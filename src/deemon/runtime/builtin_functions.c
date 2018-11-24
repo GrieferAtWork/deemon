@@ -224,7 +224,7 @@ again:
  result = jit_module;
  if unlikely(!result) {
   rwlock_endread(&jit_access_lock);
-  result = DeeModule_Open(&str__jit,NULL,false);
+  result = DeeModule_OpenGlobal(&str__jit,NULL,false);
   if unlikely(!result) return NULL;
   if (result != ITER_DONE) {
    if unlikely(DeeModule_RunInit(result) < 0) {

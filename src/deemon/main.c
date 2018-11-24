@@ -892,7 +892,7 @@ PRIVATE int DCALL cmd_help(char *arg) {
  } else {
   /* `print Doc from doc(arg)' */
   DREF DeeObject *doc_module,*doc_node; dssize_t error;
-  doc_module = DeeModule_OpenString("doc",3,NULL,true);
+  doc_module = DeeModule_OpenGlobalString("doc",3,NULL,true);
   if unlikely(!doc_module) goto err;
   if unlikely(DeeModule_RunInit(doc_module)) doc_node = NULL;
   else doc_node = DeeObject_CallAttrStringf(doc_module,"Doc","s",arg);
@@ -1081,13 +1081,12 @@ int main(int argc, char *argv[]) {
   if unlikely(!argc) goto err_no_input;
 
   /* Run the module passed through argv[0] */
-  user_module = (DREF DeeModuleObject *)DeeModule_OpenFileString(argv[0],
-                                                                 strlen(argv[0]),
-                                                                 NULL,
-                                                                 0,
-                                                                 MODULE_FILECLASS_SOURCE |
-                                                                 MODULE_FILECLASS_THROWERROR,
-                                                                &script_options);
+  user_module = (DREF DeeModuleObject *)DeeModule_OpenSourceFileString(argv[0],
+                                                                       strlen(argv[0]),
+                                                                       NULL,
+                                                                       0,
+                                                                      &script_options,
+                                                                       true);
   if unlikely(!user_module) goto err;
   if (operation_mode == OPERATION_MODE_PRINTASM) {
    /* Print a full disassembly of the user-module. */
@@ -1098,7 +1097,7 @@ int main(int argc, char *argv[]) {
    else {
     PRIVATE DEFINE_STRING(str_disassembler,"disassembler");
     DREF DeeObject *disassembler_module;
-    disassembler_module = DeeModule_Open((DeeObject *)&str_disassembler,NULL,true);
+    disassembler_module = DeeModule_OpenGlobal((DeeObject *)&str_disassembler,NULL,true);
     if unlikely(!disassembler_module)
      temp = -1;
     else {
@@ -1241,7 +1240,19 @@ done:
 #else
    extern int ATTR_CDECL _CrtDumpMemoryLeaks(void);
 #endif
-   _CrtDumpMemoryLeaks();
+   if (!IsDebuggerPresent()) {
+    _Dee_dprint("");
+    if (_Dee_dprint_enabled) {
+     _CrtSetReportMode(_CRT_WARN,_CRTDBG_MODE_FILE);
+     _CrtSetReportFile(_CRT_WARN,_CRTDBG_FILE_STDERR);
+     _CrtSetReportMode(_CRT_ERROR,_CRTDBG_MODE_FILE);
+     _CrtSetReportFile(_CRT_ERROR,_CRTDBG_FILE_STDERR);
+     _CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_FILE);
+     _CrtSetReportFile(_CRT_ASSERT,_CRTDBG_FILE_STDERR);
+    }
+   }
+   if (_CrtDumpMemoryLeaks())
+       BREAKPOINT();
   }
 #endif
 #endif
@@ -1840,7 +1851,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
  override_start_pos -= (size_t)(file->f_end-override_start_ptr);
 
  /* Skip leading line-feeds in the format-code.
-  * This way, `DeeModule_OpenMemoryString()' won't have to adjust for column-offsets. */
+  * This way, `DeeModule_OpenSourceMemoryString()' won't have to adjust for column-offsets. */
  while (format_code_start < format_code_end &&
        (*format_code_start == '\n' ||
         *format_code_start == '\r')) {
@@ -1932,15 +1943,15 @@ try_exec_format_impl(DeeObject *__restrict stream,
        script_module = NULL;
   else {
    /* Compile the format-script into a module. */
-   script_module = (DREF DeeModuleObject *)DeeModule_OpenMemoryString(format_code_start,
-                                                                     (size_t)(format_code_end - format_code_start),
-                                                                      format_code_start_line,
-                                                                      format_code_start_col,
-                                                                     &opt,
-                                                                      filename,
-                                                                      strlen(filename),
-                                                                      NULL,
-                                                                      0);
+   script_module = (DREF DeeModuleObject *)DeeModule_OpenSourceMemoryString(format_code_start,
+                                                                           (size_t)(format_code_end - format_code_start),
+                                                                            format_code_start_line,
+                                                                            format_code_start_col,
+                                                                           &opt,
+                                                                            filename,
+                                                                            strlen(filename),
+                                                                            NULL,
+                                                                            0);
    /* Remove the format-script macro again. */
    TPPLexer_Undef("__FORMAT_SCRIPT__",17);
   }

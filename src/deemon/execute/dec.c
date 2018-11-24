@@ -809,54 +809,14 @@ DecFile_Strtab(DecFile *__restrict self) {
 
 INTERN int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self) {
- uint64_t timestamp,other; Dec_Ehdr *hdr = self->df_ehdr;
- char *module_pathstr; size_t module_pathlen;
- DREF DeeObject *filename;
- /* Check the module's original source file. */
- module_pathstr = DeeString_STR(self->df_name);
- module_pathlen = DeeString_SIZE(self->df_name);
- while (module_pathlen &&
-        module_pathstr[module_pathlen-1] != '.' &&
-        module_pathstr[module_pathlen-1] != '/'
-#ifdef CONFIG_HOST_WINDOWS
-        && module_pathstr[module_pathlen-1] != '\\'
-#endif
-        )
-        --module_pathlen;
- if (module_pathlen &&
-     module_pathstr[module_pathlen-1] == '.')
-     --module_pathlen;
- filename = DeeString_NewBuffer(module_pathlen+4);
- if unlikely(!filename) goto err;
- {
-  size_t pathlen; char *dst,*dec_filestart;
-#ifdef CONFIG_HOST_WINDOWS
-  dec_filestart = module_pathstr+module_pathlen;
-  while (dec_filestart != module_pathstr &&
-         dec_filestart[-1] != '\\' &&
-         dec_filestart[-1] != '/')
-       --dec_filestart;
-#else
-  dec_filestart = (char *)memrchr(module_pathstr,SEP,module_pathlen);
-  if (dec_filestart) ++dec_filestart;
-  else dec_filestart = module_pathstr;
-#endif
-  pathlen = (size_t)(dec_filestart-module_pathstr);
-  if (*dec_filestart == '.') ++dec_filestart,--DeeString_SIZE(filename);
-  dst = DeeString_STR(filename);
-  memcpy(dst,module_pathstr,pathlen*sizeof(char));
-  dst += pathlen;
-  pathlen = (size_t)((module_pathstr+module_pathlen)-dec_filestart);
-  memcpy(dst,dec_filestart,pathlen*sizeof(char));
-  dst += pathlen,*dst++ = '.';
-  UNALIGNED_SET32((uint32_t *)dst,ENCODE4('d','e','e',0));
- }
- other = DecTime_Lookup(filename);
- Dee_Decref(filename);
+ Dec_Ehdr *hdr = self->df_ehdr;
+ uint64_t timestamp,other;
+ other = DecTime_Lookup((DeeObject *)self->df_name);
  if unlikely(other == (uint64_t)-1) goto err;
  timestamp = (((uint64_t)LESWAP32(hdr->e_timestamp_hi) << 32) |
               ((uint64_t)LESWAP32(hdr->e_timestamp_lo)));
  if (other > timestamp) goto changed; /* Base source file has changed. */
+#if 0 /* TODO */
  /* Check additional dependencies. */
  if (hdr->e_depoff != 0) {
   Dec_Strmap *depmap; char *strtab,*filend;
@@ -893,6 +853,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
   }
  }
 done:
+#endif
  return 0;
 changed:
  return 1;
@@ -2460,15 +2421,15 @@ err:
 INTERN int DCALL
 DeeModule_OpenDec(DeeModuleObject *__restrict module,
                   DeeObject *__restrict input_stream,
-                  struct compiler_options *__restrict options,
-                  DeeStringObject *__restrict dec_pathname) {
+                  struct compiler_options *__restrict options) {
  DecFile file; int result;
+ ASSERT(module->mo_path);
  /* Initialize the file */
- if ((result = DecFile_Init(&file,input_stream,module,dec_pathname,options)) != 0)
+ if ((result = DecFile_Init(&file,input_stream,module,module->mo_path,options)) != 0)
       goto done;
- DEE_DPRINTF("[LD] Opened dec file %r\n",file.df_name);
+ DEE_DPRINTF("[LD] Opened dec file for %r\n",file.df_name);
  /* Check if the file is up-to-date (unless this check is being suppressed). */
- if ((!options || !(options->co_decloader&DEC_FLOADOUTDATED)) &&
+ if ((!options || !(options->co_decloader & DEC_FLOADOUTDATED)) &&
       (result = DecFile_IsUpToDate(&file)) != 0)
        goto done_file;
  /* With all that out of the way, actually load the file. */

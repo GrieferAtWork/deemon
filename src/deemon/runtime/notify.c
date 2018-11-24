@@ -58,7 +58,7 @@ again:
 #ifndef CONFIG_NO_THREADS
   rwlock_endread(&fs_module_lock);
 #endif
-  mod = DeeModule_Open(&str_fs,NULL,true);
+  mod = DeeModule_OpenGlobal(&str_fs,NULL,true);
   if unlikely(!mod) return NULL;
   if unlikely(DeeModule_RunInit(mod) < 0) {
    Dee_Decref(mod);

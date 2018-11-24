@@ -137,6 +137,7 @@ INTERN ATTR_COLD int DCALL err_module_cannot_write_property(struct module_object
 
 
 INTDEF ATTR_COLD int DCALL err_file_not_found(char const *__restrict filename);
+INTDEF ATTR_COLD int DCALL err_file_not_found_ob(DeeObject *__restrict filename);
 #ifndef CONFIG_NO_STDIO
 #ifdef CONFIG_HOST_WINDOWS
 /* Raise a system error after a call to a windows function

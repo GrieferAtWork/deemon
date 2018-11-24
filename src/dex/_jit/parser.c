@@ -89,9 +89,9 @@ JIT_GetOperatorFunction(uint16_t opname) {
    hash = hash_str(symbol_name);
   }
  }
- operators_module = (DREF DeeModuleObject *)DeeModule_Open((DeeObject *)&str_operators,
-                                                            NULL,
-                                                            true);
+ operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
+                                                                  NULL,
+                                                                  true);
  if unlikely(!operators_module) goto err;
  if (symbol_name) {
   result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,
@@ -585,7 +585,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
   str = unicode_printer_pack(&printer);
   if unlikely(!str) goto err_trace;
   if (DeeString_STR(str)[0] != '.') {
-   result = DeeModule_Open(str,NULL,true);
+   result = DeeModule_OpenGlobal(str,NULL,true);
   } else {
    DeeModuleObject *base = self->jl_context->jc_impbase;
    if unlikely(!base) {
@@ -598,10 +598,10 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
   }
   Dee_Decref(str);
  } else if (name_start[0] != '.') {
-  result = DeeModule_OpenString((char const *)name_start,
-                                (size_t)(name_end - name_start),
-                                 NULL,
-                                 true);
+  result = DeeModule_OpenGlobalString((char const *)name_start,
+                                      (size_t)(name_end - name_start),
+                                       NULL,
+                                       true);
  } else {
   DeeModuleObject *base = self->jl_context->jc_impbase;
   if unlikely(!base) {

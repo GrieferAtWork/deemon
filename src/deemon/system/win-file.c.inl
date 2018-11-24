@@ -69,31 +69,35 @@ nt_FixUncPath(DeeObject *__restrict filename) {
  ASSERT_OBJECT_TYPE_EXACT(filename,&DeeString_Type);
  filename = make_absolute(filename);
  if unlikely(!filename) goto err;
- /* TODO: Make this function unicode-compatible. */
  filename_size = DeeString_SIZE(filename);
  if (filename_size < 4 ||
      UNALIGNED_GET32((uint32_t *)DeeString_STR(filename)) != ENCODE4('\\','\\','.','\\')) {
-  /* Prepend "\\.\". */
-  if (!DeeObject_IsShared(filename)) {
+  if (!DeeObject_IsShared(filename) &&
+       DeeString_WIDTH(filename) == STRING_WIDTH_1BYTE) {
    DeeString_FreeWidth(filename);
    result = DeeString_ResizeBuffer(filename,4+filename_size);
    if unlikely(!result) goto err_filename;
    memmove(DeeString_STR(result)+4,
            DeeString_STR(filename),
            filename_size*sizeof(char));
+   /* Set the prefix. */
+   UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
+                    ENCODE4('\\','\\','.','\\'));
+   return result;
   } else {
-   result = DeeString_NewBuffer(4+filename_size);
-   if unlikely(!result) goto err_filename;
-   /* Copy the text after the prefix. */
-   memcpy(DeeString_STR(result)+4,
-          DeeString_STR(filename),
-          filename_size*sizeof(char));
+   struct unicode_printer printer = UNICODE_PRINTER_INIT;
+   /* Prepend "\\.\". */
+   if unlikely(unicode_printer_print8(&printer,(uint8_t *)"\\\\.\\",4) < 0)
+      goto err_printer;
+   if unlikely(unicode_printer_printstring(&printer,filename) < 0)
+      goto err_printer;
+   result = unicode_printer_pack(&printer);
    Dee_Decref(filename);
+   return result;
+err_printer:
+   unicode_printer_fini(&printer);
+   return NULL;
   }
-  /* Set the prefix. */
-  UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
-                   ENCODE4('\\','\\','.','\\'));
-  return result;
  }
  return filename;
 err_filename:

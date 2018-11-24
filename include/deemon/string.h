@@ -500,6 +500,7 @@ ATTR_RETNONNULL uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
  * @return: * :   A pointer to the UTF-8 variant-string of `self'
  * @return: NULL: An error occurred. */
 DFUNDEF char *DCALL DeeString_AsUtf8(DeeObject *__restrict self);
+DFUNDEF char *DCALL DeeString_TryAsUtf8(DeeObject *__restrict self);
 
 /* Returns the UTF-16 variant of the given string (as a width-string). */
 DFUNDEF uint16_t *DCALL DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode);

@@ -92,23 +92,26 @@ INTERN struct static_module_struct deemon_module_head = {
         NULL
     },{
         OBJECT_HEAD_INIT(&DeeModule_Type),
-        /* .mo_name    = */(DREF DeeStringObject *)&str_deemon,
-        /* .mo_pself   = */NULL,
-        /* .mo_next    = */NULL,
-        /* .mo_path    = */NULL,
-        /* .mo_fspself = */NULL,
-        /* .mo_fsnext  = */NULL,
-        /* .mo_importc = */0,
-        /* .mo_globalc = */num_builtins_obj,
-        /* .mo_flags   = */MODULE_FLOADING|MODULE_FDIDLOAD|MODULE_FINITIALIZING|MODULE_FDIDINIT,
-        /* .mo_bucketm = */builtins_hashmask,
-        /* .mo_bucketv = */deemon_symbols,
-        /* .mo_importv = */NULL,
-        /* .mo_globalv = */builtin_object_vector,
-        /* .mo_root    = */&empty_code,
+        /* .mo_name      = */(DREF DeeStringObject *)&str_deemon,
+        /* .mo_pself     = */NULL,
+        /* .mo_next      = */NULL,
+        /* .mo_path      = */NULL,
+#ifdef CONFIG_HOST_WINDOWS
+        /* .mo_pathhash  = */0,
+#endif
+        /* .mo_globpself = */NULL,
+        /* .mo_globnext  = */NULL,
+        /* .mo_importc   = */0,
+        /* .mo_globalc   = */num_builtins_obj,
+        /* .mo_flags     = */MODULE_FLOADING|MODULE_FDIDLOAD|MODULE_FINITIALIZING|MODULE_FDIDINIT,
+        /* .mo_bucketm   = */builtins_hashmask,
+        /* .mo_bucketv   = */deemon_symbols,
+        /* .mo_importv   = */NULL,
+        /* .mo_globalv   = */builtin_object_vector,
+        /* .mo_root      = */&empty_code,
 #ifndef CONFIG_NO_THREADS
-        /* .mo_lock    = */RWLOCK_INIT,
-        /* .mo_loader  = */NULL,
+        /* .mo_lock      = */RWLOCK_INIT,
+        /* .mo_loader    = */NULL,
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC
         /* .mo_ctime     = */0,

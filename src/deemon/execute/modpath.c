@@ -63,6 +63,16 @@
 #include <limits.h>
 #endif
 
+#if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
+/* NOTE: Don't use LoadLibrary() on cygwin. It does some crazy hacking
+ *       to get fork() working properly with dynamic linking, so better
+ *       not interfere with it by bypassing its mechanisms. */
+#define USE_LOADLIBRARY 1
+#else
+#include <dlfcn.h>
+#endif
+
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -653,7 +663,7 @@ DeeModule_LoadSourceStream(DeeObject *__restrict self,
 
 
 struct module_bucket {
- DeeModuleObject *mb_list; /* [0..1][weak] Chain of modules in this bucket. */
+    DeeModuleObject *mb_list; /* [0..1][weak] Chain of modules in this bucket. */
 };
 
 /* Filesystem-based module hash table. */
@@ -665,21 +675,16 @@ PRIVATE DEFINE_RWLOCK(modules_lock);
 #endif /* !CONFIG_NO_THREADS */
 
 /* Name-based, global module hash table. */
-PRIVATE size_t                modules_glob_c = 0;    /* [lock(modules_lock)] Amount of modules in-cache. */
-PRIVATE size_t                modules_glob_a = 0;    /* [lock(modules_lock)] Allocated hash-map size. */
-PRIVATE struct module_bucket *modules_glob_v = NULL; /* [lock(modules_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
+PRIVATE size_t                modules_glob_c = 0;    /* [lock(modules_glob_lock)] Amount of modules in-cache. */
+PRIVATE size_t                modules_glob_a = 0;    /* [lock(modules_glob_lock)] Allocated hash-map size. */
+PRIVATE struct module_bucket *modules_glob_v = NULL; /* [lock(modules_glob_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
 PRIVATE DEFINE_RWLOCK(modules_glob_lock);
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DeeModuleObject *DCALL
-find_file_module(DeeStringObject *__restrict module_file) {
+find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
  DeeModuleObject *result = NULL;
-#ifdef CONFIG_NOCASE_FS
- dhash_t hash = DeeString_HashCase((DeeObject *)module_file);
-#else
- dhash_t hash = DeeString_Hash((DeeObject *)module_file);
-#endif
 #ifndef CONFIG_NO_THREADS
  ASSERT(rwlock_reading(&modules_lock));
 #endif /* !CONFIG_NO_THREADS */
@@ -689,7 +694,9 @@ find_file_module(DeeStringObject *__restrict module_file) {
    ASSERTF(result->mo_path,"All modules found in the file cache must have a path assigned");
    ASSERT_OBJECT_TYPE_EXACT(result->mo_path,&DeeString_Type);
    if (
-#ifndef CONFIG_NOCASE_FS
+#ifdef CONFIG_HOST_WINDOWS
+       result->mo_pathhash == hash &&
+#elif !defined(CONFIG_NOCASE_FS)
        DeeString_HASH(result->mo_path) == hash &&
 #endif
        DeeString_SIZE(result->mo_path) == DeeString_SIZE(module_file) &&
@@ -766,7 +773,9 @@ do_alloc_new_vector:
    ASSERTF(iter->mo_path,"All modules found in the file cache must have a path assigned");
    ASSERT_OBJECT_TYPE_EXACT(iter->mo_path,&DeeString_Type);
    /* Re-hash this entry. */
-#ifndef CONFIG_NOCASE_FS
+#ifdef CONFIG_HOST_WINDOWS
+   dst = &new_vector[iter->mo_pathhash % new_size];
+#elif !defined(CONFIG_NOCASE_FS)
    dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_path) % new_size];
 #else
    dst = &new_vector[DeeString_HashCase((DeeObject *)iter->mo_path) % new_size];
@@ -839,7 +848,9 @@ add_file_module(DeeModuleObject *__restrict self) {
     !rehash_file_modules()) return false;
  ASSERT(modules_a);
  /* Insert the module into the table. */
-#ifdef CONFIG_NOCASE_FS
+#ifdef CONFIG_HOST_WINDOWS
+ hash = self->mo_pathhash;
+#elif defined(CONFIG_NOCASE_FS)
  hash = DeeString_HashCase((DeeObject *)self->mo_path);
 #else
  hash = DeeString_Hash((DeeObject *)self->mo_path);
@@ -916,66 +927,67 @@ module_unbind(DeeModuleObject *__restrict self) {
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenFile(DeeObject *__restrict source_pathname,
-                   DeeObject *module_name,
-                   uint16_t file_class,
-                   struct compiler_options *options) {
- DREF DeeModuleObject *result; int load_error;
- DREF DeeObject *input_stream = NULL;
- DREF DeeStringObject *abs_source_pathname;
-#ifndef CONFIG_NO_DEC
- /* Dismiss attempt to load DEC files when the DEC loader has been disabled. */
- if ((file_class&MODULE_FILECLASS_MASK) == MODULE_FILECLASS_COMPILED &&
-      options && (options->co_decloader&DEC_FDISABLE)) {
-  /* Throw an error instead if the caller requested this. */
-  if (file_class&MODULE_FILECLASS_THROWERROR) {
-   err_file_not_found(DeeString_STR(source_pathname));
-   return NULL;
-  }
-  return ITER_DONE;
- }
-#endif
+DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
+                         DeeObject *module_global_name,
+                         struct compiler_options *options,
+                         bool throw_error) {
+ DREF DeeModuleObject *existing_module;
+ DREF DeeModuleObject *result;
+ DREF DeeStringObject *module_name_ob;
+ DREF DeeStringObject *module_path_ob;
+ DREF DeeObject *input_stream; dhash_t hash;
+ ASSERT_OBJECT_TYPE(source_pathname,&DeeString_Type);
+ ASSERT_OBJECT_TYPE_OPT(module_global_name,&DeeString_Type);
+ module_path_ob = (DREF DeeStringObject *)make_absolute(source_pathname);
+ if unlikely(!module_path_ob) goto err;
 
- abs_source_pathname = (DREF DeeStringObject *)make_absolute(source_pathname);
- if unlikely(!abs_source_pathname) return NULL;
-#ifndef CONFIG_NO_THREADS
+ /* Quick check if this module had already been opened. */
  rwlock_read(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
- /* Search for an existing instance of this module. */
- result = find_file_module(abs_source_pathname);
+ hash = DeeString_HashCase((DeeObject *)module_path_ob);
+ result = find_file_module(module_path_ob,hash);
  if (result) {
   Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
   rwlock_endread(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
-  goto found_existing_module;
+got_result_modulepath:
+  Dee_Decref(module_path_ob);
+  goto got_result;
  }
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
 
-#ifndef CONFIG_NO_DEX
- if ((file_class&MODULE_FILECLASS_MASK) != MODULE_FILECLASS_EXTENSION)
-#endif
- {
-  /* Open the module's source file stream. */
-  input_stream = DeeFile_Open((DeeObject *)abs_source_pathname,OPEN_FRDONLY,0);
-  if unlikely(!ITER_ISOK(input_stream)) {
-   result = (DREF DeeModuleObject *)input_stream;
-   if (input_stream == ITER_DONE &&
-       file_class&MODULE_FILECLASS_THROWERROR)
-       err_file_not_found(DeeString_STR(source_pathname)),
-       result = NULL;
-   goto done;
+ /* Also search for an existing instance
+  * of the specified global module name. */
+#if 1 /* This is optional */
+ if (ITER_ISOK(module_global_name)) {
+  rwlock_read(&modules_glob_lock);
+  result = find_glob_module((DeeStringObject *)module_global_name);
+  if (result) {
+   Dee_Incref(result);
+   rwlock_endread(&modules_glob_lock);
+   goto got_result_modulepath;
   }
+  rwlock_endread(&modules_glob_lock);
+ }
+#endif
+
+ /* Open the module's source file stream. */
+ input_stream = DeeFile_Open((DeeObject *)module_path_ob,OPEN_FRDONLY,0);
+ if unlikely(!ITER_ISOK(input_stream)) {
+  result = (DREF DeeModuleObject *)input_stream;
+  if (input_stream == ITER_DONE && throw_error)
+      err_file_not_found_ob((DeeObject *)module_path_ob),
+      result = NULL;
+  goto got_result_modulepath;
  }
 
  /* Create a new module. */
- if (!module_name) {
-  char  *name = DeeString_STR(source_pathname);
-  size_t size = DeeString_SIZE(source_pathname);
+ if (ITER_ISOK(module_global_name)) {
+  module_name_ob = (DREF DeeStringObject *)module_global_name;
+ } else {
   char *name_end,*name_start;
-  DREF DeeObject *name_object;
+  char *name; size_t size;
+  name = DeeString_AsUtf8(source_pathname);
+  if unlikely(!name) goto err_modulepath_inputstream;
+  size = WSTR_LENGTH(name);
   name_end = name+size;
 #ifdef CONFIG_HOST_WINDOWS
   name_start = name_end;
@@ -986,194 +998,132 @@ DeeModule_OpenFile(DeeObject *__restrict source_pathname,
   if (!name_start) name_start = name-1;
   ++name_start;
 #endif
-#ifndef CONFIG_NO_DEC
-  if (file_class == MODULE_FILECLASS_COMPILED &&
-     *name_start == '.') ++name_start;
-#endif
-
   /* Get rid of a file extension in the module name. */
   while (name_end != name_start && name_end[-1] != '.') --name_end;
   while (name_end != name_start && name_end[-1] == '.') --name_end;
   if (name_end == name_start) name_end = name+size;
-  name_object = DeeString_NewSized(name_start,
-                                  (size_t)(name_end - name_start));
-  if unlikely(!name_object) goto err;
-#ifndef CONFIG_NO_DEX
-  if ((file_class&MODULE_FILECLASS_MASK) == MODULE_FILECLASS_EXTENSION)
-   result = (DREF DeeModuleObject *)DeeDex_New(name_object);
-  else
-#endif
-  {
-   result = (DREF DeeModuleObject *)DeeModule_New(name_object);
-  }
-  Dee_Decref(name_object);
- } else {
-  DeeModuleObject *existing_module;
-  /* Check if the module is already loaded in the global cache. */
-#ifndef CONFIG_NO_THREADS
-  rwlock_read(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
-  result = find_glob_module((DeeStringObject *)module_name);
-  if (result) {
-   Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
-   rwlock_endread(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
-   goto found_existing_module;
-  }
-#ifndef CONFIG_NO_THREADS
-  rwlock_endread(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
-  /* Create a new module. */
-#ifndef CONFIG_NO_DEX
-  if ((file_class&MODULE_FILECLASS_MASK) == MODULE_FILECLASS_EXTENSION)
-   result = (DREF DeeModuleObject *)DeeDex_New(module_name);
-  else
-#endif
-  {
-   result = (DREF DeeModuleObject *)DeeModule_New(module_name);
-  }
-  /* Add the module to the global module cache. */
-set_global_module:
-#ifndef CONFIG_NO_THREADS
-  rwlock_write(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
-  existing_module = find_glob_module((DeeStringObject *)module_name);
-  if unlikely(existing_module) {
-   /* The module got created in the mean time. */
-   Dee_Incref(existing_module);
-#ifndef CONFIG_NO_THREADS
-   rwlock_endwrite(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
-   Dee_Decref(result);
-   result = existing_module;
-   goto found_existing_module;
-  }
-  /* Add the module to the global cache. */
-  if unlikely(!add_glob_module(result)) {
-#ifndef CONFIG_NO_THREADS
-   rwlock_endwrite(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
-   /* Try to collect some memory, then try again. */
-   if (Dee_CollectMemory(1)) goto set_global_module;
-   goto err_r;
-  }
-#ifndef CONFIG_NO_THREADS
-  rwlock_endwrite(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
+  module_name_ob = (DREF DeeStringObject *)DeeString_NewUtf8(name_start,
+                                                            (size_t)(name_end - name_start),
+                                                             STRING_ERROR_FIGNORE);
+  if unlikely(!module_name_ob) goto err_modulepath_inputstream;
  }
- /* Set the module's name within its data structure. */
- ASSERT_OBJECT_TYPE_EXACT(abs_source_pathname,&DeeString_Type);
- result->mo_path = (DREF DeeStringObject *)abs_source_pathname;
- Dee_Incref(abs_source_pathname);
- /* Now add the module to the file-cache. */
-set_file_module:
+
+ /* Create the new module. */
+ result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
+ Dee_Decref_unlikely(module_name_ob);
+ if unlikely(!result) goto err_modulepath_inputstream;
+
+ /* Register the module in the filesystem & global cache. */
+ result->mo_path = module_path_ob; /* Inherit reference. */
+#ifdef CONFIG_HOST_WINDOWS
+ result->mo_pathhash = hash;
+#endif
+ result->mo_flags |= MODULE_FLOADING;
+ COMPILER_WRITE_BARRIER();
+ /* Cache the new module as part of the filesystem
+  * module cache, as well as the global module cache. */
+ if (module_global_name) {
+set_file_module_global:
 #ifndef CONFIG_NO_THREADS
- rwlock_write(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
- {
-  /* Check if the file-system version of this module got added in the mean time. */
-  DeeModuleObject *existing_module;
-  existing_module = find_file_module(abs_source_pathname);
+  rwlock_write(&modules_lock);
+  if (!rwlock_trywrite(&modules_glob_lock)) {
+   rwlock_endwrite(&modules_lock);
+   rwlock_write(&modules_glob_lock);
+   if (!rwlock_trywrite(&modules_lock)) {
+    rwlock_endwrite(&modules_glob_lock);
+    goto set_file_module_global;
+   }
+  }
+#endif
+  existing_module = find_file_module(module_path_ob,hash);
+  if likely(!existing_module)
+     existing_module = find_glob_module(module_name_ob);
   if unlikely(existing_module) {
    Dee_Incref(existing_module);
-#ifndef CONFIG_NO_THREADS
+   rwlock_endwrite(&modules_glob_lock);
    rwlock_endwrite(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
-   Dee_Decref(result);
+   Dee_DecrefDokill(result);
+   Dee_Decref_likely(input_stream);
    result = existing_module;
-   goto found_existing_module;
+   goto try_load_module_after_failure;
+  }
+  /* Add the module to the file-cache. */
+  if ((modules_c >= modules_a && !rehash_file_modules()) ||
+      (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
+   rwlock_endwrite(&modules_lock);
+   /* Try to collect some memory, then try again. */
+   if (Dee_CollectMemory(1))
+       goto set_file_module_global;
+   Dee_Decref_likely(input_stream);
+   goto err_inputstream_r;
+  }
+  add_glob_module(result);
+  add_file_module(result);
+  rwlock_endwrite(&modules_glob_lock);
+  rwlock_endwrite(&modules_lock);
+ } else {
+set_file_module:
+  rwlock_write(&modules_lock);
+  existing_module = find_file_module(module_path_ob,hash);
+  if unlikely(existing_module) {
+   Dee_Incref(existing_module);
+   rwlock_endwrite(&modules_lock);
+   Dee_DecrefDokill(result);
+   Dee_Decref_likely(input_stream);
+   result = existing_module;
+try_load_module_after_failure:
+   if (DeeModule_BeginLoading(result) == 0)
+       goto load_module_after_failure;
+   goto got_result;
   }
   /* Add the module to the file-cache. */
   if unlikely(!add_file_module(result)) {
-#ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
    /* Try to collect some memory, then try again. */
-   if (Dee_CollectMemory(1)) goto set_file_module;
-   goto err_r;
+   if (Dee_CollectMemory(1))
+       goto set_file_module;
+   Dee_Decref_likely(input_stream);
+   goto err_inputstream_r;
   }
+  rwlock_endwrite(&modules_lock);
  }
-#ifndef CONFIG_NO_THREADS
- rwlock_endwrite(&modules_lock);
-#endif /* !CONFIG_NO_THREADS */
-found_existing_module:
- /* Now to actually load the module. */
- load_error = DeeModule_BeginLoading(result);
- if (load_error == 0) {
-#ifndef CONFIG_NO_DEX
-  if (DeeDex_Check(result)) {
-   load_error = dex_load_file((DeeDexObject *)result,
-                              (DeeObject *)abs_source_pathname);
-   if (load_error > 0) goto file_not_found;
-  } else
-#endif
-  {
-   /* If the input stream hasn't been opened yet, open it now. */
-   if (!input_stream) {
-    input_stream = DeeFile_Open((DeeObject *)abs_source_pathname,OPEN_FRDONLY,0);
-    if (ITER_ISOK(input_stream)) goto do_load_input_stream;
-    if (input_stream == ITER_DONE) {
-     /* Propagate file-not-found by returning ITER_DONE. */
-#if !defined(CONFIG_NO_DEX) || !defined(CONFIG_NO_DEC)
-file_not_found:
-#endif
-     DeeModule_FailLoading(result);
-     Dee_Decref(result);
-     result = (DREF DeeModuleObject *)ITER_DONE;
-     if (file_class&MODULE_FILECLASS_THROWERROR)
-         err_file_not_found(DeeString_STR(source_pathname)),
-         result = NULL;
-     goto done;
-    }
-    load_error = -1;
-   } else {
-do_load_input_stream:
-#ifndef CONFIG_NO_DEC
-    if ((file_class&MODULE_FILECLASS_MASK) == MODULE_FILECLASS_COMPILED) {
-     load_error = DeeModule_OpenDec(result,input_stream,options,
-                                   (DeeStringObject *)abs_source_pathname);
-     if (load_error > 0)
-         goto file_not_found;
-    } else
-#endif /* !CONFIG_NO_DEC */
-    {
-     load_error = DeeModule_LoadSourceStreamEx(result,
-                                               input_stream,
-                                               options,
-                                               0,
-                                               0,
-                                              (DeeStringObject *)source_pathname);
-    }
-   }
-  }
-  /* Depending on a load error having occurred, either signify
-   * that the module has been loaded, or failed to be loaded. */
-  if unlikely(load_error) {
+load_module_after_failure:
+ /* Actually load the module from its source stream. */
+ {
+  int error;
+  error = DeeModule_LoadSourceStreamEx(result,
+                                       input_stream,
+                                       options,
+                                       0,
+                                       0,
+                                       module_path_ob);
+  Dee_Decref(input_stream);
+  if unlikely(error) {
    DeeModule_FailLoading(result);
-   Dee_Clear(result);
-  } else {
-   DeeModule_DoneLoading(result);
+   goto err_inputstream_r;
   }
+  DeeModule_DoneLoading(result);
  }
-done:
- if (input_stream != ITER_DONE)
-     Dee_XDecref(input_stream);
- Dee_Decref(abs_source_pathname);
+got_result:
  return (DREF DeeObject *)result;
-err_r:
+err_inputstream_r:
  Dee_Decref(result);
+ Dee_Decref(input_stream);
+ goto err;
+err_modulepath_inputstream:
+ Dee_Decref(input_stream);
+/*err_modulepath:*/
+ Dee_Decref(module_path_ob);
 err:
- result = NULL;
- goto done;
+ return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenFileString(/*utf-8*/char const *__restrict source_pathname,
-                         size_t source_pathsize,
-                         /*utf-8*/char const *module_name,
-                         size_t module_namesize,
-                         uint16_t file_class,
-                         struct compiler_options *options) {
+DeeModule_OpenSourceFileString(/*utf-8*/char const *__restrict source_pathname,
+                               size_t source_pathsize,
+                               /*utf-8*/char const *module_name,
+                               size_t module_namesize,
+                               struct compiler_options *options,
+                               bool throw_error) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob;
@@ -1189,10 +1139,10 @@ DeeModule_OpenFileString(/*utf-8*/char const *__restrict source_pathname,
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
  }
- result = DeeModule_OpenFile(source_pathname_ob,
-                             module_name_ob,
-                             file_class,
-                             options);
+ result = DeeModule_OpenSourceFile(source_pathname_ob,
+                                   module_name_ob,
+                                   options,
+                                   throw_error);
  Dee_XDecref(module_name_ob);
  Dee_Decref(source_pathname_ob);
  return result;
@@ -1203,15 +1153,15 @@ err:
 }
 
 
-/* Very similar to `DeeModule_OpenMemory()', and used to implement it,
+/* Very similar to `DeeModule_OpenSourceMemory()', and used to implement it,
  * however source data is made available using a stream object derived
  * from `file from deemon' */
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenStream(DeeObject *__restrict source_stream,
-                     int start_line, int start_col,
-                     struct compiler_options *options,
-                     DeeObject *source_pathname,
-                     DeeObject *module_name) {
+DeeModule_OpenSourceStream(DeeObject *__restrict source_stream,
+                           int start_line, int start_col,
+                           struct compiler_options *options,
+                           DeeObject *source_pathname,
+                           DeeObject *module_name) {
  DREF DeeModuleObject *result; int load_error;
  /* Create a new module. */
  if (!module_name) {
@@ -1246,50 +1196,36 @@ DeeModule_OpenStream(DeeObject *__restrict source_stream,
  } else {
   DeeModuleObject *existing_module;
   /* Check if the module is already loaded in the global cache. */
-#ifndef CONFIG_NO_THREADS
   rwlock_read(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
   result = find_glob_module((DeeStringObject *)module_name);
   if (result) {
    Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
    rwlock_endread(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
    goto found_existing_module;
   }
-#ifndef CONFIG_NO_THREADS
   rwlock_endread(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
   /* Create a new module. */
   result = (DREF DeeModuleObject *)DeeModule_New(module_name);
   /* Add the module to the global module cache. */
 set_global_module:
-#ifndef CONFIG_NO_THREADS
   rwlock_write(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
   existing_module = find_glob_module((DeeStringObject *)module_name);
   if unlikely(existing_module) {
    /* The module got created in the mean time. */
    Dee_Incref(existing_module);
-#ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
    Dee_Decref(result);
    result = existing_module;
    goto found_existing_module;
   }
   /* Add the module to the global cache. */
   if unlikely(!add_glob_module(result)) {
-#ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
    /* Try to collect some memory, then try again. */
    if (Dee_CollectMemory(1)) goto set_global_module;
    goto err_r;
   }
-#ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
  }
 found_existing_module:
  load_error = DeeModule_BeginLoading(result);
@@ -1318,13 +1254,13 @@ err:
  goto done;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenStreamString(DeeObject *__restrict source_stream,
-                           int start_line, int start_col,
-                           struct compiler_options *options,
-                           /*utf-8*/char const *source_pathname,
-                           size_t source_pathsize,
-                           /*utf-8*/char const *module_name,
-                           size_t module_namesize) {
+DeeModule_OpenSourceStreamString(DeeObject *__restrict source_stream,
+                                 int start_line, int start_col,
+                                 struct compiler_options *options,
+                                 /*utf-8*/char const *source_pathname,
+                                 size_t source_pathsize,
+                                 /*utf-8*/char const *module_name,
+                                 size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob = NULL;
@@ -1342,7 +1278,7 @@ DeeModule_OpenStreamString(DeeObject *__restrict source_stream,
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
  }
- result = DeeModule_OpenStream(source_stream,
+ result = DeeModule_OpenSourceStream(source_stream,
                                start_line,
                                start_col,
                                options,
@@ -1359,11 +1295,11 @@ err:
 
 
 /* Construct a module from a memory source-code blob.
- * NOTE: Unlike `DeeModule_OpenFile()', this function will not bind `source_pathname'
+ * NOTE: Unlike `DeeModule_OpenSourceFile()', this function will not bind `source_pathname'
  *       to the returned module, meaning that the module object returned will be entirely
  *       anonymous, except for when `module_name' was passed as non-NULL, in which case
  *       the returned module will be made available as a global import with that same name,
- *       and be available for later addressing using `DeeModule_Open()'
+ *       and be available for later addressing using `DeeModule_OpenGlobal()'
  * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
  *                          Used by `#include' directives, as well as `__FILE__' and ddi information.
  *                          When NULL, an empty string is used internally, which results in the current
@@ -1377,15 +1313,15 @@ err:
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenMemory(/*utf-8*/char const *__restrict data, size_t data_size,
-                     int start_line, int start_col,
-                     struct compiler_options *options,
-                     DeeObject *source_pathname,
-                     DeeObject *module_name) {
+DeeModule_OpenSourceMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+                           int start_line, int start_col,
+                           struct compiler_options *options,
+                           DeeObject *source_pathname,
+                           DeeObject *module_name) {
  DREF DeeObject *source_stream,*result;
  source_stream = DeeFile_OpenRoMemory(data,data_size);
  if unlikely(!source_stream) return NULL;
- result = DeeModule_OpenStream(source_stream,
+ result = DeeModule_OpenSourceStream(source_stream,
                                start_line,
                                start_col,
                                options,
@@ -1396,13 +1332,13 @@ DeeModule_OpenMemory(/*utf-8*/char const *__restrict data, size_t data_size,
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
-                           int start_line, int start_col,
-                           struct compiler_options *options,
-                           /*utf-8*/char const *source_pathname,
-                           size_t source_pathsize,
-                           /*utf-8*/char const *module_name,
-                           size_t module_namesize) {
+DeeModule_OpenSourceMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                                 int start_line, int start_col,
+                                 struct compiler_options *options,
+                                 /*utf-8*/char const *source_pathname,
+                                 size_t source_pathsize,
+                                 /*utf-8*/char const *module_name,
+                                 size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
  DREF DeeObject *source_pathname_ob = NULL;
@@ -1420,7 +1356,7 @@ DeeModule_OpenMemoryString(/*utf-8*/char const *__restrict data, size_t data_siz
   if unlikely(!module_name_ob)
      goto err_source_pathname_ob;
  }
- result = DeeModule_OpenMemory(data,
+ result = DeeModule_OpenSourceMemory(data,
                                data_size,
                                start_line,
                                start_col,
@@ -1466,32 +1402,6 @@ DeeModule_New(DeeObject *__restrict name) {
 }
 
 
-#define SOURCE_EXTENSION_MAX  3
-struct ext_def {
- char    source_ext[SOURCE_EXTENSION_MAX];
- uint8_t source_class;
-};
-
-PRIVATE struct ext_def const extensions[] = {
-#ifndef CONFIG_NO_DEC
-    { {'d','e','c'}, MODULE_FILECLASS_COMPILED },
-#endif
-    { {'d','e','e'}, MODULE_FILECLASS_SOURCE },
-#ifndef CONFIG_NO_DEX
-#ifdef CONFIG_HOST_WINDOWS
-    { {'d','l','l'}, MODULE_FILECLASS_EXTENSION },
-#else
-    { {'s','o',0}, MODULE_FILECLASS_EXTENSION },
-#endif
-#endif
-};
-
-PRIVATE ATTR_COLD int DCALL
-err_invalid_module_name(DeeObject *__restrict module_name) {
- return DeeError_Throwf(&DeeError_ValueError,
-                        "%r is not a valid module name",
-                        module_name);
-}
 PRIVATE ATTR_COLD int DCALL
 err_invalid_module_name_s(char const *__restrict module_name, size_t module_namesize) {
  return DeeError_Throwf(&DeeError_ValueError,
@@ -1506,12 +1416,6 @@ err_module_not_found(DeeObject *__restrict module_name) {
                         module_name);
 }
 
-PRIVATE ATTR_COLD int DCALL
-err_module_not_found_s(char const *__restrict module_name, size_t module_namesize) {
- return DeeError_Throwf(&DeeError_FileNotFound,
-                        "Module %$q could not be found",
-                        module_namesize,module_name);
-}
 
 PRIVATE DREF DeeObject *DCALL
 DeeModule_DoGet(char const *__restrict name,
@@ -1600,13 +1504,788 @@ DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
       (ch) == '}' || (ch) == '<' || (ch) == '>' || (ch) == '+'))
 #endif
 
+#define MODULE_OPENINPATH_FNORMAL      0x0000 /* Normal flags */
+#define MODULE_OPENINPATH_FRELMODULE   0x0001 /* The module name is relative */
+#define MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if  */
+
+LOCAL DREF DeeModuleObject *DCALL
+DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
+                        /*utf-8*/char const *__restrict module_name, size_t module_namesize,
+                        DeeObject *module_global_name,
+                        struct compiler_options *options,
+                        unsigned int mode) {
+ DREF DeeStringObject *module_name_ob;
+ DREF DeeStringObject *module_path_ob;
+ DREF DeeModuleObject *result;
+ char *buf,*dst,*module_name_start; size_t i,len;
+ dhash_t hash;
+#ifndef CONFIG_NO_DEC
+ buf = (char *)Dee_AMalloc((module_pathsize + module_namesize + 6) * sizeof(char));
+#else
+ buf = (char *)Dee_AMalloc((module_pathsize + module_namesize + 5) * sizeof(char));
+#endif
+ if unlikely(!buf) goto err;
+ dst = buf;
+ for (i = 0; i < module_pathsize;) {
+  char ch = module_path[i++];
+  if (!ISSEP(ch)) { *dst++ = ch; continue; }
+  while (i < module_pathsize && ISSEP(module_path[i])) ++i;
+  if (dst >= buf + 1 && dst[-1] == '.') {
+   /* Skip self-directory references. */
+   if (dst == buf + 1 || dst[-2] == SEP) { --dst; continue; }
+   if (dst >= buf + 2 && dst[-2] == '.' &&
+      (dst == buf + 2 || dst[-3] == SEP)) {
+    /* Skip parent-directory references. */
+    dst -= 3;
+    while (dst > buf && dst[-1] != SEP) --dst;
+    if (dst != buf) --dst;
+    continue;
+   }
+  }
+  *dst++ = SEP;
+ }
+ if (dst > buf && dst[-1] != SEP)
+    *dst++ = SEP;
+ /* Step #1: Check for a cached variant of a user-script. */
+ module_name_start = (char *)module_name;
+ for (i = 0; i < module_namesize; ++i) {
+  char ch = module_name[i];
+  if (ch == '.') {
+   if unlikely(module_name_start == (char *)module_name + i)
+      goto err_bad_module_name; /* Don't allow multiple consecutive dots here! */
+   ch = SEP;
+   module_name_start = (char *)module_name + i + 1;
+  } else if (!IS_VALID_MODULE_CHARACTER(ch)) {
+err_bad_module_name:
+   err_invalid_module_name_s(module_name,module_namesize);
+   goto err_buf;
+  }
+  dst[i] = ch;
+ }
+ dst += (size_t)(module_name_start - module_name);
+ module_namesize -= (size_t)(module_name_start - module_name);
+ module_name = module_name_start;
+
+ dst[module_namesize + 0] = '.';
+ dst[module_namesize + 1] = 'd';
+ dst[module_namesize + 2] = 'e';
+ dst[module_namesize + 3] = 'e';
+ dst[module_namesize + 4] = '\0';
+ len = (size_t)(dst - buf) + module_namesize + 4;
+#ifdef CONFIG_NOCASE_FS
+ hash = hash_ptr(buf,len); /* TODO: hash_utf8 */
+#else
+ hash = hash_caseptr(buf,len); /* TODO: hash_caseutf8 */
+#endif
+again_search_fs_modules:
+
+ /* Search for modules that have already been cached. */
+ rwlock_read(&modules_lock);
+ if (modules_a) {
+  result = modules_v[hash % modules_a].mb_list;
+  for (; result; result = result->mo_next) {
+   char *utf8_path;
+#ifdef CONFIG_HOST_WINDOWS
+   if (hash != result->mo_pathhash) continue;
+#elif defined(CONFIG_NOCASE_FS)
+   if (hash != DeeString_HashCase((DeeObject *)result->mo_path)) continue;
+#else
+   if (hash != DeeString_Hash((DeeObject *)result->mo_path)) continue;
+#endif
+   utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
+   if unlikely(!utf8_path) {
+    Dee_Incref(result);
+    rwlock_endread(&modules_lock);
+    utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
+    if unlikely(!utf8_path) goto err_buf_r;
+    if (WSTR_LENGTH(utf8_path) == len &&
+#ifdef CONFIG_NOCASE_FS
+        MEMCASEEQ(utf8_path,buf,len * sizeof(char)) /* TODO: UTF-8 case compare! */
+#else
+        memcmp(utf8_path,buf,len * sizeof(char)) == 0
+#endif
+        )
+        goto got_result_set_global;
+    Dee_Decref(result);
+    goto again_search_fs_modules;
+   }
+   if (WSTR_LENGTH(utf8_path) != len)
+       continue;
+#ifdef CONFIG_NOCASE_FS
+   if (!MEMCASEEQ(utf8_path,buf,len * sizeof(char))) /* TODO: UTF-8 case compare! */
+       continue;
+#else
+   if (memcmp(utf8_path,buf,len * sizeof(char)) != 0)
+       continue;
+#endif
+   /* Found it! */
+   Dee_Incref(result);
+   rwlock_endread(&modules_lock);
+got_result_set_global:
+   if (module_global_name) {
+    DeeModuleObject *existing_module;
+    /* Cache the module as global (if it wasn't already) */
+again_find_existing_global_module:
+    rwlock_write(&modules_glob_lock);
+    existing_module = find_glob_module(result->mo_name);
+    if unlikely(existing_module) {
+     Dee_Incref(existing_module);
+     rwlock_endwrite(&modules_glob_lock);
+     Dee_Decref_likely(result);
+     result = existing_module;
+     goto got_result;
+    }
+    if (!add_glob_module(result)) {
+     rwlock_endwrite(&modules_glob_lock);
+     if (Dee_CollectMemory(1))
+         goto again_find_existing_global_module;
+     goto err_buf_r;
+    }
+    rwlock_endwrite(&modules_glob_lock);
+
+   }
+   goto got_result;
+  }
+#ifndef CONFIG_NO_DEX
+  /* Also search for cached dex extensions. */
+  {
+   dhash_t dex_hash;
+#ifdef CONFIG_HOST_WINDOWS
+#define dex_len   (len)
+   dst[module_namesize + 2] = 'l';
+   dst[module_namesize + 3] = 'l';
+#else
+#define dex_len   (len - 1)
+   dst[module_namesize + 1] = 's';
+   dst[module_namesize + 2] = 'o';
+   dst[module_namesize + 3] = '\0';
+#endif
+#ifdef CONFIG_NOCASE_FS
+   dex_hash = hash_ptr(buf,dex_len); /* TODO: hash_utf8 */
+#else
+   dex_hash = hash_caseptr(buf,dex_len); /* TODO: hash_caseutf8 */
+#endif
+   result = modules_v[dex_hash % modules_a].mb_list;
+   for (; result; result = result->mo_next) {
+    char *utf8_path;
+#ifdef CONFIG_HOST_WINDOWS
+    if (dex_hash != result->mo_pathhash) continue;
+#elif defined(CONFIG_NOCASE_FS)
+    if (dex_hash != DeeString_HashCase((DeeObject *)result->mo_path)) continue;
+#else
+    if (dex_hash != DeeString_Hash((DeeObject *)result->mo_path)) continue;
+#endif
+    utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
+    if unlikely(!utf8_path) {
+     Dee_Incref(result);
+     rwlock_endread(&modules_lock);
+     utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
+     if unlikely(!utf8_path) goto err_buf_r;
+     if (WSTR_LENGTH(utf8_path) == dex_len &&
+#ifdef CONFIG_NOCASE_FS
+         MEMCASEEQ(utf8_path,buf,dex_len * sizeof(char)) /* TODO: UTF-8 case compare! */
+#else
+         memcmp(utf8_path,buf,dex_len * sizeof(char)) == 0
+#endif
+         )
+         goto got_result_set_global;
+     Dee_Decref(result);
+     goto again_search_fs_modules;
+    }
+    if (WSTR_LENGTH(utf8_path) != dex_len)
+        continue;
+#ifdef CONFIG_NOCASE_FS
+    if (!MEMCASEEQ(utf8_path,buf,dex_len * sizeof(char))) /* TODO: UTF-8 case compare! */
+        continue;
+#else
+    if (memcmp(utf8_path,buf,dex_len * sizeof(char)) != 0)
+        continue;
+#endif
+    /* Found it! */
+    Dee_Incref(result);
+    rwlock_endread(&modules_lock);
+    goto got_result_set_global;
+   }
+#ifndef CONFIG_HOST_WINDOWS
+   dst[module_namesize + 1] = 'd';
+#endif
+   dst[module_namesize + 2] = 'e';
+   dst[module_namesize + 3] = 'e';
+  }
+#endif /* !CONFIG_NO_DEX */
+ }
+ rwlock_endread(&modules_lock);
+ if (ITER_ISOK(module_global_name)) {
+  module_name_ob = (DREF DeeStringObject *)module_global_name;
+  Dee_Incref(module_global_name);
+ } else {
+  module_name_ob = (DREF DeeStringObject *)DeeString_NewUtf8(module_name,
+                                                             module_namesize,
+                                                             STRING_ERROR_FIGNORE);
+  if unlikely(!module_name_ob) goto err_buf;
+ }
+
+ /* The module hasn't been loaded, yet.
+  * Try to load it now! */
+#ifndef CONFIG_NO_DEC
+ if (!options || !(options->co_decloader & DEC_FDISABLE)) {
+  /* Step #1: Try to load the module from a pre-compiled .dec file.
+   * By checking this before searching for trying to load a DEX extension,
+   * we allow the user to override extensions with user-code scripts by
+   * simply generating a dec file using `deemon -c', without having to
+   * actually delete the dex library. */
+  memmove(dst + 1,dst,(module_namesize + 5) * sizeof(char));
+  dst[0] = '.';
+  ASSERT(dst[module_namesize + 1] == '.');
+  ASSERT(dst[module_namesize + 2] == 'd');
+  ASSERT(dst[module_namesize + 3] == 'e');
+  dst[module_namesize + 4] = 'c';
+  ASSERT(dst[module_namesize + 5] == '\0');
+  {
+   DREF DeeObject *dec_stream;
+   dec_stream = DeeFile_OpenString(buf,OPEN_FRDONLY,0);
+   memmove(dst,dst + 1,(module_namesize + 5) * sizeof(char));
+   ASSERT(dst[module_namesize + 0] == '.');
+   ASSERT(dst[module_namesize + 1] == 'd');
+   ASSERT(dst[module_namesize + 2] == 'e');
+   dst[module_namesize + 3] = 'e';
+   ASSERT(dst[module_namesize + 4] == '\0');
+   if (dec_stream != ITER_DONE) {
+    int error; DeeModuleObject *existing_module;
+    /* The compiled file _does_ exist! */
+    if unlikely(!dec_stream) goto err_buf_module_name;
+    module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,len,STRING_ERROR_FIGNORE);
+    if unlikely(!module_path_ob) {
+err_buf_name_dec_stream:
+     Dee_Decref_likely(dec_stream);
+     goto err_buf_module_name;
+    }
+    result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
+    if unlikely(!result) {
+/*err_buf_name_dec_stream_path:*/
+     Dee_Decref_likely(module_path_ob);
+     goto err_buf_name_dec_stream;
+    }
+    Dee_Decref_unlikely(module_name_ob);
+    result->mo_path = module_path_ob; /* Inherit reference. */
+#ifdef CONFIG_HOST_WINDOWS
+    result->mo_pathhash = hash;
+#endif
+    result->mo_flags |= MODULE_FLOADING;
+    COMPILER_WRITE_BARRIER();
+    /* Cache the new module as part of the filesystem
+     * module cache, as well as the global module cache. */
+    if (module_global_name) {
+set_dec_file_module_global:
+#ifndef CONFIG_NO_THREADS
+     rwlock_write(&modules_lock);
+     if (!rwlock_trywrite(&modules_glob_lock)) {
+      rwlock_endwrite(&modules_lock);
+      rwlock_write(&modules_glob_lock);
+      if (!rwlock_trywrite(&modules_lock)) {
+       rwlock_endwrite(&modules_glob_lock);
+       goto set_dec_file_module_global;
+      }
+     }
+#endif
+     existing_module = find_file_module(module_path_ob,hash);
+     if likely(!existing_module)
+        existing_module = find_glob_module(module_name_ob);
+     if unlikely(existing_module) {
+      Dee_Incref(existing_module);
+      rwlock_endwrite(&modules_glob_lock);
+      rwlock_endwrite(&modules_lock);
+      Dee_DecrefDokill(result);
+      Dee_Decref_likely(dec_stream);
+      result = existing_module;
+      goto try_load_module_after_dec_failure;
+     }
+     /* Add the module to the file-cache. */
+     if ((modules_c >= modules_a && !rehash_file_modules()) ||
+         (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
+      rwlock_endwrite(&modules_lock);
+      /* Try to collect some memory, then try again. */
+      if (Dee_CollectMemory(1))
+          goto set_dec_file_module_global;
+      Dee_Decref_likely(dec_stream);
+      goto err_buf_r;
+     }
+     add_glob_module(result);
+     add_file_module(result);
+     rwlock_endwrite(&modules_glob_lock);
+     rwlock_endwrite(&modules_lock);
+    } else {
+set_dec_file_module:
+     rwlock_write(&modules_lock);
+     existing_module = find_file_module(module_path_ob,hash);
+     if unlikely(existing_module) {
+      Dee_Incref(existing_module);
+      rwlock_endwrite(&modules_lock);
+      Dee_DecrefDokill(result);
+      Dee_Decref_likely(dec_stream);
+      result = existing_module;
+try_load_module_after_dec_failure:
+      if (DeeModule_BeginLoading(result) == 0)
+          goto load_module_after_dec_failure;
+      goto got_result;
+     }
+     /* Add the module to the file-cache. */
+     if unlikely(!add_file_module(result)) {
+      rwlock_endwrite(&modules_lock);
+      /* Try to collect some memory, then try again. */
+      if (Dee_CollectMemory(1))
+          goto set_dec_file_module;
+      Dee_Decref_likely(dec_stream);
+      goto err_buf_r;
+     }
+     rwlock_endwrite(&modules_lock);
+    }
+    error = DeeModule_OpenDec(result,dec_stream,options);
+    Dee_Decref_likely(dec_stream);
+    if likely(error == 0) {
+     /* Successfully loaded the DEC file. */
+     DeeModule_DoneLoading(result);
+     goto got_result;
+    }
+    if unlikely(error < 0) {
+     /* Hard error. */
+     DeeModule_FailLoading(result);
+     goto err_buf_r;
+    }
+load_module_after_dec_failure:
+    /* Must try to load the module from its source file. */
+    dec_stream = DeeFile_OpenString(buf,OPEN_FRDONLY,0);
+    if unlikely(!ITER_ISOK(dec_stream)) {
+     DeeModule_FailLoading(result);
+     if (dec_stream == ITER_DONE) {
+      DeeError_Throwf(&DeeError_FileNotFound,
+                      "Missing source file `%s' when the associated dec file does found",
+                      buf);
+     }
+     goto err_buf_r;
+    }
+    error = DeeModule_LoadSourceStreamEx(result,
+                                         dec_stream,
+                                         options,
+                                         0,
+                                         0,
+                                         result->mo_path);
+    if unlikely(error) {
+     DeeModule_FailLoading(result);
+     goto err_buf_r;
+    }
+    DeeModule_DoneLoading(result);
+    goto got_result;
+   }
+  }
+ }
+#endif /* !CONFIG_NO_DEC */
+#ifdef CONFIG_NO_DEX
+ module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len,STRING_ERROR_FSTRICT);
+ if unlikely(!module_path_ob) goto err_buf;
+#else /* CONFIG_NO_DEX */
+ /* Try to load the module from a DEX extension. */
+ ASSERT(dst[module_namesize + 0] == '.');
+ ASSERT(dst[module_namesize + 1] == 'd');
+ ASSERT(dst[module_namesize + 2] == 'e');
+ ASSERT(dst[module_namesize + 3] == 'e');
+ ASSERT(dst[module_namesize + 4] == '\0');
+#ifdef CONFIG_HOST_WINDOWS
+ dst[module_namesize + 2] = 'l';
+ dst[module_namesize + 3] = 'l';
+#ifdef USE_LOADLIBRARY
+ module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,len,STRING_ERROR_FSTRICT);
+ if unlikely(!module_path_ob) goto err_buf_module_name;
+#endif /* USE_LOADLIBRARY */
+#endif
+ {
+#ifdef USE_LOADLIBRARY
+  HMODULE hModule;
+  {
+   LPCWSTR wPath;
+   wPath = (LPCWSTR)DeeString_AsWide((DeeObject *)module_path_ob);
+   if unlikely(!wPath) goto err_buf_module_name_path;
+   hModule = LoadLibraryW(wPath);
+  }
+#define CLOSE_MODULE(x) FreeLibrary(x)
+  if (hModule == NULL)
+#else /* USE_LOADLIBRARY */
+#ifndef CONFIG_HOST_WINDOWS
+  dst[module_namesize + 1] = 's';
+  dst[module_namesize + 2] = 'o';
+  dst[module_namesize + 3] = '\0';
+#endif
+  hModule = dlopen(buf,
+                   RTLD_LOCAL |
+#ifdef RTLD_LAZY
+                   RTLD_LAZY
+#else
+                   RTLD_NOW
+#endif
+                   );
+#define CLOSE_MODULE(x) dlclose(x)
+  if (hModule == NULL)
+#endif /* !USE_LOADLIBRARY */
+  {
+#ifdef USE_LOADLIBRARY
+   {
+    size_t temp = DeeString_WLEN(module_path_ob);
+    DeeString_SetChar(module_path_ob,temp - 2,'e'); /* Was `l' */
+    DeeString_SetChar(module_path_ob,temp - 1,'e'); /* Was `l' */
+   }
+#else /* USE_LOADLIBRARY */
+#ifndef CONFIG_HOST_WINDOWS
+   dst[module_namesize + 1] = 'd';
+#endif
+   dst[module_namesize + 2] = 'e';
+   dst[module_namesize + 3] = 'e';
+   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len,STRING_ERROR_FSTRICT);
+   if unlikely(!module_path_ob) goto err_buf;
+#endif /* !USE_LOADLIBRARY */
+  } else {
+   int error;
+   DeeModuleObject *existing_module;
+#ifndef USE_LOADLIBRARY
+#ifdef CONFIG_HOST_WINDOWS
+   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len,STRING_ERROR_FSTRICT);
+#else
+   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len - 1,STRING_ERROR_FSTRICT);
+#endif
+   if unlikely(!module_path_ob) goto err_buf_name_module;
+#endif /* !USE_LOADLIBRARY */
+   result = (DREF DeeModuleObject *)DeeDex_New((DeeObject *)module_name_ob);
+   if unlikely(!result) {
+#ifndef USE_LOADLIBRARY
+err_buf_name_module:
+#endif /* !USE_LOADLIBRARY */
+    CLOSE_MODULE(hModule);
+    goto err_buf_module_name_path;
+   }
+   Dee_Decref_unlikely(module_name_ob);
+   result->mo_path = module_path_ob; /* Inherit reference. */
+#ifdef CONFIG_HOST_WINDOWS
+   result->mo_pathhash = hash;
+#endif
+   result->mo_flags |= MODULE_FLOADING;
+   COMPILER_WRITE_BARRIER();
+
+   /* Register the new dex module globally. */
+   if (module_global_name) {
+set_dex_file_module_global:
+#ifndef CONFIG_NO_THREADS
+    rwlock_write(&modules_lock);
+    if (!rwlock_trywrite(&modules_glob_lock)) {
+     rwlock_endwrite(&modules_lock);
+     rwlock_write(&modules_glob_lock);
+     if (!rwlock_trywrite(&modules_lock)) {
+      rwlock_endwrite(&modules_glob_lock);
+      goto set_dex_file_module_global;
+     }
+    }
+#endif
+    existing_module = find_file_module(module_path_ob,hash);
+    if likely(!existing_module)
+       existing_module = find_glob_module(module_name_ob);
+    if unlikely(existing_module) {
+     Dee_Incref(existing_module);
+     rwlock_endwrite(&modules_glob_lock);
+     rwlock_endwrite(&modules_lock);
+     Dee_DecrefDokill(result);
+     CLOSE_MODULE(hModule);
+     result = existing_module;
+     goto try_load_module_after_dex_failure;
+    }
+    /* Add the module to the file-cache. */
+    if ((modules_c >= modules_a && !rehash_file_modules()) ||
+        (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
+     rwlock_endwrite(&modules_lock);
+     /* Try to collect some memory, then try again. */
+     if (Dee_CollectMemory(1))
+         goto set_dex_file_module_global;
+     CLOSE_MODULE(hModule);
+     goto err_buf_r;
+    }
+    add_glob_module(result);
+    add_file_module(result);
+    rwlock_endwrite(&modules_glob_lock);
+    rwlock_endwrite(&modules_lock);
+   } else {
+set_dex_file_module:
+    rwlock_write(&modules_lock);
+    existing_module = find_file_module(module_path_ob,hash);
+    if unlikely(existing_module) {
+     Dee_Incref(existing_module);
+     rwlock_endwrite(&modules_lock);
+     Dee_DecrefDokill(result);
+     CLOSE_MODULE(hModule);
+     result = existing_module;
+try_load_module_after_dex_failure:
+     if (DeeModule_BeginLoading(result) == 0)
+         goto load_module_after_dex_failure;
+     goto got_result;
+    }
+    /* Add the module to the file-cache. */
+    if unlikely(!add_file_module(result)) {
+     rwlock_endwrite(&modules_lock);
+     /* Try to collect some memory, then try again. */
+     if (Dee_CollectMemory(1))
+         goto set_dex_file_module;
+     CLOSE_MODULE(hModule);
+     goto err_buf_r;
+    }
+    rwlock_endwrite(&modules_lock);
+   }
+load_module_after_dex_failure:
+   error = dex_load_handle((DeeDexObject *)result,
+                           (void *)hModule,
+                           (DeeObject *)result->mo_path);
+   if unlikely(error) {
+    DeeModule_FailLoading(result);
+    goto err_buf_r;
+   }
+   DeeModule_DoneLoading(result);
+   goto got_result;
+  }
+ }
+#endif /* !CONFIG_NO_DEX */
+ ASSERT(module_path_ob != NULL);
+ /* Load a regular, old source file. */
+ {
+  DeeModuleObject *existing_module;
+  DREF DeeObject *source_stream; int error;
+  source_stream = DeeFile_Open((DeeObject *)module_path_ob,OPEN_FRDONLY,0);
+  if unlikely(!ITER_ISOK(source_stream)) {
+   Dee_Decref(module_name_ob);
+   if (source_stream == ITER_DONE) {
+    /* The source file doesn't exist! */
+    if (!(mode & MODULE_OPENINPATH_FTHROWERROR)) {
+     Dee_Decref_likely(module_path_ob);
+     result = (DREF DeeModuleObject *)ITER_DONE;
+     goto got_result;
+    }
+    err_file_not_found_ob((DeeObject *)module_path_ob);
+   }
+   goto err_buf_module_path;
+  }
+  result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
+  if unlikely(!result) {
+/*err_buf_name_source_stream:*/
+   Dee_Decref_likely(source_stream);
+   goto err_buf_module_name_path;
+  }
+  Dee_Decref_unlikely(module_name_ob);
+  result->mo_path = module_path_ob; /* Inherit reference. */
+#ifdef CONFIG_HOST_WINDOWS
+  result->mo_pathhash = hash;
+#endif
+  result->mo_flags |= MODULE_FLOADING;
+  COMPILER_WRITE_BARRIER();
+
+  /* Register the new dex module globally. */
+  if (module_global_name) {
+set_src_file_module_global:
+#ifndef CONFIG_NO_THREADS
+   rwlock_write(&modules_lock);
+   if (!rwlock_trywrite(&modules_glob_lock)) {
+    rwlock_endwrite(&modules_lock);
+    rwlock_write(&modules_glob_lock);
+    if (!rwlock_trywrite(&modules_lock)) {
+     rwlock_endwrite(&modules_glob_lock);
+     goto set_src_file_module_global;
+    }
+   }
+#endif
+   existing_module = find_file_module(module_path_ob,hash);
+   if likely(!existing_module)
+      existing_module = find_glob_module(module_name_ob);
+   if unlikely(existing_module) {
+    Dee_Incref(existing_module);
+    rwlock_endwrite(&modules_glob_lock);
+    rwlock_endwrite(&modules_lock);
+    Dee_DecrefDokill(result);
+    Dee_Decref_likely(source_stream);
+    result = existing_module;
+    goto try_load_module_after_src_failure;
+   }
+   /* Add the module to the file-cache. */
+   if ((modules_c >= modules_a && !rehash_file_modules()) ||
+       (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
+    rwlock_endwrite(&modules_lock);
+    /* Try to collect some memory, then try again. */
+    if (Dee_CollectMemory(1))
+        goto set_src_file_module_global;
+    Dee_Decref_likely(source_stream);
+    goto err_buf_r;
+   }
+   add_glob_module(result);
+   add_file_module(result);
+   rwlock_endwrite(&modules_glob_lock);
+   rwlock_endwrite(&modules_lock);
+  } else {
+set_src_file_module:
+   rwlock_write(&modules_lock);
+   existing_module = find_file_module(module_path_ob,hash);
+   if unlikely(existing_module) {
+    Dee_Incref(existing_module);
+    rwlock_endwrite(&modules_lock);
+    Dee_DecrefDokill(result);
+    Dee_Decref_likely(source_stream);
+    result = existing_module;
+try_load_module_after_src_failure:
+    if (DeeModule_BeginLoading(result) == 0)
+        goto load_module_after_src_failure;
+    goto got_result;
+   }
+   /* Add the module to the file-cache. */
+   if unlikely(!add_file_module(result)) {
+    rwlock_endwrite(&modules_lock);
+    /* Try to collect some memory, then try again. */
+    if (Dee_CollectMemory(1))
+        goto set_src_file_module;
+    Dee_Decref_likely(source_stream);
+    goto err_buf_r;
+   }
+   rwlock_endwrite(&modules_lock);
+  }
+load_module_after_src_failure:
+  error = DeeModule_LoadSourceStreamEx(result,
+                                       source_stream,
+                                       options,
+                                       0,
+                                       0,
+                                       result->mo_path);
+  Dee_Decref_likely(source_stream);
+  if unlikely(error) {
+   DeeModule_FailLoading(result);
+   goto err_buf_r;
+  }
+  DeeModule_DoneLoading(result);
+  /*goto got_result;*/
+ }
+got_result:
+ Dee_AFree(buf);
+ return result;
+/*
+err_buf_module_name_r:
+ Dee_Decref_unlikely(result);*/
+err_buf_module_name_path:
+ Dee_Decref_likely(module_path_ob);
+err_buf_module_name:
+ Dee_Decref_likely(module_name_ob);
+ goto err_buf;
+err_buf_module_path:
+ Dee_Decref_likely(module_path_ob);
+ goto err_buf;
+err_buf_r:
+ Dee_Decref_unlikely(result);
+err_buf:
+ Dee_AFree(buf);
+err:
+ return NULL;
+}
+
+
+/* @param: module_global_name: The name that should be used to register the module
+ *                             in the global module namespace, or `NULL' if the module
+ *                             should not be registered as global, or `ITER_DONE' if
+ *                             the name should automatically be generated from `module_path'
+ *                             NOTE: If another module with the same global name already
+ *                                   exists by the time to module gets registered as global,
+ *                                   that module will be returned instead! */
+PRIVATE DREF DeeModuleObject *DCALL
+DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
+                     /*utf-8*/char const *__restrict module_name, size_t module_namesize,
+                     DeeObject *module_global_name,
+                     struct compiler_options *options,
+                     unsigned int mode) {
+ size_t additional_count;
+ /* Walk up the directory path for upwards references in the relative path. */
+ additional_count = 0;
+ for (;;) {
+  while (module_pathsize && ISSEP(module_path[module_pathsize - 1]))
+      --module_pathsize;
+  if (module_pathsize >= 1 &&
+      module_path[module_pathsize - 1] == '.') {
+   if (module_pathsize == 1 || ISSEP(module_path[module_pathsize - 2])) {
+    /* Current-directory reference. */
+    module_pathsize -= 2;
+    continue;
+   }
+   if (module_pathsize >= 2 &&
+       module_path[module_pathsize - 2] == '.' &&
+      (module_pathsize == 2 || ISSEP(module_path[module_pathsize - 3]))) {
+    /* Parent-directory reference. */
+    ++additional_count;
+    module_pathsize -= 3;
+    continue;
+   }
+  }
+  if (additional_count) {
+   --additional_count;
+  } else {
+   if (!(mode & MODULE_OPENINPATH_FRELMODULE)) break;
+   ++module_name;
+   --module_namesize;
+   if (!module_namesize || *module_name != '.')
+       break;
+  }
+  while (module_pathsize && !ISSEP(module_path[module_pathsize - 1]))
+      --module_pathsize;
+  ++module_name;
+  --module_namesize;
+ }
+#ifdef CONFIG_HOST_WINDOWS
+ if unlikely(module_pathsize < 2 || module_path[1] != ':')
+#else
+ if unlikely(!module_pathsize || module_path[0] != '/')
+#endif
+ {
+  /* Must make the given module path absolute. */
+  DREF DeeStringObject *abs_path; /*utf-8*/char *abs_utf8;
+  DREF DeeModuleObject *result;
+  struct unicode_printer printer = UNICODE_PRINTER_INIT;
+  if (print_pwd(&printer) < 0)
+      goto err_printer;
+  if (unicode_printer_print(&printer,module_path,module_pathsize) < 0)
+      goto err_printer;
+  abs_path = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+  if unlikely(!abs_path) goto err;
+  abs_utf8 = DeeString_AsUtf8((DeeObject *)abs_path);
+  if unlikely(!abs_utf8) goto err_abs_path;
+  result = DeeModule_OpenInPathAbs(abs_utf8,
+                                   WSTR_LENGTH(abs_utf8),
+                                   module_name,module_namesize,
+                                   module_global_name,
+                                   options,
+                                   mode);
+  Dee_Decref(abs_path);
+  return result;
+err_abs_path:
+  Dee_Decref(abs_path);
+  goto err;
+err_printer:
+  unicode_printer_fini(&printer);
+  goto err;
+ }
+ return DeeModule_OpenInPathAbs(module_path,module_pathsize,
+                                module_name,module_namesize,
+                                module_global_name,
+                                options,
+                                mode);
+err:
+ return NULL;
+}
+
+
 PUBLIC DREF DeeObject *DCALL
-DeeModule_Open(DeeObject *__restrict module_name,
-               struct compiler_options *options,
-               bool throw_error) {
+DeeModule_OpenGlobal(DeeObject *__restrict module_name,
+                     struct compiler_options *options,
+                     bool throw_error) {
  DREF DeeObject *path;
  DREF DeeModuleObject *result;
  DeeListObject *paths; size_t i;
+ /*utf-8*/char const *module_namestr;
+ size_t module_namelen;
  ASSERT_OBJECT_TYPE_EXACT(module_name,&DeeString_Type);
  /* First off: Check if this is a request for the builtin `deemon' module.
   * NOTE: This check is always done in case-sensitive mode! */
@@ -1629,11 +2308,10 @@ DeeModule_Open(DeeObject *__restrict module_name,
 #ifndef CONFIG_NO_THREADS
  rwlock_endread(&modules_glob_lock);
 #endif /* !CONFIG_NO_THREADS */
- if (result) {
-  if likely(result->mo_flags & MODULE_FDIDLOAD)
-     goto done; /* Found a cached module. */
-  Dee_Decref(result);
- }
+ if (result) goto done;
+ module_namestr = DeeString_AsUtf8(module_name);
+ if unlikely(!module_namestr) goto err;
+ module_namelen = WSTR_LENGTH(module_namestr);
 
  /* Default case: Must load a new module. */
  paths = DeeModule_GetPath();
@@ -1643,136 +2321,18 @@ DeeModule_Open(DeeObject *__restrict module_name,
   Dee_Incref(path);
   DeeList_LockEndRead(paths);
   if (DeeString_Check(path)) {
-   size_t j,length,module_ext_start;
-   size_t module_name_start;
-#ifndef CONFIG_NO_DEC
-   size_t module_name_size;
-#endif
-   struct unicode_printer printer = UNICODE_PRINTER_INIT;
-   DREF DeeStringObject *module_path;
-   /* Try to speed this up by reserving some memory in the printer. */
-   unicode_printer_allocate(&printer,
-                            DeeString_SIZE(path) + 1 +
-#ifndef CONFIG_NO_DEC
-                            1 + /* The `.' prefixed before DEC files. */
-#endif
-                            DeeString_SIZE(module_name) +
-                            1 + SOURCE_EXTENSION_MAX,
-                            STRING_WIDTH_COMMON(DeeString_WIDTH(path),
-                                                DeeString_WIDTH(module_name)));
-   /* Start out by printing the given path. */
-   if unlikely(unicode_printer_printstring(&printer,path) < 0)
-      goto err_path_printer;
-   /* Strip trailing slashes. */
-   for (;;) {
-    uint32_t ch;
-    length = UNICODE_PRINTER_LENGTH(&printer);
-    if (!length) break;
-    ch = UNICODE_PRINTER_GETCHAR(&printer,length - 1);
-    if (!ISSEP(ch)) break;
-    unicode_printer_truncate(&printer,length - 1);
-   }
-   /* Append a single slash. */
-   if unlikely(unicode_printer_putascii(&printer,SEP))
-      goto err_path_printer;
-   /* Append the module filename. */
-   j = UNICODE_PRINTER_LENGTH(&printer);
-   module_name_start = j;
-   if unlikely(unicode_printer_printstring(&printer,module_name) < 0)
-      goto err_path_printer;
-   module_ext_start = UNICODE_PRINTER_LENGTH(&printer);
-   /* Validate the path and convert `.' into `/' */
-   for (; j < module_ext_start; ++j) {
-    uint32_t ch;
-    ch = UNICODE_PRINTER_GETCHAR(&printer,j);
-    if (ch != '.') {
-     if (!IS_VALID_MODULE_CHARACTER(ch)) {
-err_invalid_name:
-      err_invalid_module_name(module_name);
-err_path_printer:
-      unicode_printer_fini(&printer);
-      goto err_path;
-     }
-     continue;
-    }
-    /* The first character of a system-level module name mustn't be a `.'
-     * This also checks for 2 consecutive `.' characters, which also aren't
-     * allowed in system-level module names. */
-    if (j == module_name_start)
-        goto err_invalid_name;
-#if 0
-    /* Make sure the next character isn't another `.'
-     * (which isn't allowed in system module names) */
-    if (j + 1 >= module_ext_start)
-        goto err_invalid_name;
-    if (UNICODE_PRINTER_GETCHAR(&printer,j+1) == '.')
-        goto err_invalid_name;
-#endif
-    /* Convert to a slash. */
-    UNICODE_PRINTER_SETCHAR(&printer,j,SEP);
-    module_name_start = j + 1;
-   }
-   /* Reserve characters for the extension. */
-   if (unicode_printer_reserve(&printer,
-#ifndef CONFIG_NO_DEC
-                               1 +
-#endif
-                               1 + SOURCE_EXTENSION_MAX) < 0)
-       goto err_path_printer;
-   UNICODE_PRINTER_SETCHAR(&printer,module_ext_start,'.');
-   ++module_ext_start;
-#ifndef CONFIG_NO_DEC
-   module_name_size = module_ext_start - module_name_start;
-#endif
-
-   /* pack together the full module path. */
-   module_path = (REF DeeStringObject *)unicode_printer_pack(&printer);
-   if unlikely(!module_path) goto err_path;
-   j = 0;
-   do {
-#ifndef CONFIG_NO_DEC
-    if (extensions[j].source_class == MODULE_FILECLASS_COMPILED) {
-     /* Shift the filename. */
-     DeeString_Memmove(module_path,
-                       module_name_start + 1,
-                       module_name_start,
-                       module_name_size);
-     DeeString_SetChar(module_path,module_name_start,'.');
-     DeeString_SetChar(module_path,module_ext_start + 1,'d');
-     DeeString_SetChar(module_path,module_ext_start + 2,'e');
-     DeeString_SetChar(module_path,module_ext_start + 3,'c');
-     /* Open the module source file. */
-     result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,module_name,
-                                                          MODULE_FILECLASS_COMPILED,
-                                                          options);
-     if (result != (DREF DeeModuleObject *)ITER_DONE)
-         goto done_path;
-     /* Undo the path modifications done for the leading `.' of DEC files. */
-     DeeString_Memmove(module_path,
-                       module_name_start,
-                       module_name_start + 1,
-                       module_name_size);
-     DeeString_PopbackAscii(module_path);
-    } else
-#endif
-    {
-     size_t k;
-     for (k = 0; k < SOURCE_EXTENSION_MAX; ++k) {
-      DeeString_SetChar(module_path,module_ext_start + k,
-                        extensions[j].source_ext[k]);
-     }
-     result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,module_name,
-                                                          extensions[j].source_class,
-                                                          options);
-     if (result != (DREF DeeModuleObject *)ITER_DONE) {
-done_path:
-      Dee_Decref(module_path);
-      Dee_Decref(path);
-      goto done;
-     }
-    }
-   } while (++j < COMPILER_LENOF(extensions));
-   Dee_Decref(module_path);
+   /*utf-8*/char const *path_str;
+   path_str = DeeString_AsUtf8(path);
+   if unlikely(!path_str) goto err_path;
+   result = DeeModule_OpenInPath(path_str,
+                                 WSTR_LENGTH(path_str),
+                                 module_namestr,
+                                 module_namelen,
+                                 module_name,
+                                 options,
+                                 MODULE_OPENINPATH_FNORMAL);
+   if (result != (DREF DeeModuleObject *)ITER_DONE)
+       goto done_path;
   } else {
    /* `path' isn't a string */
   }
@@ -1788,21 +2348,24 @@ err:
 err_path:
  Dee_Decref(path);
  goto err;
+done_path:
+ Dee_Decref(path);
 done:
  return (DREF DeeObject *)result;
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenString(/*utf-8*/char const *__restrict module_name,
-                     size_t module_namesize,
-                     struct compiler_options *options,
-                     bool throw_error) {
+DeeModule_OpenGlobalString(/*utf-8*/char const *__restrict module_name,
+                           size_t module_namesize,
+                           struct compiler_options *options,
+                           bool throw_error) {
+ /* TODO: This function can be written to be faster */
  DREF DeeObject *name_object,*result;
  name_object = DeeString_NewUtf8(module_name,
                                  module_namesize,
                                  STRING_ERROR_FSTRICT);
  if unlikely(!name_object) return NULL;
- result = DeeModule_Open(name_object,options,throw_error);
+ result = DeeModule_OpenGlobal(name_object,options,throw_error);
  Dee_Decref(name_object);
  return result;
 }
@@ -1820,194 +2383,33 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
  if unlikely(!module_name_str)
     goto err;
  if (*module_name_str != '.')
-     return DeeModule_Open(module_name,options,throw_error);
- return DeeModule_OpenRelativeString(module_name_str,
-                                     WSTR_LENGTH(module_name_str),
-                                     module_pathname,
-                                     module_pathsize,
-                                     options,
-                                     throw_error);
+     return DeeModule_OpenGlobal(module_name,options,throw_error);
+ return (DREF DeeObject *)DeeModule_OpenInPath(module_pathname,
+                                               module_pathsize,
+                                               module_name_str,
+                                               WSTR_LENGTH(module_name_str),
+                                               NULL,
+                                               options,
+                                               throw_error ? (MODULE_OPENINPATH_FRELMODULE|MODULE_OPENINPATH_FTHROWERROR)
+                                                           : (MODULE_OPENINPATH_FRELMODULE));
 err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t module_namesize,
                              /*utf-8*/char const *__restrict module_pathname, size_t module_pathsize,
-                             struct compiler_options *options,
-                             bool throw_error) {
- DREF DeeModuleObject *result; size_t i;
- DREF DeeStringObject *module_path;
- char *iter,*begin,*end,ch,*flush_start;
-#ifndef CONFIG_NO_DEC
- size_t module_name_start;
- size_t module_name_size;
- size_t module_ext_start;
-#endif
- struct unicode_printer full_path = UNICODE_PRINTER_INIT;
- flush_start = begin = (char *)module_name;
- end = (iter = begin) + module_namesize;
+                             struct compiler_options *options, bool throw_error) {
  /* Shouldn't happen: Not actually a relative module name. */
- if (*begin != '.')
-     return DeeModule_OpenString(module_name,module_namesize,options,throw_error);
- if (unicode_printer_print(&full_path,module_pathname,module_pathsize) < 0)
-     goto err;
- /* Add a trailing slash is necessary. */
- if (module_pathsize && !ISSEP(module_pathname[module_pathsize-1]) &&
-     unicode_printer_putascii(&full_path,SEP)) goto err;
- /* Interpret and process the given module name. */
-#ifndef CONFIG_NO_DEC
- module_name_start = UNICODE_PRINTER_LENGTH(&full_path);
-#endif
-next:
- ch = *iter++;
- if (ch == '\0') {
-  if (iter == end+1)
-      goto done;
-  goto next;
- }
- if (ch != '.') {
-  /* Validate that this character is allowed in module names. */
-  uint32_t ch32;
-  --iter;
-  ch32 = utf8_readchar((char const **)&iter,end);
-  if (!IS_VALID_MODULE_CHARACTER(ch32)) {
-   err_invalid_module_name_s(module_name,module_namesize);
-   goto err;
-  }
-  goto next;
- }
- /* Flush the current part and append another slash. */
- if (flush_start != iter-1) {
-  if (unicode_printer_print(&full_path,flush_start,
-                           (size_t)(iter-flush_start)-1) < 0 ||
-      unicode_printer_putascii(&full_path,SEP))
-      goto err;
- }
- /* Handle parent directory references. */
- for (; *iter == '.'; ++iter) {
-  if (UNICODE_PRINTER_LENGTH(&full_path) != 0) {
-   size_t old_length,new_end;
-   old_length = UNICODE_PRINTER_LENGTH(&full_path);
-   while (old_length) {
-    uint32_t ch;
-    ch = UNICODE_PRINTER_GETCHAR(&full_path,old_length-1);
-    if (!ISSEP(ch)) break;
-    --old_length;
-   }
-   new_end = (size_t)unicode_printer_memrchr(&full_path,'/',0,old_length);
-#ifdef CONFIG_HOST_WINDOWS
-   {
-    size_t temp;
-    temp = (size_t)unicode_printer_memrchr(&full_path,'\\',0,old_length);
-    if (new_end > temp)
-        new_end = temp;
-   }
-#endif
-   if (new_end != (size_t)-1) {
-    /* Truncate the existing path. */
-    ++new_end;
-    unicode_printer_truncate(&full_path,new_end);
-    continue;
-   }
-  }
-  /* Append a host-specific parent directory reference. */
-  if (unicode_printer_printascii(&full_path,".." SEP_S,3) < 0)
-      goto err;
- }
-#ifndef CONFIG_NO_DEC
- module_name_start = UNICODE_PRINTER_LENGTH(&full_path);
-#endif
- flush_start = iter;
- goto next;
-done:
- --iter;
- /* Print the remainder. */
- if (iter > flush_start) {
-  if (unicode_printer_print(&full_path,flush_start,
-                           (size_t)(iter-flush_start)) < 0)
-      goto err;
- }
-#ifndef CONFIG_NO_DEC
- module_name_size = (UNICODE_PRINTER_LENGTH(&full_path) -
-                     module_name_start) + 1;
-#endif
- /* With the full path now printed, reserve memory for the extension. */
- {
-  dssize_t temp;
-  temp = unicode_printer_reserve(&full_path,
-#ifndef CONFIG_NO_DEC
-                                 1 +
-#endif
-                                 1 + SOURCE_EXTENSION_MAX);
-  if unlikely(temp == -1) goto err;
-  /* NOTE: The remainder is written in the source-class loop below. */
-  UNICODE_PRINTER_SETCHAR(&full_path,temp,'.');
- }
- module_path = (DREF DeeStringObject *)unicode_printer_pack(&full_path);
- if unlikely(!module_path) goto err_noprinter;
- /* Loop through known extensions and classes while trying to find what belongs. */
-#ifndef CONFIG_NO_DEC
- module_ext_start = DeeString_WLEN(module_path);
- module_name_start = (module_ext_start -
-                     (1+SOURCE_EXTENSION_MAX+module_name_size));
- module_ext_start -= SOURCE_EXTENSION_MAX + 1;
-#else
- module_ext_start = DeeString_WLEN(module_path) - SOURCE_EXTENSION_MAX;
-#endif
- i = 0;
- do {
-#ifndef CONFIG_NO_DEC
-  if (extensions[i].source_class == MODULE_FILECLASS_COMPILED) {
-   DeeString_Memmove(module_path,
-                     module_name_start+1,
-                     module_name_start,
-                     module_name_size);
-   DeeString_SetChar(module_path,module_name_start,'.');
-   DeeString_SetChar(module_path,module_ext_start + 1,'d');
-   DeeString_SetChar(module_path,module_ext_start + 2,'e');
-   DeeString_SetChar(module_path,module_ext_start + 3,'c');
-   result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,NULL,
-                                                        extensions[i].source_class,
-                                                        options);
-   if (result == (DREF DeeModuleObject *)ITER_DONE) {
-    DeeString_Memmove(module_path,
-                      module_name_start,
-                      module_name_start + 1,
-                      module_name_size);
-    DeeString_PopbackAscii(module_path);
-   }
-  } else
-#endif
-  {
-   /* Graft the current extension onto the path. */
-   size_t j;
-   for (j = 0; j < SOURCE_EXTENSION_MAX; ++j) {
-    DeeString_SetChar(module_path,module_ext_start + j,
-                      extensions[i].source_ext[j]);
-   }
-   /* NOTE: We pass NULL for `module_name' to this function, so it can figure
-    *       out what the module's name is itself, while also not attempting to
-    *       register it as a global module, yet still register it under its
-    *       absolute filename. */
-   result = (DREF DeeModuleObject *)DeeModule_OpenFile((DeeObject *)module_path,NULL,
-                                                        extensions[i].source_class,
-                                                        options);
-  }
-  if (result != (DREF DeeModuleObject *)ITER_DONE) break;
- } while (++i != COMPILER_LENOF(extensions));
- Dee_Decref(module_path);
- /* Throw an error if the module could not be found
-  * and if we're not supposed to return `ITER_DONE'. */
- if (result == (DREF DeeModuleObject *)ITER_DONE &&
-     throw_error) {
-  err_module_not_found_s(module_name,module_namesize);
-  result = NULL;
- }
- return (DREF DeeObject *)result;
-err:
- unicode_printer_fini(&full_path);
-err_noprinter:
- return NULL;
+ if (!module_namesize || *module_name != '.')
+     return DeeModule_OpenGlobalString(module_name,module_namesize,options,throw_error);
+ return (DREF DeeObject *)DeeModule_OpenInPath(module_pathname,
+                                               module_pathsize,
+                                               module_name,
+                                               module_namesize,
+                                               NULL,
+                                               options,
+                                               throw_error ? (MODULE_OPENINPATH_FRELMODULE|MODULE_OPENINPATH_FTHROWERROR)
+                                                           : (MODULE_OPENINPATH_FRELMODULE));
 }
 
 INTERN DREF DeeObject *DCALL
@@ -2034,7 +2436,7 @@ DeeModule_Import(DeeObject *__restrict module_name,
  } else {
 open_normal:
   /* Without an execution frame, dismiss the relative import() code handling. */
-  result = DeeModule_Open(module_name,options,throw_error);
+  result = DeeModule_OpenGlobal(module_name,options,throw_error);
  }
  return result;
 err:
@@ -2054,7 +2456,7 @@ DeeModule_ImportRel(DeeObject *__restrict basemodule,
  /* Load the path of the currently executing code (for relative imports). */
  path = ((DeeModuleObject *)basemodule)->mo_path;
  if unlikely(!path)
-    return DeeModule_Open(module_name,options,throw_error);
+    return DeeModule_OpenGlobal(module_name,options,throw_error);
  ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
  begin = DeeString_AsUtf8((DeeObject *)path);
  if unlikely(!begin) goto err;
@@ -2081,7 +2483,7 @@ DeeModule_ImportRelString(DeeObject *__restrict basemodule,
  /* Load the path of the currently executing code (for relative imports). */
  path = ((DeeModuleObject *)basemodule)->mo_path;
  if unlikely(!path)
-    return DeeModule_OpenString(module_name,module_namesize,options,throw_error);
+    return DeeModule_OpenGlobalString(module_name,module_namesize,options,throw_error);
  ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
  begin = DeeString_AsUtf8((DeeObject *)path);
  if unlikely(!begin) goto err;

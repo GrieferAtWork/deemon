@@ -80,9 +80,9 @@ ast_gen_operator_func(struct ast *binding,
   if (info) symbol_name = info->oi_sname;
  }
  /* Import the operators module. */
- operators_module = (DREF DeeModuleObject *)DeeModule_Open(&str_operators,
-                                                            inner_compiler_options,
-                                                            true);
+ operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(&str_operators,
+                                                                  inner_compiler_options,
+                                                                  true);
  if unlikely(!operators_module) goto err;
  if (symbol_name) {
   /* Lookup a symbol matching the operator's name. */

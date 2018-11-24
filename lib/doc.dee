@@ -2959,7 +2959,7 @@ load_type_input:
 			if (doc_parent_or_path !is string) {
 				/* Check for singleton-like object instances. */
 				local tp = type doc_parent_or_path;
-				if (!deemon.type_.__isconstructible__(tp)) {
+				if (deemon.type_.__issingleton__(tp)) {
 					doc_parent_or_path = tp;
 					goto load_type_input;
 				}
@@ -3505,7 +3505,7 @@ set_is_type:
 	private member m_docsections: {DocSection...};
 
 	@@Automatically generate documentation for native type constructors.
-	private autogenerate_native_constructor_descl(): {DocSection...} {
+	private autogenerate_native_constructor_desc(): {DocSection...} {
 		if (deemon.type_.__issuperconstructible__(object)) {
 			yield DocSection(this,"constructor->!S");
 		} else {
@@ -3578,7 +3578,7 @@ set_is_type:
 				if (deemon.type_.hasprivateoperator(object,opname))
 					yield autogenerate_opdecl(opname)...;
 				else if (opname == "constructor") {
-					yield autogenerate_native_constructor_descl()...;
+					yield autogenerate_native_constructor_desc()...;
 				}
 			}
 		}
@@ -3628,7 +3628,7 @@ set_is_type:
 				}
 			} else {
 				if ("constructor" !in result)
-					result["constructor"] = tuple(autogenerate_native_constructor_descl());
+					result["constructor"] = tuple(autogenerate_native_constructor_desc());
 				for (local name: deemon.type_.__operators__(object)) {
 					if (name !is string)
 						continue;

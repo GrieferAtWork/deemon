@@ -49,6 +49,24 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 */
 
 
+#ifndef CONFIG_HOST_WINDOWS
+#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
+    defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
+    defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
+    defined(_WIN32_WCE) || defined(WIN32_WCE) || defined(_MSC_VER)
+#define CONFIG_HOST_WINDOWS 1
+#endif
+#endif /* !CONFIG_HOST_WINDOWS */
+
+#ifndef __USER_LABEL_PREFIX__
+#ifdef CONFIG_HOST_WINDOWS
+#   define __USER_LABEL_PREFIX__ _
+#else
+#   define __USER_LABEL_PREFIX__ /* nothing */
+#endif
+#endif
+
+
 #ifdef __ELF__
 #define END(x)   .size x, . - x
 #else
@@ -261,19 +279,24 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define mo_pself       (DEE_OBJECT_OFFSETOF_DATA+4)  /* DeeModuleObject **mo_pself; */
 #define mo_next        (DEE_OBJECT_OFFSETOF_DATA+8)  /* DeeModuleObject *mo_next; */
 #define mo_path        (DEE_OBJECT_OFFSETOF_DATA+12) /* DREF struct string_object *mo_path; */
+#ifdef CONFIG_HOST_WINDOWS
+#define mo_pathhash    (DEE_OBJECT_OFFSETOF_DATA+16) /* dhash_t mo_pathhash; */
+#define mo_globpself   (DEE_OBJECT_OFFSETOF_DATA+20) /* DeeModuleObject **mo_globpself; */
+#else
 #define mo_globpself   (DEE_OBJECT_OFFSETOF_DATA+16) /* DeeModuleObject **mo_globpself; */
-#define mo_globnext    (DEE_OBJECT_OFFSETOF_DATA+20) /* DeeModuleObject *mo_globnext; */
-#define mo_importc     (DEE_OBJECT_OFFSETOF_DATA+24) /* uint16_t mo_importc; */
-#define mo_globalc     (DEE_OBJECT_OFFSETOF_DATA+26) /* uint16_t mo_globalc; */
-#define mo_flags       (DEE_OBJECT_OFFSETOF_DATA+28) /* uint16_t mo_flags; */
-#define mo_bucketm     (DEE_OBJECT_OFFSETOF_DATA+30) /* uint16_t mo_bucketm; */
-#define mo_bucketv     (DEE_OBJECT_OFFSETOF_DATA+32) /* struct module_symbol *const *mo_bucketv; */
-#define mo_importv     (DEE_OBJECT_OFFSETOF_DATA+36) /* DREF DeeModuleObject *const *mo_importv; */
-#define mo_globalv     (DEE_OBJECT_OFFSETOF_DATA+40) /* DREF DeeObject **mo_globalv; */
-#define mo_root        (DEE_OBJECT_OFFSETOF_DATA+44) /* DREF DeeCodeObject *mo_root; */
+#endif
+#define mo_globnext    (mo_globpself+4) /* DeeModuleObject *mo_globnext; */
+#define mo_importc     (mo_globpself+8) /* uint16_t mo_importc; */
+#define mo_globalc     (mo_globpself+10) /* uint16_t mo_globalc; */
+#define mo_flags       (mo_globpself+12) /* uint16_t mo_flags; */
+#define mo_bucketm     (mo_globpself+14) /* uint16_t mo_bucketm; */
+#define mo_bucketv     (mo_globpself+16) /* struct module_symbol *const *mo_bucketv; */
+#define mo_importv     (mo_globpself+20) /* DREF DeeModuleObject *const *mo_importv; */
+#define mo_globalv     (mo_globpself+24) /* DREF DeeObject **mo_globalv; */
+#define mo_root        (mo_globpself+28) /* DREF DeeCodeObject *mo_root; */
 #ifndef CONFIG_NO_THREADS
-#define mo_lock        (DEE_OBJECT_OFFSETOF_DATA+48) /* rwlock_t mo_lock; */
-#define mo_loader      (DEE_OBJECT_OFFSETOF_DATA+52) /* struct thread_object *mo_loader; */
+#define mo_lock        (mo_globpself+32) /* rwlock_t mo_lock; */
+#define mo_loader      (mo_globpself+36) /* struct thread_object *mo_loader; */
 #endif /* !CONFIG_NO_THREADS */
 /* }; */
 
@@ -386,23 +409,6 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define FRAME_THIS     cf_this(FRAME)    /* DeeObject           *cf_this; */
 #define FRAME_RESULT   cf_result(FRAME)  /* DeeObject           *cf_result; */
 #define FRAME_STACKSZ  cf_stacksz(FRAME) /* uint16_t             cf_stacksz; */
-
-#ifndef CONFIG_HOST_WINDOWS
-#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
-    defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
-    defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
-    defined(_WIN32_WCE) || defined(WIN32_WCE) || defined(_MSC_VER)
-#define CONFIG_HOST_WINDOWS 1
-#endif
-#endif /* !CONFIG_HOST_WINDOWS */
-
-#ifndef __USER_LABEL_PREFIX__
-#ifdef CONFIG_HOST_WINDOWS
-#   define __USER_LABEL_PREFIX__ _
-#else
-#   define __USER_LABEL_PREFIX__ /* nothing */
-#endif
-#endif
 
 /* Code access helpers */
 #ifdef CODE_IS_REGISTER

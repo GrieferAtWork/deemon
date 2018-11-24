@@ -116,12 +116,10 @@ EXPDEF struct dex DEX;
 #ifdef CONFIG_BUILDING_DEEMON
 /* Try to load an extension file.
  * NOTE: This isn't where the dex gets initialized!
- * @return:  1: The given file could not be found.
  * @return:  0: The extension was successfully loaded.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
-dex_load_file(DeeDexObject *__restrict self,
-              DeeObject *__restrict input_file);
+INTDEF int DCALL dex_load_handle(DeeDexObject *__restrict self, /*inherited(always)*/void *handle, DeeObject *__restrict input_file);
+
 /* Initialize the given dex module. */
 INTDEF int DCALL dex_initialize(DeeDexObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeDex_New(DeeObject *__restrict name);

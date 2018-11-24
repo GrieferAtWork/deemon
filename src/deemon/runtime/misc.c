@@ -975,7 +975,7 @@ PUBLIC void
  DBG_ALIGNMENT_ENABLE();
 }
 
-#if defined(_MSC_VER) && 0
+#if defined(_MSC_VER) && 1
 extern ATTR_DLLIMPORT void __cdecl _lock(_In_ int _File);
 extern ATTR_DLLIMPORT void __cdecl _unlock(_Inout_ int _File);
 #define _HEAP_LOCK 4

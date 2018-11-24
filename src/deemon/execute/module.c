@@ -28,6 +28,7 @@
 #include <deemon/string.h>
 #include <deemon/exec.h>
 #include <deemon/arg.h>
+#include <deemon/none.h>
 #include <deemon/tuple.h>
 #include <deemon/error.h>
 #include <deemon/thread.h>
@@ -1165,11 +1166,27 @@ module_get_path(DeeModuleObject *__restrict self) {
   err_module_not_fully_loaded(self);
   return NULL;
  }
- if (!self->mo_path) {
-  err_unbound_attribute(&DeeModule_Type,"__path__");
-  return NULL;
- }
+ if (!self->mo_path)
+     return_none;
  return_reference_((DREF DeeObject *)self->mo_path);
+}
+
+PRIVATE DREF DeeObject *DCALL
+module_get_isglobal(DeeModuleObject *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ return_bool(self->mo_globpself != NULL);
+#else
+ return_bool(ATOMIC_READ(self->mo_globpself) != NULL);
+#endif
+}
+
+PRIVATE DREF DeeObject *DCALL
+module_get_haspath(DeeModuleObject *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ return_bool(self->mo_pself != NULL);
+#else
+ return_bool(ATOMIC_READ(self->mo_pself) != NULL);
+#endif
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1218,10 +1235,18 @@ PRIVATE struct type_getset module_getsets[] = {
           "Returns the code object for the module's root initializer") },
     { "__path__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_path, NULL, NULL,
-      DOC("->?Dstring\n"
+      DOC("->?X2?Dstring?N\n"
           "@throw ValueError The module hasn't been fully loaded\n"
-          "@throw AttributeError The module wasn't accessed through the filesystem\n"
-          "Returns the absolute filesystem path of the module's source file") },
+          "Returns the absolute filesystem path of the module's source file, or :none "
+          "if the module wasn't created from a file accessible via the filesystem") },
+    { "__isglobal__",
+     (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_isglobal, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Returns :true if @this module is global (i.e. can be accessed as ${import(this.__name__)})") },
+    { "__haspath__",
+     (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_haspath, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Returns :true if @this module has a path found within the filesystem") },
     { NULL }
 };
 
@@ -1495,6 +1520,9 @@ INTERN struct static_module_struct empty_module_head = {
         /* .mo_pself     = */NULL,
         /* .mo_next      = */NULL,
         /* .mo_path      = */NULL,
+#ifdef CONFIG_HOST_WINDOWS
+        /* .mo_pathhash  = */0,
+#endif /* CONFIG_HOST_WINDOWS */
         /* .mo_globpself = */NULL,
         /* .mo_globnext  = */NULL,
         /* .mo_importc   = */0,

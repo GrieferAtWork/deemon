@@ -586,7 +586,7 @@ typedef struct {
     };
     size_t                     df_size;    /* Total number of usable bytes of memory
                                             * that can be found within the source file. */
-    DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dec' file opened by this descriptor. */
+    DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
     DREF struct module_object *df_module;  /* [1..1] The module that is being loaded. */
     struct compiler_options   *df_options; /* [0..1] Compilation options. */
     DREF struct string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
@@ -630,8 +630,7 @@ INTDEF int DCALL DecFile_Load(DecFile *__restrict self);
 INTDEF int DCALL
 DeeModule_OpenDec(struct module_object *__restrict module,
                   DeeObject *__restrict input_stream,
-                  struct compiler_options *__restrict options,
-                  struct string_object *__restrict dec_pathname);
+                  struct compiler_options *__restrict options);
 
 /* DEC loader implementation. */
 

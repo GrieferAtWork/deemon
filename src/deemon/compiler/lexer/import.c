@@ -92,9 +92,9 @@ import_module_by_name(DeeStringObject *__restrict module_name,
    goto module_opened;
   }
  }
- result = (DREF DeeModuleObject *)DeeModule_Open((DeeObject *)module_name,
-                                                  inner_compiler_options,
-                                                  false);
+ result = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)module_name,
+                                                        inner_compiler_options,
+                                                        false);
 module_opened:
  if unlikely(!ITER_ISOK(result)) {
   if unlikely(!result) goto err;

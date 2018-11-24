@@ -44,12 +44,11 @@
 
 #include "../runtime/runtime_error.h"
 
-#if defined(CONFIG_HOST_WINDOWS) && \
-   !defined(__CYGWIN__)
+#if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
 /* NOTE: Don't use LoadLibrary() on cygwin. It does some crazy hacking
  *       to get fork() working properly with dynamic linking, so better
  *       not interfere with it by bypassing its mechanisms. */
-#define USE_LOADLIBRARY
+#define USE_LOADLIBRARY 1
 #include <Windows.h>
 #else
 #include <dlfcn.h>
@@ -65,48 +64,17 @@ DECL_BEGIN
 INTDEF struct module_symbol empty_module_buckets[];
 
 INTERN int DCALL
-dex_load_file(DeeDexObject *__restrict self,
-              DeeObject *__restrict input_file) {
+dex_load_handle(DeeDexObject *__restrict self,
+                void *handle,
+                DeeObject *__restrict input_file) {
  struct module_symbol *modsym;
  struct dex_symbol *symbols; struct dex *descriptor;
  DREF DeeObject **globals; DREF DeeModuleObject **imports;
  size_t symcount,impcount; uint16_t symi,bucket_mask;
 #ifdef USE_LOADLIBRARY
- HMODULE handle;
-#else
- void *handle;
-#endif
-#ifdef USE_LOADLIBRARY
- LPWSTR name = (LPWSTR)DeeString_AsWide(input_file);
- if unlikely(!name) return -1;
  DBG_ALIGNMENT_DISABLE();
- handle = LoadLibraryW((LPCWSTR)name);
-#else
- DBG_ALIGNMENT_DISABLE();
- handle = dlopen(DeeString_STR(input_file),
-                 RTLD_LOCAL|
-#ifdef RTLD_LAZY
-                 RTLD_LAZY
-#else
-                 RTLD_NOW
-#endif
-                 );
-#endif
- if (!handle) {
-#ifdef USE_LOADLIBRARY
-  /* TODO: Check against GetLastError() for the reason why.
-   *       If it's anything other than file-not-found, throw an
-   *       error indicating that the module has been corrupted. */
-  DWORD error;
-  error = GetLastError();
-  DBG_ALIGNMENT_ENABLE();
-  DEE_DPRINTF("error = %u (%r)\n",error,input_file);
-#endif
-  return 1;
- }
-#ifdef USE_LOADLIBRARY
- descriptor = (struct dex *)GetProcAddress(handle,"DEX");
- if (!descriptor) descriptor = (struct dex *)GetProcAddress(handle,"_DEX");
+ descriptor = (struct dex *)GetProcAddress((HMODULE)handle,"DEX");
+ if (!descriptor) descriptor = (struct dex *)GetProcAddress((HMODULE)handle,"_DEX");
 #else
  descriptor = (struct dex *)dlsym(handle,"DEX");
  if (!descriptor) descriptor = (struct dex *)dlsym(handle,"_DEX");
@@ -140,7 +108,7 @@ dex_load_file(DeeDexObject *__restrict self,
   /* Load import modules, using the same index as the original name. */
   for (i = 0; i < impcount; ++i) {
    DREF DeeObject *import;
-   import = DeeModule_OpenString(names[i],
+   import = DeeModule_OpenGlobalString(names[i],
                                  strlen(names[i]),
                                  NULL,
                                  true);
@@ -219,7 +187,7 @@ err_imp:
 err:
  DBG_ALIGNMENT_DISABLE();
 #ifdef USE_LOADLIBRARY
- FreeLibrary(handle);
+ FreeLibrary((HMODULE)handle);
 #else
  dlclose(handle);
 #endif

@@ -673,7 +673,7 @@ PRIVATE DREF DeeObject *DCALL libcodecs_get(void) {
   return result;
  }
  rwlock_endread(&libcodecs_lock);
- result = DeeModule_Open(&str_codecs,NULL,true);
+ result = DeeModule_OpenGlobal(&str_codecs,NULL,true);
  if likely(result) {
   rwlock_write(&libcodecs_lock);
   ASSERT(!libcodecs || libcodecs == result);

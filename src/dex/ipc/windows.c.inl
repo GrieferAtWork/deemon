@@ -1619,7 +1619,7 @@ call_extern(DeeObject *__restrict module_name,
             DeeObject *__restrict global_name,
             size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *module,*result;
- module = DeeModule_Open(module_name,NULL,true);
+ module = DeeModule_OpenGlobal(module_name,NULL,true);
  if unlikely(!module) goto err;
  result = DeeObject_CallAttr(module,global_name,argc,argv);
  Dee_Decref(module);
@@ -1632,7 +1632,7 @@ PRIVATE DREF DeeObject *DCALL
 get_extern(DeeObject *__restrict module_name,
            DeeObject *__restrict global_name) {
  DREF DeeObject *module,*result;
- module = DeeModule_Open(module_name,NULL,true);
+ module = DeeModule_OpenGlobal(module_name,NULL,true);
  if unlikely(!module) goto err;
  result = DeeObject_GetAttr(module,global_name);
  Dee_Decref(module);

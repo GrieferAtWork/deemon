@@ -149,6 +149,7 @@ PUBLIC uint8_t const utf8_sequence_len[256] = {
 /* String functions related to unicode. */
 
 DECLARE_STRUCT_CACHE(utf,struct string_utf)
+DEFINE_STRUCT_CACHE_TRYALLOC(utf,struct string_utf,sizeof(struct string_utf))
 #ifndef NDEBUG
 #define utf_alloc()  utf_dbgalloc(__FILE__,__LINE__)
 #endif
@@ -380,6 +381,90 @@ set_utf8_and_return_1byte:
   result = (uint8_t *)Dee_Malloc(sizeof(size_t)+
                                 (result_length+1)*
                                  sizeof(uint8_t));
+  if unlikely(!result) goto err;
+  *(size_t *)result = result_length;
+  result += sizeof(size_t);
+  /* Copy leading ASCII-only data. */
+  memcpy(result,DeeString_STR(self),
+        (size_t)(iter-(uint8_t *)DeeString_STR(self))*
+         sizeof(uint8_t));
+  dst = result + (size_t)(iter-(uint8_t *)DeeString_STR(self));
+  for (; iter < end; ++iter) {
+   ch = *iter;
+   if (ch <= 0x7f)
+    *dst++ = ch;
+   else {
+    /* Encode the LATIN-1 character in UTF-8 */
+    *dst++ = 0xc0 | ((ch & 0xc0) >> 6);
+    *dst++ = 0x80 | (ch & 0x3f);
+   }
+  }
+  ASSERT(WSTR_LENGTH(result) == result_length);
+  ASSERT(dst == result + result_length);
+  *dst = '\0';
+  /* Save the generated UTF-8 string in the string's UTF cache. */
+  if (!ATOMIC_CMPXCH(utf->u_utf8,NULL,(char *)result)) {
+   Dee_Free((size_t *)result - 1);
+   ASSERT(utf->u_utf8 != NULL);
+   return utf->u_utf8;
+  }
+  Dee_UntrackAlloc((size_t *)result - 1);
+  return (char *)result;
+ }
+ /* No latin1 characters here! */
+ ATOMIC_FETCHOR(utf->u_flags,STRING_UTF_FASCII);
+ goto set_utf8_and_return_1byte;
+err:
+ return NULL;
+}
+
+PUBLIC char *DCALL
+DeeString_TryAsUtf8(DeeObject *__restrict self) {
+ struct string_utf *utf;
+ uint8_t *iter,*end;
+ ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
+again:
+ utf = ((String *)self)->s_data;
+ if (utf) {
+  if (utf->u_utf8)
+      return utf->u_utf8;
+  if ((utf->u_flags & STRING_UTF_FASCII) ||
+      (utf->u_width != STRING_WIDTH_1BYTE)) {
+set_utf8_and_return_1byte:
+   ATOMIC_WRITE(utf->u_utf8,DeeString_STR(self));
+   return DeeString_STR(self);
+  }
+ }
+ /* We are either a LATIN1, or an ASCII string. */
+ if (!utf) {
+  /* Allocate the UTF-buffer. */
+  utf = utf_tryalloc();
+  if unlikely(!utf) goto err;
+  memset(utf,0,sizeof(struct string_utf));
+  utf->u_width                    = STRING_WIDTH_1BYTE;
+  utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
+  if (!ATOMIC_CMPXCH(((String *)self)->s_data,NULL,utf)) {
+   utf_free(utf);
+   goto again;
+  }
+  Dee_UntrackAlloc(utf);
+ }
+ iter = (uint8_t *)DeeString_STR(self);
+ end = iter + DeeString_SIZE(self);
+ for (; iter < end; ++iter) {
+  uint8_t ch = *iter;
+  size_t result_length;
+  uint8_t *iter2,*result,*dst;
+  if (ch <= 0x7f) continue; /* ASCII character. */
+  /* Well... This string _does_ contain some latin1 characters. */
+  result_length = DeeString_SIZE(self)+1;
+  iter2 = iter+1;
+  for (; iter2 < end; ++iter2) {
+   if (*iter2 >= 0x80) ++result_length;
+  }
+  result = (uint8_t *)Dee_TryMalloc(sizeof(size_t)+
+                                   (result_length + 1)*
+                                    sizeof(uint8_t));
   if unlikely(!result) goto err;
   *(size_t *)result = result_length;
   result += sizeof(size_t);

@@ -743,7 +743,14 @@ err_no_super_class(DeeTypeObject *__restrict type) {
 INTERN ATTR_COLD int DCALL
 err_file_not_found(char const *__restrict filename) {
  return DeeError_Throwf(&DeeError_FileNotFound,
-                        "File `%s' could not be found",filename);
+                        "File `%s' could not be found",
+                        filename);
+}
+INTERN ATTR_COLD int DCALL
+err_file_not_found_ob(DeeObject *__restrict filename) {
+ return DeeError_Throwf(&DeeError_FileNotFound,
+                        "File `%k' could not be found",
+                        filename);
 }
 
 #ifndef CONFIG_NO_STDIO
