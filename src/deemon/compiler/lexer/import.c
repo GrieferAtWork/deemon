@@ -432,7 +432,8 @@ complete_module_name:
   if unlikely(yield() < 0)
      goto err_printer;
   /* Make sure to properly parse `import . as me' */
-  if ((TPP_ISKEYWORD(tok) && tok != KWD_as) || tok == TOK_STRING ||
+  if ((TPP_ISKEYWORD(tok) && tok != KWD_as) ||
+       TOK_ISDOT(tok) || tok == TOK_STRING ||
       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)) ||
       (UNICODE_PRINTER_LENGTH(&printer) != 1)) {
    if unlikely(ast_parse_module_name(&printer,true) < 0)
