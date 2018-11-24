@@ -1111,15 +1111,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw ValueError The given @mode is malformed or not recognized\n"
           "Change the permissions associated with a given @path") },
     { "chown", (DeeObject *)&libfs_chown, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,user:?Dstring,group:?Dstring)\n"
-          "(path:?Dstring,user:?Guser,group:?Ggroup)\n"
-          "(path:?Dstring,user:?Dint,group:?Dint)\n"
-          "(fp:?Dfile,user:?Dstring,group:?Dstring)\n"
-          "(fp:?Dfile,user:?Guser,group:?Ggroup)\n"
-          "(fp:?Dfile,user:?Dint,group:?Dint)\n"
-          "(fd:?Dint,user:?Dstring,group:?Dstring)\n"
-          "(fd:?Dint,user:?Guser,group:?Ggroup)\n"
-          "(fd:?Dint,user:?Dint,group:?Dint)\n"
+      DOC("(path:?Dstring,user:?X3?Guper?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+          "(fp:?Dfile,user:?X3?Guper?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+          "(fd:?Dint,user:?X3?Guper?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1133,8 +1127,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to change ownership for some reason\n"
           "Change the ownership of a given @path") },
     { "mkdir", (DeeObject *)&libfs_mkdir, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,permissions:?Dstring=!N)\n"
-          "(path:?Dstring,permissions:?Dint)\n"
+      DOC("(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n"
           "@interrupt\n"
           "@throw FileNotFound One or more of @path's parents do not exist\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1208,15 +1201,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to rename the given @existing_path for some reason\n"
           "Renames or moves a given @existing_path to be referred to as @new_path from then on") },
     { "copyfile", (DeeObject *)&libfs_copyfile, MODSYM_FNORMAL,
-      DOC("(existing_file:?Dstring,new_file:?Dstring,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dstring,new_file:?Dfile,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dstring,new_file:?Dint,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dfile,new_file:?Dstring,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dfile,new_file:?Dfile,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dfile,new_file:?Dint,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dint,new_file:?Dstring,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dint,new_file:?Dfile,progress:?Dcallable=!N)\n"
-          "(existing_file:?Dint,new_file:?Dint,progress:?Dcallable=!N)\n"
+      DOC("(existing_file:?X3?Dstring?Dfile?Dint,new_file:?X3?Dstring?Dfile?Dint,progress:?Dcallable=!N)\n"
           "@interrupt\n"
           "@throw FileExists The given @new_file already exists\n"
           "@throw NoDirectory A part of the given @existing_file or @new_file is not a directory\n"
@@ -1243,9 +1228,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "propagated after the partially copied file may have been deleted, based on "
           "the host operating system's preferrance") },
     { "link", (DeeObject *)&libfs_link, MODSYM_FNORMAL,
-      DOC("(existing_path:?Dstring,new_path:?Dstring)\n"
-          "(existing_file:?Dfile,new_path:?Dstring)\n"
-          "(existing_file:?Dint,new_path:?Dstring)\n"
+      DOC("(existing_path:?X3?Dstring?Dfile?Dint,new_path:?Dstring)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @existing_path could not be found, or a parent directory of @new_path does not exist\n"
           "@throw NoDirectory A part of the given @existing_path or @new_path is not a directory\n"
@@ -1356,7 +1339,7 @@ PRIVATE struct dex_symbol symbols[] = {
           ">print exctrail(\"/foo/bar/\"); /* \"/foo/bar\" */\n"
           ">print exctrail(\"/foo/bar\");  /* \"/foo/bar\" */") },
     { "abspath", (DeeObject *)&libfs_abspath, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,cwd=!P{\\.})->?Dstring\n"
+      DOC("(path:?Dstring,cwd=!P{.})->?Dstring\n"
           "@interrupt\n"
           "Makes @path an absolute path, using @cwd as the base point for the relative disposition\n"
           "If @path was already relative to begin with, it is forced to become relative "
@@ -1366,7 +1349,7 @@ PRIVATE struct dex_symbol symbols[] = {
           ">import abspath from fs;\n"
           ">print abspath(\"../user/bar\",\"/home/foobar\"); /* \"/home/user/bar\" */") },
     { "relpath", (DeeObject *)&libfs_relpath, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,cwd=!P{\\.})->?Dstring\n"
+      DOC("(path:?Dstring,cwd=!P{.})->?Dstring\n"
           "@interrupt\n"
           "Creates a relative path leading to @path and originating from @cwd\n"
           "If @path was already relative to begin with, it is forced to become absolute "

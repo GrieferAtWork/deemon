@@ -48,9 +48,9 @@ DECL_BEGIN
                                      "For more information, see :S_IFMT")
 #define DeeStat_st_nlink_doc     DOC("->?Dint\n" \
                                      "Returns the number of existing hard-links to this stat-file")
-#define DeeStat_st_uid_doc       DOC("->user\n" \
+#define DeeStat_st_uid_doc       DOC("->?Guser\n" \
                                      "Returns a descriptor for the user owning this file")
-#define DeeStat_st_gid_doc       DOC("->group\n" \
+#define DeeStat_st_gid_doc       DOC("->?Ggroup\n" \
                                      "Returns a descriptor for the group owning this file")
 #define DeeStat_st_rdev_doc      DOC("->?Dint\n" \
                                      "@throw ValueError @this stat-file does not contain valid r-dev information\n" \

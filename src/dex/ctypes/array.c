@@ -587,7 +587,7 @@ PRIVATE struct type_member array_class_members[] = {
 
 
 INTERN DeeArrayTypeObject DeeArray_Type = {
-    /* XXX: Somehow find a way to include functionality from `DeeSequence_Type' */
+    /* XXX: Somehow find a way to include functionality from `DeeSeq_Type' */
     /* .ft_base = */{
         /* .st_base = */{
             OBJECT_HEAD_INIT((DeeTypeObject *)&DeeArrayType_Type),
