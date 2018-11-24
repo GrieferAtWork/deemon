@@ -1160,24 +1160,81 @@ err:
 }
 
 PRIVATE int DCALL
-dec_putddi_xdat_ptr(struct ddi_exdat const *self, bool use_16bit) {
+dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
+                    struct ddi_exdat const *self,
+                    bool use_16bit) {
  if (self && self->dx_size != 0) {
-  uint8_t *buf;
+  uint8_t *buf,*iter,*end; size_t size;
   struct dec_section *xsect,*old_sec;
   /* Create a new section within which debug data will be placed. */
   xsect = dec_newsection_after(SC_DEBUG_DATA);
   if unlikely(!xsect) goto err;
   old_sec  = dec_curr;
   dec_curr = xsect;
-  if (self->dx_size >= (uint16_t)-1) {
-   if (dec_putw(0xffff)) goto err;
-   if (dec_putl(self->dx_size)) goto err;
-  } else {
-   if (dec_putw((uint16_t)self->dx_size)) goto err;
+  if (dec_putw(0)) goto err; /* Overwritten later */
+  end = (iter = (uint8_t *)self->dx_data) + self->dx_size;
+  while (iter < end) {
+   uint8_t op = *iter++;
+   size_t opsize;
+   switch (op & DDI_EXDAT_OPMASK) {
+   case DDI_EXDAT_OP8:  opsize = 1 + 1; break;
+   case DDI_EXDAT_OP16: opsize = 2 + 2; break;
+   case DDI_EXDAT_OP32: opsize = 2 + 4; break;
+   default:             opsize = 0; break;
+   }
+   switch (op & ~DDI_EXDAT_OPMASK) {
+   {
+    uint32_t string_offset;
+    uint16_t symbol_id;
+    char const *string;
+   case DDI_EXDAT_O_RNAM:
+   case DDI_EXDAT_O_SNAM:
+    switch (opsize) {
+    case 1 + 1: symbol_id = *(uint8_t *)(iter + 0); string_offset = *(uint8_t *)(iter + 1); break;
+    case 2 + 2: symbol_id = UNALIGNED_GETLE16((uint16_t *)(iter + 0)); string_offset = UNALIGNED_GETLE16((uint16_t *)(iter + 2)); break;
+    case 2 + 4: symbol_id = UNALIGNED_GETLE16((uint16_t *)(iter + 0)); string_offset = UNALIGNED_GETLE32((uint32_t *)(iter + 2)); break;
+    default: goto defl_xdat;
+    }
+    string = DeeString_STR(ddi->d_strtab) + string_offset;
+    dec_curr = SC_STRING;
+    string = (char *)dec_allocstr(string,(strlen(string) + 1)*sizeof(char));
+    if unlikely(!string) goto err;
+    string_offset = dec_ptr2addr((uint8_t *)string);
+    dec_curr = xsect;
+    if (string_offset <= UINT8_MAX && symbol_id <= UINT8_MAX) {
+     if (dec_putb((op & ~DDI_EXDAT_OPMASK) | DDI_EXDAT_OP8)) goto err;
+     if (dec_putb((uint8_t)symbol_id)) goto err;
+     if (dec_putb((uint8_t)string_offset)) goto err;
+    } else if (string_offset <= UINT16_MAX) {
+     if (dec_putb((op & ~DDI_EXDAT_OPMASK) | DDI_EXDAT_OP16)) goto err;
+     if (dec_putw(symbol_id)) goto err;
+     if (dec_putw((uint16_t)string_offset)) goto err;
+    } else {
+     if (dec_putb((op & ~DDI_EXDAT_OPMASK) | DDI_EXDAT_OP32)) goto err;
+     if (dec_putw(symbol_id)) goto err;
+     if (dec_putl(string_offset)) goto err;
+    }
+   } break;
+   default:
+defl_xdat:
+    buf = dec_alloc(1 + opsize);
+    if unlikely(!buf) goto err;
+    memcpy(buf,buf - 1,1 + opsize);
+    break;
+   }
+   iter += opsize;
   }
-  buf = dec_alloc(self->dx_size);
-  if unlikely(!buf) goto err;
-  memcpy(buf,self->dx_data,self->dx_size);
+  size = (size_t)(xsect->ds_iter - xsect->ds_begin) - 2;
+  if (size <= UINT16_MAX) {
+   UNALIGNED_SETLE16((uint16_t *)xsect->ds_begin,(uint16_t)size);
+  } else {
+   if (dec_putl(0)) goto err;
+   memmove(xsect->ds_begin + 6,
+           xsect->ds_begin + 2,
+           size);
+   UNALIGNED_SET16  ((uint16_t *)(xsect->ds_begin + 0),0xffff);
+   UNALIGNED_SETLE32((uint32_t *)(xsect->ds_begin + 2),(uint32_t)size);
+  }
 
   /* Switch back to the old section. */
   dec_curr = old_sec;
@@ -1298,7 +1355,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   /* Emit debug information if there are some */
   DeeDDIObject *ddi = self->co_ddi;
   /* Don't emit any debug information, if the DDI object doesn't have any text. */
-  if (ddi->d_ddisize) {
+  if (ddi->d_ddisize ||
+     (ddi->d_exdat && ddi->d_exdat->dx_size)) {
    uint8_t *tempptr; struct dec_sym *tempsym;
    struct dec_section *ddi_section = dec_newsection_after(SC_DEBUG);
    if unlikely(!ddi_section) goto err;
@@ -1318,8 +1376,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
    if unlikely(!tempsym) goto err;
    dec_defsymat(tempsym,dec_ptr2addr(tempptr));
    dec_curr = ddi_section;
-   if unlikely(dec_putddi_xdat_ptr(ddi->d_exdat,use_8bit))
-      goto err;
+   if unlikely(dec_putddi_xdat_ptr(ddi,ddi->d_exdat,use_8bit))
+      goto err; /* Dec_CodeDDI.cd_ddixdat */
 
    /* Now emit the size of, and a pointer to the DDI's text. */
    if (use_8bit) {
