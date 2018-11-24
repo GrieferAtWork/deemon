@@ -306,7 +306,7 @@ function get_modules_list(fp: file) {
 			<< name
 			<< "\">"
 			<< name
-			<< "</a></div>";
+			<< "</a></div>\r\n";
 	}
 	fp << "</main>";
 	write_page_tail(fp);

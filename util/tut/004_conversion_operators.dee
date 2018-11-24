@@ -27,13 +27,13 @@ print str(12) + str(34); /* 1234 */
 /* Operators are provided on a per-type basis, meaning that their behavior
  * depends on what object they are being invoked upon. However, not all
  * objects must necessary implement all operators, with missing ones causing
- * an Error.RuntimeError.NotImplemented being thrown (see tutorial for exceptions) */
+ * an Error.RuntimeError.NotImplemented to be thrown (see tutorial on exceptions) */
 print !12;  /* Logical negation        -- false */
 print !!12; /* Logical double-negation -- true */
 print ~12;  /* Bit-wise inversion      -- -13 */
 print -12;  /* Negation                -- -12 */
 
-/* Another importable unary operator is `repr', which operates similarly
+/* Another important unary operator is `repr', which operates similarly
  * to `str', but is meant to return a representation of how an expression
  * would be written in usercode in order to produce that object. */
 print repr 12;               /* Still prints `12', because that's how you would write this object. */
@@ -45,7 +45,7 @@ print type 10;     /* int */
 print type "foo";  /* string */
 print type str 10; /* string */
 
-/* The `type' expression simply returns the type of the expression it is given */
+/* The `type' expression simply returns the type of the expression it is handed */
 
 
 

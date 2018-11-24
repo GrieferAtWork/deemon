@@ -70,7 +70,7 @@ print x ? "x is true" : ;        /* Use `x' as false-branch */
 
 local y = false;
 
-print x || y; /* true  -- Logical or  -- Same as `!!x ? : y' */
+print x || y; /* true  -- Logical or  -- Same as `!!x ? : !!y' */
 print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ' */
 /* Note that in logical or/and, the second branch is not evaluated
  * if it doesn't have to be. */
@@ -98,8 +98,8 @@ try {
 /* Catch-expressions can be written in one of the following ways:
  *   - catch (...)              -- Catch any kind of object that isn't an interrupt
  *   - catch (e...)             -- Catch any kind of object that isn't an interrupt and store it in a newly created local variable `e'
- *   - @interrupt catch (...)   -- Catch any kind of object
- *   - @interrupt catch (e...)  -- Catch any kind of object and store it in a newly created local variable `e'
+ *   - @:interrupt catch (...)  -- Catch any kind of object
+ *   - @:interrupt catch (e...) -- Catch any kind of object and store it in a newly created local variable `e'
  *   - catch (<typeexpr>)       -- Catch any object `x' where `x is <typeexpr>' is true
  *                                 <typeexpr> is evaluated only when an exception occurs
  *   - catch (<typeexpr> as e)  -- Same as `catch (<typeexpr>)', but also store it in a newly created local variable `e'
@@ -112,7 +112,7 @@ for (local x: items) {
 	print x;
 }
 
-/* An going even further, in order to best support sequences-of-sequences,
+/* And going even further, in order to best support sequences-of-sequences,
  * you can do something like this: */
 local item_pairs = { { "a", 10 }, { "b", 20 }, { "c", 30 } };
 for (local x,y: item_pairs) {

@@ -20,11 +20,11 @@
 
 import file, int from deemon;
 import fs;
-import process, pipe from ipc;
+import Process, Pipe from ipc;
 
-local proc = process("x86_64-w64-mingw32-addr2line.exe",["-f","-e","deemon-gcc.exe"]);
-local ir,iw = pipe.new()...;
-local or,ow = pipe.new()...;
+local proc = Process("x86_64-w64-mingw32-addr2line.exe",["-f","-e","deemon-gcc.exe"]);
+local ir,iw = Pipe.new()...;
+local or,ow = Pipe.new()...;
 
 proc.stdin  = ir;
 proc.stdout = ow;

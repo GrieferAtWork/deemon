@@ -96,12 +96,12 @@ print barfoo;
 
 /* The following example now introduces the `import' statement, which may be
  * used to access the variables of another module.
- * For this, also take a look at `006_variables_module.dee'
- * NOTE: Once you run time tutorial file, a new file `.006_variables_module.dec'
+ * For this, also take a look at `demo_module.dee'
+ * NOTE: Once you run time tutorial file, a new file `.demo_module.dec'
  *       will appear in this folder. - Don't be alarmed, it's a precompiled
- *       cache file for `006_variables_module.dee'. - You may simply ignore
- *       it, or delete it, however it will reappear if you run this tutorial
- *       again, and will be updated if `006_variables_module.dee' changes.
+ *       cache file for `demo_module.dee'. - You may simply ignore it,
+ *       or delete it, however it will reappear if you run this tutorial
+ *       again, and will be updated if `demo_module.dee' is changed.
  */
 {
 	local but_im_not = "I wasn't imported";
@@ -120,7 +120,7 @@ print barfoo;
 	}
 
 	{
-		import mod = .demo_module;
+		import mod = ".demo_module";
 		print mod.im_an_export;       /* Yes I am */
 		print mod.im_another_export;  /* Me too */
 		mod.im_another_export = "The new value";
@@ -142,8 +142,8 @@ print barfoo;
  *       - `.' characters seen in a module name act as references to sub-directories
  *       - A leading `.' character means that the import is relative to the
  *         file containing the statement.
- *       - 2 consecutive `..' characters translate to `/../'
- *       - 3 consecutive `...' characters translate to `/../../', etc.
+ *       - 2 consecutive `..' characters translate to `./../'
+ *       - 3 consecutive `...' characters translate to `./../../', etc.
  *       - Names without a leading `.' character will be searched for in the module
  *         search path, which by default contains `/lib' (in the deemon source tree)
  *     Examles:
@@ -154,21 +154,23 @@ print barfoo;
  *       - ..foo.bar  --> "${CURRENT_SOURCE_PATH}/../foo/bar.dee"
  *       - .          --> "${CURRENT_SOURCE_FILE}.dee" -- `import foo = .' defines `foo' as the current module
  *   - Modules themself are also objects which can be imported as:
- *       - import foo;                      // Defines a local variable `foo' as the module `foo'
- *       - import foo.bar;                  // Defines a local variable `bar' as the module `foo.bar'
- *       - import foobar = foo.bar;         // Defines a local variable `foobar' as the module `foo.bar'
- *       - import sym from foo.bar;         // Defines a local symbol `sym' as an alias for `sym from foo.bar'
- *       - import mysym = sym from foo.bar; // Defines a local symbol `mysym' as an alias for `sym from foo.bar'
+ *       - import foo;                       // Defines a local variable `foo' as the module `foo'
+ *       - import foo.bar;                   // Defines a local variable `bar' as the module `foo.bar'
+ *       - import foobar = foo.bar;          // Defines a local variable `foobar' as the module `foo.bar'
+ *       - import foo.bar as foobar;         // Defines a local variable `foobar' as the module `foo.bar'
+ *       - import sym from foo.bar;          // Defines a local symbol `sym' as an alias for `sym from foo.bar'
+ *       - import mysym = sym from foo.bar;  // Defines a local symbol `mysym' as an alias for `sym from foo.bar'
+ *       - import sym as mysym from foo.bar; // Defines a local symbol `mysym' as an alias for `sym from foo.bar'
  *   - When importing a module with a name containing characters
  *     that are not valid identifiers, the following syntax can be used;
  *       - `import myname = ".foo.1234actual-name"'
  *   - When not wanting to bind a variable from another module to a local symbol,
- *     you are also able to write `symbol from module'
+ *     you are also able to write `symbol from module' in expressions.
  */
 
 {
 	import util;
-	print util;  /* util (which is a module found in /lib/util.dee) */
+	print util;  /* util (which is a module implemented by /lib/util.dee) */
 	util = 7;
 	/* Module symbols behave like variables, but if it wasn't
 	 * for the assignment above, the compiler is normally able
@@ -197,6 +199,35 @@ print barfoo;
 {
 	print im_another_export from .demo_module;
 }
+{
+	import .demo_module;
+	print demo_module.im_another_export;
+}
+{
+	import .demo_module as dmod;
+	print dmod.im_another_export;
+}
+{
+	import dmod = .demo_module;
+	print dmod.im_another_export;
+}
+{
+	import dmod = ".demo_module";
+	print dmod.im_another_export;
+}
+{
+	import "im_another_export" as sym from .demo_module;
+	print sym;
+}
+
+/* One last way of using `import' is when it appears in expressions,
+ * where it becomes a function that can be used to dynamically load
+ * modules, given their names as variables. */
+{
+	local name = ".demo_module";
+	local mod = import(name);
+	print mod.operator . ("im_another_export");
+}
 
 
 /* You may have already noticed that that both
@@ -215,7 +246,7 @@ print barfoo;
 	print x is bound;  /* true */
 }
 
-/* Normally (and contrary to what scopes may let you thing), local variables
+/* Normally (and contrary to what scopes may let you think), local variables
  * are only unbound at the end of the containing function, rather than at the
  * end of the scope containing them, while in the mean time the compiler is
  * allowed to re-use that variable in sibling scopes without being required
@@ -266,7 +297,7 @@ print barfoo;
  * potentially allow store expressions to be omitted from generated code.
  * Just like `static' variables, `__stack' variables can only be used as
  * local variables, meaning you should always include a `local' prefix
- * when declaring them.
+ * when declaring them, too.
  * Use of `__stack' variables is never required, and in certain situations
  * may even break code. Additionally, with optimizations enabled, the compiler
  * may automatically recognize where the use of a stack variable could lead
@@ -282,8 +313,8 @@ print barfoo;
 
 
 
-/* That's all the different types of variables there are. Now on to a hand
- * full of special cases and extensions. */
+/* That's all the different types of variables there are.
+ * Now on to a hand full of special cases and extensions. */
 
 {
 	local foo = "outer";
@@ -297,8 +328,9 @@ print barfoo;
 
 /* `__nth(<intexpr>)' can be prefixed before variable names in order
  * to select the n'th match of a given name, rather than the first.
- * This is a lesser used feature which none-the-less finds great use
- * in autogenerated code using scopes to structure its data tree. */
+ * This is a lesser used feature which none-the-less finds great
+ * use in autogenerated code using scopes and the preprocessor to
+ * structure its data tree (s.a. `/magic.dee'). */
 
 
 
@@ -366,11 +398,12 @@ print barfoo;
  * are their own operators at runtime, an expression such as `x += 20'
  * may also be emulated as `x = x + 20' when the type of `x' is immutable.
  * This also applies to `x.y += 20' potentially becoming `x.y = x.y + 20',
- * as well as the same when appearing in in `x[y] += 20' becoming `x[y] = x[y] + 20'
+ * as well as the same when appearing in `x[y] += 20', which becomes `x[y] = x[y] + 20'
  * Note however that in all cases, the operands found in the left-hand-side are only
- * evaluated once, meaning that in `x[y] += 20', `y' is only evaluated once, and all
- * its side-effects only happen once too.
- *  - It should also be noted that deemon enforces a strong left-to-right evaluation order.
+ * evaluated once, meaning that in `x[y] += 20', `x' and `y' are only evaluated once,
+ * and all its side-effects only happen once too.
+ *  - It should also be noted that deemon enforces a strong left-to-right
+ *    evaluation order, as well as subsequent side-effects caused thereby.
  */
 
 

@@ -23,7 +23,7 @@
  * Now that I said that, forget that I did, because they're actually all the same. */
 
 
-@"A regular function that is exported from this module"
+@@A regular function that is exported from this module
 function foo(x,y) {
 	print "foo("+x+","+y+")";
 	return x + y;
@@ -88,12 +88,12 @@ function yielding_function(items) {
  * will output their text in all at once, but alternatingly.
  * This is because the `yield' above causes execution of the function
  * to be suspended, have it return a value to our for-loop here, before
- * our for-loop passed control back to the yield function.
+ * our for-loop passes control back to the yield function.
  * Essentially, this means that when wanting to transform a sequence,
  * instead of having to transform it in its entirety before being able
  * to continue with the next step, you can simply use yield functions
  * to construct a wrapper that transforms your original sequence as
- * they are needed.
+ * its elements are needed.
  */
 for (local x: yielding_function([:20])) {
 	print "Got value:",x;
