@@ -84,7 +84,7 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_len,
  void const *candidate; uint8_t marker;
  if unlikely(!needle_len || needle_len > haystack_len)
     return NULL;
- haystack_len -= needle_len,marker = *(uint8_t *)needle;
+ haystack_len -= (needle_len - 1),marker = *(uint8_t *)needle;
  while ((candidate = memchr(haystack,marker,haystack_len)) != NULL) {
   if (memcmp(candidate,needle,needle_len) == 0)
       return (void *)candidate;
