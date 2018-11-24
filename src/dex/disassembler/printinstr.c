@@ -908,11 +908,106 @@ libdisasm_printref(dformatprinter printer, void *arg,
        goto print_generic;
    return DeeFormat_Printf(printer,arg,"ref %u /* invalid rid */",(unsigned int)rid);
   }
-      
  }
 print_generic:
  return DeeFormat_Printf(printer,arg,"ref %u",(unsigned int)rid);
 }
+PRIVATE dssize_t DCALL
+libdisasm_printmembername(dformatprinter printer, void *arg,
+                          uint16_t rid, uint16_t mid,
+                          DeeCodeObject *code,
+                          unsigned int flags,
+                          bool is_cmember) {
+ (void)flags;
+ if (code) {
+  char *class_name;
+  class_name = DeeCode_GetRSymbolName((DeeObject *)code,rid);
+  if (class_name) {
+   DeeModuleObject *mod = code->co_module;
+   if (!DeeInteractiveModule_Check(code->co_module)) {
+    struct module_symbol *class_sym;
+    class_sym = DeeModule_GetSymbolString(code->co_module,
+                                          class_name,
+                                          hash_str(class_name));
+    if (class_sym &&
+      !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN)) &&
+        class_sym->ss_index < mod->mo_globalc) {
+     DREF DeeObject *class_type;
+     rwlock_read(&mod->mo_lock);
+     class_type = mod->mo_globalv[class_sym->ss_index];
+     Dee_XIncref(class_type);
+     rwlock_endread(&mod->mo_lock);
+     if (class_type) {
+      if (DeeType_Check(class_type) &&
+          DeeType_IsClass(class_type)) {
+       DeeClassDescriptorObject *desc;
+       struct class_attribute *attr;
+       desc = DeeClass_DESC(class_type)->cd_desc;
+       if (mid < (is_cmember ? desc->cd_cmemb_size : desc->cd_imemb_size)) {
+        size_t i; dssize_t result;
+        if (desc->cd_name) class_name = DeeString_STR(desc->cd_name);
+        else if (((DeeTypeObject *)class_type)->tp_name)
+         class_name = (char *)((DeeTypeObject *)class_type)->tp_name;
+        if (is_cmember) {
+         for (i = 0; i <= desc->cd_cattr_mask; ++i) {
+          attr = &desc->cd_cattr_list[i];
+          if (!attr->ca_name) continue;
+          if (mid < attr->ca_addr)
+              continue;
+          if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+           if (mid > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+                   ? attr->ca_addr : attr->ca_addr + 2))
+               continue;
+           /* Found it! */
+           goto found_it_property;
+          } else {
+           if (mid > attr->ca_addr)
+               continue;
+           goto found_it_member;
+          }
+         }
+        }
+        for (i = 0; i <= desc->cd_iattr_mask; ++i) {
+         attr = &desc->cd_iattr_list[i];
+         if (!attr->ca_name) continue;
+         if (is_cmember
+          ? !(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+          :  (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+             continue;
+         if (mid < attr->ca_addr)
+             continue;
+         if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+          if (mid > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+                  ? attr->ca_addr : attr->ca_addr + 2))
+              continue;
+          /* Found it! */
+found_it_property:
+          result = DeeFormat_Printf(printer,arg,"%s.%k.%s",
+                                    class_name,attr->ca_name,
+                                    mid == attr->ca_addr + CLASS_GETSET_GET ? "getter" :
+                                    mid == attr->ca_addr + CLASS_GETSET_DEL ? "delete" :
+                                                                              "setter");
+         } else {
+          if (mid > attr->ca_addr)
+              continue;
+found_it_member:
+          result = DeeFormat_Printf(printer,arg,"%s.%k",
+                                    class_name,attr->ca_name);
+         }
+         Dee_Decref(class_type);
+         return result;
+        }
+       }
+      }
+      Dee_Decref(class_type);
+     }
+    }
+   }
+  }
+ }
+ return DeeFormat_Printf(printer,arg,"%I16u",mid);
+}
+
 PRIVATE dssize_t DCALL
 libdisasm_printarg(dformatprinter printer, void *arg,
                    uint16_t aid, DeeCodeObject *code,
@@ -1910,7 +2005,11 @@ print_ref:
   case ASM_SETMEMBER_THIS_R:
   case ASM_GETCMEMBER_R:
   case ASM_CALLCMEMBER_THIS_R:
-   printf(", " PREFIX_INTEGERAL "%I8u",READ_imm8(iter));
+   PRINT(", " PREFIX_INTEGERAL);
+   imm2 = READ_imm8(iter);
+   INVOKE(libdisasm_printmembername(printer,arg,imm,imm2,code,flags,
+                                    opcode == ASM_GETCMEMBER_R ||
+                                    opcode == ASM_CALLCMEMBER_THIS_R));
    if (opcode == ASM_SETMEMBER_THIS_R) PRINT(", pop");
    if (opcode == ASM_CALLCMEMBER_THIS_R)
        printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));
@@ -1921,7 +2020,11 @@ print_ref:
   case ASM16_SETMEMBER_THIS_R:
   case ASM16_GETCMEMBER_R:
   case ASM16_CALLCMEMBER_THIS_R:
-   printf(", " PREFIX_INTEGERAL "%I16u",READ_imm16(iter));
+   PRINT(", " PREFIX_INTEGERAL);
+   imm2 = READ_imm16(iter);
+   INVOKE(libdisasm_printmembername(printer,arg,imm,imm2,code,flags,
+                                    opcode == ASM16_GETCMEMBER_R ||
+                                    opcode == ASM16_CALLCMEMBER_THIS_R));
    if (opcode == ASM16_SETMEMBER_THIS_R) PRINT(", pop");
    if (opcode == ASM16_CALLCMEMBER_THIS_R)
        printf(", " PREFIX_STACKEFFECT "%I8u",READ_imm8(iter));

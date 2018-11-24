@@ -1979,9 +1979,9 @@ DecFile_LoadDDI(DecFile *__restrict self,
   if (xdat < self->df_base ||
       xdat >= self->df_base + self->df_size)
       GOTO_CORRUPTED(xdat,err_currupted_r_maps);
-  xsiz = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+  xsiz = UNALIGNED_GETLE16((uint16_t *)xdat),xdat += 2;
   if unlikely(xsiz == (uint16_t)-1)
-     xsiz = UNALIGNED_GETLE32((uint32_t *)reader),reader += 4;
+     xsiz = UNALIGNED_GETLE32((uint32_t *)xdat),xdat += 4;
   if likely(xsiz != 0) {
    struct ddi_exdat *xres;
    if (xdat        <  self->df_base ||
