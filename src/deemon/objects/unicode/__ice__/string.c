@@ -1048,10 +1048,7 @@ PRIVATE DeeTypeObject stringiterator_type = {
                 /* .tp_copy_ctor = */&string_iter_copy,
                 /* .tp_deep_ctor = */&string_iter_copy,
                 /* .tp_any_ctor  = */&string_iter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&string_iterator_fini,

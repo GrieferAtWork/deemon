@@ -207,10 +207,7 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
                 /* .tp_copy_ctor = */&smapiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&smapiter_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SharedMapIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SharedMapIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&smapiter_fini,

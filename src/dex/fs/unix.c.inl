@@ -601,10 +601,7 @@ INTERN DeeTypeObject DeeUser_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeUserObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeUserObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -1111,10 +1108,7 @@ INTERN DeeTypeObject DeeStat_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&stat_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeStatObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeStatObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -1158,10 +1152,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&lstat_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeStatObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeStatObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -1963,10 +1954,7 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
                 /* .tp_copy_ctor = */NULL, /* (void *)&diriter_copy, */
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DirIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(DirIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&diriter_fini,
@@ -2058,10 +2046,7 @@ INTERN DeeTypeObject DeeDir_Type = {
                 /* .tp_copy_ctor = */(void *)&dir_copy,
                 /* .tp_deep_ctor = */(void *)&dir_copy,
                 /* .tp_any_ctor  = */(void *)&dir_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Dir)
-                }
+                TYPE_FIXED_ALLOCATOR(Dir)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dir_fini,
@@ -2173,10 +2158,7 @@ INTERN DeeTypeObject DeeQueryIterator_Type = {
                 /* .tp_copy_ctor = */NULL, /* (void *)&diriter_copy, */
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(QueryIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(QueryIterator)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -2295,10 +2277,7 @@ INTERN DeeTypeObject DeeQuery_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Dir)
-                }
+                TYPE_FIXED_ALLOCATOR(Dir)
             }
         },
         /* .tp_dtor        = */NULL,

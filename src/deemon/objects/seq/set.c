@@ -356,10 +356,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
                 /* .tp_copy_ctor = */&suiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&suiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetUnionIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SetUnionIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&suiter_fini,
@@ -467,10 +464,7 @@ INTERN DeeTypeObject SetUnion_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&su_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetUnion)
-                }
+                TYPE_FIXED_ALLOCATOR(SetUnion)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -593,10 +587,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
                 /* .tp_copy_ctor = */&ssditer_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&ssditer_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetSymmetricDifference)
-                }
+                TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ssditer_fini,
@@ -695,10 +686,7 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&ssd_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetSymmetricDifference)
-                }
+                TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -859,10 +847,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
                 /* .tp_copy_ctor = */&siiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&siiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetIntersectionIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SetIntersectionIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&siiter_fini,
@@ -964,10 +949,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&si_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetIntersection)
-                }
+                TYPE_FIXED_ALLOCATOR(SetIntersection)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -1045,10 +1027,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
                 /* .tp_copy_ctor = */&sditer_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sditer_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetDifferenceIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SetDifferenceIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sditer_fini,
@@ -1151,10 +1130,7 @@ INTERN DeeTypeObject SetDifference_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sd_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetDifference)
-                }
+                TYPE_FIXED_ALLOCATOR(SetDifference)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,

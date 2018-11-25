@@ -993,10 +993,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
                 /* .tp_copy_ctor = */&yf_copy,
                 /* .tp_deep_ctor = */&yf_deepcopy,
                 /* .tp_any_ctor  = */&yf_new,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(YFunction)
-                }
+                TYPE_FIXED_ALLOCATOR(YFunction)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&yf_fini,
@@ -1735,10 +1732,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
                 /* .tp_copy_ctor = */&yfi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&yfi_new,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(YFIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(YFIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&yfi_dtor,

@@ -1454,10 +1454,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
                 /* .tp_copy_ctor   = */(void *)&toi_copy,
                 /* .tp_deep_ctor   = */NULL,
                 /* .tp_any_ctor    = */NULL,
-                /* .tp_free        = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(TypeOperatorsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(TypeOperatorsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&toi_fini,
@@ -1502,10 +1499,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
                 /* .tp_copy_ctor   = */NULL,
                 /* .tp_deep_ctor   = */NULL,
                 /* .tp_any_ctor    = */NULL,
-                /* .tp_free        = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(TypeOperators)
-                }
+                TYPE_FIXED_ALLOCATOR(TypeOperators)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&to_fini,

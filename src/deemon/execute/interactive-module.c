@@ -1690,10 +1690,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&imod_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(InteractiveModule)
-                }
+                TYPE_FIXED_ALLOCATOR(InteractiveModule)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&imod_fini,

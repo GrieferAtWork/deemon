@@ -197,10 +197,7 @@ INTERN DeeTypeObject DeeLocatorIterator_Type = {
                 /* .tp_copy_ctor = */&locatoriter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&locatoriter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(LocatorIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(LocatorIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&locatoriter_fini,
@@ -325,10 +322,7 @@ INTERN DeeTypeObject DeeLocator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&locator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Locator)
-                }
+                TYPE_FIXED_ALLOCATOR(Locator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&locator_fini,

@@ -156,10 +156,7 @@ INTERN DeeTypeObject DeeSubRangeIterator_Type = {
                 /* .tp_copy_ctor = */&subrangeiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&subrangeiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SubRangeIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SubRangeIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&subrangeiterator_fini,
@@ -372,10 +369,7 @@ INTERN DeeTypeObject DeeSubRange_Type = {
                 /* .tp_copy_ctor = */NULL, /* TODO */
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SubRange)
-                }
+                TYPE_FIXED_ALLOCATOR(SubRange)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&subrange_fini,
@@ -622,10 +616,7 @@ INTERN DeeTypeObject DeeSubRangeN_Type = {
                 /* .tp_copy_ctor = */NULL, /* TODO */
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SubRangeN)
-                }
+                TYPE_FIXED_ALLOCATOR(SubRangeN)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&subrangen_fini,

@@ -903,10 +903,7 @@ INTERN DeeTypeObject FixedListIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&fli_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&fli_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(FixedListIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(FixedListIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&fli_fini,

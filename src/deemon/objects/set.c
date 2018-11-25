@@ -148,10 +148,7 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&invset_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeInverseSetObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeInverseSetObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&invset_fini,
@@ -857,10 +854,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,

@@ -249,10 +249,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
                 /* .tp_copy_ctor = */&kwdsiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&kwdsiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(KwdsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(KwdsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
@@ -785,10 +782,7 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
                 /* .tp_copy_ctor = */&kmapiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&kmapiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(KmapIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(KmapIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&kmapiter_fini,
@@ -1038,10 +1032,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&kmap_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(KwdsMapping)
-                }
+                TYPE_FIXED_ALLOCATOR(KwdsMapping)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&kmap_fini,

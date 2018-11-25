@@ -321,10 +321,7 @@ INTERN DeeTypeObject DeeCatIterator_Type = {
                 /* .tp_copy_ctor = */&catiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&catiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(CatIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(CatIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&catiterator_fini,

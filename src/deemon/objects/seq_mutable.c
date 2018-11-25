@@ -2903,10 +2903,7 @@ PRIVATE DeeTypeObject RemoveIfAllWrapper_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RemoveIfAllWrapper)
-                }
+                TYPE_FIXED_ALLOCATOR(RemoveIfAllWrapper)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ria_fini,

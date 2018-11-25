@@ -190,10 +190,7 @@ PRIVATE DeeTypeObject CombinationsIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(CombinationsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&comiter_fini,
@@ -302,10 +299,7 @@ PRIVATE DeeTypeObject Combinations_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Combinations)
-                }
+                TYPE_FIXED_ALLOCATOR(Combinations)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&com_fini,
@@ -425,10 +419,7 @@ PRIVATE DeeTypeObject RepeatCombinationsIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(CombinationsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&comiter_fini,
@@ -501,10 +492,7 @@ PRIVATE DeeTypeObject RepeatCombinations_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Combinations)
-                }
+                TYPE_FIXED_ALLOCATOR(Combinations)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&com_fini,
@@ -616,10 +604,7 @@ PRIVATE DeeTypeObject PermutationsIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(CombinationsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&comiter_fini,
@@ -695,10 +680,7 @@ PRIVATE DeeTypeObject Permutations_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Combinations)
-                }
+                TYPE_FIXED_ALLOCATOR(Combinations)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&com_fini,

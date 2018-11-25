@@ -40,61 +40,78 @@ typedef DeeWeakRefAbleObject WeakRefAble;
 PRIVATE void DCALL
 ob_weakref_fini(WeakRef *__restrict self) {
  Dee_weakref_fini(&self->wr_ref);
+ Dee_XDecref(self->wr_del);
 }
 PRIVATE int DCALL
 ob_weakref_ctor(WeakRef *__restrict self) {
  Dee_weakref_null(&self->wr_ref);
+ self->wr_del = NULL;
  return 0;
 }
 PRIVATE int DCALL
 ob_weakref_copy(WeakRef *__restrict self,
                 WeakRef *__restrict other) {
- DREF DeeObject *refobj;
- refobj = Dee_weakref_lock(&other->wr_ref);
- if (!refobj) Dee_weakref_null(&self->wr_ref);
- else {
-#ifdef NDEBUG
-  Dee_weakref_init(&self->wr_ref,refobj);
-#else
-  bool ok = Dee_weakref_init(&self->wr_ref,refobj);
-  ASSERT(ok && "Then how did `other' manage to create one?");
-#endif
-  Dee_Decref(refobj);
- }
+ self->wr_del = other->wr_del;
+ Dee_XIncref(self->wr_del);
+ Dee_weakref_copy(&self->wr_ref,&other->wr_ref);
  return 0;
 }
 PRIVATE int DCALL
 ob_weakref_deep(WeakRef *__restrict self,
                 WeakRef *__restrict other) {
- DREF DeeObject *refobj,*refcopy;
- refobj = Dee_weakref_lock(&other->wr_ref);
- if (!refobj)
-  Dee_weakref_null(&self->wr_ref);
- else {
-  refcopy = DeeObject_DeepCopy(refobj);
-  Dee_Decref(refobj);
-  if unlikely(!refcopy) return -1;
-#ifdef NDEBUG
-  Dee_weakref_init(&self->wr_ref,refcopy);
-#else
-  {
-   bool ok = Dee_weakref_init(&self->wr_ref,refcopy);
-   ASSERT(ok && "Then how did `other' manage to create one?");
-  }
-#endif
-  Dee_Decref(refcopy);
+ self->wr_del = NULL;
+ if (other->wr_del) {
+  self->wr_del = DeeObject_DeepCopy(other->wr_del);
+  if unlikely(!self->wr_del) goto err;
  }
+ Dee_weakref_copy(&self->wr_ref,&other->wr_ref);
  return 0;
+err:
+ return -1;
 }
+
+PRIVATE void DCALL
+ob_weakref_invoke_callback(struct weakref *__restrict self) {
+ DREF WeakRef *me;
+ me = COMPILER_CONTAINER_OF(self,WeakRef,wr_ref);
+ if (!Dee_IncrefIfNotZero(me)) {
+  /* Controller has already died. */
+  WEAKREF_CALLBACK_UNLOCK(self);
+ } else {
+  DREF DeeObject *result;
+  WEAKREF_CALLBACK_UNLOCK(self);
+  /* Invoke the controller deletion callback. */
+  ASSERT(me->wr_del);
+  result = DeeObject_Call(me->wr_del,1,(DeeObject **)&me);
+  Dee_Decref(me);
+  if likely(result)
+      Dee_Decref(result);
+  else {
+   DeeError_Print("Unhandled exception in weakref callback",
+                   ERROR_PRINT_DOHANDLE);
+  }
+ }
+}
+
+
 PRIVATE int DCALL
 ob_weakref_init(WeakRef *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj;
- if (DeeArg_Unpack(argc,argv,"o:weakref",&obj))
+ self->wr_del = NULL;
+ if (DeeArg_Unpack(argc,argv,"o|o:weakref",&obj,&self->wr_del))
      goto err;
- if (!Dee_weakref_init(&self->wr_ref,obj))
-      goto err_nosupport;
+ if (self->wr_del) {
+  Dee_Incref(self->wr_del);
+  if (!Dee_weakref_init(&self->wr_ref,obj,&ob_weakref_invoke_callback))
+       goto err_nosupport_del;
+ } else {
+  if (!Dee_weakref_init(&self->wr_ref,obj,NULL))
+       goto err_nosupport;
+ }
  return 0;
+err_nosupport_del:
+ Dee_Decref(self->wr_del);
 err_nosupport:
  err_cannot_weak_reference(obj);
 err:
@@ -125,10 +142,8 @@ ob_weakref_assign(WeakRef *__restrict self,
 #endif
  } else {
   /* Assign the given other to our weak reference. */
-  if (!Dee_weakref_set(&self->wr_ref,other)) {
-   err_cannot_weak_reference(other);
-   return -1;
-  }
+  if (!Dee_weakref_set(&self->wr_ref,other))
+       return err_cannot_weak_reference(other);
  }
  return 0;
 }
@@ -302,6 +317,17 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
     { NULL }
 };
 
+PRIVATE struct type_member ob_weakref_members[] = {
+    TYPE_MEMBER_FIELD_DOC("callback",STRUCT_OBJECT,offsetof(WeakRef,wr_del),
+                          "->?Dcallable\n"
+                          "@throw UnboundAttribute No callback has been specified\n"
+                          "The second argument passed to the constructor, specifying "
+                          "an optional callback to-be executed when the bound object "
+                          "dies on its own\n"
+                          "When invoked, the callback is passed a reference to @this weakref object"),
+    TYPE_MEMBER_END
+};
+
 
 PUBLIC DeeTypeObject DeeWeakRef_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -311,12 +337,17 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                             "()\n"
                             "Construct an unbound weak reference\n"
                             "\n"
-                            "(obj)\n"
+                            "(obj,callback?:?Dcallable)\n"
                             "@throw TypeError The given object @obj does not implement weak referencing support\n"
                             "Construct a weak reference bound to @obj, that will be notified once said "
                             "object is supposed to be destroyed. With that in mind, weak references don't "
                             "actually hold references at all, but rather allow the user to test if an "
                             "object is still allocated at runtime.\n"
+                            "If given, @callback is invoked with a single argument passed as "
+                            "@this weakref object once the then bound object dies on its own\n"
+                            "Note however that the bound callback does not influence anything "
+                            "else, such as comparison operators, which only compare the ids of "
+                            "bound objects, even after those objects have died\n"
                             "\n"
                             "bool->\n"
                             "Returns true if the weak reference is currently bound. Note however that this "
@@ -358,10 +389,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                 /* .tp_copy_ctor = */&ob_weakref_copy,
                 /* .tp_deep_ctor = */&ob_weakref_deep,
                 /* .tp_any_ctor  = */&ob_weakref_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(WeakRef)
-                }
+                TYPE_FIXED_ALLOCATOR(WeakRef)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
@@ -386,7 +414,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */ob_weakref_methods,
     /* .tp_getsets       = */ob_weakref_getsets,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */ob_weakref_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -439,10 +467,7 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
                 /* .tp_copy_ctor = */&weakrefable_copy,
                 /* .tp_deep_ctor = */&weakrefable_copy,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(WeakRefAble)
-                }
+                TYPE_FIXED_ALLOCATOR(WeakRefAble)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&weakrefable_fini,

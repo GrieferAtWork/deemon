@@ -240,10 +240,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
                         /* .tp_copy_ctor = */NULL,
                         /* .tp_deep_ctor = */NULL,
                         /* .tp_any_ctor  = */NULL,
-                        /* .tp_free      = */NULL,
-                        {
-                            /* .tp_instance_size = */sizeof(struct pointer_object)
-                        }
+                        TYPE_FIXED_ALLOCATOR(struct pointer_object)
                     }
                 },
                 /* .tp_dtor        = */NULL,

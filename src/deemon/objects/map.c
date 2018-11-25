@@ -151,10 +151,7 @@ PRIVATE DeeTypeObject DeeMapKeysIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&proxy_iterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_iterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxyIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxyIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_iterator_fini,
@@ -198,10 +195,7 @@ PRIVATE DeeTypeObject DeeMapValuesIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&proxy_iterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_iterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxyIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxyIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_iterator_fini,
@@ -245,10 +239,7 @@ PRIVATE DeeTypeObject DeeMapItemsIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&proxy_iterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_iterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxyIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxyIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_iterator_fini,
@@ -407,10 +398,7 @@ PRIVATE DeeTypeObject DeeMapProxy_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&proxy_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxy)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -454,10 +442,7 @@ PRIVATE DeeTypeObject DeeMapKeys_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&proxy_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxy)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -501,10 +486,7 @@ PRIVATE DeeTypeObject DeeMapValues_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&proxy_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxy)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -548,10 +530,7 @@ PRIVATE DeeTypeObject DeeMapItems_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&proxy_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(MapProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(MapProxy)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -1034,10 +1013,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,

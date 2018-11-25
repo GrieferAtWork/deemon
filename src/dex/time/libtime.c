@@ -2151,10 +2151,7 @@ INTERN DeeTypeObject DeeTime_Type = {
                 /* .tp_copy_ctor = */(void *)&time_copy,
                 /* .tp_deep_ctor = */(void *)&time_copy,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeTimeObject)
-                },
+                TYPE_FIXED_ALLOCATOR(DeeTimeObject),
                 /* .tp_any_ctor_kw = */(void *)&time_init,
             }
         },

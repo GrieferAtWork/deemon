@@ -1654,10 +1654,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */&buffer_ctor,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(Buffer)
-                    }
+                    TYPE_FIXED_ALLOCATOR(Buffer)
                 }
             },
             /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&buffer_fini,

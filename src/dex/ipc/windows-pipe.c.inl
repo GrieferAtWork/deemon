@@ -124,10 +124,7 @@ INTERN DeeFileTypeObject DeePipe_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */NULL,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(SystemFile)
-                    }
+                    TYPE_FIXED_ALLOCATOR(SystemFile)
                 }
             },
             /* .tp_dtor        = */NULL,
@@ -184,10 +181,7 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */NULL,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(SystemFile)
-                    }
+                    TYPE_FIXED_ALLOCATOR(SystemFile)
                 }
             },
             /* .tp_dtor        = */NULL,
@@ -244,10 +238,7 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */NULL,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(SystemFile)
-                    }
+                    TYPE_FIXED_ALLOCATOR(SystemFile)
                 }
             },
             /* .tp_dtor        = */NULL,

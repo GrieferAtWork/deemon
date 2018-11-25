@@ -3483,10 +3483,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&thread_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeThreadObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeThreadObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&thread_fini,
@@ -3514,10 +3511,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeThreadObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeThreadObject)
             }
         },
         /* .tp_dtor        = */NULL,

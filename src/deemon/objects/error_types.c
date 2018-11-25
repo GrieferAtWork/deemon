@@ -303,10 +303,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
                 /* .tp_copy_ctor = */(void *)&error_copy,
                 /* .tp_deep_ctor = */(void *)&error_deep,
                 /* .tp_any_ctor  = */(void *)&error_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeErrorObject)
-                },
+                TYPE_FIXED_ALLOCATOR(DeeErrorObject),
                 /* .tp_any_ctor_kw = */(void *)&error_init_kw,
             }
         },
@@ -846,10 +843,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
                 /* .tp_copy_ctor = */&appexit_copy,
                 /* .tp_deep_ctor = */&appexit_copy,
                 /* .tp_any_ctor  = */&appexit_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(struct appexit_object)
-                }
+                TYPE_FIXED_ALLOCATOR(struct appexit_object)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -972,10 +966,7 @@ PUBLIC DeeTypeObject DeeError_Signal = {
                 /* .tp_copy_ctor = */(void *)&none_i2,
                 /* .tp_deep_ctor = */(void *)&none_i2,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeSignalObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeSignalObject)
             }
         },
         /* .tp_dtor        = */NULL,

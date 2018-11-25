@@ -172,10 +172,7 @@ INTERN DeeTypeObject DeeTransformationIterator_Type = {
                 /* .tp_copy_ctor = */&transiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&transiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(TransformationIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(TransformationIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&transiter_fini,
@@ -364,10 +361,7 @@ INTERN DeeTypeObject DeeTransformation_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&trans_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Transformation)
-                }
+                TYPE_FIXED_ALLOCATOR(Transformation)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&trans_fini,

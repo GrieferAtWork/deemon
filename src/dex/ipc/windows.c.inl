@@ -1331,10 +1331,7 @@ INTERN DeeTypeObject ProcessThreads_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ProcessThreads)
-                }
+                TYPE_FIXED_ALLOCATOR(ProcessThreads)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -1448,10 +1445,7 @@ INTERN DeeTypeObject ProcessThreadsIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ProcessThreadsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ProcessThreadsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&pti_fini,
@@ -2096,10 +2090,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&process_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Process)
-                }
+                TYPE_FIXED_ALLOCATOR(Process)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&process_fini,
@@ -2146,10 +2137,7 @@ INTERN DeeTypeObject DeeProcEnumIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -2199,10 +2187,7 @@ INTERN DeeTypeObject DeeProcEnum_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,

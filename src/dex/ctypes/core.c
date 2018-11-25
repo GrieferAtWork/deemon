@@ -319,10 +319,7 @@ INTERN DeeTypeObject DeeSType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeSTypeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeSTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&stype_fini,
@@ -393,10 +390,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeePointerTypeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeePointerTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ptype_fini,
@@ -481,10 +475,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeLValueTypeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeLValueTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ltype_fini,
@@ -1030,10 +1021,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
                     /* .tp_deep_ctor = */(void *)&struct_copy,
                     /* .tp_any_ctor  = */(void *)&struct_init,
                     /* TODO: Use a custom allocator that takes alignment into account. */
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(DeeObject)
-                    }
+                    TYPE_FIXED_ALLOCATOR_S(DeeObject)
                 }
             },
             /* .tp_dtor        = */NULL,
@@ -1724,10 +1712,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeArrayTypeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeArrayTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&atype_fini,
@@ -1847,10 +1832,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeCFunctionTypeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeCFunctionTypeObject)
             }
         },
 #ifdef CONFIG_NO_CFUNCTION

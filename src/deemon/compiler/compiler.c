@@ -354,10 +354,7 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeCompilerObject)
-                },
+                TYPE_FIXED_ALLOCATOR(DeeCompilerObject),
                 /* .tp_any_ctor_kw = */&compiler_init,
             }
         },

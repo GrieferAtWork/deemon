@@ -662,10 +662,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Frame)
-                }
+                TYPE_FIXED_ALLOCATOR(Frame)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&frame_fini,

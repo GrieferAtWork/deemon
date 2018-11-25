@@ -1800,10 +1800,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
                 /* .tp_copy_ctor = */&dict_copy,
                 /* .tp_deep_ctor = */&dict_copy,
                 /* .tp_any_ctor  = */&dict_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Dict)
-                }
+                TYPE_FIXED_ALLOCATOR(Dict)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dict_fini,

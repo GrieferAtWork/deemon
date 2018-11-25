@@ -197,13 +197,16 @@ LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 
 
 PUBLIC bool DCALL
-Dee_weakref_init(struct weakref *__restrict self, DeeObject *__restrict ob) {
+Dee_weakref_init(struct weakref *__restrict self,
+                 DeeObject *__restrict ob,
+                 weakref_callback_t callback) {
  struct weakref_list *list;
  struct weakref *next;
  ASSERT(self);
  ASSERT(ob);
  ASSERT(ob->ob_refcnt);
  ASSERT(IS_ALIGNED((uintptr_t)self,PTRLOCK_LOCK_MASK+1));
+ self->wr_del = callback;
  list = WEAKREFS_GET(ob);
  if unlikely(!WEAKREFS_OK(list,ob))
     return false;
@@ -245,6 +248,7 @@ PUBLIC void
  self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
  self->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
 #endif
+ self->wr_del = other->wr_del;
  if (other->wr_obj) {
   WEAKREF_LOCK(other);
   COMPILER_READ_BARRIER();
@@ -302,7 +306,9 @@ again:
    if unlikely(self->wr_obj) {
     struct weakref *next;
     if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+#if 0
      struct weakref **block = self->wr_pself;
+#endif
      struct weakref **p = self->wr_pself;
      struct weakref **other_p = other->wr_pself;
      WEAKREF_UNLOCK(self);
@@ -310,8 +316,10 @@ again:
      WEAKREF_UNLOCK(other);
      if unlikely(p == other_p || p == &other->wr_next)
         return;
+#if 0 /* Potential SEGFAULT */
      LOCK_POINTER(*block);
      UNLOCK_POINTER(*block);
+#endif
      goto again;
     }
     next = (struct weakref *)GET_POINTER(self->wr_next);
@@ -324,8 +332,10 @@ again:
       WEAKREF_UNLOCK(other);
       if unlikely(next == other)
          return;
+#if 0 /* Potential SEGFAULT */
       WEAKREF_LOCK(next);
       WEAKREF_UNLOCK(next);
+#endif
       goto again;
      }
      next->wr_pself = self->wr_pself;
@@ -382,7 +392,9 @@ again:
    if unlikely(self->wr_obj) {
     struct weakref *next;
     if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+#if 0
      struct weakref **block = self->wr_pself;
+#endif
      struct weakref **p = self->wr_pself;
      struct weakref **other_p = other->wr_pself;
      WEAKREF_UNLOCK(self);
@@ -390,8 +402,10 @@ again:
      WEAKREF_UNLOCK(other);
      if unlikely(p == other_p || p == &other->wr_next)
         return;
+#if 0 /* Potential SEGFAULT */
      LOCK_POINTER(*block);
      UNLOCK_POINTER(*block);
+#endif
      goto again;
     }
     next = (struct weakref *)GET_POINTER(self->wr_next);
@@ -404,8 +418,10 @@ again:
       WEAKREF_UNLOCK(other);
       if unlikely(next == other)
          return;
+#if 0 /* Potential SEGFAULT */
       WEAKREF_LOCK(next);
       WEAKREF_UNLOCK(next);
+#endif
       goto again;
      }
      next->wr_pself = self->wr_pself;
@@ -447,6 +463,7 @@ Dee_weakref_move(struct weakref *__restrict dst,
 #ifndef NDEBUG
  ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif
+ dst->wr_del = src->wr_del;
 again:
 #ifndef NDEBUG
  dst->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
@@ -559,9 +576,13 @@ again:
 }
 
 
+/* Overwrite an already initialize weak reference with the given `ob'.
+ * @return: true:    Successfully overwritten the weak reference.
+ * @return: false:   The given object `ob' does not support weak referencing
+ *                   and the stored weak reference was not modified. */
 PUBLIC bool DCALL
 Dee_weakref_set(struct weakref *__restrict self,
-            DeeObject *__restrict ob) {
+                DeeObject *__restrict ob) {
  struct weakref_list *new_list;
  struct weakref *next;
  ASSERT(self);
@@ -781,8 +802,10 @@ again:
    }
   }
  } else if (result != NULL) {
+#if 0 /* Can't happen, because we're locking the weakref */
   COMPILER_READ_BARRIER();
   result = self->wr_obj; /* Re-read in case it changed. */
+#endif
 #ifdef CONFIG_NO_THREADS
   if likely(result->ob_refcnt != 0)
    ++result->ob_refcnt;
@@ -844,7 +867,7 @@ destroy_weak:
    struct weakref_list *list;
    ASSERT(undo_start->tp_weakrefs >= sizeof(DeeObject));
    list = (struct weakref_list *)((uintptr_t)self+undo_start->tp_weakrefs);
- restart_clear_weakrefs:
+restart_clear_weakrefs:
    LOCK_POINTER(list->wl_nodes);
    if ((iter = (struct weakref *)GET_POINTER(list->wl_nodes)) != NULL) {
     if (!WEAKREF_TRYLOCK(iter)) {
@@ -866,16 +889,19 @@ destroy_weak:
     }
     /* Overwrite the weakly referenced object with NULL,
      * indicating that the link has been severed. */
-    iter->wr_obj = NULL;
-    COMPILER_WRITE_BARRIER();
-#ifndef NDEBUG
-    iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-    ATOMIC_WRITE(iter->wr_next,(struct weakref *)
-                ((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else
-    ATOMIC_WRITE(iter->wr_next,NULL);
-#endif
+    ATOMIC_WRITE(iter->wr_obj,NULL);
     ATOMIC_WRITE(list->wl_nodes,next);
+    if (iter->wr_del) {
+     (*iter->wr_del)(iter);
+    } else {
+#ifndef NDEBUG
+     iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
+     ATOMIC_WRITE(iter->wr_next,(struct weakref *)
+                 ((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
+#else
+     ATOMIC_WRITE(iter->wr_next,NULL);
+#endif
+    }
     goto restart_clear_weakrefs;
    }
   }
@@ -974,16 +1000,19 @@ restart_clear_weakrefs:
   }
   /* Overwrite the weakly referenced object with NULL,
    * indicating that the link has been severed. */
-  iter->wr_obj = NULL;
-  COMPILER_WRITE_BARRIER();
-#ifndef NDEBUG
-  iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-  ATOMIC_WRITE(iter->wr_next,(struct weakref *)
-              ((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else
-  ATOMIC_WRITE(iter->wr_next,NULL);
-#endif
+  ATOMIC_WRITE(iter->wr_obj,NULL);
   ATOMIC_WRITE(list->wl_nodes,next);
+  if (iter->wr_del) {
+   (*iter->wr_del)(iter);
+  } else {
+#ifndef NDEBUG
+   iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
+   ATOMIC_WRITE(iter->wr_next,(struct weakref *)
+               ((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
+#else
+   ATOMIC_WRITE(iter->wr_next,NULL);
+#endif
+  }
   goto restart_clear_weakrefs;
  }
 #if 1
@@ -2177,10 +2206,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
                 /* .tp_copy_ctor = */&object_copy_ctor,
                 /* .tp_deep_ctor = */&object_copy_ctor,
                 /* .tp_any_ctor  = */&object_any_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -3930,10 +3956,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeTypeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeTypeObject)
             }
         },
         /* .tp_dtor        = */(void (DCALL *)(DeeObject *__restrict))&type_fini,

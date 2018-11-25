@@ -247,10 +247,7 @@ INTERN DeeTypeObject DeeBytesSplitIterator_Type = {
                 /* .tp_copy_ctor = */&bsi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bsi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesSplitIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bsi_fini,
@@ -295,10 +292,7 @@ INTERN DeeTypeObject DeeBytesCaseSplitIterator_Type = {
                 /* .tp_copy_ctor = */&bsi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bsi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesSplitIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bsi_fini,
@@ -490,10 +484,7 @@ INTERN DeeTypeObject DeeBytesSplit_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bs_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesSplit)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesSplit)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bs_fini,
@@ -537,10 +528,7 @@ INTERN DeeTypeObject DeeBytesCaseSplit_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bs_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesSplit)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesSplit)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bs_fini,
@@ -830,10 +818,7 @@ INTERN DeeTypeObject DeeBytesLineSplitIterator_Type = {
                 /* .tp_copy_ctor = */&blsi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&blsi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesLineSplitIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesLineSplitIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&blsi_fini,
@@ -950,10 +935,7 @@ INTERN DeeTypeObject DeeBytesLineSplit_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bls_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesLineSplit)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesLineSplit)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bls_fini,

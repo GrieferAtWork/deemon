@@ -191,10 +191,7 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
                 /* .tp_copy_ctor = */&rveciter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&rveciter_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RefVectorIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(RefVectorIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&rveciter_fini,
@@ -988,10 +985,7 @@ INTERN DeeTypeObject RefVector_Type = {
                 /* .tp_copy_ctor = */&rvec_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RefVector)
-                }
+                TYPE_FIXED_ALLOCATOR(RefVector)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&rvec_fini,
@@ -1213,10 +1207,7 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
                 /* .tp_copy_ctor = */&sveciter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sveciter_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SharedVectorIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SharedVectorIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sveciter_fini,
@@ -1518,10 +1509,7 @@ INTERN DeeTypeObject SharedVector_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SharedVector)
-                }
+                TYPE_FIXED_ALLOCATOR(SharedVector)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&svec_fini,

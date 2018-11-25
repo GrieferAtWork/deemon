@@ -333,10 +333,7 @@ INTERN DeeTypeObject DictIterator_Type = {
                 /* .tp_copy_ctor = */&dictiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&dictiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(DictIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dictiterator_fini,
@@ -437,10 +434,7 @@ PRIVATE DeeTypeObject DictProxyIterator_Type = {
                 /* .tp_copy_ctor = */&dictproxyiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictProxyIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(DictProxyIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dictproxyiterator_fini,
@@ -530,10 +524,7 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
                 /* .tp_copy_ctor = */&dictproxyiterator_copy, \
                 /* .tp_deep_ctor = */NULL, \
                 /* .tp_any_ctor  = */&dictproxyiterator_init, \
-                /* .tp_free      = */NULL, \
-                { \
-                    /* .tp_instance_size = */sizeof(DictProxyIterator) \
-                } \
+                TYPE_FIXED_ALLOCATOR(DictProxyIterator) \
             } \
         }, \
         /* .tp_dtor        = */NULL, \
@@ -765,10 +756,7 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
                 /* .tp_copy_ctor = */&proxy_copy,
                 /* .tp_deep_ctor = */&proxy_deep,
                 /* .tp_any_ctor  = */&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&proxy_fini,
@@ -813,10 +801,7 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
                 /* .tp_copy_ctor = */&proxy_copy,
                 /* .tp_deep_ctor = */&proxy_deep,
                 /* .tp_any_ctor  = */&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -861,10 +846,7 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
                 /* .tp_copy_ctor = */&proxy_copy,
                 /* .tp_deep_ctor = */&proxy_deep,
                 /* .tp_any_ctor  = */&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -909,10 +891,7 @@ PUBLIC DeeTypeObject DeeDictValues_Type = {
                 /* .tp_copy_ctor = */&proxy_copy,
                 /* .tp_deep_ctor = */&proxy_deep,
                 /* .tp_any_ctor  = */&proxy_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictProxy)
-                }
+                TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
         /* .tp_dtor        = */NULL,

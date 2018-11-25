@@ -1452,10 +1452,7 @@ INTERN DeeTypeObject Deque_Type = {
                 /* .tp_copy_ctor = */(void *)&deq_copy,
                 /* .tp_deep_ctor = */(void *)&deq_copy,
                 /* .tp_any_ctor  = */(void *)&deq_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Deque)
-                }
+                TYPE_FIXED_ALLOCATOR(Deque)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&deq_fini,
@@ -1586,10 +1583,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&deqiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&deqiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DequeIteratorObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DequeIteratorObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&deqiter_fini,

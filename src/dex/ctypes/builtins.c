@@ -309,10 +309,7 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */NULL,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(DeeObject)
-                    }
+                    TYPE_FIXED_ALLOCATOR_S(DeeObject)
                 }
             },
             /* .tp_dtor        = */NULL,

@@ -247,10 +247,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(TraceIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(TraceIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&traceiter_fini,

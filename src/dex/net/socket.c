@@ -2711,10 +2711,7 @@ INTERN DeeTypeObject DeeSocket_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeSocketObject)
-                },
+                TYPE_FIXED_ALLOCATOR(DeeSocketObject),
                 /* .tp_any_ctor_kw = */(void *)&socket_ctor,
             }
         },

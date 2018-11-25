@@ -560,10 +560,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&ssi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringScanIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringScanIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ssi_fini, /* offset:`s_split' == offset:`ls_split' */
@@ -673,10 +670,7 @@ INTERN DeeTypeObject StringScan_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringScanner)
-                }
+                TYPE_FIXED_ALLOCATOR(StringScanner)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ss_fini,

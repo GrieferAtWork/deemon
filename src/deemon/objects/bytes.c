@@ -194,10 +194,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
                 /* .tp_copy_ctor = */&bytesiter_copy,
                 /* .tp_deep_ctor = */&bytesiter_copy,
                 /* .tp_any_ctor  = */&bytesiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bytesiter_fini,

@@ -462,10 +462,7 @@ INTERN DeeTypeObject DeeSeqIterator_Type = {
                 /* .tp_copy_ctor = */&seqiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&seqiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SeqIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SeqIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&seqiterator_fini,
@@ -3921,10 +3918,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -4350,10 +4344,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -4474,10 +4465,7 @@ INTERN DeeTypeObject IteratorFuture_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&if_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(IteratorFuture)
-                }
+                TYPE_FIXED_ALLOCATOR(IteratorFuture)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&if_fini,
@@ -4572,10 +4560,7 @@ INTERN DeeTypeObject IteratorPending_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&ip_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(IteratorPending)
-                }
+                TYPE_FIXED_ALLOCATOR(IteratorPending)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ip_fini,

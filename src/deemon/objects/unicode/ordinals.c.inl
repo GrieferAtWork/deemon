@@ -164,10 +164,7 @@ INTERN DeeTypeObject DeeStringOrdinalsIterator_Type = {
                 /* .tp_copy_ctor = */&stringordinalsiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&stringordinalsiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringOrdinalsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringOrdinalsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&stringordinalsiter_fini,
@@ -298,10 +295,7 @@ INTERN DeeTypeObject DeeStringOrdinals_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringOrdinals)
-                }
+                TYPE_FIXED_ALLOCATOR(StringOrdinals)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&stringordinals_fini,

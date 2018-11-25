@@ -886,10 +886,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */NULL,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(X(Integer))
-                    }
+                    TYPE_FIXED_ALLOCATOR(X(Integer))
                 }
             },
             /* .tp_dtor        = */NULL,

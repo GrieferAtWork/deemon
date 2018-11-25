@@ -372,10 +372,7 @@ INTERN DeeTypeObject StringFindIterator_Type = {
                 /* .tp_copy_ctor = */&sfi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sfi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringFindIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringFindIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sfi_fini,
@@ -419,10 +416,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
                 /* .tp_copy_ctor = */&sfi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&scfi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringFindIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringFindIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sfi_fini,
@@ -560,10 +554,7 @@ INTERN DeeTypeObject StringFind_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sf_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringFind)
-                }
+                TYPE_FIXED_ALLOCATOR(StringFind)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sf_fini,
@@ -608,10 +599,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sf_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringFind)
-                }
+                TYPE_FIXED_ALLOCATOR(StringFind)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sf_fini,

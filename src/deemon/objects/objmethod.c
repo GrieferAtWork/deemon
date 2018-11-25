@@ -370,10 +370,7 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObjMethodObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeObjMethodObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&objmethod_fini,
@@ -580,10 +577,7 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&dockwdsiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DocKwdsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(DocKwdsIterator)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -663,10 +657,7 @@ INTERN DeeTypeObject DocKwds_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DocKwds)
-                }
+                TYPE_FIXED_ALLOCATOR(DocKwds)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -795,10 +786,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeKwObjMethodObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeKwObjMethodObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&kwobjmethod_fini,
@@ -1041,10 +1029,7 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeClsMethodObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeClsMethodObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&clsmethod_fini,
@@ -1135,10 +1120,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeKwClsMethodObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeKwClsMethodObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&kwclsmethod_fini,
@@ -1430,10 +1412,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeClsPropertyObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeClsPropertyObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&clsmethod_fini,
@@ -1644,10 +1623,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeClsMemberObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeClsMemberObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&clsmember_fini,
@@ -2002,10 +1978,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeCMethodObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeCMethodObject)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -2072,10 +2045,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeKwCMethodObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeKwCMethodObject)
             }
         },
         /* .tp_dtor        = */NULL,

@@ -222,10 +222,7 @@ INTERN DeeTypeObject RepeatIterator_Type = {
                 /* .tp_copy_ctor = */&repeatiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&repeatiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RepeatIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(RepeatIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&repeatiter_fini,
@@ -487,10 +484,7 @@ INTERN DeeTypeObject Repeat_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&repeat_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Repeat)
-                }
+                TYPE_FIXED_ALLOCATOR(Repeat)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&repeat_fini,
@@ -687,10 +681,7 @@ INTERN DeeTypeObject RepeatItemIterator_Type = {
                 /* .tp_copy_ctor = */&repeatitemiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&repeatitemiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RepeatItemIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(RepeatItemIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&repeatitemiter_fini,
@@ -966,10 +957,7 @@ INTERN DeeTypeObject RepeatItem_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&repeatitem_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RepeatItem)
-                }
+                TYPE_FIXED_ALLOCATOR(RepeatItem)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&repeatitem_fini,

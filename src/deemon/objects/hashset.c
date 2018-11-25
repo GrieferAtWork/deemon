@@ -1162,10 +1162,7 @@ INTERN DeeTypeObject SetIterator_Type = {
                 /* .tp_copy_ctor = */&setiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&setiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Set)
-                }
+                TYPE_FIXED_ALLOCATOR(Set)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&setiterator_fini,
@@ -1503,10 +1500,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
                 /* .tp_copy_ctor = */&set_copy,
                 /* .tp_deep_ctor = */&set_copy,
                 /* .tp_any_ctor  = */&set_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Set)
-                }
+                TYPE_FIXED_ALLOCATOR(Set)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&set_fini,

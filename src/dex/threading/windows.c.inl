@@ -258,10 +258,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&sema_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Semaphore)
-                }
+                TYPE_FIXED_ALLOCATOR(Semaphore)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sema_fini,
@@ -475,10 +472,7 @@ INTERN DeeTypeObject DeeMutex_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Mutex)
-                }
+                TYPE_FIXED_ALLOCATOR(Mutex)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&mutex_fini,

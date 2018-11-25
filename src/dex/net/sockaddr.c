@@ -1758,10 +1758,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(void *)&sockaddr_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeSockAddrObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeSockAddrObject)
             }
         },
         /* .tp_dtor        = */NULL,

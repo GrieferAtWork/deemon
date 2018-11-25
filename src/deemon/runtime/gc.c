@@ -1066,10 +1066,7 @@ PRIVATE DeeTypeObject GCIter_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(GCIter)
-                }
+                TYPE_FIXED_ALLOCATOR(GCIter)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&gciter_fini,
@@ -1284,10 +1281,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */NULL,

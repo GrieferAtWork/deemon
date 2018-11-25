@@ -145,10 +145,7 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeObject)
-                }
+                TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&aiter_fini,
@@ -604,10 +601,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
                         /* .tp_copy_ctor = */NULL,
                         /* .tp_deep_ctor = */NULL,
                         /* .tp_any_ctor  = */NULL,
-                        /* .tp_free      = */NULL,
-                        {
-                            /* .tp_instance_size = */sizeof(DeeObject)
-                        }
+                        TYPE_FIXED_ALLOCATOR_S(DeeObject)
                     }
                 },
                 /* .tp_dtor        = */NULL,
@@ -628,7 +622,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
             /* .tp_iter_next     = */NULL,
             /* .tp_attr          = */NULL,
             /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
+            /* .tp_buffer        = */NULL,
             /* .tp_methods       = */NULL,
             /* .tp_getsets       = */NULL,
             /* .tp_members       = */NULL,

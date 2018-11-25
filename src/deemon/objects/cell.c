@@ -530,10 +530,7 @@ PUBLIC DeeTypeObject DeeCell_Type = {
                 /* .tp_copy_ctor = */&cell_copy,
                 /* .tp_deep_ctor = */&cell_copy,
                 /* .tp_any_ctor  = */&cell_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Cell)
-                }
+                TYPE_FIXED_ALLOCATOR(Cell)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cell_fini,

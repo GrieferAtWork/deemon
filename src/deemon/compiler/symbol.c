@@ -587,10 +587,7 @@ INTERN DeeTypeObject DeeScope_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeScopeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeScopeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&scope_fini,
@@ -653,10 +650,7 @@ INTERN DeeTypeObject DeeClassScope_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeClassScopeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeClassScopeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&class_scope_fini,
@@ -762,10 +756,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeBaseScopeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeBaseScopeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&base_scope_fini,
@@ -882,10 +873,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&root_scope_ctor,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeRootScopeObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeRootScopeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&root_scope_fini,

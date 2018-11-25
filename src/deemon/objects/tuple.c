@@ -968,10 +968,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
                 /* .tp_copy_ctor = */&tuple_iterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&tuple_iterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(TupleIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(TupleIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&tuple_iterator_fini,

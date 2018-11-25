@@ -168,10 +168,7 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
                 /* .tp_copy_ctor = */&bsegiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bsegiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesSegmentsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesSegmentsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bsegiter_fini,
@@ -360,10 +357,7 @@ INTERN DeeTypeObject BytesSegments_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bseg_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesSegments)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesSegments)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bseg_fini,

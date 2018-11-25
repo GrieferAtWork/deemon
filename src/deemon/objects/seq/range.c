@@ -358,10 +358,7 @@ INTERN DeeTypeObject RangeIterator_Type = {
                 /* .tp_copy_ctor = */&ri_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&ri_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(RangeIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(RangeIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ri_fini,
@@ -598,10 +595,7 @@ INTERN DeeTypeObject Range_Type = {
                 /* .tp_copy_ctor = */NULL, /* TODO */
                 /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Range)
-                }
+                TYPE_FIXED_ALLOCATOR(Range)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&range_fini,
@@ -733,10 +727,7 @@ INTERN DeeTypeObject IntRangeIterator_Type = {
                 /* .tp_copy_ctor = */&iri_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(IntRangeIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(IntRangeIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&iri_fini,
@@ -1019,10 +1010,7 @@ INTERN DeeTypeObject IntRange_Type = {
                 /* .tp_copy_ctor = */NULL, /* TODO */
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL, /* TODO */
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(IntRange)
-                }
+                TYPE_FIXED_ALLOCATOR(IntRange)
             }
         },
         /* .tp_dtor        = */NULL,

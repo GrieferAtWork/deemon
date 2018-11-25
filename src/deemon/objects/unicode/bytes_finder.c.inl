@@ -253,10 +253,7 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
                 /* .tp_copy_ctor = */&bfi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bfi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesFindIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesFindIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bfi_fini,
@@ -300,10 +297,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
                 /* .tp_copy_ctor = */&bfi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bcfi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesFindIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesFindIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bfi_fini,
@@ -452,10 +446,7 @@ INTERN DeeTypeObject BytesFind_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bf_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesFind)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesFind)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bf_fini,
@@ -500,10 +491,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&bf_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(BytesFind)
-                }
+                TYPE_FIXED_ALLOCATOR(BytesFind)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&bf_fini,

@@ -372,15 +372,15 @@ private:
     struct ::weakref w_ref; /* The underlying weak reference. */
 public:
     weakref() DEE_CXX_NOTHROW { Dee_weakref_null(&w_ref); }
-    weakref(DeeObject *ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
-    weakref(obj_nonnull ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); }
-    weakref(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
+    weakref(DeeObject *ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
+    weakref(obj_nonnull ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); }
+    weakref(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
     weakref(weakref const &other) DEE_CXX_NOTHROW { Dee_weakref_copy(&w_ref,&other.w_ref); }
     weakref(weakref &&other) DEE_CXX_NOTHROW { Dee_weakref_move(&w_ref,&other.w_ref); }
     ~weakref() DEE_CXX_NOTHROW { Dee_weakref_fini(&w_ref); }
-    weakref &operator = (DeeObject *ob) { if (ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
+    weakref &operator = (DeeObject *ob) { if (ob) { if (!ob) Dee_weakref_clear(&w_ref); else if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
     weakref &operator = (obj_nonnull ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); return *this; }
-    weakref &operator = (obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
+    weakref &operator = (obj_maybenull ob) { if (ob) { if (!ob) Dee_weakref_clear(&w_ref); else if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
     weakref &operator = (weakref &&other) DEE_CXX_NOTHROW { Dee_weakref_moveassign(&w_ref,&other.w_ref); return *this; }
     weakref &operator = (weakref const &other) DEE_CXX_NOTHROW { Dee_weakref_copyassign(&w_ref,&other.w_ref); return *this; }
     DREF DeeObject *trylockref() const DEE_CXX_NOTHROW { return Dee_weakref_lock(&w_ref); }

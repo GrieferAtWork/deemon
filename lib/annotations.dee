@@ -257,7 +257,8 @@ class Timed: callable {
 		del total;
 	}
 
-	@@Get/del (reset)/set the amount of time that has already been spent while inside of the function."
+	@@Get/del (reset)/set the amount of time that has
+	@@already been spent while inside of the function.
 	@@>print myfunc.total.microseconds;
 	property total: time from time = {
 		get(): time from time {

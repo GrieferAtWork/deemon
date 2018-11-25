@@ -236,10 +236,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */NULL,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(MemoryFile)
-                    }
+                    TYPE_FIXED_ALLOCATOR(MemoryFile)
                 }
             },
             /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&mf_fini,
@@ -664,10 +661,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */(void *)&reader_init,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(Reader)
-                    }
+                    TYPE_FIXED_ALLOCATOR(Reader)
                 }
             },
             /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&reader_fini,
@@ -1599,10 +1593,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
                     /* .tp_copy_ctor = */NULL,
                     /* .tp_deep_ctor = */NULL,
                     /* .tp_any_ctor  = */(void *)&writer_init,
-                    /* .tp_free      = */NULL,
-                    {
-                        /* .tp_instance_size = */sizeof(Writer)
-                    }
+                    TYPE_FIXED_ALLOCATOR(Writer)
                 }
             },
             /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&writer_fini,

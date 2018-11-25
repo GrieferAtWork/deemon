@@ -272,16 +272,81 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, i
 
 
 /* Object weak reference tracing. */
+typedef void (DCALL *weakref_callback_t)(struct weakref *__restrict self);
+
 struct weakref {
-    /* TODO: Weakref destruction notification support!
-     *       Then we can implement containers that automatically
-     *       remove elements once those elements have been destroyed.
-     *       Such a container would be beautiful for the purposes of caching... */
-    struct weakref **wr_pself; /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Indirect self pointer. */
-    struct weakref  *wr_next;  /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)][ORDER(BEFORE(*wr_pself))] Next weak references. */
-    DeeObject       *wr_obj;   /* [0..1][lock(BIT0(wr_next))] Pointed-to object. */
+    struct weakref   **wr_pself; /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Indirect self pointer. */
+    struct weakref    *wr_next;  /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)][ORDER(BEFORE(*wr_pself))] Next weak references. */
+    DeeObject         *wr_obj;   /* [0..1][lock(BIT0(wr_next))] Pointed-to object. */
+    weakref_callback_t wr_del;   /* [0..1][const]
+                                  * An optional callback that is invoked when the bound object
+                                  * `wr_obj' gets destroyed, causing the weakref to become unbound.
+                                  * NOTE: If set, this callback _MUST_ invoke `WEAKREF_CALLBACK_UNLOCK()'
+                                  *       in order to unlock the passed `struct weakref', after it has
+                                  *       acquired shared ownership to a containing object if it intends
+                                  *       to invoke arbitrary user-code, or drop references. */
 };
-#define WEAKREF_INIT { NULL, NULL, NULL }
+
+/* Unlock a weakref from within a `wr_del' callback.
+ * An invocation of this macro is _MANDATORY_ for any custom weakref
+ * callback, as it is part of the synchronization process used to prevent
+ * race conditions when working with weakref callbacks.
+ * A simple weakref callback that invokes another user-code function could
+ * then look like this:
+ * >> typedef struct {
+ * >>     OBJECT_HEAD
+ * >>     struct weakref  o_ref; // Uses `my_callback'
+ * >>     DREF DeeObject *o_fun; // 1..1
+ * >> } MyObject;
+ * >>
+ * >> PRIVATE void DCALL my_callback(struct weakref *__restrict self) {
+ * >>     DREF MyObject *me;
+ * >>     me = COMPILER_CONTAINER_OF(self,MyObject,o_ref);
+ * >>     if (!Dee_IncrefIfNotZero(me)) {
+ * >>         // Race condition: the weakref controller died while
+ * >>         //                 the weakref itself is also dying.
+ * >>         WEAKREF_CALLBACK_UNLOCK(self);
+ * >>     } else {
+ * >>         DREF MyObject *result;
+ * >>         WEAKREF_CALLBACK_UNLOCK(self);
+ * >>         // At this point, we've unlocked the weakref after safely acquiring
+ * >>         // a reference to the controlling object, meaning we're not safe to
+ * >>         // execute arbitrary code, with the exception that we can't propagate
+ * >>         // exceptions.
+ * >>         result = DeeObject_Call(me->o_fun,0,NULL);
+ * >>         Dee_Decref(me);
+ * >>         if unlikely(!result) {
+ * >>             DeeError_Print("Unhandled exception in weakref callback",
+ * >>                             ERROR_PRINT_DOHANDLE);
+ * >>         } else {
+ * >>             Dee_Decref(result);
+ * >>         }
+ * >>     }
+ * >> }
+ */
+#ifndef NDEBUG
+#if __SIZEOF_POINTER__ == 4 && __SIZEOF_LONG__ == 4
+#define WEAKREF_CALLBACK_UNLOCK(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct weakref *)((uintptr_t)0xccccccccul & ~1ul),__ATOMIC_RELEASE)
+#elif __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG__ == 8
+#define WEAKREF_CALLBACK_UNLOCK(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct weakref *)((uintptr_t)0xccccccccccccccccul & ~1ul),__ATOMIC_RELEASE)
+#elif defined(__SIZEOF_LONG_LONG__) && \
+      __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG_LONG__ == 8
+#define WEAKREF_CALLBACK_UNLOCK(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct weakref *)((uintptr_t)0xccccccccccccccccull & ~1ul),__ATOMIC_RELEASE)
+#else
+#define WEAKREF_CALLBACK_UNLOCK(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct weakref *)((uintptr_t)-1 & ~1ul),__ATOMIC_RELEASE)
+#endif
+#else
+#define WEAKREF_CALLBACK_UNLOCK(x) \
+   __hybrid_atomic_store((x)->wr_next,NULL,__ATOMIC_RELEASE)
+#endif
+
+
+
+#define WEAKREF_INIT { NULL, NULL, NULL, NULL }
 #define WEAKREF(T)     struct weakref
 
 struct weakref_list {
@@ -306,7 +371,7 @@ Dee_weakref_support_fini(struct weakref_list *__restrict self);
 
 
 /* Initialize the given weak reference to NULL. */
-#define Dee_weakref_null(self) ((self)->wr_obj = NULL)
+#define Dee_weakref_null(self) ((self)->wr_obj = NULL,(self)->wr_del = NULL)
 
 /* Weak reference functionality.
  * @assume(ob != NULL);
@@ -314,13 +379,15 @@ Dee_weakref_support_fini(struct weakref_list *__restrict self);
  * @return: false: The given object `ob' does not support weak referencing. */
 DFUNDEF bool DCALL
 Dee_weakref_init(struct weakref *__restrict self,
-                 DeeObject *__restrict ob);
+                 DeeObject *__restrict ob,
+                 weakref_callback_t callback);
 
 /* Finalize a given weak reference. */
 DFUNDEF void DCALL Dee_weakref_fini(struct weakref *__restrict self);
 
 /* Move/Copy a given weak reference into another, optionally
- * overwriting whatever object was referenced before. */
+ * overwriting whatever object was referenced before.
+ * NOTE: Assignment here does _NOT_ override a set deletion callback! */
 DFUNDEF void DCALL Dee_weakref_move(struct weakref *__restrict dst, struct weakref *__restrict src);
 DFUNDEF void DCALL Dee_weakref_moveassign(struct weakref *__restrict dst, struct weakref *__restrict src);
 #ifdef __INTELLISENSE__
@@ -334,13 +401,17 @@ DFUNDEF void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self, str
 #endif
 
 /* Overwrite an already initialize weak reference with the given `ob'.
- * @return: true:  Successfully overwritten the weak reference.
- * @return: false: The given object `ob' does not support weak referencing
- *                 and the stored weak reference was not modified. */
-DFUNDEF bool DCALL Dee_weakref_set(struct weakref *__restrict self, DeeObject *__restrict ob);
+ * @return: true:    Successfully overwritten the weak reference.
+ * @return: false:   The given object `ob' does not support weak referencing
+ *                   and the stored weak reference was not modified. */
+DFUNDEF bool DCALL Dee_weakref_set(struct weakref *__restrict self,
+                                   DeeObject *__restrict ob);
 
-/* Clear the weak reference `self', returning true if it used to point to an object. */
-DFUNDEF bool DCALL Dee_weakref_clear(struct weakref *__restrict self);
+/* Clear the weak reference `self', returning true if it used to point to an object.
+ * NOTE: Upon success (return is `true'), the callback will not be
+ *       executed for the previously bound object's destruction. */
+DFUNDEF bool DCALL
+Dee_weakref_clear(struct weakref *__restrict self);
 
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
  * @return: * :   A new reference to the pointed-to object.
@@ -367,8 +438,7 @@ DFUNDEF WUNUSED bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self);
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
 DFUNDEF WUNUSED DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct weakref *__restrict self,
-                           DeeObject *old_ob,
-                           DeeObject *new_ob);
+                           DeeObject *old_ob, DeeObject *new_ob);
 
 
 /* Type visit helpers. */
@@ -744,6 +814,19 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
 #endif
 
 
+#define TYPE_ALLOCATOR(tp_malloc,tp_free) (tp_free),{(uintptr_t)(tp_malloc) }
+#define TYPE_FIXED_ALLOCATOR(T) NULL,{(uintptr_t)sizeof(T) } /* TODO: Optimizations for known sizes */
+
+/* Same as `TYPE_FIXED_ALLOCATOR()', but don't link agains dedicated
+ * allocator functions when doing so would require the creation of
+ * relocations that might cause loading times to become larger. */
+#if !defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) || \
+     defined(__PIC__) || defined(__pie__) || defined(__pic__)
+#define TYPE_FIXED_ALLOCATOR_S(T) NULL,{(uintptr_t)sizeof(T) }
+#else
+#define TYPE_FIXED_ALLOCATOR_S(T) TYPE_FIXED_ALLOCATOR(T)
+#endif
+
 struct type_constructor {
     /* Instance constructors/destructors. */
     union {
@@ -753,7 +836,6 @@ struct type_constructor {
             void *_tp_init2_; /* tp_deep_ctor */
             void *_tp_init3_; /* tp_any_ctor */
             /* Initializer for a custom type allocator. */
-#define TYPE_ALLOCATOR(tp_malloc,tp_free) (tp_free),{(uintptr_t)(tp_malloc) }
             void *_tp_init4_; /* tp_free */
             struct { uintptr_t _tp_init5_; } _tp_init6_;
             void *_tp_init7_; /* tp_any_ctor_kw */

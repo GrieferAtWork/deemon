@@ -264,10 +264,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&rodictiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(size_t,DeeObject **__restrict))&rodictiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DictIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(DictIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&rodictiterator_fini,

@@ -242,10 +242,7 @@ INTERN DeeTypeObject REFindAllIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&refaiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ReSequenceIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&refaiter_fini,
@@ -374,10 +371,7 @@ INTERN DeeTypeObject RELocateAllIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&relaiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ReSequenceIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&relaiter_fini,
@@ -517,10 +511,7 @@ INTERN DeeTypeObject RESplitIterator_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&respiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ReSequenceIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&respiter_fini,
@@ -728,10 +719,7 @@ INTERN DeeTypeObject REFindAll_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&refa_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ReSequence)
-                }
+                TYPE_FIXED_ALLOCATOR(ReSequence)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&refa_fini,
@@ -820,10 +808,7 @@ INTERN DeeTypeObject RELocateAll_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&rela_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ReSequence)
-                }
+                TYPE_FIXED_ALLOCATOR(ReSequence)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&rela_fini,
@@ -977,10 +962,7 @@ INTERN DeeTypeObject RESplit_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&resp_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ReSequence)
-                }
+                TYPE_FIXED_ALLOCATOR(ReSequence)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&resp_fini,

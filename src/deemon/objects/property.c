@@ -353,10 +353,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
                 /* .tp_copy_ctor   = */&property_copy,
                 /* .tp_deep_ctor   = */&property_deep,
                 /* .tp_any_ctor    = */NULL,
-                /* .tp_free        = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Property),
-                },
+                TYPE_FIXED_ALLOCATOR(Property),
                 /* .tp_any_ctor_kw = */&property_init,
             }
         },

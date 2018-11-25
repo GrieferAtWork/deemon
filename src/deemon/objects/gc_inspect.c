@@ -132,10 +132,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&gcsetiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(GCSetIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(GCSetIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&gcsetiterator_fini,

@@ -1040,10 +1040,7 @@ INTERN DeeTypeObject StringIterator_Type = {
                 /* .tp_copy_ctor = */&stringiter_copy,
                 /* .tp_deep_ctor = */&stringiter_copy,
                 /* .tp_any_ctor  = */&stringiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&stringiter_fini,

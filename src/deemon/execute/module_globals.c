@@ -254,10 +254,7 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
                 /* .tp_copy_ctor = */&mei_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&mei_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ModuleExportsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ModuleExportsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&mei_fini,
@@ -553,10 +550,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&me_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ModuleExports)
-                }
+                TYPE_FIXED_ALLOCATOR(ModuleExports)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&me_fini,
@@ -726,10 +720,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
                 /* .tp_copy_ctor = */&mgi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&mgi_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ModuleGlobalsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ModuleGlobalsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&mgi_fini,
@@ -891,10 +882,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&mg_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ModuleExports)
-                }
+                TYPE_FIXED_ALLOCATOR(ModuleExports)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&mg_fini,

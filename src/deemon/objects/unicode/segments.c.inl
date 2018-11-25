@@ -192,10 +192,7 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
                 /* .tp_copy_ctor = */&ssegiter_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&ssegiter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringSegmentsIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(StringSegmentsIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ssegiter_fini,
@@ -425,10 +422,7 @@ INTERN DeeTypeObject StringSegments_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&sseg_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(StringSegments)
-                }
+                TYPE_FIXED_ALLOCATOR(StringSegments)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sseg_fini,

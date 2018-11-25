@@ -230,10 +230,7 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&coti_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ClassOperatorTableIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ClassOperatorTableIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&coti_fini,
@@ -395,10 +392,7 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ClassOperatorTable)
-                }
+                TYPE_FIXED_ALLOCATOR(ClassOperatorTable)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cot_fini,
@@ -837,10 +831,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ClassAttribute)
-                }
+                TYPE_FIXED_ALLOCATOR(ClassAttribute)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ca_fini,
@@ -885,10 +876,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
                 /* .tp_copy_ctor = */(void *)&cati_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ClassAttributeTableIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ClassAttributeTableIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cati_fini,
@@ -933,10 +921,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ClassAttributeTable)
-                }
+                TYPE_FIXED_ALLOCATOR(ClassAttributeTable)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cat_fini,
@@ -1536,10 +1521,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ObjectTable)
-                }
+                TYPE_FIXED_ALLOCATOR(ObjectTable)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ot_fini,
@@ -1843,10 +1825,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
                 /* .tp_copy_ctor = */instancemember_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeInstanceMemberObject),
-                }
+                TYPE_FIXED_ALLOCATOR(DeeInstanceMemberObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&instancemember_fini,

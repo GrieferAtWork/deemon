@@ -3483,10 +3483,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
                 /* .tp_deep_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
                 /* .tp_any_ctor  = */(int(DCALL *)(size_t,DeeObject **__restrict))&list_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeListObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeListObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&list_fini,
@@ -3679,10 +3676,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
                 /* .tp_copy_ctor = */&li_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&li_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(ListIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(ListIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&li_dtor,

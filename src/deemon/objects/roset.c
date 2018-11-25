@@ -189,10 +189,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&rosetiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */(int(DCALL *)(size_t,DeeObject **__restrict))&rosetiterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(SetIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(SetIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&rosetiterator_fini,

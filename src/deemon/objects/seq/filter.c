@@ -173,10 +173,7 @@ INTERN DeeTypeObject DeeFilterIterator_Type = {
                 /* .tp_copy_ctor = */&filteriterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&filteriterator_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(FilterIterator)
-                }
+                TYPE_FIXED_ALLOCATOR(FilterIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&filteriterator_fini,
@@ -284,10 +281,7 @@ INTERN DeeTypeObject DeeFilter_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&filter_init,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(Filter)
-                }
+                TYPE_FIXED_ALLOCATOR(Filter)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&filter_fini,

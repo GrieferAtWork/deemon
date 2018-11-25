@@ -234,6 +234,8 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
  JITObjectTable base_locals;
  DeeThreadObject *ts = DeeThread_Self();
  size_t i;
+ if (DeeThread_CheckInterrupt())
+     goto err;
  ASSERT(self->jf_args.ot_prev.otp_ind >= 2);
  ASSERT(self->jf_args.ot_prev.otp_tab == &self->jf_refs);
  if (argc < self->jf_argc_min)

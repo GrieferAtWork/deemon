@@ -1790,10 +1790,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL,
-                {
-                    /* .tp_instance_size = */sizeof(DeeRelIntObject)
-                }
+                TYPE_FIXED_ALLOCATOR(DeeRelIntObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&relint_fini,
