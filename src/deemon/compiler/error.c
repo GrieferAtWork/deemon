@@ -566,7 +566,7 @@ handle_compiler_warning(struct ast_loc *loc, bool force_fatal,
   mode = tpp_warning_mode_matrix[mode];
  }
  /* Construct a new compiler error. */
- error = DeeObject_MALLOC(DeeCompilerErrorObject);
+ error = DeeObject_FMALLOC(DeeCompilerErrorObject);
  if unlikely(!error) goto err;
 
  /* Generate an error message. */
@@ -656,7 +656,7 @@ done_nonfatal:
 err_message:
  Dee_Decref(error->e_message);
 err_error:
- DeeObject_Free(error);
+ DeeObject_FFREE(error);
 err:
  /* Switch TPP to the error-state, now
   * that something fatal has happened.. */

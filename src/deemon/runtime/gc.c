@@ -906,10 +906,10 @@ LOCAL void *gc_initob(void *ptr) {
 }
 
 PUBLIC ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
- return gc_initob(DeeObject_Malloc(GC_HEAD_SIZE+n_bytes));
+ return gc_initob(DeeObject_Malloc(GC_HEAD_SIZE + n_bytes));
 }
 PUBLIC ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes) {
- return gc_initob(DeeObject_Calloc(GC_HEAD_SIZE+n_bytes));
+ return gc_initob(DeeObject_Calloc(GC_HEAD_SIZE + n_bytes));
 }
 PUBLIC void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
  if (p) {
@@ -918,9 +918,9 @@ PUBLIC void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
           "Object was still being tracked");
 #endif /* GCHEAD_ISTRACKED */
   p = DeeObject_Realloc(DeeGC_Head((DeeObject *)p),
-                        GC_HEAD_SIZE+n_bytes);
+                        GC_HEAD_SIZE + n_bytes);
  } else {
-  p = DeeObject_Malloc(GC_HEAD_SIZE+n_bytes);
+  p = DeeObject_Malloc(GC_HEAD_SIZE + n_bytes);
  }
  return gc_initob(p);
 }
@@ -947,16 +947,57 @@ PUBLIC void *
  return gc_initob(p);
 }
 
+#ifdef GCHEAD_ISTRACKED
+#define ASSERT_UNTRACKED(p) \
+  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)), \
+          "Object was still being tracked")
+#else /* GCHEAD_ISTRACKED */
+#define ASSERT_UNTRACKED(p) (void)0
+#endif /* !GCHEAD_ISTRACKED */
+
 PUBLIC void
 (DCALL DeeGCObject_Free)(void *p) {
  if (p) {
-#ifdef GCHEAD_ISTRACKED
-  ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
-          "Object was still being tracked");
-#endif /* GCHEAD_ISTRACKED */
+  ASSERT_UNTRACKED(p);
   DeeObject_Free(DeeGC_Head((DeeObject *)p));
  }
 }
+
+#ifndef CONFIG_NO_OBJECT_SLABS
+#define DEFINE_GC_SLAB_FUNCTIONS(size) \
+PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
+DeeGCObject_SlabMalloc##size(void) { \
+ return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabMalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                      (DeeObject_Malloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+} \
+PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
+DeeGCObject_SlabCalloc##size(void) { \
+ return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabCalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                      (DeeObject_Calloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+} \
+PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
+DeeGCObject_SlabTryMalloc##size(void) { \
+ return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabTryMalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                      (DeeObject_TryMalloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+} \
+PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
+DeeGCObject_SlabTryCalloc##size(void) { \
+ return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabTryCalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                      (DeeObject_TryCalloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+} \
+PUBLIC void DCALL \
+DeeGCObject_SlabFree##size(void *__restrict ptr) { \
+ ASSERT(ptr); \
+ ASSERT_UNTRACKED(ptr); \
+ DeeObject_SlabInvoke(DeeObject_SlabFree,GC_HEAD_SIZE + size * sizeof(void *), \
+                     (DeeGC_Head((DeeObject *)ptr)), \
+                     (DeeObject_Free)(DeeGC_Head((DeeObject *)ptr))); \
+} \
+/**/
+DEE_ENUMERATE_SLAB_SIZES(DEFINE_GC_SLAB_FUNCTIONS)
+#undef DEFINE_GC_SLAB_FUNCTIONS
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
 
 #ifndef NDEBUG
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -1101,7 +1142,7 @@ PRIVATE DREF GCIter *DCALL
 gcenum_iter(DeeObject *__restrict UNUSED(self)) {
  DREF GCIter *result;
  struct gc_head *first;
- result = DeeObject_MALLOC(GCIter);
+ result = DeeObject_FMALLOC(GCIter);
  if unlikely(!result) goto done;
  GCLOCK_ACQUIRE_READ();
  first = gc_root;

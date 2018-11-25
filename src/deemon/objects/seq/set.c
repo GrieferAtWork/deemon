@@ -408,7 +408,7 @@ su_init(SetUnion *__restrict self,
 PRIVATE DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
  DREF SetUnionIterator *result;
- result = DeeObject_MALLOC(SetUnionIterator);
+ result = DeeObject_FMALLOC(SetUnionIterator);
  if unlikely(!result) goto done;
  result->sui_iter = DeeObject_IterSelf(self->su_a);
  if unlikely(!result->sui_iter) goto err_r;
@@ -420,7 +420,7 @@ su_iter(SetUnion *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
@@ -632,7 +632,7 @@ ssd_init(SetSymmetricDifference *__restrict self,
 PRIVATE DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
  DREF SetSymmetricDifferenceIterator *result;
- result = DeeObject_MALLOC(SetSymmetricDifferenceIterator);
+ result = DeeObject_FMALLOC(SetSymmetricDifferenceIterator);
  if unlikely(!result) goto done;
  result->ssd_iter = DeeObject_IterSelf(self->ssd_a);
  if unlikely(!result->ssd_iter) goto err_r;
@@ -644,7 +644,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
@@ -892,7 +892,7 @@ si_init(SetIntersection *__restrict self,
 PRIVATE DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
  DREF SetIntersectionIterator *result;
- result = DeeObject_MALLOC(SetIntersectionIterator);
+ result = DeeObject_FMALLOC(SetIntersectionIterator);
  if unlikely(!result) goto done;
  result->sii_iter = DeeObject_IterSelf(self->si_a);
  if unlikely(!result->sii_iter) goto err_r;
@@ -904,7 +904,7 @@ si_iter(SetIntersection *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
@@ -1072,7 +1072,7 @@ sd_init(SetDifference *__restrict self,
 PRIVATE DREF SetDifferenceIterator *DCALL
 sd_iter(SetDifference *__restrict self) {
  DREF SetDifferenceIterator *result;
- result = DeeObject_MALLOC(SetDifferenceIterator);
+ result = DeeObject_FMALLOC(SetDifferenceIterator);
  if unlikely(!result) goto done;
  result->sdi_iter = DeeObject_IterSelf(self->sd_a);
  if unlikely(!result->sdi_iter) goto err_r;
@@ -1084,7 +1084,7 @@ sd_iter(SetDifference *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
@@ -1206,7 +1206,7 @@ DeeSet_Union(DeeObject *__restrict lhs,
  if (DeeSet_CheckEmpty(lhs)) return_reference_(rhs);
  if (DeeSet_CheckEmpty(rhs)) return_reference_(lhs);
  /* Construct a set-union wrapper. */
- result = (DREF DeeObject *)DeeObject_MALLOC(SetUnion);
+ result = (DREF DeeObject *)DeeObject_FMALLOC(SetUnion);
  if unlikely(!result) goto done;
  ((SetUnion *)result)->su_a = lhs;
  ((SetUnion *)result)->su_b = rhs;
@@ -1239,7 +1239,7 @@ DeeSet_Intersection(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
  if (DeeSet_CheckEmpty(lhs) || DeeSet_CheckEmpty(rhs))
      return_reference_(Dee_EmptySet);
  /* Construct a set-intersection wrapper. */
- result = (DREF DeeObject *)DeeObject_MALLOC(SetIntersection);
+ result = (DREF DeeObject *)DeeObject_FMALLOC(SetIntersection);
  if unlikely(!result) goto done;
  ASSERT(!DeeInverseSet_CheckExact(lhs));
  ((SetIntersection *)result)->si_a = lhs;
@@ -1267,7 +1267,7 @@ DeeSet_Difference(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
  if (DeeSet_CheckEmpty(lhs)) return_reference_(Dee_EmptySet);
  if (DeeSet_CheckEmpty(rhs)) return_reference_(lhs);
  /* Construct a set-difference wrapper. */
- result = (DREF DeeObject *)DeeObject_MALLOC(SetDifference);
+ result = (DREF DeeObject *)DeeObject_FMALLOC(SetDifference);
  if unlikely(!result) goto done;
  ASSERT(!DeeInverseSet_CheckExact(lhs));
  ((SetDifference *)result)->sd_a = lhs;
@@ -1286,7 +1286,7 @@ DeeSet_SymmetricDifference(DeeObject *__restrict lhs, DeeObject *__restrict rhs)
  if (DeeSet_CheckEmpty(lhs)) return_reference_(rhs);
  if (DeeSet_CheckEmpty(rhs)) return_reference_(lhs);
  /* Construct a set-symmetric-difference wrapper. */
- result = DeeObject_MALLOC(SetSymmetricDifference);
+ result = DeeObject_FMALLOC(SetSymmetricDifference);
  if unlikely(!result) goto done;
  ASSERT(!DeeInverseSet_CheckExact(lhs));
  result->ssd_a = lhs;

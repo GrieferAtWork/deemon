@@ -169,8 +169,8 @@ DeeTuple_NewUninitialized(size_t n) {
   }
  }
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
- result = (DREF DeeTupleObject *)DeeObject_Malloc(offsetof(DeeTupleObject,t_elem)+
-                                                  n*sizeof(DeeObject *));
+ result = (DREF DeeTupleObject *)DeeObject_Malloc(offsetof(DeeTupleObject,t_elem) +
+                                                 (n * sizeof(DeeObject *)));
  if unlikely(!result) return NULL;
  result->t_size = n;
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
@@ -1051,13 +1051,13 @@ tuple_fini(Tuple *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 tuple_iter(Tuple *__restrict self) {
  DREF TupleIterator *result;
- result = (DREF TupleIterator *)DeeObject_Malloc(sizeof(TupleIterator));
- if likely(result) {
-  DeeObject_Init(result,&DeeTupleIterator_Type);
-  result->ti_index = 0;
-  result->ti_tuple = self;
-  Dee_Incref(self);
- }
+ result = DeeObject_FMALLOC(TupleIterator);
+ if unlikely(!result) goto done;
+ DeeObject_Init(result,&DeeTupleIterator_Type);
+ result->ti_index = 0;
+ result->ti_tuple = self;
+ Dee_Incref(self);
+done:
  return (DREF DeeObject *)result;
 }
 

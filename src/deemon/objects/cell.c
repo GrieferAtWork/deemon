@@ -41,17 +41,17 @@ PUBLIC DREF DeeObject *DCALL
 DeeCell_New(DeeObject *__restrict item) {
  DREF Cell *result;
  ASSERT_OBJECT(item);
- result = DeeGCObject_MALLOC(Cell);
- if likely(result) {
-  /* Initialize and fill in the new cell. */
-  DeeObject_Init(result,&DeeCell_Type);
-  Dee_Incref(item);
-  result->c_item = item;
+ result = DeeGCObject_FMALLOC(Cell);
+ if unlikely(!result) goto done;
+ /* Initialize and fill in the new cell. */
+ DeeObject_Init(result,&DeeCell_Type);
+ Dee_Incref(item);
+ result->c_item = item;
 #ifndef CONFIG_NO_THREADS
-  rwlock_init(&result->c_lock);
+ rwlock_init(&result->c_lock);
 #endif /* !CONFIG_NO_THREADS */
-  DeeGC_Track((DeeObject *)result);
- }
+ DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 }
 
@@ -530,7 +530,7 @@ PUBLIC DeeTypeObject DeeCell_Type = {
                 /* .tp_copy_ctor = */&cell_copy,
                 /* .tp_deep_ctor = */&cell_copy,
                 /* .tp_any_ctor  = */&cell_init,
-                TYPE_FIXED_ALLOCATOR(Cell)
+                TYPE_FIXED_ALLOCATOR_GC(Cell)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cell_fini,

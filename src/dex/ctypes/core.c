@@ -319,7 +319,7 @@ INTERN DeeTypeObject DeeSType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeSTypeObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeSTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&stype_fini,
@@ -390,7 +390,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeePointerTypeObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeePointerTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ptype_fini,
@@ -475,7 +475,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeLValueTypeObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeLValueTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ltype_fini,
@@ -516,7 +516,7 @@ PRIVATE DREF DeePointerTypeObject *DCALL
 pointertype_new(DeeSTypeObject *__restrict self) {
  DREF DeePointerTypeObject *result;
  DREF DeeStringObject *name;
- result = DeeGCObject_CALLOC(DeePointerTypeObject);
+ result = DeeGCObject_FCALLOC(DeePointerTypeObject);
  if unlikely(!result) goto done;
  /* Create the name of the resulting type. */
  name = (DREF DeeStringObject *)make_structured_name(self,'*');
@@ -551,14 +551,14 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 PRIVATE DREF DeeLValueTypeObject *DCALL
 lvaluetype_new(DeeSTypeObject *__restrict self) {
  DREF DeeLValueTypeObject *result;
  DREF DeeStringObject *name;
- result = DeeGCObject_CALLOC(DeeLValueTypeObject);
+ result = DeeGCObject_FCALLOC(DeeLValueTypeObject);
  if unlikely(!result) goto done;
  /* Create the name of the resulting type. */
  name = (DREF DeeStringObject *)make_structured_name(self,'&');
@@ -586,7 +586,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
@@ -959,7 +959,7 @@ struct_ref(DeeObject *__restrict self) {
  DREF DeePointerTypeObject *pointer_type;
  pointer_type = DeeSType_Pointer((DeeSTypeObject *)Dee_TYPE(self));
  if unlikely(!pointer_type) goto err;
- result = DeeObject_MALLOC(struct pointer_object);
+ result = DeeObject_FMALLOC(struct pointer_object);
  if unlikely(!result) goto err;
  /* Construct a new pointer directed at the data of this structured object. */
  DeeObject_InitNoref(result,(DREF DeeTypeObject *)pointer_type); /* Inherit reference: pointer_type */
@@ -1093,7 +1093,7 @@ DeeObject_Ref(DeeObject *__restrict self) {
   if unlikely(!tp_result)
       goto err;
   /* Create the new pointer object. */
-  result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
+  result = (DREF struct pointer_object *)DeeObject_FMALLOC(struct pointer_object);
   if unlikely(!result) goto err_tpres;
   DeeObject_InitNoref(result,(DeeTypeObject *)tp_result); /* Inherit reference: result_type */
   /* Copy the l-value pointer into the regular pointer. */
@@ -1105,7 +1105,7 @@ DeeObject_Ref(DeeObject *__restrict self) {
  if unlikely(!tp_result)
      goto err;
  /* Create the new pointer object. */
- result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
+ result = (DREF struct pointer_object *)DeeObject_FMALLOC(struct pointer_object);
  if unlikely(!result) goto err_tpres;
  DeeObject_InitNoref(result,(DeeTypeObject *)tp_result); /* Inherit reference: result_type */
  result->p_ptr.ptr = DeeStruct_Data(self);
@@ -1125,7 +1125,7 @@ DeeObject_Deref(DeeObject *__restrict self) {
   /* Regular pointer. */
   tp_result = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
   if unlikely(!tp_result) goto err;
-  result = DeeObject_MALLOC(struct lvalue_object);
+  result = DeeObject_FMALLOC(struct lvalue_object);
   if unlikely(!result) goto err_tpres;
   DeeObject_InitNoref(result,(DeeTypeObject *)tp_result); /* Inherit reference: result_type */
   result->l_ptr.ptr = ((struct pointer_object *)self)->p_ptr.ptr;
@@ -1138,7 +1138,7 @@ DeeObject_Deref(DeeObject *__restrict self) {
    /* LValue-to-pointer. */
    tp_result = DeeSType_LValue(tp_base->pt_orig);
    if unlikely(!tp_result) goto err;
-   result = DeeObject_MALLOC(struct lvalue_object);
+   result = DeeObject_FMALLOC(struct lvalue_object);
    if unlikely(!result) goto err_tpres;
    DeeObject_InitNoref(result,(DeeTypeObject *)tp_result); /* Inherit reference: result_type */
    /* Dereference this pointer. */
@@ -1153,7 +1153,7 @@ err:
  return NULL;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_tpres_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
 #endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err_tpres:
  Dee_Decref((DeeObject *)tp_result);
@@ -1166,7 +1166,7 @@ DeePointer_New(DeePointerTypeObject *__restrict pointer_type,
  struct pointer_object *result;
  ASSERT(DeePointerType_Check(pointer_type));
  /* Allocate a new pointer object. */
- result = DeeObject_MALLOC(struct pointer_object);
+ result = DeeObject_FMALLOC(struct pointer_object);
  if unlikely(!result) goto done;
  /* Initialize the new pointer object. */
  DeeObject_Init(result,(DeeTypeObject *)pointer_type);
@@ -1712,7 +1712,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeArrayTypeObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeArrayTypeObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&atype_fini,
@@ -1832,7 +1832,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeCFunctionTypeObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeCFunctionTypeObject)
             }
         },
 #ifdef CONFIG_NO_CFUNCTION

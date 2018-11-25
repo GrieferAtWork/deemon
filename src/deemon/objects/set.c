@@ -45,7 +45,7 @@ DeeSet_Invert(DeeObject *__restrict self) {
  if (DeeInverseSet_CheckExact(self))
      return_reference(DeeInverseSet_SET(self));
  /* Construct a new inverse-set wrapper. */
- result = DeeObject_MALLOC(DeeInverseSetObject);
+ result = DeeObject_FMALLOC(DeeInverseSetObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeInverseSet_Type);
  result->is_set = self;

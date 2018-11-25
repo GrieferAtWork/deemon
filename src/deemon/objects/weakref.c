@@ -378,7 +378,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                             "Override @this weak reference with the value referenced by @other, "
                             "while atomically clearing the weak reference from @other\n"
                             ),
-    /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT|TP_FFINAL,
+    /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeObject_Type,

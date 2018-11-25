@@ -79,7 +79,7 @@ aiter_next(ArrayIterator *__restrict self) {
 #endif
 
  /* Construct an l-value object for the array item. */
- result = DeeObject_MALLOC(struct lvalue_object);
+ result = DeeObject_FMALLOC(struct lvalue_object);
  if unlikely(!result) goto done;
  DeeObject_Init(result,(DeeTypeObject *)self->ai_type);
  /* Use the item pointer which we've just extracted. */
@@ -113,7 +113,7 @@ aiter_getseq(ArrayIterator *__restrict self) {
  if unlikely(!ltype) goto err;
 
  /* Construct an l-value object for the array base address. */
- result = DeeObject_MALLOC(struct lvalue_object);
+ result = DeeObject_FMALLOC(struct lvalue_object);
  if unlikely(!result) goto err_ltype;
  DeeObject_InitNoref(result,(DeeTypeObject *)ltype); /* Inherit reference: ltype */
  result->l_ptr.ptr = self->ai_begin.ptr;
@@ -180,7 +180,7 @@ PRIVATE DREF ArrayIterator *DCALL
 array_iter(DeeArrayTypeObject *__restrict tp_self, void *base) {
  DREF ArrayIterator *result;
  /* Create a new array iterator. */
- result = DeeObject_MALLOC(ArrayIterator);
+ result = DeeObject_FMALLOC(ArrayIterator);
  if unlikely(!result) goto done;
  /* Construct the l-value version of the array's item type. */
  result->ai_type = DeeSType_LValue(tp_self->at_orig);
@@ -194,7 +194,7 @@ array_iter(DeeArrayTypeObject *__restrict tp_self, void *base) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 
@@ -217,7 +217,7 @@ array_contains(DeeArrayTypeObject *__restrict tp_self, void *base,
   /* Construct a temporary l-value to use in comparisons against `other'. */
   if (!temp || DeeObject_IsShared(temp)) {
    Dee_XDecref(temp);
-   temp = DeeObject_MALLOC(struct lvalue_object);
+   temp = DeeObject_FMALLOC(struct lvalue_object);
    if unlikely(!temp) goto err_lval_type;
    DeeObject_Init(temp,(DeeTypeObject *)lval_type);
   }
@@ -258,7 +258,7 @@ array_get(DeeArrayTypeObject *__restrict tp_self, void *base,
  lval_type = DeeSType_LValue(tp_self->at_orig);
  if unlikely(!lval_type) goto err;
  /* Construct an l-value object to-be returned. */
- result = DeeObject_MALLOC(struct lvalue_object);
+ result = DeeObject_FMALLOC(struct lvalue_object);
  if unlikely(!result) goto err_lval_type;
  DeeObject_InitNoref(result,(DeeTypeObject *)lval_type); /* Inherit reference: lval_type */
  /* Calculate the resulting item address. */
@@ -311,7 +311,7 @@ array_getrange(DeeArrayTypeObject *__restrict tp_self, void *base,
  lval_type = DeeSType_LValue((DeeSTypeObject *)array_type);
  Dee_Decref((DeeObject *)array_type);
  if unlikely(!lval_type) goto err;
- result = DeeObject_MALLOC(struct lvalue_object);
+ result = DeeObject_FMALLOC(struct lvalue_object);
  if unlikely(!result) goto err_lval_type;
  DeeObject_InitNoref(result,(DeeTypeObject *)lval_type); /* Inherit reference: lval_type */
  /* Set the base pointer to the start of the requested sub-range. */
@@ -455,7 +455,7 @@ array_adddiff(DeeArrayTypeObject *__restrict tp_self,
  if unlikely(!ptr_type) goto err;
 
  /* Construct a new pointer object. */
- result = DeeObject_MALLOC(struct pointer_object);
+ result = DeeObject_FMALLOC(struct pointer_object);
  if unlikely(!result) goto err_ptr_type;
  DeeObject_InitNoref(result,(DeeTypeObject *)ptr_type); /* Inherit reference: ptr_type */
 
@@ -668,7 +668,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
  DREF DeeArrayTypeObject *result;
  DREF DeeStringObject *name;
 
- result = DeeGCObject_CALLOC(DeeArrayTypeObject);
+ result = DeeGCObject_FCALLOC(DeeArrayTypeObject);
  if unlikely(!result) goto done;
  /* Create the name of the resulting type. */
  name = (DREF DeeStringObject *)DeeString_Newf("%k[%Iu]",item_type,num_items);
@@ -708,7 +708,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 

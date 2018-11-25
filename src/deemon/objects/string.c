@@ -335,8 +335,8 @@ DeeString_NewBuffer(size_t num_bytes) {
   Dee_Incref(Dee_EmptyString);
   return Dee_EmptyString;
  }
- result = (DREF String *)DeeObject_Malloc(offsetof(String,s_str)+
-                                         (num_bytes+1)*sizeof(char));
+ result = (DREF String *)DeeObject_Malloc(offsetof(String,s_str) +
+                                         (num_bytes + 1)*sizeof(char));
  if likely(result) {
   DeeObject_Init(result,&DeeString_Type);
   result->s_data        = NULL;
@@ -1075,8 +1075,8 @@ INTERN DeeTypeObject StringIterator_Type = {
 PRIVATE DREF DeeObject *DCALL
 string_iter(String *__restrict self) {
  DREF StringIterator *result;
- result = (DREF StringIterator *)DeeObject_Malloc(sizeof(StringIterator));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(StringIterator);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&StringIterator_Type);
  result->si_string = self;
  Dee_Incref(self);
@@ -1085,6 +1085,7 @@ string_iter(String *__restrict self) {
  result->si_end.ptr  = (void *)((uintptr_t)result->si_iter.ptr +
                                  WSTR_LENGTH(result->si_iter.ptr) *
                                  STRING_SIZEOF_WIDTH(result->si_width));
+done:
  return (DREF DeeObject *)result;
 }
 INTDEF DREF DeeObject *DCALL

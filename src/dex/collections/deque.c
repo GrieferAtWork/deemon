@@ -932,7 +932,7 @@ PRIVATE struct type_gc deq_gc = {
 PRIVATE DREF DequeIteratorObject *DCALL
 deq_iter(Deque *__restrict self) {
  DREF DequeIteratorObject *result;
- result = DeeObject_MALLOC(DequeIteratorObject);
+ result = DeeObject_FMALLOC(DequeIteratorObject);
  if unlikely(!result) goto done;
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->di_lock);
@@ -1452,7 +1452,7 @@ INTERN DeeTypeObject Deque_Type = {
                 /* .tp_copy_ctor = */(void *)&deq_copy,
                 /* .tp_deep_ctor = */(void *)&deq_copy,
                 /* .tp_any_ctor  = */(void *)&deq_init,
-                TYPE_FIXED_ALLOCATOR(Deque)
+                TYPE_FIXED_ALLOCATOR_GC(Deque)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&deq_fini,

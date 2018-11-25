@@ -59,7 +59,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict key_items) {
  DREF Dict *result;
  /* Allocate the dict object. */
- result = (DREF Dict *)DeeGCObject_Malloc(sizeof(Dict));
+ result = DeeGCObject_FMALLOC(Dict);
  if unlikely(!result) return NULL;
  if (!num_keyitems) {
   /* Special case: allocate an empty dict. */
@@ -110,7 +110,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
  return (DREF DeeObject *)result;
 err_r:
  Dee_Free(result->d_elem);
- DeeGCObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
@@ -224,28 +224,30 @@ err:
 PUBLIC DREF DeeObject *DCALL
 DeeDict_FromIterator(DeeObject *__restrict self) {
  DREF Dict *result;
- result = (DREF Dict *)DeeGCObject_Malloc(sizeof(Dict));
- if unlikely(!result) return NULL;
- if unlikely(dict_init_iterator(result,self)) goto err;
+ result = DeeGCObject_FMALLOC(Dict);
+ if unlikely(!result) goto done;
+ if unlikely(dict_init_iterator(result,self)) goto err_r;
  DeeObject_Init(result,&DeeDict_Type);
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
-err:
- DeeGCObject_Free(result);
+err_r:
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
 PUBLIC DREF DeeObject *DCALL
 DeeDict_FromSequence(DeeObject *__restrict self) {
  DREF Dict *result;
- result = (DREF Dict *)DeeGCObject_Malloc(sizeof(Dict));
- if unlikely(!result) return NULL;
- if unlikely(dict_init_sequence(result,self)) goto err;
+ result = DeeGCObject_FMALLOC(Dict);
+ if unlikely(!result) goto done;
+ if unlikely(dict_init_sequence(result,self)) goto err_r;
  DeeObject_Init(result,&DeeDict_Type);
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
-err:
- DeeGCObject_Free(result);
+err_r:
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
@@ -1800,7 +1802,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
                 /* .tp_copy_ctor = */&dict_copy,
                 /* .tp_deep_ctor = */&dict_copy,
                 /* .tp_any_ctor  = */&dict_init,
-                TYPE_FIXED_ALLOCATOR(Dict)
+                TYPE_FIXED_ALLOCATOR_GC(Dict)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dict_fini,

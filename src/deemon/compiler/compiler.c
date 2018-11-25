@@ -237,7 +237,7 @@ DeeCompiler_New(DeeObject *__restrict module,
  DREF DeeCompilerObject *result;
  ASSERT_OBJECT_TYPE(module,&DeeModule_Type);
  ASSERTF(!(flags & ~COMPILER_FMASK),"Invalid compiler flags in %x",flags);
- result = DeeObject_MALLOC(DeeCompilerObject);
+ result = DeeObject_FMALLOC(DeeCompilerObject);
  if unlikely(!result) goto done;
  /* Create the new root scope object. */
  result->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type,1,
@@ -274,7 +274,7 @@ done:
 err_scope:
  Dee_Decref(result->cp_scope);
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 

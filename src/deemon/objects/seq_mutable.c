@@ -2938,7 +2938,7 @@ make_removeif_all_wrapper(DeeObject *__restrict elem, DeeObject *key) {
  /* >> return [](x) -> keyed_search_item == (key is none ? x : key(x));
   * So simple, yet sooo complex to implement in C... */
  DREF RemoveIfAllWrapper *result;
- result = DeeObject_MALLOC(RemoveIfAllWrapper);
+ result = DeeObject_FMALLOC(RemoveIfAllWrapper);
  if unlikely(!result) goto done;
  if (key) {
   result->ria_elem = DeeObject_Call(key,1,(DeeObject **)&elem);
@@ -2954,7 +2954,7 @@ make_removeif_all_wrapper(DeeObject *__restrict elem, DeeObject *key) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 

@@ -321,14 +321,10 @@ proxy_contains_key(MapProxy *__restrict self, DeeObject *__restrict key) {
 PRIVATE DREF MapProxyIterator *DCALL
 proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type) {
  DREF MapProxyIterator *result;
- result = DeeObject_MALLOC(MapProxyIterator);
+ result = DeeObject_FMALLOC(MapProxyIterator);
  if unlikely(!result) goto done;
  result->mpi_iter = DeeObject_IterSelf(self->mp_map);
- if unlikely(!result->mpi_iter) {
-  DeeObject_Free(result);
-  result = NULL;
-  goto done;
- }
+ if unlikely(!result->mpi_iter) goto err_r;
  result->mpi_nsi = DeeType_NSI(Dee_TYPE(self->mp_map));
  if (result->mpi_nsi && result->mpi_nsi->nsi_class != TYPE_SEQX_CLASS_MAP)
      result->mpi_nsi = NULL;
@@ -337,6 +333,9 @@ proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type)
  DeeObject_Init(result,result_type);
 done:
  return result;
+err_r:
+ DeeObject_FFREE(result);
+ return NULL;
 }
 
 PRIVATE DREF MapProxyIterator *DCALL
@@ -715,7 +714,7 @@ err1: Dee_Decref(iterator);
 PRIVATE DREF MapProxy *DCALL
 map_new_proxy(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
  DREF MapProxy *result;
- result = DeeObject_MALLOC(MapProxy);
+ result = DeeObject_FMALLOC(MapProxy);
  if unlikely(!result) goto done;
  result->mp_map = self;
  Dee_Incref(self);
@@ -727,13 +726,10 @@ done:
 PRIVATE DREF MapProxyIterator *DCALL
 map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
  DREF MapProxyIterator *result;
- result = DeeObject_MALLOC(MapProxyIterator);
+ result = DeeObject_FMALLOC(MapProxyIterator);
  if unlikely(!result) goto done;
  result->mpi_iter = DeeObject_IterSelf(self);
- if unlikely(!result->mpi_iter) {
-  DeeObject_Free(result);
-  return NULL;
- }
+ if unlikely(!result->mpi_iter) goto err_r;
  result->mpi_map = self;
  Dee_Incref(self);
  if (result_type != &DeeMapItemsIterator_Type) {
@@ -745,6 +741,9 @@ map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_t
  DeeObject_Init(result,result_type);
 done:
  return result;
+err_r:
+ DeeObject_FFREE(result);
+ return NULL;
 }
 
 PRIVATE DREF MapProxy *DCALL

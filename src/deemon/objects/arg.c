@@ -390,8 +390,8 @@ kwds_findstr_len(Kwds *__restrict self,
 
 PRIVATE DREF Kwds *DCALL kwds_ctor(void) {
  DREF Kwds *result;
- result = (DREF Kwds *)DeeObject_Malloc(COMPILER_OFFSETOF(Kwds,kw_map)+
-                                        2*sizeof(struct kwds_entry));
+ result = (DREF Kwds *)DeeObject_Malloc(COMPILER_OFFSETOF(Kwds,kw_map) +
+                                       (2 * sizeof(struct kwds_entry)));
  if unlikely(!result) goto done;
  result->kw_map[0].ke_name = NULL;
  result->kw_map[1].ke_name = NULL;
@@ -448,16 +448,15 @@ kwds_bool(Kwds *__restrict self) {
 PRIVATE DREF KwdsIterator *DCALL
 kwds_iter(Kwds *__restrict self) {
  DREF KwdsIterator *result;
- result = DeeObject_MALLOC(KwdsIterator);
+ result = DeeObject_FMALLOC(KwdsIterator);
  if unlikely(!result) goto done;
  result->ki_iter = self->kw_map;
  result->ki_end  = self->kw_map + self->kw_mask + 1;
  result->ki_map  = self;
  Dee_Incref(self);
  DeeObject_Init(result,&DeeKwdsIterator_Type);
- return result;
 done:
- return NULL;
+ return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -886,7 +885,7 @@ kmap_bool(KwdsMapping *__restrict self) {
 PRIVATE DREF KmapIterator *DCALL
 kmap_iter(KwdsMapping *__restrict self) {
  DREF KmapIterator *result;
- result = DeeObject_MALLOC(KmapIterator);
+ result = DeeObject_FMALLOC(KmapIterator);
  if unlikely(!result) goto done;
  result->ki_iter = self->kmo_kwds->kw_map;
  result->ki_end  = self->kmo_kwds->kw_map + self->kmo_kwds->kw_mask + 1;
@@ -894,7 +893,7 @@ kmap_iter(KwdsMapping *__restrict self) {
  Dee_Incref(self);
  DeeObject_Init(result,&DeeKwdsMappingIterator_Type);
 done:
- return NULL;
+ return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1074,7 +1073,7 @@ DeeKwdsMapping_New(/*Kwds*/DeeObject *__restrict kwds,
                    DeeObject **__restrict argv) {
  DREF KwdsMapping *result;
  ASSERT_OBJECT_TYPE_EXACT(kwds,&DeeKwds_Type);
- result = DeeObject_MALLOC(KwdsMapping);
+ result = DeeObject_FMALLOC(KwdsMapping);
  if unlikely(!result) goto done;
  result->kmo_argv = argv;
  result->kmo_kwds = (DREF DeeKwdsObject *)kwds;

@@ -366,7 +366,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 INTERN DREF DeeObject *DCALL
 dict_iter(DeeDictObject *__restrict self) {
  DREF DictIterator *result;
- result = DeeObject_MALLOC(DictIterator);
+ result = DeeObject_FMALLOC(DictIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DictIterator_Type);
  result->di_dict = self;
@@ -476,13 +476,17 @@ dictproxyiterator_ctor(DictProxyIterator *__restrict self) {
                DeeObject_InstanceOf((DeeObject *)self,&DictItemsIterator_Type) ? &DeeDictItems_Type :
                                                                                  &DeeDictValues_Type);
  self->dpi_base.di_dict = (DeeDictObject *)DeeDict_New();
- if unlikely(!self->dpi_base.di_dict) return -1;
- self->dpi_proxy = DeeObject_MALLOC(DictProxy);
- if unlikely(!self->dpi_proxy) { Dee_Decref(self->dpi_base.di_dict); return -1; }
+ if unlikely(!self->dpi_base.di_dict) goto err;
+ self->dpi_proxy = DeeObject_FMALLOC(DictProxy);
+ if unlikely(!self->dpi_proxy) goto err_dict;
  DeeObject_Init(self->dpi_proxy,proxy_type);
  self->dpi_proxy->dp_dict = self->dpi_base.di_dict;
  Dee_Incref(self->dpi_base.di_dict);
  return 0;
+err_dict:
+ Dee_Decref(self->dpi_base.di_dict);
+err:
+ return -1;
 }
 
 INTERN int DCALL
@@ -565,7 +569,7 @@ INTERN DREF DeeObject *DCALL
 dict_newproxy_iterator(DictProxy *__restrict self,
                        DeeTypeObject *__restrict proxy_iterator_type) {
  DREF DictProxyIterator *result;
- result = DeeObject_MALLOC(DictProxyIterator);
+ result = DeeObject_FMALLOC(DictProxyIterator);
  if unlikely(!result) goto done;
  DeeObject_Init((DeeObject *)result,proxy_iterator_type);
  result->dpi_base.di_dict = self->dp_dict;
@@ -587,7 +591,7 @@ dict_newproxy(DeeDictObject *__restrict self,
               DeeTypeObject *__restrict proxy_type) {
  DREF DictProxy *result;
  ASSERT_OBJECT_TYPE(self,&DeeDict_Type);
- result = (DREF DictProxy *)DeeObject_Malloc(sizeof(DictProxy));
+ result = DeeObject_FMALLOC(DictProxy);
  if unlikely(!result) return NULL;
  DeeObject_Init(result,proxy_type);
  result->dp_dict = self;

@@ -1495,7 +1495,7 @@ err_yield_function:
 #endif
      goto err_operator_ast_ddi;
     }
-    argv = (DREF struct ast **)DeeObject_Malloc(1*sizeof(DREF struct ast *));
+    argv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
     if unlikely(!argv) { err_yield_function_temp: ast_decref(temp); goto err_yield_function; }
     argv[0] = temp; /* Inherit reference */
     operator_ast = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,1,argv),&loc);

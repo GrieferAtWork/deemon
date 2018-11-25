@@ -286,7 +286,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
   }
  }
 
- result = DeeGCObject_CALLOC(DeeCFunctionTypeObject);
+ result = DeeGCObject_FCALLOC(DeeCFunctionTypeObject);
  if unlikely(!result) goto err_argv;
  /* Create the name of the resulting type. */
  name = (DREF DeeStringObject *)generate_function_name(return_type,calling_convention,argc,argv);
@@ -365,7 +365,7 @@ err_argv_r_name_ffi_typev:
 err_argv_r_name:
  Dee_Decref(name);
 err_argv_r:
- DeeObject_Free(result);
+ DeeGCObject_FFREE(result);
 err_argv:
  while (argc--) Dee_Decref((DeeObject *)argv_copy[argc]);
  Dee_Free(argv_copy);

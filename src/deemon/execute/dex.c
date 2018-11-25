@@ -272,7 +272,7 @@ INTERN DREF DeeObject *DCALL
 DeeDex_New(DeeObject *__restrict name) {
  DREF DeeDexObject *result;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- result = DeeGCObject_CALLOC(DeeDexObject);
+ result = DeeGCObject_FCALLOC(DeeDexObject);
  if unlikely(!result) return NULL;
  DeeObject_Init(&result->d_module,&DeeDex_Type);
  result->d_module.mo_name    = (DeeStringObject *)name;
@@ -448,7 +448,7 @@ PUBLIC DeeTypeObject DeeDex_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeDexObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeDexObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&dex_fini,

@@ -800,9 +800,10 @@ PRIVATE int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeModuleObject *module;
- if (DeeArg_Unpack(argc,argv,"o:root_scope",&module) ||
-     DeeObject_AssertType((DeeObject *)module,&DeeModule_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:root_scope",&module))
+     goto err;
+ if (DeeObject_AssertType((DeeObject *)module,&DeeModule_Type))
+     goto err;
  memset((uint8_t *)self + offsetof(DeeScopeObject,s_prev),0,
          sizeof(DeeRootScopeObject)-offsetof(DeeScopeObject,s_prev));
  weakref_support_init((DeeScopeObject *)self);
@@ -818,7 +819,10 @@ root_scope_ctor(DeeRootScopeObject *__restrict self,
  self->rs_flags          = MODULE_FNORMAL;
 #endif
  return 0;
+err:
+ return -1;
 }
+
 PRIVATE void DCALL
 root_scope_fini(DeeRootScopeObject *__restrict self) {
  Dee_Decref(self->rs_module);
@@ -907,7 +911,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 
 INTERN int (DCALL scope_push)(void) {
  DREF DeeScopeObject *new_scope;
- new_scope = DeeObject_CALLOC(DeeScopeObject);
+ new_scope = DeeObject_FCALLOC(DeeScopeObject);
  if unlikely(!new_scope) goto err;
  DeeObject_Init(new_scope,&DeeScope_Type);
  new_scope->s_prev  = current_scope; /* Inherit reference */
@@ -934,7 +938,7 @@ INTERN void DCALL scope_pop(void) {
 INTERN int (DCALL classscope_push)(void) {
  DREF DeeClassScopeObject *new_scope;
  struct symbol *this_sym;
- new_scope = DeeObject_CALLOC(DeeClassScopeObject);
+ new_scope = DeeObject_FCALLOC(DeeClassScopeObject);
  if unlikely(!new_scope) goto err;
  this_sym = sym_alloc();
  if unlikely(!this_sym) goto err_new_scope;
@@ -959,7 +963,7 @@ INTERN int (DCALL classscope_push)(void) {
  current_scope = &new_scope->cs_scope; /* Inherit reference */
  return 0;
 err_new_scope:
- DeeObject_Free(new_scope);
+ DeeObject_FFREE(new_scope);
 err:
  return -1;
 }
@@ -986,8 +990,8 @@ basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
 }
 INTERN int (DCALL basescope_push)(void) {
  DREF DeeBaseScopeObject *new_scope;
- new_scope = (DeeBaseScopeObject *)DeeObject_Calloc(sizeof(DeeBaseScopeObject));
- if unlikely(!new_scope) return -1;
+ new_scope = DeeObject_FCALLOC(DeeBaseScopeObject);
+ if unlikely(!new_scope) goto err;
  DeeObject_Init((DeeObject *)new_scope,&DeeBaseScope_Type);
  ASSERT(current_scope);
  ASSERT(current_rootscope == current_basescope->bs_root);
@@ -999,6 +1003,8 @@ INTERN int (DCALL basescope_push)(void) {
  current_basescope = new_scope;
  current_scope     = (DREF DeeScopeObject *)new_scope; /* Inherit reference */
  return 0;
+err:
+ return -1;
 }
 
 INTERN void DCALL basescope_pop(void) {

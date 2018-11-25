@@ -67,13 +67,14 @@ DeeFile_OpenFd(dsysfd_t fd,
                /*String*/DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
  SystemFile *result;
- result = (SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(SystemFile);
+ if unlikely(!result) goto done;
  result->sf_handle    = fd;
  result->sf_ownhandle = inherit_fd ? fd : (dsysfd_t)-1; /* Inherit. */
  result->sf_filename  = filename;
  Dee_XIncref(filename);
  DeeLFileObject_Init(result,&DeeSystemFile_Type);
+done:
  return (DREF DeeObject *)result;
 }
 
@@ -404,7 +405,7 @@ DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode) {
                      "Failed to open %r",filename);
   goto err;
  }
- result = (DREF SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
+ result = DeeObject_FMALLOC(SystemFile);
  if unlikely(!result) goto err_fd;
  DeeLFileObject_Init(result,&DeeFSFile_Type);
  result->sf_handle    = (dsysfd_t)fd;

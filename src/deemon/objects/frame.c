@@ -92,7 +92,7 @@ PUBLIC DREF DeeObject *
 {
  DREF Frame *result;
  ASSERT_OBJECT_OPT(owner);
- result = DeeObject_MALLOC(Frame);
+ result = DeeObject_FMALLOC(Frame);
  if unlikely(!result) goto done;
  result->f_owner = owner;
  result->f_frame = frame;

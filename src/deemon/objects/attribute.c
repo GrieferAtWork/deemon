@@ -586,7 +586,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
      return_none;
   goto err;
  }
- result = DeeObject_MALLOC(DeeAttributeObject);
+ result = DeeObject_FMALLOC(DeeAttributeObject);
  if unlikely(!result) goto err_info;
  DeeObject_Init(result,&DeeAttribute_Type);
  info.a_perm |= ATTR_NAMEOBJ;
@@ -762,7 +762,7 @@ do_realloc:
   self->al_a = new_alloc;
  }
  /* Allocate a new attribute descriptor. */
- new_attr = DeeObject_MALLOC(Attr);
+ new_attr = DeeObject_FMALLOC(Attr);
  if unlikely(!new_attr) goto err;
  new_attr->a_name = attr_name;
  if (perm & ATTR_NAMEOBJ)
@@ -882,7 +882,7 @@ enumattriter_init(EnumAttrIter *__restrict self,
 PRIVATE DREF EnumAttrIter *DCALL
 enumattr_iter(EnumAttr *__restrict self) {
  DREF EnumAttrIter *result;
- result = DeeObject_MALLOC(EnumAttrIter);
+ result = DeeObject_FMALLOC(EnumAttrIter);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeEnumAttrIterator_Type);
  enumattriter_init(result,self);
@@ -1054,7 +1054,7 @@ enumattr_longjmp(DeeObject *__restrict declarator,
  ASSERT(iterator->ei_bufpos != COMPILER_ENDOF(iterator->ei_buffer));
 again:
  /* Create a new descriptor for the information passed. */
- new_attribute = DeeObject_TRYMALLOC(Attr);
+ new_attribute = DeeObject_TRYFMALLOC(Attr);
  if unlikely(!new_attribute) goto err_collect; /* Error. */
  new_attribute->a_info.a_decl     = declarator;
  new_attribute->a_info.a_perm     = perm;

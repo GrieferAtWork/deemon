@@ -827,14 +827,14 @@ PRIVATE DREF DeeThreadObject *DCALL
 allocate_thread_self(void) {
  DREF DeeThreadObject *result;
 again:
- result = DeeObject_TRYCALLOC(DeeThreadObject);
+ result = DeeObject_TRYFCALLOC(DeeThreadObject);
  if unlikely(!result) {
   /* We can attempt to clear out caches to get more memory,
    * as those will not go so far as to invoke user-code callbacks,
    * or require the thread.self object in any other way. */
   if (DeeMem_ClearCaches(sizeof(DeeThreadObject))) goto again;
   /* Well shit! Try one more time?... */
-  result = DeeObject_TRYCALLOC(DeeThreadObject);
+  result = DeeObject_TRYFCALLOC(DeeThreadObject);
   if (!result) return NULL;
  }
  DeeObject_Init(result,&DeeThread_Type);
@@ -955,7 +955,7 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
    ASSERT(!self->t_threadres);
    thread_fini(self);
    DeeObject_FreeTracker((DeeObject *)self);
-   DeeGCObject_Free(self);
+   DeeGCObject_FFREE(self);
    break;
   }
   if (ATOMIC_CMPXCH(self->ob_refcnt,refcnt,refcnt-1))
@@ -1343,12 +1343,12 @@ err:
   /* try to consume one keyboard interrupt. */
   do if ((count = ATOMIC_READ(keyboard_interrupt_counter)) == 0) return 0;
   while (!ATOMIC_CMPXCH_WEAK(keyboard_interrupt_counter,count,count-1));
-  keyboard_interrupt = DeeObject_MALLOC(DeeSignalObject);
+  keyboard_interrupt = DeeObject_FMALLOC(DeeSignalObject);
   if unlikely(!keyboard_interrupt) goto err;
   DeeObject_Init(keyboard_interrupt,&DeeError_KeyboardInterrupt);
   DeeError_Throw((DeeObject *)keyboard_interrupt);
   Dee_Decref(keyboard_interrupt);
-  return -1;
+  goto err;
  }
 #endif
  return 0;
@@ -1785,7 +1785,7 @@ try_alloc_wrappers(struct except_frame **__restrict presult,
  bool result = true;
  struct except_frame *chain = *presult;
  if (chain && !chain->ef_error) {
-  chain->ef_error = (DREF DeeObject *)DeeObject_TRYMALLOC(DeeErrorObject);
+  chain->ef_error = (DREF DeeObject *)DeeObject_TRYFMALLOC(DeeErrorObject);
   if unlikely(!chain->ef_error) goto fail;
  }
  while (*pnum_wrappers) {
@@ -1794,7 +1794,7 @@ try_alloc_wrappers(struct except_frame **__restrict presult,
   if unlikely(!new_frame) goto fail;
   new_frame->ef_prev = chain;
   chain = new_frame;
-  chain->ef_error = (DREF DeeObject *)DeeObject_TRYMALLOC(DeeErrorObject);
+  chain->ef_error = (DREF DeeObject *)DeeObject_TRYFMALLOC(DeeErrorObject);
   if unlikely(!chain->ef_error) goto fail;
   --*pnum_wrappers;
  }
@@ -2072,7 +2072,7 @@ relock_state:
       if (!Dee_CollectMemory(sizeof(struct except_frame))) {
        while (error_frames) {
         struct except_frame *next = error_frames->ef_prev;
-        DeeObject_Free(error_frames->ef_error);
+        DeeObject_FFree(error_frames->ef_error,sizeof(DeeErrorObject));
         ef_free(error_frames);
         error_frames = next;
        }
@@ -2086,7 +2086,7 @@ relock_state:
     uint16_t num_free = current_alloc-req_alloc;
     while (num_free--) {
      struct except_frame *next = error_frames->ef_prev;
-     DeeObject_Free(error_frames->ef_error);
+     DeeObject_FFree(error_frames->ef_error,sizeof(DeeErrorObject));
      ef_free(error_frames);
      error_frames = next;
     }
@@ -2409,7 +2409,7 @@ PUBLIC DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread)
 #endif
 {
  DREF DeeThreadObject *result;
- result = DeeGCObject_CALLOC(DeeThreadObject);
+ result = DeeGCObject_FCALLOC(DeeThreadObject);
  if unlikely(!result) goto done;
  result->t_state    = (THREAD_STATE_STARTED|THREAD_STATE_EXTERNAL);
 #ifndef CONFIG_NO_THREADID
@@ -2947,7 +2947,7 @@ thread_exit(DeeObject *__restrict UNUSED(self),
  DREF struct threadexit_object *error;
  if (DeeArg_Unpack(argc,argv,"|o:exit",&result))
      goto err;
- error = DeeObject_MALLOC(struct threadexit_object);
+ error = DeeObject_FMALLOC(struct threadexit_object);
  if unlikely(!error) goto err;
  error->te_result = result;
  Dee_Incref(result);
@@ -3483,7 +3483,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&thread_ctor,
-                TYPE_FIXED_ALLOCATOR(DeeThreadObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeThreadObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&thread_fini,

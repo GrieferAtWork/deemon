@@ -2005,7 +2005,7 @@ PRIVATE DREF DeeObject *DCALL
 nt_NewUserDescriptor(/*inherit(on_success)*/PSID pSid,
                      /*inherit(on_success)*/PSECURITY_DESCRIPTOR pSD) {
  DREF struct user_object *result;
- result = DeeObject_MALLOC(struct user_object);
+ result = DeeObject_FMALLOC(struct user_object);
  if unlikely(!result) goto done;
  result->u_sd = pSD;
  result->u_sid = pSid;
@@ -3965,7 +3965,7 @@ dir_iter(Dir *__restrict self) {
  DREF DirIterator *result;
  LPWSTR wname,wpattern; size_t i,wname_length;
  if (DeeThread_CheckInterrupt()) goto err;
- result = DeeObject_MALLOC(DirIterator);
+ result = DeeObject_FMALLOC(DirIterator);
  if unlikely(!result) goto err;
  wname = (LPWSTR)DeeString_AsWide((DeeObject *)self->d_path);
  if unlikely(!wname) goto err_r;
@@ -4016,7 +4016,7 @@ dir_iter(Dir *__restrict self) {
  DeeObject_Init(result,&DeeDirIterator_Type);
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
 err:
  return NULL;
 }
@@ -4378,7 +4378,7 @@ query_iter(Dir *__restrict self) {
  DREF QueryIterator *result;
  LPWSTR wname,wpattern; size_t i,wname_length;
  if (DeeThread_CheckInterrupt()) goto err;
- result = DeeObject_MALLOC(QueryIterator);
+ result = DeeObject_FMALLOC(QueryIterator);
  if unlikely(!result) goto err;
  wname = (LPWSTR)DeeString_AsWide((DeeObject *)self->d_path);
  if unlikely(!wname) goto err_r;
@@ -4448,7 +4448,7 @@ again_wname:
  DeeObject_Init(&result->q_iter,&DeeQueryIterator_Type);
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
 err:
  return NULL;
 }

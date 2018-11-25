@@ -316,6 +316,7 @@ again:
      WEAKREF_UNLOCK(other);
      if unlikely(p == other_p || p == &other->wr_next)
         return;
+     SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
      LOCK_POINTER(*block);
      UNLOCK_POINTER(*block);
@@ -332,6 +333,7 @@ again:
       WEAKREF_UNLOCK(other);
       if unlikely(next == other)
          return;
+      SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
       WEAKREF_LOCK(next);
       WEAKREF_UNLOCK(next);
@@ -377,7 +379,11 @@ again:
   COMPILER_READ_BARRIER();
   if likely(other->wr_obj) {
    struct weakref *next;
-   LOCK_POINTER(*other->wr_pself);
+   if (!TRYLOCK_POINTER(*other->wr_pself)) {
+    WEAKREF_UNLOCK(other);
+    SCHED_YIELD();
+    goto again;
+   }
    if unlikely(!WEAKREF_TRYLOCK(self)) {
     struct weakref **p = other->wr_pself;
     UNLOCK_POINTER(*other->wr_pself);
@@ -402,6 +408,7 @@ again:
      WEAKREF_UNLOCK(other);
      if unlikely(p == other_p || p == &other->wr_next)
         return;
+     SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
      LOCK_POINTER(*block);
      UNLOCK_POINTER(*block);
@@ -418,6 +425,7 @@ again:
       WEAKREF_UNLOCK(other);
       if unlikely(next == other)
          return;
+      SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
       WEAKREF_LOCK(next);
       WEAKREF_UNLOCK(next);
@@ -1085,7 +1093,8 @@ again:
      * NOTE: We're allowed to modify the type of `self' _ONLY_
      *       because it's reference counter is ZERO (and because
      *       implementors of `tp_free' are aware of its volatile
-     *       nature that may only be interpreted as a free-hint). */
+     *       nature that may only be interpreted as a free-hint).
+     * NOTE: This even applies to the slab allocators used by `DeeObject_FMALLOC'! */
     self->ob_type = type;
     COMPILER_WRITE_BARRIER();
     (*type->tp_init.tp_dtor)(self);
@@ -1329,7 +1338,33 @@ object_sizeof(DeeObject *__restrict self,
  /* Variable types lack a standardized way of determining their size in bytes. */
  if unlikely(type->tp_flags & TP_FVARIABLE)
     goto err_isvar;
+ if unlikely(type->tp_init.tp_alloc.tp_free) {
+#ifndef CONFIG_NO_OBJECT_SLABS
+  /* Check for slab allocators. */
+  size_t slab_size;
+  void (DCALL *tp_free)(void *__restrict ob);
+  tp_free = type->tp_init.tp_alloc.tp_free;
+#define CHECK_SIZE(x) \
+  if (tp_free == &DeeObject_SlabFree##x || \
+      tp_free == &DeeGCObject_SlabFree##x) \
+      slab_size = x * __SIZEOF_POINTER__; \
+  else
+  DEE_ENUMERATE_SLAB_SIZES(CHECK_SIZE)
+#undef CHECK_SIZE
+  {
+   goto err_iscustom;
+  }
+  return DeeInt_NewSize(slab_size);
+#else /* !CONFIG_NO_OBJECT_SLABS */
+  goto err_iscustom;
+#endif /* CONFIG_NO_OBJECT_SLABS */
+ }
  return DeeInt_NewSize(type->tp_init.tp_alloc.tp_instance_size);
+err_iscustom:
+ DeeError_Throwf(&DeeError_TypeError,
+                 "Cannot determine size of type `%k' with custom allocator",
+                 type);
+ goto err;
 err_isvar:
  DeeError_Throwf(&DeeError_TypeError,
                  "Cannot determine size of variable-length type `%k'",
@@ -3956,7 +3991,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeTypeObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeTypeObject)
             }
         },
         /* .tp_dtor        = */(void (DCALL *)(DeeObject *__restrict))&type_fini,

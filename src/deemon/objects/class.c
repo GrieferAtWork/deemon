@@ -3311,7 +3311,14 @@ DeeClass_New(DeeTypeObject *__restrict base,
    goto err;
   }
  }
- result_class_offset  = result_type_type->tp_init.tp_alloc.tp_instance_size;
+ result_class_offset = result_type_type->tp_init.tp_alloc.tp_instance_size;
+ if (result_type_type->tp_init.tp_alloc.tp_free) {
+err_custom_allocator:
+  DeeError_Throwf(&DeeError_TypeError,
+                 "Cannot use `%s' with custom allocator as class base",
+                 base->tp_name);
+  goto err;
+ }
  result_class_offset +=  (sizeof(void *) - 1);
  result_class_offset &= ~(sizeof(void *) - 1);
  /* Allocate the resulting class object. */
@@ -3331,7 +3338,40 @@ DeeClass_New(DeeTypeObject *__restrict base,
   result_class->cd_offset = sizeof(DeeObject);
  } else {
   /* Calculate the offset of instance descriptors. */
-  result_class->cd_offset  = base->tp_init.tp_alloc.tp_instance_size;
+  result_class->cd_offset = base->tp_init.tp_alloc.tp_instance_size;
+  if (base->tp_init.tp_alloc.tp_free) {
+#ifndef CONFIG_NO_OBJECT_SLABS
+   void (DCALL *tp_free)(void *__restrict ob);
+   size_t base_size;
+   tp_free = base->tp_init.tp_alloc.tp_free;
+   /* Figure out the slab size used by the base-class. */
+   if (base->tp_flags & TP_FGC) {
+#define CHECK_ALLOCATOR(x) \
+    if (tp_free == &DeeGCObject_SlabFree##x) base_size = x * sizeof(void *); \
+    else
+    DEE_ENUMERATE_SLAB_SIZES(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+    {
+     DeeGCObject_Free(result);
+     goto err_custom_allocator;
+    }
+   } else {
+#define CHECK_ALLOCATOR(x) \
+    if (tp_free == &DeeObject_SlabFree##x) base_size = x * sizeof(void *); \
+    else
+    DEE_ENUMERATE_SLAB_SIZES(CHECK_ALLOCATOR)
+#undef CHECK_ALLOCATOR
+    {
+     DeeGCObject_Free(result);
+     goto err_custom_allocator;
+    }
+   }
+   result_class->cd_offset = base_size;
+#else /* !CONFIG_NO_OBJECT_SLABS */
+   DeeGCObject_Free(result);
+   goto err_custom_allocator;
+#endif /* CONFIG_NO_OBJECT_SLABS */
+  }
   result_class->cd_offset +=  (sizeof(void *)-1);
   result_class->cd_offset &= ~(sizeof(void *)-1);
   result->tp_base = base;
@@ -3517,7 +3557,7 @@ err_r_base:
  Dee_XDecref_unlikely(desc->cd_doc);
  Dee_Decref_unlikely(desc);
 /*err_r:*/
- DeeObject_Free(result);
+ DeeGCObject_Free(result);
 err:
  return NULL;
 }

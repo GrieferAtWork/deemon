@@ -1471,7 +1471,7 @@ DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
                           DeeObject *argv,
                           DeeObject *default_symbols) {
  DREF InteractiveModule *result;
- result = DeeGCObject_MALLOC(InteractiveModule);
+ result = DeeGCObject_FMALLOC(InteractiveModule);
  if unlikely(!result) goto done;
  DeeObject_Init((DeeObject *)result,&DeeInteractiveModule_Type);
  if (imod_init(result,
@@ -1492,7 +1492,7 @@ done:
 err_r:
  Dee_DecrefNokill(&DeeInteractiveModule_Type);
  DeeObject_FreeTracker((DeeObject *)result);
- DeeObject_Free((DeeObject *)result);
+ DeeGCObject_FFREE((DeeObject *)result);
  return NULL;
 }
 
@@ -1690,7 +1690,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&imod_ctor,
-                TYPE_FIXED_ALLOCATOR(InteractiveModule)
+                TYPE_FIXED_ALLOCATOR_GC(InteractiveModule)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&imod_fini,

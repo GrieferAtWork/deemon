@@ -326,7 +326,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
      return_empty_bytes;
  bufsize = DeeFastSeq_GetSize(seq);
  if (bufsize != DEE_FASTSEQ_NOTFAST) {
-  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data) +
                                           bufsize);
   if unlikely(!result) goto err;
   /* Fast-sequence optimizations. */
@@ -345,7 +345,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
  result = (DREF Bytes *)DeeObject_TryMalloc(COMPILER_OFFSETOF(Bytes,b_data)+bufsize);
  if unlikely(!bufsize) {
   bufsize = 1;
-  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+1);
+  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data) + 1);
   if unlikely(!result) goto err;
  }
  iter = DeeObject_IterSelf(seq);
@@ -446,7 +446,7 @@ err_r:
 PUBLIC DREF DeeObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
  DREF Bytes *result;
- result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data) +
                                          num_bytes);
  if unlikely(!result) goto done;
  memset(result->b_data,init,num_bytes);
@@ -467,7 +467,7 @@ done:
 PUBLIC DREF DeeObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes) {
  DREF Bytes *result;
- result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data) +
                                          num_bytes);
  if unlikely(!result) goto done;
  result->b_base  = result->b_data;
@@ -486,7 +486,7 @@ done:
 PUBLIC DREF DeeObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
  DREF Bytes *result;
- result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data)+
+ result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data) +
                                          num_bytes);
  if unlikely(!result) goto done;
  result->b_base  = (uint8_t *)memcpy(result->b_data,data,num_bytes);
@@ -785,7 +785,7 @@ bytes_bool(Bytes *__restrict self) {
 PRIVATE DREF BytesIterator *DCALL
 bytes_iter(Bytes *__restrict self) {
  DREF BytesIterator *result;
- result = DeeObject_MALLOC(BytesIterator);
+ result = DeeObject_FMALLOC(BytesIterator);
  if unlikely(!result) goto done;
  result->bi_bytes = self;
  result->bi_iter  = DeeBytes_DATA(self);

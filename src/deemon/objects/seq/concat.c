@@ -360,7 +360,7 @@ INTDEF void DCALL tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg);
 PRIVATE DREF CatIterator *DCALL
 cat_iter(Cat *__restrict self) {
  DREF CatIterator *result;
- result = DeeObject_MALLOC(CatIterator);
+ result = DeeObject_FMALLOC(CatIterator);
  if unlikely(!result) goto done;
  ASSERT(DeeTuple_SIZE(self) != 0);
  result->c_curr = DeeObject_IterSelf(DeeTuple_GET(self,0));
@@ -375,7 +375,7 @@ cat_iter(Cat *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 

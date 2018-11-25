@@ -292,14 +292,10 @@ repeat_bool(Repeat *__restrict self) {
 PRIVATE DREF RepeatIterator *DCALL
 repeat_iter(Repeat *__restrict self) {
  DREF RepeatIterator *result;
- result = DeeObject_MALLOC(RepeatIterator);
+ result = DeeObject_FMALLOC(RepeatIterator);
  if unlikely(!result) goto done;
  result->ri_iter = DeeObject_IterSelf(self->r_seq);
- if unlikely(!result->ri_iter) {
-  DeeObject_Free(result);
-  result = NULL;
-  goto done;
- }
+ if unlikely(!result->ri_iter) goto err_r;
  result->ri_rep  = self;
  result->ri_num  = self->r_num-1;
 #ifndef CONFIG_NO_THREADS
@@ -309,6 +305,9 @@ repeat_iter(Repeat *__restrict self) {
  DeeObject_Init(result,&RepeatIterator_Type);
 done:
  return result;
+err_r:
+ DeeObject_FFREE(result);
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -745,7 +744,7 @@ repeatitem_bool(RepeatItem *__restrict self) {
 PRIVATE DREF RepeatItemIterator *DCALL
 repeatitem_iter(RepeatItem *__restrict self) {
  DREF RepeatItemIterator *result;
- result = DeeObject_MALLOC(RepeatItemIterator);
+ result = DeeObject_FMALLOC(RepeatItemIterator);
  if unlikely(!result) goto done;
  result->rii_rep = self;
  result->rii_obj = self->ri_obj;
@@ -995,7 +994,7 @@ DeeSeq_Repeat(DeeObject *__restrict self, size_t count) {
  DREF Repeat *result;
  if (!count || DeeFastSeq_GetSize(self) == 0)
       return_reference_(Dee_EmptySeq);
- result = DeeObject_MALLOC(Repeat);
+ result = DeeObject_FMALLOC(Repeat);
  if unlikely(!result) goto done;
  Dee_Incref(self);
  result->r_seq = self;
@@ -1009,7 +1008,7 @@ DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
  DREF RepeatItem *result;
  if (!count)
       return_reference_(Dee_EmptySeq);
- result = DeeObject_MALLOC(RepeatItem);
+ result = DeeObject_FMALLOC(RepeatItem);
  if unlikely(!result) goto done;
  Dee_Incref(item);
  result->ri_obj = item;

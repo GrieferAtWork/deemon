@@ -603,7 +603,7 @@ refa_bool(ReSequence *__restrict self) {
 PRIVATE DREF ReSequenceIterator *DCALL
 refa_iter(ReSequence *__restrict self) {
  DREF ReSequenceIterator *result;
- result = DeeObject_MALLOC(ReSequenceIterator);
+ result = DeeObject_FMALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -611,9 +611,8 @@ refa_iter(ReSequence *__restrict self) {
  Dee_Incref(result->re_pattern);
  DeeObject_Init(result,&REFindAllIterator_Type);
  rwlock_init(&result->re_lock);
- return result;
 done:
- return NULL;
+ return result;
 }
 
 PRIVATE size_t DCALL
@@ -761,7 +760,7 @@ INTERN DeeTypeObject REFindAll_Type = {
 PRIVATE DREF ReSequenceIterator *DCALL
 rela_iter(ReSequence *__restrict self) {
  DREF ReSequenceIterator *result;
- result = DeeObject_MALLOC(ReSequenceIterator);
+ result = DeeObject_FMALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -769,9 +768,8 @@ rela_iter(ReSequence *__restrict self) {
  Dee_Incref(result->re_pattern);
  DeeObject_Init(result,&RELocateAllIterator_Type);
  rwlock_init(&result->re_lock);
- return result;
 done:
- return NULL;
+ return result;
 }
 
 PRIVATE struct type_seq rela_seq = {
@@ -865,7 +863,7 @@ resp_bool(ReSequence *__restrict self) {
 PRIVATE DREF ReSequenceIterator *DCALL
 resp_iter(ReSequence *__restrict self) {
  DREF ReSequenceIterator *result;
- result = DeeObject_MALLOC(ReSequenceIterator);
+ result = DeeObject_FMALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -875,9 +873,8 @@ resp_iter(ReSequence *__restrict self) {
  Dee_Incref(result->re_pattern);
  DeeObject_Init(result,&RESplitIterator_Type);
  rwlock_init(&result->re_lock);
- return result;
 done:
- return NULL;
+ return result;
 }
 
 PRIVATE size_t DCALL
@@ -1000,7 +997,7 @@ string_re_findall(String *__restrict self,
                   String *__restrict pattern,
                   struct re_args const *__restrict args) {
  DREF ReSequence *result;
- result = DeeObject_MALLOC(ReSequence);
+ result = DeeObject_FMALLOC(ReSequence);
  if unlikely(!result) goto done;
  result->re_data    = self;
  result->re_pattern = pattern;
@@ -1017,7 +1014,7 @@ string_re_locateall(String *__restrict self,
                     String *__restrict pattern,
                     struct re_args const *__restrict args) {
  DREF ReSequence *result;
- result = DeeObject_MALLOC(ReSequence);
+ result = DeeObject_FMALLOC(ReSequence);
  if unlikely(!result) goto done;
  result->re_data    = self;
  result->re_pattern = pattern;
@@ -1034,7 +1031,7 @@ string_re_split(String *__restrict self,
                 String *__restrict pattern,
                 struct re_args const *__restrict args) {
  DREF ReSequence *result;
- result = DeeObject_MALLOC(ReSequence);
+ result = DeeObject_FMALLOC(ReSequence);
  if unlikely(!result) goto done;
  result->re_data    = self;
  result->re_pattern = pattern;

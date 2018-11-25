@@ -492,7 +492,7 @@ DeeRoDict_FromIterator(DeeObject *__restrict self) {
 PRIVATE DREF DictIterator *DCALL
 rodict_iter(Dict *__restrict self) {
  DREF DictIterator *result;
- result = DeeObject_MALLOC(DictIterator);
+ result = DeeObject_FMALLOC(DictIterator);
  if unlikely(!result) goto done;
  result->di_dict = self;
  result->di_next = self->rd_elem;

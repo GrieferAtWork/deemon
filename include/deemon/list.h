@@ -40,6 +40,7 @@ struct list_object {
 #ifndef CONFIG_NO_THREADS
     rwlock_t         l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
+    WEAKREF_SUPPORT
 };
 
 #ifndef CONFIG_NO_THREADS

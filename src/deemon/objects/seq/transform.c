@@ -220,16 +220,20 @@ trans_bool(Transformation *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 trans_iter(Transformation *__restrict self) {
  DREF TransformationIterator *result;
- result = (TransformationIterator *)DeeObject_Malloc(sizeof(TransformationIterator));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(TransformationIterator);
+ if unlikely(!result) goto err;
  /* Create the underlying iterator. */
  result->ti_iter = DeeObject_IterSelf(self->t_seq);
- if unlikely(!result->ti_iter) { DeeObject_Free(result); return NULL; }
+ if unlikely(!result->ti_iter) goto err_r;
  /* Assign the transformation functions. */
  result->ti_func = self->t_fun;
  Dee_Incref(self->t_fun);
  DeeObject_Init(result,&DeeTransformationIterator_Type);
  return (DREF DeeObject *)result;
+err_r:
+ DeeObject_FFREE(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_member trans_members[] = {
@@ -398,13 +402,14 @@ DeeSeq_Transform(DeeObject *__restrict self,
                  DeeObject *__restrict transformation) {
  DREF Transformation *result;
  /* Create a new transformation sequence. */
- result = (DREF Transformation *)DeeObject_Malloc(sizeof(Transformation));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(Transformation);
+ if unlikely(!result) goto done;
  result->t_seq = self;
  result->t_fun = transformation;
  Dee_Incref(self);
  Dee_Incref(transformation);
  DeeObject_Init(result,&DeeTransformation_Type);
+done:
  return (DREF DeeObject *)result;
 }
 

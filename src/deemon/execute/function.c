@@ -252,7 +252,7 @@ DeeFunction_New(DeeObject *__restrict code, size_t refc,
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(((DeeCodeObject *)code)->co_refc == refc);
  result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
-                                                    (refc*sizeof(DREF DeeObject *)));
+                                           (refc * sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;
  result->fo_code = (DREF DeeCodeObject *)code;
  for (i = 0; i < refc; ++i) {
@@ -280,7 +280,7 @@ DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
          ((DeeCodeObject *)code)->co_refc,refc,
          DeeCode_NAME(code));
  result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
-                                                    (refc*sizeof(DREF DeeObject *)));
+                                           (refc * sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;
  result->fo_code = (DREF DeeCodeObject *)code;
  MEMCPY_PTR(result->fo_refv,refv,refc);
@@ -318,7 +318,7 @@ function_init(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
      goto err;
  result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
-                                                    (code->co_refc*sizeof(DREF DeeObject *)));
+                                           (code->co_refc * sizeof(DREF DeeObject *)));
  if unlikely(!result)
      goto err;
  if (DeeObject_Unpack(refs,code->co_refc,result->fo_refv))
@@ -804,14 +804,14 @@ err:
 PRIVATE DREF YFIterator *DCALL
 yf_iter_self(YFunction *__restrict self) {
  DREF YFIterator *result;
- result = DeeGCObject_MALLOC(YFIterator);
+ result = DeeGCObject_FMALLOC(YFIterator);
  if unlikely(!result) goto err;
  if unlikely(yfi_init(result,self)) goto err_r;
  DeeObject_Init(result,&DeeYieldFunctionIterator_Type);
  DeeGC_Track((DeeObject *)result);
  return result;
 err_r:
- DeeGCObject_Free(result);
+ DeeGCObject_FFREE(result);
 err:
  return NULL;
 }
@@ -1732,7 +1732,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
                 /* .tp_copy_ctor = */&yfi_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&yfi_new,
-                TYPE_FIXED_ALLOCATOR(YFIterator)
+                TYPE_FIXED_ALLOCATOR_GC(YFIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&yfi_dtor,

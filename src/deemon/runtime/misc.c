@@ -1376,8 +1376,10 @@ PUBLIC void
 }
 #endif
 
-
-
 DECL_END
+
+#ifndef __INTELLISENSE__
+#include "slab.c.inl"
+#endif
 
 #endif /* !GUARD_DEEMON_RUNTIME_MISC_C */

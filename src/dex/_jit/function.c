@@ -47,7 +47,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
                 DeeObject *globals,
                 uint16_t flags) {
  DREF JITFunction *result;
- result = DeeObject_MALLOC(JITFunction);
+ result = DeeObject_FMALLOC(JITFunction);
  if unlikely(!result) goto done;
  result->jf_source_start = source_start;
  result->jf_source_end   = source_end;

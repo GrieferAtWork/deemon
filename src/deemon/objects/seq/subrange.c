@@ -214,7 +214,7 @@ subrange_iter(SubRange *__restrict self) {
  DREF DeeObject *iterator; size_t begin_index;
  iterator = DeeObject_IterSelf(self->sr_seq);
  if unlikely(!iterator) return NULL;
- result = (DREF SubRangeIterator *)DeeObject_Malloc(sizeof(SubRangeIterator));
+ result = DeeObject_FMALLOC(SubRangeIterator);
  if unlikely(!result) goto err_iterator;
  begin_index = self->sr_begin;
  result->sr_size = self->sr_size;
@@ -224,19 +224,22 @@ subrange_iter(SubRange *__restrict self) {
   DREF DeeObject *discard;
   discard = DeeObject_IterNext(iterator);
   if unlikely(!ITER_ISOK(discard)) {
-   if (!discard) goto err_iterator2;
+   if (!discard) goto err_iterator_r;
    /* Empty iterator (the base iterator was exhausted during the discard-phase) */
    result->sr_size = 0;
    break;
   }
   Dee_Decref(discard);
   if (DeeThread_CheckInterrupt())
-      goto err_iterator2;
+      goto err_iterator_r;
  }
  DeeObject_Init(result,&DeeSubRangeIterator_Type);
  return (DREF DeeObject *)result;
-err_iterator2: DeeObject_Free(result);
-err_iterator:  Dee_Decref(iterator);
+err_iterator_r:
+ DeeObject_FFREE(result);
+err_iterator:
+ Dee_Decref(iterator);
+/*err:*/
  return NULL;
 }
 
@@ -406,8 +409,8 @@ DeeSeq_GetRange(DeeObject *__restrict self,
  if unlikely(begin >= end)
     return_reference_(Dee_EmptySeq);
  /* Create a sub-range sequence. */
- result = DeeObject_MALLOC(SubRange);
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(SubRange);
+ if unlikely(!result) goto done;
  if (DeeObject_InstanceOfExact(self,&DeeSubRange_Type)) {
   SubRange *me = (SubRange *)self;
   /* Special handling for recursion. */
@@ -422,6 +425,7 @@ DeeSeq_GetRange(DeeObject *__restrict self,
   result->sr_size  = (size_t)(end-begin);
  }
  DeeObject_Init(result,&DeeSubRange_Type);
+done:
  return (DREF DeeObject *)result;
 }
 
@@ -432,8 +436,8 @@ DeeSeq_GetRangeN(DeeObject *__restrict self,
  if (!begin)
       return_reference_(self);
  /* Create a sub-range sequence. */
- result = DeeObject_MALLOC(SubRangeN);
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(SubRangeN);
+ if unlikely(!result) goto done;
  if (DeeObject_InstanceOfExact(self,&DeeSubRangeN_Type)) {
   SubRangeN *me = (SubRangeN *)self;
   /* Special handling for recursion. */
@@ -446,6 +450,7 @@ DeeSeq_GetRangeN(DeeObject *__restrict self,
   result->sr_begin = begin;
  }
  DeeObject_Init(result,&DeeSubRangeN_Type);
+done:
  return (DREF DeeObject *)result;
 }
 

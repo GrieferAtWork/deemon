@@ -1476,7 +1476,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_FIXED_ALLOCATOR(DeeModuleObject)
+                TYPE_FIXED_ALLOCATOR_GC(DeeModuleObject)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&module_fini,

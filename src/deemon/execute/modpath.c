@@ -1380,17 +1380,19 @@ DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen) {
  name_object = DeeString_NewUtf8(name,
                                  namelen,
                                  STRING_ERROR_FSTRICT);
- if unlikely(!name_object) return NULL;
+ if unlikely(!name_object) goto err;
  result = DeeModule_New(name_object);
  Dee_Decref(name_object);
  return result;
+err:
+ return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeModule_New(DeeObject *__restrict name) {
  DeeModuleObject *result;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- result = DeeGCObject_CALLOC(DeeModuleObject);
- if unlikely(!result) return NULL;
+ result = DeeGCObject_FCALLOC(DeeModuleObject);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeModule_Type);
  result->mo_name    = (DeeStringObject *)name;
  result->mo_bucketv = empty_module_buckets;
@@ -1398,6 +1400,7 @@ DeeModule_New(DeeObject *__restrict name) {
  Dee_Incref(name);
  weakref_support_init(result);
  DeeGC_Track((DREF DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 }
 
@@ -2711,7 +2714,7 @@ DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
   Dee_Incref(module_name);
  }
  /* Create the new module. */
- result = DeeGCObject_CALLOC(DeeModuleObject);
+ result = DeeGCObject_FCALLOC(DeeModuleObject);
  if unlikely(!result) goto err_module_name;
  result->mo_name    = (DREF DeeStringObject *)module_name; /* Inherit reference. */
  result->mo_bucketv = empty_module_buckets;

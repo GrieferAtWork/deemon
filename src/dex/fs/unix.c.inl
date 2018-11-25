@@ -1911,7 +1911,7 @@ PRIVATE DREF DirIterator *DCALL
 dir_iter(Dir *__restrict self) {
  DREF DirIterator *result; char *utf8;
  if (DeeThread_CheckInterrupt()) goto err;
- result = DeeObject_MALLOC(DirIterator);
+ result = DeeObject_FMALLOC(DirIterator);
  if unlikely(!result) goto err;
  /* Open a directory descriptor. */
  utf8 = DeeString_AsUtf8((DeeObject *)self->d_path);
@@ -1930,8 +1930,10 @@ dir_iter(Dir *__restrict self) {
 #endif
  DeeObject_Init(result,&DeeDirIterator_Type);
  return result;
-err_r: DeeObject_Free(result);
-err:   return NULL;
+err_r:
+ DeeObject_FFREE(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_member diriter_members[] = {
@@ -2199,7 +2201,7 @@ query_iter(Dir *__restrict self) {
  DREF QueryIterator *result;
  char *query_start,*query_str;
  if (DeeThread_CheckInterrupt()) goto err;
- result = DeeObject_MALLOC(QueryIterator);
+ result = DeeObject_FMALLOC(QueryIterator);
  if unlikely(!result) goto err;
  query_str = DeeString_AsUtf8((DeeObject *)self->d_path);
  if unlikely(!query_str) goto err;
@@ -2246,8 +2248,10 @@ query_iter(Dir *__restrict self) {
 #endif
  DeeObject_Init(&result->q_iter,&DeeQueryIterator_Type);
  return result;
-err_r: DeeObject_Free(result);
-err:   return NULL;
+err_r:
+ DeeObject_FFREE(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_seq query_seq = {

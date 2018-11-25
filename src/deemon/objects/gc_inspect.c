@@ -210,7 +210,7 @@ gcset_bool(GCSet *__restrict self) {
 PRIVATE DREF GCSetIterator *DCALL
 gcset_iter(GCSet *__restrict self) {
  DREF GCSetIterator *result;
- result = DeeObject_MALLOC(GCSetIterator);
+ result = DeeObject_FMALLOC(GCSetIterator);
  if unlikely(!result) goto done;
  result->gsi_index = 0;
  result->gsi_set = self;

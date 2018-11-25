@@ -239,7 +239,7 @@ bseg_bool(BytesSegments *__restrict self) {
 PRIVATE DREF BytesSegmentsIterator *DCALL
 bseg_iter(BytesSegments *__restrict self) {
  DREF BytesSegmentsIterator *result;
- result = DeeObject_MALLOC(BytesSegmentsIterator);
+ result = DeeObject_FMALLOC(BytesSegmentsIterator);
  if unlikely(!result) goto done;
  Dee_Incref(self->b_str);
  result->b_str = self->b_str;
@@ -393,7 +393,7 @@ DeeBytes_Segments(DeeBytesObject *__restrict self,
                   size_t segment_size) {
  DREF BytesSegments *result;
  ASSERT(segment_size != 0);
- result = DeeObject_MALLOC(BytesSegments);
+ result = DeeObject_FMALLOC(BytesSegments);
  if unlikely(!result) goto done;
  result->b_str = self;
  Dee_Incref(self);

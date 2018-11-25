@@ -405,8 +405,8 @@ range_visit(Range *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF RangeIterator *DCALL
 range_iter(Range *__restrict self) {
  DREF RangeIterator *result;
- result = (DREF RangeIterator *)DeeObject_Malloc(sizeof(RangeIterator));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(RangeIterator);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&RangeIterator_Type);
  result->ri_index = self->r_begin;
  result->ri_range = self;
@@ -420,6 +420,7 @@ range_iter(Range *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->ri_lock);
 #endif
+done:
  return result;
 }
 
@@ -760,8 +761,8 @@ INTERN DeeTypeObject IntRangeIterator_Type = {
 PRIVATE DREF IntRangeIterator *DCALL
 intrange_iter(IntRange *__restrict self) {
  DREF IntRangeIterator *result;
- result = (DREF IntRangeIterator *)DeeObject_Malloc(sizeof(IntRangeIterator));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(IntRangeIterator);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&IntRangeIterator_Type);
  result->iri_range = self;
  result->iri_step  = self->ir_step;
@@ -773,6 +774,7 @@ intrange_iter(IntRange *__restrict self) {
   result->iri_index = self->ir_end + self->ir_step;
  }
  Dee_Incref(self);
+done:
  return result;
 }
 
@@ -1076,13 +1078,14 @@ DeeRange_NewInt(dssize_t begin,
  ASSERT(step != 0);
 
  /* Create the new range. */
- result = (DREF IntRange *)DeeObject_Malloc(sizeof(IntRange));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(IntRange);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&IntRange_Type);
  /* Fill in members of the new range object. */
  result->ir_begin = begin;
  result->ir_end   = end;
  result->ir_step  = step;
+done:
  return (DREF DeeObject *)result;
 #endif
 }
@@ -1120,8 +1123,8 @@ do_object_range:
   if unlikely(temp < 0) return NULL;
  }
  /* Create the new range. */
- result = (DREF Range *)DeeObject_Malloc(sizeof(Range));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(Range);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&Range_Type);
  /* Fill in members of the new range object. */
  result->r_begin = begin;
@@ -1131,6 +1134,7 @@ do_object_range:
  Dee_Incref(begin);
  Dee_Incref(end);
  Dee_XIncref(step);
+done:
  return (DREF DeeObject *)result;
 }
 

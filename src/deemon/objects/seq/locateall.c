@@ -269,18 +269,22 @@ locator_visit(Locator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF DeeObject *DCALL
 locator_iter(Locator *__restrict self) {
  DREF LocatorIterator *result;
- result = (LocatorIterator *)DeeObject_Malloc(sizeof(LocatorIterator));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(LocatorIterator);
+ if unlikely(!result) goto done;
  /* Create the underlying iterator. */
  result->li_iter = DeeObject_IterSelf(self->l_seq);
- if unlikely(!result->li_iter) { DeeObject_Free(result); return NULL; }
+ if unlikely(!result->li_iter) goto err_r;
  /* Assign the locator element & key function. */
  result->li_elem = self->l_elem;
  Dee_Incref(self->l_elem);
  result->li_pred = self->l_pred;
  Dee_XIncref(self->l_pred);
  DeeObject_Init(result,&DeeLocatorIterator_Type);
+done:
  return (DREF DeeObject *)result;
+err_r:
+ DeeObject_FFREE(result);
+ return NULL;
 }
 
 PRIVATE struct type_member locator_members[] = {
@@ -360,7 +364,7 @@ DeeSeq_LocateAll(DeeObject *__restrict self,
                  DeeObject *key) {
  DREF Locator *result;
  /* Create a new locator sequence. */
- result = (DREF Locator *)DeeObject_Malloc(sizeof(Locator));
+ result = DeeObject_FMALLOC(Locator);
  if unlikely(!result) return NULL;
  result->l_seq  = self;
  result->l_elem = keyed_search_item;

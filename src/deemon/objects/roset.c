@@ -403,7 +403,7 @@ DeeRoSet_FromIterator(DeeObject *__restrict self) {
 PRIVATE DREF SetIterator *DCALL
 roset_iter(Set *__restrict self) {
  DREF SetIterator *result;
- result = DeeObject_MALLOC(SetIterator);
+ result = DeeObject_FMALLOC(SetIterator);
  if unlikely(!result) goto done;
  result->si_set = self;
  result->si_next = self->rs_elem;

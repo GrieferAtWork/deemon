@@ -54,8 +54,8 @@ PUBLIC DREF DeeObject *DCALL
 DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items) {
  DREF Set *result;
  /* Allocate the set object. */
- result = (DREF Set *)DeeGCObject_Malloc(sizeof(Set));
- if unlikely(!result) return NULL;
+ result = DeeGCObject_FMALLOC(Set);
+ if unlikely(!result) goto done;
  if unlikely(!num_items) {
   /* Special case: allocate an empty set. */
   result->s_mask = 0;
@@ -98,10 +98,11 @@ DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items
  weakref_support_init(result);
  DeeObject_Init(result,&DeeHashSet_Type);
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 err_r:
  Dee_Free(result->s_elem);
- DeeGCObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
@@ -186,28 +187,30 @@ err:
 PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromIterator(DeeObject *__restrict self) {
  DREF Set *result;
- result = (DREF Set *)DeeGCObject_Malloc(sizeof(Set));
- if unlikely(!result) return NULL;
+ result = DeeGCObject_FMALLOC(Set);
+ if unlikely(!result) goto done;
  if unlikely(set_init_iterator(result,self)) goto err;
  DeeObject_Init(result,&DeeHashSet_Type);
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 err:
- DeeGCObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
 PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromSequence(DeeObject *__restrict self) {
  DREF Set *result;
- result = (DREF Set *)DeeGCObject_Malloc(sizeof(Set));
- if unlikely(!result) return NULL;
+ result = DeeGCObject_FMALLOC(Set);
+ if unlikely(!result) goto done;
  if unlikely(set_init_sequence(result,self)) goto err;
  DeeObject_Init(result,&DeeHashSet_Type);
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 err:
- DeeGCObject_Free(result);
+ DeeGCObject_FFREE(result);
  return NULL;
 }
 
@@ -1197,8 +1200,8 @@ INTERN DeeTypeObject SetIterator_Type = {
 PRIVATE DREF SetIterator *DCALL
 set_iter(Set *__restrict self) {
  DREF SetIterator *result;
- result = (DREF SetIterator *)DeeObject_Malloc(sizeof(SetIterator));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(SetIterator);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&SetIterator_Type);
  result->si_set = self;
  Dee_Incref(self);
@@ -1207,6 +1210,7 @@ set_iter(Set *__restrict self) {
 #else
  result->si_next = ATOMIC_READ(self->s_elem);
 #endif
+done:
  return result;
 }
 
@@ -1500,7 +1504,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
                 /* .tp_copy_ctor = */&set_copy,
                 /* .tp_deep_ctor = */&set_copy,
                 /* .tp_any_ctor  = */&set_init,
-                TYPE_FIXED_ALLOCATOR(Set)
+                TYPE_FIXED_ALLOCATOR_GC(Set)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&set_fini,

@@ -1134,7 +1134,7 @@ set_none_result:
   }
   refc = code->co_refc;
   result = (DREF DeeObject *)DeeObject_Malloc(offsetof(DeeFunctionObject,fo_refv)+
-                                             (refc*sizeof(DREF DeeObject *)));
+                                             (refc * sizeof(DREF DeeObject *)));
   if unlikely(!result) {
 err_function_code:
    Dee_Decref(code);

@@ -212,7 +212,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(Segments,s_len) ==
 PRIVATE DREF SegmentsIterator *DCALL
 seg_iter(Segments *__restrict self) {
  DREF SegmentsIterator *result;
- result = DeeObject_MALLOC(SegmentsIterator);
+ result = DeeObject_FMALLOC(SegmentsIterator);
  if unlikely(!result) goto done;
  result->si_iter = DeeObject_IterSelf(self->s_seq);
  if unlikely(!result->si_iter) goto err_r;
@@ -221,7 +221,7 @@ seg_iter(Segments *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 
@@ -287,7 +287,7 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Segments(DeeObject *__restrict self, size_t segsize) {
  DREF Segments *result;
  ASSERT(segsize != 0);
- result = DeeObject_MALLOC(Segments);
+ result = DeeObject_FMALLOC(Segments);
  if unlikely(!result) goto done;
  result->s_seq = self;
  result->s_len = segsize;

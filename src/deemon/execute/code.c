@@ -1321,7 +1321,7 @@ function_call(DeeFunctionObject *__restrict self,
    err_invalid_argc(DeeCode_NAME(code),0,code->co_argc_min+1,
                     code->co_flags&CODE_FVARARGS ?
                    (size_t)-1 : ((size_t)code->co_argc_max+1));
-   return NULL;
+   goto err;
   }
   return DeeFunction_ThisCall(self,argv[0],argc-1,argv+1);
  }
@@ -1333,7 +1333,7 @@ function_call(DeeFunctionObject *__restrict self,
   err_invalid_argc(DeeCode_NAME(code),argc,code->co_argc_min,
                    code->co_flags&CODE_FVARARGS ?
                   (size_t)-1 : ((size_t)code->co_argc_max));
-  return NULL;
+  goto err;
  }
 
  if (!(code->co_flags&CODE_FYIELDING)) {
@@ -1352,7 +1352,7 @@ function_call(DeeFunctionObject *__restrict self,
 #endif /* Dee_Alloca */
   {
    frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
-   if unlikely(!frame.cf_frame) return NULL;
+   if unlikely(!frame.cf_frame) goto err;
   }
   /* Per-initialize local variable memory to ZERO. */
   MEMSET_PTR(frame.cf_frame,0,code->co_localc);
@@ -1406,17 +1406,21 @@ function_call(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_MALLOC(DeeYieldFunctionObject);
-  if unlikely(!result) return NULL;
+  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  if unlikely(!result) goto err;
   result->yf_func = (DREF DeeFunctionObject *)self;
   /* Pack together an argument tuple for the yield-function. */
   result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
-  if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
+  if unlikely(!result->yf_args) goto err_r;
   result->yf_this = NULL;
   Dee_Incref(self);
   DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
+err_r:
+  DeeObject_FFREE(result);
  }
+err:
+ return NULL;
 }
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
@@ -1524,14 +1528,15 @@ DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_MALLOC(DeeYieldFunctionObject);
-  if unlikely(!result) return NULL;
+  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  if unlikely(!result) goto done;
   result->yf_func = (DREF DeeFunctionObject *)self;
   result->yf_args = (DREF DeeTupleObject *)args;
   result->yf_this = NULL;
   Dee_Incref(self);
   Dee_Incref(args);
   DeeObject_Init(result,&DeeYieldFunction_Type);
+done:
   return (DREF DeeObject *)result;
  }
 }
@@ -1574,7 +1579,7 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
   DREF DeeObject *result,*packed_args;
   /* Re-package the argument tuple and perform a regular call. */
   packed_args = DeeTuple_NewUninitialized(1+argc);
-  if unlikely(!packed_args) return NULL;
+  if unlikely(!packed_args) goto err;
   DeeTuple_SET(packed_args,0,this_arg);
   MEMCPY_PTR(DeeTuple_ELEM(packed_args)+1,argv,argc);
   /* Perform a regular callback. */
@@ -1592,7 +1597,7 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
   err_invalid_argc(DeeCode_NAME(code),argc,code->co_argc_min,
                    code->co_flags&CODE_FVARARGS ? (size_t)-1 :
                   (size_t)code->co_argc_max);
-  return NULL;
+  goto err;
  }
 
  if (!(code->co_flags&CODE_FYIELDING)) {
@@ -1611,7 +1616,7 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
 #endif /* Dee_Alloca */
   {
    frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
-   if unlikely(!frame.cf_frame) return NULL;
+   if unlikely(!frame.cf_frame) goto err;
   }
   /* Per-initialize local variable memory to ZERO. */
   MEMSET_PTR(frame.cf_frame,0,code->co_localc);
@@ -1656,18 +1661,23 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_MALLOC(DeeYieldFunctionObject);
-  if unlikely(!result) return NULL;
+  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  if unlikely(!result) goto done;
   result->yf_func = self;
   /* Pack together an argument tuple for the yield-function. */
   result->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(argc,argv);
-  if unlikely(!result->yf_args) { DeeGCObject_Free(result); return NULL; }
+  if unlikely(!result->yf_args) goto err_r;
   result->yf_this = this_arg;
   Dee_Incref(self);
   Dee_Incref(this_arg);
   DeeObject_Init(result,&DeeYieldFunction_Type);
+done:
   return (DREF DeeObject *)result;
+err_r:
+  DeeObject_FFREE(result);
  }
+err:
+ return NULL;
 }
 
 
@@ -1685,7 +1695,7 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
   DREF DeeObject *result,*packed_args;
   /* Re-package the argument tuple and perform a regular call. */
   packed_args = DeeTuple_NewUninitialized(1+DeeTuple_SIZE(args));
-  if unlikely(!packed_args) return NULL;
+  if unlikely(!packed_args) goto err;
   DeeTuple_SET(packed_args,0,this_arg);
   MEMCPY_PTR(DeeTuple_ELEM(packed_args)+1,
              DeeTuple_ELEM(args),
@@ -1706,7 +1716,7 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
                    DeeTuple_SIZE(args),code->co_argc_min,
                    code->co_flags&CODE_FVARARGS ? (size_t)-1 :
                   (size_t)code->co_argc_max);
-  return NULL;
+  goto err;
  }
 
  if (!(code->co_flags&CODE_FYIELDING)) {
@@ -1725,7 +1735,7 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
 #endif /* Dee_Alloca */
   {
    frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
-   if unlikely(!frame.cf_frame) return NULL;
+   if unlikely(!frame.cf_frame) goto err;
   }
   /* Per-initialize local variable memory to ZERO. */
   MEMSET_PTR(frame.cf_frame,0,code->co_localc);
@@ -1773,8 +1783,8 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_MALLOC(DeeYieldFunctionObject);
-  if unlikely(!result) return NULL;
+  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  if unlikely(!result) goto err;
   result->yf_func = self;
   /* Pack together an argument tuple for the yield-function. */
   result->yf_args = (DREF DeeTupleObject *)args;
@@ -1785,6 +1795,8 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
   DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
  }
+err:
+ return NULL;
 }
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 

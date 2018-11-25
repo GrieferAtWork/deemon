@@ -68,7 +68,7 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
  DREF DeeObject *field_name_and_type[2];
  size_t i,min_align = 1,instance_size = 0;
  result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject,st_fvec)+
-                                                         2*sizeof(struct struct_field));
+                                                        (2 * sizeof(struct struct_field)));
  if unlikely(!result) goto err;
  result->st_fmsk = 1;
  while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -481,7 +481,7 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
              DeeString_STR(name),
              DeeString_SIZE(name)*sizeof(char)) != 0) continue;
   /* Found it! (return an l-value to the field in question) */
-  result = DeeObject_MALLOC(struct lvalue_object);
+  result = DeeObject_FMALLOC(struct lvalue_object);
   if unlikely(!result) goto err;
   DeeObject_Init(result,(DeeTypeObject *)field->sf_type);
   result->l_ptr.uint = (uintptr_t)self + field->sf_offset;

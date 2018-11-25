@@ -36,8 +36,8 @@ struct gc_head {
     struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
     DeeObject        gc_object; /* The object that is being controlled by the GC. */
 };
-#define GC_OBJECT_OFFSET  offsetof(struct gc_head,gc_object)
-#define GC_HEAD_SIZE      offsetof(struct gc_head,gc_object)
+#define GC_OBJECT_OFFSET  COMPILER_OFFSETOF(struct gc_head,gc_object)
+#define GC_HEAD_SIZE      COMPILER_OFFSETOF(struct gc_head,gc_object)
 #define DeeGC_Head(ob)   ((struct gc_head *)((uintptr_t)REQUIRES_OBJECT(ob)-GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob) (&(ob)->gc_object)
 #define DeeGC_Check(ob)  (Dee_TYPE(ob)->tp_flags&TP_FGC && (!DeeType_Check(ob) || (((DeeTypeObject *)REQUIRES_OBJECT(ob))->tp_flags&TP_FHEAP)))
@@ -81,9 +81,47 @@ DFUNDEF ATTR_MALLOC void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
 DFUNDEF void *(DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes);
 DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 
-#define DeeGCObject_MALLOC(T) ((T *)DeeGCObject_Malloc(sizeof(T)))
-#define DeeGCObject_CALLOC(T) ((T *)DeeGCObject_Calloc(sizeof(T)))
+#define DeeGCObject_MALLOC(T)    ((T *)DeeGCObject_Malloc(sizeof(T)))
+#define DeeGCObject_CALLOC(T)    ((T *)DeeGCObject_Calloc(sizeof(T)))
+#define DeeGCObject_TRYMALLOC(T) ((T *)DeeGCObject_TryMalloc(sizeof(T)))
+#define DeeGCObject_TRYCALLOC(T) ((T *)DeeGCObject_TryCalloc(sizeof(T)))
 
+#ifdef CONFIG_NO_OBJECT_SLABS
+#define DeeGCObject_FMalloc(size)    DeeGCObject_Malloc(size)
+#define DeeGCObject_FCalloc(size)    DeeGCObject_Calloc(size)
+#define DeeGCObject_FTryMalloc(size) DeeGCObject_TryMalloc(size)
+#define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
+#define DeeGCObject_FFree(ptr,size)  DeeGCObject_Free(ptr)
+#else /* CONFIG_NO_OBJECT_SLABS */
+#define DeeGCObject_FMalloc(size)    DeeObject_SlabInvoke(DeeGCObject_SlabMalloc,size,(),DeeGCObject_Malloc(size))
+#define DeeGCObject_FCalloc(size)    DeeObject_SlabInvoke(DeeGCObject_SlabCalloc,size,(),DeeGCObject_Calloc(size))
+#define DeeGCObject_FTryMalloc(size) DeeObject_SlabInvoke(DeeGCObject_SlabTryMalloc,size,(),DeeGCObject_TryMalloc(size))
+#define DeeGCObject_FTryCalloc(size) DeeObject_SlabInvoke(DeeGCObject_SlabTryCalloc,size,(),DeeGCObject_TryCalloc(size))
+#define DeeGCObject_FFree(ptr,size)  DeeObject_SlabInvoke(DeeGCObject_SlabFree,size,(ptr),DeeGCObject_Free(ptr))
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
+/* Same as the regular malloc functions, but use the same allocation methods that
+ * would be used by `TYPE_FIXED_ALLOCATOR_GC' and `TYPE_FIXED_ALLOCATOR_GC_S', meaning
+ * that pointers returned by these macros have binary compatibility with them. */
+#define DeeGCObject_FMALLOC(T)       ((T *)DeeGCObject_FMalloc(sizeof(T)))
+#define DeeGCObject_FCALLOC(T)       ((T *)DeeGCObject_FCalloc(sizeof(T)))
+#define DeeGCObject_TRYFMALLOC(T)    ((T *)DeeGCObject_FTryMalloc(sizeof(T)))
+#define DeeGCObject_TRYFCALLOC(T)    ((T *)DeeGCObject_FTryCalloc(sizeof(T)))
+#define DeeGCObject_FFREE(typed_ptr)       DeeGCObject_FFree((void *)(typed_ptr),sizeof(*(typed_ptr)))
+
+#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#define DeeGCObject_MALLOC_S      DeeGCObject_MALLOC
+#define DeeGCObject_CALLOC_S      DeeGCObject_CALLOC
+#define DeeGCObject_TRYMALLOC_S   DeeGCObject_TRYMALLOC
+#define DeeGCObject_TRYCALLOC_S   DeeGCObject_TRYCALLOC
+#define DeeGCObject_FFREE_S       DeeGCObject_Free
+#else
+#define DeeGCObject_MALLOC_S      DeeGCObject_FMALLOC
+#define DeeGCObject_CALLOC_S      DeeGCObject_FCALLOC
+#define DeeGCObject_TRYMALLOC_S   DeeGCObject_TRYFMALLOC
+#define DeeGCObject_TRYCALLOC_S   DeeGCObject_TRYFCALLOC
+#define DeeGCObject_FFREE_S       DeeGCObject_FFREE
+#endif
 
 /* An generic sequence singleton that can be
  * iterated to yield all tracked GC objects.

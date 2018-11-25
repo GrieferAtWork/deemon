@@ -170,7 +170,7 @@ PRIVATE DREF struct lvalue_object *DCALL
 pointer_get_deref(struct pointer_object *__restrict self) {
  DREF struct lvalue_object *result;
  DREF DeeLValueTypeObject *type;
- result = DeeObject_MALLOC(struct lvalue_object);
+ result = DeeObject_FMALLOC(struct lvalue_object);
  if unlikely(!result) goto done;
  /* Lookup the l-value version of the base-type. */
  type = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
@@ -181,7 +181,7 @@ pointer_get_deref(struct pointer_object *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
  return NULL;
 }
 PRIVATE int DCALL
@@ -488,7 +488,7 @@ lvalue_ref(struct lvalue_object *__restrict self) {
  DREF DeePointerTypeObject *pointer_type;
  pointer_type = DeeSType_Pointer(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
  if unlikely(!pointer_type) goto err;
- result = DeeObject_MALLOC(struct pointer_object);
+ result = DeeObject_FMALLOC(struct pointer_object);
  if unlikely(!result) goto err;
  /* Construct a new pointer with the same data-value as our l-value. */
  DeeObject_InitNoref(result,(DREF DeeTypeObject *)pointer_type); /* Inherit reference: pointer_type */
@@ -534,6 +534,7 @@ PRIVATE DREF DeeObject *DCALL
 lvalue_copy(struct lvalue_object *__restrict self) {
  DeeObject *result; size_t datasize; uint8_t *dst,*src;
  DeeSTypeObject *orig_type = (DeeSTypeObject *)Dee_TYPE(self);
+ ASSERT(!orig_type->st_base.tp_init.tp_alloc.tp_free);
  datasize = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
  if unlikely(orig_type->st_base.tp_flags&TP_FGC) {
   /* This can happen when the user creates their own
@@ -552,7 +553,9 @@ lvalue_copy(struct lvalue_object *__restrict self) {
  CTYPES_FAULTPROTECT({
      memcpy(dst,src,datasize);
  },{
-     DeeObject_Free(result);
+     if unlikely(orig_type->st_base.tp_flags & TP_FGC)
+          DeeGCObject_Free(result);
+     else DeeObject_Free(result);
      return NULL;
  });
 #else
@@ -560,7 +563,9 @@ lvalue_copy(struct lvalue_object *__restrict self) {
      while (datasize--)
         *dst++ = *src++;
  },{
-     DeeObject_Free(result);
+     if unlikely(orig_type->st_base.tp_flags & TP_FGC)
+          DeeGCObject_Free(result);
+     else DeeObject_Free(result);
      return NULL;
  });
 #endif
@@ -569,7 +574,7 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 #endif
  DeeObject_Init(result,(DeeTypeObject *)orig_type);
  /* Handle GC objects (see above) */
- if unlikely(orig_type->st_base.tp_flags&TP_FGC)
+ if unlikely(orig_type->st_base.tp_flags & TP_FGC)
     DeeGC_Track(result);
 done:
  return result;

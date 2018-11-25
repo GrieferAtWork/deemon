@@ -895,6 +895,12 @@
     <None Include="..\src\deemon\runtime\mro-impl.c.inl">
       <Filter>src\deemon\runtime</Filter>
     </None>
+    <None Include="..\src\deemon\runtime\slab.c.inl">
+      <Filter>src\deemon\runtime</Filter>
+    </None>
+    <None Include="..\src\deemon\runtime\slab-impl.c.inl">
+      <Filter>src\deemon\runtime</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

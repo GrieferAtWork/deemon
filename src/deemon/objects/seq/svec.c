@@ -240,7 +240,7 @@ rvec_bool(RefVector *__restrict self) {
 PRIVATE DREF RefVectorIterator *DCALL
 rvec_iter(RefVector *__restrict self) {
  DREF RefVectorIterator *result;
- result = DeeObject_MALLOC(RefVectorIterator);
+ result = DeeObject_FMALLOC(RefVectorIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&RefVectorIterator_Type);
  Dee_Incref(self); /* Reference stored in `rvi_vector' */
@@ -1027,7 +1027,7 @@ DeeRefVector_New(DeeObject *__restrict owner, size_t length,
  DREF RefVector *result;
  ASSERT_OBJECT(owner);
  ASSERT(!length || vector);
- result = DeeObject_MALLOC(RefVector);
+ result = DeeObject_FMALLOC(RefVector);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&RefVector_Type);
  Dee_Incref(owner); /* Create the reference for `rv_owner' */
@@ -1255,7 +1255,7 @@ svec_visit(SharedVector *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF SharedVectorIterator *DCALL
 svec_iter(SharedVector *__restrict self) {
  DREF SharedVectorIterator *result;
- result = DeeObject_MALLOC(SharedVectorIterator);
+ result = DeeObject_FMALLOC(SharedVectorIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&SharedVectorIterator_Type);
  Dee_Incref(self);
@@ -1542,7 +1542,7 @@ INTERN DeeTypeObject SharedVector_Type = {
 INTERN DREF SharedVector *DCALL
 SharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector) {
  DREF SharedVector *result;
- result = DeeObject_MALLOC(SharedVector);
+ result = DeeObject_FMALLOC(SharedVector);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&SharedVector_Type);
 #ifndef CONFIG_NO_THREADS

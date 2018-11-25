@@ -9790,7 +9790,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
     /* Most likely case: both strings use 1-byte characters,
      * so we don't even need to use a multi-byte buffer! */
     result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String,s_str)+
-                                            (total_length+1)*sizeof(char));
+                                            (total_length + 1)*sizeof(char));
     if unlikely(!result) goto err;
     result->s_len = total_length;
     /* Copy characters into the resulting string. */
@@ -9819,7 +9819,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
    /* Most likely case: both strings use 1-byte characters,
     * so we don't even need to use a multi-byte buffer! */
    result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String,s_str)+
-                                           (total_length+1)*sizeof(char));
+                                           (total_length + 1)*sizeof(char));
    if unlikely(!result) goto err;
    result_utf = string_utf_alloc();
    if unlikely(!result_utf) goto err_r_2_4;

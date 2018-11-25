@@ -1825,16 +1825,15 @@ INTERN DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
               tint_t addend, uint16_t mode) {
  DREF DeeRelIntObject *result;
- result = DeeObject_MALLOC(DeeRelIntObject);
- if unlikely(!result) goto err;
+ result = DeeObject_FMALLOC(DeeRelIntObject);
+ if unlikely(!result) goto done;
  ++sym->as_used;
  result->ri_sym  = sym;
  result->ri_add  = addend;
  result->ri_mode = mode;
  DeeObject_Init(result,&DeeRelInt_Type);
+done:
  return (DREF DeeObject *)result;
-err:
- return NULL;
 }
 
 INTERN int32_t DCALL

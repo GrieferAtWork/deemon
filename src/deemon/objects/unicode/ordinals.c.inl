@@ -58,7 +58,7 @@ INTDEF DeeTypeObject DeeStringOrdinals_Type;
 INTERN DREF DeeObject *DCALL
 DeeString_Ordinals(DeeObject *__restrict self) {
  DREF StringOrdinals *result;
- result = DeeObject_MALLOC(StringOrdinals);
+ result = DeeObject_FMALLOC(StringOrdinals);
  if unlikely(!result) goto done;
  result->so_str     = (DREF DeeStringObject *)self;
  result->so_width   = DeeString_WIDTH(self);
@@ -210,7 +210,7 @@ stringordinals_bool(StringOrdinals *__restrict self) {
 PRIVATE DREF StringOrdinalsIterator *DCALL
 stringordinals_iter(StringOrdinals *__restrict self) {
  DREF StringOrdinalsIterator *result;
- result = DeeObject_MALLOC(StringOrdinalsIterator);
+ result = DeeObject_FMALLOC(StringOrdinalsIterator);
  if unlikely(!result) goto done;
  result->soi_str     = self->so_str;
  result->soi_width   = self->so_width;

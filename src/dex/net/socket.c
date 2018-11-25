@@ -247,32 +247,33 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 PRIVATE DREF DeeSockAddrObject *DCALL
 socket_sockname_get(Socket *__restrict self) {
  DREF DeeSockAddrObject *result;
- result = DeeObject_MALLOC(DeeSockAddrObject);
+ result = DeeObject_FMALLOC(DeeSockAddrObject);
  if unlikely(!result) goto done;
- if unlikely(DeeSocket_GetSockName(self,&result->sa_addr,true)) {
-  DeeObject_Free(result);
-  result = NULL;
-  goto done;
- }
+ if unlikely(DeeSocket_GetSockName(self,&result->sa_addr,true))
+    goto err_r;
  DeeObject_Init(result,&DeeSockAddr_Type);
 done:
  return result;
+err_r:
+ DeeObject_FFREE(result);
+ return NULL;
 }
 PRIVATE DREF DeeSockAddrObject *DCALL
 socket_peeraddr_get(Socket *__restrict self) {
  DREF DeeSockAddrObject *result;
  if (DeeThread_CheckInterrupt())
-     return NULL;
- result = DeeObject_MALLOC(DeeSockAddrObject);
+     goto err;
+ result = DeeObject_FMALLOC(DeeSockAddrObject);
  if unlikely(!result) goto done;
- if unlikely(DeeSocket_GetPeerAddr(self,&result->sa_addr,true)) {
-  DeeObject_Free(result);
-  result = NULL;
-  goto done;
- }
+ if unlikely(DeeSocket_GetPeerAddr(self,&result->sa_addr,true))
+    goto err_r;
  DeeObject_Init(result,&DeeSockAddr_Type);
 done:
  return result;
+err_r:
+ DeeObject_FFREE(result);
+err:
+ return NULL;
 }
 
 PRIVATE DEFINE_STRING(shutdown_all,"rw");
@@ -1869,14 +1870,14 @@ err:
 PRIVATE DREF DeeObject *DCALL
 socket_doaccept(Socket *__restrict self, uint64_t timeout) {
  DREF Socket *result; int error;
- result = DeeObject_MALLOC(Socket);
+ result = DeeObject_FMALLOC(Socket);
  if unlikely(!result) goto err;
  error = DeeSocket_Accept(self,timeout,
                          &result->s_socket,
                          &result->s_peeraddr);
- if unlikely(error < 0) goto err2;
+ if unlikely(error < 0) goto err_r;
  if (error > 0) {
-  DeeObject_Free(result);
+  DeeObject_FFREE(result);
   return_none; /* Timeout */
  }
  /* Fill in the remaining members of the new socket. */
@@ -1887,8 +1888,8 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout) {
  result->s_proto = self->s_proto;
  DeeObject_Init(result,&DeeSocket_Type);
  return (DREF DeeObject *)result;
-err2:
- DeeObject_Free(result);
+err_r:
+ DeeObject_FFREE(result);
 err:
  return NULL;
 }
@@ -2054,7 +2055,7 @@ socket_recvfrom(Socket *__restrict self, size_t argc,
       goto err;
  }
  /* Create the socket address object that's going to be returned. */
- result_addr = DeeObject_MALLOC(DeeSockAddrObject);
+ result_addr = DeeObject_FMALLOC(DeeSockAddrObject);
  if unlikely(!result_addr) goto err;
  /* Actually receive the data. */
  result_text = DeeSocket_RecvData(self,timeout,max_size,flags,
@@ -2065,7 +2066,7 @@ socket_recvfrom(Socket *__restrict self, size_t argc,
  if unlikely(!result) goto err_text;
  if (result_text == ITER_DONE) {
   /* A somewhat different story: must return (none,"") */
-  DeeObject_Free(result_addr);
+  DeeObject_FFREE(result_addr);
   DeeTuple_SET(result,0,Dee_None);
   DeeTuple_SET(result,1,Dee_EmptyString);
   Dee_Incref(Dee_None);
@@ -2077,9 +2078,13 @@ socket_recvfrom(Socket *__restrict self, size_t argc,
   DeeTuple_SET(result,1,(DeeObject *)result_text); /* Inherit */
  }
  return result;
-err_text: if (result_text != ITER_DONE) Dee_Decref(result_text);
-err_addr: DeeObject_Free(result_addr);
-err:      return NULL;
+err_text:
+ if (result_text != ITER_DONE)
+     Dee_Decref(result_text);
+err_addr:
+ DeeObject_FFREE(result_addr);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -2118,7 +2123,7 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
       goto err;
  }
  /* Create the socket address object that's going to be returned. */
- result_addr = DeeObject_MALLOC(DeeSockAddrObject);
+ result_addr = DeeObject_FMALLOC(DeeSockAddrObject);
  if unlikely(!result_addr) goto err;
  if (DeeObject_GetBuf(data,&buffer,DEE_BUFFER_FWRITABLE))
      goto err_addr;
@@ -2135,7 +2140,7 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
  if unlikely(!result) goto err_addr;
  if (result_size == 0) {
   /* A somewhat different story: must return (none,"") */
-  DeeObject_Free(result_addr);
+  DeeObject_FFREE(result_addr);
   DeeTuple_SET(result,0,Dee_None);
   DeeTuple_SET(result,1,(DeeObject *)&DeeInt_Zero);
   Dee_Incref(Dee_None);
@@ -2154,7 +2159,7 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
  }
  return result;
 err_addr:
- DeeObject_Free(result_addr);
+ DeeObject_FFREE(result_addr);
 err:
  return NULL;
 }

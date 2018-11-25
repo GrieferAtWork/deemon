@@ -65,6 +65,7 @@ INTDEF DeeTypeObject DeeListIterator_Type;
 PRIVATE void DCALL
 list_fini(List *__restrict self) {
  DeeObject **begin,**iter;
+ weakref_support_fini(self);
  iter = (begin = DeeList_ELEM(self))+DeeList_SIZE(self);
  while (iter-- != begin) Dee_Decref(*iter);
  Dee_Free(begin);
@@ -142,23 +143,21 @@ done:
 }
 
 PRIVATE int DCALL
-list_ctor(DeeListObject *__restrict self) {
+list_ctor(List *__restrict self) {
+ weakref_support_init(self);
  self->l_alloc = 0;
  self->l_size  = 0;
  self->l_elem  = NULL;
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->l_lock);
-#endif /* !CONFIG_NO_THREADS */
  return 0;
 }
 
 PRIVATE int DCALL
-list_copy(DeeListObject *__restrict self,
-          DeeListObject *__restrict other) {
+list_copy(List *__restrict self,
+          List *__restrict other) {
  DeeObject **iter,**end,**src;
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(self);
  rwlock_init(&self->l_lock);
-#endif /* !CONFIG_NO_THREADS */
 again:
  DeeList_LockRead(other);
  self->l_alloc = self->l_size = other->l_size;
@@ -182,8 +181,9 @@ again:
 }
 
 PRIVATE int DCALL
-list_deepload(DeeListObject *__restrict self) {
+list_deepload(List *__restrict self) {
  DREF DeeObject *temp,*item; size_t i = 0;
+ weakref_support_init(self);
  DeeList_LockRead(self);
  for (; i < self->l_size; ++i) {
   item = self->l_elem[i];
@@ -218,7 +218,7 @@ stop_on_end:
 
 
 PRIVATE int DCALL
-list_init_iterator(DeeListObject *__restrict self,
+list_init_iterator(List *__restrict self,
                    DeeObject *__restrict iterator) {
  DREF DeeObject *elem; size_t size,alloc,new_alloc;
  DREF DeeObject **vector,**new_vector;
@@ -253,9 +253,8 @@ do_realloc:
  self->l_alloc = alloc;
  self->l_elem  = vector;
  self->l_size  = size;
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(self);
  rwlock_init(&self->l_lock);
-#endif /* !CONFIG_NO_THREADS */
  return 0;
 err:
  while (size--) Dee_Decref(vector[size]);
@@ -265,17 +264,16 @@ err:
 
 PUBLIC DREF DeeObject *DCALL
 DeeList_NewHint(size_t n_prealloc) {
- DREF DeeListObject *result;
- result = (DREF DeeListObject *)DeeGCObject_Malloc(sizeof(DeeListObject));
- if unlikely(!result) return NULL;
+ DREF List *result;
+ result = DeeGCObject_FMALLOC(List);
+ if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeList_Type);
  result->l_alloc = n_prealloc;
  result->l_size  = 0;
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
-#endif /* !CONFIG_NO_THREADS */
  if likely(n_prealloc) {
-  result->l_elem = (DREF DeeObject **)Dee_TryMalloc(n_prealloc*
+  result->l_elem = (DREF DeeObject **)Dee_TryMalloc(n_prealloc *
                                                     sizeof(DREF DeeObject *));
   if unlikely(!result->l_elem)
      result->l_alloc = 0;
@@ -283,23 +281,27 @@ DeeList_NewHint(size_t n_prealloc) {
   result->l_elem = NULL;
  }
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeList_NewUninitialized(size_t n_elem) {
- DREF DeeListObject *result;
- result = (DREF DeeListObject *)DeeGCObject_Malloc(sizeof(DeeListObject));
- if unlikely(!result) return NULL;
+ DREF List *result;
+ result = DeeGCObject_FMALLOC(List);
+ if unlikely(!result) goto done;
  result->l_elem  = (DREF DeeObject **)Dee_Malloc(n_elem*sizeof(DREF DeeObject *));
- if unlikely(!result->l_elem) { DeeGCObject_Free(result); return NULL; }
+ if unlikely(!result->l_elem) goto err_r;
  DeeObject_Init(result,&DeeList_Type);
  result->l_alloc = n_elem;
  result->l_size  = n_elem;
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
-#endif /* !CONFIG_NO_THREADS */
  /*DeeGC_Track((DeeObject *)result);*/ /* The caller must do this */
+done:
  return (DREF DeeObject *)result;
+err_r:
+ DeeGCObject_FFREE(result);
+ return NULL;
 }
 PUBLIC void DCALL
 DeeList_FreeUninitialized(DeeObject *__restrict self) {
@@ -308,27 +310,32 @@ DeeList_FreeUninitialized(DeeObject *__restrict self) {
  Dee_DecrefNokill(&DeeList_Type);
  Dee_Free(DeeList_ELEM(self));
  DeeObject_FreeTracker((DeeObject *)self);
- DeeGCObject_Free(self);
+ DeeGCObject_FFREE(self);
 }
 PUBLIC DREF DeeObject *DCALL
 DeeList_FromIterator(DeeObject *__restrict self) {
- DREF DeeListObject *result;
- result = (DREF DeeListObject *)DeeGCObject_Malloc(sizeof(DeeListObject));
- if unlikely(!result) return NULL;
- if unlikely(list_init_iterator(result,self)) { DeeGCObject_Free(result); return NULL; }
+ DREF List *result;
+ result = DeeGCObject_FMALLOC(List);
+ if unlikely(!result) goto done;
+ if unlikely(list_init_iterator(result,self)) goto err_r;
  DeeObject_Init(result,&DeeList_Type);
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
+err_r:
+ DeeGCObject_FFREE(result);
+ return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeList_FromSequence(DeeObject *__restrict self) {
- DREF DeeListObject *result;
+ DREF List *result;
  if (DeeList_CheckExact(self)) {
   if (!DeeObject_IsShared(self))
        return_reference_(self);
  }
- result = DeeGCObject_MALLOC(DeeListObject);
+ result = DeeGCObject_FMALLOC(List);
  if unlikely(!result) goto err;
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
  result->l_elem = DeeSeq_AsHeapVectorWithAlloc(self,
                                               &result->l_size,
@@ -338,7 +345,7 @@ DeeList_FromSequence(DeeObject *__restrict self) {
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_Free(result);
+ DeeGCObject_FFREE(result);
 err:
  return NULL;
 }
@@ -347,29 +354,29 @@ PUBLIC DREF DeeObject *DCALL
 DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv) {
  DREF DeeObject *result;
  result = DeeList_NewUninitialized(objc);
- if likely(result) {
-  MEMCPY_PTR(DeeList_ELEM(result),objv,objc);
-  COMPILER_WRITE_BARRIER();
-  /* Now that the list's been filled with data,
-   * we can start tracking it as a GC object. */
-  DeeGC_Track(result);
- }
+ if unlikely(!result) goto done;
+ MEMCPY_PTR(DeeList_ELEM(result),objv,objc);
+ COMPILER_WRITE_BARRIER();
+ /* Now that the list's been filled with data,
+  * we can start tracking it as a GC object. */
+ DeeGC_Track(result);
+done:
  return result;
 }
 PUBLIC DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
                                /*inherit(on_success)*/DREF DeeObject **__restrict objv) {
- DREF DeeListObject *result;
- result = (DREF DeeListObject *)DeeGCObject_Malloc(sizeof(DeeListObject));
- if unlikely(!result) return NULL;
+ DREF List *result;
+ result = DeeGCObject_FMALLOC(List);
+ if unlikely(!result) goto done;
  result->l_elem  = objv; /* Inherit */
  result->l_alloc = obja;
  result->l_size  = objc;
  DeeObject_Init(result,&DeeList_Type);
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
-#endif /* !CONFIG_NO_THREADS */
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
 }
 PUBLIC DREF DeeObject *DCALL
@@ -386,21 +393,21 @@ err:
 
 INTERN DREF DeeObject *DCALL
 DeeList_Copy(DREF DeeObject *__restrict self) {
- DREF DeeListObject *result;
+ DREF List *result;
  ASSERT_OBJECT(self);
  ASSERT(DeeList_Check(self));
- result = (DREF DeeListObject *)DeeGCObject_Malloc(sizeof(DeeListObject));
- if unlikely(!result) return NULL;
- if unlikely(list_copy(result,(DeeListObject *)self)) {
-  DeeObject_Free(result);
-  return NULL;
- }
+ result = DeeGCObject_FMALLOC(List);
+ if unlikely(!result) goto done;
+ if unlikely(list_copy(result,(List *)self)) goto err_r;
  DeeObject_Init(result,&DeeList_Type);
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
-#endif /* !CONFIG_NO_THREADS */
  DeeGC_Track((DeeObject *)result);
+done:
  return (DREF DeeObject *)result;
+err_r:
+ DeeGCObject_FFREE(result);
+ return NULL;
 }
 
 
@@ -479,7 +486,7 @@ allocate_new_vector:
   }
   DeeList_LockEndRead(self);
   /* Create the new list descriptor. */
-  result = DeeGCObject_MALLOC(List);
+  result = DeeGCObject_FMALLOC(List);
   if unlikely(!result) {
    while (i--) Dee_Decref(new_vector[i]);
    Dee_Free(new_vector);
@@ -489,9 +496,8 @@ allocate_new_vector:
   DeeObject_Init(result,&DeeList_Type);
   result->l_alloc = result->l_size = list_size+argc;
   result->l_elem  = new_vector;
-#ifndef CONFIG_NO_THREADS
+  weakref_support_init(result);
   rwlock_init(&result->l_lock);
-#endif
   DeeGC_Track((DeeObject *)result);
  }
  return (DREF DeeObject *)result;
@@ -1012,7 +1018,7 @@ PUBLIC int (DCALL DeeList_InsertSequence)(DeeObject *__restrict self, size_t ind
 
     
 PRIVATE int DCALL
-list_init_sequence(DeeListObject *__restrict self,
+list_init_sequence(List *__restrict self,
                    DeeObject *__restrict seq) {
  int result; DeeObject *iter;
  size_t fast_size;
@@ -1034,6 +1040,7 @@ list_init_sequence(DeeListObject *__restrict self,
   }
   self->l_elem = elem;
   self->l_size = self->l_alloc = fast_size;
+  weakref_support_init(self);
   rwlock_init(&self->l_lock);
   return 0;
 err_elem:
@@ -1052,7 +1059,7 @@ err:
 
 
 PRIVATE int DCALL
-list_init(DeeListObject *__restrict self,
+list_init(List *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *sequence; DeeObject *filler = NULL;
  if (DeeArg_Unpack(argc,argv,"o|o:list",&sequence,&filler))
@@ -1071,6 +1078,7 @@ list_init(DeeListObject *__restrict self,
    Dee_Incref_n(filler,list_size);
   }
   self->l_alloc = self->l_size = list_size;
+  weakref_support_init(self);
   rwlock_init(&self->l_lock);
   return 0;
  }
@@ -1080,7 +1088,7 @@ err:
 }
 
 PRIVATE void DCALL
-list_visit(DeeListObject *__restrict self,
+list_visit(List *__restrict self,
            dvisit_t proc, void *arg) {
  DREF DeeObject **iter,**end;
  DeeList_LockRead(self);
@@ -1246,14 +1254,13 @@ again:
  }
  DeeList_LockEndRead(self);
  /* Create the new list descriptor. */
- result = DeeGCObject_MALLOC(List);
+ result = DeeGCObject_FMALLOC(List);
  if unlikely(!result) goto err_elemv;
  /* Fill in the descriptor. */
  DeeObject_Init(result,&DeeList_Type);
  result->l_size = result->l_alloc = (size_t)end;
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
-#endif
  result->l_elem = new_vector;
  /* Start tracking it as a GC object. */
  DeeGC_Track((DeeObject *)result);
@@ -1298,14 +1305,13 @@ again:
  }
  DeeList_LockEndRead(self);
  /* Create the new list descriptor. */
- result = DeeGCObject_MALLOC(List);
+ result = DeeGCObject_FMALLOC(List);
  if unlikely(!result) goto err_elemv;
  /* Fill in the descriptor. */
  DeeObject_Init(result,&DeeList_Type);
  result->l_size = result->l_alloc = (size_t)new_size;
-#ifndef CONFIG_NO_THREADS
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
-#endif
  result->l_elem = new_vector;
  /* Start tracking it as a GC object. */
  DeeGC_Track((DeeObject *)result);
@@ -1399,7 +1405,7 @@ list_setitem(List *__restrict self,
 PRIVATE DREF ListIterator *DCALL
 list_iter(List *__restrict self) {
  DREF ListIterator *result;
- result = DeeObject_MALLOC(ListIterator);
+ result = DeeObject_FMALLOC(ListIterator);
  if unlikely(!result) goto done;
  result->li_list = self;
  result->li_index = 0;
@@ -2868,11 +2874,12 @@ again:
   dst += my_length;
  }
  DeeList_LockEndRead(self);
- result = DeeGCObject_MALLOC(List);
+ result = DeeGCObject_FMALLOC(List);
  if unlikely(!result) goto err_elem;
  result->l_elem  = elemv;
  result->l_alloc = result_length;
  result->l_size  = result_length;
+ weakref_support_init(result);
  rwlock_init(&result->l_lock);
  DeeObject_Init(result,&DeeList_Type);
  DeeGC_Track((DeeObject *)result);
@@ -3473,7 +3480,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
                             "\n"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
-    /* .tp_weakrefs = */0,
+    /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(List),
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeSeq_Type,
     /* .tp_init = */{
@@ -3483,7 +3490,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
                 /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
                 /* .tp_deep_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
                 /* .tp_any_ctor  = */(int(DCALL *)(size_t,DeeObject **__restrict))&list_init,
-                TYPE_FIXED_ALLOCATOR(DeeListObject)
+                TYPE_FIXED_ALLOCATOR_GC(List)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&list_fini,

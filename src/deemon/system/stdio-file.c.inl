@@ -129,7 +129,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE,
         /* .tp_weakrefs = */0,
-        /* .tp_features = */TF_HASFILEOPS,
+        /* .tp_features = */TF_HASFILEOPS | TF_SINGLETON,
         /* .tp_base     = */(DeeTypeObject *)&DeeFile_Type,
         /* .tp_init = */{
             {
@@ -184,13 +184,14 @@ PUBLIC DREF /*SystemFile*/DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd, /*String*/DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
  SystemFile *result;
- result = (SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
- if unlikely(!result) return NULL;
+ result = DeeObject_FMALLOC(SystemFile);
+ if unlikely(!result) goto done;
  result->sf_handle = (FILE *)fd;
  result->sf_ownhandle = inherit_fd ? (FILE *)fd : NULL; /* Inherit. */
  result->sf_filename = filename;
  Dee_XIncref(filename);
  DeeLFileObject_Init(result,&DeeSystemFile_Type);
+done:
  return (DREF DeeObject *)result;
 }
 PRIVATE int DCALL error_file_closed(SystemFile *__restrict self) {
@@ -240,7 +241,7 @@ DeeFile_OpenString(char const *__restrict filename,
                   filename);
   return NULL;
  }
- result = (DREF SystemFile *)DeeObject_Malloc(sizeof(SystemFile));
+ result = DeeObject_FMALLOC(SystemFile);
  if unlikely(!result) goto err_fp;
  result->sf_handle    = fp;
  result->sf_ownhandle = fp; /* Inherit stream. */
@@ -253,7 +254,7 @@ err_unsupported_mode:
                  "The given open-mode combination is not supported");
  return NULL;
 err_fp_result:
- DeeObject_Free(result);
+ DeeObject_FFREE(result);
 err_fp:
  fclose(fp);
  return NULL;

@@ -316,7 +316,7 @@ me_bool(ModuleExports *__restrict self) {
 PRIVATE DREF ModuleExportsIterator *DCALL
 me_iter(ModuleExports *__restrict self) {
  DREF ModuleExportsIterator *result;
- result = DeeObject_MALLOC(ModuleExportsIterator);
+ result = DeeObject_FMALLOC(ModuleExportsIterator);
  if unlikely(!result) goto done;
  result->mei_module = self->me_module;
  result->mei_index  = 0;
@@ -584,7 +584,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
 INTERN DREF ModuleExports *DCALL
 DeeModule_ViewExports(DeeModuleObject *__restrict self) {
  DREF ModuleExports *result;
- result = DeeObject_MALLOC(ModuleExports);
+ result = DeeObject_FMALLOC(ModuleExports);
  if unlikely(!result) goto done;
  result->me_module = self;
  Dee_Incref(self);
@@ -776,7 +776,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator,mei_module) ==
 PRIVATE DREF ModuleGlobalsIterator *DCALL
 mg_iter(ModuleGlobals *__restrict self) {
  DREF ModuleGlobalsIterator *result;
- result = DeeObject_MALLOC(ModuleGlobalsIterator);
+ result = DeeObject_FMALLOC(ModuleGlobalsIterator);
  if unlikely(!result) goto done;
  result->mgi_index  = 0;
  result->mgi_module = self->mg_module;
@@ -916,7 +916,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 INTERN DREF ModuleGlobals *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
  DREF ModuleGlobals *result;
- result = DeeObject_MALLOC(ModuleGlobals);
+ result = DeeObject_FMALLOC(ModuleGlobals);
  if unlikely(!result) goto done;
  result->mg_module = self;
  Dee_Incref(self);
