@@ -257,7 +257,7 @@ shlib_getitem(Shlib *__restrict self,
  }
  result_type = get_void_pointer();
  if unlikely(!result_type) goto err;
- result = DeeObject_FMALLOC(struct pointer_object);
+ result = DeeObject_MALLOC(struct pointer_object);
  if unlikely(!result) goto err_type;
  DeeObject_InitNoref(result,(DeeTypeObject *)result_type);
  result->p_ptr.ptr = symaddr;
@@ -282,7 +282,7 @@ shlib_getattr(Shlib *__restrict self,
 #ifdef CONFIG_NO_CFUNCTION
  result_type = (DREF DeeSTypeObject *)DeeSType_Pointer(&DeeCVoid_Type);
  if unlikely(!result_type) goto err;
- result = DeeObject_FMALLOC(struct pointer_object);
+ result = DeeObject_MALLOC(struct pointer_object);
  if unlikely(!result) { Dee_Decref((DeeObject *)result_type); goto err; }
  DeeObject_InitNoref(result,(DeeTypeObject *)result_type);
 #else
@@ -303,7 +303,7 @@ shlib_getattr(Shlib *__restrict self,
        Dee_DecrefNokill((DeeObject *)result_type);
   ASSERT(self->sh_vfunptr == result_type);
  }
- result = DeeObject_FMALLOC(struct pointer_object);
+ result = DeeObject_MALLOC(struct pointer_object);
  if unlikely(!result) goto err;
  DeeObject_Init(result,(DeeTypeObject *)result_type);
 #endif
@@ -335,7 +335,7 @@ shlib_base(Shlib *__restrict self, size_t argc,
      goto err;
  result_type = get_void_pointer();
  if unlikely(!result_type) goto err;
- result = DeeObject_FMALLOC(struct pointer_object);
+ result = DeeObject_MALLOC(struct pointer_object);
  if unlikely(!result) goto err_type;
  DeeObject_InitNoref(result,(DeeTypeObject *)result_type);
  /* Return the base address of the shared library. */

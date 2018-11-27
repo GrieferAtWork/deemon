@@ -344,7 +344,7 @@ typedef struct {
 } Integer_int_object;
 INTERN DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
  Integer_int_object *result;
- result = DeeObject_FMALLOC(Integer_int_object);
+ result = DeeObject_MALLOC(Integer_int_object);
  if unlikely(!result) goto done;
  DeeObject_Init(result,(DeeTypeObject *)&DeeCInt_Type);
  result->i_value = val;
@@ -356,7 +356,7 @@ done:
 #if !defined(SIGNED) || SIZEOF != CONFIG_CTYPES_SIZEOF_INT
 INTERN DREF DeeObject *DCALL F(int_new)(T val) {
  X(Integer) *result;
- result = DeeObject_FMALLOC(X(Integer));
+ result = DeeObject_MALLOC(X(Integer));
  if unlikely(!result) goto done;
  DeeObject_Init(result,(DeeTypeObject *)&TYPE_NAME);
  result->i_value = val;

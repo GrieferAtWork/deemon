@@ -605,7 +605,7 @@ PRIVATE void DCALL ss_fini(StringScanner *__restrict self) {
 PRIVATE DREF StringScanIterator *DCALL
 ss_iter(StringScanner *__restrict self) {
  DREF StringScanIterator *result;
- result = DeeObject_FMALLOC(StringScanIterator);
+ result = DeeObject_MALLOC(StringScanIterator);
  if unlikely(!result) goto done;
  /* Universally use UTF-8 for string scanning to prevent
   * any problems related to unicode text processing. */
@@ -636,7 +636,7 @@ ss_iter(StringScanner *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -732,7 +732,7 @@ DeeString_Scanf(DeeObject *__restrict self,
   * intermediate sequence type, as well as optimizing
   * to only generate output values which are actually
   * being used. */
- result = DeeObject_FMALLOC(StringScanner);
+ result = DeeObject_MALLOC(StringScanner);
  if unlikely(!result) goto done;
  result->ss_data   = self;
  result->ss_format = format;

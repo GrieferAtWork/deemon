@@ -813,11 +813,6 @@ DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
 #define DeeDbgObject_Free(ob,file,line)                DeeDbg_Free(ob,file,line)
 #endif /* CONFIG_NO_OBJECT_SLABS */
 
-#define DeeObject_MALLOC(T)    ((T *)DeeObject_Malloc(sizeof(T)))
-#define DeeObject_CALLOC(T)    ((T *)DeeObject_Calloc(sizeof(T)))
-#define DeeObject_TRYMALLOC(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
-#define DeeObject_TRYCALLOC(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
-
 /* Free the reference tracker of a given object.
  * Should be called prior to `DeeObject_Free()' for any object
  * who's reference counter was modified at any point in time. */
@@ -826,6 +821,39 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
 #else
 #define DeeObject_FreeTracker(self) (void)0
 #endif
+
+
+/* Free-functions, and their capabilities
+ *
+ * Dee_Free:             Accepts  Dee_Malloc()
+ *
+ * DeeSlab_Free:         Accepts  DeeSlab_Malloc<M>()
+ *                       Accepts  Dee_Malloc()
+ *
+ * DeeSlab_FFree(<N>):
+ * DeeSlab_Free<N>:      Accepts  DeeSlab_Malloc<M>()         | M >= N
+ *                       Accepts  Dee_Malloc()
+ *
+ * DeeObject_Free:       Accepts  DeeObject_SlabMalloc<M>()
+ *                       Accepts  DeeObject_FMalloc(<M>)
+ *                       Accepts  DeeObject_Malloc()
+ *
+ * DeeObject_FFree(<N>):
+ * DeeObject_SlabFree<N>:   Accepts  DeeObject_SlabMalloc<M>()   | M >= N
+ *                          Accepts  DeeObject_FMalloc(<N>)      | M >= N
+ *                          Accepts  DeeObject_Malloc()
+ *
+ *
+ * DeeGCObject_Free:        Accepts  DeeGCObject_SlabMalloc<M>()
+ *                          Accepts  DeeGCObject_FMalloc(<M>)
+ *                          Accepts  DeeGCObject_Malloc()
+ *
+ * DeeGCObject_FFree(<N>):
+ * DeeGCObject_SlabFree<N>: Accepts  DeeGCObject_SlabMalloc<M>() | M >= N
+ *                          Accepts  DeeGCObject_FMalloc(<M>)    | M >= N
+ *                          Accepts  DeeGCObject_Malloc()
+ *
+ */
 
 
 
@@ -884,7 +912,7 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
    (size) <= 8*__SIZEOF_POINTER__ ? 3u : \
    (size) <= 10*__SIZEOF_POINTER__ ? 4u : 0xffu)
 #define DEEMON_SLAB_HASSIZE(size) (0 DEE_ENUMERATE_SLAB_SIZES(|| (size) == ))
-#define DeeObject_SlabInvokeDyn(func,size,args,fallback) \
+#define DeeSlab_InvokeDyn(func,size,args,fallback) \
   ((size) <= 4*__SIZEOF_POINTER__ ? func##4 args : \
    (size) <= 5*__SIZEOF_POINTER__ ? func##5 args : \
    (size) <= 6*__SIZEOF_POINTER__ ? func##6 args : \
@@ -892,7 +920,7 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
    (size) <= 10*__SIZEOF_POINTER__ ? func##10 args : \
                                      fallback)
 #ifndef __NO_builtin_choose_expr
-#define DeeObject_SlabInvoke(func,size,args,fallback) \
+#define DeeSlab_Invoke(func,size,args,fallback) \
    __builtin_choose_expr((size) <= 4*__SIZEOF_POINTER__,func##4 args, \
    __builtin_choose_expr((size) <= 5*__SIZEOF_POINTER__,func##5 args, \
    __builtin_choose_expr((size) <= 6*__SIZEOF_POINTER__,func##6 args, \
@@ -900,104 +928,210 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
    __builtin_choose_expr((size) <= 10*__SIZEOF_POINTER__,func##10 args, \
                                                          fallback)))))
 #else /* !__NO_builtin_choose_expr */
-#define DeeObject_SlabInvoke  DeeObject_SlabInvokeDyn
+#define DeeSlab_Invoke  DeeSlab_InvokeDyn
 #endif /* __NO_builtin_choose_expr */
 
 #define DEFINE_SLAB_FUNCTIONS(size) \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeObject_SlabMalloc##size)(void); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeObject_SlabCalloc##size)(void); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeObject_SlabTryMalloc##size)(void); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeObject_SlabTryCalloc##size)(void); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgObject_SlabMalloc##size)(char const *file, int line); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgObject_SlabCalloc##size)(char const *file, int line); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgObject_SlabTryMalloc##size)(char const *file, int line); \
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgObject_SlabTryCalloc##size)(char const *file, int line); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_Malloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_Calloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_TryMalloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_TryCalloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_Malloc##size)(char const *file, int line); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_Calloc##size)(char const *file, int line); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_TryMalloc##size)(char const *file, int line); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_TryCalloc##size)(char const *file, int line); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabMalloc##size)(void); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
-DFUNDEF void (DCALL DeeObject_SlabFree##size)(void *__restrict ptr); \
-DFUNDEF void (DCALL DeeDbgObject_SlabFree##size)(void *__restrict ptr, char const *file, int line); \
+DFUNDEF void (DCALL DeeSlab_Free##size)(void *__restrict ptr); \
+DFUNDEF void (DCALL DeeDbgSlab_Free##size)(void *__restrict ptr, char const *file, int line); \
 DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr); \
 /**/
 DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_FUNCTIONS)
 #undef DEFINE_SLAB_FUNCTIONS
-#if DEEMON_SLAB_HASSIZE(4)
-#ifndef NDEBUG
-#define DeeObject_SlabMalloc4()    DeeDbgObject_SlabMalloc4(__FILE__,__LINE__)
-#define DeeObject_SlabCalloc4()    DeeDbgObject_SlabCalloc4(__FILE__,__LINE__)
-#define DeeObject_SlabTryMalloc4() DeeDbgObject_SlabTryMalloc4(__FILE__,__LINE__)
-#define DeeObject_SlabTryCalloc4() DeeDbgObject_SlabTryCalloc4(__FILE__,__LINE__)
-#define DeeObject_SlabFree4(ptr)   DeeDbgObject_SlabFree4(ptr,__FILE__,__LINE__)
+
+
+/* Allocate fixed-size, general-purpose slab memory.
+ * NOTE: This memory must be freed by one of:
+ *   - DeeSlab_FFree(return,size2)  | size2 <= size
+ *   - DeeSlab_Free<size2>(return)  | size2 <= size
+ *   - DeeSlab_Free(return) */
+#define DeeSlab_Malloc(size)                 DeeSlab_Invoke(DeeSlab_Malloc,size,(ptr),Dee_Malloc(size))
+#define DeeSlab_Calloc(size)                 DeeSlab_Invoke(DeeSlab_Calloc,size,(ptr),Dee_Calloc(size))
+#define DeeSlab_TryMalloc(size)              DeeSlab_Invoke(DeeSlab_TryMalloc,size,(ptr),Dee_TryMalloc(size))
+#define DeeSlab_TryCalloc(size)              DeeSlab_Invoke(DeeSlab_TryCalloc,size,(ptr),Dee_TryCalloc(size))
+#define DeeSlab_FFree(ptr,size)              DeeSlab_Invoke(DeeSlab_Free,size,(ptr),Dee_Free(ptr))
+#define DeeDbgSlab_Malloc(size,file,line)    DeeSlab_Invoke(DeeDbgSlab_Malloc,size,(ptr,file,line),DeeDbg_Malloc(size,file,line))
+#define DeeDbgSlab_Calloc(size,file,line)    DeeSlab_Invoke(DeeDbgSlab_Calloc,size,(ptr,file,line),DeeDbg_Calloc(size,file,line))
+#define DeeDbgSlab_TryMalloc(size,file,line) DeeSlab_Invoke(DeeDbgSlab_TryMalloc,size,(ptr,file,line),DeeDbg_TryMalloc(size,file,line))
+#define DeeDbgSlab_TryCalloc(size,file,line) DeeSlab_Invoke(DeeDbgSlab_TryCalloc,size,(ptr,file,line),DeeDbg_TryCalloc(size,file,line))
+#define DeeDbgSlab_FFree(ptr,size,file,line) DeeSlab_Invoke(DeeDbgSlab_Free,size,(ptr,file,line),DeeDbg_Free(ptr,file,line))
+
+/* Free any kind of pointer allocated by the general-purpose slab allocators.
+ * NOTE: Do not mix with object slab allocators, even if they may appear identical! */
+#ifdef __INTELLISENSE__
+DFUNDEF void (DCALL DeeSlab_Free)(void *__restrict ptr);
+DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int line);
+#elif DEEMON_SLAB_MINSIZE == 4
+#define DeeSlab_Free      DeeSlab_Free4
+#define DeeDbgSlab_Free   DeeDbgSlab_Free4
 #else
-#define DeeDbgObject_SlabMalloc4(file,line)    DeeObject_SlabMalloc4()
-#define DeeDbgObject_SlabCalloc4(file,line)    DeeObject_SlabCalloc4()
-#define DeeDbgObject_SlabTryMalloc4(file,line) DeeObject_SlabTryMalloc4()
-#define DeeDbgObject_SlabTryCalloc4(file,line) DeeObject_SlabTryCalloc4()
-#define DeeDbgObject_SlabFree4(ptr,file,line)  DeeObject_SlabFree4(ptr)
+#define DEE_PRIVATE_DeeSlab_Free2(x) DeeSlab_Free ## x
+#define DEE_PRIVATE_DeeSlab_Free(x) DEE_PRIVATE_DeeSlab_Free2(x)
+#define DEE_PRIVATE_DeeDbgSlab_Free2(x) DeeDbgSlab_Free ## x
+#define DEE_PRIVATE_DeeDbgSlab_Free(x) DEE_PRIVATE_DeeDbgSlab_Free2(x)
+#define DeeSlab_Free      DEE_PRIVATE_DeeSlab_Free(DEEMON_SLAB_MINSIZE)
+#define DeeDbgSlab_Free   DEE_PRIVATE_DeeDbgSlab_Free(DEEMON_SLAB_MINSIZE)
+#endif
+
+
+/* Define slab-enabled object memory allocators, and override regular
+ * slab allocator function to either include, or exclude debug information. */
+#if DEEMON_SLAB_HASSIZE(4)
+#define DeeObject_SlabMalloc4    DeeSlab_Malloc4
+#define DeeObject_SlabCalloc4    DeeSlab_Calloc4
+#define DeeObject_SlabTryMalloc4 DeeSlab_TryMalloc4
+#define DeeObject_SlabTryCalloc4 DeeSlab_TryCalloc4
+#define DeeObject_SlabFree4      DeeSlab_Free4
+#ifndef NDEBUG
+#define DeeSlab_Malloc4()    DeeDbgSlab_Malloc4(__FILE__,__LINE__)
+#define DeeSlab_Calloc4()    DeeDbgSlab_Calloc4(__FILE__,__LINE__)
+#define DeeSlab_TryMalloc4() DeeDbgSlab_TryMalloc4(__FILE__,__LINE__)
+#define DeeSlab_TryCalloc4() DeeDbgSlab_TryCalloc4(__FILE__,__LINE__)
+#define DeeSlab_Free4(ptr)   DeeDbgSlab_Free4(ptr,__FILE__,__LINE__)
+#else
+#define DeeDbgSlab_Malloc4(file,line)    DeeSlab_Malloc4()
+#define DeeDbgSlab_Calloc4(file,line)    DeeSlab_Calloc4()
+#define DeeDbgSlab_TryMalloc4(file,line) DeeSlab_TryMalloc4()
+#define DeeDbgSlab_TryCalloc4(file,line) DeeSlab_TryCalloc4()
+#define DeeDbgSlab_Free4(ptr,file,line)  DeeSlab_Free4(ptr)
 #endif
 #endif /* DEEMON_SLAB_HASSIZE(4) */
 #if DEEMON_SLAB_HASSIZE(5)
+#define DeeObject_SlabMalloc5    DeeSlab_Malloc5
+#define DeeObject_SlabCalloc5    DeeSlab_Calloc5
+#define DeeObject_SlabTryMalloc5 DeeSlab_TryMalloc5
+#define DeeObject_SlabTryCalloc5 DeeSlab_TryCalloc5
+#define DeeObject_SlabFree5      DeeSlab_Free5
 #ifndef NDEBUG
-#define DeeObject_SlabMalloc5()    DeeDbgObject_SlabMalloc5(__FILE__,__LINE__)
-#define DeeObject_SlabCalloc5()    DeeDbgObject_SlabCalloc5(__FILE__,__LINE__)
-#define DeeObject_SlabTryMalloc5() DeeDbgObject_SlabTryMalloc5(__FILE__,__LINE__)
-#define DeeObject_SlabTryCalloc5() DeeDbgObject_SlabTryCalloc5(__FILE__,__LINE__)
-#define DeeObject_SlabFree5(ptr)   DeeDbgObject_SlabFree5(ptr,__FILE__,__LINE__)
+#define DeeSlab_Malloc5()    DeeDbgSlab_Malloc5(__FILE__,__LINE__)
+#define DeeSlab_Calloc5()    DeeDbgSlab_Calloc5(__FILE__,__LINE__)
+#define DeeSlab_TryMalloc5() DeeDbgSlab_TryMalloc5(__FILE__,__LINE__)
+#define DeeSlab_TryCalloc5() DeeDbgSlab_TryCalloc5(__FILE__,__LINE__)
+#define DeeSlab_Free5(ptr)   DeeDbgSlab_Free5(ptr,__FILE__,__LINE__)
 #else
-#define DeeDbgObject_SlabMalloc5(file,line)    DeeObject_SlabMalloc5()
-#define DeeDbgObject_SlabCalloc5(file,line)    DeeObject_SlabCalloc5()
-#define DeeDbgObject_SlabTryMalloc5(file,line) DeeObject_SlabTryMalloc5()
-#define DeeDbgObject_SlabTryCalloc5(file,line) DeeObject_SlabTryCalloc5()
-#define DeeDbgObject_SlabFree5(ptr,file,line)  DeeObject_SlabFree5(ptr)
+#define DeeDbgSlab_Malloc5(file,line)    DeeSlab_Malloc5()
+#define DeeDbgSlab_Calloc5(file,line)    DeeSlab_Calloc5()
+#define DeeDbgSlab_TryMalloc5(file,line) DeeSlab_TryMalloc5()
+#define DeeDbgSlab_TryCalloc5(file,line) DeeSlab_TryCalloc5()
+#define DeeDbgSlab_Free5(ptr,file,line)  DeeSlab_Free5(ptr)
 #endif
 #endif /* DEEMON_SLAB_HASSIZE(5) */
 #if DEEMON_SLAB_HASSIZE(6)
+#define DeeObject_SlabMalloc6    DeeSlab_Malloc6
+#define DeeObject_SlabCalloc6    DeeSlab_Calloc6
+#define DeeObject_SlabTryMalloc6 DeeSlab_TryMalloc6
+#define DeeObject_SlabTryCalloc6 DeeSlab_TryCalloc6
+#define DeeObject_SlabFree6      DeeSlab_Free6
 #ifndef NDEBUG
-#define DeeObject_SlabMalloc6()    DeeDbgObject_SlabMalloc6(__FILE__,__LINE__)
-#define DeeObject_SlabCalloc6()    DeeDbgObject_SlabCalloc6(__FILE__,__LINE__)
-#define DeeObject_SlabTryMalloc6() DeeDbgObject_SlabTryMalloc6(__FILE__,__LINE__)
-#define DeeObject_SlabTryCalloc6() DeeDbgObject_SlabTryCalloc6(__FILE__,__LINE__)
-#define DeeObject_SlabFree6(ptr)   DeeDbgObject_SlabFree6(ptr,__FILE__,__LINE__)
+#define DeeSlab_Malloc6()    DeeDbgSlab_Malloc6(__FILE__,__LINE__)
+#define DeeSlab_Calloc6()    DeeDbgSlab_Calloc6(__FILE__,__LINE__)
+#define DeeSlab_TryMalloc6() DeeDbgSlab_TryMalloc6(__FILE__,__LINE__)
+#define DeeSlab_TryCalloc6() DeeDbgSlab_TryCalloc6(__FILE__,__LINE__)
+#define DeeSlab_Free6(ptr)   DeeDbgSlab_Free6(ptr,__FILE__,__LINE__)
 #else
-#define DeeDbgObject_SlabMalloc6(file,line)    DeeObject_SlabMalloc6()
-#define DeeDbgObject_SlabCalloc6(file,line)    DeeObject_SlabCalloc6()
-#define DeeDbgObject_SlabTryMalloc6(file,line) DeeObject_SlabTryMalloc6()
-#define DeeDbgObject_SlabTryCalloc6(file,line) DeeObject_SlabTryCalloc6()
-#define DeeDbgObject_SlabFree6(ptr,file,line)  DeeObject_SlabFree6(ptr)
+#define DeeDbgSlab_Malloc6(file,line)    DeeSlab_Malloc6()
+#define DeeDbgSlab_Calloc6(file,line)    DeeSlab_Calloc6()
+#define DeeDbgSlab_TryMalloc6(file,line) DeeSlab_TryMalloc6()
+#define DeeDbgSlab_TryCalloc6(file,line) DeeSlab_TryCalloc6()
+#define DeeDbgSlab_Free6(ptr,file,line)  DeeSlab_Free6(ptr)
 #endif
 #endif /* DEEMON_SLAB_HASSIZE(6) */
 #if DEEMON_SLAB_HASSIZE(8)
+#define DeeObject_SlabMalloc8    DeeSlab_Malloc8
+#define DeeObject_SlabCalloc8    DeeSlab_Calloc8
+#define DeeObject_SlabTryMalloc8 DeeSlab_TryMalloc8
+#define DeeObject_SlabTryCalloc8 DeeSlab_TryCalloc8
+#define DeeObject_SlabFree8      DeeSlab_Free8
 #ifndef NDEBUG
-#define DeeObject_SlabMalloc8()    DeeDbgObject_SlabMalloc8(__FILE__,__LINE__)
-#define DeeObject_SlabCalloc8()    DeeDbgObject_SlabCalloc8(__FILE__,__LINE__)
-#define DeeObject_SlabTryMalloc8() DeeDbgObject_SlabTryMalloc8(__FILE__,__LINE__)
-#define DeeObject_SlabTryCalloc8() DeeDbgObject_SlabTryCalloc8(__FILE__,__LINE__)
-#define DeeObject_SlabFree8(ptr)   DeeDbgObject_SlabFree8(ptr,__FILE__,__LINE__)
+#define DeeSlab_Malloc8()    DeeDbgSlab_Malloc8(__FILE__,__LINE__)
+#define DeeSlab_Calloc8()    DeeDbgSlab_Calloc8(__FILE__,__LINE__)
+#define DeeSlab_TryMalloc8() DeeDbgSlab_TryMalloc8(__FILE__,__LINE__)
+#define DeeSlab_TryCalloc8() DeeDbgSlab_TryCalloc8(__FILE__,__LINE__)
+#define DeeSlab_Free8(ptr)   DeeDbgSlab_Free8(ptr,__FILE__,__LINE__)
 #else
-#define DeeDbgObject_SlabMalloc8(file,line)    DeeObject_SlabMalloc8()
-#define DeeDbgObject_SlabCalloc8(file,line)    DeeObject_SlabCalloc8()
-#define DeeDbgObject_SlabTryMalloc8(file,line) DeeObject_SlabTryMalloc8()
-#define DeeDbgObject_SlabTryCalloc8(file,line) DeeObject_SlabTryCalloc8()
-#define DeeDbgObject_SlabFree8(ptr,file,line)  DeeObject_SlabFree8(ptr)
+#define DeeDbgSlab_Malloc8(file,line)    DeeSlab_Malloc8()
+#define DeeDbgSlab_Calloc8(file,line)    DeeSlab_Calloc8()
+#define DeeDbgSlab_TryMalloc8(file,line) DeeSlab_TryMalloc8()
+#define DeeDbgSlab_TryCalloc8(file,line) DeeSlab_TryCalloc8()
+#define DeeDbgSlab_Free8(ptr,file,line)  DeeSlab_Free8(ptr)
 #endif
 #endif /* DEEMON_SLAB_HASSIZE(8) */
 #if DEEMON_SLAB_HASSIZE(10)
+#define DeeObject_SlabMalloc10    DeeSlab_Malloc10
+#define DeeObject_SlabCalloc10    DeeSlab_Calloc10
+#define DeeObject_SlabTryMalloc10 DeeSlab_TryMalloc10
+#define DeeObject_SlabTryCalloc10 DeeSlab_TryCalloc10
+#define DeeObject_SlabFree10      DeeSlab_Free10
 #ifndef NDEBUG
-#define DeeObject_SlabMalloc10()    DeeDbgObject_SlabMalloc10(__FILE__,__LINE__)
-#define DeeObject_SlabCalloc10()    DeeDbgObject_SlabCalloc10(__FILE__,__LINE__)
-#define DeeObject_SlabTryMalloc10() DeeDbgObject_SlabTryMalloc10(__FILE__,__LINE__)
-#define DeeObject_SlabTryCalloc10() DeeDbgObject_SlabTryCalloc10(__FILE__,__LINE__)
-#define DeeObject_SlabFree10(ptr)   DeeDbgObject_SlabFree10(ptr,__FILE__,__LINE__)
+#define DeeSlab_Malloc10()    DeeDbgSlab_Malloc10(__FILE__,__LINE__)
+#define DeeSlab_Calloc10()    DeeDbgSlab_Calloc10(__FILE__,__LINE__)
+#define DeeSlab_TryMalloc10() DeeDbgSlab_TryMalloc10(__FILE__,__LINE__)
+#define DeeSlab_TryCalloc10() DeeDbgSlab_TryCalloc10(__FILE__,__LINE__)
+#define DeeSlab_Free10(ptr)   DeeDbgSlab_Free10(ptr,__FILE__,__LINE__)
 #else
-#define DeeDbgObject_SlabMalloc10(file,line)    DeeObject_SlabMalloc10()
-#define DeeDbgObject_SlabCalloc10(file,line)    DeeObject_SlabCalloc10()
-#define DeeDbgObject_SlabTryMalloc10(file,line) DeeObject_SlabTryMalloc10()
-#define DeeDbgObject_SlabTryCalloc10(file,line) DeeObject_SlabTryCalloc10()
-#define DeeDbgObject_SlabFree10(ptr,file,line)  DeeObject_SlabFree10(ptr)
+#define DeeDbgSlab_Malloc10(file,line)    DeeSlab_Malloc10()
+#define DeeDbgSlab_Calloc10(file,line)    DeeSlab_Calloc10()
+#define DeeDbgSlab_TryMalloc10(file,line) DeeSlab_TryMalloc10()
+#define DeeDbgSlab_TryCalloc10(file,line) DeeSlab_TryCalloc10()
+#define DeeDbgSlab_Free10(ptr,file,line)  DeeSlab_Free10(ptr)
 #endif
 #endif /* DEEMON_SLAB_HASSIZE(10) */
-#endif /* !CONFIG_NO_OBJECT_SLABS */
+#else /* !CONFIG_NO_OBJECT_SLABS */
+
+/* Allocate fixed-size, general-purpose slab memory.
+ * NOTE: This memory must be freed by one of:
+ *   - DeeSlab_FFree(return,size2)  | size2 <= size
+ *   - DeeSlab_Free<size2>(return)  | size2 <= size
+ *   - DeeSlab_Free(return) */
+#define DeeSlab_Malloc(size)                 Dee_Malloc(size)
+#define DeeSlab_Calloc(size)                 Dee_Calloc(size)
+#define DeeSlab_TryMalloc(size)              Dee_TryMalloc(size)
+#define DeeSlab_TryCalloc(size)              Dee_TryCalloc(size)
+#define DeeSlab_FFree(ptr,size)              Dee_Free(ptr)
+#define DeeDbgSlab_Malloc(size,file,line)    DeeDbg_Malloc(size,file,line)
+#define DeeDbgSlab_Calloc(size,file,line)    DeeDbg_Calloc(size,file,line)
+#define DeeDbgSlab_TryMalloc(size,file,line) DeeDbg_TryMalloc(size,file,line)
+#define DeeDbgSlab_TryCalloc(size,file,line) DeeDbg_TryCalloc(size,file,line)
+#define DeeDbgSlab_FFree(ptr,size,file,line) DeeDbg_Free(ptr,file,line)
+
+/* Free any kind of pointer allocated by the general-purpose slab allocators.
+ * NOTE: Do not mix with object slab allocators, even if they may appear identical! */
+#ifdef __INTELLISENSE__
+DFUNDEF void (DCALL DeeSlab_Free)(void *__restrict ptr);
+DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int line);
+#else
+#define DeeSlab_Free      Dee_Free
+#define DeeDbgSlab_Free   DeeDbg_Free
+#endif
+
+#endif /* CONFIG_NO_OBJECT_SLABS */
+
+/* Slab memory allocators with automatic component size detection.
+ * >> MyStruct *ob;
+ * >> ob = DeeSlab_MALLOC(MyStruct);
+ * >> if likely(ob) {
+ * >>     ...
+ * >>     DeeSlab_FREE(ob);
+ * >> }
+ */
+#define DeeSlab_MALLOC(T)       ((T *)DeeSlab_Malloc(sizeof(T)))
+#define DeeSlab_CALLOC(T)       ((T *)DeeSlab_Calloc(sizeof(T)))
+#define DeeSlab_TRYMALLOC(T)    ((T *)DeeSlab_TryMalloc(sizeof(T)))
+#define DeeSlab_TRYCALLOC(T)    ((T *)DeeSlab_TryCalloc(sizeof(T)))
+#define DeeSlab_FREE(typed_ptr)       DeeSlab_FFree((void *)(typed_ptr),sizeof(*(typed_ptr)))
+
 
 
 typedef struct {
@@ -1046,7 +1180,11 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 
 
 
-
+/* Allocate fixed-size, object-purposed slab memory.
+ * NOTE: This memory must be freed by one of:
+ *   - DeeObject_FFree(return,size2)     | size2 <= size
+ *   - DeeObject_SlabFree<size2>(return) | size2 <= size
+ *   - DeeObject_Free(return) */
 #ifdef CONFIG_NO_OBJECT_SLABS
 #define DeeObject_FMalloc(size)    DeeObject_Malloc(size)
 #define DeeObject_FCalloc(size)    DeeObject_Calloc(size)
@@ -1054,21 +1192,21 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_FTryCalloc(size) DeeObject_TryCalloc(size)
 #define DeeObject_FFree(ptr,size)  DeeObject_Free(ptr)
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DeeObject_FMalloc(size)    DeeObject_SlabInvoke(DeeObject_SlabMalloc,size,(),DeeObject_Malloc(size))
-#define DeeObject_FCalloc(size)    DeeObject_SlabInvoke(DeeObject_SlabCalloc,size,(),DeeObject_Calloc(size))
-#define DeeObject_FTryMalloc(size) DeeObject_SlabInvoke(DeeObject_SlabTryMalloc,size,(),DeeObject_TryMalloc(size))
-#define DeeObject_FTryCalloc(size) DeeObject_SlabInvoke(DeeObject_SlabTryCalloc,size,(),DeeObject_TryCalloc(size))
-#define DeeObject_FFree(ptr,size)  DeeObject_SlabInvoke(DeeObject_SlabFree,size,(ptr),DeeObject_Free(ptr))
+#define DeeObject_FMalloc(size)    DeeSlab_Invoke(DeeObject_SlabMalloc,size,(),DeeObject_Malloc(size))
+#define DeeObject_FCalloc(size)    DeeSlab_Invoke(DeeObject_SlabCalloc,size,(),DeeObject_Calloc(size))
+#define DeeObject_FTryMalloc(size) DeeSlab_Invoke(DeeObject_SlabTryMalloc,size,(),DeeObject_TryMalloc(size))
+#define DeeObject_FTryCalloc(size) DeeSlab_Invoke(DeeObject_SlabTryCalloc,size,(),DeeObject_TryCalloc(size))
+#define DeeObject_FFree(ptr,size)  DeeSlab_Invoke(DeeObject_SlabFree,size,(ptr),DeeObject_Free(ptr))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as the regular malloc functions, but use the same allocation methods that
  * would be used by `TYPE_FIXED_ALLOCATOR' and `TYPE_FIXED_ALLOCATOR_S', meaning
  * that pointers returned by these macros have binary compatibility with them. */
-#define DeeObject_FMALLOC(T)       ((T *)DeeObject_FMalloc(sizeof(T)))
-#define DeeObject_FCALLOC(T)       ((T *)DeeObject_FCalloc(sizeof(T)))
-#define DeeObject_TRYFMALLOC(T)    ((T *)DeeObject_FTryMalloc(sizeof(T)))
-#define DeeObject_TRYFCALLOC(T)    ((T *)DeeObject_FTryCalloc(sizeof(T)))
-#define DeeObject_FFREE(typed_ptr)       DeeObject_FFree((void *)(typed_ptr),sizeof(*(typed_ptr)))
+#define DeeObject_MALLOC(T)       ((T *)DeeObject_FMalloc(sizeof(T)))
+#define DeeObject_CALLOC(T)       ((T *)DeeObject_FCalloc(sizeof(T)))
+#define DeeObject_TRYMALLOC(T)    ((T *)DeeObject_FTryMalloc(sizeof(T)))
+#define DeeObject_TRYCALLOC(T)    ((T *)DeeObject_FTryCalloc(sizeof(T)))
+#define DeeObject_FREE(typed_ptr)       DeeObject_FFree(typed_ptr,sizeof(*(typed_ptr)))
 
 /* Specifies a custom object allocator declaration. */
 #define TYPE_ALLOCATOR(tp_malloc,tp_free) (tp_free),{(uintptr_t)(tp_malloc) }
@@ -1083,11 +1221,11 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define TYPE_FIXED_ALLOCATOR_GC    TYPE_AUTO_ALLOCATOR
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define TYPE_FIXED_ALLOCATOR(T) \
-    DeeObject_SlabInvoke(&DeeObject_SlabFree,sizeof(T),,NULL), \
-  {(uintptr_t)DeeObject_SlabInvoke(&DeeObject_SlabMalloc,sizeof(T),,sizeof(T)) }
+    DeeSlab_Invoke(&DeeObject_SlabFree,sizeof(T),,NULL), \
+  {(uintptr_t)DeeSlab_Invoke(&DeeObject_SlabMalloc,sizeof(T),,sizeof(T)) }
 #define TYPE_FIXED_ALLOCATOR_GC(T) \
-    DeeObject_SlabInvoke(&DeeGCObject_SlabFree,sizeof(T),,NULL), \
-  {(uintptr_t)DeeObject_SlabInvoke(&DeeGCObject_SlabMalloc,sizeof(T),,sizeof(T)) }
+    DeeSlab_Invoke(&DeeGCObject_SlabFree,sizeof(T),,NULL), \
+  {(uintptr_t)DeeSlab_Invoke(&DeeGCObject_SlabMalloc,sizeof(T),,sizeof(T)) }
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as `TYPE_FIXED_ALLOCATOR()', but don't link agains dedicated
@@ -1098,21 +1236,21 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
      defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
      defined(CONFIG_NO_OBJECT_SLABS)
 #define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO 1
-#define TYPE_FIXED_ALLOCATOR_S(T)    TYPE_AUTO_ALLOCATOR(T)
-#define TYPE_FIXED_ALLOCATOR_GC_S(T) TYPE_AUTO_ALLOCATOR(T)
-#define DeeObject_FMALLOC_S          DeeObject_MALLOC
-#define DeeObject_FCALLOC_S          DeeObject_CALLOC
-#define DeeObject_TRYFMALLOC_S       DeeObject_TRYMALLOC
-#define DeeObject_TRYFCALLOC_S       DeeObject_TRYCALLOC
-#define DeeObject_FFREE_S            DeeObject_Free
+#define TYPE_FIXED_ALLOCATOR_S(T)      TYPE_AUTO_ALLOCATOR(T)
+#define TYPE_FIXED_ALLOCATOR_GC_S(T)   TYPE_AUTO_ALLOCATOR(T)
+#define DeeObject_MALLOC_S(T)    ((T *)DeeObject_Malloc(sizeof(T)))
+#define DeeObject_CALLOC_S(T)    ((T *)DeeObject_Calloc(sizeof(T)))
+#define DeeObject_TRYMALLOC_S(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
+#define DeeObject_TRYCALLOC_S(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
+#define DeeObject_FREE_S               DeeObject_Free
 #else
-#define TYPE_FIXED_ALLOCATOR_S(T)    TYPE_FIXED_ALLOCATOR(T)
-#define TYPE_FIXED_ALLOCATOR_GC_S(T) TYPE_FIXED_ALLOCATOR_GC(T)
-#define DeeObject_FMALLOC_S          DeeObject_FMALLOC
-#define DeeObject_FCALLOC_S          DeeObject_FCALLOC
-#define DeeObject_TRYFMALLOC_S       DeeObject_TRYFMALLOC
-#define DeeObject_TRYFCALLOC_S       DeeObject_TRYFCALLOC
-#define DeeObject_FFREE_S            DeeObject_FFREE
+#define TYPE_FIXED_ALLOCATOR_S(T)      TYPE_FIXED_ALLOCATOR(T)
+#define TYPE_FIXED_ALLOCATOR_GC_S(T)   TYPE_FIXED_ALLOCATOR_GC(T)
+#define DeeObject_FMALLOC_S            DeeObject_MALLOC
+#define DeeObject_FCALLOC_S            DeeObject_CALLOC
+#define DeeObject_TRYFMALLOC_S         DeeObject_TRYMALLOC
+#define DeeObject_TRYFCALLOC_S         DeeObject_TRYCALLOC
+#define DeeObject_FREE_S               DeeObject_FREE
 #endif
 
 struct type_constructor {

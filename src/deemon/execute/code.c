@@ -1406,7 +1406,7 @@ function_call(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) goto err;
   result->yf_func = (DREF DeeFunctionObject *)self;
   /* Pack together an argument tuple for the yield-function. */
@@ -1417,7 +1417,7 @@ function_call(DeeFunctionObject *__restrict self,
   DeeObject_Init(result,&DeeYieldFunction_Type);
   return (DREF DeeObject *)result;
 err_r:
-  DeeObject_FFREE(result);
+  DeeObject_FREE(result);
  }
 err:
  return NULL;
@@ -1528,7 +1528,7 @@ DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) goto done;
   result->yf_func = (DREF DeeFunctionObject *)self;
   result->yf_args = (DREF DeeTupleObject *)args;
@@ -1661,7 +1661,7 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) goto done;
   result->yf_func = self;
   /* Pack together an argument tuple for the yield-function. */
@@ -1674,7 +1674,7 @@ DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
 done:
   return (DREF DeeObject *)result;
 err_r:
-  DeeObject_FFREE(result);
+  DeeObject_FREE(result);
  }
 err:
  return NULL;
@@ -1783,7 +1783,7 @@ DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
  /* Special case: Create a yield-function callback. */
  {
   DREF DeeYieldFunctionObject *result;
-  result = DeeObject_FMALLOC(DeeYieldFunctionObject);
+  result = DeeObject_MALLOC(DeeYieldFunctionObject);
   if unlikely(!result) goto err;
   result->yf_func = self;
   /* Pack together an argument tuple for the yield-function. */

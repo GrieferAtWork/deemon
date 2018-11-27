@@ -265,7 +265,7 @@ err:
 PUBLIC DREF DeeObject *DCALL
 DeeList_NewHint(size_t n_prealloc) {
  DREF List *result;
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeList_Type);
  result->l_alloc = n_prealloc;
@@ -287,7 +287,7 @@ done:
 PUBLIC DREF DeeObject *DCALL
 DeeList_NewUninitialized(size_t n_elem) {
  DREF List *result;
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto done;
  result->l_elem  = (DREF DeeObject **)Dee_Malloc(n_elem*sizeof(DREF DeeObject *));
  if unlikely(!result->l_elem) goto err_r;
@@ -300,7 +300,7 @@ DeeList_NewUninitialized(size_t n_elem) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 PUBLIC void DCALL
@@ -310,12 +310,12 @@ DeeList_FreeUninitialized(DeeObject *__restrict self) {
  Dee_DecrefNokill(&DeeList_Type);
  Dee_Free(DeeList_ELEM(self));
  DeeObject_FreeTracker((DeeObject *)self);
- DeeGCObject_FFREE(self);
+ DeeGCObject_FREE(self);
 }
 PUBLIC DREF DeeObject *DCALL
 DeeList_FromIterator(DeeObject *__restrict self) {
  DREF List *result;
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto done;
  if unlikely(list_init_iterator(result,self)) goto err_r;
  DeeObject_Init(result,&DeeList_Type);
@@ -323,7 +323,7 @@ DeeList_FromIterator(DeeObject *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
@@ -333,7 +333,7 @@ DeeList_FromSequence(DeeObject *__restrict self) {
   if (!DeeObject_IsShared(self))
        return_reference_(self);
  }
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto err;
  weakref_support_init(result);
  rwlock_init(&result->l_lock);
@@ -345,7 +345,7 @@ DeeList_FromSequence(DeeObject *__restrict self) {
  DeeGC_Track((DeeObject *)result);
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
 err:
  return NULL;
 }
@@ -367,7 +367,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
                                /*inherit(on_success)*/DREF DeeObject **__restrict objv) {
  DREF List *result;
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto done;
  result->l_elem  = objv; /* Inherit */
  result->l_alloc = obja;
@@ -396,7 +396,7 @@ DeeList_Copy(DREF DeeObject *__restrict self) {
  DREF List *result;
  ASSERT_OBJECT(self);
  ASSERT(DeeList_Check(self));
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto done;
  if unlikely(list_copy(result,(List *)self)) goto err_r;
  DeeObject_Init(result,&DeeList_Type);
@@ -406,7 +406,7 @@ DeeList_Copy(DREF DeeObject *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 
@@ -486,7 +486,7 @@ allocate_new_vector:
   }
   DeeList_LockEndRead(self);
   /* Create the new list descriptor. */
-  result = DeeGCObject_FMALLOC(List);
+  result = DeeGCObject_MALLOC(List);
   if unlikely(!result) {
    while (i--) Dee_Decref(new_vector[i]);
    Dee_Free(new_vector);
@@ -1254,7 +1254,7 @@ again:
  }
  DeeList_LockEndRead(self);
  /* Create the new list descriptor. */
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto err_elemv;
  /* Fill in the descriptor. */
  DeeObject_Init(result,&DeeList_Type);
@@ -1305,7 +1305,7 @@ again:
  }
  DeeList_LockEndRead(self);
  /* Create the new list descriptor. */
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto err_elemv;
  /* Fill in the descriptor. */
  DeeObject_Init(result,&DeeList_Type);
@@ -1405,7 +1405,7 @@ list_setitem(List *__restrict self,
 PRIVATE DREF ListIterator *DCALL
 list_iter(List *__restrict self) {
  DREF ListIterator *result;
- result = DeeObject_FMALLOC(ListIterator);
+ result = DeeObject_MALLOC(ListIterator);
  if unlikely(!result) goto done;
  result->li_list = self;
  result->li_index = 0;
@@ -2874,7 +2874,7 @@ again:
   dst += my_length;
  }
  DeeList_LockEndRead(self);
- result = DeeGCObject_FMALLOC(List);
+ result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto err_elem;
  result->l_elem  = elemv;
  result->l_alloc = result_length;

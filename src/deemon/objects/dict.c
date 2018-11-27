@@ -59,7 +59,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict key_items) {
  DREF Dict *result;
  /* Allocate the dict object. */
- result = DeeGCObject_FMALLOC(Dict);
+ result = DeeGCObject_MALLOC(Dict);
  if unlikely(!result) return NULL;
  if (!num_keyitems) {
   /* Special case: allocate an empty dict. */
@@ -110,7 +110,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
  return (DREF DeeObject *)result;
 err_r:
  Dee_Free(result->d_elem);
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 
@@ -224,7 +224,7 @@ err:
 PUBLIC DREF DeeObject *DCALL
 DeeDict_FromIterator(DeeObject *__restrict self) {
  DREF Dict *result;
- result = DeeGCObject_FMALLOC(Dict);
+ result = DeeGCObject_MALLOC(Dict);
  if unlikely(!result) goto done;
  if unlikely(dict_init_iterator(result,self)) goto err_r;
  DeeObject_Init(result,&DeeDict_Type);
@@ -232,14 +232,14 @@ DeeDict_FromIterator(DeeObject *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 
 PUBLIC DREF DeeObject *DCALL
 DeeDict_FromSequence(DeeObject *__restrict self) {
  DREF Dict *result;
- result = DeeGCObject_FMALLOC(Dict);
+ result = DeeGCObject_MALLOC(Dict);
  if unlikely(!result) goto done;
  if unlikely(dict_init_sequence(result,self)) goto err_r;
  DeeObject_Init(result,&DeeDict_Type);
@@ -247,7 +247,7 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 

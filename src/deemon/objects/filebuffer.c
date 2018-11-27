@@ -297,7 +297,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeFileBuffer_New(DeeObject *__restrict file,
                   uint16_t mode, size_t size) {
  DREF Buffer *result;
- result = DeeObject_FMALLOC(Buffer);
+ result = DeeObject_MALLOC(Buffer);
  if unlikely(!result) goto done;
  /* Initialize the buffer. */
  if unlikely(buffer_init(result,file,mode,size)) goto err_r;
@@ -305,7 +305,7 @@ DeeFileBuffer_New(DeeObject *__restrict file,
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 

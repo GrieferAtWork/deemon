@@ -41,7 +41,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeCell_New(DeeObject *__restrict item) {
  DREF Cell *result;
  ASSERT_OBJECT(item);
- result = DeeGCObject_FMALLOC(Cell);
+ result = DeeGCObject_MALLOC(Cell);
  if unlikely(!result) goto done;
  /* Initialize and fill in the new cell. */
  DeeObject_Init(result,&DeeCell_Type);

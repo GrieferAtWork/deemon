@@ -312,7 +312,7 @@ LOCAL DREF StringSplitIterator *DCALL
 split_doiter(StringSplit *__restrict self,
              DeeTypeObject *__restrict iter_type) {
  DREF StringSplitIterator *result;
- result = DeeObject_FMALLOC(StringSplitIterator);
+ result = DeeObject_MALLOC(StringSplitIterator);
  if unlikely(!result) goto done;
  result->s_width = STRING_WIDTH_COMMON(DeeString_WIDTH(self->s_str),
                                        DeeString_WIDTH(self->s_sep));
@@ -348,7 +348,7 @@ split_doiter(StringSplit *__restrict self,
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -498,7 +498,7 @@ DeeString_Split(DeeObject *__restrict self,
  DREF StringSplit *result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
  ASSERT_OBJECT_TYPE_EXACT(seperator,&DeeString_Type);
- result = DeeObject_FMALLOC(StringSplit);
+ result = DeeObject_MALLOC(StringSplit);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeSplit_Type);
  Dee_Incref(self);
@@ -515,7 +515,7 @@ DeeString_CaseSplit(DeeObject *__restrict self,
  DREF StringSplit *result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
  ASSERT_OBJECT_TYPE_EXACT(seperator,&DeeString_Type);
- result = DeeObject_FMALLOC(StringSplit);
+ result = DeeObject_MALLOC(StringSplit);
  if unlikely(!result) goto done;
  /* Same as the regular split(), but use the case-insensitive sequence type. */
  DeeObject_Init(result,&DeeCaseSplit_Type);
@@ -717,7 +717,7 @@ PRIVATE struct type_member linesplit_class_members[] = {
 PRIVATE DREF LineSplitIterator *DCALL
 linesplit_iter(LineSplit *__restrict self) {
  DREF LineSplitIterator *result;
- result = DeeObject_FMALLOC(LineSplitIterator);
+ result = DeeObject_MALLOC(LineSplitIterator);
  if unlikely(!result) goto done;
  result->ls_width = DeeString_WIDTH(self->ls_str);
  result->ls_begin = (uint8_t *)DeeString_WSTR(self->ls_str);
@@ -804,7 +804,7 @@ DeeString_SplitLines(DeeObject *__restrict self,
                      bool keepends) {
  DREF LineSplit *result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
- result = DeeObject_FMALLOC(LineSplit);
+ result = DeeObject_MALLOC(LineSplit);
  if unlikely(!result) goto done;
  /* Same as the regular split(), but use the case-insensitive sequence type. */
  DeeObject_Init(result,&DeeLineSplit_Type);

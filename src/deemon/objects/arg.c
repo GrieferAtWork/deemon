@@ -448,7 +448,7 @@ kwds_bool(Kwds *__restrict self) {
 PRIVATE DREF KwdsIterator *DCALL
 kwds_iter(Kwds *__restrict self) {
  DREF KwdsIterator *result;
- result = DeeObject_FMALLOC(KwdsIterator);
+ result = DeeObject_MALLOC(KwdsIterator);
  if unlikely(!result) goto done;
  result->ki_iter = self->kw_map;
  result->ki_end  = self->kw_map + self->kw_mask + 1;
@@ -885,7 +885,7 @@ kmap_bool(KwdsMapping *__restrict self) {
 PRIVATE DREF KmapIterator *DCALL
 kmap_iter(KwdsMapping *__restrict self) {
  DREF KmapIterator *result;
- result = DeeObject_FMALLOC(KmapIterator);
+ result = DeeObject_MALLOC(KmapIterator);
  if unlikely(!result) goto done;
  result->ki_iter = self->kmo_kwds->kw_map;
  result->ki_end  = self->kmo_kwds->kw_map + self->kmo_kwds->kw_mask + 1;
@@ -1073,7 +1073,7 @@ DeeKwdsMapping_New(/*Kwds*/DeeObject *__restrict kwds,
                    DeeObject **__restrict argv) {
  DREF KwdsMapping *result;
  ASSERT_OBJECT_TYPE_EXACT(kwds,&DeeKwds_Type);
- result = DeeObject_FMALLOC(KwdsMapping);
+ result = DeeObject_MALLOC(KwdsMapping);
  if unlikely(!result) goto done;
  result->kmo_argv = argv;
  result->kmo_kwds = (DREF DeeKwdsObject *)kwds;

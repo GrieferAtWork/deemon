@@ -967,31 +967,31 @@ PUBLIC void
 #define DEFINE_GC_SLAB_FUNCTIONS(size) \
 PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
 DeeGCObject_SlabMalloc##size(void) { \
- return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabMalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
-                                      (DeeObject_Malloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+ return gc_initob(DeeSlab_Invoke(DeeObject_SlabMalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                (DeeObject_Malloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
 } \
 PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
 DeeGCObject_SlabCalloc##size(void) { \
- return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabCalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
-                                      (DeeObject_Calloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+ return gc_initob(DeeSlab_Invoke(DeeObject_SlabCalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                (DeeObject_Calloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
 } \
 PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
 DeeGCObject_SlabTryMalloc##size(void) { \
- return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabTryMalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
-                                      (DeeObject_TryMalloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+ return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryMalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                (DeeObject_TryMalloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
 } \
 PUBLIC WUNUSED ATTR_MALLOC void *DCALL \
 DeeGCObject_SlabTryCalloc##size(void) { \
- return gc_initob(DeeObject_SlabInvoke(DeeObject_SlabTryCalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
-                                      (DeeObject_TryCalloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
+ return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryCalloc,GC_HEAD_SIZE + size * sizeof(void *),(), \
+                                (DeeObject_TryCalloc)(GC_HEAD_SIZE + size * sizeof(void *)))); \
 } \
 PUBLIC void DCALL \
 DeeGCObject_SlabFree##size(void *__restrict ptr) { \
  ASSERT(ptr); \
  ASSERT_UNTRACKED(ptr); \
- DeeObject_SlabInvoke(DeeObject_SlabFree,GC_HEAD_SIZE + size * sizeof(void *), \
-                     (DeeGC_Head((DeeObject *)ptr)), \
-                     (DeeObject_Free)(DeeGC_Head((DeeObject *)ptr))); \
+ DeeSlab_Invoke(DeeObject_SlabFree,GC_HEAD_SIZE + size * sizeof(void *), \
+               (DeeGC_Head((DeeObject *)ptr)), \
+               (DeeObject_Free)(DeeGC_Head((DeeObject *)ptr))); \
 } \
 /**/
 DEE_ENUMERATE_SLAB_SIZES(DEFINE_GC_SLAB_FUNCTIONS)
@@ -1142,7 +1142,7 @@ PRIVATE DREF GCIter *DCALL
 gcenum_iter(DeeObject *__restrict UNUSED(self)) {
  DREF GCIter *result;
  struct gc_head *first;
- result = DeeObject_FMALLOC(GCIter);
+ result = DeeObject_MALLOC(GCIter);
  if unlikely(!result) goto done;
  GCLOCK_ACQUIRE_READ();
  first = gc_root;

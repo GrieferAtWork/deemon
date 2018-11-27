@@ -288,12 +288,12 @@ struct {
 
 /* Default sizes for slabs (in whole pages) */
 PRIVATE size_t const default_slab_sizes[DEEMON_SLAB_COUNT] = {
-    /* TODO: Tweak these numbers according to statistics. */
-    8,  /* 4  -- 16 / 32 */
-    16, /* 5  -- 20 / 40 */
-    32, /* 6  -- 24 / 48 */
-    24, /* 8  -- 32 / 64 */
-    8,  /* 10 -- 40 / 80 */
+    /* XXX: Tweak these numbers according to statistics. */
+    16,  /* 4  -- 16 / 32 */
+    8,   /* 5  -- 20 / 40 */
+    8,   /* 6  -- 24 / 48 */
+    64,  /* 8  -- 32 / 64 */
+    48,  /* 10 -- 40 / 80 */
 };
 
 /* Collect slab information and write that information to `info'

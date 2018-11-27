@@ -1092,7 +1092,7 @@ again:
      *       because it's reference counter is ZERO (and because
      *       implementors of `tp_free' are aware of its volatile
      *       nature that may only be interpreted as a free-hint).
-     * NOTE: This even applies to the slab allocators used by `DeeObject_FMALLOC'! */
+     * NOTE: This even applies to the slab allocators used by `DeeObject_MALLOC'! */
     self->ob_type = type;
     COMPILER_WRITE_BARRIER();
     (*type->tp_init.tp_dtor)(self);

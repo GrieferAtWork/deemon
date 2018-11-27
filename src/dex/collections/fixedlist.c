@@ -594,7 +594,7 @@ err:
 PRIVATE DREF FixedListIterator *DCALL
 fl_iter(FixedList *__restrict self) {
  DREF FixedListIterator *result;
- result = DeeObject_FMALLOC(DREF FixedListIterator);
+ result = DeeObject_MALLOC(DREF FixedListIterator);
  if unlikely(!result) goto done;
  result->li_list = self;
  result->li_iter = 0;

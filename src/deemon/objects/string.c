@@ -1075,7 +1075,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 PRIVATE DREF DeeObject *DCALL
 string_iter(String *__restrict self) {
  DREF StringIterator *result;
- result = DeeObject_FMALLOC(StringIterator);
+ result = DeeObject_MALLOC(StringIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&StringIterator_Type);
  result->si_string = self;

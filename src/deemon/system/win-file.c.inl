@@ -393,7 +393,7 @@ PUBLIC DREF /*SystemFile*/DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd, /*String*/DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
  SystemFile *result;
- result = DeeObject_FMALLOC(SystemFile);
+ result = DeeObject_MALLOC(SystemFile);
  if unlikely(!result) goto done;
  result->sf_handle    = fd;
  result->sf_ownhandle = inherit_fd ? fd : INVALID_HANDLE_VALUE; /* Inherit. */
@@ -601,7 +601,7 @@ got_file_name:
   DBG_ALIGNMENT_ENABLE();
  }
 #endif
- result = DeeObject_FMALLOC(SystemFile);
+ result = DeeObject_MALLOC(SystemFile);
  if unlikely(!result) goto err_fp;
  DeeLFileObject_Init(result,&DeeFSFile_Type);
  result->sf_handle    = fp;

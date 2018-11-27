@@ -214,7 +214,7 @@ subrange_iter(SubRange *__restrict self) {
  DREF DeeObject *iterator; size_t begin_index;
  iterator = DeeObject_IterSelf(self->sr_seq);
  if unlikely(!iterator) return NULL;
- result = DeeObject_FMALLOC(SubRangeIterator);
+ result = DeeObject_MALLOC(SubRangeIterator);
  if unlikely(!result) goto err_iterator;
  begin_index = self->sr_begin;
  result->sr_size = self->sr_size;
@@ -236,7 +236,7 @@ subrange_iter(SubRange *__restrict self) {
  DeeObject_Init(result,&DeeSubRangeIterator_Type);
  return (DREF DeeObject *)result;
 err_iterator_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
 err_iterator:
  Dee_Decref(iterator);
 /*err:*/
@@ -409,7 +409,7 @@ DeeSeq_GetRange(DeeObject *__restrict self,
  if unlikely(begin >= end)
     return_reference_(Dee_EmptySeq);
  /* Create a sub-range sequence. */
- result = DeeObject_FMALLOC(SubRange);
+ result = DeeObject_MALLOC(SubRange);
  if unlikely(!result) goto done;
  if (DeeObject_InstanceOfExact(self,&DeeSubRange_Type)) {
   SubRange *me = (SubRange *)self;
@@ -436,7 +436,7 @@ DeeSeq_GetRangeN(DeeObject *__restrict self,
  if (!begin)
       return_reference_(self);
  /* Create a sub-range sequence. */
- result = DeeObject_FMALLOC(SubRangeN);
+ result = DeeObject_MALLOC(SubRangeN);
  if unlikely(!result) goto done;
  if (DeeObject_InstanceOfExact(self,&DeeSubRangeN_Type)) {
   SubRangeN *me = (SubRangeN *)self;

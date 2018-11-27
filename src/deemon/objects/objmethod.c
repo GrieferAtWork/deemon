@@ -49,7 +49,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self) {
  DREF DeeObjMethodObject *result;
  ASSERT_OBJECT(self);
- result = DeeObject_FMALLOC(DeeObjMethodObject);
+ result = DeeObject_MALLOC(DeeObjMethodObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeObjMethod_Type);
  result->om_func = func;
@@ -63,7 +63,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self) {
  DREF DeeKwObjMethodObject *result;
  ASSERT_OBJECT(self);
- result = DeeObject_FMALLOC(DeeKwObjMethodObject);
+ result = DeeObject_MALLOC(DeeKwObjMethodObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeKwObjMethod_Type);
  result->om_func = func;
@@ -543,7 +543,7 @@ PRIVATE struct type_cmp dockwdsiter_cmp = {
 PRIVATE DREF DocKwds *DCALL
 dockwdsiter_getseq(DocKwdsIterator *__restrict self) {
  DREF DocKwds *result;
- result = DeeObject_FMALLOC(DREF DocKwds);
+ result = DeeObject_MALLOC(DREF DocKwds);
  if unlikely(!result) goto done;
  result->dk_start = self->dk_start;
  DeeObject_Init(result,&DocKwds_Type);
@@ -614,7 +614,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DocKwdsIterator,dk_start) ==
 PRIVATE DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
  DREF DocKwdsIterator *result;
- result = DeeObject_FMALLOC(DREF DocKwdsIterator);
+ result = DeeObject_MALLOC(DREF DocKwdsIterator);
  if unlikely(!result) goto done;
  ASSERT(self->dk_start);
  ASSERT(self->dk_start[0] == '(');
@@ -694,7 +694,7 @@ doc_decode_kwds(char const *doc) {
  DREF DocKwds *result;
  if (!doc) goto no_kwds;
  if (doc[0] != '(') goto no_kwds;
- result = DeeObject_FMALLOC(DREF DocKwds);
+ result = DeeObject_MALLOC(DREF DocKwds);
  if unlikely(!result) goto done;
  result->dk_start = doc;
  DeeObject_Init(result,&DocKwds_Type);
@@ -823,7 +823,7 @@ DeeClsMethod_New(DeeTypeObject *__restrict type,
                  dobjmethod_t func) {
  DeeClsMethodObject *result;
  ASSERT_OBJECT_TYPE(type,&DeeType_Type);
- result = DeeObject_FMALLOC(DeeClsMethodObject);
+ result = DeeObject_MALLOC(DeeClsMethodObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeClsMethod_Type);
  result->cm_type = type;
@@ -838,7 +838,7 @@ DeeKwClsMethod_New(DeeTypeObject *__restrict type,
                    dkwobjmethod_t func) {
  DeeKwClsMethodObject *result;
  ASSERT_OBJECT_TYPE(type,&DeeType_Type);
- result = DeeObject_FMALLOC(DeeKwClsMethodObject);
+ result = DeeObject_MALLOC(DeeKwClsMethodObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeKwClsMethod_Type);
  result->cm_type = type;
@@ -1192,7 +1192,7 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
                    dsetmethod_t set) {
  DeeClsPropertyObject *result;
  ASSERT_OBJECT_TYPE(type,&DeeType_Type);
- result = DeeObject_FMALLOC(DeeClsPropertyObject);
+ result = DeeObject_MALLOC(DeeClsPropertyObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeClsProperty_Type);
  result->cp_type = type;
@@ -1453,7 +1453,7 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
                  struct type_member const *__restrict desc) {
  DREF DeeClsMemberObject *result;
  ASSERT_OBJECT_TYPE(type,&DeeType_Type);
- result = DeeObject_FMALLOC(DeeClsMemberObject);
+ result = DeeObject_MALLOC(DeeClsMemberObject);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeClsMember_Type);
  result->cm_memb = *desc;

@@ -494,7 +494,7 @@ INTERN DeeTypeObject DeeSeqIterator_Type = {
 
 INTERN DREF DeeObject *DCALL new_empty_sequence_iterator(void) {
  DREF SeqIterator *result;
- result = DeeObject_FMALLOC(SeqIterator);
+ result = DeeObject_MALLOC(SeqIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeSeqIterator_Type);
  /* Default-construct the iterator.
@@ -520,7 +520,7 @@ seq_iterself(DeeObject *__restrict self) {
    if (found == (1|2)) {
     /* Yes, this one's OK! */
     DREF SeqIterator *result;
-    result = DeeObject_FMALLOC(SeqIterator);
+    result = DeeObject_MALLOC(SeqIterator);
     if unlikely(!result) goto err;
     /* Save the getitem operator. */
     result->si_getitem = tp_iter->tp_seq->tp_get;
@@ -544,7 +544,7 @@ seq_iterself(DeeObject *__restrict self) {
     /* Figure out the size of the sequence. */
     result->si_size = (*tp_iter->tp_seq->tp_size)(self);
     if unlikely(!result->si_size) {
-     DeeObject_FFREE(result);
+     DeeObject_FREE(result);
      goto err;
     }
     /* Assign the initial iterator index. */
@@ -4388,7 +4388,7 @@ INTDEF DeeTypeObject IteratorFuture_Type;
 INTERN DREF DeeObject *DCALL
 IteratorFuture_For(DeeObject *__restrict self) {
  DREF IteratorFuture *result;
- result = DeeObject_FMALLOC(IteratorFuture);
+ result = DeeObject_MALLOC(IteratorFuture);
  if unlikely(!result) goto done;
  result->if_iter = self;
  Dee_Incref(self);
@@ -4508,7 +4508,7 @@ INTDEF DeeTypeObject IteratorPending_Type;
 INTERN DREF DeeObject *DCALL
 IteratorPending_For(DeeObject *__restrict self) {
  DREF IteratorPending *result;
- result = DeeObject_FMALLOC(IteratorPending);
+ result = DeeObject_MALLOC(IteratorPending);
  if unlikely(!result) goto done;
  result->ip_iter = self;
  Dee_Incref(self);

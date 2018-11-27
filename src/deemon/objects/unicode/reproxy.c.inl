@@ -603,7 +603,7 @@ refa_bool(ReSequence *__restrict self) {
 PRIVATE DREF ReSequenceIterator *DCALL
 refa_iter(ReSequence *__restrict self) {
  DREF ReSequenceIterator *result;
- result = DeeObject_FMALLOC(ReSequenceIterator);
+ result = DeeObject_MALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -760,7 +760,7 @@ INTERN DeeTypeObject REFindAll_Type = {
 PRIVATE DREF ReSequenceIterator *DCALL
 rela_iter(ReSequence *__restrict self) {
  DREF ReSequenceIterator *result;
- result = DeeObject_FMALLOC(ReSequenceIterator);
+ result = DeeObject_MALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -863,7 +863,7 @@ resp_bool(ReSequence *__restrict self) {
 PRIVATE DREF ReSequenceIterator *DCALL
 resp_iter(ReSequence *__restrict self) {
  DREF ReSequenceIterator *result;
- result = DeeObject_FMALLOC(ReSequenceIterator);
+ result = DeeObject_MALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -997,7 +997,7 @@ string_re_findall(String *__restrict self,
                   String *__restrict pattern,
                   struct re_args const *__restrict args) {
  DREF ReSequence *result;
- result = DeeObject_FMALLOC(ReSequence);
+ result = DeeObject_MALLOC(ReSequence);
  if unlikely(!result) goto done;
  result->re_data    = self;
  result->re_pattern = pattern;
@@ -1014,7 +1014,7 @@ string_re_locateall(String *__restrict self,
                     String *__restrict pattern,
                     struct re_args const *__restrict args) {
  DREF ReSequence *result;
- result = DeeObject_FMALLOC(ReSequence);
+ result = DeeObject_MALLOC(ReSequence);
  if unlikely(!result) goto done;
  result->re_data    = self;
  result->re_pattern = pattern;
@@ -1031,7 +1031,7 @@ string_re_split(String *__restrict self,
                 String *__restrict pattern,
                 struct re_args const *__restrict args) {
  DREF ReSequence *result;
- result = DeeObject_FMALLOC(ReSequence);
+ result = DeeObject_MALLOC(ReSequence);
  if unlikely(!result) goto done;
  result->re_data    = self;
  result->re_pattern = pattern;

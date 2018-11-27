@@ -481,7 +481,7 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
              DeeString_STR(name),
              DeeString_SIZE(name)*sizeof(char)) != 0) continue;
   /* Found it! (return an l-value to the field in question) */
-  result = DeeObject_FMALLOC(struct lvalue_object);
+  result = DeeObject_MALLOC(struct lvalue_object);
   if unlikely(!result) goto err;
   DeeObject_Init(result,(DeeTypeObject *)field->sf_type);
   result->l_ptr.uint = (uintptr_t)self + field->sf_offset;

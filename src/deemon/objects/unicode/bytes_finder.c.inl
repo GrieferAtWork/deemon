@@ -380,28 +380,28 @@ bf_visit(BytesFind *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF BytesFindIterator *DCALL
 bf_iter(BytesFind *__restrict self) {
  DREF BytesFindIterator *result;
- result = DeeObject_FMALLOC(BytesFindIterator);
+ result = DeeObject_MALLOC(BytesFindIterator);
  if unlikely(!result) goto done;
  if (bfi_setup(result,self)) goto err_r;
  DeeObject_Init(result,&BytesFindIterator_Type);
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
 PRIVATE DREF BytesFindIterator *DCALL
 bcf_iter(BytesFind *__restrict self) {
  DREF BytesFindIterator *result;
- result = DeeObject_FMALLOC(BytesFindIterator);
+ result = DeeObject_MALLOC(BytesFindIterator);
  if unlikely(!result) goto done;
  if (bfi_setup(result,self)) goto err_r;
  DeeObject_Init(result,&BytesCaseFindIterator_Type);
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -527,7 +527,7 @@ DeeBytes_FindAll(Bytes *__restrict self,
                  DeeObject *__restrict other,
                  size_t start, size_t end) {
  DREF BytesFind *result;
- result = DeeObject_FMALLOC(BytesFind);
+ result = DeeObject_MALLOC(BytesFind);
  if unlikely(!result) goto done;
  if (get_needle(&result->bf_needle,other))
      goto err_r;
@@ -545,7 +545,7 @@ DeeBytes_FindAll(Bytes *__restrict self,
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -554,7 +554,7 @@ DeeBytes_CaseFindAll(Bytes *__restrict self,
                      DeeObject *__restrict other,
                      size_t start, size_t end) {
  DREF BytesFind *result;
- result = DeeObject_FMALLOC(BytesFind);
+ result = DeeObject_MALLOC(BytesFind);
  if unlikely(!result) goto done;
  if (get_needle(&result->bf_needle,other))
      goto err_r;
@@ -572,7 +572,7 @@ DeeBytes_CaseFindAll(Bytes *__restrict self,
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 

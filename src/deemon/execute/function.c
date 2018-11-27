@@ -804,14 +804,14 @@ err:
 PRIVATE DREF YFIterator *DCALL
 yf_iter_self(YFunction *__restrict self) {
  DREF YFIterator *result;
- result = DeeGCObject_FMALLOC(YFIterator);
+ result = DeeGCObject_MALLOC(YFIterator);
  if unlikely(!result) goto err;
  if unlikely(yfi_init(result,self)) goto err_r;
  DeeObject_Init(result,&DeeYieldFunctionIterator_Type);
  DeeGC_Track((DeeObject *)result);
  return result;
 err_r:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
 err:
  return NULL;
 }

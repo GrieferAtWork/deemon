@@ -165,7 +165,7 @@ coti_copy(ClassOperatorTableIterator *__restrict self,
 PRIVATE DREF ClassOperatorTable *DCALL
 coti_getseq(ClassOperatorTableIterator *__restrict self) {
  DREF ClassOperatorTable *result;
- result = DeeObject_FMALLOC(ClassOperatorTable);
+ result = DeeObject_MALLOC(ClassOperatorTable);
  if unlikely(!result) goto done;
  result->co_desc = self->co_desc;
  Dee_Incref(self->co_desc);
@@ -274,7 +274,7 @@ cot_bool(ClassOperatorTable *__restrict self) {
 PRIVATE DREF ClassOperatorTableIterator *DCALL
 cot_iter(ClassOperatorTable *__restrict self) {
  DREF ClassOperatorTableIterator *result;
- result = DeeObject_FMALLOC(ClassOperatorTableIterator);
+ result = DeeObject_MALLOC(ClassOperatorTableIterator);
  if unlikely(!result) goto done;
  result->co_desc = self->co_desc;
  result->co_iter = self->co_desc->cd_clsop_list;
@@ -453,7 +453,7 @@ PRIVATE DREF ClassAttribute *DCALL
 cattr_new(ClassDescriptor *__restrict desc,
           struct class_attribute *__restrict attr) {
  DREF ClassAttribute *result;
- result = DeeObject_FMALLOC(DREF ClassAttribute);
+ result = DeeObject_MALLOC(DREF ClassAttribute);
  if unlikely(!result) goto done;
  result->ca_desc = desc;
  result->ca_attr = attr;
@@ -548,7 +548,7 @@ cati_next_value(ClassAttributeTableIterator *__restrict self) {
 PRIVATE DREF ClassAttributeTableIterator *DCALL
 cat_iter(ClassAttributeTable *__restrict self) {
  DREF ClassAttributeTableIterator *result;
- result = DeeObject_FMALLOC(ClassAttributeTableIterator);
+ result = DeeObject_MALLOC(ClassAttributeTableIterator);
  if unlikely(!result) goto done;
  result->ca_desc = self->ca_desc;
  result->ca_iter = self->ca_start;
@@ -628,7 +628,7 @@ cat_getitem(ClassAttributeTable *__restrict self,
 PRIVATE DREF ClassAttributeTable *DCALL
 cati_getseq(ClassAttributeTableIterator *__restrict self) {
  DREF ClassAttributeTable *result;
- result = DeeObject_FMALLOC(ClassAttributeTable);
+ result = DeeObject_MALLOC(ClassAttributeTable);
  if unlikely(!result) goto done;
  result->ca_desc = self->ca_desc;
  if (self->ca_end == self->ca_desc->cd_iattr_list + self->ca_desc->cd_iattr_mask + 1) {
@@ -1103,7 +1103,7 @@ cd_ismoveany(ClassDescriptor *__restrict self) {
 PRIVATE DREF ClassOperatorTable *DCALL
 cd_operators(ClassDescriptor *__restrict self) {
  DREF ClassOperatorTable *result;
- result = DeeObject_FMALLOC(ClassOperatorTable);
+ result = DeeObject_MALLOC(ClassOperatorTable);
  if unlikely(!result) goto done;
  result->co_desc = self;
  Dee_Incref(self);
@@ -1114,7 +1114,7 @@ done:
 PRIVATE DREF ClassAttributeTable *DCALL
 cd_iattr(ClassDescriptor *__restrict self) {
  DREF ClassAttributeTable *result;
- result = DeeObject_FMALLOC(ClassAttributeTable);
+ result = DeeObject_MALLOC(ClassAttributeTable);
  if unlikely(!result) goto done;
  result->ca_desc  = self;
  result->ca_start = self->cd_iattr_list;
@@ -1127,7 +1127,7 @@ done:
 PRIVATE DREF ClassAttributeTable *DCALL
 cd_cattr(ClassDescriptor *__restrict self) {
  DREF ClassAttributeTable *result;
- result = DeeObject_FMALLOC(ClassAttributeTable);
+ result = DeeObject_MALLOC(ClassAttributeTable);
  if unlikely(!result) goto done;
  result->ca_desc  = self;
  result->ca_start = self->cd_cattr_list;
@@ -1559,7 +1559,7 @@ type_get_ctable(DeeTypeObject *__restrict self) {
  if (!DeeType_IsClass(self))
      return_empty_seq;
  desc = DeeClass_DESC(self);
- result = DeeObject_FMALLOC(DREF ObjectTable);
+ result = DeeObject_MALLOC(DREF ObjectTable);
  if unlikely(!result) goto done;
  result->ot_owner = (DREF DeeObject *)self;
  result->ot_desc  = class_desc_as_instance(desc);
@@ -1584,7 +1584,7 @@ instance_get_itable(DeeObject *__restrict self) {
  if (!DeeType_IsClass(type))
      return_empty_seq;
  desc = DeeClass_DESC(type);
- result = DeeObject_FMALLOC(DREF ObjectTable);
+ result = DeeObject_MALLOC(DREF ObjectTable);
  if unlikely(!result) goto done;
  result->ot_owner = (DREF DeeObject *)self;
  result->ot_desc  = DeeInstance_DESC(desc,real_self);
@@ -1864,7 +1864,7 @@ DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
  ASSERT_OBJECT_TYPE(class_type,&DeeType_Type);
  ASSERT(DeeType_IsClass(class_type));
  ASSERT(attribute);
- result = DeeObject_FMALLOC(DeeInstanceMemberObject);
+ result = DeeObject_MALLOC(DeeInstanceMemberObject);
  if unlikely(!result) goto done;
  result->im_type      = class_type;
  result->im_attribute = attribute;
@@ -2268,7 +2268,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
   if unlikely(!member_value) goto unbound;
   return member_value;
  }
- result = DeeObject_FMALLOC(DeePropertyObject);
+ result = DeeObject_MALLOC(DeePropertyObject);
  if unlikely(!result) goto err;
  result->p_del = NULL;
  result->p_set = NULL;
@@ -2288,7 +2288,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
  /* Make sure that at least a single property callback has been assigned.
   * If not, raise an unbound-attr error. */
  if (!result->p_get && !result->p_del && !result->p_set) {
-  DeeObject_FFREE(result);
+  DeeObject_FREE(result);
   goto unbound;
  }
  /* Finalize initialization of the property wrapper and return it. */

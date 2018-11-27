@@ -272,7 +272,7 @@ INTERN DREF DeeObject *DCALL
 DeeDex_New(DeeObject *__restrict name) {
  DREF DeeDexObject *result;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- result = DeeGCObject_FCALLOC(DeeDexObject);
+ result = DeeGCObject_CALLOC(DeeDexObject);
  if unlikely(!result) return NULL;
  DeeObject_Init(&result->d_module,&DeeDex_Type);
  result->d_module.mo_name    = (DeeStringObject *)name;

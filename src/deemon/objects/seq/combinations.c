@@ -223,7 +223,7 @@ PRIVATE DeeTypeObject CombinationsIterator_Type = {
 PRIVATE DREF CombinationsIterator *DCALL
 com_iter(Combinations *__restrict self) {
  DREF CombinationsIterator *result; size_t i,comlen;
- result = DeeObject_FMALLOC(CombinationsIterator);
+ result = DeeObject_MALLOC(CombinationsIterator);
  if unlikely(!result) goto done;
  result->ci_combi = self;
  rwlock_init(&result->ci_lock);
@@ -238,7 +238,7 @@ com_iter(Combinations *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -452,7 +452,7 @@ PRIVATE DeeTypeObject RepeatCombinationsIterator_Type = {
 PRIVATE DREF CombinationsIterator *DCALL
 rcom_iter(Combinations *__restrict self) {
  DREF CombinationsIterator *result;
- result = DeeObject_FMALLOC(CombinationsIterator);
+ result = DeeObject_MALLOC(CombinationsIterator);
  if unlikely(!result) goto done;
  result->ci_combi = self;
  rwlock_init(&result->ci_lock);
@@ -464,7 +464,7 @@ rcom_iter(Combinations *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -637,7 +637,7 @@ PRIVATE DeeTypeObject PermutationsIterator_Type = {
 PRIVATE DREF CombinationsIterator *DCALL
 pmut_iter(Combinations *__restrict self) {
  DREF CombinationsIterator *result; size_t i,comlen;
- result = DeeObject_FMALLOC(CombinationsIterator);
+ result = DeeObject_MALLOC(CombinationsIterator);
  if unlikely(!result) goto done;
  result->ci_combi = self;
  rwlock_init(&result->ci_lock);
@@ -652,7 +652,7 @@ pmut_iter(Combinations *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -715,13 +715,13 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
  DREF Combinations *result;
  DeeTypeObject *tp_iter;
- result = DeeObject_FMALLOC(Combinations);
+ result = DeeObject_MALLOC(Combinations);
  if unlikely(!result) goto done;
  /* Quickly check if we can use the fast-sequence interface. */
  tp_iter = Dee_TYPE(self);
  if (tp_iter == &DeeTuple_Type) {
   if (r >= DeeTuple_SIZE(self)) {
-   DeeObject_FFREE(result);
+   DeeObject_FREE(result);
    if (r == DeeTuple_SIZE(self))
        return DeeTuple_Pack(1,self);
    return_empty_seq;
@@ -834,7 +834,7 @@ err_elem_v:
     for (i = 0; i < elem_c; ++i)
         Dee_Decref(elem_v[i]);
     Dee_Free(elem_v);
-    DeeObject_FFREE(result);
+    DeeObject_FREE(result);
     if (r == elem_c)
         return DeeTuple_Pack(1,self);
     return_empty_seq;
@@ -856,7 +856,7 @@ fill_in_result:
  if (r >= result->c_seqlen) {
   size_t seqlen = result->c_seqlen;
   ASSERT(!result->c_elem);
-  DeeObject_FFREE(result);
+  DeeObject_FREE(result);
   if (r == seqlen)
       return DeeTuple_Pack(1,self);
   return_empty_seq;
@@ -869,7 +869,7 @@ fill_in_result_2:
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -879,13 +879,13 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
  DREF Combinations *result;
  DeeTypeObject *tp_iter;
  if (!r) return DeeTuple_Pack(1,Dee_EmptySeq);
- result = DeeObject_FMALLOC(Combinations);
+ result = DeeObject_MALLOC(Combinations);
  if unlikely(!result) goto done;
  /* Quickly check if we can use the fast-sequence interface. */
  tp_iter = Dee_TYPE(self);
  if (tp_iter == &DeeTuple_Type) {
   if (!DeeTuple_SIZE(self)) {
-   DeeObject_FFREE(result);
+   DeeObject_FREE(result);
    return_empty_seq;
   }
   result->c_getitem = NULL;
@@ -993,7 +993,7 @@ err_elem_v:
    Dee_Decref(iterator);
    if (!elem_c) {
     Dee_Free(elem_v);
-    DeeObject_FFREE(result);
+    DeeObject_FREE(result);
     return_empty_seq;
    }
    if likely(elem_a > elem_c) {
@@ -1012,7 +1012,7 @@ err_elem_v:
 fill_in_result:
  if (!result->c_seqlen) {
   ASSERT(!result->c_elem);
-  DeeObject_FFREE(result);
+  DeeObject_FREE(result);
   return_empty_seq;
  }
 fill_in_result_2:
@@ -1023,7 +1023,7 @@ fill_in_result_2:
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -1032,13 +1032,13 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Permutations(DeeObject *__restrict self) {
  DREF Combinations *result;
  DeeTypeObject *tp_iter;
- result = DeeObject_FMALLOC(Combinations);
+ result = DeeObject_MALLOC(Combinations);
  if unlikely(!result) goto done;
  /* Quickly check if we can use the fast-sequence interface. */
  tp_iter = Dee_TYPE(self);
  if (tp_iter == &DeeTuple_Type) {
   if (!DeeTuple_SIZE(self)) {
-   DeeObject_FFREE(result);
+   DeeObject_FREE(result);
    return DeeTuple_Pack(1,Dee_EmptySeq);
   }
   result->c_getitem = NULL;
@@ -1146,7 +1146,7 @@ err_elem_v:
    Dee_Decref(iterator);
    if (!elem_c) {
     Dee_Free(elem_v);
-    DeeObject_FFREE(result);
+    DeeObject_FREE(result);
     return DeeTuple_Pack(1,Dee_EmptySeq);
    }
    if likely(elem_a > elem_c) {
@@ -1165,7 +1165,7 @@ err_elem_v:
 fill_in_result:
  if (!result->c_seqlen) {
   ASSERT(!result->c_elem);
-  DeeObject_FFREE(result);
+  DeeObject_FREE(result);
   return DeeTuple_Pack(1,Dee_EmptySeq);
  }
 fill_in_result_2:
@@ -1176,7 +1176,7 @@ fill_in_result_2:
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 

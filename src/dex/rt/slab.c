@@ -126,7 +126,7 @@ ss_nsi_getitem(SlabStatObject *__restrict self, size_t index) {
                   index,self->st_stat.st_slabcount,Dee_TYPE(self));
   return NULL;
  }
- result = DeeObject_FMALLOC(SlabInfoObject);
+ result = DeeObject_MALLOC(SlabInfoObject);
  if unlikely(!result) goto done;
  result->si_info = &self->st_stat.st_slabs[index];
  result->si_stat = self;
@@ -138,7 +138,7 @@ done:
 PRIVATE DREF SlabStatIteratorObject *DCALL
 ss_iter(SlabStatObject *__restrict self) {
  DREF SlabStatIteratorObject *result;
- result = DeeObject_FMALLOC(SlabStatIteratorObject);
+ result = DeeObject_MALLOC(SlabStatIteratorObject);
  if unlikely(!result) goto done;
  result->sti_stat = self;
  result->sti_index = 0;
@@ -322,7 +322,7 @@ ssi_next(SlabStatIteratorObject *__restrict self) {
   self->sti_index index + 1;
 #endif /* CONFIG_NO_THREADS */
  }
- result = DeeObject_FMALLOC(SlabInfoObject);
+ result = DeeObject_MALLOC(SlabInfoObject);
  if unlikely(!result) goto done;
  result->si_stat = self->sti_stat;
  result->si_info = &result->si_stat->st_stat.st_slabs[index];

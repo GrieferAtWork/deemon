@@ -1263,7 +1263,7 @@ INTDEF DeeTypeObject ProcessThreads_Type;
 
 PRIVATE DREF ProcessThreads *DCALL pt_new(DWORD pid) {
  DREF ProcessThreads *result;
- result = DeeObject_FMALLOC(ProcessThreads);
+ result = DeeObject_MALLOC(ProcessThreads);
  if unlikely(!result) goto done;
  result->pt_id = pid;
  DeeObject_Init(result,&ProcessThreads_Type);
@@ -1274,7 +1274,7 @@ done:
 PRIVATE DREF ProcessThreadsIterator *DCALL
 pt_iter(ProcessThreads *__restrict self) {
  DREF ProcessThreadsIterator *result;
- result = DeeObject_FMALLOC(ProcessThreadsIterator);
+ result = DeeObject_MALLOC(ProcessThreadsIterator);
  if unlikely(!result) goto done; 
  DBG_ALIGNMENT_DISABLE();
  result->pti_handle = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD,self->pt_id);
@@ -1301,7 +1301,7 @@ pt_iter(ProcessThreads *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 

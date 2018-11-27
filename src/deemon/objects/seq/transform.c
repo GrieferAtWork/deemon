@@ -220,7 +220,7 @@ trans_bool(Transformation *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 trans_iter(Transformation *__restrict self) {
  DREF TransformationIterator *result;
- result = DeeObject_FMALLOC(TransformationIterator);
+ result = DeeObject_MALLOC(TransformationIterator);
  if unlikely(!result) goto err;
  /* Create the underlying iterator. */
  result->ti_iter = DeeObject_IterSelf(self->t_seq);
@@ -231,7 +231,7 @@ trans_iter(Transformation *__restrict self) {
  DeeObject_Init(result,&DeeTransformationIterator_Type);
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
 err:
  return NULL;
 }
@@ -402,7 +402,7 @@ DeeSeq_Transform(DeeObject *__restrict self,
                  DeeObject *__restrict transformation) {
  DREF Transformation *result;
  /* Create a new transformation sequence. */
- result = DeeObject_FMALLOC(Transformation);
+ result = DeeObject_MALLOC(Transformation);
  if unlikely(!result) goto done;
  result->t_seq = self;
  result->t_fun = transformation;

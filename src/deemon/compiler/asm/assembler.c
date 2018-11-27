@@ -1825,7 +1825,7 @@ INTERN DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
               tint_t addend, uint16_t mode) {
  DREF DeeRelIntObject *result;
- result = DeeObject_FMALLOC(DeeRelIntObject);
+ result = DeeObject_MALLOC(DeeRelIntObject);
  if unlikely(!result) goto done;
  ++sym->as_used;
  result->ri_sym  = sym;

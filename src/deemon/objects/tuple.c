@@ -1051,7 +1051,7 @@ tuple_fini(Tuple *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 tuple_iter(Tuple *__restrict self) {
  DREF TupleIterator *result;
- result = DeeObject_FMALLOC(TupleIterator);
+ result = DeeObject_MALLOC(TupleIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeTupleIterator_Type);
  result->ti_index = 0;

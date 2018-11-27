@@ -488,28 +488,28 @@ sf_fini(StringFind *__restrict self) {
 PRIVATE DREF StringFindIterator *DCALL
 sf_iter(StringFind *__restrict self) {
  DREF StringFindIterator *result;
- result = DeeObject_FMALLOC(StringFindIterator);
+ result = DeeObject_MALLOC(StringFindIterator);
  if unlikely(!result) goto done;
  if (sfi_setup(result,self)) goto err_r;
  DeeObject_Init(result,&StringFindIterator_Type);
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
 PRIVATE DREF StringFindIterator *DCALL
 scf_iter(StringFind *__restrict self) {
  DREF StringFindIterator *result;
- result = DeeObject_FMALLOC(StringFindIterator);
+ result = DeeObject_MALLOC(StringFindIterator);
  if unlikely(!result) goto done;
  if (sfi_setup(result,self)) goto err_r;
  DeeObject_Init(result,&StringCaseFindIterator_Type);
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -635,7 +635,7 @@ DeeString_FindAll(String *__restrict self,
                   String *__restrict other,
                   size_t start, size_t end) {
  DREF StringFind *result;
- result = DeeObject_FMALLOC(StringFind);
+ result = DeeObject_MALLOC(StringFind);
  if unlikely(!result) goto done;
  result->sf_str    = self;
  result->sf_needle = other;
@@ -653,7 +653,7 @@ DeeString_CaseFindAll(String *__restrict self,
                       String *__restrict other,
                       size_t start, size_t end) {
  DREF StringFind *result;
- result = DeeObject_FMALLOC(StringFind);
+ result = DeeObject_MALLOC(StringFind);
  if unlikely(!result) goto done;
  result->sf_str    = self;
  result->sf_needle = other;

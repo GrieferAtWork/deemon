@@ -54,7 +54,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items) {
  DREF Set *result;
  /* Allocate the set object. */
- result = DeeGCObject_FMALLOC(Set);
+ result = DeeGCObject_MALLOC(Set);
  if unlikely(!result) goto done;
  if unlikely(!num_items) {
   /* Special case: allocate an empty set. */
@@ -102,7 +102,7 @@ done:
  return (DREF DeeObject *)result;
 err_r:
  Dee_Free(result->s_elem);
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 
@@ -187,7 +187,7 @@ err:
 PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromIterator(DeeObject *__restrict self) {
  DREF Set *result;
- result = DeeGCObject_FMALLOC(Set);
+ result = DeeGCObject_MALLOC(Set);
  if unlikely(!result) goto done;
  if unlikely(set_init_iterator(result,self)) goto err;
  DeeObject_Init(result,&DeeHashSet_Type);
@@ -195,14 +195,14 @@ DeeHashSet_FromIterator(DeeObject *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 
 PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromSequence(DeeObject *__restrict self) {
  DREF Set *result;
- result = DeeGCObject_FMALLOC(Set);
+ result = DeeGCObject_MALLOC(Set);
  if unlikely(!result) goto done;
  if unlikely(set_init_sequence(result,self)) goto err;
  DeeObject_Init(result,&DeeHashSet_Type);
@@ -210,7 +210,7 @@ DeeHashSet_FromSequence(DeeObject *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err:
- DeeGCObject_FFREE(result);
+ DeeGCObject_FREE(result);
  return NULL;
 }
 
@@ -1200,7 +1200,7 @@ INTERN DeeTypeObject SetIterator_Type = {
 PRIVATE DREF SetIterator *DCALL
 set_iter(Set *__restrict self) {
  DREF SetIterator *result;
- result = DeeObject_FMALLOC(SetIterator);
+ result = DeeObject_MALLOC(SetIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&SetIterator_Type);
  result->si_set = self;

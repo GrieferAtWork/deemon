@@ -18,8 +18,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "slab.c.inl"
-#define SIZE         4
-#define NEXT_LARGER  5
+#define SIZE         10
+//#define NEXT_LARGER  5
 #endif
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -255,7 +255,7 @@ FUNC(DeeSlab_ResetStatSlab)(void) {
 
 
 LOCAL WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_DoSlabAlloc))(void) {
+(DCALL FUNC(DeeSlab_DoAlloc))(void) {
  FUNC(SlabPage) *page;
 again:
  page = ATOMIC_READ(FUNC(slab).s_free);
@@ -323,16 +323,18 @@ again:
  FUNC(slab).s_free = page;
  INC_MAXPAIR(FUNC(slab).s_num_freepages,
              FUNC(slab).s_max_freepages);
+ rwlock_endwrite(&FUNC(slab).s_lock);
+ INC_MAXPAIR(FUNC(slab).s_num_alloc,
+             FUNC(slab).s_max_alloc);
  ADD_MAXPAIR(FUNC(slab).s_num_free,
              FUNC(slab).s_max_free,
              SLAB_PAGECOUNT - 1);
- rwlock_endwrite(&FUNC(slab).s_lock);
 #endif
  return &page->sp_items[0];
 }
 
 FORCELOCAL void
-(DCALL FUNC(DeeObject_DoSlabFree))(void *__restrict ptr) {
+(DCALL FUNC(DeeSlab_DoFree))(void *__restrict ptr) {
 #if 0
  (void)ptr;
 #else
@@ -387,7 +389,7 @@ FORCELOCAL void
 #ifdef NEXT_LARGER
  else {
   /* Page is actually apart of a larger slab! */
-  PP_CAT2(DeeObject_DoSlabFree,NEXT_LARGER)(ptr);
+  PP_CAT2(DeeSlab_DoFree,NEXT_LARGER)(ptr);
  }
 #endif
 #endif
@@ -396,120 +398,126 @@ FORCELOCAL void
 
 #ifdef NDEBUG
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabMalloc))(void) {
+(DCALL FUNC(DeeSlab_Malloc))(void) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (Dee_Malloc)ITEMSIZE;
  return result;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabMalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (DeeDbg_Malloc)(ITEMSIZE,file,line);
  return result;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabTryMalloc))(void) {
+(DCALL FUNC(DeeSlab_TryMalloc))(void) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (Dee_TryMalloc)ITEMSIZE;
  return result;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabTryMalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (DeeDbg_TryMalloc)(ITEMSIZE,file,line);
  return result;
 }
 #else
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabMalloc))(void) {
+(DCALL FUNC(DeeSlab_Malloc))(void) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (Dee_Malloc)ITEMSIZE;
  else INIT_DEBUG(result);
  return result;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabMalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (DeeDbg_Malloc)(ITEMSIZE,file,line);
  else INIT_DEBUG(result);
  return result;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabTryMalloc))(void) {
+(DCALL FUNC(DeeSlab_TryMalloc))(void) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (Dee_TryMalloc)ITEMSIZE;
  else INIT_DEBUG(result);
  return result;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabTryMalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  if unlikely(!result)
     result = (DeeDbg_TryMalloc)(ITEMSIZE,file,line);
  else INIT_DEBUG(result);
  return result;
 }
 #endif
+#undef DeeSlab_Calloc
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabCalloc))(void) {
+(DCALL FUNC(DeeSlab_Calloc))(void) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  return likely(result)
       ? memset(result,0,ITEMSIZE)
       : (Dee_Calloc)ITEMSIZE;
 }
+#undef DeeSlab_TryCalloc
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabTryCalloc))(void) {
+(DCALL FUNC(DeeSlab_TryCalloc))(void) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  return likely(result)
       ? memset(result,0,ITEMSIZE)
       : (Dee_TryCalloc)ITEMSIZE;
 }
+#undef DeeDbgSlab_Calloc
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabCalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_Calloc))(char const *file, int line) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  return likely(result)
       ? memset(result,0,ITEMSIZE)
       : (DeeDbg_Calloc)(ITEMSIZE,file,line);
 }
+#undef DeeDbgSlab_TryCalloc
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabTryCalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *file, int line) {
  void *result;
- result = FUNC(DeeObject_DoSlabAlloc)();
+ result = FUNC(DeeSlab_DoAlloc)();
  return likely(result)
       ? memset(result,0,ITEMSIZE)
       : (DeeDbg_TryCalloc)(ITEMSIZE,file,line);
 }
+#undef DeeSlab_Free
 PUBLIC void
-(DCALL FUNC(DeeObject_SlabFree))(void *__restrict ptr) {
+(DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
  if (IS_SLAB_POINTER(ptr))
-     FUNC(DeeObject_DoSlabFree)(ptr);
+     FUNC(DeeSlab_DoFree)(ptr);
  else {
   (Dee_Free)(ptr);
  }
 }
+#undef DeeDbgSlab_Free
 PUBLIC void
-(DCALL FUNC(DeeDbgObject_SlabFree))(void *__restrict ptr,
+(DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr,
                                     char const *file, int line) {
  if (IS_SLAB_POINTER(ptr))
-     FUNC(DeeObject_DoSlabFree)(ptr);
+     FUNC(DeeSlab_DoFree)(ptr);
  else {
   (DeeDbg_Free)(ptr,file,line);
  }
@@ -532,45 +540,45 @@ PUBLIC void
 #else /* !CONFIG_NO_OBJECT_SLABS */
 #define MY_SLAB_IS_DISABLED 1
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabMalloc))(void) {
+(DCALL FUNC(DeeSlab_Malloc))(void) {
  return (Dee_Malloc)ITEMSIZE;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabCalloc))(void) {
+(DCALL FUNC(DeeSlab_Calloc))(void) {
  return (Dee_Calloc)ITEMSIZE;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabTryMalloc))(void) {
+(DCALL FUNC(DeeSlab_TryMalloc))(void) {
  return (Dee_TryMalloc)ITEMSIZE;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeObject_SlabTryCalloc))(void) {
+(DCALL FUNC(DeeSlab_TryCalloc))(void) {
  return (Dee_TryCalloc)ITEMSIZE;
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabMalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
  return (DeeDbg_Malloc)(ITEMSIZE,file,line);
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabCalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_Calloc))(char const *file, int line) {
  return (DeeDbg_Calloc)(ITEMSIZE,file,line);
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabTryMalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
  return (DeeDbg_TryMalloc)(ITEMSIZE,file,line);
 }
 PUBLIC WUNUSED ATTR_MALLOC void *
-(DCALL FUNC(DeeDbgObject_SlabTryCalloc))(char const *file, int line) {
+(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *file, int line) {
  return (DeeDbg_TryCalloc)(ITEMSIZE,file,line);
 }
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeObject_SlabFree),4),
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeSlab_Free),4),
                     ASSEMBLY_NAME(Dee_Free,4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgObject_SlabFree),12),
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12),
                     ASSEMBLY_NAME(DeeDbg_Free,12));
 #else /* !__NO_DEFINE_ALIAS */
-PUBLIC void (DCALL FUNC(DeeObject_SlabFree))(void *__restrict ptr) { (Dee_Free)(ptr); }
-PUBLIC void (DCALL FUNC(DeeDbgObject_SlabFree))(void *__restrict ptr, char const *file, int line) { (DeeDbg_Free)(ptr,file,line); }
+PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) { (Dee_Free)(ptr); }
+PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file, int line) { (DeeDbg_Free)(ptr,file,line); }
 #endif /* __NO_DEFINE_ALIAS */
 #endif /* CONFIG_NO_OBJECT_SLABS */
 
@@ -579,12 +587,12 @@ PUBLIC void (DCALL FUNC(DeeDbgObject_SlabFree))(void *__restrict ptr, char const
 #ifndef MY_SLAB_IS_DISABLED
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free,4),
-                    ASSEMBLY_NAME(FUNC(DeeObject_SlabFree),4));
+                    ASSEMBLY_NAME(FUNC(DeeSlab_Free),4));
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
-                    ASSEMBLY_NAME(FUNC(DeeDbgObject_SlabFree),12));
+                    ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12));
 #else
-PUBLIC void (DCALL DeeObject_Free)(void *ptr) { (FUNC(DeeObject_SlabFree))(ptr); }
-PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) { (FUNC(DeeDbgObject_SlabFree))(ptr,file,line); }
+PUBLIC void (DCALL DeeObject_Free)(void *ptr) { (FUNC(DeeSlab_Free))(ptr); }
+PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) { (FUNC(DeeDbgSlab_Free))(ptr,file,line); }
 #endif
 #else /* !MY_SLAB_IS_DISABLED */
 #ifndef __NO_DEFINE_ALIAS

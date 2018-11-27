@@ -366,7 +366,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 INTERN DREF DeeObject *DCALL
 dict_iter(DeeDictObject *__restrict self) {
  DREF DictIterator *result;
- result = DeeObject_FMALLOC(DictIterator);
+ result = DeeObject_MALLOC(DictIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DictIterator_Type);
  result->di_dict = self;
@@ -477,7 +477,7 @@ dictproxyiterator_ctor(DictProxyIterator *__restrict self) {
                                                                                  &DeeDictValues_Type);
  self->dpi_base.di_dict = (DeeDictObject *)DeeDict_New();
  if unlikely(!self->dpi_base.di_dict) goto err;
- self->dpi_proxy = DeeObject_FMALLOC(DictProxy);
+ self->dpi_proxy = DeeObject_MALLOC(DictProxy);
  if unlikely(!self->dpi_proxy) goto err_dict;
  DeeObject_Init(self->dpi_proxy,proxy_type);
  self->dpi_proxy->dp_dict = self->dpi_base.di_dict;
@@ -569,7 +569,7 @@ INTERN DREF DeeObject *DCALL
 dict_newproxy_iterator(DictProxy *__restrict self,
                        DeeTypeObject *__restrict proxy_iterator_type) {
  DREF DictProxyIterator *result;
- result = DeeObject_FMALLOC(DictProxyIterator);
+ result = DeeObject_MALLOC(DictProxyIterator);
  if unlikely(!result) goto done;
  DeeObject_Init((DeeObject *)result,proxy_iterator_type);
  result->dpi_base.di_dict = self->dp_dict;
@@ -591,7 +591,7 @@ dict_newproxy(DeeDictObject *__restrict self,
               DeeTypeObject *__restrict proxy_type) {
  DREF DictProxy *result;
  ASSERT_OBJECT_TYPE(self,&DeeDict_Type);
- result = DeeObject_FMALLOC(DictProxy);
+ result = DeeObject_MALLOC(DictProxy);
  if unlikely(!result) return NULL;
  DeeObject_Init(result,proxy_type);
  result->dp_dict = self;

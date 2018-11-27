@@ -321,7 +321,7 @@ proxy_contains_key(MapProxy *__restrict self, DeeObject *__restrict key) {
 PRIVATE DREF MapProxyIterator *DCALL
 proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type) {
  DREF MapProxyIterator *result;
- result = DeeObject_FMALLOC(MapProxyIterator);
+ result = DeeObject_MALLOC(MapProxyIterator);
  if unlikely(!result) goto done;
  result->mpi_iter = DeeObject_IterSelf(self->mp_map);
  if unlikely(!result->mpi_iter) goto err_r;
@@ -334,7 +334,7 @@ proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type)
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -714,7 +714,7 @@ err1: Dee_Decref(iterator);
 PRIVATE DREF MapProxy *DCALL
 map_new_proxy(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
  DREF MapProxy *result;
- result = DeeObject_FMALLOC(MapProxy);
+ result = DeeObject_MALLOC(MapProxy);
  if unlikely(!result) goto done;
  result->mp_map = self;
  Dee_Incref(self);
@@ -726,7 +726,7 @@ done:
 PRIVATE DREF MapProxyIterator *DCALL
 map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
  DREF MapProxyIterator *result;
- result = DeeObject_FMALLOC(MapProxyIterator);
+ result = DeeObject_MALLOC(MapProxyIterator);
  if unlikely(!result) goto done;
  result->mpi_iter = DeeObject_IterSelf(self);
  if unlikely(!result->mpi_iter) goto err_r;
@@ -742,7 +742,7 @@ map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_t
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 

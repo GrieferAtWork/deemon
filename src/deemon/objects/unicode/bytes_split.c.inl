@@ -381,7 +381,7 @@ bs_bool(BytesSplit *__restrict self) {
 PRIVATE DREF BytesSplitIterator *DCALL
 bs_iter(BytesSplit *__restrict self) {
  DREF BytesSplitIterator *result;
- result = DeeObject_FMALLOC(BytesSplitIterator);
+ result = DeeObject_MALLOC(BytesSplitIterator);
  if unlikely(!result) goto done;
  result->bsi_split   = self;
  result->bsi_bytes   = self->bs_bytes;
@@ -400,7 +400,7 @@ done:
 PRIVATE DREF BytesSplitIterator *DCALL
 bcs_iter(BytesSplit *__restrict self) {
  DREF BytesSplitIterator *result;
- result = DeeObject_FMALLOC(BytesSplitIterator);
+ result = DeeObject_MALLOC(BytesSplitIterator);
  if unlikely(!result) goto done;
  result->bsi_split   = self;
  result->bsi_bytes   = self->bs_bytes;
@@ -562,7 +562,7 @@ INTERN DREF DeeObject *DCALL
 DeeBytes_SplitByte(Bytes *__restrict self,
                    uint8_t sep) {
  DREF BytesSplit *result;
- result = DeeObject_FMALLOC(BytesSplit);
+ result = DeeObject_MALLOC(BytesSplit);
  if unlikely(!result) goto done;
  result->bs_bytes      = self;
  result->bs_sep_owner  = NULL;
@@ -581,7 +581,7 @@ DeeBytes_Split(Bytes *__restrict self,
  ASSERT_OBJECT(sep);
  ASSERT(DeeString_Check(sep) || DeeBytes_Check(sep));
  DREF BytesSplit *result;
- result = DeeObject_FMALLOC(BytesSplit);
+ result = DeeObject_MALLOC(BytesSplit);
  if unlikely(!result) goto done;
  if (DeeString_Check(sep)) {
   result->bs_sep_ptr = DeeString_AsBytes(sep,false);
@@ -599,7 +599,7 @@ DeeBytes_Split(Bytes *__restrict self,
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -607,7 +607,7 @@ INTERN DREF DeeObject *DCALL
 DeeBytes_CaseSplitByte(Bytes *__restrict self,
                        uint8_t sep) {
  DREF BytesSplit *result;
- result = DeeObject_FMALLOC(BytesSplit);
+ result = DeeObject_MALLOC(BytesSplit);
  if unlikely(!result) goto done;
  result->bs_bytes      = self;
  result->bs_sep_owner  = NULL;
@@ -626,7 +626,7 @@ DeeBytes_CaseSplit(Bytes *__restrict self,
  ASSERT_OBJECT(sep);
  ASSERT(DeeString_Check(sep) || DeeBytes_Check(sep));
  DREF BytesSplit *result;
- result = DeeObject_FMALLOC(BytesSplit);
+ result = DeeObject_MALLOC(BytesSplit);
  if unlikely(!result) goto done;
  if (DeeString_Check(sep)) {
   result->bs_sep_ptr = DeeString_AsBytes(sep,false);
@@ -644,7 +644,7 @@ DeeBytes_CaseSplit(Bytes *__restrict self,
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -883,7 +883,7 @@ err:
 PRIVATE DREF BytesLineSplitIterator *DCALL
 bls_iter(BytesLineSplit *__restrict self) {
  DREF BytesLineSplitIterator *result;
- result = DeeObject_FMALLOC(BytesLineSplitIterator);
+ result = DeeObject_MALLOC(BytesLineSplitIterator);
  if unlikely(!result) goto done;
  result->blsi_bytes    = self->bls_bytes;
  result->blsi_keepends = self->bls_keepends;
@@ -971,7 +971,7 @@ INTERN DREF DeeObject *DCALL
 DeeBytes_SplitLines(Bytes *__restrict self,
                     bool keepends) {
  DREF BytesLineSplit *result;
- result = DeeObject_FMALLOC(BytesLineSplit);
+ result = DeeObject_MALLOC(BytesLineSplit);
  if unlikely(!result) goto done;
  result->bls_bytes    = self;
  result->bls_keepends = keepends;

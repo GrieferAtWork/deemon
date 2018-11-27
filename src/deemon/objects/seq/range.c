@@ -405,7 +405,7 @@ range_visit(Range *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF RangeIterator *DCALL
 range_iter(Range *__restrict self) {
  DREF RangeIterator *result;
- result = DeeObject_FMALLOC(RangeIterator);
+ result = DeeObject_MALLOC(RangeIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&RangeIterator_Type);
  result->ri_index = self->r_begin;
@@ -761,7 +761,7 @@ INTERN DeeTypeObject IntRangeIterator_Type = {
 PRIVATE DREF IntRangeIterator *DCALL
 intrange_iter(IntRange *__restrict self) {
  DREF IntRangeIterator *result;
- result = DeeObject_FMALLOC(IntRangeIterator);
+ result = DeeObject_MALLOC(IntRangeIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&IntRangeIterator_Type);
  result->iri_range = self;
@@ -1078,7 +1078,7 @@ DeeRange_NewInt(dssize_t begin,
  ASSERT(step != 0);
 
  /* Create the new range. */
- result = DeeObject_FMALLOC(IntRange);
+ result = DeeObject_MALLOC(IntRange);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&IntRange_Type);
  /* Fill in members of the new range object. */
@@ -1123,7 +1123,7 @@ do_object_range:
   if unlikely(temp < 0) return NULL;
  }
  /* Create the new range. */
- result = DeeObject_FMALLOC(Range);
+ result = DeeObject_MALLOC(Range);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&Range_Type);
  /* Fill in members of the new range object. */

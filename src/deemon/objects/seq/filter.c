@@ -111,7 +111,7 @@ filteriterator_seq_get(FilterIterator *__restrict self) {
  DREF DeeObject *base_seq;
  base_seq = DeeObject_GetAttr(self->fi_iter,&str_seq);
  if unlikely(!base_seq) goto err;
- result = DeeObject_FMALLOC(Filter);
+ result = DeeObject_MALLOC(Filter);
  if unlikely(!result) goto err_base_seq;
  result->f_seq = base_seq; /* Inherit reference. */
  result->f_fun = self->fi_func;
@@ -209,7 +209,7 @@ INTERN DeeTypeObject DeeFilterIterator_Type = {
 PRIVATE DREF FilterIterator *DCALL
 filter_iter(Filter *__restrict self) {
  DREF FilterIterator *result;
- result = DeeObject_FMALLOC(FilterIterator);
+ result = DeeObject_MALLOC(FilterIterator);
  if unlikely(!result) goto done;
  result->fi_iter = DeeObject_IterSelf(self->f_seq);
  if unlikely(!result->fi_iter) goto err_r;
@@ -219,7 +219,7 @@ filter_iter(Filter *__restrict self) {
 done:
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -317,7 +317,7 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Filter(DeeObject *__restrict self,
               DeeObject *__restrict pred_keep) {
  DREF Filter *result;
- result = DeeObject_FMALLOC(DREF Filter);
+ result = DeeObject_MALLOC(DREF Filter);
  if unlikely(!result) goto done;
  Dee_Incref(self);
  Dee_Incref(pred_keep);

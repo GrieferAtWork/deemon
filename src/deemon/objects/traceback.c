@@ -434,7 +434,7 @@ PRIVATE DREF TraceIterator *DCALL
 traceback_iter(DeeTracebackObject *__restrict self) {
  TraceIterator *result;
  /* Create a new traceback iterator object. */
- result = DeeObject_FMALLOC(TraceIterator);
+ result = DeeObject_MALLOC(TraceIterator);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeTracebackIterator_Type);
  result->ti_next  = self->tb_frames+self->tb_numframes-1;

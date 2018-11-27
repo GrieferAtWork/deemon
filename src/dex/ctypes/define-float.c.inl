@@ -93,7 +93,7 @@ typedef struct {
 } Float_double_object;
 PRIVATE DREF DeeObject *DCALL float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
  Float_double_object *result;
- result = DeeObject_FMALLOC(Float_double_object);
+ result = DeeObject_MALLOC(Float_double_object);
  if unlikely(!result) goto done;
  DeeObject_Init(result,(DeeTypeObject *)&DeeCDouble_Type);
  result->f_value = val;
@@ -105,7 +105,7 @@ done:
 #define NEW_FLOAT(val) F(fltnew)(val)
 PRIVATE DREF DeeObject *DCALL F(fltnew)(T val) {
  X(Float) *result;
- result = DeeObject_FMALLOC(X(Float));
+ result = DeeObject_MALLOC(X(Float));
  if unlikely(!result) goto done;
  DeeObject_Init(result,(DeeTypeObject *)&TYPE_NAME);
  result->f_value = val;

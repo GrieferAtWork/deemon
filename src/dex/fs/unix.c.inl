@@ -1911,7 +1911,7 @@ PRIVATE DREF DirIterator *DCALL
 dir_iter(Dir *__restrict self) {
  DREF DirIterator *result; char *utf8;
  if (DeeThread_CheckInterrupt()) goto err;
- result = DeeObject_FMALLOC(DirIterator);
+ result = DeeObject_MALLOC(DirIterator);
  if unlikely(!result) goto err;
  /* Open a directory descriptor. */
  utf8 = DeeString_AsUtf8((DeeObject *)self->d_path);
@@ -1931,7 +1931,7 @@ dir_iter(Dir *__restrict self) {
  DeeObject_Init(result,&DeeDirIterator_Type);
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
 err:
  return NULL;
 }
@@ -2201,7 +2201,7 @@ query_iter(Dir *__restrict self) {
  DREF QueryIterator *result;
  char *query_start,*query_str;
  if (DeeThread_CheckInterrupt()) goto err;
- result = DeeObject_FMALLOC(QueryIterator);
+ result = DeeObject_MALLOC(QueryIterator);
  if unlikely(!result) goto err;
  query_str = DeeString_AsUtf8((DeeObject *)self->d_path);
  if unlikely(!query_str) goto err;
@@ -2249,7 +2249,7 @@ query_iter(Dir *__restrict self) {
  DeeObject_Init(&result->q_iter,&DeeQueryIterator_Type);
  return result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
 err:
  return NULL;
 }

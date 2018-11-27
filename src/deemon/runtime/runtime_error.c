@@ -43,7 +43,7 @@ DECL_BEGIN
 PUBLIC ATTR_COLD int DCALL
 Dee_BadAlloc(size_t req_bytes) {
  DeeNoMemoryErrorObject *nomem_error; int result;
- nomem_error = DeeObject_TRYFMALLOC(DeeNoMemoryErrorObject);
+ nomem_error = DeeObject_TRYMALLOC(DeeNoMemoryErrorObject);
  if (!nomem_error) {
   /* If we can't even allocate the no-memory
    * object, throw a static instance. */

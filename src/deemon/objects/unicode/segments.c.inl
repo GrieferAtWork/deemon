@@ -264,7 +264,7 @@ sseg_bool(StringSegments *__restrict self) {
 PRIVATE DREF StringSegmentsIterator *DCALL
 sseg_iter(StringSegments *__restrict self) {
  DREF StringSegmentsIterator *result;
- result = DeeObject_FMALLOC(StringSegmentsIterator);
+ result = DeeObject_MALLOC(StringSegmentsIterator);
  if unlikely(!result) goto done;
  Dee_Incref(self->s_str);
  result->s_str   = self->s_str;
@@ -458,7 +458,7 @@ DeeString_Segments(String *__restrict self,
                    size_t segment_size) {
  DREF StringSegments *result;
  ASSERT(segment_size != 0);
- result = DeeObject_FMALLOC(StringSegments);
+ result = DeeObject_MALLOC(StringSegments);
  if unlikely(!result) goto done;
  result->s_str = (DREF DeeStringObject *)self;
  Dee_Incref(self);

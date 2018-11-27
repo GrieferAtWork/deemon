@@ -932,7 +932,7 @@ PRIVATE struct type_gc deq_gc = {
 PRIVATE DREF DequeIteratorObject *DCALL
 deq_iter(Deque *__restrict self) {
  DREF DequeIteratorObject *result;
- result = DeeObject_FMALLOC(DequeIteratorObject);
+ result = DeeObject_MALLOC(DequeIteratorObject);
  if unlikely(!result) goto done;
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->di_lock);

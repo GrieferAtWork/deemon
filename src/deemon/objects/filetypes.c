@@ -293,7 +293,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 PUBLIC DREF /*File*/DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size) {
  DREF MemoryFile *result;
- result = DeeObject_FMALLOC(MemoryFile);
+ result = DeeObject_MALLOC(MemoryFile);
  if unlikely(!result) goto done;
  result->mf_begin = (char *)data;
  result->mf_end   = (char *)data + data_size;
@@ -717,7 +717,7 @@ PUBLIC DREF /*File*/DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size) {
  DREF Reader *result;
- result = DeeObject_FMALLOC(Reader);
+ result = DeeObject_MALLOC(Reader);
  if unlikely(!result) goto done;
  Dee_Incref(data_owner);
  result->r_owner = data_owner;
@@ -738,7 +738,7 @@ PUBLIC DREF /*File*/DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          dssize_t begin, dssize_t end) {
  DREF Reader *result;
- result = DeeObject_FMALLOC(Reader);
+ result = DeeObject_MALLOC(Reader);
  if unlikely(!result) goto done;
  if (DeeObject_GetBuf(data,&result->r_buffer,DEE_BUFFER_FREADONLY))
      goto err_r;
@@ -758,7 +758,7 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -1638,7 +1638,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 /* Open a new file stream that writes all written data into a string. */
 PUBLIC DREF /*File*/DeeObject *DCALL DeeFile_OpenWriter(void) {
  DREF Writer *result;
- result = DeeObject_FMALLOC(Writer);
+ result = DeeObject_MALLOC(Writer);
  if unlikely(!result) goto done;
  writer_ctor(result);
  DeeLFileObject_Init(result,&DeeFileWriter_Type);

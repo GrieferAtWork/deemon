@@ -39,7 +39,7 @@ typedef DeeSystemFileObject SystemFile;
 PRIVATE DREF SystemFile *DCALL
 open_fd(DeeFileTypeObject *__restrict fType, HANDLE hHandle) {
  DREF SystemFile *result;
- result = DeeObject_FMALLOC(SystemFile);
+ result = DeeObject_MALLOC(SystemFile);
  if unlikely(!result) goto done;
  /* Fill in the system file. */
  result->sf_filename  = NULL;

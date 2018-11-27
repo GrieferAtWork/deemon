@@ -184,7 +184,7 @@ PUBLIC DREF /*SystemFile*/DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd, /*String*/DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
  SystemFile *result;
- result = DeeObject_FMALLOC(SystemFile);
+ result = DeeObject_MALLOC(SystemFile);
  if unlikely(!result) goto done;
  result->sf_handle = (FILE *)fd;
  result->sf_ownhandle = inherit_fd ? (FILE *)fd : NULL; /* Inherit. */
@@ -241,7 +241,7 @@ DeeFile_OpenString(char const *__restrict filename,
                   filename);
   return NULL;
  }
- result = DeeObject_FMALLOC(SystemFile);
+ result = DeeObject_MALLOC(SystemFile);
  if unlikely(!result) goto err_fp;
  result->sf_handle    = fp;
  result->sf_ownhandle = fp; /* Inherit stream. */
@@ -254,7 +254,7 @@ err_unsupported_mode:
                  "The given open-mode combination is not supported");
  return NULL;
 err_fp_result:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
 err_fp:
  fclose(fp);
  return NULL;

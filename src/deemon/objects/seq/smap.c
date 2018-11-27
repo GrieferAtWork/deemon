@@ -259,7 +259,7 @@ smap_visit(SharedMap *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF SharedMapIterator *DCALL
 smap_iter(SharedMap *__restrict self) {
  DREF SharedMapIterator *result;
- result = DeeObject_FMALLOC(SharedMapIterator);
+ result = DeeObject_MALLOC(SharedMapIterator);
  if unlikely(!result) goto done;
  result->sm_seq = self;
  Dee_Incref(self);

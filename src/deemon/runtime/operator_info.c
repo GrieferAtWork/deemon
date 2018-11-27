@@ -1294,7 +1294,7 @@ to_str(TypeOperators *__restrict self) {
 PRIVATE DREF TypeOperatorsIterator *DCALL
 to_iter(TypeOperators *__restrict self) {
  DREF TypeOperatorsIterator *result;
- result = DeeObject_FMALLOC(DREF TypeOperatorsIterator);
+ result = DeeObject_MALLOC(DREF TypeOperatorsIterator);
  if unlikely(!result) goto done;
  result->to_type = self->to_type;
  result->to_opid = 0;
@@ -1533,7 +1533,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 INTERN DREF DeeObject *DCALL
 type_get_operators(DeeTypeObject *__restrict self) {
  DREF TypeOperators *result;
- result = DeeObject_FMALLOC(TypeOperators);
+ result = DeeObject_MALLOC(TypeOperators);
  if unlikely(!result) goto done;
  result->to_type = self;
  result->to_name = true;
@@ -1545,7 +1545,7 @@ done:
 INTERN DREF DeeObject *DCALL
 type_get_operatorids(DeeTypeObject *__restrict self) {
  DREF TypeOperators *result;
- result = DeeObject_FMALLOC(TypeOperators);
+ result = DeeObject_MALLOC(TypeOperators);
  if unlikely(!result) goto done;
  result->to_type = self;
  result->to_name = false;

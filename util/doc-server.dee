@@ -450,6 +450,9 @@ try {
 	}
 } finally {
 	doc_cache.clear();
+	for (local x: (slabstat from rt)())
+		print x;
+
 }
 #endif
 

@@ -793,7 +793,7 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
  /* No stdlib support. Instead, we must throw an AppExit error. */
  {
   struct appexit_object *error;
-  error = DeeObject_FMALLOC(struct appexit_object);
+  error = DeeObject_MALLOC(struct appexit_object);
   if unlikely(!error) goto err;
   /* Initialize the appexit error. */
   error->ae_exitcode = exitcode;

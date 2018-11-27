@@ -1471,7 +1471,7 @@ DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
                           DeeObject *argv,
                           DeeObject *default_symbols) {
  DREF InteractiveModule *result;
- result = DeeGCObject_FMALLOC(InteractiveModule);
+ result = DeeGCObject_MALLOC(InteractiveModule);
  if unlikely(!result) goto done;
  DeeObject_Init((DeeObject *)result,&DeeInteractiveModule_Type);
  if (imod_init(result,
@@ -1492,7 +1492,7 @@ done:
 err_r:
  Dee_DecrefNokill(&DeeInteractiveModule_Type);
  DeeObject_FreeTracker((DeeObject *)result);
- DeeGCObject_FFREE((DeeObject *)result);
+ DeeGCObject_FREE((DeeObject *)result);
  return NULL;
 }
 

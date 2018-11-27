@@ -81,11 +81,11 @@ DFUNDEF ATTR_MALLOC void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
 DFUNDEF void *(DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes);
 DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 
-#define DeeGCObject_MALLOC(T)    ((T *)DeeGCObject_Malloc(sizeof(T)))
-#define DeeGCObject_CALLOC(T)    ((T *)DeeGCObject_Calloc(sizeof(T)))
-#define DeeGCObject_TRYMALLOC(T) ((T *)DeeGCObject_TryMalloc(sizeof(T)))
-#define DeeGCObject_TRYCALLOC(T) ((T *)DeeGCObject_TryCalloc(sizeof(T)))
-
+/* Allocate fixed-size, gc-object-purposed slab memory.
+ * NOTE: This memory must be freed by one of:
+ *   - DeeGCObject_FFree(return,size2)     | size2 <= size
+ *   - DeeGCObject_SlabFree<size2>(return) | size2 <= size
+ *   - DeeGCObject_Free(return) */
 #ifdef CONFIG_NO_OBJECT_SLABS
 #define DeeGCObject_FMalloc(size)    DeeGCObject_Malloc(size)
 #define DeeGCObject_FCalloc(size)    DeeGCObject_Calloc(size)
@@ -93,34 +93,43 @@ DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 #define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
 #define DeeGCObject_FFree(ptr,size)  DeeGCObject_Free(ptr)
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DeeGCObject_FMalloc(size)    DeeObject_SlabInvoke(DeeGCObject_SlabMalloc,size,(),DeeGCObject_Malloc(size))
-#define DeeGCObject_FCalloc(size)    DeeObject_SlabInvoke(DeeGCObject_SlabCalloc,size,(),DeeGCObject_Calloc(size))
-#define DeeGCObject_FTryMalloc(size) DeeObject_SlabInvoke(DeeGCObject_SlabTryMalloc,size,(),DeeGCObject_TryMalloc(size))
-#define DeeGCObject_FTryCalloc(size) DeeObject_SlabInvoke(DeeGCObject_SlabTryCalloc,size,(),DeeGCObject_TryCalloc(size))
-#define DeeGCObject_FFree(ptr,size)  DeeObject_SlabInvoke(DeeGCObject_SlabFree,size,(ptr),DeeGCObject_Free(ptr))
+#define DEFINE_SLAB_FUNCTIONS(size) \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabMalloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
+DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr); \
+/**/
+DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_FUNCTIONS)
+#undef DEFINE_SLAB_FUNCTIONS
+#define DeeGCObject_FMalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabMalloc,size,(),DeeGCObject_Malloc(size))
+#define DeeGCObject_FCalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabCalloc,size,(),DeeGCObject_Calloc(size))
+#define DeeGCObject_FTryMalloc(size) DeeSlab_Invoke(DeeGCObject_SlabTryMalloc,size,(),DeeGCObject_TryMalloc(size))
+#define DeeGCObject_FTryCalloc(size) DeeSlab_Invoke(DeeGCObject_SlabTryCalloc,size,(),DeeGCObject_TryCalloc(size))
+#define DeeGCObject_FFree(ptr,size)  DeeSlab_Invoke(DeeGCObject_SlabFree,size,(ptr),DeeGCObject_Free(ptr))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as the regular malloc functions, but use the same allocation methods that
  * would be used by `TYPE_FIXED_ALLOCATOR_GC' and `TYPE_FIXED_ALLOCATOR_GC_S', meaning
  * that pointers returned by these macros have binary compatibility with them. */
-#define DeeGCObject_FMALLOC(T)       ((T *)DeeGCObject_FMalloc(sizeof(T)))
-#define DeeGCObject_FCALLOC(T)       ((T *)DeeGCObject_FCalloc(sizeof(T)))
-#define DeeGCObject_TRYFMALLOC(T)    ((T *)DeeGCObject_FTryMalloc(sizeof(T)))
-#define DeeGCObject_TRYFCALLOC(T)    ((T *)DeeGCObject_FTryCalloc(sizeof(T)))
-#define DeeGCObject_FFREE(typed_ptr)       DeeGCObject_FFree((void *)(typed_ptr),sizeof(*(typed_ptr)))
+#define DeeGCObject_MALLOC(T)       ((T *)DeeGCObject_FMalloc(sizeof(T)))
+#define DeeGCObject_CALLOC(T)       ((T *)DeeGCObject_FCalloc(sizeof(T)))
+#define DeeGCObject_TRYMALLOC(T)    ((T *)DeeGCObject_FTryMalloc(sizeof(T)))
+#define DeeGCObject_TRYCALLOC(T)    ((T *)DeeGCObject_FTryCalloc(sizeof(T)))
+#define DeeGCObject_FREE(typed_ptr)       DeeGCObject_FFree(typed_ptr,sizeof(*(typed_ptr)))
 
 #ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#define DeeGCObject_MALLOC_S(T)    ((T *)DeeGCObject_Malloc(sizeof(T)))
+#define DeeGCObject_CALLOC_S(T)    ((T *)DeeGCObject_Calloc(sizeof(T)))
+#define DeeGCObject_TRYMALLOC_S(T) ((T *)DeeGCObject_TryMalloc(sizeof(T)))
+#define DeeGCObject_TRYCALLOC_S(T) ((T *)DeeGCObject_TryCalloc(sizeof(T)))
+#define DeeGCObject_FREE_S               DeeGCObject_Free
+#else
 #define DeeGCObject_MALLOC_S      DeeGCObject_MALLOC
 #define DeeGCObject_CALLOC_S      DeeGCObject_CALLOC
 #define DeeGCObject_TRYMALLOC_S   DeeGCObject_TRYMALLOC
 #define DeeGCObject_TRYCALLOC_S   DeeGCObject_TRYCALLOC
-#define DeeGCObject_FFREE_S       DeeGCObject_Free
-#else
-#define DeeGCObject_MALLOC_S      DeeGCObject_FMALLOC
-#define DeeGCObject_CALLOC_S      DeeGCObject_FCALLOC
-#define DeeGCObject_TRYMALLOC_S   DeeGCObject_TRYFMALLOC
-#define DeeGCObject_TRYCALLOC_S   DeeGCObject_TRYFCALLOC
-#define DeeGCObject_FFREE_S       DeeGCObject_FFREE
+#define DeeGCObject_FREE_S        DeeGCObject_FREE
 #endif
 
 /* An generic sequence singleton that can be

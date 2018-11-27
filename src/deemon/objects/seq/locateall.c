@@ -269,7 +269,7 @@ locator_visit(Locator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF DeeObject *DCALL
 locator_iter(Locator *__restrict self) {
  DREF LocatorIterator *result;
- result = DeeObject_FMALLOC(LocatorIterator);
+ result = DeeObject_MALLOC(LocatorIterator);
  if unlikely(!result) goto done;
  /* Create the underlying iterator. */
  result->li_iter = DeeObject_IterSelf(self->l_seq);
@@ -283,7 +283,7 @@ locator_iter(Locator *__restrict self) {
 done:
  return (DREF DeeObject *)result;
 err_r:
- DeeObject_FFREE(result);
+ DeeObject_FREE(result);
  return NULL;
 }
 
@@ -364,7 +364,7 @@ DeeSeq_LocateAll(DeeObject *__restrict self,
                  DeeObject *key) {
  DREF Locator *result;
  /* Create a new locator sequence. */
- result = DeeObject_FMALLOC(Locator);
+ result = DeeObject_MALLOC(Locator);
  if unlikely(!result) return NULL;
  result->l_seq  = self;
  result->l_elem = keyed_search_item;

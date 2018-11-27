@@ -785,7 +785,7 @@ bytes_bool(Bytes *__restrict self) {
 PRIVATE DREF BytesIterator *DCALL
 bytes_iter(Bytes *__restrict self) {
  DREF BytesIterator *result;
- result = DeeObject_FMALLOC(BytesIterator);
+ result = DeeObject_MALLOC(BytesIterator);
  if unlikely(!result) goto done;
  result->bi_bytes = self;
  result->bi_iter  = DeeBytes_DATA(self);
