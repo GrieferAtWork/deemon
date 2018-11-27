@@ -191,7 +191,7 @@ function get_module_page(fp: file, path: {string...}) {
 	fp << "<h2><b>" << d.kind << "</b>: " << d.typename;
 	if (d.istype && d.object is bound) {
 		local base = deemon.type_.__base__(d.object);
-		if (base !is none) {
+		if (base !is none && base !== deemon.object) {
 			base = Doc(base);
 			fp << " extends <b>";
 			local path = base.path;
