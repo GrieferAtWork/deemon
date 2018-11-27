@@ -229,7 +229,7 @@ PRIVATE struct type_cmp kwdsiter_cmp = {
 };
 
 PRIVATE struct type_member kwdsiter_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(KwdsIterator,ki_map)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(KwdsIterator,ki_map),"->?Ert:kwds"),
     TYPE_MEMBER_END
 };
 
@@ -1006,7 +1006,7 @@ PRIVATE struct type_seq kmap_seq = {
 
 
 PRIVATE struct type_member kmap_members[] = {
-    TYPE_MEMBER_FIELD("__kwds__",STRUCT_OBJECT,offsetof(KwdsMapping,kmo_kwds)),
+    TYPE_MEMBER_FIELD_DOC("__kwds__",STRUCT_OBJECT,offsetof(KwdsMapping,kmo_kwds),"->?Ert:kwds"),
     TYPE_MEMBER_END
 };
 

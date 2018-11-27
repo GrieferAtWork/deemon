@@ -3514,9 +3514,9 @@ PRIVATE struct type_method type_methods[] = {
 };
 
 PRIVATE struct type_member type_members[] = {
-    TYPE_MEMBER_FIELD("__name__",STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_name)),
-    TYPE_MEMBER_FIELD("__doc__", STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_doc)),
-    TYPE_MEMBER_FIELD("__base__",STRUCT_OBJECT_OPT,offsetof(DeeTypeObject,tp_base)),
+    TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_name),"->?X2?Dstring?N"),
+    TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST|STRUCT_CSTR_OPT,offsetof(DeeTypeObject,tp_doc),"->?X2?Dstring?N"),
+    TYPE_MEMBER_FIELD_DOC("__base__",STRUCT_OBJECT_OPT,offsetof(DeeTypeObject,tp_base),"->?X2?Dtype?N"),
     TYPE_MEMBER_END
 };
 
