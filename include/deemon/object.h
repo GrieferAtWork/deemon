@@ -377,10 +377,18 @@ Dee_weakref_support_fini(struct weakref_list *__restrict self);
  * @assume(ob != NULL);
  * @return: true:  Successfully initialized the given weak reference.
  * @return: false: The given object `ob' does not support weak referencing. */
+#ifdef __INTELLISENSE__
 DFUNDEF bool DCALL
 Dee_weakref_init(struct weakref *__restrict self,
                  DeeObject *__restrict ob,
                  weakref_callback_t callback);
+#else
+#define Dee_weakref_init(self,ob,callback) \
+      ((self)->wr_del = (callback),_Dee_weakref_init(self,ob))
+DFUNDEF bool DCALL
+_Dee_weakref_init(struct weakref *__restrict self,
+                  DeeObject *__restrict ob);
+#endif
 
 /* Finalize a given weak reference. */
 DFUNDEF void DCALL Dee_weakref_fini(struct weakref *__restrict self);
@@ -820,6 +828,7 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
 #endif
 
 
+
 #ifndef CONFIG_NO_OBJECT_SLABS
 /* Slab allocator functions.
  * These operate in increments of at least sizeof(void *), with the acutal
@@ -868,6 +877,12 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
     func(8)  /* 32 / 64 */ \
     func(10) /* 40 / 80 */ \
 /**/
+#define DEEMON_SLAB_INDEXOF(size)  \
+  ((size) <= 4*__SIZEOF_POINTER__ ? 0u : \
+   (size) <= 5*__SIZEOF_POINTER__ ? 1u : \
+   (size) <= 6*__SIZEOF_POINTER__ ? 2u : \
+   (size) <= 8*__SIZEOF_POINTER__ ? 3u : \
+   (size) <= 10*__SIZEOF_POINTER__ ? 4u : 0xffu)
 #define DEEMON_SLAB_HASSIZE(size) (0 DEE_ENUMERATE_SLAB_SIZES(|| (size) == ))
 #define DeeObject_SlabInvokeDyn(func,size,args,fallback) \
   ((size) <= 4*__SIZEOF_POINTER__ ? func##4 args : \
@@ -983,6 +998,53 @@ DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_FUNCTIONS)
 #endif
 #endif /* DEEMON_SLAB_HASSIZE(10) */
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+
+
+typedef struct {
+    uintptr_t si_slabstart;      /* [const] Slab starting address */
+    uintptr_t si_slabend;        /* [const] Slab ending address */
+    size_t    si_itemsize;       /* [const] Slab item size (in bytes) */
+    size_t    si_items_per_page; /* [const] Number of items per page */
+    size_t    si_totalpages;     /* [const] Number of pages designated for this slab. */
+    size_t    si_totalitems;     /* [const][== si_totalpages * si_items_per_page] Max number of items which may be allocated by the slab. */
+    size_t    si_cur_alloc;      /* # of items (`si_itemsize'-sized data blocks) currently allocated. */
+    size_t    si_max_alloc;      /* Max # of items that were ever allocated */
+    size_t    si_cur_free;       /* # of items in initialized pages currently marked as free */
+    size_t    si_max_free;       /* Max # of items that were ever marked as free */
+    size_t    si_cur_fullpages;  /* # of initialized pages that currently are fully in use */
+    size_t    si_max_fullpages;  /* Max # of initialized pages that were ever in use at the same time */
+    size_t    si_cur_freepages;  /* # of initialized pages containing unallocated items. */
+    size_t    si_max_freepages;  /* Max # of initialized pages containing unallocated items at any point int time. */
+    size_t    si_usedpages;      /* # of pages which are currently being used (si_cur_fullpages + si_cur_freepages) */
+    size_t    si_tailpages;      /* # of pages which haven't been allocated, yet */
+} DeeSlabInfo;
+
+typedef struct {
+    size_t      st_slabcount;      /* [const] Number of existing slabs. */
+#ifdef DEEMON_SLAB_COUNT
+    DeeSlabInfo st_slabs[DEEMON_SLAB_COUNT]; /* Slab-specific information */
+#else
+    DeeSlabInfo st_slabs[8];       /* Slab-specific information */
+#endif
+} DeeSlabStat;
+
+
+/* Collect slab information and write that information to `info'
+ * When `bufsize' is smaller that the required buffer size to write
+ * all known slab information, the contents of `info' are undefined,
+ * and the required size is returned (which is then `> bufsize')
+ * Otherwise, `info' is filled with slab statistic information, and
+ * the used buffer size is returned (which is then `<= bufsize')
+ * In no case will this function throw an error.
+ * When deemon has been built with `CONFIG_NO_OBJECT_SLAB_STATS',
+ * this function will be significantly slower, and all max-fields
+ * are set to match the cur-fields. */
+DFUNDEF size_t DCALL DeeSlab_Stat(DeeSlabStat *info, size_t bufsize);
+/* Reset the slab max-statistics to the cur-values. */
+DFUNDEF void DCALL DeeSlab_ResetStat(void);
+
+
+
 
 
 #ifdef CONFIG_NO_OBJECT_SLABS

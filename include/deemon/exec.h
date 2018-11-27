@@ -263,7 +263,13 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t
                                     /*utf-8*/char const *module_name, size_t module_namesize);
 
 
-
+/* Initialize the deemon runtime.
+ * This does very little, as most components are designed for lazy initialization,
+ * or are simply initialized statically (i.e. already come pre-initialized).
+ * However, some components do require some pre-initialization, the most notable
+ * here being `DeeThread_Init()', as well as allocation of the data block used by
+ * the slab allocator. */
+DFUNDEF void DCALL Dee_Initialize(void);
 
 /* Keep clearing global hooks while invoking the GC to
  * finalize all user-objects that may still be loaded.

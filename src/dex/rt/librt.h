@@ -25,7 +25,28 @@
 
 DECL_BEGIN
 
+/* Types for accessing slab allocator statistics. */
 
+typedef struct {
+    OBJECT_HEAD
+    DeeSlabStat st_stat; /* [const] Slab statistics. */
+} SlabStatObject;
+
+typedef struct {
+    OBJECT_HEAD
+    DREF SlabStatObject *sti_stat;  /* [1..1][const] Slab statistics. */
+    ATOMIC_DATA size_t   sti_index; /* Iterator position. */
+} SlabStatIteratorObject;
+
+typedef struct {
+    OBJECT_HEAD
+    DREF SlabStatObject *si_stat; /* [1..1][const] Slab statistics. */
+    DeeSlabInfo         *si_info; /* [1..1][const] Slab information. */
+} SlabInfoObject;
+
+INTDEF DeeTypeObject SlabStat_Type;
+INTDEF DeeTypeObject SlabStatIterator_Type;
+INTDEF DeeTypeObject SlabInfo_Type;
 
 DECL_END
 

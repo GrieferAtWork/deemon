@@ -648,6 +648,8 @@ EXPORTS
 	DeeSeq_Max@8=_DeeSeq_Max@8
 	DeeSeq_Min@8=_DeeSeq_Min@8
 	DeeSeq_Sum@4=_DeeSeq_Sum@4
+	DeeSlab_ResetStat@0=_DeeSlab_ResetStat@0
+	DeeSlab_Stat@8=_DeeSlab_Stat@8
 	DeeString_As2Byte@4=_DeeString_As2Byte@4
 	DeeString_As4Byte@4=_DeeString_As4Byte@4
 	DeeString_AsBytes@8=_DeeString_AsBytes@8
@@ -765,6 +767,7 @@ EXPORTS
 	Dee_Incref_n@8=_Dee_Incref_n@8
 	Dee_Incref_n_traced@16=_Dee_Incref_n_traced@16
 	Dee_Incref_traced@12=_Dee_Incref_traced@12
+	Dee_Initialize@0=_Dee_Initialize@0
 	Dee_Malloc@4=_Dee_Malloc@4
 	Dee_OperatorFromName@8=_Dee_OperatorFromName@8
 	Dee_OperatorFromNameLen@12=_Dee_OperatorFromNameLen@12
@@ -790,7 +793,6 @@ EXPORTS
 	Dee_weakref_copy@8=_Dee_weakref_copy@8
 	Dee_weakref_copyassign@8=_Dee_weakref_copyassign@8
 	Dee_weakref_fini@4=_Dee_weakref_fini@4
-	Dee_weakref_init@12=_Dee_weakref_init@12
 	Dee_weakref_lock@4=_Dee_weakref_lock@4
 	Dee_weakref_move@8=_Dee_weakref_move@8
 	Dee_weakref_moveassign@8=_Dee_weakref_moveassign@8
@@ -803,6 +805,7 @@ EXPORTS
 	_DeeString_Chr8@4=__DeeString_Chr8@4
 	_Dee_dprint@4=__Dee_dprint@4
 	_Dee_vdprintf@8=__Dee_vdprintf@8
+	_Dee_weakref_init@8=__Dee_weakref_init@8
 	ascii_printer_alloc@8=_ascii_printer_alloc@8
 	ascii_printer_allocstr@12=_ascii_printer_allocstr@12
 	ascii_printer_pack@4=_ascii_printer_pack@4

@@ -793,9 +793,34 @@ PRIVATE bool DCALL shutdown_globals(void) {
 INTDEF void DCALL gc_dump_all(void);
 #endif
 
+#ifndef CONFIG_NO_OBJECT_SLABS
+INTDEF void DCALL DeeSlab_Initialize(void);
+INTDEF void DCALL DeeSlab_Finalize(void);
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
+
+/* Initialize the deemon runtime.
+ * This does very little, as most components are designed for lazy initialization,
+ * or are simply initialized statically (i.e. already come pre-initialized).
+ * However, some components do require some pre-initialization, the most notable
+ * here being `DeeThread_Init()', as well as allocation of the data block used by
+ * the slab allocator. */
+PUBLIC void DCALL Dee_Initialize(void) {
+ DeeThread_Init();
+
+ /* Reserve system memory for slab allocators. */
+#ifndef CONFIG_NO_OBJECT_SLABS
+ DeeSlab_Initialize();
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
+ /* Install the keyboard interrupt handler. */
+#ifndef CONFIG_NO_KEYBOARD_INTERRUPT
+ DeeError_InstallKeyboardInterrupt();
+#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
+}
+
 
 PUBLIC size_t DCALL Dee_Shutdown(void) {
-#if 1
  size_t result = 0,temp;
  size_t num_gc = 0,num_empty_gc = 0;
  for (;;) {
@@ -864,32 +889,18 @@ do_kill_user:
        break;
  }
 
-#ifndef CONFIG_NO_DEX
  /* Shutdown all loaded DEX extensions. */
+#ifndef CONFIG_NO_DEX
  DEE_CHECKMEMORY();
  DeeDex_Finalize();
  DEE_CHECKMEMORY();
 #endif /* !CONFIG_NO_DEX */
 
+ /* Deallocate slab caches. */
+#ifndef CONFIG_NO_OBJECT_SLABS
+ DeeSlab_Finalize();
+#endif /* !CONFIG_NO_OBJECT_SLABS */
  return result;
-
-#else
- size_t n = 0,temp = 0;
- bool must_continue;
- do {
-  /* XXX: After say... 16 iterations, somehow disable
-   *      the execution of any user-assembly.
-   *      Because let's face it. If stuff is still
-   *      running that that point, we've got some
-   *      user-defined cleanup code that keeps on
-   *      re-adding global hooks somewhere.
-   */
-  n += temp;
-  must_continue = shutdown_globals();
- } while ((temp = DeeGC_Collect((size_t)-1)) != 0 ||
-           must_continue);
- return n;
-#endif
 }
 
 

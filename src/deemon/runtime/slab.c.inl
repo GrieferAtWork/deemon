@@ -24,8 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/gc.h>
-
-DECL_BEGIN
+#include <hybrid/host.h>
 
 #undef Dee_Malloc
 #undef Dee_Calloc
@@ -36,7 +35,103 @@ DECL_BEGIN
 #undef Dee_Free
 #undef DeeObject_Free
 
+#ifdef CONFIG_OBJECT_SLAB_STATS
+#undef CONFIG_NO_OBJECT_SLAB_STATS
+#if (CONFIG_OBJECT_SLAB_STATS+0) == 0
+#undef CONFIG_OBJECT_SLAB_STATS
+#define CONFIG_NO_OBJECT_SLAB_STATS 1
+#endif
+#elif !defined(CONFIG_NO_OBJECT_SLAB_STATS)
+#ifdef NDEBUG
+#define CONFIG_NO_OBJECT_SLAB_STATS 1
+#endif
+#endif
+
+
+#ifndef CONFIG_NO_OBJECT_SLABS
+#if (!defined(__i386__) && !defined(__x86_64__)) || \
+    (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX))
+#define CONFIG_NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
+#endif
+#ifndef CONFIG_NO_OBJECT_SLABS
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#else /* CONFIG_HOST_WINDOWS */
+#ifndef __NO_has_include
+/* Check for dependencies, but default to assuming
+ * that we have everything which we might need. */
+#if !__has_include(<sys/mman.h>)
+#define CONFIG_NO_OBJECT_SLABS 1
+#endif
+#if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+#if !__has_include(<sys/fcntl.h>)
+#define CONFIG_NO_OBJECT_SLABS 1
+#endif
+#endif
+#endif /* __NO_has_include */
+#ifndef CONFIG_NO_OBJECT_SLABS
+#include <sys/mman.h>
+#if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+#include <fcntl.h>
+#endif
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_HOST_WINDOWS */
+
+#ifndef CONFIG_NO_OBJECT_SLABS
+#include <hybrid/limits.h>
+
+#ifndef PAGESIZE
+#define PAGESIZE 4096
+#endif
+
+#ifndef __SIZEOF_POINTER__
+#if defined(__x86_64__)
+#define __SIZEOF_POINTER__ 8
+#else
+#define __SIZEOF_POINTER__ 4
+#endif
+#endif
+
+DECL_BEGIN
+
+typedef struct {
+    uintptr_t sr_start;       /* Starting address of this slab region.
+                               * NOTE: This pointer is aligned by `PAGESIZE' */
+} SlabRegionDef;
+
+typedef struct {
+    /* The slab configuration is written to once during program
+     * initialization, at which point slab caches get allocated. */
+    union {
+        SlabRegionDef sc_regions[DEEMON_SLAB_COUNT]; /* Slab region definitions.
+                                                      * NOTE: The starting addresses of these are ordered ascendingly! */
+        uintptr_t     sc_heap_start;                 /* [const] Starting address of the slab heap.
+                                                      * NOTE: This pointer is aligned by `PAGESIZE' */
+    };
+    uintptr_t         sc_heap_end;   /* [const] End address of the slab heap.
+                                      * NOTE: This pointer is aligned by `PAGESIZE' */
+} SlabConfig;
+
+PRIVATE SlabConfig slab_config = {
+    {
+         {
+#define INIT_REGION(x)  { (uintptr_t)-1 },
+              DEE_ENUMERATE_SLAB_SIZES(INIT_REGION)
+#undef INIT_REGION
+         }
+    },
+    /* .sc_heap_end = */0
+};
+
+#define IS_SLAB_POINTER(p) \
+      ((uintptr_t)(p) >= slab_config.sc_heap_start && \
+       (uintptr_t)(p) <  slab_config.sc_heap_end)
+
+
 DECL_END
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_NO_OBJECT_SLABS */
 
 #ifndef __INTELLISENSE__
 /*[[[deemon
@@ -147,5 +242,212 @@ print "#undef NEXT_LARGER";
 #undef NEXT_LARGER
 //[[[end]]]
 #endif
+
+#ifndef CONFIG_NO_OBJECT_SLABS
+#include <stdlib.h>
+#include <hybrid/overflow.h>
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
+DECL_BEGIN
+
+#ifdef CONFIG_NO_OBJECT_SLABS
+INTERN void DCALL DeeSlab_Finalize(void) {
+ /* nothing */
+}
+INTERN void DCALL DeeSlab_Initialize(void) {
+ /* nothing */
+}
+#else /* CONFIG_NO_OBJECT_SLABS */
+
+#ifdef __INTELLISENSE__
+struct {
+#ifndef CONFIG_NO_THREADS
+    rwlock_t  s_lock; /* Lock for this slab */
+#endif
+     void    *s_free; /* [0..1][lock(s_lock)] Chain of free pages */
+     void    *s_full; /* [0..1][lock(s_lock)] Chain of pages that fully in-use */
+     void    *s_tail; /* [0..1][lock(s_lock)] Pointer to the next page that should be allocated from the system. */
+#ifndef CONFIG_NO_OBJECT_SLAB_STATS
+    ATOMIC_DATA size_t s_num_free;      /* Number of items currently marked as free. */
+    ATOMIC_DATA size_t s_max_free;      /* Max number of items ever marked as free. */
+    ATOMIC_DATA size_t s_num_alloc;     /* Number of items currently allocated from this slab. */
+    ATOMIC_DATA size_t s_max_alloc;     /* Max number of items that were ever allocated at once. */
+    ATOMIC_DATA size_t s_num_fullpages; /* Number of full pages currently allocated from this slab. */
+    ATOMIC_DATA size_t s_max_fullpages; /* Max number of full pages that were ever allocated at once. */
+    ATOMIC_DATA size_t s_num_freepages; /* Number of pages containing unused items. */
+    ATOMIC_DATA size_t s_max_freepages; /* Max number of pages containing unused items to ever exist. */
+#endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
+}
+#define DEFINE_SLAB_VAR(x) slab ## x,
+    DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_VAR)
+#undef DEFINE_SLAB_VAR
+    _slab_intellisense_trailing
+;
+
+#endif
+
+/* Default sizes for slabs (in whole pages) */
+PRIVATE size_t const default_slab_sizes[DEEMON_SLAB_COUNT] = {
+    /* TODO: Tweak these numbers according to statistics. */
+    8,  /* 4  -- 16 / 32 */
+    16, /* 5  -- 20 / 40 */
+    32, /* 6  -- 24 / 48 */
+    24, /* 8  -- 32 / 64 */
+    8,  /* 10 -- 40 / 80 */
+};
+
+/* Collect slab information and write that information to `info'
+ * When `bufsize' is smaller that the required buffer size to write
+ * all known slab information, the contents of `info' are undefined,
+ * and the required size is returned (which is then `> bufsize')
+ * Otherwise, `info' is filled with slab statistic information, and
+ * the used buffer size is returned (which is then `<= bufsize')
+ * In no case will this function throw an error.
+ * When deemon has been built with `CONFIG_NO_OBJECT_SLAB_STATS',
+ * this function will be significantly slower, and all max-fields
+ * are set to match the cur-fields. */
+PUBLIC size_t DCALL
+DeeSlab_Stat(DeeSlabStat *info, size_t bufsize) {
+ if (bufsize >= sizeof(DeeSlabStat)) {
+  info->st_slabcount = DEEMON_SLAB_COUNT;
+#define GATHER_INFO(x) \
+  DeeSlab_StatSlab ## x(&info->st_slabs[DEEMON_SLAB_INDEXOF(x * __SIZEOF_POINTER__)]);
+  DEE_ENUMERATE_SLAB_SIZES(GATHER_INFO)
+#undef GATHER_INFO
+ }
+ return sizeof(DeeSlabStat);
+}
+
+/* Reset the slab max-statistics to the cur-values. */
+PUBLIC void DCALL DeeSlab_ResetStat(void) {
+#define RESET_INFO(x) \
+ DeeSlab_ResetStatSlab ## x();
+ DEE_ENUMERATE_SLAB_SIZES(RESET_INFO)
+#undef RESET_INFO
+}
+
+
+
+INTERN void DCALL DeeSlab_Finalize(void) {
+ if (slab_config.sc_heap_start == (uintptr_t)-1)
+     return;
+#ifdef CONFIG_HOST_WINDOWS
+ VirtualFree((LPVOID)slab_config.sc_heap_start,
+             (SIZE_T)(slab_config.sc_heap_end - slab_config.sc_heap_start),
+              MEM_DECOMMIT);
+#elif defined(CONFIG_HOST_UNIX)
+ munmap((void *)slab_config.sc_heap_start,
+        (size_t)(slab_config.sc_heap_end - slab_config.sc_heap_start));
+#else
+#error "Invalid SLAB configuration"
+#endif
+}
+
+INTERN void DCALL DeeSlab_Initialize(void) {
+ size_t total; unsigned int i;
+ size_t sizes[DEEMON_SLAB_COUNT]; char *config;
+ memcpy(sizes,default_slab_sizes,sizeof(default_slab_sizes));
+ config = getenv("DEEMON_SLABS");
+ if (config && *config) {
+  /* Load slab sizes from the configuration string, which is
+   * a comma-separated list of the slab sizes that should be
+   * used. */
+#if DEEMON_SLAB_COUNT == 5
+  sscanf(config,"%u,%u,%u,%u,%u",
+        &sizes[0],&sizes[1],&sizes[2],
+        &sizes[3],&sizes[4]);
+#else
+#error FIXME
+#endif
+ }
+ for (i = 0,total = 0; i < DEEMON_SLAB_COUNT; ++i) {
+  if (OVERFLOW_UADD(total,sizes[i],&total))
+      goto disable_slabs;
+  total += sizes[i];
+ }
+ if (!total) goto disable_slabs;
+ if (OVERFLOW_UMUL(total,PAGESIZE,&total))
+     goto disable_slabs;
+ {
+  void *slab_memory;
+#ifdef CONFIG_HOST_WINDOWS
+  slab_memory = VirtualAlloc(NULL,
+                             total,
+                             MEM_COMMIT | MEM_RESERVE,
+                             PAGE_READWRITE);
+  if (!slab_memory)
+       goto disable_slabs;
+#elif defined(CONFIG_HOST_UNIX)
+#if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+#ifndef MAP_FAILED
+#define MAP_FAILED ((void *)-1)
+#endif
+#ifndef MAP_PRIVATE
+#define MAP_PRIVATE 0
+#endif
+#ifndef MAP_FILE
+#define MAP_FILE 0
+#endif
+  /* XXX: Maybe use `MAP_NORESERVE' to try to keep the kernel from having
+   *      to reserve SWAP space when we may not actually be intending on
+   *      using a majority of allocated slab pages... */
+#ifdef MAP_ANONYMOUS
+  slab_memory = (void *)mmap(NULL,
+                             total,
+                             PROT_READ | PROT_WRITE,
+                             MAP_PRIVATE | MAP_ANONYMOUS,
+                             -1,
+                             0);
+#else
+  {
+   int fd = open("/dev/null",O_RDONLY);
+   if unlikely(fd < 0)
+      goto disable_slabs;
+   slab_memory = (void *)mmap(NULL,
+                              total,
+                              PROT_READ | PROT_WRITE,
+                              MAP_PRIVATE | MAP_FILE,
+                              fd,
+                              0);
+   close(fd);
+  }
+#endif
+  if unlikely(slab_memory == MAP_FAILED)
+     goto disable_slabs;
+#else
+#error "Invalid SLAB configuration"
+#endif
+  slab_config.sc_heap_end = (uintptr_t)slab_memory + total;
+  for (i = 0,total = 0; i < DEEMON_SLAB_COUNT; ++i) {
+   slab_config.sc_regions[i].sr_start = (uintptr_t)slab_memory;
+   if (OVERFLOW_UADD(total,sizes[i],&total))
+       goto disable_slabs;
+   slab_memory = (void *)((uintptr_t)slab_memory + sizes[i] * PAGESIZE);
+  }
+#define SET_SLAB_STARTING_PAGE(x) \
+  *(void **)&slab ## x.s_free = (void *)(uintptr_t)-1l; \
+  *(void **)&slab ## x.s_full = (void *)(uintptr_t)-1l; \
+  *(void **)&slab ## x.s_tail = (void *)slab_config.sc_regions[DEEMON_SLAB_INDEXOF(x * __SIZEOF_POINTER__)].sr_start;
+  DEE_ENUMERATE_SLAB_SIZES(SET_SLAB_STARTING_PAGE)
+#undef SET_SLAB_STARTING_PAGE
+ }
+ return;
+disable_slabs:
+ memset(&slab_config,0xff,offsetof(SlabConfig,sc_heap_end));
+ slab_config.sc_heap_end = 0;
+#define SET_SLAB_STARTING_PAGE(x) \
+ *(void **)&slab ## x.s_free = (void *)(uintptr_t)-1l; \
+ *(void **)&slab ## x.s_full = (void *)(uintptr_t)-1l; \
+ *(void **)&slab ## x.s_tail = (void *)(uintptr_t)-1l;
+ DEE_ENUMERATE_SLAB_SIZES(SET_SLAB_STARTING_PAGE)
+#undef SET_SLAB_STARTING_PAGE
+}
+
+#endif /* !CONFIG_NO_OBJECT_SLABS */
+
+DECL_END
+
 
 #endif /* !GUARD_DEEMON_RUNTIME_SLAB_C_INL */

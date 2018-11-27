@@ -959,19 +959,14 @@ int main(int argc, char *argv[]) {
 #endif
  DBG_ALIGNMENT_ENABLE();
 
- /*_CrtSetBreakAlloc(3116);*/
+ /*_CrtSetBreakAlloc(280);*/
 
  /* Literally the only deemon component that actually needs to
   * be initialized (and isn't already initialized statically):
   *  - The TLS variable that is used by `DeeThread_Self()'
   * To bad there's no cross-platform way to do this statically.
   * Else, this'd be so much simpler. */
- DeeThread_Init();
-
-#ifndef CONFIG_NO_KEYBOARD_INTERRUPT
- /* Install the keyboard interrupt handler. */
- DeeError_InstallKeyboardInterrupt();
-#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
+ Dee_Initialize();
 
  /* Skip the first argument (the deemon executable name) */
  if (argc) --argc,++argv;

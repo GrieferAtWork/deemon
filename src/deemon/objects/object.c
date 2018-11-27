@@ -197,16 +197,14 @@ LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 
 
 PUBLIC bool DCALL
-Dee_weakref_init(struct weakref *__restrict self,
-                 DeeObject *__restrict ob,
-                 weakref_callback_t callback) {
+_Dee_weakref_init(struct weakref *__restrict self,
+                  DeeObject *__restrict ob) {
  struct weakref_list *list;
  struct weakref *next;
  ASSERT(self);
  ASSERT(ob);
  ASSERT(ob->ob_refcnt);
  ASSERT(IS_ALIGNED((uintptr_t)self,PTRLOCK_LOCK_MASK+1));
- self->wr_del = callback;
  list = WEAKREFS_GET(ob);
  if unlikely(!WEAKREFS_OK(list,ob))
     return false;

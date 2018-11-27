@@ -114,6 +114,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "may lead to hard crashes of the deemon interpreter, causing "
           "the user-script and hosting application to crash in an undefined "
           "manner.") },
+    { "slabstat", (DeeObject *)&SlabStat_Type }, /* Access to slab allocator statistics. */
     { "interactivemodule", (DeeObject *)&DeeInteractiveModule_Type }, /* The type used to implement an interactive module, as available by `deemon -i' */
 #ifndef CONFIG_NO_DEX
     { "dexmodule", (DeeObject *)&DeeDex_Type },                   /* The type of a module that has been loaded from a machine-level shared library. */

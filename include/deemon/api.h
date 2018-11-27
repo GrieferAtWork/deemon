@@ -131,6 +131,13 @@ DECL_BEGIN
 #endif
 
 
+#if (!defined(__i386__) && !defined(__x86_64__)) || \
+    (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX))
+#undef CONFIG_NO_OBJECT_SLABS
+#define CONFIG_NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
+#endif
+
+
 #ifdef CONFIG_HOST_WINDOWS
 #ifndef _WIN32_WINNT
 /* Limit windows headers to only provide XP stuff. */
