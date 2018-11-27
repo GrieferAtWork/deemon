@@ -825,20 +825,22 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
 
 /* Free-functions, and their capabilities
  *
- * Dee_Free:             Accepts  Dee_Malloc()
+ * Dee_Free:                Accepts  Dee_Malloc()
+ *                          Accepts  NULL
  *
- * DeeSlab_Free:         Accepts  DeeSlab_Malloc<M>()
- *                       Accepts  Dee_Malloc()
+ * DeeSlab_Free:            Accepts  DeeSlab_Malloc<M>()
+ *                          Accepts  Dee_Malloc()
  *
- * DeeSlab_FFree(<N>):
- * DeeSlab_Free<N>:      Accepts  DeeSlab_Malloc<M>()         | M >= N
- *                       Accepts  Dee_Malloc()
+ * DeeSlab_FFree(...,<N>):
+ * DeeSlab_Free<N>:         Accepts  DeeSlab_Malloc<M>()         | M >= N
+ *                          Accepts  Dee_Malloc()
  *
- * DeeObject_Free:       Accepts  DeeObject_SlabMalloc<M>()
- *                       Accepts  DeeObject_FMalloc(<M>)
- *                       Accepts  DeeObject_Malloc()
+ * DeeObject_Free:          Accepts  DeeObject_SlabMalloc<M>()
+ *                          Accepts  DeeObject_FMalloc(<M>)
+ *                          Accepts  DeeObject_Malloc()
+ *                          Accepts  NULL
  *
- * DeeObject_FFree(<N>):
+ * DeeObject_FFree(...,<N>):
  * DeeObject_SlabFree<N>:   Accepts  DeeObject_SlabMalloc<M>()   | M >= N
  *                          Accepts  DeeObject_FMalloc(<N>)      | M >= N
  *                          Accepts  DeeObject_Malloc()
@@ -847,12 +849,25 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
  * DeeGCObject_Free:        Accepts  DeeGCObject_SlabMalloc<M>()
  *                          Accepts  DeeGCObject_FMalloc(<M>)
  *                          Accepts  DeeGCObject_Malloc()
+ *                          Accepts  NULL
  *
- * DeeGCObject_FFree(<N>):
+ * DeeGCObject_FFree(...,<N>):
  * DeeGCObject_SlabFree<N>: Accepts  DeeGCObject_SlabMalloc<M>() | M >= N
  *                          Accepts  DeeGCObject_FMalloc(<M>)    | M >= N
  *                          Accepts  DeeGCObject_Malloc()
  *
+ * The following free functions accept and ignore NULL-pointers:
+ *   - Dee_Free
+ *   - DeeObject_Free
+ *   - DeeGCObject_Free
+ * The following free functions require the caller to pass non-NULL pointers:
+ *   - DeeSlab_Free
+ *   - DeeSlab_FFree(...,<N>)
+ *   - DeeSlab_Free<N>
+ *   - DeeObject_FFree(...,<N>)
+ *   - DeeObject_SlabFree<N>
+ *   - DeeGCObject_FFree(...,<N>)
+ *   - DeeGCObject_SlabFree<N>
  */
 
 
@@ -860,9 +875,11 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
 #ifndef CONFIG_NO_OBJECT_SLABS
 /* Slab allocator functions.
  * These operate in increments of at least sizeof(void *), with the acutal
- * allocated size being `X * sizeof(void *)' for `<X>' in `DeeObject_SlabMalloc<X>'
- * These allocator functions can be extremely fast, and are designed to be used to
- * speed up allocation of the many small helper objects which can be found in deemon.
+ * allocated size being `X * sizeof(void *)' for `X = <X>' in `DeeObject_SlabMalloc<X>'
+ * These allocator functions can be extremely fast, but have a fixed allocation limit.
+ * They are designed to be used to speed up allocation of the many small helper objects
+ * which can be found in deemon, most of which have a very short life-time, while others
+ * exist for quite a while.
  * Pointers to these functions are mainly found in the `tp_alloc()' and `tp_free()'
  * fields of types. However, you shouldn't invoke these functions directly but use
  * `DeeObject_FMalloc()' and `DeeObject_FFree()', as well as their helper macros instead.
@@ -1139,16 +1156,16 @@ typedef struct {
     uintptr_t si_slabend;        /* [const] Slab ending address */
     size_t    si_itemsize;       /* [const] Slab item size (in bytes) */
     size_t    si_items_per_page; /* [const] Number of items per page */
-    size_t    si_totalpages;     /* [const] Number of pages designated for this slab. */
-    size_t    si_totalitems;     /* [const][== si_totalpages * si_items_per_page] Max number of items which may be allocated by the slab. */
-    size_t    si_cur_alloc;      /* # of items (`si_itemsize'-sized data blocks) currently allocated. */
+    size_t    si_totalpages;     /* [const][== si_usedpages + si_tailpages] Number of pages designated for this slab */
+    size_t    si_totalitems;     /* [const][== si_totalpages * si_items_per_page] Max number of items which may be allocated by the slab */
+    size_t    si_cur_alloc;      /* # of items (`si_itemsize'-sized data blocks) currently allocated */
     size_t    si_max_alloc;      /* Max # of items that were ever allocated */
     size_t    si_cur_free;       /* # of items in initialized pages currently marked as free */
     size_t    si_max_free;       /* Max # of items that were ever marked as free */
     size_t    si_cur_fullpages;  /* # of initialized pages that currently are fully in use */
     size_t    si_max_fullpages;  /* Max # of initialized pages that were ever in use at the same time */
-    size_t    si_cur_freepages;  /* # of initialized pages containing unallocated items. */
-    size_t    si_max_freepages;  /* Max # of initialized pages containing unallocated items at any point int time. */
+    size_t    si_cur_freepages;  /* # of initialized pages containing unallocated items */
+    size_t    si_max_freepages;  /* Max # of initialized pages containing unallocated items at any point int time */
     size_t    si_usedpages;      /* # of pages which are currently being used (si_cur_fullpages + si_cur_freepages) */
     size_t    si_tailpages;      /* # of pages which haven't been allocated, yet */
 } DeeSlabInfo;

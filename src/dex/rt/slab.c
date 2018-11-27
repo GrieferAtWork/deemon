@@ -204,6 +204,11 @@ PRIVATE struct type_seq ss_seq = {
     /* .tp_range_set = */NULL,
 };
 
+PRIVATE struct type_member ss_class_members[] = {
+    TYPE_MEMBER_CONST("iterator",&SlabStatIterator_Type),
+    TYPE_MEMBER_CONST("item",&SlabInfo_Type),
+    TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject SlabStat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -247,7 +252,7 @@ INTERN DeeTypeObject SlabStat_Type = {
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+    /* .tp_class_members = */ss_class_members
 };
 
 
@@ -402,7 +407,69 @@ si_repr(SlabInfoObject *__restrict self) {
  return DeeString_Newf("<slabinfo %k>",self);
 }
 
+PRIVATE DREF DeeObject *DCALL
+si_get_index(SlabInfoObject *__restrict self) {
+ return DeeInt_NewSize((size_t)(self->si_info - self->si_stat->st_stat.st_slabs));
+}
+
+PRIVATE DREF DeeObject *DCALL
+si_get_slabsize(SlabInfoObject *__restrict self) {
+ return DeeInt_NewSize(self->si_info->si_slabend -
+                       self->si_info->si_slabstart);
+}
+
+#define DEFINE_FIELD_READER(field_name) \
+PRIVATE DREF DeeObject *DCALL \
+si_get_##field_name(SlabInfoObject *__restrict self) \
+{ \
+ return DeeInt_NewSize(self->si_info->si_##field_name); \
+}
+DEFINE_FIELD_READER(itemsize)
+DEFINE_FIELD_READER(items_per_page)
+DEFINE_FIELD_READER(totalpages)
+DEFINE_FIELD_READER(totalitems)
+DEFINE_FIELD_READER(cur_alloc)
+DEFINE_FIELD_READER(max_alloc)
+DEFINE_FIELD_READER(cur_free)
+DEFINE_FIELD_READER(max_free)
+DEFINE_FIELD_READER(cur_fullpages)
+DEFINE_FIELD_READER(max_fullpages)
+DEFINE_FIELD_READER(cur_freepages)
+DEFINE_FIELD_READER(max_freepages)
+DEFINE_FIELD_READER(usedpages)
+DEFINE_FIELD_READER(tailpages)
+#undef DEFINE_FIELD_READER
+
+
+PRIVATE struct type_member si_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__stat__",STRUCT_OBJECT,offsetof(SlabInfoObject,si_stat),"->?Gslabstat"),
+    TYPE_MEMBER_END
+};
+
 PRIVATE struct type_getset si_getsets[] = {
+#define DEFINE_FIELD(name,doc) \
+    { #name, \
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_##name, NULL, NULL, \
+      DOC("->?Dint\n" doc) }
+    DEFINE_FIELD(slabsize,"Total size of the slab (in bytes)"),
+    DEFINE_FIELD(itemsize,"Slab item size (in bytes)"),
+    DEFINE_FIELD(items_per_page,"Number of items per page"),
+    DEFINE_FIELD(totalpages,"Number of pages designated for this slab"),
+    DEFINE_FIELD(totalitems,"Max number of items which may be allocated by the slab (same as @totalpages * @items_per_page)"),
+    DEFINE_FIELD(cur_alloc,"Number of items (@itemsize-sized data blocks) currently allocated"),
+    DEFINE_FIELD(max_alloc,"Max number of items that were ever allocated"),
+    DEFINE_FIELD(cur_free,"Number of items in initialized pages currently marked as free"),
+    DEFINE_FIELD(max_free,"Max number of items that were ever marked as free"),
+    DEFINE_FIELD(cur_fullpages,"Number of initialized pages that currently are fully in use"),
+    DEFINE_FIELD(max_fullpages,"Max number of initialized pages that were ever in use at the same time"),
+    DEFINE_FIELD(cur_freepages,"Number of initialized pages containing unallocated items"),
+    DEFINE_FIELD(max_freepages,"Max number of initialized pages containing unallocated items at any point int time"),
+    DEFINE_FIELD(usedpages,"Number of pages which are currently being used (@cur_fullpages + @cur_freepages)"),
+    DEFINE_FIELD(tailpages,"Number of pages which haven't been allocated, yet"),
+#undef DEFINE_FIELD
+    { "__index__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_index, NULL, NULL,
+      DOC("->?Dint\n"
+          "Index of @this slab within :rt:slabstat") },
     { NULL }
 };
 
@@ -435,7 +502,7 @@ PRIVATE struct type_cmp si_cmp = {
 INTERN DeeTypeObject SlabInfo_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_slabinfo",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("Element type for :rt:slabstat"),
     /* .tp_flags    = */TP_FNORMAL | TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -471,7 +538,7 @@ INTERN DeeTypeObject SlabInfo_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */si_getsets,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */si_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL

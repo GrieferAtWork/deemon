@@ -188,7 +188,7 @@ function get_module_page(fp: file, path: {string...}) {
 		d.prettypathname
 	});
 	fp << "</ul></nav>\r\n<main>\r\n";
-	fp << "<h2><b>" << d.kind << "</b>: " << d.name;
+	fp << "<h2><b>" << d.kind << "</b>: " << d.typename;
 	if (d.istype && d.object is bound) {
 		local base = deemon.type_.__base__(d.object);
 		if (base !is none) {
@@ -450,9 +450,6 @@ try {
 	}
 } finally {
 	doc_cache.clear();
-	for (local x: (slabstat from rt)())
-		print x;
-
 }
 #endif
 

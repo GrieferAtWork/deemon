@@ -2774,6 +2774,16 @@ class Doc: weakrefable {
 	@@its typing can be recreated with the attributes #isclassattr and #isoperator
 	public final member name: string;
 
+	@@Returns the name of type, or #name if #istype is :false, or if the type is anonymous
+	public final property typename: string = {
+		get(): string {
+			local result = none;
+			if (istype && object is bound)
+				result = deemon.type_.__name__(object);
+			return result is none ? name : result;
+		}
+	}
+
 	@@Similar to #name, but if @this Doc node is an operator, return
 	@@that operator's name in the form of $"==", rather than $"eq"
 	public final property prettyname: string = {
