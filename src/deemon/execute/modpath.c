@@ -1873,6 +1873,7 @@ load_module_after_dec_failure:
                                          0,
                                          0,
                                          result->mo_path);
+    Dee_Decref_likely(dec_stream);
     if unlikely(error) {
      DeeModule_FailLoading(result);
      goto err_buf_r;
