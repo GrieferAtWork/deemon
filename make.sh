@@ -117,10 +117,12 @@ ${MKDIR} -p ${BUILDPATH}
 ${MKDIR} -p ${BUILDPATH}/deemon
 ${MKDIR} -p ${BUILDPATH}/_jit
 ${MKDIR} -p ${BUILDPATH}/math
+${MKDIR} -p ${BUILDPATH}/xml
 ${MKDIR} -p ${BUILDPATH}/disassembler
 ${MKDIR} -p ${BUILDPATH}/fs
 ${MKDIR} -p ${BUILDPATH}/collections
 ${MKDIR} -p ${BUILDPATH}/time
+${MKDIR} -p ${BUILDPATH}/win32
 ${MKDIR} -p ${BUILDPATH}/ipc
 ${MKDIR} -p ${BUILDPATH}/ctypes
 ${MKDIR} -p ${BUILDPATH}/rt
@@ -319,6 +321,13 @@ req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "TARGET_WINDOWS" "-D__PE__") $(iyo
 req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-o lib/math.dll")) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-Wl,--out-implib=/lib/math.dll.a")) $(inopt "CONFIG_NO_DEX" $(inopt "TARGET_WINDOWS" "-o lib/math.so")) $(inopt "CONFIG_NO_DEX" "-L.") $(inopt "CONFIG_NO_DEX" "-shared") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-static-libgcc")) $(inopt "CONFIG_NO_DEX" "${BUILDPATH}/math/src.dex.math.libmath.c.o") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-ldeemon"))
 fi
 
+# Project: xml
+if nopt CONFIG_NO_DEX; then
+req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "TARGET_WINDOWS" "-D__PE__") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_DEBUG" "-DNDEBUG") -Wall -Wextra -Wno-address -Wno-unused-value -Wno-nonnull-compare -Wno-unused-parameter -Wno-comment -Wno-strict-aliasing -Wno-missing-field-initializers -Wno-type-limits $(iyopt "CONFIG_NO_THREADS" "-DCONFIG_NO_THREADS") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" "-DCONFIG_BUILDING_DEX") -shared -Iinclude -Iinclude/deemon/kos-headers -c -o ${BUILDPATH}/xml/src.dex.xml.libxml.c.o src/dex/xml/libxml.c
+req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "TARGET_WINDOWS" "-D__PE__") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_DEBUG" "-DNDEBUG") -Wall -Wextra -Wno-address -Wno-unused-value -Wno-nonnull-compare -Wno-unused-parameter -Wno-comment -Wno-strict-aliasing -Wno-missing-field-initializers -Wno-type-limits $(iyopt "CONFIG_NO_THREADS" "-DCONFIG_NO_THREADS") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" "-DCONFIG_BUILDING_DEX") -shared -Iinclude -Iinclude/deemon/kos-headers -c -o ${BUILDPATH}/xml/src.dex.xml.xml.c.o src/dex/xml/xml.c
+req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-o lib/xml.dll")) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-Wl,--out-implib=/lib/xml.dll.a")) $(inopt "CONFIG_NO_DEX" $(inopt "TARGET_WINDOWS" "-o lib/xml.so")) $(inopt "CONFIG_NO_DEX" "-L.") $(inopt "CONFIG_NO_DEX" "-shared") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-static-libgcc")) $(inopt "CONFIG_NO_DEX" "${BUILDPATH}/xml/src.dex.xml.libxml.c.o") $(inopt "CONFIG_NO_DEX" "${BUILDPATH}/xml/src.dex.xml.xml.c.o") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-ldeemon"))
+fi
+
 # Project: disassembler
 if nopt CONFIG_NO_DEX; then
 req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "TARGET_WINDOWS" "-D__PE__") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_DEBUG" "-DNDEBUG") -Wall -Wextra -Wno-address -Wno-unused-value -Wno-nonnull-compare -Wno-unused-parameter -Wno-comment -Wno-strict-aliasing -Wno-missing-field-initializers -Wno-type-limits $(iyopt "CONFIG_NO_THREADS" "-DCONFIG_NO_THREADS") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" "-DCONFIG_BUILDING_DEX") -shared -Iinclude -Iinclude/deemon/kos-headers -c -o ${BUILDPATH}/disassembler/src.dex.disassembler.libdisasm.c.o src/dex/disassembler/libdisasm.c
@@ -347,6 +356,12 @@ fi
 if nopt CONFIG_NO_DEX; then
 req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "TARGET_WINDOWS" "-D__PE__") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_DEBUG" "-DNDEBUG") -Wall -Wextra -Wno-address -Wno-unused-value -Wno-nonnull-compare -Wno-unused-parameter -Wno-comment -Wno-strict-aliasing -Wno-missing-field-initializers -Wno-type-limits $(iyopt "CONFIG_NO_THREADS" "-DCONFIG_NO_THREADS") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" "-DCONFIG_BUILDING_DEX") -shared -Iinclude -Iinclude/deemon/kos-headers -c -o ${BUILDPATH}/time/src.dex.time.libtime.c.o src/dex/time/libtime.c
 req $(inopt "CONFIG_NO_DEX" "${CXX}") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-o lib/time.dll")) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-Wl,--out-implib=/lib/time.dll.a")) $(inopt "CONFIG_NO_DEX" $(inopt "TARGET_WINDOWS" "-o lib/time.so")) $(inopt "CONFIG_NO_DEX" "-L.") $(inopt "CONFIG_NO_DEX" "-shared") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-static-libgcc")) $(inopt "CONFIG_NO_DEX" "${BUILDPATH}/time/src.dex.time.libtime.c.o") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-ldeemon"))
+fi
+
+# Project: win32
+if nopt CONFIG_NO_DEX && yopt TARGET_WINDOWS; then
+req $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "${CXX}")) $(iyopt "TARGET_WINDOWS" "-D__PE__") $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_DEBUG" "-DNDEBUG") -Wall -Wextra -Wno-address -Wno-unused-value -Wno-nonnull-compare -Wno-unused-parameter -Wno-comment -Wno-strict-aliasing -Wno-missing-field-initializers -Wno-type-limits $(iyopt "CONFIG_NO_THREADS" "-DCONFIG_NO_THREADS") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" "-DCONFIG_BUILDING_DEX") -shared -Iinclude -Iinclude/deemon/kos-headers -c -o ${BUILDPATH}/win32/src.dex.win32.libwin32.c.o src/dex/win32/libwin32.c
+req $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "${CXX}")) $(iyopt "CONFIG_OPTIMIZE" "-O3") $(iyopt "CONFIG_DEBUG" "-fstack-protector-strong -g") $(inopt "CONFIG_NO_THREADS" "-pthread") $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" $(iyopt "TARGET_WINDOWS" "-o lib/win32.dll"))) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" $(iyopt "TARGET_WINDOWS" "-Wl,--out-implib=/lib/win32.dll.a"))) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" $(inopt "TARGET_WINDOWS" "-o lib/win32.so"))) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-L.")) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "-shared")) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" $(iyopt "TARGET_WINDOWS" "-static-libgcc"))) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" "${BUILDPATH}/win32/src.dex.win32.libwin32.c.o")) $(inopt "CONFIG_NO_DEX" $(iyopt "TARGET_WINDOWS" $(iyopt "TARGET_WINDOWS" "-ldeemon")))
 fi
 
 # Project: ipc

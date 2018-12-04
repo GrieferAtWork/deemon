@@ -1,0 +1,495 @@
+local copyright =
+"/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */";
+
+import fs;
+import util;
+import * from deemon;
+
+local converter_map = {
+	"o"            : ("o", "?O",       "DeeObject *"),
+	"b"            : ("b", "?Dbool",   "bool"),
+	"d"            : ("d", "?Dint",    "int"),
+	"i"            : ("d", "?Dint",    "int"),
+	"u"            : ("u", "?Dint",    "unsigned int"),
+	"x"            : ("u", "?Dint",    "unsigned int"),
+	"Id"           : ("Id", "?Dint",   "dssize_t"),
+	"Ii"           : ("Id", "?Dint",   "dssize_t"),
+	"Iu"           : ("Iu", "?Dint",   "size_t"),
+	"Ix"           : ("Iu", "?Dint",   "size_t"),
+	"I8d"          : ("I8d", "?Dint",  "int8_t"),
+	"I8i"          : ("I8d", "?Dint",  "int8_t"),
+	"I8u"          : ("I8u", "?Dint",  "uint8_t"),
+	"I8x"          : ("I8u", "?Dint",  "uint8_t"),
+	"I16d"         : ("I16d", "?Dint", "int16_t"),
+	"I16i"         : ("I16d", "?Dint", "int16_t"),
+	"I16u"         : ("I16u", "?Dint", "uint16_t"),
+	"I16x"         : ("I16u", "?Dint", "uint16_t"),
+	"I32d"         : ("I32d", "?Dint", "int32_t"),
+	"I32i"         : ("I32d", "?Dint", "int32_t"),
+	"I32u"         : ("I32u", "?Dint", "uint32_t"),
+	"I32x"         : ("I32u", "?Dint", "uint32_t"),
+	"I64d"         : ("I64d", "?Dint", "int64_t"),
+	"I64i"         : ("I64d", "?Dint", "int64_t"),
+	"I64u"         : ("I64u", "?Dint", "uint64_t"),
+	"I64x"         : ("I64u", "?Dint", "uint64_t"),
+	"hhd"          : ("hhd", "?Dint",  "signed char"),
+	"hhi"          : ("hhd", "?Dint",  "signed char"),
+	"hhu"          : ("hhu", "?Dint",  "unsigned char"),
+	"hhx"          : ("hhu", "?Dint",  "unsigned char"),
+	"hd"           : ("hd", "?Dint",   "short"),
+	"hi"           : ("hd", "?Dint",   "short"),
+	"hu"           : ("hu", "?Dint",   "unsigned short"),
+	"hx"           : ("hu", "?Dint",   "unsigned short"),
+	"ld"           : ("ld", "?Dint",   "long"),
+	"li"           : ("ld", "?Dint",   "long"),
+	"lu"           : ("lu", "?Dint",   "unsigned long"),
+	"lx"           : ("lu", "?Dint",   "unsigned long"),
+	"lld"          : ("ld", "?Dint",   "__LONGLONG"),
+	"lli"          : ("ld", "?Dint",   "__LONGLONG"),
+	"llu"          : ("lu", "?Dint",   "__ULONGLONG"),
+	"llx"          : ("lu", "?Dint",   "__ULONGLONG"),
+	"f"            : ("f", "?Dfloat",  "float"),
+	"D"            : ("D", "?Dfloat",  "double"),
+	"LD"           : ("LD", "?Dfloat", "long double"),
+	"obj"          : "o",
+	"obj:any"      : "o",
+	"obj:buffer"   : ("o", "?Dbytes",  "DeeObject *"),
+	"obj:int"      : ("o", "?Dint",    "DeeIntObject *",
+		"\tif (DeeObject_AssertTypeExact({obj},&DeeInt_Type))\n"
+		"\t    goto err;\n"),
+	"obj:string"   : ("o", "?Dstring", "DeeStringObject *",
+		"\tif (DeeObject_AssertTypeExact({obj},&DeeString_Type))\n"
+		"\t    goto err;\n"),
+	"obj:callable" : ("o", "?Dcallable", "DeeObject *"),
+	"c:char[]"  : ("o", "?Dstring", "DeeStringObject *",
+		"\tif (DeeObject_AssertTypeExact({obj},&DeeString_Type))\n"
+		"\t    goto err;\n"
+		"\t{obj}_str = DeeString_AsUtf8((DeeObject *){obj});\n"
+		"\tif unlikely(!{obj}_str)\n"
+		"\t    goto err;\n",
+		("/*utf-8*/char const *","{}_str")),
+	"c:wchar_t[]"  : ("o", "?Dstring", "DeeStringObject *",
+		"\tif (DeeObject_AssertTypeExact({obj},&DeeString_Type))\n"
+		"\t    goto err;\n"
+		"\t{obj}_str = (dwchar_t const *)DeeString_AsWide((DeeObject *){obj});\n"
+		"\tif unlikely(!{obj}_str)\n"
+		"\t    goto err;\n",
+		("dwchar_t const *","{}_str")),
+	"c:bool"       : ("b", "?Dbool",   "bool"),
+	"nt:DWORD"     : ("I32u", "?Dint", "DWORD"),
+	"nt:HANDLE"    : ("Iu", "?Dint",   "HANDLE"),
+	"nt:LPCSTR"    : ("o", "?Dstring", "DeeStringObject *",
+		"\tif (DeeObject_AssertTypeExact({obj},&DeeString_Type))\n"
+		"\t    goto err;\n"
+		"\t{obj}_str = (LPCSTR)DeeString_AsUtf8((DeeObject *){obj});\n"
+		"\tif unlikely(!{obj}_str)\n"
+		"\t    goto err;\n",
+		("LPCSTR","{}_str")),
+	"nt:LPCWSTR"   : ("o", "?Dstring", "DeeStringObject *",
+		"\tif (DeeObject_AssertTypeExact({obj},&DeeString_Type))\n"
+		"\t    goto err;\n"
+		"\t{obj}_str = (LPCWSTR)DeeString_AsWide((DeeObject *){obj});\n"
+		"\tif unlikely(!{obj}_str)\n"
+		"\t    goto err;\n",
+		("LPCWSTR","{}_str")),
+};
+
+local function get_converter(name) {
+	local result = converter_map[name];
+	while (result is string)
+		result = converter_map[result];
+	return result;
+}
+
+
+@@Emit a #include directive, and write the remainder of input to another file
+function include(filename) {
+	print "#include",repr filename;
+	file.stdout = file.open(filename,"w");
+	print copyright;
+	print "/* WARNING: Autogenerated file",repr filename,"*/";
+}
+
+
+@@Define an integer constant (gi -- GenerateInteger)
+function gi(name: string, value: string | int = none, libname: string = none, visi: string = "PRIVATE", isconstant: bool = true) {
+	if (libname is none)
+		libname = fs.fileof(traceback()[1].file);
+	if (libname)
+		libname = libname + "_";
+	if (value is none)
+		value = name;
+	function define_with_bits(sign,n_bits) {
+		print "DEFINE_{}INT{}({}{},{});".format({
+			sign ? "" : "U",
+			n_bits,
+			libname,
+			name,
+			value
+		});
+	}
+	print "#define {}{}_DEF \\\n\t".format({ libname.upper(), name.upper() }),
+		"{",(repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) +
+		",",isconstant ? "MODSYM_FREADONLY|MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL","},";
+	local valid_bits = [15,30,45,60];
+	if (value is int) {
+		/* The constant is given directly. */
+		if (value < 0) {
+			for (local b: valid_bits) {
+				if (value < -(1 << (b - 1)))
+					continue;
+				define_with_bits(true,b);
+				return;
+			}
+			define_with_bits(true,75);
+		} else {
+			for (local b: valid_bits) {
+				if (value > ((1 << b) - 1))
+					continue;
+				define_with_bits(false,b);
+				return;
+			}
+			define_with_bits(false,75);
+		}
+	} else {
+		/* The constant is given via a macro that, meaning we must generate dynamic code. */
+		print "#if",value,">= 0";
+		print "#if",value,"== 0";
+		print "#define",libname + name,"DeeInt_Zero";
+		print "#elif",value,"== 1";
+		print "#define",libname + name,"DeeInt_One";
+		for (local b: valid_bits) {
+			print "#elif ",;
+			print value,"<= " + ((1 << b) - 1).hex() + "ull /* "+b+"-bit */";
+			define_with_bits(false,b);
+		}
+		print "#else";
+		define_with_bits(false,75);
+		print "#endif";
+		print "#else /* ",value,">= 0 */";
+		print "#if",value,"== -1";
+		print "#define",libname + name,"DeeInt_MinusOne";
+		for (local b: valid_bits) {
+			print "#elif ",;
+			print value,">= -" + (1 << (b - 1)).hex() + "ll /* "+b+"-bit */";
+			define_with_bits(true,b);
+		}
+		print "#else";
+		define_with_bits(true,75);
+		print "#endif";
+		print "#endif /* ",value,"< 0 */";
+	}
+}
+
+@@Same as #gi, but surround the definition with an #ifdef for @value
+function gii(name: string, value: string = none, libname: string = none, visi: string = "PRIVATE", isconstant: bool = true) {
+	if (libname is none)
+		libname = fs.fileof(traceback()[1].file);
+	if (value is none)
+		value = name;
+	print "#ifdef",value;
+	gi(name,value,libname,visi,isconstant);
+	print "#else /*",value,"*/";
+	if (libname)
+		libname = libname + "_";
+	print "#define {}{}_DEF /* nothing */".format({ libname.upper(), name.upper() });
+	print "#endif /* !"+value,"*/";
+}
+
+
+
+@@Generate a wrapper for a c method (gw -- GenerateWrapper)
+@@Usage (in a file `libfoo.c', after running `$ deemon -F libfoo.c'):
+@@>/*[[[deemon import("_dexutils").gw("bar","arg1:obj:string,arg2:o,arg3:o=NULL,arg4:b=true"); ]]]*/
+@@>FORCELOCAL DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *__restrict arg1, DeeObject *__restrict arg2, DeeObject *arg3, bool arg4);
+@@>PRIVATE DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+@@>#define LIBFOO_BAR_DEF(doc) { "bar", (DeeObject *)&libfoo_bar, MODSYM_FNORMAL, DOC("(arg1:?Dstring,arg2,arg3?,arg4:?Dbool=!t)\n" doc)}
+@@>PRIVATE DEFINE_KWCMETHOD(libfoo_bar,libfoo_bar_f);
+@@>PRIVATE DEFINE_KWLIST(libfoo_bar_kwds,{ K(arg1), K(arg2), K(arg3), K(arg4) });
+@@>PRIVATE DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+@@>	DeeStringObject *arg1;
+@@>	DeeObject *arg2;
+@@>	DeeObject *arg3 = NULL;
+@@>	bool arg4 = true;
+@@>	if (DeeArg_UnpackKw(argc,argv,kw,libfoo_bar_kwds,"oo|ob:bar",&arg1,&arg2,&arg3,&arg4))
+@@>	    goto err;
+@@>	if (DeeObject_AssertTypeExact(arg1,&DeeString_Type))
+@@>	    goto err;
+@@>	return libfoo_bar_f_impl(arg1,arg2,arg3,arg4);
+@@>err:
+@@>	return NULL;
+@@>}
+@@>FORCELOCAL DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *__restrict arg1, DeeObject *__restrict arg2, DeeObject *arg3, bool arg4)
+@@>//[[[end]]]
+@@>{
+@@>	...
+@@>	return_none;
+@@>}
+@@>	...
+@@>PRIVATE struct dex_symbol symbols[] = {
+@@>	LIBFOO_BAR_DEF("Human-readable function documentation text goes here"),
+@@>	{ NULL }
+@@>};
+@@>
+@@>PUBLIC struct dex DEX = {
+@@>	/* .d_symbols = */symbols
+@@>};
+function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = true, libname: string = none, visi: string = "PRIVATE") {
+	/* Extract the library name from the filename that is being formatted. */
+	if (libname is none)
+		libname = fs.fileof(traceback()[1].file);
+	if (libname)
+		libname = libname + "_";
+	local return_type;
+	args,none,return_type = args.rpartition("->")...;
+	local user_impl_name = "{}{}_f_impl".format({ libname, name });
+	local user_args = args.split(",");
+	local arg_data = list(#user_args,none);
+	for (local i,arg: util.enumerate(user_args)) {
+		local x,none,y = arg.partition(":")...;
+		local y,none,z = y.partition("=")...;
+		if (!y) y = "o";
+		arg_data[i] = (x.strip(),y.strip(),z.strip());
+	}
+	function print_user_impl() {
+		print "FORCELOCAL DREF DeeObject *DCALL",user_impl_name + "(",;
+		if (!arg_data)
+			print "void",;
+		else {
+			local is_first = true;
+			for (local x,y,z: arg_data) {
+				if (is_first)
+					is_first = false;
+				else {
+					print ", ",;
+				}
+				local conv;
+				if ("?" in y) {
+					conv = "DeeObject *";
+				} else {
+					local map = get_converter(y);
+					conv = map[2];
+					if (#map >= 5)
+						conv = map[4][0];
+				}
+				print conv,;
+				if (conv.endswith("*") && z != "NULL")
+					print "__restrict ",;
+				else if (!conv.endswith("*"))
+					print " ",;
+				print x,;
+			}
+		}
+		print ")",;
+	}
+	print_user_impl();
+	print ";";
+	print visi == "INTERN" ? "INTDEF" : visi,
+		"DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **__restrict argv"
+		.format({ libname, name }),;
+	if (kw && arg_data) print ", DeeObject *kw",;
+	print ");";
+	function print_default_doc_decl() {
+		print "(",;
+		local is_first = true;
+		for (local x,y,z: arg_data) {
+			if (is_first)
+				is_first = false;
+			else {
+				print ",",;
+			}
+			print x,;
+			if ("?" in y) {
+				if (z == "NULL") {
+					print "?",;
+					z = "";
+				}
+				print ":"+y,;
+			} else {
+				local conv = get_converter(y);
+				local typ = conv[1];
+				if (z == "NULL" && conv[2].endswith("*")) {
+					print "?",;
+					z = "";
+				}
+				if (typ != "?O") {
+					print ":"+typ,;
+				}
+			}
+			if (z) {
+				local map = {
+					"Dee_None" : "!N",
+					"Dee_True" : "!t",
+					"Dee_False" : "!f",
+					"true" : "!t",
+					"false" : "!f",
+				};
+				local r = map.get(z,z);
+				if (r is none) {
+					r = z;
+					if (z) {
+						if (z.isdigit(0))
+							r = "!" + z;
+					} else {
+						/* TODO: Support for string constants! */
+					}
+				}
+				print "="+r,;
+			}
+		}
+		print ")",;
+		if (return_type && return_type !in ["?N","?Dnone","?Edeemon:none"])
+			print "->"+return_type,;
+	}
+	print "#define {}{}_DEF".format({ libname.upper(), name.upper() }),
+		"{",(repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) + ", MODSYM_FNORMAL",;
+	if (docdecl) {
+		print ", DOC(\"",;
+		print_default_doc_decl();
+		print "\") },";
+	} else {
+		print " },";
+	}
+	print "#define {}{}_DEF_DOC(doc)".format({ libname.upper(), name.upper() }),
+		"{",(repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) + ", MODSYM_FNORMAL",;
+	if (docdecl) {
+		print ", DOC(\"",;
+		print_default_doc_decl();
+		print "\\n\" doc) },";
+	} else {
+		print ", DOC(doc) },";
+	}
+	local kwlist_name;
+	if (kw && arg_data) {
+		print visi,"DEFINE_KWCMETHOD({}{},{0}{1}_f);".format({ libname, name });
+		//kwlist_name = "{}{}_kwds".format({ libname, name });
+		kwlist_name = "{}kwds_{}".format({ libname,
+			"_".join(for (local x,y,z: arg_data) x)
+		});
+		local kwlist_def_name = "{}_DEFINED".format({ kwlist_name.upper() });
+		print "#ifndef",kwlist_def_name;
+		print "#define",kwlist_def_name,"1";
+		print visi,"DEFINE_KWLIST({},{{".format({ kwlist_name }),
+			", ".join(
+				for (local x,y,z: arg_data)
+					"K({})".format({ x })),
+			"});";
+		print "#endif /* !"+kwlist_def_name,"*/";
+		print visi,"DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {{".format({ libname, name });
+	} else {
+		print visi,"DEFINE_CMETHOD({}{},{0}{1}_f);".format({ libname, name });
+		print visi,"DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **__restrict argv) {{".format({ libname, name });
+	}
+	for (local x,y,z: arg_data) {
+		local conv;
+		if ("?" in y) {
+			conv = "DeeObject *";
+		} else {
+			local map = get_converter(y);
+			conv = map[2];
+			if (#map >= 5) {
+				local alt_type,alt_format = map[4]...;
+				print "\t"+alt_type,;
+				if (!alt_type.endswith("*"))
+					print " ",;
+				print alt_format.format({ x }),;
+				if (z) {
+					print " =",z,;
+					z = "";
+				}
+				print ";";
+			}
+		}
+		print "\t"+conv,;
+		if (!conv.endswith("*"))
+			print " ",;
+		print x,;
+		if (z) print " =",z,;
+		print ";";
+	}
+	if (kw && arg_data) {
+		print "\tif (DeeArg_UnpackKw(argc,argv,kw,{},\"".format({ kwlist_name }),;
+	} else {
+		print "\tif (DeeArg_Unpack(argc,argv,\"",;
+	}
+	local is_optional = false;
+	for (local x,y,z: arg_data) {
+		if (z) {
+			if (!is_optional) {
+				print "|",;
+				is_optional = true;
+			}
+		} else {
+			if (is_optional)
+				throw "Argument {!r}, following another default "
+					"argument is missing an initializer".format({ x });
+		}
+		if ("?" in y) {
+			print "o",;
+		} else {
+			print get_converter(y)[0],;
+		}
+	}
+	print ":",;
+	print name,;
+	print "\"",;
+	if (arg_data) {
+		for (local x,y,z: arg_data) {
+			print ",&",;
+			print x,;
+		}
+	}
+	print "))";
+	print "\t    goto err;";
+	/* Invoke check functions. */
+	for (local x,y,z: arg_data) {
+		if ("?" in y)
+			continue;
+		local d = get_converter(y);
+		if (#d >= 4)
+			print d[3].format({ "obj" : x }),;
+	}
+	print "\treturn",user_impl_name,;
+	print "(",;
+	local is_first = true;
+	for (local x,y,z: arg_data) {
+		if (is_first) {
+			is_first = false;
+		} else {
+			print ",",;
+		}
+		if ("?" !in y) {
+			local d = get_converter(y);
+			if (#d >= 5) {
+				local alt_format = d[4][1];
+				x = alt_format.format({ x });
+			}
+		}
+		print x,;
+	}
+	print ");";
+	print "err:";
+	print "\treturn NULL;";
+	print "}";
+	print_user_impl();
+	print;
+}
+
+

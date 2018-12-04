@@ -175,6 +175,13 @@ BEGIN
 		BEGIN DEX("math")         SOURCE("math/*.c")         END
 		BEGIN DEX("collections")  SOURCE("collections/*.c")  END
 		BEGIN DEX("disassembler") SOURCE("disassembler/*.c") END
+		BEGIN DEX("xml")          SOURCE("xml/*.c")          END
+		IF(TARGET_WINDOWS)
+			BEGIN
+				DEX("win32")
+				SOURCE("win32/*.c")
+			END
+		FI
 
 	FI
 END

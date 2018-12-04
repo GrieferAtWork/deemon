@@ -974,15 +974,15 @@ DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_FUNCTIONS)
  *   - DeeSlab_FFree(return,size2)  | size2 <= size
  *   - DeeSlab_Free<size2>(return)  | size2 <= size
  *   - DeeSlab_Free(return) */
-#define DeeSlab_Malloc(size)                 DeeSlab_Invoke(DeeSlab_Malloc,size,(ptr),Dee_Malloc(size))
-#define DeeSlab_Calloc(size)                 DeeSlab_Invoke(DeeSlab_Calloc,size,(ptr),Dee_Calloc(size))
-#define DeeSlab_TryMalloc(size)              DeeSlab_Invoke(DeeSlab_TryMalloc,size,(ptr),Dee_TryMalloc(size))
-#define DeeSlab_TryCalloc(size)              DeeSlab_Invoke(DeeSlab_TryCalloc,size,(ptr),Dee_TryCalloc(size))
+#define DeeSlab_Malloc(size)                 DeeSlab_Invoke(DeeSlab_Malloc,size,(),Dee_Malloc(size))
+#define DeeSlab_Calloc(size)                 DeeSlab_Invoke(DeeSlab_Calloc,size,(),Dee_Calloc(size))
+#define DeeSlab_TryMalloc(size)              DeeSlab_Invoke(DeeSlab_TryMalloc,size,(),Dee_TryMalloc(size))
+#define DeeSlab_TryCalloc(size)              DeeSlab_Invoke(DeeSlab_TryCalloc,size,(),Dee_TryCalloc(size))
 #define DeeSlab_FFree(ptr,size)              DeeSlab_Invoke(DeeSlab_Free,size,(ptr),Dee_Free(ptr))
-#define DeeDbgSlab_Malloc(size,file,line)    DeeSlab_Invoke(DeeDbgSlab_Malloc,size,(ptr,file,line),DeeDbg_Malloc(size,file,line))
-#define DeeDbgSlab_Calloc(size,file,line)    DeeSlab_Invoke(DeeDbgSlab_Calloc,size,(ptr,file,line),DeeDbg_Calloc(size,file,line))
-#define DeeDbgSlab_TryMalloc(size,file,line) DeeSlab_Invoke(DeeDbgSlab_TryMalloc,size,(ptr,file,line),DeeDbg_TryMalloc(size,file,line))
-#define DeeDbgSlab_TryCalloc(size,file,line) DeeSlab_Invoke(DeeDbgSlab_TryCalloc,size,(ptr,file,line),DeeDbg_TryCalloc(size,file,line))
+#define DeeDbgSlab_Malloc(size,file,line)    DeeSlab_Invoke(DeeDbgSlab_Malloc,size,(file,line),DeeDbg_Malloc(size,file,line))
+#define DeeDbgSlab_Calloc(size,file,line)    DeeSlab_Invoke(DeeDbgSlab_Calloc,size,(file,line),DeeDbg_Calloc(size,file,line))
+#define DeeDbgSlab_TryMalloc(size,file,line) DeeSlab_Invoke(DeeDbgSlab_TryMalloc,size,(file,line),DeeDbg_TryMalloc(size,file,line))
+#define DeeDbgSlab_TryCalloc(size,file,line) DeeSlab_Invoke(DeeDbgSlab_TryCalloc,size,(file,line),DeeDbg_TryCalloc(size,file,line))
 #define DeeDbgSlab_FFree(ptr,size,file,line) DeeSlab_Invoke(DeeDbgSlab_Free,size,(ptr,file,line),DeeDbg_Free(ptr,file,line))
 
 /* Free any kind of pointer allocated by the general-purpose slab allocators.

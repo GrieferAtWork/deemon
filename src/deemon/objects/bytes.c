@@ -181,7 +181,7 @@ PRIVATE struct type_member bytesiter_members[] = {
 
 INTERN DeeTypeObject BytesIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"bytes.iterator",
+    /* .tp_name     = */"_bytesiterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

@@ -267,7 +267,10 @@ again:
   result = (size_t)(new_ptr.cp32 - self->sfi_start.cp32);
   break;
  }
- return DeeTuple_Newf("IuIu",result,result + match_length);
+ return DeeTuple_Newf(DEE_FMT_SIZE_T
+                      DEE_FMT_SIZE_T,
+                      result,
+                      result + match_length);
 iter_done:
  return ITER_DONE;
 }
@@ -466,7 +469,7 @@ sf_init(StringFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  self->sf_start = 0;
  self->sf_end   = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|IdId:_stringfind",
+ if (DeeArg_Unpack(argc,argv,"oo|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":_stringfind",
                   &self->sf_str,&self->sf_needle,
                   &self->sf_start,&self->sf_end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->sf_str,&DeeString_Type) ||

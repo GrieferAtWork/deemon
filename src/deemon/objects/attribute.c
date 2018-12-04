@@ -1001,7 +1001,7 @@ PRIVATE int DCALL
 enumattriter_ctor(EnumAttrIter *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  EnumAttr *seq;
- if (DeeArg_Unpack(argc,argv,"o:enumattr.iterator",&seq) ||
+ if (DeeArg_Unpack(argc,argv,"o:_EnumAttrIterator",&seq) ||
      DeeObject_AssertType((DeeObject *)seq,&DeeEnumAttr_Type))
      return -1;
  enumattriter_init(self,seq);
@@ -1260,7 +1260,7 @@ PRIVATE struct type_member enumattriter_members[] = {
 
 PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"enumattr.iterator",
+    /* .tp_name     = */"_EnumAttrIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

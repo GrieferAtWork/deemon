@@ -2505,7 +2505,7 @@ int_tobytes(DeeIntObject *__restrict self,
  size_t length; DeeObject *byteorder = Dee_None;
  bool is_signed = false; bool encode_little;
  DREF DeeObject *result;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"Iu|ob:tobytes",
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,DEE_FMT_SIZE_T "|ob:tobytes",
                     &length,&byteorder,&is_signed))
      goto err;
  if (DeeNone_Check(byteorder)) {

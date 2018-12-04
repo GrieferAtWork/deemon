@@ -98,7 +98,7 @@ PRIVATE int DCALL
 stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
                         size_t argc, DeeObject **__restrict argv) {
  StringOrdinals *ords;
- if (DeeArg_Unpack(argc,argv,"o:_stringordinals.iterator",&ords) ||
+ if (DeeArg_Unpack(argc,argv,"o:_StringOrdinalsIterator",&ords) ||
      DeeObject_AssertTypeExact((DeeObject *)ords,&DeeStringOrdinals_Type))
      return -1;
  self->soi_str     = ords->so_str;
@@ -151,7 +151,7 @@ PRIVATE struct type_getset stringordinalsiter_getsets[] = {
 
 INTERN DeeTypeObject DeeStringOrdinalsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringordinals.iterator",
+    /* .tp_name     = */"_StringOrdinalsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -282,7 +282,7 @@ PRIVATE struct type_member stringordinals_class_members[] = {
 
 INTERN DeeTypeObject DeeStringOrdinals_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringordinals",
+    /* .tp_name     = */"_StringOrdinals",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

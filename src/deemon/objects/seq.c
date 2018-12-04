@@ -1346,7 +1346,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_segments(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  size_t segsize;
- if (DeeArg_Unpack(argc,argv,"Iu:segments",&segsize))
+ if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":segments",&segsize))
      goto err;
  if unlikely(!segsize)
     goto err_invalid_segsize;
@@ -1360,7 +1360,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_distribute(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  size_t segsize,mylen;
- if (DeeArg_Unpack(argc,argv,"Iu:distribute",&segsize))
+ if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":distribute",&segsize))
      goto err;
  if unlikely(!segsize)
     goto err_invalid_segsize;
@@ -1380,7 +1380,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_combinations(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  size_t r;
- if (DeeArg_Unpack(argc,argv,"Iu:combinations",&r))
+ if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":combinations",&r))
      goto err;
  return DeeSeq_Combinations(self,r);
 err:
@@ -1390,7 +1390,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_repeatcombinations(DeeObject *__restrict self,
                        size_t argc, DeeObject **__restrict argv) {
  size_t r;
- if (DeeArg_Unpack(argc,argv,"Iu:repeatcombinations",&r))
+ if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":repeatcombinations",&r))
      goto err;
  return DeeSeq_RepeatCombinations(self,r);
 err:
@@ -1445,7 +1445,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_erase(DeeObject *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
  size_t index,count = 1,result;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,DEE_FMT_SIZE_T "|" DEE_FMT_SIZE_T ":erase",&index,&count))
      goto err;
  result = DeeSeq_Erase(self,index,count);
  if unlikely(result == (size_t)-1)
@@ -1592,7 +1592,7 @@ seq_removeif(DeeObject *__restrict self, size_t argc,
              DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *should;
  size_t result,start = 0,end = (size_t)-1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":removeif",&should,&start,&end))
      goto err;
  result = DeeSeq_RemoveIf(self,should,start,end);
  if unlikely(result == (size_t)-1)
@@ -1635,7 +1635,7 @@ seq_resize(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  DREF DeeObject *result;
  size_t newsize,oldsize; DeeObject *filler = Dee_None;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,DEE_FMT_SIZE_T "|o:resize",&newsize,&filler))
      goto err;
  if (!newsize) {
   result = DeeObject_CallAttr(self,&str_clear,0,NULL);

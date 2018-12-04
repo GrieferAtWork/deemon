@@ -126,8 +126,16 @@ coti_next(ClassOperatorTableIterator *__restrict self) {
  ent = coti_next_ent(self);
  if (!ent) return ITER_DONE;
  info = Dee_OperatorInfo(NULL,ent->co_name);
- if (info) return DeeTuple_Newf("sI16u",info->oi_sname,ent->co_addr);
- return DeeTuple_Newf("I16uI16u",ent->co_name,ent->co_addr);
+ if (info) {
+  return DeeTuple_Newf("s"
+                       DEE_FMT_UINT16,
+                       info->oi_sname,
+                       ent->co_addr);
+ }
+ return DeeTuple_Newf(DEE_FMT_UINT16
+                      DEE_FMT_UINT16,
+                      ent->co_name,
+                      ent->co_addr);
 }
 PRIVATE DREF DeeObject *DCALL
 coti_next_key(ClassOperatorTableIterator *__restrict self) {

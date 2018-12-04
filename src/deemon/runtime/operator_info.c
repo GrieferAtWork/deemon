@@ -958,7 +958,7 @@ invoke_operator(DeeObject *__restrict self,
     case FILE_OPERATOR_READ:
      max_bytes = (size_t)-1;
      /* TODO: Support for reading into buffers */
-     if (DeeArg_Unpack(argc,argv,"|Iu:__read__",&max_bytes))
+     if (DeeArg_Unpack(argc,argv,"|" DEE_FMT_SIZE_T ":__read__",&max_bytes))
          goto err;
      return DeeFile_ReadText(self,max_bytes,false);
     }

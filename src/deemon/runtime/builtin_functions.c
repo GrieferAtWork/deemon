@@ -527,7 +527,7 @@ f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
  DeeThreadObject *ts;
  size_t argc_cur,argc_min = 0,argc_max;
  char *function_name = NULL;
- if (DeeArg_Unpack(argc,argv,"Iu:__badcall",&argc_max))
+ if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":__badcall",&argc_max))
      goto done;
  ts = DeeThread_Self();
  argc_cur = argc_max;

@@ -525,7 +525,7 @@ DFUNDEF bool (DCALL DeeThread_JoinAll)(void);
 DFUNDEF bool (DCALL DeeThread_ClearTls)(void);
 
 
-#if defined(CONFIG_BUILTIN_LIBTHREADING) || \
+#if defined(CONFIG_BUILDING_LIBTHREADING) || \
     defined(CONFIG_BUILDING_DEEMON)
 /* TLS implementation library hooks.
  * NOTE: These are exported publicly because there'd be no point in hiding them.

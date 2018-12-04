@@ -18,7 +18,7 @@
  */
 #ifndef GUARD_DEX_TIME_LIBTIME_C
 #define GUARD_DEX_TIME_LIBTIME_C 1
-#define CONFIG_BUILTIN_LIBTIME
+#define CONFIG_BUILDING_LIBTIME
 #define _KOS_SOURCE 1
 
 #include "libtime.h"

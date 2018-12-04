@@ -16,26 +16,38 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_THREADING_HOST_C
-#define GUARD_DEX_THREADING_HOST_C 1
-#define CONFIG_BUILDING_LIBTHREADING 1
-#define _KOS_SOURCE 1
+#ifndef GUARD_DEX_WIN32_LIBWIN32_H
+#define GUARD_DEX_WIN32_LIBWIN32_H 1
 
 #include <deemon/api.h>
+#ifdef CONFIG_HOST_WINDOWS
+#include <deemon/dex.h>
+#include <deemon/object.h>
+#include <deemon/string.h>
+#include <deemon/util/rwlock.h>
 
-#ifdef CONFIG_NO_THREADS
-#include "nothread.c.inl"
-#elif defined(CONFIG_HOST_WINDOWS)
-#include "windows.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
-#include "unix.c.inl"
-#elif 1
-/* -> The nothread variant uses atomics to try and implement thread support */
-#include "nothread.c.inl"
-#else
-/* XXX: c++11 standard headers? */
-/* XXX: atomic-only implementation? */
-#error "No libthreading support available"
+#include <Windows.h>
+
+DECL_BEGIN
+
+#if 0 /* TODO */
+typedef struct nt_reg_key NTRegKeyObject;
+
+struct nt_reg_key {
+    OBJECT_HEAD
+#ifndef CONFIG_NO_THREADS
+    rwlock_t              rk_lock; /* Lock for this registry key. */
+#endif
+    HKEY                  rk_key;  /* [0..1][lock(rk_lock)] A handle for the key being accessed.
+                                    * When `NULL', the handle must lazily be allocated when it is first needed. */
+    DREF DeeStringObject *rk_name; /* [1..1][const] Name of the key, possibly in relation to `rk_rel'. */
+    DREF NTRegKeyObject  *rk_rel;  /* [0..1][const] Underlying base-key, describing where `rk_name' originates from. */
+
+};
 #endif
 
-#endif /* !GUARD_DEX_THREADING_HOST_C */
+
+DECL_END
+#endif /* CONFIG_HOST_WINDOWS */
+
+#endif /* !GUARD_DEX_WIN32_LIBWIN32_H */

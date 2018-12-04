@@ -16,26 +16,26 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_THREADING_HOST_C
-#define GUARD_DEX_THREADING_HOST_C 1
-#define CONFIG_BUILDING_LIBTHREADING 1
-#define _KOS_SOURCE 1
+#ifndef GUARD_DEX_XML_LIBXML_C
+#define GUARD_DEX_XML_LIBXML_C 1
+#define CONFIG_BUILDING_LIBXML
 
-#include <deemon/api.h>
+#include "libxml.h"
 
-#ifdef CONFIG_NO_THREADS
-#include "nothread.c.inl"
-#elif defined(CONFIG_HOST_WINDOWS)
-#include "windows.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
-#include "unix.c.inl"
-#elif 1
-/* -> The nothread variant uses atomics to try and implement thread support */
-#include "nothread.c.inl"
-#else
-/* XXX: c++11 standard headers? */
-/* XXX: atomic-only implementation? */
-#error "No libthreading support available"
-#endif
+DECL_BEGIN
 
-#endif /* !GUARD_DEX_THREADING_HOST_C */
+
+
+PRIVATE struct dex_symbol symbols[] = {
+    { "Node", (DeeObject *)&XMLNodeObject_Type },
+    { NULL }
+};
+
+PUBLIC struct dex DEX = {
+    /* .d_symbols = */symbols
+};
+
+DECL_END
+
+
+#endif /* !GUARD_DEX_XML_LIBXML_C */

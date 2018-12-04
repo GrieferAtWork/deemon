@@ -1210,7 +1210,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_collect(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **__restrict argv) {
  size_t max = (size_t)-1,result;
- if (DeeArg_Unpack(argc,argv,"|Iu:collect",&max))
+ if (DeeArg_Unpack(argc,argv,"|" DEE_FMT_SIZE_T ":collect",&max))
      goto err;
  result = DeeGC_Collect(max);
  return DeeInt_NewSize(result);

@@ -21,6 +21,7 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/arg.h>
@@ -79,7 +80,7 @@ repeatiter_copy(RepeatIterator *__restrict self,
 PRIVATE int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_repeat.iterator",&self->ri_rep) ||
+ if (DeeArg_Unpack(argc,argv,"o:_RepeatIterator",&self->ri_rep) ||
      DeeObject_AssertTypeExact((DeeObject *)self->ri_rep,&Repeat_Type))
      return -1;
  self->ri_iter = DeeObject_IterSelf(self->ri_rep->r_seq);
@@ -209,7 +210,7 @@ PRIVATE struct type_member repeatiter_members[] = {
 
 INTERN DeeTypeObject RepeatIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_repeat.iterator",
+    /* .tp_name     = */"_RepeatIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -264,7 +265,7 @@ repeat_ctor(Repeat *__restrict self) {
 PRIVATE int DCALL
 repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oIu",&self->r_seq,&self->r_num))
+ if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":_Repeat",&self->r_seq,&self->r_num))
      return -1;
  if unlikely(!self->r_num) {
   self->r_seq = Dee_EmptySeq;
@@ -470,7 +471,7 @@ PRIVATE struct type_member repeat_class_members[] = {
 
 INTERN DeeTypeObject Repeat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_repeat",
+    /* .tp_name     = */"_Repeat",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -553,7 +554,7 @@ repeatitemiter_copy(RepeatItemIterator *__restrict self,
 PRIVATE int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_repeatitem.iterator",&self->rii_rep) ||
+ if (DeeArg_Unpack(argc,argv,"o:_RepeatItemIterator",&self->rii_rep) ||
      DeeObject_AssertTypeExact((DeeObject *)self->rii_rep,&RepeatItem_Type))
      return -1;
  self->rii_obj = self->rii_rep->ri_obj;
@@ -667,7 +668,7 @@ PRIVATE struct type_member repeatitemiter_members[] = {
 
 INTERN DeeTypeObject RepeatItemIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_repeatitem.iterator",
+    /* .tp_name     = */"_RepeatItemIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -722,7 +723,7 @@ repeatitem_ctor(RepeatItem *__restrict self) {
 PRIVATE int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oIu:_repeatitem",&self->ri_obj,&self->ri_num))
+ if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":_RepeatItem",&self->ri_obj,&self->ri_num))
      return -1;
  if unlikely(!self->ri_num) {
   self->ri_obj = Dee_EmptySeq;
@@ -943,7 +944,7 @@ PRIVATE struct type_member repeatitem_class_members[] = {
 
 INTERN DeeTypeObject RepeatItem_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_repeatitem",
+    /* .tp_name     = */"_RepeatItem",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

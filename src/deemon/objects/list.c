@@ -2179,7 +2179,7 @@ list_removeif(List *__restrict self, size_t argc,
               DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *should;
  size_t result,start = 0,end = (size_t)-1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":removeif",&should,&start,&end))
      goto err;
  result = DeeList_RemoveIf(self,should,start,end);
  if unlikely(result == (size_t)-1)
@@ -2202,7 +2202,7 @@ PRIVATE DREF DeeObject *DCALL
 list_erase(List *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  size_t index,count = 1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,DEE_FMT_SIZE_T "|" DEE_FMT_SIZE_T ":erase",&index,&count))
      return NULL;
  count = DeeList_Erase((DeeObject *)self,index,count);
  if unlikely(count == (size_t)-1) return NULL;
@@ -2375,7 +2375,7 @@ PRIVATE DREF DeeObject *DCALL
 list_reserve(List *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  size_t size;
- if (DeeArg_Unpack(argc,argv,"Iu:reserve",&size))
+ if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":reserve",&size))
      goto err;
  DeeList_LockWrite(self);
  if (size > self->l_alloc) {
@@ -2558,7 +2558,7 @@ PRIVATE DREF DeeObject *DCALL
 list_resize(List *__restrict self, size_t argc,
             DeeObject **__restrict argv, DeeObject *kw) {
  size_t newsize; DeeObject *filler = Dee_None;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,DEE_FMT_SIZE_T "|o:resize",&newsize,&filler))
      goto err;
 again:
  DeeList_LockWrite(self);
@@ -3551,7 +3551,7 @@ PRIVATE int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->li_index = 0;
- if (DeeArg_Unpack(argc,argv,"o|Iu:_listiterator",&self->li_list,&self->li_index) ||
+ if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":_listiterator",&self->li_list,&self->li_index) ||
      DeeObject_AssertType((DeeObject *)self->li_list,&DeeList_Type))
      return -1;
  Dee_Incref(self->li_list);

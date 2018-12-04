@@ -1165,7 +1165,7 @@ INTERN DeeTypeObject SetIterator_Type = {
                 /* .tp_copy_ctor = */&setiterator_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&setiterator_init,
-                TYPE_FIXED_ALLOCATOR(Set)
+                TYPE_FIXED_ALLOCATOR(SetIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&setiterator_fini,

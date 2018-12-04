@@ -172,7 +172,10 @@ again:
   if (!ATOMIC_CMPXCH_WEAK(self->bfi_ptr,ptr,new_ptr + self->bfi_needle_len))
        goto again;
   result = (size_t)(new_ptr - self->bfi_start);
-  return DeeTuple_Newf("IuIu",result,result + self->bfi_needle_len);
+  return DeeTuple_Newf(DEE_FMT_SIZE_T
+                       DEE_FMT_SIZE_T,
+                       result,
+                       result + self->bfi_needle_len);
  }
  return ITER_DONE;
 }
@@ -348,7 +351,7 @@ PRIVATE int DCALL
 bf_init(BytesFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|IdId:_bytesfind",
+ if (DeeArg_Unpack(argc,argv,"oo|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":_bytesfind",
                   &self->bf_bytes,&self->bf_other,
                   &start,&end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->bf_bytes,&DeeBytes_Type) ||

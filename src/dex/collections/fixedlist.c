@@ -799,7 +799,7 @@ PRIVATE int DCALL
 fli_init(FixedListIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->li_iter = 0;
- if (DeeArg_Unpack(argc,argv,"o|Iu:FixedListIterator",&self->li_list,&self->li_iter))
+ if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":FixedListIterator",&self->li_list,&self->li_iter))
      goto err;
  if (DeeObject_AssertTypeExact(self->li_list,&FixedList_Type))
      goto err;

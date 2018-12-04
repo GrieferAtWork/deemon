@@ -246,7 +246,7 @@ INTERN int DCALL
 dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  DeeDictObject *dict;
- if (DeeArg_Unpack(argc,argv,"o:dict.iterator",&dict) ||
+ if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&dict) ||
      DeeObject_AssertType((DeeObject *)dict,&DeeDict_Type))
      return -1;
  self->di_dict = dict;
@@ -320,7 +320,7 @@ PRIVATE struct type_member dict_iterator_members[] = {
 
 INTERN DeeTypeObject DictIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dict.iterator",
+    /* .tp_name     = */"_DictIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -421,7 +421,7 @@ dictproxyiterator_copy(DictProxyIterator *__restrict self,
 
 PRIVATE DeeTypeObject DictProxyIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dict.proxy.iterator",
+    /* .tp_name     = */"_DictProxyIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -493,7 +493,7 @@ INTERN int DCALL
 dictproxyiterator_init(DictProxyIterator *__restrict self,
                        size_t argc, DeeObject **__restrict argv) {
  DictProxy *proxy;
- if (DeeArg_Unpack(argc,argv,"o:dict.iterator",&proxy) ||
+ if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&proxy) ||
      DeeObject_AssertType((DeeObject *)proxy,
                            DeeObject_InstanceOf((DeeObject *)self,&DictKeysIterator_Type)  ? &DeeDictKeys_Type :
                            DeeObject_InstanceOf((DeeObject *)self,&DictItemsIterator_Type) ? &DeeDictItems_Type :
@@ -557,12 +557,9 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
     /* .tp_class_getsets = */NULL, \
     /* .tp_class_members = */NULL \
 }
-INTERN DeeTypeObject DictKeysIterator_Type =
-  INIT_PROXY_ITERATOR_TYPE("dict.keys.iterator",&dictiterator_next_key);
-INTERN DeeTypeObject DictItemsIterator_Type =
-  INIT_PROXY_ITERATOR_TYPE("dict.items.iterator",&dictiterator_next_item);
-INTERN DeeTypeObject DictValuesIterator_Type =
-  INIT_PROXY_ITERATOR_TYPE("dict.values.iterator",&dictiterator_next_value);
+INTERN DeeTypeObject DictKeysIterator_Type   = INIT_PROXY_ITERATOR_TYPE("_DictKeysIterator",&dictiterator_next_key);
+INTERN DeeTypeObject DictItemsIterator_Type  = INIT_PROXY_ITERATOR_TYPE("_DictItemsIterator",&dictiterator_next_item);
+INTERN DeeTypeObject DictValuesIterator_Type = INIT_PROXY_ITERATOR_TYPE("_DictValuesIterator",&dictiterator_next_value);
 #undef INIT_PROXY_ITERATOR_TYPE
 
 INTERN DREF DeeObject *DCALL
@@ -604,13 +601,15 @@ PRIVATE int DCALL
 proxy_init(DictProxy *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *dict;
- if (DeeArg_Unpack(argc,argv,"o:dict.proxy",&dict))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_DictProxy",&dict))
+     goto err;
  if (DeeObject_AssertType(dict,&DeeDict_Type))
-     return -1;
+     goto err;
  self->dp_dict = (DREF DeeDictObject *)dict;
  Dee_Incref(dict);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -747,7 +746,7 @@ PRIVATE struct type_seq dict_values_seq = {
 
 PUBLIC DeeTypeObject DeeDictProxy_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dict.proxy",
+    /* .tp_name     = */"_DictProxy",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -792,7 +791,7 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
 
 PUBLIC DeeTypeObject DeeDictKeys_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dict.keys",
+    /* .tp_name     = */"_DictKeys",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -837,7 +836,7 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
 
 PUBLIC DeeTypeObject DeeDictItems_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dict.items",
+    /* .tp_name     = */"_DictItems",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -882,7 +881,7 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
 
 PUBLIC DeeTypeObject DeeDictValues_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dict.values",
+    /* .tp_name     = */"_DictValues",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

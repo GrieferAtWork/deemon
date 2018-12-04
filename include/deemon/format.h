@@ -23,6 +23,7 @@
 #include "object.h"
 #include <stddef.h>
 #include <stdarg.h>
+#include <hybrid/typecore.h>
 
 DECL_BEGIN
 
@@ -171,6 +172,79 @@ DFUNDEF DREF DeeObject *Dee_Packf(char const *__restrict format, ...);
 DFUNDEF DREF DeeObject *DCALL Dee_VPackf(char const *__restrict format, va_list args);
 DFUNDEF DREF DeeObject *DCALL Dee_VPPackf(char const **__restrict pformat, struct va_list_struct *__restrict pargs);
 DFUNDEF void DCALL Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
+
+/* Helper macros to select the most efficient
+ * encoding which still produces the correct results. */
+#define DEE_FMT_INT8    DEE_FMT_S_INT8  "d"
+#define DEE_FMT_INT16   DEE_FMT_S_INT16 "d"
+#define DEE_FMT_INT32   DEE_FMT_S_INT32 "d"
+#define DEE_FMT_INT64   DEE_FMT_S_INT64 "d"
+#define DEE_FMT_UINT8   DEE_FMT_S_INT8  "u"
+#define DEE_FMT_UINT16  DEE_FMT_S_INT16 "u"
+#define DEE_FMT_UINT32  DEE_FMT_S_INT32 "u"
+#define DEE_FMT_UINT64  DEE_FMT_S_INT64 "u"
+#define DEE_FMT_SIZE_T  "Iu"
+#define DEE_FMT_SSIZE_T "Id"
+
+#define DEE_FMT_S_INT8  ""    /* Due to integer promotions, we can assume that any 8-bit integral always
+                                 * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
+#define DEE_FMT_S_INT16 "I16"
+#define DEE_FMT_S_INT32 "I32"
+#define DEE_FMT_S_INT64 "I64"
+
+#ifdef __SIZEOF_LONG_LONG__
+#if __SIZEOF_LONG_LONG__ == 8
+#undef DEE_FMT_S_INT64
+#define DEE_FMT_S_INT64 "ll"
+#elif __SIZEOF_LONG_LONG__ == 4
+#undef DEE_FMT_S_INT32
+#define DEE_FMT_S_INT32 "ll"
+#endif
+#endif /* __SIZEOF_LONG_LONG__ */
+#ifdef __SIZEOF_SIZE_T__
+#if __SIZEOF_SIZE_T__ == 8
+#undef DEE_FMT_S_INT64
+#define DEE_FMT_S_INT64 "I"
+#elif __SIZEOF_SIZE_T__ == 4
+#undef DEE_FMT_S_INT32
+#define DEE_FMT_S_INT32 "I"
+#endif
+#if defined(__SIZEOF_INT__) && __SIZEOF_SIZE_T__ <= __SIZEOF_INT__
+#undef DEE_FMT_SIZE_T
+#undef DEE_FMT_SSIZE_T
+#define DEE_FMT_SIZE_T  "u"
+#define DEE_FMT_SSIZE_T "d"
+#endif
+#endif /* __SIZEOF_SIZE_T__ */
+#ifdef __SIZEOF_LONG__
+#if __SIZEOF_LONG__ == 4
+#undef DEE_FMT_S_INT32
+#define DEE_FMT_S_INT32 "l"
+#elif __SIZEOF_LONG__ == 8
+#undef DEE_FMT_S_INT64
+#define DEE_FMT_S_INT64 "l"
+#endif
+#endif /* __SIZEOF_LONG__ */
+#ifdef __SIZEOF_INT__
+#if __SIZEOF_INT__ >= 8
+#undef DEE_FMT_S_INT16
+#undef DEE_FMT_S_INT32
+#undef DEE_FMT_S_INT64
+#define DEE_FMT_S_INT16 ""
+#define DEE_FMT_S_INT32 ""
+#define DEE_FMT_S_INT64 ""
+#elif __SIZEOF_INT__ >= 4
+#undef DEE_FMT_S_INT16
+#undef DEE_FMT_S_INT32
+#define DEE_FMT_S_INT16 ""
+#define DEE_FMT_S_INT32 ""
+#elif __SIZEOF_INT__ >= 2
+#undef DEE_FMT_S_INT16
+#define DEE_FMT_S_INT16 ""
+#endif
+#endif /* __SIZEOF_INT__ */
+
+
 
 /* Unpack values from an object.
  * Format language syntax:

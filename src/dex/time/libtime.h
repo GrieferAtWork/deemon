@@ -156,7 +156,7 @@ struct time_object {
 #   define _Time_Set64(x,y) ((x).t_time = (y))
 #endif
 
-#ifdef CONFIG_BUILTIN_LIBTIME
+#ifdef CONFIG_BUILDING_LIBTIME
 INTDEF DeeTypeObject DeeTime_Type;
 #define DeeTime_Check(ob)      DeeObject_InstanceOf(ob,&DeeTime_Type)
 #define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeTime_Type)
@@ -181,7 +181,7 @@ INTDEF uint64_t DCALL DeeTime_Get64(DeeTimeObject const *__restrict self);
    (void)(_Time_Set64(*(self),value),(self)->t_type = TIME_MICROSECONDS)
 
 INTDEF dtime_t DCALL time_now(void);
-#endif /* CONFIG_BUILTIN_LIBTIME */
+#endif /* CONFIG_BUILDING_LIBTIME */
 
 #define time_tick() DeeThread_GetTimeMicroSeconds()
 
@@ -220,10 +220,10 @@ INTDEF dtime_t DCALL time_now(void);
 /* NOTE: Converting days <-> years and days <-> months assumes a base of `0'! */
 #define time_day2yer(x)     ((400*((x)+1))/146097)
 #define time_yer2day(x)     (((146097*(x))/400)/*-1*/)
-#ifdef CONFIG_BUILTIN_LIBTIME
+#ifdef CONFIG_BUILDING_LIBTIME
 INTDEF dtime_half_t (TIMECALL time_day2mon)(dtime_half_t x);
 INTDEF dtime_half_t (TIMECALL time_mon2day)(dtime_half_t x);
-#endif /* CONFIG_BUILTIN_LIBTIME */
+#endif /* CONFIG_BUILDING_LIBTIME */
 #define time_day2mon(x) time_day2mon((dtime_half_t)(x))
 #define time_mon2day(x) time_mon2day((dtime_half_t)(x))
 

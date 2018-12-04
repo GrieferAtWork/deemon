@@ -119,7 +119,7 @@ PRIVATE struct type_member gcset_iterator_members[] = {
 
 INTERN DeeTypeObject DeeGCSetIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_gcset.iterator",
+    /* .tp_name     = */"_GCSetIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -251,7 +251,7 @@ PRIVATE struct type_member gcset_class_members[] = {
 
 INTERN DeeTypeObject DeeGCSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_gcset",
+    /* .tp_name     = */"_GCSet",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
     /* .tp_weakrefs = */0,
