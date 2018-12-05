@@ -531,7 +531,6 @@ Dee_weakref_fini(struct weakref *__restrict self) {
 #endif
 again:
  if (self->wr_obj) {
-  DEE_DPRINTF("Dee_weakref_fini(%p)\n",self);
   WEAKREF_LOCK(self);
   COMPILER_READ_BARRIER();
   if likely(self->wr_obj) {
@@ -1020,7 +1019,6 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref,4),
 PUBLIC void DCALL
 Dee_weakref_support_fini(struct weakref_list *__restrict list) {
  struct weakref *iter,*next;
- DEE_DPRINTF("Dee_weakref_support_fini(%p)\n",list);
 restart_clear_weakrefs:
  LOCK_POINTER(list->wl_nodes);
  if ((iter = (struct weakref *)GET_POINTER(list->wl_nodes)) != NULL) {
@@ -1047,7 +1045,6 @@ restart_clear_weakrefs:
    * indicating that the link has been severed. */
   ATOMIC_WRITE(iter->wr_obj,NULL);
   ATOMIC_WRITE(list->wl_nodes,next);
-  DEE_DPRINTF("FINALIZE(%p)\n",iter);
   if (iter->wr_del) {
    (*iter->wr_del)(iter);
   } else {
