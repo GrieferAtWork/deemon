@@ -4741,7 +4741,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "scope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getscope, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setscope,
-      DOC("->?Ascope?Ert:Compiler\n"
+      DOC("->?AScope?Ert:Compiler\n"
           "@throw ValueError Attempted to set a scope associated with a different compiler\n"
           "@throw ReferenceError Attempted to set a scope not apart of the same base-scope (s.a. :Compiler.scope.base)\n"
           "@throw ReferenceError Attempted to set the scope of a branch containing symbols that would no longer be reachable\n"
@@ -4763,7 +4763,7 @@ PRIVATE struct type_getset ast_getsets[] = {
     { "sym",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getsym, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setsym,
-      DOC("->?Asymbol?Ert:Compiler\n"
+      DOC("->?ASymbol?Ert:Compiler\n"
           "@throw TypeError #kind isn't $\"sym\", $\"unbind\" or $\"bound\"\n"
           "@throw ValueError Attempted to set a :Compiler.symbol associated with a different compiler\n"
           "Get or set the symbol associated with a symbol-related AST") },
@@ -5175,7 +5175,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 
 INTERN DeeTypeObject DeeCompilerAst_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"ast",
+    /* .tp_name     = */"_Ast",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

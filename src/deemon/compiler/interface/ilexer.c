@@ -648,18 +648,18 @@ PRIVATE struct type_getset keyword_getsets[] = {
       DOC("->?Dint\n"
           "Returns the hash of @this keyword") },
     { "macrofile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_macrofile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
           "Returns the macro definitions file, or :none if "
           "@this keyword isn't being used as a user-defined macro") },
     { "oldmacrofile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_oldmacrofile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
           "Returns the latest old macro file, that is the first macro "
           "file definition that is preserved when ${#pragma push_macro(\"foo\")} is used") },
     { "defmacrofile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_defmacrofile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
           "Returns the default definition of a user-overwritten macro") },
     { "cachedfile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_cachedfile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
           "Returns a file that has been cached under this keyword") },
     { "counter",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_counter,
@@ -753,7 +753,7 @@ PRIVATE struct type_getset keyword_getsets[] = {
 
 INTERN DeeTypeObject DeeCompilerKeyword_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"keyword",
+    /* .tp_name     = */"_Keyword",
     /* .tp_doc      = */DOC("str->\n"
                             "Returns the name of @this keyword"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
@@ -1374,51 +1374,51 @@ lexer_set_counter(DeeCompilerWrapperObject *__restrict self,
 
 PRIVATE struct type_getset lexer_getsets[] = {
     { "keywords", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_keywords, NULL, NULL,
-      DOC("->?#keywords\n"
+      DOC("->?#Keywords\n"
           "Returns a descriptor for recognized keywords, as well as their associated bindings") },
     { "extensions", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_extensions, NULL, NULL,
-      DOC("->?#extensions\n"
+      DOC("->?#Extensions\n"
           "Returns a descriptor for currently enabled compiler extensions") },
     { "warnings", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_warnings, NULL, NULL,
-      DOC("->?#warnings\n"
+      DOC("->?#Warnings\n"
           "Returns a descriptor for the current compiler warning state") },
     { "syspaths", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_syspaths, NULL, NULL,
-      DOC("->?#syspaths\n"
+      DOC("->?#SysPaths\n"
           "Returns a sequence representing the system include paths currently being used") },
     { "ifdef", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_ifdef, NULL, NULL,
-      DOC("->?#ifdef\n"
+      DOC("->?#Ifdef\n"
           "Returns a descriptor for the active list of ifdef-blocks") },
     { "token", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_token, NULL, NULL,
-      DOC("->?#token\n"
+      DOC("->?#Token\n"
           "Returns a descriptor for the currently active token") },
     { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
-      DOC("->?X2?#file?N\n"
+      DOC("->?X2?#File?N\n"
           "Returns the currently active file, or :none if no file is currently active. Same as #token.id") },
     { "textfile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textfile, NULL, NULL,
-      DOC("->?X2?#file?N\n"
-          "Same as #file, but return the first non-macro file") },
+      DOC("->?X2?#File?N\n"
+          "Same as #File, but return the first non-macro file") },
     { "basefile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_basefile, NULL, NULL,
-      DOC("->?X2?#file?N\n"
-          "Similar to #file, but return the base-file (that is the first included file) instead") },
+      DOC("->?X2?#File?N\n"
+          "Similar to #File, but return the base-file (that is the first included file) instead") },
     { "textposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textposition, NULL, NULL,
-      DOC("->?X2?T3?#file?Dint?Dint?N\n"
+      DOC("->?X2?T3?#File?Dint?Dint?N\n"
           "Returns a tuple (file,line,column) for the text-position of the current token\n"
           "In the event that the current file is the result of an expanded macro, the source "
           "location of the macro invocation site is returned\n"
           "In the event that no text file is currently loaded, :none is returned instead") },
     { "textendposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textendposition, NULL, NULL,
-      DOC("->?X2?T3?#file?Dint?Dint?N\n"
+      DOC("->?X2?T3?#File?Dint?Dint?N\n"
           "Same as #textposition, however when the current file isn't the result of an expanded macro, "
           "the returned values refer to the end of the current token, rather than its beginning\n"
           "In the event that no text file is currently loaded, :none is returned instead") },
     { "tokenposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-      DOC("->?X2?T3?#file?Dint?Dint?N\n"
+      DOC("->?X2?T3?#File?Dint?Dint?N\n"
           "Similar to #textposition, however in the event of the current token originating "
           "from a macro, return the source position of that token within the macro, rather "
           "than the source position of the macro being invoked\n"
           "Same as #token.position") },
     { "tokenendposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-      DOC("->?X2?T3?#file?Dint?Dint?N\n"
+      DOC("->?X2?T3?#File?Dint?Dint?N\n"
           "Same as #tokenposition, however return the end position of the current token\n"
           "Same as #token.endposition") },
     { "atstartofline", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
@@ -1459,7 +1459,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_noseek_on_eob,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_noseek_on_eob,
       DOC("->?Dbool\n"
-          "When :true, don't seek the next chunk (s.a. #file.nextchunk) "
+          "When :true, don't seek the next chunk (s.a. #File.nextchunk) "
           "when the current one ends. Instead, indicate EOF by setting the "
           "current #token.id to $0\n"
           "Note: This field is preserved by #flags") },
@@ -1468,7 +1468,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_nopop_on_eof,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_nopop_on_eof,
       DOC("->?Dbool\n"
-          "When :true, don't automatically pop the current #file when it signals "
+          "When :true, don't automatically pop the current #File when it signals "
           "eof in order to continue parsing older files, but instead propagate the "
           "EOF by setting the current #token.id to $0\n"
           "Note: This field is preserved by #flags") },
@@ -1487,7 +1487,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_nonblocking,
       DOC("->?Dbool\n"
           "When :true, operate in non-blocking mode when loading new chunks from "
-          "files, which essentically means that whenever #file.nextchunk is called, "
+          "files, which essentically means that whenever #File.nextchunk is called, "
           "the $nonblocking argument is set to this value\n"
           "Note: This field is preserved by #flags") },
     { "terminatestringlf",
@@ -1498,7 +1498,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
           "When :true, regular strings are terminated by line-feeds, which will also "
           "cause a warning/error to be emit, alongside the incomplete token still "
           "packaged as a complete string\n"
-          "Note that this also affects #file.nextchunk, in that incomplete strings "
+          "Note that this also affects #File.nextchunk, in that incomplete strings "
           "near the end of the input stream can also be terminted by line-feeds\n"
           "Note: This field is preserved by #flags") },
     { "nodirectives",
@@ -1609,7 +1609,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_wsystemheaders,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_wsystemheaders,
       DOC("->?Dbool\n"
-          "When :true, ignore #file.issystemheader, and still produce "
+          "When :true, ignore #File.issystemheader, and still produce "
           "warnings in files marked as system headers\n"
           "Note: This field is preserved by #flags") },
     { "nodeprecated",
@@ -1617,7 +1617,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_nodeprecated,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_nodeprecated,
       DOC("->?Dbool\n"
-          "When :true, don't emit warnings for keywords marked as #keyword.is_deprecated or #keyword.is_poisoned\n"
+          "When :true, don't emit warnings for keywords marked as #Keyword.is_deprecated or #Keyword.is_poisoned\n"
           "Note: This field is preserved by #flags") },
     { "msvcmessages",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_msvcmessages,
@@ -1641,7 +1641,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_noencoding,
       DOC("->?Dbool\n"
           "When :true, don't decode input text prior to processing it\n"
-          "This essentically means that whenever #file.nextchunk is called, "
+          "This essentically means that whenever #File.nextchunk is called, "
           "the $binary is set to this value") },
     { "reemitunknownpragma",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_reemitunknownpragma,
@@ -1678,16 +1678,16 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eobfile,
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_eobfile,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_eobfile,
-      DOC("->?#file\n"
+      DOC("->?#File\n"
           "When bound, prevent seek-on-end-of-block (that is performing a call to "
-          "#file.nextchunk) when the current is equal to #eobfile\n"
+          "#File.nextchunk) when the current is equal to #eobfile\n"
           "This is essentially the same as setting #noseek_on_eob to :true, however "
           "rather than affecting all files, it only affect a specific file") },
     { "eoffile",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eoffile,
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_eoffile,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_eoffile,
-      DOC("->?#file\n"
+      DOC("->?#File\n"
           "When bound, prevent pop-on-end-of-file (that is popping the current "
           "file, as done by #popfile) when the current is equal to #eoffile\n"
           "This is essentially the same as setting #nopop_on_eof to :true, however "
@@ -1697,7 +1697,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
       (int(DCALL *)(DeeObject *__restrict))&lexer_del_macrolimit,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&lexer_set_macrolimit,
       DOC("->?Dint\n"
-          "The max number of times that a recursive macro (s.a. #file.allowselfexpansion) "
+          "The max number of times that a recursive macro (s.a. #File.allowselfexpansion) "
           "is allowed to appear on the macro stack, before an error is emit, and further "
           "expansion is prevented (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_MREC) ", "
           "which is also restored when deleting this property)") },
@@ -1754,14 +1754,14 @@ PRIVATE struct type_getset lexer_getsets[] = {
 
 
 PRIVATE struct type_member lexer_class_members[] = {
-    TYPE_MEMBER_CONST("keyword",&DeeCompilerKeyword_Type),
-    TYPE_MEMBER_CONST("keywords",&DeeCompilerLexerKeywords_Type),
-    TYPE_MEMBER_CONST("extensions",&DeeCompilerLexerExtensions_Type),
-    TYPE_MEMBER_CONST("warnings",&DeeCompilerLexerWarnings_Type),
-    TYPE_MEMBER_CONST("syspaths",&DeeCompilerLexerSyspaths_Type),
-    TYPE_MEMBER_CONST("ifdef",&DeeCompilerLexerIfdef_Type),
-    TYPE_MEMBER_CONST("token",&DeeCompilerLexerToken_Type),
-    TYPE_MEMBER_CONST("file",&DeeCompilerFile_Type),
+    TYPE_MEMBER_CONST("Keyword",&DeeCompilerKeyword_Type),
+    TYPE_MEMBER_CONST("Keywords",&DeeCompilerLexerKeywords_Type),
+    TYPE_MEMBER_CONST("Extensions",&DeeCompilerLexerExtensions_Type),
+    TYPE_MEMBER_CONST("Warnings",&DeeCompilerLexerWarnings_Type),
+    TYPE_MEMBER_CONST("SysPaths",&DeeCompilerLexerSyspaths_Type),
+    TYPE_MEMBER_CONST("Ifdef",&DeeCompilerLexerIfdef_Type),
+    TYPE_MEMBER_CONST("Token",&DeeCompilerLexerToken_Type),
+    TYPE_MEMBER_CONST("File",&DeeCompilerFile_Type),
     TYPE_MEMBER_END
 };
 
@@ -1967,7 +1967,7 @@ err:
 
 
 DOC_DEF(lexer_getkwd_doc,
-        "(name:?Dstring,create=!t)->?X2?#keyword?N\n"
+        "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
         "Lookup the keyword associated with @name and return it, or :none "
         "when @create is :false and the keyword hasn't been accessed yet");
 PRIVATE struct keyword getkwd_kwlist[] = { K(name), K(create), KEND };
@@ -2004,7 +2004,7 @@ err:
 }
 
 DOC_DEF(lexer_getxkwd_doc,
-        "(name:?Dstring,create=!t)->?X2?#keyword?N\n"
+        "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
         "Same as #getkwd, however the given @name may contain escaped "
         "line-feeds that are removed prior to it being used to lookup "
         "a keyword");
@@ -2041,7 +2041,7 @@ err:
 }
 
 DOC_DEF(lexer_getkwdid_doc,
-        "(id:?Dint)->?X2?#keyword?N\n"
+        "(id:?Dint)->?X2?#Keyword?N\n"
         "Lookup the keyword associated with the given @id, "
         "returning it or :none if no such keyword exists.\n"
         "WARNING: This is an O(n) operation and should be avoided if at all possible");
@@ -2208,7 +2208,7 @@ PRIVATE struct type_method lexer_methods[] = {
           "Restore the lexer after it was set to an error state") },
     { "popfile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_popfile,
       DOC("->?Dbool\n"
-          "Pop the last-#{include}d file and switch back to the file before then (s.a. #file)") },
+          "Pop the last-#{include}d file and switch back to the file before then (s.a. #File)") },
     { "getkwd", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_getkwd,
       DOC_GET(lexer_getkwd_doc),
       TYPE_METHOD_FKWDS },
@@ -2235,8 +2235,7 @@ PRIVATE struct type_method lexer_methods[] = {
           "within a preprcessor expression"),
       TYPE_METHOD_FKWDS },
     { "delassert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_delassert,
-      DOC("(predicate:?Dstring)->?Dbool\n"
-          "(predicate:?Dstring,answer:?Dstring)->?Dbool\n"
+      DOC("(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
           "@return Returns :true when at least 1 answer got deleted for the given @predicate\n"
           "Delete an assertion @answer, or all assertions made for a given "
           "@predicate, such that ${#if #predicate(answer)} no longer evaluates "
@@ -2249,7 +2248,7 @@ PRIVATE struct type_method lexer_methods[] = {
 
 INTERN DeeTypeObject DeeCompilerLexer_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lexer",
+    /* .tp_name     = */"_Lexer",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2348,7 +2347,7 @@ PRIVATE struct type_method lexer_keywords_methods[] = {
 
 INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lexer_keywords",
+    /* .tp_name     = */"_LexerKeywords",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2393,7 +2392,7 @@ INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
 
 INTERN DeeTypeObject DeeCompilerLexerExtensions_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lexer_extensions",
+    /* .tp_name     = */"_LexerExtensions",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2438,7 +2437,7 @@ INTERN DeeTypeObject DeeCompilerLexerExtensions_Type = {
 
 INTERN DeeTypeObject DeeCompilerLexerWarnings_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lexer_warnings",
+    /* .tp_name     = */"_LexerWarnings",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2664,7 +2663,7 @@ INTERN DeeTypeObject DeeCompilerLexerSyspaths_Type = {
 
 INTERN DeeTypeObject DeeCompilerLexerIfdef_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"lexer_ifdef",
+    /* .tp_name     = */"_LexerIfdef",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2904,19 +2903,19 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
     { "keyword",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_keyword, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&token_setkeyword,
-      DOC("->?X2?Akeyword?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
           "Returns the keyword associated with the current token, or "
           ":none if the current token doesn't have an associated keyword\n"
-          "When setting this field, both the token's #keyword, as well "
+          "When setting this field, both the token's #Keyword, as well "
           "as its #id field are set to the given value") },
     { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
           "Returns the currently active file, or :none if no file is currently active") },
     { "position", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-      DOC("->?X2?T3?Afile?Alexer?Ert:Compiler?Dint?Dint?N\n"
+      DOC("->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
           "Return the exact source position of @this token within a macro definition, or text source") },
     { "endposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-      DOC("->?X2?T3?Afile?Alexer?Ert:Compiler?Dint?Dint?N\n"
+      DOC("->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
           "Same as #position, however return the end position of the current token") },
     { "atstartofline", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
       DOC("->?Dbool\n"
@@ -3038,7 +3037,7 @@ PRIVATE struct type_cmp token_cmp = {
 
 INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"token",
+    /* .tp_name     = */"_Token",
     /* .tp_doc      = */DOC("str->\n"
                             "Returns a string representation for the #id of @this token\n"
                             "For most tokens, this is equivalent to #text, with the exception of the following:\n"
@@ -4228,7 +4227,7 @@ PRIVATE struct type_getset file_getsets[] = {
       DOC("->?Dstring\n"
           "Returns the real filename of a text file, or the real filename of the file "
           "containing the definition of the @this macro\n"
-          "This is the original, real filename, whereas the name returned by #filename "
+          "This is the original, real filename, whereas the name returned by #Filename "
           "is the one which may have been overwritten by a ${#line} directive") },
     { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_name, NULL, NULL,
       DOC("->?Dstring\n"
@@ -4251,7 +4250,7 @@ PRIVATE struct type_getset file_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getguard,
       (int(DCALL *)(DeeObject *__restrict))&file_delguard,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setguard,
-      DOC("->?X2?Akeyword?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
           "@throw ValueError @this file isn't a text file (#istext is :false)\n"
           "Get, delete, or set a keyword that is checked for being defined "
           "before allowing @this file to be included by ${#include} again\n"
@@ -4262,7 +4261,7 @@ PRIVATE struct type_getset file_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getnewguard,
       (int(DCALL *)(DeeObject *__restrict))&file_delnewguard,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setnewguard,
-      DOC("->?X2?Akeyword?Alexer?Ert:Compiler?N\n"
+      DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
           "@throw ValueError @this file isn't a text file (#istext is :false)\n"
           "Get, delete, or set a keyword that will be set as #guard (if no guard has "
           "already been set) once @this file is popped from the ${#include}-stack, and "
@@ -4438,7 +4437,7 @@ PRIVATE struct type_method file_methods[] = {
 
 INTERN DeeTypeObject DeeCompilerFile_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"file",
+    /* .tp_name     = */"_File",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

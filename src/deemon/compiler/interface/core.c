@@ -143,7 +143,7 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
 
 INTERN DeeTypeObject DeeCompilerObjItem_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"compilerobjitem",
+    /* .tp_name     = */"_CompilerObjItem",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -195,7 +195,7 @@ DeeCompilerWrapper_Fini(CompilerWrapper *__restrict self) {
 
 INTERN DeeTypeObject DeeCompilerWrapper_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"compilerwrapper",
+    /* .tp_name     = */"_CompilerWrapper",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

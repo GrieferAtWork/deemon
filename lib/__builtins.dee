@@ -189,13 +189,13 @@ local __objects = deemon.list {
 	/* 0x0090 */ ctypes.FunctionType, /* DeeForeignFunctionType_Type */
 	/* 0x0091 */ deemon.code,
 	/* 0x0092 */ deemon.code(), /* empty_code */
-	/* 0x0093 */ rt.Compiler.ast, /* DeeXAst_Type */
+	/* 0x0093 */ rt.Compiler.Ast, /* DeeXAst_Type */
 	/* 0x0094 */ try rt.DexModule catch (...) none, /* DeeDexModule_Type */
 	/* 0x0095 */ none, /* DeeErrorType_DexError */
-	/* 0x0096 */ none, /* DeeToken_Type */
+	/* 0x0096 */ rt.Compiler.Lexer.Token, /* DeeToken_Type */
 	/* 0x0097 */ none, /* DeeLocalVar_Type */
-	/* 0x0098 */ none, /* DeeLexer_Type */
-	/* 0x0099 */ rt.Compiler.ast, /* DeeSAst_Type */
+	/* 0x0098 */ rt.Compiler.Lexer, /* DeeLexer_Type */
+	/* 0x0099 */ rt.Compiler.Ast, /* DeeSAst_Type */
 	/* 0x009a */ fs.getcwd,
 	/* 0x009b */ fs.chdir,
 	/* 0x009c */ [] -> fs.user.home,
@@ -280,7 +280,7 @@ local __objects = deemon.list {
 	/* 0x00eb */ fs.query,
 	/* 0x00ec */ fs.query.iterator,
 	/* 0x00ed */ fs.link,
-	/* 0x00ee */ none, /* TODO: __builtin_fs_win32modulename */
+	/* 0x00ee */ try import("win32").GetModuleFileName catch (...) none, /* __builtin_fs_win32modulename */
 	/* 0x00ef */ deemon.Error.AppExit.exit,
 	/* 0x00f0 */ [](x) -> deemon.Error.AppExit.exit(x,false),
 	/* 0x00f1 */ [](x) -> deemon.Error.AppExit.exit(1,false),
@@ -312,15 +312,15 @@ local __objects = deemon.list {
 	/* 0x010b */ util.ceil,
 	/* 0x010c */ util.floor,
 	/* 0x010d */ util.round,
-	/* 0x010e */ (type [1:2]).iterator, /* DeeRangeInt8Iterator_Type */
-	/* 0x010f */ (type [1:2]).iterator, /* DeeRangeInt16Iterator_Type */
-	/* 0x0110 */ (type [1:2]).iterator, /* DeeRangeInt32Iterator_Type */
-	/* 0x0111 */ (type [1:2]).iterator, /* DeeRangeInt64Iterator_Type */
-	/* 0x0112 */ (type [1:2]).iterator, /* DeeRangeUInt8Iterator_Type */
-	/* 0x0113 */ (type [1:2]).iterator, /* DeeRangeUInt16Iterator_Type */
-	/* 0x0114 */ (type [1:2]).iterator, /* DeeRangeUInt32Iterator_Type */
-	/* 0x0115 */ (type [1:2]).iterator, /* DeeRangeUInt64Iterator_Type */
-	/* 0x0116 */ (type [1:2]).iterator, /* DeeGenericRangeIterator_Type */
+	/* 0x010e */ rt.SeqIntRangeIterator, /* DeeRangeInt8Iterator_Type */
+	/* 0x010f */ rt.SeqIntRangeIterator, /* DeeRangeInt16Iterator_Type */
+	/* 0x0110 */ rt.SeqIntRangeIterator, /* DeeRangeInt32Iterator_Type */
+	/* 0x0111 */ rt.SeqIntRangeIterator, /* DeeRangeInt64Iterator_Type */
+	/* 0x0112 */ rt.SeqIntRangeIterator, /* DeeRangeUInt8Iterator_Type */
+	/* 0x0113 */ rt.SeqIntRangeIterator, /* DeeRangeUInt16Iterator_Type */
+	/* 0x0114 */ rt.SeqIntRangeIterator, /* DeeRangeUInt32Iterator_Type */
+	/* 0x0115 */ rt.SeqIntRangeIterator, /* DeeRangeUInt64Iterator_Type */
+	/* 0x0116 */ rt.SeqIntRangeIterator, /* DeeGenericRangeIterator_Type */
 	/* 0x0117 */ deemon.sequence.range,
 	/* 0x0118 */ deemon.object.id,
 	/* 0x0119 */ none, /* TODO: math.sin */
@@ -421,7 +421,7 @@ local __objects = deemon.list {
 	/* 0x0178 */ ctypes.bswap32,
 	/* 0x0179 */ ctypes.bswap64,
 	/* 0x017A */ ctypes.StructType,
-	/* 0x017B */ rt.Compiler.scope,
+	/* 0x017B */ rt.Compiler.Scope,
 	/* 0x017C */ none, /* TODO: &DeeLexerIterator_Type */
 	/* 0x017D */ deemon.Error.ValueError.IndexError,
 	/* 0x017E */ deemon.hashset,
@@ -474,8 +474,8 @@ local __objects = deemon.list {
 	/* 0x01AD */ deemon.Error.ValueError.Arithmetic.DivideByZero(), /* _DeeErrorInstance_DivByZero */
 	/* 0x01AE */ deemon.Error.RuntimeError.StackOverflow(), /* _DeeErrorInstance_StackOverflow */
 	/* 0x01AF */ deemon.Error.RuntimeError.StackOverflow,
-	/* 0x01B0 */ none, /* TODO: DeeBuiltinFunction___builtin_get_stacklimit (These 2 should be provided through a...) */
-	/* 0x01B1 */ none, /* TODO: DeeBuiltinFunction___builtin_set_stacklimit (... DEX `rt', and not be apart of the core) */
+	/* 0x01B0 */ rt.getstacklimit, /* DeeBuiltinFunction___builtin_get_stacklimit */
+	/* 0x01B1 */ rt.setstacklimit, /* DeeBuiltinFunction___builtin_set_stacklimit */
 	/* 0x01B2 */ deemon.sequence.find,
 	/* 0x01B3 */ deemon.sequence.rfind,
 	/* 0x01B4 */ deemon.sequence.index,

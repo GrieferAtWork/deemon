@@ -1034,6 +1034,61 @@ err:
 
 
 
+/*[[[deemon import("_dexutils").gw("GetModuleFileName","hModule:nt:HANDLE->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDLE hModule);
+PRIVATE DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#define LIBWIN32_GETMODULEFILENAME_DEF { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FNORMAL, DOC("(hModule:?Dint)->?X2?Dstring?N") },
+#define LIBWIN32_GETMODULEFILENAME_DEF_DOC(doc) { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FNORMAL, DOC("(hModule:?Dint)->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileName,libwin32_GetModuleFileName_f);
+#ifndef LIBWIN32_KWDS_HMODULE_DEFINED
+#define LIBWIN32_KWDS_HMODULE_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hModule,{ K(hModule) });
+#endif /* !LIBWIN32_KWDS_HMODULE_DEFINED */
+PRIVATE DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+	HANDLE hModule;
+	if (DeeArg_UnpackKw(argc,argv,kw,libwin32_kwds_hModule,"Iu:GetModuleFileName",&hModule))
+	    goto err;
+	return libwin32_GetModuleFileName_f_impl(hModule);
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDLE hModule)
+//[[[end]]]
+{
+ LPWSTR buffer,new_buffer; DWORD bufsize = 256,error;
+again:
+ if (DeeThread_CheckInterrupt()) goto err;
+ buffer = DeeString_NewWideBuffer(bufsize);
+ if unlikely(!buffer) goto err;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  error = GetModuleFileNameW((HMODULE)hModule,buffer,bufsize+1);
+  if (!error) {
+   error = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (error == ERROR_OPERATION_ABORTED)
+       goto again;
+   DeeString_FreeWideBuffer(buffer);
+   return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (error <= bufsize) break;
+  /* Increase buffer size. */
+  bufsize   *= 2;
+  new_buffer = DeeString_ResizeWideBuffer(buffer,bufsize);
+  if unlikely(!new_buffer) goto err_result;
+  buffer = new_buffer;
+ }
+ new_buffer = DeeString_TryResizeWideBuffer(buffer,error);
+ if likely(new_buffer) buffer = new_buffer;
+ return DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(buffer);
+err:
+ return NULL;
+}
+
+
 
 PRIVATE struct dex_symbol symbols[] = {
     /* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
@@ -1062,6 +1117,7 @@ PRIVATE struct dex_symbol symbols[] = {
     LIBWIN32_REMOVEDIRECTORY_DEF
     LIBWIN32_CREATEDIRECTORY_DEF
     LIBWIN32_DELETEFILE_DEF
+    LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module (s.a. #GetLastError)")
 
     /* Constant flags. */
     LIBWIN32_FILE_READ_DATA_DEF

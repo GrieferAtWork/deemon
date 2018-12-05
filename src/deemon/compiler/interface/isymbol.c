@@ -397,7 +397,7 @@ symbol_bool(DeeCompilerSymbolObject *__restrict self) {
 
 INTERN DeeTypeObject DeeCompilerSymbol_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"symbol",
+    /* .tp_name     = */"_Symbol",
     /* .tp_doc      = */DOC("Inspect and modify attributes, typing, and alinkage of a symbol\n"
                             "\n"
                             "str->\n"
