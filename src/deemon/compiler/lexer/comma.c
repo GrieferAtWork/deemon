@@ -647,7 +647,7 @@ continue_at_comma:
                                  NULL);
   if unlikely(!store_source) goto err_current;
 
-  need_semi = !!(mode & AST_COMMA_PARSESEMI);
+  need_semi = true;
   /* Now everything depends on whether or not what
    * we've just parsed is an expand-expression:
    * >> a,b,c = get_value()...; // >> (((a,b,c) = get_value())...);
@@ -760,7 +760,7 @@ done_expression_nomerge:
  if (pout_mode) {
   if (need_semi)
      *pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
- } else if (need_semi) {
+ } else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
   /* Consume a `;' token as part of the expression. */
   if likely(tok == ';' || tok == '\n') {
    do {
