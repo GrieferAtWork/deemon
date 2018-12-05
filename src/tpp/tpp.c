@@ -190,15 +190,18 @@
 #endif
 
 
-#define SEP    '/'  /* The path-separator used in sanitized pathnames. */
 #if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
     defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
     defined(_WIN32_WCE) || defined(WIN32_WCE)
-/* An alternate path-separator that is replaced with `SEP' during sanitization.
- * >> We're going all-out linux here! (No backslashes allowed, because they _suck_!) */
-#define ALTSEP '\\'
+/* An alternate path-separator that is replaced with `SEP' during sanitization.  */
 #define HAVE_INSENSITIVE_PATHS
+#define SEP       '/'  /* The path-separator used in sanitized pathnames. */
+#define ALTSEP    '\\'
+#define ISABS(x) ((x)[0] && (x)[1] == ':')
+#else
+#define SEP       '/'  /* The path-separator used in sanitized pathnames. */
+#define ISABS(x) ((x)[0] == '/')
 #endif
 
 #ifdef HAVE_INSENSITIVE_PATHS
@@ -6349,10 +6352,26 @@ err_r:
 #endif
   goto end;
  }
+ /* Check for special case: The given path is absolute. */
+ if (ISABS(filename)) {
+  result = open_normal_file(filename,
+                            filename_size,
+                            pkeyword_entry,
+                            0);
+  if (result) { /* Goti! */
+#ifdef HAVE_INSENSITIVE_PATHS
+   if (!(mode&TPPLEXER_OPENFILE_FLAG_NOCASEWARN) &&
+       !check_path_spelling(filename,filename_size))
+        goto err_r;
+#endif
+   goto end;
+  }
+ }
  if (mode&TPPLEXER_OPENFILE_MODE_RELATIVE) {
-  struct TPPFile *iter = token.t_file;
+  struct TPPFile *iter;
   /* Relative #include-mode (Scan for files relative to
    * the paths of all text files on the #include stack). */
+  iter = token.t_file;
   while ((assert(iter),iter != &TPPFile_Empty)) {
    size_t pathsize; char *path_end,*path,*used_filename;
    if (iter->f_kind != TPPFILE_KIND_TEXT) goto nextfile;
@@ -6400,8 +6419,10 @@ err_r:
    }
    /* TODO: The is-system-header flag must depend on the
     *       path of the file we're using as basis. */
-   result = open_normal_file(used_filename,newbuffersize,
-                             pkeyword_entry,0);
+   result = open_normal_file(used_filename,
+                             newbuffersize,
+                             pkeyword_entry,
+                             0);
    if (result) { /* Goti! */
 #ifdef HAVE_INSENSITIVE_PATHS
     /* TODO: No need to check inherited path portion:
@@ -6419,7 +6440,7 @@ err_buffer_r:
 #endif
     /* When running in include_next-mode, make sure
      * that the file isn't already being included. */
-    if (!(mode&TPPLEXER_OPENFILE_FLAG_NEXT) ||
+    if (!(mode & TPPLEXER_OPENFILE_FLAG_NEXT) ||
         !(result->f_prev))
           goto end_buffer;
    }
