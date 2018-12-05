@@ -3551,7 +3551,7 @@ PRIVATE int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->li_index = 0;
- if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":_listiterator",&self->li_list,&self->li_index) ||
+ if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":_ListIterator",&self->li_list,&self->li_index) ||
      DeeObject_AssertType((DeeObject *)self->li_list,&DeeList_Type))
      return -1;
  Dee_Incref(self->li_list);
@@ -3670,7 +3670,7 @@ PRIVATE struct type_cmp li_cmp = {
 
 INTERN DeeTypeObject DeeListIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_listiterator",
+    /* .tp_name     = */"_ListIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

@@ -146,7 +146,9 @@ struct module_symbol {
                                            *          contains the proper value. */
 #define MODSYM_FCONSTEXPR      0x0002     /* May be combined with `MODSYM_FREADONLY' to allow the compiler to
                                            * propagate this symbol as a constant expression at compile-time,
-                                           * so-long as its runtime-value matches the criteria detailed above. */
+                                           * so-long as its runtime-value matches the criteria detailed above.
+                                           * NOTE: Regardless of this flag, the compiler mustn't propagate
+                                           *       the assigned value when `MODSYM_FPROPERTY' it set. */
 #define MODSYM_FALIAS          0x0004     /* This symbol is aliasing another.
                                            * This flag is handled by `DeeModule_GlobalName()', which will
                                            * try to continue searching for another member with the same index,
@@ -528,7 +530,7 @@ DeeModule_OpenSourceStreamString(DeeObject *__restrict source_stream,
  * Interactive modules are kind-of special, in that they parse,
  * compile, assemble, and link source code a-statement-at-a-time.
  * Additionally, the code that they produce is executed when you
- * iterate the returned module (_interactivemodule) object, at
+ * iterate the returned module (_InteractiveModule) object, at
  * which point it will return the value of expressions found in
  * the root-scope of the associated source code.
  * NOTE: When constructing an iterator for the returned module,

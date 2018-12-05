@@ -74,32 +74,6 @@ typedef struct {
 
 INTDEF DeeTypeObject SharedVector_Type;
 
-/* Create a new shared vector that will inherit elements
- * from the given vector once `SharedVector_Decref()' is called.
- * NOTE: This function implicitly inherits a reference to each item
- *       of the given vector, though does not actually inherit the
- *       vector itself! */
-INTDEF DREF SharedVector *DCALL
-SharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector);
-
-/* Check if the reference counter of `self' is 1. When it is,
- * simply destroy the shared vector without freeing `sv_vector',
- * but still decref() all contained object.
- * Otherwise, try to allocate a new vector with a length of `sv_length'.
- * If doing so fails, don't raise an error but replace `sv_vector' with
- * `NULL' and `sv_length' with `0' before decref()-ing all elements
- * that that pair of members used to refer to.
- * If allocation does succeed, memcpy() all objects contained in
- * the original vector into the dynamically allocated one, thus
- * transferring ownership to that vector before writing it back
- * to the SharedVector object.
- * >> In the end, this behavior is required to implement a fast,
- *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
- * NOTE: During decref(), objects are destroyed in reverse order,
- *       mirroring the behavior of adjstack/pop instructions. */
-INTDEF void DCALL SharedVector_Decref(DREF SharedVector *__restrict self);
-
 
 typedef struct {
     OBJECT_HEAD

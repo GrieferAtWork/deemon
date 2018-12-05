@@ -29,12 +29,12 @@
 
 DECL_BEGIN
 
-INTDEF DeeTypeObject DeeBytesSplitIterator_Type;
-INTDEF DeeTypeObject DeeBytesSplit_Type;
-INTDEF DeeTypeObject DeeBytesCaseSplitIterator_Type;
-INTDEF DeeTypeObject DeeBytesCaseSplit_Type;
-INTDEF DeeTypeObject DeeBytesLineSplitIterator_Type;
-INTDEF DeeTypeObject DeeBytesLineSplit_Type;
+INTDEF DeeTypeObject BytesSplitIterator_Type;
+INTDEF DeeTypeObject BytesSplit_Type;
+INTDEF DeeTypeObject BytesCaseSplitIterator_Type;
+INTDEF DeeTypeObject BytesCaseSplit_Type;
+INTDEF DeeTypeObject BytesLineSplitIterator_Type;
+INTDEF DeeTypeObject BytesLineSplit_Type;
 
 typedef struct {
     OBJECT_HEAD
@@ -64,14 +64,14 @@ typedef struct {
 PRIVATE int DCALL
 bsi_init(BytesSplitIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_bytessplititerator",
+ if (DeeArg_Unpack(argc,argv,"o:_BytesSplitIterator",
                   &self->bsi_split))
      goto err;
- if (Dee_TYPE(self) == &DeeBytesSplitIterator_Type) {
-  if (DeeObject_AssertTypeExact((DeeObject *)self->bsi_split,&DeeBytesSplit_Type))
+ if (Dee_TYPE(self) == &BytesSplitIterator_Type) {
+  if (DeeObject_AssertTypeExact((DeeObject *)self->bsi_split,&BytesSplit_Type))
       goto err;
  } else {
-  if (DeeObject_AssertTypeExact((DeeObject *)self->bsi_split,&DeeBytesCaseSplit_Type))
+  if (DeeObject_AssertTypeExact((DeeObject *)self->bsi_split,&BytesCaseSplit_Type))
       goto err;
  }
  self->bsi_bytes   = self->bsi_split->bs_bytes;
@@ -232,9 +232,9 @@ PRIVATE struct type_member bsi_members[] = {
 };
 
 
-INTERN DeeTypeObject DeeBytesSplitIterator_Type = {
+INTERN DeeTypeObject BytesSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytessplititerator",
+    /* .tp_name     = */"_BytesSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -277,9 +277,9 @@ INTERN DeeTypeObject DeeBytesSplitIterator_Type = {
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
 };
-INTERN DeeTypeObject DeeBytesCaseSplitIterator_Type = {
+INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytescasesplititerator",
+    /* .tp_name     = */"_BytesCaseSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -335,7 +335,7 @@ bs_ctor(BytesSplit *__restrict self) {
 PRIVATE int DCALL
 bs_init(BytesSplit *__restrict self, size_t argc,
         DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_bytessplit",&self->bs_bytes,&self->bs_sep_owner))
+ if (DeeArg_Unpack(argc,argv,"oo:_BytesSplit",&self->bs_bytes,&self->bs_sep_owner))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->bs_bytes,&DeeBytes_Type))
      goto err;
@@ -392,7 +392,7 @@ bs_iter(BytesSplit *__restrict self) {
  result->bsi_sep_ptr = self->bs_sep_ptr;
  result->bsi_sep_len = self->bs_sep_len;
  Dee_Incref(self);
- DeeObject_Init(result,&DeeBytesSplitIterator_Type);
+ DeeObject_Init(result,&BytesSplitIterator_Type);
 done:
  return result;
 }
@@ -411,7 +411,7 @@ bcs_iter(BytesSplit *__restrict self) {
  result->bsi_sep_ptr = self->bs_sep_ptr;
  result->bsi_sep_len = self->bs_sep_len;
  Dee_Incref(self);
- DeeObject_Init(result,&DeeBytesCaseSplitIterator_Type);
+ DeeObject_Init(result,&BytesCaseSplitIterator_Type);
 done:
  return result;
 }
@@ -460,18 +460,18 @@ PRIVATE struct type_member bs_members[] = {
 };
 
 PRIVATE struct type_member bs_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeBytesSplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&BytesSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member bcs_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeBytesCaseSplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&BytesCaseSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject DeeBytesSplit_Type = {
+INTERN DeeTypeObject BytesSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytessplit",
+    /* .tp_name     = */"_BytesSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -513,9 +513,9 @@ INTERN DeeTypeObject DeeBytesSplit_Type = {
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */bs_class_members
 };
-INTERN DeeTypeObject DeeBytesCaseSplit_Type = {
+INTERN DeeTypeObject BytesCaseSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytescasesplit",
+    /* .tp_name     = */"_BytesCaseSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -570,7 +570,7 @@ DeeBytes_SplitByte(Bytes *__restrict self,
  result->bs_sep_len    = 1;
  result->bs_sep_buf[0] = sep;
  Dee_Incref(self);
- DeeObject_Init(result,&DeeBytesSplit_Type);
+ DeeObject_Init(result,&BytesSplit_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -595,7 +595,7 @@ DeeBytes_Split(Bytes *__restrict self,
  result->bs_sep_owner = sep;
  Dee_Incref(self);
  Dee_Incref(sep);
- DeeObject_Init(result,&DeeBytesSplit_Type);
+ DeeObject_Init(result,&BytesSplit_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -615,7 +615,7 @@ DeeBytes_CaseSplitByte(Bytes *__restrict self,
  result->bs_sep_len    = 1;
  result->bs_sep_buf[0] = sep;
  Dee_Incref(self);
- DeeObject_Init(result,&DeeBytesCaseSplit_Type);
+ DeeObject_Init(result,&BytesCaseSplit_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -640,7 +640,7 @@ DeeBytes_CaseSplit(Bytes *__restrict self,
  result->bs_sep_owner = sep;
  Dee_Incref(self);
  Dee_Incref(sep);
- DeeObject_Init(result,&DeeBytesCaseSplit_Type);
+ DeeObject_Init(result,&BytesCaseSplit_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -685,8 +685,8 @@ blsi_init(BytesLineSplitIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  BytesLineSplit *ls;
  self->blsi_keepends = false;
- if (DeeArg_Unpack(argc,argv,"o|b:_byteslinesplititerator",&ls,&self->blsi_keepends) ||
-     DeeObject_AssertTypeExact((DeeObject *)ls,&DeeBytesLineSplit_Type))
+ if (DeeArg_Unpack(argc,argv,"o|b:_BytesLineSplitIterator",&ls,&self->blsi_keepends) ||
+     DeeObject_AssertTypeExact((DeeObject *)ls,&BytesLineSplit_Type))
      goto err;
  self->blsi_bytes = ls->bls_bytes;
  self->blsi_iter  = DeeBytes_DATA(self->blsi_bytes);
@@ -803,9 +803,9 @@ PRIVATE struct type_member blsi_members[] = {
 };
 
 
-INTERN DeeTypeObject DeeBytesLineSplitIterator_Type = {
+INTERN DeeTypeObject BytesLineSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_byteslinesplititerator",
+    /* .tp_name     = */"_BytesLineSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -867,7 +867,7 @@ PRIVATE int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject **__restrict argv) {
  self->bls_keepends = false;
- if (DeeArg_Unpack(argc,argv,"o|b:_byteslinesplit",&self->bls_bytes,&self->bls_keepends) ||
+ if (DeeArg_Unpack(argc,argv,"o|b:_BytesLineSplit",&self->bls_bytes,&self->bls_keepends) ||
      DeeObject_AssertTypeExact((DeeObject *)self->bls_bytes,&DeeBytes_Type))
      goto err;
  Dee_Incref(self->bls_bytes);
@@ -892,7 +892,7 @@ bls_iter(BytesLineSplit *__restrict self) {
  if (result->blsi_iter == result->blsi_end)
      result->blsi_iter = NULL;
  Dee_Incref(result->blsi_bytes);
- DeeObject_Init(result,&DeeBytesLineSplitIterator_Type);
+ DeeObject_Init(result,&BytesLineSplitIterator_Type);
 done:
  return result;
 }
@@ -916,13 +916,13 @@ PRIVATE struct type_member bls_members[] = {
 };
 
 PRIVATE struct type_member bls_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeBytesLineSplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&BytesLineSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject DeeBytesLineSplit_Type = {
+INTERN DeeTypeObject BytesLineSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_byteslinesplit",
+    /* .tp_name     = */"_BytesLineSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -976,7 +976,7 @@ DeeBytes_SplitLines(Bytes *__restrict self,
  result->bls_bytes    = self;
  result->bls_keepends = keepends;
  Dee_Incref(self);
- DeeObject_Init(result,&DeeBytesLineSplit_Type);
+ DeeObject_Init(result,&BytesLineSplit_Type);
 done:
  return (DREF DeeObject *)result;
 }

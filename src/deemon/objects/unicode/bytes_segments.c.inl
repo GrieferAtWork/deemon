@@ -92,7 +92,7 @@ PRIVATE int DCALL
 bsegiter_init(BytesSegmentsIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  BytesSegments *seg;
- if (DeeArg_Unpack(argc,argv,"o:_bytessegmentsiterator",&seg) ||
+ if (DeeArg_Unpack(argc,argv,"o:_BytesSegmentsIterator",&seg) ||
      DeeObject_AssertTypeExact((DeeObject *)seg,&BytesSegments_Type))
      goto err;
  self->b_str = seg->b_str;
@@ -155,7 +155,7 @@ PRIVATE struct type_getset bsegiter_getsets[] = {
 
 INTERN DeeTypeObject BytesSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytessegmentsiterator",
+    /* .tp_name     = */"_BytesSegmentsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -212,7 +212,7 @@ bseg_ctor(BytesSegments *__restrict self) {
 PRIVATE int DCALL
 bseg_init(BytesSegments *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oIu:_bytessegments",&self->b_str,&self->b_siz) ||
+ if (DeeArg_Unpack(argc,argv,"oIu:_BytesSegments",&self->b_str,&self->b_siz) ||
      DeeObject_AssertTypeExact((DeeObject *)self->b_str,&DeeBytes_Type))
      goto err;
  if (!self->b_siz) {
@@ -344,7 +344,7 @@ PRIVATE struct type_member bseg_class_members[] = {
 
 INTERN DeeTypeObject BytesSegments_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytessegments",
+    /* .tp_name     = */"_BytesSegments",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

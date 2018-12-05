@@ -58,10 +58,10 @@ typedef struct {
     ATOMIC_DATA size_t rii_num; /* The remaining number of repetitions. */
 } RepeatItemIterator;
 
-INTDEF DeeTypeObject Repeat_Type;
-INTDEF DeeTypeObject RepeatItem_Type;
-INTDEF DeeTypeObject RepeatIterator_Type;
-INTDEF DeeTypeObject RepeatItemIterator_Type;
+INTDEF DeeTypeObject SeqRepeat_Type;
+INTDEF DeeTypeObject SeqItemRepeat_Type;
+INTDEF DeeTypeObject SeqRepeatIterator_Type;
+INTDEF DeeTypeObject SeqItemRepeatIterator_Type;
 
 
 DECL_END

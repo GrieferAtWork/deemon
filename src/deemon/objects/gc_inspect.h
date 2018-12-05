@@ -89,7 +89,7 @@ INTDEF int DCALL DeeGC_CollectReferred(GCSetMaker *__restrict self, DeeObject *_
 INTDEF int DCALL DeeGC_CollectReachable(GCSetMaker *__restrict self, DeeObject *__restrict start);   /* Objects reachable by X */
 INTDEF int DCALL DeeGC_CollectGCReferred(GCSetMaker *__restrict self, DeeObject *__restrict target); /* GC objects referring to X */
 
-/* Returns `true' if `target' is directly referred to by `source' */
+/* Returns `true' if `target' is referred to by `source' */
 INTDEF bool DCALL DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target);
 
 

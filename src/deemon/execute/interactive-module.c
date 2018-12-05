@@ -1677,7 +1677,7 @@ PRIVATE struct type_gc imod_gc = {
 INTDEF struct type_gc module_gc;
 PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_interactivemodule",
+    /* .tp_name     = */"_InteractiveModule",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FGC,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeModuleObject),

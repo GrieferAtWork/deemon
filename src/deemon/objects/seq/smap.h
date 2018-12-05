@@ -30,15 +30,10 @@
 DECL_BEGIN
 
 typedef struct {
-    DREF DeeObject  *sk_key;    /* [1..1][const] The key of this shared-key. */
-    DREF DeeObject  *sk_value;  /* [1..1][const] The item of this shared-key. */
-} SharedKey;
-
-typedef struct {
-    DeeObject       *sk_key;    /* [1..1][const] The key of this shared-key. */
-    DeeObject       *sk_value;  /* [1..1][const] The item of this shared-key. */
-    dhash_t          sk_hash;   /* Hash of this key. */
-} SharedKeyEx;
+    DeeObject       *si_key;    /* [1..1][const] The key of this shared item. */
+    DeeObject       *si_value;  /* [1..1][const] The value of this shared item. */
+    dhash_t          si_hash;   /* Hash of this key. */
+} SharedItemEx;
 
 typedef struct {
     OBJECT_HEAD
@@ -46,44 +41,17 @@ typedef struct {
     rwlock_t         sm_lock;   /* Lock for this shared-vector. */
 #endif
     size_t           sm_length; /* [lock(skv_lock)] The number of items in this vector. */
-    SharedKey       *sm_vector; /* [1..1][const][0..sv_length][lock(skv_lock)][owned]
+    DeeSharedItem   *sm_vector; /* [1..1][const][0..sv_length][lock(skv_lock)][owned]
                                  * The vector of objects that is being referenced.
                                  * NOTE: Elements of this vector must not be changed. */
     size_t           sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
-    SharedKeyEx      sm_map[1]; /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
+    SharedItemEx     sm_map[1]; /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
                                  * This hash-vector is populated lazily as objects are queried by key. */
 } SharedMap;
 
-#define SHAREDMAP_SIZEOF(mask) (offsetof(SharedMap,sm_map)+((mask)+1)*sizeof(SharedKeyEx))
+#define SHAREDMAP_SIZEOF(mask) (offsetof(SharedMap,sm_map)+((mask)+1)*sizeof(SharedItemEx))
 INTDEF DeeTypeObject SharedMap_Type;
 
-
-
-/* Create a new shared vector that will inherit elements
- * from the given vector once `SharedMap_Decref()' is called.
- * NOTE: This function implicitly inherits a reference to each item
- *       of the given vector, though does not actually inherit the
- *       vector itself! */
-INTDEF DREF SharedMap *DCALL
-SharedMap_NewShared(size_t length, DREF SharedKey *__restrict vector);
-
-/* Check if the reference counter of `self' is 1. When it is,
- * simply destroy the shared vector without freeing `skv_vector',
- * but still decref() all contained object.
- * Otherwise, try to allocate a new vector with a length of `sv_length'.
- * If doing so fails, don't raise an error but replace `sskv_vector' with
- * `NULL' and `sv_length' with `0' before decref()-ing all elements
- * that that pair of members used to refer to.
- * If allocation does succeed, memcpy() all objects contained in
- * the original vector into the dynamically allocated one, thus
- * transferring ownership to that vector before writing it back
- * to the SharedVector object.
- * >> In the end, this behavior is required to implement a fast,
- *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
- * NOTE: During decref(), objects are destroyed in reverse order,
- *       mirroring the behavior of adjstack/pop instructions. */
-INTDEF void DCALL SharedMap_Decref(DREF SharedMap *__restrict self);
 
 
 /* Hash-iteration control. */

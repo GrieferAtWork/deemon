@@ -64,7 +64,7 @@ INTERN int DCALL
 rodictiterator_init(DictIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  Dict *dict;
- if (DeeArg_Unpack(argc,argv,"o:_rodict.iterator",&dict) ||
+ if (DeeArg_Unpack(argc,argv,"o:_RoDictIterator",&dict) ||
      DeeObject_AssertTypeExact((DeeObject *)dict,&DeeRoDict_Type))
      return -1;
  self->di_dict = dict;
@@ -251,7 +251,7 @@ PRIVATE struct type_member rodict_iterator_members[] = {
 
 INTERN DeeTypeObject RoDictIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_rodict.iterator",
+    /* .tp_name     = */"_RoDictIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -845,7 +845,7 @@ err:
 PRIVATE DREF Dict *DCALL
 rodict_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:_rodict",&seq))
+ if (DeeArg_Unpack(argc,argv,"o:_RoDict",&seq))
      return NULL;
  return (DREF Dict *)DeeRoDict_FromSequence(seq);
 }
@@ -855,7 +855,7 @@ rodict_init(size_t argc, DeeObject **__restrict argv) {
 
 PUBLIC DeeTypeObject DeeRoDict_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_rodict",
+    /* .tp_name     = */"_RoDict",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
     /* .tp_weakrefs = */0,

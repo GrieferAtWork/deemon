@@ -126,6 +126,12 @@ err_cannot_weak_reference(DeeObject *__restrict ob) {
                         "Cannot create weak reference for instances of type `%k'",
                         Dee_TYPE(ob));
 }
+INTERN ATTR_COLD int DCALL
+err_reference_loop(DeeObject *__restrict a, DeeObject *__restrict b) {
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Reference loop between instance of %k and %k",
+                        Dee_TYPE(a),Dee_TYPE(b));
+}
 INTERN ATTR_COLD int DCALL err_cannot_lock_weakref(void) {
  return DeeError_Throwf(&DeeError_ReferenceError,
                         "Cannot lock weak reference");

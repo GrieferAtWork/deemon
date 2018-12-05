@@ -64,7 +64,7 @@ INTERN int DCALL
 rosetiterator_init(SetIterator *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  Set *set;
- if (DeeArg_Unpack(argc,argv,"o:_roset.iterator",&set) ||
+ if (DeeArg_Unpack(argc,argv,"o:_RoSetIterator",&set) ||
      DeeObject_AssertTypeExact((DeeObject *)set,&DeeRoSet_Type))
      return -1;
  self->si_set = set;
@@ -176,7 +176,7 @@ PRIVATE struct type_member roset_iterator_members[] = {
 
 INTERN DeeTypeObject RoSetIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_roset.iterator",
+    /* .tp_name     = */"_RoSetIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -576,7 +576,7 @@ err:
 PRIVATE DREF Set *DCALL
 roset_ctor(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:_roset",&seq))
+ if (DeeArg_Unpack(argc,argv,"o:_RoSet",&seq))
      return NULL;
  return (DREF Set *)DeeRoSet_FromSequence(seq);
 }
@@ -585,7 +585,7 @@ roset_ctor(size_t argc, DeeObject **__restrict argv) {
 
 PUBLIC DeeTypeObject DeeRoSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_roset",
+    /* .tp_name     = */"_RoSet",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
     /* .tp_weakrefs = */0,

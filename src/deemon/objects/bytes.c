@@ -181,7 +181,7 @@ PRIVATE struct type_member bytesiter_members[] = {
 
 INTERN DeeTypeObject BytesIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytesiterator",
+    /* .tp_name     = */"_BytesIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -454,10 +454,10 @@ DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
  result->b_size  = num_bytes;
  result->b_orig  = (DREF DeeObject *)result;
  result->b_flags = DEE_BUFFER_FWRITABLE;
- result->b_buffer.bb_base  = result->b_data;
- result->b_buffer.bb_size  = num_bytes;
+ result->b_buffer.bb_base = result->b_data;
+ result->b_buffer.bb_size = num_bytes;
 #ifndef __INTELLISENSE__
- result->b_buffer.bb_put   = NULL;
+ result->b_buffer.bb_put  = NULL;
 #endif
  DeeObject_Init(result,&DeeBytes_Type);
 done:

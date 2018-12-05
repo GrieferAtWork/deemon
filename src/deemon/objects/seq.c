@@ -326,7 +326,7 @@ seqiterator_init(SeqIterator *__restrict self,
 }
 
 
-INTDEF DeeTypeObject DeeSeqIterator_Type;
+INTDEF DeeTypeObject DeeGenericIterator_Type;
 
 
 #ifndef CONFIG_NO_THREADS
@@ -335,7 +335,7 @@ PRIVATE DREF DeeObject *DCALL \
 name(SeqIterator *__restrict self, \
      SeqIterator *__restrict other) { \
  DREF DeeObject *lindex,*rindex,*result; \
- if (DeeObject_AssertType((DeeObject *)other,&DeeSeqIterator_Type)) \
+ if (DeeObject_AssertType((DeeObject *)other,&DeeGenericIterator_Type)) \
      return NULL; \
  rwlock_read(&self->si_lock); \
  lindex = self->si_index; \
@@ -356,7 +356,7 @@ PRIVATE DREF DeeObject *DCALL \
 name(SeqIterator *__restrict self, \
      SeqIterator *__restrict other) { \
  DREF DeeObject *lindex,*rindex,*result; \
- if (DeeObject_AssertType((DeeObject *)other,&DeeSeqIterator_Type)) \
+ if (DeeObject_AssertType((DeeObject *)other,&DeeGenericIterator_Type)) \
      return NULL; \
  lindex = self->si_index; \
  Dee_Incref(lindex); \
@@ -447,9 +447,9 @@ PRIVATE struct type_cmp seqiterator_cmp = {
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&seqiterator_ge
 };
 
-INTERN DeeTypeObject DeeSeqIterator_Type = {
+INTERN DeeTypeObject DeeGenericIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"generic_iterator",
+    /* .tp_name     = */"_GenericIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -496,7 +496,7 @@ INTERN DREF DeeObject *DCALL new_empty_sequence_iterator(void) {
  DREF SeqIterator *result;
  result = DeeObject_MALLOC(SeqIterator);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&DeeSeqIterator_Type);
+ DeeObject_Init(result,&DeeGenericIterator_Type);
  /* Default-construct the iterator.
   * HINT: This function is implemented above and can never fail,
   *       which is why we don't check it for errors here. */
@@ -556,7 +556,7 @@ seq_iterself(DeeObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
     rwlock_init(&result->si_lock);
 #endif
-    DeeObject_Init(result,&DeeSeqIterator_Type);
+    DeeObject_Init(result,&DeeGenericIterator_Type);
     return (DREF DeeObject *)result;
    }
   }
@@ -659,12 +659,14 @@ err:
 PRIVATE int DCALL
 seq_nsi_insert_vec(DeeObject *__restrict self, size_t index,
                    size_t objc, DeeObject **__restrict objv) {
- SharedVector *shared_vector; int result;
- shared_vector = SharedVector_NewShared(objc,objv);
- if unlikely(!shared_vector) return -1;
- result = DeeSeq_InsertAll(self,index,(DeeObject *)shared_vector);
- SharedVector_Decref(shared_vector);
+ DeeObject *shared_vector; int result;
+ shared_vector = DeeSharedVector_NewShared(objc,objv);
+ if unlikely(!shared_vector) goto err;
+ result = DeeSeq_InsertAll(self,index,shared_vector);
+ DeeSharedVector_Decref(shared_vector);
  return result;
+err:
+ return -1;
 }
 
 PRIVATE struct type_nsi seq_nsi = {
@@ -877,7 +879,7 @@ seq_iterator_get(DeeTypeObject *__restrict self) {
  /* If we've found everything that's need to implement
   * the `generic_iterator' type, then that's the one! */
  if (found == (1|2))
-     return_reference_(&DeeSeqIterator_Type);
+     return_reference_(&DeeGenericIterator_Type);
 fail:
  err_unknown_attribute(self,
                        DeeString_STR(&str_iterator),
@@ -3280,7 +3282,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_class_repeat(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj; size_t count;
- if (DeeArg_Unpack(argc,argv,"oIu:repeat",&obj,&count))
+ if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":repeat",&obj,&count))
      goto err;
  return DeeSeq_RepeatItem(obj,count);
 err:
@@ -3290,14 +3292,14 @@ PRIVATE DREF DeeObject *DCALL
 seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; size_t count;
- if (DeeArg_Unpack(argc,argv,"oIu:repeatseq",&seq,&count))
+ if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":repeatseq",&seq,&count))
      goto err;
  return DeeSeq_Repeat(seq,count);
 err:
  return NULL;
 }
 
-INTDEF DeeTypeObject DeeCat_Type;
+INTDEF DeeTypeObject SeqConcat_Type;
 
 PRIVATE DREF DeeObject *DCALL
 seq_class_concat(DeeObject *__restrict UNUSED(self),
@@ -3309,8 +3311,8 @@ seq_class_concat(DeeObject *__restrict UNUSED(self),
  if likely(result) {
   ASSERT(result->ob_type == &DeeTuple_Type);
   Dee_DecrefNokill(&DeeTuple_Type);
-  Dee_Incref(&DeeCat_Type);
-  result->ob_type = &DeeCat_Type;
+  Dee_Incref(&SeqConcat_Type);
+  result->ob_type = &SeqConcat_Type;
  }
  return result;
 }
@@ -4406,7 +4408,7 @@ if_ctor(IteratorFuture *__restrict self) {
 PRIVATE int DCALL
 if_init(IteratorFuture *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_iteratorfuture",&self->if_iter))
+ if (DeeArg_Unpack(argc,argv,"o:_IteratorFuture",&self->if_iter))
      goto err;
  Dee_Incref(self->if_iter);
  return 0;
@@ -4454,7 +4456,7 @@ PRIVATE struct type_member if_class_members[] = {
 
 INTERN DeeTypeObject IteratorFuture_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_iteratorfuture",
+    /* .tp_name     = */"_IteratorFuture",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -4524,7 +4526,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(IteratorFuture,if_iter) ==
 PRIVATE int DCALL
 ip_init(IteratorPending *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_iteratorpending",&self->ip_iter))
+ if (DeeArg_Unpack(argc,argv,"o:_IteratorPending",&self->ip_iter))
      goto err;
  Dee_Incref(self->ip_iter);
  return 0;
@@ -4549,7 +4551,7 @@ PRIVATE struct type_seq ip_seq = {
 
 INTERN DeeTypeObject IteratorPending_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_iteratorpending",
+    /* .tp_name     = */"_IteratorPending",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

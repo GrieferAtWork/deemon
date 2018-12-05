@@ -47,7 +47,7 @@ PRIVATE int DCALL
 subrangeiterator_init(SubRangeIterator *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
  self->sr_size = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":_subrangeiterator",
+ if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":_SubRangeIterator",
                   &self->sr_iter,&self->sr_size))
      return -1;
  Dee_Incref(self->sr_iter);
@@ -79,13 +79,13 @@ subrangeiterator_next(SubRangeIterator *__restrict self) {
  return DeeObject_IterNext(self->sr_iter);
 }
 
-INTDEF DeeTypeObject DeeSubRangeIterator_Type;
+INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 
 #define DEFINE_COMPARE(name,op) \
 PRIVATE DREF DeeObject *DCALL \
 name(SubRangeIterator *__restrict self, \
      SubRangeIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeSubRangeIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqSubRangeIterator_Type)) \
      return NULL; \
  return_bool(READ_SIZE(other) op READ_SIZE(self)); \
 }
@@ -110,12 +110,22 @@ PRIVATE struct type_cmp subrangeiterator_cmp = {
 PRIVATE DREF DeeObject *DCALL
 subrangeiterator_seq_get(SubRangeIterator *__restrict self) {
  /* Forward access to this attribute to the pointed-to iterator. */
+ /* TODO: this returns the real underlying sequence, when we'd need to
+  *       return a sub-range proxy to it, rather than the actual sequence! */
  return DeeObject_GetAttr(self->sr_iter,&str_seq);
 }
 
 PRIVATE struct type_getset subrangeiterator_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangeiterator_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangeiterator_seq_get,
+      NULL, NULL },
     { NULL }
+};
+
+PRIVATE struct type_member subrangeiterator_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SubRangeIterator,sr_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD("__size__",STRUCT_SIZE_T,offsetof(SubRangeIterator,sr_size)),
+    TYPE_MEMBER_END
 };
 
 PRIVATE int DCALL
@@ -141,9 +151,9 @@ subrangeiterator_bool(SubRangeIterator *__restrict self) {
  return DeeObject_Bool(self->sr_iter);
 }
 
-INTERN DeeTypeObject DeeSubRangeIterator_Type = {
+INTERN DeeTypeObject SeqSubRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_subrangeiterator",
+    /* .tp_name     = */"_SeqSubRangeIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -180,7 +190,7 @@ INTERN DeeTypeObject DeeSubRangeIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */subrangeiterator_getsets,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */subrangeiterator_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -233,7 +243,7 @@ subrange_iter(SubRange *__restrict self) {
   if (DeeThread_CheckInterrupt())
       goto err_iterator_r;
  }
- DeeObject_Init(result,&DeeSubRangeIterator_Type);
+ DeeObject_Init(result,&SeqSubRangeIterator_Type);
  return (DREF DeeObject *)result;
 err_iterator_r:
  DeeObject_FREE(result);
@@ -244,7 +254,7 @@ err_iterator:
 }
 
 PRIVATE struct type_member subrange_members[] = {
-    TYPE_MEMBER_FIELD("__seq__",STRUCT_OBJECT,offsetof(SubRange,sr_seq)),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SubRange,sr_seq),"->?Dsequence"),
     TYPE_MEMBER_FIELD("__begin__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SubRange,sr_begin)),
     TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SubRange,sr_size)),
     TYPE_MEMBER_END
@@ -252,7 +262,7 @@ PRIVATE struct type_member subrange_members[] = {
 
 
 PRIVATE struct type_member subrange_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeSubRangeIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqSubRangeIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -357,9 +367,9 @@ PRIVATE struct type_seq subrange_seq = {
     /* .tp_nsi       = */&subrange_nsi
 };
 
-INTERN DeeTypeObject DeeSubRange_Type = {
+INTERN DeeTypeObject SeqSubRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_subrange",
+    /* .tp_name     = */"_SeqSubRange",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -411,7 +421,7 @@ DeeSeq_GetRange(DeeObject *__restrict self,
  /* Create a sub-range sequence. */
  result = DeeObject_MALLOC(SubRange);
  if unlikely(!result) goto done;
- if (DeeObject_InstanceOfExact(self,&DeeSubRange_Type)) {
+ if (DeeObject_InstanceOfExact(self,&SeqSubRange_Type)) {
   SubRange *me = (SubRange *)self;
   /* Special handling for recursion. */
   Dee_Incref(me->sr_seq);
@@ -424,7 +434,7 @@ DeeSeq_GetRange(DeeObject *__restrict self,
   result->sr_begin = begin;
   result->sr_size  = (size_t)(end-begin);
  }
- DeeObject_Init(result,&DeeSubRange_Type);
+ DeeObject_Init(result,&SeqSubRange_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -438,7 +448,7 @@ DeeSeq_GetRangeN(DeeObject *__restrict self,
  /* Create a sub-range sequence. */
  result = DeeObject_MALLOC(SubRangeN);
  if unlikely(!result) goto done;
- if (DeeObject_InstanceOfExact(self,&DeeSubRangeN_Type)) {
+ if (DeeObject_InstanceOfExact(self,&SeqSubRangeN_Type)) {
   SubRangeN *me = (SubRangeN *)self;
   /* Special handling for recursion. */
   Dee_Incref(me->sr_seq);
@@ -449,7 +459,7 @@ DeeSeq_GetRangeN(DeeObject *__restrict self,
   result->sr_seq   = self;
   result->sr_begin = begin;
  }
- DeeObject_Init(result,&DeeSubRangeN_Type);
+ DeeObject_Init(result,&SeqSubRangeN_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -595,7 +605,7 @@ PRIVATE struct type_seq subrangen_seq = {
 };
 
 PRIVATE struct type_member subrangen_members[] = {
-    TYPE_MEMBER_FIELD("__seq__",STRUCT_OBJECT,offsetof(SubRangeN,sr_seq)),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SubRangeN,sr_seq),"->?Dsequence"),
     TYPE_MEMBER_FIELD("__begin__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SubRangeN,sr_begin)),
     TYPE_MEMBER_END
 };
@@ -606,9 +616,9 @@ PRIVATE struct type_member subrangen_class_members[] = {
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject DeeSubRangeN_Type = {
+INTERN DeeTypeObject SeqSubRangeN_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_subrangen",
+    /* .tp_name     = */"_SeqSubRangeN",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

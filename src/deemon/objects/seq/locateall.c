@@ -54,8 +54,8 @@ typedef struct {
     DREF DeeObject *li_pred; /* [0..1][const] The key function invoked to transform elements. */
 } LocatorIterator;
 
-INTDEF DeeTypeObject DeeLocator_Type;
-INTDEF DeeTypeObject DeeLocatorIterator_Type;
+INTDEF DeeTypeObject SeqLocator_Type;
+INTDEF DeeTypeObject SeqLocatorIterator_Type;
 
 
 PRIVATE int DCALL
@@ -82,8 +82,8 @@ PRIVATE int DCALL
 locatoriter_init(LocatorIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  Locator *loc;
- if (DeeArg_Unpack(argc,argv,"o:_locator.iterator",&loc) ||
-     DeeObject_AssertTypeExact((DeeObject *)loc,&DeeLocator_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_SeqLocatorIterator",&loc) ||
+     DeeObject_AssertTypeExact((DeeObject *)loc,&SeqLocator_Type))
      return -1;
  self->li_iter = DeeObject_IterSelf(loc->l_seq);
  if unlikely(!self->li_iter) return -1;
@@ -135,7 +135,7 @@ err:
 PRIVATE DREF DeeObject *DCALL \
 name(LocatorIterator *__restrict self, \
      LocatorIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeLocatorIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqLocatorIterator_Type)) \
      return NULL; \
  return compare_object(self->li_iter,other->li_iter); \
 }
@@ -171,20 +171,21 @@ locatoriter_seq_get(LocatorIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset locatoriter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locatoriter_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locatoriter_seq_get, NULL, NULL,
+      DOC("->?Ert:SeqLocator") },
     { NULL }
 };
 
 PRIVATE struct type_member locatoriter_members[] = {
-    TYPE_MEMBER_FIELD("__iterator__",STRUCT_OBJECT,offsetof(LocatorIterator,li_iter)),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(LocatorIterator,li_iter),"->?Diterator"),
     TYPE_MEMBER_FIELD("__elem__",STRUCT_OBJECT,offsetof(LocatorIterator,li_elem)),
-    TYPE_MEMBER_FIELD("__pred__",STRUCT_OBJECT_OPT,offsetof(LocatorIterator,li_pred)),
+    TYPE_MEMBER_FIELD_DOC("__pred__",STRUCT_OBJECT_OPT,offsetof(LocatorIterator,li_pred),"->?Dcallable"),
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject DeeLocatorIterator_Type = {
+INTERN DeeTypeObject SeqLocatorIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_locator.iterator",
+    /* .tp_name     = */"_SeqLocatorIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -239,7 +240,7 @@ PRIVATE int DCALL
 locator_init(Locator *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  self->l_pred = NULL;
- if (DeeArg_Unpack(argc,argv,"oo|o:_locator",&self->l_seq,&self->l_elem,&self->l_pred))
+ if (DeeArg_Unpack(argc,argv,"oo|o:_SeqLocator",&self->l_seq,&self->l_elem,&self->l_pred))
      goto err;
  if (self->l_pred) {
   self->l_elem = DeeObject_Call(self->l_pred,1,&self->l_elem);
@@ -279,7 +280,7 @@ locator_iter(Locator *__restrict self) {
  Dee_Incref(self->l_elem);
  result->li_pred = self->l_pred;
  Dee_XIncref(self->l_pred);
- DeeObject_Init(result,&DeeLocatorIterator_Type);
+ DeeObject_Init(result,&SeqLocatorIterator_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -288,14 +289,14 @@ err_r:
 }
 
 PRIVATE struct type_member locator_members[] = {
-   TYPE_MEMBER_FIELD("__seq__",STRUCT_OBJECT,offsetof(Locator,l_seq)),
+   TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Locator,l_seq),"->?Dsequence"),
    TYPE_MEMBER_FIELD("__elem__",STRUCT_OBJECT,offsetof(Locator,l_elem)),
-   TYPE_MEMBER_FIELD("__pred__",STRUCT_OBJECT_OPT,offsetof(Locator,l_pred)),
+   TYPE_MEMBER_FIELD_DOC("__pred__",STRUCT_OBJECT_OPT,offsetof(Locator,l_pred),"->?Dcallable"),
    TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member locator_class_members[] = {
-   TYPE_MEMBER_CONST("iterator",&DeeLocatorIterator_Type),
+   TYPE_MEMBER_CONST("iterator",&SeqLocatorIterator_Type),
    TYPE_MEMBER_END
 };
 
@@ -311,9 +312,9 @@ PRIVATE struct type_seq locator_seq = {
     /* .tp_range_set = */NULL
 };
 
-INTERN DeeTypeObject DeeLocator_Type = {
+INTERN DeeTypeObject SeqLocator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_locator",
+    /* .tp_name     = */"_SeqLocator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -372,7 +373,7 @@ DeeSeq_LocateAll(DeeObject *__restrict self,
  Dee_Incref(self);
  Dee_Incref(keyed_search_item);
  Dee_XIncref(key);
- DeeObject_Init(result,&DeeLocator_Type);
+ DeeObject_Init(result,&SeqLocator_Type);
  return (DREF DeeObject *)result;
 }
 

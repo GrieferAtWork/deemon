@@ -50,9 +50,9 @@ typedef struct {
     size_t          sr_begin; /* [const] Amount of items discarded at the beginning. */
 } SubRangeN;
 
-INTDEF DeeTypeObject DeeSubRangeIterator_Type;
-INTDEF DeeTypeObject DeeSubRange_Type;
-INTDEF DeeTypeObject DeeSubRangeN_Type;
+INTDEF DeeTypeObject SeqSubRangeIterator_Type;
+INTDEF DeeTypeObject SeqSubRange_Type;
+INTDEF DeeTypeObject SeqSubRangeN_Type;
 
 DECL_END
 

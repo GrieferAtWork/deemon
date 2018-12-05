@@ -31,7 +31,7 @@
 
 DECL_BEGIN
 
-INTDEF DeeFileTypeObject DeePipe_Type; /* Extends `system_file' */
+INTDEF DeeFileTypeObject DeePipe_Type; /* Extends `_SystemFile' */
 INTDEF DeeFileTypeObject DeePipeReader_Type;
 INTDEF DeeFileTypeObject DeePipeWriter_Type;
 
@@ -49,7 +49,7 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
  * >> property threads -> {thread...};
  *
  * File enumeration functions:
- * >> property files -> {system_file...};
+ * >> property files -> {_SystemFile...};
  *
  * Process environment control:
  * >> property stdin -> file;

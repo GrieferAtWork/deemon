@@ -234,7 +234,7 @@ PRIVATE struct type_member traceiter_members[] = {
 
 INTERN DeeTypeObject DeeTracebackIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"traceback.iterator",
+    /* .tp_name     = */"_TracebackIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

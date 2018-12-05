@@ -54,7 +54,7 @@ typedef struct {
     union dcharptr        so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
 } StringOrdinals;
 
-INTDEF DeeTypeObject DeeStringOrdinals_Type;
+INTDEF DeeTypeObject StringOrdinals_Type;
 INTERN DREF DeeObject *DCALL
 DeeString_Ordinals(DeeObject *__restrict self) {
  DREF StringOrdinals *result;
@@ -63,7 +63,7 @@ DeeString_Ordinals(DeeObject *__restrict self) {
  result->so_str     = (DREF DeeStringObject *)self;
  result->so_width   = DeeString_WIDTH(self);
  result->so_ptr.ptr = DeeString_WSTR(self);
- DeeObject_Init(result,&DeeStringOrdinals_Type);
+ DeeObject_Init(result,&StringOrdinals_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -99,7 +99,7 @@ stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
                         size_t argc, DeeObject **__restrict argv) {
  StringOrdinals *ords;
  if (DeeArg_Unpack(argc,argv,"o:_StringOrdinalsIterator",&ords) ||
-     DeeObject_AssertTypeExact((DeeObject *)ords,&DeeStringOrdinals_Type))
+     DeeObject_AssertTypeExact((DeeObject *)ords,&StringOrdinals_Type))
      return -1;
  self->soi_str     = ords->so_str;
  self->soi_width   = ords->so_width;
@@ -149,7 +149,7 @@ PRIVATE struct type_getset stringordinalsiter_getsets[] = {
 };
 
 
-INTERN DeeTypeObject DeeStringOrdinalsIterator_Type = {
+INTERN DeeTypeObject StringOrdinalsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_StringOrdinalsIterator",
     /* .tp_doc      = */NULL,
@@ -217,7 +217,7 @@ stringordinals_iter(StringOrdinals *__restrict self) {
  result->soi_ptr     = self->so_ptr;
  result->soi_end.ptr = DeeString_WEND(self->so_str);
  Dee_Incref(self->so_str);
- DeeObject_Init(result,&DeeStringOrdinalsIterator_Type);
+ DeeObject_Init(result,&StringOrdinalsIterator_Type);
 done:
  return result;
 }
@@ -275,12 +275,12 @@ PRIVATE struct type_member stringordinals_members[] = {
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member stringordinals_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeStringOrdinalsIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&StringOrdinalsIterator_Type),
     TYPE_MEMBER_END
 };
 
 
-INTERN DeeTypeObject DeeStringOrdinals_Type = {
+INTERN DeeTypeObject StringOrdinals_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_StringOrdinals",
     /* .tp_doc      = */NULL,

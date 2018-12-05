@@ -76,7 +76,7 @@ INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict sta
  ASSERT(sym->s_nread);
  /* Optimize constant, extern symbols. */
  if (sym->s_type == SYMBOL_TYPE_EXTERN &&
-    (sym->s_extern.e_symbol->ss_flags & MODSYM_FCONSTEXPR)) {
+    (sym->s_extern.e_symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FCONSTEXPR)) == MODSYM_FCONSTEXPR) {
   /* The symbol is allowed to be expanded at compile-time. */
   int error;
   DeeModuleObject *symmod;

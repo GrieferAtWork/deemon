@@ -2197,9 +2197,9 @@ PRIVATE struct type_getset object_getsets[] = {
     { DeeString_STR(&str_class), &object_class_get, NULL, NULL },
     { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL },
     { "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
-      DOC("->?Aobjecttable?Ert:classdescriptor\n"
+      DOC("->?Aobjecttable?Ert:ClassDescriptor\n"
           "Returns an indexable sequence describing the instance object "
-          "table, as referenced by :rt.classdescriptor.attribute.addr\n"
+          "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. when ${this.class.__isclass__} is :false), an empty sequence is returned\n"
           "The class-attribute table can be accessed through :type.__ctable__") },
     { NULL }
@@ -3827,7 +3827,7 @@ PRIVATE struct type_getset type_getsets[] = {
           "Returns :true if @this type implements the buffer interface\n"
           "The most prominent type to which this applies is :bytes, however other types also support this") },
     { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
-      DOC("->?Ert:classdescriptor\n"
+      DOC("->?Ert:ClassDescriptor\n"
           "@throw AttributeError @this type is a user-defined class (s.a. #__isclass__)\n"
           "Returns the internal class-descriptor descriptor for a user-defined class") },
     { "__issingleton__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_issingleton, NULL, NULL,
@@ -3845,9 +3845,9 @@ PRIVATE struct type_getset type_getsets[] = {
           "be determined, which may be the case if the type doesn't have any defining "
           "features such as operators, or class/instance member functions") },
     { "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
-      DOC("->?Aobjecttable?Ert:classdescriptor\n"
+      DOC("->?Aobjecttable?Ert:ClassDescriptor\n"
           "Returns an indexable sequence describing the class object table, "
-          "as referenced by :rt.classdescriptor.attribute.addr\n"
+          "as referenced by :rt.ClassDescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"
           "The instance-attribute table can be accessed through :object.__itable__") },
     { "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,

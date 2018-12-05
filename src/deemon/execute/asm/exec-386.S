@@ -1995,7 +1995,7 @@ target_call_seq:
 	pushl  %eax            /* argc */
 	ADJUST_CFA_OFFSET(4)
 	/* Construct the shared vector, which inherits the stack-arguments. */
-	call   fSYM(SharedVector_NewShared,8)
+	call   fSYM(DeeSharedVector_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jz    .except_x4
@@ -2019,14 +2019,14 @@ target_call_seq:
 	decref %eax /* Decref the sequence type. */
 	/* At this point, backup(shared_vector) is still located in the stack,
 	 * and assuming that `DeeObject_Call()' didn't modify its argv (which
-	 * it's not allowed to), we can simply invoke `SharedVector_Decref()'
+	 * it's not allowed to), we can simply invoke `DeeSharedVector_Decref()'
 	 * to release vector-ownership of the shared-vector. */
-	call   fSYM(SharedVector_Decref,4)
+	call   fSYM(DeeSharedVector_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp   .disp
 	ADJUST_CFA_OFFSET(4)
 99:	/* Must still release vector ownership (shared_vector is still in 0(%esp)) */
-	call   fSYM(SharedVector_Decref,4)
+	call   fSYM(DeeSharedVector_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp   .except
 
@@ -2043,7 +2043,7 @@ target_call_map:
 	pushl  %eax            /* argc */
 	ADJUST_CFA_OFFSET(4)
 	/* Construct the shared vector, which inherits the stack-arguments. */
-	call   fSYM(SharedMap_NewShared,8)
+	call   fSYM(DeeSharedMap_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jz    .except_x4
@@ -2067,14 +2067,14 @@ target_call_map:
 	decref %eax /* Decref the sequence type. */
 	/* At this point, backup(shared_map) is still located in the stack,
 	 * and assuming that `DeeObject_Call()' didn't modify its argv (which
-	 * it's not allowed to), we can simply invoke `SharedMap_Decref()'
+	 * it's not allowed to), we can simply invoke `DeeSharedMap_Decref()'
 	 * to release vector-ownership of the shared-vector. */
-	call   fSYM(SharedMap_Decref,4)
+	call   fSYM(DeeSharedMap_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp   .disp
 	ADJUST_CFA_OFFSET(4)
 99:	/* Must still release vector ownership (shared_map is still in 0(%esp)) */
-	call   fSYM(SharedMap_Decref,4)
+	call   fSYM(DeeSharedMap_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp   .except
 
@@ -5646,11 +5646,11 @@ target_callattr_c_seq:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %edx          /* BACKUP(new_sp) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* SharedVector_NewShared:vector */
+	pushl   %edx          /* DeeSharedVector_NewShared:vector */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax          /* SharedVector_NewShared:length */
+	pushl   %eax          /* DeeSharedVector_NewShared:length */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(SharedVector_NewShared,8)
+	call    fSYM(DeeSharedVector_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl   %eax, %eax
 	jz     .except_x24
@@ -5663,11 +5663,11 @@ target_callattr_c_seq:
 	jz      99f
 	xchgl   %eax, TOP     /* Save the result */
 	decref  %eax
-	call    fSYM(SharedVector_Decref,4) /* decref() the shared vector. */
+	call    fSYM(DeeSharedVector_Decref,4) /* decref() the shared vector. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
-99:	call    fSYM(SharedVector_Decref,4) /* decref() the shared vector. */
+99:	call    fSYM(DeeSharedVector_Decref,4) /* decref() the shared vector. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 
@@ -5696,11 +5696,11 @@ target_callattr_c_map:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %edx          /* BACKUP(new_sp) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* SharedMap_NewShared:vector */
+	pushl   %edx          /* DeeSharedMap_NewShared:vector */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax          /* SharedMap_NewShared:length */
+	pushl   %eax          /* DeeSharedMap_NewShared:length */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(SharedMap_NewShared,8)
+	call    fSYM(DeeSharedMap_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl   %eax, %eax
 	jz     .except_x24
@@ -5713,11 +5713,11 @@ target_callattr_c_map:
 	jz      99f
 	xchgl   %eax, TOP     /* Save the result */
 	decref  %eax
-	call    fSYM(SharedMap_Decref,4) /* decref() the shared map. */
+	call    fSYM(DeeSharedMap_Decref,4) /* decref() the shared map. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
-99:	call    fSYM(SharedMap_Decref,4) /* decref() the shared map. */
+99:	call    fSYM(DeeSharedMap_Decref,4) /* decref() the shared map. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 

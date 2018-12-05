@@ -50,7 +50,7 @@ rveciter_copy(RefVectorIterator *__restrict self,
 PRIVATE int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_refvectoriterator",&self->rvi_vector) ||
+ if (DeeArg_Unpack(argc,argv,"o:_RefVectorIterator",&self->rvi_vector) ||
      DeeObject_AssertTypeExact((DeeObject *)self->rvi_vector,&RefVector_Type))
      return -1;
  Dee_Incref(self->rvi_vector);
@@ -172,13 +172,13 @@ PRIVATE struct type_cmp rveciter_cmp = {
 };
 
 PRIVATE struct type_member rveciter_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(RefVectorIterator,rvi_vector)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(RefVectorIterator,rvi_vector),"->?Ert:RefVector"),
     TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject RefVectorIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_refvectoriterator",
+    /* .tp_name     = */"_RefVectorIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -921,7 +921,7 @@ PRIVATE struct type_member rvec_class_members[] = {
 
 PRIVATE struct type_member rvec_members[] = {
     TYPE_MEMBER_FIELD("__owner__",STRUCT_OBJECT,offsetof(RefVector,rv_owner)),
-    TYPE_MEMBER_FIELD("__length__",STRUCT_OBJECT,offsetof(RefVector,rv_length)),
+    TYPE_MEMBER_FIELD("__length__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(RefVector,rv_length)),
     TYPE_MEMBER_END
 };
 
@@ -972,7 +972,7 @@ rvec_copy(RefVector *__restrict self,
 
 INTERN DeeTypeObject RefVector_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_refvector",
+    /* .tp_name     = */"_RefVector",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1049,7 +1049,7 @@ done:
 PRIVATE int DCALL
 sveciter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_sharedvectoriterator",&self->si_seq) ||
+ if (DeeArg_Unpack(argc,argv,"o:_SharedVectorIterator",&self->si_seq) ||
      DeeObject_AssertTypeExact((DeeObject *)self->si_seq,&SharedVector_Type))
      return -1;
  Dee_Incref(self->si_seq);
@@ -1117,8 +1117,9 @@ sveciter_copy(SharedVectorIterator *__restrict self,
  return 0;
 }
 
-INTERN struct type_member sveciter_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(SharedVectorIterator,si_seq)),
+PRIVATE struct type_member sveciter_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SharedVectorIterator,si_seq),"->?Ert:SharedVector"),
+    TYPE_MEMBER_FIELD("__index__",STRUCT_SIZE_T,offsetof(SharedVectorIterator,si_index)),
     TYPE_MEMBER_END
 };
 
@@ -1194,7 +1195,7 @@ INTERN struct type_cmp sveciter_cmp = {
 
 INTERN DeeTypeObject SharedVectorIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_sharedvectoriterator",
+    /* .tp_name     = */"_SharedVectorIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1496,7 +1497,7 @@ svec_bool(SharedVector *__restrict self) {
 
 INTERN DeeTypeObject SharedVector_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_sharedvector",
+    /* .tp_name     = */"_SharedVector",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1539,19 +1540,23 @@ INTERN DeeTypeObject SharedVector_Type = {
     /* .tp_class_members = */svec_class_members
 };
 
-INTERN DREF SharedVector *DCALL
-SharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector) {
+
+/* Create a new shared vector that will inherit elements
+ * from the given vector once `DeeSharedVector_Decref()' is called.
+ * NOTE: This function implicitly inherits a reference to each item
+ *       of the given vector, though does not actually inherit the
+ *       vector itself! */
+PUBLIC DREF DeeObject *DCALL
+DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector) {
  DREF SharedVector *result;
  result = DeeObject_MALLOC(SharedVector);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&SharedVector_Type);
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&result->sv_lock);
-#endif
  result->sv_length = length;
  result->sv_vector = vector;
 done:
- return result;
+ return (DREF DeeObject *)result;
 }
 
 /* Check if the reference counter of `self' is 1. When it is,
@@ -1568,52 +1573,47 @@ done:
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
  *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers. */
-INTERN void DCALL
-SharedVector_Decref(DREF SharedVector *__restrict self) {
+PUBLIC void DCALL
+DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
  DREF DeeObject **begin,**iter;
  DREF DeeObject **vector_copy;
- ASSERT_OBJECT_TYPE_EXACT(self,&SharedVector_Type);
- if (!DeeObject_IsShared(self)) {
+ SharedVector *me = (SharedVector *)self;
+ ASSERT_OBJECT_TYPE_EXACT(me,&SharedVector_Type);
+ if (!DeeObject_IsShared(me)) {
   /* Simple case: The vector isn't being shared. */
-  iter = (begin = self->sv_vector)+self->sv_length;
+  iter = (begin = me->sv_vector)+me->sv_length;
   while (iter-- != begin) Dee_Decref(*iter);
   Dee_DecrefNokill(&SharedVector_Type);
-  DeeObject_FreeTracker((DeeObject *)self);
-  DeeObject_Free(self);
+  DeeObject_FreeTracker((DeeObject *)me);
+  DeeObject_Free(me);
   return;
  }
  /* Difficult case: must duplicate the vector. */
-#ifndef CONFIG_NO_THREADS
- rwlock_write(&self->sv_lock);
-#endif
- vector_copy = (DREF DeeObject **)Dee_TryMalloc(self->sv_length*
+ rwlock_write(&me->sv_lock);
+ vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sv_length*
                                                 sizeof(DREF DeeObject *));
  if unlikely(!vector_copy)
     goto err_cannot_inherit;
  /* Simply copy all the elements, transferring
   * all the references that they represent. */
- MEMCPY_PTR(vector_copy,self->sv_vector,self->sv_length);
+ MEMCPY_PTR(vector_copy,me->sv_vector,me->sv_length);
  /* Give the SharedVector its very own copy
   * which it will take to its grave. */
- self->sv_vector = vector_copy;
-#ifndef CONFIG_NO_THREADS
- rwlock_endwrite(&self->sv_lock);
-#endif
- Dee_Decref(self);
+ me->sv_vector = vector_copy;
+ rwlock_endwrite(&me->sv_lock);
+ Dee_Decref(me);
  return;
 
 err_cannot_inherit:
  /* Special case: failed to create a copy that the vector may call its own. */
- iter = (begin = self->sv_vector)+self->sv_length;
+ iter = (begin = me->sv_vector)+me->sv_length;
  /* Override with an empty vector. */
- self->sv_vector = NULL;
- self->sv_length = 0;
-#ifndef CONFIG_NO_THREADS
- rwlock_endwrite(&self->sv_lock);
-#endif
+ me->sv_vector = NULL;
+ me->sv_length = 0;
+ rwlock_endwrite(&me->sv_lock);
  /* Destroy the items that the caller wanted the vector to inherit. */
  while (iter-- != begin) Dee_Decref(*iter);
- Dee_Decref(self);
+ Dee_Decref(me);
 }
 
 

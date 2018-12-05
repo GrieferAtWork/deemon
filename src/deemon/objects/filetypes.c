@@ -223,7 +223,7 @@ mf_ungetc(MemoryFile *__restrict self, int ch) {
 PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"_memoryfile",
+        /* .tp_name     = */"_MemoryFile",
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL,
         /* .tp_weakrefs = */0,

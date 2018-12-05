@@ -1294,7 +1294,7 @@ to_str(TypeOperators *__restrict self) {
 PRIVATE DREF TypeOperatorsIterator *DCALL
 to_iter(TypeOperators *__restrict self) {
  DREF TypeOperatorsIterator *result;
- result = DeeObject_MALLOC(DREF TypeOperatorsIterator);
+ result = DeeObject_MALLOC(TypeOperatorsIterator);
  if unlikely(!result) goto done;
  result->to_type = self->to_type;
  result->to_opid = 0;
@@ -1441,7 +1441,7 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 
 INTERN DeeTypeObject TypeOperatorsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_typeoperatorsiterator",
+    /* .tp_name     = */"_TypeOperatorsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -1486,7 +1486,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 
 INTERN DeeTypeObject TypeOperators_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_typeoperators",
+    /* .tp_name     = */"_TypeOperators",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

@@ -199,29 +199,29 @@ compiler_get_module(DeeCompilerObject *__restrict self) {
 
 INTERN struct type_getset compiler_getsets[] = {
     { "lexer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_lexer, NULL, NULL,
-      DOC("->?Alexer?Ert:compiler\n"
+      DOC("->?Alexer?Ert:Compiler\n"
           "Returns the lexer (tokenizer) of @this compiler") },
     { "parser", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_parser, NULL, NULL,
-      DOC("->?Aparser?Ert:compiler\n"
+      DOC("->?Aparser?Ert:Compiler\n"
           "Returns the parser (token to ast converter) of @this compiler") },
     { "scope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_scope, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&compiler_set_scope,
-      DOC("->?Ascope?Ert:compiler\n"
+      DOC("->?Ascope?Ert:Compiler\n"
           "@throw ValueError Attempted to set a scope who's compiler doesn't match @this\n"
           "@throw ReferenceError Attempted to set a scope not apart of the same base-scope as #basescope\n"
           "Get or set the current scope used for parsing new #{ast}s") },
     { "basescope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_basescope, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&compiler_set_basescope,
-      DOC("->?Abasescope?Ert:compiler\n"
+      DOC("->?Abasescope?Ert:Compiler\n"
           "@throw ValueError Attempted to set a scope who's compiler doesn't match @this\n"
           "@throw ReferenceError Attempted to set a scope not apart of the same root-scope as #rootscope\n"
           "Get or set the current base-scope, representing the current function-context\n"
           "When setting the base-scope, #scope is set to the same scope") },
     { "rootscope",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_rootscope, NULL, NULL,
-      DOC("->?Arootscope?Ert:compiler\n"
+      DOC("->?Arootscope?Ert:Compiler\n"
           "Get the root-scope active within @this compiler\n"
           "Note that this scope is fixed and cannot be changed") },
     { "module",
@@ -644,7 +644,7 @@ LOCAL int DCALL
 unpack_catch_expression(DeeObject *__restrict triple,
                         struct catch_expr *__restrict result,
                         DeeBaseScopeObject *__restrict base_scope) {
- /* (:flags:?Dstring, #ast mask, #code:?Aast?Ert:compiler) */
+ /* (:flags:?Dstring, #ast mask, #code:?Aast?Ert:Compiler) */
  DeeCompilerAstObject *args[3];
  if (DeeObject_Unpack(triple,3,(DeeObject **)args))
      goto err;
@@ -841,8 +841,8 @@ ast_makeloop(DeeCompilerObject *__restrict self,
  DeeCompilerAstObject *cond = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerAstObject *next = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerAstObject *loop = (DeeCompilerAstObject *)Dee_None;
- /* "(flags:?Dstring,ast elem=!N,ast iter,ast loop=!N,scope:?Ascope?Ert:compiler=!N)->?Aast?Ert:compiler\n"
-  * "(flags:?Dstring,ast cond=!N,ast next=!N,ast loop=!N,scope:?Ascope?Ert:compiler=!N)->?Aast?Ert:compiler\n" */
+ /* "(flags:?Dstring,ast elem=!N,ast iter,ast loop=!N,scope:?Ascope?Ert:Compiler=!N)->?Aast?Ert:Compiler\n"
+  * "(flags:?Dstring,ast cond=!N,ast next=!N,ast loop=!N,scope:?Ascope?Ert:Compiler=!N)->?Aast?Ert:Compiler\n" */
  if unlikely(!argc) { err_invalid_argc("makeloop",argc,1,5); goto done2; }
  if (DeeString_Check(argv[0])) {
   if unlikely(DeeObject_AssertTypeExact(argv[0],&DeeString_Type))
@@ -1120,7 +1120,7 @@ PRIVATE DREF DeeObject *DCALL
 ast_makefunction(DeeCompilerObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
                  DeeObject *kw) {
- /* "(code:?Aast?Ert:compiler,scope:?Ascope?Ert:compiler=!N)->?Aast?Ert:compiler\n" */
+ /* "(code:?Aast?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N)->?Aast?Ert:Compiler\n" */
  DREF DeeObject *result = NULL;
  DeeCompilerAstObject *code;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -1199,8 +1199,8 @@ PRIVATE DREF DeeObject *DCALL
 ast_makeoperatorfunc(DeeCompilerObject *__restrict self,
                      size_t argc, DeeObject **__restrict argv,
                      DeeObject *kw) {
- /* "(string name,binding:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N)->?Aast?Ert:compiler\n"
-  * "(int name,binding:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N)->?Aast?Ert:compiler\n" */
+ /* "(string name,binding:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N)->?Aast?Ert:Compiler\n"
+  * "(int name,binding:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N)->?Aast?Ert:Compiler\n" */
  DREF DeeObject *result = NULL; DeeObject *name; uint16_t id;
  DeeCompilerAstObject *binding = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -1269,8 +1269,8 @@ PRIVATE DREF DeeObject *DCALL
 ast_makeoperator(DeeCompilerObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
                  DeeObject *kw) {
- /* "(string name,a:?Aast?Ert:compiler,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,d:?Aast?Ert:compiler=!N,flags=!P{},scope=!N)->?Aast?Ert:compiler\n"
-  * "(int name,a:?Aast?Ert:compiler,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,d:?Aast?Ert:compiler=!N,flags=!P{},scope=!N)->?Aast?Ert:compiler\n" */
+ /* "(string name,a:?Aast?Ert:Compiler,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,d:?Aast?Ert:Compiler=!N,flags=!P{},scope=!N)->?Aast?Ert:Compiler\n"
+  * "(int name,a:?Aast?Ert:Compiler,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,d:?Aast?Ert:Compiler=!N,flags=!P{},scope=!N)->?Aast?Ert:Compiler\n" */
  DREF DeeObject *result = NULL; DeeObject *name; uint16_t id,flags = 0;
  DeeCompilerAstObject *a;
  DeeCompilerAstObject *b = (DeeCompilerAstObject *)Dee_None;
@@ -1492,7 +1492,7 @@ PRIVATE DREF DeeObject *DCALL
 ast_makeaction(DeeCompilerObject *__restrict self,
                size_t argc, DeeObject **__restrict argv,
                DeeObject *kw) {
- /* "(string name,a:?Aast?Ert:compiler=!N,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,bool mustrun=true,scope=!N)->?Aast?Ert:compiler\n" */
+ /* "(string name,a:?Aast?Ert:Compiler=!N,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,bool mustrun=true,scope=!N)->?Aast?Ert:Compiler\n" */
  DREF DeeObject *result = NULL; DeeObject *name; int32_t id;
  DeeCompilerAstObject *a = (DeeCompilerAstObject *)Dee_None;
  DeeCompilerAstObject *b = (DeeCompilerAstObject *)Dee_None;
@@ -1575,14 +1575,14 @@ PRIVATE DREF DeeObject *DCALL ast_makeassembly(DeeCompilerObject *__restrict sel
 
 INTERN struct type_method compiler_methods[] = {
     { "makeconstexpr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeconstexpr,
-      DOC("(value,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(value,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @scope doesn't match @this\n"
           "Construct a new constant-expression ast referring to @value"),
       TYPE_METHOD_FKWDS },
     { "makesym", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makesym,
-      DOC("(sym:?Asymbol?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(sym:?Asymbol?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
@@ -1594,7 +1594,7 @@ INTERN struct type_method compiler_methods[] = {
           "branch is used in an assembly output operand"),
       TYPE_METHOD_FKWDS },
     { "makeunbind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeunbind,
-      DOC("(sym:?Asymbol?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(sym:?Asymbol?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
@@ -1602,7 +1602,7 @@ INTERN struct type_method compiler_methods[] = {
           "Construct a branch for unbinding the value of @sym at runtime"),
       TYPE_METHOD_FKWDS },
     { "makebound", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makebound,
-      DOC("(sym:?Asymbol?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(sym:?Asymbol?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @sym or @scope doesn't match @this\n"
@@ -1610,7 +1610,7 @@ INTERN struct type_method compiler_methods[] = {
           "Construct a branch for checking if a given symbol @sym is bound"),
       TYPE_METHOD_FKWDS },
     { "makemultiple", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makemultiple,
-      DOC("(branches:?S?Aast?Ert:compiler,typing:?Dtype=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(branches:?S?Aast?Ert:Compiler,typing:?Dtype=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given @branches or @scope doesn't match @this\n"
@@ -1631,7 +1631,7 @@ INTERN struct type_method compiler_methods[] = {
           "appear, and will be inlined as part of the greater whole expression"),
       TYPE_METHOD_FKWDS },
     { "makereturn", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makereturn,
-      DOC("(expr:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(expr:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
@@ -1639,7 +1639,7 @@ INTERN struct type_method compiler_methods[] = {
           "Construct a return-branch that either returns @expr, or :none when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "makeyield", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeyield,
-      DOC("(expr:?Aast?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(expr:?Aast?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
@@ -1647,7 +1647,7 @@ INTERN struct type_method compiler_methods[] = {
           "Construct a yield-branch that either returns @expr, or :none when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "makethrow", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makethrow,
-      DOC("(expr:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(expr:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
@@ -1655,8 +1655,8 @@ INTERN struct type_method compiler_methods[] = {
           "Construct a throw-branch that either throws @expr, or re-throws the last exception when @expr is :none"),
       TYPE_METHOD_FKWDS },
     { "maketry", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_maketry,
-      DOC("(guard:?Aast?Ert:compiler,handlers:?S?T3?Dstring?Aast?Ert:compiler?Aast?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(guard:?Aast?Ert:compiler,handlers:?S?T3?Dint?Aast?Ert:compiler?Aast?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(guard:?Aast?Ert:Compiler,handlers:?S?T3?Dstring?Aast?Ert:Compiler?Aast?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(guard:?Aast?Ert:Compiler,handlers:?S?T3?Dint?Aast?Ert:Compiler?Aast?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
@@ -1672,10 +1672,10 @@ INTERN struct type_method compiler_methods[] = {
           "$\"interrupt\"|The handler is capable of catching interrupt-exceptions (ignored when $\"finally\" is given)}"),
       TYPE_METHOD_FKWDS },
     { "makeloop", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeloop,
-      DOC("(flags:?Dstring,elem:?Aast?Ert:compiler=!N,iter:?Aast?Ert:compiler,loop:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(flags:?Dstring,cond:?Aast?Ert:compiler=!N,next:?Aast?Ert:compiler=!N,loop:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(flags:?Dint,elem:?Aast?Ert:compiler=!N,iter:?Aast?Ert:compiler,loop:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(flags:?Dint,cond:?Aast?Ert:compiler=!N,next:?Aast?Ert:compiler=!N,loop:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(flags:?Dstring,elem:?Aast?Ert:Compiler=!N,iter:?Aast?Ert:Compiler,loop:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(flags:?Dstring,cond:?Aast?Ert:Compiler=!N,next:?Aast?Ert:Compiler=!N,loop:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(flags:?Dint,elem:?Aast?Ert:Compiler=!N,iter:?Aast?Ert:Compiler,loop:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(flags:?Dint,cond:?Aast?Ert:Compiler=!N,next:?Aast?Ert:Compiler=!N,loop:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
@@ -1695,7 +1695,7 @@ INTERN struct type_method compiler_methods[] = {
                         "should be placed in a section of code that is rarely used}"),
       TYPE_METHOD_FKWDS },
     { "makeloopctl", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeloopctl,
-      DOC("(isbreak:?Dbool,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(isbreak:?Dbool,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @scope doesn't match @this\n"
@@ -1703,8 +1703,8 @@ INTERN struct type_method compiler_methods[] = {
           "@isbreak is :false), or a $break statement (when @isbreak is :true)"),
       TYPE_METHOD_FKWDS },
     { "makeconditional", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeconditional,
-      DOC("(cond:?Aast?Ert:compiler,tt:?Aast?Ert:compiler=!N,ff:?Aast?Ert:compiler=!N,flags=!P{},scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(cond:?Aast?Ert:compiler,tt:?Aast?Ert:compiler=!N,ff:?Aast?Ert:compiler=!N,flags=!0,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(cond:?Aast?Ert:Compiler,tt:?Aast?Ert:Compiler=!N,ff:?Aast?Ert:Compiler=!N,flags=!P{},scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(cond:?Aast?Ert:Compiler,tt:?Aast?Ert:Compiler=!N,ff:?Aast?Ert:Compiler=!N,flags=!0,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The given @flags contains an unrecognized, or invalid flag\n"
@@ -1731,7 +1731,7 @@ INTERN struct type_method compiler_methods[] = {
           "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used}"),
       TYPE_METHOD_FKWDS },
     { "makebool", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makebool,
-      DOC("(expr:?Aast?Ert:compiler,negate=!f,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(expr:?Aast?Ert:Compiler,negate=!f,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
@@ -1741,7 +1741,7 @@ INTERN struct type_method compiler_methods[] = {
           "The expression ${!!a} results in ${makebool(a,false)}, while ${!a} results in ${makebool(a,true)}"),
       TYPE_METHOD_FKWDS },
     { "makeexpand", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeexpand,
-      DOC("(expr:?Aast?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(expr:?Aast?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @expr or @scope doesn't match @this\n"
@@ -1749,7 +1749,7 @@ INTERN struct type_method compiler_methods[] = {
           "Construct an expand-branch that will unpack a sequence expression @expr at runtime"),
       TYPE_METHOD_FKWDS },
     { "makefunction", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makefunction,
-      DOC("(code:?Aast?Ert:compiler,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(code:?Aast?Ert:Compiler,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of @code or @scope doesn't match @this\n"
@@ -1760,8 +1760,8 @@ INTERN struct type_method compiler_methods[] = {
           "branch will be executed in the context of @scope, or the current scope when :none"),
       TYPE_METHOD_FKWDS },
     { "makeoperatorfunc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeoperatorfunc,
-      DOC("(name:?Dstring,binding:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(name:?Dint,binding:?Aast?Ert:compiler=!N,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(name:?Dstring,binding:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(name:?Dint,binding:?Aast?Ert:Compiler=!N,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
                       "for ambiguous operators resolved at runtime\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
@@ -1775,10 +1775,10 @@ INTERN struct type_method compiler_methods[] = {
           "${binding.operator add} results in ${makeoperatorfunc(\"add\",binding)}"),
       TYPE_METHOD_FKWDS },
     { "makeoperator", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeoperator,
-      DOC("(name:?Dstring,a:?Aast?Ert:compiler,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,d:?Aast?Ert:compiler=!N,flags=!P{},scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(name:?Dint,a:?Aast?Ert:compiler,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,d:?Aast?Ert:compiler=!N,flags=!P{},scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(name:?Dstring,a:?Aast?Ert:compiler,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,d:?Aast?Ert:compiler=!N,flags=!0,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
-          "(name:?Dint,a:?Aast?Ert:compiler,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,d:?Aast?Ert:compiler=!N,flags=!0,scope:?Ascope?Ert:compiler=!N,loc?:?T3?Afile?Alexer?Ert:compiler?Dint?Dint)->?Aast?Ert:compiler\n"
+      DOC("(name:?Dstring,a:?Aast?Ert:Compiler,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,d:?Aast?Ert:Compiler=!N,flags=!P{},scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(name:?Dint,a:?Aast?Ert:Compiler,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,d:?Aast?Ert:Compiler=!N,flags=!P{},scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(name:?Dstring,a:?Aast?Ert:Compiler,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,d:?Aast?Ert:Compiler=!N,flags=!0,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
+          "(name:?Dint,a:?Aast?Ert:Compiler,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,d:?Aast?Ert:Compiler=!N,flags=!0,scope:?Ascope?Ert:Compiler=!N,loc?:?T3?Afile?Alexer?Ert:Compiler?Dint?Dint)->?Aast?Ert:Compiler\n"
           "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
                       "for ambiguous operators resolved based on argument count\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
@@ -1803,7 +1803,7 @@ INTERN struct type_method compiler_methods[] = {
           "$\"dontoptimize\"|Don't perform constant optimizations within this branch during the ast-optimization pass}"),
       TYPE_METHOD_FKWDS },
     { "makeaction", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makeaction,
-      DOC("(name:?Dstring,a:?Aast?Ert:compiler=!N,b:?Aast?Ert:compiler=!N,c:?Aast?Ert:compiler=!N,mustrun=!t,scope=!N)->?Aast?Ert:compiler\n"
+      DOC("(name:?Dstring,a:?Aast?Ert:Compiler=!N,b:?Aast?Ert:Compiler=!N,c:?Aast?Ert:Compiler=!N,mustrun=!t,scope=!N)->?Aast?Ert:Compiler\n"
           "@param name The name of the action (see table below)\n"
           "@param mustrun When :false, ast-optimization may optimize away side-effects caused by action operands. "
                          "Otherwise, all operands are required to execute as required by the action (which usually means executed-in-order)\n"

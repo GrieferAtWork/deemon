@@ -88,7 +88,7 @@ PRIVATE int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  StringSegments *seg;
- if (DeeArg_Unpack(argc,argv,"o:_stringsegmentsiterator",&seg) ||
+ if (DeeArg_Unpack(argc,argv,"o:_StringSegmentsIterator",&seg) ||
      DeeObject_AssertTypeExact((DeeObject *)seg,&StringSegments_Type))
      goto err;
  self->s_str   = seg->s_str;
@@ -179,7 +179,7 @@ PRIVATE struct type_cmp ssegiter_cmp = {
 
 INTERN DeeTypeObject StringSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringsegmentsiterator",
+    /* .tp_name     = */"_StringSegmentsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -238,7 +238,7 @@ sseg_ctor(StringSegments *__restrict self) {
 PRIVATE int DCALL
 sseg_init(StringSegments *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oIu:_stringsegments",&self->s_str,&self->s_siz) ||
+ if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":_StringSegments",&self->s_str,&self->s_siz) ||
      DeeObject_AssertTypeExact((DeeObject *)self->s_str,&DeeString_Type))
      goto err;
  if (!self->s_siz) {
@@ -409,7 +409,7 @@ PRIVATE struct type_member sseg_class_members[] = {
 
 INTERN DeeTypeObject StringSegments_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringsegments",
+    /* .tp_name     = */"_StringSegments",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

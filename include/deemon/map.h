@@ -54,16 +54,16 @@ DECL_BEGIN
  *        following the generic-mapping syntax of `{ key: item, ... }'
  *   - `class member proxy -> type'
  *      - Returns the common base-class of `keys', `values' and `items'
- *        By default, this is `DeeMapProxy_Type'
+ *        By default, this is `DeeMappingProxy_Type'
  *   - `class member keys -> type'
  *      - Returns the return type of the `keys' member function
- *        By default, this is `DeeMapKeys_Type'
+ *        By default, this is `DeeMappingKeys_Type'
  *   - `class member values -> type'
  *      - Returns the return type of the `values' member function
- *        By default, this is `DeeMapValues_Type'
+ *        By default, this is `DeeMappingValues_Type'
  *   - `class member items -> type'
  *      - Returns the return type of the `items' member function
- *        By default, this is `DeeMapItems_Type'
+ *        By default, this is `DeeMappingItems_Type'
  *   - `function keys() -> mapping.keys'
  *      - Returns a sequence that can be enumerated to view only the keys of a mapping
  *   - `function values() -> mapping.values'

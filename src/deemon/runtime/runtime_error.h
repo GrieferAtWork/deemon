@@ -41,6 +41,7 @@ INTDEF ATTR_COLD int DCALL err_divide_by_zero(DeeObject *__restrict a, DeeObject
 INTDEF ATTR_COLD int DCALL err_divide_by_zero_i(dssize_t a);
 INTDEF ATTR_COLD int DCALL err_shift_negative(DeeObject *__restrict a, DeeObject *__restrict b, bool is_left_shift);
 INTDEF ATTR_COLD int DCALL err_cannot_weak_reference(DeeObject *__restrict ob);
+INTDEF ATTR_COLD int DCALL err_reference_loop(DeeObject *__restrict a, DeeObject *__restrict b);
 INTDEF ATTR_COLD int DCALL err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD int DCALL err_bytes_not_writable(DeeObject *__restrict bytes_ob);
 INTDEF ATTR_COLD int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);

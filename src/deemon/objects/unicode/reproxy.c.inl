@@ -33,12 +33,12 @@
 
 DECL_BEGIN
 
-INTDEF DeeTypeObject REFindAllIterator_Type;
-INTDEF DeeTypeObject RELocateAllIterator_Type;
-INTDEF DeeTypeObject RESplitIterator_Type;
-INTDEF DeeTypeObject REFindAll_Type;
-INTDEF DeeTypeObject RELocateAll_Type;
-INTDEF DeeTypeObject RESplit_Type;
+INTDEF DeeTypeObject ReFindAll_Type;
+INTDEF DeeTypeObject ReFindAllIterator_Type;
+INTDEF DeeTypeObject ReLocateAll_Type;
+INTDEF DeeTypeObject ReLocateAllIterator_Type;
+INTDEF DeeTypeObject ReSplit_Type;
+INTDEF DeeTypeObject ReSplitIterator_Type;
 
 typedef struct {
     OBJECT_HEAD
@@ -87,8 +87,8 @@ PRIVATE int DCALL
 refaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_refindalliterator",&reseq) ||
-     DeeObject_AssertTypeExact((DeeObject *)reseq,&REFindAll_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_ReFindAllIterator",&reseq) ||
+     DeeObject_AssertTypeExact((DeeObject *)reseq,&ReFindAll_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -227,9 +227,9 @@ PRIVATE struct type_member refaiter_members[] = {
 };
 
 
-INTERN DeeTypeObject REFindAllIterator_Type = {
+INTERN DeeTypeObject ReFindAllIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_refindalliterator",
+    /* .tp_name     = */"_ReFindAllIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -283,8 +283,8 @@ PRIVATE int DCALL
 relaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_relocatealliterator",&reseq) ||
-     DeeObject_AssertTypeExact((DeeObject *)reseq,&RELocateAll_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_ReLocateAllIterator",&reseq) ||
+     DeeObject_AssertTypeExact((DeeObject *)reseq,&ReLocateAll_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -356,9 +356,9 @@ again:
                           STRING_ERROR_FIGNORE);
 }
 
-INTERN DeeTypeObject RELocateAllIterator_Type = {
+INTERN DeeTypeObject ReLocateAllIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_relocatealliterator",
+    /* .tp_name     = */"_ReLocateAllIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -411,8 +411,8 @@ PRIVATE int DCALL
 respiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_resplititerator",&reseq) ||
-     DeeObject_AssertTypeExact((DeeObject *)reseq,&RESplit_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_ReSplitIterator",&reseq) ||
+     DeeObject_AssertTypeExact((DeeObject *)reseq,&ReSplit_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
          sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -496,9 +496,9 @@ respiter_bool(ReSequenceIterator *__restrict self) {
 }
 
 
-INTERN DeeTypeObject RESplitIterator_Type = {
+INTERN DeeTypeObject ReSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_resplititerator",
+    /* .tp_name     = */"_ReSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -560,7 +560,7 @@ PRIVATE int DCALL
 refa_init(ReSequence *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  String *rules = NULL;
- if (DeeArg_Unpack(argc,argv,"oo|o" /*":_refindall"*/,
+ if (DeeArg_Unpack(argc,argv,"oo|o" /*":_ReFindAll"*/,
                    &self->re_data,&self->re_pattern,&rules) ||
      DeeObject_AssertTypeExact((DeeObject *)self->re_data,&DeeString_Type) ||
      DeeObject_AssertTypeExact((DeeObject *)self->re_pattern,&DeeString_Type))
@@ -609,7 +609,7 @@ refa_iter(ReSequence *__restrict self) {
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
  Dee_Incref(result->re_data);
  Dee_Incref(result->re_pattern);
- DeeObject_Init(result,&REFindAllIterator_Type);
+ DeeObject_Init(result,&ReFindAllIterator_Type);
  rwlock_init(&result->re_lock);
 done:
  return result;
@@ -699,13 +699,13 @@ PRIVATE struct type_member refa_members[] = {
 };
 
 PRIVATE struct type_member refa_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&REFindAllIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&ReFindAllIterator_Type),
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject REFindAll_Type = {
+INTERN DeeTypeObject ReFindAll_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_refindall",
+    /* .tp_name     = */"_ReFindAll",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -766,7 +766,7 @@ rela_iter(ReSequence *__restrict self) {
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
  Dee_Incref(result->re_data);
  Dee_Incref(result->re_pattern);
- DeeObject_Init(result,&RELocateAllIterator_Type);
+ DeeObject_Init(result,&ReLocateAllIterator_Type);
  rwlock_init(&result->re_lock);
 done:
  return result;
@@ -786,14 +786,14 @@ PRIVATE struct type_seq rela_seq = {
 };
 
 PRIVATE struct type_member rela_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RELocateAllIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&ReLocateAllIterator_Type),
     TYPE_MEMBER_END
 };
 
 
-INTERN DeeTypeObject RELocateAll_Type = {
+INTERN DeeTypeObject ReLocateAll_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_relocateall",
+    /* .tp_name     = */"_ReLocateAll",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -871,7 +871,7 @@ resp_iter(ReSequence *__restrict self) {
         result->re_args.re_dataptr == NULL);
  Dee_Incref(result->re_data);
  Dee_Incref(result->re_pattern);
- DeeObject_Init(result,&RESplitIterator_Type);
+ DeeObject_Init(result,&ReSplitIterator_Type);
  rwlock_init(&result->re_lock);
 done:
  return result;
@@ -939,14 +939,14 @@ PRIVATE struct type_seq resp_seq = {
 };
 
 PRIVATE struct type_member resp_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RESplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&ReSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
 
-INTERN DeeTypeObject RESplit_Type = {
+INTERN DeeTypeObject ReSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_resplit",
+    /* .tp_name     = */"_ReSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1004,7 +1004,7 @@ string_re_findall(String *__restrict self,
  memcpy(&result->re_args,args,sizeof(struct re_args));
  Dee_Incref(self);
  Dee_Incref(pattern);
- DeeObject_Init(result,&REFindAll_Type);
+ DeeObject_Init(result,&ReFindAll_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -1021,7 +1021,7 @@ string_re_locateall(String *__restrict self,
  memcpy(&result->re_args,args,sizeof(struct re_args));
  Dee_Incref(self);
  Dee_Incref(pattern);
- DeeObject_Init(result,&RELocateAll_Type);
+ DeeObject_Init(result,&ReLocateAll_Type);
 done:
  return (DREF DeeObject *)result;
 }
@@ -1040,7 +1040,7 @@ string_re_split(String *__restrict self,
       result->re_args.re_dataptr = NULL;
  Dee_Incref(self);
  Dee_Incref(pattern);
- DeeObject_Init(result,&RESplit_Type);
+ DeeObject_Init(result,&ReSplit_Type);
 done:
  return (DREF DeeObject *)result;
 }

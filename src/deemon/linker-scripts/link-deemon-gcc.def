@@ -427,6 +427,7 @@ EXPORTS
 	_DeeObject_CompareLoObject@8=DeeObject_CompareLoObject@8
 	_DeeObject_CompareNe@8=DeeObject_CompareNe@8
 	_DeeObject_CompareNeObject@8=DeeObject_CompareNeObject@8
+	_DeeObject_ConcatInherited@8=DeeObject_ConcatInherited@8
 	_DeeObject_Contains@8=DeeObject_Contains@8
 	_DeeObject_ContainsObject@8=DeeObject_ContainsObject@8
 	_DeeObject_Copy@4=DeeObject_Copy@4
@@ -447,6 +448,7 @@ EXPORTS
 	_DeeObject_DivInt@8=DeeObject_DivInt@8
 	_DeeObject_Enter@4=DeeObject_Enter@4
 	_DeeObject_EnumAttr@16=DeeObject_EnumAttr@16
+	_DeeObject_ExtendInherited@12=DeeObject_ExtendInherited@12
 	_DeeObject_Foreach@12=DeeObject_Foreach@12
 	_DeeObject_Free@4=DeeObject_Free@4
 	_DeeObject_GenericEnumAttr@12=DeeObject_GenericEnumAttr@12
@@ -623,6 +625,10 @@ EXPORTS
 	_DeeSeq_Max@8=DeeSeq_Max@8
 	_DeeSeq_Min@8=DeeSeq_Min@8
 	_DeeSeq_Sum@4=DeeSeq_Sum@4
+	_DeeSharedMap_Decref@4=DeeSharedMap_Decref@4
+	_DeeSharedMap_NewShared@8=DeeSharedMap_NewShared@8
+	_DeeSharedVector_Decref@4=DeeSharedVector_Decref@4
+	_DeeSharedVector_NewShared@8=DeeSharedVector_NewShared@8
 	_DeeSlab_Calloc10@0=DeeSlab_Calloc10@0
 	_DeeSlab_Calloc4@0=DeeSlab_Calloc4@0
 	_DeeSlab_Calloc5@0=DeeSlab_Calloc5@0

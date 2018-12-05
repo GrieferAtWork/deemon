@@ -115,17 +115,24 @@ err:
 }
 
 PRIVATE struct type_getset segiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq, NULL, NULL },
+    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq, NULL, NULL,
+      DOC("->?Ert:SeqSegments") },
     { NULL }
 };
 
-INTDEF DeeTypeObject SegmentsIterator_Type;
+PRIVATE struct type_member segiter_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SegmentsIterator,si_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD("__len__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SegmentsIterator,si_len)),
+    TYPE_MEMBER_END
+};
+
+INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 
 #define DEFINE_SEGITER_COMPARE(name,func) \
 PRIVATE DREF DeeObject *DCALL \
 name(SegmentsIterator *__restrict self, \
      SegmentsIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact(other,&SegmentsIterator_Type)) \
+ if (DeeObject_AssertTypeExact(other,&SeqSegmentsIterator_Type)) \
      return NULL; \
  return func(self->si_iter,other->si_iter); \
 }
@@ -148,9 +155,9 @@ PRIVATE struct type_cmp segiter_cmp = {
 };
 
 
-INTERN DeeTypeObject SegmentsIterator_Type = {
+INTERN DeeTypeObject SeqSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_segmentsiterator",
+    /* .tp_name     = */"_SeqSegmentsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -187,7 +194,7 @@ INTERN DeeTypeObject SegmentsIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */segiter_getsets,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */segiter_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -196,7 +203,7 @@ INTERN DeeTypeObject SegmentsIterator_Type = {
 
 
 PRIVATE struct type_member seg_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SegmentsIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqSegmentsIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -217,7 +224,7 @@ seg_iter(Segments *__restrict self) {
  result->si_iter = DeeObject_IterSelf(self->s_seq);
  if unlikely(!result->si_iter) goto err_r;
  result->si_len = self->s_len;
- DeeObject_Init(result,&SegmentsIterator_Type);
+ DeeObject_Init(result,&SeqSegmentsIterator_Type);
 done:
  return result;
 err_r:
@@ -235,9 +242,15 @@ PRIVATE struct type_seq seg_seq = {
     /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))NULL,
 };
 
-PRIVATE DeeTypeObject Segments_Type = {
+PRIVATE struct type_member seg_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Segments,s_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD("__len__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Segments,s_len)),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DeeTypeObject SeqSegments_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_segments",
+    /* .tp_name     = */"_SeqSegments",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -274,7 +287,7 @@ PRIVATE DeeTypeObject Segments_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */seg_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */seg_class_members
@@ -292,7 +305,7 @@ DeeSeq_Segments(DeeObject *__restrict self, size_t segsize) {
  result->s_seq = self;
  result->s_len = segsize;
  Dee_Incref(self);
- DeeObject_Init(result,&Segments_Type);
+ DeeObject_Init(result,&SeqSegments_Type);
 done:
  return (DREF DeeObject *)result;
 }

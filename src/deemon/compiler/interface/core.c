@@ -92,13 +92,13 @@ DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg
 }
 
 INTERN struct type_member DeeCompilerItem_Members[] = {
-    TYPE_MEMBER_FIELD_DOC("compiler",STRUCT_OBJECT,offsetof(CompilerItem,ci_compiler),"->?Ert:compiler"),
+    TYPE_MEMBER_FIELD_DOC("compiler",STRUCT_OBJECT,offsetof(CompilerItem,ci_compiler),"->?Ert:Compiler"),
     TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject DeeCompilerItem_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"compileritem",
+    /* .tp_name     = */"_CompilerItem",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

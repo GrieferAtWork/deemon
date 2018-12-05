@@ -338,8 +338,8 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
     /* .tp_doc      = */NULL,
     /* TODO: This must be a GC object, because user-code may create const-symbols
      *       that re-reference the compiler, creating a reference loop:
-     * >> import compiler from rt;
-     * >> local com = compiler();
+     * >> import Compiler from rt;
+     * >> local com = Compiler();
      * >> local sym = com.rootscope.newlocal("foo",loc: none);
      * >> sym.setconst(com); // Reference loop
      */

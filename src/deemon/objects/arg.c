@@ -79,7 +79,7 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 
 PRIVATE int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_kwdsiterator",&self->ki_map) ||
+ if (DeeArg_Unpack(argc,argv,"o:_KwdsIterator",&self->ki_map) ||
      DeeObject_AssertTypeExact((DeeObject *)self->ki_map,&DeeKwds_Type))
      return -1;
  Dee_Incref(self->ki_map);
@@ -229,14 +229,14 @@ PRIVATE struct type_cmp kwdsiter_cmp = {
 };
 
 PRIVATE struct type_member kwdsiter_members[] = {
-    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(KwdsIterator,ki_map),"->?Ert:kwds"),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(KwdsIterator,ki_map),"->?Ert:Kwds"),
     TYPE_MEMBER_END
 };
 
 
 INTERN DeeTypeObject DeeKwdsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwdsmappingiterator",
+    /* .tp_name     = */"_KwdsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -544,7 +544,7 @@ PRIVATE struct type_member kwds_class_members[] = {
 
 PUBLIC DeeTypeObject DeeKwds_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwds",
+    /* .tp_name     = */"_Kwds",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -624,7 +624,7 @@ kmapiter_ctor(KmapIterator *__restrict self) {
 #define kmapiter_copy kwdsiter_copy
 PRIVATE int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_kwdsmappingiterator",&self->ki_map) ||
+ if (DeeArg_Unpack(argc,argv,"o:_KwdsMappingIterator",&self->ki_map) ||
      DeeObject_AssertTypeExact((DeeObject *)self->ki_map,&DeeKwdsMapping_Type))
      return -1;
  Dee_Incref(self->ki_map);
@@ -768,7 +768,7 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 
 INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwdsmappingiterator",
+    /* .tp_name     = */"_KwdsMappingIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -828,7 +828,7 @@ PRIVATE int DCALL
 kmap_init(KwdsMapping *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *args; size_t i;
- if (DeeArg_Unpack(argc,argv,"oo:_kwdsmapping",&self->kmo_kwds,&args) ||
+ if (DeeArg_Unpack(argc,argv,"oo:_KwdsMapping",&self->kmo_kwds,&args) ||
      DeeObject_AssertTypeExact((DeeObject *)self->kmo_kwds,&DeeKwds_Type) ||
      DeeObject_AssertTypeExact(args,&DeeTuple_Type))
      return -1;
@@ -1006,7 +1006,7 @@ PRIVATE struct type_seq kmap_seq = {
 
 
 PRIVATE struct type_member kmap_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__kwds__",STRUCT_OBJECT,offsetof(KwdsMapping,kmo_kwds),"->?Ert:kwds"),
+    TYPE_MEMBER_FIELD_DOC("__kwds__",STRUCT_OBJECT,offsetof(KwdsMapping,kmo_kwds),"->?Ert:Kwds"),
     TYPE_MEMBER_END
 };
 
@@ -1018,7 +1018,7 @@ PRIVATE struct type_member kmap_class_members[] = {
 
 PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwdsmapping",
+    /* .tp_name     = */"_KwdsMapping",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

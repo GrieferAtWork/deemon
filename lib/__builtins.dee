@@ -54,7 +54,7 @@ local __objects = deemon.list {
 	/* 0x0009 */ deemon.weakref,
 	/* 0x000a */ deemon.tuple,
 	/* 0x000b */ deemon.type_,
-	/* 0x000c */ rt.nonetype,
+	/* 0x000c */ rt.NoneType,
 	/* 0x000d */ none, /* __builtin_object (Filled below) */
 	/* 0x000e */ deemon.tuple.iterator,
 	/* 0x000f */ deemon.dict,
@@ -144,7 +144,7 @@ local __objects = deemon.list {
 	/* 0x0063 */ operators.setattr,
 	/* 0x0064 */ operators.iter,
 	/* 0x0065 */ operators.next,
-	/* 0x0066 */ rt.filetype,
+	/* 0x0066 */ rt.FileType,
 	/* 0x0067 */ deemon.file,
 	/* 0x0068 */ deemon.file, /* file.io (merged with `file') */
 	/* 0x0069 */ deemon.file.reader,
@@ -165,17 +165,17 @@ local __objects = deemon.list {
 	/* 0x0078 */ deemon.Error.ValueError,
 	/* 0x0079 */ deemon.Error.SystemError,
 	/* 0x007a */ deemon.Error.SystemError.FSError,
-	/* 0x007b */ threading.semaphore,
-	/* 0x007c */ threading.mutex,
-	/* 0x007d */ threading.tls,
+	/* 0x007b */ threading.Semaphore,
+	/* 0x007c */ threading.Mutex,
+	/* 0x007d */ threading.Tls,
 	/* 0x007e */ deemon.thread,
-	/* 0x007f */ time.time,
-	/* 0x0080 */ ctypes.structured_type,
-	/* 0x0081 */ ctypes.pointer_type,
-	/* 0x0082 */ ctypes.lvalue_type,
-	/* 0x0083 */ ctypes.structured,
-	/* 0x0084 */ ctypes.pointer,
-	/* 0x0085 */ ctypes.lvalue,
+	/* 0x007f */ time.Time,
+	/* 0x0080 */ ctypes.StructuredType,
+	/* 0x0081 */ ctypes.PointerType,
+	/* 0x0082 */ ctypes.LValueType,
+	/* 0x0083 */ ctypes.Structured,
+	/* 0x0084 */ ctypes.Pointer,
+	/* 0x0085 */ ctypes.LValue,
 	/* 0x0086 */ [](x) -> x.ptr,    /* __builtin_pointer_add */
 	/* 0x0087 */ [](x) -> x.base,   /* __builtin_pointer_rem */
 	/* 0x0088 */ [](x) -> x.lvalue, /* __builtin_lvalue_add */
@@ -183,19 +183,19 @@ local __objects = deemon.list {
 	/* 0x008a */ deemon.traceback,
 	/* 0x008b */ deemon.traceback.iterator,
 	/* 0x008c */ deemon.frame, /* DeeTracebackEntry_Type */
-	/* 0x008d */ rt.objmethod, /* DeeMemberFunction_Type (DeeObjMethod_Type) */
-	/* 0x008e */ rt.cmethod, /* DeeCFunction_Type (DeeCMethod_Type) */
-	/* 0x008f */ ctypes.shlib,
-	/* 0x0090 */ ctypes.function_type, /* DeeForeignFunctionType_Type */
+	/* 0x008d */ rt.ObjMethod, /* DeeMemberFunction_Type (DeeObjMethod_Type) */
+	/* 0x008e */ rt.CMethod, /* DeeCFunction_Type (DeeCMethod_Type) */
+	/* 0x008f */ ctypes.ShLib,
+	/* 0x0090 */ ctypes.FunctionType, /* DeeForeignFunctionType_Type */
 	/* 0x0091 */ deemon.code,
 	/* 0x0092 */ deemon.code(), /* empty_code */
-	/* 0x0093 */ rt.compiler.ast, /* DeeXAst_Type */
-	/* 0x0094 */ rt.dexmodule, /* DeeDexModule_Type */
+	/* 0x0093 */ rt.Compiler.ast, /* DeeXAst_Type */
+	/* 0x0094 */ try rt.DexModule catch (...) none, /* DeeDexModule_Type */
 	/* 0x0095 */ none, /* DeeErrorType_DexError */
 	/* 0x0096 */ none, /* DeeToken_Type */
 	/* 0x0097 */ none, /* DeeLocalVar_Type */
 	/* 0x0098 */ none, /* DeeLexer_Type */
-	/* 0x0099 */ rt.compiler.ast, /* DeeSAst_Type */
+	/* 0x0099 */ rt.Compiler.ast, /* DeeSAst_Type */
 	/* 0x009a */ fs.getcwd,
 	/* 0x009b */ fs.chdir,
 	/* 0x009c */ [] -> fs.user.home,
@@ -268,9 +268,9 @@ local __objects = deemon.list {
 	/* 0x00df */ none, /* TODO: ctypes.aligned_calloc */
 	/* 0x00e0 */ none, /* TODO: ctypes.aligned_realloc */
 	/* 0x00e1 */ none, /* TODO: ctypes.aligned_free */
-	/* 0x00e2 */ ipc.pipe,
-	/* 0x00e3 */ ipc.pipe.reader,
-	/* 0x00e4 */ ipc.pipe.writer,
+	/* 0x00e2 */ ipc.Pipe,
+	/* 0x00e3 */ ipc.Pipe.reader,
+	/* 0x00e4 */ ipc.Pipe.writer,
 	/* 0x00e5 */ deemon.Error.RuntimeError.SegFault,
 	/* 0x00e6 */ deemon.gc.collect, /* __builtin_gc_collect_now */
 	/* 0x00e7 */ fs.stat.isexe,
@@ -420,8 +420,8 @@ local __objects = deemon.list {
 	/* 0x0177 */ ctypes.bswap16,
 	/* 0x0178 */ ctypes.bswap32,
 	/* 0x0179 */ ctypes.bswap64,
-	/* 0x017A */ ctypes.struct_type,
-	/* 0x017B */ rt.compiler.scope,
+	/* 0x017A */ ctypes.StructType,
+	/* 0x017B */ rt.Compiler.scope,
 	/* 0x017C */ none, /* TODO: &DeeLexerIterator_Type */
 	/* 0x017D */ deemon.Error.ValueError.IndexError,
 	/* 0x017E */ deemon.hashset,
@@ -430,15 +430,15 @@ local __objects = deemon.list {
 	/* 0x0181 */ [](path,val) -> fs.chtime(path,none,none,val),
 	/* 0x0182 */ [](path,val) -> fs.chtime(path,none,val,none),
 	/* 0x0183 */ [](path,at = none,ct = none,mt = none) -> (chtime from fs)(path,at,mt,ct),
-	/* 0x0184 */ ctypes.array_type,
-	/* 0x0185 */ ctypes.array.iterator,
-	/* 0x0186 */ joined from files,
+	/* 0x0184 */ ctypes.ArrayType,
+	/* 0x0185 */ ctypes.Array.iterator,
+	/* 0x0186 */ Joined from files,
 	/* 0x0187 */ deemon.property_,
-	/* 0x0188 */ ipc.process,
+	/* 0x0188 */ ipc.Process,
 	/* 0x0189 */ deemon.sequence.contains,
 	/* 0x018A */ net.socket,
 	/* 0x018B */ deemon.hasattr,
-	/* 0x018C */ type(([]{ yield none; })()[0:1]).iterator, /* DeeSubRangeIterator_Type */
+	/* 0x018C */ type(([]{ yield none; })()[0:1]).iterator, /* SeqSubRangeIterator_Type */
 	/* 0x018D */ none, /* DeeSocketFile_Type -- Sockets no longer implement the file protocol */
 	/* 0x018E */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the file protocol */
 	/* 0x018F */ deemon.string.iterator, /* DeeWideStringIterator_Type */
@@ -522,7 +522,7 @@ local __objects = deemon.list {
 	/* 0x01DD */ [](seq,a,b,c...) { if (!c) return seq.operator[]=(a,b); return seq.operator [:](a,b,c...); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
 	/* 0x01DE */ deemon.import_, /* DeeBuiltinFunction___builtin_dex */
 	/* 0x01DF */ operators.bool, /* DeeBuiltinFunction___bool__ */
-	/* 0x01E0 */ [](f,n,t = none) { __stack local res = ctypes.shlib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
+	/* 0x01E0 */ [](f,n,t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
 	/* 0x01E1 */ none, /* TODO: Add closure support to ctypes -- DeeBuiltinFunction___builtin_ff_closure */
 	/* 0x01E2 */ enumattr from .include.m_util_attr, /* DeeBuiltinFunction___builtin_enumattr */
 	/* 0x01E3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */

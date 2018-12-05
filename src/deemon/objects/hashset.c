@@ -1089,13 +1089,13 @@ setiterator_visit(SetIterator *__restrict self, dvisit_t proc, void *arg) {
  Dee_Visit(self->si_set);
 }
 
-INTDEF DeeTypeObject SetIterator_Type;
+INTDEF DeeTypeObject HashSetIterator_Type;
 
 INTERN int DCALL
 setiterator_init(SetIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  Set *set;
- if (DeeArg_Unpack(argc,argv,"o:hashset.iterator",&set) ||
+ if (DeeArg_Unpack(argc,argv,"o:_HashSetIterator",&set) ||
      DeeObject_AssertType((DeeObject *)set,&DeeHashSet_Type))
      return -1;
  self->si_set = set;
@@ -1123,7 +1123,7 @@ setiterator_bool(SetIterator *__restrict self) {
 PRIVATE int DCALL \
 name(SetIterator *__restrict self, \
      SetIterator *__restrict other) { \
- if (DeeObject_AssertType((DeeObject *)other,&SetIterator_Type)) \
+ if (DeeObject_AssertType((DeeObject *)other,&HashSetIterator_Type)) \
      return -1; \
  return READ_ITEM(self) op READ_ITEM(other); \
 }
@@ -1150,9 +1150,9 @@ PRIVATE struct type_cmp setiterator_cmp = {
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_ge
 };
 
-INTERN DeeTypeObject SetIterator_Type = {
+INTERN DeeTypeObject HashSetIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"set.iterator",
+    /* .tp_name     = */"_HashSetIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -1202,7 +1202,7 @@ set_iter(Set *__restrict self) {
  DREF SetIterator *result;
  result = DeeObject_MALLOC(SetIterator);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&SetIterator_Type);
+ DeeObject_Init(result,&HashSetIterator_Type);
  result->si_set = self;
  Dee_Incref(self);
 #ifdef CONFIG_NO_THREADS
@@ -1455,7 +1455,7 @@ INTERN struct type_getset set_getsets[] = {
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_member set_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SetIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&HashSetIterator_Type),
     TYPE_MEMBER_END
 };
 

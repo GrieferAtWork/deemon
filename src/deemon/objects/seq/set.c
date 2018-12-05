@@ -29,6 +29,8 @@
 #include <deemon/arg.h>
 
 #include "set.h"
+#include "../gc_inspect.h"
+#include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 
@@ -69,10 +71,6 @@ proxy_visit(SetUnion *__restrict self, dvisit_t proc, void *arg) {
  Dee_Visit(self->su_a);
  Dee_Visit(self->su_b);
 }
-PRIVATE struct type_member proxy_iterator_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(SetUnionIterator,sui_union)),
-    TYPE_MEMBER_END
-};
 
 
 
@@ -80,10 +78,60 @@ PRIVATE struct type_member proxy_iterator_members[] = {
 /* ================================================================================ */
 /*   SET UNION                                                                      */
 /* ================================================================================ */
+STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator,sui_union) == COMPILER_OFFSETOF(SetUnion,su_a));
+STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator,sui_iter) == COMPILER_OFFSETOF(SetUnion,su_b));
+#define suiter_fini  proxy_fini
+PRIVATE DREF DeeObject *DCALL
+suiter_get_iter(SetUnionIterator *__restrict self) {
+ DREF DeeObject *result;
+ rwlock_read(&self->sui_lock);
+ result = self->sui_iter;
+ Dee_Incref(result);
+ rwlock_endread(&self->sui_lock);
+ return result;
+}
+PRIVATE int DCALL
+suiter_set_iter(SetUnionIterator *__restrict self,
+                DeeObject *__restrict iter) {
+ DREF DeeObject *old_iter;
+ if (DeeGC_ReferredBy(iter,(DeeObject *)self))
+     return err_reference_loop((DeeObject *)self,iter);
+ Dee_Incref(iter);
+ rwlock_read(&self->sui_lock);
+ old_iter = self->sui_iter;
+ self->sui_iter = iter;
+ rwlock_endread(&self->sui_lock);
+ Dee_Decref(old_iter);
+ return 0;
+}
+PRIVATE DREF DeeObject *DCALL
+suiter_get_in2nd(SetUnionIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ return_bool(self->sui_in2nd);
+#else
+ bool result;
+ COMPILER_BARRIER();
+ result = self->sui_in2nd;
+ COMPILER_BARRIER();
+ return_bool(result);
+#endif
+}
+PRIVATE int DCALL
+suiter_set_in2nd(SetUnionIterator *__restrict self,
+                 DeeObject *__restrict value) {
+ int newval = DeeObject_Bool(value);
+ if unlikely(newval < 0) return newval;
+ rwlock_write(&self->sui_lock);
+ self->sui_in2nd = !!newval;
+ rwlock_endwrite(&self->sui_lock);
+ return 0;
+}
 PRIVATE void DCALL
-suiter_fini(SetUnionIterator *__restrict self) {
- Dee_Decref(self->sui_union);
- Dee_Decref(self->sui_iter);
+suiter_visit(SetUnionIterator *__restrict self, dvisit_t proc, void *arg) {
+ Dee_Visit(self->sui_union);
+ rwlock_read(&self->sui_lock);
+ Dee_Visit(self->sui_iter);
+ rwlock_endread(&self->sui_lock);
 }
 PRIVATE int DCALL
 suiter_copy(SetUnionIterator *__restrict self,
@@ -105,7 +153,7 @@ suiter_copy(SetUnionIterator *__restrict self,
 PRIVATE int DCALL
 suiter_init(SetUnionIterator *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_setunioniterator",&self->sui_union) ||
+ if (DeeArg_Unpack(argc,argv,"o:_SetUnionIterator",&self->sui_union) ||
      DeeObject_AssertTypeExact((DeeObject *)self->sui_union,&SetUnion_Type) ||
     (self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
      return -1;
@@ -113,13 +161,6 @@ suiter_init(SetUnionIterator *__restrict self,
  rwlock_init(&self->sui_lock);
  self->sui_in2nd = false;
  return 0;
-}
-PRIVATE void DCALL
-suiter_visit(SetUnionIterator *__restrict self, dvisit_t proc, void *arg) {
- Dee_Visit(self->sui_union);
- rwlock_read(&self->sui_lock);
- Dee_Visit(self->sui_iter);
- rwlock_endread(&self->sui_lock);
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_next(SetUnionIterator *__restrict self) {
@@ -341,9 +382,24 @@ PRIVATE struct type_cmp suiter_cmp = {
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&suiter_gr,
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&suiter_ge
 };
+PRIVATE struct type_member suiter_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SetUnionIterator,sui_union),"->?Ert:SetUnion"),
+    TYPE_MEMBER_END
+};
+PRIVATE struct type_getset suiter_getsets[] = {
+    { "__iter__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_iter, NULL,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&suiter_set_iter,
+      DOC("->?Diterator") },
+    { "__in2nd__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_in2nd, NULL,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&suiter_set_in2nd,
+      DOC("->?Dbool") },
+    { NULL }
+};
 INTERN DeeTypeObject SetUnionIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setunioniterator",
+    /* .tp_name     = */"_SetUnionIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -379,8 +435,8 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */proxy_iterator_members,
+    /* .tp_getsets       = */suiter_getsets,
+    /* .tp_members       = */suiter_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -399,7 +455,7 @@ su_init(SetUnion *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->su_a = Dee_EmptySet;
  self->su_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_setunion",&self->su_a,&self->su_b))
+ if (DeeArg_Unpack(argc,argv,"|oo:_SetUnion",&self->su_a,&self->su_b))
      return -1;
  Dee_Incref(self->su_a);
  Dee_Incref(self->su_b);
@@ -451,7 +507,7 @@ PRIVATE struct type_member su_class_members[] = {
 };
 INTERN DeeTypeObject SetUnion_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setunion",
+    /* .tp_name     = */"_SetUnion",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -501,11 +557,12 @@ INTERN DeeTypeObject SetUnion_Type = {
 /* ================================================================================ */
 /*   SET SYMMETRIC DIFFERENCE                                                       */
 /* ================================================================================ */
-#define ssditer_copy  suiter_copy
-#define ssditer_init  suiter_init
-#define ssditer_fini  suiter_fini
-#define ssditer_visit suiter_visit
-#define ssditer_cmp   suiter_cmp
+#define ssditer_copy    suiter_copy
+#define ssditer_init    suiter_init
+#define ssditer_fini    suiter_fini
+#define ssditer_visit   suiter_visit
+#define ssditer_cmp     suiter_cmp
+#define ssditer_getsets suiter_getsets
 PRIVATE DREF DeeObject *DCALL
 ssditer_next(SetSymmetricDifferenceIterator *__restrict self) {
  DREF DeeObject *result;
@@ -572,9 +629,13 @@ read_from_iter:
 done:
  return result;
 }
+PRIVATE struct type_member ssditer_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SetSymmetricDifferenceIterator,ssd_set),"->?Ert:SetSymmetricDifference"),
+    TYPE_MEMBER_END
+};
 INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setsymmetricdifferenceiterator",
+    /* .tp_name     = */"_SetSymmetricDifferenceIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -587,7 +648,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
                 /* .tp_copy_ctor = */&ssditer_copy,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */&ssditer_init,
-                TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
+                TYPE_FIXED_ALLOCATOR(SetSymmetricDifferenceIterator)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ssditer_fini,
@@ -610,8 +671,8 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */proxy_iterator_members,
+    /* .tp_getsets       = */ssditer_getsets,
+    /* .tp_members       = */ssditer_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -623,7 +684,7 @@ ssd_init(SetSymmetricDifference *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->ssd_a = Dee_EmptySet;
  self->ssd_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_setsymmetricdifference",&self->ssd_a,&self->ssd_b))
+ if (DeeArg_Unpack(argc,argv,"|oo:_SetSymmetricDifference",&self->ssd_a,&self->ssd_b))
      return -1;
  Dee_Incref(self->ssd_a);
  Dee_Incref(self->ssd_b);
@@ -673,7 +734,7 @@ PRIVATE struct type_member ssd_class_members[] = {
 };
 INTERN DeeTypeObject SetSymmetricDifference_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setsymmetricdifference",
+    /* .tp_name     = */"_SetSymmetricDifference",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -745,7 +806,7 @@ siiter_copy(SetIntersectionIterator *__restrict self,
 PRIVATE int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_setintersectioniterator",&self->sii_intersect) ||
+ if (DeeArg_Unpack(argc,argv,"o:_SetIntersectionIterator",&self->sii_intersect) ||
      DeeObject_AssertTypeExact((DeeObject *)self->sii_intersect,&SetIntersection_Type) ||
     (self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a)) == NULL)
      return -1;
@@ -832,9 +893,15 @@ PRIVATE struct type_cmp siiter_cmp = {
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&siiter_gr,
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&siiter_ge
 };
+PRIVATE struct type_member siiter_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SetIntersectionIterator,sii_intersect),"->?Ert:SetIntersection"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SetIntersectionIterator,sii_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__other__",STRUCT_OBJECT,offsetof(SetIntersectionIterator,sii_other),"->?Dset"),
+    TYPE_MEMBER_END
+};
 INTERN DeeTypeObject SetIntersectionIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setintersectioniterator",
+    /* .tp_name     = */"_SetIntersectionIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -871,7 +938,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */proxy_iterator_members,
+    /* .tp_members       = */siiter_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -883,7 +950,7 @@ si_init(SetIntersection *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->si_a = Dee_EmptySet;
  self->si_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_setintersection",&self->si_a,&self->si_b))
+ if (DeeArg_Unpack(argc,argv,"|oo:_SetIntersection",&self->si_a,&self->si_b))
      return -1;
  Dee_Incref(self->si_a);
  Dee_Incref(self->si_b);
@@ -936,7 +1003,7 @@ PRIVATE struct type_member si_class_members[] = {
 
 INTERN DeeTypeObject SetIntersection_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setintersection",
+    /* .tp_name     = */"_SetIntersection",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -987,11 +1054,11 @@ INTERN DeeTypeObject SetIntersection_Type = {
 /* ================================================================================ */
 /*   SET DIFFERENCE                                                                 */
 /* ================================================================================ */
-#define sditer_copy   siiter_copy
-#define sditer_init   siiter_init
-#define sditer_fini   siiter_fini
-#define sditer_visit  siiter_visit
-#define sditer_cmp    siiter_cmp
+#define sditer_copy    siiter_copy
+#define sditer_init    siiter_init
+#define sditer_fini    siiter_fini
+#define sditer_visit   siiter_visit
+#define sditer_cmp     siiter_cmp
 PRIVATE DREF DeeObject *DCALL
 sditer_next(SetDifferenceIterator *__restrict self) {
  DREF DeeObject *result; int temp;
@@ -1011,10 +1078,15 @@ again:
 done:
  return result;
 }
-
+PRIVATE struct type_member sditer_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SetDifferenceIterator,sdi_diff),"->?Ert:SetDifference"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SetDifferenceIterator,sdi_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__other__",STRUCT_OBJECT,offsetof(SetDifferenceIterator,sdi_other),"->?Dset"),
+    TYPE_MEMBER_END
+};
 INTERN DeeTypeObject SetDifferenceIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setdifferenceiterator",
+    /* .tp_name     = */"_SetDifferenceIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1051,7 +1123,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */proxy_iterator_members,
+    /* .tp_members       = */sditer_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -1063,7 +1135,7 @@ sd_init(SetDifference *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->sd_a = Dee_EmptySet;
  self->sd_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_setdifference",&self->sd_a,&self->sd_b))
+ if (DeeArg_Unpack(argc,argv,"|oo:_SetDifference",&self->sd_a,&self->sd_b))
      return -1;
  Dee_Incref(self->sd_a);
  Dee_Incref(self->sd_b);
@@ -1117,7 +1189,7 @@ PRIVATE struct type_member sd_class_members[] = {
 
 INTERN DeeTypeObject SetDifference_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_setdifference",
+    /* .tp_name     = */"_SetDifference",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

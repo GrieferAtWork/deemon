@@ -793,7 +793,7 @@ err:
 
 PRIVATE struct type_member code_members[] = {
     TYPE_MEMBER_FIELD_DOC("__ddi__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_ddi),
-                          "->?Ert:ddi\n"
+                          "->?Ert:Ddi\n"
                           "The DDI (DeemonDebugInformation) data block"),
     TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),
                           "->?Dmodule"),

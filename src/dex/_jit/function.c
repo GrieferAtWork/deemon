@@ -439,7 +439,7 @@ PRIVATE struct type_member jf_members[] = {
 
 INTERN DeeTypeObject JITFunction_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_jitfunction",
+    /* .tp_name     = */"_JitFunction",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,

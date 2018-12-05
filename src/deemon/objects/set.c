@@ -67,10 +67,12 @@ PRIVATE int DCALL
 invset_init(DeeInverseSetObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  self->is_set = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|o:_inverseset",&self->is_set))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"|o:_InverseSet",&self->is_set))
+     goto err;
  Dee_Incref(self->is_set);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -135,7 +137,7 @@ PRIVATE struct type_member invset_members[] = {
 
 PUBLIC DeeTypeObject DeeInverseSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_inverseset",
+    /* .tp_name     = */"_InverseSet",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

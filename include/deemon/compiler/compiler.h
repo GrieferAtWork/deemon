@@ -151,7 +151,7 @@ struct compiler_object {
  *       thus providing code that wishes to stick to our deemon implementation
  *       the ability to tinker around with the compiler, while still not having
  *       to standardize any aspect about its inner working what-so-ever. */
-DDATDEF DeeTypeObject DeeCompiler_Type; /* compiler from rt */
+DDATDEF DeeTypeObject DeeCompiler_Type; /* Compiler from rt */
 #define DeeCompiler_Check(ob)      DeeObject_InstanceOf(ob,&DeeCompiler_Type)
 #define DeeCompiler_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeCompiler_Type)
 

@@ -87,8 +87,8 @@ PRIVATE struct type_getset transiter_getsets[] = {
 };
 
 PRIVATE struct type_member transiter_members[] = {
-    TYPE_MEMBER_FIELD("__iterator__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_iter)),
-    TYPE_MEMBER_FIELD("__func__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_func)),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_func),"->?Dcallable"),
     TYPE_MEMBER_END
 };
 
@@ -96,13 +96,13 @@ PRIVATE struct type_member transiter_members[] = {
 PRIVATE DREF DeeObject *DCALL \
 name(TransformationIterator *__restrict self, \
      TransformationIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeTransformationIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqTransformationIterator_Type)) \
      return NULL; \
  if (self->ti_func != other->ti_func) { \
      int temp = DeeObject_CompareEq(self->ti_func,other->ti_func); \
      if (temp <= 0) { \
          if (temp == 0) \
-             err_unimplemented_operator(&DeeTransformationIterator_Type,opname); \
+             err_unimplemented_operator(&SeqTransformationIterator_Type,opname); \
          return NULL; \
      } \
  } \
@@ -147,8 +147,8 @@ PRIVATE int DCALL
 transiter_init(TransformationIterator *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  Transformation *trans;
- if (DeeArg_Unpack(argc,argv,"o:_transformationiterator",&trans) ||
-     DeeObject_AssertTypeExact((DeeObject *)trans,&DeeTransformation_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_SeqTransformationIterator",&trans) ||
+     DeeObject_AssertTypeExact((DeeObject *)trans,&SeqTransformation_Type))
      return -1;
  self->ti_iter = DeeObject_IterSelf(trans->t_seq);
  if unlikely(!self->ti_iter) return -1;
@@ -157,9 +157,9 @@ transiter_init(TransformationIterator *__restrict self,
  return 0;
 }
 
-INTERN DeeTypeObject DeeTransformationIterator_Type = {
+INTERN DeeTypeObject SeqTransformationIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_transformationiterator",
+    /* .tp_name     = */"_SeqTransformationIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -228,7 +228,7 @@ trans_iter(Transformation *__restrict self) {
  /* Assign the transformation functions. */
  result->ti_func = self->t_fun;
  Dee_Incref(self->t_fun);
- DeeObject_Init(result,&DeeTransformationIterator_Type);
+ DeeObject_Init(result,&SeqTransformationIterator_Type);
  return (DREF DeeObject *)result;
 err_r:
  DeeObject_FREE(result);
@@ -237,13 +237,13 @@ err:
 }
 
 PRIVATE struct type_member trans_members[] = {
-   TYPE_MEMBER_FIELD("__seq__",STRUCT_OBJECT,offsetof(Transformation,t_seq)),
-   TYPE_MEMBER_FIELD("__func__",STRUCT_OBJECT,offsetof(Transformation,t_fun)),
+   TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Transformation,t_seq),"->?Dsequence"),
+   TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(Transformation,t_fun),"->?Dcallable"),
    TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member trans_class_members[] = {
-   TYPE_MEMBER_CONST("iterator",&DeeTransformationIterator_Type),
+   TYPE_MEMBER_CONST("iterator",&SeqTransformationIterator_Type),
    TYPE_MEMBER_END
 };
 
@@ -342,7 +342,7 @@ PRIVATE struct type_seq trans_seq = {
 PRIVATE int DCALL
 trans_init(Transformation *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_transformation",
+ if (DeeArg_Unpack(argc,argv,"oo:_SeqTransformation",
                   &self->t_seq,&self->t_fun))
      return -1;
  Dee_Incref(self->t_seq);
@@ -350,10 +350,10 @@ trans_init(Transformation *__restrict self,
  return 0;
 }
 
-INTERN DeeTypeObject DeeTransformation_Type = {
+INTERN DeeTypeObject SeqTransformation_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_transformation",
-    /* .tp_doc      = */NULL,
+    /* .tp_name     = */"_SeqTransformation",
+    /* .tp_doc      = */DOC("(seq:?Dsequence,fun:?Dcallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -408,7 +408,7 @@ DeeSeq_Transform(DeeObject *__restrict self,
  result->t_fun = transformation;
  Dee_Incref(self);
  Dee_Incref(transformation);
- DeeObject_Init(result,&DeeTransformation_Type);
+ DeeObject_Init(result,&SeqTransformation_Type);
 done:
  return (DREF DeeObject *)result;
 }

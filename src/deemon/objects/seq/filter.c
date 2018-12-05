@@ -53,8 +53,8 @@ PRIVATE int DCALL
 filteriterator_init(FilterIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  Filter *filter;
- if (DeeArg_Unpack(argc,argv,"o:_filter.iterator",&filter) ||
-     DeeObject_AssertTypeExact((DeeObject *)filter,&DeeFilter_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_SeqFilterIterator",&filter) ||
+     DeeObject_AssertTypeExact((DeeObject *)filter,&SeqFilter_Type))
      return -1;
  self->fi_iter = DeeObject_IterSelf(filter->f_seq);
  if unlikely(!self->fi_iter) return -1;
@@ -116,7 +116,7 @@ filteriterator_seq_get(FilterIterator *__restrict self) {
  result->f_seq = base_seq; /* Inherit reference. */
  result->f_fun = self->fi_func;
  Dee_Incref(result->f_fun);
- DeeObject_Init(result,&DeeFilter_Type);
+ DeeObject_Init(result,&SeqFilter_Type);
  return result;
 err_base_seq:
  Dee_Decref(base_seq);
@@ -126,8 +126,9 @@ err:
 
 
 PRIVATE struct type_getset filteriterator_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get, NULL, NULL,
-      DOC("->_filter") },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get, NULL, NULL,
+      DOC("->?Ert:SeqFilter") },
     { NULL }
 };
 
@@ -136,7 +137,7 @@ PRIVATE struct type_getset filteriterator_getsets[] = {
 PRIVATE DREF DeeObject *DCALL \
 name(FilterIterator *__restrict self, \
      FilterIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeFilterIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqFilterIterator_Type)) \
      return NULL; \
  return compare_object(self->fi_iter,other->fi_iter); \
 }
@@ -150,20 +151,20 @@ DEFINE_FILTERITERATOR_COMPARE(filteriterator_ge,DeeObject_CompareGeObject)
 
 PRIVATE struct type_cmp filteriterator_cmp = {
     /* .tp_hash = */NULL,
-    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&filteriterator_eq,
-    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&filteriterator_ne,
-    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&filteriterator_lo,
-    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&filteriterator_le,
-    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&filteriterator_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&filteriterator_ge,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&filteriterator_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&filteriterator_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&filteriterator_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&filteriterator_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&filteriterator_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&filteriterator_ge,
 };
 
 
 
-INTERN DeeTypeObject DeeFilterIterator_Type = {
+INTERN DeeTypeObject SeqFilterIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_filter.iterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_name     = */"_SeqFilterIterator",
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqFilter)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -215,7 +216,7 @@ filter_iter(Filter *__restrict self) {
  if unlikely(!result->fi_iter) goto err_r;
  result->fi_func = self->f_fun;
  Dee_Incref(result->fi_func);
- DeeObject_Init(result,&DeeFilterIterator_Type);
+ DeeObject_Init(result,&SeqFilterIterator_Type);
 done:
  return result;
 err_r:
@@ -236,13 +237,13 @@ PRIVATE struct type_seq filter_seq = {
 };
 
 PRIVATE struct type_member filter_members[] = {
-    TYPE_MEMBER_FIELD("__seq__",STRUCT_OBJECT,offsetof(Filter,f_seq)),
-    TYPE_MEMBER_FIELD("__filter__",STRUCT_OBJECT,offsetof(Filter,f_fun)),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Filter,f_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__filter__",STRUCT_OBJECT,offsetof(Filter,f_fun),"->?Dcallable"),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member filter_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeFilterIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqFilterIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -258,20 +259,22 @@ filter_ctor(Filter *__restrict self) {
 PRIVATE int DCALL
 filter_init(Filter *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_filter",&self->f_seq,&self->f_fun))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"oo:_SeqFilter",&self->f_seq,&self->f_fun))
+     goto err;
  self->f_seq = Dee_EmptySeq;
  self->f_fun = Dee_None;
  Dee_Incref(self->f_seq);
  Dee_Incref(self->f_fun);
  return 0;
+err:
+ return -1;
 }
 
 
-INTERN DeeTypeObject DeeFilter_Type = {
+INTERN DeeTypeObject SeqFilter_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_filter",
-    /* .tp_doc      = */NULL,
+    /* .tp_name     = */"_SeqFilter",
+    /* .tp_doc      = */DOC("(seq:?Dsequence,fun:?Dcallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -317,13 +320,13 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Filter(DeeObject *__restrict self,
               DeeObject *__restrict pred_keep) {
  DREF Filter *result;
- result = DeeObject_MALLOC(DREF Filter);
+ result = DeeObject_MALLOC(Filter);
  if unlikely(!result) goto done;
  Dee_Incref(self);
  Dee_Incref(pred_keep);
  result->f_seq = self;
  result->f_fun = pred_keep;
- DeeObject_Init(result,&DeeFilter_Type);
+ DeeObject_Init(result,&SeqFilter_Type);
 done:
  return (DREF DeeObject *)result;
 }

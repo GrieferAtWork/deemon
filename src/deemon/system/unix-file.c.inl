@@ -645,7 +645,7 @@ PRIVATE struct type_method sysfile_class_methods[] = {
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"system_file",
+        /* .tp_name     = */"_SystemFile",
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL,
         /* .tp_weakrefs = */0,
@@ -703,7 +703,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 PUBLIC DeeFileTypeObject DeeFSFile_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"fs_file",
+        /* .tp_name     = */"_FSFile",
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL,
         /* .tp_weakrefs = */0,

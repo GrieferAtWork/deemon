@@ -2874,7 +2874,7 @@ PRIVATE DREF DeeObject *DCALL
 ria_call(RemoveIfAllWrapper *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result,*key_elem;
  if unlikely(argc != 1) {
-  err_invalid_argc("_removeif_all_wrapper",argc,1,1);
+  err_invalid_argc("_SeqRemoveIfAllWrapper",argc,1,1);
   return NULL;
  }
  if (self->ria_pred) {
@@ -2888,9 +2888,9 @@ ria_call(RemoveIfAllWrapper *__restrict self, size_t argc, DeeObject **__restric
  return result;
 }
 
-PRIVATE DeeTypeObject RemoveIfAllWrapper_Type = {
+PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_removeif_all_wrapper",
+    /* .tp_name     = */"_SeqRemoveIfAllWrapper",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2950,7 +2950,7 @@ make_removeif_all_wrapper(DeeObject *__restrict elem, DeeObject *key) {
   result->ria_pred = NULL;
   Dee_Incref(elem);
  }
- DeeObject_Init(result,&RemoveIfAllWrapper_Type);
+ DeeObject_Init(result,&SeqRemoveIfAllWrapper_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:

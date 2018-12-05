@@ -212,7 +212,7 @@ PRIVATE struct type_member ss_class_members[] = {
 
 INTERN DeeTypeObject SlabStat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_slabstat",
+    /* .tp_name     = */"_SlabStat",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
     /* .tp_weakrefs = */0,
@@ -339,14 +339,14 @@ done:
 
 
 PRIVATE struct type_member ssi_members[] = {
-    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SlabStatIteratorObject,sti_stat),"->?Gslabstat"),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SlabStatIteratorObject,sti_stat),"->?GSlabStat"),
     TYPE_MEMBER_FIELD("__index__",STRUCT_SIZE_T,offsetof(SlabStatIteratorObject,sti_stat)),
     TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject SlabStatIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_slabstatiterator",
+    /* .tp_name     = */"_SlabStatIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -442,7 +442,7 @@ DEFINE_FIELD_READER(tailpages)
 
 
 PRIVATE struct type_member si_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__stat__",STRUCT_OBJECT,offsetof(SlabInfoObject,si_stat),"->?Gslabstat"),
+    TYPE_MEMBER_FIELD_DOC("__stat__",STRUCT_OBJECT,offsetof(SlabInfoObject,si_stat),"->?GSlabStat"),
     TYPE_MEMBER_END
 };
 
@@ -469,7 +469,7 @@ PRIVATE struct type_getset si_getsets[] = {
 #undef DEFINE_FIELD
     { "__index__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_index, NULL, NULL,
       DOC("->?Dint\n"
-          "Index of @this slab within :rt:slabstat") },
+          "Index of @this slab within :rt:SlabStat") },
     { NULL }
 };
 
@@ -501,8 +501,8 @@ PRIVATE struct type_cmp si_cmp = {
 
 INTERN DeeTypeObject SlabInfo_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_slabinfo",
-    /* .tp_doc      = */DOC("Element type for :rt:slabstat"),
+    /* .tp_name     = */"_SlabInfo",
+    /* .tp_doc      = */DOC("Element type for :rt:SlabStat"),
     /* .tp_flags    = */TP_FNORMAL | TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

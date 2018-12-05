@@ -29,8 +29,9 @@
 #include <deemon/int.h>
 #include <deemon/error.h>
 
-#include "../../runtime/runtime_error.h"
 #include "range.h"
+#include "../gc_inspect.h"
+#include "../../runtime/runtime_error.h"
 
 
 #include <hybrid/overflow.h>
@@ -55,13 +56,13 @@ ri_ctor(RangeIterator *__restrict self) {
  return 0;
 }
 
-INTDEF DeeTypeObject Range_Type;
+INTDEF DeeTypeObject SeqRange_Type;
 
 PRIVATE int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_rangeiterator",&self->ri_range) ||
-     DeeObject_AssertTypeExact(self->ri_range,&Range_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_SeqRangeIterator",&self->ri_range) ||
+     DeeObject_AssertTypeExact(self->ri_range,&SeqRange_Type))
      return -1;
  self->ri_index = self->ri_range->r_begin;
  self->ri_end   = self->ri_range->r_end;
@@ -268,11 +269,12 @@ ri_index_del(RangeIterator *__restrict self) {
  return 0;
 }
 
-#if 0 /* Could cause a reference loop, and I don't want this to become another GC object... */
 PRIVATE int DCALL
 ri_index_set(RangeIterator *__restrict self,
              DeeObject *__restrict value) {
  DREF DeeObject *old_index;
+ if (DeeGC_ReferredBy(value,(DeeObject *)self))
+     return err_reference_loop((DeeObject *)self,value);
 #ifndef CONFIG_NO_THREADS
  rwlock_write(&self->ri_lock);
 #endif
@@ -287,17 +289,16 @@ ri_index_set(RangeIterator *__restrict self,
  Dee_Decref(old_index);
  return 0;
 }
-#endif
 
 PRIVATE struct type_getset ri_getsets[] = {
     { "__index__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ri_index_get,
                    (int(DCALL *)(DeeObject *__restrict))&ri_index_del,
-                   (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL /*&ri_index_set*/ },
+                   (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_index_set },
     { NULL }
 };
 
 PRIVATE struct type_member ri_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(RangeIterator,ri_range)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(RangeIterator,ri_range),"->?Ert:SeqRange"),
     TYPE_MEMBER_FIELD("__end__",STRUCT_OBJECT,offsetof(RangeIterator,ri_end)),
     TYPE_MEMBER_FIELD("__step__",STRUCT_OBJECT,offsetof(RangeIterator,ri_step)),
     TYPE_MEMBER_FIELD("__first__",STRUCT_ATOMIC|STRUCT_BOOL,offsetof(RangeIterator,ri_first)),
@@ -309,7 +310,7 @@ PRIVATE DREF DeeObject *DCALL \
 name(RangeIterator *__restrict self, \
      RangeIterator *__restrict other) { \
  DREF DeeObject *my_index,*ot_index,*result; \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&RangeIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqRangeIterator_Type)) \
      return NULL; \
  rwlock_read(&self->ri_lock); \
  my_index = self->ri_index; \
@@ -334,18 +335,18 @@ DEFINE_RANGEITERATOR_COMPARE(ri_ge,DeeObject_CompareGeObject)
 
 PRIVATE struct type_cmp ri_cmp = {
     /* .tp_hash = */NULL,
-    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&ri_eq,
-    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&ri_ne,
-    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&ri_lo,
-    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&ri_le,
-    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&ri_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&ri_ge,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_ge,
 };
 
 
-INTERN DeeTypeObject RangeIterator_Type = {
+INTERN DeeTypeObject SeqRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_rangeiterator",
+    /* .tp_name     = */"_SeqRangeIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -407,7 +408,7 @@ range_iter(Range *__restrict self) {
  DREF RangeIterator *result;
  result = DeeObject_MALLOC(RangeIterator);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&RangeIterator_Type);
+ DeeObject_Init(result,&SeqRangeIterator_Type);
  result->ri_index = self->r_begin;
  result->ri_range = self;
  result->ri_end   = self->r_end;
@@ -568,7 +569,7 @@ PRIVATE struct type_member range_members[] = {
 };
 
 PRIVATE struct type_member range_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RangeIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqRangeIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -581,9 +582,9 @@ range_repr(Range *__restrict self) {
 }
 
 
-INTERN DeeTypeObject Range_Type = {
+INTERN DeeTypeObject SeqRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_range",
+    /* .tp_name     = */"_SeqRange",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -703,7 +704,7 @@ iri_next(IntRangeIterator *__restrict self) {
 }
 
 PRIVATE struct type_member iri_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(IntRangeIterator,iri_range)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(IntRangeIterator,iri_range),"->?Ert:SeqIntRange"),
     /* We allow write-access to these members because doing so doesn't
      * actually harm anything, although fiddling with this stuff may
      * break some weak expectations but should never crash anything! */
@@ -713,9 +714,9 @@ PRIVATE struct type_member iri_members[] = {
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject IntRangeIterator_Type = {
+INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_intrangeiterator",
+    /* .tp_name     = */"_SeqIntRangeIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -763,7 +764,7 @@ intrange_iter(IntRange *__restrict self) {
  DREF IntRangeIterator *result;
  result = DeeObject_MALLOC(IntRangeIterator);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&IntRangeIterator_Type);
+ DeeObject_Init(result,&SeqIntRangeIterator_Type);
  result->iri_range = self;
  result->iri_step  = self->ir_step;
  if (self->ir_step >= 0) {
@@ -985,7 +986,7 @@ PRIVATE struct type_member intrange_members[] = {
 };
 
 PRIVATE struct type_member intrange_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&IntRangeIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqIntRangeIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -997,9 +998,9 @@ intrange_repr(IntRange *__restrict self) {
        ;
 }
 
-INTERN DeeTypeObject IntRange_Type = {
+INTERN DeeTypeObject SeqIntRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_intrange",
+    /* .tp_name     = */"_SeqIntRange",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1080,7 +1081,7 @@ DeeRange_NewInt(dssize_t begin,
  /* Create the new range. */
  result = DeeObject_MALLOC(IntRange);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&IntRange_Type);
+ DeeObject_Init(result,&SeqIntRange_Type);
  /* Fill in members of the new range object. */
  result->ir_begin = begin;
  result->ir_end   = end;
@@ -1125,7 +1126,7 @@ do_object_range:
  /* Create the new range. */
  result = DeeObject_MALLOC(Range);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&Range_Type);
+ DeeObject_Init(result,&SeqRange_Type);
  /* Fill in members of the new range object. */
  result->r_begin = begin;
  result->r_end   = end;

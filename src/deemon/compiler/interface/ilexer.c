@@ -648,18 +648,18 @@ PRIVATE struct type_getset keyword_getsets[] = {
       DOC("->?Dint\n"
           "Returns the hash of @this keyword") },
     { "macrofile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_macrofile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
           "Returns the macro definitions file, or :none if "
           "@this keyword isn't being used as a user-defined macro") },
     { "oldmacrofile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_oldmacrofile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
           "Returns the latest old macro file, that is the first macro "
           "file definition that is preserved when ${#pragma push_macro(\"foo\")} is used") },
     { "defmacrofile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_defmacrofile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
           "Returns the default definition of a user-overwritten macro") },
     { "cachedfile", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_cachedfile, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
           "Returns a file that has been cached under this keyword") },
     { "counter",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_counter,
@@ -2174,9 +2174,9 @@ PRIVATE struct type_method lexer_methods[] = {
           "you must call one of the #next-functions in order to load the first token of the newly "
           "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
           "will think that no input data is available, causing compiler error to be produced:\n"
-          ">import compiler from rt;\n"
+          ">import Compiler from rt;\n"
           ">import file from deemon;\n"
-          ">local com = compiler();\n"
+          ">local com = Compiler();\n"
           ">com.lexer.include(file.open(\"input.dee\"));\n"
           ">com.lexer.next(); /* Don't forget to always load the first token */\n"
           ">local ast = com.parser.parse_allstmt();\n"
@@ -2904,19 +2904,19 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
     { "keyword",
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_keyword, NULL,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&token_setkeyword,
-      DOC("->?X2?Akeyword?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Akeyword?Alexer?Ert:Compiler?N\n"
           "Returns the keyword associated with the current token, or "
           ":none if the current token doesn't have an associated keyword\n"
           "When setting this field, both the token's #keyword, as well "
           "as its #id field are set to the given value") },
     { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
-      DOC("->?X2?Afile?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Afile?Alexer?Ert:Compiler?N\n"
           "Returns the currently active file, or :none if no file is currently active") },
     { "position", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-      DOC("->?X2?T3?Afile?Alexer?Ert:compiler?Dint?Dint?N\n"
+      DOC("->?X2?T3?Afile?Alexer?Ert:Compiler?Dint?Dint?N\n"
           "Return the exact source position of @this token within a macro definition, or text source") },
     { "endposition", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-      DOC("->?X2?T3?Afile?Alexer?Ert:compiler?Dint?Dint?N\n"
+      DOC("->?X2?T3?Afile?Alexer?Ert:Compiler?Dint?Dint?N\n"
           "Same as #position, however return the end position of the current token") },
     { "atstartofline", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
       DOC("->?Dbool\n"
@@ -4251,7 +4251,7 @@ PRIVATE struct type_getset file_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getguard,
       (int(DCALL *)(DeeObject *__restrict))&file_delguard,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setguard,
-      DOC("->?X2?Akeyword?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Akeyword?Alexer?Ert:Compiler?N\n"
           "@throw ValueError @this file isn't a text file (#istext is :false)\n"
           "Get, delete, or set a keyword that is checked for being defined "
           "before allowing @this file to be included by ${#include} again\n"
@@ -4262,7 +4262,7 @@ PRIVATE struct type_getset file_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getnewguard,
       (int(DCALL *)(DeeObject *__restrict))&file_delnewguard,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setnewguard,
-      DOC("->?X2?Akeyword?Alexer?Ert:compiler?N\n"
+      DOC("->?X2?Akeyword?Alexer?Ert:Compiler?N\n"
           "@throw ValueError @this file isn't a text file (#istext is :false)\n"
           "Get, delete, or set a keyword that will be set as #guard (if no guard has "
           "already been set) once @this file is popped from the ${#include}-stack, and "

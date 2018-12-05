@@ -357,7 +357,7 @@ objmethod_repr(DeeObjMethodObject *__restrict self) {
 
 PUBLIC DeeTypeObject DeeObjMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_objmethod",
+    /* .tp_name     = */"_ObjMethod",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -543,7 +543,7 @@ PRIVATE struct type_cmp dockwdsiter_cmp = {
 PRIVATE DREF DocKwds *DCALL
 dockwdsiter_getseq(DocKwdsIterator *__restrict self) {
  DREF DocKwds *result;
- result = DeeObject_MALLOC(DREF DocKwds);
+ result = DeeObject_MALLOC(DocKwds);
  if unlikely(!result) goto done;
  result->dk_start = self->dk_start;
  DeeObject_Init(result,&DocKwds_Type);
@@ -554,7 +554,7 @@ done:
 PRIVATE struct type_getset dockwdsiter_getsets[] = {
     { DeeString_STR(&str_seq),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dockwdsiter_getseq, NULL, NULL,
-      DOC("->?U_dockwds") },
+      DOC("->?U_DocKwds") },
     { NULL }
 };
 PRIVATE struct type_member dockwdsiter_members[] = {
@@ -564,7 +564,7 @@ PRIVATE struct type_member dockwdsiter_members[] = {
 
 INTERN DeeTypeObject DocKwdsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_dockwdsiterator",
+    /* .tp_name     = */"_DocKwdsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -614,7 +614,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DocKwdsIterator,dk_start) ==
 PRIVATE DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
  DREF DocKwdsIterator *result;
- result = DeeObject_MALLOC(DREF DocKwdsIterator);
+ result = DeeObject_MALLOC(DocKwdsIterator);
  if unlikely(!result) goto done;
  ASSERT(self->dk_start);
  ASSERT(self->dk_start[0] == '(');
@@ -644,7 +644,7 @@ PRIVATE struct type_member dockwds_class_members[] = {
 
 INTERN DeeTypeObject DocKwds_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_dockwds",
+    /* .tp_name     = */"_DocKwds",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -694,7 +694,7 @@ doc_decode_kwds(char const *doc) {
  DREF DocKwds *result;
  if (!doc) goto no_kwds;
  if (doc[0] != '(') goto no_kwds;
- result = DeeObject_MALLOC(DREF DocKwds);
+ result = DeeObject_MALLOC(DocKwds);
  if unlikely(!result) goto done;
  result->dk_start = doc;
  DeeObject_Init(result,&DocKwds_Type);
@@ -773,7 +773,7 @@ PRIVATE struct type_getset kwobjmethod_getsets[] = {
 
 PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwobjmethod",
+    /* .tp_name     = */"_KwObjMethod",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1018,7 +1018,7 @@ PRIVATE struct type_member kwclsmethod_members[] = {
 
 PUBLIC DeeTypeObject DeeClsMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classmethod",
+    /* .tp_name     = */"_ClassMethod",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1109,7 +1109,7 @@ kwclsmethod_call_kw(DeeKwClsMethodObject *__restrict self,
 
 PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwclassmethod",
+    /* .tp_name     = */"_KwClassMethod",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1402,7 +1402,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsPropertyObject,cp_type) ==
               COMPILER_OFFSETOF(DeeClsMethodObject,cm_type));
 PUBLIC DeeTypeObject DeeClsProperty_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classproperty",
+    /* .tp_name     = */"_ClassProperty",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1613,7 +1613,7 @@ PRIVATE struct type_getset clsmember_getsets[] = {
 
 PUBLIC DeeTypeObject DeeClsMember_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classmember",
+    /* .tp_name     = */"_ClassMember",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1968,7 +1968,7 @@ cmethod_repr(DeeCMethodObject *__restrict self) {
 
 PUBLIC DeeTypeObject DeeCMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_cmethod",
+    /* .tp_name     = */"_CMethod",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -2035,7 +2035,7 @@ kwcmethod_call_kw(DeeKwCMethodObject *__restrict self,
 
 PUBLIC DeeTypeObject DeeKwCMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_kwcmethod",
+    /* .tp_name     = */"_KwCMethod",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,

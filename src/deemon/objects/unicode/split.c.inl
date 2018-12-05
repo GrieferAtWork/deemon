@@ -204,9 +204,9 @@ splititer_copy(StringSplitIterator *__restrict self,
  return 0;
 }
 
-INTERN DeeTypeObject DeeSplitIterator_Type = {
+INTERN DeeTypeObject StringSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_splititerator",
+    /* .tp_name     = */"_StringSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -249,14 +249,14 @@ INTERN DeeTypeObject DeeSplitIterator_Type = {
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
 };
-INTERN DeeTypeObject DeeCaseSplitIterator_Type = {
+INTERN DeeTypeObject StringCaseSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_casesplititerator",
+    /* .tp_name     = */"_StringCaseSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeSplitIterator_Type, /* Extend the regular split() iterator type. */
+    /* .tp_base     = */&StringSplitIterator_Type, /* Extend the regular split() iterator type. */
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
@@ -354,11 +354,11 @@ err_r:
 
 PRIVATE DREF StringSplitIterator *DCALL
 split_iter(StringSplit *__restrict self) {
- return split_doiter(self,&DeeSplitIterator_Type);
+ return split_doiter(self,&StringSplitIterator_Type);
 }
 PRIVATE DREF StringSplitIterator *DCALL
 casesplit_iter(StringSplit *__restrict self) {
- return split_doiter(self,&DeeCaseSplitIterator_Type);
+ return split_doiter(self,&StringCaseSplitIterator_Type);
 }
 
 PRIVATE struct type_member split_members[] = {
@@ -368,12 +368,12 @@ PRIVATE struct type_member split_members[] = {
 };
 
 PRIVATE struct type_member split_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeSplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&StringSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member casesplit_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeCaseSplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&StringCaseSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -401,9 +401,9 @@ PRIVATE struct type_seq casesplit_seq = {
     /* .tp_range_set = */NULL
 };
 
-INTERN DeeTypeObject DeeSplit_Type = {
+INTERN DeeTypeObject StringSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_split",
+    /* .tp_name     = */"_StringSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -446,14 +446,14 @@ INTERN DeeTypeObject DeeSplit_Type = {
     /* .tp_class_members = */split_class_members
 };
 
-INTERN DeeTypeObject DeeCaseSplit_Type = {
+INTERN DeeTypeObject StringCaseSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_casesplit",
+    /* .tp_name     = */"_StringCaseSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeSplit_Type, /* Extend the regular split() type. */
+    /* .tp_base     = */&StringSplit_Type, /* Extend the regular split() type. */
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
@@ -500,7 +500,7 @@ DeeString_Split(DeeObject *__restrict self,
  ASSERT_OBJECT_TYPE_EXACT(seperator,&DeeString_Type);
  result = DeeObject_MALLOC(StringSplit);
  if unlikely(!result) goto done;
- DeeObject_Init(result,&DeeSplit_Type);
+ DeeObject_Init(result,&StringSplit_Type);
  Dee_Incref(self);
  Dee_Incref(seperator);
  result->s_str = (DREF DeeStringObject *)self;      /* Inherit */
@@ -518,7 +518,7 @@ DeeString_CaseSplit(DeeObject *__restrict self,
  result = DeeObject_MALLOC(StringSplit);
  if unlikely(!result) goto done;
  /* Same as the regular split(), but use the case-insensitive sequence type. */
- DeeObject_Init(result,&DeeCaseSplit_Type);
+ DeeObject_Init(result,&StringCaseSplit_Type);
  Dee_Incref(self);
  Dee_Incref(seperator);
  result->s_str = (DREF DeeStringObject *)self;      /* Inherit */
@@ -663,9 +663,9 @@ lineiter_copy(LineSplitIterator *__restrict self,
 }
 
 
-INTERN DeeTypeObject DeeLineSplitIterator_Type = {
+INTERN DeeTypeObject StringLineSplitIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_linesplititerator",
+    /* .tp_name     = */"_StringLineSplitIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -710,7 +710,7 @@ INTERN DeeTypeObject DeeLineSplitIterator_Type = {
 };
 
 PRIVATE struct type_member linesplit_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeLineSplitIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&StringLineSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -728,7 +728,7 @@ linesplit_iter(LineSplit *__restrict self) {
  result->ls_keep  = self->ls_keep;
  Dee_Incref(self);
  result->ls_split = self;
- DeeObject_Init(result,&DeeLineSplitIterator_Type);
+ DeeObject_Init(result,&StringLineSplitIterator_Type);
 done:
  return result;
 }
@@ -752,9 +752,9 @@ PRIVATE struct type_member linesplit_members[] = {
     TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject DeeLineSplit_Type = {
+INTERN DeeTypeObject StringLineSplit_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_linesplit",
+    /* .tp_name     = */"_StringLineSplit",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -807,7 +807,7 @@ DeeString_SplitLines(DeeObject *__restrict self,
  result = DeeObject_MALLOC(LineSplit);
  if unlikely(!result) goto done;
  /* Same as the regular split(), but use the case-insensitive sequence type. */
- DeeObject_Init(result,&DeeLineSplit_Type);
+ DeeObject_Init(result,&StringLineSplit_Type);
  Dee_Incref(self);
  result->ls_str  = (DREF DeeStringObject *)self; /* Inherit */
  result->ls_keep = keepends;

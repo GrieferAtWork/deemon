@@ -36,8 +36,8 @@ typedef struct {
     DREF DeeObject *f_fun;   /* [1..1][const] The function used for filtering. */
 } Filter;
 
-INTDEF DeeTypeObject DeeFilter_Type;
-INTDEF DeeTypeObject DeeFilterIterator_Type;
+INTDEF DeeTypeObject SeqFilter_Type;
+INTDEF DeeTypeObject SeqFilterIterator_Type;
 
 DECL_END
 

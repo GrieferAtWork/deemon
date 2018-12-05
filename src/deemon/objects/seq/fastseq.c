@@ -145,7 +145,7 @@ DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
      return DeeTuple_SIZE(self);
  if (tp_self == &SharedVector_Type)
      return ((SharedVector *)self)->sv_length;
- if (tp_self == &DeeSubRange_Type) {
+ if (tp_self == &SeqSubRange_Type) {
   if (DeeFastSeq_GetSizeNB(((SubRange *)self)->sr_seq) == DEE_FASTSEQ_NOTFAST)
       return DEE_FASTSEQ_NOTFAST;
   return ((SubRange *)self)->sr_size;
@@ -174,7 +174,7 @@ again:
   rwlock_endread(&((SharedVector *)self)->sv_lock);
   return result;
  }
- ASSERT(tp_self == &DeeSubRange_Type);
+ ASSERT(tp_self == &SeqSubRange_Type);
  index += ((SubRange *)self)->sr_begin;
  self   = ((SubRange *)self)->sr_seq;
  goto again;

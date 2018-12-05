@@ -872,7 +872,7 @@ libdisasm_printextern(dformatprinter printer, void *arg,
                       uint16_t mid, uint16_t gid,
                       DeeCodeObject *code, unsigned int flags) {
  if (code) {
-  char const *name;
+  struct module_symbol *symbol;
   DeeModuleObject *module;
   if (mid >= code->co_module->mo_importc) {
    if (flags & PCODE_FNOBADCOMMENT)
@@ -885,12 +885,35 @@ libdisasm_printextern(dformatprinter printer, void *arg,
        goto print_unknown_name;
    return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%u /* invalid gid */",module->mo_name,(unsigned int)gid);
   }
-  name = DeeModule_GlobalName((DeeObject *)module,gid);
-  if (!name) {
-print_unknown_name:
-   return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%u",module->mo_name,(unsigned int)gid);
+  symbol = DeeModule_GetSymbolID(module,gid);
+  if (symbol) {
+   if (symbol->ss_flags & MODSYM_FPROPERTY) {
+    return DeeFormat_Printf(printer,arg,
+                            "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+getter",
+                            module->mo_name,
+                            symbol->ss_name);
+   }
+   return DeeFormat_Printf(printer,arg,
+                           "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",
+                           module->mo_name,
+                           symbol->ss_name);
   }
-  return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",module->mo_name,name);
+  if (gid >= MODULE_PROPERTY_DEL) {
+   symbol = DeeModule_GetSymbolID(module,gid - MODULE_PROPERTY_DEL);
+   if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
+    return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%s+delete",
+                            module->mo_name,(unsigned int)gid);
+   }
+   if (gid >= MODULE_PROPERTY_SET) {
+    symbol = DeeModule_GetSymbolID(module,gid - MODULE_PROPERTY_SET);
+    if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
+     return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%s+setter",
+                             module->mo_name,(unsigned int)gid);
+    }
+   }
+  }
+print_unknown_name:
+  return DeeFormat_Printf(printer,arg,"extern " PREFIX_VARNAME "%k:%u",module->mo_name,(unsigned int)gid);
  }
 print_generic:
  return DeeFormat_Printf(printer,arg,"extern %u:%u",(unsigned int)mid,(unsigned int)gid);

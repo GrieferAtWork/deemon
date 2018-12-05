@@ -37,6 +37,26 @@ typedef struct {
     uint8_t         b_data[1]; /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the bytes object owns its own data) */
 } DeeBytesObject;
 
+#define DEFINE_BYTES(name,flags,num_bytes,...) \
+struct { \
+    OBJECT_HEAD \
+    uint8_t        *b_base; \
+    size_t          b_size; \
+    DREF DeeObject *b_orig; \
+    DeeBuffer       b_buffer; \
+    unsigned int    b_flags; \
+    uint8_t         b_data[num_bytes]; \
+} name = { \
+    OBJECT_HEAD_INIT(&DeeBytes_Type), \
+    name.b_data, \
+    num_bytes, \
+   (DeeObject *)&name, \
+    DEEBUFFER_INIT(name.b_data,num_bytes), \
+    flags, \
+    __VA_ARGS__ \
+}
+
+
 #define DeeBytes_DATA(x)        ((DeeBytesObject *)REQUIRES_OBJECT(x))->b_base
 #define DeeBytes_SIZE(x)        ((DeeBytesObject *)REQUIRES_OBJECT(x))->b_size
 #define DeeBytes_TERM(x)        (DeeBytes_DATA(x)+DeeBytes_SIZE(x))

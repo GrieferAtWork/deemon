@@ -551,6 +551,9 @@ visit_referred_by_func(DeeObject *__restrict self,
 INTERN bool DCALL
 DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target) {
  struct visit_referred_by_data data;
+ /* Check for special case: the 2 objects are identical. */
+ if (source == target)
+     return true;
  data.target = target;
  data.did    = false;
  DeeObject_Visit(source,(dvisit_t)&visit_referred_by_func,&data);

@@ -1653,7 +1653,7 @@ PRIVATE struct type_getset yfi_getsets[] = {
           "The $this-argument used during execution") },
     { "__yfunc__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_yfunc, NULL, NULL,
-      DOC("->?Ert:yieldfunction\n"
+      DOC("->?Ert:YieldFunction\n"
           "The underlying yield-function, describing the :function and arguments that are being executed") },
     { "__func__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_func, NULL, NULL,

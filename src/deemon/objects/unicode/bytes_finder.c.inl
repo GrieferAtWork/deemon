@@ -124,7 +124,7 @@ PRIVATE int DCALL
 bfi_init(BytesFindIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  BytesFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_bytesfinditerator",&find) ||
+ if (DeeArg_Unpack(argc,argv,"o:_BytesFindIterator",&find) ||
      DeeObject_AssertTypeExact((DeeObject *)find,&BytesFind_Type))
      goto err;
  return bfi_setup(self,find);
@@ -135,7 +135,7 @@ PRIVATE int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  BytesFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_bytescasefinditerator",&find) ||
+ if (DeeArg_Unpack(argc,argv,"o:_BytesCaseFindIterator",&find) ||
      DeeObject_AssertTypeExact((DeeObject *)find,&BytesCaseFind_Type))
      goto err;
  return bfi_setup(self,find);
@@ -243,7 +243,7 @@ PRIVATE struct type_cmp bfi_cmp = {
 
 INTERN DeeTypeObject BytesFindIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytesfinditerator",
+    /* .tp_name     = */"_BytesFindIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -287,7 +287,7 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 };
 INTERN DeeTypeObject BytesCaseFindIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytescasefinditerator",
+    /* .tp_name     = */"_BytesCaseFindIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -351,7 +351,7 @@ PRIVATE int DCALL
 bf_init(BytesFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":_bytesfind",
+ if (DeeArg_Unpack(argc,argv,"oo|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":_BytesFind",
                   &self->bf_bytes,&self->bf_other,
                   &start,&end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->bf_bytes,&DeeBytes_Type) ||
@@ -436,7 +436,7 @@ PRIVATE struct type_member bf_class_members[] = {
 
 INTERN DeeTypeObject BytesFind_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytesfind",
+    /* .tp_name     = */"_BytesFind",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -481,7 +481,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 
 INTERN DeeTypeObject BytesCaseFind_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_bytescasefind",
+    /* .tp_name     = */"_BytesCaseFind",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

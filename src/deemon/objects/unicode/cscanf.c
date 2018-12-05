@@ -547,7 +547,7 @@ ssi_copy(StringScanIterator *__restrict self,
 
 INTERN DeeTypeObject StringScanIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringscanneriterator",
+    /* .tp_name     = */"_StringScannerIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -657,7 +657,7 @@ PRIVATE struct type_member ss_class_members[] = {
 
 INTERN DeeTypeObject StringScan_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_stringscanner",
+    /* .tp_name     = */"_StringScanner",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

@@ -53,8 +53,8 @@ typedef struct {
 #endif
 } RangeIterator;
 
-INTDEF DeeTypeObject RangeIterator_Type;
-INTDEF DeeTypeObject Range_Type;
+INTDEF DeeTypeObject SeqRangeIterator_Type;
+INTDEF DeeTypeObject SeqRange_Type;
 
 
 
@@ -77,8 +77,8 @@ typedef struct {
     DREF IntRange  *iri_range; /* [1..1][const] The underlying range object. */
 } IntRangeIterator;
 
-INTDEF DeeTypeObject IntRangeIterator_Type;
-INTDEF DeeTypeObject IntRange_Type;
+INTDEF DeeTypeObject SeqIntRangeIterator_Type;
+INTDEF DeeTypeObject SeqIntRange_Type;
 
 
 DECL_END

@@ -3339,7 +3339,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetRange,
 }
 #ifndef DEFINE_TYPE_OPERATORS
 
-INTERN DREF DeeObject *DCALL
+PUBLIC DREF DeeObject *DCALL
 DeeObject_ConcatInherited(DREF DeeObject *__restrict self,
                           DeeObject *__restrict other) {
  DREF DeeObject *result;
@@ -3363,22 +3363,24 @@ DeeObject_ConcatInherited(DREF DeeObject *__restrict self,
  Dee_Decref(self);
  return result;
 }
-INTERN DREF DeeObject *DCALL
+PUBLIC DREF DeeObject *DCALL
 DeeObject_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
                           /*inherit(on_success)*/DREF DeeObject **__restrict argv) {
  DREF DeeObject *result;
- DREF SharedVector *other;
+ DREF DeeObject *other;
  if (DeeTuple_CheckExact(self))
      return DeeTuple_ExtendInherited(self,argc,argv);
  if (DeeList_CheckExact(self))
      return DeeList_ExtendInherited(self,argc,argv);
  /* Fallback: perform an arithmetic add operation. */
- other = SharedVector_NewShared(argc,argv);
- if unlikely(!other) return NULL;
+ other = DeeSharedVector_NewShared(argc,argv);
+ if unlikely(!other) goto err;
  result = DeeObject_Add(self,(DeeObject *)other);
- SharedVector_Decref(other);
+ DeeSharedVector_Decref(other);
  Dee_Decref(self);
  return result;
+err:
+ return NULL;
 }
 
 

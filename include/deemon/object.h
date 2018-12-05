@@ -1582,6 +1582,12 @@ struct bytesbuffer {
     void    (DCALL *bb_put)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
 #endif
 };
+#ifdef __INTELLISENSE__
+#define DEEBUFFER_INIT(base,size) { base, size }
+#else
+#define DEEBUFFER_INIT(base,size) { base, size, NULL }
+#endif
+
 
 struct type_buffer {
     /* Low-level buffer interface. */
@@ -2515,12 +2521,9 @@ DFUNDEF WUNUSED int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self,
 DFUNDEF WUNUSED int (DCALL DeeObject_BoundItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, bool allow_missing);
 DFUNDEF WUNUSED int (DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, bool allow_missing);
 
-
-#ifdef CONFIG_BUILDING_DEEMON
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc, /*inherit(on_success)*/DREF DeeObject **__restrict argv);
-#endif
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, DeeObject *__restrict other);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc, /*inherit(on_success)*/DREF DeeObject **__restrict argv);
 
 /* Process UTF-8-encoded `data' in whatever way you wish. */
 typedef dssize_t (DCALL *dformatprinter)(void *arg, char const *__restrict data, size_t datalen);

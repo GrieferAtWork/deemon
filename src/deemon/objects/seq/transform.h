@@ -36,8 +36,8 @@ typedef struct {
     DREF DeeObject *t_fun;   /* [1..1][const] The function used for transforming. */
 } Transformation;
 
-INTDEF DeeTypeObject DeeTransformation_Type;
-INTDEF DeeTypeObject DeeTransformationIterator_Type;
+INTDEF DeeTypeObject SeqTransformation_Type;
+INTDEF DeeTypeObject SeqTransformationIterator_Type;
 
 DECL_END
 

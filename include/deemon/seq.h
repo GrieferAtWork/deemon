@@ -526,6 +526,69 @@ DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
 
 
 
+/* Create a new shared vector that will inherit elements
+ * from the given vector once `DeeSharedVector_Decref()' is called.
+ * NOTE: This function implicitly inherits a reference to each item
+ *       of the given vector, though does not actually inherit the
+ *       vector itself! */
+DFUNDEF DREF DeeObject *DCALL
+DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector);
+
+/* Check if the reference counter of `self' is 1. When it is,
+ * simply destroy the shared vector without freeing `sv_vector',
+ * but still decref() all contained object.
+ * Otherwise, try to allocate a new vector with a length of `sv_length'.
+ * If doing so fails, don't raise an error but replace `sv_vector' with
+ * `NULL' and `sv_length' with `0' before decref()-ing all elements
+ * that that pair of members used to refer to.
+ * If allocation does succeed, memcpy() all objects contained in
+ * the original vector into the dynamically allocated one, thus
+ * transferring ownership to that vector before writing it back
+ * to the SharedVector object.
+ * >> In the end, this behavior is required to implement a fast,
+ *    general-purpose sequence type that can be used to implement
+ *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
+ * NOTE: During decref(), objects are destroyed in reverse order,
+ *       mirroring the behavior of adjstack/pop instructions. */
+DFUNDEF void DCALL DeeSharedVector_Decref(DREF DeeObject *__restrict self);
+
+
+
+typedef struct {
+    DREF DeeObject  *si_key;    /* [1..1][const] The key of this shared item. */
+    DREF DeeObject  *si_value;  /* [1..1][const] The value of this shared item. */
+} DeeSharedItem;
+
+/* Create a new shared vector that will inherit elements
+ * from the given vector once `DeeSharedMap_Decref()' is called.
+ * NOTE: This function implicitly inherits a reference to each item
+ *       of the given vector, though does not actually inherit the
+ *       vector itself! */
+DFUNDEF DREF DeeObject *DCALL
+DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *__restrict vector);
+
+/* Check if the reference counter of `self' is 1. When it is,
+ * simply destroy the shared vector without freeing `skv_vector',
+ * but still decref() all contained object.
+ * Otherwise, try to allocate a new vector with a length of `sv_length'.
+ * If doing so fails, don't raise an error but replace `sskv_vector' with
+ * `NULL' and `sv_length' with `0' before decref()-ing all elements
+ * that that pair of members used to refer to.
+ * If allocation does succeed, memcpy() all objects contained in
+ * the original vector into the dynamically allocated one, thus
+ * transferring ownership to that vector before writing it back
+ * to the SharedVector object.
+ * >> In the end, this behavior is required to implement a fast,
+ *    general-purpose sequence type that can be used to implement
+ *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
+ * NOTE: During decref(), objects are destroyed in reverse order,
+ *       mirroring the behavior of adjstack/pop instructions. */
+DFUNDEF void DCALL DeeSharedMap_Decref(DREF DeeObject *__restrict self);
+
+
+
+
+
 
 /* Check if `self' is a fast-sequence object, and return its (current)
  * length if it is, or return `DEE_FASTSEQ_NOTFAST' if it isn't.

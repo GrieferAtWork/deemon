@@ -36,6 +36,7 @@
 #include <hybrid/overflow.h>
 
 #include "svec.h"
+#include "../gc_inspect.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -44,8 +45,8 @@ DECL_BEGIN
 typedef DeeTupleObject Tuple;
 typedef DeeTupleObject Cat;
 
-INTDEF DeeTypeObject DeeCat_Type;
-INTDEF DeeTypeObject DeeCatIterator_Type;
+INTDEF DeeTypeObject SeqConcat_Type;
+INTDEF DeeTypeObject SeqConcatIterator_Type;
 
 typedef struct {
     OBJECT_HEAD
@@ -90,8 +91,8 @@ catiterator_copy(CatIterator *__restrict self,
 PRIVATE int DCALL
 catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_catseqiterator",&self->c_cat) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->c_cat,&DeeCat_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_SeqConcatIterator",&self->c_cat) ||
+     DeeObject_AssertTypeExact((DeeObject *)self->c_cat,&SeqConcat_Type))
      return -1;
  self->c_pseq = DeeTuple_ELEM(self->c_cat);
  self->c_curr = DeeObject_IterSelf(self->c_pseq[0]);
@@ -145,7 +146,7 @@ name(CatIterator *__restrict self, \
  DREF DeeObject *result; \
  DREF DeeObject *my_curr,*ot_curr; \
  DREF DeeObject **my_pseq,**ot_pseq; \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeCatIterator_Type)) \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqConcatIterator_Type)) \
      return NULL; \
  if (self == other) if_equal; \
  for (;;) { \
@@ -211,14 +212,10 @@ do_iter:
  if (!ITER_ISOK(result)) {
   DeeObject *const *pnext;
   if unlikely(!result) return NULL;
-#ifndef CONFIG_NO_THREADS
   rwlock_write(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
   /* Check if the iterator has changed. */
   if (self->c_curr != iter) {
-#ifndef CONFIG_NO_THREADS
    rwlock_downgrade(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
    goto again;
   }
   /* Load the next sequence. */
@@ -228,26 +225,18 @@ do_iter:
   if unlikely(pnext == (DeeTuple_ELEM(self->c_cat)+
                         DeeTuple_SIZE(self->c_cat))) {
    /* Fully exhausted. */
-#ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
    return ITER_DONE;
   }
-#ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
   /* Create an iterator for this sequence. */
   iter = DeeObject_IterSelf(*pnext);
   if unlikely(!iter) return NULL;
-#ifndef CONFIG_NO_THREADS
   rwlock_write(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
   COMPILER_READ_BARRIER();
   /* Check if the sequence was changed by someone else. */
   if (self->c_pseq != pnext-1) {
-#ifndef CONFIG_NO_THREADS
    rwlock_endwrite(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
    Dee_Decref(iter);
    goto again_locked;
   }
@@ -257,9 +246,7 @@ do_iter:
   result = self->c_curr;
   self->c_curr = iter;
   Dee_Incref(iter); /* The reference now stored in `self->c_curr' */
-#ifndef CONFIG_NO_THREADS
   rwlock_endwrite(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
   /* Drop the old iterator. */
   Dee_Decref(result);
   goto do_iter;
@@ -270,45 +257,54 @@ do_iter:
 PRIVATE DREF DeeObject *DCALL
 catiterator_seq_get(CatIterator *__restrict self) {
  DREF DeeObject *result;
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
  result = *self->c_pseq;
  Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
  return result;
 }
 PRIVATE DREF DeeObject *DCALL
 catiterator_curr_get(CatIterator *__restrict self) {
  DREF DeeObject *result;
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
  result = self->c_curr;
  Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
  return result;
 }
+PRIVATE int DCALL
+catiterator_curr_set(CatIterator *__restrict self,
+                     DeeObject *__restrict value) {
+ DREF DeeObject *oldval;
+ if (DeeGC_ReferredBy(value,(DeeObject *)self))
+     return err_reference_loop((DeeObject *)self,value);
+ Dee_Incref(value);
+ rwlock_write(&self->c_lock);
+ oldval = self->c_curr;
+ self->c_curr = value;
+ rwlock_endread(&self->c_lock);
+ Dee_Decref(oldval);
+ return 0;
+}
 PRIVATE struct type_getset catiterator_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL,
-      DOC("->?S?O") },
-    { "__curr__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL, NULL,
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL,
+      DOC("->?Ert:SeqConcat") },
+    { "__curr__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&catiterator_curr_set,
       DOC("->?Diterator") },
     { NULL }
 };
 PRIVATE struct type_member catiterator_members[] = {
-    TYPE_MEMBER_FIELD("__sequences__",STRUCT_OBJECT,offsetof(CatIterator,c_cat)),
+    TYPE_MEMBER_FIELD_DOC("__sequences__",STRUCT_OBJECT,offsetof(CatIterator,c_cat),"->?S?Dsequence"),
     TYPE_MEMBER_END
 };
 
 
-INTERN DeeTypeObject DeeCatIterator_Type = {
+INTERN DeeTypeObject SeqConcatIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_catseqiterator",
+    /* .tp_name     = */"_SeqConcatIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -371,7 +367,7 @@ cat_iter(Cat *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->c_lock);
 #endif /* !CONFIG_NO_THREADS */
- DeeObject_Init(result,&DeeCatIterator_Type);
+ DeeObject_Init(result,&SeqConcatIterator_Type);
 done:
  return result;
 err_r:
@@ -388,12 +384,12 @@ cat_getsequences(Cat *__restrict self) {
 
 PRIVATE struct type_getset cat_getsets[] = {
     { "__sequences__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences, NULL, NULL,
-      DOC("->?S?S?O") },
+      DOC("->?S?Dsequence") },
     { NULL }
 };
 
 PRIVATE struct type_member cat_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeCatIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqConcatIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -664,19 +660,19 @@ cat_deepcopy(Cat *__restrict self) {
  DREF Cat *result;
  result = (DREF Cat *)tuple_deepcopy((Tuple *)self);
  if likely(result) {
-  Dee_Incref(&DeeCat_Type);
-  result->ob_type = &DeeCat_Type;
+  Dee_Incref(&SeqConcat_Type);
+  result->ob_type = &SeqConcat_Type;
   Dee_DecrefNokill(&DeeTuple_Type);
  }
  return result;
 }
 
 
-INTERN DeeTypeObject DeeCat_Type = {
-    /* NOTE: `_catseq' objects are never empty, because then
+INTERN DeeTypeObject SeqConcat_Type = {
+    /* NOTE: `_Concat' objects are never empty, because then
      *        we'd get an overlap with `Dee_EmptyTuple' */
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_catseq",
+    /* .tp_name     = */"_SeqConcat",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -725,8 +721,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
  DREF DeeObject **dst,**iter,**end;
  DREF DeeTupleObject *result;
  /* Special handling for recursive cats. */
- if (DeeObject_InstanceOf(self,&DeeCat_Type)) {
-  if (DeeObject_InstanceOf(other,&DeeCat_Type)) {
+ if (DeeObject_InstanceOf(self,&SeqConcat_Type)) {
+  if (DeeObject_InstanceOf(other,&SeqConcat_Type)) {
    result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self)+
                                                              DeeTuple_SIZE(other));
    if unlikely(!result) goto err;
@@ -756,7 +752,7 @@ DeeSeq_Concat(DeeObject *__restrict self,
    *dst = other;
    Dee_Incref(other);
   }
- } else if (DeeObject_InstanceOf(other,&DeeCat_Type)) {
+ } else if (DeeObject_InstanceOf(other,&SeqConcat_Type)) {
   result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(1+DeeTuple_SIZE(other));
   if unlikely(!result) goto err;
   dst = DeeTuple_ELEM(result);
@@ -775,8 +771,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
  /* Fix the resulting object type. */
  ASSERT(result->ob_type == &DeeTuple_Type);
  Dee_DecrefNokill(&DeeTuple_Type);
- Dee_Incref(&DeeCat_Type);
- result->ob_type = &DeeCat_Type;
+ Dee_Incref(&SeqConcat_Type);
+ result->ob_type = &SeqConcat_Type;
  return (DREF DeeObject *)result;
 err:
  return NULL;

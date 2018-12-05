@@ -218,6 +218,45 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
  if (mode&AST_COMMA_ALLOWVARDECLS &&
      ast_parse_lookup_mode(&lookup_mode))
      goto err;
+ /* TODO: Allow `final' variable declarations.
+  * >> global final foo = 42;
+  * A variable declared as `final' can only be assigned once during its life-time,
+  * with any attempt to assign another value after that point resulting in an Error
+  * being thrown.
+  * Semantically, this behavior would be identical to java, while finally adding a
+  * way for user-code to make use of module-scope constants which the compiler is
+  * allowed to inline at the use-site whenever used.
+  * Problems:
+  *  - User-defined classes already use `final' where it would appear if it was
+  *    a variable/storage modifier, with it appearing in that location having a
+  *    different meaning that specifying a write-once variable.
+  *    Solution #1: All user-defined classes are stored in write-once variables (not a good idea)
+  *    Solution #2: User-defined classes are not stored in write-once variables, and the
+  *                `final' prefix is not applied to class itself (disallowing sub-classing)
+  *              -> This way, the user could still write `final MyClass = class { ... };'
+  *                 or `final MyClass = final class { ... };', thus solving the problem.
+  *  - Not everything that's final should also be constant.
+  *    By default, any `final' global should be, however another variable modifier
+  *   `varying' should be introduced which may be combined with `final' to declare
+  *    a write-once variable whose value may not be assumed to be constant at compile
+  *    time, as it may not be consistent across multiple runs.
+  *    As far as runtime support goes, that's already there:
+  *     - __stack/local variables don't need runtime support, as they would be handled by the compiler
+  *     - global variables already provide and implement 2 flags:
+  *       - MODSYM_FREADONLY   (enables write-once semantics)
+  *       - MODSYM_FCONSTEXPR  (allows the optimizer to inline the symbol's value)
+  *    foo.dee:
+  *    >> global normal_global = 42;
+  *    >> global final fixed_value = 42;
+  *    >> global final changing_rand = rand(); // This shouldn't be done, but can't be prevented...
+  *    >> global final varying changing_value = rand();
+  *    bar.dee:
+  *    >> import * from foo;
+  *    >> print normal_global;  // print extern @bar:@normal_global, nl  // Cannot be inlined
+  *    >> print fixed_value;    // print @42, nl                         // Can be inlined
+  *    >> print changing_rand;  // print @<UNDEFINED>, nl                // Can be inlined
+  *    >> print changing_value; // print extern @bar:@changing_value, nl // Cannot be inlined
+  */
 
 next_expr:
  need_semi = !!(mode&AST_COMMA_PARSESEMI);

@@ -109,9 +109,9 @@ dex_load_handle(DeeDexObject *__restrict self,
   for (i = 0; i < impcount; ++i) {
    DREF DeeObject *import;
    import = DeeModule_OpenGlobalString(names[i],
-                                 strlen(names[i]),
-                                 NULL,
-                                 true);
+                                       strlen(names[i]),
+                                       NULL,
+                                       true);
    if unlikely(!import) {
     while (i--) Dee_Decref(imports[i]);
     goto err_imp;
@@ -119,6 +119,8 @@ dex_load_handle(DeeDexObject *__restrict self,
    imports[i] = (DREF DeeModuleObject *)import;
   }
  }
+
+
 
  /* Load the extension's symbol table. */
  symbols = descriptor->d_symbols;

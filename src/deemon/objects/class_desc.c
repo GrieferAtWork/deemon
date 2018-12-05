@@ -214,18 +214,18 @@ PRIVATE struct type_cmp coti_cmp = {
 PRIVATE struct type_getset coti_getsets[] = {
     { DeeString_STR(&str_seq),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_getseq, NULL, NULL,
-      DOC("->?Aoperators?Ert:classdescriptor") },
+      DOC("->?Aoperators?Ert:ClassDescriptor") },
     { NULL }
 };
 
 PRIVATE struct type_member coti_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__class__",STRUCT_OBJECT,offsetof(ClassOperatorTableIterator,co_desc),"->?Ert:classdescriptor"),
+    TYPE_MEMBER_FIELD_DOC("__class__",STRUCT_OBJECT,offsetof(ClassOperatorTableIterator,co_desc),"->?Ert:ClassDescriptor"),
     TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classoperatortableiterator",
+    /* .tp_name     = */"_ClassOperatorTableIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -387,7 +387,7 @@ PRIVATE struct type_member cot_class_members[] = {
 
 INTERN DeeTypeObject ClassOperatorTable_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classoperatortable",
+    /* .tp_name     = */"_ClassOperatorTable",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -461,7 +461,7 @@ PRIVATE DREF ClassAttribute *DCALL
 cattr_new(ClassDescriptor *__restrict desc,
           struct class_attribute *__restrict attr) {
  DREF ClassAttribute *result;
- result = DeeObject_MALLOC(DREF ClassAttribute);
+ result = DeeObject_MALLOC(ClassAttribute);
  if unlikely(!result) goto done;
  result->ca_desc = desc;
  result->ca_attr = attr;
@@ -655,7 +655,7 @@ done:
 PRIVATE struct type_getset cati_getsets[] = {
     { DeeString_STR(&str_seq),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_getseq, NULL, NULL,
-      DOC("->?Aattributes?Ert:classdescriptor") },
+      DOC("->?Aattributes?Ert:ClassDescriptor") },
     { NULL }
 };
 
@@ -789,8 +789,8 @@ PRIVATE struct type_getset ca_getsets[] = {
           "Returns :true if @this class attribute is exclusive to the "
           "class-namespace (i.e. was declared as $static)\n"
           "During enumeration of attributes, all attributes where this is :true "
-          "are enumated by :classdescriptor.cattr, while all for which it isn't "
-          "are enumated by :classdescriptor.iattr") },
+          "are enumated by :ClassDescriptor.cattr, while all for which it isn't "
+          "are enumated by :ClassDescriptor.iattr") },
     { NULL }
 };
 
@@ -826,7 +826,7 @@ PRIVATE struct type_seq cat_seq = {
 
 INTERN DeeTypeObject ClassAttribute_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classattribute",
+    /* .tp_name     = */"_ClassAttribute",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -871,7 +871,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 
 INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classattributetableiterator",
+    /* .tp_name     = */"_ClassAttributeTableIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -916,7 +916,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 
 INTERN DeeTypeObject ClassAttributeTable_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classattributetable",
+    /* .tp_name     = */"_ClassAttributeTable",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1155,17 +1155,17 @@ PRIVATE struct type_getset cd_getsets[] = {
     { "__isinttruncated__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL, DOC("->?Dbool") },
     { "__ismoveany__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL, DOC("->?Dbool") },
     { "operators", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
-      DOC("->?#operators\n"
+      DOC("->?#OperatorTable\n"
           "Enumerate operators implemented by @this class, as well as their associated "
           "class object table indices which are holding the respective implementations\n"
           "Note that the class object table entry may be left unbound to explicitly "
           "define an operator as having been deleted") },
     { "iattr", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_iattr, NULL, NULL,
-      DOC("->?#attributes\n"
-          "Enumerate user-defined instance attributes as a mapping-like string-attribute sequence") },
+      DOC("->?#AttributeTable\n"
+          "Enumerate user-defined instance attributes as a mapping-like :deemon:string-#Attribute sequence") },
     { "cattr", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_cattr, NULL, NULL,
-      DOC("->?#attributes\n"
-          "Enumerate user-defined class ($static) attributes as a mapping-like string-attribute sequence") },
+      DOC("->?#AttributeTable\n"
+          "Enumerate user-defined class ($static) attributes as a mapping-like :deemon:string-#Attribute sequence") },
     { NULL }
 };
 
@@ -1179,10 +1179,10 @@ PRIVATE struct type_member cd_members[] = {
 
 INTDEF DeeTypeObject ObjectTable_Type;
 PRIVATE struct type_member cd_class_members[] = {
-    TYPE_MEMBER_CONST("operators",&ClassOperatorTable_Type),
-    TYPE_MEMBER_CONST("attribute",&ClassAttribute_Type),
-    TYPE_MEMBER_CONST("attributes",&ClassAttributeTable_Type),
-    TYPE_MEMBER_CONST("objecttable",&ObjectTable_Type),
+    TYPE_MEMBER_CONST("OperatorTable",&ClassOperatorTable_Type),
+    TYPE_MEMBER_CONST("Attribute",&ClassAttribute_Type),
+    TYPE_MEMBER_CONST("AttributeTable",&ClassAttributeTable_Type),
+    TYPE_MEMBER_CONST("ObjectTable",&ObjectTable_Type),
     TYPE_MEMBER_END
 };
 
@@ -1196,7 +1196,7 @@ cd_str(ClassDescriptor *__restrict self) {
 
 PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_classdescriptor",
+    /* .tp_name     = */"_ClassDescriptor",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FVARIABLE | TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1448,7 +1448,10 @@ PRIVATE struct type_nsi ot_nsi = {
 };
 
 PRIVATE struct type_seq ot_seq = {
-    /* .tp_iter_self = */NULL,
+    /* .tp_iter_self = */NULL, /* WARNING: If you assign a dedicated iterator here, `librt' will
+                                * not longer be able to reverse-engineer `DeeGenericIterator_Type',
+                                * as in order to do that, it does `DeeObject_GetAttr()'
+                                */
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ot_size,
     /* .tp_contains  = */NULL,
     /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ot_getitem,
@@ -1499,7 +1502,7 @@ PRIVATE struct type_getset ot_getsets[] = {
      (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_gettype, NULL, NULL,
       DOC("->?Dtype\nThe type describing @this object table") },
     { "__class__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_getclass, NULL, NULL,
-      DOC("->?Ert:classdescriptor\nSame as ${this.__type__.__class__}") },
+      DOC("->?Ert:ClassDescriptor\nSame as ${this.__type__.__class__}") },
     { "__isctable__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_isctable, NULL, NULL,
       DOC("->?Dbool\nEvaluates to :true if @this is a class object table") },
     { "__isitable__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_isitable, NULL, NULL,
@@ -1516,7 +1519,7 @@ PRIVATE struct type_member ot_members[] = {
 
 INTERN DeeTypeObject ObjectTable_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_objecttable",
+    /* .tp_name     = */"_ObjectTable",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1567,7 +1570,7 @@ type_get_ctable(DeeTypeObject *__restrict self) {
  if (!DeeType_IsClass(self))
      return_empty_seq;
  desc = DeeClass_DESC(self);
- result = DeeObject_MALLOC(DREF ObjectTable);
+ result = DeeObject_MALLOC(ObjectTable);
  if unlikely(!result) goto done;
  result->ot_owner = (DREF DeeObject *)self;
  result->ot_desc  = class_desc_as_instance(desc);
@@ -1592,7 +1595,7 @@ instance_get_itable(DeeObject *__restrict self) {
  if (!DeeType_IsClass(type))
      return_empty_seq;
  desc = DeeClass_DESC(type);
- result = DeeObject_MALLOC(DREF ObjectTable);
+ result = DeeObject_MALLOC(ObjectTable);
  if unlikely(!result) goto done;
  result->ot_owner = (DREF DeeObject *)self;
  result->ot_desc  = DeeInstance_DESC(desc,real_self);
@@ -1820,7 +1823,7 @@ PRIVATE struct type_cmp instancemember_cmp = {
 
 PUBLIC DeeTypeObject DeeInstanceMember_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_instancemember",
+    /* .tp_name     = */"_InstanceMember",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

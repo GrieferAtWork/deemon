@@ -1777,7 +1777,7 @@ PRIVATE struct type_cmp relint_cmp = {
 
 INTERN DeeTypeObject DeeRelInt_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_relint",
+    /* .tp_name     = */"_RelInt",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

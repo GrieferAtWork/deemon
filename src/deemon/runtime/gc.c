@@ -1094,7 +1094,7 @@ PRIVATE struct type_member gciter_members[] = {
 
 PRIVATE DeeTypeObject GCIter_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_gciter",
+    /* .tp_name     = */"_GCIter",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

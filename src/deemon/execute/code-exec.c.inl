@@ -52,8 +52,6 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/sched/yield.h>
 
-#include "../objects/seq/svec.h"
-#include "../objects/seq/smap.h"
 #include "../runtime/runtime_error.h"
 
 #ifndef SSIZE_MAX
@@ -3310,7 +3308,7 @@ do_callattr_c:
 
  RAW_TARGET(ASM_CALLATTR_C_SEQ) {
      DREF DeeObject *callback_result,**new_sp;
-     DREF SharedVector *shared_vector;
+     DREF DeeObject *shared_vector;
      imm_val = READ_imm8();
 do_callattr_c_seq:
      imm_val2 = READ_imm8();
@@ -3327,22 +3325,22 @@ do_callattr_c_seq:
         Dee_Decref(imm_name);
         goto err_requires_string;
        }
-       shared_vector = SharedVector_NewShared(imm_val2,new_sp);
+       shared_vector = DeeSharedVector_NewShared(imm_val2,new_sp);
        if unlikely(!shared_vector) { Dee_Decref(imm_name); HANDLE_EXCEPT(); }
        sp = new_sp;
        callback_result = DeeObject_CallAttr(new_sp[-1],imm_name,1,
                                            (DeeObject **)&shared_vector);
-       SharedVector_Decref(shared_vector);
+       DeeSharedVector_Decref(shared_vector);
        Dee_Decref(imm_name);
      }
 #else
      ASSERT_STRING(CONSTimm);
-     shared_vector = SharedVector_NewShared(imm_val2,new_sp);
+     shared_vector = DeeSharedVector_NewShared(imm_val2,new_sp);
      if unlikely(!shared_vector) HANDLE_EXCEPT();
      sp = new_sp;
      callback_result = DeeObject_CallAttr(new_sp[-1],CONSTimm,1,
                                          (DeeObject **)&shared_vector);
-     SharedVector_Decref(shared_vector);
+     DeeSharedVector_Decref(shared_vector);
 #endif
      if unlikely(!callback_result) HANDLE_EXCEPT();
      Dee_Decref(TOP);
@@ -3352,7 +3350,7 @@ do_callattr_c_seq:
 
  RAW_TARGET(ASM_CALLATTR_C_MAP) {
      DREF DeeObject *callback_result,**new_sp;
-     DREF SharedMap *shared_map;
+     DREF DeeObject *shared_map;
      imm_val = READ_imm8();
 do_callattr_c_map:
      imm_val2 = READ_imm8();
@@ -3369,22 +3367,22 @@ do_callattr_c_map:
         Dee_Decref(imm_name);
         goto err_requires_string;
        }
-       shared_map = SharedMap_NewShared(imm_val2,(DREF SharedKey *)new_sp);
+       shared_map = DeeSharedMap_NewShared(imm_val2,(DREF DeeSharedItem *)new_sp);
        if unlikely(!shared_map) { Dee_Decref(imm_name); HANDLE_EXCEPT(); }
        sp = new_sp;
        callback_result = DeeObject_CallAttr(new_sp[-1],imm_name,1,
                                            (DeeObject **)&shared_map);
-       SharedMap_Decref(shared_map);
+       DeeSharedMap_Decref(shared_map);
        Dee_Decref(imm_name);
      }
 #else
      ASSERT_STRING(CONSTimm);
-     shared_map = SharedMap_NewShared(imm_val2,(DREF SharedKey *)new_sp);
+     shared_map = DeeSharedMap_NewShared(imm_val2,(DREF DeeSharedItem *)new_sp);
      if unlikely(!shared_map) HANDLE_EXCEPT();
      sp = new_sp;
      callback_result = DeeObject_CallAttr(new_sp[-1],CONSTimm,1,
                                          (DeeObject **)&shared_map);
-     SharedMap_Decref(shared_map);
+     DeeSharedMap_Decref(shared_map);
 #endif
      if unlikely(!callback_result) HANDLE_EXCEPT();
      Dee_Decref(TOP);
@@ -3980,19 +3978,19 @@ do_setattr_this_c:
          uint8_t n_args = READ_imm8();
          DREF DeeObject *callback_result;
 #ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
-#define shared_vector  (*(DREF SharedVector **)&prefix_ob)
+#define shared_vector    prefix_ob
 #else /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
-         DREF SharedVector *shared_vector;
+         DREF DeeObject *shared_vector;
 #endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
          ASSERT_USAGE(-((int)n_args+1),+1);
-         shared_vector = SharedVector_NewShared(n_args,sp-n_args);
+         shared_vector = DeeSharedVector_NewShared(n_args,sp-n_args);
          if unlikely(!shared_vector)
             HANDLE_EXCEPT();
-         sp -= n_args; /* These operands have been inherited `SharedVector_NewShared' */
+         sp -= n_args; /* These operands have been inherited `DeeSharedVector_NewShared' */
          /* Invoke the object that is now located in TOP
           * For this invocation, we pass only a single argument `shared_vector' */
          callback_result = DeeObject_Call(TOP,1,(DeeObject **)&shared_vector);
-         SharedVector_Decref(shared_vector);
+         DeeSharedVector_Decref(shared_vector);
          if unlikely(!callback_result)
             HANDLE_EXCEPT();
          /* Replace the function that was called with its return value. */
@@ -4009,21 +4007,21 @@ do_setattr_this_c:
          uint8_t n_args = READ_imm8();
          DREF DeeObject *callback_result;
 #ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
-#define shared_key_vector  (*(DREF SharedMap **)&prefix_ob)
+#define shared_key_vector  prefix_ob
 #else /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
-         DREF SharedMap *shared_key_vector;
+         DREF DeeObject *shared_key_vector;
 #endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
          ASSERT_USAGE(-(((int)n_args*2)+1),+1);
-         /* NOTE: The vector of SharedKey structures has
+         /* NOTE: The vector of DeeSharedItem structures has
           *       previously been constructed on the stack. */
-         shared_key_vector = SharedMap_NewShared(n_args,(SharedKey *)(sp-n_args*2));
+         shared_key_vector = DeeSharedMap_NewShared(n_args,(DeeSharedItem *)(sp-n_args*2));
          if unlikely(!shared_key_vector)
             HANDLE_EXCEPT();
-         sp -= n_args*2; /* These operands have been inherited `SharedVector_NewShared' */
+         sp -= n_args*2; /* These operands have been inherited `DeeSharedVector_NewShared' */
          /* Invoke the object that is now located in TOP
           * For this invocation, we pass only a single argument `shared_key_vector' */
          callback_result = DeeObject_Call(TOP,1,(DeeObject **)&shared_key_vector);
-         SharedMap_Decref(shared_key_vector);
+         DeeSharedMap_Decref(shared_key_vector);
          if unlikely(!callback_result)
             HANDLE_EXCEPT();
          /* Replace the function that was called with its return value. */

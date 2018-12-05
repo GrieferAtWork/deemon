@@ -1075,7 +1075,8 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
         perm |= (ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
   if (iter->ss_flags&MODSYM_FPROPERTY) {
    perm &= ~(ATTR_ACCESS_GET|ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
-   perm |= ATTR_PROPERTY;
+   if (!(iter->ss_flags & MODSYM_FCONSTEXPR))
+       perm |= ATTR_PROPERTY;
   }
   attr_type = NULL;
 #if 0 /* Always allow this! (we allow it for user-classes, as well!) */
@@ -1090,7 +1091,7 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
 #ifndef CONFIG_NO_THREADS
     rwlock_read(&self->mo_lock);
 #endif
-    if (perm & ATTR_PROPERTY) {
+    if (iter->ss_flags&MODSYM_FPROPERTY) {
      /* Check which property operations have been bound. */
      if (self->mo_globalv[iter->ss_index + MODULE_PROPERTY_GET])
          perm |= ATTR_ACCESS_GET;

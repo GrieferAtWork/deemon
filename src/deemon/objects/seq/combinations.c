@@ -45,7 +45,7 @@ typedef struct {
                                       * NOTE: When `NULL', elements from `c_seq' are accessed through
                                       *       the GETITEM interface, as those items are being used. */
     size_t             c_seqlen;     /* [const][!0] The length of the sequence (in items) */
-    size_t             c_comlen;     /* [const][< c_seqlen][!0] The amount of elements per combination. */
+    size_t             c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
     struct type_seq   *c_getitem;    /* [0..1][if(!c_elem,[1..1])][const] The seq-interface of the type
                                       * to-be used to access the items of `c_seq' */
     DeeTypeObject     *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)]
@@ -171,13 +171,13 @@ err:
 }
 
 PRIVATE struct type_member comiter_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(CombinationsIterator,ci_combi)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(CombinationsIterator,ci_combi),"->?Ert:SeqCombinations"),
     TYPE_MEMBER_END
 };
 
-PRIVATE DeeTypeObject CombinationsIterator_Type = {
+PRIVATE DeeTypeObject SeqCombinationsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_combinationsiterator",
+    /* .tp_name     = */"_SeqCombinationsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -234,7 +234,7 @@ com_iter(Combinations *__restrict self) {
      result->ci_indices[i] = i;
  result->ci_first = true;
  Dee_Incref(self);
- DeeObject_Init(result,&CombinationsIterator_Type);
+ DeeObject_Init(result,&SeqCombinationsIterator_Type);
 done:
  return result;
 err_r:
@@ -280,13 +280,13 @@ PRIVATE struct type_seq com_seq = {
 };
 
 PRIVATE struct type_member com_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&CombinationsIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqCombinationsIterator_Type),
     TYPE_MEMBER_END
 };
 
-PRIVATE DeeTypeObject Combinations_Type = {
+PRIVATE DeeTypeObject SeqCombinations_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_combinations",
+    /* .tp_name     = */"_SeqCombinations",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -404,9 +404,14 @@ err:
  return NULL;
 }
 
-PRIVATE DeeTypeObject RepeatCombinationsIterator_Type = {
+PRIVATE struct type_member rcomiter_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(CombinationsIterator,ci_combi),"->?Ert:SeqRepeatCombinations"),
+    TYPE_MEMBER_END
+};
+
+PRIVATE DeeTypeObject SeqRepeatCombinationsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_repeatcombinationsiterator",
+    /* .tp_name     = */"_SeqRepeatCombinationsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -443,7 +448,7 @@ PRIVATE DeeTypeObject RepeatCombinationsIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */comiter_members,
+    /* .tp_members       = */rcomiter_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -460,7 +465,7 @@ rcom_iter(Combinations *__restrict self) {
  if unlikely(!result->ci_indices) goto err_r;
  result->ci_first = true;
  Dee_Incref(self);
- DeeObject_Init(result,&RepeatCombinationsIterator_Type);
+ DeeObject_Init(result,&SeqRepeatCombinationsIterator_Type);
 done:
  return result;
 err_r:
@@ -473,13 +478,13 @@ PRIVATE struct type_seq rcom_seq = {
 };
 
 PRIVATE struct type_member rcom_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RepeatCombinationsIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqRepeatCombinationsIterator_Type),
     TYPE_MEMBER_END
 };
 
-PRIVATE DeeTypeObject RepeatCombinations_Type = {
+PRIVATE DeeTypeObject SeqRepeatCombinations_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_repeatcombinations",
+    /* .tp_name     = */"_SeqRepeatCombinations",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -589,9 +594,15 @@ err:
  return NULL;
 }
 
-PRIVATE DeeTypeObject PermutationsIterator_Type = {
+PRIVATE struct type_member pmutiter_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(CombinationsIterator,ci_combi),"->?Ert:SeqPermutations"),
+    TYPE_MEMBER_END
+};
+
+
+PRIVATE DeeTypeObject SeqPermutationsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_permutationsiterator",
+    /* .tp_name     = */"_SeqPermutationsIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -628,7 +639,7 @@ PRIVATE DeeTypeObject PermutationsIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */comiter_members,
+    /* .tp_members       = */pmutiter_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -648,7 +659,7 @@ pmut_iter(Combinations *__restrict self) {
      result->ci_indices[i] = i;
  result->ci_first = true;
  Dee_Incref(self);
- DeeObject_Init(result,&PermutationsIterator_Type);
+ DeeObject_Init(result,&SeqPermutationsIterator_Type);
 done:
  return result;
 err_r:
@@ -661,13 +672,13 @@ PRIVATE struct type_seq pmut_seq = {
 };
 
 PRIVATE struct type_member pmut_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&PermutationsIterator_Type),
+    TYPE_MEMBER_CONST("iterator",&SeqPermutationsIterator_Type),
     TYPE_MEMBER_END
 };
 
-PRIVATE DeeTypeObject Permutations_Type = {
+PRIVATE DeeTypeObject SeqPermutations_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_permutations",
+    /* .tp_name     = */"_SeqPermutations",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -865,7 +876,7 @@ fill_in_result_2:
  result->c_seq    = self;
  result->c_comlen = r;
  Dee_Incref(self);
- DeeObject_Init(result,&Combinations_Type);
+ DeeObject_Init(result,&SeqCombinations_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -1019,7 +1030,7 @@ fill_in_result_2:
  result->c_seq    = self;
  result->c_comlen = r;
  Dee_Incref(self);
- DeeObject_Init(result,&RepeatCombinations_Type);
+ DeeObject_Init(result,&SeqRepeatCombinations_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -1172,7 +1183,7 @@ fill_in_result_2:
  result->c_seq    = self;
  result->c_comlen = result->c_seqlen;
  Dee_Incref(self);
- DeeObject_Init(result,&Permutations_Type);
+ DeeObject_Init(result,&SeqPermutations_Type);
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -1185,7 +1196,7 @@ DeeSeq_Permutations2(DeeObject *__restrict self, size_t r) {
  DREF DeeObject *result;
  if (!r) return DeeTuple_Pack(1,Dee_EmptySeq);
  result = DeeSeq_Permutations(self);
- if unlikely(!result || Dee_TYPE(result) != &Permutations_Type)
+ if unlikely(!result || Dee_TYPE(result) != &SeqPermutations_Type)
     goto done;
  ((Combinations *)result)->c_comlen = r;
  if (r > ((Combinations *)result)->c_seqlen) {

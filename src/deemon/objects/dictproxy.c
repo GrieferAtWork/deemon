@@ -430,10 +430,10 @@ PRIVATE DeeTypeObject DictProxyIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&dictproxyiterator_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)NULL,
+                /* .tp_copy_ctor = */(void *)&dictproxyiterator_copy,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)NULL,
                 TYPE_FIXED_ALLOCATOR(DictProxyIterator)
             }
         },
@@ -524,10 +524,10 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
     /* .tp_init = */{ \
         { \
             /* .tp_alloc = */{ \
-                /* .tp_ctor      = */&dictproxyiterator_ctor, \
-                /* .tp_copy_ctor = */&dictproxyiterator_copy, \
-                /* .tp_deep_ctor = */NULL, \
-                /* .tp_any_ctor  = */&dictproxyiterator_init, \
+                /* .tp_ctor      = */(void *)&dictproxyiterator_ctor, \
+                /* .tp_copy_ctor = */(void *)&dictproxyiterator_copy, \
+                /* .tp_deep_ctor = */(void *)NULL, \
+                /* .tp_any_ctor  = */(void *)&dictproxyiterator_init, \
                 TYPE_FIXED_ALLOCATOR(DictProxyIterator) \
             } \
         }, \

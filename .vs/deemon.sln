@@ -80,6 +80,25 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32", "dex\win32.vcxproj"
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{2360741E-FB49-40D4-B684-65FE0F4A9A7C}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\__builtins.dee = ..\lib\__builtins.dee
+		..\lib\_dexutils.dee = ..\lib\_dexutils.dee
+		..\lib\annotations.dee = ..\lib\annotations.dee
+		..\lib\codecs.dee = ..\lib\codecs.dee
+		..\lib\d200.dee = ..\lib\d200.dee
+		..\lib\doc.dee = ..\lib\doc.dee
+		..\lib\functools.dee = ..\lib\functools.dee
+		..\lib\operators.dee = ..\lib\operators.dee
+		..\lib\thread_util.dee = ..\lib\thread_util.dee
+		..\lib\util.dee = ..\lib\util.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net", "net", "{AEC1B98C-EA2C-42FE-8E56-04C1D51149C6}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\net\ftp.dee = ..\lib\net\ftp.dee
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug-GCC|Win32 = Debug-GCC|Win32
@@ -227,5 +246,6 @@ Global
 		{876B2FE6-A43E-45F3-AC78-C97C8E5AFFD5} = {D0CDCDF8-71E9-4F21-8231-EAF86D441513}
 		{CB66189C-3DDC-4F98-9621-D203A2751067} = {D0CDCDF8-71E9-4F21-8231-EAF86D441513}
 		{C0532153-C48E-43FE-9F74-00C5160207B5} = {D0CDCDF8-71E9-4F21-8231-EAF86D441513}
+		{AEC1B98C-EA2C-42FE-8E56-04C1D51149C6} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
 	EndGlobalSection
 EndGlobal
