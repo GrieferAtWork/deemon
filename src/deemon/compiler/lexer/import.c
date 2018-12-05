@@ -524,7 +524,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
       goto err;
   goto done;
  }
- end = (iter = module->mo_bucketv)+(module->mo_bucketm+1);
+ end = (iter = module->mo_bucketv) + (module->mo_bucketm + 1);
  for (; iter != end; ++iter) {
   struct symbol *sym;
   struct TPPKeyword *name;
@@ -552,10 +552,76 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
     */
    if (!SYMBOL_IS_WEAK(sym))
         continue; /* Not a weakly declared symbol. */
-   if (sym->s_type == SYMBOL_TYPE_EXTERN &&
-       sym->s_extern.e_module == module &&
-       sym->s_extern.e_symbol == iter)
-       continue; /* Same declaration. */
+   /* Special handling for re-imports. */
+   if (sym->s_type == SYMBOL_TYPE_EXTERN) {
+    if (sym->s_extern.e_module == module) {
+     if (sym->s_extern.e_symbol == iter)
+         continue; /* Same declaration. */
+    } else {
+     /* TODO: Special handling when aliasing `MODSYM_FEXTERN'-symbols.
+      *       Importing an external symbol that has been aliased should
+      *       not cause ambiguity if it is the original symbol with which
+      *       the new one would collide (this goes if at least either the
+      *       old, or the new symbol has the `MODSYM_FEXTERN' flag)
+      */
+
+     /* Special case: When both the old and new symbol refers to an external `final global'
+      * variable (with neither being `varying'), then ensure that the modules have been
+      * initialized, and check if the values bound for the symbols differ.
+      * If they are identical, we're allowed to assume that they simply alias each other, in
+      * which case it doesn't really matter which one we use for binding. However in the interest
+      * of minimizing dependencies, if either module is the builtin `deemon' module, bind against
+      * the symbol as found in `deemon', otherwise check if either module uses the other, in which
+      * case: bind against the symbol of the module being used (aka. further down in the dependency
+      * tree) */
+     if ((sym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY|MODSYM_FCONSTEXPR|MODSYM_FPROPERTY|MODSYM_FEXTERN)) == (MODSYM_FREADONLY|MODSYM_FCONSTEXPR) &&
+         (iter->ss_flags                   & (MODSYM_FREADONLY|MODSYM_FCONSTEXPR|MODSYM_FPROPERTY|MODSYM_FEXTERN)) == (MODSYM_FREADONLY|MODSYM_FCONSTEXPR)) {
+      /* Both symbols are non-varying (allowing value inlining).
+       * -> Make sure both modules have been loaded, and compare the values that have been bound.
+       * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
+      int error;
+      error = DeeModule_RunInit((DeeObject *)module);
+      if unlikely(error < 0) goto err;
+      if (error == 0) {
+       error = DeeModule_RunInit((DeeObject *)sym->s_extern.e_module);
+       if unlikely(error < 0) goto err;
+       if (error == 0) {
+        /* Both modules are now initialized. */
+        DeeObject *old_val,*new_val;
+        rwlock_read(&module->mo_lock);
+        old_val = module->mo_globalv[iter->ss_index];
+        rwlock_endread(&module->mo_lock);
+        rwlock_read(&sym->s_extern.e_module->mo_lock);
+        new_val = sym->s_extern.e_module->mo_globalv[sym->s_extern.e_symbol->ss_index];
+        rwlock_endread(&sym->s_extern.e_module->mo_lock);
+        if (old_val == new_val) {
+         /* One of the modules contains a copy-alias (i.e. a secondary memory location)
+          * for the other symbol. - Try to figure out which one is aliasing which, and
+          * potentially re-assign the import such that the new module has less dependencies. */
+         if (sym->s_extern.e_module != &deemon_module) {
+          if (module == &deemon_module) {
+do_reassign_new_alias:
+           sym->s_extern.e_module = module;
+           sym->s_extern.e_symbol = iter;
+          } else {
+           uint16_t i;
+           /* Neither module is the builtin `deemon' module.
+            * Check if one of the modules is importing the other,
+            * or bind the new module if it doesn't have any imports. */
+           if (!module->mo_importc) goto do_reassign_new_alias;
+           for (i = 0; i < sym->s_extern.e_module->mo_importc; ++i) {
+            if (module == sym->s_extern.e_module->mo_importv[i])
+                goto do_reassign_new_alias;
+           }
+          }
+         }
+         continue;
+        }
+       }
+      }
+     }
+    }
+   }
    if (sym->s_type != SYMBOL_TYPE_AMBIG) {
     /* Turn the symbol into one that is ambiguous. */
     symbol_fini(sym);

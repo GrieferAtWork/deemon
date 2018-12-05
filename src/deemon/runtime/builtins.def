@@ -67,9 +67,9 @@
 #include <deemon/weakref.h>
 
 /* Very important symbols: `Signal', `Error' and `traceback' */
-BUILTIN_REUSE(Signal,&DeeError_Signal,MODSYM_FREADONLY)
-BUILTIN_REUSE(Error,&DeeError_Error,MODSYM_FREADONLY)
-BUILTIN_REUSE(traceback,&DeeTraceback_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(Signal,&DeeError_Signal,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(Error,&DeeError_Error,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(traceback,&DeeTraceback_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
 
 /* Basic, builtin types. */
 BUILTIN_REUSE(bool,&DeeBool_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
@@ -111,17 +111,17 @@ BUILTIN_REUSE(true,Dee_True,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
 BUILTIN_REUSE(false,Dee_False,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
 
 /* Core functional types. */
-BUILTIN_REUSE(function,&DeeFunction_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(code,&DeeCode_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(module,&DeeModule_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(thread,&DeeThread_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(super,&DeeSuper_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(instancemethod,&DeeInstanceMethod_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(property,&DeeProperty_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(file,&DeeFile_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(attribute,&DeeAttribute_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(enumattr,&DeeEnumAttr_Type,MODSYM_FREADONLY)
-BUILTIN_REUSE(frame,&DeeFrame_Type,MODSYM_FREADONLY)
+BUILTIN_REUSE(function,&DeeFunction_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(code,&DeeCode_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(module,&DeeModule_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(thread,&DeeThread_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(super,&DeeSuper_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(instancemethod,&DeeInstanceMethod_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(property,&DeeProperty_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(file,&DeeFile_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(attribute,&DeeAttribute_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(enumattr,&DeeEnumAttr_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_REUSE(frame,&DeeFrame_Type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
 
 /* Functionality groups. */
 BUILTIN_DOC_REUSE(gc,&DeeGCEnumTracked_Singleton,MODSYM_FREADONLY,
@@ -133,11 +133,11 @@ BUILTIN_DOC_REUSE(gc,&DeeGCEnumTracked_Singleton,MODSYM_FREADONLY,
  * used as compile-time immediate attribute name.
  * The proper way to access `super' would `deemon.operator . ("super")',
  * but that's pretty long compared to `deemon.super_' */
-BUILTIN_ALIAS(super_,super,MODSYM_FREADONLY)
-BUILTIN_ALIAS(function_,function,MODSYM_FREADONLY)
-BUILTIN_ALIAS(property_,property,MODSYM_FREADONLY)
-BUILTIN_ALIAS(import_,import,MODSYM_FREADONLY)
-BUILTIN_ALIAS(type_,type,MODSYM_FREADONLY)
+BUILTIN_ALIAS(super_,super,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_ALIAS(function_,function,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_ALIAS(property_,property,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_ALIAS(import_,import,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
+BUILTIN_ALIAS(type_,type,MODSYM_FREADONLY|MODSYM_FCONSTEXPR)
 
 #ifndef BUILTIN_RUNTIME_DEFINED
 #define BUILTIN_RUNTIME_DEFINED 1
@@ -163,19 +163,19 @@ DECL_END
 
 /* Check if an object has a given attribute.
  * >> hasattr(object ob, string attr) -> bool; */
-BUILTIN_DOC(hasattr,&builtin_hasattr,MODSYM_FREADONLY,
+BUILTIN_DOC(hasattr,&builtin_hasattr,MODSYM_FREADONLY|MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring)->?Dbool\n"
             "@return Indicative of @ob containing an attribute @attr")
 
 /* Check if an object has a given item */
-BUILTIN_DOC(hasitem,&builtin_hasitem,MODSYM_FREADONLY,
+BUILTIN_DOC(hasitem,&builtin_hasitem,MODSYM_FREADONLY|MODSYM_FCONSTEXPR,
             "(ob,key:?Dobject)->?Dbool\n"
             "(ob,index:?Dint)->?Dbool\n"
             "@return Indicative of @ob containing an item @key or @index")
 
 /* Check if a given object attribute is bound.
  * >> boundattr(object ob, string attr, bool allow_missing = true) -> bool; */
-BUILTIN_DOC(boundattr,&builtin_boundattr,MODSYM_FREADONLY,
+BUILTIN_DOC(boundattr,&builtin_boundattr,MODSYM_FREADONLY|MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring,allow_missing=!t)->?Dbool\n"
             "@throw AttributeError The attribute doesn't exist, and @allow_missing is :false\n"
             "@return Indicative of attribute @attr of @ob currently being bound\n"
@@ -188,7 +188,7 @@ BUILTIN_DOC(boundattr,&builtin_boundattr,MODSYM_FREADONLY,
 /* Check if a given object item is bound.
  * >> bounditem(object ob, int index, bool allow_missing = true) -> bool;
  * >> bounditem(object ob, object key, bool allow_missing = true) -> bool; */
-BUILTIN_DOC(bounditem,&builtin_bounditem,MODSYM_FREADONLY,
+BUILTIN_DOC(bounditem,&builtin_bounditem,MODSYM_FREADONLY|MODSYM_FCONSTEXPR,
             "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
             "(ob,key:?Dobject,allow_missing=!t)->?Dbool\n"
             "@throw IndexError The given @index doesn't exist, and @allow_missing is :false\n"

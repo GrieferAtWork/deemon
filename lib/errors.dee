@@ -20,20 +20,15 @@
 /* Re-exports of all of the builtin error types otherwise reachable via `Error from deemon'
  * Using these, you can write more compact, but still specific catch statements, without having
  * to write long-a$$ expression such as `Error.SystemError.FSError.FileAccessError.ReadOnlyFile',
- * but instead allowing you to write `ReadOnlyFile from errors'
- */
+ * but instead allowing you to write `ReadOnlyFile from errors' */
 import deemon;
 
-//XXX: Signal and Error cause ambiguity after
-//    >> import * from deemon;
-//    >> import * from errors;
-
-//final global Signal = deemon.Signal;
+final global Signal = deemon.Signal;
 final global	Interrupt = deemon.Signal.Interrupt;
 final global		KeyboardInterrupt = Interrupt.KeyboardInterrupt;
 final global		ThreadExit = Interrupt.ThreadExit;
 final global		StopIteration = deemon.Signal.StopIteration;
-//final global Error = deemon.Error;
+final global Error = deemon.Error;
 final global	AttributeError = deemon.Error.AttributeError;
 final global		UnboundAttribute = AttributeError.UnboundAttribute;
 final global	CompilerError = deemon.Error.CompilerError;
