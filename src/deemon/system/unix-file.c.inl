@@ -79,7 +79,7 @@ done:
 }
 
 PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
- return DeeError_Throwf(&DeeError_HandleClosed,
+ return DeeError_Throwf(&DeeError_FileClosed,
                         "File was closed");
 }
 PRIVATE ATTR_COLD int DCALL error_file_io(SystemFile *__restrict self) {

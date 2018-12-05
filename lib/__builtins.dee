@@ -405,7 +405,7 @@ local __objects = deemon.list {
 	/* 0x0168 */ tmpname from .include.m_fs,
 	/* 0x0169 */ none, /* TODO: __builtin_code -- Return the code object of the caller */
 	/* 0x016A */ deemon.Error.RuntimeError.UnboundLocal,
-	/* 0x016B */ deemon.Error.ValueError.Arithmetic.DivideByZero,
+	/* 0x016B */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
 	/* 0x016C */ deemon.iterator, /* DeeGenericSequenceIterator_Type */
 	/* 0x016D */ deemon.Error.SystemError.FSError.FileNotFound,
 	/* 0x016E */ fs.stat.ischr,
@@ -471,7 +471,7 @@ local __objects = deemon.list {
 	/* 0x01AA */ rt.StopIteration_instance, /* _DeeErrorInstance_IterDone (DeeError_StopIteration_instance) */
 	/* 0x01AB */ rt.NoMemory_instance, /* _DeeErrorInstance_OutOfMemory (DeeError_NoMemory_instance) */
 	/* 0x01AC */ deemon.Error.RuntimeError.NotImplemented(), /* _DeeErrorInstance_NotImplemented */
-	/* 0x01AD */ deemon.Error.ValueError.Arithmetic.DivideByZero(), /* _DeeErrorInstance_DivByZero */
+	/* 0x01AD */ deemon.Error.ValueError.ArithmeticError.DivideByZero(), /* _DeeErrorInstance_DivByZero */
 	/* 0x01AE */ deemon.Error.RuntimeError.StackOverflow(), /* _DeeErrorInstance_StackOverflow */
 	/* 0x01AF */ deemon.Error.RuntimeError.StackOverflow,
 	/* 0x01B0 */ rt.getstacklimit, /* DeeBuiltinFunction___builtin_get_stacklimit */

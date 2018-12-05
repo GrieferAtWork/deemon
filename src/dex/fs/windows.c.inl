@@ -1139,13 +1139,13 @@ err_file_not_found(DWORD error, DeeObject *__restrict path) {
 }
 PRIVATE ATTR_COLD int DCALL
 err_file_no_write_access(DWORD error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Write permissions have not been granted for file %r",
                            path);
 }
 PRIVATE ATTR_COLD int DCALL
 err_path_no_write_access(int error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Write permissions have not been granted for path %r",
                            path);
 }
@@ -1157,7 +1157,7 @@ err_path_busy(DWORD error, DeeObject *__restrict path) {
 }
 PRIVATE ATTR_COLD int DCALL
 err_path_no_access(DWORD error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Search permissions are not granted for path %r",
                            path);
 }
@@ -1169,19 +1169,19 @@ err_path_not_empty(DWORD error, DeeObject *__restrict path) {
 }
 PRIVATE ATTR_COLD int DCALL
 err_chtime_no_access(DWORD error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Changes to the selected timestamps of %r are not allowed",
                            path);
 }
 PRIVATE ATTR_COLD int DCALL
 err_chattr_no_access(DWORD error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Changes to the attributes of %r are not allowed",
                            path);
 }
 PRIVATE ATTR_COLD int DCALL
 err_handle_closed(DWORD error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_HandleClosed,error,
+ return DeeError_SysThrowf(&DeeError_FileClosed,error,
                            "The given handle %r has been closed",
                            path);
 }
@@ -1189,7 +1189,7 @@ PRIVATE ATTR_COLD int DCALL
 err_path_no_access2(int error,
                     DeeObject *__restrict existing_path,
                     DeeObject *__restrict new_path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Access to %r or %r has not been granted",
                            existing_path,new_path);
 }
@@ -1215,7 +1215,7 @@ err_path_crossdev2(int error,
 
 PRIVATE ATTR_COLD int DCALL err_getcwd(DWORD dwError) {
  if (nt_IsAccessDenied(dwError)) {
-  return DeeError_SysThrowf(&DeeError_AccessError,dwError,
+  return DeeError_SysThrowf(&DeeError_FileAccessError,dwError,
                             "Permission to read a part of the current "
                             "working directory's path was denied");
  } else if (nt_IsFileNotFound(dwError)) {

@@ -187,7 +187,7 @@ PRIVATE struct type_method process_methods[] = {
       DOC("->?Dbool\n"
           "@interrupt\n"
           "@throw FileNotFound The specified executable could not be found\n"
-          "@throw AccessError The current user does not have permissions to access the "
+          "@throw FileAccessError The current user does not have permissions to access the "
                              "executable, or the executable is lacking execute permissions\n"
           "@throw SystemError Failed to start the process for some reason\n"
           "Begin execution of the process") },

@@ -290,7 +290,7 @@ do_del_total:
 		get(): time from time {
 			try {
 				return m_total_spend / m_num_invocations;
-			} catch (Error.ValueError.Arithmetic.DivideByZero) {
+			} catch (Error.ValueError.ArithmeticError.DivideByZero) {
 				throw Error.ValueError(
 					"No profiling data available for {}"
 					.format({ m_func }));

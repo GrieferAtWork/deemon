@@ -158,7 +158,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define DEC_BUILTIN_SET0_StackOverflow         0x21 /* DeeError_StackOverflow  */
 #define DEC_BUILTIN_SET0_TypeError             0x22 /* DeeError_TypeError      */
 #define DEC_BUILTIN_SET0_ValueError            0x23 /* DeeError_ValueError     */
-#define DEC_BUILTIN_SET0_Arithmetic            0x24 /* DeeError_Arithmetic     */
+#define DEC_BUILTIN_SET0_Arithmetic            0x24 /* DeeError_ArithmeticError     */
 #define DEC_BUILTIN_SET0_DivideByZero          0x25 /* DeeError_DivideByZero   */
 #define DEC_BUILTIN_SET0_KeyError              0x26 /* DeeError_KeyError       */
 #define DEC_BUILTIN_SET0_IndexError            0x27 /* DeeError_IndexError     */
@@ -169,10 +169,10 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define DEC_BUILTIN_SET0_UnpackError           0x2c /* DeeError_UnpackError    */
 #define DEC_BUILTIN_SET0_SystemError           0x2d /* DeeError_SystemError    */
 #define DEC_BUILTIN_SET0_FSError               0x2e /* DeeError_FSError        */
-#define DEC_BUILTIN_SET0_AccessError           0x2f /* DeeError_AccessError    */
+#define DEC_BUILTIN_SET0_AccessError           0x2f /* DeeError_FileAccessError    */
 #define DEC_BUILTIN_SET0_FileNotFound          0x30 /* DeeError_FileNotFound   */
 #define DEC_BUILTIN_SET0_FileExists            0x31 /* DeeError_FileExists     */
-#define DEC_BUILTIN_SET0_HandleClosed          0x32 /* DeeError_HandleClosed   */
+#define DEC_BUILTIN_SET0_HandleClosed          0x32 /* DeeError_FileClosed   */
 /*      DEC_BUILTIN_SET0_                      0x33 /* ... */
 /*      DEC_BUILTIN_SET0_                      0x34 /* ... */
 /*      DEC_BUILTIN_SET0_                      0x35 /* ... */
@@ -329,7 +329,7 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
     { (DeeObject *)&DeeError_StackOverflow, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_StackOverflow) },
     { (DeeObject *)&DeeError_TypeError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_TypeError) },
     { (DeeObject *)&DeeError_ValueError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_ValueError) },
-    { (DeeObject *)&DeeError_Arithmetic, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Arithmetic) },
+    { (DeeObject *)&DeeError_ArithmeticError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Arithmetic) },
     { (DeeObject *)&DeeError_DivideByZero, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_DivideByZero) },
     { (DeeObject *)&DeeError_KeyError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_KeyError) },
     { (DeeObject *)&DeeError_IndexError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_IndexError) },
@@ -340,10 +340,10 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
     { (DeeObject *)&DeeError_UnpackError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_UnpackError) },
     { (DeeObject *)&DeeError_SystemError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_SystemError) },
     { (DeeObject *)&DeeError_FSError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FSError) },
-    { (DeeObject *)&DeeError_AccessError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_AccessError) },
+    { (DeeObject *)&DeeError_FileAccessError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_AccessError) },
     { (DeeObject *)&DeeError_FileNotFound, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FileNotFound) },
     { (DeeObject *)&DeeError_FileExists, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FileExists) },
-    { (DeeObject *)&DeeError_HandleClosed, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_HandleClosed) },
+    { (DeeObject *)&DeeError_FileClosed, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_HandleClosed) },
     { (DeeObject *)&DeeObject_Type, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Object) },
     { (DeeObject *)&DeeSeq_Type, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Sequence) },
     { (DeeObject *)&DeeMapping_Type, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Mapping) },
@@ -392,7 +392,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
     /* 0x21 */(DeeObject *)&DeeError_StackOverflow, /* StackOverflow */
     /* 0x22 */(DeeObject *)&DeeError_TypeError, /* TypeError */
     /* 0x23 */(DeeObject *)&DeeError_ValueError, /* ValueError */
-    /* 0x24 */(DeeObject *)&DeeError_Arithmetic, /* Arithmetic */
+    /* 0x24 */(DeeObject *)&DeeError_ArithmeticError, /* ArithmeticError */
     /* 0x25 */(DeeObject *)&DeeError_DivideByZero, /* DivideByZero */
     /* 0x26 */(DeeObject *)&DeeError_KeyError, /* KeyError */
     /* 0x27 */(DeeObject *)&DeeError_IndexError, /* IndexError */
@@ -403,10 +403,10 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
     /* 0x2c */(DeeObject *)&DeeError_UnpackError, /* UnpackError */
     /* 0x2d */(DeeObject *)&DeeError_SystemError, /* SystemError */
     /* 0x2e */(DeeObject *)&DeeError_FSError, /* FSError */
-    /* 0x2f */(DeeObject *)&DeeError_AccessError, /* AccessError */
+    /* 0x2f */(DeeObject *)&DeeError_FileAccessError, /* FileAccessError */
     /* 0x30 */(DeeObject *)&DeeError_FileNotFound, /* FileNotFound */
     /* 0x31 */(DeeObject *)&DeeError_FileExists, /* FileExists */
-    /* 0x32 */(DeeObject *)&DeeError_HandleClosed, /* HandleClosed */
+    /* 0x32 */(DeeObject *)&DeeError_FileClosed, /* FileClosed */
     /* 0x33 */NULL,
     /* 0x34 */NULL,
     /* 0x35 */NULL,

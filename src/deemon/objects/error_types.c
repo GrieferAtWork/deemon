@@ -563,7 +563,7 @@ INIT_CUSTOM_ERROR("TypeError",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Error,
 
 /* BEGIN::ValueError */
 PRIVATE struct type_member valueerror_class_members[] = {
-    TYPE_MEMBER_CONST("Arithmetic",&DeeError_Arithmetic),
+    TYPE_MEMBER_CONST("ArithmeticError",&DeeError_ArithmeticError),
     TYPE_MEMBER_CONST("KeyError",&DeeError_KeyError),
     TYPE_MEMBER_CONST("IndexError",&DeeError_IndexError),
     TYPE_MEMBER_CONST("SequenceError",&DeeError_SequenceError),
@@ -577,30 +577,30 @@ PUBLIC DeeTypeObject DeeError_ValueError =
 INIT_CUSTOM_ERROR("ValueError",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Error,
                   NULL,NULL,NULL,NULL,DeeErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,valueerror_class_members);
-/* BEGIN::ValueError.Arithmetic */
+/* BEGIN::ValueError.ArithmeticError */
 PRIVATE struct type_member arithmetic_class_members[] = {
     TYPE_MEMBER_CONST("IntegerOverflow",&DeeError_IntegerOverflow),
     TYPE_MEMBER_CONST("DivideByZero",&DeeError_DivideByZero),
     TYPE_MEMBER_CONST("NegativeShift",&DeeError_NegativeShift),
     TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_Arithmetic =
-INIT_CUSTOM_ERROR("Arithmetic",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_ValueError,
+PUBLIC DeeTypeObject DeeError_ArithmeticError =
+INIT_CUSTOM_ERROR("ArithmeticError",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_ValueError,
                   NULL,NULL,NULL,NULL,DeeErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,arithmetic_class_members);
 PUBLIC DeeTypeObject DeeError_IntegerOverflow =
-INIT_CUSTOM_ERROR("IntegerOverflow",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Arithmetic,
+INIT_CUSTOM_ERROR("IntegerOverflow",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_ArithmeticError,
                   NULL,NULL,NULL,NULL,DeeErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
 PUBLIC DeeTypeObject DeeError_DivideByZero =
-INIT_CUSTOM_ERROR("DivideByZero",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Arithmetic,
+INIT_CUSTOM_ERROR("DivideByZero",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_ArithmeticError,
                   NULL,NULL,NULL,NULL,DeeErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
 PUBLIC DeeTypeObject DeeError_NegativeShift =
-INIT_CUSTOM_ERROR("NegativeShift",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Arithmetic,
+INIT_CUSTOM_ERROR("NegativeShift",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_ArithmeticError,
                   NULL,NULL,NULL,NULL,DeeErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
-/* END::ValueError.Arithmetic */
+/* END::ValueError.ArithmeticError */
 PUBLIC DeeTypeObject DeeError_KeyError =
 INIT_CUSTOM_ERROR("KeyError",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_ValueError,
                   NULL,NULL,NULL,NULL,DeeErrorObject,NULL,NULL,NULL,
@@ -676,10 +676,10 @@ INIT_CUSTOM_ERROR("UnsupportedAPI",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Sys
                   NULL,NULL,NULL,NULL,DeeSystemErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
 PRIVATE struct type_member fserror_class_members[] = {
-    TYPE_MEMBER_CONST("AccessError",&DeeError_AccessError),
+    TYPE_MEMBER_CONST("FileAccessError",&DeeError_FileAccessError),
     TYPE_MEMBER_CONST("FileNotFound",&DeeError_FileNotFound),
     TYPE_MEMBER_CONST("FileExists",&DeeError_FileExists),
-    TYPE_MEMBER_CONST("HandleClosed",&DeeError_HandleClosed),
+    TYPE_MEMBER_CONST("FileClosed",&DeeError_FileClosed),
     TYPE_MEMBER_END
 };
 PUBLIC DeeTypeObject DeeError_FSError =
@@ -687,19 +687,19 @@ INIT_CUSTOM_ERROR("FSError",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_SystemErro
                   NULL,NULL,NULL,NULL,DeeSystemErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,fserror_class_members);
 PRIVATE struct type_member accesserror_members[] = {
-    TYPE_MEMBER_CONST("ReadOnly",&DeeError_ReadOnly),
+    TYPE_MEMBER_CONST("ReadOnlyFile",&DeeError_ReadOnlyFile),
     TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_AccessError =
-INIT_CUSTOM_ERROR("AccessError","An error derived from :FSError that is thrown when attempting "
-                                "to access a file or directory without the necessary permissions",
+PUBLIC DeeTypeObject DeeError_FileAccessError =
+INIT_CUSTOM_ERROR("FileAccessError","An error derived from :FSError that is thrown when attempting "
+                                    "to access a file or directory without the necessary permissions",
                   TP_FNORMAL|TP_FINHERITCTOR,&DeeError_FSError,
                   NULL,NULL,NULL,NULL,DeeSystemErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,accesserror_members);
-PUBLIC DeeTypeObject DeeError_ReadOnly =
-INIT_CUSTOM_ERROR("ReadOnly","An error derived from :AccessError that is thrown when attempting "
-                             "to modify a file or directory when it or the filesystem is read-only",
-                  TP_FNORMAL|TP_FINHERITCTOR,&DeeError_AccessError,
+PUBLIC DeeTypeObject DeeError_ReadOnlyFile =
+INIT_CUSTOM_ERROR("ReadOnlyFile","An error derived from :FileAccessError that is thrown when attempting "
+                                 "to modify a file or directory when it or the filesystem is read-only",
+                  TP_FNORMAL|TP_FINHERITCTOR,&DeeError_FileAccessError,
                   NULL,NULL,NULL,NULL,DeeSystemErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
 PUBLIC DeeTypeObject DeeError_FileNotFound =
@@ -712,8 +712,8 @@ INIT_CUSTOM_ERROR("FileExists","An error derived from :FSError that is thrown wh
                   TP_FNORMAL|TP_FINHERITCTOR,&DeeError_FSError,
                   NULL,NULL,NULL,NULL,DeeSystemErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
-PUBLIC DeeTypeObject DeeError_HandleClosed =
-INIT_CUSTOM_ERROR("HandleClosed",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_FSError,
+PUBLIC DeeTypeObject DeeError_FileClosed =
+INIT_CUSTOM_ERROR("FileClosed",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_FSError,
                   NULL,NULL,NULL,NULL,DeeSystemErrorObject,NULL,NULL,NULL,
                   NULL,NULL,NULL,NULL);
 /* END::SystemError */

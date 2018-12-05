@@ -2359,7 +2359,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@interrupt\n"
           "@throw ValueError Invalid shutdown mode\n"
           "@throw NetError Failed to shutdown @this socket\n"
-          "@throw HandleClosed @this socket has already been closed\n"
+          "@throw FileClosed @this socket has already been closed\n"
           "Closes the socket's file descriptor. When @shutdown_socket is a non-empty :string, "
           "#shutdown will automatically be invoked on @this socket if it hasn't before\n"
           "Note that in the event that #shutdown has already been called, ") },
@@ -2369,7 +2369,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@interrupt\n"
           "@throw ValueError Invalid shutdown mode\n"
           "@throw NetError Failed to shutdown @this socket\n"
-          "@throw HandleClosed @this socket has already been closed\n"
+          "@throw FileClosed @this socket has already been closed\n"
           "Shuts down @this socket either for reading, for writing or for both") },
     { "bind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_bind,
       DOC("(args!)\n"
@@ -2380,7 +2380,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.IsConnected @this socket has already been bound is is already connected\n"
           "@throw NetError @this socket has already been bound and its address family does not allow rebinding\n"
           "@throw NetError Failed to bind @this socket for some unknown reason\n"
-          "@throw HandleClosed @this socket has already been closed\n"
+          "@throw FileClosed @this socket has already been closed\n"
           "Binds @this socket to a given address.\n"
           "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
     { "connect", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_connect,
@@ -2397,7 +2397,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.NetUnreachable No route to the network of the given address can be established\n"
           "@throw NetError.NetUnreachable.HostUnreachable The host of the target address cannot be reached\n"
           "@throw NetError Failed to connect @this socket for some unknown reason\n"
-          "@throw HandleClosed @this socket has already been closed\n"
+          "@throw FileClosed @this socket has already been closed\n"
           "Connect @this socket with a given address.\n"
           "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
     { "listen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_listen,
@@ -2407,7 +2407,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.NoSupport The protocol of @this socket does not allow listening\n"
           "@throw NetError.IsConnected The socket is already connected\n"
           "@throw NetError Failed to start listening for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param max_backlog The max number of connections to queue before #accept must be called to acknowledge them. "
                              "When negative, use a default backlog that can be configured with the environment variable "
                              "${(int from deemon)((environ from fs)[\"DEEMON_MAXBACKLOG\"])}\n"
@@ -2420,7 +2420,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
           "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
           "@throw NetError Failed to start accept a connection for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param timeout_microseconds The timeout describing for how long #accept should wait before returning :none. "
                                       "You may pass ${-1} for an infinite timeout or $0 to fail immediately.\n"
           "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
@@ -2432,7 +2432,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
           "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
           "@throw NetError Failed to start accept a connection for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "Same as calling #accept with a timeout_microseconds argument of ${0}") },
     { "recv", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recv,
       DOC("(flags:?Dstring)->?Dbytes\n"
@@ -2446,7 +2446,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.ConnectReset The peer has reset the connection\n"
           "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
           "@throw NetError Failed to receive data for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param flags A set of flags used during delivery. The integer value expects the same "
                        "values as the host system library whereas the string version can be used "
                        "to independently encode flags as $\",\" or $\"|\" separated case-insensitive "
@@ -2470,7 +2470,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.ConnectReset The peer has reset the connection\n"
           "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
           "@throw NetError Failed to receive data for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "Same as #recv, but received data is written into the given buffer @dst") },
     { "recvfrom", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvfrom,
@@ -2484,7 +2484,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.ConnectReset The peer has reset the connection\n"
           "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
           "@throw NetError Failed to receive data for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "Same as #recv, but uses the recvfrom system call to read data, also returning "
           "the socket address from which the data originates as the first of 2 :tuple "
@@ -2502,7 +2502,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.ConnectReset The peer has reset the connection\n"
           "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
           "@throw NetError Failed to receive data for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "Same as #recvfrom, buf read received data into the given buffer @dst") },
     { "send", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_send,
@@ -2518,7 +2518,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
           "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
           "@throw NetError Failed to send data for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "@return The total number of bytes that was sent\n"
           "Send @data over the network to the peer of a connected socket") },
@@ -2537,7 +2537,7 @@ PRIVATE struct type_method socket_methods[] = {
           "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
           "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
           "@throw NetError Failed to send data for some reason\n"
-          "@throw HandleClosed @this socket has already been closed or was shut down\n"
+          "@throw FileClosed @this socket has already been closed or was shut down\n"
           "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
           "@param target A tuple consisting of arguments which can be used to construct a :sockaddr object, or a single argument used for "
                         "the same purpose in ${target = target is tuple ? sockaddr(this.sock_af,target...) : sockaddr(this.sock_af,target)}.\n"
@@ -2569,13 +2569,13 @@ PRIVATE struct type_method socket_methods[] = {
 PRIVATE struct type_getset socket_getsets[] = {
     { "sockname", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_sockname_get, NULL, NULL,
       DOC("->?Gsockaddr\n"
-          "@throw HandleClosed @this socket has been closed\n"
+          "@throw FileClosed @this socket has been closed\n"
           "@throw NetError.NotConnected @this socket is neither connected, nor bound\n"
           "Returns the socket name (local address) of @this socket") },
     { "peeraddr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_peeraddr_get, NULL, NULL,
       DOC("->?Gsockaddr\n"
           "@interrupt\n"
-          "@throw HandleClosed @this socket has been closed\n"
+          "@throw FileClosed @this socket has been closed\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport @this socket's protocol does not allow for peer addresses\n"
           "@throw NetError Failed to query the peer address for some unknown reason\n"

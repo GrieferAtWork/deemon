@@ -107,7 +107,7 @@ DDATDEF DeeTypeObject         DeeError_SegFault;
 DDATDEF DeeTypeObject         DeeError_IllegalInstruction;
 DDATDEF DeeTypeObject     DeeError_TypeError;
 DDATDEF DeeTypeObject     DeeError_ValueError;
-DDATDEF DeeTypeObject         DeeError_Arithmetic;
+DDATDEF DeeTypeObject         DeeError_ArithmeticError;
 DDATDEF DeeTypeObject             DeeError_IntegerOverflow;
 DDATDEF DeeTypeObject             DeeError_DivideByZero;
 DDATDEF DeeTypeObject             DeeError_NegativeShift;
@@ -124,11 +124,11 @@ DDATDEF DeeTypeObject         DeeError_BufferError;
 DDATDEF DeeTypeObject     DeeError_SystemError;
 DDATDEF DeeTypeObject         DeeError_UnsupportedAPI;
 DDATDEF DeeTypeObject         DeeError_FSError;
-DDATDEF DeeTypeObject             DeeError_AccessError;
-DDATDEF DeeTypeObject                 DeeError_ReadOnly;
+DDATDEF DeeTypeObject             DeeError_FileAccessError;
+DDATDEF DeeTypeObject                 DeeError_ReadOnlyFile;
 DDATDEF DeeTypeObject             DeeError_FileNotFound;
 DDATDEF DeeTypeObject             DeeError_FileExists;
-DDATDEF DeeTypeObject             DeeError_HandleClosed;
+DDATDEF DeeTypeObject             DeeError_FileClosed;
 
 /* A very special error type that doesn't actually derive
  * from `Error', or even `object' for that matter.

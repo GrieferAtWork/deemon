@@ -1698,7 +1698,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 
 
 PRIVATE ATTR_COLD void DCALL err_buffer_closed(void) {
- DeeError_Throwf(&DeeError_HandleClosed,
+ DeeError_Throwf(&DeeError_FileClosed,
                  "Buffer has been closed");
 }
 

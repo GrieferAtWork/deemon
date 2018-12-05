@@ -68,16 +68,16 @@ INTERN int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info) {
   DeeError_Throwf(&DeeError_IndexError,"Array bounds exceeded");
   goto did_handle;
  case EXCEPTION_FLT_DENORMAL_OPERAND:
-  DeeError_Throwf(&DeeError_Arithmetic,"Denormal floating point operand");
+  DeeError_Throwf(&DeeError_ArithmeticError,"Denormal floating point operand");
   goto did_handle;
  case EXCEPTION_FLT_DIVIDE_BY_ZERO:
   DeeError_Throwf(&DeeError_DivideByZero,"Floating point divide by zero");
   goto did_handle;
  case EXCEPTION_FLT_INEXACT_RESULT:
-  DeeError_Throwf(&DeeError_Arithmetic,"Inexact floating point results");
+  DeeError_Throwf(&DeeError_ArithmeticError,"Inexact floating point results");
   goto did_handle;
  case EXCEPTION_FLT_INVALID_OPERATION:
-  DeeError_Throwf(&DeeError_Arithmetic,"Invalid floating point operation");
+  DeeError_Throwf(&DeeError_ArithmeticError,"Invalid floating point operation");
   goto did_handle;
  case EXCEPTION_FLT_OVERFLOW:
   DeeError_Throwf(&DeeError_IntegerOverflow,"floating point overflow");
@@ -104,7 +104,7 @@ INTERN int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info) {
   DeeError_Throwf(&DeeError_StackOverflow,"Stack overflow");
   goto did_handle;
  case EXCEPTION_INVALID_HANDLE:
-  DeeError_Throwf(&DeeError_HandleClosed,"Invalid handle");
+  DeeError_Throwf(&DeeError_FileClosed,"Invalid handle");
   goto did_handle;
 
  default: break;

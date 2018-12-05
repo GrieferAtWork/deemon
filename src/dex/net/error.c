@@ -142,7 +142,7 @@ INTERN DeeTypeObject DeeError_NoHostAddress =
 
 INTERN void DCALL
 err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self) {
- DeeError_SysThrowf(&DeeError_HandleClosed,err,
+ DeeError_SysThrowf(&DeeError_FileClosed,err,
                     "Socket %k has been closed",self);
 }
 

@@ -174,7 +174,7 @@ DDATDEF DeeTypeObject DeeSeq_Type;  /* `sequence from deemon' */
  *           - Same as `tp_inplace_add' when the second operand is `1'.
  *        - tp_inplace_add
  *           - Advance the iterator by the integer representation of the second operand.
- *             When the second operand is negative, throw an `Error.ValueError.Arithmetic.IntegerOverflow'
+ *             When the second operand is negative, throw an `Error.ValueError.ArithmeticError.IntegerOverflow'
  *     - Abstraction that automatically defines the following methods:
  *        - `next() -> object'
  *           - Literally the same as invoking `operator __next__()', but has a more userfriendly name.

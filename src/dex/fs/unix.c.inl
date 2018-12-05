@@ -320,13 +320,13 @@ done:
 
 PRIVATE ATTR_COLD int DCALL
 err_path_no_access(int error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Search permissions are not granted for path %r",
                            path);
 }
 PRIVATE ATTR_COLD int DCALL
 err_path_no_write_access(int error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Write permissions have not been granted for path %r",
                            path);
 }
@@ -356,7 +356,7 @@ err_path_not_empty(int error, DeeObject *__restrict path) {
 }
 PRIVATE ATTR_COLD int DCALL
 err_path_readonly(int error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_ReadOnly,error,
+ return DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,
                            "Path %r is apart of a read-only filesystem",
                            path);
 }
@@ -374,14 +374,14 @@ err_path_not_found(int error, DeeObject *__restrict path) {
 }
 PRIVATE ATTR_COLD int DCALL
 err_handle_closed(int error, DeeObject *__restrict path) {
- return DeeError_SysThrowf(&DeeError_HandleClosed,error,
+ return DeeError_SysThrowf(&DeeError_FileClosed,error,
                            "The given handle %r has been closed",
                            path);
 }
 
 PRIVATE ATTR_COLD int DCALL err_getcwd(int error) {
  if (error == EACCES) {
-  return DeeError_SysThrowf(&DeeError_AccessError,error,
+  return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                             "Permission to read a part of the current "
                             "working directory's path was denied");
  } else if (error == ENOENT) {
@@ -1491,7 +1491,7 @@ PRIVATE ATTR_COLD int DCALL
 err_path_no_access2(int error,
                     DeeObject *__restrict existing_path,
                     DeeObject *__restrict new_path) {
- return DeeError_SysThrowf(&DeeError_AccessError,error,
+ return DeeError_SysThrowf(&DeeError_FileAccessError,error,
                            "Access to %r or %r has not been granted",
                            existing_path,new_path);
 }
@@ -1507,7 +1507,7 @@ PRIVATE ATTR_COLD int DCALL
 err_path_readonly2(int error,
                    DeeObject *__restrict existing_path,
                    DeeObject *__restrict new_path) {
- return DeeError_SysThrowf(&DeeError_ReadOnly,error,
+ return DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,
                            "Path %r and %r is apart of a read-only filesystem",
                            existing_path,new_path);
 }

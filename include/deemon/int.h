@@ -468,7 +468,7 @@ DFUNDEF bool DCALL DeeInt_TryAsU32(DeeObject *__restrict self, uint32_t *__restr
 DFUNDEF bool DCALL DeeInt_TryAsU64(DeeObject *__restrict self, uint64_t *__restrict value);
 DFUNDEF bool DCALL DeeInt_TryAsU128(DeeObject *__restrict self, duint128_t *__restrict value);
 
-/* Same as the functions above, but raise an `Error.ValueError.Arithmetic.IntegerOverflow'
+/* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
  * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
 DFUNDEF int DCALL DeeInt_As8(DeeObject *__restrict self, int8_t *__restrict value);
 DFUNDEF int DCALL DeeInt_As16(DeeObject *__restrict self, int16_t *__restrict value);

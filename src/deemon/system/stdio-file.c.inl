@@ -196,7 +196,7 @@ done:
 }
 PRIVATE int DCALL error_file_closed(SystemFile *__restrict self) {
  (void)self;
- return DeeError_Throwf(&DeeError_HandleClosed,"File was closed");
+ return DeeError_Throwf(&DeeError_FileClosed,"File was closed");
 }
 PRIVATE int DCALL error_file_io(SystemFile *__restrict self) {
  (void)self;

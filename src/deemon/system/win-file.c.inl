@@ -407,7 +407,7 @@ done:
 }
 
 PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
- return DeeError_Throwf(&DeeError_HandleClosed,
+ return DeeError_Throwf(&DeeError_FileClosed,
                         "File was closed");
 }
 

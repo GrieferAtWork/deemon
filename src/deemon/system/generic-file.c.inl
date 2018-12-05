@@ -45,7 +45,7 @@ INTERN dsysfd_t DCALL
 DeeSystemFile_Fileno(/*FileSystem*/DeeObject *__restrict self) {
  ASSERT_OBJECT_TYPE(self,(DeeTypeObject *)&DeeSystemFile_Type);
  (void)self;
- DeeError_Throwf(&DeeError_HandleClosed,
+ DeeError_Throwf(&DeeError_FileClosed,
                  fs_unsupported_message);
  return (dsysfd_t)-1;
 }

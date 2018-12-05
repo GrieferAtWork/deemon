@@ -889,7 +889,7 @@ INTDEF DeeTypeObject     DeeError_AddrNotAvail;
 INTDEF DeeTypeObject     DeeError_HostNotFound; /* Host name does not exist. */
 INTDEF DeeTypeObject         DeeError_NoHostAddress; /* Host has no addresses associated with it. */
 
-/* Throws an `Error.SystemError.FSError.HandleClosed' */
+/* Throws an `Error.SystemError.FSError.FileClosed' */
 INTDEF void DCALL err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);
 
 

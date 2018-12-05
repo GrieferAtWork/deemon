@@ -276,7 +276,7 @@ DFUNDEF int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
  *       expecting an integer (or int-castable) to be returned,
  *       which is then converted to a system file descriptor.
  *       If the casted value is equal to `DSYSFD_INVALID', a
- *       `HandleClosed' will be raised automatically, thus
+ *       `FileClosed' will be raised automatically, thus
  *       ensuring that the function never returns that value
  *       without throwing an error, and always returns that
  *       value when an error was thrown.

@@ -1,0 +1,75 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* Re-exports of all of the builtin error types otherwise reachable via `Error from deemon'
+ * Using these, you can write more compact, but still specific catch statements, without having
+ * to write long-a$$ expression such as `Error.SystemError.FSError.FileAccessError.ReadOnlyFile',
+ * but instead allowing you to write `ReadOnlyFile from errors'
+ */
+import deemon;
+
+//XXX: Signal and Error cause ambiguity after
+//    >> import * from deemon;
+//    >> import * from errors;
+
+//final global Signal = deemon.Signal;
+final global	Interrupt = deemon.Signal.Interrupt;
+final global		KeyboardInterrupt = Interrupt.KeyboardInterrupt;
+final global		ThreadExit = Interrupt.ThreadExit;
+final global		StopIteration = deemon.Signal.StopIteration;
+//final global Error = deemon.Error;
+final global	AttributeError = deemon.Error.AttributeError;
+final global		UnboundAttribute = AttributeError.UnboundAttribute;
+final global	CompilerError = deemon.Error.CompilerError;
+final global		SyntaxError = CompilerError.SyntaxError;
+final global		SymbolError = CompilerError.SymbolError;
+final global	ThreadCrash = deemon.Error.ThreadCrash;
+final global	NoMemory = deemon.Error.NoMemory;
+final global	RuntimeError = deemon.Error.RuntimeError;
+final global		NotImplemented = RuntimeError.NotImplemented;
+final global		AssertionError = RuntimeError.AssertionError;
+final global		UnboundLocal = RuntimeError.UnboundLocal;
+final global		StackOverflow = RuntimeError.StackOverflow;
+final global		SegFault = RuntimeError.SegFault;
+final global		IllegalInstruction = RuntimeError.IllegalInstruction;
+final global	TypeError = deemon.Error.TypeError;
+final global	ValueError = deemon.Error.ValueError;
+final global		ArithmeticError = ValueError.ArithmeticError;
+final global			IntegerOverflow = ArithmeticError.IntegerOverflow;
+final global			DivideByZero = ArithmeticError.DivideByZero;
+final global			NegativeShift = ArithmeticError.NegativeShift;
+final global		KeyError = ValueError.KeyError;
+final global		IndexError = ValueError.IndexError;
+final global			UnboundItem = IndexError.UnboundItem;
+final global		SequenceError = ValueError.SequenceError;
+final global		UnicodeError = ValueError.UnicodeError;
+final global			UnicodeDecodeError = UnicodeError.UnicodeDecodeError;
+final global			UnicodeEncodeError = UnicodeError.UnicodeEncodeError;
+final global		ReferenceError = ValueError.ReferenceError;
+final global		UnpackError = ValueError.UnpackError;
+final global		BufferError = ValueError.BufferError;
+final global	SystemError = deemon.Error.SystemError;
+final global		UnsupportedAPI = SystemError.UnsupportedAPI;
+final global		FSError = SystemError.FSError;
+final global			FileAccessError = FSError.FileAccessError;
+final global				ReadOnlyFile = FileAccessError.ReadOnlyFile;
+final global			FileNotFound = FSError.FileNotFound;
+final global			FileExists = FSError.FileExists;
+final global			FileClosed = FSError.FileClosed;
+
