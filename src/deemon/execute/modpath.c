@@ -743,7 +743,7 @@ find_glob_module(DeeStringObject *__restrict module_name) {
 #endif
        )
        break; /* Found it! */
-   result = result->mo_next;
+   result = result->mo_globnext;
   }
  }
  return result;
@@ -867,6 +867,8 @@ add_file_module(DeeModuleObject *__restrict self) {
 PRIVATE bool DCALL
 add_glob_module(DeeModuleObject *__restrict self) {
  dhash_t hash; struct module_bucket *bucket;
+ DEE_DPRINTF("[RT] Cached global module %r loaded from %r\n",
+              self->mo_name,self->mo_path ? self->mo_path : (DeeStringObject *)Dee_EmptyString);
  ASSERT(!self->mo_globpself);
  ASSERT(self->mo_name);
 #ifndef CONFIG_NO_THREADS
@@ -1279,11 +1281,11 @@ DeeModule_OpenSourceStreamString(DeeObject *__restrict source_stream,
      goto err_source_pathname_ob;
  }
  result = DeeModule_OpenSourceStream(source_stream,
-                               start_line,
-                               start_col,
-                               options,
-                               source_pathname_ob,
-                               module_name_ob);
+                                     start_line,
+                                     start_col,
+                                     options,
+                                     source_pathname_ob,
+                                     module_name_ob);
  Dee_XDecref(module_name_ob);
  Dee_XDecref(source_pathname_ob);
  return result;
@@ -1453,7 +1455,7 @@ DeeModule_DoGet(char const *__restrict name,
     Dee_Incref(result);
     break; /* Found it! */
    }
-   result = result->mo_next;
+   result = result->mo_globnext;
   }
  }
 #ifndef CONFIG_NO_THREADS
@@ -1625,31 +1627,33 @@ again_search_fs_modules:
    Dee_Incref(result);
    rwlock_endread(&modules_lock);
 got_result_set_global:
-   if (module_global_name) {
+   if (module_global_name && likely(!result->mo_globpself)) {
     DeeModuleObject *existing_module;
     /* Cache the module as global (if it wasn't already) */
 again_find_existing_global_module:
     rwlock_write(&modules_glob_lock);
-    existing_module = find_glob_module(result->mo_name);
-    if unlikely(existing_module) {
-     Dee_Incref(existing_module);
-     rwlock_endwrite(&modules_glob_lock);
-     Dee_Decref_likely(result);
-     result = existing_module;
-     goto got_result;
-    }
-    if (!add_glob_module(result)) {
-     rwlock_endwrite(&modules_glob_lock);
-     if (Dee_CollectMemory(1))
-         goto again_find_existing_global_module;
-     goto err_buf_r;
+    COMPILER_READ_BARRIER();
+    if likely(result->mo_globpself == NULL) {
+     existing_module = find_glob_module(result->mo_name);
+     if unlikely(existing_module) {
+      Dee_Incref(existing_module);
+      rwlock_endwrite(&modules_glob_lock);
+      Dee_Decref_likely(result);
+      result = existing_module;
+      goto got_result;
+     }
+     if (!add_glob_module(result)) {
+      rwlock_endwrite(&modules_glob_lock);
+      if (Dee_CollectMemory(1))
+          goto again_find_existing_global_module;
+      goto err_buf_r;
+     }
     }
     rwlock_endwrite(&modules_glob_lock);
-
    }
    goto got_result;
   }
-#ifndef CONFIG_NO_DEX
+#if !defined(CONFIG_NO_DEX) && 0 /* Dex modules are still cached under their real name! */
   /* Also search for cached dex extensions. */
   {
    dhash_t dex_hash;
@@ -2304,15 +2308,15 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
  }
 
  /* Search for a cache entry for this module in the global module cache. */
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
  result = find_glob_module((DeeStringObject *)module_name);
- Dee_XIncref(result);
-#ifndef CONFIG_NO_THREADS
+ if (result) {
+  Dee_Incref(result);
+  rwlock_endread(&modules_glob_lock);
+  goto done;
+ }
  rwlock_endread(&modules_glob_lock);
-#endif /* !CONFIG_NO_THREADS */
- if (result) goto done;
+
  module_namestr = DeeString_AsUtf8(module_name);
  if unlikely(!module_namestr) goto err;
  module_namelen = WSTR_LENGTH(module_namestr);
