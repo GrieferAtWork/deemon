@@ -21,12 +21,14 @@ import util;
 import deemon;
 import * from deemon;
 
+global Declaration;
 global Doc;
 global DocSection;
-global Declaration;
-global Parameter;
 global Expression;
-
+global Parameter;
+global TextSegment;
+global TypeExpr;
+global TypeRef;
 
 local function decode_name_content(name: string): string {
 	name = name.substr(1,#name - 1);

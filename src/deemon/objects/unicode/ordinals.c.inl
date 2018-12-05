@@ -63,6 +63,7 @@ DeeString_Ordinals(DeeObject *__restrict self) {
  result->so_str     = (DREF DeeStringObject *)self;
  result->so_width   = DeeString_WIDTH(self);
  result->so_ptr.ptr = DeeString_WSTR(self);
+ Dee_Incref(self);
  DeeObject_Init(result,&StringOrdinals_Type);
 done:
  return (DREF DeeObject *)result;

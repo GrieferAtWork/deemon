@@ -445,7 +445,7 @@ err_unbound_local(struct code_object *__restrict code,
      DeeError_Throwf(&DeeError_UnboundLocal,
                      "Unbound local variable `%s' %s%s",
                      local_name,
-                     code_name ? " in function " : "",
+                     code_name ? "in function " : "",
                      code_name ? code_name : "");
      ddi_state_fini(&state);
      return -1;
@@ -488,7 +488,7 @@ err_readonly_local(struct code_object *__restrict code,
      DeeError_Throwf(&DeeError_RuntimeError,
                      "Cannot modify read-only local variable `%s' %s%s",
                      local_name,
-                     code_name ? " in function " : "",
+                     code_name ? "in function " : "",
                      code_name ? code_name : "");
      ddi_state_fini(&state);
      return -1;

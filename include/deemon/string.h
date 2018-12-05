@@ -1523,11 +1523,11 @@ dssize_t (unicode_printer_printobjectrepr)(struct unicode_printer *__restrict se
  * These functions will start by normalize `name', checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
  * call to `encode from codecs' / `decode from codecs':
- * >> name = name.lower().replace("_","-");
+ * >> name = name.casefold().replace("_","-");
  * >> if (name.startswith("iso-"))
- * >>  name = "iso"+name[4:];
+ * >>     name = "iso"+name[4:];
  * >> else if (name.startswith("cp-")) {
- * >>  name = "cp"+name[3:];
+ * >>     name = "cp"+name[3:];
  * >> }
  * >> if (has_builtin_codec(name))
  * >>     return builtin_encode(self,name,error_mode); // or decode...
@@ -1543,6 +1543,7 @@ dssize_t (unicode_printer_printobjectrepr)(struct unicode_printer *__restrict se
  *  - "utf-32-le", "utf32-le", "u32-le", "utf-32le", "utf32le", "u32le"
  *  - "utf-32-be", "utf32-be", "u32-be", "utf-32be", "utf32be", "u32be"
  *  - "string-escape", "backslash-escape", "c-escape"
+ * @throw: ValueError: The given `name' is not a recognized codec name.
  * @param: error_mode: One of `STRING_ERROR_F*'
  * @return: * :   The encoded/decoded variant of `self'
  *                The type of this object is unrelated to `self', but rather

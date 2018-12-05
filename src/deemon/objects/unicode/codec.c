@@ -786,12 +786,13 @@ DeeCodec_Decode(DeeObject *__restrict self,
   goto err_name;
  }
  result = DeeObject_CallAttrPack(libcodecs,
-                                &str_decode,
+                                &str___decode,
                                  3,
                                  self,
                                  name,
                                  error_module_names[error_mode]);
  Dee_Decref(libcodecs);
+#if 0
  if unlikely(!result) {
   /* Translate any kind of value error into an unknown-codec error.
    * This includes things such as key-errors thrown by the codec library,
@@ -799,6 +800,7 @@ DeeCodec_Decode(DeeObject *__restrict self,
   if (DeeError_Catch(&DeeError_ValueError))
       goto err_unknown;
  }
+#endif
 done:
  Dee_Decref(name);
  return result;
@@ -839,12 +841,13 @@ DeeCodec_Encode(DeeObject *__restrict self,
   goto err_name;
  }
  result = DeeObject_CallAttrPack(libcodecs,
-                                &str_encode,
+                                &str___encode,
                                  3,
                                  self,
                                  name,
                                  error_module_names[error_mode]);
  Dee_Decref(libcodecs);
+#if 0
  if unlikely(!result) {
   /* Translate any kind of value error into an unknown-codec error.
    * This includes things such as key-errors thrown by the codec library,
@@ -852,6 +855,7 @@ DeeCodec_Encode(DeeObject *__restrict self,
   if (DeeError_Catch(&DeeError_ValueError))
       goto err_unknown;
  }
+#endif
 done:
  Dee_Decref(name);
  return result;
