@@ -418,6 +418,14 @@ next_expr:
    struct symbol *var_symbol;
    DREF struct ast *args,*merge;
    struct ast_loc symbol_name_loc;
+   if (KWD_IS_D100_VARIABLE_MODIFIER(tok)) {
+    /* Deemon 100+ used to allow `int local x;' as alias for `local x = int()'.
+     * While this isn't support anymore, still try to emulate it... */
+    if (WARN(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
+        goto err_current;
+    if (ast_parse_lookup_mode(&lookup_mode))
+        goto err;
+   }
    loc_here(&symbol_name_loc);
    var_symbol = get_local_symbol(token.t_kwd);
    if unlikely(var_symbol) {
