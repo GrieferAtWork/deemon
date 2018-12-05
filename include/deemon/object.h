@@ -271,9 +271,9 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, i
 
 
 
-/* Object weak reference tracing. */
 typedef void (DCALL *weakref_callback_t)(struct weakref *__restrict self);
 
+/* Object weak reference tracing. */
 struct weakref {
     struct weakref   **wr_pself; /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Indirect self pointer. */
     struct weakref    *wr_next;  /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)][ORDER(BEFORE(*wr_pself))] Next weak references. */
@@ -286,6 +286,9 @@ struct weakref {
                                   *       acquired shared ownership to a containing object if it intends
                                   *       to invoke arbitrary user-code, or drop references. */
 };
+#define WEAKREF_INIT { NULL, NULL, NULL, NULL }
+#define WEAKREF(T)     struct weakref
+
 
 /* Unlock a weakref from within a `wr_del' callback.
  * An invocation of this macro is _MANDATORY_ for any custom weakref
@@ -345,9 +348,6 @@ struct weakref {
 #endif
 
 
-
-#define WEAKREF_INIT { NULL, NULL, NULL, NULL }
-#define WEAKREF(T)     struct weakref
 
 struct weakref_list {
     struct weakref  *wl_nodes; /* [0..1][lock(BIT0(wl_nodes))] chain of weak references. */

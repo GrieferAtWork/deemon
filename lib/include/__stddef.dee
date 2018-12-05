@@ -125,7 +125,6 @@ local function __ctypes_new(tp) {
 #define __builtin_unused_2(a,b)          ({ a; b; })
 #define __builtin_unused(...)               __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
 #define __builtin_dead(x)                  (true || (x))
-#define __builtin_exists(x)                 true /* Cannot be emulated, so we can only hope... */
 #define __builtin_choose_expr(c,tt,ff)    ((c)?(tt):(ff))
 #define __builtin_unreachable()             __asm__("" : : : "noreturn")
 #define __builtin_types_compatible_p(x,y) ((x)===(y))
@@ -142,10 +141,20 @@ local function __ctypes_new(tp) {
 #define move   copy                     /* Move-construct (implement as copy-construct) */
 
 /* Stub-implement removed static-if keywords (as far as possible). */
-#define __static_if(x) if(x)
-#define __static_else  else
-#define __if_true      if(true)
-#define __if_false     if(false)
+#define __PRIVATE_if_not_exists{...}
+#if 1 /* Cannot be emulated, so we can only hope... */
+#define __builtin_exists(x) true
+#define __if_exists(x)      if(1)
+#define __if_not_exists(x)  __PRIVATE_if_not_exists
+#else
+#define __builtin_exists(x) false
+#define __if_exists(x)      __PRIVATE_if_not_exists
+#define __if_not_exists(x)  if(1)
+#endif
+#define __static_if(x)     if(x)
+#define __static_else      else
+#define __if_true          if(true)
+#define __if_false         if(false)
 
 /* Re-define the removed alias for `assert' */
 #define __assert    assert
