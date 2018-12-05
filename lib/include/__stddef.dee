@@ -168,6 +168,11 @@ local function __ctypes_new(tp) {
 #define const     /* nothing */
 #define constexpr /* nothing */
 
+#if 1 /* This allows `static if' to be compiled correctly, however it
+       * also causes static variable declaration to be impossible... */
+#define static    /* nothing */
+#endif
+
 /* Import some of the symbols that old code assumes to be visible. */
 from deemon import
 	bool, string, tuple, list, int,

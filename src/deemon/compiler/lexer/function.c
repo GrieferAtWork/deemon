@@ -429,14 +429,13 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   ast_decref(code);
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
- } else {
+ } else if (tok == '{') {
   struct ast_loc brace_loc;
   loc_here(&brace_loc);
   old_flags = TPPLexer_Current->l_flags;
   if (parser_flags & PARSE_FLFSTMT)
       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-  if unlikely(likely(tok == '{') ? (yield() < 0) :
-              WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
+  if unlikely(yield() < 0)
      goto err_flags_decl;
   code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&brace_loc);
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -445,6 +444,31 @@ ast_parse_function_noscope(struct TPPKeyword *name,
               WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
      goto err_xcode_decl;
   if (pneed_semi) *pneed_semi = false;
+ } else {
+  /* Missing function body (this was allowed in deemon 100+, where
+   * this was interpreted the same way an `{ }'-like empty body would
+   * have been)
+   * Back then, the intend was to go hand-in-hand with the user being
+   * able to re-assign the code of a function after that function had
+   * already been created, thus allowing for self-referencing functions
+   * which were generated as:
+   * >> local x = function();
+   * >> local x := function(n) {
+   * >>     print "x(" + n + ")";
+   * >>     if (n < 10) {
+   * >>         // Self-reference via reference (`x' already had
+   * >>         // a value when the function was assigned, thus
+   * >>         // allowing that value to be referenced like any
+   * >>         // other referenced variable)
+   * >>         x(n + 1);
+   * >>     }
+   * >> }
+   * >> x(0);
+   */
+  if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
+      goto err;
+  code = ast_multiple(AST_FMULTIPLE_KEEPLAST,0,NULL);
+  if (pneed_semi) *pneed_semi = true;
  }
  if unlikely(!code) goto err_decl;
  result = ast_function(code,current_basescope);
@@ -506,14 +530,13 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
   ast_decref(code);
   code = ast_setddi(result,&arrow_loc);
   if (pneed_semi) *pneed_semi = true;
- } else {
+ } else if (tok == '{') {
   struct ast_loc brace_loc;
   loc_here(&brace_loc);
   old_flags = TPPLexer_Current->l_flags;
   if (parser_flags & PARSE_FLFSTMT)
       TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-  if unlikely(likely(tok == '{') ? (yield() < 0) :
-              WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
+  if unlikely(yield() < 0)
      goto err_flags;
   code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,'}'),&brace_loc);
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -522,6 +545,14 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
               WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
      goto err_xcode;
   if (pneed_semi) *pneed_semi = false;
+ } else {
+  /* Missing function body (this was allowed in deemon 100+, where
+   * this was interpreted the same way an `{ }'-like empty body would
+   * have been) */
+  if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
+      goto err;
+  code = ast_multiple(AST_FMULTIPLE_KEEPLAST,0,NULL);
+  if (pneed_semi) *pneed_semi = true;
  }
  if unlikely(!code) goto err;
  result = ast_function(code,current_basescope);
