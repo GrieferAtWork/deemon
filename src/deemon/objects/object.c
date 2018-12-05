@@ -205,6 +205,7 @@ _Dee_weakref_init(struct weakref *__restrict self,
  ASSERT(ob);
  ASSERT(ob->ob_refcnt);
  ASSERT(IS_ALIGNED((uintptr_t)self,PTRLOCK_LOCK_MASK+1));
+again:
  list = WEAKREFS_GET(ob);
  if unlikely(!WEAKREFS_OK(list,ob))
     return false;
@@ -214,13 +215,17 @@ _Dee_weakref_init(struct weakref *__restrict self,
  self->wr_pself = &list->wl_nodes;
  if (next) {
   ASSERT(next->wr_obj == ob);
-  WEAKREF_LOCK(next);
+  if unlikely(!WEAKREF_TRYLOCK(next)) {
+   UNLOCK_POINTER(list->wl_nodes);
+   SCHED_YIELD();
+   goto again;
+  }
   ASSERT(next->wr_pself == &list->wl_nodes);
   next->wr_pself = &self->wr_next;
   self->wr_next  = next;
   WEAKREF_UNLOCK(next);
  } else {
-  self->wr_next  = NULL;
+  self->wr_next = NULL;
  }
  /* NOTE: This also unlocks the weakref list for writing. */
  ATOMIC_WRITE(list->wl_nodes,self);
@@ -247,11 +252,16 @@ PUBLIC void
  self->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
 #endif
  self->wr_del = other->wr_del;
+again:
  if (other->wr_obj) {
   WEAKREF_LOCK(other);
   COMPILER_READ_BARRIER();
   if likely(other->wr_obj) {
-   LOCK_POINTER(*other->wr_pself);
+   if unlikely(!TRYLOCK_POINTER(*other->wr_pself)) {
+    WEAKREF_UNLOCK(other);
+    SCHED_YIELD();
+    goto again;
+   }
    self->wr_pself  = other->wr_pself;
    self->wr_next   = (struct weakref *)other;
    ((struct weakref *)other)->wr_pself = &self->wr_next;
@@ -289,7 +299,11 @@ again:
   WEAKREF_LOCK(other);
   COMPILER_READ_BARRIER();
   if likely(other->wr_obj) {
-   LOCK_POINTER(*other->wr_pself);
+   if unlikely(!TRYLOCK_POINTER(*other->wr_pself)) {
+    WEAKREF_UNLOCK(other);
+    SCHED_YIELD();
+    goto again;
+   }
    if unlikely(!WEAKREF_TRYLOCK(self)) {
     struct weakref **p = other->wr_pself;
     UNLOCK_POINTER(*other->wr_pself);
@@ -443,6 +457,7 @@ again:
      /* Prevent a deadlock. */
      WEAKREF_UNLOCK(*other->wr_pself);
      WEAKREF_UNLOCK(other);
+     SCHED_YIELD();
      goto again;
     }
     next->wr_pself = &self->wr_next;
@@ -489,6 +504,7 @@ again:
      /* Prevent a deadlock. */
      WEAKREF_UNLOCK(*src->wr_pself);
      WEAKREF_UNLOCK(src);
+     SCHED_YIELD();
      goto again;
     }
     next->wr_pself = &dst->wr_next;
@@ -515,6 +531,7 @@ Dee_weakref_fini(struct weakref *__restrict self) {
 #endif
 again:
  if (self->wr_obj) {
+  DEE_DPRINTF("Dee_weakref_fini(%p)\n",self);
   WEAKREF_LOCK(self);
   COMPILER_READ_BARRIER();
   if likely(self->wr_obj) {
@@ -526,6 +543,7 @@ again:
      /* Prevent a deadlock. */
      WEAKREF_UNLOCK(*self->wr_pself);
      WEAKREF_UNLOCK(self);
+     SCHED_YIELD();
      goto again;
     }
     next->wr_pself = self->wr_pself;
@@ -554,13 +572,18 @@ again:
   COMPILER_READ_BARRIER();
   if (self->wr_obj) {
    struct weakref *next;
-   LOCK_POINTER(*self->wr_pself);
+   if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+    WEAKREF_UNLOCK(self);
+    SCHED_YIELD();
+    goto again;
+   }
    next = (struct weakref *)GET_POINTER(self->wr_next);
    if (next) {
     if unlikely(!WEAKREF_TRYLOCK(next)) {
      /* Prevent a deadlock. */
      WEAKREF_UNLOCK(*self->wr_pself);
      WEAKREF_UNLOCK(self);
+     SCHED_YIELD();
      goto again;
     }
     next->wr_pself = self->wr_pself;
@@ -606,13 +629,18 @@ again:
  } else {
   /* Delete a previously assigned object. */
   if (self->wr_obj) {
-   LOCK_POINTER(*self->wr_pself);
+   if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+    WEAKREF_UNLOCK(self);
+    SCHED_YIELD();
+    goto again;
+   }
    next = (struct weakref *)GET_POINTER(self->wr_next);
    if (next) {
     if unlikely(!WEAKREF_TRYLOCK(next)) {
      /* Prevent a deadlock. */
      WEAKREF_UNLOCK(*self->wr_pself);
      WEAKREF_UNLOCK(self);
+     SCHED_YIELD();
      goto again;
     }
     next->wr_pself = self->wr_pself;
@@ -740,13 +768,18 @@ again:
    } else {
     struct weakref *next;
     /* Delete a previously assigned object. */
-    LOCK_POINTER(*self->wr_pself);
+    if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+     WEAKREF_UNLOCK(self);
+     SCHED_YIELD();
+     goto again;
+    }
     next = (struct weakref *)GET_POINTER(self->wr_next);
     if (next) {
      if unlikely(!WEAKREF_TRYLOCK(next)) {
       /* Prevent a deadlock. */
       WEAKREF_UNLOCK(*self->wr_pself);
       WEAKREF_UNLOCK(self);
+      SCHED_YIELD();
       goto again;
      }
      next->wr_pself = self->wr_pself;
@@ -783,6 +816,7 @@ again:
        /* Prevent a deadlock. */
        WEAKREF_UNLOCK(*self->wr_pself);
        WEAKREF_UNLOCK(self);
+       SCHED_YIELD();
        goto again;
       }
       next->wr_pself = self->wr_pself;
@@ -879,6 +913,7 @@ restart_clear_weakrefs:
     if (!WEAKREF_TRYLOCK(iter)) {
      /* Prevent deadlock. */
      UNLOCK_POINTER(list->wl_nodes);
+     SCHED_YIELD();
      goto restart_clear_weakrefs;
     }
     ASSERT(iter->wr_pself == &list->wl_nodes);
@@ -888,6 +923,7 @@ restart_clear_weakrefs:
       /* Prevent deadlock. */
       WEAKREF_UNLOCK(iter);
       UNLOCK_POINTER(list->wl_nodes);
+      SCHED_YIELD();
       goto restart_clear_weakrefs;
      }
      next->wr_pself = &list->wl_nodes;
@@ -984,12 +1020,14 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref,4),
 PUBLIC void DCALL
 Dee_weakref_support_fini(struct weakref_list *__restrict list) {
  struct weakref *iter,*next;
+ DEE_DPRINTF("Dee_weakref_support_fini(%p)\n",list);
 restart_clear_weakrefs:
  LOCK_POINTER(list->wl_nodes);
  if ((iter = (struct weakref *)GET_POINTER(list->wl_nodes)) != NULL) {
   if (!WEAKREF_TRYLOCK(iter)) {
    /* Prevent deadlock. */
    UNLOCK_POINTER(list->wl_nodes);
+   SCHED_YIELD();
    goto restart_clear_weakrefs;
   }
   ASSERT(iter->wr_pself == &list->wl_nodes);
@@ -999,6 +1037,7 @@ restart_clear_weakrefs:
     /* Prevent deadlock. */
     WEAKREF_UNLOCK(iter);
     UNLOCK_POINTER(list->wl_nodes);
+    SCHED_YIELD();
     goto restart_clear_weakrefs;
    }
    next->wr_pself = &list->wl_nodes;
@@ -1008,6 +1047,7 @@ restart_clear_weakrefs:
    * indicating that the link has been severed. */
   ATOMIC_WRITE(iter->wr_obj,NULL);
   ATOMIC_WRITE(list->wl_nodes,next);
+  DEE_DPRINTF("FINALIZE(%p)\n",iter);
   if (iter->wr_del) {
    (*iter->wr_del)(iter);
   } else {
