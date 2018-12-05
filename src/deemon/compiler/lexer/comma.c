@@ -344,7 +344,7 @@ next_expr:
                                 );
    AST_TAGS_RESTORE_PRINTERS(temp);
   }
-  if unlikely(!current) goto err_decl;
+  if unlikely(!current) goto err;
   /* Pack together the documentation string for the function. */
   if (function_symbol) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
