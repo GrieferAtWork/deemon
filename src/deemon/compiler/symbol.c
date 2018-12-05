@@ -1316,8 +1316,13 @@ seach_single:
     if ((mode&LOOKUP_SYM_ALLOWDECL) && SYMBOL_IS_WEAK(result)) {
      /* Re-declare this symbol. */
      SYMBOL_CLEAR_WEAK(result);
-     if ((mode&LOOKUP_SYM_VGLOBAL) ||
-        ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
+     if (mode & LOOKUP_SYM_FINAL) {
+      result->s_flag |= SYMBOL_FFINAL;
+      if (mode & LOOKUP_SYM_VARYING)
+          result->s_flag |= SYMBOL_FVARYING;
+     }
+     if ((mode & LOOKUP_SYM_VGLOBAL) ||
+        ((mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
           /* Default variable lookup in the root scope creates global variables. */
           current_scope == (DeeScopeObject *)current_rootscope)) {
       result->s_type = SYMBOL_TYPE_GLOBAL;
@@ -1405,6 +1410,11 @@ create_variable:
  result->s_name  = name;
  result->s_scope = current_scope;
  result->s_type  = SYMBOL_TYPE_FWD;
+ if (mode & LOOKUP_SYM_FINAL) {
+  result->s_flag |= SYMBOL_FFINAL;
+  if (mode & LOOKUP_SYM_VARYING)
+      result->s_flag |= SYMBOL_FVARYING;
+ }
  if ((mode&LOOKUP_SYM_VGLOBAL) ||
     ((mode&LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT &&
       /* Default variable lookup in the root scope creates global variables. */

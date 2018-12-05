@@ -1249,7 +1249,7 @@ PRIVATE DREF DeeObject *DCALL
 deq_erase(Deque *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
  size_t index,result; size_t num_items = 1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Id|" DEE_FMT_SIZE_T ":erase",&index,&num_items))
+ if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Id|Iu:erase",&index,&num_items))
      goto err;
  result = Deque_Erase(self,index,num_items);
  if unlikely(result == (size_t)-1)
@@ -1273,7 +1273,7 @@ PRIVATE DREF DeeObject *DCALL
 deq_llrot(Deque *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t num_items;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":llrot",&num_items) ||
+ if (DeeArg_Unpack(argc,argv,"Iu:llrot",&num_items) ||
      Deque_llrot(self,num_items))
      return NULL;
  return_none;
@@ -1282,7 +1282,7 @@ PRIVATE DREF DeeObject *DCALL
 deq_lrrot(Deque *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t num_items;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":lrrot",&num_items) ||
+ if (DeeArg_Unpack(argc,argv,"Iu:lrrot",&num_items) ||
      Deque_lrrot(self,num_items))
      return NULL;
  return_none;
@@ -1291,7 +1291,7 @@ PRIVATE DREF DeeObject *DCALL
 deq_rlrot(Deque *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t num_items;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":rlrot",&num_items) ||
+ if (DeeArg_Unpack(argc,argv,"Iu:rlrot",&num_items) ||
      Deque_rlrot(self,num_items))
      return NULL;
  return_none;
@@ -1300,7 +1300,7 @@ PRIVATE DREF DeeObject *DCALL
 deq_rrrot(Deque *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t num_items;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":rrrot",&num_items) ||
+ if (DeeArg_Unpack(argc,argv,"Iu:rrrot",&num_items) ||
      Deque_rrrot(self,num_items))
      return NULL;
  return_none;

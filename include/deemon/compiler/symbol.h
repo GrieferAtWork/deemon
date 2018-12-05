@@ -539,6 +539,8 @@ struct symbol {
                                     * declarations, or turned into a non-weak symbol if used. */
 #define SYMBOL_FALLOC    0x0002    /* Used during assembly: the symbol has been allocated. */
 #define SYMBOL_FALLOCREF 0x0004    /* A reference ID for the symbol has been allocated. */
+#define SYMBOL_FFINAL    0x0010    /* The variable was declared as `final' */
+#define SYMBOL_FVARYING  0x0020    /* The variable was declared as `varying' */
 #define SYMBOL_FSTACK_NOUNBIND_OK 0x0100 /* FLAG: If the symbol appears in a `del' expression, and `sym_bound' is non-ZERO,
                                           *       still don't warn about the fact that a stack variable isn't being unbound,
                                           *       but is only being overwritten. */
@@ -934,6 +936,9 @@ lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
 #define LOOKUP_SYM_VMASK     0x0003 /* Mask for visibility options. */
 #define LOOKUP_SYM_STATIC    0x0100 /* Create static variables / warn about non-static, existing variables. */
 #define LOOKUP_SYM_STACK     0x0200 /* Create stack variables / warn about non-stack, existing variables. */
+#define LOOKUP_SYM_FINAL     0x0400 /* Create final (write-once) variables. */
+#define LOOKUP_SYM_VARYING   0x0800 /* Create varying variables (when combined with `LOOKUP_SYM_FINAL': don't
+                                     * assume that the value stays the same between multiple invocations). */
 #define LOOKUP_SYM_ALLOWDECL 0x8000 /* Allow declaration of new variables (HINT: Unless set, warn when new variables are created). */
 
 /* Lookup the nth instance of `name' (starting at 1 for the first)

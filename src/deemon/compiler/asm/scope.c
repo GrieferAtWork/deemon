@@ -53,6 +53,10 @@ check_symbol:
  //case SYMBOL_TYPE_MYMOD:
  //case SYMBOL_TYPE_MYFUNC:
  //case SYMBOL_TYPE_THIS:
+  if (sym->s_flag & SYMBOL_FFINAL) {
+   if (ASM_WARN(W_WRITE_TO_FINAL_VARIABLE,sym))
+       goto err;
+  }
   lid = asm_newlocal();
   if unlikely(lid < 0) goto err;
 #if 1

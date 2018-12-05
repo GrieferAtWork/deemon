@@ -47,7 +47,7 @@ PRIVATE int DCALL
 subrangeiterator_init(SubRangeIterator *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
  self->sr_size = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SIZE_T ":_SubRangeIterator",
+ if (DeeArg_Unpack(argc,argv,"o|Iu:_SubRangeIterator",
                   &self->sr_iter,&self->sr_size))
      return -1;
  Dee_Incref(self->sr_iter);

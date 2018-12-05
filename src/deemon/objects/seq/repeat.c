@@ -327,7 +327,7 @@ repeat_ctor(Repeat *__restrict self) {
 PRIVATE int DCALL
 repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":_SeqRepeat",&self->r_seq,&self->r_num))
+ if (DeeArg_Unpack(argc,argv,"oIu:_SeqRepeat",&self->r_seq,&self->r_num))
      return -1;
  if unlikely(!self->r_num) {
   self->r_seq = Dee_EmptySeq;
@@ -785,7 +785,7 @@ repeatitem_ctor(RepeatItem *__restrict self) {
 PRIVATE int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o" DEE_FMT_SIZE_T ":_SeqItemRepeat",&self->ri_obj,&self->ri_num))
+ if (DeeArg_Unpack(argc,argv,"oIu:_SeqItemRepeat",&self->ri_obj,&self->ri_num))
      return -1;
  if unlikely(!self->ri_num) {
   self->ri_obj = Dee_EmptySeq;

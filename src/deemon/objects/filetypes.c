@@ -611,7 +611,7 @@ PRIVATE int DCALL
 reader_init(Reader *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  size_t begin = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":reader",&self->r_owner,&begin,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:reader",&self->r_owner,&begin,&end) ||
      DeeObject_GetBuf(self->r_owner,&self->r_buffer,DEE_BUFFER_FREADONLY))
      return -1;
  /* Truncate the end-pointer. */

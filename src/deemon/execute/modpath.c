@@ -2239,8 +2239,6 @@ DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_
   }
   while (module_pathsize && !ISSEP(module_path[module_pathsize - 1]))
       --module_pathsize;
-  ++module_name;
-  --module_namesize;
  }
 #ifdef CONFIG_HOST_WINDOWS
  if unlikely(module_pathsize < 2 || module_path[1] != ':')

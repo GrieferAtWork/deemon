@@ -1038,6 +1038,9 @@ check_sym_class:
   goto check_sym_class;
 
  case SYMBOL_TYPE_GLOBAL:
+  if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+     return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...' */
+  ATTR_FALLTHROUGH
  case SYMBOL_TYPE_LOCAL:
  case SYMBOL_TYPE_STATIC:
   return true;
@@ -1057,8 +1060,85 @@ check_sym_class:
 }
 
 
-INTERN int (DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
-                                      struct ast *__restrict warn_ast) {
+INTERN int
+(DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
+                           struct ast *__restrict warn_ast) {
+ int32_t symid;
+ ASSERT(sym);
+ (void)warn_ast;
+check_sym_class:
+ ASSERT(!SYMBOL_MUST_REFERENCE(sym));
+ switch (SYMBOL_TYPE(sym)) {
+
+ case SYMBOL_TYPE_ALIAS:
+  sym = SYMBOL_ALIAS(sym);
+  goto check_sym_class;
+
+ case SYMBOL_TYPE_EXTERN:
+  ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY),
+          "Cannot prefix property symbols");
+  symid = asm_esymid(sym);
+  if unlikely(symid < 0) goto err;
+  ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
+  return asm_pextern((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
+
+ case SYMBOL_TYPE_GLOBAL:
+  symid = asm_gsymid(sym);
+  if unlikely(symid < 0) goto err;
+  return asm_pglobal((uint16_t)symid);
+
+ case SYMBOL_TYPE_LOCAL:
+  symid = asm_lsymid(sym);
+  if unlikely(symid < 0) goto err;
+  if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+   if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL,sym))
+       goto err;
+   if (asm_gcheck_final_local_bound((uint16_t)symid))
+       goto err;
+  }
+  return asm_plocal((uint16_t)symid);
+
+ case SYMBOL_TYPE_STATIC:
+  if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+   if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE,sym))
+       goto err;
+  }
+  symid = asm_ssymid(sym);
+  if unlikely(symid < 0) goto err;
+  return asm_pstatic((uint16_t)symid);
+
+ case SYMBOL_TYPE_STACK:
+  if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+   if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE,sym))
+       goto err;
+  }
+  ASSERT(sym->s_flag & SYMBOL_FALLOC);
+  if (current_assembler.a_stackcur <= SYMBOL_STACK_OFFSET(sym)) {
+   /* This can happen in code like this:
+    * __stack local foo;
+    * {
+    *     __stack local bar = "ValueOfBar";
+    *     foo = "ValueOfFoo";
+    * }
+    * print foo; // Error here
+    */
+   ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED,sym);
+   goto err;
+  }
+  return asm_pstack(SYMBOL_STACK_OFFSET(sym));
+
+ default:
+  ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS,sym);
+  goto err;
+ }
+ __builtin_unreachable();
+err:
+ return -1;
+}
+
+INTERN int
+(DCALL asm_gprefix_symbol_for_read)(struct symbol *__restrict sym,
+                                    struct ast *__restrict warn_ast) {
  int32_t symid;
  ASSERT(sym);
  (void)warn_ast;
@@ -1117,7 +1197,6 @@ check_sym_class:
 err:
  return -1;
 }
-
 
 /* Define to generate inline code for testing the binding of a class property.
  * This should be kept disabled, because the generated code is quite excessively
@@ -1353,6 +1432,10 @@ check_sym_class:
    goto check_sym_class;
 
   case SYMBOL_TYPE_GLOBAL:
+   if unlikely(sym->s_flag & SYMBOL_FFINAL) {
+    if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL,sym))
+        goto err;
+   }
    if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
          return 0;
    symid = asm_gsymid(sym);
@@ -1360,6 +1443,10 @@ check_sym_class:
    return asm_gdel_global((uint16_t)symid);
 
   case SYMBOL_TYPE_LOCAL:
+   if unlikely(sym->s_flag & SYMBOL_FFINAL) {
+    if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL,sym))
+        goto err;
+   }
    if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
          return 0;
    symid = asm_lsymid(sym);
@@ -1399,6 +1486,10 @@ check_sym_class:
   } break;
 
   case SYMBOL_TYPE_STACK:
+   if unlikely(sym->s_flag & SYMBOL_FFINAL) {
+    if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL,sym))
+        goto err;
+   }
    /* If `bound()' is used on the symbol, warn about the fact that
     * doing this will not actually unbind the symbol, but only delete
     * the value that was being stored. */
@@ -1567,7 +1658,7 @@ check_sym_class:
 
   case SYMBOL_TYPE_EXTERN:
    ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
-   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags&MODSYM_FREADONLY) {
+   if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FREADONLY) {
     /* ERROR: Can't modify read-only external symbol. */
     if (ASM_WARN(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,sym))
         goto err;
@@ -1586,20 +1677,44 @@ check_sym_class:
   case SYMBOL_TYPE_GLOBAL:
    symid = asm_gsymid(sym);
    if unlikely(symid < 0) goto err;
+   if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+    if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL,sym))
+        goto err;
+    symid = asm_newconst_string(sym->s_name->k_name,
+                                sym->s_name->k_size);
+    /* Must ensure that the write is only written once! */
+    if (asm_gpush_this_module()) goto err; /* value, this_module */
+    if (asm_gswap()) goto err;             /* this_module, value */
+    return asm_gsetattr_const(symid);      /* this_module.<SYMBOL> = value */
+   }
    return asm_gpop_global((uint16_t)symid);
 
   case SYMBOL_TYPE_LOCAL:
    symid = asm_lsymid(sym);
    if unlikely(symid < 0) goto err;
+   if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+    if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL,sym))
+        goto err;
+    if (asm_gcheck_final_local_bound((uint16_t)symid))
+        goto err;
+   }
    return asm_gpop_local((uint16_t)symid);
 
   case SYMBOL_TYPE_STATIC:
    symid = asm_ssymid(sym);
    if unlikely(symid < 0) goto err;
+   if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+    if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE,sym))
+        goto err;
+   }
    return asm_gpop_static((uint16_t)symid);
 
   case SYMBOL_TYPE_STACK:
    ASSERT(current_assembler.a_stackcur);
+   if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+    if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE,sym))
+        goto err;
+   }
    if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
     /* This is where the magic of lazy stack initialization happens! */
     if (current_assembler.a_flag&ASM_FSTACKDISP) {
@@ -1907,6 +2022,59 @@ INTERN int
  /* Fallback: push the argument, then pop it into the symbol. */
  if (asm_gpush_varg(argid)) goto err;
  return asm_gpop_symbol(dst,warn_ast);
+err:
+ return -1;
+}
+
+
+/* Generate code to throw RuntimeError when `lid' is bound at runtime. */
+INTERN int DCALL
+asm_gcheck_final_local_bound(uint16_t lid) {
+ /* >>     push   bound local \lid
+  * >>     jt     1f
+  * >> .pushsection .cold
+  * >>     push   $\lid
+  * >>     push   call extern @deemon:@__roloc, #1
+  * >>     pop
+  * >>     jmp    2f
+  * >> .popsection
+  * >> 2: */
+ struct asm_sym *within_cold;
+ struct asm_sym *after_cold;
+ struct asm_sec *sect;
+ DREF DeeObject *constlid;
+ int32_t temp_id;
+ if (asm_gpush_bnd_local(lid))
+     goto err;
+ within_cold = asm_newsym();
+ if unlikely(!within_cold) goto err;
+ after_cold = asm_newsym();
+ if unlikely(!after_cold) goto err;
+ if (asm_gjmp(ASM_JT,within_cold)) goto err;
+ asm_decsp(); /* Popped by `ASM_JT' */
+ sect = current_assembler.a_curr;
+ if (sect == &current_assembler.a_sect[SECTION_COLD] &&
+     asm_gjmp(ASM_JMP,after_cold)) goto err;
+ current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
+ asm_defsym(within_cold);
+ /* We get here only when the local was already bound. */
+ constlid = DeeInt_NewU16(lid);
+ if unlikely(!constlid) goto err;
+ temp_id = asm_newconst(constlid);
+ Dee_Decref(constlid);
+ if unlikely(temp_id < 0) goto err;
+ if (asm_gpush_const(temp_id)) goto err; /* Push the ID of the faulting local */
+ temp_id = asm_newmodule(DeeModule_GetDeemon());
+ if unlikely(temp_id < 0) goto err;
+ /* Invoke `__roloc from deemon' and let it decide what to do about the error. */
+ if (asm_gcall_extern((uint16_t)temp_id,id___roloc,1)) goto err;
+ if (asm_gpop()) goto err;
+ /* Jump/Switch back to the previous section. */
+ if (sect != &current_assembler.a_sect[SECTION_COLD] &&
+     asm_gjmp(ASM_JMP,after_cold)) goto err;
+ current_assembler.a_curr = sect;
+ asm_defsym(after_cold);
+ return 0;
 err:
  return -1;
 }

@@ -423,32 +423,88 @@ err_unbound_global(DeeModuleObject *__restrict module,
 INTERN ATTR_COLD int DCALL
 err_unbound_local(struct code_object *__restrict code,
                   void *__restrict ip, uint16_t local_index) {
- char const *local_name;
- char const *code_name;
+ char const *code_name = NULL;
+ uint8_t *error;
+ struct ddi_state state;
  ASSERT_OBJECT(code);
  ASSERT(DeeCode_Check(code));
  ASSERT(local_index < code->co_localc);
- code_name = DeeCode_NAME(code);
-#if 1
- local_name = NULL;
- (void)ip;
-#else /* TODO: Use DDI information to lookup the name of the variable. */
- if (local_index >= code->co_ddi->d_nlocals) local_name = NULL;
- else if (*(local_name = DeeDDI_LOCAL_NAME(code->co_ddi,local_index)) == '\0') local_name = NULL;
-#endif
- if (local_name) {
-  return DeeError_Throwf(&DeeError_UnboundLocal,
-                         "Unbound local variable `%s' %s%s",
-                         local_name,
-                         code_name ? " in function " : "",
-                         code_name ? code_name : "");
- } else {
-  return DeeError_Throwf(&DeeError_UnboundLocal,
-                         "Unbound local variable %d%s%s",
-                         local_index,
-                         code_name ? " in function " : "",
-                         code_name ? code_name : "");
+ error = DeeCode_FindDDI((DeeObject *)code,&state,NULL,
+                         (instruction_t *)ip - code->co_code,
+                          DDI_STATE_FNOTHROW);
+ if (DDI_ISOK(error)) {
+  struct ddi_xregs *iter;
+  DDI_STATE_DO(iter,&state) {
+   if (local_index < iter->dx_lcnamc) {
+    char *local_name;
+    if (!code_name)
+         code_name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_base.dr_name);
+    if ((local_name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_lcnamv[local_index])) != NULL) {
+     if (!code_name)
+          code_name = DeeCode_NAME(code);
+     DeeError_Throwf(&DeeError_UnboundLocal,
+                     "Unbound local variable `%s' %s%s",
+                     local_name,
+                     code_name ? " in function " : "",
+                     code_name ? code_name : "");
+     ddi_state_fini(&state);
+     return -1;
+    }
+   }
+  }
+  DDI_STATE_WHILE(iter,&state);
+  ddi_state_fini(&state);
  }
+ if (!code_name)
+      code_name = DeeCode_NAME(code);
+ return DeeError_Throwf(&DeeError_UnboundLocal,
+                        "Unbound local variable %d%s%s",
+                        local_index,
+                        code_name ? " in function " : "",
+                        code_name ? code_name : "");
+}
+INTERN ATTR_COLD int DCALL
+err_readonly_local(struct code_object *__restrict code,
+                   void *__restrict ip, uint16_t local_index) {
+ char const *code_name = NULL;
+ uint8_t *error;
+ struct ddi_state state;
+ ASSERT_OBJECT(code);
+ ASSERT(DeeCode_Check(code));
+ ASSERT(local_index < code->co_localc);
+ error = DeeCode_FindDDI((DeeObject *)code,&state,NULL,
+                         (instruction_t *)ip - code->co_code,
+                          DDI_STATE_FNOTHROW);
+ if (DDI_ISOK(error)) {
+  struct ddi_xregs *iter;
+  DDI_STATE_DO(iter,&state) {
+   if (local_index < iter->dx_lcnamc) {
+    char *local_name;
+    if (!code_name)
+         code_name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_base.dr_name);
+    if ((local_name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_lcnamv[local_index])) != NULL) {
+     if (!code_name)
+          code_name = DeeCode_NAME(code);
+     DeeError_Throwf(&DeeError_RuntimeError,
+                     "Cannot modify read-only local variable `%s' %s%s",
+                     local_name,
+                     code_name ? " in function " : "",
+                     code_name ? code_name : "");
+     ddi_state_fini(&state);
+     return -1;
+    }
+   }
+  }
+  DDI_STATE_WHILE(iter,&state);
+  ddi_state_fini(&state);
+ }
+ if (!code_name)
+      code_name = DeeCode_NAME(code);
+ return DeeError_Throwf(&DeeError_RuntimeError,
+                        "Cannot modify read-only local variable %d%s%s",
+                        local_index,
+                        code_name ? " in function " : "",
+                        code_name ? code_name : "");
 }
 INTERN ATTR_COLD int DCALL
 err_illegal_instruction(struct code_object *__restrict code,

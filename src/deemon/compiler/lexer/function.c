@@ -77,10 +77,25 @@ INTERN int DCALL parse_arglist(void) {
  while (tok > 0 && tok != ')') {
   DREF DeeObject *defl_value;
   bool arg_is_optional = false;
+  uint16_t var_flags = 0;
   /* Special case: The old deemon allowed an ignored `local' before argument names.
    *               Since this doesn't harm anything, we allow doing so
    *               too (despite no longer documenting doing so). */
-  if (tok == KWD_local && yield() < 0) goto err;
+  for (;;) {
+   if (tok == KWD_local);
+   else if (tok == KWD_final) {
+    if (var_flags & LOOKUP_SYM_FINAL &&
+        WARN(W_VARIABLE_MODIFIER_DUPLICATED))
+        goto err;
+    var_flags |= LOOKUP_SYM_FINAL;
+   } else if (tok == KWD_varying) {
+    if (var_flags & LOOKUP_SYM_VARYING &&
+        WARN(W_VARIABLE_MODIFIER_DUPLICATED))
+        goto err;
+    var_flags |= LOOKUP_SYM_VARYING;
+   } else break;
+   if (yield() < 0) goto err;
+  }
   if (tok == '?') {
    /* Found an optional argument! */
    arg_is_optional = true;

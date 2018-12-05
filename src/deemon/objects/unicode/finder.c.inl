@@ -469,7 +469,7 @@ sf_init(StringFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  self->sf_start = 0;
  self->sf_end   = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":_StringFind",
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:_StringFind",
                   &self->sf_str,&self->sf_needle,
                   &self->sf_start,&self->sf_end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->sf_str,&DeeString_Type) ||

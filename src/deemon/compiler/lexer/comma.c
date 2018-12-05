@@ -124,6 +124,20 @@ ast_parse_lookup_mode(unsigned int *__restrict pmode) {
 next_modifier:
  switch (tok) {
 
+ case KWD_final:
+  if (*pmode & LOOKUP_SYM_FINAL &&
+      WARN(W_VARIABLE_MODIFIER_DUPLICATED))
+      goto err;
+  *pmode |= LOOKUP_SYM_FINAL;
+  goto continue_modifier;
+
+ case KWD_varying:
+  if (*pmode & LOOKUP_SYM_VARYING &&
+      WARN(W_VARIABLE_MODIFIER_DUPLICATED))
+      goto err;
+  *pmode |= LOOKUP_SYM_VARYING;
+  goto continue_modifier;
+
  case KWD_local:
   if (*pmode & LOOKUP_SYM_VLOCAL &&
       WARN(W_VARIABLE_MODIFIER_DUPLICATED))
@@ -181,6 +195,10 @@ continue_modifier:
 
  default: break;
  }
+ if ((*pmode & (LOOKUP_SYM_VARYING | LOOKUP_SYM_FINAL)) == LOOKUP_SYM_VARYING) {
+  if (WARN(W_VARYING_WITHOUT_FINAL))
+      goto err;
+ }
  return 0;
 err:
  return -1;
@@ -218,8 +236,8 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
  if (mode&AST_COMMA_ALLOWVARDECLS &&
      ast_parse_lookup_mode(&lookup_mode))
      goto err;
- /* TODO: Allow `final' variable declarations.
-  * >> global final foo = 42;
+ /* Allow `final' variable declarations.
+  * >> final global foo = 42;
   * A variable declared as `final' can only be assigned once during its life-time,
   * with any attempt to assign another value after that point resulting in an Error
   * being thrown.
@@ -261,21 +279,17 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
 next_expr:
  need_semi = !!(mode&AST_COMMA_PARSESEMI);
  /* Parse an expression (special handling for functions/classes) */
- if (tok == KWD_final || tok == KWD_class) {
+ if (tok == KWD_class) {
   /* Declare a new class */
   uint16_t class_flags = current_tags.at_class_flags & 0xf; /* From tags. */
   struct TPPKeyword *class_name = NULL;
   unsigned int symbol_mode = lookup_mode;
-  if (tok == KWD_final) {
-   class_flags |= TP_FFINAL;
-   if unlikely(yield() < 0) goto err;
-   if (unlikely(tok != KWD_class) &&
-       WARN(W_EXPECTED_CLASS_AFTER_FINAL))
-       goto err;
-  }
+  if (symbol_mode & LOOKUP_SYM_FINAL)
+      class_flags |= TP_FFINAL;
+  symbol_mode &= ~(LOOKUP_SYM_FINAL | LOOKUP_SYM_VARYING);
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
-  if (tok == KWD_class && !(class_flags & TP_FFINAL)) {
+  if (tok == KWD_final && !(class_flags & TP_FFINAL)) {
    class_flags |= TP_FFINAL;
    if unlikely(yield() < 0) goto err;
   }
@@ -413,6 +427,11 @@ next_expr:
     /* Create a new symbol for the initialized variable. */
     var_symbol = new_local_symbol(token.t_kwd,NULL);
     if unlikely(!var_symbol) goto err_current;
+    if (lookup_mode & LOOKUP_SYM_FINAL) {
+     var_symbol->s_flag |= SYMBOL_FFINAL;
+     if (lookup_mode & LOOKUP_SYM_VARYING)
+         var_symbol->s_flag |= SYMBOL_FVARYING;
+    }
     if (lookup_mode & LOOKUP_SYM_STATIC) {
      var_symbol->s_type = SYMBOL_TYPE_STATIC;
     } else if (lookup_mode & LOOKUP_SYM_STACK) {

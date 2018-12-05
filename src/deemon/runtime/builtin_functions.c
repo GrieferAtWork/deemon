@@ -527,7 +527,7 @@ f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
  DeeThreadObject *ts;
  size_t argc_cur,argc_min = 0,argc_max;
  char *function_name = NULL;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":__badcall",&argc_max))
+ if (DeeArg_Unpack(argc,argv,"Iu:__badcall",&argc_max))
      goto done;
  ts = DeeThread_Self();
  argc_cur = argc_max;
@@ -547,6 +547,27 @@ done:
  return NULL;
 }
 INTERN DEFINE_CMETHOD(rt_badcall,&f_rt_badcall);
+
+
+PRIVATE DREF DeeObject *DCALL
+f_rt_roloc(size_t argc, DeeObject **__restrict argv) {
+ DeeThreadObject *ts; uint16_t lid;
+ if (DeeArg_Unpack(argc,argv,"I16u:__roloc",&lid))
+     goto done;
+ ts = DeeThread_Self();
+ if likely(ts->t_execsz) {
+  struct code_frame *frame = ts->t_exec;
+  DeeCodeObject *code = frame->cf_func->fo_code;
+  err_readonly_local(code,frame->cf_ip,lid);
+ } else {
+  DeeError_Throwf(&DeeError_RuntimeError,
+                  "Cannot modify read-only local variable %I16u",
+                  lid);
+ }
+done:
+ return NULL;
+}
+INTERN DEFINE_CMETHOD(rt_roloc,&f_rt_roloc);
 
 
 

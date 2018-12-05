@@ -150,6 +150,7 @@ INTDEF DeeCMethodObject rt_grosr;
 INTDEF DeeCMethodObject rt_gaosa;
 INTDEF DeeCMethodObject rt_assert;
 INTDEF DeeCMethodObject rt_badcall;
+INTDEF DeeCMethodObject rt_roloc;
 INTDEF DeeCMethodObject builtin_hasattr;
 INTDEF DeeCMethodObject builtin_hasitem;
 INTDEF DeeCMethodObject builtin_boundattr;
@@ -232,6 +233,7 @@ BUILTIN_REUSE(__neosb,&rt_neosb,MODSYM_FREADONLY|MODSYM_FHIDDEN)
 BUILTIN_REUSE(__giosi,&rt_giosi,MODSYM_FREADONLY|MODSYM_FHIDDEN)
 BUILTIN_REUSE(__grosr,&rt_grosr,MODSYM_FREADONLY|MODSYM_FHIDDEN)
 BUILTIN_REUSE(__gaosa,&rt_gaosa,MODSYM_FREADONLY|MODSYM_FHIDDEN)
+BUILTIN(__roloc,&rt_roloc,MODSYM_FREADONLY|MODSYM_FHIDDEN)
 
 /* Used to implement the `assert' keyword.
  * NOTE: This function is not marked as read-only,

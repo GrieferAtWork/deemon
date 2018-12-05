@@ -2006,7 +2006,7 @@ asm_do_gjcc(struct ast *__restrict cond,
  instruction_t *data;
  struct asm_rel *rel;
  ASSERT(instr == ASM_JT || instr == ASM_JF);
- if (cond->a_type != AST_SYM || !asm_can_prefix_symbol(cond->a_sym)) {
+ if (cond->a_type != AST_SYM || !asm_can_prefix_symbol_for_read(cond->a_sym)) {
   if (ast_genasm(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL))
       goto err;
   if (asm_putddi(ddi_ast)) goto err;
@@ -2018,7 +2018,7 @@ asm_do_gjcc(struct ast *__restrict cond,
  if unlikely((rel = asm_allocrel()) == NULL) goto err;
  /* Emit the symbol prefix. */
  if (asm_putddi(ddi_ast)) goto err;
- if (asm_gprefix_symbol(cond->a_sym,cond)) goto err;
+ if (asm_gprefix_symbol_for_read(cond->a_sym,cond)) goto err;
  rel->ar_sym = target,++target->as_used;
  /* Let's get big-code assembly mode out of the way! */
  if unlikely(current_assembler.a_flag&ASM_FBIGCODE) {
@@ -2255,6 +2255,63 @@ err:
 }
 
 
+PRIVATE int DCALL check_resize_constants(void) {
+ /* Allocate more buffer memory when nothing is left. */
+ ASSERT(current_assembler.a_constc <= current_assembler.a_consta);
+ if (current_assembler.a_constc == current_assembler.a_consta) {
+  uint16_t new_consta = current_assembler.a_consta * 2;
+  DREF DeeObject **new_vector;
+  if (!new_consta) new_consta = 1;
+  if unlikely(new_consta < current_assembler.a_constc) {
+   new_consta = current_assembler.a_constc+1;
+   if unlikely(new_consta < current_assembler.a_constc) {
+    return DeeError_Throwf(&DeeError_CompilerError,
+                           "Too many constant variables");
+   }
+  }
+do_realloc:
+  new_vector = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_constv,
+                                                 new_consta*sizeof(DREF DeeObject *));
+  if unlikely(!new_vector) {
+   if (new_consta != current_assembler.a_constc+1) {
+    new_consta = current_assembler.a_constc+1;
+    goto do_realloc;
+   }
+   if (Dee_CollectMemory(new_consta*sizeof(DREF DeeObject *)))
+       goto do_realloc;
+   return -1;
+  }
+  current_assembler.a_constv = new_vector;
+  current_assembler.a_consta = new_consta;
+ }
+ return 0;
+}
+
+
+INTERN int32_t DCALL
+asm_newconst_string(char const *__restrict str, size_t len) {
+ uint16_t result;
+ DREF DeeObject *value;
+ if (!(current_assembler.a_flag & ASM_FNOREUSECONST)) {
+  for (result = 0; result < current_assembler.a_constc; ++result) {
+   DeeObject *ob = current_assembler.a_constv[result];
+   if (!DeeString_Check(ob)) continue;
+   if (DeeString_SIZE(ob) != len) continue;
+   if (memcmp(DeeString_STR(ob),str,len * sizeof(char)) != 0) continue;
+   return result; /* Found it! */
+  }
+ }
+ if unlikely(check_resize_constants())
+    goto err;
+ value = DeeString_NewSized(str,len);
+ if unlikely(!value) goto err;
+ result = current_assembler.a_constc;
+ current_assembler.a_constv[current_assembler.a_constc++] = value; /* Inherit reference. */
+ return result;
+err:
+ return -1;
+}
+
 INTERN int32_t DCALL
 asm_newconst(DeeObject *__restrict constvalue) {
  int32_t result; DREF DeeObject **iter,**end,*elem;
@@ -2275,38 +2332,8 @@ asm_newconst(DeeObject *__restrict constvalue) {
    }
   }
  }
-
- /* Allocate more buffer memory when nothing is left. */
- ASSERT(current_assembler.a_constc <=
-        current_assembler.a_consta);
- if (current_assembler.a_constc ==
-     current_assembler.a_consta) {
-  uint16_t new_consta = current_assembler.a_consta * 2;
-  DREF DeeObject **new_vector;
-  if (!new_consta) new_consta = 1;
-  if unlikely(new_consta < current_assembler.a_constc) {
-   new_consta = current_assembler.a_constc+1;
-   if unlikely(new_consta < current_assembler.a_constc) {
-    DeeError_Throwf(&DeeError_CompilerError,
-                    "Too many constant variables");
+ if unlikely(check_resize_constants())
     return -1;
-   }
-  }
-do_realloc:
-  new_vector = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_constv,
-                                                 new_consta*sizeof(DREF DeeObject *));
-  if unlikely(!new_vector) {
-   if (new_consta != current_assembler.a_constc+1) {
-    new_consta = current_assembler.a_constc+1;
-    goto do_realloc;
-   }
-   if (Dee_CollectMemory(new_consta*sizeof(DREF DeeObject *)))
-       goto do_realloc;
-   return -1;
-  }
-  current_assembler.a_constv = new_vector;
-  current_assembler.a_consta = new_consta;
- }
  result = current_assembler.a_constc;
  current_assembler.a_constv[current_assembler.a_constc++] = constvalue;
  Dee_Incref(constvalue);
@@ -2355,35 +2382,23 @@ do_realloc:
  return result;
 }
 
-INTERN int32_t DCALL asm_newlocal(void) {
- uint8_t *iter,*end,temp; uint16_t result;
- if (!(current_assembler.a_flag&ASM_FREUSELOC)) {
-  if unlikely(current_assembler.a_localc == UINT16_MAX)
-     goto err_too_many_locals;
-  return current_assembler.a_localc++;
- }
- /* Search for unused local variable indices. */
- end = (iter = current_assembler.a_localuse)+
-             ((current_assembler.a_localc+7)/8);
- for (; iter != end; ++iter) {
-  if (*iter == 0xff) continue;
-  /* We might have got something here... */
-  temp   = *iter;
-  result = (uint16_t)(iter-current_assembler.a_localuse)*8;
-  while (temp & 1) ++result,temp >>= 1;
-  if (result < current_assembler.a_localc) {
-   /* Yes! reuse this one. */
-   *iter |= (1 << (result % 8));
-   goto end;
-  }
-  break;
- }
+PRIVATE ATTR_COLD int DCALL err_too_many_locals(void) {
+ return DeeError_Throwf(&DeeError_CompilerError,
+                        "Too many local variables");
+}
+
+
+INTERN int32_t DCALL asm_newlocal_noreuse(void) {
+ uint16_t result;
  /* Allocate a new local variable and mark is as in-use. */
- result = current_assembler.a_localc++;
+ result = current_assembler.a_localc;
  if unlikely(result == UINT16_MAX)
-    goto err_too_many_locals;
+    return err_too_many_locals();
+ ++current_assembler.a_localc;
  if (result/8 >= current_assembler.a_locala) {
   uint8_t *new_bitset; uint16_t new_size;
+  if unlikely(!(current_assembler.a_flag & ASM_FREUSELOC))
+     goto end;
   /* Must extend the in-use bitset. */
   new_size = (current_assembler.a_locala*3)/2;
   if (!new_size) new_size = 1;
@@ -2402,10 +2417,33 @@ do_realloc:
  current_assembler.a_localuse[result / 8] |= 1 << (result % 8);
 end:
  return (int32_t)result;
-err_too_many_locals:
- DeeError_Throwf(&DeeError_CompilerError,
-                 "Too many local variables");
- return -1;
+}
+
+INTERN int32_t DCALL asm_newlocal(void) {
+ uint8_t *iter,*end,temp; uint16_t result;
+ if (!(current_assembler.a_flag&ASM_FREUSELOC)) {
+  if unlikely(current_assembler.a_localc == UINT16_MAX)
+     return err_too_many_locals();
+  return current_assembler.a_localc++;
+ }
+ /* Search for unused local variable indices. */
+ end = (iter = current_assembler.a_localuse)+
+             ((current_assembler.a_localc+7)/8);
+ for (; iter != end; ++iter) {
+  if (*iter == 0xff) continue;
+  /* We might have got something here... */
+  temp   = *iter;
+  result = (uint16_t)(iter-current_assembler.a_localuse)*8;
+  while (temp & 1) ++result,temp >>= 1;
+  if (result < current_assembler.a_localc) {
+   /* Yes! reuse this one. */
+   *iter |= (1 << (result % 8));
+   return (int32_t)result;
+  }
+  break;
+ }
+ /* Allocate a new local variable and mark is as in-use. */
+ return asm_newlocal_noreuse();
 }
 
 INTERN void DCALL asm_dellocal(uint16_t index) {
@@ -2500,6 +2538,7 @@ asm_gsymid(struct symbol *__restrict sym) {
     iter->ss_flags |= MODSYM_FDOCOBJ;
     Dee_Incref(sym->s_global.g_doc);
    }
+   iter->ss_flags &= ~(MODSYM_FCONSTEXPR);
    return result;
   }
  }
@@ -2539,6 +2578,11 @@ asm_gsymid(struct symbol *__restrict sym) {
   }
   iter->ss_hash  = name_hash;
   iter->ss_index = result;
+  if (sym->s_flag & SYMBOL_FFINAL) {
+   iter->ss_flags |= MODSYM_FREADONLY;
+   if (!(sym->s_flag & SYMBOL_FVARYING))
+       iter->ss_flags |= MODSYM_FCONSTEXPR;
+  }
   break;
  }
  /* Increment to indicate that this index has now bee taken up. */
@@ -2561,8 +2605,15 @@ asm_lsymid(struct symbol *__restrict sym) {
  ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
  if (sym->s_flag & SYMBOL_FALLOC)
      return sym->s_symid;
- /* Allocate a new local variable index for the given symbol. */
- new_index = asm_newlocal();
+ if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
+  /* Must ensure that variable doesn't share its storage location, so
+   * we can safely generate binding checks to ensure that it doesn't
+   * get re-assigned accidentally. */
+  new_index = asm_newlocal_noreuse();
+ } else {
+  /* Allocate a new local variable index for the given symbol. */
+  new_index = asm_newlocal();
+ }
  if unlikely(new_index < 0) goto end;
  ASSERT(new_index <= UINT16_MAX);
  sym->s_symid = (uint16_t)new_index;
@@ -2923,6 +2974,10 @@ do_savearg:
     if (asm_gmov_varg(sym,argid,code_ast,true)) goto err;
    } else if (sym->s_nwrite != 0) {
     /* Must convert this one into a local variable. */
+    if (sym->s_flag & SYMBOL_FFINAL) {
+     if (ASM_WARN(W_WRITE_TO_FINAL_VARIABLE,sym))
+         goto err;
+    }
     sym->s_type  = SYMBOL_TYPE_LOCAL;
     sym->s_flag &= ~SYMBOL_FALLOC;
     goto do_savearg;

@@ -761,10 +761,16 @@ libdisasm_printlocal(dformatprinter printer, void *arg,
                      DeeCodeObject *code, unsigned int flags) {
  if (code) {
   /* Use DDI information to lookup the name of the variable. */
-  if (ddi && lid < ddi->rs_xregs.dx_lcnamc) {
-   char *name;
-   if ((name = DeeCode_GetDDIString((DeeObject *)code,ddi->rs_xregs.dx_lcnamv[lid])) != NULL)
-        return DeeFormat_Printf(printer,arg,"local " PREFIX_VARNAME "%s",name);
+  if (ddi) {
+   struct ddi_xregs *iter;
+   DDI_STATE_DO(iter,ddi) {
+    if (lid < iter->dx_lcnamc) {
+     char *name;
+     if ((name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_lcnamv[lid])) != NULL)
+          return DeeFormat_Printf(printer,arg,"local " PREFIX_VARNAME "%s",name);
+    }
+   }
+   DDI_STATE_WHILE(iter,ddi);
   } 
   if (lid >= code->co_localc) {
    if (flags & PCODE_FNOBADCOMMENT)
@@ -780,18 +786,24 @@ libdisasm_printstack(dformatprinter printer, void *arg,
                      uint16_t soff, bool is_prefix, struct ddi_state *ddi,
                      DeeCodeObject *code, unsigned int flags) {
  if (code) {
+  if (ddi) {
+   /* Use DDI information to lookup the name of the variable. */
+   struct ddi_xregs *iter;
+   DDI_STATE_DO(iter,ddi) {
+    if (soff < MIN(iter->dx_base.dr_usp,iter->dx_spnama)) {
+     char *name;
+     if ((name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_spnamv[soff])) != NULL)
+          return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
+    }
+   }
+   DDI_STATE_WHILE(iter,ddi);
+  } 
   if (soff >= DeeCode_StackDepth(code)) {
    if (flags & PCODE_FNOBADCOMMENT)
        goto print_generic;
    return DeeFormat_Printf(printer,arg,"%s%I16u /* invalid stack-offset */",
                            is_prefix ? "stack #" : "#",soff);
   }
-  /* Use DDI information to lookup the name of the variable. */
-  if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama)) {
-   char *name;
-   if ((name = DeeCode_GetDDIString((DeeObject *)code,ddi->rs_xregs.dx_spnamv[soff])) != NULL)
-        return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
-  } 
  }
 print_generic:
  return DeeFormat_Printf(printer,arg,"%s%I16u",
@@ -814,15 +826,20 @@ print_generic:
   if (soff >= DeeCode_StackDepth(code))
       goto invalid_offset;
   /* Use DDI information to lookup the name of the variable. */
-  if (ddi && soff < MIN(ddi->rs_xregs.dx_base.dr_usp,ddi->rs_xregs.dx_spnama)) {
-   char *name = DeeCode_GetDDIString((DeeObject *)code,
-                                      ddi->rs_xregs.dx_spnamv[soff]);
-   if (name) {
-    if (!(flags & PCODE_FALTCOMMENT))
-        return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
-    return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
-                            name,soff,sp_sub);
+  if (ddi) {
+   struct ddi_xregs *iter;
+   DDI_STATE_DO(iter,ddi) {
+    if (soff < MIN(iter->dx_base.dr_usp,iter->dx_spnama)) {
+     char *name;
+     if ((name = DeeCode_GetDDIString((DeeObject *)code,iter->dx_spnamv[soff])) != NULL) {
+      if (!(flags & PCODE_FALTCOMMENT))
+          return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s",name);
+      return DeeFormat_Printf(printer,arg,"stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
+                              name,soff,sp_sub);
+     }
+    }
    }
+   DDI_STATE_WHILE(iter,ddi);
   } 
  }
  if (!(flags & PCODE_FALTCOMMENT))

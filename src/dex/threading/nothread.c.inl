@@ -47,7 +47,7 @@ PRIVATE int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  self->sem_count = 0;
- return DeeArg_Unpack(argc,argv,"|" DEE_FMT_SIZE_T ":semaphore",&self->sem_count);
+ return DeeArg_Unpack(argc,argv,"|Iu:semaphore",&self->sem_count);
 }
 PRIVATE int DCALL
 sema_enter(Semaphore *__restrict self) {
@@ -102,7 +102,7 @@ PRIVATE DREF DeeObject *DCALL
 sema_post(Semaphore *__restrict self, size_t argc,
           DeeObject **__restrict argv) {
  size_t count = 1;
- if (DeeArg_Unpack(argc,argv,"|" DEE_FMT_SIZE_T ":post",&count) ||
+ if (DeeArg_Unpack(argc,argv,"|Iu:post",&count) ||
      sema_leave(self,count))
      return NULL;
  return_none;

@@ -475,7 +475,8 @@ PRIVATE int DCALL
 nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  if (error_try_init((DeeErrorObject *)self,argc,argv)) goto done;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":NoMemory",&self->nm_allocsize))
+ self->nm_allocsize = 1;
+ if (DeeArg_Unpack(argc,argv,"|Iu:NoMemory",&self->nm_allocsize))
      return -1;
 done:
  return 0;

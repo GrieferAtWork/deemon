@@ -351,7 +351,7 @@ PRIVATE int DCALL
 bf_init(BytesFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|" DEE_FMT_SSIZE_T DEE_FMT_SSIZE_T ":_BytesFind",
+ if (DeeArg_Unpack(argc,argv,"oo|IdId:_BytesFind",
                   &self->bf_bytes,&self->bf_other,
                   &start,&end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->bf_bytes,&DeeBytes_Type) ||

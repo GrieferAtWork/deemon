@@ -869,7 +869,7 @@ tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
  self->ti_index = 0;
- if (DeeArg_Unpack(argc,argv,"|o" DEE_FMT_SIZE_T ":_TupleIterator",
+ if (DeeArg_Unpack(argc,argv,"|oIu:_TupleIterator",
                     &self->ti_tuple,&self->ti_index))
      goto err;
  if (DeeObject_AssertTypeExact(self->ti_tuple,&DeeTuple_Type))

@@ -170,6 +170,8 @@ done:
  return self;
 }
 
+
+
 INTERN void DCALL
 ast_incwrite(struct ast *__restrict self) {
  switch (self->a_type) {

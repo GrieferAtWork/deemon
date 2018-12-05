@@ -42,6 +42,7 @@ DEF_K(operator)
     ((x) >= KWD_none && (x) <= KWD_operator)
 
 DEF_K(final)
+DEF_K(varying)
 DEF_K(class)
 DEF_K(this)
 DEF_K(super)
@@ -214,6 +215,7 @@ DEF_M_IF(__POSIX__,HAS(EXT_SYSTEM_MACROS))
 
 
 WGROUP(WG_SYMBOL,"symbol",WSTATE_FATAL)
+WGROUP(WG_READONLY,"readonly",WSTATE_FATAL)
 WGROUP(WG_RESERVED,"reserved",WSTATE_FATAL)
 WGROUP(WG_CONST,"const",WSTATE_FATAL)
 WGROUP(WG_D200,"d200",WSTATE_FATAL)
@@ -299,6 +301,7 @@ DEF_WARNING(W_EXPECTED_RPAREN_AFTER_FOR,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected
 DEF_WARNING(W_EXPECTED_COLLON_AFTER_FOREACH,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `:' after `foreach', but got " TOK_S,TOK_A))
 DEF_WARNING(W_VARIABLE_MODIFIER_DUPLICATED,(WG_SYNTAX),WSTATE_ERROR,WARNF("The variable modifier " TOK_S " has already been used",TOK_A))
 DEF_WARNING(W_VARIABLE_MODIFIER_INCOMPATIBLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Variable modifier " TOK_S " is incompatible with `%s'",TOK_A,ARG(char *)))
+DEF_WARNING(W_VARYING_WITHOUT_FINAL,(WG_SYNTAX),WSTATE_ERROR,WARNF("`varying' used without `final'"))
 DEF_WARNING(W_EXPECTED_CLASS_AFTER_FINAL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `class' after `final', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_LBRACE_AFTER_CLASS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `{' after `class', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_CLASS,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after `class', but got " TOK_S,TOK_A))
@@ -406,7 +409,6 @@ DEF_WARNING(W_UNKNOWN_VARIABLE,(WG_SYMBOL),WSTATE_ERROR,WARNF("Unknown variable 
 DEF_WARNING(W_VARIABLE_ALREADY_EXISTS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Local variable `%s' already exists",KWDNAME()))
 DEF_WARNING(W_DECLARING_GLOBAL_IN_NONROOT,(WG_SYMBOL),WSTATE_WARN,WARNF("Declaring global variable `%s' outside of the root scope",KWDNAME()))
 DEF_WARNING(W_DECLARING_IMPLICIT_VARIABLE,(WG_SYMBOL),WSTATE_WARN,{ char *s = KWDNAME(); WARNF("Implicitly declaring `%s' as a local variable. Write `local %s' if this is intended",s,s); })
-
 DEF_WARNING(W_INVALID_NAME_FOR_MODULE_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ void *a = ARG(void *); size_t b = ARG(size_t); WARNF("Cannot import module %r: %$q is not a valid variable name",a,b,ARG(void *)); })
 DEF_WARNING(W_INVALID_NAME_FOR_IMPORT_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ void *a = ARG(void *); size_t b = ARG(size_t); WARNF("Cannot import symbol %r: %$q is not a valid variable name",a,b,ARG(void *)); })
 DEF_WARNING(W_IMPORT_ALIAS_IS_ALREADY_DEFINED,(WG_SYMBOL),WSTATE_ERROR,WARNF("A symbol with the imported name `%s' has already been defined",KWDNAME()))
@@ -433,10 +435,13 @@ DEF_WARNING(W_NO_D200_OLD_USER_CLASS,(WG_SYMBOL),WSTATE_ERROR,WARNF("Module `d20
 
 DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED,(WG_SYMBOL),WSTATE_WARN,WARNF("Comparing compiler-generated constants with `===' or `!==' produces undefined results"))
 
+DEF_WARNING(W_WRITE_TO_FINAL_VARIABLE,(WG_READONLY),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to variable `%s' declared as final",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 DEF_WARNING(W_SYMBOL_TYPE_DECLARATION_CHANGED,(WG_SYNTAX),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Type declaration for symbol `%s' differs from previous definition",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,(WG_SYNTAX),WSTATE_ERROR,{ char *name = ARG(char *); WARNF("Unknown attribute `%s' of constant expressions `%r'",name,ARG(DeeObject *)); })
 #endif
+
 
 
 #ifdef CONFIG_LANGUAGE_NO_ASM
@@ -535,6 +540,9 @@ DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE,(WG_SYMBOL),WSTATE_E
 DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND,(WG_SYMBOL),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to symbol `%s' of class `%s'",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot modify read-only external symbol `%s from %k'",SYMBOL_EXTERN_SYMBOL(sym)->ss_name,SYMBOL_EXTERN_MODULE(sym)->mo_name); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_MULTIPLE_WRITES_TO_FINAL,(WG_READONLY),WSTATE_DISABLED,{ struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final variable `%s' generate additional checks",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_UNBIND_FINAL_SYMBOL,(WG_READONLY),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot delete final variable `%s'",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE,(WG_READONLY),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final symbol `%s' of type `%s' cannot be handled",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
 
 WARNING_NAMESPACE(WN_ASSEMBLER_LABLES,8120)
 DEF_WARNING(W_ASM_LABEL_ALREADY_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Label `%s' has already been defined",ARG(char *)))

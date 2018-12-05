@@ -77,6 +77,7 @@ INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size_minmax(DeeObject *__rest
                                                                size_t need_size_min, size_t need_size_max);
 INTDEF ATTR_COLD int DCALL err_unbound_global(struct module_object *__restrict module, uint16_t global_index);
 INTDEF ATTR_COLD int DCALL err_unbound_local(struct code_object *__restrict code, void *__restrict ip, uint16_t local_index);
+INTDEF ATTR_COLD int DCALL err_readonly_local(struct code_object *__restrict code, void *__restrict ip, uint16_t local_index);
 INTDEF ATTR_COLD int DCALL err_illegal_instruction(struct code_object *__restrict code, void *__restrict ip);
 INTDEF ATTR_COLD int DCALL err_requires_class(DeeTypeObject *__restrict tp_self);
 INTDEF ATTR_COLD int DCALL err_invalid_class_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);

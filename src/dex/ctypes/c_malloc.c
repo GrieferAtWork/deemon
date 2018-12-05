@@ -47,7 +47,7 @@ err:
 INTERN DREF DeeObject *DCALL
 capi_malloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result; size_t num_bytes;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":malloc",&num_bytes))
+ if (DeeArg_Unpack(argc,argv,"Iu:malloc",&num_bytes))
      goto err;
  ptr = Dee_Malloc(num_bytes);
  if unlikely(!ptr) goto err;
@@ -88,7 +88,7 @@ INTERN DREF DeeObject *DCALL
 capi_calloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result;
  size_t count,num_bytes = 1,total;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T "|" DEE_FMT_SIZE_T ":calloc",&count,&num_bytes))
+ if (DeeArg_Unpack(argc,argv,"Iu|Iu:calloc",&count,&num_bytes))
      goto err;
  total = count * num_bytes;
  /* Check for allocation overflow. */
@@ -113,7 +113,7 @@ err:
 INTERN DREF DeeObject *DCALL
 capi_trymalloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result; size_t num_bytes;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":trymalloc",&num_bytes))
+ if (DeeArg_Unpack(argc,argv,"Iu:trymalloc",&num_bytes))
      goto err;
  ptr = Dee_TryMalloc(num_bytes);
  result = DeePointer_NewVoid(ptr);
@@ -154,7 +154,7 @@ INTERN DREF DeeObject *DCALL
 capi_trycalloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result;
  size_t count,num_bytes = 1,total;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T "|" DEE_FMT_SIZE_T ":trycalloc",&count,&num_bytes))
+ if (DeeArg_Unpack(argc,argv,"Iu|Iu:trycalloc",&count,&num_bytes))
      goto err;
  total = count * num_bytes;
  /* Check for allocation overflow. */

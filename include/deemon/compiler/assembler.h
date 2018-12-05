@@ -1000,6 +1000,7 @@ INTDEF int DCALL asm_gpush_stk(struct asm_sym *__restrict sym); /* SP */
  * of the constant variable, its index is returned instead.
  * NOTE: The return type is 32-bits to allow for -1 to be returned on error. */
 INTDEF int32_t DCALL asm_newconst(DeeObject *__restrict constvalue);
+INTDEF int32_t DCALL asm_newconst_string(char const *__restrict str, size_t len);
 /* Check if a given constant value can safely appear in constant variable slots.
  * If this is not the case, `asm_gpush_constexpr' should be used to automatically
  * generate code capable of pushing the given value onto the stack. */
@@ -1013,6 +1014,7 @@ INTDEF int32_t DCALL asm_newstatic(DeeObject *__restrict initializer, struct sym
 
 /* Allocate a new local variable index. */
 INTDEF int32_t DCALL asm_newlocal(void);
+INTDEF int32_t DCALL asm_newlocal_noreuse(void);
 
 /* Mark a given local variable as no longer being in use.
  * Once this is done, later calls to `asm_newlocal()' are allowed
@@ -1491,6 +1493,7 @@ INTDEF int DCALL asm_gpush_constexpr(DeeObject *__restrict value);
 INTDEF int DCALL asm_gpush_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gcall_symbol_n(struct symbol *__restrict function, uint8_t argc, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF int DCALL asm_gprefix_symbol_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF bool DCALL asm_can_prefix_symbol(struct symbol *__restrict sym);
 INTDEF bool DCALL asm_can_prefix_symbol_for_read(struct symbol *__restrict sym);
 INTDEF int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
@@ -1571,6 +1574,10 @@ asm_gstore_constexpr(struct ast *__restrict dst, DeeObject *__restrict src,
 INTDEF int DCALL asm_gunpack_expr(struct ast *__restrict src,
                                   uint16_t num_targets,
                                   struct ast *__restrict ddi_ast);
+
+/* Generate code to throw RuntimeError when `lid' is bound at runtime. */
+INTDEF int DCALL asm_gcheck_final_local_bound(uint16_t lid);
+
 
 /* Generate attribute-, item- and range-store operations. */
 INTDEF int DCALL
@@ -1963,6 +1970,7 @@ INTDEF int (DCALL asm_genassert)(struct ast *__restrict expr,
 #define asm_gpush_constexpr(value)                      __builtin_expect(asm_gpush_constexpr(value),0)
 #define asm_gpush_symbol(sym,warn_ast)                  __builtin_expect(asm_gpush_symbol(sym,warn_ast),0)
 #define asm_gprefix_symbol(sym,warn_ast)                __builtin_expect(asm_gprefix_symbol(sym,warn_ast),0)
+#define asm_gprefix_symbol_for_read(sym,warn_ast)       __builtin_expect(asm_gprefix_symbol_for_read(sym,warn_ast),0)
 #define asm_gpush_bnd_symbol(sym,warn_ast)              __builtin_expect(asm_gpush_bnd_symbol(sym,warn_ast),0)
 #define asm_gdel_symbol(sym,warn_ast)                   __builtin_expect(asm_gdel_symbol(sym,warn_ast),0)
 #define asm_gpop_symbol(sym,warn_ast)                   __builtin_expect(asm_gpop_symbol(sym,warn_ast),0)

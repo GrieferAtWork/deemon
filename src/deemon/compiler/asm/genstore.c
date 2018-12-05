@@ -953,7 +953,7 @@ asm_gunpack_expr(struct ast *__restrict src,
   if (asm_can_prefix_symbol_for_read(sym)) {
    /* The unpack instructions can make use of an object prefix. */
    if (asm_putddi(ddi_ast)) goto err;
-   if (asm_gprefix_symbol(sym,src)) goto err;
+   if (asm_gprefix_symbol_for_read(sym,src)) goto err;
    return asm_gunpack_p(num_targets);
   }
  }
@@ -1302,7 +1302,7 @@ check_dst_sym_class_hybrid:
      symid = asm_gsymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
+     if (asm_gprefix_symbol_for_read(src->a_sym,src)) goto err;
      return asm_gpop_global_p((uint16_t)symid);
 
     case SYMBOL_TYPE_LOCAL:
@@ -1310,7 +1310,7 @@ check_dst_sym_class_hybrid:
      symid = asm_lsymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
+     if (asm_gprefix_symbol_for_read(src->a_sym,src)) goto err;
      return asm_gpop_local_p((uint16_t)symid);
 
     case SYMBOL_TYPE_STATIC:
@@ -1318,7 +1318,7 @@ check_dst_sym_class_hybrid:
      symid = asm_ssymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
+     if (asm_gprefix_symbol_for_read(src->a_sym,src)) goto err;
      return asm_gpop_static_p((uint16_t)symid);
 
     case SYMBOL_TYPE_EXTERN:
@@ -1328,14 +1328,14 @@ check_dst_sym_class_hybrid:
      symid = asm_esymid(dst_sym);
      if unlikely(symid < 0) goto err;
      if (asm_putddi(dst)) goto err;
-     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
+     if (asm_gprefix_symbol_for_read(src->a_sym,src)) goto err;
      return asm_gpop_extern_p((uint16_t)symid,SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_index);
 
     case SYMBOL_TYPE_STACK:
      if (!(dst_sym->s_flag & SYMBOL_FALLOC))
            break;
      if (asm_putddi(ddi_ast)) goto err;
-     if (asm_gprefix_symbol(src->a_sym,src)) goto err;
+     if (asm_gprefix_symbol_for_read(src->a_sym,src)) goto err;
      if (SYMBOL_STACK_OFFSET(dst_sym) == current_assembler.a_stackcur-1) {
       /* mov top, PREFIX */
       return asm_gpop_p();

@@ -622,7 +622,7 @@ done_push_none:
              asm_can_prefix_symbol_for_read(self->a_return->a_sym)) {
    if (asm_putddi(self)) goto err;
    if (asm_gunwind()) goto err;
-   if (asm_gprefix_symbol(self->a_return->a_sym,self->a_return)) goto err;
+   if (asm_gprefix_symbol_for_read(self->a_return->a_sym,self->a_return)) goto err;
    if (asm_gret_p()) goto err;
   } else {
    if (ast_genasm(self->a_return,ASM_G_FPUSHRES)) goto err;
@@ -649,7 +649,7 @@ done_fake_none:
   } else if (self->a_yield->a_type == AST_SYM &&
              asm_can_prefix_symbol_for_read(self->a_yield->a_sym)) {
    if (asm_putddi(self)) goto err;
-   if (asm_gprefix_symbol(self->a_yield->a_sym,self->a_yield)) goto err;
+   if (asm_gprefix_symbol_for_read(self->a_yield->a_sym,self->a_yield)) goto err;
    if (asm_gyield_p()) goto err;
   } else {
    if (ast_genasm(self->a_yield,ASM_G_FPUSHRES) ||
@@ -665,7 +665,7 @@ done_fake_none:
   } else if (self->a_throw->a_type == AST_SYM &&
              asm_can_prefix_symbol_for_read(self->a_throw->a_sym)) {
    if (asm_putddi(self)) goto err;
-   if (asm_gprefix_symbol(self->a_throw->a_sym,self->a_throw)) goto err;
+   if (asm_gprefix_symbol_for_read(self->a_throw->a_sym,self->a_throw)) goto err;
    if (asm_gthrow_p()) goto err;
   } else {
    if (ast_genasm(self->a_throw,ASM_G_FPUSHRES) ||
