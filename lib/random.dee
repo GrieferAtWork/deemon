@@ -1,0 +1,111 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+import * from errors;
+
+local rand_map = {
+	0x11e0ebcc,0xa914eba6,0xe400e438,0xa6c4a4df,
+	0x0da46171,0x4b9a27d1,0x201910ae,0x95e213cb,
+	0xd5ce0943,0x00005fdc,0x0319257d,0x09280b06,
+	0x1148c0a6,0x07a24139,0x021214a6,0x03221af8
+};
+
+class Random {
+
+	static final member m_random_tls;
+
+	@@Returns a lazily initialized, thread-local random generator
+	static final property current: Random = {
+		get(): Random {
+			if (m_random_tls !is bound)
+				m_random_tls = import("threading").Tls(Random);
+			return m_random_tls.value;
+		}
+	}
+
+	@@Deprecated alias for #current
+	static final function thread_local(): Random {
+		return current;
+	}
+
+	@@The current Pseudo-RNG seed
+	public final member seed: int;
+
+	this(seed: int = none) {
+		if (seed !is none)
+			this.seed = seed;
+		else {
+			randomize();
+		}
+	}
+
+	@@Re-initializes the seed to an unpredictable value
+	public final function randomize() {
+		// Since time.now() returns the current time with microsecond precision,
+		// it should be pretty much impossible to predict its value.
+		this.seed = (int)import("time").now() & 0xffffffff;
+		// By looking at the most random part of the timestamp, selectively
+		// distribute the randomness across the entire seed, thus preventing
+		// the first value that's going to be generated from being predictable.
+		for (none: [:this.seed & 7])
+			rand32();
+	}
+
+
+	@@Return a 32-bit unsigned integer populated entirely with speudo-random bits.
+	public final function rand32(): int {
+		local new_seed,result = seed;
+		new_seed = (((result + 7) << 1) / 3);
+		new_seed = new_seed ^ rand_map[(new_seed >> (new_seed & 7)) % #rand_map];
+		seed = new_seed & 0xffffffff;
+		return result;
+	}
+
+	@@Generate a random value of type @T
+	public final function next(T: type_) {
+		if (T === int)
+			return rand32();
+		throw TypeError("Cannot generate random data of type " + T);
+	}
+
+	@@Alias for #next
+	operator () (T: type_) {
+		return next(T);
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -153,6 +153,7 @@ local function __ctypes_new(tp) {
 #endif
 #define __static_if(x)     if(x)
 #define __static_else      else
+#define __static_elif      elif
 #define __if_true          if(true)
 #define __if_false         if(false)
 
@@ -163,10 +164,28 @@ local function __ctypes_new(tp) {
 #define __looponce{...} do { __VA_ARGS__ } while (0)
 #define __loopever      for (;;)
 #define __loopnone      while (0)
+#define __foreach       foreach
 
 /* Delete some keywords that got removed. */
-#define const     /* nothing */
-#define constexpr /* nothing */
+#define forward      /* nothing */
+#define __scope(n)   /* nothing */
+#define alias        /* nothing */
+#define const        /* nothing */
+#define __const      /* nothing */
+#define __const__    /* nothing */
+#define volatile     /* nothing */
+#define __volatile   /* nothing */
+#define __volatile__ /* nothing */
+#define constexpr    /* nothing */
+#define atomic       /* nothing */
+#define _Atomic      /* nothing */
+
+// XXX: extern
+// XXX: typedef
+// XXX: struct
+// XXX: union
+// XXX: enum
+
 
 #if 1 /* This allows `static if' to be compiled correctly, however it
        * also causes static variable declaration to be impossible... */
@@ -190,8 +209,11 @@ from ctypes import
 	_Bool = bool, signed = int, unsigned = uint, char = char, short = short,
 	long = long, double = double, int8_t = int8_t, int16_t = int16_t,
 	int32_t = int32_t, int64_t = int64_t, uint8_t = uint8_t, uint16_t = uint16_t,
-	uint32_t = uint32_t, uint64_t = uint64_t
+	uint32_t = uint32_t, uint64_t = uint64_t, char16_t = char16_t, char32_t = char32_t,
+	__signed = int, __signed__ = int, __unsigned = uint, __unsigned__ = uint
 ;
+#define long /* Delete to fix stuff such as `long double' */
+
 
 
 /* Enable some preprocessor extensions for better legacy support. */

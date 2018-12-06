@@ -3118,7 +3118,10 @@ err_unknown_attribute:
 						 * between stuff like `dict.c:keys' and `dict.i:keys' */
 						object = deemon.type_.getinstanceattr(parob,fixed_attribute_name);
 					} else {
-						object = parob.operator . (fixed_attribute_name);
+						try {
+							object = parob.operator . (fixed_attribute_name);
+						} catch (Error.AttributeError) {
+						}
 					}
 				}
 			} else if (my_attr.isinstance) {
