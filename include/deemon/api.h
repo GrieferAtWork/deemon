@@ -102,6 +102,12 @@ DECL_BEGIN
 #endif
 
 
+/* Disable the assembly interpreter, as it hasn't been updated to accept the
+ * new instructions that were added to support keyword arguments, or the change
+ * that split varargs from the regular argument id-namespace. */
+#undef CONFIG_HAVE_EXEC_ASM
+
+
 #ifdef CONFIG_TRACE_REFCHANGES
 /* Assembly interpreters do not implement the additional
  * overhead required to properly track reference counts.
