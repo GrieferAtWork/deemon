@@ -2958,22 +2958,19 @@ print_function_atargs(struct ast *__restrict self,
      DO(print_code_tags(function_scope,printer,arg));
  PRINT("(");
  for (i = 0; i < function_scope->bs_argc; ++i) {
+  struct symbol *arg = function_scope->bs_argv[i];
   if (i != 0) PRINT(", ");
-  print(function_scope->bs_argv[i]->s_name->k_name,
-        function_scope->bs_argv[i]->s_name->k_size);
-  if (DeeBaseScope_IsArgOptional(function_scope,i)) {
-   PRINT("?");
-  } else if (DeeBaseScope_IsArgDefault(function_scope,i)) {
-   printf(" = %r",function_scope->bs_default[i - function_scope->bs_argc_min]);
+  if (arg == function_scope->bs_varkwds)
+      PRINT("**");
+  print(arg->s_name->k_name,arg->s_name->k_size);
+  if (arg == function_scope->bs_varargs) {
+   PRINT("...");
+  } else if (arg == function_scope->bs_varkwds) {
+  } else if (i >= function_scope->bs_argc_min && i < function_scope->bs_argc_max) {
+   DeeObject *defl = function_scope->bs_default[i - function_scope->bs_argc_min];
+   if (defl) printf(" = %r",defl);
+   else PRINT("?");
   }
- }
- if (function_scope->bs_flags & CODE_FVARARGS) {
-  if (function_scope->bs_argc) PRINT(", ");
-  if (function_scope->bs_varargs) {
-   print(function_scope->bs_varargs->s_name->k_name,
-         function_scope->bs_varargs->s_name->k_size);
-  }
-  PRINT("...");
  }
  PRINT(") ");
  DO(print_ast_code(self->a_function.f_code,printer,arg,false,self->a_scope,indent));

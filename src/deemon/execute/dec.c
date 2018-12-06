@@ -2083,7 +2083,7 @@ DecFile_LoadCode(DecFile *__restrict self,
   uint8_t *def_reader = self->df_base + header.co_defaultoff;
   if unlikely(def_reader >= end) GOTO_CORRUPTED(reader,corrupt_r);
   /* Default default object vector. */
-  defv = DecFile_LoadObjectVector(self,&defaultc,&def_reader,false);
+  defv = DecFile_LoadObjectVector(self,&defaultc,&def_reader,true);
   if unlikely(!ITER_ISOK(defv)) { if (!defv) goto err_r; goto corrupt_r; }
   result->co_defaultv = defv;
   if unlikely(defaultc+result->co_argc_max < defaultc) {
@@ -2308,8 +2308,7 @@ err_r_default:
  ASSERT(result->co_argc_max >= result->co_argc_min);
  while (result->co_argc_max != result->co_argc_min) {
   --result->co_argc_max;
-  Dee_Decref(result->co_defaultv[result->co_argc_max-
-                                 result->co_argc_min]);
+  Dee_XDecref(result->co_defaultv[result->co_argc_max-result->co_argc_min]);
  }
  Dee_Free((void *)result->co_defaultv);
 err_r:
@@ -2335,8 +2334,7 @@ corrupt_r_default:
  ASSERT(result->co_argc_max >= result->co_argc_min);
  while (result->co_argc_max != result->co_argc_min) {
   --result->co_argc_max;
-  Dee_Decref(result->co_defaultv[result->co_argc_max-
-                                 result->co_argc_min]);
+  Dee_XDecref(result->co_defaultv[result->co_argc_max-result->co_argc_min]);
  }
  Dee_Free((void *)result->co_defaultv);
 corrupt_r:

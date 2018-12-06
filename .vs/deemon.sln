@@ -90,6 +90,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{2360741E-FB4
 		..\lib\doc.dee = ..\lib\doc.dee
 		..\lib\functools.dee = ..\lib\functools.dee
 		..\lib\operators.dee = ..\lib\operators.dee
+		..\lib\random.dee = ..\lib\random.dee
 		..\lib\thread_util.dee = ..\lib\thread_util.dee
 		..\lib\util.dee = ..\lib\util.dee
 	EndProjectSection

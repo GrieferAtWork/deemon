@@ -901,6 +901,12 @@
     <None Include="..\src\deemon\runtime\slab-impl.c.inl">
       <Filter>src\deemon\runtime</Filter>
     </None>
+    <None Include="..\src\deemon\execute\code-invoke.c.inl">
+      <Filter>src\deemon\execute</Filter>
+    </None>
+    <None Include="..\src\deemon\execute\code-invoke-kw.c.inl">
+      <Filter>src\deemon\execute</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

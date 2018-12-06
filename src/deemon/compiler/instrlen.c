@@ -131,11 +131,11 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0x05 */ 1, /* `ASM_SETRET':                  `setret pop' */
     /* 0x06 */ 1, /* `ASM_ENDCATCH':                `end catch' */
     /* 0x07 */ 1, /* `ASM_ENDFINALLY':              `end finally' */
-    /* 0x08 */ 1, /* --- */
-    /* 0x09 */ 1, /* --- */
+    /* 0x08 */ 3, /* `ASM_CALL_KW':                 `call top, #<imm8>, const <imm8>' */
+    /* 0x09 */ 2, /* `ASM_CALL_TUPLE_KW':           `call top, pop..., const <imm8>' */
     /* 0x0a */ 1, /* --- */
-    /* 0x0b */ 3, /* `ASM_CALL_KW':                 `call top, #<imm8>, const <imm8>' */
-    /* 0x0c */ 2, /* `ASM_CALL_TUPLE_KW':           `call top, pop..., const <imm8>' */
+    /* 0x0b */ 1, /* --- */
+    /* 0x0c */ 2, /* `ASM_PUSH_BND_ARG':            `push bound arg <imm8>' */
     /* 0x0d */ 3, /* `ASM_PUSH_BND_EXTERN':         `push bound extern <imm8>:<imm8>' */
     /* 0x0e */ 2, /* `ASM_PUSH_BND_GLOBAL':         `push bound global <imm8>' */
     /* 0x0f */ 2, /* `ASM_PUSH_BND_LOCAL':          `push bound local <imm8>' */
@@ -177,8 +177,8 @@ PRIVATE uint8_t const intr_len[256] = {
     /* 0x33 */ 1, /* `ASM_PUSH_NONE':               `push none' */
     /* 0x34 */ 1, /* --- */
     /* 0x35 */ 1, /* --- */
-    /* 0x36 */ 1, /* --- */
-    /* 0x37 */ 1, /* --- */
+    /* 0x36 */ 1, /* `ASM_PUSH_VARARGS':            `push varargs' */
+    /* 0x37 */ 1, /* `ASM_PUSH_VARKWDS':            `push varkwds' */
     /* 0x38 */ 2, /* `ASM_PUSH_MODULE':             `push module <imm8>' */
     /* 0x39 */ 2, /* `ASM_PUSH_ARG':                `push arg <imm8>' */
     /* 0x3a */ 2, /* `ASM_PUSH_CONST':              `push const <imm8>' */
@@ -389,14 +389,14 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0x05 */ 2, /* --- */
     /* 0x06 */ 3, /* `ASM_ENDCATCH_N':              `end catch, #<imm8>+1' */
     /* 0x07 */ 3, /* `ASM_ENDFINALLY_N':            `end finally, #<imm8>+1' */
-    /* 0x08 */ 2, /* --- */
-    /* 0x09 */ 2, /* --- */
+    /* 0x08 */ 5, /* `ASM16_CALL_KW':               `call top, #<imm8>, const <imm16>' */
+    /* 0x09 */ 4, /* `ASM16_CALL_TUPLE_KW':         `call top, pop..., const <imm16>' */
     /* 0x0a */ 2, /* --- */
-    /* 0x0b */ 5, /* `ASM16_CALL_KW':               `call top, #<imm8>, const <imm16>' */
-    /* 0x0c */ 4, /* `ASM16_CALL_TUPLE_KW':         `call top, pop..., const <imm16>' */
-    /* 0x0d */ 6, /* `ASM16_PUSH_BND_EXTERN':       `push bnd extern <imm16>:<imm16>' */
-    /* 0x0e */ 4, /* `ASM16_PUSH_BND_GLOBAL':       `push bnd global <imm16>' */
-    /* 0x0f */ 4, /* `ASM16_PUSH_BND_LOCAL':        `push bnd local <imm16>' */
+    /* 0x0b */ 2, /* --- */
+    /* 0x0c */ 4, /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm8>' */
+    /* 0x0d */ 6, /* `ASM16_PUSH_BND_EXTERN':       `push bound extern <imm16>:<imm16>' */
+    /* 0x0e */ 4, /* `ASM16_PUSH_BND_GLOBAL':       `push bound global <imm16>' */
+    /* 0x0f */ 4, /* `ASM16_PUSH_BND_LOCAL':        `push bound local <imm16>' */
     /* 0x10 */ 2, /* --- */
     /* 0x11 */ 2, /* --- */
     /* 0x12 */ 2, /* --- */
@@ -548,7 +548,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0xa4 */ 5, /* `ASM_RANGE_0_I32':             `push range $0, $<imm32>' */
     /* 0xa5 */ 2, /* --- */
     /* 0xa6 */ 3, /* `ASM_VARARGS_UNPACK':          `unpack varargs, #<imm8>' */
-    /* 0xa7 */ 4, /* `ASM_CALL_ARGSFWD':            `call top, arg <imm8>, arg <imm8>' */
+    /* 0xa7 */ 2, /* --- */
     /* 0xa8 */ 2, /* --- */
     /* 0xa9 */ 4, /* `ASM16_FPRINT_C':              `print top, const <imm16>' */
     /* 0xaa */ 4, /* `ASM16_FPRINT_C_SP':           `print top, const <imm16>, sp' */
@@ -647,11 +647,11 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0x05 */ STACK_EFFECT(1,0),  /* `ASM_SETRET':                  `setret pop' */
     /* 0x06 */ STACK_EFFECT(0,0),  /* `ASM_ENDCATCH':                `end catch' */
     /* 0x07 */ STACK_EFFECT(0,0),  /* `ASM_ENDFINALLY':              `end finally' */
-    /* 0x08 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x09 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x08 */ STACK_EFFECT_UNDEF, /* `ASM_CALL_KW':                 `call top, #<imm8>, const <imm8>' */
+    /* 0x09 */ STACK_EFFECT(2,1),  /* `ASM_CALL_TUPLE_KW':           `call top, pop..., const <imm8>' */
     /* 0x0a */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x0b */ STACK_EFFECT_UNDEF, /* `ASM_CALL_KW':                 `call top, #<imm8>, const <imm8>' */
-    /* 0x0c */ STACK_EFFECT(2,1),  /* `ASM_CALL_TUPLE_KW':           `call top, pop..., const <imm8>' */
+    /* 0x0b */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x0c */ STACK_EFFECT(0,1),  /* `ASM_PUSH_BND_ARG':            `push bound arg <imm8>' */
     /* 0x0d */ STACK_EFFECT(0,1),  /* `ASM_PUSH_BND_EXTERN':         `push bound extern <imm8>:<imm8>' */
     /* 0x0e */ STACK_EFFECT(0,1),  /* `ASM_PUSH_BND_GLOBAL':         `push bound global <imm8>' */
     /* 0x0f */ STACK_EFFECT(0,1),  /* `ASM_PUSH_BND_LOCAL':          `push bound local <imm8>' */
@@ -693,8 +693,8 @@ PRIVATE uint8_t const stack_effect[256] = {
     /* 0x33 */ STACK_EFFECT(0,1),  /* `ASM_PUSH_NONE':               `push none' */
     /* 0x34 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x35 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x36 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x37 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x36 */ STACK_EFFECT(0,1),  /* `ASM_PUSH_VARARGS':            `push varargs' */
+    /* 0x37 */ STACK_EFFECT(0,1),  /* `ASM_PUSH_VARKWDS':            `push varkwds' */
     /* 0x38 */ STACK_EFFECT(0,1),  /* `ASM_PUSH_MODULE':             `push module <imm8>' */
     /* 0x39 */ STACK_EFFECT(0,1),  /* `ASM_PUSH_ARG':                `push arg <imm8>' */
     /* 0x3a */ STACK_EFFECT(0,1),  /* `ASM_PUSH_CONST':              `push const <imm8>' */
@@ -905,14 +905,14 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0x05 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x06 */ STACK_EFFECT(0,0),  /* `ASM_ENDCATCH_N':              `end catch, #<imm8>+1' */
     /* 0x07 */ STACK_EFFECT(0,0),  /* `ASM_ENDFINALLY_N':            `end finally, #<imm8>+1' */
-    /* 0x08 */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x09 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x08 */ STACK_EFFECT_UNDEF, /* `ASM16_CALL_KW':               `call top, #<imm8>, const <imm16>' */
+    /* 0x09 */ STACK_EFFECT(2,1),  /* `ASM16_CALL_TUPLE_KW':         `call top, pop..., const <imm16>' */
     /* 0x0a */ STACK_EFFECT_UNDEF, /* --- */
-    /* 0x0b */ STACK_EFFECT_UNDEF, /* `ASM16_CALL_KW':               `call top, #<imm8>, const <imm16>' */
-    /* 0x0c */ STACK_EFFECT(2,1),  /* `ASM16_CALL_TUPLE_KW':         `call top, pop..., const <imm16>' */
-    /* 0x0d */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_EXTERN':       `push bnd extern <imm16>:<imm16>' */
-    /* 0x0e */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_GLOBAL':       `push bnd global <imm16>' */
-    /* 0x0f */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_LOCAL':        `push bnd local <imm16>' */
+    /* 0x0b */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0x0c */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm8>' */
+    /* 0x0d */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_EXTERN':       `push bound extern <imm16>:<imm16>' */
+    /* 0x0e */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_GLOBAL':       `push bound global <imm16>' */
+    /* 0x0f */ STACK_EFFECT(0,1),  /* `ASM16_PUSH_BND_LOCAL':        `push bound local <imm16>' */
     /* 0x10 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x11 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0x12 */ STACK_EFFECT_UNDEF, /* --- */
@@ -1064,7 +1064,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0xa4 */ STACK_EFFECT(0,1),  /* `ASM_RANGE_0_I32':             `push range $0, $<imm32>' */
     /* 0xa5 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xa6 */ STACK_EFFECT_UNDEF, /* `ASM_VARARGS_UNPACK':          `unpack varargs, #<imm8>' */
-    /* 0xa7 */ STACK_EFFECT(1,1),  /* `ASM_CALL_ARGSFWD':            `call top, arg <imm8>, arg <imm8>' */
+    /* 0xa7 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xa8 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xa9 */ STACK_EFFECT(1,1),  /* `ASM16_FPRINT_C':              `print top, const <imm16>' */
     /* 0xaa */ STACK_EFFECT(1,1),  /* `ASM16_FPRINT_C_SP':           `print top, const <imm16>, sp' */

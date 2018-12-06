@@ -134,6 +134,7 @@ for (local x: names) {
 #define MOVE            OPERAND_CLASS_MOVE
 #define DEFAULT         OPERAND_CLASS_DEFAULT
 #define VARARGS         OPERAND_CLASS_VARARGS
+#define VARKWDS         OPERAND_CLASS_VARKWDS
 #define POP_DOTS        OPERAND_CLASS_POP_DOTS
 #define SPPOP           OPERAND_CLASS_SPPOP
 #define SPADDIMM_EQ_N2  OPERAND_CLASS_SPADDIMM_EQ_N2
@@ -302,7 +303,6 @@ INSTR("call",(
     O3(ASM_CALL_KW,        FSTKABS|FF0,      (TOP)(SPIMM8)(CONST))		  /* call top, #imm8, const <imm8/16> */
     O3(ASM_CALL_TUPLE_KW,  FF0,              (TOP)(POP|FDOTSFLAG)(CONST)) /* call top, pop..., const <imm8/16> */
     O3(ASM_CALL_TUPLE_KWDS,FNORMAL,          (TOP)(POP|FDOTSFLAG)(POP))	  /* call top, pop..., pop */
-    O3(ASM_CALL_ARGSFWD,   FNORMAL,          (TOP)(ARG)(ARG))			  /* call top, arg <imm8>, arg <imm8> */
 ))
 
 /* CONSTRAINTS: `op <ps>, ..., ...' */
@@ -438,6 +438,8 @@ INSTR("push",(
     O1(ASM_PUSH_THIS,         FPREFIX,                  (THIS))
     O1(ASM_PUSH_THIS_MODULE,  FPREFIX,                  (THIS_MODULE))
     O1(ASM_PUSH_THIS_FUNCTION,FPREFIX,                  (THIS_FUNCTION))
+    O1(ASM_PUSH_VARARGS,      FNORMAL,                  (VARARGS))
+    O1(ASM_PUSH_VARKWDS,      FNORMAL,                  (VARKWDS))
     O1(ASM_PUSH_REF,          FPREFIX|FF0,              (REF))
     O1(ASM_PUSH_ARG,          FPREFIX|FF0,              (ARG))
     O1(ASM_PUSH_CONST,        FPREFIX|FF0,              (CONST))
@@ -1065,6 +1067,8 @@ INSTR("mov",(
     O2(ASM_PUSH_THIS_MODULE,  FNORMAL,(PREFIX)(THIS_MODULE))      /* mov PREFIX, this_module */
     O2(ASM_PUSH_THIS_FUNCTION,FNORMAL,(PREFIX)(THIS_FUNCTION))    /* mov PREFIX, this_function */
     O2(ASM_PUSH_REF,          FF0,    (PREFIX)(REF))              /* mov PREFIX, ref <imm8/16> */
+    O2(ASM_PUSH_VARARGS,      FNORMAL,(PREFIX)(VARARGS))          /* mov PREFIX, varargs */
+    O2(ASM_PUSH_VARKWDS,      FNORMAL,(PREFIX)(VARKWDS))          /* mov PREFIX, varkwds */
     O2(ASM_PUSH_ARG,          FF0,    (PREFIX)(ARG))              /* mov PREFIX, arg <imm8/16> */
     O2(ASM_PUSH_CONST,        FF0,    (PREFIX)(CONST))            /* mov PREFIX, const <imm8/16> */
     O2(ASM_PUSH_STATIC,       FF0,    (PREFIX)(STATIC))           /* mov PREFIX, static <imm8/16> */
@@ -1145,6 +1149,7 @@ for (local x: names) {
 #undef SPADDIMM_EQ_N2
 #undef SPPOP
 #undef POP_DOTS
+#undef VARKWDS
 #undef VARARGS
 #undef DEFAULT
 #undef MOVE

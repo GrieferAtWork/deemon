@@ -941,11 +941,7 @@ asm_gunpack_expr(struct ast *__restrict src,
  if (src->a_type == AST_SYM) {
   struct symbol *sym = src->a_sym;
   SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-  if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
-     (current_basescope->bs_flags & CODE_FVARARGS) &&
-     !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
-     !DeeBaseScope_HasOptional(current_basescope) &&
-      DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) {
+  if (DeeBaseScope_IsVarargs(current_basescope,sym)) {
    /* Unpack the varargs argument. */
    if (asm_putddi(ddi_ast)) goto err;
    return asm_gvarargs_unpack(num_targets);
@@ -1040,10 +1036,12 @@ check_src_sym_class:
 
  case SYMBOL_TYPE_ARG:
   /* mov PREFIX, arg <imm8/16> */
-  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,src_sym->s_symid))
-       break; /* Can only be used for required, or default arguments. */
   if (asm_putddi(dst_ast)) goto err;
   if (asm_gprefix_symbol(dst_sym,dst_ast)) goto err;
+  if (DeeBaseScope_IsVarargs(current_basescope,src_sym))
+      return asm_gpush_varargs_p();
+  if (DeeBaseScope_IsVarkwds(current_basescope,src_sym))
+      return asm_gpush_varkwds_p();
   return asm_gpush_arg_p(src_sym->s_symid);
 
  case SYMBOL_TYPE_GLOBAL:

@@ -142,9 +142,12 @@ ast_predict_type(struct ast *__restrict self) {
     * >>     pop  local @x
     */
    bscope = self->a_scope->s_base;
-   if (bscope->bs_flags & CODE_FVARARGS &&
-       DeeBaseScope_IsArgVarArgs(bscope,sym->s_symid))
+   if (DeeBaseScope_IsVarargs(bscope,sym))
        return &DeeTuple_Type;
+#if 0 /* Not necessarily... */
+   if (DeeBaseScope_IsVarkwds(bscope,sym))
+       return &DeeMapping_Type; /* {(string,object)...} */
+#endif
   } break;
   default: break;
   }
@@ -776,7 +779,9 @@ ast_is_nothrow(struct ast *__restrict self, bool result_used) {
     * if it is, it gets turned into a local variable, which _can_
     * cause exceptions when accessed. */
    if (SYMBOL_NWRITE(sym) == 0 &&
-       DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->s_symid))
+      (sym->s_symid < current_basescope->bs_argc_min ||
+      (sym->s_symid < current_basescope->bs_argc_max &&
+       current_basescope->bs_default[sym->s_symid - current_basescope->bs_argc_min])))
        goto is_nothrow;
    break;
 

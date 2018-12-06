@@ -300,6 +300,8 @@ ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(
     </None>
     <None Include="..\src\deemon\execute\code-exec-targets.c.inl" />
     <None Include="..\src\deemon\execute\code-exec.c.inl" />
+    <None Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
+    <None Include="..\src\deemon\execute\code-invoke.c.inl" />
     <None Include="..\src\deemon\objects\float-print.c.inl" />
     <None Include="..\src\deemon\objects\unicode\bytes_finder.c.inl" />
     <None Include="..\src\deemon\objects\unicode\bytes_functions.c.inl" />

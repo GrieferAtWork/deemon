@@ -1287,7 +1287,7 @@ DeeArg_GetKw(size_t *__restrict pargc,
  if (DeeKwds_Check(kw)) {
   size_t num_keywords;
   num_keywords = DeeKwds_SIZE(kw);
-  if (num_keywords > *pargc) {
+  if unlikely(num_keywords > *pargc) {
    /* Argument list is too short of the given keywords */
    err_keywords_bad_for_argc(*pargc,num_keywords);
    return NULL;
@@ -1324,13 +1324,13 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
  if (DeeKwds_Check(kw)) {
   size_t kw_index;
   size_t num_keywords = DeeKwds_SIZE(kw);
-  if (num_keywords > argc) {
+  if unlikely(num_keywords > argc) {
    /* Argument list is too short of the given keywords */
    err_keywords_bad_for_argc(argc,num_keywords);
    return NULL;
   }
   kw_index = kwds_findstr((Kwds *)kw,name,hash);
-  if (kw_index == (size_t)-1) {
+  if unlikely(kw_index == (size_t)-1) {
    err_keywords_not_found(name);
    return NULL;
   }
@@ -1349,13 +1349,13 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
  if (DeeKwds_Check(kw)) {
   size_t kw_index;
   size_t num_keywords = DeeKwds_SIZE(kw);
-  if (num_keywords > argc) {
+  if unlikely(num_keywords > argc) {
    /* Argument list is too short of the given keywords */
    err_keywords_bad_for_argc(argc,num_keywords);
    return NULL;
   }
   kw_index = kwds_findstr_len((Kwds *)kw,name,namelen,hash);
-  if (kw_index == (size_t)-1) {
+  if unlikely(kw_index == (size_t)-1) {
    err_keywords_not_found(name);
    return NULL;
   }
@@ -1379,8 +1379,8 @@ return_def:
  if (DeeKwds_Check(kw)) {
   size_t kw_index;
   size_t num_keywords = DeeKwds_SIZE(kw);
-  if (num_keywords > argc)
-      goto return_def;
+  if unlikely(num_keywords > argc)
+     goto return_def;
   kw_index = kwds_findstr((Kwds *)kw,name,hash);
   if (kw_index == (size_t)-1)
       goto return_def;

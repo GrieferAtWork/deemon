@@ -945,17 +945,11 @@ PUBLIC int
      if (*format == '|') { ++format; argc_max += count_unpack_args((char const **)&format); }
      if (*format == ':') ++format;
      else format = NULL;
-     if (argc_min == argc_max) {
-      return DeeError_Throwf(&DeeError_TypeError,
-                             "Missing argument %s in call to function%s%s expecting %Iu arguments when %Iu w%s given",
-                             kwlist->k_name,format ? " " : "",format ? format : "",
-                             argc_min,argc,argc == 1 ? "as" : "ere");
-     } else {
-      return DeeError_Throwf(&DeeError_TypeError,
-                             "Missing argument %s in call to function%s%s expecting between %Iu and %Iu arguments when %Iu w%s given",
-                             kwlist->k_name,format ? " " : "",format ? format : "",
-                             argc_min,argc_max,argc,argc == 1 ? "as" : "ere");
-     }
+     return err_invalid_argc_missing_kw(kwlist->k_name,
+                                        format,
+                                        argc,
+                                        argc_min,
+                                        argc_max);
     }
     /* The argument is optional, but not given. -> So just skip this one! */
     format = Dee_VPUnpackfSkip(format,pargs);
@@ -1024,17 +1018,11 @@ PUBLIC int
     if (*format == '|') { ++format; argc_max += count_unpack_args((char const **)&format); }
     if (*format == ':') ++format;
     else format = NULL;
-    if (argc_min == argc_max) {
-     return DeeError_Throwf(&DeeError_TypeError,
-                            "Missing argument %s in call to function%s%s expecting %Iu arguments when %Iu w%s given",
-                            kwlist->k_name,format ? " " : "",format ? format : "",
-                            argc_min,argc,argc == 1 ? "as" : "ere");
-    } else {
-     return DeeError_Throwf(&DeeError_TypeError,
-                            "Missing argument %s in call to function%s%s expecting between %Iu and %Iu arguments when %Iu w%s given",
-                            kwlist->k_name,format ? " " : "",format ? format : "",
-                            argc_min,argc_max,argc,argc == 1 ? "as" : "ere");
-    }
+    return err_invalid_argc_missing_kw(kwlist->k_name,
+                                       format,
+                                       argc,
+                                       argc_min,
+                                       argc_max);
    }
    /* The argument is optional, but not given. -> So just skip this one! */
    format = Dee_VPUnpackfSkip(format,pargs);

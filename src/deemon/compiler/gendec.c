@@ -1338,7 +1338,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
  }
 
  ASSERT(self->co_argc_max >= self->co_argc_min);
- if (self->co_argc_min != self->co_argc_max) {
+ if (self->co_argc_min < self->co_argc_max) {
   /* Create the argument descriptor data. */
   struct dec_section *args_sec;
   args_sec = dec_newsection_after(SC_ROOT);
@@ -1346,7 +1346,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
   dec_curr = args_sec;
   default_sym = &args_sec->ds_start; /* This is where argument data starts. */
   /* Generate default argument data. */
-  if (dec_putobjv(self->co_argc_max-self->co_argc_min,
+  if (dec_putobjv(self->co_argc_max - self->co_argc_min,
                  (DeeObject **)self->co_defaultv))
       goto err;
  }

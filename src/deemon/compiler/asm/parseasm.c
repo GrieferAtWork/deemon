@@ -950,9 +950,7 @@ PRIVATE int32_t FCALL do_parse_arg_operands(void) {
                    symbol_name->k_name);
    goto err;
   }
-  if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->s_symid) &&
-     (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid) ||
-       DeeBaseScope_HasOptional(current_basescope))) {
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
    DeeError_Throwf(&DeeError_CompilerError,
                    "Argument `%s' cannot be addressed as a regular argument",
                    symbol_name->k_name);
@@ -1195,12 +1193,14 @@ check_sym_class:
     break;
 
    case SYMBOL_TYPE_ARG:
-    if (!DeeBaseScope_IsArgReqOrDefl(current_basescope,sym->s_symid) &&
-       (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid) ||
-         DeeBaseScope_HasOptional(current_basescope)))
-         goto unsupported_expression;
-    result->io_class = OPERAND_CLASS_ARG;
-    result->io_symid = sym->s_symid;
+    if (DeeBaseScope_IsVarargs(current_basescope,sym)) {
+     result->io_class = OPERAND_CLASS_VARARGS;
+    } else if (DeeBaseScope_IsVarkwds(current_basescope,sym)) {
+     result->io_class = OPERAND_CLASS_VARKWDS;
+    } else {
+     result->io_class = OPERAND_CLASS_ARG;
+     result->io_symid = sym->s_symid;
+    }
     break;
 
    case SYMBOL_TYPE_MODULE:
@@ -1355,8 +1355,17 @@ parse_arg_operand:
   if unlikely(yield() < 0) goto err;
   val = do_parse_arg_operands();
   if unlikely(val < 0) goto err;
-  result->io_class = OPERAND_CLASS_ARG;
-  result->io_symid = (uint16_t)val;
+  if (current_basescope->bs_varargs &&
+      current_basescope->bs_varargs->s_symid == (uint16_t)val)
+      result->io_class = OPERAND_CLASS_VARARGS;
+  else
+  if (current_basescope->bs_varkwds &&
+      current_basescope->bs_varkwds->s_symid == (uint16_t)val)
+      result->io_class = OPERAND_CLASS_VARKWDS;
+  else {
+   result->io_class = OPERAND_CLASS_ARG;
+   result->io_symid = (uint16_t)val;
+  }
  } break;
 
  {
@@ -1470,6 +1479,7 @@ parse_local_operand:
    if (IS_KWD_NOCASE("move")) { result->io_class = OPERAND_CLASS_MOVE; goto done_yield_1; }
    if (IS_KWD_NOCASE("default")) { result->io_class = OPERAND_CLASS_DEFAULT; goto done_yield_1; }
    if (IS_KWD_NOCASE("varargs")) { result->io_class = OPERAND_CLASS_VARARGS; goto done_yield_1; }
+   if (IS_KWD_NOCASE("varkwds")) { result->io_class = OPERAND_CLASS_VARKWDS; goto done_yield_1; }
   }
   /* Fallback: Parse an address expression. */
   if unlikely(uasm_parse_intexpr(&result->io_intexpr,

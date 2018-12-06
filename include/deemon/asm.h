@@ -264,11 +264,14 @@
                                     * >> IF (THREAD->t_exceptsz - REG_EXCEPTION_START) > 0
                                     * >>     EXCEPT();
                                     * >> FI */
-/*      ASM_                  0x08  *               --------                            - ------------------ */
-/*      ASM_                  0x09  *               --------                            - ------------------ */
+#define ASM_CALL_KW           0x08 /* [3][-1-n,+1] `call top, #<imm8>, const <imm8>'    - Similar to `ASM_CALL', but also pass a keywords mapping from `<imm8>' */
+#define ASM_CALL_TUPLE_KW     0x09 /* [2][-2,+1]   `call top, pop..., const <imm8>'     - Similar to `ASM_CALL_TUPLE', but also pass a keywords mapping from `<imm8>' */
 /*      ASM_                  0x0a  *               --------                            - ------------------ */
-#define ASM_CALL_KW           0x0b /* [3][-1-n,+1] `call top, #<imm8>, const <imm8>'    - Similar to `ASM_CALL', but also pass a keywords mapping from `<imm8>' */
-#define ASM_CALL_TUPLE_KW     0x0c /* [2][-2,+1]   `call top, pop..., const <imm8>'     - Similar to `ASM_CALL_TUPLE', but also pass a keywords mapping from `<imm8>' */
+/*      ASM_                  0x0b  *               --------                            - ------------------ */
+#define ASM_PUSH_BND_ARG      0x0c /* [2][-0,+1]   `push bound arg <imm8>'              - Check if the argument variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
+                                    * WARNING: This mnemonic only looks at positional and keyword arguments
+                                    *          passed by the caller, but doesn't account for default arguments.
+                                    * >> PUSH(bool(IS_BOUND(ARG(IMM8)))); */
 #define ASM_PUSH_BND_EXTERN   0x0d /* [3][-0,+1]   `push bound extern <imm8>:<imm8>'    - Check if the extern variable indexed by `<imm8>:<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(EXTERN(IMM8,IMM8)))); */
 #define ASM_PUSH_BND_GLOBAL   0x0e /* [2][-0,+1]   `push bound global <imm8>'           - Check if the global variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
@@ -467,31 +470,35 @@
                                     * >> DESTINATION = none; */
 /*      ASM_                  0x34  *               --------                            - ------------------ */
 /*      ASM_                  0x35  *               --------                            - ------------------ */
-/*      ASM_                  0x36  *               --------                            - ------------------ */
-/*      ASM_                  0x37  *               --------                            - ------------------ */
+#define ASM_PUSH_VARARGS      0x36 /* [1][-0,+1]   `push varargs'                       - Push variable arguments. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set)
+                                    * [1][-0,+0]   `mov  PREFIX, varargs'               - `PREFIX: push varargs'
+                                    * >> DESTINATION = VARARGS; */
+#define ASM_PUSH_VARKWDS      0x37 /* [1][-0,+1]   `push varkwds'                       - Push variable arguments. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set)
+                                    * [1][-0,+0]   `mov  PREFIX, varkwds'               - `PREFIX: push varkwds'
+                                    * >> DESTINATION = VARKWDS; */
 #define ASM_PUSH_MODULE       0x38 /* [2][-0,+1]   `push module <imm8>'                 - Push an imported module indexed by <imm8> from the current module.
-                                    * [1][-0,+0]   `mov  PREFIX, module <imm8>'         - `PREFIX: push module <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, module <imm8>'         - `PREFIX: push module <imm8>'
                                     * >> DESTINATION = MODULE(IMM8); */
 #define ASM_PUSH_ARG          0x39 /* [2][-0,+1]   `push arg <imm8>'                    - Push the argument indexed by `<imm8>'.
-                                    * [1][-0,+0]   `mov  PREFIX, arg <imm8>'            - `PREFIX: push arg <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, arg <imm8>'            - `PREFIX: push arg <imm8>'
                                     * >> DESTINATION = ARG(IMM8); */
 #define ASM_PUSH_CONST        0x3a /* [2][-0,+1]   `push const <imm8>'                  - Same as `ASM_PUSH_STATIC', but doesn't require a lock as the slot should acts as an immutable constant.
-                                    * [1][-0,+0]   `mov  PREFIX, const <imm8>'          - `PREFIX: push const <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, const <imm8>'          - `PREFIX: push const <imm8>'
                                     * >> DESTINATION = CONSTANT(IMM8); */
 #define ASM_PUSH_REF          0x3b /* [2][-0,+1]   `push ref <imm8>'                    - Push a referenced variable indexed by `<imm8>'.
-                                    * [1][-0,+0]   `mov  PREFIX, ref <imm8>'            - `PREFIX: push ref <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, ref <imm8>'            - `PREFIX: push ref <imm8>'
                                     * >> DESTINATION = REF(IMM8); */
 #define ASM_PUSH_STATIC       0x3c /* [2][-0,+1]   `push static <imm8>'                 - Push the static variable indexed by `<imm8>'.
-                                    * [1][-0,+0]   `mov  PREFIX, static <imm8>'         - `PREFIX: push static <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, static <imm8>'         - `PREFIX: push static <imm8>'
                                     * >> DESTINATION = STATIC(IMM8); */
 #define ASM_PUSH_EXTERN       0x3d /* [3][-0,+1]   `push extern <imm8>:<imm8>'          - Push the extern variable indexed by `<imm8>:<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
-                                    * [1][-0,+0]   `mov  PREFIX, extern <imm8>'         - `PREFIX: push extern <imm8>'
+                                    * [3][-0,+0]   `mov  PREFIX, extern <imm8>'         - `PREFIX: push extern <imm8>'
                                     * >> DESTINATION = EXTERN(IMM8,IMM8); */
 #define ASM_PUSH_GLOBAL       0x3e /* [2][-0,+1]   `push global <imm8>'                 - Push the global variable indexed by `<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
-                                    * [1][-0,+0]   `mov  PREFIX, global <imm8>'         - `PREFIX: push global <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, global <imm8>'         - `PREFIX: push global <imm8>'
                                     * >> DESTINATION = GLOBAL(IMM8); */
 #define ASM_PUSH_LOCAL        0x3f /* [2][-0,+1]   `push local <imm8>'                  - Push the local variable indexed by `<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
-                                    * [1][-0,+0]   `mov  PREFIX, local <imm8>'          - `PREFIX: push local <imm8>'
+                                    * [2][-0,+0]   `mov  PREFIX, local <imm8>'          - `PREFIX: push local <imm8>'
                                     * >> DESTINATION = LOCAL(IMM8); */
 
 /* Sequence control instructions. */
@@ -909,14 +916,14 @@
                                       * >> IF (THREAD->t_exceptsz-REG_EXCEPTION_START) > IMM8+1
                                       * >>     EXCEPT();
                                       * >> FI */
-/*      ASM_                  0xf008  *               --------                            - ------------------ */
-/*      ASM_                  0xf009  *               --------                            - ------------------ */
+#define ASM16_CALL_KW         0xf008 /* [5][-1-n,+1] `call top, #<imm8>, const <imm16>'   - Similar to `ASM_CALL', but also pass a keywords mapping from `<imm16>' */
+#define ASM16_CALL_TUPLE_KW   0xf009 /* [4][-2,+1]   `call top, pop..., const <imm16>'    - Similar to `ASM_CALL_TUPLE', but also pass a keywords mapping from `<imm16>' */
 /*      ASM_                  0xf00a  *               --------                            - ------------------ */
-#define ASM16_CALL_KW         0xf00b /* [5][-1-n,+1] `call top, #<imm8>, const <imm16>'   - Similar to `ASM_CALL', but also pass a keywords mapping from `<imm16>' */
-#define ASM16_CALL_TUPLE_KW   0xf00c /* [4][-2,+1]   `call top, pop..., const <imm16>'    - Similar to `ASM_CALL_TUPLE', but also pass a keywords mapping from `<imm16>' */
-#define ASM16_PUSH_BND_EXTERN 0xf00d /* [6][-0,+1]   `push bnd extern <imm16>:<imm16>'    - Check if the extern variable indexed by `<imm16>:<imm16>' is bound, pushing true/false indicative of that state. */
-#define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bnd global <imm16>'            - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
-#define ASM16_PUSH_BND_LOCAL  0xf00f /* [4][-0,+1]   `push bnd local <imm16>'             - Check if the local variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
+/*      ASM_                  0xf00b  *               --------                            - ------------------ */
+#define ASM16_PUSH_BND_ARG    0xf00c /* [4][-0,+1]   `push bound arg <imm8>'              - Check if the argument variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
+#define ASM16_PUSH_BND_EXTERN 0xf00d /* [6][-0,+1]   `push bound extern <imm16>:<imm16>'  - Check if the extern variable indexed by `<imm16>:<imm16>' is bound, pushing true/false indicative of that state. */
+#define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bound global <imm16>'          - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
+#define ASM16_PUSH_BND_LOCAL  0xf00f /* [4][-0,+1]   `push bound local <imm16>'           - Check if the local variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 /*      ASM_                  0xf010  *               --------                            - ------------------ */
 /*      ASM_                  0xf011  *               --------                            - ------------------ */
 /*      ASM_                  0xf012  *               --------                            - ------------------ */
@@ -1133,9 +1140,7 @@
 #define ASM_RANGE_0_I32       0xf0a4 /* [5][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
 /*      ASM_                  0xf0a5  *               --------                            - ------------------ */
 #define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs tuple doesn't need to be pushed. */
-#define ASM_CALL_ARGSFWD      0xf0a7 /* [4][-1,+1]   `call top, arg <imm8>, arg <imm8>'   - Call a function in `top' by forwarding the inclusive range of objects founds between (and including) the 2 imm8 operands.
-                                      *                                                   For this, the first imm8 must be <= the second, and if the second specified the varargs argument index, the entirety of
-                                      *                                                   varargs is forwarded as well. */
+/*      ASM_                  0xf0a7  *               --------                            - ------------------ */
 /*      ASM_                  0xf0a8  *               --------                            - ------------------ */
 #define ASM16_FPRINT_C        0xf0a9 /* [4][-1,+1]   `print top, const <imm16>'           - Print a constant from `<imm16>' to a file in stack-top. */
 #define ASM16_FPRINT_C_SP     0xf0aa /* [4][-1,+1]   `print top, const <imm16>, sp'       - Same as `ASM_FPRINT_C16', but follow up by printing a space character. */

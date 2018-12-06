@@ -2992,57 +2992,6 @@ do_savearg:
 #endif
    }
   }
-  if ((current_basescope->bs_flags & CODE_FVARARGS) &&
-      !current_basescope->bs_varargs) {
-   /* In a varargs-function without a varargs symbol (which can happen
-    * in a function with optional arguments, and a missing varargs tail),
-    * we must manually check if the actual argument count is within the
-    * expected bounds, and throw a TypeError if they aren't. */
-   uint16_t required_va_size; int32_t deemon_modid;
-   instruction_t jmp_instruction = ASM_JT;
-   struct asm_sym *error_sym; int32_t max_argc_cid;
-   DREF DeeObject *max_argc_ob;
-   if (!did_define_header_ddi) {
-    if (asm_putddi(code_ast)) goto err;
-    did_define_header_ddi = true;
-   }
-   required_va_size = current_basescope->bs_argc_opt;
-   if likely(required_va_size) {
-    /* >> push cmp gr, #varargs, $<required_va_size>
-     * >> jt   .error */
-    if (asm_gcmp_gr_varargs_sz(required_va_size)) goto err;
-   } else {
-    /* >> push cmp eq, #varargs, $0
-     * >> jf   .error */
-    jmp_instruction = ASM_JF;
-    if (_asm_gcmp_eq_varargs_sz(0)) goto err;
-   }
-   error_sym = asm_newsym();
-   if unlikely(!error_sym) goto err;
-   if (asm_gjmp(jmp_instruction,error_sym)) goto err;
-   asm_decsp();
-   /* Generate the error processing code in .cold */
-   asm_setcur(SECTION_COLD);
-   if (asm_putddi(code_ast)) goto err;
-   asm_defsym(error_sym);
-   /* Throw a TypeError indicating an invalid argument count:
-    * >>    push $<max_argc>
-    * >>    call extern @deemon:@__badcall */
-   deemon_modid = asm_newmodule(DeeModule_GetDeemon());
-   if unlikely(deemon_modid < 0) goto err;
-   max_argc_ob = DeeInt_NewU16(current_basescope->bs_argc);
-   if unlikely(!max_argc_ob) goto err;
-   max_argc_cid = asm_newconst(max_argc_ob);
-   Dee_Decref(max_argc_ob);
-   if unlikely(max_argc_cid < 0) goto err;
-   if (asm_gpush_const((uint16_t)max_argc_cid)) goto err;
-   if (asm_gcall_extern((uint16_t)deemon_modid,id___badcall,1)) goto err;
-   if (asm_gret_none()) goto err;
-   asm_setcur(SECTION_TEXT);
-   ASSERTF(current_assembler.a_stackcur == 1,
-           "Only the return value of `__badcall from deemon' should still be there");
-   current_assembler.a_stackcur = 0; /* The return value would only exists in .cold */
-  }
  }
 
  /* Generate text assembly for the given code. */
@@ -3229,14 +3178,13 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
  ASSERT(prefc);
  ASSERT(prefv);
  /* Check if the function even qualifies for argrefs. */
- if unlikely(current_basescope->bs_argc_opt ||
-             current_basescope->bs_argc_min != current_basescope->bs_argc_max ||
-             current_basescope->bs_varargs != NULL ||
+ if unlikely(current_basescope->bs_argc_min < current_basescope->bs_argc_max ||
             (current_basescope->bs_flags & CODE_FVARARGS)) {
   *pargc = 0;
   *pargv = NULL;
   return code_compile(code_ast,flags,false,prefc,prefv);
  }
+ ASSERT(current_basescope->bs_varargs == NULL);
 
  /* Copy the current, and create a new assembler. */
  memcpy(&old_assembler,&current_assembler,sizeof(struct assembler));

@@ -466,17 +466,11 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
        break;
   if (asm_putddi(self)) goto err;
   if ((gflags & ASM_G_FLAZYBOOL) &&
-       SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
-      !SYMBOL_MUST_REFERENCE(sym) &&
-      (current_basescope->bs_flags & CODE_FVARARGS) &&
-       DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) {
+       DeeBaseScope_IsVarargs(current_basescope,sym)) {
    /* Special case: If the caller accesses the varargs-symbol in a boolean-context,
     *               then we can simply check if the number of varargs is non-zero,
-    *               emulating the behavior of tuple's `operator bool()'.
-    * NOTE: Here we check if the number of varargs is greater than the
-    *       number if optional arguments, in which case more arguments
-    *       were given than optional were required. */
-   if (asm_gcmp_gr_varargs_sz(current_basescope->bs_argc_opt)) goto err;
+    *               emulating the behavior of tuple's `operator bool()'. */
+   if (asm_gcmp_gr_varargs_sz(0)) goto err;
    goto done;
   }
   if (asm_gpush_symbol(sym,self)) goto err;
@@ -1172,11 +1166,8 @@ pop_unused:
    if (sequence->a_type == AST_SYM) {
     struct symbol *sym = sequence->a_sym;
     SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
-       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
-       (current_basescope->bs_flags & CODE_FVARARGS) &&
-        DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) {
-     uint32_t va_index;
+    if (DeeBaseScope_IsVarargs(current_basescope,sym)) {
+     uint8_t va_index;
      if (!PUSH_RESULT) {
       if (ast_genasm(self->a_operator.o_op1,ASM_G_FNORMAL))
           goto err;
@@ -1185,24 +1176,13 @@ pop_unused:
      /* Lookup a varargs-argument by index. */
      if (self->a_operator.o_op1->a_type == AST_CONSTEXPR &&
          DeeInt_Check(self->a_operator.o_op1->a_constexpr) &&
-         DeeInt_TryAsU32(self->a_operator.o_op1->a_constexpr,&va_index)) {
-      /* Optional arguments are actually apart of varargs, so
-       * we need to adjust the user-given index to have its base
-       * be located just after the varargs. */
-      va_index += current_basescope->bs_argc_opt;
-      if (va_index <= UINT8_MAX) {
-       if (asm_putddi(self)) goto err;
-       if (asm_gvarargs_getitem_i((uint8_t)va_index)) goto err;
-       goto done;
-      }
+         DeeInt_TryAsU8(self->a_operator.o_op1->a_constexpr,&va_index)) {
+      if (asm_putddi(self)) goto err;
+      if (asm_gvarargs_getitem_i((uint8_t)va_index)) goto err;
+      goto done;
      }
      if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self)) goto err;
-     if (DeeBaseScope_HasOptional(current_basescope)) {
-      /* Must adjust for optional arguments by adding their amount to the index. */
-      if (asm_gadd_imm32(current_basescope->bs_argc_opt))
-          goto err;
-     }
      if (asm_gvarargs_getitem()) goto err;
      goto done;
     }
@@ -1519,10 +1499,7 @@ push_a_if_used:
         self->a_operator.o_op0->a_type == AST_SYM) {
     struct symbol *sym = self->a_operator.o_op0->a_sym;
     SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-    if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_ARG &&
-       !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
-        DeeBaseScope_IsArgVarArgs(current_basescope,
-                                  sym->s_symid)) {
+    if (DeeBaseScope_IsVarargs(current_basescope,sym)) {
      /* Special case: Get the size of varargs. */
      if (!PUSH_RESULT) goto done;
      if (asm_putddi(self)) goto err;
@@ -1530,8 +1507,8 @@ push_a_if_used:
         !(current_assembler.a_flag & ASM_FOPTIMIZE_SIZE)) {
       /* When not optimizing for size, we can compare the number
        * of varargs against 1 and push the inverted result. */
-      if (asm_gcmp_gr_varargs_sz(current_basescope->bs_argc_opt)) goto err;
-     } else if (!DeeBaseScope_HasOptional(current_basescope)) {
+      if (asm_gcmp_gr_varargs_sz(0)) goto err;
+     } else {
       /* NOTE: If optional arguments are being used, don't go this
        *       route because we'd need a lot of overhead to get the
        *       number of variable arguments minus the number of optional
@@ -1547,7 +1524,7 @@ push_a_if_used:
    struct symbol *sym;
    struct ast *sizeast;
    DeeObject *sizeval;
-   uint32_t va_size_val;
+   uint8_t va_size_val;
   case OPERATOR_EQ:
   case OPERATOR_NE:
    if unlikely(!self->a_operator.o_op1) goto generic_operator;
@@ -1576,22 +1553,17 @@ push_a_if_used:
     sizeast = self->a_operator.o_op0;
    }
    SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) break;
-   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) break;
-   if (!DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)) break;
+   if (!DeeBaseScope_IsVarargs(current_basescope,sym)) break;
    if (sizeast->a_type != AST_CONSTEXPR) break;
    sizeval = sizeast->a_constexpr;
    if (!DeeInt_Check(sizeval)) break;
    /* If the expression result isn't being used,
     * then there is no need to do anything! */
    if (!PUSH_RESULT) goto done;
-   if (!DeeInt_TryAsU32(sizeval,&va_size_val)) break;
-   /* Adjust for the number of optional arguments. */
-   va_size_val += current_basescope->bs_argc_opt;
-   if (va_size_val > UINT8_MAX) break;
+   if (!DeeInt_TryAsU8(sizeval,&va_size_val)) break;
    /* All right! we can encode this one as `cmp eq, #varargs, $<va_size_val>' */
    if (asm_putddi(self)) goto err;
-   if (_asm_gcmp_eq_varargs_sz((uint8_t)va_size_val)) goto err;
+   if (asm_gcmp_eq_varargs_sz(va_size_val)) goto err;
    /* If the expression is checking for inequality, invert the result. */
    if (self->a_flag == OPERATOR_NE && asm_gbool(true)) goto err;
    goto done;

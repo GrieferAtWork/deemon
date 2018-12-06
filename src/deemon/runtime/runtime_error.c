@@ -303,6 +303,33 @@ err_invalid_distribution_count(size_t distcnt) {
                         distcnt);
 }
 INTERN ATTR_COLD int DCALL
+err_invalid_argc_missing_kw(char const *__restrict argument_name,
+                            char const *function_name,
+                            size_t argc_cur,
+                            size_t argc_min,
+                            size_t argc_max) {
+ if (argc_min == argc_max) {
+  return DeeError_Throwf(&DeeError_TypeError,
+                         "Missing argument %s in call to function%s%s expecting %Iu arguments when %Iu w%s given",
+                         argument_name,
+                         function_name ? " " : "",
+                         function_name ? function_name : "",
+                         argc_min,
+                         argc_cur,
+                         argc_cur == 1 ? "as" : "ere");
+ } else {
+  return DeeError_Throwf(&DeeError_TypeError,
+                         "Missing argument %s in call to function%s%s expecting between %Iu and %Iu arguments when %Iu w%s given",
+                         argument_name,
+                         function_name ? " " : "",
+                         function_name ? function_name : "",
+                         argc_min,
+                         argc_max,
+                         argc_cur,
+                         argc_cur == 1 ? "as" : "ere");
+ }
+}
+INTERN ATTR_COLD int DCALL
 err_invalid_argc(char const *function_name, size_t argc_cur,
                  size_t argc_min, size_t argc_max) {
  if (argc_min == argc_max) {
@@ -426,8 +453,7 @@ err_unbound_local(struct code_object *__restrict code,
  char const *code_name = NULL;
  uint8_t *error;
  struct ddi_state state;
- ASSERT_OBJECT(code);
- ASSERT(DeeCode_Check(code));
+ ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(local_index < code->co_localc);
  error = DeeCode_FindDDI((DeeObject *)code,&state,NULL,
                          (instruction_t *)ip - code->co_code,
@@ -458,8 +484,33 @@ err_unbound_local(struct code_object *__restrict code,
  if (!code_name)
       code_name = DeeCode_NAME(code);
  return DeeError_Throwf(&DeeError_UnboundLocal,
-                        "Unbound local variable %d%s%s",
+                        "Unbound local variable %I16u%s%s",
                         local_index,
+                        code_name ? " in function " : "",
+                        code_name ? code_name : "");
+}
+INTERN ATTR_COLD int DCALL
+err_unbound_arg(struct code_object *__restrict code,
+                void *__restrict ip, uint16_t arg_index) {
+ char const *code_name;
+ (void)ip;
+ ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
+ ASSERT(arg_index < code->co_argc_max);
+ code_name = DeeCode_NAME(code);
+ if (code->co_keywords) {
+  struct string_object *kwname;
+  kwname = code->co_keywords[arg_index];
+  if (!DeeString_IsEmpty(kwname)) {
+   return DeeError_Throwf(&DeeError_UnboundLocal,
+                          "Unbound argument %k%s%s",
+                          kwname,
+                          code_name ? " in function " : "",
+                          code_name ? code_name : "");
+  }
+ }
+ return DeeError_Throwf(&DeeError_UnboundLocal,
+                        "Unbound argument %I16u%s%s",
+                        arg_index,
                         code_name ? " in function " : "",
                         code_name ? code_name : "");
 }
@@ -469,8 +520,7 @@ err_readonly_local(struct code_object *__restrict code,
  char const *code_name = NULL;
  uint8_t *error;
  struct ddi_state state;
- ASSERT_OBJECT(code);
- ASSERT(DeeCode_Check(code));
+ ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(local_index < code->co_localc);
  error = DeeCode_FindDDI((DeeObject *)code,&state,NULL,
                          (instruction_t *)ip - code->co_code,

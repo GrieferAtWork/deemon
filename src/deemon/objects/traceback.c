@@ -86,7 +86,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
    Dee_Incref(dst->cf_func);
    code = dst->cf_func->fo_code;
    dst->cf_flags = code->co_flags;
-   if (code->co_flags&CODE_FTHISCALL) {
+   if (code->co_flags & CODE_FTHISCALL) {
     ASSERT_OBJECT(dst->cf_this);
     if (!(code->co_flags&CODE_FCONSTRUCTOR)) {
      Dee_Incref(dst->cf_this);

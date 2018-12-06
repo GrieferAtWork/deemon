@@ -374,8 +374,8 @@ struct code_object {
     uint16_t                 co_refc;        /* [const] Amount of reference variables used by this code. */
     uint16_t                 co_exceptc;     /* [const] Amount of exception handlers. */
     uint16_t                 co_argc_min;    /* [const] Min amount of arguments required to execute this code. */
-    uint16_t                 co_argc_max;    /* [const] Max amount of arguments accepted by this code (excluding a varargs argument). */
-    uint16_t                 co_padding;     /*... */
+    uint16_t                 co_argc_max;    /* [const][>= co_argc_min] Max amount of arguments accepted by this code (excluding a varargs argument). */
+    uint16_t                 co_padding;     /* ... */
 #define CODE_LARGEFRAME_THRESHOLD 0x100      /* When `co_framesize' turns out to be larger than this,
                                               * it is suggested that the `CODE_FHEAPFRAME' flag be set. */
     uint32_t                 co_framesize;   /* [const][== (co_localc + X)*sizeof(DeeObject *)]
@@ -399,7 +399,9 @@ struct code_object {
     };
     DREF struct string_object
                      *const *co_keywords;    /* [1..1][const][0..co_argc_max][const] Argument keywords. */
-    DREF DeeObject   *const *co_defaultv;    /* [1..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values. */
+    DREF DeeObject   *const *co_defaultv;    /* [0..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values.
+                                              * NOTE: NULL entires refer to optional arguments, producing an error
+                                              *       when attempted to be loaded without a user override. */
     DREF DeeObject         **co_staticv;     /* [1..1][lock(co_staticv)][0..co_staticc][owned] Vector of constants and static variables. */
     /* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */
     struct except_handler   *co_exceptv;     /* [0..co_excptc][owned] Vector of exception handler descriptors. */
@@ -458,6 +460,49 @@ DDATDEF DeeTypeObject DeeCode_Type;
 DFUNDEF int DCALL DeeCode_SetAssembly(/*Code*/DeeObject *__restrict self);
 
 
+/* Extended frame information for functions invoked with keyword arguments.
+ * >> function foo(x?,y?,z?,**w) { }
+ * >> foo(10,z: 20,foobar: "barfoo");
+ * VALUES:
+ *    cf_argc         = 1
+ *    cf_argv         = { int(10) }     (with out-of-bounds extension `{ int(20), string("barfoo") }')
+ *    cf_kw->fk_kwds  = <SPECIAL_MAPPING_TYPE> { "foobar" : "barfoo" }  (generated upon first use)
+ *    cf_kw->fk_kw    = DeeKwdsObject { "z": 0, "foobar": 1 }
+ *    cf_kw->fk_kargv = { NULL, int(20) }
+ * Position argument lookup then functions as follows:
+ * >> GET_ARG(i):
+ * >>    DeeObject *result;
+ * >>    ASSERT(i < code->co_argc_max);
+ * >>    if (i < frame->cf_argc)
+ * >>        return frame->cf_argv[i]; // Regular, positional arguments
+ * >>    if (frame->cf_kw) {
+ * >>        result = frame->cf_kw->fk_kargv[i - frame->cf_argc];
+ * >>        if (result)
+ * >>            return result;
+ * >>    }
+ * >>    ASSERT(i >= code->co_argc_min);
+ * >>    result = code->co_defaultv[i - code->co_argc_min];
+ * >>    if (result)
+ * >>        return result;
+ * >>    ERROR_UNBOUND_ARGUMENT(i);
+ */
+struct code_frame_kwds {
+    DREF DeeObject           *fk_varkwds;     /* [0..1][valid_if(:cf_func->fo_code->co_flags & CODE_FVARKWDS)]
+                                               * [lock(WRITE_ONCE)] Variable keyword arguments.
+                                               * NOTE: May only be accessed by a code interpreter when the associated
+                                               *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
+                                               *       field may not actually exist) */
+    DREF DeeObject           *fk_kw;          /* [1..1][const] The original `kw' object that was passed to the function.
+                                              *  NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
+                                              *        aka. at the end of the standard-accessible argument vector.
+                                               * NOTE: May only be accessed by a code interpreter when the associated
+                                               *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
+                                               *       field may not actually exist) */
+    DREF DeeObject           *fk_kargv[1024]; /* [0..1][const][1..(:cf_func->fo_code->co_argc_max - :cf_argc)]
+                                               * Overlay of additional, non-positional arguments which were
+                                               * passed via keyword arguments. */
+};
+
 /* Execution frame of a deemon code object.
  * NOTE: This structure is usually allocated on the host's stack. */
 struct code_frame {
@@ -469,7 +514,7 @@ struct code_frame {
     DeeFunctionObject        *cf_func;    /* [1..1] The function running within in this frame. */
     size_t                    cf_argc;    /* [const] Amount of input arguments. */
     DREF DeeObject          **cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
-    DeeObject                *cf_kw;      /* [1..1][const] Keywords passed to the function. */
+    struct code_frame_kwds   *cf_kw;      /* [0..1][const] Keyword argument extension data. */
     DREF DeeObject          **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned] Frame-local work-memory used during execution. */
     DREF DeeObject          **cf_stack;   /* [?..1][(cf_func->fo_code->co_framesize - cf_func->fo_code->co_localc * sizeof(DeeObject *)) / sizeof(DeeObject *)] Base address for the stack.
                                            * NOTE: When `cf_stacksz != 0', then this vector is allocated on the heap. */
@@ -619,6 +664,7 @@ struct yield_function_object {
                                         * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
     DREF struct tuple_object *yf_args; /* [1..1][const] Arguments that we are called with.
                                         * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
+    struct code_frame_kwds   *yf_kw;   /* [0..1][owned][const] Keyword arguments. */
     DREF DeeObject           *yf_this; /* [0..1][const] 'this' object during callback. */
 };
 
@@ -722,7 +768,12 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *__restrict self,
                             DeeObject *__restrict this_arg,
                             DeeObject *__restrict args,
                             DeeObject *kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#define DeeFunction_CallTuple(self,args)                   DeeFunction_Call(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeFunction_CallTupleKw(self,args,kw)              DeeFunction_CallKw(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeFunction_ThisCallTuple(self,this_arg,args)      DeeFunction_ThisCall(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeFunction_ThisCallTupleKw(self,this_arg,args,kw) DeeFunction_ThisCallKw(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 #endif
 

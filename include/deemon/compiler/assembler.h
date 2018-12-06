@@ -369,6 +369,7 @@ struct asm_invoke_operand {
 #define OPERAND_CLASS_MOVE             0x00a0     /* `move' */
 #define OPERAND_CLASS_DEFAULT          0x00a1     /* `default' */
 #define OPERAND_CLASS_VARARGS          0x00a2     /* `varargs' */
+#define OPERAND_CLASS_VARKWDS          0x00a3     /* `varkwds' */
     uint16_t                           io_class;  /* Operand class (One of `OPERAND_CLASS_*'). */
     union {
         uint16_t                       io_symid;  /* Symbol id. */
@@ -1150,6 +1151,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gendcatch_n(n)            (ASSERT((n) <= UINT8_MAX+1),(n) ? (asm_put((ASM_ENDCATCH_N&0xff00) >> 8) || asm_putimm8(ASM_ENDCATCH_N&0xff,(uint8_t)((n)-1))) : asm_gendcatch())
 #define asm_gendfinally()             (asm_put(ASM_ENDFINALLY))
 #define asm_gendfinally_n(n)          (ASSERT((n) <= UINT8_MAX+1),(n) ? (asm_put((ASM_ENDFINALLY_N&0xff00) >> 8) || asm_putimm8(ASM_ENDFINALLY_N&0xff,(uint8_t)((n)-1))) : asm_gendfinally())
+#define asm_gpush_bnd_arg(aid)        (asm_incsp(),asm_put816(ASM_PUSH_BND_ARG,aid))
 #define asm_gpush_bnd_extern(mid,gid) (asm_incsp(),asm_put881616(ASM_PUSH_BND_EXTERN,mid,gid))
 #define asm_gpush_bnd_global(gid)     (asm_incsp(),asm_put816(ASM_PUSH_BND_GLOBAL,gid))
 #define asm_gpush_bnd_local(lid)      (asm_incsp(),asm_put816(ASM_PUSH_BND_LOCAL,lid))
@@ -1163,7 +1165,6 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gcallattr_const_map(cid,n) (ASSERT((n) <= UINT8_MAX),asm_subsp(((n)*2)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_MAP,cid,n))
 #define asm_gcall_tuple()             (asm_ddicsp(),asm_put(ASM_CALL_TUPLE))
 #define asm_gthiscall_tuple()         (asm_dddicsp(),asm_put16(ASM_THISCALL_TUPLE))
-#define asm_gcall_argsfwd(lo,hi)      (asm_dicsp(),asm_put((ASM_CALL_ARGSFWD & 0xff00) >> 8) || asm_putimm8_8(ASM_CALL_ARGSFWD & 0xff,(uint8_t)(lo),(uint8_t)(hi)))
 #define asm_gjmp_pop()                (asm_decsp(),asm_put(ASM_JMP_POP))
 #define asm_gjmp_pop_pop()            (asm_ddcsp(),asm_put((ASM_JMP_POP_POP & 0xff00) >> 8) || asm_put(ASM_JMP_POP_POP & 0xff))
 #define asm_gdel_global(gid)          (asm_put816(ASM_DEL_GLOBAL,gid))
@@ -1203,8 +1204,11 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gpush_ref(rid)            (asm_incsp(),asm_put816(ASM_PUSH_REF,rid))
 #define asm_gpush_ref_p(rid)          (asm_put816(ASM_PUSH_REF,rid))
 #define asm_gpush_arg(aid)            (asm_incsp(),asm_put816(ASM_PUSH_ARG,aid))
-#define asm_gpush_varargs()           (asm_incsp(),asm_put816(ASM_PUSH_ARG,current_basescope->bs_argc_max))
 #define asm_gpush_arg_p(aid)          (asm_put816(ASM_PUSH_ARG,aid))
+#define asm_gpush_varargs()           (asm_incsp(),asm_put(ASM_PUSH_VARARGS))
+#define asm_gpush_varargs_p()         (asm_put(ASM_PUSH_VARARGS))
+#define asm_gpush_varkwds()           (asm_incsp(),asm_put(ASM_PUSH_VARKWDS))
+#define asm_gpush_varkwds_p()         (asm_put(ASM_PUSH_VARKWDS))
 #define asm_gpush_const(cid)          (asm_incsp(),asm_put816(ASM_PUSH_CONST,cid))
 #define asm_gpush_const_p(cid)        (asm_put816(ASM_PUSH_CONST,cid))
 #define asm_gpush_const8(cid)         (asm_incsp(),asm_putimm8(ASM_PUSH_CONST,cid))
@@ -1265,8 +1269,8 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gcmp_le()                 (asm_ddicsp(),asm_put(ASM_CMP_LE))
 #define asm_gcmp_gr()                 (asm_ddicsp(),asm_put(ASM_CMP_GR))
 #define asm_gcmp_ge()                 (asm_ddicsp(),asm_put(ASM_CMP_GE))
-#define _asm_gcmp_eq_varargs_sz(sz)   (asm_incsp(),asm_put((ASM_VARARGS_CMP_EQ_SZ & 0xff00) >> 8) || asm_putimm8(ASM_VARARGS_CMP_EQ_SZ & 0xff,sz))
-#define _asm_gcmp_gr_varargs_sz(sz)   (asm_incsp(),asm_put((ASM_VARARGS_CMP_GR_SZ & 0xff00) >> 8) || asm_putimm8(ASM_VARARGS_CMP_GR_SZ & 0xff,sz))
+#define asm_gcmp_eq_varargs_sz(sz)    (asm_incsp(),asm_put((ASM_VARARGS_CMP_EQ_SZ & 0xff00) >> 8) || asm_putimm8(ASM_VARARGS_CMP_EQ_SZ & 0xff,sz))
+#define asm_gcmp_gr_varargs_sz(sz)    (asm_incsp(),asm_put((ASM_VARARGS_CMP_GR_SZ & 0xff00) >> 8) || asm_putimm8(ASM_VARARGS_CMP_GR_SZ & 0xff,sz))
 #define asm_gfunction_ii(code_cid,n_refs) (asm_subsp(n_refs),asm_incsp(),asm_private_gfunction_ii(code_cid,n_refs))
 #define asm_gfunction_ii_prefixed(code_cid,n_refs) (asm_subsp(n_refs),asm_private_gfunction_ii(code_cid,n_refs))
 #define asm_ginv()                    (asm_dicsp(),asm_put(ASM_INV))
@@ -1476,8 +1480,6 @@ INTDEF int DCALL asm_gpush_varg(uint16_t argid);
 INTDEF int DCALL asm_gmov_varg(struct symbol *__restrict dst, uint16_t argid,
                                struct ast *__restrict warn_ast,
                                bool ignore_unbound);
-INTERN int DCALL asm_gcmp_eq_varargs_sz(uint16_t sz);
-INTERN int DCALL asm_gcmp_gr_varargs_sz(uint16_t sz);
 
 
 /* Push the given value as an integer constant onto the stack. */

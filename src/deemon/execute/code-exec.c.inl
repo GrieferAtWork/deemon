@@ -40,6 +40,7 @@
 #include <deemon/hashset.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/map.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -118,6 +119,58 @@ INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *__restrict tp_self, DeeObje
 INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict value);
 INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
 #endif
+
+
+#ifdef EXEC_FAST
+#define construct_varkwds_mapping()  construct_varkwds_mapping_fast(frame)
+PRIVATE DREF DeeObject *ATTR_FASTCALL
+construct_varkwds_mapping_fast(struct code_frame *__restrict frame)
+#else
+#define construct_varkwds_mapping()  construct_varkwds_mapping_safe(frame)
+PRIVATE DREF DeeObject *ATTR_FASTCALL
+construct_varkwds_mapping_safe(struct code_frame *__restrict frame)
+#endif
+{
+ struct code_frame_kwds *kwds;
+ DREF DeeObject *result;
+ DeeObject *kw;
+ kwds = frame->cf_kw;
+ ASSERT(kwds);
+ kw = kwds->fk_kw;
+ if likely(DeeKwds_Check(kw)) {
+  /* Most common case: Must create a wrapper around the kwds/argv hybrid descriptor,
+   *                   but exclude any keyword also found as part of our code's
+   *                   keyword list.
+   * >> function foo(x,y,**kw) {
+   * >>     print repr kw;
+   * >> }
+   * >> foo(x: 10, y: 20, z: 30); // { "z": 30 }
+   * Semantically comparable to:
+   * >> return rt.RoDict(for (local key,id: kw)
+   * >>     if (key !in __code__.__kwds__)
+   * >>         (key,__argv__[#__argv__ + id])
+   * >>     );
+   */
+  /* TODO */
+  result = Dee_EmptyMapping;
+  Dee_Incref(result);
+ } else {
+  /* Special case: create a proxy-mapping object for `kw' that get rids
+   *               of all keys that are equal to one of the strings found
+   *               within our keyword list.
+   * Semantically comparable to:
+   * >> return rt.RoDict(for (local key,item: kw)
+   * >>     if (key !in __code__.__kwds__)
+   * >>         (key,item)
+   * >>     );
+   */
+  /* TODO */
+  result = Dee_EmptyMapping;
+  Dee_Incref(result);
+ }
+ return result;
+}
+
 
 
 /* @return: * :        Prefixed object pointer (dereferences to non-NULL)
@@ -762,14 +815,6 @@ ill_instr:
  return 0;
 }
 
-#ifndef PRIVATE_OBJECT_CALL_VEC2_DEFINED
-#define PRIVATE_OBJECT_CALL_VEC2_DEFINED 1
-INTDEF DREF DeeObject *DCALL
-object_call_vec2(DeeObject *__restrict func,
-                 size_t argc1, DeeObject **__restrict vec1,
-                 size_t argc2, DeeObject **__restrict vec2);
-#endif /* !PRIVATE_OBJECT_CALL_VEC2_DEFINED */
-
 #ifdef EXEC_FAST
 PUBLIC DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFast(struct code_frame *__restrict frame)
@@ -908,7 +953,7 @@ inc_execsz_start:
  /* Don't allow the compiler to move the frame-linking code below this point. */
  COMPILER_WRITE_BARRIER();
 
- if unlikely(code->co_flags&CODE_FASSEMBLY) {
+ if unlikely(code->co_flags & CODE_FASSEMBLY) {
   /* Highly unlikely case:
    *   There is a chance that our execution got suspended when
    *   another thread was setting the assembly flag just now.
@@ -995,11 +1040,12 @@ inc_execsz_start:
 #ifdef EXEC_SAFE
 #define ASSERT_TUPLE(ob)     do{ if unlikely(!DeeTuple_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_tuple;} }__WHILE0
 #define ASSERT_STRING(ob)    do{ if unlikely(!DeeString_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_string;} }__WHILE0
-#define ASSERT_THISCALL()    do{ if unlikely(!(code->co_flags&CODE_FTHISCALL)) { EXCEPTION_CLEANUP goto err_requires_thiscall_code; } }__WHILE0
+#define ASSERT_THISCALL()    do{ if unlikely(!(code->co_flags & CODE_FTHISCALL)) { EXCEPTION_CLEANUP goto err_requires_thiscall_code; } }__WHILE0
 #define CONST_LOCKREAD()     STATIC_LOCKREAD()
 #define CONST_LOCKENDREAD()  STATIC_LOCKENDREAD()
 #define CONST_LOCKWRITE()    STATIC_LOCKWRITE()
 #define CONST_LOCKENDWRITE() STATIC_LOCKENDWRITE()
+#define ASSERT_ARGimm()      do{ if unlikely(imm_val >= code->co_argc_max) { EXCEPTION_CLEANUP goto err_invalid_argument_index; } }__WHILE0
 #define ASSERT_REFimm()      do{ if unlikely(imm_val >= code->co_refc) { EXCEPTION_CLEANUP goto err_invalid_ref; } }__WHILE0
 #define ASSERT_EXTERNimm()   do{ if unlikely(imm_val >= code->co_module->mo_importc || imm_val2 >= code->co_module->mo_importv[imm_val]->mo_globalc) { EXCEPTION_CLEANUP goto err_invalid_extern; } }__WHILE0
 #define ASSERT_GLOBALimm()   do{ if unlikely(imm_val >= code->co_module->mo_globalc) { EXCEPTION_CLEANUP goto err_invalid_global; } }__WHILE0
@@ -1007,7 +1053,7 @@ inc_execsz_start:
 #define ASSERT_STATICimm()   do{ if unlikely(imm_val >= code->co_staticc) { EXCEPTION_CLEANUP goto err_invalid_static; } }__WHILE0
 #define ASSERT_CONSTimm()    do{ if unlikely(imm_val >= code->co_staticc) { EXCEPTION_CLEANUP goto err_invalid_const; } }__WHILE0
 #define ASSERT_CONSTimm2()   do{ if unlikely(imm_val2 >= code->co_staticc) { EXCEPTION_CLEANUP imm_val2 = imm_val; goto err_invalid_const; } }__WHILE0
-#define ASSERT_YIELDING()    do{ if unlikely(!(code->co_flags&CODE_FYIELDING)) { EXCEPTION_CLEANUP goto err_requires_yield_code; } }__WHILE0
+#define ASSERT_YIELDING()    do{ if unlikely(!(code->co_flags & CODE_FYIELDING)) { EXCEPTION_CLEANUP goto err_requires_yield_code; } }__WHILE0
 #define STACKFREE           ((frame->cf_stack+(frame->cf_stacksz ? frame->cf_stacksz : STACKPREALLOC))-sp)
 #define STACKSIZE            (frame->cf_stacksz ? frame->cf_stacksz : STACKPREALLOC)
 #define ASSERT_USAGE(sp_sub,sp_add) \
@@ -1016,11 +1062,12 @@ inc_execsz_start:
 #else
 #define ASSERT_TUPLE(ob)      ASSERT(DeeTuple_CheckExact(ob))
 #define ASSERT_STRING(ob)     ASSERT(DeeString_CheckExact(ob))
-#define ASSERT_THISCALL()     ASSERT(code->co_flags&CODE_FTHISCALL)
+#define ASSERT_THISCALL()     ASSERT(code->co_flags & CODE_FTHISCALL)
 #define CONST_LOCKREAD()     (void)0
 #define CONST_LOCKENDREAD()  (void)0
 #define CONST_LOCKWRITE()    (void)0
 #define CONST_LOCKENDWRITE() (void)0
+#define ASSERT_ARGimm()       ASSERT(imm_val < code->co_argc_max)
 #define ASSERT_REFimm()       ASSERT(imm_val < code->co_refc)
 #define ASSERT_EXTERNimm()    ASSERT(imm_val < code->co_module->mo_importc && imm_val2 < code->co_module->mo_importv[imm_val]->mo_globalc)
 #define ASSERT_GLOBALimm()    ASSERT(imm_val < code->co_module->mo_globalc)
@@ -1028,7 +1075,7 @@ inc_execsz_start:
 #define ASSERT_STATICimm()    ASSERT(imm_val < code->co_staticc)
 #define ASSERT_CONSTimm()     ASSERT(imm_val < code->co_staticc)
 #define ASSERT_CONSTimm2()    ASSERT(imm_val2 < code->co_staticc)
-#define ASSERT_YIELDING()     ASSERT(code->co_flags&CODE_FYIELDING)
+#define ASSERT_YIELDING()     ASSERT(code->co_flags & CODE_FYIELDING)
 #define STACKFREE           ((frame->cf_stack+STACKPREALLOC)-sp)
 #define STACKSIZE            (STACKPREALLOC)
 #define ASSERT_USAGE(sp_sub,sp_add) \
@@ -1045,8 +1092,8 @@ inc_execsz_start:
 #define REPEAT_INSTRUCTION() (ip.ptr = frame->cf_ip)
 #define HANDLE_EXCEPT()       goto handle_except
 #define DISPATCH()            goto next_instr
-#define YIELD_RESULT()        do{ ASSERT(code->co_flags&CODE_FYIELDING); goto end_without_finally; }__WHILE0
-#define RETURN_RESULT()       do{ ASSERT(!(code->co_flags&CODE_FYIELDING)); goto end_return; }__WHILE0
+#define YIELD_RESULT()        do{ ASSERT(code->co_flags & CODE_FYIELDING); goto end_without_finally; }__WHILE0
+#define RETURN_RESULT()       do{ ASSERT(!(code->co_flags & CODE_FYIELDING)); goto end_return; }__WHILE0
 #define YIELD(val)            do{ frame->cf_result = (val); YIELD_RESULT(); }__WHILE0
 #define RETURN(val)           do{ frame->cf_result = (val); RETURN_RESULT(); }__WHILE0
 #ifndef __OPTIMIZE_SIZE__
@@ -1095,7 +1142,7 @@ next_instr:
  TARGET(ASM_RET_NONE,-0,+0) {
      if (ITER_ISOK(frame->cf_result))
          Dee_Decref(frame->cf_result);
-     if (code->co_flags&CODE_FYIELDING) {
+     if (code->co_flags & CODE_FYIELDING) {
       /* Rewind the instruction pointer to potentially re-execute
        * `ASM_RET_NONE' and return `ITER_DONE' once again, should
        * the caller attempt to invoke us again. */
@@ -1115,7 +1162,7 @@ next_instr:
      if (ITER_ISOK(frame->cf_result))
          Dee_Decref(frame->cf_result);
      frame->cf_result = POP();
-     if (code->co_flags&CODE_FYIELDING)
+     if (code->co_flags & CODE_FYIELDING)
          goto end_without_finally;
      goto end_return;
  }
@@ -1182,6 +1229,16 @@ except_no_active_exception:
      /* Check for errors. */
      if (except_recursion != this_thread->t_exceptsz)
          HANDLE_EXCEPT();
+     DISPATCH();
+ }
+
+ TARGET(ASM_PUSH_BND_ARG,-0,+1) {
+     imm_val = READ_imm8();
+do_push_bnd_arg:
+     ASSERT_ARGimm();
+     PUSHREF(DeeBool_For(imm_val < frame->cf_argc ||
+                        (frame->cf_kw &&
+                         frame->cf_kw->fk_kargv[imm_val - frame->cf_argc])));
      DISPATCH();
  }
 
@@ -1632,44 +1689,70 @@ do_push_ref:
  }
 
  TARGET(ASM_PUSH_ARG,-0,+1) {
+     DeeObject *value;
      imm_val = READ_imm8();
 do_push_arg:
-     ASSERT(code->co_argc_max >= code->co_argc_min);
-     if (imm_val < code->co_argc_max) {
-      /* Simple case: Direct argument/default reference. */
-      if (imm_val < frame->cf_argc) {
-       PUSHREF(frame->cf_argv[imm_val]);
-      } else {
-       /* TODO: Keyword argument support? */
-       ASSERT(imm_val >= code->co_argc_min);
-       PUSHREF(code->co_defaultv[imm_val-code->co_argc_min]);
+     ASSERT_ARGimm();
+     /* Simple case: Direct argument/default reference. */
+     if (imm_val < frame->cf_argc) {
+      value = frame->cf_argv[imm_val];
+     } else if (frame->cf_kw) {
+      value = frame->cf_kw->fk_kargv[imm_val - frame->cf_argc];
+      if (!value) {
+       value = code->co_defaultv[imm_val - code->co_argc_min];
+       if (!value) goto err_unbound_arg;
       }
      } else {
-      /* Special case: Varargs. */
-#ifdef EXEC_SAFE
-      if (!(code->co_flags&CODE_FVARARGS))
-          goto err_invalid_argument_index;
-      if (imm_val != code->co_argc_max)
-          goto err_invalid_argument_index;
-#else
-      ASSERT(code->co_flags&CODE_FVARARGS);
-      ASSERTF(imm_val == code->co_argc_max,
-              "out-of-bounds argument index");
-#endif
-      ASSERT(frame->cf_argc >= code->co_argc_min);
-      if (!frame->cf_vargs) {
-       if (frame->cf_argc <= code->co_argc_max) {
-        frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
-        Dee_Incref(Dee_EmptyTuple);
-       } else {
-        frame->cf_vargs = (DREF DeeTupleObject *)
-         DeeTuple_NewVector((size_t)(frame->cf_argc-code->co_argc_max),
-                                     frame->cf_argv+code->co_argc_max);
-        if unlikely(!frame->cf_vargs) HANDLE_EXCEPT();
-       }
-      }
-      PUSHREF((DeeObject *)frame->cf_vargs);
+      value = code->co_defaultv[imm_val - code->co_argc_min];
+      if (!value) goto err_unbound_arg;
      }
+     PUSHREF(value);
+     DISPATCH();
+ }
+
+ TARGET(ASM_PUSH_VARARGS,-0,+1) {
+#ifdef EXEC_SAFE
+     if (!(code->co_flags & CODE_FVARARGS))
+         goto err_requires_varargs_code;
+#else
+     ASSERT(code->co_flags & CODE_FVARARGS);
+#endif
+     if (!frame->cf_vargs) {
+      if (frame->cf_argc <= code->co_argc_max) {
+       frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
+       Dee_Incref(Dee_EmptyTuple);
+      } else {
+       frame->cf_vargs = (DREF DeeTupleObject *)
+        DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+                                    frame->cf_argv + code->co_argc_max);
+       if unlikely(!frame->cf_vargs) HANDLE_EXCEPT();
+      }
+     }
+     PUSHREF((DeeObject *)frame->cf_vargs);
+     DISPATCH();
+ }
+
+ TARGET(ASM_PUSH_VARKWDS,-0,+1) {
+     DeeObject *varkwds;
+#ifdef EXEC_SAFE
+     if (!(code->co_flags & CODE_FVARKWDS))
+         goto err_requires_varkwds_code;
+#else
+     ASSERT(code->co_flags & CODE_FVARKWDS);
+#endif
+     if (frame->cf_kw) {
+      varkwds = frame->cf_kw->fk_varkwds;
+      if (!varkwds) {
+       DeeObject *oldval;
+       varkwds = construct_varkwds_mapping();
+       if unlikely(!varkwds) HANDLE_EXCEPT();
+       oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,varkwds);
+       if unlikely(oldval) { Dee_Decref(varkwds); varkwds = oldval; }
+      }
+     } else {
+      varkwds = Dee_EmptyMapping;
+     }
+     PUSHREF(varkwds);
      DISPATCH();
  }
 
@@ -3082,7 +3165,7 @@ do_setitem_c:
 
      case TRIGGER_BREAKPOINT_EXIT:
      case TRIGGER_BREAKPOINT_EXIT_NOFIN:
-      if (code->co_flags&CODE_FYIELDING) {
+      if (code->co_flags & CODE_FYIELDING) {
        if (ITER_ISOK(frame->cf_result))
            Dee_Decref(frame->cf_result);
        frame->cf_result = ITER_DONE;
@@ -3099,7 +3182,7 @@ do_setitem_c:
       goto end_return;
 
      case TRIGGER_BREAKPOINT_RETURN:
-      if (code->co_flags&CODE_FYIELDING) {
+      if (code->co_flags & CODE_FYIELDING) {
        if (frame->cf_result == NULL)
            frame->cf_result = ITER_DONE;
        goto end_without_finally;
@@ -4831,19 +4914,21 @@ do_pack_dict:
          goto do_prefix_instr;
 
 
+
      RAW_TARGET(ASM_VARARGS_UNPACK) {
          size_t va_size;
 #ifdef EXEC_SAFE
-         if (!(code->co_flags&CODE_FVARARGS))
+         if (!(code->co_flags & CODE_FVARARGS))
              goto err_requires_varargs_code;
 #else
-         ASSERT(code->co_flags&CODE_FVARARGS);
+         ASSERT(code->co_flags & CODE_FVARARGS);
 #endif
          imm_val = READ_imm8();
          ASSERT_USAGE(-0,+imm_val);
          va_size = likely(frame->cf_argc > code->co_argc_max)
                  ? frame->cf_argc - code->co_argc_max
-                 : 0;
+                 : 0
+                 ;
          if (imm_val != va_size) {
           err_invalid_va_unpack_size(imm_val,va_size);
           HANDLE_EXCEPT();
@@ -4853,81 +4938,15 @@ do_pack_dict:
          DISPATCH();
      }
 
-     TARGET(ASM_CALL_ARGSFWD,-1,+1) {
-         DREF DeeObject *temp;
-         uint8_t arg_lo = READ_imm8();
-         uint8_t arg_hi = READ_imm8();
-#ifdef EXEC_SAFE
-         if (arg_lo > arg_hi)
-             goto err_invalid_operands;
-#else
-         ASSERT(arg_lo <= arg_hi);
-#endif
-         if (arg_hi < code->co_argc_max) {
-          if (arg_hi < frame->cf_argc) {
-           /* Just a regular, old call-forward */
-           temp = DeeObject_Call(TOP,
-                                (size_t)(arg_hi - arg_lo) + 1,
-                                 frame->cf_argv + arg_lo);
-          } else if (arg_lo >= frame->cf_argc) {
-           /* Call using only default-arguments. */
-           ASSERT(arg_lo >= code->co_argc_min);
-           temp = DeeObject_Call(TOP,
-                                (size_t)(arg_hi - arg_lo) + 1,
-                                (DeeObject **)code->co_defaultv +
-                                (arg_lo - code->co_argc_min));
-          } else {
-           /* Partial call using both default, and given arguments. */
-           size_t argc = (size_t)(arg_hi-arg_lo)+1;
-           size_t fwd_argc = frame->cf_argc - arg_lo;
-           temp = object_call_vec2(TOP,
-                                   fwd_argc,
-                                   frame->cf_argv + arg_lo,
-                                   argc - fwd_argc,
-                                  (DeeObject **)code->co_defaultv +
-                                 ((code->co_argc_max - code->co_argc_min) - (argc - fwd_argc)));
-          }
-         } else {
-          /* Special case: Varargs-inclusive. */
-#ifdef EXEC_SAFE
-          if (!(code->co_flags&CODE_FVARARGS))
-              goto err_invalid_argument_index;
-          if (arg_hi != code->co_argc_max)
-              goto err_invalid_argument_index;
-#else
-          ASSERT(code->co_flags&CODE_FVARARGS);
-          ASSERTF(arg_hi == code->co_argc_max,
-                  "out-of-bounds argument index");
-#endif
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-          if (frame->cf_vargs != NULL &&
-             !arg_lo && !code->co_argc_min) {
-           temp = DeeObject_CallTuple(TOP,(DeeObject *)frame->cf_vargs);
-          } else
-#endif
-          {
-           temp = DeeObject_Call(TOP,
-                                 frame->cf_argc - arg_lo,
-                                 frame->cf_argv + arg_lo);
-          }
-         }
-         if unlikely(!temp) HANDLE_EXCEPT();
-         Dee_Decref(TOP);
-         TOP = temp; /* Inherit reference. */
-         DISPATCH();
-     }
-
-
      /* Variable argument API. */
      TARGET(ASM_VARARGS_GETSIZE,-0,+1) {
          DREF DeeObject *varsize;
 #ifdef EXEC_SAFE
-         if (!(code->co_flags&CODE_FVARARGS))
-             goto err_invalid_argument_index;
+         if (!(code->co_flags & CODE_FVARARGS))
+             goto err_requires_varargs_code;
 #else
-         ASSERT(code->co_flags&CODE_FVARARGS);
+         ASSERT(code->co_flags & CODE_FVARARGS);
 #endif
-         ASSERT(frame->cf_argc >= code->co_argc_min);
          if (frame->cf_argc <= code->co_argc_max) {
           varsize = &DeeInt_Zero;
           Dee_Incref(varsize);
@@ -4942,12 +4961,11 @@ do_pack_dict:
      TARGET(ASM_VARARGS_CMP_EQ_SZ,-0,+1) {
          size_t va_size;
 #ifdef EXEC_SAFE
-         if (!(code->co_flags&CODE_FVARARGS))
-             goto err_invalid_argument_index;
+         if (!(code->co_flags & CODE_FVARARGS))
+             goto err_requires_varargs_code;
 #else
-         ASSERT(code->co_flags&CODE_FVARARGS);
+         ASSERT(code->co_flags & CODE_FVARARGS);
 #endif
-         ASSERT(frame->cf_argc >= code->co_argc_min);
          if (frame->cf_argc <= code->co_argc_max) {
           va_size = 0;
          } else {
@@ -4960,12 +4978,11 @@ do_pack_dict:
      TARGET(ASM_VARARGS_CMP_GR_SZ,-0,+1) {
          size_t va_size;
 #ifdef EXEC_SAFE
-         if (!(code->co_flags&CODE_FVARARGS))
-             goto err_invalid_argument_index;
+         if (!(code->co_flags & CODE_FVARARGS))
+             goto err_requires_varargs_code;
 #else
-         ASSERT(code->co_flags&CODE_FVARARGS);
+         ASSERT(code->co_flags & CODE_FVARARGS);
 #endif
-         ASSERT(frame->cf_argc >= code->co_argc_min);
          if (frame->cf_argc <= code->co_argc_max) {
           va_size = 0;
          } else {
@@ -4979,14 +4996,13 @@ do_pack_dict:
      TARGET(ASM_VARARGS_GETITEM,-1,+1) {
          size_t index;
 #ifdef EXEC_SAFE
-         if (!(code->co_flags&CODE_FVARARGS))
-             goto err_invalid_argument_index;
+         if (!(code->co_flags & CODE_FVARARGS))
+             goto err_requires_varargs_code;
 #else
-         ASSERT(code->co_flags&CODE_FVARARGS);
+         ASSERT(code->co_flags & CODE_FVARARGS);
 #endif
          if (DeeObject_AsSize(TOP,&index))
              HANDLE_EXCEPT();
-         ASSERT(frame->cf_argc >= code->co_argc_min);
          index += code->co_argc_max;
          if (index >= frame->cf_argc) {
           err_va_index_out_of_bounds((size_t)(index-code->co_argc_max),
@@ -5005,12 +5021,11 @@ do_pack_dict:
          DeeObject *argobj;
          index = READ_imm8();
 #ifdef EXEC_SAFE
-         if (!(code->co_flags&CODE_FVARARGS))
-             goto err_invalid_argument_index;
+         if (!(code->co_flags & CODE_FVARARGS))
+             goto err_requires_varargs_code;
 #else
-         ASSERT(code->co_flags&CODE_FVARARGS);
+         ASSERT(code->co_flags & CODE_FVARARGS);
 #endif
-         ASSERT(frame->cf_argc >= code->co_argc_min);
          index += code->co_argc_max;
          if (index >= frame->cf_argc) {
           size_t va_size = 0;
@@ -6096,44 +6111,74 @@ do_prefix_push_ref:
       DREF DeeObject *value;
       imm_val = READ_imm8();
 do_prefix_push_arg:
-      ASSERT(code->co_argc_max >= code->co_argc_min);
-      if (imm_val < code->co_argc_max) {
-       /* Simple case: Direct argument/default reference. */
-       if (imm_val < frame->cf_argc) {
-        value = frame->cf_argv[imm_val];
-       } else {
-        /* TODO: Keyword argument support? */
-        ASSERT(imm_val >= code->co_argc_min);
-        value = code->co_defaultv[imm_val-code->co_argc_min];
+      ASSERT_ARGimm();
+      /* Simple case: Direct argument/default reference. */
+      if (imm_val < frame->cf_argc) {
+       value = frame->cf_argv[imm_val];
+      } else if (frame->cf_kw) {
+       value = frame->cf_kw->fk_kargv[imm_val - frame->cf_argc];
+       if (!value) {
+        value = code->co_defaultv[imm_val - code->co_argc_min];
+        if (!value) goto err_unbound_arg;
        }
       } else {
-       /* Special case: Varargs. */
-#ifdef EXEC_SAFE
-       if (!(code->co_flags&CODE_FVARARGS))
-           goto err_invalid_argument_index;
-       if (imm_val != code->co_argc_max)
-           goto err_invalid_argument_index;
-#else
-       ASSERT(code->co_flags&CODE_FVARARGS);
-       ASSERTF(imm_val == code->co_argc_max,
-               "out-of-bounds argument index");
-#endif
-       ASSERT(frame->cf_argc >= code->co_argc_min);
-       if (!frame->cf_vargs) {
-        if (frame->cf_argc <= code->co_argc_max) {
-         frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
-         Dee_Incref(Dee_EmptyTuple);
-        } else {
-         frame->cf_vargs = (DREF DeeTupleObject *)
-          DeeTuple_NewVector((size_t)(frame->cf_argc-code->co_argc_max),
-                                      frame->cf_argv+code->co_argc_max);
-         if unlikely(!frame->cf_vargs) HANDLE_EXCEPT();
-        }
-       }
-       value = (DeeObject *)frame->cf_vargs;
+       value = code->co_defaultv[imm_val - code->co_argc_min];
+       if (!value) goto err_unbound_arg;
       }
       Dee_Incref(value);
       if (set_prefix_object(value))
+          HANDLE_EXCEPT();
+      DISPATCH();
+  }
+
+  PREFIX_TARGET(ASM_PUSH_VARARGS) {
+      /* Special case: Varargs. */
+#ifdef EXEC_SAFE
+      if (!(code->co_flags & CODE_FVARARGS))
+          goto err_requires_varargs_code;
+#else
+      ASSERT(code->co_flags & CODE_FVARARGS);
+#endif
+      if (!frame->cf_vargs) {
+       if (frame->cf_argc <= code->co_argc_max) {
+        frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
+        Dee_Incref(Dee_EmptyTuple);
+       } else {
+        frame->cf_vargs = (DREF DeeTupleObject *)
+         DeeTuple_NewVector((size_t)(frame->cf_argc-code->co_argc_max),
+                                     frame->cf_argv+code->co_argc_max);
+        if unlikely(!frame->cf_vargs) HANDLE_EXCEPT();
+       }
+      }
+      Dee_Incref(frame->cf_vargs);
+      if (set_prefix_object((DeeObject *)frame->cf_vargs))
+          HANDLE_EXCEPT();
+      DISPATCH();
+  }
+
+  PREFIX_TARGET(ASM_PUSH_VARKWDS) {
+      DREF DeeObject *varkwds;
+      /* Special case: Varargs. */
+#ifdef EXEC_SAFE
+      if (!(code->co_flags&CODE_FVARKWDS))
+          goto err_requires_varkwds_code;
+#else
+      ASSERT(code->co_flags&CODE_FVARKWDS);
+#endif
+      if (frame->cf_kw) {
+       varkwds = frame->cf_kw->fk_varkwds;
+       if (!varkwds) {
+        DeeObject *oldval;
+        varkwds = construct_varkwds_mapping();
+        if unlikely(!varkwds) HANDLE_EXCEPT();
+        oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,varkwds);
+        if unlikely(oldval) { Dee_Decref(varkwds); varkwds = oldval; }
+       }
+      } else {
+       varkwds = Dee_EmptyMapping;
+      }
+      Dee_Incref(varkwds);
+      if (set_prefix_object((DeeObject *)varkwds))
           HANDLE_EXCEPT();
       DISPATCH();
   }
@@ -6268,7 +6313,7 @@ do_prefix_push_local:
       if (ITER_ISOK(frame->cf_result))
           Dee_Decref(frame->cf_result);
       frame->cf_result = value;
-      if (code->co_flags&CODE_FYIELDING)
+      if (code->co_flags & CODE_FYIELDING)
           goto end_without_finally;
       goto end_return;
   }
@@ -6582,6 +6627,7 @@ err_invalid_instance_addr:
 err_invalid_ip:
 err_invalid_operands:
 err_requires_varargs_code:
+err_requires_varkwds_code:
 err_requires_yield_code:
 err_requires_thiscall_code:
 err_invalid_argument_index:
@@ -6589,6 +6635,10 @@ err_cannot_push_exception:
  err_illegal_instruction(code,frame->cf_ip);
  HANDLE_EXCEPT();
 #endif
+err_unbound_arg:
+ ASSERT(imm_val <= code->co_argc_max);
+ err_unbound_arg(code,frame->cf_ip,imm_val);
+ HANDLE_EXCEPT();
 err_unbound_extern:
  ASSERT(imm_val  <= code->co_module->mo_importc);
  ASSERT(imm_val2 <= code->co_module->mo_importv[imm_val]->mo_globalc);
@@ -6661,6 +6711,7 @@ DECL_END
 #undef CONST_LOCKENDREAD
 #undef CONST_LOCKWRITE
 #undef CONST_LOCKENDWRITE
+#undef ASSERT_ARGimm
 #undef ASSERT_REFimm
 #undef ASSERT_EXTERNimm
 #undef ASSERT_GLOBALimm
@@ -6687,6 +6738,7 @@ DECL_END
 #undef YIELD
 #undef RETURN
 #undef USE_SWITCH
+#undef construct_varkwds_mapping
 #undef set_prefix_object
 #undef xch_prefix_object
 #undef get_prefix_object_ptr

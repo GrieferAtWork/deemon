@@ -720,7 +720,7 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
   DREF DeeObject **iter,**end;
   end = (iter = self->bs_default)+(self->bs_argc_max-
                                    self->bs_argc_min);
-  for (; iter != end; ++iter) Dee_Decref(*iter);
+  for (; iter != end; ++iter) Dee_XDecref(*iter);
  }
  Dee_Free(self->bs_default);
  Dee_Free(self->bs_argv);
@@ -736,7 +736,7 @@ base_scope_visit(DeeBaseScopeObject *__restrict self,
   DREF DeeObject **iter,**end;
   end = (iter = self->bs_default)+(self->bs_argc_max-
                                    self->bs_argc_min);
-  for (; iter != end; ++iter) Dee_Visit(*iter);
+  for (; iter != end; ++iter) Dee_XVisit(*iter);
  }
  recursive_rwlock_endread(&DeeCompiler_Lock);
 }
@@ -1030,14 +1030,12 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
  ASSERT(!current_basescope->bs_argc);
  ASSERT(!current_basescope->bs_argc_min);
  ASSERT(!current_basescope->bs_argc_max);
- ASSERT(!current_basescope->bs_argc_opt);
  ASSERT(!current_basescope->bs_argv);
  ASSERT(!current_basescope->bs_default);
  ASSERT(!current_basescope->bs_varargs);
  ASSERT(!(current_basescope->bs_flags&CODE_FVARARGS));
  /* Copy basic flags and counters. */
  current_basescope->bs_flags   |= other->bs_flags&CODE_FVARARGS;
- current_basescope->bs_argc_opt = other->bs_argc_opt;
  current_basescope->bs_argc_max = other->bs_argc_max;
  current_basescope->bs_argc_min = other->bs_argc_min;
  current_basescope->bs_argc     = other->bs_argc;
@@ -1048,7 +1046,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
   if unlikely(!current_basescope->bs_default) goto err;
   for (i = 0; i < count; ++i) {
    current_basescope->bs_default[i] = other->bs_default[i];
-   Dee_Incref(other->bs_default[i]);
+   Dee_XIncref(other->bs_default[i]);
   }
  }
  count = other->bs_argc;
@@ -1081,7 +1079,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 err:
  count = other->bs_argc_max - other->bs_argc_min;
  for (i = 0; i < count; ++i)
-      Dee_Decref(current_basescope->bs_default[i]);
+      Dee_XDecref(current_basescope->bs_default[i]);
  Dee_Free(current_basescope->bs_default);
  current_basescope->bs_argc     = 0;
  current_basescope->bs_argc_min = 0;

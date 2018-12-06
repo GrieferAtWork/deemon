@@ -702,20 +702,38 @@ decl_ast_print(struct decl_ast const *__restrict self,
   if (unicode_printer_putascii(printer,'('))
       goto err;
   argv = scope->bs_argv;
-  for (i = 0; i < scope->bs_argc_max; ++i) {
+  for (i = 0; i < scope->bs_argc; ++i) {
    struct symbol *arg;
    if (i != 0 && unicode_printer_putascii(printer,','))
        goto err;
    arg = argv[i];
-#if 0 /* Since we always generate keyword information, the names of
-       * positional arguments can always be extracted from code keywords. */
-   if (unicode_printer_print(printer,
-                             arg->s_name->k_name,
-                             arg->s_name->k_size) < 0)
-       goto err;
-#endif
+   if (arg == scope->bs_varargs ||
+       arg == scope->bs_varkwds) {
+    if (unicode_printer_print(printer,
+                              arg->s_name->k_name,
+                              arg->s_name->k_size) < 0)
+        goto err;
+   } else {
+    /* Since we always generate keyword information, the names of
+     * positional arguments can always be extracted from code keywords. */
+   }
+   if (i >= scope->bs_argc_min && i < scope->bs_argc_max &&
+      !scope->bs_default[i - scope->bs_argc_min]) {
+    /* Optional argument */
+    if (unicode_printer_putascii(printer,'?'))
+        goto err;
+   } else if (arg == scope->bs_varargs) {
+    /* Varargs argument */
+    if (unicode_printer_putascii(printer,'!'))
+        goto err;
+   } else if (arg == scope->bs_varkwds) {
+    /* Varkwds argument */
+    if (UNICODE_PRINTER_PRINT(printer,"!!") < 0)
+        goto err;
+   }
    if (!decl_ast_isempty(&arg->s_decltype) &&
-      (i < scope->bs_argc_min ||
+      (i < scope->bs_argc_min || i >= scope->bs_argc_max ||
+      !scope->bs_default[i - scope->bs_argc_min] ||
       !decl_ast_istype(&arg->s_decltype, /* Don't encode a type if it can be deduced from the default argument */
                         Dee_TYPE(scope->bs_default[i - scope->bs_argc_min])))) {
     /* Encode the argument type. */
@@ -724,7 +742,8 @@ decl_ast_print(struct decl_ast const *__restrict self,
     if (decl_ast_print_type(&arg->s_decltype,printer))
         goto err;
    }
-   if (i >= scope->bs_argc_min) {
+   if (i >= scope->bs_argc_min && i < scope->bs_argc_max &&
+       scope->bs_default[i - scope->bs_argc_min]) {
     /* Argument has a default parameter. */
     if (unicode_printer_putascii(printer,'='))
         goto err;
@@ -734,63 +753,6 @@ decl_ast_print(struct decl_ast const *__restrict self,
 #endif
    }
   }
-  argv += scope->bs_argc_max;
-  for (i = 0; i < scope->bs_argc_opt; ++i) {
-   if ((i != 0 || scope->bs_argc_max != 0) &&
-        unicode_printer_putascii(printer,','))
-        goto err;
-   if (unicode_printer_print(printer,
-                             argv[i]->s_name->k_name,
-                             argv[i]->s_name->k_size) < 0)
-       goto err;
-   if (unicode_printer_putascii(printer,'?'))
-       goto err;
-   if (!decl_ast_isempty(&argv[i]->s_decltype)) {
-    /* Encode the argument type. */
-    if (unicode_printer_putascii(printer,':'))
-        goto err;
-    if (decl_ast_print_type(&argv[i]->s_decltype,printer))
-        goto err;
-   }
-  }
-  if (scope->bs_varargs) {
-   if ((scope->bs_argc_max || scope->bs_argc_opt) &&
-        unicode_printer_putascii(printer,','))
-       goto err;
-   if (unicode_printer_print(printer,
-                             scope->bs_varargs->s_name->k_name,
-                             scope->bs_varargs->s_name->k_size) < 0)
-       goto err;
-   if (unicode_printer_putascii(printer,'!'))
-       goto err;
-   if (!decl_ast_isempty(&scope->bs_varargs->s_decltype)) {
-    /* Encode the argument type. */
-    if (unicode_printer_putascii(printer,':'))
-        goto err;
-    if (decl_ast_print_type(&scope->bs_varargs->s_decltype,printer))
-        goto err;
-   }
-  }
-#if 0 /* TODO: bs_kwargs */
-  if (scope->bs_kwargs) {
-   if ((scope->bs_argc_max || scope->bs_argc_opt || scope->bs_varargs) &&
-        unicode_printer_putascii(printer,','))
-       goto err;
-   if (unicode_printer_print(printer,
-                             scope->bs_kwargs->s_name->k_name,
-                             scope->bs_kwargs->s_name->k_size) < 0)
-       goto err;
-   if (UNICODE_PRINTER_PRINT(printer,"!!"))
-       goto err;
-   if (!decl_ast_isempty(&scope->bs_kwargs->s_decltype)) {
-    /* Encode the argument type. */
-    if (unicode_printer_putascii(printer,':'))
-        goto err;
-    if (decl_ast_print_type(&scope->bs_kwargs->s_decltype,printer))
-        goto err;
-   }
-  }
-#endif
   if (unicode_printer_putascii(printer,')'))
       goto err;
  }
@@ -1338,6 +1300,29 @@ err_elemv:
  goto err;
 err_r:
  decl_ast_fini(self);
+err:
+ return -1;
+}
+
+INTERN int DCALL
+decl_ast_parse_for_symbol(struct symbol *__restrict self) {
+ if likely(self->s_decltype.da_type == DAST_NONE) {
+  if unlikely(decl_ast_parse(&self->s_decltype))
+     goto err;
+ } else {
+  struct decl_ast decl;
+  if unlikely(decl_ast_parse(&decl))
+     goto err;
+  if unlikely(!decl_ast_equal(&self->s_decltype,&decl) &&
+               WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,self)) {
+   decl_ast_fini(&decl);
+   goto err;
+  }
+  decl_ast_fini(&self->s_decltype);
+  self->s_decltype.da_type = DAST_NONE;
+  decl_ast_move(&self->s_decltype,&decl);
+ }
+ return 0;
 err:
  return -1;
 }

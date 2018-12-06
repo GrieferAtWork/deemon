@@ -3635,7 +3635,7 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
   dst->cf_vargs = iter->cf_vargs;
   XINCREF_IF_NONZERO(iter->cf_vargs);
   dst->cf_this  = iter->cf_this;
-  if (!(code->co_flags&CODE_FTHISCALL))
+  if (!(code->co_flags & CODE_FTHISCALL))
         dst->cf_this = NULL;
   Dee_XIncref(dst->cf_this);
   dst->cf_result = iter->cf_result;

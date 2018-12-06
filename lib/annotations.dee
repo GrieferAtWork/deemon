@@ -225,13 +225,13 @@ class Synchronized: callable {
 class Timed: callable {
 	private static member m_libtime: module;
 	private member m_func: callable;
-	private member m_total_spend: time from time;
+	private member m_total_spend: Time from time;
 	private member m_num_invocations: int = 0;
 	this(func: callable) {
 		m_func = func;
 		if (m_libtime !is bound)
 			m_libtime = import("time");
-		m_total_spend = m_libtime.time(0);
+		m_total_spend = m_libtime.Time(0);
 	}
 
 	operator str(): string {
@@ -260,15 +260,15 @@ class Timed: callable {
 	@@Get/del (reset)/set the amount of time that has
 	@@already been spent while inside of the function.
 	@@>print myfunc.total.microseconds;
-	property total: time from time = {
-		get(): time from time {
+	property total: Time from time = {
+		get(): Time from time {
 			return m_total_spend;
 		}
 		del() {
-			m_total_spend = m_libtime.time(0);
+			m_total_spend = m_libtime.Time(0);
 			m_num_invocations = 0;
 		}
-		set(value: time from time) {
+		set(value: Time from time) {
 			if (value is none) {
 do_del_total:
 				del total;
@@ -276,8 +276,8 @@ do_del_total:
 				if (!value) goto do_del_total;
 				m_total_spend = m_libtime.makeanon(value);
 			} else {
-				if (value !is m_libtime.time)
-					throw Error.TypeError("Expected a time object");
+				if (value !is m_libtime.Time)
+					throw Error.TypeError("Expected a Time object");
 				m_total_spend = copy value;
 			}
 		}
@@ -286,8 +286,8 @@ do_del_total:
 	@@@throw ValueError The function hasn't been called yet
 	@@Get the average time spent while inside of the function
 	@@>print myfunc.average.microseconds;
-	property average: time from time = {
-		get(): time from time {
+	property average: Time from time = {
+		get(): Time from time {
 			try {
 				return m_total_spend / m_num_invocations;
 			} catch (Error.ValueError.ArithmeticError.DivideByZero) {

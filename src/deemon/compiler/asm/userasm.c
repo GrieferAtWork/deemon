@@ -172,6 +172,7 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
  case OPERAND_CLASS_MOVE         : raw_operand_string = "move"; goto do_raw_string;
  case OPERAND_CLASS_DEFAULT      : raw_operand_string = "default"; goto do_raw_string;
  case OPERAND_CLASS_VARARGS      : raw_operand_string = "varargs"; goto do_raw_string;
+ case OPERAND_CLASS_VARKWDS      : raw_operand_string = "varkwds"; goto do_raw_string;
 
  default:
   temp = ascii_printer_printf(printer,"??" "?(%u)",
@@ -353,24 +354,30 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
   if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_VARARGS) break;
   /* Special case: If Allow the use of the last argument as replacement for `varargs' */
   if (((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) &&
-      (current_basescope->bs_flags & CODE_FVARARGS) &&
-       iop->io_symid == current_basescope->bs_argc_max &&
-      (iop->io_symid <= UINT8_MAX || (ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0))) &&
-      (current_basescope->bs_flags & CODE_FVARARGS))
-      break;
+       current_basescope->bs_varargs &&
+       iop->io_symid == current_basescope->bs_varargs->s_symid)
+       break;
+  goto nope;
+
+ case OPERAND_CLASS_VARKWDS:
+  if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_VARKWDS) break;
+  /* Special case: If Allow the use of the last argument as replacement for `varargs' */
+  if (((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) &&
+       current_basescope->bs_varkwds &&
+       iop->io_symid == current_basescope->bs_varkwds->s_symid)
+       break;
   goto nope;
 
  case OPERAND_CLASS_ARG:
-  if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) {
-   if (iop->io_symid > UINT8_MAX && !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
+  if ((iop->io_class & OPERAND_CLASS_FMASK) != OPERAND_CLASS_ARG)
        goto nope;
-   break;
-  }
-  /* Special case: If Allow the use of `varargs' instead of the last argument in varargs functions. */
-  if (!(current_basescope->bs_flags & CODE_FVARARGS)) goto nope;
-  if ((iop->io_class & OPERAND_CLASS_FMASK) != OPERAND_CLASS_VARARGS) goto nope;
-  /* Make sure the varargs index can be fitted by this overload. */
-  if (current_basescope->bs_argc_max > UINT8_MAX && !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
+  if (iop->io_symid > UINT8_MAX && !(ao_flags & (ASM_OVERLOAD_F16BIT|ASM_OVERLOAD_FF0)))
+      goto nope;
+  if (current_basescope->bs_varargs &&
+      current_basescope->bs_varargs->s_symid == iop->io_symid)
+      goto nope;
+  if (current_basescope->bs_varkwds &&
+      current_basescope->bs_varkwds->s_symid == iop->io_symid)
       goto nope;
   break;
 
@@ -860,20 +867,13 @@ do_emit_instruction:
    case OPERAND_CLASS_MODULE:
    case OPERAND_CLASS_GLOBAL:
    case OPERAND_CLASS_LOCAL:
-do_emit_symid_816:
+   case OPERAND_CLASS_ARG:
+/*do_emit_symid_816:*/
     if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_symid)
                    : asm_put_data8 ((uint8_t)invoc->ai_ops[i].io_symid))
         goto err;
     break;
 
-   case OPERAND_CLASS_ARG:
-    if (invoc->ai_ops[i].io_symid != OPERAND_CLASS_VARARGS)
-        goto do_emit_symid_816;
-    /* Emit the varargs argument index. */
-    if (emit_sym16 ? asm_put_data16(current_basescope->bs_argc_max)
-                   : asm_put_data8 ((uint8_t)current_basescope->bs_argc_max))
-        goto err;
-    break;
 
     /* Immediate operands (of any kind). */
    case OPERAND_CLASS_SDISP8:
@@ -993,6 +993,8 @@ struct assembler_state {
 #define ASM_OP_REF           OPNAME1('r')         /* `ref <imm8|16>'              A referenced variable. */
 #define ASM_OP_REF_GEN       OPNAME1('R')         /* `ref <imm8|16>'              A referenced variable (create new references for variables where that is possible). */
 #define ASM_OP_ARG           OPNAME1('a')         /* `arg <imm8|16>'              An argument variable. */
+#define ASM_OP_VARG          OPNAME2('A','v')     /* `varargs'                    Variable positional arguments. */
+#define ASM_OP_VKWD          OPNAME2('A','k')     /* `varkwds'                    Variable keyword arguments. */
 #define ASM_OP_CONST         OPNAME1('c')         /* `const <imm8|16>'            A constant expression. */
 #define ASM_OP_STATIC        OPNAME2('C','s')     /* `static <imm8|16>'           A static expression. */
 #define ASM_OP_EXTERN        OPNAME1('e')         /* `extern <imm8|16>:<imm8|16>' An external symbol. */
@@ -1016,10 +1018,10 @@ struct assembler_state {
 #define ASM_OP_PREFIX        OPNAME1('p')         /* Input operand: Same as `ceglCsS' (Any prefix operand, including const-as-static)
                                                    * Output operand: Same as `eglCsS' (Any prefix operand, including const-as-static) */
 #define ASM_OP_INTEGER       OPNAME1('i')         /* Same as `I32N32' (Any integer operand). */
-#define ASM_OP_SYMBOL        OPNAME1('v')         /* Same as `racCseglRS' (Any symbol, potentially immutable). */
+#define ASM_OP_SYMBOL        OPNAME1('v')         /* Same as `raAvAkcCseglRS' (Any symbol, potentially immutable). */
 #define ASM_OP_VARIABLE      OPNAME1('V')         /* Same as `eglS' (Any symbol, must be mutable). */
 #define ASM_OP_BINDABLE      OPNAME1('b')         /* Same as `egl' (Any symbol, must be able to be unbound). */
-#define ASM_OP_PUSH          OPNAME1('P')         /* Input operand:  Same as `nEMTiTmTfracCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
+#define ASM_OP_PUSH          OPNAME1('P')         /* Input operand:  Same as `nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
                                                    * Output operand: Same as `eglCsS' (All operands accepted by the `pop' instruction)
                                                    * In/out operand: Same as output operand (All operands accepted by both the `push' and `pop' instructions) */
 #define ASM_OP_ANYTHING      OPNAME1('x')         /* Any kind of operand (only really meaningful for artificial dependencies). */
@@ -1260,11 +1262,30 @@ abs_stack_any:
   sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
   if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) goto next_option;
   if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
-  if (DeeBaseScope_IsArgOptional(current_basescope,sym->s_symid) ||
-     (DeeBaseScope_HasOptional(current_basescope) &&
-      DeeBaseScope_IsArgVarArgs(current_basescope,sym->s_symid)))
-      goto next_option; /* Optional arguments, or the varargs with optional present cannot be addressed directly. */
+  if (DeeBaseScope_IsVarargs(current_basescope,sym) ||
+      DeeBaseScope_IsVarkwds(current_basescope,sym))
+      goto next_option;
   result = DeeString_Newf("arg %I16u",sym->s_symid);
+  break;
+
+ case ASM_OP_VARG:
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
+  if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) goto next_option;
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
+  if (!DeeBaseScope_IsVarargs(current_basescope,sym))
+      goto next_option;
+  result = DeeString_New("varargs");
+  break;
+
+ case ASM_OP_VKWD:
+  if (self->a_type != AST_SYM) goto next_option;
+  sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
+  if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) goto next_option;
+  if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) goto next_option;
+  if (!DeeBaseScope_IsVarkwds(current_basescope,sym))
+      goto next_option;
+  result = DeeString_New("varkwds");
   break;
 
  {
@@ -1541,7 +1562,7 @@ write_regular_local:
   goto next_option;
 
  case ASM_OP_SYMBOL:
-  result = get_assembly_formatter_oprepr(self,"racCseglRS",mode|OPTION_MODE_TRY,
+  result = get_assembly_formatter_oprepr(self,"raAvAkcCseglRS",mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;
   if (result != ITER_DONE) break;
@@ -1565,7 +1586,7 @@ write_regular_local:
   if (mode == OPTION_MODE_UNDEF)
       goto err_undefined_mode;
   if (mode == OPTION_MODE_INPUT)
-   result = get_assembly_formatter_oprepr(self,"nEMTiTmTfracCseglTTFFTcI64N64SR",
+   result = get_assembly_formatter_oprepr(self,"nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR",
                                           mode|OPTION_MODE_TRY,
                                           cleanup,init_state);
   else {
@@ -1578,7 +1599,7 @@ write_regular_local:
   goto next_option;
 
  case ASM_OP_ANYTHING:
-  result = get_assembly_formatter_oprepr(self,"nEMTiTmTfracCseglTTFFI64N64CaQsQm",
+  result = get_assembly_formatter_oprepr(self,"nEMTiTmTfraAvAkcCseglTTFFI64N64CaQsQm",
                                          mode|OPTION_MODE_TRY,
                                          cleanup,init_state);
   if (!result) goto err;

@@ -290,95 +290,8 @@ asm_gcall_expr(struct ast *__restrict func,
  if (func->a_type == AST_FUNCTION &&
      /* NOTE: Don't perform this optimization when the argument list is unpredictable. */
     (args->a_type != AST_MULTIPLE || 
-    (AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
-    !ast_multiple_hasexpand(args))))
+    (AST_FMULTIPLE_ISSEQUENCE(args->a_flag) && !ast_multiple_hasexpand(args))))
      return asm_gcall_func(func,args,ddi_ast,gflags);
- if (args->a_type == AST_MULTIPLE &&
-     AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
-     args->a_multiple.m_astc != 0 &&
-     args->a_multiple.m_astc <= UINT8_MAX) {
-  /* Check if this call can be encoded as an argument-forward-call. */
-  size_t i; uint16_t start_offset; struct symbol *arg_sym;
-  struct ast *arg = args->a_multiple.m_astv[0];
-  if (arg->a_type == AST_EXPAND) {
-   /* If the argument is an expand expression, check for the varargs argument. */
-   arg = arg->a_expand;
-   if (arg->a_type != AST_SYM)
-       goto not_argument_forward;
-   arg_sym = arg->a_sym;
-   SYMBOL_INPLACE_UNWIND_ALIAS(arg_sym);
-   if (SYMBOL_TYPE(arg_sym) != SYMBOL_TYPE_ARG)
-       goto not_argument_forward;
-   if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
-       goto not_argument_forward;
-   start_offset = arg_sym->s_symid;
-   /* Make sure that this is the varargs symbol. */
-   if (!DeeBaseScope_IsArgVarArgs(current_basescope,start_offset))
-        goto not_argument_forward;
-  } else {
-   if (arg->a_type != AST_SYM)
-       goto not_argument_forward;
-   arg_sym = arg->a_sym;
-   SYMBOL_INPLACE_UNWIND_ALIAS(arg_sym);
-   if (SYMBOL_TYPE(arg_sym) != SYMBOL_TYPE_ARG)
-       goto not_argument_forward;
-   if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
-       goto not_argument_forward;
-   start_offset = arg_sym->s_symid;
-   /* Make sure that this isn't the varargs symbol. */
-   if (DeeBaseScope_IsArgVarArgs(current_basescope,start_offset))
-       goto not_argument_forward;
-  }
-  /* Check if the final argument range can fit the
-   * 8-bit operand limit for argument forwarding. */
-  if ((size_t)start_offset+args->a_multiple.m_astc > (size_t)UINT8_MAX+1)
-      goto not_argument_forward;
-  /* Check if the remainder of arguments follows our own argument list. */
-  for (i = 1; i < args->a_multiple.m_astc; ++i) {
-   arg = args->a_multiple.m_astv[i];
-   if (DeeBaseScope_IsArgVarArgs(current_basescope,(uint16_t)i)) {
-    /* The varargs-symbol must appear as an expand expression to be forwarded. */
-    if (arg->a_type != AST_EXPAND) goto not_argument_forward;
-    arg = arg->a_expand;
-   }
-   if (arg->a_type != AST_SYM)
-       goto not_argument_forward;
-   arg_sym = arg->a_sym;
-   SYMBOL_INPLACE_UNWIND_ALIAS(arg_sym);
-   if (SYMBOL_TYPE(arg_sym) != SYMBOL_TYPE_ARG)
-       goto not_argument_forward;
-   if (SYMBOL_MUST_REFERENCE_TYPEMAY(arg_sym))
-       goto not_argument_forward;
-   if ((size_t)arg_sym->s_symid != (size_t)start_offset+i)
-       goto not_argument_forward;
-   /* Optional arguments cannot be forwarded, because accessing
-    * them can have the side-effect of them not being bound, so
-    * we can't just forward them in a call-forward. */
-   if (DeeBaseScope_IsArgOptional(current_basescope,(uint16_t)i))
-       goto not_argument_forward;
-  }
-#if 1 /* Optimization: When only a couple of arguments are being forwarded,
-       *               consider if there even is an advantage over doing a
-       *               regular call that can be optimized much better than
-       *               this very specific argument-forward call. */
-  if ((size_t)args->a_multiple.m_astc <=
-      (size_t)((func->a_type == AST_OPERATOR && func->a_flag == OPERATOR_GETATTR
-                /* XXX: class-member symbols? */
-                ) ? 3 : 1) &&
-      !DeeBaseScope_IsArgVarArgs(current_basescope,arg_sym->s_symid))
-       goto not_argument_forward;
-#endif
-
-  /* This one can be encoded as an argument-forward-call! */
-  if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
-  if (asm_putddi(ddi_ast)) goto err;
-  if (asm_gcall_argsfwd(start_offset,
-                        start_offset+
-                        args->a_multiple.m_astc-1))
-      goto err;
-  goto pop_unused;
- }
-not_argument_forward:
 
  /* Optimized call for stack-packed argument list within an 8-bit range. */
  if ((args->a_type != AST_MULTIPLE ||
@@ -1101,12 +1014,14 @@ check_getattr_base_symbol_class_tuple:
     if (asm_gcast_tuple()) goto err;
     goto pop_unused;
    }
+#if 0 /* The real constructor has a special case for integer pre-sizing... */
    if (cxpr == (DeeObject *)&DeeList_Type) {
     if (ast_genasm(arg0,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcast_list()) goto err;
     goto pop_unused;
    }
+#endif
    if (cxpr == (DeeObject *)&DeeDict_Type) {
     if (ast_genasm(arg0,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;

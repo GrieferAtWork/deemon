@@ -438,6 +438,7 @@ INTDEF bool DCALL decl_ast_equal(struct decl_ast const *__restrict a,
 
 /* Parse a declaration expression. */
 INTDEF int DCALL decl_ast_parse(struct decl_ast *__restrict self);
+INTDEF int DCALL decl_ast_parse_for_symbol(struct symbol *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -520,7 +521,10 @@ struct symbol {
 #define SYMBOL_TYPE_GETSET 0x0005  /* A get/set property symbol. */
 #define SYMBOL_TYPE_CATTR  0x0006  /* Class attribute. */
 #define SYMBOL_TYPE_ALIAS  0x0007  /* An alias for a different symbol. */
-#define SYMBOL_TYPE_ARG    0x0008  /* An argument passed to a function. */
+#define SYMBOL_TYPE_ARG    0x0008  /* An argument passed to a function.
+                                    * NOTE: `s_symid' is the argument index in `s_scope->s_base->bs_argv',
+                                    *        meaning it may also be referring to the varargs, or kwargs
+                                    *        special argument objects. */
 #define SYMBOL_TYPE_LOCAL  0x0009  /* A local symbol. */
 #define SYMBOL_TYPE_STACK  0x000a  /* A stack symbol. */
 #define SYMBOL_TYPE_STATIC 0x000b  /* A static symbol. */
@@ -817,10 +821,15 @@ struct base_scope_object {
     DeeCodeObject      *bs_restore;    /* [0..1] Pointer to the generated code object (once that code object has been generated)
                                         * In the event that assembler must be reset due to a linker truncation,
                                         * this code object will be used to restore inherited (stolen) data. */
-    DREF DeeObject    **bs_default;    /* [1..1][0..(bs_argc_max - bs_argc_min)][owned] Vector of function default arguments. */
+    DREF DeeObject    **bs_default;    /* [0..1][0..(bs_argc_max - bs_argc_min)][owned] Vector of function default arguments.
+                                        * NOTE: NULL entires refer to optional arguments, producing an error
+                                        *       when attempted to be loaded without a user override. */
+#define DeeBaseScope_IsVarargs(self,sym) ((self)->bs_varargs == (sym))
+#define DeeBaseScope_IsVarkwds(self,sym) ((self)->bs_varkwds == (sym))
     struct symbol      *bs_varargs;    /* [0..1] A symbol for the varargs argument. */
-    /* TODO: `bs_kwargs' */
-    struct symbol     **bs_argv;       /* [1..1][0..bs_argc][owned] Vector of arguments taken by the function implemented by this scope.
+    struct symbol      *bs_varkwds;    /* [0..1] A symbol for keyword arguments. */
+    struct symbol     **bs_argv;       /* [1..1][0..bs_argc][owned]
+                                        * Vector of arguments taken by the function implemented by this scope.
                                         * HINT: This vector is also used to track which arguments was written to
                                         *      (deemon assembly doesn't allow modifications of arguments), as all
                                         *       those that was will have been converted into `SYM_CLASS_LOCAL'.
@@ -848,24 +857,10 @@ struct base_scope_object {
                                         *   >>    print pop, nl
                                         *   >>    ret
                                         */
-    /* Argument indices are ordered as follows:
-     *  0 ... bs_argc_min-1                       --- `foo'        Mandatory arguments without default values
-     *  bs_argc_min ... bs_argc_max-1             --- `foo = none' Optional arguments with default values
-     *  bs_argc_max ... bs_argc_max+bs_argc_opt-1 --- `?foo'       Optional arguments without default values
-     *  bs_argc_max+bs_argc_opt                   --- `foo...'     The varargs argument
-     *  TODO: bs_kwargs
-     */
-#define DeeBaseScope_IsArgRequired(self,x)   ((x) < (self)->bs_argc_min)
-#define DeeBaseScope_IsArgDefault(self,x)    ((x) >= (self)->bs_argc_min && (x) < (self)->bs_argc_max)
-#define DeeBaseScope_IsArgReqOrDefl(self,x)  ((x) < (self)->bs_argc_max)
-#define DeeBaseScope_IsArgOptional(self,x)   ((x) >= (self)->bs_argc_max && (x) < (uint16_t)((self)->bs_argc_max+(self)->bs_argc_opt))
-#define DeeBaseScope_IsArgVarArgs(self,x)    ((self)->bs_varargs && (x) == (uint16_t)(self)->bs_argc-1)
-#define DeeBaseScope_HasOptional(self)       ((self)->bs_argc_opt != 0)
     uint16_t            bs_argc_min;   /* Min amount of argument symbols defined for this scope. */
     uint16_t            bs_argc_max;   /* Max amount of argument symbols defined for this scope. */
-    uint16_t            bs_argc_opt;   /* The number of optional argument symbols defined for this scope. */
-    uint16_t            bs_argc;       /* The actual amount of argument symbols.
-                                        * == (bs_argc_max+bs_argc_opt)+(bs_varargs ? 1 : 0); */
+    uint16_t            bs_argc;       /* [== bs_argc_max + (bs_varargs ? 1 : 0) + (bs_varkwds ? 1 : 0)]
+                                        * The actual argument count for this scope. */
     uint16_t            bs_flags;      /* Scope flags (Set of `CODE_F*'). */
 #define BASESCOPE_FNORMAL 0x0000       /* Normal base-scope flags. */
 #define BASESCOPE_FRETURN 0x0001       /* A non-empty return statement has been encountered. */

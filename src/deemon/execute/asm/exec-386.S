@@ -366,7 +366,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define cf_func      4  /* DeeFunctionObject *cf_func; */
 #define cf_argc      8  /* size_t cf_argc; */
 #define cf_argv      12 /* DREF DeeObject **cf_argv; */
-#define cf_kw        16 /* DREF DeeObject *cf_kw; */
+#define cf_kw        16 /* struct code_frame_kwds *cf_kw; */
 #define cf_frame     20 /* DREF DeeObject **cf_frame; */
 #define cf_stack     24 /* DREF DeeObject **cf_stack; */
 #define cf_sp        28 /* DeeObject **cf_sp; */
@@ -3144,98 +3144,6 @@ target_varargs_unpack:
 	call   fSYM(err_invalid_va_unpack_size,8)
 	ADJUST_CFA_OFFSET(-8)
 	jmp   .except
-
-/* Call forwarding */
-target_call_argsfwd:
-	lodsb
-	movl   %eax, %edx /* EDX = arg_lo */
-	lodsb             /* EAX = arg_hi */
-	ASSERT_BELOW_EQUAL(%edx,%eax)
-	LOAD_CODE(%ecx)
-	cmpw   co_argc_max(CODE_OR_ECX), %ax
-	/* if (!(arg_hi < code->co_argc_max))
-	 *       goto .Lcall_argsfwd_varargs; */
-	jnb   .Lcall_argsfwd_varargs
-	cmpl   FRAME_ARGC, %eax
-	/* if (!(arg_hi < frame->cf_argc))
-	 *       goto .Lcall_argsfwd_defl; */
-	jnb   .Lcall_argsfwd_defl
-	/* Just a regular, old call-forward */
-	movl   FRAME_ARGV, %ecx
-	leal   (%ecx,%edx,4), %ecx
-	pushl  %ecx /* DeeObject_Call:argv = frame->cf_argv + arg_lo */
-	ADJUST_CFA_OFFSET(4)
-	subl   %edx, %eax
-.Lcall_argsfwd_call_eax_is_argc_minus_one:
-	incl   %eax
-	pushl  %eax /* DeeObject_Call:argc = (arg_hi - arg_lo) + 1 */
-	ADJUST_CFA_OFFSET(4)
-.Lcall_argsfwd_call_top:
-	pushl  TOP  /* DeeObject_Call:self = TOP */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_Call,12)
-	ADJUST_CFA_OFFSET(-12)
-.Lcall_argsfwd_set_eax:
-	testl  %eax, %eax
-	jz    .except
-	xchgl  TOP, %eax
-	decref %eax
-	jmp   .disp
-.Lcall_argsfwd_defl:
-	cmpl   FRAME_ARGC, %edx
-	jnae   1f /* if (!(arg_lo >= frame->cf_argc)) goto 1f; */
-	/* ASSERT(arg_lo >= code->co_argc_min); */
-	ASSERT_ABOVE_EQUAL(%dx,co_argc_min(CODE_OR_ECX))
-	subl   %edx, %eax                     /* EAX = arg_hi - arg_lo */
-	subw   co_argc_min(CODE_OR_ECX), %dx  /* DX  = arg_lo - code->co_argc_min */
-	movl   co_defaultv(CODE_OR_ECX), %ecx /* ECX = code->co_defaultv */
-	leal   (%ecx,%edx,4), %ecx /* ECX = code->co_defaultv + (arg_lo - code->co_argc_min) */
-	pushl  %ecx /* DeeObject_Call:argv = code->co_defaultv + (arg_lo - code->co_argc_min) */
-	ADJUST_CFA_OFFSET(4)
-	jmp    .Lcall_argsfwd_call_eax_is_argc_minus_one
-	ADJUST_CFA_OFFSET(-4)
-1:	/* Partial call using both default, and given arguments. */
-	subl   %edx, %eax                     /* EAX = arg_hi - arg_lo */
-	incl   %eax                           /* EAX = argc = (arg_hi - arg_lo) + 1 */
-	subl   $20, %esp                      /* Reserve memory for the call to `object_call_vec2' */
-	ADJUST_CFA_OFFSET(20)
-	movl   FRAME_ARGC, %ecx
-	subl   %edx, %ecx                     /* ECX = fwd_argc = frame->cf_argc - arg_lo */
-	movl   %ecx, 4(%esp)                  /* object_call_vec2:argc1 = fwd_argc */
-	subl   %ecx, %eax                     /* EAX = argc - fwd_argc */
-	movl   %eax, 12(%esp)                 /* object_call_vec2:argc2 = argc - fwd_argc */
-	movl   FRAME_ARGV, %ecx
-	leal   (%ecx,%edx,4), %ecx /* ECX = frame->cf_argv + arg_lo */
-	movl   %ecx, 8(%esp)       /* object_call_vec2:argv1 = frame->cf_argv + arg_lo */
-	LOAD_CODE(%ecx)
-	movw   co_argc_max(CODE_OR_ECX), %dx /* EDX = code->co_argc_max */
-	subw   co_argc_min(CODE_OR_ECX), %dx /* EDX = code->co_argc_max - code->co_argc_min */
-	subl   %eax, %edx                    /* EDX = (code->co_argc_max - code->co_argc_min) - (argc-fwd_argc) */
-	movl   co_defaultv(CODE_OR_ECX), %ecx
-	leal   (%ecx,%edx,4), %ecx           /* ECX = code->co_defaultv + ((code->co_argc_max-code->co_argc_min) - (argc-fwd_argc)) */
-	movl   %ecx, 16(%esp)   /* object_call_vec2:argv2 = code->co_defaultv + ((code->co_argc_max-code->co_argc_min) - (argc-fwd_argc)) */
-	movl   TOP, %eax
-	movl   %eax, 0(%esp)   /* object_call_vec2:func = TOP */
-	call   fSYM(object_call_vec2,20)
-	ADJUST_CFA_OFFSET(-20)
-	jmp   .Lcall_argsfwd_set_eax
-.Lcall_argsfwd_varargs:
-	/* Special case: Varargs-inclusive. */
-	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
-	ASSERT_EQUAL(co_argc_max(CODE_OR_ECX),%ax) /* arg_hi == code->co_argc_max */
-	movl   FRAME_ARGV, %eax
-	leal   (%eax,%edx,4), %eax
-	pushl  %eax  /* DeeObject_Call:argv = frame->cf_argv + arg_lo */
-	ADJUST_CFA_OFFSET(4)
-	movl   FRAME_ARGC, %eax
-	subl   %edx, %eax
-	pushl  %eax  /* DeeObject_Call:argc = frame->cf_argc - arg_lo */
-	ADJUST_CFA_OFFSET(4)
-	jmp   .Lcall_argsfwd_call_top
-	ADJUST_CFA_OFFSET(-8)
-
-
-
 
 
 target_varargs_getsize:
@@ -8004,6 +7912,9 @@ prefix_target_call_kw = prefix_invop
 .ifndef prefix_target_call_tuple_kw
 prefix_target_call_tuple_kw = prefix_invop
 .endif
+.ifndef prefix_target_push_bnd_arg
+prefix_target_push_bnd_arg = prefix_invop
+.endif
 .ifndef prefix_target_push_bnd_extern
 prefix_target_push_bnd_extern = prefix_invop
 .endif
@@ -8102,6 +8013,12 @@ prefix_target_pop_local = prefix_invop
 .endif
 .ifndef prefix_target_push_none
 prefix_target_push_none = prefix_invop
+.endif
+.ifndef prefix_target_push_varargs
+prefix_target_push_varargs = prefix_invop
+.endif
+.ifndef prefix_target_push_varkwds
+prefix_target_push_varkwds = prefix_invop
 .endif
 .ifndef prefix_target_push_module
 prefix_target_push_module = prefix_invop
@@ -8625,6 +8542,9 @@ prefix_target16_call_kw = prefix_invop
 .ifndef prefix_target16_call_tuple_kw
 prefix_target16_call_tuple_kw = prefix_invop
 .endif
+.ifndef prefix_target16_push_bnd_arg
+prefix_target16_push_bnd_arg = prefix_invop
+.endif
 .ifndef prefix_target16_push_bnd_extern
 prefix_target16_push_bnd_extern = prefix_invop
 .endif
@@ -8874,9 +8794,6 @@ prefix_target_range_0_i32 = prefix_invop
 .ifndef prefix_target_varargs_unpack
 prefix_target_varargs_unpack = prefix_invop
 .endif
-.ifndef prefix_target_call_argsfwd
-prefix_target_call_argsfwd = prefix_invop
-.endif
 .ifndef prefix_target16_fprint_c
 prefix_target16_fprint_c = prefix_invop
 .endif
@@ -9036,11 +8953,11 @@ inst_table:
 	.long target_setret                  /* `setret pop' */
 	.long target_endcatch                /* `end catch' */
 	.long target_endfinally              /* `end finally' */
-	.long invop
-	.long invop
-	.long invop
 	.long target_call_kw                 /* `call top, #<imm8>, const <imm8>' */
 	.long target_call_tuple_kw           /* `call top, pop..., const <imm8>' */
+	.long invop
+	.long invop
+	.long target_push_bnd_arg            /* `push bound arg <imm8>' */
 	.long target_push_bnd_extern         /* `push bound extern <imm8>:<imm8>' */
 	.long target_push_bnd_global         /* `push bound global <imm8>' */
 	.long target_push_bnd_local          /* `push bound local <imm8>' */
@@ -9082,8 +8999,8 @@ inst_table:
 	.long target_push_none               /* `push none' */
 	.long invop
 	.long invop
-	.long invop
-	.long invop
+	.long target_push_varargs            /* `push varargs' */
+	.long target_push_varkwds            /* `push varkwds' */
 	.long target_push_module             /* `push module <imm8>' */
 	.long target_push_arg                /* `push arg <imm8>' */
 	.long target_push_const              /* `push const <imm8>' */
@@ -9294,14 +9211,14 @@ inst_table_f0:
 	.long invop
 	.long target_endcatch_n              /* `end catch, #<imm8>+1' */
 	.long target_endfinally_n            /* `end finally, #<imm8>+1' */
-	.long invop
-	.long invop
-	.long invop
 	.long target16_call_kw               /* `call top, #<imm8>, const <imm16>' */
 	.long target16_call_tuple_kw         /* `call top, pop..., const <imm16>' */
-	.long target16_push_bnd_extern       /* `push bnd extern <imm16>:<imm16>' */
-	.long target16_push_bnd_global       /* `push bnd global <imm16>' */
-	.long target16_push_bnd_local        /* `push bnd local <imm16>' */
+	.long invop
+	.long invop
+	.long target16_push_bnd_arg          /* `push bound arg <imm8>' */
+	.long target16_push_bnd_extern       /* `push bound extern <imm16>:<imm16>' */
+	.long target16_push_bnd_global       /* `push bound global <imm16>' */
+	.long target16_push_bnd_local        /* `push bound local <imm16>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9453,7 +9370,7 @@ inst_table_f0:
 	.long target_range_0_i32             /* `push range $0, $<imm32>' */
 	.long invop
 	.long target_varargs_unpack          /* `unpack varargs, #<imm8>' */
-	.long target_call_argsfwd            /* `call top, arg <imm8>, arg <imm8>' */
+	.long invop
 	.long invop
 	.long target16_fprint_c              /* `print top, const <imm16>' */
 	.long target16_fprint_c_sp           /* `print top, const <imm16>, sp' */
@@ -9552,11 +9469,11 @@ prefix_inst_table:
 	.long prefix_target_setret                  /* `setret pop' */
 	.long prefix_target_endcatch                /* `end catch' */
 	.long prefix_target_endfinally              /* `end finally' */
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
 	.long prefix_target_call_kw                 /* `call top, #<imm8>, const <imm8>' */
 	.long prefix_target_call_tuple_kw           /* `call top, pop..., const <imm8>' */
+	.long prefix_invop
+	.long prefix_invop
+	.long prefix_target_push_bnd_arg            /* `push bound arg <imm8>' */
 	.long prefix_target_push_bnd_extern         /* `push bound extern <imm8>:<imm8>' */
 	.long prefix_target_push_bnd_global         /* `push bound global <imm8>' */
 	.long prefix_target_push_bnd_local          /* `push bound local <imm8>' */
@@ -9598,8 +9515,8 @@ prefix_inst_table:
 	.long prefix_target_push_none               /* `push none' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_push_varargs            /* `push varargs' */
+	.long prefix_target_push_varkwds            /* `push varkwds' */
 	.long prefix_target_push_module             /* `push module <imm8>' */
 	.long prefix_target_push_arg                /* `push arg <imm8>' */
 	.long prefix_target_push_const              /* `push const <imm8>' */
@@ -9810,14 +9727,14 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target_endcatch_n              /* `end catch, #<imm8>+1' */
 	.long prefix_target_endfinally_n            /* `end finally, #<imm8>+1' */
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
 	.long prefix_target16_call_kw               /* `call top, #<imm8>, const <imm16>' */
 	.long prefix_target16_call_tuple_kw         /* `call top, pop..., const <imm16>' */
-	.long prefix_target16_push_bnd_extern       /* `push bnd extern <imm16>:<imm16>' */
-	.long prefix_target16_push_bnd_global       /* `push bnd global <imm16>' */
-	.long prefix_target16_push_bnd_local        /* `push bnd local <imm16>' */
+	.long prefix_invop
+	.long prefix_invop
+	.long prefix_target16_push_bnd_arg          /* `push bound arg <imm8>' */
+	.long prefix_target16_push_bnd_extern       /* `push bound extern <imm16>:<imm16>' */
+	.long prefix_target16_push_bnd_global       /* `push bound global <imm16>' */
+	.long prefix_target16_push_bnd_local        /* `push bound local <imm16>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -9969,7 +9886,7 @@ prefix_inst_table_f0:
 	.long prefix_target_range_0_i32             /* `push range $0, $<imm32>' */
 	.long prefix_invop
 	.long prefix_target_varargs_unpack          /* `unpack varargs, #<imm8>' */
-	.long prefix_target_call_argsfwd            /* `call top, arg <imm8>, arg <imm8>' */
+	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target16_fprint_c              /* `print top, const <imm16>' */
 	.long prefix_target16_fprint_c_sp           /* `print top, const <imm16>, sp' */

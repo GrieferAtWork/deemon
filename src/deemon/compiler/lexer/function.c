@@ -29,291 +29,396 @@
 
 DECL_BEGIN
 
+PRIVATE int DCALL skip_argument_name(void) {
+ if unlikely(!TPP_ISKEYWORD(tok)) {
+  if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
+      goto err;
+ } else {
+  if (tok != KWD_none) {
+   if (has_local_symbol(token.t_kwd)) {
+    if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
+        goto err;
+   } else if (is_reserved_symbol_name(token.t_kwd)) {
+    if (WARN(W_RESERVED_ARGUMENT_NAME,token.t_kwd))
+        goto err;
+   }
+  }
+  if unlikely(yield() < 0)
+     goto err;
+ }
+ return 0;
+err:
+ return -1;
+}
+
 PRIVATE struct symbol *DCALL parse_argument_name(void) {
  struct symbol *result;
  struct TPPKeyword *argument_name;
- if (tok == KWD_none) {
-  /* Special case: Allow `none' to be used for placeholder/pending arguments. */
-create_anon_argument:
-  /* Create a new symbol for the argument. */
+ if unlikely(!TPP_ISKEYWORD(tok)) {
+  if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
+      goto err;
   result = new_unnamed_symbol();
  } else {
-  argument_name = token.t_kwd;
-  if (has_local_symbol(argument_name)) {
-   if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
-       goto err;
-   goto create_anon_argument;
+  if (tok == KWD_none) {
+   /* Special case: Allow `none' to be used for placeholder/pending arguments. */
+ create_anon_argument:
+   /* Create a new symbol for the argument. */
+   result = new_unnamed_symbol();
+   if unlikely(!result) goto err;
+   loc_here(&result->s_decl);
+   if (result->s_decl.l_file)
+       TPPFile_Incref(result->s_decl.l_file);
+  } else {
+   argument_name = token.t_kwd;
+   if (has_local_symbol(argument_name)) {
+    if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
+        goto err;
+    goto create_anon_argument;
+   }
+   /* Check if the argument name is a reserved identifier. */
+   if (is_reserved_symbol_name(argument_name)) {
+    if (WARN(W_RESERVED_ARGUMENT_NAME,argument_name))
+        goto err;
+   }
+   /* Create a new symbol for the argument. */
+   result = new_local_symbol(argument_name,NULL);
   }
-  /* Check if the argument name is a reserved identifier. */
-  if (is_reserved_symbol_name(argument_name)) {
-   if (WARN(W_RESERVED_ARGUMENT_NAME,argument_name))
-       goto err;
-  }
-  /* Create a new symbol for the argument. */
-  result = new_local_symbol(argument_name,NULL);
+  if unlikely(yield() < 0)
+     goto err;
  }
  return result;
 err:
  return NULL;
 }
 
+PRIVATE int DCALL resize_argument_list(uint16_t *__restrict parga) {
+ struct symbol **new_symv;
+ ASSERT(current_basescope->bs_argc <= *parga);
+ if (current_basescope->bs_argc >= *parga) {
+  uint16_t new_arga = *parga * 2;
+  if (!new_arga) new_arga = 2;
+do_realloc_symv:
+  new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
+                                              new_arga * sizeof(struct symbol *));
+  if unlikely(!new_symv) {
+   if (new_arga != current_basescope->bs_argc + 1) {
+    new_arga = current_basescope->bs_argc + 1;
+    goto do_realloc_symv;
+   }
+   if (Dee_CollectMemory(new_arga*sizeof(struct symbol *)))
+       goto do_realloc_symv;
+   return -1;
+  }
+  current_basescope->bs_argv = new_symv;
+  *parga = new_arga;
+ }
+ return 0;
+}
+
+PRIVATE int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
+ DREF DeeObject **new_defaultv;
+ uint16_t defaultc;
+ defaultc = (size_t)(current_basescope->bs_argc_max - current_basescope->bs_argc_min);
+ ASSERT(defaultc <= *pdefaulta);
+ if (defaultc >= *pdefaulta) {
+  uint16_t new_defaulta = *pdefaulta * 2;
+  if (!new_defaulta) new_defaulta = 2;
+do_realloc_symv:
+  new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
+                                                   new_defaulta * sizeof(DREF DeeObject *));
+  if unlikely(!new_defaultv) {
+   if (new_defaulta != defaultc + 1) {
+    new_defaulta = defaultc + 1;
+    goto do_realloc_symv;
+   }
+   if (Dee_CollectMemory(new_defaulta * sizeof(DREF DeeObject *)))
+       goto do_realloc_symv;
+   return -1;
+  }
+  current_basescope->bs_default = new_defaultv;
+  *pdefaulta = new_defaulta;
+ }
+ return 0;
+}
+
 
 INTERN int DCALL parse_arglist(void) {
- bool in_default_args = false;
- bool in_optional_args = false;
- struct symbol **new_symv; uint16_t defaulta,arga;
+ uint16_t defaulta,arga;
  DREF DeeObject **new_defaultv; struct symbol *arg;
  DREF DeeScopeObject *old_current_scope;
  ASSERT(!current_basescope->bs_argc_min);
  ASSERT(!current_basescope->bs_argc_max);
- ASSERT(!current_basescope->bs_argc_opt);
  ASSERT(!current_basescope->bs_argc);
  ASSERT(!current_basescope->bs_argv);
  ASSERT(!current_basescope->bs_varargs);
+ ASSERT(!current_basescope->bs_varkwds);
+ ASSERT(!current_basescope->bs_default);
  old_current_scope = current_scope;
  current_scope = (DREF DeeScopeObject *)current_basescope;
  Dee_Incref(current_scope);
  defaulta = arga = 0;
- while (tok > 0 && tok != ')') {
-  DREF DeeObject *defl_value;
-  bool arg_is_optional = false;
-  uint16_t var_flags = 0;
-  /* Special case: The old deemon allowed an ignored `local' before argument names.
-   *               Since this doesn't harm anything, we allow doing so
-   *               too (despite no longer documenting doing so). */
-  for (;;) {
-   if (tok == KWD_local);
-   else if (tok == KWD_final) {
-    if (var_flags & LOOKUP_SYM_FINAL &&
-        WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-        goto err;
-    var_flags |= LOOKUP_SYM_FINAL;
-   } else if (tok == KWD_varying) {
-    if (var_flags & LOOKUP_SYM_VARYING &&
-        WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-        goto err;
-    var_flags |= LOOKUP_SYM_VARYING;
-   } else break;
-   if (yield() < 0) goto err;
-  }
-  if (tok == '?') {
-   /* Found an optional argument! */
-   arg_is_optional = true;
-   if (yield() < 0) goto err;
-  }
+ if (tok > 0 && tok != ')') for (;;) {
+  uint16_t symbol_flags;
 
-  ASSERT(current_basescope->bs_argc <= arga);
-  if (current_basescope->bs_argc == arga) {
-   uint16_t new_arga = arga * 2;
-   if (!new_arga) new_arga = 2;
-do_realloc_symv:
-   new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
-                                               new_arga*sizeof(struct symbol *));
-   if unlikely(!new_symv) {
-    if (new_arga != current_basescope->bs_argc+1) {
-     new_arga = current_basescope->bs_argc+1;
-     goto do_realloc_symv;
-    }
-    if (Dee_CollectMemory(new_arga*sizeof(struct symbol *)))
-        goto do_realloc_symv;
-   }
-   current_basescope->bs_argv = new_symv;
-   arga = new_arga;
-  }
+  /* Special case: unnamed varargs. */
   if (tok == TOK_DOTS) {
-   /* Special case: unnamed varargs. */
+   if unlikely(current_basescope->bs_flags & CODE_FVARARGS) {
+    arg = current_basescope->bs_varargs;
+    if likely(arg) {
+     if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED,arg))
+         goto err;
+     if unlikely(yield() < 0) goto err;
+     goto parse_varargs_suffix;
+    }
+   }
+   ASSERT(!current_basescope->bs_varargs);
    arg = new_unnamed_symbol();
    if unlikely(!arg) goto err;
-   /* Initialize the symbol as an argument. */
-   arg->s_type  = SYMBOL_TYPE_ARG;
-   arg->s_flag  = SYMBOL_FALLOC;
-   arg->s_symid = current_basescope->bs_argc;
-   /* Add the symbol to the argument symbol vector. */
-   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
-   goto done_dots;
-  }
-  if unlikely(!TPP_ISKEYWORD(tok)) {
-   if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
-       goto err;
-   break;
-  }
-  /* Parse the argument name. */
-  arg = parse_argument_name();
-  if unlikely(!arg) goto err;
-  /* Initialize the symbol as an argument. */
-  arg->s_type  = SYMBOL_TYPE_ARG;
-  arg->s_flag  = SYMBOL_FALLOC;
-  arg->s_symid = current_basescope->bs_argc;
-  /* Add the symbol to the argument symbol vector. */
-  current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
-  if unlikely(yield() < 0) goto err;
-  if (tok == TOK_DOTS) {
-   /* Varargs */
-done_dots:
+   loc_here(&arg->s_decl);
+   if (arg->s_decl.l_file)
+       TPPFile_Incref(arg->s_decl.l_file);
    if unlikely(yield() < 0) goto err;
+   arg->s_flag = SYMBOL_FALLOC;
+set_arg_as_varargs_argument:
+   if unlikely(resize_argument_list(&arga)) goto err;
+   /* Add the symbol to the argument symbol vector. */
+   arg->s_type  = SYMBOL_TYPE_ARG;
+   arg->s_symid = current_basescope->bs_argc;
+   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
+   current_basescope->bs_varargs = arg;
+   current_basescope->bs_flags |= CODE_FVARARGS;
+parse_varargs_suffix:
+   if unlikely(tok == '?') {
+    if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS,arg))
+        goto err;
+    if unlikely(yield() < 0) goto err;
+   }
+   if unlikely(tok == TOK_DOTS) {
+    if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS,arg))
+        goto err;
+    if unlikely(yield() < 0) goto err;
+   }
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
    if (tok == ':') {
     /* Parse argument declaration information. */
-    struct decl_ast decl;
     if unlikely(yield() < 0) goto err;
-    if unlikely(decl_ast_parse(&decl)) goto err;
-    if (arg->s_decltype.da_type != DAST_NONE &&
-       !decl_ast_equal(&arg->s_decltype,&decl)) {
-     decl_ast_fini(&decl);
-     if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,arg))
+    if unlikely(decl_ast_parse_for_symbol(arg)) goto err;
+   }
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+   if unlikely(tok == '=') {
+    if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS,arg))
+        goto err;
+    goto skip_default_suffix;
+   }
+   goto next_argument;
+  }
+
+  /* Parse variable modifier flags. */
+  symbol_flags = SYMBOL_FNORMAL;
+  for (;;) {
+   if (tok == KWD_local) {
+   } else if (tok == KWD_final) {
+    if (symbol_flags & SYMBOL_FFINAL &&
+        WARN(W_VARIABLE_MODIFIER_DUPLICATED))
+        goto err;
+    symbol_flags |= SYMBOL_FFINAL;
+   } else if (tok == KWD_varying) {
+    if (symbol_flags & SYMBOL_FVARYING &&
+        WARN(W_VARIABLE_MODIFIER_DUPLICATED))
+        goto err;
+    symbol_flags |= SYMBOL_FVARYING;
+   } else break;
+   if (yield() < 0) goto err;
+  }
+  /* Check for keyword arguments parameter. */
+  if (tok == TOK_POW) {
+   if unlikely(current_basescope->bs_flags & CODE_FVARKWDS) {
+    arg = current_basescope->bs_varkwds;
+    if likely(arg) {
+     if (WARN(W_KEYWORD_ARGUMENT_ALREADY_DEFINED,arg))
          goto err;
-    } else {
-     decl_ast_move(&arg->s_decltype,&decl);
+     if (skip_argument_name())
+         goto err;
+     goto parse_varargs_suffix;
     }
    }
-#endif
-   if (tok == ',' && unlikely(yield() < 0)) goto err;
-   if unlikely(tok != ')' && WARN(W_EXPECTED_RPAREN_AFTER_VARARGS)) goto err;
-   /* Set the varargs flag in the new base scope. */
-   current_basescope->bs_flags  |= CODE_FVARARGS;
-   current_basescope->bs_varargs = arg;
-   goto done;
-  }
-  if (tok == '?' && !arg_is_optional) {
-   arg_is_optional = true;
    if unlikely(yield() < 0) goto err;
+   /* Parse the argument name. */
+   arg = parse_argument_name();
+   if unlikely(!arg) goto err;
+   if unlikely(resize_argument_list(&arga)) goto err;
+   /* Add the symbol to the argument symbol vector. */
+   arg->s_type  = SYMBOL_TYPE_ARG;
+   arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
+   arg->s_symid = current_basescope->bs_argc;
+   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
+   current_basescope->bs_varkwds = arg;
+   current_basescope->bs_flags |= CODE_FVARKWDS;
+   goto parse_varargs_suffix;
   }
+
+  /* Parse the argument name. */
+  arg = parse_argument_name();
+  if unlikely(!arg) goto err;
+  if (tok == TOK_DOTS) {
+   /* Varargs argument. */
+   if unlikely(yield() < 0) goto err;
+   if likely(!current_basescope->bs_varargs) {
+    arg->s_flag = SYMBOL_FALLOC | symbol_flags;
+    goto set_arg_as_varargs_argument;
+   }
+   ASSERT(current_basescope->bs_flags & CODE_FVARARGS);
+   if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED,arg))
+       goto err;
+   arg->s_type = SYMBOL_TYPE_LOCAL;
+   arg->s_flag = symbol_flags;
+   goto parse_varargs_suffix;
+  } else if (current_basescope->bs_varkwds || current_basescope->bs_varargs) {
+   if (current_basescope->bs_varkwds
+     ? WARN(W_POSITIONAL_ARGUMENT_AFTER_VARKWDS,arg,current_basescope->bs_varkwds)
+     : WARN(W_POSITIONAL_ARGUMENT_AFTER_VARARGS,arg,current_basescope->bs_varargs))
+       goto err;
+set_argument_as_local:
+   arg->s_type = SYMBOL_TYPE_LOCAL;
+   arg->s_flag = symbol_flags;
+   if (tok == '?' && unlikely(yield() < 0)) goto err;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-  if (tok == ':') {
-   /* Parse argument declaration information. */
-   struct decl_ast decl;
+   if (tok == ':') {
+    if unlikely(yield() < 0) goto err;
+    if unlikely(decl_ast_parse_for_symbol(arg)) goto err;
+   }
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+   if (tok == '=') goto skip_default_suffix;
+  } else if (tok == '?') { /* Optional argument */
    if unlikely(yield() < 0) goto err;
-   if unlikely(decl_ast_parse(&decl)) goto err;
-   if (arg->s_decltype.da_type != DAST_NONE &&
-      !decl_ast_equal(&arg->s_decltype,&decl)) {
-    decl_ast_fini(&decl);
-    if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED,arg))
-        goto err;
-   } else {
-    decl_ast_move(&arg->s_decltype,&decl);
+   arg->s_type  = SYMBOL_TYPE_ARG;
+   arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
+   arg->s_symid = current_basescope->bs_argc;
+   if unlikely(resize_argument_list(&arga)) goto err;
+   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
+   if unlikely(resize_default_list(&defaulta)) goto err;
+   /* Set a default value of NULL to indicate a variable that is unbound by default. */
+   current_basescope->bs_default[current_basescope->bs_argc_max -
+                                 current_basescope->bs_argc_min] = NULL;
+   ++current_basescope->bs_argc_max;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+   if (tok == ':') {
+    if unlikely(yield() < 0) goto err;
+    if unlikely(decl_ast_parse_for_symbol(arg)) goto err;
    }
-  }
-#endif
-  ++current_basescope->bs_argc_max;
-  if (tok == '=') {
-   uint16_t defaultc;
-   DREF struct ast *initializer;
-   if (in_optional_args) {
-    if (WARN(W_DEFAULT_ARGUMENT_AFTER_NONDEFAULT_OPTIONAL))
-        goto err;
-   } else {
-    /* Default initializer. */
-    if (!in_default_args) {
-     /* First default value. */
-     current_basescope->bs_argc_min = current_basescope->bs_argc_max-1;
-     in_default_args                = true;
-    }
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+   if unlikely(tok == '=') {
+    DREF struct ast *default_expr;
+    if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL,arg)) goto err;
+skip_default_suffix:
+    if unlikely(yield() < 0) goto err;
+    /* Parse & discard the default expression. */
+    default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
+    if unlikely(!default_expr) goto err;
+    ast_decref(default_expr);
+    goto next_argument;
    }
-   /* Yield the `=' token. */
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+  } else if (tok == ':') { /* Declaration suffix. */
    if unlikely(yield() < 0) goto err;
-   /* Parse the initializer. */
-   initializer = ast_parse_expr(LOOKUP_SYM_NORMAL);
-   if unlikely(!initializer) goto err;
-   if (in_optional_args) {
-    ast_decref(initializer);
-    goto got_optional_arg;
-   }
-   /* Do optimizations on the AST to allow for a bit for complex
-    * expression that can still be resolved at compile-time.
-    * (`ast_optimize_all()' is where constant propagation happens) */
-   if (ast_optimize_all(initializer,true)) {
-err_initializer:
-    ast_decref(initializer);
+   if unlikely(decl_ast_parse_for_symbol(arg)) goto err;
+   if (tok == '=')
+       goto parse_default_suffix;
+   goto set_arg_as_normal;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+  } else if (tok == '=') { /* Default argument */
+   DREF DeeObject *default_value;
+   DREF struct ast *default_expr;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+parse_default_suffix:
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+   if unlikely(yield() < 0) goto err;
+   default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
+   if unlikely(!default_expr) goto err;
+   if (ast_optimize_all(default_expr,true)) {
+err_default_expr:
+    ast_decref(default_expr);
     goto err;
    }
-   /* Extract the value of a constant expression,
-    * which is required for a default initializer. */
-   if unlikely(initializer->a_type != AST_CONSTEXPR) {
-    if (WARN(W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT))
-        goto err_initializer;
-    defl_value = Dee_None;
+   if unlikely(resize_argument_list(&arga)) goto err;
+   if unlikely(resize_default_list(&defaulta)) goto err;
+   if (default_expr->a_type != AST_CONSTEXPR) {
+    if (WARNAST(default_expr,W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT,arg))
+        goto err_default_expr;
+    default_value = Dee_None;
+    Dee_Incref(Dee_None);
    } else {
-    defl_value = initializer->a_constexpr;
+    default_value = default_expr->a_constexpr;
+    Dee_Incref(default_value);
    }
-   Dee_Incref(defl_value);
-   ast_decref(initializer);
-set_default_value:
-   defaultc = (uint16_t)(current_basescope->bs_argc_max-
-                         current_basescope->bs_argc_min);
-   if (defaultc >= defaulta) {
-    uint16_t new_defaulta = defaulta*2;
-    if (!new_defaulta) new_defaulta = 1;
-do_realloc_defaultv:
-    new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
-                                                     new_defaulta*sizeof(DREF DeeObject *));
-    if unlikely(!new_defaultv) {
-     if (new_defaulta != defaultc) { new_defaulta = defaultc; goto do_realloc_defaultv; }
-     if (Dee_CollectMemory(new_defaulta*sizeof(DREF DeeObject *))) goto do_realloc_defaultv;
-     Dee_Decref(defl_value);
-     goto err;
-    }
-    current_basescope->bs_default = new_defaultv;
-    defaulta = new_defaulta;
+   ast_decref(default_expr);
+   arg->s_type  = SYMBOL_TYPE_ARG;
+   arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
+   arg->s_symid = current_basescope->bs_argc;
+   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
+   current_basescope->bs_default[current_basescope->bs_argc_max -
+                                 current_basescope->bs_argc_min] = default_value; /* Inherit reference. */
+   ++current_basescope->bs_argc_max;
+  } else {
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+set_arg_as_normal:
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+   ASSERT(current_basescope->bs_argc_min <= current_basescope->bs_argc_max);
+   if (current_basescope->bs_argc_min < current_basescope->bs_argc_max) {
+    /* Positional-after-optional */
+    if (WARN(W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT,arg))
+        goto err;
+    goto set_argument_as_local;
    }
-   current_basescope->bs_default[defaultc-1] = defl_value; /* Inherit reference. */
-  } else if (arg_is_optional) {
-got_optional_arg:
-   --current_basescope->bs_argc_max;
-   ++current_basescope->bs_argc_opt;
-   current_basescope->bs_flags |= CODE_FVARARGS;
-   in_optional_args = true;
-  } else if (in_optional_args) {
-   if (WARN(W_MISSING_ARGUMENT_OPTIONAL_PREFIX))
-       goto err;
-   goto got_optional_arg;
-  } else if (in_default_args) {
-   /* Missing default initializer. */
-   if (WARN(W_MISSING_ARGUMENT_DEFAULT_INITIAIZER))
-       goto err;
-   defl_value = Dee_None;
-   Dee_Incref(Dee_None);
-   goto set_default_value;
+   /* Mandatory, positional argument. */
+   arg->s_type  = SYMBOL_TYPE_ARG;
+   arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
+   arg->s_symid = current_basescope->bs_argc;
+   ASSERT(current_basescope->bs_argc_min == current_basescope->bs_argc);
+   ASSERT(current_basescope->bs_argc_min == current_basescope->bs_argc_max);
+   if unlikely(resize_argument_list(&arga)) goto err;
+   current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
+   ++current_basescope->bs_argc_min;
+   ++current_basescope->bs_argc_max;
   }
-  /* parse more arguments. */
+next_argument:
   if (tok != ',') break;
   if unlikely(yield() < 0) goto err;
  }
-done:
+/*done:*/
  ASSERT(current_basescope->bs_argc_min <=
         current_basescope->bs_argc_max);
  ASSERT(arga >= current_basescope->bs_argc);
  /* Truncate the argument vector. */
  if (arga != current_basescope->bs_argc) {
+  struct symbol **new_symv;
   new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
                                               current_basescope->bs_argc*
                                               sizeof(struct symbol *));
   if likely(new_symv) current_basescope->bs_argv = new_symv;
  }
- if (!in_default_args) {
-  /* Without any default arguments, the function
-   * takes an absolute number of parameters. */
-  current_basescope->bs_argc_min = current_basescope->bs_argc_max;
- } else {
+ if (current_basescope->bs_default) {
   /* Truncate the default argument vector. */
-  uint16_t req_defaulta = (current_basescope->bs_argc_max-
-                           current_basescope->bs_argc_min);
+  uint16_t req_defaulta = (current_basescope->bs_argc_max - current_basescope->bs_argc_min);
   if (defaulta != req_defaulta) {
    new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
                                                     req_defaulta*sizeof(DREF DeeObject *));
    if likely(new_defaultv) current_basescope->bs_default = new_defaultv;
   }
  }
+ ASSERT(current_basescope->bs_argc_max >= current_basescope->bs_argc_min);
+ ASSERT((current_basescope->bs_varargs == NULL) || (current_basescope->bs_flags & CODE_FVARARGS));
+ ASSERT((current_basescope->bs_varkwds == NULL) || (current_basescope->bs_flags & CODE_FVARKWDS));
+ ASSERT((current_basescope->bs_default != NULL) == (current_basescope->bs_argc_max > current_basescope->bs_argc_min));
  ASSERT(current_basescope->bs_argc ==
         current_basescope->bs_argc_max +
-        current_basescope->bs_argc_opt +
+       (current_basescope->bs_varkwds ? 1 : 0) +
        (current_basescope->bs_varargs ? 1 : 0));
  Dee_Decref(current_scope);
  current_scope = old_current_scope;
  return 0;
 err:
  /* This needs to be done to ensure a consistent scope on exit. */
- if (!in_default_args)
-      current_basescope->bs_argc_min = current_basescope->bs_argc_max;
  Dee_Decref(current_scope);
  current_scope = old_current_scope;
  return -1;
@@ -394,7 +499,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
   struct decl_ast *return_type;
   if unlikely(yield() < 0) goto err_decl;
   /* Function return type information. */
-  assert(!my_decl.da_func.f_ret);
+  ASSERT(!my_decl.da_func.f_ret);
   return_type = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
   if unlikely(!return_type) goto err_decl;
   if unlikely(decl_ast_parse(return_type)) {
@@ -481,7 +586,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
  result->a_scope = current_basescope->bs_scope.s_prev;
  Dee_Incref(result->a_scope);
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
- assert(!funcself_symbol || my_decl.da_type == DAST_NONE);
+ ASSERT(!funcself_symbol || my_decl.da_type == DAST_NONE);
  if (decl) {
   /* Pass Declaration information to the caller. */
   if (funcself_symbol) {

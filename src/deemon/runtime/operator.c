@@ -292,6 +292,7 @@ type_inherit_constructors(DeeTypeObject *__restrict self) {
   self->tp_init.tp_var.tp_free        = base->tp_init.tp_var.tp_free;
   self->tp_init.tp_var.tp_any_ctor_kw = base->tp_init.tp_var.tp_any_ctor_kw;
  } else {
+#if 0 /* Allocators should not be inheritable! */
   if (base->tp_init.tp_alloc.tp_free) {
 #ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
    ASSERT((base->tp_flags&TP_FGC) == (self->tp_flags&TP_FGC));
@@ -302,6 +303,7 @@ type_inherit_constructors(DeeTypeObject *__restrict self) {
    self->tp_init.tp_alloc.tp_alloc = base->tp_init.tp_alloc.tp_alloc;
    self->tp_init.tp_alloc.tp_free  = base->tp_init.tp_alloc.tp_free;
   }
+#endif
   self->tp_init.tp_alloc.tp_ctor        = base->tp_init.tp_alloc.tp_ctor;
   self->tp_init.tp_alloc.tp_copy_ctor   = base->tp_init.tp_alloc.tp_copy_ctor;
   self->tp_init.tp_alloc.tp_deep_ctor   = base->tp_init.tp_alloc.tp_deep_ctor;

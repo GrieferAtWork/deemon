@@ -1237,15 +1237,16 @@ check_sym_class:
   goto check_sym_class;
 
  {
-  uint16_t opt_index;
+  DeeObject *defl;
  case SYMBOL_TYPE_ARG:
-  if (!DeeBaseScope_IsArgOptional(current_basescope,sym->s_symid))
-       goto fallback;
-  /* Optional arguments can be unbound */
-  opt_index  = sym->s_symid;
-  opt_index -= current_basescope->bs_argc_max;
-  /* The argument is bound when there is a sufficient number of variable arguments present. */
-  return asm_gcmp_gr_varargs_sz(opt_index);
+  if (sym->s_symid <  current_basescope->bs_argc_min ||
+      sym->s_symid >= current_basescope->bs_argc_max ||
+      DeeBaseScope_IsVarargs(current_basescope,sym) ||
+      DeeBaseScope_IsVarkwds(current_basescope,sym))
+      goto fallback;
+  defl = current_basescope->bs_default[sym->s_symid - current_basescope->bs_argc_min];
+  if (defl) goto fallback; /* Non-optional arguments are always bound. */
+  return asm_gpush_bnd_arg(sym->s_symid);
  } break;
 
  case SYMBOL_TYPE_EXTERN:
@@ -1928,74 +1929,16 @@ err:
 /* Push the virtual argument known as `argid' */
 INTERN int DCALL
 asm_gpush_varg(uint16_t argid) {
- if (DeeBaseScope_IsArgReqOrDefl(current_basescope,argid))
-     return asm_gpush_arg(argid);
- if (DeeBaseScope_IsArgOptional(current_basescope,argid)) {
-  uint16_t varindex;
-  varindex = argid-current_basescope->bs_argc_max;
-  /* Optional argument. */
-  if (varindex <= UINT8_MAX)
-      return asm_gvarargs_getitem_i(varindex);
-  /* Opt-index is too large (must go the long route) */
-  if (asm_gpush_varargs()) goto err;
-  return asm_ggetitem_index(varindex);
+ if (argid < current_basescope->bs_argc) {
+  struct symbol *sym = current_basescope->bs_argv[argid];
+  if (DeeBaseScope_IsVarargs(current_basescope,sym))
+      return asm_gpush_varargs();
+  if (DeeBaseScope_IsVarkwds(current_basescope,sym))
+      return asm_gpush_varkwds();
  }
- ASSERTF(DeeBaseScope_IsArgVarArgs(current_basescope,argid),
-         "Invalid argument ID %I16u",argid);
- /* Push the varargs tuple. */
- if (asm_gpush_varargs()) goto err;
- if (DeeBaseScope_HasOptional(current_basescope)) {
-  uint16_t va_start_index;
-  DREF DeeObject *temp; int32_t cid;
-  /* Must access a sub-range of the varargs tuple. */
-  va_start_index = current_basescope->bs_argc_opt;
-  if (va_start_index < INT16_MAX)
-      return asm_ggetrange_in((uint16_t)va_start_index);
-  /* varargs start index is too large. - Must encode as a constant. */
-  temp = DeeInt_NewU16(va_start_index);
-  if unlikely(!temp) goto err;
-  cid = asm_newconst(temp);
-  Dee_Decref(temp);
-  if unlikely(cid < 0) goto err;
-  if (asm_gpush_const((uint16_t)cid)) goto err;
-  return asm_ggetrange_pn();
- }
- return 0;
-err:
- return -1;
+ return asm_gpush_arg(argid);
 }
 
-
-INTERN int (DCALL asm_gcmp_eq_varargs_sz)(uint16_t sz) {
- DREF DeeObject *temp; int32_t cid;
- if (sz <= UINT8_MAX)
-     return _asm_gcmp_eq_varargs_sz((uint8_t)sz);
- temp = DeeInt_NewU16(sz);
- if unlikely(!temp) goto err;
- cid = asm_newconst(temp);
- Dee_Decref(temp);
- if unlikely(cid < 0) goto err;
- if (asm_ggetsize_varargs()) goto err;
- if (asm_gpush_const((uint16_t)cid)) goto err;
- return asm_gcmp_eq();
-err:
- return -1;
-}
-INTERN int (DCALL asm_gcmp_gr_varargs_sz)(uint16_t sz) {
- DREF DeeObject *temp; int32_t cid;
- if (sz <= UINT8_MAX)
-     return _asm_gcmp_gr_varargs_sz((uint8_t)sz);
- temp = DeeInt_NewU16(sz);
- if unlikely(!temp) goto err;
- cid = asm_newconst(temp);
- Dee_Decref(temp);
- if unlikely(cid < 0) goto err;
- if (asm_ggetsize_varargs()) goto err;
- if (asm_gpush_const((uint16_t)cid)) goto err;
- return asm_gcmp_gr();
-err:
- return -1;
-}
 
 
 
@@ -2005,11 +1948,12 @@ INTERN int
                       struct ast *__restrict warn_ast,
                       bool ignore_unbound) {
  if (ignore_unbound &&
-     DeeBaseScope_IsArgOptional(current_basescope,argid)) {
+     argid >= current_basescope->bs_argc_min &&
+     argid <  current_basescope->bs_argc_max &&
+     current_basescope->bs_default[argid] == NULL) {
   /* Check if the argument is bound, and don't do the mov if it isn't. */
   struct asm_sym *skip_mov;
-  uint16_t va_index = argid - current_basescope->bs_argc_max;
-  if (asm_gcmp_gr_varargs_sz(va_index)) goto err;
+  if (asm_gpush_bnd_arg(argid)) goto err;
   skip_mov = asm_newsym();
   if (asm_gjmp(ASM_JF,skip_mov)) goto err;
   asm_decsp();
