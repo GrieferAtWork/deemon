@@ -319,6 +319,9 @@ struct class_descriptor_object {
     OBJECT_HEAD
     DREF struct string_object *cd_name;          /* [0..1][const] Name of the class. */
     DREF struct string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
+#define CLASS_TP_FSUPERKWDS    TP_FHEAP          /* FLAG: When set, the superargs operator actually returns a tuple `(args,kwds)' which
+                                                  *       should then be used to invoke the super-constructor as `super(args...,**kwds)'
+                                                  *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
     uint16_t                   cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
                                                   * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
                                                   *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
@@ -639,6 +642,12 @@ INTDEF int DCALL instance_super_tinit(DeeTypeObject *__restrict tp_self, DeeObje
 INTDEF int DCALL instance_super_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
 INTDEF int DCALL instance_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_kwsuper_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_kwsuper_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_kwsuper_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
 /* `CLASS_OPERATOR_SUPERARGS' */
 INTDEF int DCALL instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
@@ -647,6 +656,12 @@ INTDEF int DCALL instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self,
 INTDEF int DCALL instance_builtin_super_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
 INTDEF int DCALL instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF int DCALL instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_kwsuper_ctor(DeeObject *__restrict self);
+INTDEF int DCALL instance_builtin_kwsuper_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_kwsuper_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_kwsuper_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 
 /* `OPERATOR_CONSTRUCTOR' */
 INTDEF int DCALL instance_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);

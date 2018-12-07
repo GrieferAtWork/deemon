@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_RUNTIME_FORMAT_C 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/object.h>
 #include <deemon/format.h>
 #include <deemon/float.h>
@@ -1572,6 +1573,141 @@ Dee_snprintf(char *__restrict buffer, size_t bufsize,
  result = Dee_vsnprintf(buffer,bufsize,format,args);
  va_end(args);
  return result;
+}
+
+
+
+/* ==========? Extensible formating functions ?========== */
+
+
+LOCAL struct kwds_entry *DCALL
+kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
+ size_t i;
+ for (i = 0; i <= self->kw_mask; ++i) {
+  if (!self->kw_map[i].ke_name)
+      continue;
+  if (self->kw_map[i].ke_index != index)
+      continue;
+  return &self->kw_map[i];
+ }
+ return NULL;
+}
+
+/* Print the object types passed by the given argument list.
+ * If given, also include keyword names & types from `kw'
+ * >> foo(10,1.0,"bar",enabled: true);
+ * Printed: "int, float, string, enabled: bool" */
+PUBLIC dssize_t
+(DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg,
+                                       size_t argc, DeeObject **__restrict argv,
+                                       DeeObject *kw) {
+ size_t i; char const *str;
+ dssize_t temp,result = 0;
+ if (kw && DeeKwds_Check(kw)) {
+  size_t kwargc = DeeKwds_SIZE(kw);
+  struct kwds_entry *entry;
+  if unlikely(kwargc > argc) {
+   kwargc = argc;
+  } else {
+   for (i = 0; i < argc - kwargc; ++i) {
+    if (i != 0) {
+     temp = (*printer)(arg,", ",2);
+     if unlikely(temp < 0) goto err;
+     result += temp;
+    }
+    str = Dee_TYPE(argv[i])->tp_name;
+    if unlikely(!str) str = "<anonymous_type>";
+    temp = (*printer)(arg,str,strlen(str));
+    if unlikely(temp < 0) goto err;
+    result += temp;
+   }
+  }
+  for (i = 0; i < kwargc; ++i) {
+   if (i != 0 || argc > kwargc) {
+    temp = (*printer)(arg,", ",2);
+    if unlikely(temp < 0) goto err;
+    result += temp;
+   }
+   entry = kwds_find_entry((DeeKwdsObject *)kw,i);
+   if (entry) {
+    temp = DeeString_PrintUtf8((DeeObject *)entry->ke_name,printer,arg);
+    if unlikely(temp < 0) goto err;
+    result += temp;
+    temp = (*printer)(arg,": ",2);
+    if unlikely(temp < 0) goto err;
+    result += temp;
+   }
+   str = Dee_TYPE(argv[argc - kwargc + i])->tp_name;
+   if unlikely(!str) str = "<anonymous_type>";
+   temp = (*printer)(arg,str,strlen(str));
+   if unlikely(temp < 0) goto err;
+   result += temp;
+  }
+  goto done;
+ }
+ for (i = 0; i < argc; ++i) {
+  if (i != 0) {
+   temp = (*printer)(arg,", ",2);
+   if unlikely(temp < 0) goto err;
+   result += temp;
+  }
+  str = Dee_TYPE(argv[i])->tp_name;
+  if unlikely(!str) str = "<anonymous_type>";
+  temp = (*printer)(arg,str,strlen(str));
+  if unlikely(temp < 0) goto err;
+  result += temp;
+ }
+ if (kw) {
+  /* Print keyword passed via a generic mappings. */
+  DREF DeeObject *iter,*elem,*pair[2];
+  iter = DeeObject_IterSelf(kw);
+  if unlikely(!iter) goto err_m1;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+   int error;
+   if (argc != 0) {
+    temp = (*printer)(arg,", ",2);
+    if unlikely(temp < 0) goto err;
+    result += temp;
+   }
+   argc = 1;
+   error = DeeObject_Unpack(elem,2,pair);
+   Dee_Decref(elem);
+   if unlikely(error) {
+err_iter:
+    Dee_Decref(iter);
+    goto err_m1;
+   }
+   temp = DeeObject_Print(pair[0],printer,arg);
+   Dee_Decref(pair[0]);
+   if unlikely(temp < 0) {
+err_pair1_iter_temp:
+    Dee_Decref(pair[1]);
+err_iter_temp:
+    Dee_Decref(iter);
+    goto err;
+   }
+   result += temp;
+   temp = (*printer)(arg,": ",2);
+   if unlikely(temp < 0)
+      goto err_pair1_iter_temp;
+   result += temp;
+   str = Dee_TYPE(pair[1])->tp_name;
+   if unlikely(!str) str = "<anonymous_type>";
+   temp = (*printer)(arg,str,strlen(str));
+   Dee_Decref(pair[1]);
+   if unlikely(temp < 0)
+      goto err_iter_temp;
+   result += temp;
+  }
+  if unlikely(!elem) goto err_iter;
+  Dee_Decref(iter);
+ }
+done:
+ return result;
+err:
+ return temp;
+err_m1:
+ return -1;
 }
 
 

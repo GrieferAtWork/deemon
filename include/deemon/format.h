@@ -308,6 +308,17 @@ DFUNDEF char *DCALL Dee_vsnprintf(char *__restrict buffer, size_t bufsize, char 
 #endif
 
 
+/* ==========? Extensible formating functions ?========== */
+
+/* Print the object types passed by the given argument list.
+ * If given, also include keyword names & types from `kw'
+ * >> foo(10,1.0,"bar",enabled: true);
+ * Printed: "int, float, string, enabled: bool" */
+#define DeeFormat_PrintArgumentTypes(printer,arg,argc,argv) \
+        DeeFormat_PrintArgumentTypesKw(printer,arg,argc,argv,NULL)
+DFUNDEF dssize_t (DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_FORMAT_H */

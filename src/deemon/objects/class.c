@@ -634,30 +634,36 @@ instance_destructor(DeeObject *__restrict self) {
   IF_NOBASE((func) == &instance_builtin_nobase_ctor ? instance_builtin_nobase_tctor(tp_self,self) :) \
             (func) == &instance_builtin_inherited_ctor ? instance_builtin_inherited_tctor(tp_self,self) : \
             (func) == &instance_builtin_super_ctor ? instance_builtin_super_tctor(tp_self,self) : \
+            (func) == &instance_builtin_kwsuper_ctor ? instance_builtin_kwsuper_tctor(tp_self,self) : \
             (func) == &instance_ctor ? instance_tctor(tp_self,self) : \
   IF_NOBASE((func) == &instance_nobase_ctor ? instance_nobase_tctor(tp_self,self) :) \
           /*(func) == &instance_inherited_ctor ? instance_inherited_tctor(tp_self,self) :*/ \
             (func) == &instance_super_ctor ? instance_super_tctor(tp_self,self) : \
+            (func) == &instance_kwsuper_ctor ? instance_kwsuper_tctor(tp_self,self) : \
           (*(func))(self))
 #define DeeType_INVOKE_ANY_CTOR(func,tp_self,self,argc,argv) \
            ((func) == &instance_builtin_init ? instance_builtin_tinit(tp_self,self,argc,argv) : \
   IF_NOBASE((func) == &instance_builtin_nobase_init ? instance_builtin_nobase_tinit(tp_self,self,argc,argv) :) \
             (func) == &instance_builtin_inherited_init ? instance_builtin_inherited_tinit(tp_self,self,argc,argv) : \
             (func) == &instance_builtin_super_init ? instance_builtin_super_tinit(tp_self,self,argc,argv) : \
+            (func) == &instance_builtin_kwsuper_init ? instance_builtin_kwsuper_tinit(tp_self,self,argc,argv) : \
             (func) == &instance_init ? instance_tinit(tp_self,self,argc,argv) : \
   IF_NOBASE((func) == &instance_nobase_init ? instance_nobase_tinit(tp_self,self,argc,argv) :) \
             (func) == &instance_inherited_init ? instance_inherited_tinit(tp_self,self,argc,argv) : \
             (func) == &instance_super_init ? instance_super_tinit(tp_self,self,argc,argv) : \
+            (func) == &instance_kwsuper_init ? instance_kwsuper_tinit(tp_self,self,argc,argv) : \
           (*(func))(self,argc,argv))
 #define DeeType_INVOKE_ANY_CTOR_KW(func,tp_self,self,argc,argv,kw) \
            ((func) == &instance_builtin_initkw ? instance_builtin_tinitkw(tp_self,self,argc,argv,kw) : \
   IF_NOBASE((func) == &instance_builtin_nobase_initkw ? instance_builtin_nobase_tinitkw(tp_self,self,argc,argv,kw) :) \
             (func) == &instance_builtin_inherited_initkw ? instance_builtin_inherited_tinitkw(tp_self,self,argc,argv,kw) : \
             (func) == &instance_builtin_super_initkw ? instance_builtin_super_tinitkw(tp_self,self,argc,argv,kw) : \
+            (func) == &instance_builtin_kwsuper_initkw ? instance_builtin_kwsuper_tinitkw(tp_self,self,argc,argv,kw) : \
             (func) == &instance_initkw ? instance_tinitkw(tp_self,self,argc,argv,kw) : \
   IF_NOBASE((func) == &instance_nobase_initkw ? instance_nobase_tinitkw(tp_self,self,argc,argv,kw) :) \
             (func) == &instance_inherited_initkw ? instance_inherited_tinitkw(tp_self,self,argc,argv,kw) : \
             (func) == &instance_super_initkw ? instance_super_tinitkw(tp_self,self,argc,argv,kw) : \
+            (func) == &instance_kwsuper_initkw ? instance_kwsuper_tinitkw(tp_self,self,argc,argv,kw) : \
           (*(func))(self,argc,argv,kw))
 
 
@@ -1225,6 +1231,80 @@ err_args_only:
  goto err;
 }
 INTERN int DCALL
+instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
+                       DeeObject *__restrict self) {
+ struct class_desc *desc = DeeClass_DESC(tp_self);
+ struct instance_desc *instance = DeeInstance_DESC(desc,self);
+ DREF DeeObject *func,*args,*result;
+ DeeTypeObject *tp_super;
+ /* Figure out the arguments to-be passed to the super-constructor. */
+ func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
+ if unlikely(!func) goto err;
+ args = DeeObject_Call(func,0,NULL);
+ Dee_Decref(func);
+ if unlikely(!args) goto err;
+ /* Make sure that the super-arguments object is a tuple. */
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err_args_only;
+ if (DeeTuple_SIZE(args) != 2)
+     goto err_invalid_init_size;
+ if (DeeObject_AssertTypeExact(DeeTuple_GET(args,0),&DeeTuple_Type))
+     goto err_args_only;
+
+ /* Lookup the user-defined constructor for this class. */
+ func = class_desc_get_known_operator(tp_self,desc,OPERATOR_CONSTRUCTOR);
+ if unlikely(!func) goto err_args_only;
+ /* Default-initialize the members of this instance. */
+ rwlock_init(&instance->id_lock);
+ MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+ /* Initialize the super-classes. */
+ tp_super = DeeType_Base(tp_self);
+ if (tp_super && tp_super != &DeeObject_Type) {
+  /* XXX: Keyword arguments in super-constructor calls? */
+  if (instance_initsuper_as_initkw(tp_super,self,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1)))
+      goto err_members;
+ } else if (DeeTuple_SIZE(DeeTuple_GET(args,0)) != 0) {
+  /* Without a custom base class, the constructor requires _no_ arguments! */
+  err_unimplemented_constructor_kw(&DeeObject_Type,
+                                    DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                    DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                    DeeTuple_GET(args,1));
+  goto err_args;
+ } else {
+  if (check_empty_keywords_obj(DeeTuple_GET(args,1)))
+      goto err_args;
+ }
+ /* Invoke the user-defined class constructor. */
+ result = DeeObject_ThisCall(func,self,0,NULL);
+ if unlikely(!result) goto err_super;
+ Dee_Decref(result);
+ Dee_Decref(args);
+ Dee_Decref(func);
+ return 0;
+err_super:
+ if (!DeeObject_UndoConstruction(tp_super,self)) {
+  DeeError_Print(str_shared_ctor_failed,ERROR_PRINT_DOHANDLE);
+  Dee_Decref(args);
+  Dee_Decref(func);
+  return 0;
+ }
+err_members:
+ instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+err_args:
+ Dee_Decref(args);
+ Dee_Decref(func);
+err:
+ return -1;
+err_invalid_init_size:
+ err_invalid_unpack_size(args,2,DeeTuple_SIZE(args));
+err_args_only:
+ Dee_Decref(args);
+ goto err;
+}
+INTERN int DCALL
 instance_super_tinit(DeeTypeObject *__restrict tp_self,
                      DeeObject *__restrict self,
                      size_t argc, DeeObject **__restrict argv) {
@@ -1283,6 +1363,81 @@ err_args:
  Dee_Decref(func);
 err:
  return -1;
+err_args_only:
+ Dee_Decref(args);
+ goto err;
+}
+INTERN int DCALL
+instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
+                       DeeObject *__restrict self,
+                       size_t argc, DeeObject **__restrict argv) {
+ struct class_desc *desc = DeeClass_DESC(tp_self);
+ struct instance_desc *instance = DeeInstance_DESC(desc,self);
+ DREF DeeObject *func,*args,*result;
+ DeeTypeObject *tp_super;
+ /* Figure out the arguments to-be passed to the super-constructor. */
+ func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
+ if unlikely(!func) goto err;
+ args = DeeObject_Call(func,argc,argv);
+ Dee_Decref(func);
+ if unlikely(!args) goto err;
+ /* Make sure that the super-arguments object is a tuple. */
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err_args_only;
+ if (DeeTuple_SIZE(args) != 2)
+     goto err_invalid_init_size;
+ if (DeeObject_AssertTypeExact(DeeTuple_GET(args,0),&DeeTuple_Type))
+     goto err_args_only;
+ /* Lookup the user-defined constructor for this class. */
+ func = class_desc_get_known_operator(tp_self,desc,OPERATOR_CONSTRUCTOR);
+ if unlikely(!func) goto err_args_only;
+ /* Default-initialize the members of this instance. */
+ rwlock_init(&instance->id_lock);
+ MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+ /* Initialize the super-classes. */
+ tp_super = DeeType_Base(tp_self);
+ if (tp_super && tp_super != &DeeObject_Type) {
+  /* XXX: Keyword arguments in super-constructor calls? */
+  if (instance_initsuper_as_initkw(tp_super,self,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1)))
+      goto err_members;
+ } else if (DeeTuple_SIZE(DeeTuple_GET(args,0)) != 0) {
+  /* Without a custom base class, the constructor requires _no_ arguments! */
+  err_unimplemented_constructor_kw(&DeeObject_Type,
+                                   DeeTuple_SIZE(args),
+                                   DeeTuple_ELEM(args),
+                                   DeeTuple_GET(args,1));
+  goto err_args;
+ } else {
+  if (check_empty_keywords_obj(DeeTuple_GET(args,1)))
+      goto err_args;
+ }
+
+ /* Invoke the user-defined class constructor. */
+ result = DeeObject_ThisCall(func,self,argc,argv);
+ if unlikely(!result) goto err_super;
+ Dee_Decref(result);
+ Dee_Decref(args);
+ Dee_Decref(func);
+ return 0;
+err_super:
+ if (!DeeObject_UndoConstruction(tp_super,self)) {
+  DeeError_Print(str_shared_ctor_failed,ERROR_PRINT_DOHANDLE);
+  Dee_Decref(args);
+  Dee_Decref(func);
+  return 0;
+ }
+err_members:
+ instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+err_args:
+ Dee_Decref(args);
+ Dee_Decref(func);
+err:
+ return -1;
+err_invalid_init_size:
+ err_invalid_unpack_size(args,2,DeeTuple_SIZE(args));
 err_args_only:
  Dee_Decref(args);
  goto err;
@@ -1350,6 +1505,80 @@ err_args_only:
  Dee_Decref(args);
  goto err;
 }
+INTERN int DCALL
+instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
+                         DeeObject *__restrict self, size_t argc,
+                         DeeObject **__restrict argv, DeeObject *kw) {
+ struct class_desc *desc = DeeClass_DESC(tp_self);
+ struct instance_desc *instance = DeeInstance_DESC(desc,self);
+ DREF DeeObject *func,*args,*result;
+ DeeTypeObject *tp_super;
+ /* Figure out the arguments to-be passed to the super-constructor. */
+ func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
+ if unlikely(!func) goto err;
+ args = DeeObject_CallKw(func,argc,argv,kw);
+ Dee_Decref(func);
+ if unlikely(!args) goto err;
+ /* Make sure that the super-arguments object is a tuple. */
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err_args_only;
+ if (DeeTuple_SIZE(args) != 2)
+     goto err_invalid_init_size;
+ if (DeeObject_AssertTypeExact(DeeTuple_GET(args,0),&DeeTuple_Type))
+     goto err_args_only;
+ /* Lookup the user-defined constructor for this class. */
+ func = class_desc_get_known_operator(tp_self,desc,OPERATOR_CONSTRUCTOR);
+ if unlikely(!func) goto err_args_only;
+ /* Default-initialize the members of this instance. */
+ rwlock_init(&instance->id_lock);
+ MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+ /* Initialize the super-classes. */
+ tp_super = DeeType_Base(tp_self);
+ if (tp_super && tp_super != &DeeObject_Type) {
+  /* XXX: Keyword arguments in super-constructor calls? */
+  if (instance_initsuper_as_initkw(tp_super,self,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1)))
+      goto err_members;
+ } else if (DeeTuple_SIZE(DeeTuple_GET(args,0)) != 0) {
+  /* Without a custom base class, the constructor requires _no_ arguments! */
+  err_unimplemented_constructor_kw(&DeeObject_Type,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1));
+  goto err_args;
+ } else {
+  if (check_empty_keywords_obj(DeeTuple_GET(args,1)))
+      goto err_args;
+ }
+ /* Invoke the user-defined class constructor. */
+ result = DeeObject_ThisCallKw(func,self,argc,argv,kw);
+ if unlikely(!result) goto err_super;
+ Dee_Decref(result);
+ Dee_Decref(args);
+ Dee_Decref(func);
+ return 0;
+err_super:
+ if (!DeeObject_UndoConstruction(tp_super,self)) {
+  DeeError_Print(str_shared_ctor_failed,ERROR_PRINT_DOHANDLE);
+  Dee_Decref(args);
+  Dee_Decref(func);
+  return 0;
+ }
+err_members:
+ instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+err_args:
+ Dee_Decref(args);
+ Dee_Decref(func);
+err:
+ return -1;
+err_invalid_init_size:
+ err_invalid_unpack_size(args,2,DeeTuple_SIZE(args));
+err_args_only:
+ Dee_Decref(args);
+ goto err;
+}
 
 /* `CLASS_OPERATOR_SUPERARGS' */
 INTERN int DCALL
@@ -1387,6 +1616,60 @@ instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self,
  }
  Dee_Decref(args);
  return 0;
+err_members:
+ instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+err_args:
+ Dee_Decref(args);
+err:
+ return -1;
+}
+INTERN int DCALL
+instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
+                               DeeObject *__restrict self) {
+ struct class_desc *desc = DeeClass_DESC(tp_self);
+ struct instance_desc *instance = DeeInstance_DESC(desc,self);
+ DREF DeeObject *func,*args; DeeTypeObject *tp_super;
+ /* Figure out the arguments to-be passed to the super-constructor. */
+ func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
+ if unlikely(!func) goto err;
+ args = DeeObject_Call(func,0,NULL);
+ Dee_Decref(func);
+ if unlikely(!args) goto err;
+ /* Make sure that the super-arguments object is a tuple. */
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err_args;
+ if (DeeTuple_SIZE(args) != 2)
+     goto err_invalid_init_size;
+ if (DeeObject_AssertTypeExact(DeeTuple_GET(args,0),&DeeTuple_Type))
+     goto err_args;
+ /* Default-initialize the members of this instance. */
+ rwlock_init(&instance->id_lock);
+ MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+ /* Initialize the super-classes. */
+ tp_super = DeeType_Base(tp_self);
+ if (tp_super && tp_super != &DeeObject_Type) {
+  /* XXX: Keyword arguments in super-constructor calls? */
+  if (instance_initsuper_as_initkw(tp_super,self,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1)))
+      goto err_members;
+ } else if (DeeTuple_SIZE(DeeTuple_GET(args,0)) != 0) {
+  /* Without a custom base class, the constructor requires _no_ arguments! */
+  err_unimplemented_constructor_kw(&DeeObject_Type,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1));
+  goto err_args;
+ } else {
+  if (check_empty_keywords_obj(DeeTuple_GET(args,1)))
+      goto err_args;
+ }
+ Dee_Decref(args);
+ return 0;
+err_invalid_init_size:
+ err_invalid_unpack_size(args,2,DeeTuple_SIZE(args));
+ goto err_args;
 err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
 err_args:
@@ -1438,6 +1721,61 @@ err:
  return -1;
 }
 INTERN int DCALL
+instance_builtin_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
+                               DeeObject *__restrict self,
+                               size_t argc, DeeObject **__restrict argv) {
+ struct class_desc *desc = DeeClass_DESC(tp_self);
+ struct instance_desc *instance = DeeInstance_DESC(desc,self);
+ DREF DeeObject *func,*args; DeeTypeObject *tp_super;
+ /* Figure out the arguments to-be passed to the super-constructor. */
+ func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
+ if unlikely(!func) goto err;
+ args = DeeObject_Call(func,argc,argv);
+ Dee_Decref(func);
+ if unlikely(!args) goto err;
+ /* Make sure that the super-arguments object is a tuple. */
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err_args;
+ if (DeeTuple_SIZE(args) != 2)
+     goto err_invalid_init_size;
+ if (DeeObject_AssertTypeExact(DeeTuple_GET(args,0),&DeeTuple_Type))
+     goto err_args;
+ /* Default-initialize the members of this instance. */
+ rwlock_init(&instance->id_lock);
+ MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+ /* Initialize the super-classes. */
+ tp_super = DeeType_Base(tp_self);
+ if (tp_super && tp_super != &DeeObject_Type) {
+  /* XXX: Keyword arguments in super-constructor calls? */
+  if (instance_initsuper_as_initkw(tp_super,self,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1)))
+      goto err_members;
+ } else if (DeeTuple_SIZE(DeeTuple_GET(args,0)) != 0) {
+  /* Without a custom base class, the constructor requires _no_ arguments! */
+  err_unimplemented_constructor_kw(&DeeObject_Type,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1));
+  goto err_args;
+ } else {
+  if (check_empty_keywords_obj(DeeTuple_GET(args,1)))
+      goto err_args;
+ }
+ Dee_Decref(args);
+ return 0;
+err_invalid_init_size:
+ err_invalid_unpack_size(args,2,DeeTuple_SIZE(args));
+ goto err_args;
+err_members:
+ instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+err_args:
+ Dee_Decref(args);
+err:
+ return -1;
+}
+INTERN int DCALL
 instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self,
                                DeeObject *__restrict self, size_t argc,
                                DeeObject **__restrict argv, DeeObject *kw) {
@@ -1473,6 +1811,61 @@ instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self,
  }
  Dee_Decref(args);
  return 0;
+err_members:
+ instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
+err_args:
+ Dee_Decref(args);
+err:
+ return -1;
+}
+INTERN int DCALL
+instance_builtin_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
+                                 DeeObject *__restrict self, size_t argc,
+                                 DeeObject **__restrict argv, DeeObject *kw) {
+ struct class_desc *desc = DeeClass_DESC(tp_self);
+ struct instance_desc *instance = DeeInstance_DESC(desc,self);
+ DREF DeeObject *func,*args; DeeTypeObject *tp_super;
+ /* Figure out the arguments to-be passed to the super-constructor. */
+ func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
+ if unlikely(!func) goto err;
+ args = DeeObject_CallKw(func,argc,argv,kw);
+ Dee_Decref(func);
+ if unlikely(!args) goto err;
+ /* Make sure that the super-arguments object is a tuple. */
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err_args;
+ if (DeeTuple_SIZE(args) != 2)
+     goto err_invalid_init_size;
+ if (DeeObject_AssertTypeExact(DeeTuple_GET(args,0),&DeeTuple_Type))
+     goto err_args;
+ /* Default-initialize the members of this instance. */
+ rwlock_init(&instance->id_lock);
+ MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
+ /* Initialize the super-classes. */
+ tp_super = DeeType_Base(tp_self);
+ if (tp_super && tp_super != &DeeObject_Type) {
+  /* XXX: Keyword arguments in super-constructor calls? */
+  if (instance_initsuper_as_initkw(tp_super,self,
+                                   DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                   DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                   DeeTuple_GET(args,1)))
+      goto err_members;
+ } else if (DeeTuple_SIZE(DeeTuple_GET(args,0)) != 0) {
+  /* Without a custom base class, the constructor requires _no_ arguments! */
+  err_unimplemented_constructor_kw(&DeeObject_Type,
+                                    DeeTuple_SIZE(DeeTuple_GET(args,0)),
+                                    DeeTuple_ELEM(DeeTuple_GET(args,0)),
+                                    DeeTuple_GET(args,1));
+  goto err_args;
+ } else {
+  if (check_empty_keywords_obj(DeeTuple_GET(args,1)))
+      goto err_args;
+ }
+ Dee_Decref(args);
+ return 0;
+err_invalid_init_size:
+ err_invalid_unpack_size(args,2,DeeTuple_SIZE(args));
+ goto err_args;
 err_members:
  instance_clear_members(instance,desc->cd_desc->cd_imemb_size);
 err_args:
@@ -1988,9 +2381,18 @@ instance_super_ctor(DeeObject *__restrict self) {
  return instance_super_tctor(Dee_TYPE(self),self);
 }
 INTERN int DCALL
+instance_kwsuper_ctor(DeeObject *__restrict self) {
+ return instance_kwsuper_tctor(Dee_TYPE(self),self);
+}
+INTERN int DCALL
 instance_super_init(DeeObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  return instance_super_tinit(Dee_TYPE(self),self,argc,argv);
+}
+INTERN int DCALL
+instance_kwsuper_init(DeeObject *__restrict self,
+                      size_t argc, DeeObject **__restrict argv) {
+ return instance_kwsuper_tinit(Dee_TYPE(self),self,argc,argv);
 }
 INTERN int DCALL
 instance_super_initkw(DeeObject *__restrict self, size_t argc,
@@ -1998,8 +2400,17 @@ instance_super_initkw(DeeObject *__restrict self, size_t argc,
  return instance_super_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
 }
 INTERN int DCALL
+instance_kwsuper_initkw(DeeObject *__restrict self, size_t argc,
+                        DeeObject **__restrict argv, DeeObject *kw) {
+ return instance_kwsuper_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+}
+INTERN int DCALL
 instance_builtin_super_ctor(DeeObject *__restrict self) {
  return instance_builtin_super_tctor(Dee_TYPE(self),self);
+}
+INTERN int DCALL
+instance_builtin_kwsuper_ctor(DeeObject *__restrict self) {
+ return instance_builtin_kwsuper_tctor(Dee_TYPE(self),self);
 }
 INTERN int DCALL
 instance_builtin_super_init(DeeObject *__restrict self,
@@ -2007,9 +2418,19 @@ instance_builtin_super_init(DeeObject *__restrict self,
  return instance_builtin_super_tinit(Dee_TYPE(self),self,argc,argv);
 }
 INTERN int DCALL
+instance_builtin_kwsuper_init(DeeObject *__restrict self,
+                              size_t argc, DeeObject **__restrict argv) {
+ return instance_builtin_kwsuper_tinit(Dee_TYPE(self),self,argc,argv);
+}
+INTERN int DCALL
 instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc,
                               DeeObject **__restrict argv, DeeObject *kw) {
  return instance_builtin_super_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+}
+INTERN int DCALL
+instance_builtin_kwsuper_initkw(DeeObject *__restrict self, size_t argc,
+                                DeeObject **__restrict argv, DeeObject *kw) {
+ return instance_builtin_kwsuper_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
 }
 INTERN int DCALL
 instance_ctor(DeeObject *__restrict self) {
@@ -3476,9 +3897,15 @@ err_custom_allocator:
   } while (++i <= desc->cd_clsop_mask);
   switch (constructor_features) {
   case FEATURE_CONSTRUCTOR | FEATURE_SUPERARGS:
-   result->tp_init.tp_alloc.tp_ctor        = &instance_super_ctor;
-   result->tp_init.tp_alloc.tp_any_ctor    = &instance_super_init;
-   result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_super_initkw;
+   if (desc->cd_flags & CLASS_TP_FSUPERKWDS) {
+    result->tp_init.tp_alloc.tp_ctor        = &instance_kwsuper_ctor;
+    result->tp_init.tp_alloc.tp_any_ctor    = &instance_kwsuper_init;
+    result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_kwsuper_initkw;
+   } else {
+    result->tp_init.tp_alloc.tp_ctor        = &instance_super_ctor;
+    result->tp_init.tp_alloc.tp_any_ctor    = &instance_super_init;
+    result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_super_initkw;
+   }
    break;
   case FEATURE_CONSTRUCTOR:
    if (desc->cd_flags & TP_FINHERITCTOR) {
@@ -3498,9 +3925,15 @@ err_custom_allocator:
    }
    break;
   case FEATURE_SUPERARGS:
-   result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_super_ctor;
-   result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_super_init;
-   result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_super_initkw;
+   if (desc->cd_flags & CLASS_TP_FSUPERKWDS) {
+    result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_kwsuper_ctor;
+    result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_kwsuper_init;
+    result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_kwsuper_initkw;
+   } else {
+    result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_super_ctor;
+    result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_super_init;
+    result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_super_initkw;
+   }
    break;
   default:
    if (desc->cd_flags & TP_FINHERITCTOR) {

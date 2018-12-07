@@ -23,6 +23,8 @@
 #include <deemon/object.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>
+#include <deemon/arg.h>
+#include <deemon/format.h>
 #include <deemon/tuple.h>
 #include <deemon/bytes.h>
 #include <deemon/module.h>
@@ -83,19 +85,40 @@ PUBLIC ATTR_COLD int
 }
 
 INTERN ATTR_COLD int DCALL
-err_unimplemented_constructor(DeeTypeObject *__restrict tp,
-                              size_t argc, DeeObject **__restrict argv) {
- DeeObject *args; int result;
- ASSERT_OBJECT(tp);
- ASSERT(DeeType_Check(tp));
- /* XXX: This can be done more efficiently... */
- args = DeeTuple_NewVectorSymbolic(argc,argv);
- if unlikely(!args) return -1;
- result = DeeError_Throwf(&DeeError_NotImplemented,
-                          "Constructor `%k%K' is not implemented",
-                          tp,DeeTuple_Types(args));
- DeeTuple_DecrefSymbolic(args);
+err_unimplemented_constructor_kw(DeeTypeObject *__restrict tp,
+                                 size_t argc,
+                                 DeeObject **__restrict argv,
+                                 DeeObject *kw) {
+ int result;
+ DREF DeeObject *error_args[1],*error_ob;
+ struct unicode_printer printer = UNICODE_PRINTER_INIT;
+ char const *name = tp->tp_name;
+ if (!name) name = "<anonymous type>";
+ if unlikely(unicode_printer_printf(&printer,"Constructor `%s(",name) < 0)
+    goto err_printer;
+ if unlikely(DeeFormat_PrintArgumentTypesKw((dformatprinter)&unicode_printer_print,
+                                            &printer,
+                                             argc,
+                                             argv,
+                                             kw) < 0)
+    goto err_printer;
+ if unlikely(UNICODE_PRINTER_PRINT(&printer,")' is not implemented") < 0)
+    goto err_printer;
+ /* Create the message string. */
+ error_args[0] = unicode_printer_pack(&printer);
+ if unlikely(!error_args[0]) goto err;
+ /* Pack the constructor argument tuple. */
+ error_ob = DeeObject_New(&DeeError_TypeError,1,error_args);
+ Dee_Decref(error_args[0]);
+ if unlikely(!error_ob) goto err;
+ /* Throw the new error object. */
+ result = DeeError_Throw(error_ob);
+ Dee_Decref(error_ob);
  return result;
+err_printer:
+ unicode_printer_fini(&printer);
+err:
+ return -1;
 }
 
 INTERN ATTR_COLD int DCALL
@@ -255,6 +278,39 @@ err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow) {
                         "%s integer overflow after %Iu bits",
                         positive_overflow ? "positive" : "negative",
                         cutoff_bits);
+}
+INTERN int FCALL
+check_empty_keywords(DeeObject *__restrict kw,
+                     DeeTypeObject *__restrict tp_self) {
+ if (DeeKwds_Check(kw)) {
+  if (DeeKwds_SIZE(kw) != 0)
+      goto err_no_keywords;
+ } else {
+  size_t temp = DeeObject_Size(kw);
+  if unlikely(temp == (size_t)-1) goto err;
+  if (temp != 0) goto err_no_keywords;
+ }
+ return 0;
+err_no_keywords:
+ err_keywords_not_accepted(tp_self,kw);
+err:
+ return -1;
+}
+INTERN int FCALL
+check_empty_keywords_obj(DeeObject *__restrict kw) {
+ if (DeeKwds_Check(kw)) {
+  if (DeeKwds_SIZE(kw) != 0)
+      goto err_no_keywords;
+ } else {
+  size_t temp = DeeObject_Size(kw);
+  if unlikely(temp == (size_t)-1) goto err;
+  if (temp != 0) goto err_no_keywords;
+ }
+ return 0;
+err_no_keywords:
+ err_keywords_not_accepted(&DeeObject_Type,kw);
+err:
+ return -1;
 }
 INTERN ATTR_COLD int DCALL
 err_keywords_not_accepted(DeeTypeObject *__restrict tp_self,
