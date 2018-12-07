@@ -353,9 +353,14 @@ INTERN void DCALL DeeSlab_Initialize(void) {
    * a comma-separated list of the slab sizes that should be
    * used. */
 #if DEEMON_SLAB_COUNT == 5
-  sscanf(config,"%u,%u,%u,%u,%u",
-        &sizes[0],&sizes[1],&sizes[2],
-        &sizes[3],&sizes[4]);
+  memset(sizes,0,sizeof(sizes));
+  sscanf(config,
+         "%u,%u,%u,%u,%u",
+        (unsigned int *)&sizes[0],
+        (unsigned int *)&sizes[1],
+        (unsigned int *)&sizes[2],
+        (unsigned int *)&sizes[3],
+        (unsigned int *)&sizes[4]);
 #else
 #error FIXME
 #endif

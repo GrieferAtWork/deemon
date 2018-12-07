@@ -164,12 +164,12 @@ DECL_BEGIN
 #if (defined(__i386__) && !defined(__x86_64__)) && \
      defined(CONFIG_HOST_WINDOWS)
 #if 0
-#define ASSEMBLY_NAME(x,s) PP_CAT4(__USER_LABEL_PREFIX__,x,@,s)
+#define ASSEMBLY_NAME(x,s)     PP_CAT4(__USER_LABEL_PREFIX__,x,@,s)
 #else
-#define ASSEMBLY_NAME(x,s) PP_CAT2(__USER_LABEL_PREFIX__,x@s)
+#define ASSEMBLY_NAME(x,s)     PP_CAT2(__USER_LABEL_PREFIX__,x@s)
 #endif
 #else
-#define ASSEMBLY_NAME(x,s) PP_CAT2(__USER_LABEL_PREFIX__,x)
+#define ASSEMBLY_NAME(x,s)     PP_CAT2(__USER_LABEL_PREFIX__,x)
 #endif
 #endif /* CONFIG_BUILDING_DEEMON */
 

@@ -288,10 +288,14 @@ UNIQUE(err_kargv):
  /* Yield-function invocation. */
  yf = DeeObject_MALLOC(DeeYieldFunctionObject);
  if unlikely(!yf) {
+#if !(defined(CALL_TUPLE) && defined(KW_IS_MAPPING) && (CODE_FLAGS == (CODE_FYIELDING|CODE_FVARKWDS)))
 UNIQUE(err_kargv_varkwds):
+#endif
 #if defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FVARKWDS
   /*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
+#if defined(KW_IS_MAPPING) && !(CODE_FLAGS & CODE_FVARKWDS)
 UNIQUE(err_kargv):
+#endif
   while (ex_argc--)
       Dee_XDecref(frame.cf_kw->fk_kargv[ex_argc]);
   goto err_ex_frame;

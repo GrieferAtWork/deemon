@@ -125,121 +125,6 @@ gii("FILE_END");
 
 
 
-
-#define MAX_KEY_LENGTH 255
-#define MAX_VALUE_NAME 16383
- 
-void QueryKey(HKEY hKey) 
-{ 
-    TCHAR    achKey[MAX_KEY_LENGTH];   // buffer for subkey name
-    DWORD    cbName;                   // size of name string 
-    TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name 
-    DWORD    cchClassName = MAX_PATH;  // size of class string 
-    DWORD    cSubKeys=0;               // number of subkeys 
-    DWORD    cbMaxSubKey;              // longest subkey size 
-    DWORD    cchMaxClass;              // longest class string 
-    DWORD    cValues;              // number of values for key 
-    DWORD    cchMaxValue;          // longest value name 
-    DWORD    cbMaxValueData;       // longest value data 
-    DWORD    cbSecurityDescriptor; // size of security descriptor 
-    FILETIME ftLastWriteTime;      // last write time 
- 
-    DWORD i, retCode; 
- 
-    TCHAR  achValue[MAX_VALUE_NAME]; 
-    DWORD cchValue = MAX_VALUE_NAME; 
- 
-    // Get the class name and the value count. 
-    retCode = RegQueryInfoKey(
-        hKey,                    // key handle 
-        achClass,                // buffer for class name 
-        &cchClassName,           // size of class string 
-        NULL,                    // reserved 
-        &cSubKeys,               // number of subkeys 
-        &cbMaxSubKey,            // longest subkey size 
-        &cchMaxClass,            // longest class string 
-        &cValues,                // number of values for this key 
-        &cchMaxValue,            // longest value name 
-        &cbMaxValueData,         // longest value data 
-        &cbSecurityDescriptor,   // security descriptor 
-        &ftLastWriteTime);       // last write time 
- 
-    // Enumerate the subkeys, until RegEnumKeyEx fails.
-    
-    if (cSubKeys)
-    {
-        printf( "\nNumber of subkeys: %d\n", cSubKeys);
-
-        for (i=0; i<cSubKeys; i++) 
-        { 
-            cbName = MAX_KEY_LENGTH;
-            retCode = RegEnumKeyEx(hKey, i,
-                     achKey, 
-                     &cbName, 
-                     NULL, 
-                     NULL, 
-                     NULL, 
-                     &ftLastWriteTime); 
-            if (retCode == ERROR_SUCCESS) 
-            {
-                printf(("(%d) %s\n"), i+1, achKey);
-            }
-        }
-    } 
- 
-    // Enumerate the key values. 
-
-    if (cValues) 
-    {
-        printf( "\nNumber of values: %d\n", cValues);
-
-        for (i=0, retCode=ERROR_SUCCESS; i<cValues; i++) 
-        { 
-            cchValue = MAX_VALUE_NAME; 
-            achValue[0] = '\0'; 
-            retCode = RegEnumValue(hKey, i, 
-                achValue, 
-                &cchValue, 
-                NULL, 
-                NULL,
-                NULL,
-                NULL);
- 
-            if (retCode == ERROR_SUCCESS ) 
-            { 
-                printf(("(%d) %s\n"), i+1, achValue); 
-            } 
-        }
-    }
-}
-
-/*[[[deemon import("_dexutils").gw("test"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libwin32_test_f_impl(void);
-PRIVATE DREF DeeObject *DCALL libwin32_test_f(size_t argc, DeeObject **__restrict argv);
-#define LIBWIN32_TEST_DEF { "test", (DeeObject *)&libwin32_test, MODSYM_FNORMAL, DOC("()") },
-#define LIBWIN32_TEST_DEF_DOC(doc) { "test", (DeeObject *)&libwin32_test, MODSYM_FNORMAL, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(libwin32_test,libwin32_test_f);
-PRIVATE DREF DeeObject *DCALL libwin32_test_f(size_t argc, DeeObject **__restrict argv) {
-	if (DeeArg_Unpack(argc,argv,":test"))
-	    goto err;
-	return libwin32_test_f_impl();
-err:
-	return NULL;
-}
-FORCELOCAL DREF DeeObject *DCALL libwin32_test_f_impl(void)
-//[[[end]]]
-{
- HKEY hTestKey;
- DBG_ALIGNMENT_DISABLE();
- if (RegOpenKeyEx(HKEY_CURRENT_USER,TEXT("SOFTWARE\\Microsoft"),0,KEY_READ,&hTestKey) == ERROR_SUCCESS) {
-  QueryKey(hTestKey);
- }
- RegCloseKey(hTestKey);
- DBG_ALIGNMENT_ENABLE();
- return_none;
-}
-
-
 /*[[[deemon import("_dexutils").gw("GetLastError","->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libwin32_GetLastError_f_impl(void);
 PRIVATE DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject **__restrict argv);
@@ -803,7 +688,7 @@ err:
 FORCELOCAL DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE hFile, int64_t lDistanceToMove, DWORD dwMoveMethod)
 //[[[end]]]
 {
- LONG lResult;
+ DWORD dwResult;
  LONG lDistanceToMoveLow;
  LONG lDistanceToMoveHigh;
 again:
@@ -812,11 +697,11 @@ again:
  lDistanceToMoveLow  = (LONG)(lDistanceToMove);
  lDistanceToMoveHigh = (LONG)(lDistanceToMove >> 32);
  DBG_ALIGNMENT_DISABLE();
- lResult = SetFilePointer(hFile,
-                          lDistanceToMoveLow,
-                         &lDistanceToMoveHigh,
-                          dwMoveMethod);
- if unlikely(lResult == INVALID_SET_FILE_POINTER) {
+ dwResult = SetFilePointer(hFile,
+                           lDistanceToMoveLow,
+                          &lDistanceToMoveHigh,
+                           dwMoveMethod);
+ if unlikely(dwResult == INVALID_SET_FILE_POINTER) {
   DWORD error = GetLastError();
   DBG_ALIGNMENT_ENABLE();
   if (error != NO_ERROR) {
@@ -828,7 +713,7 @@ again:
  }
  DBG_ALIGNMENT_ENABLE();
  return DeeInt_NewU64((uint64_t)(uint32_t)lDistanceToMoveHigh << 32 |
-                      (uint64_t)(uint32_t)lResult);
+                      (uint64_t)(uint32_t)dwResult);
 err:
  return NULL;
 }
@@ -1093,8 +978,6 @@ err:
 PRIVATE struct dex_symbol symbols[] = {
     /* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
     /* TODO: Wrapper types for `WIN32_FIND_DATA' */
-
-    LIBWIN32_TEST_DEF_DOC("Test function")
 
     /* Error-related functions. */
     LIBWIN32_GETLASTERROR_DEF

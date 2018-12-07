@@ -66,7 +66,7 @@
 #define IF_EVAL(...)      /* nothing */
 #define SYNTAXERROR(...) (DeeError_Throwf(&DeeError_SyntaxError,__VA_ARGS__), \
                           JITLexer_ErrorTrace(self,self->jl_tokstart), \
-                          self->jl_context->jc_flags |= JITCONTEXT_FSERROR,-1)
+                          self->jl_context->jc_flags |= JITCONTEXT_FSYNERR,-1)
 #define DECREF(x)        (void)0
 #define DECREF_MAYBE_LVALUE(x) (void)0
 #define ERROR             -1
@@ -92,7 +92,8 @@
 #define IF_EVAL(...)      __VA_ARGS__
 #define SYNTAXERROR(...) (DeeError_Throwf(&DeeError_SyntaxError,__VA_ARGS__), \
                           JITLexer_ErrorTrace(self,self->jl_tokstart), \
-                          self->jl_context->jc_flags |= JITCONTEXT_FSERROR,NULL)
+                          self->jl_context->jc_flags |= JITCONTEXT_FSYNERR, \
+                          NULL)
 #define ERROR             NULL
 #define RETURN_TYPE       DREF DeeObject *
 #define DECREF(x)         Dee_Decref(x)
@@ -815,7 +816,7 @@ done_y1:
       char const *next = (char const *)source_end;
       ch = utf8_readchar_rev(&next,(char const *)source_start);
       if (!DeeUni_IsSpace(ch)) break;
-      source_end = (unsigned char *)ch;
+      source_end = (unsigned char *)next;
      }
      result = JITFunction_New(NULL,
                               NULL,
@@ -892,7 +893,7 @@ done_y1:
      char const *next = (char const *)source_end;
      ch = utf8_readchar_rev(&next,(char const *)source_start);
      if (!DeeUni_IsSpace(ch)) break;
-     source_end = (unsigned char *)ch;
+     source_end = (unsigned char *)next;
     }
     result = JITFunction_New(NULL,
                              NULL,
@@ -1416,9 +1417,10 @@ skip_rbrck_and_done:
  } break;
 
  default:
-  result = SYNTAXERROR("Unexpected token `%$s' in expression",
-                      (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+  SYNTAXERROR("Unexpected token `%$s' in expression",
+             (size_t)(self->jl_tokend - self->jl_tokstart),
+              self->jl_tokstart);
+  result = ERROR;
   break;
  }
 done:
@@ -2913,6 +2915,7 @@ again:
    result = new_result;
   }
 #else
+  ATTR_FALLTHROUGH
  case ',':
 #endif
   JITLexer_Yield(self);
@@ -2980,6 +2983,7 @@ again:
    Dee_Decref(lhs);
   }
 #else
+  ATTR_FALLTHROUGH
  case ',':
 #endif
   JITLexer_Yield(self);

@@ -76,7 +76,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
  result = EVAL_PRIMARY(self,&was_expression);
  if (result == JIT_LVALUE)
      result = JITLexer_PackLValue(self);
- if (self->jl_context->jc_flags & JITCONTEXT_FSERROR)
+ if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
      goto err;
  JITLexer_YieldAt(self,start);
  if (SKIP_PRIMARY(self,&was_expression))
@@ -116,7 +116,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
     if (SKIP_SECONDARY(self,&was_expression))
         goto err_r_popscope;
     Dee_XClear(result);
-    if (self->jl_context->jc_flags & JITCONTEXT_FSERROR)
+    if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
         goto err_popscope;
     continue;
    }
@@ -189,7 +189,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
      if (result == JIT_LVALUE)
          result = JITLexer_PackLValue(self);
      if unlikely(!result) {
-      if (self->jl_context->jc_flags & JITCONTEXT_FSERROR)
+      if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
           goto err_popscope;
       goto err_handle_catch_except;
      }
@@ -363,7 +363,7 @@ err_r:
  DECREF(result);
 #endif /* JIT_EVAL */
 err:
- return NULL;
+ return ERROR;
 }
 
 INTERN RETURN_TYPE FCALL

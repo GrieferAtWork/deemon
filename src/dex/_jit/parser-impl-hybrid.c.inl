@@ -407,7 +407,7 @@ err_popscope:
 err_r:
  DECREF_MAYBE_LVALUE(result);
 err:
- return NULL;
+ return ERROR;
 }
 
 INTERN RETURN_TYPE FCALL

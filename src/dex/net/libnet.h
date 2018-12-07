@@ -594,10 +594,10 @@ typedef SocketHandleType sock_t;
 #define SHUT_RD   SD_RECEIVE
 #define SHUT_WR   SD_SEND
 #define SHUT_RDWR SD_BOTH
-#ifdef AF_UNIX
+#if defined(AF_UNIX) && !defined(CONFIG_HOST_UNIX)
 struct sockaddr_un {
- sa_family_t sun_family;    /* AF_UNIX */
- char        sun_path[108]; /* pathname */
+    sa_family_t sun_family;    /* AF_UNIX */
+    char        sun_path[108]; /* pathname */
 };
 #endif
 #endif /* CONFIG_HOST_WINDOWS */

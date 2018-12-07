@@ -3957,6 +3957,12 @@ do_setattr_this_c:
          DISPATCH();
      }
 
+     TARGET(ASM16_PUSH_BND_ARG,-0,+1) {
+         imm_val = READ_imm16();
+         goto do_push_bnd_arg;
+     }
+
+
      TARGET(ASM16_PUSH_BND_EXTERN,-0,+1) {
          imm_val  = READ_imm16();
          imm_val2 = READ_imm16();

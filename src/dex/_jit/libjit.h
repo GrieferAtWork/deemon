@@ -498,7 +498,7 @@ JITObjectTable_Create(JITObjectTable *__restrict self,
 #define JITCONTEXT_RETVAL_ISSET(x)  ((uintptr_t)(x) < (uintptr_t)-0xf)
 
 #define JITCONTEXT_FNORMAL 0x0000 /* Normal flags. */
-#define JITCONTEXT_FSERROR 0x0001 /* A syntax error occurred that may not be caught. */
+#define JITCONTEXT_FSYNERR 0x0001 /* A syntax error occurred that may not be caught. */
 
 struct jit_context {
     DeeModuleObject *jc_impbase;  /* [0..1] Base module used for relative, static imports (such as `foo from .baz.bar')

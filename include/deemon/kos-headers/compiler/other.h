@@ -49,21 +49,22 @@
 #endif
 
 
+#ifndef __PE__
 #ifdef __ASSEMBLER__
 #define __DEFINE_PRIVATE_ALIAS(new,old)      .local new; .set new, old;
-#define __DEFINE_PUBLIC_ALIAS(new,old)       .global new; .set new, old;
 #define __DEFINE_INTERN_ALIAS(new,old)       .global new; .hidden new; .set new, old;
 #define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) .weak new; .local new; .set new, old;
-#define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  .weak new; .global new; .set new, old;
 #define __DEFINE_INTERN_WEAK_ALIAS(new,old)  .weak new; .global new; .hidden new; .set new, old;
+#define __DEFINE_PUBLIC_ALIAS(new,old)       .global new; .set new, old;
+#define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  .weak new; .global new; .set new, old;
 #elif defined(__LINKER__)
-#define __DEFINE_PRIVATE_ALIAS(new,old)      __DEFINE_INTERN_ALIAS(new,old)
-#define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) __DEFINE_INTERN_ALIAS(new,old)
-#define __DEFINE_INTERN_WEAK_ALIAS(new,old)  __DEFINE_INTERN_ALIAS(new,old)
-#define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  __DEFINE_PUBLIC_ALIAS(new,old)
-#define __DEFINE_PUBLIC_ALIAS(new,old)       PROVIDE(new = ABSOLUTE(old))
-#define __DEFINE_INTERN_ALIAS(new,old)       PROVIDE_HIDDEN(new = ABSOLUTE(old))
+#define __DEFINE_PRIVATE_ALIAS(new,old)         __DEFINE_INTERN_ALIAS(new,old)
+#define __DEFINE_PRIVATE_WEAK_ALIAS(new,old)    __DEFINE_INTERN_ALIAS(new,old)
+#define __DEFINE_INTERN_WEAK_ALIAS(new,old)     __DEFINE_INTERN_ALIAS(new,old)
+#define __DEFINE_PUBLIC_ALIAS(new,old)          PROVIDE(new = ABSOLUTE(old))
+#define __DEFINE_INTERN_ALIAS(new,old)          PROVIDE_HIDDEN(new = ABSOLUTE(old))
 #endif
+#endif /* !__PE__ */
 
 
 #define __GCC_VERSION(a,b,c)   0

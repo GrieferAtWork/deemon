@@ -41,6 +41,26 @@
 #define __CCAST(T) /* nothing */
 #endif
 
+#if !defined(__PE__) && !defined(__ELF__)
+/* Try to determine current binary format using other platform
+ * identifiers. (When KOS headers are used on other systems) */
+#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__MINGW32__)
+#   define __PE__  1
+#elif defined(__linux__) || defined(__linux) || defined(linux) || \
+      defined(__unix__) || defined(__unix) || defined(unix)
+#   define __ELF__ 1
+#elif defined(__WINDOWS__) || \
+      defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
+      defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
+      defined(_WIN32_WCE) || defined(WIN32_WCE)
+#   define __PE__  1
+#else
+#   warning "Target binary format not defined. - Assuming `__ELF__'"
+#   define __ELF__ 1
+#endif
+#endif
+
+
 #include "compiler/pp-generic.h"
 
 #define __COMPILER_LENOF(arr)          (sizeof(arr)/sizeof(*(arr)))
@@ -138,49 +158,6 @@
 #define __COMPILER_OFFSETAFTER(s,m) ((__SIZE_TYPE__)(&((s *)0)->m+1))
 #define __COMPILER_CONTAINER_OF(ptr,type,member) \
   ((type *)((__UINTPTR_TYPE__)(ptr)-__builtin_offsetof(type,member)))
-#ifndef __DEFINE_PUBLIC_ALIAS
-#ifdef __COMPILER_HAVE_GCC_ASM
-#   define __DEFINE_ALIAS_STR(x) #x
-#   define __DEFINE_PRIVATE_ALIAS(new,old) __asm__(".local " __DEFINE_ALIAS_STR(new) "\n.set " __DEFINE_ALIAS_STR(new) "," __DEFINE_ALIAS_STR(old) "\n")
-#   define __DEFINE_PUBLIC_ALIAS(new,old)  __asm__(".global " __DEFINE_ALIAS_STR(new) "\n.set " __DEFINE_ALIAS_STR(new) "," __DEFINE_ALIAS_STR(old) "\n")
-#   define __DEFINE_INTERN_ALIAS(new,old)  __asm__(".global " __DEFINE_ALIAS_STR(new) "\n.hidden " __DEFINE_ALIAS_STR(new) "\n.set " __DEFINE_ALIAS_STR(new) "," __DEFINE_ALIAS_STR(old) "\n")
-#else
-#   define __NO_DEFINE_ALIAS 1
-#endif
-#endif /* !__DEFINE_PUBLIC_ALIAS */
-#ifdef __NO_ATTR_ALIAS
-#   define __ALIAS_IMPL(old,args) { return old args; }
-#   define __ALIAS_FUNC(decl_new,new,decl_old,old,param,args) \
-           decl_old old param; \
-           decl_new new param { return old args; }
-#   define __ALIAS_SYMBOL      __DEFINE_PUBLIC_ALIAS
-#else
-#   define __ALIAS_IMPL(new,args) __ATTR_ALIAS(#new)
-#   define __ALIAS_FUNC(decl_new,new,decl_old,old,param,args) \
-           decl_old old param; \
-           decl_new new param __ATTR_ALIAS(#old)
-#   define __ALIAS_SYMBOL(new,old) \
-           __typeof__(old) new __ATTR_ALIAS(#old)
-#endif
-
-#if !defined(__PE__) && !defined(__ELF__)
-/* Try to determine current binary format using other platform
- * identifiers. (When KOS headers are used on other systems) */
-#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__MINGW32__)
-#   define __PE__  1
-#elif defined(__linux__) || defined(__linux) || defined(linux) || \
-      defined(__unix__) || defined(__unix) || defined(unix)
-#   define __ELF__ 1
-#elif defined(__WINDOWS__) || \
-      defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
-      defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
-      defined(_WIN32_WCE) || defined(WIN32_WCE)
-#   define __PE__  1
-#else
-#   warning "Target binary format not defined. - Assuming `__ELF__'"
-#   define __ELF__ 1
-#endif
-#endif
 
 #ifndef __CC__
 #   define __IMPDEF        /* Nothing */
@@ -223,6 +200,20 @@
 #   define __INTERN_CONST         __ATTR_VISIBILITY("hidden")
 #endif
 #endif
+
+#ifndef __DEFINE_PUBLIC_ALIAS
+#if defined(__COMPILER_HAVE_GCC_ASM) && !defined(__PE__)
+#   define __DEFINE_ALIAS_STR(x) #x
+#   define __DEFINE_PRIVATE_ALIAS(new,old) __asm__(".local " __DEFINE_ALIAS_STR(new) "\n.set " __DEFINE_ALIAS_STR(new) "," __DEFINE_ALIAS_STR(old) "\n")
+#   define __DEFINE_INTERN_ALIAS(new,old)  __asm__(".global " __DEFINE_ALIAS_STR(new) "\n.hidden " __DEFINE_ALIAS_STR(new) "\n.set " __DEFINE_ALIAS_STR(new) "," __DEFINE_ALIAS_STR(old) "\n")
+#   define __DEFINE_PUBLIC_ALIAS(new,old)  __asm__(".global " __DEFINE_ALIAS_STR(new) "\n.set " __DEFINE_ALIAS_STR(new) "," __DEFINE_ALIAS_STR(old) "\n")
+#else
+#   define __NO_DEFINE_ALIAS 1
+#   define __DEFINE_PRIVATE_ALIAS(new,old) /* nothing */
+#   define __DEFINE_INTERN_ALIAS(new,old)  /* nothing */
+#   define __DEFINE_PUBLIC_ALIAS(new,old)  /* nothing */
+#endif
+#endif /* !__DEFINE_PUBLIC_ALIAS */
 
 
 #ifdef __INTELLISENSE__

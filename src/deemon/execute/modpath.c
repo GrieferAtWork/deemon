@@ -1918,6 +1918,7 @@ load_module_after_dec_failure:
 #define CLOSE_MODULE(x) FreeLibrary(x)
   if (hModule == NULL)
 #else /* USE_LOADLIBRARY */
+  void *hModule;
 #ifndef CONFIG_HOST_WINDOWS
   dst[module_namesize + 1] = 's';
   dst[module_namesize + 2] = 'o';

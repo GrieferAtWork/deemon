@@ -202,6 +202,7 @@ PRIVATE struct type_seq ss_seq = {
     /* .tp_range_get = */NULL,
     /* .tp_range_del = */NULL,
     /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&ss_nsi
 };
 
 PRIVATE struct type_member ss_class_members[] = {

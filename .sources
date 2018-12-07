@@ -25,7 +25,7 @@
 	CREATE_FOLDER(fs.path.head(x)) \
 	IF(TARGET_WINDOWS) \
 		SET_OUTPUT((x)+".dll") \
-		L_FLAGS("-Wl,--out-implib="+(x)+".dll.a") \
+		L_FLAGS("-Wl,--out-implib="+FILES(x)[0]+".dll.a") \
 	ELSE \
 		SET_OUTPUT((x)+".so") \
 	FI \
@@ -34,7 +34,7 @@
 	CREATE_FOLDER(fs.path.head(x)) \
 	IF(TARGET_WINDOWS) \
 		SET_OUTPUT(x+".exe") \
-		L_FLAGS("-Wl,--out-implib="+(x)+".dll.a") \
+		L_FLAGS("-Wl,--out-implib="+FILES(x)[0]+".dll.a") \
 	ELSE \
 		SET_OUTPUT(x) \
 	FI

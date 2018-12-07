@@ -695,7 +695,7 @@ JITLexer_SkipPair(JITLexer *__restrict self,
  return 0;
 err_eof:
  JITLexer_ErrorTrace(self,start);
- self->jl_context->jc_flags |= JITCONTEXT_FSERROR;
+ self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
  return DeeError_Throwf(&DeeError_SyntaxError,
                         "Missing `%c' after `%c'",pair_close,pair_open);
 }

@@ -168,7 +168,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_RANGE:
-  context->jc_flags |= JITCONTEXT_FSERROR;
+  context->jc_flags |= JITCONTEXT_FSYNERR;
   return DeeError_Throwf(&DeeError_SyntaxError,
                          "Cannot test binding of expression. "
                          "Expected a symbol, or attribute expression");

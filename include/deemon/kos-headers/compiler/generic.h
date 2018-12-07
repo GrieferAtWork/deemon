@@ -495,7 +495,7 @@
 #   define __XRETURN             /* Nothing */
 #endif
 #define __DEFINE_PRIVATE_ALIAS(new,old)      /* Nothing */
-#define __DEFINE_PUBLIC_ALIAS(new,old)       /* Nothing */
+#define __DEFINE_PUBLIC_ALIAS_RAW(new,old)   /* Nothing */
 #define __DEFINE_INTERN_ALIAS(new,old)       /* Nothing */
 #define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) /* Nothing */
 #define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  /* Nothing */

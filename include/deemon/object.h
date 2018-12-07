@@ -808,9 +808,14 @@ DFUNDEF ATTR_COLD int DCALL Dee_BadAlloc(size_t req_bytes);
 #ifndef CONFIG_NO_OBJECT_SLABS
 DFUNDEF void (DCALL DeeObject_Free)(void *ptr);
 DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
+#ifndef NDEBUG
+#define DeeObject_Free(ptr)              DeeDbgObject_Free(ptr,__FILE__,__LINE__)
+#else
+#define DeeDbgObject_Free(ptr,file,line) DeeObject_Free(ptr)
+#endif
 #else /* !CONFIG_NO_OBJECT_SLABS */
-#define DeeObject_Free                                 Dee_Free
-#define DeeDbgObject_Free(ob,file,line)                DeeDbg_Free(ob,file,line)
+#define DeeObject_Free(ptr)              Dee_Free(ptr)
+#define DeeDbgObject_Free(ptr,file,line) DeeDbg_Free(ptr,file,line)
 #endif /* CONFIG_NO_OBJECT_SLABS */
 
 /* Free the reference tracker of a given object.
@@ -1238,11 +1243,11 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define TYPE_FIXED_ALLOCATOR_GC    TYPE_AUTO_ALLOCATOR
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define TYPE_FIXED_ALLOCATOR(T) \
-    DeeSlab_Invoke(&DeeObject_SlabFree,sizeof(T),,NULL), \
-  {(uintptr_t)DeeSlab_Invoke(&DeeObject_SlabMalloc,sizeof(T),,sizeof(T)) }
+    DeeSlab_Invoke((void *)&DeeObject_SlabFree,sizeof(T),,NULL), \
+  { DeeSlab_Invoke((uintptr_t)(void *)&DeeObject_SlabMalloc,sizeof(T),,sizeof(T)) }
 #define TYPE_FIXED_ALLOCATOR_GC(T) \
-    DeeSlab_Invoke(&DeeGCObject_SlabFree,sizeof(T),,NULL), \
-  {(uintptr_t)DeeSlab_Invoke(&DeeGCObject_SlabMalloc,sizeof(T),,sizeof(T)) }
+    DeeSlab_Invoke((void *)&DeeGCObject_SlabFree,sizeof(T),,NULL), \
+  { DeeSlab_Invoke((uintptr_t)(void *)&DeeGCObject_SlabMalloc,sizeof(T),,sizeof(T)) }
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as `TYPE_FIXED_ALLOCATOR()', but don't link agains dedicated
