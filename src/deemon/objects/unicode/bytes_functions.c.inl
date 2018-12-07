@@ -1368,19 +1368,19 @@ INTDEF DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *__restrict self, DeeObject 
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *__restrict self, DeeObject *__restrict other, size_t start, size_t end);
 
 PRIVATE DREF DeeObject *DCALL
-bytes_findall(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+bytes_findall(Bytes *__restrict self, size_t argc,
+              DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *arg; size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId:findall",&arg,&start,&end))
+ if (DeeArg_UnpackKw(argc,argv,kw,find_kwlist,"o|IdId:findall",&arg,&start,&end))
      return NULL;
  return DeeBytes_FindAll(self,arg,start,end);
 }
 
 PRIVATE DREF DeeObject *DCALL
-bytes_casefindall(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+bytes_casefindall(Bytes *__restrict self, size_t argc,
+                  DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *arg; size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId:casefindall",&arg,&start,&end))
+ if (DeeArg_UnpackKw(argc,argv,kw,find_kwlist,"o|IdId:casefindall",&arg,&start,&end))
      return NULL;
  return DeeBytes_CaseFindAll(self,arg,start,end);
 }
