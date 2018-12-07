@@ -251,7 +251,7 @@ template<> struct __static_if<true> { bool __is_true__(); };
 
 #define __DEFINE_PRIVATE_ALIAS(new,old) \
   __pragma(comment(linker,"/alternatename:" __DEFINE_ALIAS_STR(new) "=" __DEFINE_ALIAS_STR(old)))
-#define __DEFINE_PUBLIC_ALIAS_RAW(new,old)  \
+#define __DEFINE_PUBLIC_ALIAS(new,old)  \
   __pragma(comment(linker,"/alternatename:" __DEFINE_ALIAS_STR(new) "=" __DEFINE_ALIAS_STR(old))) \
   __pragma(comment(linker,"/export:" __DEFINE_ALIAS_STR(new)))
 #define __DEFINE_INTERN_ALIAS(new,old)  \
