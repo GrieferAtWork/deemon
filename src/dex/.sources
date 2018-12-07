@@ -26,6 +26,7 @@
 	IF(TARGET_WINDOWS) \
 		LIB("deemon") \
 		L_FLAGS("-static-libgcc") \
+		L_FLAGS("-static-libstdc++") \
 	FI \
 /**/
 

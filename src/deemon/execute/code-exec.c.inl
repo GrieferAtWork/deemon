@@ -49,6 +49,7 @@
 
 #include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/overflow.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/sched/yield.h>
@@ -1742,8 +1743,21 @@ do_push_arg:
        DeeObject *oldval;
        varkwds = construct_varkwds_mapping();
        if unlikely(!varkwds) HANDLE_EXCEPT();
+#ifdef CONFIG_NO_THREADS
+       oldval = frame->cf_kw->fk_varkwds;
+       if unlikely(oldval) {
+        VARKWDS_DECREF(varkwds);
+        varkwds = oldval;
+       } else {
+        frame->cf_kw->fk_varkwds = varkwds;
+       }
+#else
        oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,varkwds);
-       if unlikely(oldval) { Dee_Decref(varkwds); varkwds = oldval; }
+       if unlikely(oldval) {
+        VARKWDS_DECREF(varkwds);
+        varkwds = oldval;
+       }
+#endif
       }
      } else {
       varkwds = Dee_EmptyMapping;
@@ -5005,10 +5019,10 @@ do_pack_dict:
 #endif
          if (DeeObject_AsSize(TOP,&index))
              HANDLE_EXCEPT();
-         index += code->co_argc_max;
-         if (index >= frame->cf_argc) {
-          err_va_index_out_of_bounds((size_t)(index-code->co_argc_max),
-                                     (size_t)(frame->cf_argc-code->co_argc_max));
+         if (OVERFLOW_UADD(index,code->co_argc_max,&index) ||
+             index >= frame->cf_argc) {
+          err_va_index_out_of_bounds((size_t)(index - code->co_argc_max),
+                                     (size_t)(frame->cf_argc - code->co_argc_max));
           HANDLE_EXCEPT();
          }
          /* Exchange the stack-top object */
@@ -6147,8 +6161,8 @@ do_prefix_push_arg:
         Dee_Incref(Dee_EmptyTuple);
        } else {
         frame->cf_vargs = (DREF DeeTupleObject *)
-         DeeTuple_NewVector((size_t)(frame->cf_argc-code->co_argc_max),
-                                     frame->cf_argv+code->co_argc_max);
+         DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+                                     frame->cf_argv + code->co_argc_max);
         if unlikely(!frame->cf_vargs) HANDLE_EXCEPT();
        }
       }
@@ -6173,8 +6187,21 @@ do_prefix_push_arg:
         DeeObject *oldval;
         varkwds = construct_varkwds_mapping();
         if unlikely(!varkwds) HANDLE_EXCEPT();
+#ifdef CONFIG_NO_THREADS
+        oldval = frame->cf_kw->fk_varkwds;
+        if unlikely(oldval) {
+         VARKWDS_DECREF(varkwds);
+         varkwds = oldval;
+        } else {
+         frame->cf_kw->fk_varkwds = varkwds;
+        }
+#else
         oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,varkwds);
-        if unlikely(oldval) { Dee_Decref(varkwds); varkwds = oldval; }
+        if unlikely(oldval) {
+         VARKWDS_DECREF(varkwds);
+         varkwds = oldval;
+        }
+#endif
        }
       } else {
        varkwds = Dee_EmptyMapping;

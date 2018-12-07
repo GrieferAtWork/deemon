@@ -225,21 +225,24 @@ again:
  if unlikely(!result) {
   rwlock_endread(&jit_access_lock);
   result = DeeModule_OpenGlobal(&str__jit,NULL,false);
-  if unlikely(!result) return NULL;
-  if (result != ITER_DONE) {
+  if unlikely(!ITER_ISOK(result)) {
+   if (!result)
+       return NULL;
+  } else {
    if unlikely(DeeModule_RunInit(result) < 0) {
     Dee_Decref(result);
     return NULL;
    }
+   Dee_Incref(result); /* The reference stored in `jit_module' */
   }
   rwlock_write(&jit_access_lock);
   if unlikely(ATOMIC_READ(jit_module)) {
    rwlock_endwrite(&jit_access_lock);
-   Dee_Decref(result);
+   if (ITER_ISOK(result))
+       Dee_Decref(result);
    goto again;
   }
-  Dee_Incref(result);
-  jit_module = result;
+  jit_module = result; /* Inherit reference. */
   rwlock_endwrite(&jit_access_lock);
  } else {
   if (result != ITER_DONE)
