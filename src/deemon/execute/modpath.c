@@ -1525,9 +1525,9 @@ DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t modu
  char *buf,*dst,*module_name_start; size_t i,len;
  dhash_t hash;
 #ifndef CONFIG_NO_DEC
- buf = (char *)Dee_AMalloc((module_pathsize + module_namesize + 6) * sizeof(char));
+ buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 6) * sizeof(char));
 #else
- buf = (char *)Dee_AMalloc((module_pathsize + module_namesize + 5) * sizeof(char));
+ buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5) * sizeof(char));
 #endif
  if unlikely(!buf) goto err;
  dst = buf;
