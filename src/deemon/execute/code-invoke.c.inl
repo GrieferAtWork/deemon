@@ -186,22 +186,48 @@ MY_FUNCTION_NAME(DeeFunctionObject *__restrict self
 #define err_ex_frame err
 #endif
 #ifndef __INTELLISENSE__
-  if (code->co_flags & CODE_FVARKWDS) {
-   if (code->co_flags & CODE_FYIELDING) {
-#define CODE_FLAGS   (CODE_FVARKWDS | CODE_FYIELDING)
+  switch (code->co_flags & (CODE_FVARKWDS | CODE_FYIELDING)) {
+  case 0:
+   if likely(DeeKwds_Check(kw)) {
+#define CODE_FLAGS    0
 #include "code-invoke-kw.c.inl"
    } else {
-#define CODE_FLAGS   (CODE_FVARKWDS)
-#include "code-invoke-kw.c.inl"
-   }
-  } else {
-   if (code->co_flags & CODE_FYIELDING) {
-#define CODE_FLAGS   (CODE_FYIELDING)
-#include "code-invoke-kw.c.inl"
-   } else {
+#define KW_IS_MAPPING 1
 #define CODE_FLAGS    0
 #include "code-invoke-kw.c.inl"
    }
+   break;
+  case CODE_FVARKWDS:
+   if likely(DeeKwds_Check(kw)) {
+#define CODE_FLAGS    CODE_FVARKWDS
+#include "code-invoke-kw.c.inl"
+   } else {
+#define KW_IS_MAPPING 1
+#define CODE_FLAGS    CODE_FVARKWDS
+#include "code-invoke-kw.c.inl"
+   }
+   break;
+  case CODE_FYIELDING:
+   if likely(DeeKwds_Check(kw)) {
+#define CODE_FLAGS    CODE_FYIELDING
+#include "code-invoke-kw.c.inl"
+   } else {
+#define KW_IS_MAPPING 1
+#define CODE_FLAGS    CODE_FYIELDING
+#include "code-invoke-kw.c.inl"
+   }
+   break;
+  case CODE_FVARKWDS | CODE_FYIELDING:
+   if likely(DeeKwds_Check(kw)) {
+#define CODE_FLAGS   (CODE_FVARKWDS | CODE_FYIELDING)
+#include "code-invoke-kw.c.inl"
+   } else {
+#define KW_IS_MAPPING 1
+#define CODE_FLAGS   (CODE_FVARKWDS | CODE_FYIELDING)
+#include "code-invoke-kw.c.inl"
+   }
+   break;
+  default: __builtin_unreachable();
   }
 #endif /* !__INTELLISENSE__ */
   return result;

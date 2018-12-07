@@ -15,4 +15,5 @@
 *.dat
 *.a
 *.dec
+*.suo
 *.stackdump

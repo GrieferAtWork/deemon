@@ -8530,8 +8530,7 @@ INTERN struct type_method string_methods[] = {
 
     /* String encode/decode functions */
     { "decode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_decode,
-      DOC("(codec:?.,errors=!Pstrict)->?.\n"
-          "(codec:?.,errors=!Pstrict)->\n"
+      DOC("(codec:?.,errors=!Pstrict)->?X2?.?O\n"
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
@@ -8561,9 +8560,7 @@ INTERN struct type_method string_methods[] = {
           "If the given @codec is not apart of this list, a call is made to :codecs:decode"),
       TYPE_METHOD_FKWDS },
     { "encode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_encode,
-      DOC("(codec:?.,errors=!Pstrict)->?Dbytes\n"
-          "(codec:?.,errors=!Pstrict)->?.\n"
-          "(codec:?.,errors=!Pstrict)->\n"
+      DOC("(codec:?.,errors=!Pstrict)->?X3?Dbytes?.?O\n"
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
@@ -9601,10 +9598,8 @@ INTERN struct type_method string_methods[] = {
           "> *    repeated */\n"
           ">print repr data.relocateall(r\"((,| f| ))+\"); /* { \",  f\" } */") },
     { "refind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_refind,
-      DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
-          "(pattern:?.,start=!0,end=!-1,rules=!P{})->?N\n"
-          "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-          "(pattern:?.,rules:?.,start=!0,end=!-1)->?N\n"
+      DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+          "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
           "@param pattern The regular expression patterm (s.a. #rematch)\n"
           "@param rules The regular expression rules (s.a. #rematch)\n"
           "@throw ValueError The given @pattern is malformed\n"
@@ -9620,10 +9615,8 @@ INTERN struct type_method string_methods[] = {
           "> * `data' itself in the event of `refind' having failed. */\n"
           ">print repr data.substr(start,end);") },
     { "rerfind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rerfind,
-      DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
-          "(pattern:?.,start=!0,end=!-1,rules=!P{})->?N\n"
-          "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-          "(pattern:?.,rules:?.,start=!0,end=!-1)->?N\n"
+      DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+          "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
           "@param pattern The regular expression patterm (s.a. #rematch)\n"
           "@param rules The regular expression rules (s.a. #rematch)\n"
           "@throw ValueError The given @pattern is malformed\n"
