@@ -603,7 +603,7 @@ PRIVATE void DCALL
 blv_fini(BlackListVarkwds *__restrict self) {
  if (self->vk_argv) {
   size_t i,argc;
-  argc = self->vk_code->co_argc_max;
+  argc = DeeKwds_SIZE(self->vk_kwds);
   for (i = 0; i < argc; ++i)
       Dee_Decref(self->vk_argv[i]);
   Dee_Free(self->vk_argv);
@@ -617,7 +617,7 @@ blv_visit(BlackListVarkwds *__restrict self, dvisit_t proc, void *arg) {
  rwlock_read(&self->vk_lock);
  if (self->vk_argv) {
   size_t i,argc;
-  argc = self->vk_code->co_argc_max;
+  argc = DeeKwds_SIZE(self->vk_kwds);
   for (i = 0; i < argc; ++i)
       Dee_Visit(self->vk_argv[i]);
  }
@@ -802,7 +802,7 @@ BlackListVarkwds_New(struct code_object *__restrict code,
   return Dee_EmptyMapping;
  }
  argc = code->co_argc_max;
- if (!argc || !code->co_keywords) {
+ if (!code->co_argc_max || !code->co_keywords) {
   /* No keyword information --> Return an unfiltered keywords mapping object.
    * -> This happens for purely varkwds user-code functions, such a function
    *    written as `function foo(**kwds)', in which case there aren't any other
@@ -831,7 +831,7 @@ done:
 INTERN void DCALL
 BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
  DREF BlackListVarkwds *me;
- size_t argc; DREF DeeObject **argv;
+ size_t kwdc; DREF DeeObject **argv;
  me = (DREF BlackListVarkwds *)self;
  if (!DeeObject_IsShared(me)) {
   /* Simple case: user-code didn't share the keyword mapping with its caller,
@@ -844,13 +844,13 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
   return;
  }
  /* Must transform the object such that it can continue to exist without causing problems. */
- argc = me->vk_code->co_argc_max;
- argv = (DREF DeeObject **)Dee_TryMalloc(argc * sizeof(DREF DeeObject *));
+ kwdc = DeeKwds_SIZE(me->vk_kwds);
+ argv = (DREF DeeObject **)Dee_TryMalloc(kwdc * sizeof(DREF DeeObject *));
  if likely(argv) {
   size_t i;
   /* Initialize the argument vector copy. */
-  MEMCPY_PTR(argv,me->vk_argv,argc);
-  for (i = 0; i < argc; ++i)
+  MEMCPY_PTR(argv,me->vk_argv,kwdc);
+  for (i = 0; i < kwdc; ++i)
       Dee_Incref(argv[i]);
  }
  /* Override the old argv such that the object holds its own copy. */
