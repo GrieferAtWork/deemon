@@ -388,7 +388,7 @@ DDATDEF DeeObject     DeeInt_One;
 DDATDEF DeeObject     DeeInt_MinusOne;
 #endif
 
-#define DeeInt_Check(x)      DeeObject_InstanceOfExact(x,&DeeInt_Type) /* `int' is `final' */
+#define DeeInt_Check(x)      DeeObject_InstanceOfExact(x,&DeeInt_Type) /* `int' is final */
 #define DeeInt_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeInt_Type)
 
 

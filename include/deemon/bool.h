@@ -37,7 +37,7 @@ typedef struct bool_object DeeBoolObject;
  *       self-address. */
 struct bool_object { OBJECT_HEAD };
 
-#define DeeBool_Check(x)      DeeObject_InstanceOfExact(x,&DeeBool_Type) /* `bool' is `final'. */
+#define DeeBool_Check(x)      DeeObject_InstanceOfExact(x,&DeeBool_Type) /* `bool' is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeBool_Type)
 #define DeeBool_IsTrue(x)   ((DeeBoolObject *)REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
 #define DeeBool_For(val)    ((DeeObject *)&Dee_FalseTrue[!!(val)])

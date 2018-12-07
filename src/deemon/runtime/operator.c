@@ -54,6 +54,7 @@
 #include "runtime_error.h"
 #include "strings.h"
 #include "../objects/seq/svec.h"
+#include "../objects/seq/varkwds.h"
 #include "../objects/int_logic.h"
 
 /* Operator invocation. */
@@ -3772,17 +3773,38 @@ PUBLIC int
  DREF DeeObject *key_ob;
  ASSERT_OBJECT(self);
  /* Optimization for specific types. */
- if (DeeDict_CheckExact(self))
-     return DeeDict_HasItemString(self,key,hash) ? 1 : 0;
- if (DeeRoDict_CheckExact(self))
-     return DeeRoDict_HasItemString(self,key,hash) ? 1 : 0;
- if (DeeKwdsMapping_CheckExact(self))
-     return DeeKwdsMapping_HasItemString(self,key,hash) ? 1 : 0;
+ if (DeeDict_CheckExact(self)) {
+  result = DeeDict_HasItemString(self,key,hash);
+  goto handle_bool;
+ }
+ if (DeeRoDict_CheckExact(self)) {
+  result = DeeRoDict_HasItemString(self,key,hash);
+  goto handle_bool;
+ }
+ if (DeeKwdsMapping_CheckExact(self)) {
+  result = DeeKwdsMapping_HasItemString(self,key,hash);
+  goto handle_bool;
+ }
+ if (BlackListVarkwds_CheckExact(self)) {
+  result = BlackListVarkwds_HasItemString((BlackListVarkwds *)self,key,hash);
+  goto handle_bool;
+ }
+ if (BlackListMapping_CheckExact(self))
+     return BlackListMapping_BoundItemString((BlackListMapping *)self,key,hash,allow_missing);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
  if unlikely(!key_ob) goto err;
  result = DeeObject_BoundItem(self,key_ob,allow_missing);
  Dee_Decref(key_ob);
+ return result;
+handle_bool:
+ if (!result) {
+  if (!allow_missing) {
+   err_unknown_key_str(self,key);
+   goto err;
+  }
+  result = -2;
+ }
  return result;
 err:
  return -1;
@@ -3798,17 +3820,38 @@ PUBLIC int
  DREF DeeObject *key_ob;
  ASSERT_OBJECT(self);
  /* Optimization for specific types. */
- if (DeeDict_CheckExact(self))
-     return DeeDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
- if (DeeRoDict_CheckExact(self))
-     return DeeRoDict_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
- if (DeeKwdsMapping_CheckExact(self))
-     return DeeKwdsMapping_HasItemStringLen(self,key,keylen,hash) ? 1 : 0;
+ if (DeeDict_CheckExact(self)) {
+  result = DeeDict_HasItemStringLen(self,key,keylen,hash);
+  goto handle_bool;
+ }
+ if (DeeRoDict_CheckExact(self)) {
+  result = DeeRoDict_HasItemStringLen(self,key,keylen,hash);
+  goto handle_bool;
+ }
+ if (DeeKwdsMapping_CheckExact(self)) {
+  result = DeeKwdsMapping_HasItemStringLen(self,key,keylen,hash);
+  goto handle_bool;
+ }
+ if (BlackListVarkwds_CheckExact(self)) {
+  result = BlackListVarkwds_HasItemStringLen((BlackListVarkwds *)self,key,keylen,hash);
+  goto handle_bool;
+ }
+ if (BlackListMapping_CheckExact(self))
+     return BlackListMapping_BoundItemStringLen((BlackListMapping *)self,key,keylen,hash,allow_missing);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
  if unlikely(!key_ob) goto err;
  result = DeeObject_BoundItem(self,key_ob,allow_missing);
  Dee_Decref(key_ob);
+ return result;
+handle_bool:
+ if (!result) {
+  if (!allow_missing) {
+   err_unknown_key_str_len(self,key,keylen);
+   goto err;
+  }
+  result = -2;
+ }
  return result;
 err:
  return -1;
@@ -3953,8 +3996,7 @@ err:
 PUBLIC int
 (DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self,
                                    char const *__restrict key,
-                                   size_t keylen,
-                                   dhash_t hash) {
+                                   size_t keylen, dhash_t hash) {
  int result;
  DREF DeeObject *key_ob;
  ASSERT_OBJECT(self);
@@ -4100,6 +4142,10 @@ DeeObject_GetItemString(DeeObject *__restrict self,
      return DeeRoDict_GetItemString(self,key,hash);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemString(self,key,hash);
+ if (BlackListVarkwds_CheckExact(self))
+     return BlackListVarkwds_GetItemString((BlackListVarkwds *)self,key,hash);
+ if (BlackListMapping_CheckExact(self))
+     return BlackListMapping_GetItemString((BlackListMapping *)self,key,hash);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
  if unlikely(!key_ob) goto err;
@@ -4122,6 +4168,10 @@ DeeObject_GetItemStringLen(DeeObject *__restrict self,
      return DeeRoDict_GetItemStringLen(self,key,keylen,hash);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemStringLen(self,key,keylen,hash);
+ if (BlackListVarkwds_CheckExact(self))
+     return BlackListVarkwds_GetItemStringLen((BlackListVarkwds *)self,key,keylen,hash);
+ if (BlackListMapping_CheckExact(self))
+     return BlackListMapping_GetItemStringLen((BlackListMapping *)self,key,keylen,hash);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
  if unlikely(!key_ob) goto err;
@@ -4144,6 +4194,10 @@ DeeObject_GetItemStringDef(DeeObject *__restrict self,
      return DeeRoDict_GetItemStringDef(self,key,hash,def);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemStringDef(self,key,hash,def);
+ if (BlackListVarkwds_CheckExact(self))
+     return BlackListVarkwds_GetItemStringDef((BlackListVarkwds *)self,key,hash,def);
+ if (BlackListMapping_CheckExact(self))
+     return BlackListMapping_GetItemStringDef((BlackListMapping *)self,key,hash,def);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewWithHash(key,hash);
  if unlikely(!key_ob) goto err;
@@ -4167,6 +4221,10 @@ DeeObject_GetItemStringLenDef(DeeObject *__restrict self,
      return DeeRoDict_GetItemStringLenDef(self,key,keylen,hash,def);
  if (DeeKwdsMapping_CheckExact(self))
      return DeeKwdsMapping_GetItemStringLenDef(self,key,keylen,hash,def);
+ if (BlackListVarkwds_CheckExact(self))
+     return BlackListVarkwds_GetItemStringLenDef((BlackListVarkwds *)self,key,keylen,hash,def);
+ if (BlackListMapping_CheckExact(self))
+     return BlackListMapping_GetItemStringLenDef((BlackListMapping *)self,key,keylen,hash,def);
  /* Fallback: create a string object and use it for indexing. */
  key_ob = DeeString_NewSizedWithHash(key,keylen,hash);
  if unlikely(!key_ob) goto err;

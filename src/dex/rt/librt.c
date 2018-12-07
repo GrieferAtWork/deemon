@@ -1331,6 +1331,12 @@ PRIVATE struct dex_symbol symbols[] = {
     { "GCSetIterator", (DeeObject *)&librt_get_GCSet, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR,
       DOC("Iterator for #GCSet") }, /* DeeGCSetIterator_Type */
 
+    /* Internal types used to drive variable keyword arguments */
+    /* TODO: BlackListVarkwds_Type */
+    /* TODO: BlackListVarkwdsIterator_Type */
+    /* TODO: BlackListMapping_Type */
+    /* TODO: BlackListMappingIterator_Type */
+
     /* Internal types used to drive keyword argument support */
     { "DocKwds", (DeeObject *)&librt_get_DocKwds, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR,
       DOC("Internal type for enumerating the keywords of functions implemented in C\n"

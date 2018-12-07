@@ -333,6 +333,9 @@
     <ClInclude Include="..\include\deemon\util\objectlist.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\varkwds.h">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -814,6 +817,9 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\lexer\decl.c">
       <Filter>src\deemon\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\varkwds.c">
+      <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -43,6 +43,7 @@
 
 #include <string.h>
 
+#include "../objects/seq/varkwds.h"
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
 
@@ -686,7 +687,11 @@ yf_fini(YFunction *__restrict self) {
       Dee_XDecref(self->yf_kw->fk_kargv[i]);
   if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
    Dee_Decref(self->yf_kw->fk_kw);
-   Dee_XDecref(self->yf_kw->fk_varkwds);
+   /* NOTE: When `BlackListVarkwds_Type' or `DeeKwdsMapping_Type' are used,
+    *       the argument vector loaded by the object had been implicitly
+    *       referenced via `self->yf_args' until this point. */
+   if (self->yf_kw->fk_varkwds)
+       VARKWDS_DECREF(self->yf_kw->fk_varkwds);
   }
   Dee_Free(self->yf_kw);
  }
@@ -729,22 +734,21 @@ err:
 PRIVATE int DCALL
 yf_copy(YFunction *__restrict self,
         YFunction *__restrict other) {
+ struct code_frame_kwds *kw;
  self->yf_kw = NULL;
  if (other->yf_kw) {
   size_t i,count;
-  struct code_frame_kwds *kw;
   count = (other->yf_func->fo_code->co_argc_max -
            DeeTuple_SIZE(other->yf_args));
   kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds,fk_kargv) +
                                            (count * sizeof(DREF DeeObject *)));
-  if unlikely(!kw) return -1;
+  if unlikely(!kw) goto err;
   self->yf_kw = kw;
   MEMCPY_PTR(kw->fk_kargv,&other->yf_kw->fk_kargv,count);
   if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
    self->yf_kw->fk_kw = other->yf_kw->fk_kw;
-   self->yf_kw->fk_varkwds = other->yf_kw->fk_varkwds;
+   self->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */
    Dee_Incref(self->yf_kw->fk_kw);
-   Dee_XIncref(self->yf_kw->fk_varkwds);
   }
   for (i = 0; i < count; ++i)
       Dee_XIncref(kw->fk_kargv[i]);
@@ -756,6 +760,8 @@ yf_copy(YFunction *__restrict self,
  Dee_Incref(self->yf_args);
  Dee_XIncref(self->yf_this);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -783,18 +789,13 @@ yf_deepcopy(YFunction *__restrict self,
    temp = DeeObject_DeepCopy(other->yf_kw->fk_kw);
    if unlikely(!temp) goto err_kw;
    self->yf_kw->fk_kw = temp; /* Inherit reference. */
-   temp = ATOMIC_READ(other->yf_kw->fk_varkwds);
-   if (temp) {
-    temp = DeeObject_DeepCopy(temp);
-    if unlikely(!temp) goto err_kw_kw;
-   }
-   self->yf_kw->fk_varkwds = temp; /* Inherit reference. */
+   self->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */
   }
   for (i = 0; i < count; ++i) {
    temp = other->yf_kw->fk_kargv[i];
    if (temp) {
     temp = DeeObject_DeepCopy(temp);
-    if unlikely(!temp) goto err_kw_kwds_kw_i;
+    if unlikely(!temp) goto err_kw_kw_i;
    }
    kw->fk_kargv[i] = temp; /* Inherit reference. */
   }
@@ -802,12 +803,9 @@ yf_deepcopy(YFunction *__restrict self,
  self->yf_func = other->yf_func;
  Dee_Incref(self->yf_func);
  return 0;
-err_kw_kwds_kw_i:
+err_kw_kw_i:
  while (i--) Dee_XDecref(kw->fk_kargv[i]);
-/*err_kw_kwds:*/
- if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS)
-     Dee_XDecref(self->yf_kw->fk_varkwds);
-err_kw_kw:
+/*err_kw_kw:*/
  if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS)
      Dee_Decref(self->yf_kw->fk_kw);
 err_kw:

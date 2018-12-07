@@ -77,7 +77,7 @@ INTDEF DeeTracebackObject empty_traceback;
 #endif
 
 DDATDEF DeeTypeObject DeeTraceback_Type;
-#define DeeTraceback_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeTraceback_Type) /* `traceback' is `final' */
+#define DeeTraceback_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeTraceback_Type) /* `traceback' is final */
 #define DeeTraceback_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeTraceback_Type)
 
 

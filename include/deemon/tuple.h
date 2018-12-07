@@ -70,7 +70,7 @@ DDATDEF DeeObject        DeeTuple_Empty;
 #define return_empty_tuple  return_reference_(Dee_EmptyTuple)
 
 DDATDEF DeeTypeObject DeeTuple_Type;
-#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x,&DeeTuple_Type) /* `tuple' is `final' */
+#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x,&DeeTuple_Type) /* `tuple' is final */
 #define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeTuple_Type)
 
 

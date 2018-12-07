@@ -41,7 +41,7 @@ struct super_object {
 #define DeeSuper_SELF(x) ((DeeSuperObject *)REQUIRES_OBJECT(x))->s_self
 
 DDATDEF DeeTypeObject DeeSuper_Type;
-#define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is `final' */
+#define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is final */
 #define DeeSuper_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeSuper_Type)
 
 /* Create a new super-wrapper for `tp_self:self'.

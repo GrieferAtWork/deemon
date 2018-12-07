@@ -437,8 +437,8 @@ INTDEF struct empty_code_struct empty_code_head;
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeCode_Type;
-#define DeeCode_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeCode_Type) /* `code' is `final' */
-#define DeeCode_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeCode_Type) /* `code' is `final' */
+#define DeeCode_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeCode_Type) /* `code' is final */
+#define DeeCode_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeCode_Type) /* `code' is final */
 
 
 /* Attempts to set the assembly flag of the given code object if it wasn't set already.
@@ -491,7 +491,10 @@ struct code_frame_kwds {
                                                * [lock(WRITE_ONCE)] Variable keyword arguments.
                                                * NOTE: May only be accessed by a code interpreter when the associated
                                                *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
-                                               *       field may not actually exist) */
+                                               *       field may not actually exist)
+                                               * WARNING: Certain object types which can appear in this field require
+                                               *          special actions to be taken before being decref'd by their
+                                               *          creator / stack-owner. */
     DREF DeeObject           *fk_kw;          /* [1..1][const] The original `kw' object that was passed to the function.
                                               *  NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
                                               *        aka. at the end of the standard-accessible argument vector.
@@ -692,11 +695,11 @@ struct yield_function_iterator_object {
 DDATDEF DeeTypeObject DeeFunction_Type;              /* foo; */
 DDATDEF DeeTypeObject DeeYieldFunction_Type;         /* foo(); */
 DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator __iterself__(); */
-#define DeeFunction_Check(ob)                   DeeObject_InstanceOfExact(ob,&DeeFunction_Type) /* `function' is `final' */
+#define DeeFunction_Check(ob)                   DeeObject_InstanceOfExact(ob,&DeeFunction_Type) /* `function' is final */
 #define DeeFunction_CheckExact(ob)              DeeObject_InstanceOfExact(ob,&DeeFunction_Type)
-#define DeeYieldFunction_Check(ob)              DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type) /* `yield_function' is `final' */
+#define DeeYieldFunction_Check(ob)              DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type) /* `yield_function' is final */
 #define DeeYieldFunction_CheckExact(ob)         DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type)
-#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type) /* `yield_function.iterator' is `final' */
+#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type) /* `yield_function.iterator' is final */
 #define DeeYieldFunctionIterator_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type)
 
 

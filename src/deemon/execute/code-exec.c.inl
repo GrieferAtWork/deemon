@@ -53,6 +53,7 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/sched/yield.h>
 
+#include "../objects/seq/varkwds.h"
 #include "../runtime/runtime_error.h"
 
 #ifndef SSIZE_MAX
@@ -121,16 +122,13 @@ INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_
 #endif
 
 
-#ifdef EXEC_FAST
-#define construct_varkwds_mapping()  construct_varkwds_mapping_fast(frame)
+#define construct_varkwds_mapping()  \
+        construct_varkwds_mapping_impl(code,frame)
+#ifndef CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED
+#define CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED 1
 PRIVATE DREF DeeObject *ATTR_FASTCALL
-construct_varkwds_mapping_fast(struct code_frame *__restrict frame)
-#else
-#define construct_varkwds_mapping()  construct_varkwds_mapping_safe(frame)
-PRIVATE DREF DeeObject *ATTR_FASTCALL
-construct_varkwds_mapping_safe(struct code_frame *__restrict frame)
-#endif
-{
+construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
+                               struct code_frame *__restrict frame) {
  struct code_frame_kwds *kwds;
  DREF DeeObject *result;
  DeeObject *kw;
@@ -149,11 +147,10 @@ construct_varkwds_mapping_safe(struct code_frame *__restrict frame)
    * >> return rt.RoDict(for (local key,id: kw)
    * >>     if (key !in __code__.__kwds__)
    * >>         (key,__argv__[#__argv__ + id])
-   * >>     );
-   */
-  /* TODO */
-  result = Dee_EmptyMapping;
-  Dee_Incref(result);
+   * >>     ); */
+  result = BlackListVarkwds_New(code,
+                               (DeeKwdsObject *)kw,
+                                frame->cf_argv + frame->cf_argc);
  } else {
   /* Special case: create a proxy-mapping object for `kw' that get rids
    *               of all keys that are equal to one of the strings found
@@ -164,12 +161,11 @@ construct_varkwds_mapping_safe(struct code_frame *__restrict frame)
    * >>         (key,item)
    * >>     );
    */
-  /* TODO */
-  result = Dee_EmptyMapping;
-  Dee_Incref(result);
+  result = BlackListMapping_New(code,kw);
  }
  return result;
 }
+#endif /* !CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED */
 
 
 

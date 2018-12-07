@@ -220,12 +220,12 @@ DEFINE_FILTERITERATOR_COMPARE(kwdsiter_ge,>=)
 
 PRIVATE struct type_cmp kwdsiter_cmp = {
     /* .tp_hash = */NULL,
-    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&kwdsiter_eq,
-    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&kwdsiter_ne,
-    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&kwdsiter_lo,
-    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&kwdsiter_le,
-    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&kwdsiter_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&kwdsiter_ge,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&kwdsiter_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&kwdsiter_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&kwdsiter_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&kwdsiter_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&kwdsiter_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&kwdsiter_ge,
 };
 
 PRIVATE struct type_member kwdsiter_members[] = {
@@ -306,7 +306,7 @@ INTERN DREF Kwds *DCALL kwds_rehash(DREF Kwds *__restrict self) {
   struct kwds_entry *src = &self->kw_map[i];
   if (!src->ke_name) continue;
   perturb = j = src->ke_hash & new_mask;
-  for (;; j = (j << 2) + j + perturb + 1,perturb >>= 5) {
+  for (;; DeeKwds_MAPNEXT(j,perturb)) {
    struct kwds_entry *dst = &result->kw_map[j & new_mask];
    if (dst->ke_name) continue;
    memcpy(dst,src,sizeof(struct kwds_entry));
@@ -336,7 +336,7 @@ INTERN int
  }
  ASSERT(self->kw_size < self->kw_mask);
  perturb = i = hash & self->kw_mask;
- for (;; i = (i << 2) + i + perturb + 1,perturb >>= 5) {
+ for (;; DeeKwds_MAPNEXT(i,perturb)) {
   entry = &self->kw_map[i & self->kw_mask];
   if (!entry->ke_name)
        break;
@@ -355,7 +355,7 @@ kwds_findstr(Kwds *__restrict self,
              dhash_t hash) {
  dhash_t i,perturb;
  perturb = i = hash & self->kw_mask;
- for (;; i = (i << 2) + i + perturb + 1,perturb >>= 5) {
+ for (;; DeeKwds_MAPNEXT(i,perturb)) {
   struct kwds_entry *entry;
   entry = &self->kw_map[i & self->kw_mask];
   if (!entry->ke_name) break;
@@ -373,7 +373,7 @@ kwds_findstr_len(Kwds *__restrict self,
                  dhash_t hash) {
  dhash_t i,perturb;
  perturb = i = hash & self->kw_mask;
- for (;; i = (i << 2) + i + perturb + 1,perturb >>= 5) {
+ for (;; DeeKwds_MAPNEXT(i,perturb)) {
   struct kwds_entry *entry;
   entry = &self->kw_map[i & self->kw_mask];
   if (!entry->ke_name) break;
@@ -1117,10 +1117,12 @@ clear_argv:
    me->kmo_argv = argv; /* Remember the old arguments. */
    rwlock_endwrite(&me->kmo_lock);
   }
+  /* Create a reference for `kmo_kwds', which didn't contain one until now. */
+  Dee_Incref(me->kmo_kwds);
   /* Drop our own reference (which should still be shared) */
   Dee_Decref_unlikely(self);
  } else {
-  Dee_Decref_unlikely(me->kmo_kwds);
+  /*Dee_Decref(me->kmo_kwds);*/
   Dee_DecrefNokill(&DeeKwdsMapping_Type);
   DeeObject_Free(me);
  }

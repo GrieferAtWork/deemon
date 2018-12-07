@@ -36,7 +36,7 @@ struct float_object {
 
 #define DeeFloat_VALUE(x) ((DeeFloatObject *)REQUIRES_OBJECT(x))->f_value
 
-#define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x,&DeeFloat_Type) /* `float' is `final' */
+#define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x,&DeeFloat_Type) /* `float' is final */
 #define DeeFloat_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeFloat_Type)
 DDATDEF DeeTypeObject DeeFloat_Type;
 

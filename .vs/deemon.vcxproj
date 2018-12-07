@@ -104,6 +104,7 @@
     <ClInclude Include="..\src\deemon\objects\seq\subrange.h" />
     <ClInclude Include="..\src\deemon\objects\seq\svec.h" />
     <ClInclude Include="..\src\deemon\objects\seq\transform.h" />
+    <ClInclude Include="..\src\deemon\objects\seq\varkwds.h" />
     <ClInclude Include="..\src\deemon\objects\seq_functions.h" />
     <ClInclude Include="..\src\deemon\objects\unicode\codec.h" />
     <ClInclude Include="..\src\deemon\objects\unicode\string_functions.h" />
@@ -239,6 +240,7 @@
     <ClCompile Include="..\src\deemon\objects\seq\subrange.c" />
     <ClCompile Include="..\src\deemon\objects\seq\svec.c" />
     <ClCompile Include="..\src\deemon\objects\seq\transform.c" />
+    <ClCompile Include="..\src\deemon\objects\seq\varkwds.c" />
     <ClCompile Include="..\src\deemon\objects\seq_functions.c" />
     <ClCompile Include="..\src\deemon\objects\seq_mutable.c" />
     <ClCompile Include="..\src\deemon\objects\set.c" />

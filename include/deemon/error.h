@@ -141,7 +141,7 @@ DDATDEF DeeTypeObject             DeeError_FileClosed;
  * destruction of all existing objects.
  * The implementation's main() function should then terminate
  * by returning the contained `ae_exitcode' value.
- * Note that this type is `final', meaning that
+ * Note that this type is final, meaning that
  * user-classes cannot be further derived from it.
  * Additionally, this type of error is used by the builtin implementation
  * of `exit()' when deemon was built with `CONFIG_NO_STDLIB'. */

@@ -108,10 +108,11 @@ struct kwds_object {
      *          However, you can easily construct a {(string,object)...}-like
      *          mapping by calling `DeeKwdsMapping_New()' (see below) */
     OBJECT_HEAD
-    size_t            kw_size;   /* [const] The number of valid entries in `kw_map'. */
-    size_t            kw_mask;   /* [const] Mask for keyword names. */
-    struct kwds_entry kw_map[1]; /* [const] Keyword name->index map. */
+    size_t            kw_size;      /* [const] The number of valid entries in `kw_map'. */
+    size_t            kw_mask;      /* [const] Mask for keyword names. */
+    struct kwds_entry kw_map[1024]; /* [const] Keyword name->index map. */
 };
+#define DeeKwds_MAPNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
 
 DDATDEF DeeTypeObject DeeKwds_Type;
 #define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)REQUIRES_OBJECT(ob))->kw_size
@@ -190,7 +191,10 @@ struct kwds_mapping_object {
      * >> }
      */
     OBJECT_HEAD
-    DREF DeeKwdsObject *kmo_kwds; /* [1..1][const] The Keyword arguments. */
+    DREF DeeKwdsObject *kmo_kwds; /* [1..1][const] The Keyword arguments.
+                                   * NOTE: If revived during unsharing, the object in this field
+                                   *       gets incref'd, meaning that before that point, this
+                                   *       field doesn't actually carry a reference. */
     DREF DeeObject    **kmo_argv; /* [1..1][const][0..kmo_kwds->kw_size][lock(kmo_lock)][owned] Vector of
                                    * argument objects. (shared until `DeeKwdsMapping_Decref()' is called)
                                    * NOTE: May be NULL, even when `kmo_kwds->kw_size' is non-zero, in which
@@ -201,7 +205,7 @@ struct kwds_mapping_object {
 };
 
 DDATDEF DeeTypeObject DeeKwdsMapping_Type;
-#define DeeKwdsMapping_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeKwdsMapping_Type) /* `_kwdsmapping' is `final' */
+#define DeeKwdsMapping_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeKwdsMapping_Type) /* `_KwdsMapping' is final */
 #define DeeKwdsMapping_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeKwdsMapping_Type)
 
 /* Construct a keywords-mapping object from a given `kwds' object,

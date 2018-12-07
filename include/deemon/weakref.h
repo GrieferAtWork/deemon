@@ -33,7 +33,7 @@ struct weakref_object {
     DREF DeeObject *wr_del; /* [0..1][const] Deletion callback. */
 };
 
-#define DeeWeakRef_Check(self)      DeeObject_InstanceOfExact(self,&DeeWeakRef_Type) /* `weakref' is `final' */
+#define DeeWeakRef_Check(self)      DeeObject_InstanceOfExact(self,&DeeWeakRef_Type) /* `weakref' is final */
 #define DeeWeakRef_CheckExact(self) DeeObject_InstanceOfExact(self,&DeeWeakRef_Type)
 DDATDEF DeeTypeObject DeeWeakRef_Type;
 

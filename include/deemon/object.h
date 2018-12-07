@@ -2515,7 +2515,7 @@ DFUNDEF WUNUSED int (DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict sel
  * @return: 1 : Item is bound.
  * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
  * @return: -1: An error occurred.
- * @return: -2: Item doesn't exist (`KeyError' or `IndexError' were caught when `allow_missing' was `false'). */
+ * @return: -2: Item doesn't exist (Only when `allow_missing' is `true': `KeyError' or `IndexError' were caught). */
 DFUNDEF WUNUSED int (DCALL DeeObject_BoundItem)(DeeObject *__restrict self, DeeObject *__restrict index, bool allow_missing);
 DFUNDEF WUNUSED int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index, bool allow_missing);
 DFUNDEF WUNUSED int (DCALL DeeObject_BoundItemString)(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, bool allow_missing);

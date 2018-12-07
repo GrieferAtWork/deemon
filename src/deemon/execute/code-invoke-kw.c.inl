@@ -18,7 +18,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "code-invoke.c.inl"
-#define CODE_FLAGS    CODE_FYIELDING
+#define CODE_FLAGS    CODE_FVARKWDS
 #define KW_IS_MAPPING 1
 #endif
 
@@ -398,7 +398,8 @@ UNIQUE(err_kargv):
       --frame.cf_sp,Dee_XDecref(*frame.cf_sp);
 
 #if CODE_FLAGS & CODE_FVARKWDS
- Dee_XDecref(frame.cf_kw->fk_varkwds);
+ if (frame.cf_kw->fk_varkwds)
+     VARKWDS_DECREF(frame.cf_kw->fk_varkwds);
 #endif
 #ifdef Dee_Alloca
  if (code->co_flags & CODE_FHEAPFRAME)

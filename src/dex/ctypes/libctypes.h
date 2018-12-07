@@ -686,7 +686,7 @@ struct array_type_object {
 
 INTDEF DeeTypeObject DeeArrayType_Type;
 #define DeeArrayType_Check(ob)     \
-   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeArrayType_Type) /* `array_type' is `final' */
+   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeArrayType_Type) /* `array_type' is final */
 
 /* Base classes for all C array types. */
 INTDEF DeeArrayTypeObject DeeArray_Type;
@@ -753,7 +753,7 @@ struct cfunction_type_object {
 
 INTDEF DeeTypeObject DeeCFunctionType_Type;
 #define DeeCFunctionType_Check(ob) \
-   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeCFunctionType_Type) /* `array_type' is `final' */
+   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeCFunctionType_Type) /* `array_type' is final */
 
 INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
 
@@ -816,7 +816,7 @@ struct struct_type_object {
 INTDEF DeeTypeObject DeeStructType_Type;
 INTDEF DeeStructTypeObject DeeStruct_Type;
 #define DeeStructType_Check(ob) \
-   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeStructType_Type) /* `struct_type' is `final' */
+   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeStructType_Type) /* `struct_type' is final */
 
 /* Construct a new struct-type from `fields', which
  * is a `sequence<pair<string,structured_type>>' */

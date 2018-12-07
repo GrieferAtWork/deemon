@@ -23,6 +23,8 @@
 #define CALL_KW    1
 #endif
 
+#include "../objects/seq/varkwds.h"
+
 DECL_BEGIN
 
 #ifdef CALL_THIS
@@ -79,7 +81,7 @@ kwds_find_index(DeeKwdsObject *__restrict self,
  dhash_t i,perturb,hash;
  hash = DeeString_Hash((DeeObject *)name);
  perturb = i = hash & self->kw_mask;
- for (;; i = (i << 2) + i + perturb + 1,perturb >>= 5) {
+ for (;; DeeKwds_MAPNEXT(i,perturb)) {
   struct kwds_entry *entry;
   entry = &self->kw_map[i & self->kw_mask];
   if (!entry->ke_name) break;
