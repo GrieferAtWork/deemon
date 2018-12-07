@@ -529,7 +529,13 @@ INTDEF int DCALL DeeInstance_SetAttribute(struct class_desc *__restrict desc, st
 /* @return:  2: Attribute isn't a basic one
  * @return:  0: Basic attribute successfully set
  * @return: -1: An error occurred. */
+#ifdef __INTELLISENSE__
 INTDEF int DCALL DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+#else
+#define DeeInstance_SetBasicAttribute(desc,self,this_arg,attr,value) \
+        DeeInstance_SetBasicAttribute_(desc,self,attr,value)
+INTDEF int (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc, struct instance_desc *__restrict self, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+#endif
 
 /* Get/Call/Del/Set a class attribute, as acquired
  * through `DeeClassDescriptor_QueryClassAttribute()'.

@@ -246,14 +246,14 @@ extern void (__debugbreak)(void);
 #pragma warning(disable: 4610)
 #endif
 
-#if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && 1
+#if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS
 #ifdef _MSC_VER
-#define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),_CrtCheckMemory(),DBG_ALIGNMENT_ENABLE())
+#define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),(_CrtCheckMemory)(),DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
-extern ATTR_DLLIMPORT int ATTR_CDECL _CrtCheckMemory(void);
+extern ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
 #else
-extern int ATTR_CDECL _CrtCheckMemory(void);
+extern int (ATTR_CDECL _CrtCheckMemory)(void);
 #endif
 #endif /* _MSC_VER */
 #endif

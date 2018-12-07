@@ -238,10 +238,20 @@ INTERN struct type_getset compiler_getsets[] = {
 #define ast_new(scope,loc)    ast_dbgnew(scope,loc,__FILE__,__LINE__)
 PRIVATE DREF struct ast *DCALL
 ast_dbgnew(DeeScopeObject *__restrict scope,
-           DeeObject *loc, char const *file, int line) {
- DREF struct ast *result = ast_dbgalloc(file,line);
+           DeeObject *loc, char const *file, int line)
+#else
+PRIVATE DREF struct ast *DCALL
+ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
+#endif
+{
+ DREF struct ast *result;
 #ifndef CONFIG_NO_THREADS
  ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+#endif
+#ifndef NDEBUG
+ result = ast_dbgalloc(file,line);
+#else
+ result = ast_alloc();
 #endif
  if likely(result) {
   if unlikely(set_astloc_from_obj(loc,result)) {
@@ -260,27 +270,6 @@ ast_dbgnew(DeeScopeObject *__restrict scope,
  }
  return result;
 }
-#else
-PRIVATE DREF struct ast *DCALL
-ast_new(DeeScopeObject *__restrict scope, DeeObject *loc) {
- DREF struct ast *result = ast_alloc();
-#ifndef CONFIG_NO_THREADS
- ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
-#endif
- if likely(result) {
-  if unlikely(set_astloc_from_obj(loc,result)) {
-   ast_free(result);
-   result = NULL;
-  } else {
-   DeeObject_Init(result,&DeeAst_Type);
-   result->a_scope = current_scope;
-   result->a_ddi.l_file = NULL;
-   Dee_Incref(result->a_scope);
-  }
- }
- return result;
-}
-#endif
 
 
 PRIVATE DeeScopeObject *DCALL

@@ -50,6 +50,9 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#ifdef CONFIG_NO_BADREFCNT_CHECKS
+#include <stdlib.h>
+#endif
 
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
@@ -1005,12 +1008,12 @@ DeeFatal_BadDecref(DeeObject *__restrict ob,
  BREAKPOINT();
 }
 #else
-PUBLIC void DCALL DeeFatal_BadIncref(DeeObject *__restrict UNUSED(ob)) { abort(); }
+PUBLIC void DCALL DeeFatal_BadIncref(DeeObject *__restrict UNUSED(ob), char const *UNUSED(file), int UNUSED(line)) { abort(); }
 #ifdef __NO_DEFINE_ALIAS
-PUBLIC void DCALL DeeFatal_BadDecref(DeeObject *__restrict UNUSED(ob)) { abort(); }
+PUBLIC void DCALL DeeFatal_BadDecref(DeeObject *__restrict UNUSED(ob), char const *UNUSED(file), int UNUSED(line)) { abort(); }
 #else /* __NO_DEFINE_ALIAS */
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref,4),
-                    ASSEMBLY_NAME(DeeFatal_BadIncref,4));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref,12),
+                    ASSEMBLY_NAME(DeeFatal_BadIncref,12));
 #endif /* !__NO_DEFINE_ALIAS */
 #endif
 

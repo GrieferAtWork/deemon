@@ -320,10 +320,12 @@ DeeSlab_Stat(DeeSlabStat *info, size_t bufsize) {
 
 /* Reset the slab max-statistics to the cur-values. */
 PUBLIC void DCALL DeeSlab_ResetStat(void) {
+#ifndef CONFIG_NO_OBJECT_SLAB_STATS
 #define RESET_INFO(x) \
  DeeSlab_ResetStatSlab ## x();
  DEE_ENUMERATE_SLAB_SIZES(RESET_INFO)
 #undef RESET_INFO
+#endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 }
 
 

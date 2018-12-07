@@ -1227,13 +1227,13 @@ done:
   Dee_DumpReferenceLeaks();
 #endif
   DBG_ALIGNMENT_DISABLE();
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(_DEBUG)
 #if defined(_MSC_VER) || defined(__CRT_DOS)
   {
 #if !defined(_MSC_VER) || defined(_DLL)
-   extern ATTR_DLLIMPORT int ATTR_CDECL _CrtDumpMemoryLeaks(void);
+   extern ATTR_DLLIMPORT int (ATTR_CDECL _CrtDumpMemoryLeaks)(void);
 #else
-   extern int ATTR_CDECL _CrtDumpMemoryLeaks(void);
+   extern int (ATTR_CDECL _CrtDumpMemoryLeaks)(void);
 #endif
    if (!IsDebuggerPresent()) {
     _Dee_dprint("");
@@ -1246,8 +1246,9 @@ done:
      _CrtSetReportFile(_CRT_ASSERT,_CRTDBG_FILE_STDERR);
     }
    }
-   if (_CrtDumpMemoryLeaks())
+   if ((_CrtDumpMemoryLeaks)())
        BREAKPOINT();
+   DEE_CHECKMEMORY();
   }
 #endif
 #endif

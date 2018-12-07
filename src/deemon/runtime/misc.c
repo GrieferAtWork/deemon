@@ -704,6 +704,8 @@ PUBLIC void (DCALL Dee_Free)(void *ptr) {
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  HEAP_CHECK();
  BEGIN_TRYALLOC();
 #ifdef __KERNEL__
@@ -728,6 +730,8 @@ PUBLIC ATTR_MALLOC void *
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  HEAP_CHECK();
  BEGIN_TRYALLOC();
 #ifdef __KERNEL__
@@ -752,6 +756,8 @@ PUBLIC ATTR_MALLOC void *
 PUBLIC void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
 #ifndef __MALLOC_ZERO_IS_NONNULL
  if unlikely(!n_bytes)
     n_bytes = 1;
@@ -769,6 +775,8 @@ PUBLIC void *
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  HEAP_CHECK();
 again:
  BEGIN_ALLOC();
@@ -799,6 +807,8 @@ again:
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  HEAP_CHECK();
 again:
  BEGIN_ALLOC();
@@ -829,6 +839,8 @@ again:
 PUBLIC void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  HEAP_CHECK();
 #ifndef __MALLOC_ZERO_IS_NONNULL
  if unlikely(!n_bytes)
@@ -850,6 +862,8 @@ again:
 }
 PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
+ (void)file;
+ (void)line;
  DBG_ALIGNMENT_DISABLE();
  HEAP_CHECK();
 #ifdef __KERNEL__
@@ -864,6 +878,8 @@ PUBLIC void
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  BEGIN_TRYALLOC();
  HEAP_CHECK();
  result = _malloc_dbg(n_bytes,_NORMAL_BLOCK,file,line);
@@ -880,6 +896,8 @@ PUBLIC ATTR_MALLOC void *
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
  BEGIN_TRYALLOC();
  HEAP_CHECK();
  result = _calloc_dbg(1,n_bytes,_NORMAL_BLOCK,file,line);
@@ -896,6 +914,8 @@ PUBLIC ATTR_MALLOC void *
 PUBLIC void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
 #ifndef __MALLOC_ZERO_IS_NONNULL
  if unlikely(!n_bytes)
     n_bytes = 1;
@@ -909,6 +929,8 @@ PUBLIC void *
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
 again:
  BEGIN_ALLOC();
  HEAP_CHECK();
@@ -931,6 +953,8 @@ again:
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
 again:
  BEGIN_ALLOC();
  HEAP_CHECK();
@@ -953,6 +977,8 @@ again:
 PUBLIC void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
  void *result;
+ (void)file;
+ (void)line;
 #ifndef __MALLOC_ZERO_IS_NONNULL
  if unlikely(!n_bytes)
     n_bytes = 1;
@@ -1046,6 +1072,8 @@ do_unhook(_CrtMemBlockHeader *__restrict hdr) {
 
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
+ (void)file;
+ (void)line;
  if (ptr) {
   _CrtMemBlockHeader *hdr;
   DBG_ALIGNMENT_DISABLE();
@@ -1339,6 +1367,10 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 }
 
 
+#ifdef NDEBUG
+PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line), char const *UNUSED(format), ...) {}
+PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line)) {}
+#else
 PRIVATE void assert_vprintf(char const *format, va_list args) {
  dssize_t error;
  error = DeeFile_VPrintf(DeeFile_DefaultStddbg,format,args);
@@ -1352,10 +1384,6 @@ PRIVATE void assert_printf(char const *format, ...) {
  va_end(args);
 }
 
-#ifdef NDEBUG
-PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line), char const *UNUSED(format), ...) {}
-PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line)) {}
-#else
 PUBLIC void
 (_DeeAssert_Failf)(char const *expr, char const *file,
                   int line, char const *format, ...) {

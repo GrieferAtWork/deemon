@@ -680,6 +680,7 @@ INTERN int DCALL asm_peephole(void) {
 #define SET_RESULT2(addr_ptr,addr_ptr2) (peephole_opt2(__FILE__,__LINE__,addr_ptr,addr_ptr2),result = true)
 #else
 #define SET_RESULT(addr_ptr)            (result = true)
+#define SET_RESULTF(addr_ptr,...)       (result = true)
 #define SET_RESULT2(addr_ptr,addr_ptr2) (result = true)
 #endif
  instruction_t *iter,*end,*after_prefix; uint16_t stacksz;

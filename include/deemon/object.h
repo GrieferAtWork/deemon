@@ -2845,7 +2845,7 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) { DBG_ALIGNMENT_E
 #endif
 
 
-#define DEE_AMALLOC_ALIGN    8
+#define DEE_AMALLOC_ALIGN    8 /* TODO: __SIZEOF_POINTER__ should always be good enough for this! */
 #define DEE_AMALLOC_MAX      512
 
 #ifdef NDEBUG
@@ -3018,10 +3018,18 @@ LOCAL WUNUSED void *(__LIBCCALL DeeDbg_ATryCallocHeap)(size_t s, char const *fil
 #define Dee_AMallocStack(s)  Dee_AMallocStack_init(Dee_Alloca((s)+DEE_AMALLOC_ALIGN),(s))
 #define Dee_AMalloc(s)    ((s) > DEE_AMALLOC_MAX-DEE_AMALLOC_ALIGN ? Dee_AMallocHeap(s) : Dee_AMallocStack(s))
 #define Dee_ATryMalloc(s) ((s) > DEE_AMALLOC_MAX-DEE_AMALLOC_ALIGN ? Dee_ATryMallocHeap(s) : Dee_AMallocStack(s))
+#ifdef NDEBUG
+#define Dee_AMallocStack_init(p,s) Dee_AMallocStack_init_(p)
+LOCAL WUNUSED void *(__LIBCCALL Dee_AMallocStack_init_)(void *p) {
+ *(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
+ return (__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN;
+}
+#else
 LOCAL WUNUSED void *(__LIBCCALL Dee_AMallocStack_init)(void *p, size_t s) {
  *(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
  return DEE_AMALLOC_SKEW_ALLOCA((__BYTE_TYPE__ *)p+DEE_AMALLOC_ALIGN,s);
 }
+#endif
 #define Dee_ACallocStack(s)  Dee_ACallocStack_init(Dee_Alloca((s)+DEE_AMALLOC_ALIGN),(s))
 #define Dee_ACalloc(s)     ((s) > DEE_AMALLOC_MAX-DEE_AMALLOC_ALIGN ? Dee_ACallocHeap(s) : Dee_ACallocStack(s))
 #define Dee_ATryCalloc(s)  ((s) > DEE_AMALLOC_MAX-DEE_AMALLOC_ALIGN ? Dee_ATryCallocHeap(s) : Dee_ACallocStack(s))

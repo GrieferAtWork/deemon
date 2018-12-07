@@ -3192,16 +3192,14 @@ illegal:
                                     DeeString_STR(attr->ca_name),
                                     ATTR_ACCESS_SET);
 }
-INTERN int DCALL
-DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc,
-                              struct instance_desc *__restrict self,
-                              DeeObject *__restrict this_arg,
-                              struct class_attribute *__restrict attr,
-                              DeeObject *__restrict value) {
+INTERN int
+(DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc,
+                                       struct instance_desc *__restrict self,
+                                       struct class_attribute *__restrict attr,
+                                       DeeObject *__restrict value) {
  DREF DeeObject *old_value;
  ASSERT(self);
  ASSERT(attr);
- ASSERT_OBJECT(this_arg);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
      self = class_desc_as_instance(desc);
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
