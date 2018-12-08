@@ -124,6 +124,7 @@ With visual studio
  - Open /.vs/deemon.sln
  - Select one of the MSVC build configurations
  - CTRL+SHIFT+B
+
 Without deemon already installed  
 $ bash make.sh  
 With deemon already installed  
