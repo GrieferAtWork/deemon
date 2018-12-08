@@ -110,7 +110,6 @@ Code examples can be found in <b>/util/tut</b>
 Legacy code being detected by it #including any of the old headers
   - C-like syntax for attributes <code>\_\_attribute\_\_((attrib))</code>, <code>\_\_declspec(attrib)</code>, <code>[[attrib]]</code>
     - Deemon 200 relies less than ever on attributes, and where they are useful, tags are used <code>@attrib</code>
-    - Note that tags will likely undergo their own overhaul in the near future in order to user-code to define its own tags
   - The millions of <code>\_\_builtin*</code> functions have all been removed
     - Most notable, even <code>\_\_builtin\_object()</code> is emulated
   - The <code>move</code> keyword is defined as an alias for <code>copy</code>
@@ -121,11 +120,17 @@ Legacy code being detected by it #including any of the old headers
 
 
 ## Building
+With visual studio  
+ - Open /.vs/deemon.sln
+ - Select one of the MSVC build configurations
+ - CTRL+SHIFT+B
 Without deemon already installed  
 $ bash make.sh  
 With deemon already installed  
 $ deemon magic.dee  
 Cross-compiling deemon  
 $ export CROSS_PREFIX="/bin/i686-w64-mingw32-"  
+$ export TARGET_ARCH=i386  
+$ export TARGET_CPU=i686  
 $ bash make.sh
 
