@@ -348,7 +348,7 @@ FORCELOCAL void
   ASSERTF((((uintptr_t)ptr - (uintptr_t)page) % ITEMSIZE) == 0,
           "Invalid slab-pointer %p is improperly aligned for slab of size %#Ix",
           ptr,(size_t)ITEMSIZE);
-  index = ((uintptr_t)ptr - (uintptr_t)page) / ITEMSIZE;
+  index = (unsigned int)(((uintptr_t)ptr - (uintptr_t)page) / ITEMSIZE);
   ASSERTF(index < (unsigned int)SLAB_PAGECOUNT,
           "Invalid slab-pointer %p is part of slab page controller (index = %u/%u)",
           ptr,index,(unsigned int)SLAB_PAGECOUNT);

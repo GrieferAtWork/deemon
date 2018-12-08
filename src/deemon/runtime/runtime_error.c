@@ -514,7 +514,7 @@ err_unbound_local(struct code_object *__restrict code,
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(local_index < code->co_localc);
  error = DeeCode_FindDDI((DeeObject *)code,&state,NULL,
-                         (instruction_t *)ip - code->co_code,
+                         (code_addr_t)((instruction_t *)ip - code->co_code),
                           DDI_STATE_FNOTHROW);
  if (DDI_ISOK(error)) {
   struct ddi_xregs *iter;
@@ -581,7 +581,7 @@ err_readonly_local(struct code_object *__restrict code,
  ASSERT_OBJECT_TYPE_EXACT(code,&DeeCode_Type);
  ASSERT(local_index < code->co_localc);
  error = DeeCode_FindDDI((DeeObject *)code,&state,NULL,
-                         (instruction_t *)ip - code->co_code,
+                         (code_addr_t)((instruction_t *)ip - code->co_code),
                           DDI_STATE_FNOTHROW);
  if (DDI_ISOK(error)) {
   struct ddi_xregs *iter;

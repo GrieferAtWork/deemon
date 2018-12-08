@@ -245,7 +245,13 @@ template<> struct __static_if<true> { bool __is_true__(); };
 #define __UINT64_TYPE__          unsigned __int64
 
 #ifndef __USER_LABEL_PREFIX__
-#define __USER_LABEL_PREFIX__           _ /* XXX: This is always the case? */
+/* XXX: Is this always correct? */
+#if defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || \
+    defined(__x86_64) || defined(_M_AMD64) || defined(_WIN64) || defined(WIN64)
+#define __USER_LABEL_PREFIX__           /* nothing */
+#else
+#define __USER_LABEL_PREFIX__           _
+#endif
 #endif
 #define __DEFINE_ALIAS_STR(x)           #x
 

@@ -338,22 +338,22 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">true</DeploymentContent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
-ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
-ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S" &gt; "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S" &gt; "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
 ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
-ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
-ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
-ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S" &gt; "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S" &gt; "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S" &gt; "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
 ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">cl.exe /EP $(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S &gt; $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm
-ml64.exe /c /Cx /Fo $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj $(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\deemon\execute\asm\altstack-x86_64.S" &gt; "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.asm"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj;%(Outputs)</Outputs>
