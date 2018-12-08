@@ -34,6 +34,19 @@
 
 DECL_BEGIN
 
+#ifndef PATH_MAX
+#ifdef PATHMAX
+#   define PATH_MAX PATHMAX
+#elif defined(MAX_PATH)
+#   define PATH_MAX MAX_PATH
+#elif defined(MAXPATH)
+#   define PATH_MAX MAXPATH
+#else
+#   define PATH_MAX 260
+#endif
+#endif
+
+
 /*[[[deemon
 import * from _dexutils;
 include("constants.def");
@@ -834,27 +847,35 @@ err:
 FORCELOCAL DREF DeeObject *DCALL libwin32_GetTempPath_f_impl(void)
 //[[[end]]]
 {
- LPWSTR buffer,new_buffer; DWORD bufsize = 256,error;
- buffer = DeeString_NewWideBuffer(bufsize);
- if unlikely(!buffer) goto err;
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
  for (;;) {
   DBG_ALIGNMENT_DISABLE();
-  error = GetTempPathW(bufsize+1,buffer);
+  dwError = GetTempPathW(dwBufSize+1,lpBuffer);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   return_none;
+  }
   DBG_ALIGNMENT_ENABLE();
-  if (!error)
-      return_none;
-  if (error <= bufsize) break;
+  if (dwError <= dwBufSize) break;
   /* Resize to fit. */
-  new_buffer = DeeString_ResizeWideBuffer(buffer,error);
-  if unlikely(!new_buffer) goto err_result;
-  buffer  = new_buffer;
-  bufsize = error;
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
  }
- new_buffer = DeeString_TryResizeWideBuffer(buffer,error);
- if likely(new_buffer) buffer = new_buffer;
- return DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
 err_result:
- DeeString_FreeWideBuffer(buffer);
+ DeeString_FreeWideBuffer(lpBuffer);
 err:
  return NULL;
 }
@@ -940,35 +961,43 @@ err:
 FORCELOCAL DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDLE hModule)
 //[[[end]]]
 {
- LPWSTR buffer,new_buffer; DWORD bufsize = 256,error;
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
 again:
- if (DeeThread_CheckInterrupt()) goto err;
- buffer = DeeString_NewWideBuffer(bufsize);
- if unlikely(!buffer) goto err;
+ if (DeeThread_CheckInterrupt()) goto err_buffer;
  for (;;) {
   DBG_ALIGNMENT_DISABLE();
-  error = GetModuleFileNameW((HMODULE)hModule,buffer,bufsize+1);
-  if (!error) {
-   error = GetLastError();
+  dwError = GetModuleFileNameW((HMODULE)hModule,lpBuffer,dwBufSize + 1);
+  if (!dwError) {
+   dwError = GetLastError();
    DBG_ALIGNMENT_ENABLE();
-   if (error == ERROR_OPERATION_ABORTED)
+   if (dwError == ERROR_OPERATION_ABORTED)
        goto again;
-   DeeString_FreeWideBuffer(buffer);
+   DeeString_FreeWideBuffer(lpBuffer);
    return_none;
   }
   DBG_ALIGNMENT_ENABLE();
-  if (error <= bufsize) break;
+  if (dwError <= dwBufSize) {
+   if (dwError < dwBufSize)
+       break;
+   DBG_ALIGNMENT_DISABLE();
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError != ERROR_INSUFFICIENT_BUFFER)
+       break;
+  }
   /* Increase buffer size. */
-  bufsize   *= 2;
-  new_buffer = DeeString_ResizeWideBuffer(buffer,bufsize);
-  if unlikely(!new_buffer) goto err_result;
-  buffer = new_buffer;
+  dwBufSize  *= 2;
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwBufSize);
+  if unlikely(!lpNewBuffer) goto err_buffer;
+  lpBuffer = lpNewBuffer;
  }
- new_buffer = DeeString_TryResizeWideBuffer(buffer,error);
- if likely(new_buffer) buffer = new_buffer;
- return DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
-err_result:
- DeeString_FreeWideBuffer(buffer);
+ lpBuffer = DeeString_TruncateWideBuffer(lpBuffer,dwError);
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_buffer:
+ DeeString_FreeWideBuffer(lpBuffer);
 err:
  return NULL;
 }

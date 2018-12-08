@@ -36,16 +36,16 @@ import * from threading;
 @@>        thread.sleep(milliseconds(20));
 @@>    }
 @@>});
-@@>thread.start();
+@@>my_thread.start();
 @@>thread.sleep(seconds(1));
-@@>with (suspend_thread(thread)) {
+@@>with (suspend_thread(my_thread)) {
 @@>    print "The thread is now suspended";
 @@>    thread.sleep(milliseconds(100));
 @@>}
 @@>print "The thread is now running again";
 @@>thread.sleep(seconds(1));
-@@>thread.interrupt();
-@@>thread.join();
+@@>my_thread.interrupt();
+@@>my_thread.join();
 function suspend_thread(t: thread) {
 	local key = Semaphore(0);
 	local sync = Semaphore(0);

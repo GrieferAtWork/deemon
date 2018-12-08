@@ -37,6 +37,19 @@
 #define GetProcAddress GetProcAddressA
 #endif
 
+#ifndef PATH_MAX
+#ifdef PATHMAX
+#   define PATH_MAX PATHMAX
+#elif defined(MAX_PATH)
+#   define PATH_MAX MAX_PATH
+#elif defined(MAXPATH)
+#   define PATH_MAX MAXPATH
+#else
+#   define PATH_MAX 260
+#endif
+#endif
+
+
 DECL_BEGIN
 
 /* Structures are taken from `https://www.nirsoft.net/kernel_struct/vista/RTL_USER_PROCESS_PARAMETERS.html' */
@@ -217,34 +230,44 @@ nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
 
 
 INTERN DREF DeeObject *DCALL nt_GetModuleFileName(HMODULE hModule) {
- LPWSTR buffer,new_buffer; DWORD bufsize = 256,error;
- if (DeeThread_CheckInterrupt()) goto err;
- buffer = DeeString_NewWideBuffer(bufsize);
- if unlikely(!buffer) goto err;
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_buffer;
  for (;;) {
   DBG_ALIGNMENT_DISABLE();
-  error = GetModuleFileNameW(hModule,buffer,bufsize+1);
-  if (!error) {
-   error = GetLastError();
+  dwError = GetModuleFileNameW((HMODULE)hModule,lpBuffer,dwBufSize + 1);
+  if (!dwError) {
+   dwError = GetLastError();
    DBG_ALIGNMENT_ENABLE();
-   /* Error. */
-   DeeError_SysThrowf(&DeeError_SystemError,error,
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   DeeError_SysThrowf(&DeeError_SystemError,dwError,
                       "Failed to lookup module name");
-   goto err_result;
+   goto err_buffer;
   }
   DBG_ALIGNMENT_ENABLE();
-  if (error <= bufsize) break;
+  if (dwError <= dwBufSize) {
+   if (dwError < dwBufSize)
+       break;
+   DBG_ALIGNMENT_DISABLE();
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError != ERROR_INSUFFICIENT_BUFFER)
+       break;
+  }
   /* Increase buffer size. */
-  bufsize   *= 2;
-  new_buffer = DeeString_ResizeWideBuffer(buffer,bufsize);
-  if unlikely(!new_buffer) goto err_result;
-  buffer = new_buffer;
+  dwBufSize  *= 2;
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwBufSize);
+  if unlikely(!lpNewBuffer) goto err_buffer;
+  lpBuffer = lpNewBuffer;
  }
- new_buffer = DeeString_TryResizeWideBuffer(buffer,error);
- if likely(new_buffer) buffer = new_buffer;
- return DeeString_PackWideBuffer(buffer,STRING_ERROR_FREPLAC);
-err_result:
- DeeString_FreeWideBuffer(buffer);
+ lpBuffer = DeeString_TruncateWideBuffer(lpBuffer,dwError);
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_buffer:
+ DeeString_FreeWideBuffer(lpBuffer);
 err:
  return NULL;
 }

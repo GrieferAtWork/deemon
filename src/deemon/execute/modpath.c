@@ -3022,6 +3022,7 @@ unix_readlink(/*utf-8*/char const *__restrict path) {
  if unlikely(!buffer) goto err;
  for (;;) {
   struct stat st;
+  if (DeeThread_CheckInterrupt()) goto err;
   DBG_ALIGNMENT_DISABLE();
   req_size = readlink(path,buffer,bufsize+1);
   if unlikely(req_size < 0) {
@@ -3062,90 +3063,87 @@ err:
 }
 #endif
 
-PRIVATE DREF /*String*/DeeObject *
+PRIVATE DREF /*String*/DeeStringObject *
 DCALL get_default_home(void) {
- DREF DeeObject *result,*new_result;
+ DREF DeeStringObject *result;
+ DREF DeeStringObject *new_result;
  char *env;
  DBG_ALIGNMENT_DISABLE();
  env = getenv("DEEMON_HOME");
  DBG_ALIGNMENT_ENABLE();
- if (env && *env) {
-  result = DeeString_NewUtf8(env,
-                             strlen(env),
-                             STRING_ERROR_FIGNORE);
-  if unlikely(!result) goto err;
-  new_result = make_absolute(result);
-  Dee_Decref(result);
-  if unlikely(!new_result) goto err;
-  result = new_result;
-  goto done;
+ if (env) {
+  size_t len = strlen(env);
+  if (len) {
+   while (len && ISSEP(env[len - 1])) --len;
+   result = (DREF DeeStringObject *)DeeString_NewUtf8(env,len + 1,STRING_ERROR_FIGNORE);
+   if unlikely(!result) goto err;
+   DeeString_SetChar(result,len - 1,SEP);
+   new_result = (DREF DeeStringObject *)make_absolute((DeeObject *)result);
+   Dee_Decref(result);
+   return new_result;
+  }
  }
 #ifdef CONFIG_DEEMON_HOME
- result = (DREF DeeObject *)&default_deemon_home;
- Dee_Incref(result);
+ return_reference_((DeeStringObject *)&default_deemon_home);
 #elif defined(CONFIG_HOST_WINDOWS)
  {
-  /* TODO: Rewrite to directly use wide-string buffers (`DeeString_NewWideBuffer()'). */
-  WCHAR stack_buffer[261],*buffer = stack_buffer;
-  WCHAR *heap_buffer = NULL,*path_start;
-  DWORD buffer_size = COMPILER_LENOF(stack_buffer)-1,size;
-again:
-  DBG_ALIGNMENT_DISABLE();
-  size = GetModuleFileNameW(NULL,buffer,buffer_size);
-  DBG_ALIGNMENT_ENABLE();
-  if unlikely(!size) {
-   err_system_error("GetModuleFileName");
-err_heap_buffer:
-   Dee_Free(heap_buffer);
+  DWORD dwBufSize = PATH_MAX,dwError;
+  LPWSTR lpBuffer,lpNewBuffer;
+  lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+  if unlikely(!lpBuffer) goto err;
+again_chk_intr:
+  if (DeeThread_CheckInterrupt()) {
+err_buffer:
+   DeeString_FreeWideBuffer(lpBuffer);
    goto err;
   }
-  if (size == buffer_size &&
-      GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-   WCHAR *new_buffer;
-   buffer_size = size*2;
-   new_buffer  = (WCHAR *)Dee_Realloc(heap_buffer,(buffer_size+1)*sizeof(WCHAR));
-   if unlikely(!new_buffer) goto err_heap_buffer;
-   buffer      = new_buffer;
-   heap_buffer = new_buffer;
-   goto again;
+  for (;;) {
+   DBG_ALIGNMENT_DISABLE();
+   SetLastError(0);
+   dwError = GetModuleFileNameW(NULL,lpBuffer,dwBufSize + 1);
+   if (!dwError) {
+    dwError = GetLastError();
+    DBG_ALIGNMENT_ENABLE();
+    if (dwError == ERROR_OPERATION_ABORTED)
+        goto again_chk_intr;
+    DeeString_FreeWideBuffer(lpBuffer);
+    err_system_error_code("GetModuleFileName",dwError);
+    goto err_buffer;
+   }
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError <= dwBufSize) {
+    if (dwError < dwBufSize)
+        break;
+    DBG_ALIGNMENT_DISABLE();
+    dwError = GetLastError();
+    DBG_ALIGNMENT_ENABLE();
+    if (dwError != ERROR_INSUFFICIENT_BUFFER)
+        break;
+   }
+   /* Increase buffer size. */
+   dwBufSize  *= 2;
+   lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwBufSize);
+   if unlikely(!lpNewBuffer) goto err_buffer;
+   lpBuffer = lpNewBuffer;
   }
-  path_start = buffer+size;
-  while (path_start != buffer && path_start[-1] != '\\') --path_start;
-  while (path_start != buffer && path_start[-1] == '\\') --path_start;
-  if (path_start == buffer) path_start = buffer+size;
-  *path_start++ = '\\'; /* Add the trailing slash now, so we don't have to do it later. */
-  result = DeeString_NewWide(buffer,
-                            (size_t)(path_start-buffer),
-                             STRING_ERROR_FREPLAC);
-  Dee_Free(heap_buffer);
+  /* TODO: Check if the module's file name is a symbolic link.
+   *       If it turns out to be one, follow it! */
+
+  /* Trim the trailing module filename, but keep 1 trailing slash. */
+  while (dwError && lpBuffer[dwError - 1] != '\\') --dwError;
+  while (dwError && lpBuffer[dwError - 1] == '\\') --dwError;
+  lpBuffer = DeeString_TruncateWideBuffer(lpBuffer,dwError + 1);
+  result = (DREF DeeStringObject *)DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
   if unlikely(!result) goto err;
-  new_result = make_absolute(result);
+  new_result = (DREF DeeStringObject *)make_absolute((DeeObject *)result);
   Dee_Decref(result);
-  result = new_result;
-  ASSERT(!result || ISSEP(DeeString_END(result)[-1]));
-  goto done_slash;
+  return new_result;
  }
 #elif defined(CONFIG_HOST_UNIX)
- result = unix_readlink("/proc/self/exe");
- ASSERT(!result || DeeString_END(result)[-1] == '/');
- goto done_slash;
+ return (DREF DeeStringObject *)unix_readlink("/proc/self/exe");
 #else
- result = DeeString_New(".");
- if unlikely(!result) goto err;
+ return (DREF DeeStringObject *)DeeString_New(".");
 #endif
-done:
- if (!DeeString_SIZE(result) ||
-     !ISSEP(DeeString_END(result)[-1])) {
-  /* Must append a trailing slash. */
-  new_result = (DREF DeeObject *)DeeString_NewSized(DeeString_STR(result),
-                                                    DeeString_SIZE(result)+1);
-  Dee_Decref(result);
-  if unlikely(!new_result) goto err;
-  DeeString_END(new_result)[-1] = SEP;
-  result = new_result;
- }
-done_slash:
- return result;
 err:
  return NULL;
 }
@@ -3154,9 +3152,9 @@ err:
 #ifndef CONFIG_NO_THREADS
 PRIVATE DEFINE_RWLOCK(deemon_home_lock);
 #endif
-PRIVATE DREF /*String*/DeeObject *deemon_home = NULL;
+PRIVATE DREF DeeStringObject *deemon_home = NULL;
 PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
- DREF DeeObject *result;
+ DREF DeeStringObject *result;
 #ifndef CONFIG_NO_THREADS
  rwlock_read(&deemon_home_lock);
 #endif
@@ -3166,7 +3164,7 @@ PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
 #ifndef CONFIG_NO_THREADS
   rwlock_endread(&deemon_home_lock);
 #endif
-  return result;
+  return (DREF DeeObject *)result;
  }
 #ifndef CONFIG_NO_THREADS
  rwlock_endread(&deemon_home_lock);
@@ -3176,7 +3174,7 @@ PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
 
  /* Save the generated path in the global variable. */
  if likely(result) {
-  DREF DeeObject *other;
+  DREF DeeStringObject *other;
 #ifndef CONFIG_NO_THREADS
   rwlock_write(&deemon_home_lock);
 #endif
@@ -3187,7 +3185,7 @@ PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
    rwlock_endwrite(&deemon_home_lock);
 #endif
    Dee_Decref(result);
-   return other;
+   return (DREF DeeObject *)other;
   }
   Dee_Incref(result);
   deemon_home = result;
@@ -3195,19 +3193,19 @@ PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
   rwlock_endwrite(&deemon_home_lock);
 #endif
  }
- return result;
+ return (DREF DeeObject *)result;
 }
 
 PUBLIC void DCALL
 DeeExec_SetHome(/*String*/DeeObject *new_home) {
- DREF DeeObject *old_home;
+ DREF DeeStringObject *old_home;
  ASSERT_OBJECT_TYPE_EXACT_OPT(new_home,&DeeString_Type);
  Dee_XIncref(new_home);
 #ifndef CONFIG_NO_THREADS
  rwlock_write(&deemon_home_lock);
 #endif
  old_home = deemon_home;
- deemon_home = new_home;
+ deemon_home = (DREF DeeStringObject *)new_home;
 #ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&deemon_home_lock);
 #endif

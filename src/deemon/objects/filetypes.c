@@ -1101,9 +1101,9 @@ writer_tryappend8(Writer *__restrict self,
    size_t new_size = avail;
    do new_size *= 2;
    while (new_size < written + bufsize);
-   new_buffer = DeeString_TryResizeBuffer16((uint16_t *)self->w_printer.up_buffer,new_size);
+   new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer,new_size);
    if unlikely(!new_buffer) {
-    new_buffer = DeeString_TryResizeBuffer16((uint16_t *)self->w_printer.up_buffer,written + bufsize);
+    new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer,written + bufsize);
     if unlikely(!new_buffer) goto err;
    }
    self->w_printer.up_buffer = new_buffer;
@@ -1123,9 +1123,9 @@ writer_tryappend8(Writer *__restrict self,
    size_t new_size = avail;
    do new_size *= 2;
    while (new_size < written + bufsize);
-   new_buffer = DeeString_TryResizeBuffer32((uint32_t *)self->w_printer.up_buffer,new_size);
+   new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer,new_size);
    if unlikely(!new_buffer) {
-    new_buffer = DeeString_TryResizeBuffer32((uint32_t *)self->w_printer.up_buffer,written + bufsize);
+    new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer,written + bufsize);
     if unlikely(!new_buffer) goto err;
    }
    self->w_printer.up_buffer = new_buffer;
@@ -1168,9 +1168,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    self->w_printer.up_length = 1;
   } else if (ch <= 0xffff) {
    uint16_t *init_buffer;
-   init_buffer = DeeString_TryNewBuffer16(UNICODE_PRINTER_INITIAL_BUFSIZE);
+   init_buffer = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
    if unlikely(!init_buffer) {
-    init_buffer = DeeString_TryNewBuffer16(1);
+    init_buffer = DeeString_TryNew2ByteBuffer(1);
     if unlikely(!init_buffer)
        goto err;
    }
@@ -1181,9 +1181,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    self->w_printer.up_flags |= STRING_WIDTH_2BYTE;
   } else {
    uint32_t *init_buffer;
-   init_buffer = DeeString_TryNewBuffer32(UNICODE_PRINTER_INITIAL_BUFSIZE);
+   init_buffer = DeeString_TryNew4ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
    if unlikely(!init_buffer) {
-    init_buffer = DeeString_TryNewBuffer32(1);
+    init_buffer = DeeString_TryNew4ByteBuffer(1);
     if unlikely(!init_buffer)
        goto err;
    }
@@ -1232,7 +1232,7 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    /* Must up-cast to 16-bit */
    uint16_t *new_buffer; size_t i,length;
    length = self->w_printer.up_length;
-   new_buffer = DeeString_TryNewBuffer16(length+1);
+   new_buffer = DeeString_TryNew2ByteBuffer(length+1);
    if unlikely(!new_buffer) goto err;
    for (i = 0; i < length; ++i)
        new_buffer[i] = ((uint8_t *)self->w_printer.up_buffer)[i];
@@ -1251,7 +1251,7 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    /* Must up-cast to 32-bit */
    uint32_t *new_buffer; size_t i,length;
    length = self->w_printer.up_length;
-   new_buffer = DeeString_TryNewBuffer32(length+1);
+   new_buffer = DeeString_TryNew4ByteBuffer(length+1);
    if unlikely(!new_buffer) goto err;
    for (i = 0; i < length; ++i)
        new_buffer[i] = ((uint8_t *)self->w_printer.up_buffer)[i];
@@ -1273,7 +1273,7 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    /* Must up-cast to 32-bit. */
    uint32_t *new_buffer; size_t i,length; uint16_t *src;
    length     = self->w_printer.up_length;
-   new_buffer = DeeString_TryNewBuffer32(length+1);
+   new_buffer = DeeString_TryNew4ByteBuffer(length+1);
    if unlikely(!new_buffer) goto err;
    src = (uint16_t *)self->w_printer.up_buffer;
    for (i = 0; i < length; ++i)
@@ -1292,9 +1292,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    size_t new_size = avail;
    do new_size *= 2;
    while (new_size <= written);
-   new_buffer = DeeString_TryResizeBuffer16((uint16_t *)self->w_printer.up_buffer,new_size);
+   new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer,new_size);
    if unlikely(!new_buffer) {
-    new_buffer = DeeString_TryResizeBuffer16((uint16_t *)self->w_printer.up_buffer,written + 1);
+    new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer,written + 1);
     if unlikely(!new_buffer) goto err;
    }
    self->w_printer.up_buffer = new_buffer;
@@ -1309,9 +1309,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
    size_t new_size = avail;
    do new_size *= 2;
    while (new_size <= written);
-   new_buffer = DeeString_TryResizeBuffer32((uint32_t *)self->w_printer.up_buffer,new_size);
+   new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer,new_size);
    if unlikely(!new_buffer) {
-    new_buffer = DeeString_TryResizeBuffer32((uint32_t *)self->w_printer.up_buffer,written + 1);
+    new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer,written + 1);
     if unlikely(!new_buffer) goto err;
    }
    self->w_printer.up_buffer = new_buffer;
@@ -1412,7 +1412,7 @@ again:
    if (width == STRING_WIDTH_2BYTE) {
     uint16_t *buffer_copy; size_t length;
     length = self->w_printer.up_length;
-    buffer_copy = DeeString_TryNewBuffer16(length + bufsize);
+    buffer_copy = DeeString_TryNew2ByteBuffer(length + bufsize);
     if unlikely(!buffer_copy) {
      DeeFile_LockEndWrite(self);
      if (Dee_CollectMemory(sizeof(size_t)+(length + bufsize + 1)*2))
@@ -1424,7 +1424,7 @@ again:
    } else {
     uint32_t *buffer_copy; size_t length;
     length = self->w_printer.up_length;
-    buffer_copy = DeeString_TryNewBuffer32(length + bufsize);
+    buffer_copy = DeeString_TryNew4ByteBuffer(length + bufsize);
     if unlikely(!buffer_copy) {
      DeeFile_LockEndWrite(self);
      if (Dee_CollectMemory(sizeof(size_t)+(length + bufsize + 1)*4))

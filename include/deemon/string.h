@@ -343,14 +343,35 @@ DDATDEF DeeTypeObject DeeString_Type;
 #define DeeString_LEN16(x)  WSTR_LENGTH(DeeString_STR16(x))
 #define DeeString_LEN32(x)  WSTR_LENGTH(DeeString_STR32(x))
 
-/* Returns true if `DeeString_STR()' is encoded in UTF-8 */
+/* Returns true if `DeeString_STR()' is encoded in UTF-8
+ * HINT: This is very useful when creating transformed sub-strings
+ *       of another string, when caring about encodings, but only
+ *       working within the ASCII-range:
+ *    >> DREF DeeObject *partition_after(DeeObject *__restrict str, char ch) {
+ *    >>     DREF DeeObject *result;
+ *    >>     char *pos = (char *)memchr(DeeString_STR(str),ch,DeeString_SIZE(str));
+ *    >>     if (!pos) return_none;
+ *    >>     // Return the sub-string after `ch'
+ *    >>     ++pos;
+ *    >>     result = DeeString_NewSized(pos,(size_t)(DeeString_END(str) - pos));
+ *    >>     if likely(result && DeeString_STR_ISUTF8(str))
+ *    >>        result = DeeString_SetUtf8(result); // Interpret raw data as UTF-8
+ *    >>     return result;
+ *    >> }
+ *       This method works with any kind of string, but has an O(n) slowdown in
+ *      `DeeString_SetUtf8()' when the input string contains ASCII characters
+ *       outside of the ASCII range (or in some cases: LATIN-1 range).
+ */
 #define DeeString_STR_ISUTF8(x) \
       (((DeeStringObject *)self)->s_data && \
      ((((DeeStringObject *)self)->s_data->u_flags & STRING_UTF_FASCII) || \
        ((DeeStringObject *)self)->s_data->u_width != STRING_WIDTH_1BYTE))
 
-/* Returns true if `DeeString_STR()' is encoded in LATIN1, or ASCII */
-#define DeeString_STR_ISLATIN1(x) (!DeeString_STR_ISUTF8(x))
+/* Returns true if `DeeString_STR()' is encoded in LATIN-1, or ASCII */
+#define DeeString_STR_ISLATIN1(x) \
+      (!((DeeStringObject *)self)->s_data || \
+       (((DeeStringObject *)self)->s_data->u_flags & STRING_UTF_FASCII) || \
+        ((DeeStringObject *)self)->s_data->u_width == STRING_WIDTH_1BYTE)
 
 
 /* Check if the given string object `x' has its hash calculated. */
@@ -575,227 +596,6 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
                                  size_t length, unsigned int error_mode);
 
 
-/* Allocate / pack UTF16, UTF32 and Wide-character strings from buffers. */
-FORCELOCAL uint16_t *DCALL
-DeeString_NewBuffer16(size_t num_chars) {
- size_t *result = (size_t *)Dee_Malloc(sizeof(size_t)+(num_chars+1)*2);
- if likely(result) *result++ = num_chars;
- return (uint16_t *)result;
-}
-FORCELOCAL uint32_t *DCALL
-DeeString_NewBuffer32(size_t num_chars) {
- size_t *result = (size_t *)Dee_Malloc(sizeof(size_t)+(num_chars+1)*4);
- if likely(result) *result++ = num_chars;
- return (uint32_t *)result;
-}
-FORCELOCAL uint16_t *DCALL
-DeeString_TryNewBuffer16(size_t num_chars) {
- size_t *result = (size_t *)Dee_TryMalloc(sizeof(size_t)+(num_chars+1)*2);
- if likely(result) *result++ = num_chars;
- return (uint16_t *)result;
-}
-FORCELOCAL uint32_t *DCALL
-DeeString_TryNewBuffer32(size_t num_chars) {
- size_t *result = (size_t *)Dee_TryMalloc(sizeof(size_t)+(num_chars+1)*4);
- if likely(result) *result++ = num_chars;
- return (uint32_t *)result;
-}
-FORCELOCAL uint16_t *DCALL
-DeeString_ResizeBuffer16(uint16_t *buffer, size_t num_chars) {
- size_t *result = buffer ? (size_t *)buffer-1 : NULL;
- result = (size_t *)Dee_Realloc(result,sizeof(size_t)+(num_chars+1)*2);
- if likely(result) *result++ = num_chars;
- return (uint16_t *)result;
-}
-FORCELOCAL uint32_t *DCALL
-DeeString_ResizeBuffer32(uint32_t *buffer, size_t num_chars) {
- size_t *result = buffer ? (size_t *)buffer-1 : NULL;
- result = (size_t *)Dee_Realloc(result,sizeof(size_t)+(num_chars+1)*4);
- if likely(result) *result++ = num_chars;
- return (uint32_t *)result;
-}
-FORCELOCAL uint16_t *DCALL
-DeeString_TryResizeBuffer16(uint16_t *buffer, size_t num_chars) {
- size_t *result = buffer ? (size_t *)buffer-1 : NULL;
- result = (size_t *)Dee_TryRealloc(result,sizeof(size_t)+(num_chars+1)*2);
- if likely(result) *result++ = num_chars;
- else if (num_chars < WSTR_LENGTH(buffer)) {
-  WSTR_LENGTH(buffer) = num_chars;
-  result = (size_t *)buffer;
- }
- return (uint16_t *)result;
-}
-FORCELOCAL uint32_t *DCALL
-DeeString_TryResizeBuffer32(uint32_t *buffer, size_t num_chars) {
- size_t *result = buffer ? (size_t *)buffer-1 : NULL;
- result = (size_t *)Dee_TryRealloc(result,sizeof(size_t)+(num_chars+1)*4);
- if likely(result) *result++ = num_chars;
- else if (num_chars < WSTR_LENGTH(buffer)) {
-  WSTR_LENGTH(buffer) = num_chars;
-  result = (size_t *)buffer;
- }
- return (uint32_t *)result;
-}
-FORCELOCAL void DeeString_Free2ByteBuffer(uint16_t *buffer) {
- if (buffer) Dee_Free((size_t *)buffer-1);
-}
-#define DeeString_Free4ByteBuffer(buffer) DeeString_Free2ByteBuffer((uint16_t *)(buffer)) 
-#define DeeString_FreeWideBuffer(buffer)  DeeString_Free2ByteBuffer((uint16_t *)(buffer))
-DFUNDEF DREF DeeObject *DCALL DeeString_Pack2ByteBuffer(/*inherit(always)*/uint16_t *__restrict text);
-DFUNDEF DREF DeeObject *DCALL DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/uint16_t *__restrict text);
-#define DeeString_Pack4ByteBuffer(text)    DeeString_PackUtf32Buffer(text,STRING_ERROR_FIGNORE)
-#define DeeString_TryPack4ByteBuffer(text) DeeString_TryPackUtf32Buffer(text)
-
-/* @param: error_mode: One of `STRING_ERROR_F*' */
-DFUNDEF DREF DeeObject *DCALL DeeString_PackUtf16Buffer(/*inherit(always)*/uint16_t *__restrict text, unsigned int error_mode);
-DFUNDEF DREF DeeObject *DCALL DeeString_PackUtf32Buffer(/*inherit(always)*/uint32_t *__restrict text, unsigned int error_mode);
-DFUNDEF DREF DeeObject *DCALL DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/uint32_t *__restrict text);
-
-#ifdef __INTELLISENSE__
-dwchar_t *DeeString_NewWideBuffer(size_t num_chars);
-dwchar_t *DeeString_ResizeWideBuffer(dwchar_t *buffer, size_t num_chars);
-dwchar_t *DeeString_TryResizeWideBuffer(dwchar_t *buffer, size_t num_chars);
-DREF DeeObject *DeeString_PackWideBuffer(/*inherit(always)*/dwchar_t *__restrict text, unsigned int error_mode);
-#elif __SIZEOF_WCHAR_T__ == 2
-#define DeeString_NewWideBuffer(num_chars)              ((dwchar_t *)DeeString_NewBuffer16(num_chars))
-#define DeeString_ResizeWideBuffer(buffer,num_chars)    ((dwchar_t *)DeeString_ResizeBuffer16((uint16_t *)(buffer),num_chars))
-#define DeeString_TryResizeWideBuffer(buffer,num_chars) ((dwchar_t *)DeeString_TryResizeBuffer16((uint16_t *)(buffer),num_chars))
-#define DeeString_PackWideBuffer(buf,error_mode)          DeeString_PackUtf16Buffer((uint16_t *)(buf),error_mode)
-#else
-#define DeeString_NewWideBuffer(num_chars)              ((dwchar_t *)DeeString_NewBuffer32(num_chars))
-#define DeeString_ResizeWideBuffer(buffer,num_chars)    ((dwchar_t *)DeeString_ResizeBuffer32((uint32_t *)(buffer),num_chars))
-#define DeeString_TryResizeWideBuffer(buffer,num_chars) ((dwchar_t *)DeeString_TryResizeBuffer32((uint32_t *)(buffer),num_chars))
-#define DeeString_PackWideBuffer(buf,error_mode)          DeeString_PackUtf32Buffer((uint32_t *)(buf),error_mode)
-#endif
-
-FORCELOCAL void *DCALL
-DeeString_NewWidthBuffer(size_t num_chars, unsigned int width) {
- if (width == STRING_WIDTH_1BYTE) {
-  DeeStringObject *result;
-  result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
-                                              (num_chars+1)*sizeof(char));
-  if unlikely(!result) return NULL;
-  result->s_len = num_chars;
-  return result->s_str;
- } else {
-  size_t *result;
-  result = (size_t *)Dee_Malloc(sizeof(size_t)+(num_chars+1)*
-                                STRING_SIZEOF_WIDTH(width));
-  if likely(result) *result++ = num_chars;
-  return result;
- }
-}
-FORCELOCAL void *DCALL
-DeeString_TryNewWidthBuffer(size_t num_chars, unsigned int width) {
- if (width == STRING_WIDTH_1BYTE) {
-  DeeStringObject *result;
-  result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
-                                                 (num_chars+1)*sizeof(char));
-  if unlikely(!result) return NULL;
-  result->s_len = num_chars;
-  return result->s_str;
- } else {
-  size_t *result;
-  result = (size_t *)Dee_TryMalloc(sizeof(size_t)+(num_chars+1)*
-                                   STRING_SIZEOF_WIDTH(width));
-  if likely(result) *result++ = num_chars;
-  return result;
- }
-}
-FORCELOCAL void *DCALL
-DeeString_ResizeWidthBuffer(void *buffer, size_t num_chars, unsigned int width) {
- if (width == STRING_WIDTH_1BYTE) {
-  DeeStringObject *result;
-  result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
-  result = (DeeStringObject *)DeeObject_Realloc(result,
-                                                COMPILER_OFFSETOF(DeeStringObject,s_str)+
-                                               (num_chars+1)*sizeof(char));
-  if likely(result) result->s_len = num_chars;
-  return result->s_str;
- } else {
-  size_t *result;
-  result = buffer ? (size_t *)buffer-1 : NULL;
-  result = (size_t *)Dee_Realloc(result,sizeof(size_t)+(num_chars+1)*
-                                 STRING_SIZEOF_WIDTH(width));
-  if likely(result) *result++ = num_chars;
-  return result;
- }
-}
-FORCELOCAL void *DCALL
-DeeString_TryResizeWidthBuffer(void *buffer, size_t num_chars, unsigned int width) {
- if (width == STRING_WIDTH_1BYTE) {
-  DeeStringObject *result;
-  result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
-  result = (DeeStringObject *)DeeObject_TryRealloc(result,
-                                                   COMPILER_OFFSETOF(DeeStringObject,s_str)+
-                                                  (num_chars+1)*sizeof(char));
-  if likely(result) result->s_len = num_chars;
-  return result->s_str;
- } else {
-  size_t *result;
-  result = buffer ? (size_t *)buffer-1 : NULL;
-  result = (size_t *)Dee_TryRealloc(result,sizeof(size_t)+(num_chars+1)*
-                                    STRING_SIZEOF_WIDTH(width));
-  if likely(result) *result++ = num_chars;
-  return result;
- }
-}
-/* @param: error_mode: One of `STRING_ERROR_F*' (Usually `STRING_ERROR_FIGNORE') */
-FORCELOCAL DREF DeeObject *DCALL
-DeeString_PackWidthBuffer(/*inherit(always)*/void *buffer,
-                          unsigned int width) {
- SWITCH_SIZEOF_WIDTH(width) {
- {
-  DREF DeeStringObject *result;
- CASE_WIDTH_1BYTE:
-  result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
-  result->s_data = NULL;
-  result->s_hash = DEE_STRING_HASH_UNSET;
-  result->s_str[result->s_len] = '\0';
-  DeeObject_Init(result,&DeeString_Type);
-  return (DREF DeeObject *)result;
- } break;
-
- CASE_WIDTH_2BYTE:
-  return DeeString_Pack2ByteBuffer((uint16_t *)buffer);
- CASE_WIDTH_4BYTE:
-  return DeeString_Pack4ByteBuffer((uint32_t *)buffer);
- }
-}
-FORCELOCAL DREF DeeObject *DCALL
-DeeString_TryPackWidthBuffer(/*inherit(on_success)*/void *buffer,
-                             unsigned int width) {
- SWITCH_SIZEOF_WIDTH(width) {
- {
-  DREF DeeStringObject *result;
- CASE_WIDTH_1BYTE:
-  result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
-  result->s_data = NULL;
-  result->s_hash = DEE_STRING_HASH_UNSET;
-  result->s_str[result->s_len] = '\0';
-  DeeObject_Init(result,&DeeString_Type);
-  return (DREF DeeObject *)result;
- } break;
-
- CASE_WIDTH_2BYTE:
-  return DeeString_TryPack2ByteBuffer((uint16_t *)buffer);
- CASE_WIDTH_4BYTE:
-  return DeeString_TryPack4ByteBuffer((uint32_t *)buffer);
- }
-}
-FORCELOCAL void DCALL
-DeeString_FreeWidthBuffer(void *buffer, unsigned int width) {
- if (buffer) {
-  if (width == STRING_WIDTH_1BYTE) {
-   DeeObject_Free(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str));
-  } else {
-   Dee_Free((size_t *)buffer-1);
-  }
- }
-}
-
-
-
 
 /* Construct a new, non-decoded single-byte-per-character string `str'.
  * The string itself may contain characters above 127, which are then
@@ -901,12 +701,12 @@ DFUNDEF DREF DeeObject *DCALL DeeString_NewUtf8(/*utf-8*/char const *__restrict 
                                                 unsigned int error_mode);
 
 /* Given a string `self' that has previously been allocated as a
- * byte-buffer string, convert it into a UTF-8 string, using the
- * byte-buffer data as UTF-8 text.
+ * byte-buffer string (such as `DeeString_NewSized()'), convert
+ * it into a UTF-8 string, using the byte-buffer data as UTF-8 text.
  * This function _always_ inherits a reference to `self', and will
  * return `NULL' on error. */
-DFUNDEF DREF DeeObject *DCALL DeeString_SetUtf8(/*inherit(always)*/DREF DeeObject *__restrict self,
-                                                unsigned int error_mode);
+DFUNDEF DREF DeeObject *DCALL DeeString_SetUtf8(/*inherit(always)*/DREF DeeObject *__restrict self, unsigned int error_mode);
+DFUNDEF DREF DeeObject *DCALL DeeString_TrySetUtf8(/*inherit(on_success)*/DREF DeeObject *__restrict self);
 
 /* Construct strings from UTF-16/32 encoded content.
  * @param: error_mode: One of `STRING_ERROR_F*' */
@@ -943,11 +743,715 @@ DREF DeeObject *DeeString_NewWideAltEndian(dwchar_t const *__restrict str, size_
 #endif
 
 
+
+/* API for string construction from buffers. */
+#define DeeString_Sizeof2ByteBuffer(num_chars) (sizeof(size_t) + ((num_chars) + 1) * 2)
+#define DeeString_Sizeof4ByteBuffer(num_chars) (sizeof(size_t) + ((num_chars) + 1) * 4)
+#ifdef __INTELLISENSE__
+/* Allocate a new buffer for constructing a string form either
+ * wide-character encoding, or any 1-, 2- or 4-byte encoding.
+ * (aka. LATIN-1 or UTF-8 / raw 2-byte or utf-16 / raw 4-byte or utf-32).  */
+WUNUSED ATTR_MALLOC dwchar_t *(DCALL DeeString_NewWideBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC uint8_t  *(DCALL DeeString_New1ByteBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeString_New2ByteBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeString_New4ByteBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC dwchar_t *(DCALL DeeString_TryNewWideBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC uint8_t  *(DCALL DeeString_TryNew1ByteBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeString_TryNew2ByteBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeString_TryNew4ByteBuffer)(size_t num_chars);
+WUNUSED ATTR_MALLOC dwchar_t *(DCALL DeeDbgString_NewWideBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC uint8_t  *(DCALL DeeDbgString_New1ByteBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeDbgString_New2ByteBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeDbgString_New4ByteBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC dwchar_t *(DCALL DeeDbgString_TryNewWideBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC uint8_t  *(DCALL DeeDbgString_TryNew1ByteBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeDbgString_TryNew2ByteBuffer)(size_t num_chars, char const *file, int line);
+WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeDbgString_TryNew4ByteBuffer)(size_t num_chars, char const *file, int line);
+
+/* Resize a string buffer. */
+WUNUSED dwchar_t *(DCALL DeeString_ResizeWideBuffer)(dwchar_t *buffer, size_t num_chars);
+WUNUSED uint8_t  *(DCALL DeeString_Resize1ByteBuffer)(uint8_t *buffer, size_t num_chars);
+WUNUSED uint16_t *(DCALL DeeString_Resize2ByteBuffer)(uint16_t *buffer, size_t num_chars);
+WUNUSED uint32_t *(DCALL DeeString_Resize4ByteBuffer)(uint32_t *buffer, size_t num_chars);
+WUNUSED dwchar_t *(DCALL DeeString_TryResizeWideBuffer)(dwchar_t *buffer, size_t num_chars);
+WUNUSED uint8_t  *(DCALL DeeString_TryResize1ByteBuffer)(uint8_t *buffer, size_t num_chars);
+WUNUSED uint16_t *(DCALL DeeString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars);
+WUNUSED uint32_t *(DCALL DeeString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars);
+WUNUSED dwchar_t *(DCALL DeeDbgString_ResizeWideBuffer)(dwchar_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED uint8_t  *(DCALL DeeDbgString_Resize1ByteBuffer)(uint8_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED uint16_t *(DCALL DeeDbgString_Resize2ByteBuffer)(uint16_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED uint32_t *(DCALL DeeDbgString_Resize4ByteBuffer)(uint32_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED dwchar_t *(DCALL DeeDbgString_TryResizeWideBuffer)(dwchar_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED uint8_t  *(DCALL DeeDbgString_TryResize1ByteBuffer)(uint8_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED uint16_t *(DCALL DeeDbgString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars, char const *file, int line);
+WUNUSED uint32_t *(DCALL DeeDbgString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars, char const *file, int line);
+
+/* Truncate a string buffer. */
+WUNUSED ATTR_RETNONNULL NONNULL((1)) dwchar_t *(DCALL DeeString_TruncateWideBuffer)(dwchar_t *__restrict buffer, size_t num_chars);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t  *(DCALL DeeString_Truncate1ByteBuffer)(uint8_t *__restrict buffer, size_t num_chars);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) uint16_t *(DCALL DeeString_Truncate2ByteBuffer)(uint16_t *__restrict buffer, size_t num_chars);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) uint32_t *(DCALL DeeString_Truncate4ByteBuffer)(uint32_t *__restrict buffer, size_t num_chars);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) dwchar_t *(DCALL DeeDbgString_TruncateWideBuffer)(dwchar_t *__restrict buffer, size_t num_chars, char const *file, int line);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t  *(DCALL DeeDbgString_Truncate1ByteBuffer)(uint8_t *__restrict buffer, size_t num_chars, char const *file, int line);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) uint16_t *(DCALL DeeDbgString_Truncate2ByteBuffer)(uint16_t *__restrict buffer, size_t num_chars, char const *file, int line);
+WUNUSED ATTR_RETNONNULL NONNULL((1)) uint32_t *(DCALL DeeDbgString_Truncate4ByteBuffer)(uint32_t *__restrict buffer, size_t num_chars, char const *file, int line);
+
+/* Free a string buffer. */
+void (DCALL DeeString_FreeWideBuffer)(dwchar_t *buffer);
+void (DCALL DeeString_Free1ByteBuffer)(uint8_t *buffer);
+void (DCALL DeeString_Free2ByteBuffer)(uint16_t *buffer);
+void (DCALL DeeString_Free4ByteBuffer)(uint32_t *buffer);
+void (DCALL DeeDbgString_FreeWideBuffer)(dwchar_t *buffer, char const *file, int line);
+void (DCALL DeeDbgString_Free1ByteBuffer)(uint8_t *buffer, char const *file, int line);
+void (DCALL DeeDbgString_Free2ByteBuffer)(uint16_t *buffer, char const *file, int line);
+void (DCALL DeeDbgString_Free4ByteBuffer)(uint32_t *buffer, char const *file, int line);
+
+/* Package a string buffer. */
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_Pack1ByteBuffer)(/*inherit(always)*/uint8_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_Pack2ByteBuffer)(/*inherit(always)*/uint16_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_Pack4ByteBuffer)(/*inherit(always)*/uint32_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackWideBuffer)(/*inherit(always)*/dwchar_t *__restrict buffer, unsigned int error_mode);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackUtf8Buffer)(/*inherit(always)*/uint8_t *__restrict buffer, unsigned int error_mode);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackUtf16Buffer)(/*inherit(always)*/uint16_t *__restrict buffer, unsigned int error_mode);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackUtf32Buffer)(/*inherit(always)*/uint32_t *__restrict buffer, unsigned int error_mode);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPack1ByteBuffer)(/*inherit(on_success)*/uint8_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPack2ByteBuffer)(/*inherit(on_success)*/uint16_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPack4ByteBuffer)(/*inherit(on_success)*/uint32_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackWideBuffer)(/*inherit(on_success)*/dwchar_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackUtf8Buffer)(/*inherit(on_success)*/uint8_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackUtf16Buffer)(/*inherit(on_success)*/uint16_t *__restrict buffer);
+WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackUtf32Buffer)(/*inherit(on_success)*/uint32_t *__restrict buffer);
+#else /* __INTELLISENSE__ */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_Pack2ByteBuffer(/*inherit(always)*/uint16_t *__restrict buffer);
+#define DeeString_Pack4ByteBuffer(buffer) DeeString_PackUtf32Buffer(buffer,STRING_ERROR_FIGNORE)
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/uint16_t *__restrict buffer);
+#define DeeString_TryPack4ByteBuffer(buffer) DeeString_TryPackUtf32Buffer(buffer)
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_PackUtf16Buffer(/*inherit(always)*/uint16_t *__restrict buffer, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/uint16_t *__restrict buffer);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_PackUtf32Buffer(/*inherit(always)*/uint32_t *__restrict buffer, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/uint32_t *__restrict buffer);
+#if __SIZEOF_WCHAR_T__ == 2
+#define DeeString_NewWideBuffer(num_chars)                           ((dwchar_t *)DeeString_New2ByteBuffer(num_chars))
+#define DeeString_TryNewWideBuffer(num_chars)                        ((dwchar_t *)DeeString_TryNew2ByteBuffer(num_chars))
+#define DeeString_ResizeWideBuffer(buffer,num_chars)                 ((dwchar_t *)DeeString_Resize2ByteBuffer((uint16_t *)(buffer),num_chars))
+#define DeeString_TryResizeWideBuffer(buffer,num_chars)              ((dwchar_t *)DeeString_TryResize2ByteBuffer((uint16_t *)(buffer),num_chars))
+#define DeeString_TruncateWideBuffer(buffer,num_chars)               ((dwchar_t *)DeeString_Truncate2ByteBuffer((uint16_t *)(buffer),num_chars))
+#define DeeString_PackWideBuffer(buf,error_mode)                       DeeString_PackUtf16Buffer((uint16_t *)(buf),error_mode)
+#define DeeString_TryPackWideBuffer(buf)                               DeeString_TryPackUtf16Buffer((uint16_t *)(buf))
+#define DeeString_FreeWideBuffer(buffer)                               DeeString_Free2ByteBuffer((uint16_t *)(buffer))
+#define DeeDbgString_NewWideBuffer(num_chars,file,line)              ((dwchar_t *)DeeDbgString_New2ByteBuffer(num_chars,file,line))
+#define DeeDbgString_TryNewWideBuffer(num_chars,file,line)           ((dwchar_t *)DeeDbgString_TryNew2ByteBuffer(num_chars,file,line))
+#define DeeDbgString_ResizeWideBuffer(buffer,num_chars,file,line)    ((dwchar_t *)DeeDbgString_Resize2ByteBuffer((uint16_t *)(buffer),num_chars,file,line))
+#define DeeDbgString_TryResizeWideBuffer(buffer,num_chars,file,line) ((dwchar_t *)DeeDbgString_TryResize2ByteBuffer((uint16_t *)(buffer),num_chars,file,line))
+#define DeeDbgString_TruncateWideBuffer(buffer,num_chars,file,line)  ((dwchar_t *)DeeDbgString_Truncate2ByteBuffer((uint16_t *)(buffer),num_chars,file,line))
+#define DeeDbgString_FreeWideBuffer(buffer,file,line)                  DeeDbgString_Free2ByteBuffer((uint16_t *)(buffer),file,line)
+#elif __SIZEOF_WCHAR_T__ == 4
+#define DeeString_NewWideBuffer(num_chars)                           ((dwchar_t *)DeeString_New4ByteBuffer(num_chars))
+#define DeeString_TryNewWideBuffer(num_chars)                        ((dwchar_t *)DeeString_TryNew4ByteBuffer(num_chars))
+#define DeeString_ResizeWideBuffer(buffer,num_chars)                 ((dwchar_t *)DeeString_Resize4ByteBuffer((uint32_t *)(buffer),num_chars))
+#define DeeString_TryResizeWideBuffer(buffer,num_chars)              ((dwchar_t *)DeeString_TryResize4ByteBuffer((uint32_t *)(buffer),num_chars))
+#define DeeString_TruncateWideBuffer(buffer,num_chars)               ((dwchar_t *)DeeString_Truncate4ByteBuffer((uint32_t *)(buffer),num_chars))
+#define DeeString_PackWideBuffer(buf,error_mode)                       DeeString_PackUtf32Buffer((uint32_t *)(buf),error_mode)
+#define DeeString_TryPackWideBuffer(buf)                               DeeString_TryPackUtf32Buffer((uint32_t *)(buf))
+#define DeeString_FreeWideBuffer(buffer)                               DeeString_Free4ByteBuffer((uint32_t *)(buffer))
+#define DeeDbgString_NewWideBuffer(num_chars,file,line)              ((dwchar_t *)DeeDbgString_New4ByteBuffer(num_chars,file,line))
+#define DeeDbgString_TryNewWideBuffer(num_chars,file,line)           ((dwchar_t *)DeeDbgString_TryNew4ByteBuffer(num_chars,file,line))
+#define DeeDbgString_ResizeWideBuffer(buffer,num_chars,file,line)    ((dwchar_t *)DeeDbgString_Resize4ByteBuffer((uint32_t *)(buffer),num_chars,file,line))
+#define DeeDbgString_TryResizeWideBuffer(buffer,num_chars,file,line) ((dwchar_t *)DeeDbgString_TryResize4ByteBuffer((uint32_t *)(buffer),num_chars,file,line))
+#define DeeDbgString_TruncateWideBuffer(buffer,num_chars,file,line)  ((dwchar_t *)DeeDbgString_Truncate4ByteBuffer((uint32_t *)(buffer),num_chars,file,line))
+#define DeeDbgString_FreeWideBuffer(buffer,file,line)                  DeeDbgString_Free4ByteBuffer((uint32_t *)(buffer),file,line)
+#else
+#error "Unsupported sizeof(wchar_t) (must be either 2 or 4)"
+#endif
+#ifdef NDEBUG
+#define DeeDbgString_New1ByteBuffer(num_chars,file,line)              DeeString_New1ByteBuffer(num_chars)
+#define DeeDbgString_New2ByteBuffer(num_chars,file,line)              DeeString_New2ByteBuffer(num_chars)
+#define DeeDbgString_New4ByteBuffer(num_chars,file,line)              DeeString_New4ByteBuffer(num_chars)
+#define DeeDbgString_TryNew1ByteBuffer(num_chars,file,line)           DeeString_TryNew1ByteBuffer(num_chars)
+#define DeeDbgString_TryNew2ByteBuffer(num_chars,file,line)           DeeString_TryNew2ByteBuffer(num_chars)
+#define DeeDbgString_TryNew4ByteBuffer(num_chars,file,line)           DeeString_TryNew4ByteBuffer(num_chars)
+#define DeeDbgString_Resize1ByteBuffer(buffer,num_chars,file,line)    DeeString_Resize1ByteBuffer(buffer,num_chars)
+#define DeeDbgString_Resize2ByteBuffer(buffer,num_chars,file,line)    DeeString_Resize2ByteBuffer(buffer,num_chars)
+#define DeeDbgString_Resize4ByteBuffer(buffer,num_chars,file,line)    DeeString_Resize4ByteBuffer(buffer,num_chars)
+#define DeeDbgString_TryResize1ByteBuffer(buffer,num_chars,file,line) DeeString_TryResize1ByteBuffer(buffer,num_chars)
+#define DeeDbgString_TryResize2ByteBuffer(buffer,num_chars,file,line) DeeString_TryResize2ByteBuffer(buffer,num_chars)
+#define DeeDbgString_TryResize4ByteBuffer(buffer,num_chars,file,line) DeeString_TryResize4ByteBuffer(buffer,num_chars)
+#define DeeDbgString_Truncate1ByteBuffer(buffer,num_chars,file,line)  DeeString_Truncate1ByteBuffer(buffer,num_chars)
+#define DeeDbgString_Truncate2ByteBuffer(buffer,num_chars,file,line)  DeeString_Truncate2ByteBuffer(buffer,num_chars)
+#define DeeDbgString_Truncate4ByteBuffer(buffer,num_chars,file,line)  DeeString_Truncate4ByteBuffer(buffer,num_chars)
+#define DeeDbgString_Free1ByteBuffer(buffer,file,line)                DeeString_Free1ByteBuffer(buffer)
+#define DeeDbgString_Free2ByteBuffer(buffer,file,line)               _DeeString_FreeBuffer(buffer)
+#define DeeDbgString_Free4ByteBuffer(buffer,file,line)               _DeeString_FreeBuffer(buffer)
+#define DeeString_Free2ByteBuffer(buffer)                            _DeeString_FreeBuffer(buffer)
+#define DeeString_Free4ByteBuffer(buffer)                            _DeeString_FreeBuffer(buffer)
+FORCELOCAL WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeString_New2ByteBuffer)(size_t num_chars) { size_t *result = (size_t *)Dee_Malloc(DeeString_Sizeof2ByteBuffer(num_chars)); if likely(result) *result++ = num_chars; return (uint16_t *)result; }
+FORCELOCAL WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeString_New4ByteBuffer)(size_t num_chars) { size_t *result = (size_t *)Dee_Malloc(DeeString_Sizeof4ByteBuffer(num_chars)); if likely(result) *result++ = num_chars; return (uint32_t *)result; }
+FORCELOCAL WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeString_TryNew2ByteBuffer)(size_t num_chars) { size_t *result = (size_t *)Dee_TryMalloc(DeeString_Sizeof2ByteBuffer(num_chars)); if likely(result) *result++ = num_chars; return (uint16_t *)result; }
+FORCELOCAL WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeString_TryNew4ByteBuffer)(size_t num_chars) { size_t *result = (size_t *)Dee_TryMalloc(DeeString_Sizeof4ByteBuffer(num_chars)); if likely(result) *result++ = num_chars; return (uint32_t *)result; }
+FORCELOCAL WUNUSED uint16_t *(DCALL DeeString_Resize2ByteBuffer)(uint16_t *buffer, size_t num_chars) {
+ size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
+ result = (size_t *)Dee_Realloc(result,DeeString_Sizeof2ByteBuffer(num_chars));
+ if likely(result) *result++ = num_chars;
+ return (uint16_t *)result;
+}
+FORCELOCAL WUNUSED uint32_t *(DCALL DeeString_Resize4ByteBuffer)(uint32_t *buffer, size_t num_chars) {
+ size_t *result = buffer ? (size_t *)buffer-1 : NULL;
+ result = (size_t *)Dee_Realloc(result,DeeString_Sizeof4ByteBuffer(num_chars));
+ if likely(result) *result++ = num_chars;
+ return (uint32_t *)result;
+}
+FORCELOCAL WUNUSED uint16_t *(DCALL DeeString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars) {
+ size_t *result = buffer ? (size_t *)buffer-1 : NULL;
+ result = (size_t *)Dee_TryRealloc(result,DeeString_Sizeof2ByteBuffer(num_chars));
+ if likely(result) *result++ = num_chars;
+ else if (num_chars < WSTR_LENGTH(buffer)) {
+  WSTR_LENGTH(buffer) = num_chars;
+  result = (size_t *)buffer;
+ }
+ return (uint16_t *)result;
+}
+FORCELOCAL WUNUSED uint32_t *(DCALL DeeString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars) {
+ size_t *result = buffer ? (size_t *)buffer-1 : NULL;
+ result = (size_t *)Dee_TryRealloc(result,sizeof(size_t)+(num_chars+1)*4);
+ if likely(result) *result++ = num_chars;
+ else if (num_chars < WSTR_LENGTH(buffer)) {
+  WSTR_LENGTH(buffer) = num_chars;
+  result = (size_t *)buffer;
+ }
+ return (uint32_t *)result;
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1))
+uint16_t *(DCALL DeeString_Truncate2ByteBuffer)(uint16_t *__restrict buffer, size_t num_chars) {
+ size_t *result;
+ ASSERT(buffer);
+ ASSERT(*((size_t *)buffer - 1) >= num_chars);
+ result = (size_t *)Dee_TryRealloc((size_t *)buffer - 1,
+                                    DeeString_Sizeof2ByteBuffer(num_chars));
+ if unlikely(!result) result = (size_t *)buffer - 1;
+ *result++ = num_chars;
+ return (uint16_t *)result;
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1))
+uint32_t *(DCALL DeeString_Truncate4ByteBuffer)(uint32_t *__restrict buffer, size_t num_chars) {
+ size_t *result;
+ result = (size_t *)Dee_TryRealloc((size_t *)buffer - 1,
+                                    DeeString_Sizeof4ByteBuffer(num_chars));
+ if unlikely(!result) result = (size_t *)buffer - 1;
+ *result++ = num_chars;
+ return (uint32_t *)result;
+}
+FORCELOCAL void (DCALL _DeeString_FreeBuffer)(void *buffer) {
+ if (buffer)
+     Dee_Free((size_t *)buffer-1);
+}
+FORCELOCAL WUNUSED ATTR_MALLOC uint8_t *
+(DCALL DeeString_New1ByteBuffer)(size_t num_chars) {
+ DeeStringObject *result;
+ result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                             (num_chars + 1) * sizeof(char));
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED ATTR_MALLOC uint8_t *
+(DCALL DeeString_TryNew1ByteBuffer)(size_t num_chars) {
+ DeeStringObject *result;
+ result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                (num_chars + 1) * sizeof(char));
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED uint8_t *
+(DCALL DeeString_Resize1ByteBuffer)(uint8_t *buffer, size_t num_chars) {
+ DeeStringObject *result;
+ result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+ result = (DeeStringObject *)DeeObject_Realloc(result,
+                                               COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                              (num_chars + 1) * sizeof(char));
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED uint8_t *
+(DCALL DeeString_TryResize1ByteBuffer)(uint8_t *buffer, size_t num_chars) {
+ DeeStringObject *result;
+ result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+ result = (DeeStringObject *)DeeObject_TryRealloc(result,
+                                                  COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                 (num_chars + 1) * sizeof(char));
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
+(DCALL DeeString_Truncate1ByteBuffer)(uint8_t *__restrict buffer, size_t num_chars) {
+ DeeStringObject *result;
+ ASSERT(buffer);
+ result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+ ASSERT(result->s_len >= num_chars);
+ result = (DeeStringObject *)DeeObject_TryRealloc(result,
+                                                  COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                 (num_chars + 1) * sizeof(char));
+ if unlikely(!result)
+    result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL void (DCALL DeeString_Free1ByteBuffer)(uint8_t *buffer) {
+ if (buffer)
+     DeeObject_Free(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str));
+}
+#else /* NDEBUG */
+#define DeeString_New1ByteBuffer(num_chars)              DeeDbgString_New1ByteBuffer(num_chars,__FILE__,__LINE__)
+#define DeeString_New2ByteBuffer(num_chars)              DeeDbgString_New2ByteBuffer(num_chars,__FILE__,__LINE__)
+#define DeeString_New4ByteBuffer(num_chars)              DeeDbgString_New4ByteBuffer(num_chars,__FILE__,__LINE__)
+#define DeeString_TryNew1ByteBuffer(num_chars)           DeeDbgString_TryNew1ByteBuffer(num_chars,__FILE__,__LINE__)
+#define DeeString_TryNew2ByteBuffer(num_chars)           DeeDbgString_TryNew2ByteBuffer(num_chars,__FILE__,__LINE__)
+#define DeeString_TryNew4ByteBuffer(num_chars)           DeeDbgString_TryNew4ByteBuffer(num_chars,__FILE__,__LINE__)
+#define DeeString_Resize1ByteBuffer(buffer,num_chars)    DeeDbgString_Resize1ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_Resize2ByteBuffer(buffer,num_chars)    DeeDbgString_Resize2ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_Resize4ByteBuffer(buffer,num_chars)    DeeDbgString_Resize4ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_TryResize1ByteBuffer(buffer,num_chars) DeeDbgString_TryResize1ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_TryResize2ByteBuffer(buffer,num_chars) DeeDbgString_TryResize2ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_TryResize4ByteBuffer(buffer,num_chars) DeeDbgString_TryResize4ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_Truncate1ByteBuffer(buffer,num_chars)  DeeDbgString_Truncate1ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_Truncate2ByteBuffer(buffer,num_chars)  DeeDbgString_Truncate2ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_Truncate4ByteBuffer(buffer,num_chars)  DeeDbgString_Truncate4ByteBuffer(buffer,num_chars,__FILE__,__LINE__)
+#define DeeString_Free1ByteBuffer(buffer)                DeeDbgString_Free1ByteBuffer(buffer,__FILE__,__LINE__)
+#define DeeString_Free2ByteBuffer(buffer)               _DeeDbgString_FreeBuffer(buffer,__FILE__,__LINE__)
+#define DeeString_Free4ByteBuffer(buffer)               _DeeDbgString_FreeBuffer(buffer,__FILE__,__LINE__)
+#define DeeDbgString_Free2ByteBuffer(buffer,file,line)  _DeeDbgString_FreeBuffer(buffer,file,line)
+#define DeeDbgString_Free4ByteBuffer(buffer,file,line)  _DeeDbgString_FreeBuffer(buffer,file,line)
+
+FORCELOCAL WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeDbgString_New2ByteBuffer)(size_t num_chars, char const *file, int line) { size_t *result = (size_t *)DeeDbg_Malloc(DeeString_Sizeof2ByteBuffer(num_chars),file,line); if likely(result) *result++ = num_chars; return (uint16_t *)result; }
+FORCELOCAL WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeDbgString_New4ByteBuffer)(size_t num_chars, char const *file, int line) { size_t *result = (size_t *)DeeDbg_Malloc(DeeString_Sizeof4ByteBuffer(num_chars),file,line); if likely(result) *result++ = num_chars; return (uint32_t *)result; }
+FORCELOCAL WUNUSED ATTR_MALLOC uint16_t *(DCALL DeeDbgString_TryNew2ByteBuffer)(size_t num_chars, char const *file, int line) { size_t *result = (size_t *)DeeDbg_TryMalloc(DeeString_Sizeof2ByteBuffer(num_chars),file,line); if likely(result) *result++ = num_chars; return (uint16_t *)result; }
+FORCELOCAL WUNUSED ATTR_MALLOC uint32_t *(DCALL DeeDbgString_TryNew4ByteBuffer)(size_t num_chars, char const *file, int line) { size_t *result = (size_t *)DeeDbg_TryMalloc(DeeString_Sizeof4ByteBuffer(num_chars),file,line); if likely(result) *result++ = num_chars; return (uint32_t *)result; }
+FORCELOCAL WUNUSED uint16_t *(DCALL DeeDbgString_Resize2ByteBuffer)(uint16_t *buffer, size_t num_chars, char const *file, int line) {
+ size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
+ result = (size_t *)DeeDbg_Realloc(result,DeeString_Sizeof2ByteBuffer(num_chars),file,line);
+ if likely(result) *result++ = num_chars;
+ return (uint16_t *)result;
+}
+FORCELOCAL WUNUSED uint32_t *(DCALL DeeDbgString_Resize4ByteBuffer)(uint32_t *buffer, size_t num_chars, char const *file, int line) {
+ size_t *result = buffer ? (size_t *)buffer-1 : NULL;
+ result = (size_t *)DeeDbg_Realloc(result,DeeString_Sizeof4ByteBuffer(num_chars),file,line);
+ if likely(result) *result++ = num_chars;
+ return (uint32_t *)result;
+}
+FORCELOCAL WUNUSED uint16_t *(DCALL DeeDbgString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars, char const *file, int line) {
+ size_t *result = buffer ? (size_t *)buffer-1 : NULL;
+ result = (size_t *)DeeDbg_TryRealloc(result,DeeString_Sizeof2ByteBuffer(num_chars),file,line);
+ if likely(result) *result++ = num_chars;
+ else if (num_chars < WSTR_LENGTH(buffer)) {
+  WSTR_LENGTH(buffer) = num_chars;
+  result = (size_t *)buffer;
+ }
+ return (uint16_t *)result;
+}
+FORCELOCAL WUNUSED uint32_t *(DCALL DeeDbgString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars, char const *file, int line) {
+ size_t *result = buffer ? (size_t *)buffer-1 : NULL;
+ result = (size_t *)DeeDbg_TryRealloc(result,DeeString_Sizeof4ByteBuffer(num_chars),file,line);
+ if likely(result) *result++ = num_chars;
+ else if (num_chars < WSTR_LENGTH(buffer)) {
+  WSTR_LENGTH(buffer) = num_chars;
+  result = (size_t *)buffer;
+ }
+ return (uint32_t *)result;
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1))
+uint16_t *(DCALL DeeDbgString_Truncate2ByteBuffer)(uint16_t *__restrict buffer, size_t num_chars, char const *file, int line) {
+ size_t *result;
+ ASSERT(buffer);
+ ASSERT(*((size_t *)buffer - 1) >= num_chars);
+ result = (size_t *)DeeDbg_TryRealloc((size_t *)buffer - 1,
+                                       DeeString_Sizeof2ByteBuffer(num_chars),
+                                       file,line);
+ if unlikely(!result) result = (size_t *)buffer - 1;
+ *result++ = num_chars;
+ return (uint16_t *)result;
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1))
+uint32_t *(DCALL DeeDbgString_Truncate4ByteBuffer)(uint32_t *__restrict buffer, size_t num_chars, char const *file, int line) {
+ size_t *result;
+ result = (size_t *)DeeDbg_TryRealloc((size_t *)buffer - 1,
+                                       DeeString_Sizeof4ByteBuffer(num_chars),
+                                       file,line);
+ if unlikely(!result) result = (size_t *)buffer - 1;
+ *result++ = num_chars;
+ return (uint32_t *)result;
+}
+FORCELOCAL void
+(DCALL _DeeDbgString_FreeBuffer)(void *buffer, char const *file, int line) {
+ if (buffer)
+     DeeDbg_Free((size_t *)buffer-1,file,line);
+}
+FORCELOCAL WUNUSED ATTR_MALLOC uint8_t *
+(DCALL DeeDbgString_New1ByteBuffer)(size_t num_chars, char const *file, int line) {
+ DeeStringObject *result;
+ result = (DeeStringObject *)DeeDbgObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                (num_chars + 1) * sizeof(char),file,line);
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED ATTR_MALLOC uint8_t *
+(DCALL DeeDbgString_TryNew1ByteBuffer)(size_t num_chars, char const *file, int line) {
+ DeeStringObject *result;
+ result = (DeeStringObject *)DeeDbgObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                   (num_chars + 1) * sizeof(char),file,line);
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED uint8_t *
+(DCALL DeeDbgString_Resize1ByteBuffer)(uint8_t *buffer, size_t num_chars, char const *file, int line) {
+ DeeStringObject *result;
+ result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+ result = (DeeStringObject *)DeeDbgObject_Realloc(result,
+                                                  COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                 (num_chars + 1) * sizeof(char),file,line);
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED uint8_t *
+(DCALL DeeDbgString_TryResize1ByteBuffer)(uint8_t *buffer, size_t num_chars, char const *file, int line) {
+ DeeStringObject *result;
+ result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+ result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
+                                                     COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                    (num_chars + 1) * sizeof(char),file,line);
+ if unlikely(!result) return NULL;
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
+(DCALL DeeDbgString_Truncate1ByteBuffer)(uint8_t *__restrict buffer, size_t num_chars, char const *file, int line) {
+ DeeStringObject *result;
+ ASSERT(buffer);
+ result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+ ASSERT(result->s_len >= num_chars);
+ result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
+                                                     COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                    (num_chars + 1) * sizeof(char),file,line);
+ if unlikely(!result)
+    result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+ result->s_len = num_chars;
+ return (uint8_t *)result->s_str;
+}
+FORCELOCAL void (DCALL DeeDbgString_Free1ByteBuffer)(uint8_t *buffer, char const *file, int line) {
+ if (buffer)
+     DeeDbgObject_Free(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str),file,line);
+}
+#endif /* !NDEBUG */
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_Pack1ByteBuffer)(/*inherit(always)*/uint8_t *__restrict buffer) {
+ DREF DeeStringObject *result;
+ ASSERT(buffer);
+ result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+ result->s_data = NULL;
+ result->s_hash = DEE_STRING_HASH_UNSET;
+ result->s_str[result->s_len] = '\0';
+ DeeObject_Init(result,&DeeString_Type);
+ return (DREF DeeObject *)result;
+}
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_PackUtf8Buffer)(/*inherit(always)*/uint8_t *__restrict buffer,
+                                 unsigned int error_mode) {
+ return DeeString_SetUtf8(DeeString_Pack1ByteBuffer(buffer),error_mode);
+}
+#define DeeString_TryPack1ByteBuffer(buffer) DeeString_Pack1ByteBuffer(buffer)
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_TryPackUtf8Buffer)(/*inherit(on_success)*/uint8_t *__restrict buffer) {
+ return DeeString_TrySetUtf8(DeeString_Pack1ByteBuffer(buffer));
+}
+#endif /* !__INTELLISENSE__ */
+
+
+
+/* API for string construction from buffers, with character size being determined at runtime.
+ * NOTE: All of these functions take a `width' argument that is one of `STRING_WIDTH_*BYTE',
+ *       behaving identical to the same `DeeString_*NByteBuffer' function.
+ * NOTE: Packing of strings is done as raw byte streams (no utf-8/16/32 decoding is performed!) */
+#ifdef __INTELLISENSE__
+FORCELOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeString_NewWidthBuffer)(size_t num_chars, unsigned int width);
+FORCELOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_chars, unsigned int width);
+FORCELOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width);
+FORCELOCAL WUNUSED void *(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width);
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *(DCALL DeeString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width);
+FORCELOCAL void (DCALL DeeString_FreeWidthBuffer)(void *buffer, unsigned int width);
+FORCELOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeDbgString_NewWidthBuffer)(size_t num_chars, unsigned int width, char const *file, int line);
+FORCELOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeDbgString_TryNewWidthBuffer)(size_t num_chars, unsigned int width, char const *file, int line);
+FORCELOCAL WUNUSED void *(DCALL DeeDbgString_ResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width, char const *file, int line);
+FORCELOCAL WUNUSED void *(DCALL DeeDbgString_TryResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width, char const *file, int line);
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *(DCALL DeeDbgString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width, char const *file, int line);
+FORCELOCAL void (DCALL DeeDbgString_FreeWidthBuffer)(void *buffer, unsigned int width, char const *file, int line);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackWidthBuffer)(/*inherit(always)*/void *__restrict buffer, unsigned int width);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackWidthBuffer)(/*inherit(on_success)*/void *__restrict buffer, unsigned int width);
+#else /* __INTELLISENSE__ */
+#ifdef NDEBUG
+#define DeeDbgString_NewWidthBuffer(num_chars,width,file,line)              DeeString_NewWidthBuffer(num_chars,width)
+#define DeeDbgString_TryNewWidthBuffer(num_chars,width,file,line)           DeeString_TryNewWidthBuffer(num_chars,width)
+#define DeeDbgString_ResizeWidthBuffer(buffer,num_chars,width,file,line)    DeeString_ResizeWidthBuffer(buffer,num_chars,width)
+#define DeeDbgString_TryResizeWidthBuffer(buffer,num_chars,width,file,line) DeeString_TryResizeWidthBuffer(buffer,num_chars,width)
+#define DeeDbgString_TruncateWidthBuffer(buffer,num_chars,width,file,line)  DeeString_TruncateWidthBuffer(buffer,num_chars,width)
+#define DeeDbgString_PackWidthBuffer(buffer,width,file,line)                DeeString_PackWidthBuffer(buffer,width)
+#define DeeDbgString_TryPackWidthBuffer(buffer,width,file,line)             DeeString_TryPackWidthBuffer(buffer,width)
+#define DeeDbgString_FreeWidthBuffer(buffer,width,file,line)                DeeString_FreeWidthBuffer(buffer,width)
+FORCELOCAL WUNUSED ATTR_MALLOC void *
+(DCALL DeeString_NewWidthBuffer)(size_t num_chars, unsigned int width) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                              (num_chars + 1)*sizeof(char));
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)Dee_Malloc(sizeof(size_t) + (num_chars + 1)*
+                                STRING_SIZEOF_WIDTH(width));
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED ATTR_MALLOC void *
+(DCALL DeeString_TryNewWidthBuffer)(size_t num_chars, unsigned int width) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                 (num_chars+1)*sizeof(char));
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)Dee_TryMalloc(sizeof(size_t)+(num_chars+1)*
+                                   STRING_SIZEOF_WIDTH(width));
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED void *
+(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+  result = (DeeStringObject *)DeeObject_Realloc(result,
+                                                COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                               (num_chars+1)*sizeof(char));
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = buffer ? (size_t *)buffer-1 : NULL;
+  result = (size_t *)Dee_Realloc(result,sizeof(size_t)+(num_chars+1)*
+                                 STRING_SIZEOF_WIDTH(width));
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED void *
+(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+  result = (DeeStringObject *)DeeObject_TryRealloc(result,
+                                                   COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                  (num_chars+1)*sizeof(char));
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = buffer ? (size_t *)buffer-1 : NULL;
+  result = (size_t *)Dee_TryRealloc(result,sizeof(size_t)+(num_chars+1)*
+                                    STRING_SIZEOF_WIDTH(width));
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
+(DCALL DeeString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width) {
+ ASSERT(buffer);
+ ASSERT(*((size_t *)buffer - 1) >= num_chars);
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str),
+                                                   COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                  (num_chars + 1)*sizeof(char));
+  if unlikely(!result) result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)Dee_TryRealloc((size_t *)buffer - 1,
+                                    sizeof(size_t) + (num_chars + 1) *
+                                    STRING_SIZEOF_WIDTH(width));
+  if unlikely(!result) result = (size_t *)buffer - 1;
+  *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL void
+(DCALL DeeString_FreeWidthBuffer)(void *buffer, unsigned int width) {
+ if (buffer) {
+  if (width == STRING_WIDTH_1BYTE) {
+   DeeObject_Free(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str));
+  } else {
+   Dee_Free((size_t *)buffer - 1);
+  }
+ }
+}
+#else /* NDEBUG */
+#define DeeString_NewWidthBuffer(num_chars,width)              DeeDbgString_NewWidthBuffer(num_chars,width,__FILE__,__LINE__)
+#define DeeString_TryNewWidthBuffer(num_chars,width)           DeeDbgString_TryNewWidthBuffer(num_chars,width,__FILE__,__LINE__)
+#define DeeString_ResizeWidthBuffer(buffer,num_chars,width)    DeeDbgString_ResizeWidthBuffer(buffer,num_chars,width,__FILE__,__LINE__)
+#define DeeString_TryResizeWidthBuffer(buffer,num_chars,width) DeeDbgString_TryResizeWidthBuffer(buffer,num_chars,width,__FILE__,__LINE__)
+#define DeeString_TruncateWidthBuffer(buffer,num_chars,width)  DeeDbgString_TruncateWidthBuffer(buffer,num_chars,width,__FILE__,__LINE__)
+#define DeeString_FreeWidthBuffer(buffer,width)                DeeDbgString_FreeWidthBuffer(buffer,width,__FILE__,__LINE__)
+FORCELOCAL WUNUSED ATTR_MALLOC void *
+(DCALL DeeDbgString_NewWidthBuffer)(size_t num_chars, unsigned int width, char const *file, int line) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeDbgObject_Malloc(COMPILER_OFFSETOF(DeeStringObject,s_str)+
+                                                 (num_chars + 1) * sizeof(char),file,line);
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)DeeDbg_Malloc(sizeof(size_t) + (num_chars + 1) *
+                                   STRING_SIZEOF_WIDTH(width),file,line);
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED ATTR_MALLOC void *
+(DCALL DeeDbgString_TryNewWidthBuffer)(size_t num_chars, unsigned int width, char const *file, int line) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeDbgObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                    (num_chars + 1) * sizeof(char),file,line);
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)DeeDbg_TryMalloc(sizeof(size_t) + (num_chars + 1) *
+                                      STRING_SIZEOF_WIDTH(width),file,line);
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED void *
+(DCALL DeeDbgString_ResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width, char const *file, int line) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+  result = (DeeStringObject *)DeeDbgObject_Realloc(result,
+                                                   COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                  (num_chars + 1) * sizeof(char),file,line);
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = buffer ? (size_t *)buffer-1 : NULL;
+  result = (size_t *)DeeDbg_Realloc(result,sizeof(size_t) + (num_chars + 1) *
+                                    STRING_SIZEOF_WIDTH(width),file,line);
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED void *
+(DCALL DeeDbgString_TryResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width, char const *file, int line) {
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = buffer ? COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str) : NULL;
+  result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
+                                                      COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                     (num_chars + 1) * sizeof(char),file,line);
+  if unlikely(!result) return NULL;
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = buffer ? (size_t *)buffer-1 : NULL;
+  result = (size_t *)DeeDbg_TryRealloc(result,sizeof(size_t) + (num_chars + 1) *
+                                       STRING_SIZEOF_WIDTH(width),file,line);
+  if likely(result) *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
+(DCALL DeeDbgString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width, char const *file, int line) {
+ ASSERT(buffer);
+ ASSERT(*((size_t *)buffer - 1) >= num_chars);
+ if (width == STRING_WIDTH_1BYTE) {
+  DeeStringObject *result;
+  result = (DeeStringObject *)DeeDbgObject_TryRealloc(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str),
+                                                      COMPILER_OFFSETOF(DeeStringObject,s_str) +
+                                                     (num_chars + 1) * sizeof(char),file,line);
+  if unlikely(!result) result = COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str);
+  result->s_len = num_chars;
+  return (uint8_t *)result->s_str;
+ } else {
+  size_t *result;
+  result = (size_t *)DeeDbg_TryRealloc((size_t *)buffer - 1,
+                                        sizeof(size_t) + (num_chars + 1) *
+                                        STRING_SIZEOF_WIDTH(width),file,line);
+  if unlikely(!result) result = (size_t *)buffer - 1;
+  *result++ = num_chars;
+  return result;
+ }
+}
+FORCELOCAL void
+(DCALL DeeDbgString_FreeWidthBuffer)(void *buffer, unsigned int width, char const *file, int line) {
+ if (buffer) {
+  if (width == STRING_WIDTH_1BYTE) {
+   DeeDbgObject_Free(COMPILER_CONTAINER_OF((char *)buffer,DeeStringObject,s_str),file,line);
+  } else {
+   DeeDbg_Free((size_t *)buffer - 1,file,line);
+  }
+ }
+}
+#endif /* !NDEBUG */
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_PackWidthBuffer)(/*inherit(always)*/void *__restrict buffer, unsigned int width) {
+ SWITCH_SIZEOF_WIDTH(width) {
+ CASE_WIDTH_1BYTE:
+  return DeeString_Pack1ByteBuffer((uint8_t *)buffer);
+ CASE_WIDTH_2BYTE:
+  return DeeString_Pack2ByteBuffer((uint16_t *)buffer);
+ CASE_WIDTH_4BYTE:
+  return DeeString_Pack4ByteBuffer((uint32_t *)buffer);
+ }
+}
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_TryPackWidthBuffer)(/*inherit(on_success)*/void *__restrict buffer, unsigned int width) {
+ SWITCH_SIZEOF_WIDTH(width) {
+ CASE_WIDTH_1BYTE:
+  return DeeString_TryPack1ByteBuffer((uint8_t *)buffer);
+ CASE_WIDTH_2BYTE:
+  return DeeString_TryPack2ByteBuffer((uint16_t *)buffer);
+ CASE_WIDTH_4BYTE:
+  return DeeString_TryPack4ByteBuffer((uint32_t *)buffer);
+ }
+}
+#endif /* !__INTELLISENSE__ */
+
+
+
+
 FORCELOCAL DREF DeeObject *DCALL
 DeeString_NewWithWidth(void const *__restrict str,
                        size_t length, unsigned int width) {
  SWITCH_SIZEOF_WIDTH(width) {
- CASE_WIDTH_1BYTE: return DeeString_NewSized((char *)str,length);
+ CASE_WIDTH_1BYTE: return DeeString_New1Byte((uint8_t *)str,length);
  CASE_WIDTH_2BYTE: return DeeString_New2Byte((uint16_t *)str,length);
  CASE_WIDTH_4BYTE: return DeeString_New4Byte((uint32_t *)str,length);
  }
@@ -996,7 +1500,8 @@ typedef uint16_t uniflag_t;
  * -> Using this, we can greatly optimize unicode database
  *    lookups by checking the size of a character at compile-
  *    time, meaning that when working with 8-bit characters,
- *    no call to `DeeUni_Descriptor()' needs to be assembled. */
+ *    no call to `DeeUni_Descriptor()' needs to be assembled.
+ * NOTE: Technically, this should be called `DeeLatin1_Flags'... */
 DDATDEF uniflag_t const DeeAscii_Flags[256];
 
 #define DeeAscii_IsUpper(ch)  (DeeAscii_Flags[(uint8_t)(ch)]&UNICODE_FUPPER)
@@ -1018,6 +1523,8 @@ struct unitraits {
 /* Unicode character traits database access. */
 DFUNDEF ATTR_RETNONNULL ATTR_CONST struct unitraits *(DCALL DeeUni_Descriptor)(uint32_t ch);
 
+/* May number of characters which may be generated
+ * by case folding a single unicode character. */
 #define UNICODE_FOLDED_MAX 3
 
 /* case-fold the given unicode character `ch', and
@@ -1455,7 +1962,7 @@ dssize_t (unicode_printer_confirm_wchar)(struct unicode_printer *__restrict self
 #endif
 
 #if 0
-/* Allocate raw unicode character buffer. */
+/* Allocate raw unicode character buffer, as opposed to buffers for certain encodings. */
 DFUNDEF uint8_t *DCALL unicode_printer_alloc8(struct unicode_printer *__restrict self, size_t length);                       /* Dee_Malloc()-like */
 DFUNDEF uint8_t *DCALL unicode_printer_tryalloc8(struct unicode_printer *__restrict self, size_t length);                    /* Dee_Malloc()-like */
 DFUNDEF uint8_t *DCALL unicode_printer_resize8(struct unicode_printer *__restrict self, uint8_t *buf, size_t new_length);    /* Dee_Realloc()-like */

@@ -52,6 +52,7 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
  end  = iter + length;
  for (; iter < end; ++iter) {
   /* TODO: Use case folding to normalize codec names! */
+  /* TODO: When `DeeString_STR_ISUTF8()' is true, must `DeeString_SetUtf8()' the result! */
   if (*iter == '_' || DeeUni_IsUpper(*iter)) {
    char *dst;
    result = DeeString_NewBuffer(length);
@@ -164,6 +165,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
       goto return_self;
   SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
   {
+   uint8_t *dest;
    uint8_t *data;
   CASE_WIDTH_1BYTE:
    data = DeeString_Get1Byte(self);
@@ -174,20 +176,21 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
      err_invalid_ascii(data[i],is_decode);
      goto err;
     }
-    result = DeeString_NewBuffer(size);
-    if unlikely(!result) goto err;
-    memcpy(DeeString_STR(result),data,i);
+    dest = DeeString_New1ByteBuffer(size);
+    if unlikely(!dest) goto err;
+    memcpy(dest,data,i);
     for (; i < size; ++i) {
      uint8_t ch = data[i];
      if (ch > 0x7f) ch = '?';
-     DeeString_STR(result)[i] = (char)ch;
+     dest[i] = (char)ch;
     }
-    return result;
+    return DeeString_Pack1ByteBuffer(dest);
    }
    goto return_self;
   } break;
   {
    uint16_t *data;
+   uint8_t *dest;
   CASE_WIDTH_2BYTE:
    data = DeeString_Get2Byte(self);
    size = WSTR_LENGTH(data);
@@ -197,16 +200,16 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
      err_invalid_ascii(data[i],is_decode);
      goto err;
     }
-    result = DeeString_NewBuffer(size);
-    if unlikely(!result) goto err;
+    dest = DeeString_New1ByteBuffer(size);
+    if unlikely(!dest) goto err;
     for (j = 0; j < i; ++j)
-       DeeString_STR(result)[j] = (uint8_t)data[j];
+       dest[j] = (uint8_t)data[j];
     for (; i < size; ++i) {
      uint16_t ch = data[i];
      if (ch > 0x7f) ch = '?';
-     DeeString_STR(result)[i] = (char)(uint8_t)ch;
+     dest[i] = (char)(uint8_t)ch;
     }
-    return result;
+    return DeeString_Pack1ByteBuffer(dest);
    }
    goto return_self;
   } break;

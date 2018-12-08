@@ -419,7 +419,7 @@ DeeString_Reversed(DeeObject *__restrict self,
  {
   uint16_t *buf;
  CASE_WIDTH_2BYTE:
-  buf = DeeString_NewBuffer16(flip_size);
+  buf = DeeString_New2ByteBuffer(flip_size);
   if unlikely(!buf) goto err;
   dst = (uint8_t *)buf;
   do {
@@ -432,7 +432,7 @@ DeeString_Reversed(DeeObject *__restrict self,
  {
   uint32_t *buf;
  CASE_WIDTH_4BYTE:
-  buf = DeeString_NewBuffer32(flip_size);
+  buf = DeeString_New4ByteBuffer(flip_size);
   if unlikely(!buf) goto err;
   dst = (uint8_t *)buf;
   do {
@@ -1660,7 +1660,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeString_New2Byte(uint16_t const *__restrict str,
                    size_t length) {
  uint16_t *buffer;
- buffer = DeeString_NewBuffer16(length);
+ buffer = DeeString_New2ByteBuffer(length);
  if unlikely(!buffer) return NULL;
  memcpyw(buffer,str,length);
  return DeeString_Pack2ByteBuffer(buffer);
@@ -1669,7 +1669,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeString_New4Byte(uint32_t const *__restrict str,
                    size_t length) {
  uint32_t *buffer;
- buffer = DeeString_NewBuffer32(length);
+ buffer = DeeString_New4ByteBuffer(length);
  if unlikely(!buffer) return NULL;
  memcpyl(buffer,str,length);
  return DeeString_Pack4ByteBuffer(buffer);
@@ -1679,7 +1679,7 @@ DeeString_NewUtf16(uint16_t const *__restrict str,
                    size_t length,
                    unsigned int error_mode) {
  uint16_t *buffer;
- buffer = DeeString_NewBuffer16(length);
+ buffer = DeeString_New2ByteBuffer(length);
  if unlikely(!buffer) return NULL;
  memcpyw(buffer,str,length);
  return DeeString_PackUtf16Buffer(buffer,error_mode);
@@ -1689,7 +1689,7 @@ DeeString_NewUtf32(uint32_t const *__restrict str,
                    size_t length,
                    unsigned int error_mode) {
  uint32_t *buffer;
- buffer = DeeString_NewBuffer32(length);
+ buffer = DeeString_New4ByteBuffer(length);
  if unlikely(!buffer) return NULL;
  memcpyl(buffer,str,length);
  return DeeString_PackUtf32Buffer(buffer,error_mode);
@@ -1699,7 +1699,7 @@ DeeString_NewUtf16AltEndian(uint16_t const *__restrict str,
                             size_t length,
                             unsigned int error_mode) {
  uint16_t *buffer; size_t i;
- buffer = DeeString_NewBuffer16(length);
+ buffer = DeeString_New2ByteBuffer(length);
  if unlikely(!buffer) return NULL;
  for (i = 0; i < length; ++i)
      buffer[i] = BSWAP16(str[i]);
@@ -1710,7 +1710,7 @@ DeeString_NewUtf32AltEndian(uint32_t const *__restrict str,
                             size_t length,
                             unsigned int error_mode) {
  uint32_t *buffer; size_t i;
- buffer = DeeString_NewBuffer32(length);
+ buffer = DeeString_New4ByteBuffer(length);
  if unlikely(!buffer) return NULL;
  for (i = 0; i < length; ++i)
      buffer[i] = BSWAP32(str[i]);
@@ -3338,7 +3338,7 @@ string_center(String *__restrict self,
    if unlikely(!fl_str.cp16) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    memfilw(dst.cp16,fill_front,fl_str.cp16,fl_len);
    dst.cp16 += fill_front;
@@ -3354,7 +3354,7 @@ string_center(String *__restrict self,
    if unlikely(!fl_str.cp32) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    memfill(dst.cp32,fill_front,fl_str.cp32,fl_len);
    dst.cp32 += fill_front;
@@ -3379,7 +3379,7 @@ string_center(String *__restrict self,
    break;
   CASE_WIDTH_2BYTE:
    my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    memsetw(dst.cp16,UNICODE_SPACE,fill_front);
    dst.cp16 += fill_front;
@@ -3390,7 +3390,7 @@ string_center(String *__restrict self,
    break;
   CASE_WIDTH_4BYTE:
    my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    memsetl(dst.cp32,UNICODE_SPACE,fill_front);
    dst.cp32 += fill_front;
@@ -3444,7 +3444,7 @@ string_ljust(String *__restrict self,
    if unlikely(!fl_str.cp16) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    memcpyw(dst.cp16,my_str.cp16,my_len);
    dst.cp16 += my_len;
@@ -3458,7 +3458,7 @@ string_ljust(String *__restrict self,
    if unlikely(!fl_str.cp32) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    memcpyl(dst.cp32,my_str.cp32,my_len);
    dst.cp32 += my_len;
@@ -3479,7 +3479,7 @@ string_ljust(String *__restrict self,
    break;
   CASE_WIDTH_2BYTE:
    my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    memcpyw(dst.cp16,my_str.cp16,my_len);
    dst.cp16 += my_len;
@@ -3488,7 +3488,7 @@ string_ljust(String *__restrict self,
    break;
   CASE_WIDTH_4BYTE:
    my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    memcpyl(dst.cp32,my_str.cp32,my_len);
    dst.cp32 += my_len;
@@ -3540,7 +3540,7 @@ string_rjust(String *__restrict self,
    if unlikely(!fl_str.cp16) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    memfilw(dst.cp16,fill_front,fl_str.cp16,fl_len);
    dst.cp16 += fill_front;
@@ -3554,7 +3554,7 @@ string_rjust(String *__restrict self,
    if unlikely(!fl_str.cp32) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    memfill(dst.cp32,fill_front,fl_str.cp32,fl_len);
    dst.cp32 += fill_front;
@@ -3575,7 +3575,7 @@ string_rjust(String *__restrict self,
    break;
   CASE_WIDTH_2BYTE:
    my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    memsetw(dst.cp16,UNICODE_SPACE,fill_front);
    dst.cp16 += fill_front;
@@ -3584,7 +3584,7 @@ string_rjust(String *__restrict self,
    break;
   CASE_WIDTH_4BYTE:
    my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    memsetl(dst.cp32,UNICODE_SPACE,fill_front);
    dst.cp32 += fill_front;
@@ -3869,7 +3869,7 @@ string_zfill(String *__restrict self,
    if unlikely(!fl_str.cp16) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    while (my_len && DeeUni_IsSign(my_str.cp16[0])) {
     *dst.cp16++ = *my_str.cp16++;
@@ -3887,7 +3887,7 @@ string_zfill(String *__restrict self,
    if unlikely(!fl_str.cp32) goto err;
    fl_len = WSTR_LENGTH(fl_str.cp8);
    if unlikely(!fl_len) goto empty_filler;
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    while (my_len && DeeUni_IsSign(my_str.cp32[0])) {
     *dst.cp32++ = *my_str.cp32++;
@@ -3916,7 +3916,7 @@ string_zfill(String *__restrict self,
    break;
   CASE_WIDTH_2BYTE:
    my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
-   dst.cp16 = buf.cp16 = DeeString_NewBuffer16(result_length);
+   dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
    if unlikely(!buf.cp16) goto err;
    while (my_len && DeeUni_IsSign(my_str.cp16[0])) {
     *dst.cp16++ = *my_str.cp16++;
@@ -3929,7 +3929,7 @@ string_zfill(String *__restrict self,
    break;
   CASE_WIDTH_4BYTE:
    my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
-   dst.cp32 = buf.cp32 = DeeString_NewBuffer32(result_length);
+   dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
    if unlikely(!buf.cp32) goto err;
    while (my_len && DeeUni_IsSign(my_str.cp32[0])) {
     *dst.cp32++ = *my_str.cp32++;
@@ -9858,7 +9858,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
      uint16_t *rhs_str = (uint16_t *)rhs_utf->u_data[STRING_WIDTH_2BYTE];
      lhs_len = WSTR_LENGTH(lhs_str);
      rhs_len = WSTR_LENGTH(rhs_str);
-     result_string = DeeString_NewBuffer16(lhs_len+rhs_len);
+     result_string = DeeString_New2ByteBuffer(lhs_len+rhs_len);
      if unlikely(!result_string) goto err_r_2_4_utf;
      result_string[lhs_len+rhs_len] = 0;
      memcpyw(result_string,lhs_str,lhs_len);
@@ -9872,7 +9872,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
      uint32_t *rhs_str = (uint32_t *)rhs_utf->u_data[STRING_WIDTH_4BYTE];
      lhs_len = WSTR_LENGTH(lhs_str);
      rhs_len = WSTR_LENGTH(rhs_str);
-     result_string = DeeString_NewBuffer32(lhs_len+rhs_len);
+     result_string = DeeString_New4ByteBuffer(lhs_len+rhs_len);
      if unlikely(!result_string) goto err_r_2_4_utf;
      result_string[lhs_len+rhs_len] = 0;
      for (i = 0; i < lhs_len; ++i)
@@ -9889,7 +9889,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
      uint16_t *rhs_str = (uint16_t *)rhs_utf->u_data[STRING_WIDTH_2BYTE];
      lhs_len = WSTR_LENGTH(lhs_str);
      rhs_len = WSTR_LENGTH(rhs_str);
-     result_string = DeeString_NewBuffer32(lhs_len+rhs_len);
+     result_string = DeeString_New4ByteBuffer(lhs_len+rhs_len);
      if unlikely(!result_string) goto err_r_2_4_utf;
      result_string[lhs_len+rhs_len] = 0;
      memcpyl(result_string,lhs_str,lhs_len);
@@ -9904,7 +9904,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
      uint32_t *rhs_str = (uint32_t *)rhs_utf->u_data[STRING_WIDTH_4BYTE];
      lhs_len = WSTR_LENGTH(lhs_str);
      rhs_len = WSTR_LENGTH(rhs_str);
-     result_string = DeeString_NewBuffer32(lhs_len+rhs_len);
+     result_string = DeeString_New4ByteBuffer(lhs_len+rhs_len);
      if unlikely(!result_string) goto err_r_2_4_utf;
      result_string[lhs_len+rhs_len] = 0;
      memcpyl(result_string,lhs_str,lhs_len);
@@ -9987,7 +9987,7 @@ string_mul(String *__restrict self, DeeObject *__restrict other) {
   my_length = WSTR_LENGTH(src);
   if (OVERFLOW_UMUL(my_length,repeat,&total_length))
       goto err_overflow;
-  dst = str = DeeString_NewBuffer16(total_length);
+  dst = str = DeeString_New2ByteBuffer(total_length);
   if unlikely(!str) goto err;
   while (repeat--) {
    memcpyw(dst,src,my_length);
@@ -10002,7 +10002,7 @@ string_mul(String *__restrict self, DeeObject *__restrict other) {
   my_length = WSTR_LENGTH(src);
   if (OVERFLOW_UMUL(my_length,repeat,&total_length))
       goto err_overflow;
-  dst = str = DeeString_NewBuffer32(total_length);
+  dst = str = DeeString_New4ByteBuffer(total_length);
   if unlikely(!str) goto err;
   while (repeat--) {
    memcpyl(dst,src,my_length);
