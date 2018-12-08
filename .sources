@@ -58,11 +58,11 @@ FI
 IF(CONFIG_OPTIMIZE)
 	C_FLAGS("-O3")
 	L_FLAGS("-O3")
-FI
-IF(CONFIG_DEBUG)
+ELSE
 	C_FLAGS("-fstack-protector-strong","-g")
 	L_FLAGS("-fstack-protector-strong","-g")
-ELSE
+FI
+IF(NOT CONFIG_DEBUG)
 	C_FLAGS("-DNDEBUG")
 FI
 INCLUDE("/include")

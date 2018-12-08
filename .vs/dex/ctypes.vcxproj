@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug-GCC (NDEBUG)|Win32">
+      <Configuration>Debug-GCC (NDEBUG)</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug-GCC (NDEBUG)|x64">
+      <Configuration>Debug-GCC (NDEBUG)</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug-GCC|Win32">
       <Configuration>Debug-GCC</Configuration>
       <Platform>Win32</Platform>
@@ -25,12 +33,28 @@
       <Configuration>Debug-MSVC</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-GCC (NDEBUG)|Win32">
+      <Configuration>Release-GCC (NDEBUG)</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-GCC (NDEBUG)|x64">
+      <Configuration>Release-GCC (NDEBUG)</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release-GCC|Win32">
       <Configuration>Release-GCC</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release-GCC|x64">
       <Configuration>Release-GCC</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-MSVC (NDEBUG)|Win32">
+      <Configuration>Release-MSVC (NDEBUG)</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-MSVC (NDEBUG)|x64">
+      <Configuration>Release-MSVC (NDEBUG)</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release-MSVC|Win32">
@@ -78,36 +102,46 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">true</DeploymentContent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
 ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
 ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
 ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
+ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
 ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
 ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
 ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.S" &gt; "$(IntermediateOutputPath)\ffi_win32_plain.asm"
+ml.exe /c /Cx /coff /Fo "$(IntermediateOutputPath)\ffi_win32.obj" "$(IntermediateOutputPath)\ffi_win32_plain.asm"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\ffi_win32.obj;%(Outputs)</Outputs>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">true</ExcludedFromBuild>
     </CustomBuild>
     <CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win64.S">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
 ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
@@ -115,24 +149,32 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
 ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
 ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\ffi_win64.obj;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
 ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
 ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
 ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.S" &gt; "$(IntermediateOutputPath)\ffi_win64_plain.asm"
+ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOutputPath)\ffi_win64_plain.asm"</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
     <None Include="..\..\src\dex\ctypes\pointer-math-impl.c.inl" />
   </ItemGroup>
@@ -147,7 +189,19 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
@@ -159,7 +213,19 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
@@ -180,6 +246,13 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
@@ -207,19 +280,38 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
@@ -231,6 +323,9 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -238,6 +333,9 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -254,6 +352,18 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'">
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
+    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine />
+    <AdditionalOptions>/TP</AdditionalOptions>
+    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakePreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'">
     <OutDir>$(SolutionDir)..\lib\</OutDir>
     <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
@@ -265,6 +375,18 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <AdditionalOptions>/TP</AdditionalOptions>
     <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'">
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
+    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine />
+    <AdditionalOptions>/TP</AdditionalOptions>
+    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakePreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'">
     <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
@@ -278,7 +400,31 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'">
+    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine />
+    <AdditionalOptions>/TP</AdditionalOptions>
+    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakePreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'">
+    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine />
+    <AdditionalOptions>/TP</AdditionalOptions>
+    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'">
     <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
@@ -320,6 +466,16 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
     <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
+    <IncludePath>$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
+    <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
@@ -350,6 +506,16 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <IncludePath>$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
+    <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEEMON;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeForcedIncludes>$(SolutionDir)..\include\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
@@ -359,6 +525,18 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
     <NMakeForcedIncludes>$(SolutionDir)..\include\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
@@ -382,6 +560,18 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -394,7 +584,31 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
@@ -487,6 +701,33 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ExceptionHandling>false</ExceptionHandling>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -547,6 +788,32 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\ffi_win64.obj" "$(IntermediateOut
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <CompileAs>CompileAsCpp</CompileAs>
       <PreprocessorDefinitions>CONFIG_BUILDING_DEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ExceptionHandling>false</ExceptionHandling>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <WholeProgramOptimization>true</WholeProgramOptimization>

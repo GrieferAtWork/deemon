@@ -3263,7 +3263,7 @@ PRIVATE DREF DeeObject *DCALL
 string_segments(String *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  size_t substring_length;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":segments",&substring_length))
+ if (DeeArg_Unpack(argc,argv,"Iu:segments",&substring_length))
      return NULL;
  if unlikely(!substring_length) {
   err_invalid_segment_size(substring_length);
@@ -3277,7 +3277,7 @@ string_distribute(String *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  size_t substring_count;
  size_t substring_length;
- if (DeeArg_Unpack(argc,argv,DEE_FMT_SIZE_T ":distribute",&substring_count))
+ if (DeeArg_Unpack(argc,argv,"Iu:distribute",&substring_count))
      return NULL;
  if unlikely(!substring_count) {
   err_invalid_distribution_count(substring_count);

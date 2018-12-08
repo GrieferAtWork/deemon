@@ -442,6 +442,7 @@ INTERN ATTR_COLD int DCALL
 err_invalid_unpack_size(DeeObject *__restrict unpack_object,
                         size_t need_size, size_t real_size) {
  ASSERT_OBJECT(unpack_object);
+ (void)unpack_object;
  return DeeError_Throwf(&DeeError_UnpackError,
                         "Expected %Iu object%s when %Iu w%s given",
                         need_size,need_size > 1 ? "s" : "",real_size,
@@ -452,6 +453,7 @@ err_invalid_unpack_size_minmax(DeeObject *__restrict unpack_object,
                                size_t need_size_min, size_t need_size_max,
                                size_t real_size) {
  ASSERT_OBJECT(unpack_object);
+ (void)unpack_object;
  return DeeError_Throwf(&DeeError_UnpackError,
                         "Expected between %Iu and %Iu objects when %Iu w%s given",
                         need_size_min,need_size_max,real_size,

@@ -18,6 +18,12 @@
     <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
@@ -36,7 +42,19 @@
     <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'">
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
@@ -48,13 +66,31 @@
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'">
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'">
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'">
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'">
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'">
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
