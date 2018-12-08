@@ -468,7 +468,7 @@ DeeRoSet_ContainsString(DeeObject *__restrict self,
                         size_t key_length) {
  size_t i,perturb,hash; struct roset_item *item;
  Set *me = (Set *)self;
- hash    = hash_ptr(key,key_length);
+ hash    = Dee_HashPtr(key,key_length);
  perturb = i = hash & me->rs_mask;
  for (;; i = ROSET_HASHNX(i,perturb),ROSET_HASHPT(perturb)) {
   item = &me->rs_elem[i & me->rs_mask];

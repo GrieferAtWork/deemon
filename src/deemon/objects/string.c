@@ -426,20 +426,20 @@ DeeString_Hash(DeeObject *__restrict self) {
  if (result == (dhash_t)-1) {
   SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
   CASE_WIDTH_1BYTE:
-   result = hash_ptr(DeeString_STR(self),
-                     DeeString_SIZE(self));
+   result = Dee_HashPtr(DeeString_STR(self),
+                        DeeString_SIZE(self));
    break;
   {
    uint16_t *str;
   CASE_WIDTH_2BYTE:
    str = DeeString_Get2Byte(self);
-   result = hash_ptrw(str,WSTR_LENGTH(str));
+   result = Dee_Hash2Byte(str,WSTR_LENGTH(str));
   } break;
   {
    uint32_t *str;
   CASE_WIDTH_4BYTE:
    str = DeeString_Get4Byte(self);
-   result = hash_ptrl(str,WSTR_LENGTH(str));
+   result = Dee_Hash4Byte(str,WSTR_LENGTH(str));
   } break;
   }
   DeeString_HASH(self) = result;
@@ -453,20 +453,20 @@ DeeString_HashCase(DeeObject *__restrict self) {
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
-  result = hash_caseptr(DeeString_STR(self),
-                        DeeString_SIZE(self));
+  result = Dee_HashCasePtr(DeeString_STR(self),
+                           DeeString_SIZE(self));
   break;
  {
   uint16_t *str;
  CASE_WIDTH_2BYTE:
   str = DeeString_Get2Byte(self);
-  result = hash_caseptrw(str,WSTR_LENGTH(str));
+  result = Dee_HashCase2Byte(str,WSTR_LENGTH(str));
  } break;
  {
   uint32_t *str;
  CASE_WIDTH_4BYTE:
   str = DeeString_Get4Byte(self);
-  result = hash_caseptrl(str,WSTR_LENGTH(str));
+  result = Dee_HashCase4Byte(str,WSTR_LENGTH(str));
  } break;
  }
  return result;

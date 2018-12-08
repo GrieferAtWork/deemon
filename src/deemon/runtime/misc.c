@@ -25,6 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/file.h>
 #include <deemon/compiler/ast.h>
 
@@ -64,10 +65,17 @@
 
 DECL_BEGIN
 
-#define packw(x) (((x)&0xff) | (((x)&0xff00) >> 8))
+#define packw(x) (((x)&0xff) ^ (((x)&0xff00) >> 8))
 #define packl(x) \
-  (((x)&0xff) | (((x)&0xff00) >> 8) | \
-   (((x)&0xff0000) >> 16) | (((x)&0xff000000) >> 24))
+  (((x)&0xff) ^ (((x)&0xff00) >> 8) ^ \
+   (((x)&0xff0000) >> 16) ^ (((x)&0xff000000) >> 24))
+
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define ESEL(l,b) l
+#else
+#define ESEL(l,b) b
+#endif
 
 
 
@@ -85,7 +93,7 @@ DECL_BEGIN
 #define m  5
 #define n  0xe6546b64
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_ptr(void const *__restrict ptr, size_t n_bytes) {
+Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
  uint8_t const *tail;
  uint32_t k1; size_t i;
  size_t const nblocks = n_bytes / 4;
@@ -123,17 +131,22 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
 }
 
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
+Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
  uint16_t const *tail;
  uint32_t k1; size_t i;
  size_t const nblocks = n_words / 4;
  uint32_t hash = 0;
  uint32_t k;
+ uint16_t ch;
  for (i = 0; i < nblocks; ++i) {
-  k  = packw(ptr[i*2]) << 24;
-  k ^= packw(ptr[i*2+1]) << 16;
-  k ^= packw(ptr[i*2+2]) << 8;
-  k ^= packw(ptr[i*2+3]);
+  ch = ptr[i*2+0];
+  k  = packw(ch) << ESEL(0,24);
+  ch = ptr[i*2+1];
+  k ^= packw(ch) << ESEL(8,16);
+  ch = ptr[i*2+2];
+  k ^= packw(ch) << ESEL(16,8);
+  ch = ptr[i*2+3];
+  k ^= packw(ch) << ESEL(24,0);
   k *= c1;
   k = ROT32(k,r1);
   k *= c2;
@@ -162,17 +175,22 @@ hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
  return hash;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
+Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
  uint32_t const *tail;
  uint32_t k1; size_t i;
  size_t const nblocks = n_dwords / 4;
  uint32_t hash = 0;
  uint32_t k;
+ uint32_t ch;
  for (i = 0; i < nblocks; ++i) {
-  k  = packl(ptr[i*2]) << 24;
-  k ^= packl(ptr[i*2+1]) << 16;
-  k ^= packl(ptr[i*2+2]) << 8;
-  k ^= packl(ptr[i*2+3]);
+  ch = ptr[i*2+0];
+  k  = packl(ch) << ESEL(0,24);
+  ch = ptr[i*2+1];
+  k ^= packl(ch) << ESEL(8,16);
+  ch = ptr[i*2+2];
+  k ^= packl(ch) << ESEL(16,8);
+  ch = ptr[i*2+3];
+  k ^= packl(ch) << ESEL(24,0);
   k *= c1;
   k = ROT32(k,r1);
   k *= c2;
@@ -182,9 +200,12 @@ hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  tail = ((uint32_t const *)ptr)+(nblocks*4);
  k1 = 0;
  switch (n_dwords & 3) {
- case 3:  k1 ^= packl(tail[2]) << 16;
- case 2:  k1 ^= packl(tail[1]) << 8;
- case 1:  k1 ^= packl(tail[0]);
+ case 3:  ch = tail[2];
+          k1 ^= packl(ch) << 16;
+ case 2:  ch = tail[1];
+          k1 ^= packl(ch) << 8;
+ case 1:  ch = tail[0];
+          k1 ^= packl(ch);
           k1 *= c1;
           k1 = ROT32(k1, r1);
           k1 *= c2;
@@ -201,7 +222,7 @@ hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  return hash;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
+Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
  uint8_t const *tail;
  uint32_t k1; size_t i;
  size_t const nblocks = n_bytes / 4;
@@ -248,17 +269,22 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
 }
 
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
+Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
  uint16_t const *tail;
  uint32_t k1; size_t i;
  size_t const nblocks = n_words / 4;
  uint32_t hash = 0;
  uint32_t k;
+ uint32_t ch;
  for (i = 0; i < nblocks; ++i) {
-  k  = packw(DeeUni_ToLower(ptr[i*2])) << 24;
-  k ^= packw(DeeUni_ToLower(ptr[i*2+1])) << 16;
-  k ^= packw(DeeUni_ToLower(ptr[i*2+2])) << 8;
-  k ^= packw(DeeUni_ToLower(ptr[i*2+3]));
+  ch = DeeUni_ToLower(ptr[i*2+0]);
+  k  = packl(ch) << ESEL(0,24);
+  ch = DeeUni_ToLower(ptr[i*2+1]);
+  k ^= packl(ch) << ESEL(8,16);
+  ch = DeeUni_ToLower(ptr[i*2+2]);
+  k ^= packl(ch) << ESEL(16,8);
+  ch = DeeUni_ToLower(ptr[i*2+3]);
+  k ^= packl(ch) << ESEL(24,0);
   k *= c1;
   k = ROT32(k,r1);
   k *= c2;
@@ -287,17 +313,22 @@ hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
  return hash;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
+Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
  uint32_t const *tail;
  uint32_t k1; size_t i;
  size_t const nblocks = n_dwords / 4;
  uint32_t hash = 0;
  uint32_t k;
+ uint32_t ch;
  for (i = 0; i < nblocks; ++i) {
-  k  = packl(DeeUni_ToLower(ptr[i*2])) << 24;
-  k ^= packl(DeeUni_ToLower(ptr[i*2+1])) << 16;
-  k ^= packl(DeeUni_ToLower(ptr[i*2+2])) << 8;
-  k ^= packl(ptr[i*2+3]);
+  ch = DeeUni_ToLower(ptr[i*2+0]);
+  k  = packl(ch) << ESEL(0,24);
+  ch = DeeUni_ToLower(ptr[i*2+1]);
+  k ^= packl(ch) << ESEL(8,16);
+  ch = DeeUni_ToLower(ptr[i*2+2]);
+  k ^= packl(ch) << ESEL(16,8);
+  ch = DeeUni_ToLower(ptr[i*2+3]);
+  k ^= packl(ch) << ESEL(24,0);
   k *= c1;
   k = ROT32(k,r1);
   k *= c2;
@@ -307,9 +338,12 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  tail = ((uint32_t const *)ptr)+(nblocks*4);
  k1 = 0;
  switch (n_dwords & 3) {
- case 3:  k1 ^= packl(DeeUni_ToLower(tail[2])) << 16;
- case 2:  k1 ^= packl(DeeUni_ToLower(tail[1])) << 8;
- case 1:  k1 ^= packl(DeeUni_ToLower(tail[0]));
+ case 3:  ch = DeeUni_ToLower(tail[2]);
+          k1 ^= packl(ch) << 16;
+ case 2:  ch = DeeUni_ToLower(tail[1]);
+          k1 ^= packl(ch) << 8;
+ case 1:  ch = DeeUni_ToLower(tail[0]);
+          k1 ^= packl(ch);
           k1 *= c1;
           k1 = ROT32(k1, r1);
           k1 *= c2;
@@ -326,6 +360,115 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  return hash;
 }
 
+PUBLIC ATTR_PURE dhash_t DCALL
+Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
+ char const *end = ptr + n_bytes;
+ uint32_t k1 = 0;
+ uint32_t block[4];
+ uint32_t hash = 0;
+ uint32_t k;
+ size_t n_chars = 0;
+ for (;;) {
+  if unlikely(ptr >= end) goto done;
+  block[0] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_1;
+  block[1] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_2;
+  block[2] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_3;
+  block[3] = utf8_readchar(&ptr,end);
+  n_chars += 4;
+  k  = packl(block[0]) << ESEL(0,24);
+  k ^= packl(block[1]) << ESEL(8,16);
+  k ^= packl(block[2]) << ESEL(16,8);
+  k ^= packl(block[3]) << ESEL(24,0);
+  k *= c1;
+  k = ROT32(k,r1);
+  k *= c2;
+  hash ^= k;
+  hash = ROT32(hash,r2)*m+n;
+ }
+ goto done;
+do_tail_3:
+ ++n_chars;
+ k1 ^= packl(block[2]) << 16;
+do_tail_2:
+ ++n_chars;
+ k1 ^= packl(block[1]) << 8;
+do_tail_1:
+ ++n_chars;
+ k1 ^= packl(block[0]);
+ k1 *= c1;
+ k1  = ROT32(k1, r1);
+ k1 *= c2;
+ hash ^= k1;
+done:
+ hash ^= n_chars;
+ hash ^= (hash >> 16);
+ hash *= 0x85ebca6b;
+ hash ^= (hash >> 13);
+ hash *= 0xc2b2ae35;
+ hash ^= (hash >> 16);
+ return hash;
+}
+
+PUBLIC ATTR_PURE dhash_t DCALL
+Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
+ char const *end = ptr + n_bytes;
+ uint32_t k1 = 0;
+ uint32_t block[4];
+ uint32_t hash = 0;
+ uint32_t k;
+ size_t n_chars = 0;
+ for (;;) {
+  if unlikely(ptr >= end) goto done;
+  block[0] = utf8_readchar(&ptr,end);
+  block[0] = DeeUni_ToLower(block[0]);
+  if unlikely(ptr >= end) goto do_tail_1;
+  block[1] = utf8_readchar(&ptr,end);
+  block[1] = DeeUni_ToLower(block[1]);
+  if unlikely(ptr >= end) goto do_tail_2;
+  block[2] = utf8_readchar(&ptr,end);
+  block[2] = DeeUni_ToLower(block[2]);
+  if unlikely(ptr >= end) goto do_tail_3;
+  block[3] = utf8_readchar(&ptr,end);
+  block[3] = DeeUni_ToLower(block[3]);
+  n_chars += 4;
+  k  = packl(block[0]) << ESEL(0,24);
+  k ^= packl(block[1]) << ESEL(8,16);
+  k ^= packl(block[2]) << ESEL(16,8);
+  k ^= packl(block[3]) << ESEL(24,0);
+  k *= c1;
+  k = ROT32(k,r1);
+  k *= c2;
+  hash ^= k;
+  hash = ROT32(hash,r2)*m+n;
+ }
+ goto done;
+do_tail_3:
+ ++n_chars;
+ k1 ^= packl(block[2]) << 16;
+do_tail_2:
+ ++n_chars;
+ k1 ^= packl(block[1]) << 8;
+do_tail_1:
+ ++n_chars;
+ k1 ^= packl(block[0]);
+ k1 *= c1;
+ k1  = ROT32(k1, r1);
+ k1 *= c2;
+ hash ^= k1;
+done:
+ hash ^= n_chars;
+ hash ^= (hash >> 16);
+ hash *= 0x85ebca6b;
+ hash ^= (hash >> 13);
+ hash *= 0xc2b2ae35;
+ hash ^= (hash >> 16);
+ return hash;
+}
+
+
 #undef c1
 #undef c2
 #undef r1
@@ -337,13 +480,18 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
 
 #define m    0xc6a4a7935bd1e995ull
 #define r    47
-#define seed 0xe17a1465
+//#define seed 0xe17a1465
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_ptr(void const *__restrict ptr, size_t n_bytes) {
+Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
+#ifdef seed
  dhash_t h = seed ^ (n_bytes * m);
+#else
+ dhash_t h = 0;
+#endif
  size_t len8 = n_bytes / 8;
  while (len8--) {
-  dhash_t k = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
+  dhash_t k;
+  k = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
   k *= m;
   k ^= k >> r;
   k *= m;
@@ -368,18 +516,23 @@ hash_ptr(void const *__restrict ptr, size_t n_bytes) {
  return h;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
+Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
+#ifdef seed
  dhash_t h = seed ^ (n_words * m);
+#else
+ dhash_t h = 0;
+#endif
  size_t len8 = n_words / 8;
  while (len8--) {
   dhash_t k;
-  k  = (dhash_t)packw(ptr[6]) << 48;
-  k ^= (dhash_t)packw(ptr[5]) << 40;
-  k ^= (dhash_t)packw(ptr[4]) << 32;
-  k ^= (dhash_t)packw(ptr[3]) << 24;
-  k ^= (dhash_t)packw(ptr[2]) << 16;
-  k ^= (dhash_t)packw(ptr[1]) << 8;
-  k ^= (dhash_t)packw(ptr[0]);
+  k  = (dhash_t)packw(ptr[0]) << ESEL(0,56);
+  k |= (dhash_t)packw(ptr[1]) << ESEL(8,48);
+  k |= (dhash_t)packw(ptr[2]) << ESEL(16,40);
+  k |= (dhash_t)packw(ptr[3]) << ESEL(24,32);
+  k |= (dhash_t)packw(ptr[4]) << ESEL(32,24);
+  k |= (dhash_t)packw(ptr[5]) << ESEL(40,16);
+  k |= (dhash_t)packw(ptr[6]) << ESEL(48,8);
+  k |= (dhash_t)packw(ptr[7]) << ESEL(56,0);
   ptr += 8;
   k *= m;
   k ^= k >> r;
@@ -405,18 +558,23 @@ hash_ptrw(uint16_t const *__restrict ptr, size_t n_words) {
  return h;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
+Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
+#ifdef seed
  dhash_t h = seed ^ (n_dwords * m);
+#else
+ dhash_t h = 0;
+#endif
  size_t len8 = n_dwords / 8;
  while (len8--) {
   dhash_t k;
-  k  = (dhash_t)packl(ptr[6]) << 48;
-  k ^= (dhash_t)packl(ptr[5]) << 40;
-  k ^= (dhash_t)packl(ptr[4]) << 32;
-  k ^= (dhash_t)packl(ptr[3]) << 24;
-  k ^= (dhash_t)packl(ptr[2]) << 16;
-  k ^= (dhash_t)packl(ptr[1]) << 8;
-  k ^= (dhash_t)packl(ptr[0]);
+  k  = (dhash_t)packl(ptr[0]) << ESEL(0,56);
+  k |= (dhash_t)packl(ptr[1]) << ESEL(8,48);
+  k |= (dhash_t)packl(ptr[2]) << ESEL(16,40);
+  k |= (dhash_t)packl(ptr[3]) << ESEL(24,32);
+  k |= (dhash_t)packl(ptr[4]) << ESEL(32,24);
+  k |= (dhash_t)packl(ptr[5]) << ESEL(40,16);
+  k |= (dhash_t)packl(ptr[6]) << ESEL(48,8);
+  k |= (dhash_t)packl(ptr[7]) << ESEL(56,0);
   ptr += 8;
   k *= m;
   k ^= k >> r;
@@ -442,15 +600,19 @@ hash_ptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  return h;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
+Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
+#ifdef seed
  dhash_t h = seed ^ (n_bytes * m);
+#else
+ dhash_t h = 0;
+#endif
  size_t len8 = n_bytes / 8;
  while (len8--) {
   union {
       char    ch[8];
       dhash_t x;
   } k;
-  k.x     = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
+  k.x = UNALIGNED_GETLE64((*(dhash_t **)&ptr)++);
   k.ch[0] = (char)DeeUni_ToLower(k.ch[0]);
   k.ch[1] = (char)DeeUni_ToLower(k.ch[1]);
   k.ch[2] = (char)DeeUni_ToLower(k.ch[2]);
@@ -459,11 +621,11 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
   k.ch[5] = (char)DeeUni_ToLower(k.ch[5]);
   k.ch[6] = (char)DeeUni_ToLower(k.ch[6]);
   k.ch[7] = (char)DeeUni_ToLower(k.ch[7]);
-  k.x    *= m;
-  k.x    ^= k.x >> r;
-  k.x    *= m;
-  h      ^= k.x;
-  h      *= m;
+  k.x *= m;
+  k.x ^= k.x >> r;
+  k.x *= m;
+  h ^= k.x;
+  h *= m;
  }
  switch (n_bytes%8) {
  case 7:  h ^= (dhash_t)DeeUni_ToLower(((uint8_t *)ptr)[6]) << 48; ATTR_FALLTHROUGH
@@ -483,33 +645,54 @@ hash_caseptr(void const *__restrict ptr, size_t n_bytes) {
  return h;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
+Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
+#ifdef seed
  dhash_t h = seed ^ (n_words * m);
+#else
+ dhash_t h = 0;
+#endif
  size_t len8 = n_words / 8;
+ uint32_t ch;
  while (len8--) {
   dhash_t k;
-  k    = (dhash_t)packw(DeeUni_ToLower(ptr[6])) << 48;
-  k   ^= (dhash_t)packw(DeeUni_ToLower(ptr[5])) << 40;
-  k   ^= (dhash_t)packw(DeeUni_ToLower(ptr[4])) << 32;
-  k   ^= (dhash_t)packw(DeeUni_ToLower(ptr[3])) << 24;
-  k   ^= (dhash_t)packw(DeeUni_ToLower(ptr[2])) << 16;
-  k   ^= (dhash_t)packw(DeeUni_ToLower(ptr[1])) << 8;
-  k   ^= (dhash_t)packw(DeeUni_ToLower(ptr[0]));
+  ch = DeeUni_ToLower(ptr[0]);
+  k  = (dhash_t)packl(ch) << ESEL(0,56);
+  ch = DeeUni_ToLower(ptr[1]);
+  k |= (dhash_t)packl(ch) << ESEL(8,48);
+  ch = DeeUni_ToLower(ptr[2]);
+  k |= (dhash_t)packl(ch) << ESEL(16,40);
+  ch = DeeUni_ToLower(ptr[3]);
+  k |= (dhash_t)packl(ch) << ESEL(24,32);
+  ch = DeeUni_ToLower(ptr[4]);
+  k |= (dhash_t)packl(ch) << ESEL(32,24);
+  ch = DeeUni_ToLower(ptr[5]);
+  k |= (dhash_t)packl(ch) << ESEL(40,16);
+  ch = DeeUni_ToLower(ptr[6]);
+  k |= (dhash_t)packl(ch) << ESEL(48,8);
+  ch = DeeUni_ToLower(ptr[7]);
+  k |= (dhash_t)packl(ch) << ESEL(56,0);
   ptr += 8;
-  k   *= m;
-  k   ^= k >> r;
-  k   *= m;
-  h   ^= k;
-  h   *= m;
+  k *= m;
+  k ^= k >> r;
+  k *= m;
+  h ^= k;
+  h *= m;
  }
  switch (n_words%8) {
- case 7:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[6])) << 48; ATTR_FALLTHROUGH
- case 6:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[5])) << 40; ATTR_FALLTHROUGH
- case 5:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[4])) << 32; ATTR_FALLTHROUGH
- case 4:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[3])) << 24; ATTR_FALLTHROUGH
- case 3:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[2])) << 16; ATTR_FALLTHROUGH
- case 2:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[1])) << 8; ATTR_FALLTHROUGH
- case 1:  h ^= (dhash_t)packw(DeeUni_ToLower(ptr[0]));
+ case 7:  ch = DeeUni_ToLower(ptr[6]);
+          h ^= (dhash_t)packl(ch) << 48; ATTR_FALLTHROUGH
+ case 6:  ch = DeeUni_ToLower(ptr[5]);
+          h ^= (dhash_t)packl(ch) << 40; ATTR_FALLTHROUGH
+ case 5:  ch = DeeUni_ToLower(ptr[4]);
+          h ^= (dhash_t)packl(ch) << 32; ATTR_FALLTHROUGH
+ case 4:  ch = DeeUni_ToLower(ptr[3]);
+          h ^= (dhash_t)packl(ch) << 24; ATTR_FALLTHROUGH
+ case 3:  ch = DeeUni_ToLower(ptr[2]);
+          h ^= (dhash_t)packl(ch) << 16; ATTR_FALLTHROUGH
+ case 2:  ch = DeeUni_ToLower(ptr[1]);
+          h ^= (dhash_t)packl(ch) << 8; ATTR_FALLTHROUGH
+ case 1:  ch = DeeUni_ToLower(ptr[0]);
+          h ^= (dhash_t)packl(ch);
           h *= m;
           break;
  default: break;
@@ -520,33 +703,54 @@ hash_caseptrw(uint16_t const *__restrict ptr, size_t n_words) {
  return h;
 }
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
+Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
+#ifdef seed
  dhash_t h = seed ^ (n_dwords * m);
+#else
+ dhash_t h = 0;
+#endif
  size_t len8 = n_dwords / 8;
+ uint32_t ch;
  while (len8--) {
   dhash_t k;
-  k    = (dhash_t)packl(DeeUni_ToLower(ptr[6])) << 48;
-  k   ^= (dhash_t)packl(DeeUni_ToLower(ptr[5])) << 40;
-  k   ^= (dhash_t)packl(DeeUni_ToLower(ptr[4])) << 32;
-  k   ^= (dhash_t)packl(DeeUni_ToLower(ptr[3])) << 24;
-  k   ^= (dhash_t)packl(DeeUni_ToLower(ptr[2])) << 16;
-  k   ^= (dhash_t)packl(DeeUni_ToLower(ptr[1])) << 8;
-  k   ^= (dhash_t)packl(DeeUni_ToLower(ptr[0]));
+  ch = DeeUni_ToLower(ptr[0]);
+  k  = (dhash_t)packl(ch) << ESEL(0,56);
+  ch = DeeUni_ToLower(ptr[1]);
+  k |= (dhash_t)packl(ch) << ESEL(8,48);
+  ch = DeeUni_ToLower(ptr[2]);
+  k |= (dhash_t)packl(ch) << ESEL(16,40);
+  ch = DeeUni_ToLower(ptr[3]);
+  k |= (dhash_t)packl(ch) << ESEL(24,32);
+  ch = DeeUni_ToLower(ptr[4]);
+  k |= (dhash_t)packl(ch) << ESEL(32,24);
+  ch = DeeUni_ToLower(ptr[5]);
+  k |= (dhash_t)packl(ch) << ESEL(40,16);
+  ch = DeeUni_ToLower(ptr[6]);
+  k |= (dhash_t)packl(ch) << ESEL(48,8);
+  ch = DeeUni_ToLower(ptr[7]);
+  k |= (dhash_t)packl(ch) << ESEL(56,0);
   ptr += 8;
-  k   *= m;
-  k   ^= k >> r;
-  k   *= m;
-  h   ^= k;
-  h   *= m;
+  k *= m;
+  k ^= k >> r;
+  k *= m;
+  h ^= k;
+  h *= m;
  }
  switch (n_dwords%8) {
- case 7:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[6])) << 48; ATTR_FALLTHROUGH
- case 6:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[5])) << 40; ATTR_FALLTHROUGH
- case 5:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[4])) << 32; ATTR_FALLTHROUGH
- case 4:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[3])) << 24; ATTR_FALLTHROUGH
- case 3:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[2])) << 16; ATTR_FALLTHROUGH
- case 2:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[1])) << 8; ATTR_FALLTHROUGH
- case 1:  h ^= (dhash_t)packl(DeeUni_ToLower(ptr[0]));
+ case 7:  ch = DeeUni_ToLower(ptr[6]);
+          h ^= (dhash_t)packl(ch) << 48; ATTR_FALLTHROUGH
+ case 6:  ch = DeeUni_ToLower(ptr[5]);
+          h ^= (dhash_t)packl(ch) << 40; ATTR_FALLTHROUGH
+ case 5:  ch = DeeUni_ToLower(ptr[4]);
+          h ^= (dhash_t)packl(ch) << 32; ATTR_FALLTHROUGH
+ case 4:  ch = DeeUni_ToLower(ptr[3]);
+          h ^= (dhash_t)packl(ch) << 24; ATTR_FALLTHROUGH
+ case 3:  ch = DeeUni_ToLower(ptr[2]);
+          h ^= (dhash_t)packl(ch) << 16; ATTR_FALLTHROUGH
+ case 2:  ch = DeeUni_ToLower(ptr[1]);
+          h ^= (dhash_t)packl(ch) << 8; ATTR_FALLTHROUGH
+ case 1:  ch = DeeUni_ToLower(ptr[0]);
+          h ^= (dhash_t)packl(ch);
           h *= m;
           break;
  default: break;
@@ -556,6 +760,145 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
  h ^= h >> r;
  return h;
 }
+
+PUBLIC ATTR_PURE dhash_t DCALL
+Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
+#ifdef seed
+ dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
+#else
+ dhash_t h = 0;
+#endif
+ char const *end = ptr + n_bytes;
+ uint32_t block[8];;
+ for (;;) {
+  dhash_t k;
+  if unlikely(ptr >= end) goto done;
+  block[0] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_1;
+  block[1] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_2;
+  block[2] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_3;
+  block[3] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_4;
+  block[4] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_5;
+  block[5] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_6;
+  block[6] = utf8_readchar(&ptr,end);
+  if unlikely(ptr >= end) goto do_tail_7;
+  block[7] = utf8_readchar(&ptr,end);
+  k  = (dhash_t)packl(block[0]) << ESEL(0,56);
+  k |= (dhash_t)packl(block[1]) << ESEL(8,48);
+  k |= (dhash_t)packl(block[2]) << ESEL(16,40);
+  k |= (dhash_t)packl(block[3]) << ESEL(24,32);
+  k |= (dhash_t)packl(block[4]) << ESEL(32,24);
+  k |= (dhash_t)packl(block[5]) << ESEL(40,16);
+  k |= (dhash_t)packl(block[6]) << ESEL(48,8);
+  k |= (dhash_t)packl(block[7]) << ESEL(56,0);
+  ptr += 8;
+  k *= m;
+  k ^= k >> r;
+  k *= m;
+  h ^= k;
+  h *= m;
+ }
+ goto done;
+do_tail_7:
+ h ^= (dhash_t)packl(ptr[6]) << 48;
+do_tail_6:
+ h ^= (dhash_t)packl(ptr[5]) << 40;
+do_tail_5:
+ h ^= (dhash_t)packl(ptr[4]) << 32;
+do_tail_4:
+ h ^= (dhash_t)packl(ptr[3]) << 24;
+do_tail_3:
+ h ^= (dhash_t)packl(ptr[2]) << 16;
+do_tail_2:
+ h ^= (dhash_t)packl(ptr[1]) << 8;
+do_tail_1:
+ h ^= (dhash_t)packl(ptr[0]);
+ h *= m;
+done:
+ h ^= h >> r;
+ h *= m;
+ h ^= h >> r;
+ return h;
+}
+
+PUBLIC ATTR_PURE dhash_t DCALL
+Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
+#ifdef seed
+ dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
+#else
+ dhash_t h = 0;
+#endif
+ char const *end = ptr + n_bytes;
+ uint32_t block[8];;
+ for (;;) {
+  dhash_t k;
+  if unlikely(ptr >= end) goto done;
+  block[0] = utf8_readchar(&ptr,end);
+  block[0] = DeeUni_ToLower(block[0]);
+  if unlikely(ptr >= end) goto do_tail_1;
+  block[1] = utf8_readchar(&ptr,end);
+  block[1] = DeeUni_ToLower(block[1]);
+  if unlikely(ptr >= end) goto do_tail_2;
+  block[2] = utf8_readchar(&ptr,end);
+  block[2] = DeeUni_ToLower(block[2]);
+  if unlikely(ptr >= end) goto do_tail_3;
+  block[3] = utf8_readchar(&ptr,end);
+  block[3] = DeeUni_ToLower(block[3]);
+  if unlikely(ptr >= end) goto do_tail_4;
+  block[4] = utf8_readchar(&ptr,end);
+  block[4] = DeeUni_ToLower(block[4]);
+  if unlikely(ptr >= end) goto do_tail_5;
+  block[5] = utf8_readchar(&ptr,end);
+  block[5] = DeeUni_ToLower(block[5]);
+  if unlikely(ptr >= end) goto do_tail_6;
+  block[6] = utf8_readchar(&ptr,end);
+  block[6] = DeeUni_ToLower(block[6]);
+  if unlikely(ptr >= end) goto do_tail_7;
+  block[7] = utf8_readchar(&ptr,end);
+  block[7] = DeeUni_ToLower(block[7]);
+  k  = (dhash_t)packl(block[0]) << ESEL(0,56);
+  k |= (dhash_t)packl(block[1]) << ESEL(8,48);
+  k |= (dhash_t)packl(block[2]) << ESEL(16,40);
+  k |= (dhash_t)packl(block[3]) << ESEL(24,32);
+  k |= (dhash_t)packl(block[4]) << ESEL(32,24);
+  k |= (dhash_t)packl(block[5]) << ESEL(40,16);
+  k |= (dhash_t)packl(block[6]) << ESEL(48,8);
+  k |= (dhash_t)packl(block[7]) << ESEL(56,0);
+  ptr += 8;
+  k *= m;
+  k ^= k >> r;
+  k *= m;
+  h ^= k;
+  h *= m;
+ }
+ goto done;
+do_tail_7:
+ h ^= (dhash_t)packl(ptr[6]) << 48;
+do_tail_6:
+ h ^= (dhash_t)packl(ptr[5]) << 40;
+do_tail_5:
+ h ^= (dhash_t)packl(ptr[4]) << 32;
+do_tail_4:
+ h ^= (dhash_t)packl(ptr[3]) << 24;
+do_tail_3:
+ h ^= (dhash_t)packl(ptr[2]) << 16;
+do_tail_2:
+ h ^= (dhash_t)packl(ptr[1]) << 8;
+do_tail_1:
+ h ^= (dhash_t)packl(ptr[0]);
+ h *= m;
+done:
+ h ^= h >> r;
+ h *= m;
+ h ^= h >> r;
+ return h;
+}
+
 #undef seed
 #undef r
 #undef m
@@ -579,8 +922,8 @@ hash_caseptrl(uint32_t const *__restrict ptr, size_t n_dwords) {
 #define END_TRYALLOC()    DBG_ALIGNMENT_ENABLE()
 
 PUBLIC ATTR_PURE dhash_t DCALL
-hash_str(char const *__restrict str) {
- return hash_ptr(str,strlen(str));
+Dee_HashStr(char const *__restrict str) {
+ return Dee_HashPtr(str,strlen(str));
 }
 
 PUBLIC ATTR_MALLOC void *(DCALL Dee_Malloc)(size_t n_bytes) {

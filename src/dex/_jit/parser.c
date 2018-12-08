@@ -79,14 +79,14 @@ JIT_GetOperatorFunction(uint16_t opname) {
      opname <= AST_OPERATOR_MAX) {
   /* Special, ambiguous operator. */
   symbol_name = rt_operator_names[opname - AST_OPERATOR_MIN];
-  hash        = hash_ptr(symbol_name,8);
+  hash        = Dee_HashPtr(symbol_name,8);
  } else {
   struct opinfo *info;
   /* Default case: determine the operator symbol using generic-operator info. */
   info = Dee_OperatorInfo(NULL,opname);
   if (info) {
    symbol_name = info->oi_sname;
-   hash = hash_str(symbol_name);
+   hash = Dee_HashStr(symbol_name);
   }
  }
  operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
@@ -100,7 +100,7 @@ JIT_GetOperatorFunction(uint16_t opname) {
  } else {
   /* Fallback: Invoke `operator(id)' to generate the default callback. */
   result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,"operator",
-                                        hash_ptr("operator",COMPILER_STRLEN("operator")));
+                                        Dee_HashPtr("operator",COMPILER_STRLEN("operator")));
   if likely(result) {
    DREF DeeObject *callback_result;
    callback_result = DeeObject_Callf(result,"I16u",opname);

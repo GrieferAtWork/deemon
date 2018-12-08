@@ -82,7 +82,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
   ent = JITObjectTable_Create(&result->jf_args,
                               name_start,
                               len,
-                              hash_ptr(name_start,len));
+                              Dee_HashUtf8(name_start,len));
   if unlikely(!ent)
      goto err_r;
   result->jf_selfarg = (size_t)(ent - result->jf_args.ot_list);

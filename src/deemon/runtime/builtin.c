@@ -128,7 +128,8 @@ PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
   dhash_t hash,i,perturb;
   DeeStringObject *name;
   name = COMPILER_CONTAINER_OF(MODULE_SYMBOL_GETNAMESTR(iter),DeeStringObject,s_str);
-  hash = hash_ptr(name->s_str,name->s_len*sizeof(char));
+  hash = Dee_HashPtr(name->s_str,
+                     name->s_len * sizeof(char));
   iter->ss_hash = name->s_hash = hash;
   perturb = i = hash & builtins_hashmask;
   for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {

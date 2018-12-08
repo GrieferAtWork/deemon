@@ -733,6 +733,7 @@ find_glob_module(DeeStringObject *__restrict module_name) {
 #ifndef CONFIG_NOCASE_FS
        DeeString_HASH(result->mo_name) == hash &&
 #endif
+       /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
        DeeString_SIZE(result->mo_name) == DeeString_SIZE(module_name) &&
 #ifdef CONFIG_NOCASE_FS
        MEMCASEEQ(DeeString_STR(result->mo_name),DeeString_STR(module_name),
@@ -775,10 +776,10 @@ do_alloc_new_vector:
    /* Re-hash this entry. */
 #ifdef CONFIG_HOST_WINDOWS
    dst = &new_vector[iter->mo_pathhash % new_size];
-#elif !defined(CONFIG_NOCASE_FS)
-   dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_path) % new_size];
-#else
+#elif defined(CONFIG_NOCASE_FS)
    dst = &new_vector[DeeString_HashCase((DeeObject *)iter->mo_path) % new_size];
+#else
+   dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_path) % new_size];
 #endif
    if ((iter->mo_next = dst->mb_list) != NULL)
         iter->mo_next->mo_pself = &iter->mo_next;
@@ -816,10 +817,10 @@ do_alloc_new_vector:
    next = iter->mo_globnext;
    ASSERT_OBJECT_TYPE_EXACT(iter->mo_name,&DeeString_Type);
    /* Re-hash this entry. */
-#ifndef CONFIG_NOCASE_FS
-   dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_name) % new_size];
-#else
+#ifdef CONFIG_NOCASE_FS
    dst = &new_vector[DeeString_HashCase((DeeObject *)iter->mo_name) % new_size];
+#else
+   dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_name) % new_size];
 #endif
    if ((iter->mo_globnext = dst->mb_list) != NULL)
         iter->mo_globnext->mo_globpself = &iter->mo_globnext;
@@ -1445,6 +1446,7 @@ DeeModule_DoGet(char const *__restrict name,
    ASSERT_OBJECT_TYPE_EXACT(result->mo_name,&DeeString_Type);
    if (DeeString_SIZE(result->mo_name) == size &&
 #ifdef CONFIG_NOCASE_FS
+       /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
        MEMCASEEQ(DeeString_STR(result->mo_name),name,
                  size*sizeof(char))
 #else
@@ -1467,6 +1469,7 @@ done:
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_Get(DeeObject *__restrict module_name) {
+ /* TODO: Support for mixed LATIN-1/UTF-8 strings */
  return DeeModule_DoGet(DeeString_STR(module_name),
                         DeeString_SIZE(module_name),
 #ifdef CONFIG_NOCASE_FS
@@ -1483,11 +1486,9 @@ DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
  return DeeModule_DoGet(module_name,
                         module_namesize,
 #ifdef CONFIG_NOCASE_FS
-                        hash_caseptr(module_name,
-                                     module_namesize)
+                        Dee_HashCaseUtf8(module_name,module_namesize)
 #else
-                        hash_ptr(module_name,
-                                 module_namesize)
+                        Dee_HashUtf8(module_name,module_namesize)
 #endif
                         );
 }
@@ -1578,9 +1579,9 @@ err_bad_module_name:
  dst[module_namesize + 4] = '\0';
  len = (size_t)(dst - buf) + module_namesize + 4;
 #ifdef CONFIG_NOCASE_FS
- hash = hash_ptr(buf,len); /* TODO: hash_utf8 */
+ hash = Dee_HashCaseUtf8(buf,len);
 #else
- hash = hash_caseptr(buf,len); /* TODO: hash_caseutf8 */
+ hash = Dee_HashUtf8(buf,len);
 #endif
 again_search_fs_modules:
 
@@ -1604,6 +1605,7 @@ again_search_fs_modules:
     utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
     if unlikely(!utf8_path) goto err_buf_r;
     if (WSTR_LENGTH(utf8_path) == len &&
+        /* TODO: Support for mixed LATIN-1/UTF-8 strings */
 #ifdef CONFIG_NOCASE_FS
         MEMCASEEQ(utf8_path,buf,len * sizeof(char)) /* TODO: UTF-8 case compare! */
 #else
@@ -1616,6 +1618,7 @@ again_search_fs_modules:
    }
    if (WSTR_LENGTH(utf8_path) != len)
        continue;
+   /* TODO: Support for mixed LATIN-1/UTF-8 strings */
 #ifdef CONFIG_NOCASE_FS
    if (!MEMCASEEQ(utf8_path,buf,len * sizeof(char))) /* TODO: UTF-8 case compare! */
        continue;
@@ -1668,9 +1671,9 @@ again_find_existing_global_module:
    dst[module_namesize + 3] = '\0';
 #endif
 #ifdef CONFIG_NOCASE_FS
-   dex_hash = hash_ptr(buf,dex_len); /* TODO: hash_utf8 */
+   dex_hash = Dee_HashCaseUtf8(buf,dex_len);
 #else
-   dex_hash = hash_caseptr(buf,dex_len); /* TODO: hash_caseutf8 */
+   dex_hash = Dee_HashUtf8(buf,dex_len);
 #endif
    result = modules_v[dex_hash % modules_a].mb_list;
    for (; result; result = result->mo_next) {

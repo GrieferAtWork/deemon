@@ -327,23 +327,23 @@ get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
  if ((unsigned int)id <= 255) {
   char name[2];
   switch (id) {
-  case TOK_EOF:     return hash_ptr(name,0);
-  case TOK_FLOAT:   return hash_ptr(".0",2);
-  case TOK_COMMENT: return hash_ptr("//",2);
+  case TOK_EOF:     return Dee_HashPtr(name,0);
+  case TOK_FLOAT:   return Dee_HashPtr(".0",2);
+  case TOK_COMMENT: return Dee_HashPtr("//",2);
   default: break;
   }
   name[0] = (char)id;
-  return hash_ptr(name,1);
+  return Dee_HashPtr(name,1);
  }
  if (id >= TOK_TWOCHAR_BEGIN &&
      id <  TOK_TWOCHAR_END) {
   char const *result = largetok_names[id - TOK_TWOCHAR_BEGIN];
-  return hash_ptr(result,result[2] ? (result[3] ? 4 : 3) : 2);
+  return Dee_HashPtr(result,result[2] ? (result[3] ? 4 : 3) : 2);
  }
  if (!kwd)
       kwd = TPPLexer_LookupKeywordID(id);
  if unlikely(!kwd) return (dhash_t)-1;
- return hash_ptr(kwd->k_name,kwd->k_size); /* XXX: hash_utf8? */
+ return Dee_HashUtf8(kwd->k_name,kwd->k_size);
 }
 
 

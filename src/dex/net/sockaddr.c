@@ -1632,7 +1632,7 @@ PRIVATE struct type_getset sockaddr_getsets[] = {
 
 PRIVATE dhash_t DCALL
 sockaddr_hash(DeeSockAddrObject *__restrict self) {
- return hash_ptr(&self->sa_addr,SockAddr_Sizeof(self->sa_addr.sa.sa_family,0));
+ return Dee_HashPtr(&self->sa_addr,SockAddr_Sizeof(self->sa_addr.sa.sa_family,0));
 }
 PRIVATE DREF DeeObject *DCALL
 sockaddr_eq(DeeSockAddrObject *__restrict self,

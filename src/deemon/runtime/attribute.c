@@ -3491,41 +3491,41 @@ done:
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_GetAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name) {
- return DeeObject_GetAttrStringHash(self,attr_name,hash_str(attr_name));
+ return DeeObject_GetAttrStringHash(self,attr_name,Dee_HashStr(attr_name));
 }
 PUBLIC int
 (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name) {
- return DeeObject_HasAttrStringHash(self,attr_name,hash_str(attr_name));
+ return DeeObject_HasAttrStringHash(self,attr_name,Dee_HashStr(attr_name));
 }
 PUBLIC int
 (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self,
                                   char const *__restrict attr_name) {
- return DeeObject_BoundAttrStringHash(self,attr_name,hash_str(attr_name));
+ return DeeObject_BoundAttrStringHash(self,attr_name,Dee_HashStr(attr_name));
 }
 PUBLIC int
 (DCALL DeeObject_DelAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name) {
- return DeeObject_DelAttrStringHash(self,attr_name,hash_str(attr_name));
+ return DeeObject_DelAttrStringHash(self,attr_name,Dee_HashStr(attr_name));
 }
 PUBLIC int
 (DCALL DeeObject_SetAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name,
                                 DeeObject *__restrict value) {
- return DeeObject_SetAttrStringHash(self,attr_name,hash_str(attr_name),value);
+ return DeeObject_SetAttrStringHash(self,attr_name,Dee_HashStr(attr_name),value);
 }
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrString)(DeeObject *__restrict self,
                                  char const *__restrict attr_name,
                                  size_t argc, DeeObject **__restrict argv) {
- return DeeObject_CallAttrStringHash(self,attr_name,hash_str(attr_name),argc,argv);
+ return DeeObject_CallAttrStringHash(self,attr_name,Dee_HashStr(attr_name),argc,argv);
 }
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrStringKw)(DeeObject *__restrict self,
                                    char const *__restrict attr_name,
                                    size_t argc, DeeObject **__restrict argv,
                                    DeeObject *kw) {
- return DeeObject_CallAttrStringHashKw(self,attr_name,hash_str(attr_name),argc,argv,kw);
+ return DeeObject_CallAttrStringHashKw(self,attr_name,Dee_HashStr(attr_name),argc,argv,kw);
 }
 
 
@@ -3603,7 +3603,7 @@ PUBLIC DREF DeeObject *
 (DCALL DeeObject_VCallAttrStringPack)(DeeObject *__restrict self,
                                       char const *__restrict attr_name,
                                       size_t argc, va_list args) {
- return DeeObject_VCallAttrStringHashPack(self,attr_name,hash_str(attr_name),argc,args);
+ return DeeObject_VCallAttrStringHashPack(self,attr_name,Dee_HashStr(attr_name),argc,args);
 }
 #endif
 PUBLIC ATTR_SENTINEL DREF DeeObject *
@@ -3645,7 +3645,7 @@ PUBLIC DREF DeeObject *
 (DCALL DeeObject_VCallAttrStringf)(DeeObject *__restrict self,
                                    char const *__restrict attr_name,
                                    char const *__restrict format, va_list args) {
- return DeeObject_VCallAttrStringHashf(self,attr_name,hash_str(attr_name),format,args);
+ return DeeObject_VCallAttrStringHashf(self,attr_name,Dee_HashStr(attr_name),format,args);
 }
 PUBLIC DREF DeeObject *
 DeeObject_CallAttrStringHashf(DeeObject *__restrict self,

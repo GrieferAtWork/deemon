@@ -774,7 +774,8 @@ INTERN DREF DeeObject *DCALL
 fs_pathexpand(DeeObject *__restrict path, uint16_t options,
               DeeObject *__restrict environ_mapping) {
  struct unicode_printer printer = ASCII_PRINTER_INIT;
- char *iter,*begin,*end,*flush_start,*flush_end,*iter_next;
+ /*utf-8*/char *iter,*begin,*end,*iter_next;
+ /*utf-8*/char *flush_start,*flush_end;
  uint32_t ch;
  ASSERT_OBJECT(environ_mapping);
  ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
@@ -881,9 +882,9 @@ home_lookup_failed:
  }
 
  {
-  char *env_start;
-  char *name_start;
-  char *name_end;
+  /*utf-8*/char *env_start;
+  /*utf-8*/char *name_start;
+  /*utf-8*/char *name_end;
   int error;
  case '$':
   if (!(options&FS_EXPAND_FVARS))
@@ -936,7 +937,7 @@ print_env:
    DREF DeeObject *item;
    item = DeeObject_GetItemStringLen(environ_mapping,name_start,
                                     (size_t)(name_end - name_start),
-                                     hash_ptr(name_start,(size_t)(name_end - name_start)));
+                                     Dee_HashUtf8(name_start,(size_t)(name_end - name_start)));
    if unlikely(!item) {
     /* When the item wasn't found, try to handle `KeyError'. */
     if (!(options&FS_EXPAND_FNOFAIL) ||

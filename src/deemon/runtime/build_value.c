@@ -931,7 +931,7 @@ PUBLIC int
    keyword_hash = kwlist->k_hash;
    if (keyword_hash == (dhash_t)-1) {
     /* Lazily calculate the hash the first time around. */
-    keyword_hash   = hash_str(kwlist->k_name);
+    keyword_hash   = Dee_HashStr(kwlist->k_name);
     kwlist->k_hash = keyword_hash;
    }
    kwd_index = kwds_findstr((DeeKwdsObject *)kw,
@@ -1003,7 +1003,7 @@ PUBLIC int
   keyword_hash = kwlist->k_hash;
   if (keyword_hash == (dhash_t)-1) {
    /* Lazily calculate the hash the first time around. */
-   keyword_hash   = hash_str(kwlist->k_name);
+   keyword_hash   = Dee_HashStr(kwlist->k_name);
    kwlist->k_hash = keyword_hash;
   }
   keyword_value = DeeObject_GetItemStringDef(kw,

@@ -2511,7 +2511,7 @@ asm_gsymid(struct symbol *__restrict sym) {
   *       symbol won't be around anymore once the module itself has
   *       been compiled. */
  name      = sym->s_name;
- name_hash = hash_ptr(name->k_name,name->k_size);
+ name_hash = Dee_HashPtr(name->k_name,name->k_size);
 
  /* To prevent multiple-definition problems of the same global variable,
   * global variables are stored by name in the `current_rootscope'

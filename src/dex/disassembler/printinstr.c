@@ -1010,7 +1010,7 @@ libdisasm_printmembername(dformatprinter printer, void *arg,
     struct module_symbol *class_sym;
     class_sym = DeeModule_GetSymbolString(code->co_module,
                                           class_name,
-                                          hash_str(class_name));
+                                          Dee_HashStr(class_name));
     if (!class_sym)
         goto search_module_root_constants;
     if (class_sym->ss_index < mod->mo_globalc &&

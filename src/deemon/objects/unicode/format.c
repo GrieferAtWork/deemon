@@ -39,6 +39,7 @@
 DECL_BEGIN
 
 struct formatter {
+    /* TODO: Unicode support */
     char           *f_iter;        /* [1..1] Current format string position. */
     char           *f_end;         /* [1..1] Format string end. */
     char           *f_flush_start; /* [1..1] Address where string flushing should start. */
@@ -57,6 +58,7 @@ PRIVATE DREF DeeObject *DCALL
 Formatter_GetUnaryArg(struct formatter *__restrict self,
                       char **__restrict pfmt_start,
                       bool do_eval) {
+ /* TODO: Unicode support */
  char *fmt_start = *pfmt_start;
  char ch = *fmt_start;
  DREF DeeObject *result;
@@ -74,7 +76,7 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
    result = DeeObject_GetItemStringLen(self->f_args,
                                        fmt_start,
                                        len,
-                                       hash_ptr(fmt_start,len));
+                                       Dee_HashPtr(fmt_start,len));
   }
   fmt_start = key_end;
  } else if (DeeUni_IsDecimal(ch)) {

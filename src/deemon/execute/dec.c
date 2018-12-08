@@ -1004,7 +1004,7 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
      GOTO_CORRUPTED(reader,stop_symbolv);
 
   /* Figure out the proper hash for the name. */
-  name_hash = hash_str(name);
+  name_hash = Dee_HashStr(name);
   perturb = hash_i = name_hash & bucket_mask;
   for (;; hash_i = MODULE_HASHNX(hash_i,perturb),MODULE_HASHPT(perturb)) {
    DREF DeeStringObject *temp;
@@ -1404,7 +1404,7 @@ err_function_code:
    if unlikely(DeeKwds_Append(&result,
                                name,
                                name_len,
-                               hash_ptr(name,name_len)))
+                               Dee_HashPtr(name,name_len)))
       goto err_r;
   }
  } break;

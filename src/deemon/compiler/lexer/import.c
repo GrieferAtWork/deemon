@@ -121,7 +121,7 @@ INTERN struct module_symbol *DCALL
 import_module_symbol(DeeModuleObject *__restrict module,
                      struct TPPKeyword *__restrict name) {
  dhash_t i,perturb;
- dhash_t hash = hash_ptr(name->k_name,name->k_size);
+ dhash_t hash = Dee_HashUtf8(name->k_name,name->k_size);
  perturb = i = MODULE_HASHST(module,hash);
  for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
   struct module_symbol *item = MODULE_HASHIT(module,i);

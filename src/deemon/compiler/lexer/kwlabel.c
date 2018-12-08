@@ -79,7 +79,7 @@ ast_parse_argument_list(uint16_t mode,
     if (DeeKwds_Append(&kwdlist_ast->a_constexpr,
                         token.t_kwd->k_name,
                         token.t_kwd->k_size,
-                        hash_str(token.t_kwd->k_name)))
+                        Dee_HashStr(token.t_kwd->k_name)))
         goto err_r_kwdlist;
     if unlikely(yield() < 0) goto err_r_kwdlist;
     if unlikely(likely(tok == ':') ? (yield() < 0) :

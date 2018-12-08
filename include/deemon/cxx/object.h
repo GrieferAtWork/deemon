@@ -522,7 +522,7 @@ class object: public detail::object_base {
         char const *m_str;
         dhash_t     m_hsh;
     public:
-        item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hash_str(str)) {}
+        item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(Dee_HashStr(str)) {}
         item_proxy_sth(DeeObject *ptr, char const *str, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hsh) {}
         item_proxy_sth(item_proxy_sth const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_hsh(right.m_hsh) {}
         bool has() const { int result = DeeObject_HasItemString(m_ptr,m_str,m_hsh); if (result < 0) throw_last_deemon_exception(); return result != 0; }
@@ -663,27 +663,27 @@ public:
     item_proxy_snh item(char const *__restrict name, size_t len, dhash_t hash) const { return item_proxy_snh(*this,name,len,hash); }
     object getitem(DeeObject *__restrict index) const { return inherit(DeeObject_GetItem(*this,index)); }
     object getitem(size_t index) const { return inherit(DeeObject_GetItemIndex(*this,index)); }
-    object getitem(char const *__restrict name) const { return inherit(DeeObject_GetItemString(*this,name,hash_str(name))); }
+    object getitem(char const *__restrict name) const { return inherit(DeeObject_GetItemString(*this,name,Dee_HashStr(name))); }
     object getitem(char const *__restrict name, dhash_t hash) const { return inherit(DeeObject_GetItemString(*this,name,hash)); }
     object getitem(char const *__restrict name, size_t len, dhash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,name,len,hash)); }
     object getitem_def(DeeObject *__restrict index, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,index,def)); }
     object getitem_def(size_t index, DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(index)); result = DeeObject_GetItemDef(*this,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
-    object getitem_def(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash_str(name),def)); }
+    object getitem_def(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,Dee_HashStr(name),def)); }
     object getitem_def(char const *__restrict name, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
     object getitem_def(char const *__restrict name, size_t len, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,name,len,hash,def)); }
     bool bounditem(DeeObject *__restrict key_or_index, bool allow_missing = true) const { int result = DeeObject_BoundItem(*this,key_or_index,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     bool bounditem(size_t index, bool allow_missing = true) const { int result = DeeObject_BoundItemIndex(*this,index,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
-    bool bounditem(char const *__restrict key, bool allow_missing = true) const { int result = DeeObject_BoundItemString(*this,key,hash_str(key),allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+    bool bounditem(char const *__restrict key, bool allow_missing = true) const { int result = DeeObject_BoundItemString(*this,key,Dee_HashStr(key),allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     bool bounditem(char const *__restrict key, dhash_t hash, bool allow_missing = true) const { int result = DeeObject_BoundItemString(*this,key,hash,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     bool bounditem(char const *__restrict key, size_t len, dhash_t hash, bool allow_missing = true) const { int result = DeeObject_BoundItemStringLen(*this,key,len,hash,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     void delitem(DeeObject *__restrict index) const { throw_if_negative(DeeObject_DelItem(*this,index)); }
     void delitem(size_t index) const { throw_if_negative(DeeObject_DelItemIndex(*this,index)); }
-    void delitem(char const *__restrict name) const { throw_if_negative(DeeObject_DelItemString(*this,name,hash_str(name))); }
+    void delitem(char const *__restrict name) const { throw_if_negative(DeeObject_DelItemString(*this,name,Dee_HashStr(name))); }
     void delitem(char const *__restrict name, dhash_t hash) const { throw_if_negative(DeeObject_DelItemString(*this,name,hash)); }
     void delitem(char const *__restrict name, size_t len, dhash_t hash) const { throw_if_negative(DeeObject_DelItemStringLen(*this,name,len,hash)); }
     void setitem(DeeObject *__restrict index, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
     void setitem(size_t index, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItemIndex(*this,index,value)); }
-    void setitem(char const *__restrict name, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItemString(*this,name,hash_str(name),value)); }
+    void setitem(char const *__restrict name, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItemString(*this,name,Dee_HashStr(name),value)); }
     void setitem(char const *__restrict name, dhash_t hash, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItemString(*this,name,hash,value)); }
     void setitem(char const *__restrict name, size_t len, dhash_t hash, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItemStringLen(*this,name,len,hash,value)); }
     range_proxy_oo range(DeeObject *__restrict begin, DeeObject *__restrict end) const { return range_proxy_oo(*this,begin,end); }

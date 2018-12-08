@@ -919,7 +919,7 @@ code_hash(DeeCodeObject *__restrict self) {
   }
  }
  result ^= DeeObject_Hash((DeeObject *)self->co_ddi);
- result ^= hash_ptr(self->co_code,self->co_codebytes);
+ result ^= Dee_HashPtr(self->co_code,self->co_codebytes);
  return result;
 }
 

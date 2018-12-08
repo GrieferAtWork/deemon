@@ -78,7 +78,7 @@ attr_hash(Attr *__restrict self) {
                                                               DeeStringObject,
                                                               s_str));
  } else {
-  result ^= hash_str(self->a_name);
+  result ^= Dee_HashStr(self->a_name);
  }
  return result;
 }
@@ -1334,7 +1334,7 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
  if (perm & ATTR_NAMEOBJ)
   attr_hash = DeeString_Hash((DeeObject *)COMPILER_CONTAINER_OF(attr_name,DeeStringObject,s_str));
  else {
-  attr_hash = hash_str(attr_name);
+  attr_hash = Dee_HashStr(attr_name);
  }
  if (attr_hash != rules->alr_hash)
      return 0;

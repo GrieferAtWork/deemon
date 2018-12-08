@@ -613,9 +613,9 @@ ddi_hash(DeeDDIObject *__restrict self) {
  for (i = 0; i < self->d_nstring; ++i)
      result ^= self->d_strings[i];
  result ^= DeeString_Hash((DeeObject *)self->d_strtab);
- result ^= hash_ptr(&self->d_start,self->d_ddisize + sizeof(struct ddi_regs));
+ result ^= Dee_HashPtr(&self->d_start,self->d_ddisize + sizeof(struct ddi_regs));
  if (self->d_exdat)
-     result ^= hash_ptr(self->d_exdat->dx_data,self->d_exdat->dx_size);
+     result ^= Dee_HashPtr(self->d_exdat->dx_data,self->d_exdat->dx_size);
  return result;
 }
 

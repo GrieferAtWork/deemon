@@ -177,7 +177,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
       if (JITObjectTable_Update(tab,
                                 symbol_name,
                                 symbol_size,
-                                hash_ptr(symbol_name,symbol_size),
+                                Dee_HashUtf8(symbol_name,symbol_size),
                                 current,
                                 true) < 0)
           goto err_r_popscope;

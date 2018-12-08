@@ -1322,7 +1322,7 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
   err_unknown_key_str(Dee_EmptyMapping,name);
   return NULL;
  }
- hash = hash_str(name);
+ hash = Dee_HashStr(name);
  if (DeeKwds_Check(kw)) {
   size_t kw_index;
   size_t num_keywords = DeeKwds_SIZE(kw);
@@ -1377,7 +1377,7 @@ return_def:
       Dee_Incref(def);
   return def;
  }
- hash = hash_str(name);
+ hash = Dee_HashStr(name);
  if (DeeKwds_Check(kw)) {
   size_t kw_index;
   size_t num_keywords = DeeKwds_SIZE(kw);

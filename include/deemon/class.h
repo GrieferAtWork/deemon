@@ -377,13 +377,13 @@ DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute
 #define DeeClassDescriptor_QueryInstanceAttribute(self,attr) \
         DeeClassDescriptor_QueryInstanceAttributeWithHash(self,attr,DeeString_Hash(attr))
 #define DeeClassDescriptor_QueryClassAttributeString(self,attr) \
-        DeeClassDescriptor_QueryClassAttributeStringWithHash(self,attr,hash_str(attr))
+        DeeClassDescriptor_QueryClassAttributeStringWithHash(self,attr,Dee_HashStr(attr))
 #define DeeClassDescriptor_QueryInstanceAttributeString(self,attr) \
-        DeeClassDescriptor_QueryInstanceAttributeStringWithHash(self,attr,hash_str(attr))
+        DeeClassDescriptor_QueryInstanceAttributeStringWithHash(self,attr,Dee_HashStr(attr))
 #define DeeClassDescriptor_QueryClassAttributeStringLen(self,attr,attrlen) \
-        DeeClassDescriptor_QueryClassAttributeStringLenWithHash(self,attr,attrlen,hash_ptr(attr,attrlen))
+        DeeClassDescriptor_QueryClassAttributeStringLenWithHash(self,attr,attrlen,Dee_HashPtr(attr,attrlen))
 #define DeeClassDescriptor_QueryInstanceAttributeStringLen(self,attr,attrlen) \
-        DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(self,attr,attrlen,hash_ptr(attr,attrlen))
+        DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(self,attr,attrlen,Dee_HashPtr(attr,attrlen))
 #endif
 
 

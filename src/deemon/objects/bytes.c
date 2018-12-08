@@ -930,7 +930,7 @@ bytes_delrange(Bytes *__restrict self,
 
 PRIVATE dhash_t DCALL
 bytes_hash(Bytes *__restrict self) {
- return hash_ptr(DeeBytes_DATA(self),
+ return Dee_HashPtr(DeeBytes_DATA(self),
                  DeeBytes_SIZE(self));
 }
 

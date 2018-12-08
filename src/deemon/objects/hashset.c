@@ -695,7 +695,8 @@ DeeHashSet_UnifyString(DeeObject *__restrict self,
                        size_t search_item_length) {
  Set *me = (Set *)self; DREF DeeStringObject *result = NULL;
  size_t mask; struct hashset_item *vector; struct hashset_item *first_dummy;
- dhash_t i,perturb,hash = hash_ptr(search_item,search_item_length);
+ dhash_t i,perturb,hash;
+ hash = Dee_HashPtr(search_item,search_item_length);
 again_lock:
  DeeHashSet_LockRead(me);
 again:
@@ -780,7 +781,8 @@ DeeHashSet_InsertString(DeeObject *__restrict self,
                         size_t search_item_length) {
  Set *me = (Set *)self; DREF DeeStringObject *new_item = NULL;
  size_t mask; struct hashset_item *vector; struct hashset_item *first_dummy;
- dhash_t i,perturb,hash = hash_ptr(search_item,search_item_length);
+ dhash_t i,perturb,hash;
+ hash = Dee_HashPtr(search_item,search_item_length);
 again_lock:
  DeeHashSet_LockRead(me);
 again:
@@ -862,7 +864,7 @@ DeeHashSet_RemoveString(DeeObject *__restrict self,
                         size_t search_item_length) {
  Set *me = (Set *)self; DeeObject *old_item;
  size_t mask; struct hashset_item *vector; dhash_t i,perturb;
- dhash_t hash = hash_ptr(search_item,search_item_length);
+ dhash_t hash = Dee_HashPtr(search_item,search_item_length);
 #ifndef CONFIG_NO_THREADS
 again_lock:
 #endif /* !CONFIG_NO_THREADS */
@@ -948,7 +950,7 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
                           size_t search_item_length) {
  Set *me = (Set *)self; size_t mask;
  struct hashset_item *vector; dhash_t i,perturb;
- dhash_t hash = hash_ptr(search_item,search_item_length);
+ dhash_t hash = Dee_HashPtr(search_item,search_item_length);
  DeeHashSet_LockRead(me);
  vector = me->s_elem;
  mask   = me->s_mask;

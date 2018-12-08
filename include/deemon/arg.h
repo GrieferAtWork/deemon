@@ -64,7 +64,7 @@ DFUNDEF int DCALL DeeArg_VUnpack(size_t argc, DeeObject **__restrict argv, char 
 
 struct kwds_entry {
     DREF struct string_object *ke_name;  /* [1..1][SENTINAL(NULL)] Keyword name. */
-    dhash_t                    ke_hash;  /* [== hash_str(ke_name)][valid_if(ke_name)] Hash of this keyword. */
+    dhash_t                    ke_hash;  /* [== Dee_HashStr(ke_name)][valid_if(ke_name)] Hash of this keyword. */
     size_t                     ke_index; /* [< kw_size:][valid_if(ke_name)]
                                           * Argument vector index of this keyword.
                                           * NOTE: This index is applied as an offset _after_ positional
@@ -261,7 +261,7 @@ DeeArg_GetKwStringLenDef(size_t argc, DeeObject **__restrict argv,
 
 struct keyword {
     char const *k_name; /* [1..1][SENTINAL(NULL)] Keyword name. */
-    dhash_t     k_hash; /* [== hash_str(ke_name)]
+    dhash_t     k_hash; /* [== Dee_HashStr(ke_name)]
                          * Hash of this keyword (or (dhash_t)-1 when not yet calculated).
                          * Filled in the first time the keyword is used. */
 };

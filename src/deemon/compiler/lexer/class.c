@@ -1215,7 +1215,7 @@ do_parse_class_base:
    struct symbol *base_symbol;
    d200_module = (DeeModuleObject *)DeeModule_OpenGlobal(&str_d200,inner_compiler_options,true);
    if unlikely(!d200_module) goto err;
-   oldbase_sym = DeeModule_GetSymbolString(d200_module,old_base,hash_str(old_base));
+   oldbase_sym = DeeModule_GetSymbolString(d200_module,old_base,Dee_HashStr(old_base));
    if unlikely(!oldbase_sym) {
     Dee_Decref(d200_module);
     if (WARN(W_NO_D200_OLD_USER_CLASS))

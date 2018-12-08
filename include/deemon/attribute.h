@@ -137,7 +137,7 @@ DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).itera
 
 struct attribute_lookup_rules {
     char const *alr_name;       /* [1..1] The name of the attribute to look up. */
-    dhash_t     alr_hash;       /* [== hash_str(alr_name)] Hash of `alr_name' */
+    dhash_t     alr_hash;       /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
     DeeObject  *alr_decl;       /* [0..1] When non-NULL, only consider attributes declared by this object. */
     uint16_t    alr_perm_mask;  /* Only consider attributes who's permissions
                                  * match `(perm & perm_mask) == perm_value' */

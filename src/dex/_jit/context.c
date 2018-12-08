@@ -73,8 +73,8 @@ update_symbol_objent(JITSymbol *__restrict self) {
 do_reload:
  {
   dhash_t i,perturb,hash;
-  hash = hash_ptr(self->js_objent.jo_namestr,
-                  self->js_objent.jo_namelen);
+  hash = Dee_HashUtf8(self->js_objent.jo_namestr,
+                      self->js_objent.jo_namelen);
   i = perturb = hash & tab->ot_mask;
   for (;; JITObjectTable_NEXT(i,perturb)) {
    ent = &tab->ot_list[i & tab->ot_mask];
@@ -608,7 +608,7 @@ JITContext_Lookup(JITContext *__restrict self,
                   size_t namelen, unsigned int mode) {
  JITObjectTable *tab;
  struct jit_object_entry *ent;
- dhash_t hash = hash_ptr(name,namelen);
+ dhash_t hash = Dee_HashUtf8(name,namelen);
  switch (mode & LOOKUP_SYM_VMASK) {
  case LOOKUP_SYM_VLOCAL:
   /* Search for a local symbol. */

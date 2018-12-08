@@ -355,8 +355,8 @@ done:
  result->xn_text_obj = parent->xn_text_obj;
  parent->xn_text_next = iter;
  Dee_Incref_n(parent->xn_text_obj,3);
- result->xn_kind_hash = hash_ptr(result->xn_kind_str, /* TODO: hash_utf8 */
-                                (size_t)(result->xn_kind_end - result->xn_kind_str));
+ result->xn_kind_hash = Dee_HashUtf8(result->xn_kind_str,
+                                 (size_t)(result->xn_kind_end - result->xn_kind_str));
 
  {
   /* Add the resulting node to the parent's hash-vector. */

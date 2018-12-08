@@ -107,7 +107,7 @@ struct module_symbol {
      * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
     char const                *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
     char const                *ss_doc;    /* [0..1] An optional documentation string. */
-    dhash_t                    ss_hash;   /* [== hash_str(ss_name)] Hash-value of this symbol. */
+    dhash_t                    ss_hash;   /* [== Dee_HashStr(ss_name)] Hash-value of this symbol. */
 #define MODSYM_FNORMAL         0x0000     /* Normal symbol flags. */
 #define MODSYM_FREADONLY       0x0001     /* Don't allow write-access to this symbol.
                                            * When set, attempting to write/delete to this symbol will cause

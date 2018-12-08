@@ -148,7 +148,7 @@ struct notify_entry {
     uint16_t              nh_class; /* The notification class. */
     uint16_t              nh_pad[(sizeof(void *)-2)/2]; /* ... */
     DREF DeeStringObject *nh_name;  /* [0..1] The notification name (or NULL if the entry is unused) */
-    dhash_t               nh_hash;  /* The effective hash of the name (using `hash_caseptr' when `NOTIFICATION_CLASS_FNOCASE' is set) */
+    dhash_t               nh_hash;  /* The effective hash of the name (using `Dee_HashCasePtr' when `NOTIFICATION_CLASS_FNOCASE' is set) */
     dnotify_t             nh_func;  /* [1..1][valid_if(nh_name)] The callback invoked for the purposes of this notification. */
     DREF DeeObject       *nh_arg;   /* [0..1][valid_if(nh_name)] The argument passed to `nh_func' */
 };
@@ -258,7 +258,7 @@ DeeNotify_BeginListen(uint16_t cls, DeeObject *__restrict name,
  struct notify_entry *first_dummy;
  dhash_t hash,perturb,i;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- hash = (cls&NOTIFICATION_CLASS_FNOCASE)
+ hash = (cls & NOTIFICATION_CLASS_FNOCASE)
       ?  DeeString_HashCase(name)
       :  DeeString_Hash(name);
 again_lock:
@@ -278,7 +278,7 @@ again:
   if (entry->nh_func != callback) continue; /* Different callback. */
   if (entry->nh_name == (DREF DeeStringObject *)name ||
      (DeeString_SIZE(entry->nh_name) == DeeString_SIZE(name) &&
-     (cls&NOTIFICATION_CLASS_FNOCASE)
+     (cls & NOTIFICATION_CLASS_FNOCASE)
      ? MEMCASEEQ(entry->nh_name,DeeString_STR(name),DeeString_SIZE(name)*sizeof(char))
      : 0==memcmp(entry->nh_name,DeeString_STR(name),DeeString_SIZE(name)*sizeof(char)))) {
    /* Already exists. */
@@ -322,7 +322,7 @@ DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
                     dnotify_t callback, DeeObject *arg) {
  dhash_t hash,perturb,i;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
- hash = (cls&NOTIFICATION_CLASS_FNOCASE)
+ hash = (cls & NOTIFICATION_CLASS_FNOCASE)
       ?  DeeString_HashCase(name)
       :  DeeString_Hash(name);
 #ifndef CONFIG_NO_THREADS
@@ -340,7 +340,7 @@ DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
   if (entry->nh_func != callback) continue; /* Different callback. */
   if (entry->nh_name == (DREF DeeStringObject *)name ||
      (DeeString_SIZE(entry->nh_name) == DeeString_SIZE(name) &&
-     (cls&NOTIFICATION_CLASS_FNOCASE)
+     (cls & NOTIFICATION_CLASS_FNOCASE)
      ? MEMCASEEQ(entry->nh_name,DeeString_STR(name),DeeString_SIZE(name)*sizeof(char))
      : 0==memcmp(entry->nh_name,DeeString_STR(name),DeeString_SIZE(name)*sizeof(char)))) {
    /* Found it! (Replace with a dummy notification) */
@@ -391,7 +391,7 @@ again:
   if (entry->nh_func == &dummy_notify) continue; /* Skip dummy notifications. */
   if (entry->nh_name->s_str == name ||
      (DeeString_SIZE(entry->nh_name) == name_size &&
-     (cls&NOTIFICATION_CLASS_FNOCASE)
+     (cls & NOTIFICATION_CLASS_FNOCASE)
      ? MEMCASEEQ(entry->nh_name,name,name_size*sizeof(char))
      : 0==memcmp(entry->nh_name,name,name_size*sizeof(char)))) {
    DREF DeeObject *arg; dnotify_t func;
@@ -435,7 +435,7 @@ DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name) {
  size_t name_size; dhash_t name_hash;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
  name_size = DeeString_SIZE(name);
- name_hash = (cls&NOTIFICATION_CLASS_FNOCASE)
+ name_hash = (cls & NOTIFICATION_CLASS_FNOCASE)
            ?  DeeString_HashCase(name)
            :  DeeString_Hash(name);
  return DeeNotify_DoBroadcast(cls,DeeString_STR(name),name_size,name_hash);
@@ -445,9 +445,9 @@ DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name) {
  size_t name_size; dhash_t name_hash;
  ASSERT(name);
  name_size = strlen(name);
- name_hash = (cls&NOTIFICATION_CLASS_FNOCASE)
-           ?  hash_caseptr(name,name_size*sizeof(char))
-           :  hash_ptr(name,name_size*sizeof(char));
+ name_hash = (cls & NOTIFICATION_CLASS_FNOCASE)
+           ?  Dee_HashCasePtr(name,name_size*sizeof(char))
+           :  Dee_HashPtr(name,name_size*sizeof(char));
  return DeeNotify_DoBroadcast(cls,name,name_size,name_hash);
 }
 

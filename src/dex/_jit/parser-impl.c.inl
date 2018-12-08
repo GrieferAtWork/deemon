@@ -1384,7 +1384,7 @@ skip_rbrck_and_done:
     symbol = DeeModule_GetSymbolStringLen(module,
                                           symbol_name,
                                           symbol_size,
-                                          hash_ptr(symbol_name,symbol_size));
+                                          Dee_HashUtf8(symbol_name,symbol_size));
     if unlikely(!symbol) {
      DeeError_Throwf(&DeeError_SymbolError,
                      "Symbol `%$s' could not be found in module `%k'",
@@ -1596,7 +1596,7 @@ err_result_copy:
      self->jl_lvalue.lv_attrstr.la_base = result; /* Inherit reference. */
      self->jl_lvalue.lv_attrstr.la_name = attr_name;
      self->jl_lvalue.lv_attrstr.la_size = attr_size;
-     self->jl_lvalue.lv_attrstr.la_hash = hash_ptr(attr_name,attr_size);
+     self->jl_lvalue.lv_attrstr.la_hash = Dee_HashUtf8(attr_name,attr_size);
      result = JIT_LVALUE;
     }
 #endif /* JIT_EVAL */

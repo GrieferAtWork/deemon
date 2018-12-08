@@ -1386,7 +1386,7 @@ DEFINE_BINARY_MATH_OPERATOR(int,-1,DeeStruct_InplacePow,st_inplace_pow,OPERATOR_
 INTERN dhash_t DCALL
 DeeStruct_Hash(DeeSTypeObject *__restrict tp_self,
                void *self) {
- return hash_ptr(self,DeeSType_Sizeof(tp_self));
+ return Dee_HashPtr(self,DeeSType_Sizeof(tp_self));
 }
 
 

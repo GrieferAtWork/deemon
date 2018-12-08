@@ -82,7 +82,7 @@ err_r:
 
 PRIVATE dhash_t DCALL
 ss_hash(SlabStatObject *__restrict self) {
- return hash_ptr(&self->st_stat,SLABSTAT_DATASIZE(self));
+ return Dee_HashPtr(&self->st_stat,SLABSTAT_DATASIZE(self));
 }
 
 #define DEFINE_SS_COMPARE(name,op,return_diff_size) \

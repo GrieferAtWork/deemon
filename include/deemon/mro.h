@@ -52,7 +52,7 @@ struct membercache_slot {
 #define MEMBERCACHE_COUNT           9  /* Amount of different cache types. */
     uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
     uint16_t               mcs_pad[(sizeof(void *)-2)/2];
-    dhash_t                mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== hash_str(mcs_name)] */
+    dhash_t                mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== Dee_HashStr(mcs_name)] */
     DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][1..1][const]
                                         * The type that is providing this attribute, which must be
                                         * the associated type itself, or one of its base-classes. */
@@ -306,17 +306,17 @@ INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenWit
 #define DeeType_QueryIInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,hash)            DeeType_QueryInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,hash)
 #define DeeType_QueryIInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash) DeeType_QueryInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash)
 #define DeeType_QueryAttribute(tp_invoker,tp_self,attr)                                        DeeType_QueryAttributeWithHash(tp_invoker,tp_self,attr,DeeString_Hash(attr))
-#define DeeType_QueryAttributeString(tp_invoker,tp_self,attr)                                  DeeType_QueryAttributeStringWithHash(tp_invoker,tp_self,attr,hash_str(attr))
-#define DeeType_QueryAttributeStringLen(tp_invoker,tp_self,attr,namelen)                       DeeType_QueryAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash_ptr(attr,namelen))
+#define DeeType_QueryAttributeString(tp_invoker,tp_self,attr)                                  DeeType_QueryAttributeStringWithHash(tp_invoker,tp_self,attr,Dee_HashStr(attr))
+#define DeeType_QueryAttributeStringLen(tp_invoker,tp_self,attr,namelen)                       DeeType_QueryAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,Dee_HashPtr(attr,namelen))
 #define DeeType_QueryClassAttribute(tp_invoker,tp_self,attr)                                   DeeType_QueryClassAttributeWithHash(tp_invoker,tp_self,attr,DeeString_Hash(attr))
-#define DeeType_QueryClassAttributeString(tp_invoker,tp_self,attr)                             DeeType_QueryClassAttributeStringWithHash(tp_invoker,tp_self,attr,hash_str(attr))
-#define DeeType_QueryClassAttributeStringLen(tp_invoker,tp_self,attr,namelen)                  DeeType_QueryClassAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash_ptr(attr,namelen))
+#define DeeType_QueryClassAttributeString(tp_invoker,tp_self,attr)                             DeeType_QueryClassAttributeStringWithHash(tp_invoker,tp_self,attr,Dee_HashStr(attr))
+#define DeeType_QueryClassAttributeStringLen(tp_invoker,tp_self,attr,namelen)                  DeeType_QueryClassAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,Dee_HashPtr(attr,namelen))
 #define DeeType_QueryInstanceAttribute(tp_invoker,tp_self,attr)                                DeeType_QueryInstanceAttributeWithHash(tp_invoker,tp_self,attr,DeeString_Hash(attr))
-#define DeeType_QueryInstanceAttributeString(tp_invoker,tp_self,attr)                          DeeType_QueryInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,hash_str(attr))
-#define DeeType_QueryInstanceAttributeStringLen(tp_invoker,tp_self,attr,namelen)               DeeType_QueryInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash_ptr(attr,namelen))
+#define DeeType_QueryInstanceAttributeString(tp_invoker,tp_self,attr)                          DeeType_QueryInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,Dee_HashStr(attr))
+#define DeeType_QueryInstanceAttributeStringLen(tp_invoker,tp_self,attr,namelen)               DeeType_QueryInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,Dee_HashPtr(attr,namelen))
 #define DeeType_QueryIInstanceAttribute(tp_invoker,tp_self,attr)                               DeeType_QueryIInstanceAttributeWithHash(tp_invoker,tp_self,attr,DeeString_Hash(attr))
-#define DeeType_QueryIInstanceAttributeString(tp_invoker,tp_self,attr)                         DeeType_QueryIInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,hash_str(attr))
-#define DeeType_QueryIInstanceAttributeStringLen(tp_invoker,tp_self,attr,namelen)              DeeType_QueryIInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash_ptr(attr,namelen))
+#define DeeType_QueryIInstanceAttributeString(tp_invoker,tp_self,attr)                         DeeType_QueryIInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,Dee_HashStr(attr))
+#define DeeType_QueryIInstanceAttributeStringLen(tp_invoker,tp_self,attr,namelen)              DeeType_QueryIInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,Dee_HashPtr(attr,namelen))
 #endif
 
 /* Invoke attributes from `tp_self->tp_methods' / `tp_self->tp_class_methods'.

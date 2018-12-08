@@ -152,7 +152,7 @@ dex_load_handle(DeeDexObject *__restrict self,
   ASSERTF(!sym->ds_obj || DeeObject_DoCheck(sym->ds_obj),
           "Invalid object %p exported: `%s' by `%s'",
           sym->ds_obj,sym->ds_name,DeeString_STR(input_file));
-  hash    = hash_str(sym->ds_name);
+  hash    = Dee_HashStr(sym->ds_name);
   perturb = i = hash & bucket_mask;
   for (;; i = MODULE_HASHNX(i,perturb),MODULE_HASHPT(perturb)) {
    struct module_symbol *target = &modsym[i & bucket_mask];
