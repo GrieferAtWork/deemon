@@ -1734,7 +1734,7 @@ DFUNDEF int (DCALL unicode_printer_putc)(struct unicode_printer *__restrict self
 /* Append an ASCII character. */
 DFUNDEF int (DCALL unicode_printer_putascii)(struct unicode_printer *__restrict self, char ch);
 /* Append a UTF-8 character. */
-DFUNDEF int (DCALL unicode_printer_pututf8)(struct unicode_printer *__restrict self, char ch);
+DFUNDEF int (DCALL unicode_printer_pututf8)(struct unicode_printer *__restrict self, uint8_t ch);
 /* Append a UTF-16 character. */
 DFUNDEF int (DCALL unicode_printer_pututf16)(struct unicode_printer *__restrict self, uint16_t ch);
 
@@ -1861,11 +1861,11 @@ DFUNDEF dssize_t (DCALL unicode_printer_reuse32)(struct unicode_printer *__restr
 
 
 /* Allocate buffers for UTF-8 with the intent of appending them to the end of the unicode printer.
- * Under specific circumstances, these functions allow the printer to allocate
- * the utf-8 string as in-line to the string being generated, with `unicode_printer_confirm_utf8()'
- * then checking if the buffer contains non-ascii characters, in which case the string would be
- * up-cast. However, if the buffer cannot be allocated in-line, it is allocated on the heap, and
- * a later call to `unicode_printer_confirm_utf8()' will append it normally.
+ * Under specific circumstances, these functions allow the printer to allocate the utf-8 string as
+ * in-line to the string being generated, with `unicode_printer_confirm_utf8()' then checking if the
+ * buffer contains non-ascii characters, in which case the string would be up-cast.
+ * However, if the buffer cannot be allocated in-line, it is allocated on the heap, and a later call
+ * to `unicode_printer_confirm_utf8()' will append it the same way `unicode_printer_print()' would.
  * Note however that when a UTF-8 buffer has been allocated, no text may be printed to the printer
  * before that buffer is either confirmed, or freed. However, this shouldn't be a problem,
  * considering the intended usage case in something like this:
@@ -1920,7 +1920,7 @@ DFUNDEF char *(DCALL unicode_printer_tryresize_utf8)(struct unicode_printer *__r
 DFUNDEF void (DCALL unicode_printer_free_utf8)(struct unicode_printer *__restrict self, char *buf);                           /* Dee_Free()-like */
 DFUNDEF dssize_t (DCALL unicode_printer_confirm_utf8)(struct unicode_printer *__restrict self, /*inherit(always)*/char *buf, size_t final_length);
 
-/* Same as the functions above, however used to allocate utf-16 character buffers. */
+/* Same as the functions above, however used to allocate utf-16 string buffers. */
 DFUNDEF uint16_t *(DCALL unicode_printer_alloc_utf16)(struct unicode_printer *__restrict self, size_t length);                        /* Dee_Malloc()-like */
 DFUNDEF uint16_t *(DCALL unicode_printer_tryalloc_utf16)(struct unicode_printer *__restrict self, size_t length);                     /* Dee_Malloc()-like */
 DFUNDEF uint16_t *(DCALL unicode_printer_resize_utf16)(struct unicode_printer *__restrict self, uint16_t *buf, size_t new_length);    /* Dee_Realloc()-like */
@@ -1928,7 +1928,7 @@ DFUNDEF uint16_t *(DCALL unicode_printer_tryresize_utf16)(struct unicode_printer
 DFUNDEF void (DCALL unicode_printer_free_utf16)(struct unicode_printer *__restrict self, uint16_t *buf);                              /* Dee_Free()-like */
 DFUNDEF dssize_t (DCALL unicode_printer_confirm_utf16)(struct unicode_printer *__restrict self, /*inherit(always)*/uint16_t *buf, size_t final_length);
 
-/* Same as the functions above, however used to allocate utf-32 character buffers. */
+/* Same as the functions above, however used to allocate utf-32 string buffers. */
 DFUNDEF uint32_t *(DCALL unicode_printer_alloc_utf32)(struct unicode_printer *__restrict self, size_t length);                        /* Dee_Malloc()-like */
 DFUNDEF uint32_t *(DCALL unicode_printer_tryalloc_utf32)(struct unicode_printer *__restrict self, size_t length);                     /* Dee_Malloc()-like */
 DFUNDEF uint32_t *(DCALL unicode_printer_resize_utf32)(struct unicode_printer *__restrict self, uint32_t *buf, size_t new_length);    /* Dee_Realloc()-like */
@@ -1937,7 +1937,7 @@ DFUNDEF void (DCALL unicode_printer_free_utf32)(struct unicode_printer *__restri
 DFUNDEF dssize_t (DCALL unicode_printer_confirm_utf32)(struct unicode_printer *__restrict self, /*inherit(always)*/uint32_t *buf, size_t final_length);
 
 
-/* Same as the functions above, however used to allocate wide-character buffers. */
+/* Same as the functions above, however used to allocate wide-string buffers. */
 #ifdef __INTELLISENSE__
 dwchar_t *(unicode_printer_alloc_wchar)(struct unicode_printer *__restrict self, size_t length);                        /* Dee_Malloc()-like */
 dwchar_t *(unicode_printer_tryalloc_wchar)(struct unicode_printer *__restrict self, size_t length);                     /* Dee_Malloc()-like */

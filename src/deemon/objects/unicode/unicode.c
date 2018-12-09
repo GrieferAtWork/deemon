@@ -3452,7 +3452,8 @@ done:
 
 PUBLIC int
 (DCALL unicode_printer_putascii)(struct unicode_printer *__restrict self, char ch) {
- ASSERTF((uint8_t)ch <= 0x7f,"The given ch (U+%.4I8x) is not an ASCII character",
+ ASSERTF((uint8_t)ch <= 0x7f,
+         "The given ch (U+%.4I8x) is not an ASCII character",
          (uint8_t)ch);
  return unicode_printer_putc8(self,(uint8_t)ch);
 }
@@ -3613,12 +3614,12 @@ err:
 
 /* Append a given UTF-8 character. */
 PUBLIC int
-(DCALL unicode_printer_pututf8)(struct unicode_printer *__restrict self, char ch) {
+(DCALL unicode_printer_pututf8)(struct unicode_printer *__restrict self, uint8_t ch) {
  if (self->up_flags & UNICODE_PRINTER_FPENDING) {
   /* Complete a pending UTF-8 multi-byte sequence. */
   uint8_t curlen,reqlen;
   curlen = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-  self->up_pend[curlen] = (uint8_t)ch;
+  self->up_pend[curlen] = ch;
   reqlen = utf8_sequence_len[self->up_pend[0]];
   ASSERT(curlen+1 <= reqlen);
   if (curlen+1 == reqlen) {
@@ -3633,13 +3634,13 @@ PUBLIC int
   self->up_flags += 1 << UNICODE_PRINTER_FPENDING_SHFT;
   return 0;
  }
- if ((unsigned char)ch >= 0xc0) {
+ if (ch >= 0xc0) {
   /* Start of a multi-byte sequence. */
-  self->up_pend[0] = (unsigned char)ch;
+  self->up_pend[0] = ch;
   self->up_flags |= 1 << UNICODE_PRINTER_FPENDING_SHFT;
   return 0;
  }
- return unicode_printer_putc8(self,(unsigned char)ch);
+ return unicode_printer_putc8(self,ch);
 }
 
 PUBLIC int
