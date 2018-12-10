@@ -19,3 +19,5 @@
 *.stackdump
 *.db
 *.opendb
+*.db-shm
+*.db-wal
