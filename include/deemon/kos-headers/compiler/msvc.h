@@ -426,6 +426,10 @@ void __builtin_va_end(__builtin_va_list &__ap);
 #pragma warning(disable: 4514) /* Unused inline function was removed. */
 #pragma warning(disable: 4574) /* Nonsensical preprocessor warning. */
 #pragma warning(disable: 4710) /* Function not inlined (Emit for local varargs functions...) */
+#if _MSC_VER >= 1900 && defined(__cplusplus)
+#pragma warning(disable: 4577) /* "noexcept" used with exceptions disabled (aka: who da fuq cares?) */
+#endif
+
 #ifndef __cplusplus
 /* Disable some warnings that are caused by function redirections in system headers. */
 #define __REDIRECT_WSUPPRESS_BEGIN \
