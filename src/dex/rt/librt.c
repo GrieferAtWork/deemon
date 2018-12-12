@@ -77,21 +77,37 @@ PRIVATE DREF DeeObject *DCALL
 librt_getstacklimit_f(size_t argc, DeeObject **__restrict argv) {
  uint16_t result;
  if (DeeArg_Unpack(argc,argv,":getstacklimit"))
-     return NULL;
+     goto err;
  result = ATOMIC_READ(DeeExec_StackLimit);
  return DeeInt_NewU16(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 librt_setstacklimit_f(size_t argc, DeeObject **__restrict argv) {
  uint16_t result,newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
  if (DeeArg_Unpack(argc,argv,"|I16u:setstacklimit",&newval))
-     return NULL;
+     goto err;
  result = ATOMIC_XCH(DeeExec_StackLimit,newval);
  return DeeInt_NewU16(result);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+librt_makeclass_f(size_t argc, DeeObject **__restrict argv) {
+ DeeTypeObject *base; DeeObject *descriptor;
+ if (DeeArg_Unpack(argc,argv,"oo:makeclass",&base,&descriptor))
+     goto err;
+ if (DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
+     goto err;
+ return (DREF DeeObject *)DeeClass_New(base,descriptor);
+err:
+ return NULL;
 }
 
 PRIVATE DEFINE_CMETHOD(librt_getstacklimit,librt_getstacklimit_f);
 PRIVATE DEFINE_CMETHOD(librt_setstacklimit,librt_setstacklimit_f);
+PRIVATE DEFINE_CMETHOD(librt_makeclass,librt_makeclass_f);
 
 #if 1
 #define STR_ITERATOR  COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name,DeeStringObject,s_str)
@@ -1190,6 +1206,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "sub-routine within the deemon core, which may not be implemented "
           "for an arbitrary architecture") },
     { "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
+    { "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
+      DOC("(base:?X2?Dtype?N,descriptor:?#ClassDescriptor)->?Dtype\n"
+          "Construct a new class from a given @base type, as well as class @descriptor") },
 
     /* Internal types used to drive sequence proxies */
     { "SeqCombinations", (DeeObject *)&librt_get_SeqCombinations, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqCombinations_Type */

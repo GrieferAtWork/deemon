@@ -2237,7 +2237,7 @@ PRIVATE struct type_getset object_getsets[] = {
     { DeeString_STR(&str_class), &object_class_get, NULL, NULL },
     { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL },
     { "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
-      DOC("->?Aobjecttable?Ert:ClassDescriptor\n"
+      DOC("->?AObjectTable?Ert:ClassDescriptor\n"
           "Returns an indexable sequence describing the instance object "
           "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. when ${this.class.__isclass__} is :false), an empty sequence is returned\n"
@@ -3885,7 +3885,7 @@ PRIVATE struct type_getset type_getsets[] = {
           "be determined, which may be the case if the type doesn't have any defining "
           "features such as operators, or class/instance member functions") },
     { "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
-      DOC("->?Aobjecttable?Ert:ClassDescriptor\n"
+      DOC("->?AObjectTable?Ert:ClassDescriptor\n"
           "Returns an indexable sequence describing the class object table, "
           "as referenced by :rt.ClassDescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"

@@ -218,7 +218,7 @@ BUILTIN_DOC_REUSE(exec,&builtin_exec,MODSYM_FNORMAL,
                   "This type of evaluation is much more restrictive that evaluation of "
                   "normal user-code, as rather than being parsed, optimized, assembled "
                   "and linked into a full byte-code object, execution happens with the "
-                  "help of a JIT compiler\n"
+                  "help of a seperate JIT compiler\n"
                   "Note however that this compiler will never support preprocessor features "
                   "such as directives, macros or escaped line-feeds, as well as other "
                   "language-level features such as goto-labels or true support for type "

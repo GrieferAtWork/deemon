@@ -29,6 +29,7 @@
 #include <deemon/none.h>
 #include <deemon/asm.h>
 #include <deemon/string.h>
+#include <deemon/roset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/tuple.h>
@@ -1571,9 +1572,30 @@ push_a_if_used:
 
   case OPERATOR_CONTAINS:
    if unlikely(!self->a_operator.o_op1) goto generic_operator;
-   if (ast_genasm_set(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
-   if (asm_putddi(self) || asm_gcontains()) goto err;
+   if (self->a_operator.o_op0->a_type == AST_CONSTEXPR &&
+      (current_assembler.a_flag & (ASM_FOPTIMIZE|ASM_FOPTIMIZE_SIZE))) {
+    DREF DeeObject *push_seq; int32_t cid;
+    push_seq = DeeRoSet_FromSequence(self->a_operator.o_op0->a_constexpr);
+    if unlikely(!push_seq) {
+     if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
+          goto err;
+     push_seq = self->a_operator.o_op0->a_constexpr;
+     Dee_Incref(push_seq);
+    }
+    if unlikely(!asm_allowconst(push_seq)) {
+     Dee_Decref_likely(push_seq);
+     goto action_in_without_const;
+    }
+    cid = asm_newconst(push_seq);
+    Dee_Decref_unlikely(push_seq);
+    if unlikely(cid < 0) goto err;
+    if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(self) || asm_gcontains_const((uint16_t)cid)) goto err;
+   } else {
+    if (ast_genasm_set(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+    if (asm_putddi(self) || asm_gcontains()) goto err;
+   }
    goto pop_unused;
 
   default: break;
@@ -1949,15 +1971,37 @@ do_this_as_typesym_ref:
    if (PUSH_RESULT && (asm_putddi(self) || asm_ginstanceof())) goto err;
    break;
   ACTION(AST_FACTION_IN)
-   if (ast_can_exchange(self->a_action.a_act0,
-                        self->a_action.a_act1)) {
-    if (ast_genasm_set(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
+   if (self->a_action.a_act1->a_type == AST_CONSTEXPR &&
+      (current_assembler.a_flag & (ASM_FOPTIMIZE|ASM_FOPTIMIZE_SIZE))) {
+    DREF DeeObject *push_seq; int32_t cid;
+    push_seq = DeeRoSet_FromSequence(self->a_action.a_act1->a_constexpr);
+    if unlikely(!push_seq) {
+     if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
+          goto err;
+     push_seq = self->a_action.a_act1->a_constexpr;
+     Dee_Incref(push_seq);
+    }
+    if unlikely(!asm_allowconst(push_seq)) {
+     Dee_Decref_likely(push_seq);
+     goto action_in_without_const;
+    }
+    cid = asm_newconst(push_seq);
+    Dee_Decref_unlikely(push_seq);
+    if unlikely(cid < 0) goto err;
     if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
-    if (asm_putddi(self) || asm_gcontains()) goto err;
+    if (asm_putddi(self) || asm_gcontains_const((uint16_t)cid)) goto err;
    } else {
-    if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm_set(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
-    if (asm_putddi(self) || asm_gswap() || asm_gcontains()) goto err;
+action_in_without_const:
+    if (ast_can_exchange(self->a_action.a_act0,
+                         self->a_action.a_act1)) {
+     if (ast_genasm_set(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(self) || asm_gcontains()) goto err;
+    } else {
+     if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_set(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
+     if (asm_putddi(self) || asm_gswap() || asm_gcontains()) goto err;
+    }
    }
    goto pop_unused;
   ACTION(AST_FACTION_MIN)

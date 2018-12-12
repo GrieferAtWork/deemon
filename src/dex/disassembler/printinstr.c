@@ -2186,6 +2186,7 @@ print_const_int:
  case ASM16_PRINT_C:
  case ASM16_FPRINT_C:
  case ASM16_GETITEM_C:
+ case ASM16_CONTAINS_C:
  case ASM16_GETATTR_C:
  case ASM16_DELATTR_C:
  case ASM16_GETATTR_THIS_C:
@@ -2212,6 +2213,7 @@ print_const_int:
  case ASM_PRINT_C:
  case ASM_FPRINT_C:
  case ASM_GETITEM_C:
+ case ASM_CONTAINS_C:
  case ASM_GETATTR_C:
  case ASM_DELATTR_C:
  case ASM_GETATTR_THIS_C:
@@ -2259,6 +2261,8 @@ print_const:
   case ASM16_SETATTR_C:
   case ASM_SETATTR_THIS_C:
   case ASM16_SETATTR_THIS_C:
+  case ASM_CONTAINS_C:
+  case ASM16_CONTAINS_C:
    PRINT(", pop");
    break;
   case ASM_CALLATTR_C:

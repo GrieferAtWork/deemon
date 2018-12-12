@@ -1029,13 +1029,18 @@
                                       * [4][-0,+0]   `mov  PREFIX, global <imm16>'        - `PREFIX: push global <imm16>' */
 #define ASM16_PUSH_LOCAL      0xf03f /* [4][-0,+1]   `push local <imm16>'                 - Push the local variable indexed by `<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                       * [4][-0,+0]   `mov  PREFIX, local <imm16>'         - `PREFIX: push local <imm16>' */
-#define ASM_CAST_HASHSET      0xf040 /* [2][-1,+1]   `cast top, hashset'                  - Convert a sequence in stack-top into a hashset. */
-#define ASM_CAST_DICT         0xf041 /* [2][-1,+1]   `cast top, dict'                     - Convert a sequence in stack-top into a dict. */
-#define ASM16_PACK_TUPLE      0xf042 /* [4][-n,+1]   `push pack tuple, #<imm16>'          - Pop <imm16> elements and pack them into a tuple. */
-#define ASM16_PACK_LIST       0xf043 /* [4][-n,+1]   `push pack list, #<imm16>'           - Pop <imm16> elements and pack them into a list. */
+#define ASM_CAST_HASHSET      0xf040 /* [2][-1,+1]   `cast top, hashset'                  - Convert a sequence in stack-top into a hashset.
+                                      * >> PUSH(hashset(POP())); */
+#define ASM_CAST_DICT         0xf041 /* [2][-1,+1]   `cast top, dict'                     - Convert a sequence in stack-top into a dict.
+                                      * >> PUSH(dict(POP())); */
+#define ASM16_PACK_TUPLE      0xf042 /* [4][-n,+1]   `push pack tuple, #<imm16>'          - Pop <imm16> elements and pack them into a tuple.
+                                      * >> PUSH(tuple({ POP(IMM16)... })); */
+#define ASM16_PACK_LIST       0xf043 /* [4][-n,+1]   `push pack list, #<imm16>'           - Pop <imm16> elements and pack them into a list.
+                                      * >> PUSH(list({ POP(IMM16)... })); */
 /*      ASM_                  0xf044  *               --------                            - ------------------ */
 /*      ASM_                  0xf045  *               --------                            - ------------------ */
-#define ASM16_UNPACK          0xf046 /* [4][-1,+n]   `unpack pop, #<imm16>'                 - Pop a sequence and unpack it into <imm16> elements then pushed onto the stack. */
+#define ASM16_UNPACK          0xf046 /* [4][-1,+n]   `unpack pop, #<imm16>'                 - Pop a sequence and unpack it into <imm16> elements then pushed onto the stack.
+                                      * >> PUSH(tuple.unpack(POP(),IMM16)...); */
 /*      ASM_                  0xf047  *               --------                            - ------------------ */
 /*      ASM_                  0xf048  *               --------                            - ------------------ */
 /*      ASM_                  0xf049  *               --------                            - ------------------ */
@@ -1046,11 +1051,15 @@
 /*      ASM_                  0xf04e  *               --------                            - ------------------ */
 /*      ASM_                  0xf04f  *               --------                            - ------------------ */
 #define ASM_PUSH_TRUE         0xf050 /* [2][-0,+1]   `push true'                          - The the builtin `true' singleton onto the stack.
-                                      * [4][-0,+0]   `mov  PREFIX, true'                  - `PREFIX: push true' */
+                                      * [4][-0,+0]   `mov  PREFIX, true'                  - `PREFIX: push true'
+                                      * >> DESTINATION = true; */
 #define ASM_PUSH_FALSE        0xf051 /* [2][-0,+1]   `push false'                         - The the builtin `false' singleton onto the stack.
-                                      * [4][-0,+0]   `mov  PREFIX, false'                 - `PREFIX: push false' */
-#define ASM_PACK_HASHSET      0xf052 /* [3][-n,+1]   `push pack hashset, #<imm8>'         - Pop <imm8> elements and pack them into a hashset. */
-#define ASM_PACK_DICT         0xf053 /* [3][-n,+1]   `push pack dict, #<imm8>*2'          - Pop <imm8>*2 elements and pack them into a dict, using every first as key and every second as item. */
+                                      * [4][-0,+0]   `mov  PREFIX, false'                 - `PREFIX: push false'
+                                      * >> DESTINATION = false; */
+#define ASM_PACK_HASHSET      0xf052 /* [3][-n,+1]   `push pack hashset, #<imm8>'         - Pop <imm8> elements and pack them into a hashset.
+                                      * >> PUSH(hashset({ POP(IMM8)... })); */
+#define ASM_PACK_DICT         0xf053 /* [3][-n,+1]   `push pack dict, #<imm8>*2'          - Pop <imm8>*2 elements and pack them into a dict, using every first as key and every second as item.
+                                      * >> PUSH(dict({ POP(IMM8 * 2)... }.segments(2))); */
 /*      ASM_                  0xf054  *               --------                            - ------------------ */
 /*      ASM_                  0xf055  *               --------                            - ------------------ */
 /*      ASM_                  0xf056  *               --------                            - ------------------ */
@@ -1058,22 +1067,38 @@
 /*      ASM_                  0xf058  *               --------                            - ------------------ */
 #define ASM_BOUNDITEM         0xf059 /* [2][-2,+1]   `bounditem top, pop'                 - Pop an index/key, then use it to check if an item is bound in stack-top.
                                       * >> PUSH(bound(POP().operator [] (POP())); */
-#define ASM16_GETATTR_C       0xf05a /* [4][-1,+1]   `getattr top, const <imm16>'         - Perform a fast attribute lookup on stack-top using a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_DELATTR_C       0xf05b /* [4][-1,+0]   `delattr pop, const <imm16>'         - Delete an attribute of stack-top named by a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_SETATTR_C       0xf05c /* [4][-2,+0]   `setattr pop, const <imm16>, pop'    - Pop a value and set an attribute of (then) stack-top named by a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_GETATTR_THIS_C  0xf05d /* [4][-0,+1]   `push getattr this, const <imm16>'   - Lookup and push an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM16_DELATTR_THIS_C  0xf05e /* [4][-0,+0]   `delattr this, const <imm16>'        - Delete an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM16_SETATTR_THIS_C  0xf05f /* [4][-1,+0]   `setattr this, const <imm16>, pop'   - Pop a value and set an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM_CMP_SO            0xf060 /* [2][-2,+1]   `cmp so, top, pop'                   - Compare for SameObject and push the result (`object.id(a) == object.id(b)' / `a === b'). */
-#define ASM_CMP_DO            0xf061 /* [2][-2,+1]   `cmp do, top, pop'                   - Compare for DifferentObject and push the result (`object.id(a) != object.id(b)' / `a !== b'). */
-#define ASM16_PACK_HASHSET    0xf062 /* [4][-n,+1]   `push pack hashset, #<imm16>'        - Pop <imm16> elements and pack them into a hashset. */
-#define ASM16_PACK_DICT       0xf063 /* [4][-n,+1]   `push pack dict, #<imm16>*2'         - Pop <imm16>*2 elements and pack them into a dict, using every first as key and every second as item. */
-#define ASM16_GETCMEMBER      0xf064 /* [4][-1,+1]   `getcmember top, $<imm16>'           - Lookup a class member of `top', given its index. */
-#define ASM_CLASS             0xf065 /* [2][-2,+1]   `class top, pop'                     - Same as `ASM_CLASS_C', however the class descriptor is popped from the stack. */
-#define ASM16_CLASS_C         0xf066 /* [4][-1,+1]   `class top, const <imm16>'           - Same as `ASM_CLASS_C', however operands are is extended to 16 bits. */
-#define ASM16_CLASS_GC        0xf067 /* [6][-0,+1]   `push class global <imm16>, const <imm16>' - Same as `ASM_CLASS_GC', however operands are is extended to 16 bits. */
-#define ASM16_CLASS_EC        0xf068 /* [8][-0,+1]   `push class extern <imm16>:<imm16>, const <imm16>' - Same as `ASM_CLASS_EC', however operands are extended to 16 bits. */
-#define ASM16_DEFCMEMBER      0xf069 /* [4][-2,+1]   `defcmember top, $<imm16>, pop'      - Initialize a class member variable `<imm16>' using a value from the stack. */
+#define ASM16_GETATTR_C       0xf05a /* [4][-1,+1]   `getattr top, const <imm16>'         - Perform a fast attribute lookup on stack-top using a string in constant slot `<imm16>' (little-endian).
+                                      * >> PUSH(POP().operator . (CONST(IMM16)); */
+#define ASM16_DELATTR_C       0xf05b /* [4][-1,+0]   `delattr pop, const <imm16>'         - Delete an attribute of stack-top named by a string in constant slot `<imm16>' (little-endian).
+                                      * >> POP().operator del. (CONST(IMM16)); */
+#define ASM16_SETATTR_C       0xf05c /* [4][-2,+0]   `setattr pop, const <imm16>, pop'    - Pop a value and set an attribute of (then) stack-top named by a string in constant slot `<imm16>' (little-endian).
+                                      * >> POP().operator .= (CONST(IMM16),POP()); */
+#define ASM16_GETATTR_THIS_C  0xf05d /* [4][-0,+1]   `push getattr this, const <imm16>'   - Lookup and push an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+                                      * >> PUSH(THIS.operator . (CONST(IMM16))); */
+#define ASM16_DELATTR_THIS_C  0xf05e /* [4][-0,+0]   `delattr this, const <imm16>'        - Delete an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+                                      * >> THIS.operator del. (CONST(IMM16)); */
+#define ASM16_SETATTR_THIS_C  0xf05f /* [4][-1,+0]   `setattr this, const <imm16>, pop'   - Pop a value and set an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+                                      * >> THIS.operator .= (CONST(IMM16),POP()); */
+#define ASM_CMP_SO            0xf060 /* [2][-2,+1]   `cmp so, top, pop'                   - Compare for SameObject and push the result (`object.id(a) == object.id(b)' / `a === b').
+                                      * >> PUSH(POP() === POP()); */
+#define ASM_CMP_DO            0xf061 /* [2][-2,+1]   `cmp do, top, pop'                   - Compare for DifferentObject and push the result (`object.id(a) != object.id(b)' / `a !== b').
+                                      * >> PUSH(POP() !== POP()); */
+#define ASM16_PACK_HASHSET    0xf062 /* [4][-n,+1]   `push pack hashset, #<imm16>'        - Pop <imm16> elements and pack them into a hashset.
+                                      * >> PUSH(hashset({ POP(IMM16)... })); */
+#define ASM16_PACK_DICT       0xf063 /* [4][-n,+1]   `push pack dict, #<imm16>*2'         - Pop <imm16>*2 elements and pack them into a dict, using every first as key and every second as item.
+                                      * >> PUSH(dict({ POP(IMM16 * 2)... }.segments(2))); */
+#define ASM16_GETCMEMBER      0xf064 /* [4][-1,+1]   `getcmember top, $<imm16>'           - Lookup a class member of `top', given its index.
+                                      * >> PUSH(type.__ctable__(POP())[IMM16]); */
+#define ASM_CLASS             0xf065 /* [2][-2,+1]   `class top, pop'                     - Same as `ASM_CLASS_C', however the class descriptor is popped from the stack.
+                                      * >> PUSH(rt.makeclass(POP(),POP())); */
+#define ASM16_CLASS_C         0xf066 /* [4][-1,+1]   `class top, const <imm16>'           - Same as `ASM_CLASS_C', however operands are is extended to 16 bits.
+                                      * >> PUSH(rt.makeclass(POP(),CONST(IMM16))); */
+#define ASM16_CLASS_GC        0xf067 /* [6][-0,+1]   `push class global <imm16>, const <imm16>' - Same as `ASM_CLASS_GC', however operands are is extended to 16 bits.
+                                      * >> PUSH(rt.makeclass(GLOBAL(IMM16),CONST(IMM16))); */
+#define ASM16_CLASS_EC        0xf068 /* [8][-0,+1]   `push class extern <imm16>:<imm16>, const <imm16>' - Same as `ASM_CLASS_EC', however operands are extended to 16 bits.
+                                      * >> PUSH(rt.makeclass(EXTERN(IMM16,IMM16),CONST(IMM16))); */
+#define ASM16_DEFCMEMBER      0xf069 /* [4][-2,+1]   `defcmember top, $<imm16>, pop'      - Initialize a class member variable `<imm16>' using a value from the stack.
+                                      * >> type.__ctable__(TOP)[IMM16] = POP(); */
 #define ASM16_GETCMEMBER_R    0xf06a /* [6][-0,+1]   `push getcmember ref <imm16>, $<imm16>'- Lookup a class member of `ref <imm16>', given its index. */
 #define ASM16_CALLCMEMBER_THIS_R 0xf06b/*[7][-n,+1]  `push callcmember this, ref <imm16>, $<imm16>, #<imm8>'- Lookup a class member of `ref <imm16>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */

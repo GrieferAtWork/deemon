@@ -1334,6 +1334,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_ggetsize()                (asm_dicsp(),asm_put(ASM_GETSIZE))
 #define asm_ggetsize_varargs()        (asm_incsp(),asm_put((ASM_VARARGS_GETSIZE & 0xff00) >> 8) || asm_put(ASM_VARARGS_GETSIZE & 0xff))
 #define asm_gcontains()               (asm_ddicsp(),asm_put(ASM_CONTAINS))
+#define asm_gcontains_const(cid)      (asm_dicsp(),asm_put816(ASM_CONTAINS_C,cid))
 #define asm_ggetitem()                (asm_ddicsp(),asm_put(ASM_GETITEM))
 #define asm_ggetitem_index(i16)       (asm_dicsp(),asm_putimm16(ASM_GETITEM_I,i16))
 #define asm_ggetitem_const(cid)       (asm_dicsp(),asm_put816(ASM_GETITEM_C,cid))
