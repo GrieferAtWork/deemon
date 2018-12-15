@@ -424,7 +424,7 @@ do_length_integer:
     struct unicode_printer subprinter = UNICODE_PRINTER_INIT;
     temp = print_repr_precision(in_arg,
                                 str_length,
-                               (dformatprinter)&unicode_printer_print,
+                               &unicode_printer_print,
                                &subprinter,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
                                 flags&F_PREFIX
@@ -492,10 +492,10 @@ err_subprinter:
     size_t preprinter_length;
     temp = ch == 'r'
          ? DeeObject_PrintRepr(in_arg,
-                              (dformatprinter)&unicode_printer_print,
+                              &unicode_printer_print,
                               &preprinter)
          : DeeObject_Print(in_arg,
-                          (dformatprinter)&unicode_printer_print,
+                          &unicode_printer_print,
                           &preprinter);
     if unlikely(temp < 0) {
 err_preprinter:

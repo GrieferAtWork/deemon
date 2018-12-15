@@ -262,7 +262,7 @@ PUBLIC int
  }
  if (DeeBytes_Check(seq)) {
   /* Optional optimization for `bytes' (though this one
-   * would  also function using the fallback code below). */
+   * would also function using the fallback code below). */
   if (DeeBytes_SIZE(seq) != num_bytes) {
    err_invalid_unpack_size(seq,num_bytes,DeeBytes_SIZE(seq));
    goto err;
@@ -717,13 +717,13 @@ err:
 PRIVATE int DCALL
 bytes_assign(Bytes *__restrict self,
              DeeObject *__restrict values) {
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  return -1;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  return DeeSeq_ItemsToBytes(DeeBytes_DATA(self),
                             DeeBytes_SIZE(self),
                             values);
+err_readonly:
+ return err_bytes_not_writable((DeeObject *)self);
 }
 
 
@@ -768,7 +768,7 @@ PRIVATE DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if unlikely(bytes_print_repr(self,
-                             (dformatprinter)&ascii_printer_print,
+                             &ascii_printer_print,
                              &printer) < 0)
     goto err;
  return ascii_printer_pack(&printer);
@@ -826,12 +826,12 @@ bytes_delitem(Bytes *__restrict self,
   err_index_out_of_bounds((DeeObject *)self,i,DeeBytes_SIZE(self));
   goto err;
  }
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  DeeBytes_DATA(self)[i] = 0;
  return 0;
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
 err:
  return -1;
 }
@@ -848,12 +848,12 @@ bytes_setitem(Bytes *__restrict self,
   err_index_out_of_bounds((DeeObject *)self,i,DeeBytes_SIZE(self));
   goto err;
  }
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  DeeBytes_DATA(self)[i] = val;
  return 0;
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
 err:
  return -1;
 }
@@ -902,10 +902,8 @@ bytes_setrange(Bytes *__restrict self,
  if (DeeObject_AsSSize(begin,&start_index) ||
     (!DeeNone_Check(end) && DeeObject_AsSSize(end,&end_index)))
      goto err;
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  if unlikely(start_index < 0) start_index += DeeBytes_SIZE(self);
  if unlikely(end_index < 0) end_index += DeeBytes_SIZE(self);
  if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
@@ -916,6 +914,8 @@ bytes_setrange(Bytes *__restrict self,
  size = (size_t)(end_index-start_index);
  dst = DeeBytes_DATA(self) + (size_t)start_index;
  return DeeSeq_ItemsToBytes(dst,size,value);
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
 err:
  return -1;
 }
@@ -1071,7 +1071,7 @@ bytes_mod(Bytes *__restrict self,
  }
  /* Use a different printer for format-copy-characters, thus allowing
   * us to not need to both encoding the bytes from `self' as UTF-8. */
- if unlikely(DeeString_CFormat((dformatprinter)&bytes_printer_print,
+ if unlikely(DeeString_CFormat(&bytes_printer_print,
                                (dformatprinter)&bytes_printer_append,
                                &printer,
                                (char const *)DeeBytes_DATA(self),
@@ -1091,9 +1091,9 @@ DeeBytes_PrintUtf8(DeeObject *__restrict self,
  dssize_t temp,result = 0;
  uint8_t *iter,*end,*flush_start;
  /* Optimizations for special printer targets. */
- if (printer == (dformatprinter)&bytes_printer_print)
+ if (printer == &bytes_printer_print)
      return bytes_printer_append((struct bytes_printer *)arg,DeeBytes_DATA(self),DeeBytes_SIZE(self));
- if (printer == (dformatprinter)&unicode_printer_print)
+ if (printer == &unicode_printer_print)
      return unicode_printer_print8((struct unicode_printer *)arg,DeeBytes_DATA(self),DeeBytes_SIZE(self));
 
  end = (iter = flush_start = DeeBytes_DATA(self)) + DeeBytes_SIZE(self);
@@ -1185,12 +1185,12 @@ bytes_nsi_delitem(Bytes *__restrict self,
   err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
   goto err;
  }
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  DeeBytes_DATA(self)[index] = 0;
  return 0;
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
 err:
  return -1;
 }
@@ -1205,12 +1205,12 @@ bytes_nsi_setitem(Bytes *__restrict self,
   err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
   goto err;
  }
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  DeeBytes_DATA(self)[index] = val;
  return 0;
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
 err:
  return -1;
 }
@@ -1259,10 +1259,8 @@ bytes_nsi_setrange_i(Bytes *__restrict self,
                      dssize_t end_index,
                      DeeObject *__restrict value) {
  uint8_t *dst; size_t size;
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  if unlikely(start_index < 0) start_index += DeeBytes_SIZE(self);
  if unlikely(end_index < 0) end_index += DeeBytes_SIZE(self);
  if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
@@ -1273,8 +1271,8 @@ bytes_nsi_setrange_i(Bytes *__restrict self,
  size = (size_t)(end_index-start_index);
  dst = DeeBytes_DATA(self) + (size_t)start_index;
  return DeeSeq_ItemsToBytes(dst,size,value);
-err:
- return -1;
+err_readonly:
+ return err_bytes_not_writable((DeeObject *)self);
 }
 
 PRIVATE int DCALL
@@ -1282,18 +1280,16 @@ bytes_nsi_setrange_in(Bytes *__restrict self,
                       dssize_t start_index,
                       DeeObject *__restrict value) {
  uint8_t *dst; size_t size;
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
  if unlikely(start_index < 0) start_index += DeeBytes_SIZE(self);
  if unlikely((size_t)start_index >= DeeBytes_SIZE(self))
     start_index = DeeBytes_SIZE(self);
  size = (size_t)(DeeBytes_SIZE(self) - start_index);
  dst = DeeBytes_DATA(self) + (size_t)start_index;
  return DeeSeq_ItemsToBytes(dst,size,value);
-err:
- return -1;
+err_readonly:
+ return err_bytes_not_writable((DeeObject *)self);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1307,10 +1303,8 @@ bytes_nsi_xch(Bytes *__restrict self,
   err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
   goto err;
  }
- if unlikely(!DeeBytes_WRITABLE(self)) {
-  err_bytes_not_writable((DeeObject *)self);
-  goto err;
- }
+ if unlikely(!DeeBytes_WRITABLE(self))
+    goto err_readonly;
 #ifdef CONFIG_NO_THREADS
  result = DeeBytes_DATA(self)[index];
  DeeBytes_DATA(self)[index] = val;
@@ -1318,6 +1312,8 @@ bytes_nsi_xch(Bytes *__restrict self,
  result = ATOMIC_XCH(DeeBytes_DATA(self)[index],val);
 #endif
  return DeeInt_NewU8(result);
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
 err:
  return NULL;
 }
@@ -1391,13 +1387,20 @@ PRIVATE int DCALL
 bytes_setfirst(Bytes *__restrict self, DeeObject *__restrict value) {
  uint8_t int_value;
  if unlikely(DeeBytes_IsEmpty(self))
-    return err_empty_sequence((DeeObject *)self);
+    goto err_empty;
  if unlikely(!DeeBytes_WRITABLE(self))
-    return err_bytes_not_writable((DeeObject *)self);
+    goto err_readonly;
  if unlikely(DeeObject_AsUInt8(value,&int_value))
-    return -1; 
+    goto err; 
  DeeBytes_DATA(self)[0] = int_value;
  return 0;
+err_empty:
+ err_empty_sequence((DeeObject *)self);
+ goto err;
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
+err:
+ return -1;
 }
 PRIVATE DREF DeeObject *DCALL
 bytes_getlast(Bytes *__restrict self) {
@@ -1411,13 +1414,20 @@ PRIVATE int DCALL
 bytes_setlast(Bytes *__restrict self, DeeObject *__restrict value) {
  uint8_t int_value;
  if unlikely(DeeBytes_IsEmpty(self))
-    return err_empty_sequence((DeeObject *)self);
+    goto err_empty;
  if unlikely(!DeeBytes_WRITABLE(self))
-    return err_bytes_not_writable((DeeObject *)self);
+    goto err_readonly;
  if unlikely(DeeObject_AsUInt8(value,&int_value))
-    return -1; 
+    goto err; 
  DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1] = int_value;
  return 0;
+err_empty:
+ err_empty_sequence((DeeObject *)self);
+ goto err;
+err_readonly:
+ err_bytes_not_writable((DeeObject *)self);
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -1470,13 +1480,13 @@ bytes_getbuf(Bytes *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {
  if ((flags & DEE_BUFFER_FWRITABLE) &&
-    !(self->b_flags & DEE_BUFFER_FWRITABLE)) {
-  err_bytes_not_writable((DeeObject *)self);
-  return -1;
- }
+    !(self->b_flags & DEE_BUFFER_FWRITABLE))
+      goto err_readonly;
  info->bb_base = DeeBytes_DATA(self);
  info->bb_size = DeeBytes_SIZE(self);
  return 0;
+err_readonly:
+ return err_bytes_not_writable((DeeObject *)self);
 }
 
 PRIVATE struct type_buffer bytes_buffer = {

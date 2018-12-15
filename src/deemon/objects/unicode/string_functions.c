@@ -6430,7 +6430,7 @@ string_format(String *__restrict self,
  if unlikely(!utf8_repr) goto err;
  {
   struct unicode_printer printer = UNICODE_PRINTER_INIT;
-  if unlikely(DeeString_Format((dformatprinter)&unicode_printer_print,
+  if unlikely(DeeString_Format(&unicode_printer_print,
                                &printer,
                                 utf8_repr,
                                 WSTR_LENGTH(utf8_repr),
@@ -9942,7 +9942,7 @@ err_r_2_4:
   if unlikely(unicode_printer_printstring(&printer,(DeeObject *)self) < 0)
      goto err_printer;
   /* Print the other object (as a string). */
-  if unlikely(DeeObject_Print(other,(dformatprinter)&unicode_printer_print,&printer) < 0)
+  if unlikely(DeeObject_Print(other,&unicode_printer_print,&printer) < 0)
      goto err_printer;
   return (DREF String *)unicode_printer_pack(&printer);
 err_printer:
@@ -10037,8 +10037,8 @@ string_mod(String *__restrict self, DeeObject *__restrict args) {
  }
  format_str = DeeString_AsUtf8((DeeObject *)self);
  if unlikely(!format_str) goto err;
- if unlikely(DeeString_CFormat((dformatprinter)&unicode_printer_print,
-                               (dformatprinter)&unicode_printer_print,
+ if unlikely(DeeString_CFormat(&unicode_printer_print,
+                               &unicode_printer_print,
                                &printer,
                                 format_str,
                                 WSTR_LENGTH(format_str),

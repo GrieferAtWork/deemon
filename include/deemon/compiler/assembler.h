@@ -1113,7 +1113,7 @@ INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct a
 INTDEF int DCALL asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
 INTDEF int DCALL asm_gjcc(struct ast *__restrict cond, instruction_t instr,
                           struct asm_sym *__restrict target,
-                           struct ast *__restrict ddi_ast);
+                          struct ast *__restrict ddi_ast);
 /* Similar to `asm_gjmp(ASM_JMP)', but generate code to adjust adjust the stack beforehand, as well
  * as code to adjust for potential exception handlers, also creating a `R_DMN_DELHAND' relocation. */
 INTDEF int DCALL asm_gjmps(struct asm_sym *__restrict target);

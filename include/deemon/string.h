@@ -1467,10 +1467,17 @@ DREF DeeObject *DeeString_Chr(uint16_t ch);
 DREF DeeObject *DeeString_Chr(uint32_t ch);
 }
 #else
+#ifndef __NO_builtin_choose_expr
+#define DeeString_Chr(ch) \
+       __builtin_choose_expr(sizeof(ch) == 1,_DeeString_Chr8((uint8_t)(ch)), \
+       __builtin_choose_expr(sizeof(ch) == 2,_DeeString_Chr16((uint16_t)(ch)), \
+                                             _DeeString_Chr32((uint32_t)(ch))))
+#else /* !__NO_builtin_choose_expr */
 #define DeeString_Chr(ch) \
        (sizeof(ch) == 1 ? _DeeString_Chr8((uint8_t)(ch)) : \
         sizeof(ch) == 2 ? _DeeString_Chr16((uint16_t)(ch)) : \
                           _DeeString_Chr32((uint32_t)(ch)))
+#endif /* __NO_builtin_choose_expr */
 DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch);
 DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch);
 DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
@@ -1580,7 +1587,7 @@ FORCELOCAL uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #define DeeUni_IsDecimalX(ch,x) \
        (sizeof(ch) == 1 ? ((uint8_t)(ch) == (uint8_t)('0'+(x))) : \
                           ((ch) == '0'+(x) || _DeeUni_IsDecimalX(ch,x)))
-FORCELOCAL bool DCALL _DeeUni_IsDecimalX(uint32_t ch, uint8_t x) {
+FORCELOCAL bool (DCALL _DeeUni_IsDecimalX)(uint32_t ch, uint8_t x) {
  struct unitraits *record = DeeUni_Descriptor(ch);
  return (record->ut_flags & UNICODE_FDECIMAL) && record->ut_digit == x;
 }
@@ -1588,7 +1595,7 @@ FORCELOCAL bool DCALL _DeeUni_IsDecimalX(uint32_t ch, uint8_t x) {
 
 /* ================================================================================= */
 /*   ASCII / LATIN-1 PRINTER API (Formerly `string_printer')                         */
-/*   Superseded by `unicode_printer'                                                 */
+/*   Superseded by `unicode_printer' (only use this one for pure ascii strings!)     */
 /* ================================================================================= */
 struct ascii_printer {
     size_t           ap_length; /* Used string length. */
@@ -1603,7 +1610,7 @@ struct ascii_printer {
 #define ASCII_PRINTER_LEN(self) ((self)->ap_length)
 
 /* Append the given data to a string printer. (HINT: Use this one as a `dformatprinter') */
-DFUNDEF dssize_t DCALL ascii_printer_print(struct ascii_printer *__restrict self, char const *__restrict data, size_t datalen);
+DFUNDEF dssize_t DCALL ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);
 
 DFUNDEF char *DCALL ascii_printer_alloc(struct ascii_printer *__restrict self, size_t datalen);
 /* Release the last `datalen' bytes from the printer to be
@@ -1616,12 +1623,12 @@ dssize_t ascii_printer_vprintf(struct ascii_printer *__restrict self, char const
 #define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(self,S,COMPILER_STRLEN(S))
 #else
 #define ASCII_PRINTER_PRINT(self,S)                ascii_printer_print(self,S,COMPILER_STRLEN(S))
-#define ascii_printer_printf(self,...)             DeeFormat_Printf((dformatprinter)&ascii_printer_print,self,__VA_ARGS__)
-#define ascii_printer_vprintf(self,format,args)    DeeFormat_VPrintf((dformatprinter)&ascii_printer_print,self,format,args)
+#define ascii_printer_printf(self,...)             DeeFormat_Printf(&ascii_printer_print,self,__VA_ARGS__)
+#define ascii_printer_vprintf(self,format,args)    DeeFormat_VPrintf(&ascii_printer_print,self,format,args)
 #endif
 
 /* Print a single character, returning -1 on error or 0 on success. */
-DFUNDEF int DCALL ascii_printer_putc(struct ascii_printer *__restrict self, char ch);
+DFUNDEF int (DCALL ascii_printer_putc)(struct ascii_printer *__restrict self, char ch);
 /* Search the buffer that has already been created for an existing instance
  * of `str...+=length' and if found, return a pointer to its location.
  * Otherwise, append the given string and return a pointer to that location.
@@ -1631,7 +1638,10 @@ DFUNDEF int DCALL ascii_printer_putc(struct ascii_printer *__restrict self, char
  *       >> ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
  *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
  *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
- */
+ * @return: * :   A pointer to a volitile memory location within the already printed string
+ *               (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
+ *                to ensure consistency if the function is called multiple times)
+ * @return: NULL: An error occurred. */
 DFUNDEF char *DCALL
 ascii_printer_allocstr(struct ascii_printer *__restrict self,
                        char const *__restrict str, size_t length);
@@ -1759,11 +1769,11 @@ int (unicode_printer_put32)(struct unicode_printer *__restrict self, uint32_t ch
 /* Append UTF-8 text to the back of the given printer.
  * An incomplete UTF-8 sequences can be completed by future uses of this function.
  * HINT: This function is intentionally designed as compatible with `dformatprinter'
- *       >> DeeObject_Print(ob,(dformatprinter)&unicode_printer_print,&printer);
+ *       >> DeeObject_Print(ob,&unicode_printer_print,&printer);
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 DFUNDEF dssize_t
-(DCALL unicode_printer_print)(struct unicode_printer *__restrict self,
+(DCALL unicode_printer_print)(void *__restrict self,
                               /*utf-8*/char const *__restrict text,
                               size_t textlen);
 
@@ -2016,10 +2026,10 @@ dssize_t (unicode_printer_vprintf)(struct unicode_printer *__restrict self, char
 dssize_t (unicode_printer_printobject)(struct unicode_printer *__restrict self, DeeObject *__restrict ob);
 dssize_t (unicode_printer_printobjectrepr)(struct unicode_printer *__restrict self, DeeObject *__restrict ob);
 #else
-#define unicode_printer_printf(self,...)          DeeFormat_Printf((dformatprinter)&unicode_printer_print,self,__VA_ARGS__)
-#define unicode_printer_vprintf(self,format,args) DeeFormat_VPrintf((dformatprinter)&unicode_printer_print,self,format,args)
-#define unicode_printer_printobject(self,ob)      DeeObject_Print(ob,(dformatprinter)&unicode_printer_print,self)
-#define unicode_printer_printobjectrepr(self,ob)  DeeObject_PrintRepr(ob,(dformatprinter)&unicode_printer_print,self)
+#define unicode_printer_printf(self,...)          DeeFormat_Printf(&unicode_printer_print,self,__VA_ARGS__)
+#define unicode_printer_vprintf(self,format,args) DeeFormat_VPrintf(&unicode_printer_print,self,format,args)
+#define unicode_printer_printobject(self,ob)      DeeObject_Print(ob,&unicode_printer_print,self)
+#define unicode_printer_printobjectrepr(self,ob)  DeeObject_PrintRepr(ob,&unicode_printer_print,self)
 #endif
 
 

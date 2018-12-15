@@ -1150,7 +1150,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 list_repr(List *__restrict self) {
  struct unicode_printer p = UNICODE_PRINTER_INIT;
- if unlikely(list_printrepr(self,(dformatprinter)&unicode_printer_print,&p) < 0)
+ if unlikely(list_printrepr(self,&unicode_printer_print,&p) < 0)
     goto err;
  return unicode_printer_pack(&p);
 err:

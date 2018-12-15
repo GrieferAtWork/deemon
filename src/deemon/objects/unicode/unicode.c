@@ -790,7 +790,7 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
   * UTF-8 version of the string) */
 again:
  utf = ((String *)self)->s_data;
- if (printer == (dformatprinter)&unicode_printer_print) {
+ if (printer == &unicode_printer_print) {
   void *str;
   /* Try to optimize, by printing character data directly. */
   if (!utf) {
@@ -3138,6 +3138,9 @@ utf8_writechar(char *__restrict buffer, uint32_t ch) {
 #undef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 #define CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION 1
 
+#ifndef UNICODE_PRINTER_INITIAL_BUFSIZE
+#define UNICODE_PRINTER_INITIAL_BUFSIZE 64
+#endif /* !UNICODE_PRINTER_INITIAL_BUFSIZE */
 
 
 /* Unicode printer API */
@@ -3317,7 +3320,6 @@ unicode_printer_trypack(/*inherit(on_success)*/struct unicode_printer *__restric
 #endif
 }
 
-#define UNICODE_PRINTER_INITIAL_BUFSIZE 64
 
 LOCAL int
 (DCALL unicode_printer_putc8)(struct unicode_printer *__restrict self,
@@ -3670,36 +3672,38 @@ PUBLIC int
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 PUBLIC dssize_t DCALL
-unicode_printer_print(struct unicode_printer *__restrict self,
+unicode_printer_print(void *__restrict self,
                       /*utf-8*/char const *__restrict text,
                       size_t textlen) {
+ struct unicode_printer *me;
  size_t result = textlen;
  char *flush_start;
- while (self->up_flags & UNICODE_PRINTER_FPENDING) {
+ me = (struct unicode_printer *)self;
+ while (me->up_flags & UNICODE_PRINTER_FPENDING) {
   /* Complete a pending UTF-8 sequence. */
   uint8_t curlen,reqlen;
   if (!textlen) goto done;
-  curlen = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-  self->up_pend[curlen] = (uint8_t)*text++;
-  reqlen = utf8_sequence_len[self->up_pend[0]];
+  curlen = (me->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+  me->up_pend[curlen] = (uint8_t)*text++;
+  reqlen = utf8_sequence_len[me->up_pend[0]];
   ASSERT(curlen+1 <= reqlen);
   if (curlen+1 == reqlen) {
    /* Append the full character. */
    int error;
-   uint32_t ch32 = utf8_getchar((uint8_t *)self->up_pend,reqlen);
-   error = unicode_printer_putc(self,ch32);
+   uint32_t ch32 = utf8_getchar((uint8_t *)me->up_pend,reqlen);
+   error = unicode_printer_putc(me,ch32);
    if unlikely(error < 0) goto err;
-   self->up_flags &= ~UNICODE_PRINTER_FPENDING;
+   me->up_flags &= ~UNICODE_PRINTER_FPENDING;
    break;
   }
-  self->up_flags += 1 << UNICODE_PRINTER_FPENDING_SHFT;
+  me->up_flags += 1 << UNICODE_PRINTER_FPENDING_SHFT;
  }
 again_flush:
  flush_start = (char *)text;
  while (textlen && (unsigned char)*text < 0xc0) ++text,--textlen;
  /* Print ASCII text. */
  if (flush_start != text) {
-  if unlikely(unicode_printer_print8(self,
+  if unlikely(unicode_printer_print8(me,
                                     (uint8_t *)flush_start,
                                     (size_t)(text-flush_start)) < 0)
      goto err;
@@ -3711,13 +3715,13 @@ again_flush:
   seqlen = utf8_sequence_len[(uint8_t)*text];
   if (seqlen > textlen) {
    /* Incomplete sequence! (safe as pending UTF-8) */
-   memcpyb(self->up_pend,text,textlen);
-   self->up_flags |= (uint8_t)textlen << UNICODE_PRINTER_FPENDING_SHFT;
+   memcpyb(me->up_pend,text,textlen);
+   me->up_flags |= (uint8_t)textlen << UNICODE_PRINTER_FPENDING_SHFT;
    goto done;
   }
   /* Expand the utf-8 sequence and emit it as a single character. */
   ch32 = utf8_getchar((uint8_t *)text,seqlen);
-  if (unicode_printer_putc(self,ch32))
+  if (unicode_printer_putc(me,ch32))
       goto err;
   text += seqlen;
   textlen -= seqlen;
@@ -4304,7 +4308,7 @@ unicode_printer_printinto(struct unicode_printer *__restrict self,
  dssize_t temp,result;
  /* Optimization for when the target is another unicode-printer. */
  length = self->up_length;
- if (printer == (dformatprinter)&unicode_printer_print) {
+ if (printer == &unicode_printer_print) {
   struct unicode_printer *dst;
   dst = (struct unicode_printer *)arg;
   if (!dst->up_buffer) {
@@ -4531,7 +4535,7 @@ PUBLIC dssize_t DCALL
 DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
  char utf8_repr[UTF8_MAX_MBLEN];
  size_t utf8_len;
- if (printer == (dformatprinter)&unicode_printer_print) {
+ if (printer == &unicode_printer_print) {
   if (unicode_printer_putc((struct unicode_printer *)arg,ch))
       return -1;
   return 1;
@@ -5527,35 +5531,37 @@ err:
  * dformatprinter-compatible callback for generating data to-be
  * written into a bytes object. */
 PUBLIC dssize_t DCALL
-bytes_printer_print(struct bytes_printer *__restrict self,
+bytes_printer_print(void *__restrict self,
                     /*utf-8*/char const *__restrict text, size_t textlen) {
  uint32_t ch32; char *flush_start;
  size_t result = textlen;
- while (self->bp_numpend) {
+ struct bytes_printer *me;
+ me = (struct bytes_printer *)self;
+ while (me->bp_numpend) {
   /* Complete a pending UTF-8 sequence. */
   uint8_t reqlen;
   if (!textlen) goto done;
-  self->bp_pend[self->bp_numpend] = (uint8_t)*text++;
-  reqlen = utf8_sequence_len[self->bp_pend[0]];
-  ASSERT(self->bp_numpend+1 <= reqlen);
-  if (self->bp_numpend+1 == reqlen) {
+  me->bp_pend[me->bp_numpend] = (uint8_t)*text++;
+  reqlen = utf8_sequence_len[me->bp_pend[0]];
+  ASSERT(me->bp_numpend+1 <= reqlen);
+  if (me->bp_numpend+1 == reqlen) {
    /* Append the full character. */
-   ch32 = utf8_getchar(self->bp_pend,reqlen);
+   ch32 = utf8_getchar(me->bp_pend,reqlen);
    if unlikely(ch32 > 0xff)
       goto err_bytes_too_large;
-   if unlikely(bytes_printer_putc(self,(char)(uint8_t)ch32))
+   if unlikely(bytes_printer_putc(me,(char)(uint8_t)ch32))
       goto err;
-   self->bp_numpend = 0;
+   me->bp_numpend = 0;
    break;
   }
-  ++self->bp_numpend;
+  ++me->bp_numpend;
  }
 again_flush:
  flush_start = (char *)text;
  while (textlen && (unsigned char)*text < 0xc0) ++text,--textlen;
  /* Print ASCII text. */
  if (flush_start != text) {
-  if unlikely(bytes_printer_append(self,
+  if unlikely(bytes_printer_append(me,
                                   (uint8_t *)flush_start,
                                   (size_t)(text-flush_start)) < 0)
      goto err;
@@ -5566,15 +5572,15 @@ again_flush:
   seqlen = utf8_sequence_len[(uint8_t)*text];
   if (seqlen > textlen) {
    /* Incomplete sequence! (safe as pending UTF-8) */
-   memcpyb(self->bp_pend,text,textlen);
-   self->bp_numpend = (uint8_t)textlen;
+   memcpyb(me->bp_pend,text,textlen);
+   me->bp_numpend = (uint8_t)textlen;
    goto done;
   }
   /* Expand the utf-8 sequence and emit it as a single character. */
   ch32 = utf8_getchar((uint8_t *)text,seqlen);
   if unlikely(ch32 > 0xff)
      goto err_bytes_too_large;
-  if unlikely(bytes_printer_putc(self,(char)(uint8_t)ch32))
+  if unlikely(bytes_printer_putc(me,(char)(uint8_t)ch32))
      goto err;
   text += seqlen;
   textlen -= seqlen;
@@ -5607,7 +5613,7 @@ DeeFormat_Print8(dformatprinter printer, void *arg,
                  size_t textlen) {
  uint8_t const *iter,*end,*flush_start;
  dssize_t temp,result = 0; uint8_t utf8_buffer[2];
- if (printer == (dformatprinter)&unicode_printer_print)
+ if (printer == &unicode_printer_print)
      return unicode_printer_print8((struct unicode_printer *)arg,text,textlen);
  /* Ascii-only data can simply be forwarded one-on-one */
  end = (iter = flush_start = text) + textlen;
@@ -5644,7 +5650,7 @@ DeeFormat_Print16(dformatprinter printer, void *arg,
                   uint16_t const *__restrict text,
                   size_t textlen) {
  dssize_t temp,result = 0; uint8_t utf8_buffer[3]; size_t utf8_length;
- if (printer == (dformatprinter)&unicode_printer_print)
+ if (printer == &unicode_printer_print)
      return unicode_printer_print16((struct unicode_printer *)arg,text,textlen);
  while (textlen--) {
   uint16_t ch = *text++;
@@ -5675,7 +5681,7 @@ DeeFormat_Print32(dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen) {
  dssize_t temp,result = 0; size_t utf8_length;
  uint8_t utf8_buffer[UTF8_MAX_MBLEN];
- if (printer == (dformatprinter)&unicode_printer_print)
+ if (printer == &unicode_printer_print)
      return unicode_printer_print32((struct unicode_printer *)arg,text,textlen);
  while (textlen--) {
   uint32_t ch = *text++;

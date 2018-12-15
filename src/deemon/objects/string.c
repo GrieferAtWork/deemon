@@ -173,14 +173,16 @@ err:
  return -1;
 }
 PUBLIC dssize_t
-(DCALL ascii_printer_print)(struct ascii_printer *__restrict self,
+(DCALL ascii_printer_print)(void *__restrict self,
                             char const *__restrict data,
                             size_t datalen) {
+ struct ascii_printer *me;
  String *string;
  size_t alloc_size;
- ASSERT(self);
+ me = (struct ascii_printer *)self;
+ ASSERT(me);
  ASSERT(data || !datalen);
- if ((string = self->ap_string) == NULL) {
+ if ((string = me->ap_string) == NULL) {
   /* Make sure not to allocate a string when the used length remains ZERO.
    * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL' */
   if unlikely(!datalen) return 0;
@@ -196,37 +198,37 @@ alloc_again:
                         (alloc_size+1)*sizeof(char))) goto alloc_again;
    return -1;
   }
-  self->ap_string = string;
+  me->ap_string = string;
   string->s_len = alloc_size;
   memcpy(string->s_str,data,datalen*sizeof(char));
-  self->ap_length = datalen;
+  me->ap_length = datalen;
   goto done;
  }
  alloc_size = string->s_len;
- ASSERT(alloc_size >= self->ap_length);
- alloc_size -= self->ap_length;
+ ASSERT(alloc_size >= me->ap_length);
+ alloc_size -= me->ap_length;
  if unlikely(alloc_size < datalen) {
-  size_t min_alloc = self->ap_length+datalen;
+  size_t min_alloc = me->ap_length+datalen;
   alloc_size = (min_alloc+63) & ~63;
 realloc_again:
   string = (String *)DeeObject_TryRealloc(string,offsetof(String,s_str)+
                                          (alloc_size+1)*sizeof(char));
   if unlikely(!string) {
-   string = self->ap_string;
+   string = me->ap_string;
    if (alloc_size != min_alloc) { alloc_size = min_alloc; goto realloc_again; }
    if (Dee_CollectMemory(offsetof(String,s_str)+
                         (alloc_size+1)*sizeof(char)))
        goto realloc_again;
    return -1;
   }
-  self->ap_string = string;
+  me->ap_string = string;
   string->s_len = alloc_size;
  }
  /* Copy text into the dynamic string. */
  /*DEE_DPRINTF("PRINT: %IX - `%.*s'\n",datalen,(int)datalen,data);*/
- memcpy(string->s_str+self->ap_length,
+ memcpy(string->s_str+me->ap_length,
         data,datalen*sizeof(char));
- self->ap_length += datalen;
+ me->ap_length += datalen;
 done:
  return (dssize_t)datalen;
 }
@@ -479,19 +481,19 @@ string_repr(DeeObject *__restrict self) {
  str.ptr = DeeString_WSTR(self);
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
  CASE_WIDTH_1BYTE:
-  if unlikely(DeeFormat_Quote8((dformatprinter)&ascii_printer_print,&printer,
+  if unlikely(DeeFormat_Quote8(&ascii_printer_print,&printer,
                                 str.cp8,WSTR_LENGTH(str.cp8),
                                 FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_2BYTE:
-  if unlikely(DeeFormat_Quote16((dformatprinter)&ascii_printer_print,&printer,
+  if unlikely(DeeFormat_Quote16(&ascii_printer_print,&printer,
                                  str.cp16,WSTR_LENGTH(str.cp16),
                                  FORMAT_QUOTE_FNORMAL) < 0)
      goto err;
   break;
  CASE_WIDTH_4BYTE:
-  if unlikely(DeeFormat_Quote32((dformatprinter)&ascii_printer_print,&printer,
+  if unlikely(DeeFormat_Quote32(&ascii_printer_print,&printer,
                                  str.cp32,WSTR_LENGTH(str.cp32),
                                  FORMAT_QUOTE_FNORMAL) < 0)
      goto err;

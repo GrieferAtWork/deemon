@@ -400,7 +400,7 @@ bytes_format(Bytes *__restrict self,
      goto err;
  {
   struct bytes_printer printer = BYTES_PRINTER_INIT;
-  if unlikely(DeeBytes_Format((dformatprinter)&bytes_printer_print,
+  if unlikely(DeeBytes_Format(&bytes_printer_print,
                               (dformatprinter)&bytes_printer_append,
                               &printer,
                               (char *)DeeBytes_DATA(self),

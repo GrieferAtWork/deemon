@@ -2390,7 +2390,7 @@ int_str(DeeObject *__restrict self) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
  struct unicode_printer p = UNICODE_PRINTER_INIT;
  /* Simply print this integer to the printer, using decimal encoding. */
- if (DeeInt_Print(self,DEEINT_PRINT_DEC,(dformatprinter)&unicode_printer_print,&p) < 0)
+ if (DeeInt_Print(self,DEEINT_PRINT_DEC,&unicode_printer_print,&p) < 0)
      goto err;
  return unicode_printer_pack(&p);
 err:
@@ -2400,7 +2400,7 @@ err:
  struct ascii_printer p = ASCII_PRINTER_INIT;
  /* Simply print this integer to the printer, using decimal encoding. */
  if (DeeInt_Print(self,DEEINT_PRINT_DEC,
-                 (dformatprinter)&ascii_printer_print,
+                 &ascii_printer_print,
                  &p) < 0)
      goto err;
  return ascii_printer_pack(&p);
@@ -2414,7 +2414,7 @@ PRIVATE DREF DeeObject *DCALL
 int_tostr_impl(DeeObject *__restrict self, uint32_t flags) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
- if unlikely(DeeInt_Print(self,flags,(dformatprinter)&unicode_printer_print,&printer) < 0)
+ if unlikely(DeeInt_Print(self,flags,&unicode_printer_print,&printer) < 0)
     goto err_printer;
  return unicode_printer_pack(&printer);
 err_printer:
@@ -2422,7 +2422,7 @@ err_printer:
 #else
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if unlikely(DeeInt_Print(self,flags,
-                         (dformatprinter)&ascii_printer_print,
+                         &ascii_printer_print,
                          &printer) < 0)
     goto err_printer;
  return ascii_printer_pack(&printer);

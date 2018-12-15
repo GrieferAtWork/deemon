@@ -642,14 +642,14 @@ decl_ast_print_const_expr(DeeObject *__restrict self,
      goto eval_none;
  if (DeeInt_Check(self)) {
   if (DeeInt_Print(self,DEEINT_PRINT_DEC,
-                  (dformatprinter)&unicode_printer_print,
+                  &unicode_printer_print,
                    printer) < 0)
       goto err;
   return 0;
  }
  if (DeeFloat_Check(self)) {
   if (DeeFloat_Print(DeeFloat_VALUE(self),
-                    (dformatprinter)&unicode_printer_print,
+                    &unicode_printer_print,
                      printer,0,0,DEEFLOAT_PRINT_FNORMAL) < 0)
       goto err;
   return 0;

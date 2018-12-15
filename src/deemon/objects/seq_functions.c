@@ -440,13 +440,13 @@ DeeSeq_Sum(DeeObject *__restrict self) {
   /* Use a unicode printer. */
   bytes_printer_init(&p);
   error = bytes_printer_append(&p,DeeBytes_DATA(result),DeeBytes_SIZE(result));
-  if (error >= 0) error = DeeObject_Print(elem,(dformatprinter)&bytes_printer_print,&p);
+  if (error >= 0) error = DeeObject_Print(elem,&bytes_printer_print,&p);
   Dee_Decref(elem);
   Dee_Decref(result);
   if unlikely(error < 0) goto err_bytes;
   /* Now print all the rest into the string as well. */
   while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-   error = DeeObject_Print(elem,(dformatprinter)&bytes_printer_print,&p);
+   error = DeeObject_Print(elem,&bytes_printer_print,&p);
    Dee_Decref(elem);
    if unlikely(error < 0) goto err_bytes;
    if (DeeThread_CheckInterrupt()) goto err_bytes;
@@ -472,13 +472,13 @@ err_bytes:
   /* Use a unicode printer. */
   unicode_printer_init(&p);
   error = unicode_printer_printstring(&p,result);
-  if (error >= 0) error = DeeObject_Print(elem,(dformatprinter)&unicode_printer_print,&p);
+  if (error >= 0) error = DeeObject_Print(elem,&unicode_printer_print,&p);
   Dee_Decref(elem);
   Dee_Decref(result);
   if unlikely(error < 0) goto err_string;
   /* Now print all the rest into the string as well. */
   while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-   error = DeeObject_Print(elem,(dformatprinter)&unicode_printer_print,&p);
+   error = DeeObject_Print(elem,&unicode_printer_print,&p);
    Dee_Decref(elem);
    if unlikely(error < 0) goto err_string;
    if (DeeThread_CheckInterrupt()) goto err_string;

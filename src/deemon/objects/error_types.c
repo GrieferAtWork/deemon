@@ -426,7 +426,7 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 comerr_str(DeeCompilerErrorObject *__restrict self) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
- if unlikely(comerr_print(self,(dformatprinter)&unicode_printer_print,&printer) < 0)
+ if unlikely(comerr_print(self,&unicode_printer_print,&printer) < 0)
     goto err;
  return unicode_printer_pack(&printer);
 err:

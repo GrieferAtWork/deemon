@@ -217,7 +217,7 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
  size_t i; char const *cc_name;
  struct ascii_printer printer = ASCII_PRINTER_INIT;
  if (DeeObject_Print((DeeObject *)return_type,
-                     (dformatprinter)&ascii_printer_print,
+                     &ascii_printer_print,
                      &printer) < 0)
      goto err;
  if (calling_convention != CC_DEFAULT) {
@@ -233,7 +233,7 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
  } else for (i = 0; i < argc; ++i) {
   if (i != 0 && ASCII_PRINTER_PRINT(&printer,", ") < 0) goto err;
   if (DeeObject_Print((DeeObject *)argv[i],
-                      (dformatprinter)&ascii_printer_print,
+                      &ascii_printer_print,
                       &printer) < 0)
       goto err;
  }

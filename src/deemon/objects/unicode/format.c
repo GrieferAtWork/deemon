@@ -712,7 +712,7 @@ format_impl(struct formatter *__restrict self,
      /* Format the format string, thus allowing it
       * to contain text from input arguments. */
      print_error = format_impl(&inner_formatter,
-                              (dformatprinter)&unicode_printer_print,
+                              &unicode_printer_print,
                                &format_string_printer);
      self->f_seqiter = inner_formatter.f_seqiter;
      if unlikely(print_error < 0) {
@@ -861,8 +861,8 @@ format_bytes_impl(struct formatter *__restrict self,
      /* Format the format string, thus allowing it
       * to contain text from input arguments. */
      print_error = format_bytes_impl(&inner_formatter,
-                                    (dformatprinter)&unicode_printer_print,
-                                    (dformatprinter)&unicode_printer_print,
+                                    &unicode_printer_print,
+                                    &unicode_printer_print,
                                      &format_string_printer);
      self->f_seqiter = inner_formatter.f_seqiter;
      if unlikely(print_error < 0) {

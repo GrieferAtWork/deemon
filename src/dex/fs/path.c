@@ -863,7 +863,7 @@ next:
    }
    /* Print the home path. */
    error = DeeObject_Print(homepath,
-                          (dformatprinter)&unicode_printer_print,
+                          &unicode_printer_print,
                            &printer);
    Dee_Decref(homepath);
    if unlikely(error < 0) goto err;

@@ -125,7 +125,7 @@ libdisasm_public_printcode_f(size_t argc,
      goto err;
  if (!fp) {
   struct unicode_printer printer = UNICODE_PRINTER_INIT;
-  error = libdisasm_printcode((dformatprinter)&unicode_printer_print,
+  error = libdisasm_printcode(&unicode_printer_print,
                               &printer,
                                code->co_code,
                                code->co_code+code->co_codebytes,

@@ -4292,7 +4292,7 @@ ast_str(DeeCompilerAstObject *__restrict self) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  COMPILER_BEGIN(self->ci_compiler);
  if unlikely(print_ast_code(self->ci_value,
-                           (dformatprinter)&unicode_printer_print,
+                           &unicode_printer_print,
                            &printer,false,NULL,0))
     goto err;
  COMPILER_END();

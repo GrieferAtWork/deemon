@@ -2739,7 +2739,7 @@ err:
 PRIVATE int
 (TPPCALL unicode_printer_tppappend_escape)(char const *__restrict buf, size_t bufsize, void *arg) {
  dssize_t result;
- result = DeeFormat_Quote((dformatprinter)&unicode_printer_print,
+ result = DeeFormat_Quote(&unicode_printer_print,
                            arg,buf,bufsize,FORMAT_QUOTE_FPRINTRAW);
  return unlikely(result < 0) ? -1 : 0;
 }

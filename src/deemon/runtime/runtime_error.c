@@ -96,7 +96,7 @@ err_unimplemented_constructor_kw(DeeTypeObject *__restrict tp,
  if (!name) name = "<anonymous type>";
  if unlikely(unicode_printer_printf(&printer,"Constructor `%s(",name) < 0)
     goto err_printer;
- if unlikely(DeeFormat_PrintArgumentTypesKw((dformatprinter)&unicode_printer_print,
+ if unlikely(DeeFormat_PrintArgumentTypesKw(&unicode_printer_print,
                                             &printer,
                                              argc,
                                              argv,
