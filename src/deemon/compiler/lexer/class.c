@@ -1467,7 +1467,7 @@ define_operator:
      * >>     }
      * >> }; */
     operator_name_kwd = TPPLexer_LookupKeyword("for",3,0);
-    assert(operator_name_kwd);
+    ASSERT(operator_name_kwd);
     if unlikely(class_maker_push_methscope(&maker)) goto err_anno;
     /* Parse a new function in its own member-method scope. */
     current_basescope->bs_name = operator_name_kwd;
@@ -1521,7 +1521,7 @@ err_yield_function:
     operator_ast = ast_setddi(ast_function(temp,current_basescope),&loc);
     ast_decref(temp);
     if unlikely(!operator_ast) goto err_operator_ast_ddi;
-    assert(operator_ast->a_scope == current_scope);
+    ASSERT(operator_ast->a_scope == current_scope);
     Dee_Incref(current_scope->s_prev);
     Dee_Decref(operator_ast->a_scope);
     operator_ast->a_scope = current_scope->s_prev;

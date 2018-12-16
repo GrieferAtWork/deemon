@@ -48,8 +48,7 @@ typedef struct {
     size_t             c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
     struct type_seq   *c_getitem;    /* [0..1][if(!c_elem,[1..1])][const] The seq-interface of the type
                                       * to-be used to access the items of `c_seq' */
-    DeeTypeObject     *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)]
-                                      * The type used to invoke the getitem operator. */
+    DeeTypeObject     *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
 } Combinations;
 
 PRIVATE DREF DeeObject *DCALL
@@ -110,6 +109,28 @@ comiter_copy(CombinationsIterator *__restrict self,
  self->ci_combi = other->ci_combi;
  Dee_Incref(self->ci_combi);
  return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+comiter_deepcopy(CombinationsIterator *__restrict self,
+                 CombinationsIterator *__restrict other) {
+ self->ci_indices = (size_t *)Dee_Malloc(other->ci_combi->c_comlen);
+ if unlikely(!self->ci_indices) goto err;
+ rwlock_read(&other->ci_lock);
+ memcpy(self->ci_indices,other->ci_indices,
+        other->ci_combi->c_comlen *
+        sizeof(size_t));
+ self->ci_first = other->ci_first;
+ rwlock_endread(&other->ci_lock);
+ rwlock_cinit(&self->ci_lock);
+ self->ci_combi = (DREF Combinations *)DeeObject_DeepCopy((DeeObject *)other->ci_combi);
+ if unlikely(!self->ci_combi)
+    goto err_indices;
+ return 0;
+err_indices:
+ Dee_Free(self->ci_indices);
 err:
  return -1;
 }
@@ -186,10 +207,10 @@ PRIVATE DeeTypeObject SeqCombinationsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&comiter_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
         },
@@ -284,6 +305,12 @@ PRIVATE struct type_member com_class_members[] = {
     TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member com_members[] = {
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Combinations,c_seq),"->?Dsequence"),
+    TYPE_MEMBER_END
+};
+
+
 PRIVATE DeeTypeObject SeqCombinations_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqCombinations",
@@ -295,10 +322,10 @@ PRIVATE DeeTypeObject SeqCombinations_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(Combinations)
             }
         },
@@ -323,7 +350,7 @@ PRIVATE DeeTypeObject SeqCombinations_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */com_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */com_class_members
@@ -420,10 +447,10 @@ PRIVATE DeeTypeObject SeqRepeatCombinationsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&comiter_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
         },
@@ -482,6 +509,8 @@ PRIVATE struct type_member rcom_class_members[] = {
     TYPE_MEMBER_END
 };
 
+#define rcom_members com_members
+
 PRIVATE DeeTypeObject SeqRepeatCombinations_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRepeatCombinations",
@@ -521,7 +550,7 @@ PRIVATE DeeTypeObject SeqRepeatCombinations_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */rcom_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */rcom_class_members
@@ -611,10 +640,10 @@ PRIVATE DeeTypeObject SeqPermutationsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&comiter_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
         },
@@ -676,6 +705,8 @@ PRIVATE struct type_member pmut_class_members[] = {
     TYPE_MEMBER_END
 };
 
+#define pmut_members com_members
+
 PRIVATE DeeTypeObject SeqPermutations_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqPermutations",
@@ -687,10 +718,10 @@ PRIVATE DeeTypeObject SeqPermutations_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(Combinations)
             }
         },
@@ -715,7 +746,7 @@ PRIVATE DeeTypeObject SeqPermutations_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */pmut_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */pmut_class_members
@@ -1067,7 +1098,8 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
  }
  do {
   struct type_seq *seq;
-  if ((seq = tp_iter->tp_seq) == NULL) continue;
+  if ((seq = tp_iter->tp_seq) == NULL)
+      continue;
   if (seq->tp_get) {
    /* Use the getitem/size variant. */
    result->c_getitem    = seq;

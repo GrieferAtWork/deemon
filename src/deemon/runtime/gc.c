@@ -498,7 +498,7 @@ found_chain_link:
      dst += iter->dc_pnum;
     }
    }
-   assert(dst == link->dc_pnum);
+   ASSERT(dst == link->dc_pnum);
    /* Remove partners objects from the
     * base-chain of unconfirmed dependencies. */
    data->vd_chain = link;

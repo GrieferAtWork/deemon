@@ -309,8 +309,8 @@ do_exec_code:
   self->im_frame.cf_result = NULL;
   goto done_exec;
  }
- assert(DeeThread_Self()->t_exceptsz != 0);
- assert(DeeThread_Self()->t_except != NULL);
+ ASSERT(DeeThread_Self()->t_exceptsz != 0);
+ ASSERT(DeeThread_Self()->t_except != NULL);
  if (!DeeObject_InstanceOf(DeeThread_Self()->t_except->ef_error,
                           &DeeError_IllegalInstruction))
       goto done_exec; /* Something other than the illegal-instruction error that we're looking for. */

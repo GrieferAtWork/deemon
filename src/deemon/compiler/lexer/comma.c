@@ -112,7 +112,7 @@ astlist_appendall(struct astlist *__restrict self,
   if (astlist_upsize(self,other->ast_c-avail))
       return -1;
  }
- assert(self->ast_c+other->ast_c <= self->ast_a);
+ ASSERT(self->ast_c+other->ast_c <= self->ast_a);
  MEMCPY_PTR(self->ast_v+self->ast_c,other->ast_v,other->ast_c);
  self->ast_c += other->ast_c;
  other->ast_c = 0; /* Steal all of these references. */

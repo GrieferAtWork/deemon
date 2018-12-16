@@ -419,7 +419,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
   } else {
    /* Found it! */
    sym = DeeModule_GetSymbolID(deemon,i);
-   assert(sym);
+   ASSERT(sym);
    if (UNICODE_PRINTER_PRINT(printer,"?D") < 0)
        goto err;
    /* NOTE: No need to use `decl_ast_escapename()' here. - We can assume that

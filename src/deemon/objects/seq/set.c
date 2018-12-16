@@ -144,23 +144,30 @@ suiter_copy(SetUnionIterator *__restrict self,
  rwlock_endread(&other->sui_lock);
  self->sui_iter = DeeObject_Copy(iter);
  Dee_Decref(iter);
- if unlikely(!self->sui_iter) return -1;
+ if unlikely(!self->sui_iter)
+    goto err;
  rwlock_init(&self->sui_lock);
  self->sui_union = other->sui_union;
  Dee_Incref(self->sui_union);
  return 0;
+err:
+ return -1;
 }
 PRIVATE int DCALL
 suiter_init(SetUnionIterator *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SetUnionIterator",&self->sui_union) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->sui_union,&SetUnion_Type) ||
-    (self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_SetUnionIterator",&self->sui_union))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)self->sui_union,&SetUnion_Type))
+     goto err;
+ if ((self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
+     goto err;
  Dee_Incref(self->sui_union);
  rwlock_init(&self->sui_lock);
  self->sui_in2nd = false;
  return 0;
+err:
+ return -1;
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_next(SetUnionIterator *__restrict self) {
@@ -233,7 +240,7 @@ suiter_eq(SetUnionIterator *__restrict self,
           SetUnionIterator *__restrict other) {
  DREF DeeObject *my_iter,*ot_iter,*result; bool my_2nd,ot_2nd;
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  rwlock_read(&self->sui_lock);
  my_iter = self->sui_iter;
  my_2nd  = self->sui_in2nd;
@@ -251,13 +258,15 @@ suiter_eq(SetUnionIterator *__restrict self,
  Dee_Decref(ot_iter);
  Dee_Decref(my_iter);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_ne(SetUnionIterator *__restrict self,
           SetUnionIterator *__restrict other) {
  DREF DeeObject *my_iter,*ot_iter,*result; bool my_2nd,ot_2nd;
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  rwlock_read(&self->sui_lock);
  my_iter = self->sui_iter;
  my_2nd  = self->sui_in2nd;
@@ -275,13 +284,15 @@ suiter_ne(SetUnionIterator *__restrict self,
  Dee_Decref(ot_iter);
  Dee_Decref(my_iter);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_lo(SetUnionIterator *__restrict self,
           SetUnionIterator *__restrict other) {
  DREF DeeObject *my_iter,*ot_iter,*result; bool my_2nd,ot_2nd;
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  rwlock_read(&self->sui_lock);
  my_iter = self->sui_iter;
  my_2nd  = self->sui_in2nd;
@@ -299,13 +310,15 @@ suiter_lo(SetUnionIterator *__restrict self,
  Dee_Decref(ot_iter);
  Dee_Decref(my_iter);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_le(SetUnionIterator *__restrict self,
           SetUnionIterator *__restrict other) {
  DREF DeeObject *my_iter,*ot_iter,*result; bool my_2nd,ot_2nd;
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  rwlock_read(&self->sui_lock);
  my_iter = self->sui_iter;
  my_2nd  = self->sui_in2nd;
@@ -323,13 +336,15 @@ suiter_le(SetUnionIterator *__restrict self,
  Dee_Decref(ot_iter);
  Dee_Decref(my_iter);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_gr(SetUnionIterator *__restrict self,
           SetUnionIterator *__restrict other) {
  DREF DeeObject *my_iter,*ot_iter,*result; bool my_2nd,ot_2nd;
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  rwlock_read(&self->sui_lock);
  my_iter = self->sui_iter;
  my_2nd  = self->sui_in2nd;
@@ -347,13 +362,15 @@ suiter_gr(SetUnionIterator *__restrict self,
  Dee_Decref(ot_iter);
  Dee_Decref(my_iter);
  return result;
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 suiter_ge(SetUnionIterator *__restrict self,
           SetUnionIterator *__restrict other) {
  DREF DeeObject *my_iter,*ot_iter,*result; bool my_2nd,ot_2nd;
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  rwlock_read(&self->sui_lock);
  my_iter = self->sui_iter;
  my_2nd  = self->sui_in2nd;
@@ -371,6 +388,8 @@ suiter_ge(SetUnionIterator *__restrict self,
  Dee_Decref(ot_iter);
  Dee_Decref(my_iter);
  return result;
+err:
+ return NULL;
 }
 
 PRIVATE struct type_cmp suiter_cmp = {
@@ -456,10 +475,12 @@ su_init(SetUnion *__restrict self,
  self->su_a = Dee_EmptySet;
  self->su_b = Dee_EmptySet;
  if (DeeArg_Unpack(argc,argv,"|oo:_SetUnion",&self->su_a,&self->su_b))
-     return -1;
+     goto err;
  Dee_Incref(self->su_a);
  Dee_Incref(self->su_b);
  return 0;
+err:
+ return -1;
 }
 PRIVATE DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
@@ -517,8 +538,8 @@ INTERN DeeTypeObject SetUnion_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&su_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&su_init,
                 TYPE_FIXED_ALLOCATOR(SetUnion)
             }
@@ -644,9 +665,9 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
+                /* .tp_ctor      = */NULL, /* TODO */
                 /* .tp_copy_ctor = */&ssditer_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&ssditer_init,
                 TYPE_FIXED_ALLOCATOR(SetSymmetricDifferenceIterator)
             }
@@ -744,8 +765,8 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&ssd_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&ssd_init,
                 TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
             }
@@ -845,43 +866,55 @@ PRIVATE DREF DeeObject *DCALL
 siiter_eq(SetIntersectionIterator *__restrict self,
           SetIntersectionIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  return DeeObject_CompareEqObject(self->sii_iter,other->sii_iter);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 siiter_ne(SetIntersectionIterator *__restrict self,
           SetIntersectionIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  return DeeObject_CompareNeObject(self->sii_iter,other->sii_iter);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 siiter_lo(SetIntersectionIterator *__restrict self,
           SetIntersectionIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  return DeeObject_CompareLoObject(self->sii_iter,other->sii_iter);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 siiter_le(SetIntersectionIterator *__restrict self,
           SetIntersectionIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  return DeeObject_CompareLeObject(self->sii_iter,other->sii_iter);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 siiter_gr(SetIntersectionIterator *__restrict self,
           SetIntersectionIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  return DeeObject_CompareGrObject(self->sii_iter,other->sii_iter);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 siiter_ge(SetIntersectionIterator *__restrict self,
           SetIntersectionIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self)))
-     return NULL;
+     goto err;
  return DeeObject_CompareGeObject(self->sii_iter,other->sii_iter);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_cmp siiter_cmp = {
@@ -951,10 +984,12 @@ si_init(SetIntersection *__restrict self,
  self->si_a = Dee_EmptySet;
  self->si_b = Dee_EmptySet;
  if (DeeArg_Unpack(argc,argv,"|oo:_SetIntersection",&self->si_a,&self->si_b))
-     return -1;
+     goto err;
  Dee_Incref(self->si_a);
  Dee_Incref(self->si_b);
  return 0;
+err:
+ return -1;
 }
 PRIVATE DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
@@ -1013,8 +1048,8 @@ INTERN DeeTypeObject SetIntersection_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&si_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&si_init,
                 TYPE_FIXED_ALLOCATOR(SetIntersection)
             }
@@ -1095,9 +1130,9 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
+                /* .tp_ctor      = */NULL, /* TODO */
                 /* .tp_copy_ctor = */&sditer_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&sditer_init,
                 TYPE_FIXED_ALLOCATOR(SetDifferenceIterator)
             }
@@ -1199,8 +1234,8 @@ INTERN DeeTypeObject SetDifference_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&si_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_copy_ctor = */NULL, /* TODO */
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */&sd_init,
                 TYPE_FIXED_ALLOCATOR(SetDifference)
             }

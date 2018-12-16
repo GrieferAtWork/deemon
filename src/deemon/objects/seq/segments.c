@@ -57,6 +57,17 @@ err:
  return -1;
 }
 
+PRIVATE int DCALL
+segiter_deepcopy(SegmentsIterator *__restrict self,
+                 SegmentsIterator *__restrict other) {
+ self->si_iter = DeeObject_DeepCopy(other->si_iter);
+ if unlikely(!self->si_iter) goto err;
+ self->si_len = other->si_len;
+ return 0;
+err:
+ return -1;
+}
+
 PRIVATE void DCALL
 segiter_fini(SegmentsIterator *__restrict self) {
  Dee_Decref(self->si_iter);
@@ -115,7 +126,10 @@ err:
 }
 
 PRIVATE struct type_getset segiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq, NULL, NULL,
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq,
+      NULL,
+      NULL,
       DOC("->?Ert:SeqSegments") },
     { NULL }
 };
@@ -166,10 +180,10 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
                 /* .tp_copy_ctor = */(void *)&segiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&segiter_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(SegmentsIterator)
             }
         },
@@ -212,9 +226,12 @@ STATIC_ASSERT(COMPILER_OFFSETOF(Segments,s_seq) ==
               COMPILER_OFFSETOF(SegmentsIterator,si_iter));
 STATIC_ASSERT(COMPILER_OFFSETOF(Segments,s_len) ==
               COMPILER_OFFSETOF(SegmentsIterator,si_len));
-#define seg_fini  segiter_fini
-#define seg_visit segiter_visit
-#define seg_bool  segiter_bool
+#define seg_copy     segiter_copy
+#define seg_deepcopy segiter_deepcopy
+#define seg_fini     segiter_fini
+#define seg_visit    segiter_visit
+#define seg_bool     segiter_bool
+
 
 PRIVATE DREF SegmentsIterator *DCALL
 seg_iter(Segments *__restrict self) {
@@ -259,10 +276,10 @@ PRIVATE DeeTypeObject SeqSegments_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&seg_copy,
+                /* .tp_deep_ctor = */(void *)&seg_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(Segments)
             }
         },

@@ -486,7 +486,7 @@ got_small_method:
          break;
      if (!(current_basescope->bs_flags & CODE_FTHISCALL))
          break;
-     assert(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
+     ASSERT(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
      /* Call to the current or surrounding function, when
       * that function is defined to be a this-call function.
       * In this case, pushing the raw function would result
@@ -1222,7 +1222,7 @@ got_method:
    if (!(current_basescope->bs_flags & CODE_FTHISCALL))
        break;
    if unlikely(argc >= (uint8_t)-1) break;
-   assert(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
+   ASSERT(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
    /* Call to the current or surrounding function, when
     * that function is defined to be a this-call function.
     * In this case, pushing the raw function would result

@@ -55,7 +55,7 @@ typedef DeeListObject List;
 
 typedef struct {
     OBJECT_HEAD
-    List              *li_list;  /* [1..1][const] The list being iterated. */
+    DREF List         *li_list;  /* [1..1][const] The list being iterated. */
     ATOMIC_DATA size_t li_index; /* The current iteration index. */
 } ListIterator;
 
@@ -2659,6 +2659,7 @@ PRIVATE struct type_getset list_getsets[] = {
           ">mylist.shrink();\n"
           ">/* And same as an atomic variant of: */\n"
           ">mylist.allocated = #mylist;") },
+    /* TODO: del/set support for `first' & `last' */
     { "first", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_first, NULL, NULL,
       DOC("->\n@return The first item from @this list") },
     { "last", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_last, NULL, NULL,
@@ -3204,10 +3205,13 @@ DeeList_LoS(List *__restrict lhs,
  if (fast_size != DEE_FASTSEQ_NOTFAST)
      return DeeList_LoF(lhs,seq,fast_size);
  seq = DeeObject_IterSelf(seq);
- if unlikely(!seq) return -1;
+ if unlikely(!seq)
+    goto err;
  result = DeeList_LoI(lhs,seq);
  Dee_Decref(seq);
  return result;
+err:
+ return -1;
 }
 INTERN int DCALL
 DeeList_LeV(List *__restrict lhs,
@@ -3323,47 +3327,67 @@ DeeList_LeS(List *__restrict lhs,
  if (fast_size != DEE_FASTSEQ_NOTFAST)
      return DeeList_LeF(lhs,seq,fast_size);
  seq = DeeObject_IterSelf(seq);
- if unlikely(!seq) return -1;
+ if unlikely(!seq) goto err;
  result = DeeList_LeI(lhs,seq);
  Dee_Decref(seq);
  return result;
+err:
+ return -1;
 }
 
 PRIVATE DREF DeeObject *DCALL
 list_eq(List *__restrict self, DeeObject *__restrict other) {
  int result = DeeList_EqS(self,other);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 list_ne(List *__restrict self, DeeObject *__restrict other) {
  int result = DeeList_EqS(self,other);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(!result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 list_lo(List *__restrict self, DeeObject *__restrict other) {
  int result = DeeList_LoS(self,other);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 list_le(List *__restrict self, DeeObject *__restrict other) {
  int result = DeeList_LeS(self,other);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 list_gr(List *__restrict self, DeeObject *__restrict other) {
  int result = DeeList_LeS(self,other);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(!result);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 list_ge(List *__restrict self, DeeObject *__restrict other) {
  int result = DeeList_LoS(self,other);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(!result);
+err:
+ return NULL;
 }
 
 
@@ -3410,12 +3434,10 @@ PUBLIC DeeTypeObject DeeList_Type = {
                             ">x.append(30);\n"
                             ">print repr x; /* `[10, 20, 30]' */\n"
                             "\n"
-                            "add->\n"
-                            "+(other:?S?O)->\n"
+                            "+(other:?X2?.?S?O)->\n"
                             "Returns a new list that is the concatenation of @this list and @other\n"
                             "\n"
-                            "+=->\n"
-                            "+=(other:?S?O)->\n"
+                            "+=(other:?X2?.?S?O)->\n"
                             "Appends elements from @other to @this list. (Same as #extend)\n"
                             "\n"
                             "*(count:?Dint)->\n"
@@ -3469,12 +3491,12 @@ PUBLIC DeeTypeObject DeeList_Type = {
                             "contains->\n"
                             "Returns :true if @elem is apart of @this list\n"
                             "\n"
-                            "<(other:?S?O)->\n"
-                            "<=(other:?S?O)->\n"
-                            "==(other:?S?O)->\n"
-                            "!=(other:?S?O)->\n"
-                            ">(other:?S?O)->\n"
-                            ">=(other:?S?O)->\n"
+                            "<(other:?X2?.?S?O)->\n"
+                            "<=(other:?X2?.?S?O)->\n"
+                            "==(other:?X2?.?S?O)->\n"
+                            "!=(other:?X2?.?S?O)->\n"
+                            ">(other:?X2?.?S?O)->\n"
+                            ">=(other:?X2?.?S?O)->\n"
                             "@throw NotImplemented The given @other cannot be iterated\n"
                             "Perform a lexicographical comparison between @this list and the given @other sequence\n"
                             "\n"
@@ -3486,10 +3508,10 @@ PUBLIC DeeTypeObject DeeList_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */(int(DCALL *)(DeeObject *__restrict))&list_ctor,
-                /* .tp_copy_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
-                /* .tp_deep_ctor = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_copy,
-                /* .tp_any_ctor  = */(int(DCALL *)(size_t,DeeObject **__restrict))&list_init,
+                /* .tp_ctor      = */(void *)&list_ctor,
+                /* .tp_copy_ctor = */(void *)&list_copy,
+                /* .tp_deep_ctor = */(void *)&list_copy,
+                /* .tp_any_ctor  = */(void *)&list_init,
                 TYPE_FIXED_ALLOCATOR_GC(List)
             }
         },
@@ -3533,9 +3555,12 @@ PUBLIC DeeTypeObject DeeList_Type = {
 PRIVATE int DCALL
 li_ctor(ListIterator *__restrict self) {
  self->li_list = (List *)DeeList_New();
- if unlikely(!self->li_list) return -1;
+ if unlikely(!self->li_list)
+    goto err;
  self->li_index = 0;
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -3548,14 +3573,29 @@ li_copy(ListIterator *__restrict self,
 }
 
 PRIVATE int DCALL
+li_deepcopy(ListIterator *__restrict self,
+            ListIterator *__restrict other) {
+ self->li_list = (DREF List *)DeeObject_DeepCopy((DeeObject *)other->li_list);
+ if unlikely(!self->li_list)
+    goto err;
+ self->li_index = LI_GETINDEX(other);
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->li_index = 0;
- if (DeeArg_Unpack(argc,argv,"o|Iu:_ListIterator",&self->li_list,&self->li_index) ||
-     DeeObject_AssertType((DeeObject *)self->li_list,&DeeList_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:_ListIterator",&self->li_list,&self->li_index))
+     goto err;
+ if (DeeObject_AssertType((DeeObject *)self->li_list,&DeeList_Type))
+     goto err;
  Dee_Incref(self->li_list);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -3608,53 +3648,65 @@ PRIVATE DREF DeeObject *DCALL
 li_eq(ListIterator *__restrict self,
       ListIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeListIterator_Type))
-     return NULL;
+     goto err;
  return_bool(self->li_list == other->li_list &&
              LI_GETINDEX(self) == LI_GETINDEX(other));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 li_ne(ListIterator *__restrict self,
       ListIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeListIterator_Type))
-     return NULL;
+     goto err;
  return_bool(self->li_list != other->li_list ||
              LI_GETINDEX(self) != LI_GETINDEX(other));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 li_lo(ListIterator *__restrict self,
       ListIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeListIterator_Type))
-     return NULL;
+     goto err;
  return_bool(self->li_list < other->li_list ||
             (self->li_list == other->li_list &&
              LI_GETINDEX(self) < LI_GETINDEX(other)));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 li_le(ListIterator *__restrict self,
       ListIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeListIterator_Type))
-     return NULL;
+     goto err;
  return_bool(self->li_list < other->li_list ||
             (self->li_list == other->li_list &&
              LI_GETINDEX(self) <= LI_GETINDEX(other)));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 li_gr(ListIterator *__restrict self,
       ListIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeListIterator_Type))
-     return NULL;
+     goto err;
  return_bool(self->li_list > other->li_list ||
             (self->li_list == other->li_list &&
              LI_GETINDEX(self) > LI_GETINDEX(other)));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 li_ge(ListIterator *__restrict self,
       ListIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&DeeListIterator_Type))
-     return NULL;
+     goto err;
  return_bool(self->li_list > other->li_list ||
             (self->li_list == other->li_list &&
              LI_GETINDEX(self) >= LI_GETINDEX(other)));
+err:
+ return NULL;
 }
 
 
@@ -3679,10 +3731,10 @@ INTERN DeeTypeObject DeeListIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&li_ctor,
-                /* .tp_copy_ctor = */&li_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&li_init,
+                /* .tp_ctor      = */(void *)&li_ctor,
+                /* .tp_copy_ctor = */(void *)&li_copy,
+                /* .tp_deep_ctor = */(void *)&li_deepcopy,
+                /* .tp_any_ctor  = */(void *)&li_init,
                 TYPE_FIXED_ALLOCATOR(ListIterator)
             }
         },

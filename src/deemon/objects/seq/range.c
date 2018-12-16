@@ -36,10 +36,7 @@
 
 #include <hybrid/overflow.h>
 #include <hybrid/__unaligned.h>
-
-#ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif
 
 DECL_BEGIN
 
@@ -72,9 +69,7 @@ ri_init(RangeIterator *__restrict self,
  Dee_Incref(self->ri_end);
  Dee_XIncref(self->ri_step);
  self->ri_first = true;
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->ri_lock);
-#endif
  return 0;
 }
 
@@ -83,20 +78,16 @@ ri_copy(RangeIterator *__restrict self,
         RangeIterator *__restrict other) {
  DREF DeeObject *new_index,*old_index;
 again:
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&other->ri_lock);
-#endif
  old_index = other->ri_index;
  self->ri_first = other->ri_first;
  Dee_Incref(old_index);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&other->ri_lock);
-#endif
  /* Create a copy of the index (may not be correct if it already changed) */
  new_index = DeeObject_Copy(old_index);
  Dee_Decref(old_index);
  if unlikely(!new_index)
-    return -1;
+    goto err;
  COMPILER_READ_BARRIER();
  if (old_index != other->ri_index) {
   Dee_Decref(new_index);
@@ -105,9 +96,7 @@ again:
    * was spun while we were copying its index. */
   goto again;
  }
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->ri_lock);
-#endif
  /* Other members are constant, so we don't
   * need to bother with synchronizing them. */
  self->ri_range = other->ri_range;
@@ -117,6 +106,8 @@ again:
  Dee_Incref(self->ri_end);
  Dee_XIncref(self->ri_step);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -129,13 +120,9 @@ ri_fini(RangeIterator *__restrict self) {
 PRIVATE void DCALL
 ri_visit(RangeIterator *__restrict self,
          dvisit_t proc, void *arg) {
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&self->ri_lock);
-#endif
  Dee_Visit(self->ri_index);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->ri_lock);
-#endif
  Dee_Visit(self->ri_range);
  Dee_Visit(self->ri_end);
  Dee_XVisit(self->ri_step);
@@ -144,18 +131,14 @@ ri_visit(RangeIterator *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 ri_next(RangeIterator *__restrict self) {
  DREF DeeObject *result;
- DREF DeeObject *old_index; int temp;
- bool is_first;
-#ifndef CONFIG_NO_THREADS
+ DREF DeeObject *old_index;
+ int temp; bool is_first;
  rwlock_read(&self->ri_lock);
-#endif
  result = self->ri_index;
  is_first = self->ri_first;
  self->ri_first = false;
  Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->ri_lock);
-#endif
  /* Skip the index modification on the first loop. */
  if (!is_first) {
   if (self->ri_step) {
@@ -176,23 +159,21 @@ ri_next(RangeIterator *__restrict self) {
  if (temp != 0) {
   /* Error, or done. */
   Dee_Decref(result);
-  if unlikely(temp < 0) return NULL;
+  if unlikely(temp < 0)
+     goto err;
   return ITER_DONE;
  }
  /* Save the new index object. */
-#ifndef CONFIG_NO_THREADS
  rwlock_write(&self->ri_lock);
-#endif
  old_index = self->ri_index; /* Inherit reference. */
  self->ri_index = result;
  Dee_Incref(result); /* Reference for `self->ri_index' */
-#ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&self->ri_lock);
-#endif
  Dee_Decref(old_index); /* Decref() the old index. */
  return result;
 err_result:
  Dee_Decref(result);
+err:
  return NULL;
 }
 
@@ -200,16 +181,12 @@ PRIVATE int DCALL
 ri_bool(RangeIterator *__restrict self) {
  DREF DeeObject *next_value;
  int temp; bool is_first;
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&self->ri_lock);
-#endif
  next_value = self->ri_index;
  is_first = self->ri_first;
  self->ri_first = false;
  Dee_Incref(next_value);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->ri_lock);
-#endif
  /* Skip the index modification on the first loop. */
  if (!is_first) {
   if (self->ri_step) {
@@ -240,31 +217,23 @@ err:
 PRIVATE DREF DeeObject *DCALL
 ri_index_get(RangeIterator *__restrict self) {
  DREF DeeObject *result;
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&self->ri_lock);
-#endif
  result = self->ri_index;
  Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->ri_lock);
-#endif
  return result;
 }
 
 PRIVATE int DCALL
 ri_index_del(RangeIterator *__restrict self) {
  DREF DeeObject *old_index;
-#ifndef CONFIG_NO_THREADS
  rwlock_write(&self->ri_lock);
-#endif
  old_index = self->ri_index;
  /* Assign the original begin-index. */
  self->ri_index = self->ri_range->r_begin;
  self->ri_first = true;
  Dee_Incref(self->ri_index);
-#ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&self->ri_lock);
-#endif
  Dee_Decref(old_index);
  return 0;
 }
@@ -275,17 +244,13 @@ ri_index_set(RangeIterator *__restrict self,
  DREF DeeObject *old_index;
  if (DeeGC_ReferredBy(value,(DeeObject *)self))
      return err_reference_loop((DeeObject *)self,value);
-#ifndef CONFIG_NO_THREADS
  rwlock_write(&self->ri_lock);
-#endif
  old_index = self->ri_index;
  /* Assign the given value. */
  self->ri_index = value;
  self->ri_first = true;
  Dee_Incref(value);
-#ifndef CONFIG_NO_THREADS
  rwlock_endwrite(&self->ri_lock);
-#endif
  Dee_Decref(old_index);
  return 0;
 }
@@ -418,9 +383,7 @@ range_iter(Range *__restrict self) {
  Dee_Incref(result->ri_end);
  Dee_XIncref(result->ri_step);
  result->ri_first = true;
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&result->ri_lock);
-#endif
 done:
  return result;
 }
@@ -727,7 +690,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL, /* TODO */
                 /* .tp_copy_ctor = */&iri_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(IntRangeIterator)
             }
@@ -1011,7 +974,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL, /* TODO */
                 /* .tp_copy_ctor = */NULL, /* TODO */
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(IntRange)
             }

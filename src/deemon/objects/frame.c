@@ -303,7 +303,7 @@ frame_getlocation(Frame *__restrict self) {
   ++i;
  }
  DDI_STATE_WHILE(iter,&state);
- assert(i == count);
+ ASSERT(i == count);
  ddi_state_fini(&state);
  Dee_Decref(code);
  return result;

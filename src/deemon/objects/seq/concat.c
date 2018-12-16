@@ -83,10 +83,39 @@ catiterator_copy(CatIterator *__restrict self,
  rwlock_endread(&other->c_lock);
  self->c_curr = DeeObject_Copy(iterator);
  Dee_Decref(iterator);
- if unlikely(!self->c_curr) return -1;
+ if unlikely(!self->c_curr)
+    goto err;
  self->c_cat = other->c_cat;
  Dee_Incref(self->c_cat);
+ rwlock_init(&self->c_lock);
  return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+catiterator_deepcopy(CatIterator *__restrict self,
+                     CatIterator *__restrict other) {
+ DREF DeeObject *iterator;
+ size_t sequence_index;
+ rwlock_read(&other->c_lock);
+ iterator = other->c_curr;
+ sequence_index = other->c_pseq - DeeTuple_ELEM(other->c_cat);
+ Dee_Incref(iterator);
+ rwlock_endread(&other->c_lock);
+ self->c_curr = DeeObject_DeepCopy(iterator);
+ Dee_Decref(iterator);
+ if unlikely(!self->c_curr)
+    goto err;
+ self->c_cat = (DREF Cat *)DeeObject_DeepCopy((DeeObject *)other->c_cat);
+ if unlikely(!self->c_cat)
+    goto err_curr;
+ self->c_pseq = DeeTuple_ELEM(self->c_cat) + sequence_index;
+ rwlock_init(&self->c_lock);
+ return 0;
+err_curr:
+ Dee_Decref(self->c_curr);
+err:
+ return -1;
 }
 PRIVATE int DCALL
 catiterator_init(CatIterator *__restrict self,
@@ -313,10 +342,10 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&catiterator_ctor,
-                /* .tp_copy_ctor = */&catiterator_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&catiterator_init,
+                /* .tp_ctor      = */(void *)&catiterator_ctor,
+                /* .tp_copy_ctor = */(void *)&catiterator_copy,
+                /* .tp_deep_ctor = */(void *)&catiterator_deepcopy,
+                /* .tp_any_ctor  = */(void *)&catiterator_init,
                 TYPE_FIXED_ALLOCATOR(CatIterator)
             }
         },
@@ -383,7 +412,10 @@ cat_getsequences(Cat *__restrict self) {
 }
 
 PRIVATE struct type_getset cat_getsets[] = {
-    { "__sequences__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences, NULL, NULL,
+    { "__sequences__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences,
+      NULL,
+      NULL,
       DOC("->?S?Dsequence") },
     { NULL }
 };
@@ -681,10 +713,10 @@ INTERN DeeTypeObject SeqConcat_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&DeeObject_NewRef,
-                /* .tp_deep_ctor = */&cat_deepcopy,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)NULL,
+                /* .tp_copy_ctor = */(void *)&DeeObject_NewRef,
+                /* .tp_deep_ctor = */(void *)&cat_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 /* .tp_free      = */&cat_tp_free,
             }
         },
@@ -727,13 +759,13 @@ DeeSeq_Concat(DeeObject *__restrict self,
                                                              DeeTuple_SIZE(other));
    if unlikely(!result) goto err;
    dst = DeeTuple_ELEM(result);
-   end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
+   end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
    for (; iter != end; ++iter,++dst) {
     DeeObject *ob = *iter;
     Dee_Incref(ob);
     *dst = ob;
    }
-   end = (iter = DeeTuple_ELEM(other))+DeeTuple_SIZE(other);
+   end = (iter = DeeTuple_ELEM(other)) + DeeTuple_SIZE(other);
    for (; iter != end; ++iter,++dst) {
     DeeObject *ob = *iter;
     Dee_Incref(ob);
@@ -743,7 +775,7 @@ DeeSeq_Concat(DeeObject *__restrict self,
    result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self)+1);
    if unlikely(!result) goto err;
    dst = DeeTuple_ELEM(result);
-   end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
+   end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
    for (; iter != end; ++iter,++dst) {
     DeeObject *ob = *iter;
     Dee_Incref(ob);
@@ -758,7 +790,7 @@ DeeSeq_Concat(DeeObject *__restrict self,
   dst = DeeTuple_ELEM(result);
   *dst++ = self;
   Dee_Incref(self);
-  end = (iter = DeeTuple_ELEM(other))+DeeTuple_SIZE(other);
+  end = (iter = DeeTuple_ELEM(other)) + DeeTuple_SIZE(other);
   for (; iter != end; ++iter,++dst) {
    DeeObject *ob = *iter;
    Dee_Incref(ob);

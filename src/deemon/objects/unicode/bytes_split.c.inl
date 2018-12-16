@@ -133,12 +133,12 @@ DEFINE_BSI_COMPARE(bsi_ge,>=)
 
 PRIVATE struct type_cmp bsi_cmp = {
     /* .tp_hash = */NULL,
-    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&bsi_eq,
-    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&bsi_ne,
-    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&bsi_lo,
-    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&bsi_le,
-    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&bsi_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict some_object))&bsi_ge,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bsi_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bsi_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bsi_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bsi_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bsi_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bsi_ge,
 };
 
 
@@ -226,10 +226,20 @@ bsci_next(BytesSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_member bsi_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_split)),
-    TYPE_MEMBER_FIELD("__bytes__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_split),"->?Ert:BytesSplit"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes),"->?Dbytes"),
     TYPE_MEMBER_END
 };
+
+#ifdef CONFIG_NO_DOC
+#define bcsi_members       bsi_members
+#else
+PRIVATE struct type_member bcsi_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_split),"->?Ert:BytesCaseSplit"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes),"->?Dbytes"),
+    TYPE_MEMBER_END
+};
+#endif
 
 
 INTERN DeeTypeObject BytesSplitIterator_Type = {
@@ -316,7 +326,7 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */bsi_members,
+    /* .tp_members       = */bcsi_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -453,9 +463,9 @@ PRIVATE struct type_getset bs_getsets[] = {
 };
 
 PRIVATE struct type_member bs_members[] = {
-    TYPE_MEMBER_FIELD("__bytes__",STRUCT_OBJECT,offsetof(BytesSplit,bs_bytes)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplit,bs_bytes),"->?Dbytes"),
     TYPE_MEMBER_FIELD("__sep_owner__",STRUCT_OBJECT,offsetof(BytesSplit,bs_sep_owner)),
-    TYPE_MEMBER_FIELD("__sep_length__",STRUCT_OBJECT,offsetof(BytesSplit,bs_sep_len)),
+    TYPE_MEMBER_FIELD("__sep_length__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(BytesSplit,bs_sep_len)),
     TYPE_MEMBER_END
 };
 
@@ -797,7 +807,7 @@ PRIVATE struct type_getset blsi_getsets[] = {
 };
 
 PRIVATE struct type_member blsi_members[] = {
-    TYPE_MEMBER_FIELD("__bytes__",STRUCT_OBJECT,offsetof(BytesLineSplitIterator,blsi_bytes)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesLineSplitIterator,blsi_bytes),"->?Dbytes"),
     TYPE_MEMBER_FIELD("__keepends__",STRUCT_BOOL|STRUCT_CONST,offsetof(BytesLineSplitIterator,blsi_keepends)),
     TYPE_MEMBER_END
 };
@@ -910,7 +920,7 @@ PRIVATE struct type_seq bls_seq = {
 };
 
 PRIVATE struct type_member bls_members[] = {
-    TYPE_MEMBER_FIELD("__bytes__",STRUCT_OBJECT,offsetof(BytesLineSplit,bls_bytes)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesLineSplit,bls_bytes),"->?Dbytes"),
     TYPE_MEMBER_FIELD("__keepends__",STRUCT_BOOL|STRUCT_CONST,offsetof(BytesLineSplit,bls_keepends)),
     TYPE_MEMBER_END
 };

@@ -1418,7 +1418,7 @@ create_variable:
       /* Default variable lookup in the root scope creates global variables. */
       current_scope == (DeeScopeObject *)current_rootscope)) {
   result->s_type = SYMBOL_TYPE_GLOBAL;
-  assert(result->s_global.g_doc == NULL);
+  ASSERT(result->s_global.g_doc == NULL);
   iter = (DeeScopeObject *)current_rootscope;
  } else {
   iter = current_scope;

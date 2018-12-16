@@ -948,12 +948,14 @@ bytes_eq(Bytes *__restrict self,
  if (DeeString_Check(other))
      return_bool(string_eq_bytes((DeeStringObject *)other,self));
  if (DeeObject_AssertTypeExact(other,&DeeBytes_Type))
-     return NULL;
+     goto err;
  other_data = DeeBytes_DATA(other);
  other_size = DeeBytes_SIZE(other);
  if (DeeBytes_SIZE(self) != other_size)
      return_false;
  return_bool(memcmp(DeeBytes_DATA(self),other_data,other_size) == 0);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -963,17 +965,21 @@ bytes_ne(Bytes *__restrict self,
  if (DeeString_Check(other))
      return_bool(!string_eq_bytes((DeeStringObject *)other,self));
  if (DeeObject_AssertTypeExact(other,&DeeBytes_Type))
-     return NULL;
+     goto err;
  other_data = DeeBytes_DATA(other);
  other_size = DeeBytes_SIZE(other);
  if (DeeBytes_SIZE(self) != other_size)
      return_true;
  return_bool(memcmp(DeeBytes_DATA(self),other_data,other_size) != 0);
+err:
+ return NULL;
 }
 
-PRIVATE int DCALL
-memxcmp(void const *a, size_t asiz,
-        void const *b, size_t bsiz) {
+#undef memxcmp
+#define memxcmp dee_memxcmp
+LOCAL int DCALL
+dee_memxcmp(void const *a, size_t asiz,
+            void const *b, size_t bsiz) {
  int result = memcmp(a,b,MIN(asiz,bsiz));
  if (result) return result;
  if (asiz == bsiz)
@@ -991,13 +997,15 @@ name(Bytes *__restrict self, \
  if (DeeString_Check(other)) \
      return_bool(0 op compare_string_bytes((DeeStringObject *)other,self)); \
  if (DeeObject_AssertTypeExact(other,&DeeBytes_Type)) \
-     return NULL; \
+     goto err; \
  other_data = DeeBytes_DATA(other); \
  other_size = DeeBytes_SIZE(other); \
  return_bool(memxcmp(DeeBytes_DATA(self), \
                      DeeBytes_SIZE(self), \
                      other_data, \
                      other_size) op 0); \
+err: \
+ return NULL; \
 }
 DEFINE_BYTES_COMPARE(bytes_lo,<)
 DEFINE_BYTES_COMPARE(bytes_le,<=)
@@ -1010,7 +1018,7 @@ bytes_add(Bytes *__restrict self,
           DeeObject *__restrict other) {
  DREF Bytes *result; DeeBuffer buffer;
  if (DeeObject_GetBuf(other,&buffer,DEE_BUFFER_FREADONLY))
-     return NULL;
+     goto err;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self)+
                                                         buffer.bb_size);
  if likely(result) {
@@ -1019,6 +1027,8 @@ bytes_add(Bytes *__restrict self,
  }
  DeeObject_PutBuf(other,&buffer,DEE_BUFFER_FREADONLY);
  return result;
+err:
+ return NULL;
 }
 
 PRIVATE DREF Bytes *DCALL
@@ -1027,7 +1037,7 @@ bytes_mul(Bytes *__restrict self,
  DREF Bytes *result; uint8_t *dst,*src;
  size_t my_length,total_length,repeat;
  if (DeeObject_AsSize(other,&repeat))
-     return NULL;
+     goto err;
  if (!repeat)
      return_reference_((DREF Bytes *)Dee_EmptyBytes);
  if (repeat == 1)
@@ -1171,11 +1181,12 @@ bytes_nsi_getsize(Bytes *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
- if unlikely(index >= DeeBytes_SIZE(self)) {
-  err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
-  return NULL;
- }
+ if unlikely(index >= DeeBytes_SIZE(self))
+    goto err_bounds;
  return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
+err_bounds:
+ err_index_out_of_bounds((DeeObject *)self,index,DeeBytes_SIZE(self));
+ return NULL;
 }
 
 PRIVATE int DCALL
@@ -1698,7 +1709,7 @@ err:
 
 PRIVATE struct type_method bytes_class_methods[] = {
     { "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_fromseq,
-      DOC("(seq:?S?O)->?.\n"
+      DOC("(seq:?S?Dint)->?.\n"
           "@throw NotImplemented The given @seq cannot be iterated, or contains at "
                                 "least one item that cannot be converted into an integer\n"
           "@throw IntegerOverflow At least one of the integers found in @seq is lower "
@@ -1714,7 +1725,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
           "or $\"A\" and $\"F\", or optional space characters seperating pairs of such characters.\n"
           "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
           "the resulting bytes object.\n"
-          "Note that this function is called also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
+          "Note that this function is also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
           "is the same as calling this functions, while ${bytes.encode(\"hex\")} is the same as calling #hex\n"
           ">local data = \"DEAD BEEF\".decode(\"hex\");\n"
           ">print repr data; /* \"\\xDE\\xAD\\xBE\\xEF\".bytes() */") },
@@ -1767,10 +1778,10 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
                             "can be determined using #iswritable and #isreadonly\n"
                             "Additionally, a bytes object can be made writable by creating a copy (a.s. #op:copy), "
                             "or by using #makewritable, which will not create a new bytes object, but re-return "
-                            "the same object, if that object already is writable\n"
+                            "the same object, if it was already writable\n"
                             "\n"
-                            "(int num_bytes)\n"
-                            "(int num_bytes,int init)\n"
+                            "(num_bytes:?Dint)\n"
+                            "(num_bytes:?Dint,init:?Dint)\n"
                             "@throw IntegerOverflow The given @init is negative, or greater than $0xff\n"
                             "Construct a writable, self-contained bytes object for a total "
                             "of @num_bytes bytes of memory, pre-initialized to @init, or left "
@@ -1808,16 +1819,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
                             "Returns the representation of @this bytes object in the form "
                             "of ${\"bytes({!r})\".format({ this.encode(\"latin-1\") })}\n"
                             "\n"
-                            "contains(needle:?.)->\n"
-                            "contains(needle:?Dstring)->\n"
-                            "contains(needle:?Dint)->\n"
+                            "contains(needle:?X3?.?Dstring?Dint)->\n"
                             "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
                             "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
                             "Check if @needle appears within @this bytes object\n"
                             "\n"
-                            ":=(data:?.)->\n"
-                            ":=(data:?Dstring)->\n"
-                            ":=(data:?Dsequence)->\n"
+                            ":=(data:?X3?.?Dstring?S?Dint)->\n"
                             "@throw BufferError @this bytes object is not writable\n"
                             "@throw UnpackError The length of the given @data does not equal ${#this}\n"
                             "Assign the contents of @data to @this bytes object\n"
@@ -1841,9 +1848,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
                             "Returns another bytes view for viewing a sub-range of bytes\n"
                             "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object\n"
                             "\n"
-                            "[:]=(start:?Dint,end:?Dint,bytes data)->\n"
-                            "[:]=(start:?Dint,end:?Dint,string data)->\n"
-                            "[:]=(start:?Dint,end:?Dint,sequence data)->\n"
+                            "[:]=(start:?Dint,end:?Dint,data:?X3?.?Dstring?S?Dint)->\n"
                             "@throw BufferError @this bytes object is not writable\n"
                             "@throw IntegerOverflow One of the integers extracted from @data is negative, or greater than $0xff\n"
                             "@throw ValueError @data is a string containing characters ${> 0xff}\n"
@@ -1858,18 +1863,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
                             "iter->\n"
                             "Allows for iteration of the individual bytes as integers between $0 and $0xff\n"
                             "\n"
-                            "<->\n"
-                            "<(other:?Dstring)->\n"
-                            "<=->\n"
-                            "<=(other:?Dstring)->\n"
-                            "==->\n"
-                            "==(other:?Dstring)->\n"
-                            "!=->\n"
-                            "!=(other:?Dstring)->\n"
-                            ">->\n"
-                            ">(other:?Dstring)->\n"
-                            ">=->\n"
-                            ">=(other:?Dstring)->\n"
+                            "<(other:?X2?.?Dstring)->\n"
+                            "<=(other:?X2?.?Dstring)->\n"
+                            "==(other:?X2?.?Dstring)->\n"
+                            "!=(other:?X2?.?Dstring)->\n"
+                            ">(other:?X2?.?Dstring)->\n"
+                            ">=(other:?X2?.?Dstring)->\n"
                             "@throw ValueError The given @other is a string containing characters ${> 0xff}\n"
                             "Perform a lexicographical comparison between @this and @other, and return the result\n"
                             "\n"
@@ -1881,8 +1880,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
                             "\n"
                             "add->\n"
                             "Construct a new writable bytes object that at is the concatenation of @this and @other\n"
-                            "+(other:?Dstring)->\n"
-                            "+(other:?O)->\n"
+                            "+(other:?X3?.?Dstring?O)->\n"
                             "Return a new writable bytes object that is the concatenation of @this and ${str(other).bytes()}\n"
                             "\n"
                             "*(times:?Dint)->\n"

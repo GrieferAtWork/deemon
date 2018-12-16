@@ -147,7 +147,11 @@ bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset bsegiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict self))&bsegiter_getseq },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bsegiter_getseq,
+      NULL,
+      NULL,
+      DOC("->?Ert:BytesSegments") },
     { NULL }
 };
 
@@ -331,7 +335,7 @@ PRIVATE struct type_seq bseg_seq = {
 
 
 PRIVATE struct type_member bseg_members[] = {
-    TYPE_MEMBER_FIELD("__bytes__",STRUCT_OBJECT,offsetof(BytesSegments,b_str)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSegments,b_str),"->?Dbytes"),
     TYPE_MEMBER_FIELD("__siz__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(BytesSegments,b_siz)),
     TYPE_MEMBER_END
 };

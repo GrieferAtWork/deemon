@@ -87,8 +87,9 @@ PRIVATE int DCALL
 refaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_ReFindAllIterator",&reseq) ||
-     DeeObject_AssertTypeExact((DeeObject *)reseq,&ReFindAll_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_ReFindAllIterator",&reseq))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)reseq,&ReFindAll_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
         sizeof(ReSequence)-offsetof(ReSequence,re_data));
@@ -146,7 +147,8 @@ again:
                          self->re_args.re_patternlen,
                         &range,
                          self->re_args.re_flags);
- if unlikely(error < 0) return NULL;
+ if unlikely(error < 0)
+    goto err;
  if (!error) {
   rwlock_write(&self->re_lock);
   if (dataptr != self->re_args.re_dataptr ||
@@ -172,6 +174,8 @@ again:
  rwlock_endwrite(&self->re_lock);
  return regex_pack_range(offset,
                         (struct regex_range *)&range.rr_start);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -192,8 +196,10 @@ PRIVATE DREF DeeObject *DCALL \
 name(ReSequenceIterator *__restrict self, \
      ReSequenceIterator *__restrict other) { \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
-     return NULL; \
+     goto err; \
  return_bool(REITER_GETDATAPTR(self) op REITER_GETDATAPTR(other)); \
+err: \
+ return NULL; \
 }
 DEFINE_REFA_COMPARE(refa_eq,==)
 DEFINE_REFA_COMPARE(refa_ne,!=)
@@ -216,13 +222,17 @@ PRIVATE struct type_cmp refaiter_cmp = {
 
 
 PRIVATE struct type_getset refaiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq,
+      NULL,
+      NULL,
+      DOC("->?Ert:ReFindAll") },
     { NULL }
 };
 
 PRIVATE struct type_member refaiter_members[] = {
-    TYPE_MEMBER_FIELD("__data__",STRUCT_OBJECT,offsetof(ReSequenceIterator,re_data)),
-    TYPE_MEMBER_FIELD("__pattern__",STRUCT_OBJECT,offsetof(ReSequenceIterator,re_pattern)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(ReSequenceIterator,re_data),"->?Dstring"),
+    TYPE_MEMBER_FIELD_DOC("__pattern__",STRUCT_OBJECT,offsetof(ReSequenceIterator,re_pattern),"->?Dstring"),
     TYPE_MEMBER_END
 };
 
@@ -287,7 +297,7 @@ relaiter_init(ReSequenceIterator *__restrict self,
      DeeObject_AssertTypeExact((DeeObject *)reseq,&ReLocateAll_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
-        sizeof(ReSequence)-offsetof(ReSequence,re_data));
+        sizeof(ReSequence) - offsetof(ReSequence,re_data));
  Dee_Incref(self->re_data);
  Dee_Incref(self->re_pattern);
  rwlock_init(&self->re_lock);
@@ -309,7 +319,11 @@ relaiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset relaiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq,
+      NULL,
+      NULL,
+      DOC("->?Ert:ReLocateAll") },
     { NULL }
 };
 
@@ -438,7 +452,11 @@ respiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset respiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq,
+      NULL,
+      NULL,
+      DOC("->?Ert:ReSplit") },
     { NULL }
 };
 
@@ -693,8 +711,8 @@ PRIVATE struct type_seq refa_seq = {
 };
 
 PRIVATE struct type_member refa_members[] = {
-    TYPE_MEMBER_FIELD("__data__",STRUCT_OBJECT,offsetof(ReSequence,re_data)),
-    TYPE_MEMBER_FIELD("__pattern__",STRUCT_OBJECT,offsetof(ReSequence,re_pattern)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(ReSequence,re_data),"->?Dstring"),
+    TYPE_MEMBER_FIELD_DOC("__pattern__",STRUCT_OBJECT,offsetof(ReSequence,re_pattern),"->?Dstring"),
     TYPE_MEMBER_END
 };
 
@@ -866,7 +884,7 @@ resp_iter(ReSequence *__restrict self) {
  result = DeeObject_MALLOC(ReSequenceIterator);
  if unlikely(!result) goto done;
  memcpy(&result->re_data,&self->re_data,
-        sizeof(ReSequence)-offsetof(ReSequence,re_data));
+        sizeof(ReSequence) - offsetof(ReSequence,re_data));
  ASSERT(result->re_args.re_datalen ? 1 : 
         result->re_args.re_dataptr == NULL);
  Dee_Incref(result->re_data);

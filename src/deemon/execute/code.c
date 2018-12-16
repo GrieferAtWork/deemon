@@ -1079,8 +1079,8 @@ code_copy(DeeCodeObject *__restrict self) {
        Dee_Incref(result->co_keywords[i]);
   }
  }
- assert(result->co_argc_max >= result->co_argc_min);
- assert((result->co_defaultv == NULL) ==
+ ASSERT(result->co_argc_max >= result->co_argc_min);
+ ASSERT((result->co_defaultv == NULL) ==
         (result->co_argc_max == result->co_argc_min));
  if (result->co_defaultv) {
   uint16_t n = result->co_argc_max - result->co_argc_min;
@@ -1092,7 +1092,7 @@ code_copy(DeeCodeObject *__restrict self) {
   for (i = 0; i < n; ++i)
       Dee_XIncref(result->co_defaultv[i]);
  }
- assert((result->co_staticc != 0) ==
+ ASSERT((result->co_staticc != 0) ==
         (result->co_staticv != NULL));
  if (result->co_staticv) {
   result->co_staticv = (DREF DeeObject **)Dee_Malloc(result->co_staticc *

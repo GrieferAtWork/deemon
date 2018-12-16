@@ -521,7 +521,7 @@ PRIVATE struct type_cmp ssi_cmp = {
 };
 
 PRIVATE struct type_member ssi_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(StringScanIterator,si_scanner)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(StringScanIterator,si_scanner),"->?Ert:StringScan"),
     TYPE_MEMBER_END
 };
 
@@ -547,7 +547,7 @@ ssi_copy(StringScanIterator *__restrict self,
 
 INTERN DeeTypeObject StringScanIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_StringScannerIterator",
+    /* .tp_name     = */"_StringScanIterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -556,14 +556,14 @@ INTERN DeeTypeObject StringScanIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&ssi_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&ssi_copy,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(StringScanIterator)
             }
         },
-        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ssi_fini, /* offset:`s_split' == offset:`ls_split' */
+        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ssi_fini,
         /* .tp_assign      = */NULL,
         /* .tp_move_assign = */NULL
     },
@@ -577,7 +577,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
                                     * (or rather an object that can only reference strings). */
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */&ssi_cmp, /* offset:`s_next' == offset:`ls_next' */
+    /* .tp_cmp           = */&ssi_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssi_next,
     /* .tp_attr          = */NULL,
@@ -585,7 +585,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */ssi_members, /* offset:`s_split' == offset:`ls_split' */
+    /* .tp_members       = */ssi_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -645,8 +645,8 @@ PRIVATE struct type_seq ss_seq = {
 };
 
 PRIVATE struct type_member ss_members[] = {
-    TYPE_MEMBER_FIELD("__data__",STRUCT_OBJECT,offsetof(StringScanner,ss_data)),
-    TYPE_MEMBER_FIELD("__format__",STRUCT_OBJECT,offsetof(StringScanner,ss_format)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringScanner,ss_data),"->?X2?Dstring?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__format__",STRUCT_OBJECT,offsetof(StringScanner,ss_format),"->?X2?Dstring?Dbytes"),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member ss_class_members[] = {
@@ -657,7 +657,7 @@ PRIVATE struct type_member ss_class_members[] = {
 
 INTERN DeeTypeObject StringScan_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_StringScanner",
+    /* .tp_name     = */"_StringScan",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

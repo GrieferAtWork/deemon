@@ -145,7 +145,11 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset stringordinalsiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq,
+      NULL,
+      NULL,
+      DOC("->?Ert:StringOrdinals") },
     { NULL }
 };
 
@@ -272,7 +276,7 @@ PRIVATE struct type_seq stringordinals_seq = {
 };
 
 PRIVATE struct type_member stringordinals_members[] = {
-    TYPE_MEMBER_FIELD("__str__",STRUCT_OBJECT,offsetof(StringOrdinals,so_str)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringOrdinals,so_str),"->?Dstring"),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member stringordinals_class_members[] = {

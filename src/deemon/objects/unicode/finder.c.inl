@@ -327,7 +327,15 @@ scfi_bool(StringFindIterator *__restrict self) {
 }
 
 PRIVATE struct type_member sfi_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(StringFindIterator,sfi_find)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,
+                          offsetof(StringFindIterator,sfi_find),
+                          "->?Ert:StringFind"),
+    TYPE_MEMBER_END
+};
+PRIVATE struct type_member scfi_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,
+                          offsetof(StringFindIterator,sfi_find),
+                          "->?Ert:StringCaseFind"),
     TYPE_MEMBER_END
 };
 
@@ -371,10 +379,10 @@ INTERN DeeTypeObject StringFindIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&sfi_ctor,
-                /* .tp_copy_ctor = */&sfi_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&sfi_init,
+                /* .tp_ctor      = */(void *)&sfi_ctor,
+                /* .tp_copy_ctor = */(void *)&sfi_copy,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&sfi_init,
                 TYPE_FIXED_ALLOCATOR(StringFindIterator)
             }
         },
@@ -415,10 +423,10 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&scfi_ctor,
-                /* .tp_copy_ctor = */&sfi_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&scfi_init,
+                /* .tp_ctor      = */(void *)&scfi_ctor,
+                /* .tp_copy_ctor = */(void *)&sfi_copy,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&scfi_init,
                 TYPE_FIXED_ALLOCATOR(StringFindIterator)
             }
         },
@@ -443,7 +451,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */sfi_members,
+    /* .tp_members       = */scfi_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -530,8 +538,8 @@ PRIVATE struct type_seq scf_seq = {
 
 
 PRIVATE struct type_member sf_members[] = {
-    TYPE_MEMBER_FIELD("__str__",STRUCT_OBJECT,offsetof(StringFind,sf_str)),
-    TYPE_MEMBER_FIELD("__needle__",STRUCT_OBJECT,offsetof(StringFind,sf_needle)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringFind,sf_str),"->?Dstring"),
+    TYPE_MEMBER_FIELD_DOC("__needle__",STRUCT_OBJECT,offsetof(StringFind,sf_needle),"->?Dstring"),
     TYPE_MEMBER_FIELD("__start__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(StringFind,sf_start)),
     TYPE_MEMBER_FIELD("__end__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(StringFind,sf_end)),
     TYPE_MEMBER_END
@@ -553,10 +561,10 @@ INTERN DeeTypeObject StringFind_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&sf_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&sf_init,
+                /* .tp_ctor      = */(void *)&sf_ctor,
+                /* .tp_copy_ctor = */(void *)NULL,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&sf_init,
                 TYPE_FIXED_ALLOCATOR(StringFind)
             }
         },
@@ -598,10 +606,10 @@ INTERN DeeTypeObject StringCaseFind_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&sf_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&sf_init,
+                /* .tp_ctor      = */(void *)&sf_ctor,
+                /* .tp_copy_ctor = */(void *)NULL,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&sf_init,
                 TYPE_FIXED_ALLOCATOR(StringFind)
             }
         },

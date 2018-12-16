@@ -961,6 +961,21 @@ int main(int argc, char *argv[]) {
 
  /*_CrtSetBreakAlloc(280);*/
 
+ /* TODO: `property dict.frozen: rt.RoDict' */
+ /* TODO: `property list.frozen: deemon.tuple' */
+ /* TODO: `property hashset.frozen: rt.RoSet' */
+ /* TODO: `class property dict.frozen: deemon.type_ -> rt.RoDict' */
+ /* TODO: `class property list.frozen: deemon.type_ -> deemon.tuple' */
+ /* TODO: `class property hashset.frozen: deemon.type_ -> rt.RoSet' */
+ /* TODO: Make dict and rodict sensitive to item ordering
+  *       -> `{ foo: "bar", bar: "foo" }' should on some level
+  *          be destinct from `{ bar: "foo", foo: "bar" }' */
+ /* TODO: Using type caches, add the ability for volatile extensions
+  *       to available attributes, allowing user-code to extend the
+  *       functionality available through builtin types.
+  * NOTE: AST Optimization also needs to be adjusted to not
+  *       accidentally invoke such extensions! */
+
  /* Literally the only deemon component that actually needs to
   * be initialized (and isn't already initialized statically):
   *  - The TLS variable that is used by `DeeThread_Self()'
@@ -1956,7 +1971,6 @@ try_exec_format_impl(DeeObject *__restrict stream,
 
   /* Clear any lexer component not properly restored by the script. */
   clear_inner_tpp_state();
-
 
   /* Restore the old TPP context. */
   TPPLexer_Current->l_eof_file  = old_l_eof_file;

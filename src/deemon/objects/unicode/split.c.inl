@@ -186,7 +186,7 @@ PRIVATE struct type_cmp splititer_cmp = {
 
 
 PRIVATE struct type_member splititer_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(StringSplitIterator,s_split)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(StringSplitIterator,s_split),"->?Ert:StringSplit"),
     TYPE_MEMBER_END
 };
 
@@ -362,8 +362,8 @@ casesplit_iter(StringSplit *__restrict self) {
 }
 
 PRIVATE struct type_member split_members[] = {
-    TYPE_MEMBER_FIELD("__str__",STRUCT_OBJECT,offsetof(StringSplit,s_str)),
-    TYPE_MEMBER_FIELD("__sep__",STRUCT_OBJECT,offsetof(StringSplit,s_sep)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringSplit,s_str),"->?Dstring"),
+    TYPE_MEMBER_FIELD_DOC("__sep__",STRUCT_OBJECT,offsetof(StringSplit,s_sep),"->?Dstring"),
     TYPE_MEMBER_END
 };
 
@@ -747,7 +747,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(LineSplit,ls_str) ==
 #define linesplit_bool split_bool
 
 PRIVATE struct type_member linesplit_members[] = {
-    TYPE_MEMBER_FIELD("__str__",STRUCT_OBJECT,offsetof(LineSplit,ls_str)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(LineSplit,ls_str),"->?Dstring"),
     TYPE_MEMBER_FIELD("__keeplf__",STRUCT_CONST|STRUCT_BOOL,offsetof(LineSplit,ls_keep)),
     TYPE_MEMBER_END
 };

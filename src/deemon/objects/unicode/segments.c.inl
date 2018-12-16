@@ -65,8 +65,8 @@ PRIVATE int DCALL
 ssegiter_ctor(StringSegmentsIterator *__restrict self) {
  self->s_str   = (DREF DeeStringObject *)Dee_EmptyString;
  self->s_siz   = 1;
- self->s_ptr   = (uint8_t *)DeeString_STR(self->s_str);
- self->s_end   = (uint8_t *)DeeString_STR(self->s_str);
+ self->s_ptr   = (uint8_t *)DeeString_STR(Dee_EmptyString);
+ self->s_end   = (uint8_t *)DeeString_STR(Dee_EmptyString);
  self->s_width = STRING_WIDTH_1BYTE;
  Dee_Incref(Dee_EmptyString);
  return 0;
@@ -88,8 +88,9 @@ PRIVATE int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  StringSegments *seg;
- if (DeeArg_Unpack(argc,argv,"o:_StringSegmentsIterator",&seg) ||
-     DeeObject_AssertTypeExact((DeeObject *)seg,&StringSegments_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_StringSegmentsIterator",&seg))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)seg,&StringSegments_Type))
      goto err;
  self->s_str   = seg->s_str;
  self->s_siz   = seg->s_siz;
@@ -144,7 +145,11 @@ ssegiter_getseq(StringSegmentsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset ssegiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict self))&ssegiter_getseq },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssegiter_getseq,
+      NULL,
+      NULL,
+      DOC("->?Ert:StringSegments") },
     { NULL }
 };
 
@@ -396,7 +401,7 @@ PRIVATE struct type_seq sseg_seq = {
 
 
 PRIVATE struct type_member sseg_members[] = {
-    TYPE_MEMBER_FIELD("__str__",STRUCT_OBJECT,offsetof(StringSegments,s_str)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringSegments,s_str),"->?Dstring"),
     TYPE_MEMBER_FIELD("__siz__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(StringSegments,s_siz)),
     TYPE_MEMBER_END
 };

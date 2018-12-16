@@ -124,8 +124,9 @@ PRIVATE int DCALL
 bfi_init(BytesFindIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  BytesFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_BytesFindIterator",&find) ||
-     DeeObject_AssertTypeExact((DeeObject *)find,&BytesFind_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_BytesFindIterator",&find))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)find,&BytesFind_Type))
      goto err;
  return bfi_setup(self,find);
 err:
@@ -135,8 +136,9 @@ PRIVATE int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  BytesFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_BytesCaseFindIterator",&find) ||
-     DeeObject_AssertTypeExact((DeeObject *)find,&BytesCaseFind_Type))
+ if (DeeArg_Unpack(argc,argv,"o:_BytesCaseFindIterator",&find))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)find,&BytesCaseFind_Type))
      goto err;
  return bfi_setup(self,find);
 err:
@@ -208,9 +210,18 @@ bcfi_bool(BytesFindIterator *__restrict self) {
 }
 
 PRIVATE struct type_member bfi_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(BytesFindIterator,bfi_find)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BytesFindIterator,bfi_find),"->?Ert:BytesFind"),
     TYPE_MEMBER_END
 };
+
+#ifdef CONFIG_NO_DOC
+#define bcfi_members       bfi_members
+#else
+PRIVATE struct type_member bcfi_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BytesFindIterator,bfi_find),"->?Ert:BytesCaseFind"),
+    TYPE_MEMBER_END
+};
+#endif
 
 
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name,op) \
@@ -324,7 +335,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */bfi_members,
+    /* .tp_members       = */bcfi_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
@@ -422,8 +433,8 @@ PRIVATE struct type_seq bcf_seq = {
 
 
 PRIVATE struct type_member bf_members[] = {
-    TYPE_MEMBER_FIELD("__str__",STRUCT_OBJECT,offsetof(BytesFind,bf_bytes)),
-    TYPE_MEMBER_FIELD("__needle__",STRUCT_OBJECT,offsetof(BytesFind,bf_needle)),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesFind,bf_bytes),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__needle__",STRUCT_OBJECT,offsetof(BytesFind,bf_needle),"->?Dbytes"),
     TYPE_MEMBER_FIELD("__start__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(BytesFind,bf_start)),
     TYPE_MEMBER_FIELD("__end__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(BytesFind,bf_end)),
     TYPE_MEMBER_END

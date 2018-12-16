@@ -50,9 +50,7 @@ repeatiter_ctor(RepeatIterator *__restrict self) {
  if unlikely(!self->ri_rep) return -1;
  self->ri_iter = DeeObject_IterSelf(Dee_EmptySeq);
  if unlikely(!self->ri_iter) { Dee_Decref(self->ri_rep); }
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->ri_lock);
-#endif
  self->ri_num = 0;
  return 0;
 }
@@ -72,9 +70,7 @@ repeatiter_copy(RepeatIterator *__restrict self,
  self->ri_iter = copy;
  self->ri_rep = other->ri_rep;
  Dee_Incref(self->ri_rep);
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->ri_lock);
-#endif
  return 0;
 }
 
@@ -87,9 +83,7 @@ repeatiter_init(RepeatIterator *__restrict self,
  self->ri_iter = DeeObject_IterSelf(self->ri_rep->r_seq);
  if unlikely(!self->ri_iter) return -1;
  Dee_Incref(self->ri_rep);
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->ri_lock);
-#endif
  self->ri_num = self->ri_rep->r_num-1;
  return 0;
 }
@@ -361,9 +355,7 @@ repeat_iter(Repeat *__restrict self) {
  if unlikely(!result->ri_iter) goto err_r;
  result->ri_rep  = self;
  result->ri_num  = self->r_num-1;
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&result->ri_lock);
-#endif
  Dee_Incref(self);
  DeeObject_Init(result,&SeqRepeatIterator_Type);
 done:
@@ -724,7 +716,9 @@ repeatitemiter_next(RepeatItemIterator *__restrict self) {
 }
 
 PRIVATE struct type_member repeatitemiter_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(RepeatItemIterator,rii_rep)),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(RepeatItemIterator,rii_rep),"->?Ert:SeqItemRepeat"),
+    TYPE_MEMBER_FIELD("__obj__",STRUCT_OBJECT,offsetof(RepeatItemIterator,rii_obj)),
+    TYPE_MEMBER_FIELD("__num__",STRUCT_SIZE_T,offsetof(RepeatItemIterator,rii_num)),
     TYPE_MEMBER_END
 };
 

@@ -1201,7 +1201,7 @@ err:
 PRIVATE dwchar_t *DCALL
 nt_MultiByteToWideChar(DWORD codepage, uint8_t *__restrict str, size_t length) {
  dwchar_t *result,*new_result; size_t result_length;
- assert(length != 0);
+ ASSERT(length != 0);
  result = DeeString_NewWideBuffer(length);
  result_length = (size_t)(DWORD)MultiByteToWideChar(codepage,
                                                     0,
