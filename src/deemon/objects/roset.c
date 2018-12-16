@@ -231,6 +231,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict self) {
   *               given sequence already is a read-only set. */
  if (DeeRoSet_CheckExact(self))
      return_reference_(self);
+ /* TODO: if (DeeHashSet_CheckExact(self)) ... */
  /* Construct a read-only set from an iterator. */
  self = DeeObject_IterSelf(self);
  if unlikely(!self) return NULL;
@@ -537,6 +538,7 @@ PRIVATE struct type_seq roset_seq = {
 
 PRIVATE struct type_member roset_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&RoSetIterator_Type),
+    /* TODO: frozen */
     TYPE_MEMBER_END
 };
 

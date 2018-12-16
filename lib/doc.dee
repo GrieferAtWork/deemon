@@ -30,6 +30,8 @@ global TextSegment;
 global TypeExpr;
 global TypeRef;
 
+
+
 local function decode_name_content(name: string): string {
 	name = name.substr(1,#name - 1);
 	name = name.replace("\\\n","\n");

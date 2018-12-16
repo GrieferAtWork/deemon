@@ -961,12 +961,6 @@ int main(int argc, char *argv[]) {
 
  /*_CrtSetBreakAlloc(280);*/
 
- /* TODO: `property dict.frozen: rt.RoDict' */
- /* TODO: `property list.frozen: deemon.tuple' */
- /* TODO: `property hashset.frozen: rt.RoSet' */
- /* TODO: `class property dict.frozen: deemon.type_ -> rt.RoDict' */
- /* TODO: `class property list.frozen: deemon.type_ -> deemon.tuple' */
- /* TODO: `class property hashset.frozen: deemon.type_ -> rt.RoSet' */
  /* TODO: Make dict and rodict sensitive to item ordering
   *       -> `{ foo: "bar", bar: "foo" }' should on some level
   *          be destinct from `{ bar: "foo", foo: "bar" }' */

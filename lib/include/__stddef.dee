@@ -76,8 +76,8 @@
  * - While the intention of dict's proxy views had always been to
  *   emulate python, deemon 100+ did this incorrectly and had swapped
  *   the meaning of `items' and `values'
- * - In python (just as in deemon200), items() is a sequence of 2-element
- *   tuples, each referring to a key-value pair, while values() is the
+ * - In python (just as in deemon200), `items' is a sequence of 2-element
+ *   tuples, each referring to a key-value pair, while `values' is the
  *   same sequence, however only referring to the value-portion.
  * - To keep backwards-compatibility with older code, as well as considering
  *   that old code was usually written to use dict.items() / dict.keys()
@@ -88,8 +88,9 @@
  *    considering our sole purpose is to ensure backwards-compatibility
  *    with a limited set of existing code, macros are the easiest, and
  *    simplest sollution, not requiring any modifications of the runtime! */
-#define items() values __NO_MACRO()
-#define values() items __NO_MACRO()
+#define keys()    keys
+#define items() values
+#define values() items
 
 
 

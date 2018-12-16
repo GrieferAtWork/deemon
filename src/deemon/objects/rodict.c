@@ -307,6 +307,7 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
   *               given sequence already is a read-only dict. */
  if (DeeRoDict_CheckExact(self))
      return_reference_(self);
+ /* TODO: if (DeeDict_CheckExact(self)) ... */
  /* Construct a read-only dict from an iterator. */
  self = DeeObject_IterSelf(self);
  if unlikely(!self) return NULL;
@@ -795,14 +796,16 @@ rodict_get(Dict *__restrict self,
 }
 
 PRIVATE struct type_method rodict_methods[] = {
-    { DeeString_STR(&str_get), (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&rodict_get,
-       DOC("(key,def=!N)\n"
-           "@return The value associated with @key or @def when @key has no value associated") },
+    { DeeString_STR(&str_get),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&rodict_get,
+      DOC("(key,def=!N)\n"
+          "@return The value associated with @key or @def when @key has no value associated") },
     { NULL }
 };
 
 PRIVATE struct type_member rodict_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&RoDictIterator_Type),
+    /* TODO: frozen */
     TYPE_MEMBER_END
 };
 
@@ -864,10 +867,10 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&rodict_ctor,
-                /* .tp_copy_ctor = */&DeeObject_NewRef,
-                /* .tp_deep_ctor = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_deepcopy,
-                /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&rodict_init,
+                /* .tp_ctor      = */(void *)&rodict_ctor,
+                /* .tp_copy_ctor = */(void *)&DeeObject_NewRef,
+                /* .tp_deep_ctor = */(void *)&rodict_deepcopy,
+                /* .tp_any_ctor  = */(void *)&rodict_init,
                 /* .tp_free      = */NULL
             }
         },

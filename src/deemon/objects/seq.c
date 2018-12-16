@@ -24,6 +24,7 @@
 #include <deemon/seq.h>
 #include <deemon/int.h>
 #include <deemon/bool.h>
+#include <deemon/attribute.h>
 #include <deemon/none.h>
 #include <deemon/arg.h>
 #include <deemon/thread.h>
@@ -887,10 +888,65 @@ fail:
  return NULL;
 }
 
+PRIVATE DREF DeeTypeObject *DCALL
+seq_frozen_get(DeeTypeObject *__restrict self) {
+ int error;
+ DREF DeeTypeObject *result;
+ struct attribute_info info;
+ struct attribute_lookup_rules rules;
+ rules.alr_name       = "frozen";
+ rules.alr_hash       = Dee_HashPtr("frozen",COMPILER_STRLEN("frozen"));
+ rules.alr_decl       = NULL;
+ rules.alr_perm_mask  = ATTR_PERMGET|ATTR_IMEMBER;
+ rules.alr_perm_value = ATTR_PERMGET|ATTR_IMEMBER;
+ error = DeeAttribute_Lookup(Dee_TYPE(self),
+                            (DeeObject *)self,
+                            &info,
+                            &rules);
+ if unlikely(error < 0)
+    goto err;
+ if (error != 0) {
+  /* If the type doesn't provide its own override for `frozen', the default
+   * implementation provided by us will return information via a tuple instead. */
+  return_reference_(&DeeTuple_Type);
+ }
+ if (info.a_attrtype) {
+  result = info.a_attrtype;
+  Dee_Incref(result);
+ } else if (info.a_decl == (DeeObject *)&DeeSeq_Type) {
+  /* We've the ones implementing the attribute, and since we know that we're
+   * already implementing it by casting ourself to a tuple, inform the caller
+   * of exactly that. */
+  result = &DeeTuple_Type;
+  Dee_Incref(&DeeTuple_Type);
+ } else {
+  if (info.a_doc) {
+   /* TODO: Use doc meta-information to determine the return type! */
+  }
+  /* Fallback: just tell the caller what they already know: a sequence will be returned... */
+  result = &DeeSeq_Type;
+  Dee_Incref(&DeeSeq_Type);
+ }
+ attribute_info_fini(&info);
+ return result;
+err:
+ return NULL;
+}
+
 PRIVATE struct type_getset seq_class_getsets[] = {
-    { DeeString_STR(&str_iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get, NULL, NULL,
-      DOC("->?Dtype\nReturns the iterator class used by instances of @this sequence type\n"
+    { DeeString_STR(&str_iterator),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get,
+      NULL,
+      NULL,
+      DOC("->?Dtype\n"
+          "Returns the iterator class used by instances of @this sequence type\n"
           "Should a sub-class implement its own iterator, this attribute should be overwritten") },
+    { "frozen",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_frozen_get,
+      NULL,
+      NULL,
+      DOC("->?Dtype\n"
+          "Returns the type of sequence returned by the #i:frozen property") },
     { NULL }
 };
 
@@ -901,8 +957,10 @@ seq_at(DeeObject *__restrict self,
        size_t argc, DeeObject **__restrict argv) {
  DeeObject *index;
  if (DeeArg_Unpack(argc,argv,"o:at",&index))
-     return NULL;
+     goto err;
  return DeeObject_GetItem(self,index);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 seq_empty(DeeObject *__restrict self,
@@ -3137,6 +3195,14 @@ seq_get_isresizable(DeeObject *__restrict self) {
 err:
  return NULL;
 }
+PRIVATE DREF DeeObject *DCALL
+seq_get_isfrozen(DeeObject *__restrict self) {
+ int result = DeeSeq_IsMutable(self);
+ if unlikely(result < 0) goto err;
+ return_bool_(!result);
+err:
+ return NULL;
+}
 
 
 
@@ -3253,6 +3319,18 @@ PRIVATE struct type_getset seq_getsets[] = {
           "sequence can actually be manipulated, only that a sub-class provides special "
           "behavior for at least one of the following: #append, #extend, #insert, #insertall, "
           "#erase, #pop, #resize, #pushfront, #pushback, #popfront or #popback") },
+    { "isfrozen", &seq_get_isfrozen, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Same as ${!this.ismutable}") },
+    /* TODO: _YieldFunction should implement `frozen' as a lazy buffer that only
+     *       enumerates elements as they are needed, and remembers then as part
+     *       of a vector of generated elements. */
+    { "frozen", &DeeTuple_FromSequence, NULL, NULL,
+      DOC("->?#frozen\n"
+          "Returns a copy of @this sequence, with all of its current elements, as well as "
+          "their current order frozen in place, constructing a snapshot of the sequence's "
+          "current contents. - The actual type of sequence returned is implementation- and "
+          "type- specific, and copying itself may either be done immediatly, or as copy-on-write") },
     { NULL }
 };
 

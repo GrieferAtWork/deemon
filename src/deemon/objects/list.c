@@ -2255,33 +2255,142 @@ list_sizeof(List *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
-list_first(List *__restrict self) {
+list_get_first(List *__restrict self) {
  DREF DeeObject *result;
  DeeList_LockRead(self);
- if unlikely(DeeList_SIZE(self) == 0) {
-  DeeList_LockEndRead(self);
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
+ if unlikely(DeeList_IsEmpty(self))
+    goto err_empty;
  result = DeeList_GET(self,0);
  Dee_Incref(result);
  DeeList_LockEndRead(self);
  return result;
+err_empty:
+ DeeList_LockEndRead(self);
+ err_empty_sequence((DeeObject *)self);
+ return NULL;
 }
+PRIVATE int DCALL
+list_del_first(List *__restrict self) {
+ DREF DeeObject *delob;
+ ASSERT_OBJECT_TYPE(self,&DeeList_Type);
+again:
+ DeeList_LockWrite(self);
+ if unlikely(DeeList_IsEmpty(self))
+    goto err_empty;
+ /* Adjust to shift following elements downwards. */
+ delob = DeeList_GET(self,0);
+ DeeList_SIZE(self) -= 1;
+ MEMMOVE_PTR(DeeList_ELEM(self),
+             DeeList_ELEM(self)+1,
+             DeeList_SIZE(self));
+ DeeList_LockEndWrite(self);
+ Dee_Decref(delob);
+ return 0;
+err_empty:
+ DeeList_LockEndRead(self);
+ return err_empty_sequence((DeeObject *)self);
+}
+PRIVATE int DCALL
+list_set_first(List *__restrict self,
+               DeeObject *__restrict value) {
+ DREF DeeObject *oldob;
+ DeeList_LockWrite(self);
+ if unlikely(DeeList_IsEmpty(self))
+    goto err_empty;
+ Dee_Incref(value);
+ oldob = DeeList_GET(self,0);
+ DeeList_SET(self,0,value);
+ DeeList_LockEndWrite(self);
+ Dee_Decref(oldob);
+ return 0;
+err_empty:
+ DeeList_LockEndWrite(self);
+ return err_empty_sequence((DeeObject *)self);
+}
+
+
 PRIVATE DREF DeeObject *DCALL
-list_last(List *__restrict self) {
+list_get_last(List *__restrict self) {
  DREF DeeObject *result;
  DeeList_LockRead(self);
- if unlikely(DeeList_SIZE(self) == 0) {
-  DeeList_LockEndRead(self);
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
+ if unlikely(DeeList_IsEmpty(self))
+    goto err_empty;
  result = DeeList_GET(self,DeeList_SIZE(self)-1);
  Dee_Incref(result);
  DeeList_LockEndRead(self);
  return result;
+err_empty:
+ DeeList_LockEndRead(self);
+ err_empty_sequence((DeeObject *)self);
+ return NULL;
 }
+PRIVATE int DCALL
+list_del_last(List *__restrict self) {
+ DREF DeeObject *delob;
+ ASSERT_OBJECT_TYPE(self,&DeeList_Type);
+again:
+ DeeList_LockWrite(self);
+ if unlikely(DeeList_IsEmpty(self))
+    goto err_empty;
+ DeeList_SIZE(self) -= 1;
+ delob = DeeList_GET(self,DeeList_SIZE(self));
+ DeeList_LockEndWrite(self);
+ Dee_Decref(delob);
+ return 0;
+err_empty:
+ DeeList_LockEndRead(self);
+ return err_empty_sequence((DeeObject *)self);
+}
+PRIVATE int DCALL
+list_set_last(List *__restrict self,
+              DeeObject *__restrict value) {
+ DREF DeeObject *oldob;
+ size_t index;
+ DeeList_LockWrite(self);
+ if unlikely(DeeList_IsEmpty(self))
+    goto err_empty;
+ index = DeeList_SIZE(self) - 1;
+ Dee_Incref(value);
+ oldob = DeeList_GET(self,index);
+ DeeList_SET(self,index,value);
+ DeeList_LockEndWrite(self);
+ Dee_Decref(oldob);
+ return 0;
+err_empty:
+ DeeList_LockEndWrite(self);
+ return err_empty_sequence((DeeObject *)self);
+}
+
+#ifdef __OPTIMIZE_SIZE__
+#define list_get_frozen DeeTuple_FromSequence
+#else /* __OPTIMIZE_SIZE__ */
+PRIVATE DREF DeeObject *DCALL
+list_get_frozen(List *__restrict self) {
+ size_t i,count;
+ DREF DeeObject *result;
+again:
+ DeeList_LockWrite(self);
+ count = DeeList_SIZE(self);
+ result = DeeTuple_TryNewUninitialized(count);
+ if unlikely(!result) {
+  DeeList_LockEndWrite(self);
+  if (Dee_CollectMemory(DeeTuple_SIZEOF(count)))
+      goto again;
+  return NULL;
+ }
+ /* Copy elements. */
+ MEMCPY_PTR(DeeTuple_ELEM(result),
+            DeeList_ELEM(self),
+            count);
+ for (i = 0; i < count; ++i)
+     Dee_Incref(DeeTuple_GET(result,i));
+ DeeList_LockEndWrite(self);
+ return result;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+
+
 PRIVATE DREF DeeObject *DCALL
 list_getallocated(List *__restrict self) {
  size_t result;
@@ -2641,9 +2750,9 @@ err:
 
 PRIVATE struct type_getset list_getsets[] = {
     { "allocated",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_getallocated,
-      (int(DCALL *)(DeeObject *__restrict))&list_delallocated,
-      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_setallocated,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_getallocated,
+     (int(DCALL *)(DeeObject *__restrict))&list_delallocated,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_setallocated,
       DOC("->?Dint\n"
           "@throw ValueError Attmpted to set the list preallocation size to a value lower than ${#this}\n"
           "The number of allocated items\n"
@@ -2660,10 +2769,22 @@ PRIVATE struct type_getset list_getsets[] = {
           ">/* And same as an atomic variant of: */\n"
           ">mylist.allocated = #mylist;") },
     /* TODO: del/set support for `first' & `last' */
-    { "first", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_first, NULL, NULL,
+    { "first",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_first,
+     (int(DCALL *)(DeeObject *__restrict))&list_del_first,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_set_first,
       DOC("->\n@return The first item from @this list") },
-    { "last", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_last, NULL, NULL,
+    { "last",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_last,
+     (int(DCALL *)(DeeObject *__restrict))&list_del_last,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_set_last,
       DOC("->\n@return The last item from @this list") },
+    { "frozen",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_frozen,
+      NULL,
+      NULL,
+      DOC("->?Dtuple\n"
+          "Return a copy of the contents of @this list as an immutable sequence") },
     { NULL }
 };
 
@@ -2982,6 +3103,7 @@ PRIVATE struct type_math list_math = {
 
 PRIVATE struct type_member list_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&DeeListIterator_Type),
+    TYPE_MEMBER_CONST("frozen",&DeeTuple_Type),
     TYPE_MEMBER_END
 };
 

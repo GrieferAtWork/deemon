@@ -21,8 +21,10 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/attribute.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
+#include <deemon/roset.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/thread.h>
@@ -495,27 +497,37 @@ PRIVATE struct type_math set_math = {
 
 INTERN struct type_method set_methods[] = {
     { "difference", &set_difference,
-      DOC("(other:?.)->?.\n"
-          "Same as ${this.operator - (other)}") },
+      DOC("(to:?.)->?.\n"
+          "Same as ${this.operator - (to)}") },
     { "intersection", &set_intersection,
-      DOC("(other:?.)->?.\n"
-          "Same as ${this.operator & (other)}") },
+      DOC("(with_:?.)->?.\n"
+          "Same as ${this.operator & (with_)}") },
     { "isdisjoint", &set_isdisjoint,
-      DOC("(other:?.)->?Dbool\n"
-          "Returns :true if ${#(this & other) == 0}\n"
-          "In other words: If @this and @other have no items in common") },
+      DOC("(with_:?.)->?Dbool\n"
+          "Returns :true if ${#(this & with_) == 0}\n"
+          "In other words: If @this and @with_ have no items in common") },
     { "union", &set_union,
-      DOC("(other:?.)->?.\n"
-          "Same as ${this.operator | (other)}") },
+      DOC("(with_:?.)->?.\n"
+          "Same as ${this.operator | (with_)}") },
     { "symmetric_difference", &set_symmetric_difference,
-      DOC("(other:?.)->?.\n"
-          "Same as ${this.operator ^ (other)}") },
+      DOC("(with_:?.)->?.\n"
+          "Same as ${this.operator ^ (with_)}") },
     { "issubset", &set_issubset,
-      DOC("(other:?.)->?Dbool\n"
-          "Same as ${this.operator <= (other)}") },
+      DOC("(of:?.)->?Dbool\n"
+          "Same as ${this.operator <= (of)}") },
     { "issuperset", &set_issuperset,
-      DOC("(other:?.)->?Dbool\n"
-          "Same as ${this.operator >= (other)}") },
+      DOC("(of:?.)->?Dbool\n"
+          "Same as ${this.operator >= (of)}") },
+    { NULL }
+};
+
+INTERN struct type_getset set_getsets[] = {
+    { "frozen", &DeeRoSet_FromSequence, NULL, NULL,
+      DOC("->?Ert:RoSet\n"
+          "Returns a copy of @this set, with all of its current elements frozen in place, "
+          "constructing a snapshot of the set's current contents. - The actual type of "
+          "set returned is implementation- and type- specific, and copying itself may "
+          "either be done immediatly, or as copy-on-write") },
     { NULL }
 };
 
@@ -530,10 +542,60 @@ set_iterator_get(DeeTypeObject *__restrict self) {
  return NULL;
 }
 
+PRIVATE DREF DeeTypeObject *DCALL
+set_frozen_get(DeeTypeObject *__restrict self) {
+ int error;
+ DREF DeeTypeObject *result;
+ struct attribute_info info;
+ struct attribute_lookup_rules rules;
+ rules.alr_name       = "frozen";
+ rules.alr_hash       = Dee_HashPtr("frozen",COMPILER_STRLEN("frozen"));
+ rules.alr_decl       = NULL;
+ rules.alr_perm_mask  = ATTR_PERMGET|ATTR_IMEMBER;
+ rules.alr_perm_value = ATTR_PERMGET|ATTR_IMEMBER;
+ error = DeeAttribute_Lookup(Dee_TYPE(self),
+                            (DeeObject *)self,
+                            &info,
+                            &rules);
+ if unlikely(error < 0)
+    goto err;
+ if (error != 0)
+     return_reference_(&DeeRoSet_Type);
+ if (info.a_attrtype) {
+  result = info.a_attrtype;
+  Dee_Incref(result);
+ } else if (info.a_decl == (DeeObject *)&DeeSet_Type) {
+  result = &DeeRoSet_Type;
+  Dee_Incref(&DeeRoSet_Type);
+ } else {
+  if (info.a_doc) {
+   /* TODO: Use doc meta-information to determine the return type! */
+  }
+  /* Fallback: just tell the caller what they already know: a set will be returned... */
+  result = &DeeSet_Type;
+  Dee_Incref(&DeeSet_Type);
+ }
+ attribute_info_fini(&info);
+ return result;
+err:
+ return NULL;
+}
+
+
 PRIVATE struct type_getset set_class_getsets[] = {
-    { DeeString_STR(&str_iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iterator_get, NULL, NULL,
-      DOC("->?Dtype\nReturns the iterator class used by instances of @this set type\n"
+    { DeeString_STR(&str_iterator),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iterator_get,
+      NULL,
+      NULL,
+      DOC("->?Dtype\n"
+          "Returns the iterator class used by instances of @this set type\n"
           "This member must be overwritten by sub-classes of :set") },
+    { "frozen",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_frozen_get,
+      NULL,
+      NULL,
+      DOC("->?Dtype\n"
+          "Returns the type of sequence returned by the #i:frozen property") },
     { NULL }
 };
 
@@ -879,7 +941,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */set_methods,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */set_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */set_class_getsets,

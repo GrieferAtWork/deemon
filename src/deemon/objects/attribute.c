@@ -390,7 +390,7 @@ err:
  return -1;
 }
 
-PRIVATE struct keyword attrinit_kwlist[] = { K(ob), K(name), K(flagmask), K(flagval), K(decl), KEND };
+PRIVATE DEFINE_KWLIST(attrinit_kwlist,{ K(ob), K(name), K(flagmask), K(flagval), K(decl), KEND });
 
 PRIVATE int DCALL
 attribute_init(DeeAttributeObject *__restrict self, size_t argc,
@@ -402,7 +402,7 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = 0;
  rules.alr_perm_value = 0;
- if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo",
+ if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo:attribute",
                     &search_self,
                     &search_name,
                     &flagmask,

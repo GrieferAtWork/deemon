@@ -1385,7 +1385,8 @@ PRIVATE struct type_method set_methods[] = {
     { DeeString_STR(&str_pop),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
       DOC("->\n"
-          "@throw ValueError The set is empty\nPop a random item from the set and return it") },
+          "@throw ValueError The set is empty\n"
+          "Pop a random item from the set and return it") },
     { DeeString_STR(&str_clear),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_doclear,
       DOC("()\n"
@@ -1393,11 +1394,13 @@ PRIVATE struct type_method set_methods[] = {
     { "popitem",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_pop,
       DOC("->\n"
-          "@throw ValueError The set is empty\nPop a random item from the set and return it (alias for #pop)") },
+          "@throw ValueError The set is empty\n"
+          "Pop a random item from the set and return it (alias for #pop)") },
     { "unify",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_unify,
       DOC("(ob)->\n"
-          "Insert @ob into the set if it wasn't inserted before, and re-return it, or the pre-existing instance") },
+          "Insert @ob into the set if it wasn't inserted before, "
+          "and re-return it, or the pre-existing instance") },
     { DeeString_STR(&str_insert),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_insert,
       DOC("(ob)->?Dbool\n"
@@ -1431,33 +1434,42 @@ PRIVATE struct type_method set_methods[] = {
 
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 set_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
  return DeeFloat_New(1.0);
 }
-PRIVATE int DCALL
+INTERN int DCALL
 set_del_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
  return 0;
 }
-PRIVATE int DCALL
+INTERN int DCALL
 set_set_maxloadfactor(DeeObject *__restrict UNUSED(self),
                       DeeObject *__restrict UNUSED(value)) {
  return 0;
 }
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-INTERN struct type_getset set_getsets[] = {
+INTERN struct type_getset hashset_getsets[] = {
+    { "frozen",
+     &DeeRoSet_FromSequence,
+      NULL,
+      NULL,
+      DOC("->?Ert:RoSet\n"
+          "Returns a read-only (frozen) copy of @this hashset") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT */
     { "max_load_factor",
-      &set_get_maxloadfactor,
-      &set_del_maxloadfactor,
-      &set_set_maxloadfactor,
+     &set_get_maxloadfactor,
+     &set_del_maxloadfactor,
+     &set_set_maxloadfactor,
       DOC("->?Dfloat\n"
           "Deprecated. Always returns ${1.0}, with del/set being ignored") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }
 };
-#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_member set_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&HashSetIterator_Type),
+    TYPE_MEMBER_CONST("frozen",&DeeRoSet_Type),
     TYPE_MEMBER_END
 };
 
@@ -1530,11 +1542,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */set_methods,
-#ifndef CONFIG_NO_DEEMON_100_COMPAT
-    /* .tp_getsets       = */set_getsets,
-#else
-    /* .tp_getsets       = */NULL,
-#endif
+    /* .tp_getsets       = */hashset_getsets,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

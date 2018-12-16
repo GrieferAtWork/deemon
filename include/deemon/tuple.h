@@ -39,11 +39,13 @@ struct tuple_object {
     DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
 #endif
 };
-#define DeeTuple_IsEmpty(ob)                ((DeeObject *)REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
-#define DeeTuple_SIZE(ob)                   ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_size
-#define DeeTuple_ELEM(ob)                   ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem
-#define DeeTuple_GET(ob,i)                  ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]
-#define DeeTuple_SET(ob,i,v)                ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]=(v)
+
+#define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject,t_elem) + (n_items) * sizeof(DREF DeeObject *))
+#define DeeTuple_IsEmpty(ob)     ((DeeObject *)REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
+#define DeeTuple_SIZE(ob)        ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_size
+#define DeeTuple_ELEM(ob)        ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem
+#define DeeTuple_GET(ob,i)       ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]
+#define DeeTuple_SET(ob,i,v)     ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]=(v)
 
 /* Define a statically allocated tuple:
  * >> PRIVATE DEFINE_TUPLE(my_tuple,2,{ Dee_EmptyString, Dee_EmptyString }); */
@@ -76,6 +78,7 @@ DDATDEF DeeTypeObject DeeTuple_Type;
 
 /* Create new tuple objects. */
 DFUNDEF DREF DeeObject *DCALL DeeTuple_NewUninitialized(size_t n);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_TryNewUninitialized(size_t n);
 DFUNDEF DREF DeeObject *DCALL DeeTuple_ResizeUninitialized(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t n);
 DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeTuple_TruncateUninitialized(/*inherit(always)*/DREF DeeObject *__restrict self, size_t n);
 DFUNDEF void DCALL DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);

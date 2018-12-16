@@ -1508,31 +1508,16 @@ dict_newproxy(DeeDictObject *__restrict self,
               DeeTypeObject *__restrict proxy_type);
 
 PRIVATE DREF DeeObject *DCALL
-dict_keys(DeeDictObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":keys"))
-     goto err;
+dict_keys(DeeDictObject *__restrict self) {
  return dict_newproxy(self,&DeeDictKeys_Type);
-err:
- return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-dict_items(DeeDictObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":items"))
-     goto err;
+dict_items(DeeDictObject *__restrict self) {
  return dict_newproxy(self,&DeeDictItems_Type);
-err:
- return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-dict_values(DeeDictObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":values"))
-     goto err;
+dict_values(DeeDictObject *__restrict self) {
  return dict_newproxy(self,&DeeDictValues_Type);
-err:
- return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1715,15 +1700,6 @@ PRIVATE struct type_method dict_methods[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
       DOC("()\n"
           "Clear all values from @this :dict") },
-    { "keys", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_keys,
-      DOC("->?Akeys?.\n"
-          "@return A proxy sequence for viewing the keys of @this :dict") },
-    { "values", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_values,
-      DOC("->?Akeys?.\n"
-          "@return A proxy sequence for viewing the values of @this :dict") },
-    { "items", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_items,
-      DOC("->?Akeys?.\n"
-          "@return A proxy sequence for viewing the key-value pairs of @this :dict") },
     { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
       DOC("->?T2?O?O\n"
           "@return A random pair key-value pair that has been removed\n"
@@ -1761,9 +1737,47 @@ PRIVATE struct type_method dict_methods[] = {
 };
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTDEF struct type_getset set_getsets[];
-#define dict_getsets set_getsets
+INTDEF DREF DeeObject *DCALL set_get_maxloadfactor(DeeObject *__restrict self);
+INTDEF int DCALL set_del_maxloadfactor(DeeObject *__restrict self);
+INTDEF int DCALL set_set_maxloadfactor(DeeObject *__restrict self, DeeObject *__restrict value);
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
+INTERN struct type_getset dict_getsets[] = {
+    { "keys",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys,
+      NULL,
+      NULL,
+      DOC("->?Akeys?.\n"
+          "@return A proxy sequence for viewing the keys of @this :dict") },
+    { "values",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values,
+      NULL,
+      NULL,
+      DOC("->?Akeys?.\n"
+          "@return A proxy sequence for viewing the values of @this :dict") },
+    { "items",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items,
+      NULL,
+      NULL,
+      DOC("->?Akeys?.\n"
+          "@return A proxy sequence for viewing the key-value pairs of @this :dict") },
+    { "frozen",
+     &DeeRoDict_FromSequence,
+      NULL,
+      NULL,
+      DOC("->?Ert:RoDict\n"
+          "Returns a read-only (frozen) copy of @this dict") },
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+    { "max_load_factor",
+     &set_get_maxloadfactor,
+     &set_del_maxloadfactor,
+     &set_set_maxloadfactor,
+      DOC("->?Dfloat\n"
+          "Deprecated. Always returns ${1.0}, with del/set being ignored") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+    { NULL }
+};
+
 
 
 INTDEF DeeTypeObject DictIterator_Type;
@@ -1773,6 +1787,7 @@ PRIVATE struct type_member dict_class_members[] = {
     TYPE_MEMBER_CONST("keys",&DeeDictKeys_Type),
     TYPE_MEMBER_CONST("items",&DeeDictItems_Type),
     TYPE_MEMBER_CONST("values",&DeeDictValues_Type),
+    TYPE_MEMBER_CONST("frozen",&DeeRoDict_Type),
     TYPE_MEMBER_END
 };
 
@@ -1826,11 +1841,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */dict_methods,
-#ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* .tp_getsets       = */dict_getsets,
-#else
-    /* .tp_getsets       = */NULL,
-#endif
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

@@ -171,7 +171,8 @@ DeeTuple_NewUninitialized(size_t n) {
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
  result = (DREF DeeTupleObject *)DeeObject_Malloc(offsetof(DeeTupleObject,t_elem) +
                                                  (n * sizeof(DeeObject *)));
- if unlikely(!result) return NULL;
+ if unlikely(!result)
+    goto done;
  result->t_size = n;
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
 got_result:
@@ -180,6 +181,51 @@ got_result:
 #ifndef NDEBUG
  MEMSET_PTR(result->t_elem,0xcc,n);
 #endif
+done:
+ return (DREF DeeObject *)result;
+}
+
+PUBLIC DREF DeeObject *DCALL
+DeeTuple_TryNewUninitialized(size_t n) {
+ DREF DeeTupleObject *result;
+ if unlikely(!n)
+    return_empty_tuple;
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
+ if (n < CONFIG_TUPLE_CACHE_MAXCOUNT) {
+  struct tuple_cache *c = &cache[n-1];
+  if (c->c_count) {
+   LOCK(c->c_lock);
+#ifndef CONFIG_NO_THREADS
+   COMPILER_READ_BARRIER();
+   if (c->c_head)
+#endif /* !CONFIG_NO_THREADS */
+   {
+    ASSERT(c->c_head != NULL);
+    result = (DREF DeeTupleObject *)c->c_head;
+    c->c_head = ((struct cached_object *)result)->co_next;
+    --c->c_count;
+    ASSERT((c->c_count == 0) == (c->c_head == NULL));
+    ASSERT(result->t_size == n);
+    UNLOCK(c->c_lock);
+    goto got_result;
+   }
+   UNLOCK(c->c_lock);
+  }
+ }
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
+ result = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject,t_elem) +
+                                                    (n * sizeof(DeeObject *)));
+ if unlikely(!result)
+    goto done;
+ result->t_size = n;
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
+got_result:
+#endif
+ DeeObject_Init(result,&DeeTuple_Type);
+#ifndef NDEBUG
+ MEMSET_PTR(result->t_elem,0xcc,n);
+#endif
+done:
  return (DREF DeeObject *)result;
 }
 
