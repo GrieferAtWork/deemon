@@ -21,9 +21,7 @@
 
 #include "api.h"
 #include "object.h"
-#ifdef CONFIG_BUILDING_DEEMON
 #include "gc.h"
-#endif
 #include <hybrid/typecore.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -388,13 +386,13 @@ struct code_object {
     union {
         DREF struct module_object
                             *co_module;      /* [1..1] The module in which this code object was defined.
-                                              *  NOTE: Running code may assume that this field is always non-NULL,
-                                              *        yet during compilation it is NULL or some other object until
-                                              *        the module object surrounding some code object has been defined.
-                                              *  HINT: At some point during compilation, this field may also point
-                                              *        to another code object, forming a linked list to track all
-                                              *        code objects of a given module before that module has actually
-                                              *        been created. */
+                                              * NOTE: Running code may assume that this field is always non-NULL,
+                                              *       yet during compilation it is NULL or some other object until
+                                              *       the module object surrounding some code object has been defined.
+                                              * HINT: At some point during compilation, this field may also point
+                                              *       to another code object, forming a linked list to track all
+                                              *       code objects of a given module before that module has actually
+                                              *       been created. */
         DREF DeeCodeObject  *co_next;        /* [0..1] Only used during compilation: Pointer to another code object. */
     };
     DREF struct string_object
@@ -415,6 +413,72 @@ struct code_object {
                                               *          thereby ensuring that upon natural completion, at least one `ASM_RET_NONE'
                                               *          instruction is always executed, no matter what. */
 };
+
+#ifndef CONFIG_NO_THREADS
+#define _DEE_CODE_CO_STATIC_LOCK_FIELD rwlock_t co_static_lock;
+#define _DEE_CODE_CO_STATIC_LOCK_INIT  RWLOCK_INIT,
+#else
+#define _DEE_CODE_CO_STATIC_LOCK_FIELD /* nothing */
+#define _DEE_CODE_CO_STATIC_LOCK_INIT  /* nothing */
+#endif
+
+/* Define a statically allocated code object. */
+#define DEFINE_CODE(name, \
+                    co_flags_,co_localc_,co_staticc_,co_refc_, \
+                    co_exceptc_,co_argc_min_,co_argc_max_,co_framesize_, \
+                    co_codebytes_,co_module_,co_keywords_,co_defaultv_, \
+                    co_staticv_,co_exceptv_,co_ddi_,...) \
+struct { \
+    struct gc_head_raw _gc_head_data; \
+    struct { \
+        OBJECT_HEAD \
+        uint16_t                 co_flags; \
+        uint16_t                 co_localc; \
+        uint16_t                 co_staticc; \
+        uint16_t                 co_refc; \
+        uint16_t                 co_exceptc; \
+        uint16_t                 co_argc_min; \
+        uint16_t                 co_argc_max; \
+        uint16_t                 co_padding; \
+        uint32_t                 co_framesize; \
+        code_size_t              co_codebytes; \
+        _DEE_CODE_CO_STATIC_LOCK_FIELD \
+        DREF struct module_object *co_module; \
+        DREF struct string_object \
+                         *const *co_keywords; \
+        DREF DeeObject   *const *co_defaultv; \
+        DREF DeeObject         **co_staticv; \
+        struct except_handler   *co_exceptv; \
+        DREF DeeDDIObject       *co_ddi; \
+        instruction_t            co_code[co_codebytes_]; \
+    } ob; \
+} name = { \
+    { NULL, NULL }, \
+    { \
+        OBJECT_HEAD_INIT(&DeeCode_Type), \
+        co_flags_,\
+        co_localc_, \
+        co_staticc_, \
+        co_refc_, \
+        co_exceptc_, \
+        co_argc_min_, \
+        co_argc_max_, \
+        0, \
+        co_framesize_, \
+        co_codebytes_, \
+        _DEE_CODE_CO_STATIC_LOCK_INIT \
+        co_module_, \
+        co_keywords_, \
+        co_defaultv_, \
+        co_staticv_, \
+        co_exceptv_, \
+        co_ddi_, \
+        __VA_ARGS__ \
+    } \
+}
+
+
+
 
 /* Returns the max number of stack objects */
 #define DeeCode_StackDepth(x) (((x)->co_framesize / sizeof(DeeObject *)) - (x)->co_localc)
@@ -658,6 +722,27 @@ struct function_object {
     DREF DeeCodeObject       *fo_code;    /* [1..1][const] Associated code object. */
     DREF DeeObject           *fo_refv[1]; /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
 };
+
+#define DEFINE_FUNCTION(name,fo_code_,fo_refc_,...) \
+struct { \
+    OBJECT_HEAD \
+    DREF DeeCodeObject *fo_code; \
+    DREF DeeObject     *fo_refv[fo_refc_]; \
+} name = { \
+    OBJECT_HEAD_INIT(&DeeFunction_Type), \
+    fo_code_, \
+    __VA_ARGS__ \
+}
+
+#define DEFINE_FUNCTION_NOREFS(name,fo_code_) \
+struct { \
+    OBJECT_HEAD \
+    DREF DeeCodeObject *fo_code; \
+} name = { \
+    OBJECT_HEAD_INIT(&DeeFunction_Type), \
+    fo_code_ \
+}
+
 
 struct yield_function_object {
     OBJECT_HEAD 

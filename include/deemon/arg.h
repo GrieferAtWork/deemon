@@ -113,6 +113,19 @@ struct kwds_object {
     struct kwds_entry kw_map[1024]; /* [const] Keyword name->index map. */
 };
 #define DeeKwds_MAPNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+#define DEFINE_KWDS(name,kw_size_,kw_mask_,...) \
+struct { \
+    OBJECT_HEAD \
+    size_t            kw_size; \
+    size_t            kw_mask; \
+    struct kwds_entry kw_map[(kw_mask_)+1]; \
+} name = { \
+    OBJECT_HEAD_INIT(&DeeKwds_Type), \
+    kw_size_, \
+    kw_mask_, \
+    __VA_ARGS__ \
+}
+
 
 DDATDEF DeeTypeObject DeeKwds_Type;
 #define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)REQUIRES_OBJECT(ob))->kw_size
