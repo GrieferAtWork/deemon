@@ -302,14 +302,14 @@ again:
   return true; /* It is! */
  }
  /* Check if more arguments need to be loaded. */
- if (ATOMIC_READ(self->vk_load) < self->vk_code->co_argc_max) {
+ if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
   size_t index;
   rwlock_write(&self->vk_lock);
   COMPILER_READ_BARRIER();
   index = ATOMIC_READ(self->vk_load);
-  while (index < self->vk_code->co_argc_max) {
+  while (index < self->vk_ckwc) {
    dhash_t str_hash;
-   str = self->vk_code->co_keywords[index++];
+   str = self->vk_ckwv[index++];
    /* Remember the string by caching it within out hash-vector. */
    str_hash = DeeString_Hash((DeeObject *)str);
    i = perturb = str_hash & self->vk_mask;
@@ -355,14 +355,14 @@ again:
   return true; /* It is! */
  }
  /* Check if more arguments need to be loaded. */
- if (ATOMIC_READ(self->vk_load) < self->vk_code->co_argc_max) {
+ if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
   size_t index;
   rwlock_write(&self->vk_lock);
   COMPILER_READ_BARRIER();
   index = ATOMIC_READ(self->vk_load);
-  while (index < self->vk_code->co_argc_max) {
+  while (index < self->vk_ckwc) {
    dhash_t str_hash;
-   str = self->vk_code->co_keywords[index++];
+   str = self->vk_ckwv[index++];
    /* Remember the string by caching it within out hash-vector. */
    str_hash = DeeString_Hash((DeeObject *)str);
    i = perturb = str_hash & self->vk_mask;
@@ -405,14 +405,14 @@ again:
   return true; /* It is! */
  }
  /* Check if more arguments need to be loaded. */
- if (ATOMIC_READ(self->vk_load) < self->vk_code->co_argc_max) {
+ if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
   size_t index;
   rwlock_write(&self->vk_lock);
   COMPILER_READ_BARRIER();
   index = ATOMIC_READ(self->vk_load);
-  while (index < self->vk_code->co_argc_max) {
+  while (index < self->vk_ckwc) {
    dhash_t str_hash;
-   str = self->vk_code->co_keywords[index++];
+   str = self->vk_ckwv[index++];
    /* Remember the string by caching it within out hash-vector. */
    str_hash = DeeString_Hash((DeeObject *)str);
    i = perturb = str_hash & self->vk_mask;
@@ -790,6 +790,7 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
  * Otherwise, the caller must decref the returned object using `BlackListVarkwds_Decref()' */
 INTERN DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
+                     size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
                      DeeObject **__restrict argv) {
  DREF BlackListVarkwds *result;
@@ -802,7 +803,7 @@ BlackListVarkwds_New(struct code_object *__restrict code,
   return Dee_EmptyMapping;
  }
  argc = code->co_argc_max;
- if (!code->co_argc_max || !code->co_keywords) {
+ if (positional_argc >= argc || !code->co_keywords) {
   /* No keyword information --> Return an unfiltered keywords mapping object.
    * -> This happens for purely varkwds user-code functions, such a function
    *    written as `function foo(**kwds)', in which case there aren't any other
@@ -816,6 +817,8 @@ BlackListVarkwds_New(struct code_object *__restrict code,
  if unlikely(!result) goto done;
  rwlock_cinit(&result->vk_lock);
  result->vk_code = code; /* Weakly referenced. */
+ result->vk_ckwc = argc - positional_argc;
+ result->vk_ckwv = code->co_keywords + positional_argc;
  result->vk_kwds = kwds; /* Weakly referenced. */
  result->vk_argv = argv; /* Weakly referenced. */
  result->vk_mask = mask;
@@ -1093,14 +1096,14 @@ again:
   return true; /* It is! */
  }
  /* Check if more arguments need to be loaded. */
- if (ATOMIC_READ(self->bm_load) < self->bm_code->co_argc_max) {
+ if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
   size_t index;
   rwlock_write(&self->bm_lock);
   COMPILER_READ_BARRIER();
   index = ATOMIC_READ(self->bm_load);
-  while (index < self->bm_code->co_argc_max) {
+  while (index < self->bm_ckwc) {
    dhash_t str_hash;
-   str = self->bm_code->co_keywords[index++];
+   str = self->bm_ckwv[index++];
    /* Remember the string by caching it within out hash-vector. */
    str_hash = DeeString_Hash((DeeObject *)str);
    i = perturb = str_hash & self->bm_mask;
@@ -1146,14 +1149,14 @@ again:
   return true; /* It is! */
  }
  /* Check if more arguments need to be loaded. */
- if (ATOMIC_READ(self->bm_load) < self->bm_code->co_argc_max) {
+ if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
   size_t index;
   rwlock_write(&self->bm_lock);
   COMPILER_READ_BARRIER();
   index = ATOMIC_READ(self->bm_load);
-  while (index < self->bm_code->co_argc_max) {
+  while (index < self->bm_ckwc) {
    dhash_t str_hash;
-   str = self->bm_code->co_keywords[index++];
+   str = self->bm_ckwv[index++];
    /* Remember the string by caching it within out hash-vector. */
    str_hash = DeeString_Hash((DeeObject *)str);
    i = perturb = str_hash & self->bm_mask;
@@ -1196,14 +1199,14 @@ again:
   return true; /* It is! */
  }
  /* Check if more arguments need to be loaded. */
- if (ATOMIC_READ(self->bm_load) < self->bm_code->co_argc_max) {
+ if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
   size_t index;
   rwlock_write(&self->bm_lock);
   COMPILER_READ_BARRIER();
   index = ATOMIC_READ(self->bm_load);
-  while (index < self->bm_code->co_argc_max) {
+  while (index < self->bm_ckwc) {
    dhash_t str_hash;
-   str = self->bm_code->co_keywords[index++];
+   str = self->bm_ckwv[index++];
    /* Remember the string by caching it within out hash-vector. */
    str_hash = DeeString_Hash((DeeObject *)str);
    i = perturb = str_hash & self->bm_mask;
@@ -1532,11 +1535,12 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 
 INTERN DREF DeeObject *DCALL
 BlackListMapping_New(struct code_object *__restrict code,
+                     size_t positional_argc,
                      DeeObject *__restrict kw) {
  DREF BlackListMapping *result;
  size_t argc,mask;
  argc = code->co_argc_max;
- if (!argc || !code->co_keywords) {
+ if (positional_argc >= argc || !code->co_keywords) {
   /* No keyword information --> Re-return the unfiltered input mapping object. */
   return_reference_(kw);
  }
@@ -1547,6 +1551,8 @@ BlackListMapping_New(struct code_object *__restrict code,
  if unlikely(!result) goto done;
  rwlock_cinit(&result->bm_lock);
  result->bm_code = code;
+ result->bm_ckwc = argc - positional_argc;
+ result->bm_ckwv = code->co_keywords + positional_argc;
  result->bm_kw   = kw;
  result->bm_mask = mask;
  Dee_Incref(code);

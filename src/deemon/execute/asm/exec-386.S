@@ -2947,18 +2947,22 @@ target_push_varkwds:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
+	pushlf  FRAME_ARGC    /* positional_argc */
+	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_New,12)
-	ADJUST_CFA_OFFSET(-12)
+	call    fSYM(BlackListVarkwds_New,16)
+	ADJUST_CFA_OFFSET(-16)
 	jmp     60f
 	/* } else { */
 1:	pushl   %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
+	pushlf  FRAME_ARGC    /* positional_argc */
+	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListMapping_New,8)
-	ADJUST_CFA_OFFSET(-8)
+	call    fSYM(BlackListMapping_New,12)
+	ADJUST_CFA_OFFSET(-12)
 	/* } */
 60:	testl   %eax, %eax
 	jz     .except
@@ -7138,18 +7142,22 @@ prefix_target_push_varkwds:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %edx          /* kw */
 	ADJUST_CFA_OFFSET(4)
+	pushlf  FRAME_ARGC    /* positional_argc */
+	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_New,12)
-	ADJUST_CFA_OFFSET(-12)
+	call    fSYM(BlackListVarkwds_New,16)
+	ADJUST_CFA_OFFSET(-16)
 	jmp     60f
 	/* } else { */
 1:	pushl   %edx          /* kw */
 	ADJUST_CFA_OFFSET(4)
+	pushlf  FRAME_ARGC    /* positional_argc */
+	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListMapping_New,8)
-	ADJUST_CFA_OFFSET(-8)
+	call    fSYM(BlackListMapping_New,12)
+	ADJUST_CFA_OFFSET(-12)
 	/* } */
 60:	testl   %eax, %eax
 	jz     .except

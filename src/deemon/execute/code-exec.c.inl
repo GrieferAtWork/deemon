@@ -150,6 +150,7 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
    * >>         (key,__argv__[#__argv__ + id])
    * >>     ); */
   result = BlackListVarkwds_New(code,
+                                frame->cf_argc,
                                (DeeKwdsObject *)kw,
                                 frame->cf_argv + frame->cf_argc);
  } else {
@@ -162,7 +163,7 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
    * >>         (key,item)
    * >>     );
    */
-  result = BlackListMapping_New(code,kw);
+  result = BlackListMapping_New(code,frame->cf_argc,kw);
  }
  return result;
 }
