@@ -1251,7 +1251,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_FREE(typed_ptr)       DeeObject_FFree(typed_ptr,sizeof(*(typed_ptr)))
 
 /* Specifies a custom object allocator declaration. */
-#define TYPE_ALLOCATOR(tp_malloc,tp_free) (tp_free),{(uintptr_t)(tp_malloc) }
+#define TYPE_ALLOCATOR(tp_malloc,tp_free) (void *)(tp_free),{(uintptr_t)(void *)(tp_malloc) }
 
 /* Specifies an automatic object allocator. */
 #define TYPE_AUTO_ALLOCATOR(T)     NULL,{(uintptr_t)sizeof(T) }

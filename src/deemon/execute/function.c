@@ -321,7 +321,7 @@ function_init(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"|oo:function",&code,&refs) ||
      DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
      goto err;
- result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv)+
+ result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv) +
                                            (code->co_refc * sizeof(DREF DeeObject *)));
  if unlikely(!result)
      goto err;

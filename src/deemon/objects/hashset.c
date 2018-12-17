@@ -1456,7 +1456,7 @@ INTERN struct type_getset hashset_getsets[] = {
       NULL,
       DOC("->?Ert:RoSet\n"
           "Returns a read-only (frozen) copy of @this hashset") },
-#ifndef CONFIG_NO_DEEMON_100_COMPAT */
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "max_load_factor",
      &set_get_maxloadfactor,
      &set_del_maxloadfactor,

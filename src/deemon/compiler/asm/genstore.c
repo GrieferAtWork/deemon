@@ -233,16 +233,26 @@ check_getattr_sym:
    } break;
 
    {
-    struct module_symbol *modsym; int32_t module_id;
+    struct module_symbol *modsym;
+    int32_t module_id;
    case SYMBOL_TYPE_MODULE: /* module.attr --> push extern ... */
     modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),attrname);
     if (!modsym) break;
     if (!PUSH_RESULT) goto done;
-    module_id = asm_msymid(sym);
+    if (modsym->ss_flags & MODSYM_FEXTERN) {
+     uint16_t impid = modsym->ss_extern.ss_impid;
+     ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
+     module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
+    } else {
+     module_id = asm_msymid(sym);
+    }
     if unlikely(module_id < 0) goto err;
     /* Push an external symbol accessed through its module. */
     if (asm_putddi(ddi_ast)) goto err;
-    return asm_gpush_extern((uint16_t)module_id,modsym->ss_index);
+    return modsym->ss_flags & MODSYM_FPROPERTY
+        ? asm_gcall_extern((uint16_t)module_id,modsym->ss_index + MODULE_PROPERTY_GET,0)
+        : asm_gpush_extern((uint16_t)module_id,modsym->ss_index)
+        ;
    } break;
 
    default: break;
@@ -374,8 +384,16 @@ check_boundattr_sym:
    case SYMBOL_TYPE_MODULE: /* module.attr --> push bnd extern ... */
     modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),attrname);
     if (!modsym) break;
+    if (modsym->ss_flags & MODSYM_FPROPERTY)
+        break; /* Handle property-like module symbols via attributes. */
     if (!PUSH_RESULT) goto done;
-    module_id = asm_msymid(sym);
+    if (modsym->ss_flags & MODSYM_FEXTERN) {
+     uint16_t impid = modsym->ss_extern.ss_impid;
+     ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
+     module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
+    } else {
+     module_id = asm_msymid(sym);
+    }
     if unlikely(module_id < 0) goto err;
     /* Push an external symbol accessed through its module. */
     if (asm_putddi(ddi_ast)) goto err;
@@ -767,14 +785,26 @@ check_base_symbol_class:
     modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
                               (DeeStringObject *)name->a_constexpr);
     if (!modsym) break;
-    module_id = asm_msymid(sym);
+    if (modsym->ss_flags & MODSYM_FREADONLY) break;
+    if (modsym->ss_flags & MODSYM_FEXTERN) {
+     uint16_t impid = modsym->ss_extern.ss_impid;
+     ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
+     module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
+    } else {
+     module_id = asm_msymid(sym);
+    }
     if unlikely(module_id < 0) goto err;
     /* Push an external symbol accessed through its module. */
     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (PUSH_RESULT && asm_gdup()) goto err;
-    if (asm_gpop_extern((uint16_t)module_id,modsym->ss_index)) goto err;
-    goto done;
+    if (modsym->ss_flags & MODSYM_FPROPERTY) {
+     /* Invoke the setter callback. */
+     if (asm_gcall_extern((uint16_t)module_id,modsym->ss_index + MODULE_PROPERTY_SET,1))
+         goto err;
+     return asm_gpop();
+    }
+    return asm_gpop_extern((uint16_t)module_id,modsym->ss_index);
    } break;
 
    default:
