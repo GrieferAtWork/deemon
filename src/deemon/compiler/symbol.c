@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/class.h>
 #include <deemon/string.h>
@@ -56,7 +57,7 @@ DEFINE_STRUCT_CACHE_EX(sym,struct symbol,
 #endif
 
 /* Re-use the symbol cache for labels. (As rare as they are, this is the best way to allocate them) */
-#define lbl_alloc()  ((struct text_label *)sym_alloc())
+#define lbl_alloc()  ((struct text_label *)sym_alloc()) /* TODO: Use slabs for this! */
 #define lbl_free(p)      sym_free((struct symbol *)(p))
 
 

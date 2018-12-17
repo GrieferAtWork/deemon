@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_PROPERTY_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/object.h>

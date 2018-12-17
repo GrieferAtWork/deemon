@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/error.h>
 #include <deemon/compiler/ast.h>
@@ -34,8 +35,8 @@ DECL_BEGIN
 typedef DeeCompilerItemObject CompilerItem;
 typedef DeeCompilerWrapperObject CompilerWrapper;
 
-DEFINE_OBJECT_CACHE(compiler_item,CompilerItem,64)
-DEFINE_OBJECT_CACHE(compiler_wrap,CompilerWrapper,16)
+DEFINE_OBJECT_CACHE(compiler_item,CompilerItem,64)    /* TODO: Use slabs */
+DEFINE_OBJECT_CACHE(compiler_wrap,CompilerWrapper,16) /* TODO: Use slabs */
 
 INTERN void DCALL
 DeeCompilerItem_Fini(CompilerItem *__restrict self) {

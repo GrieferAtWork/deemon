@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_INFO_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>

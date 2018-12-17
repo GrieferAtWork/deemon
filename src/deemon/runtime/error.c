@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/error.h>
 #include <deemon/tuple.h>
@@ -41,7 +42,7 @@
 
 DECL_BEGIN
 
-DEFINE_STRUCT_CACHE(ef,struct except_frame,8)
+DEFINE_STRUCT_CACHE(ef,struct except_frame,8) /* TODO: Remove this (use slabs instead!) */
 DEFINE_STRUCT_CACHE_TRYALLOC(ef,struct except_frame,sizeof(struct except_frame))
 
 PUBLIC bool DCALL

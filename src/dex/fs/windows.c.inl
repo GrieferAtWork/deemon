@@ -20,12 +20,10 @@
 #define GUARD_DEX_FS_WINDOWS_C_INL 1
 #define _KOS_SOURCE 1
 
-#include <deemon/api.h>
-#include <Windows.h>
-
 #include "libfs.h"
-#include "../time/libtime.h"
 
+#include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/exec.h>
 #include <deemon/bool.h>
@@ -40,8 +38,11 @@
 #endif
 #include <hybrid/unaligned.h>
 
+#include "../time/libtime.h"
+
 #include <string.h>
 #include <wchar.h>
+#include <Windows.h>
 
 #ifndef __USE_KOS
 #define strend(str) ((str)+strlen(str))

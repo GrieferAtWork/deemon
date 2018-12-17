@@ -22,6 +22,7 @@
 #define _GNU_SOURCE 1
 
 #include "libxml.h"
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/stringutils.h>
 

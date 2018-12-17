@@ -22,6 +22,7 @@
 #define _GNU_SOURCE 1
 
 #include "libfs.h"
+#include <deemon/alloc.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/bool.h>

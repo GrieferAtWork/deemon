@@ -22,6 +22,7 @@
 #endif
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>

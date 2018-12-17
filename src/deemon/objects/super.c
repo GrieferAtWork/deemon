@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -44,7 +45,7 @@ DECL_BEGIN
 
 typedef DeeSuperObject Super;
 
-DEFINE_OBJECT_CACHE(super,Super,128);
+DEFINE_OBJECT_CACHE(super,Super,128); /* TODO: Get rid of this (rely on slabs instead) */
 #ifndef NDEBUG
 #define super_alloc()  super_dbgalloc(__FILE__,__LINE__)
 #endif

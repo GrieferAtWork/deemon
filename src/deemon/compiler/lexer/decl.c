@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_COMPILER_LEXER_DECL_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/module.h>
 #include <deemon/int.h>

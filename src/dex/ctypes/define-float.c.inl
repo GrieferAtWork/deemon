@@ -29,6 +29,7 @@
 #endif
 
 #include "libctypes.h"
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>

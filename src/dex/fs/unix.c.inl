@@ -24,11 +24,9 @@
 #define _POSIX_C_SOURCE 200809L
 #define _XOPEN_SOURCE   500
 
-#include <deemon/api.h>
-
 #include "libfs.h"
-#include "../time/libtime.h"
-
+#include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/file.h>
@@ -39,6 +37,8 @@
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif
+
+#include "../time/libtime.h"
 
 #include <stdlib.h>
 #include <errno.h>

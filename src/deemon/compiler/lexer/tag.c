@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_COMPILER_LEXER_TAG_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/class.h>
 #include <deemon/string.h>

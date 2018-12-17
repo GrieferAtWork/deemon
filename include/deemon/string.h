@@ -21,6 +21,9 @@
 
 #include "api.h"
 #include "object.h"
+#ifndef __INTELLISENSE__
+#include "alloc.h"
+#endif /* !__INTELLISENSE__ */
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -1602,12 +1605,16 @@ struct ascii_printer {
     DeeStringObject *ap_string; /* [0..1][owned] Generated string object. */
 };
 #define ASCII_PRINTER_INIT  {0,NULL}
-#define ascii_printer_init(self) \
- (void)((self)->ap_length = 0,(self)->ap_string = NULL)
-#define ascii_printer_fini(self) \
-        DeeObject_Free((self)->ap_string)
 #define ASCII_PRINTER_STR(self) ((self)->ap_string->s_str)
 #define ASCII_PRINTER_LEN(self) ((self)->ap_length)
+
+#ifdef __INTELLISENSE__
+void ascii_printer_init(struct ascii_printer *__restrict self);
+void ascii_printer_fini(struct ascii_printer *__restrict self);
+#else
+#define ascii_printer_init(self) (void)((self)->ap_length = 0,(self)->ap_string = NULL)
+#define ascii_printer_fini(self) DeeObject_Free((self)->ap_string)
+#endif
 
 /* Append the given data to a string printer. (HINT: Use this one as a `dformatprinter') */
 DFUNDEF dssize_t DCALL ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);

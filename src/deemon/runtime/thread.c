@@ -32,7 +32,7 @@
  * by signals.
  * You may use the following code to determine if a given implementation does
  * actually implement synchronous thread suspension (which deemon requires).
- * WARNING: This test _MUST_ be performed on a machine with multiple
+ * WARNING: This test _MUST_ be performed on a machine with multiple cores
  * >> 
  * >> #include <pthread.h>
  * >> #include <stdio.h>
@@ -93,6 +93,7 @@
 /*#define CONFIG_HAVE_PTHREAD_SUSPEND 1*/
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
 #include <deemon/string.h>

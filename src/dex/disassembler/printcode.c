@@ -20,6 +20,7 @@
 #define GUARD_DEX_FS_PRINTCODE_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>

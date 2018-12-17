@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/compiler.h>

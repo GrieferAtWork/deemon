@@ -22,6 +22,7 @@
 #define _GNU_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/arg.h>
 #include <deemon/string.h>

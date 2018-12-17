@@ -22,6 +22,7 @@
 #include "misc.c"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/gc.h>
 #include <hybrid/host.h>

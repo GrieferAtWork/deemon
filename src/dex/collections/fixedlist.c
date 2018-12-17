@@ -23,6 +23,7 @@
 #include "libcollections.h"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 #include <deemon/gc.h>

@@ -19,9 +19,10 @@
 #ifndef GUARD_DEEMON_SYSTEM_WIN_FILE_C_INL
 #define GUARD_DEEMON_SYSTEM_WIN_FILE_C_INL 1
 
-#include <Windows.h>
+#include <Windows.h> /* _MUST_ be included first! */
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>

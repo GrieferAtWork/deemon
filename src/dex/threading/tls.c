@@ -24,6 +24,7 @@
 #include "libthreading.h"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/bool.h>
 #include <deemon/thread.h>

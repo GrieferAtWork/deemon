@@ -20,6 +20,7 @@
 #define GUARD_DEX_JIT_OBJECT_TABLE_C 1
 
 #include "libjit.h"
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/module.h>
 #include <deemon/string.h>

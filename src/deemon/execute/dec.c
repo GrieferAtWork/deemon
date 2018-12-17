@@ -26,6 +26,7 @@
 #include <deemon/dec.h>
 
 #ifndef CONFIG_NO_DEC
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
 #include <deemon/float.h>

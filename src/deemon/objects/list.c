@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
@@ -2273,7 +2274,6 @@ PRIVATE int DCALL
 list_del_first(List *__restrict self) {
  DREF DeeObject *delob;
  ASSERT_OBJECT_TYPE(self,&DeeList_Type);
-again:
  DeeList_LockWrite(self);
  if unlikely(DeeList_IsEmpty(self))
     goto err_empty;
@@ -2328,7 +2328,6 @@ PRIVATE int DCALL
 list_del_last(List *__restrict self) {
  DREF DeeObject *delob;
  ASSERT_OBJECT_TYPE(self,&DeeList_Type);
-again:
  DeeList_LockWrite(self);
  if unlikely(DeeList_IsEmpty(self))
     goto err_empty;

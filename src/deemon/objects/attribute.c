@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_ATTRIBUTE_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>

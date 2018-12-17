@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_COMPILER_LEXER_CAST_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/tuple.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/ast.h>

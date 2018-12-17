@@ -20,6 +20,7 @@
 #define GUARD_DEX_JIT_FUNCTION_C 1
 
 #include "libjit.h"
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/format.h>
 #include <deemon/none.h>

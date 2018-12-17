@@ -22,6 +22,8 @@
 #include "libnet.h"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
+#include <deemon/object.h>
 #include <deemon/file.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>

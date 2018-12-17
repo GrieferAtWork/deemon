@@ -24,6 +24,7 @@
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 
 #include <deemon/arg.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>

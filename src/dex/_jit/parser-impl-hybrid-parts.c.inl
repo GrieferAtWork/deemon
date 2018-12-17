@@ -21,6 +21,7 @@
 #define JIT_HYBRID 1
 #endif
 
+#include <deemon/alloc.h>
 #include <deemon/thread.h>
 
 #ifdef JIT_HYBRID

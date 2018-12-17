@@ -19,8 +19,9 @@
 #ifndef GUARD_DEX_FS_STDIO_C_INL
 #define GUARD_DEX_FS_STDIO_C_INL 1
 
-#include <deemon/api.h>
 #include "libfs.h"
+#include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/seq.h>

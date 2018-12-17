@@ -21,6 +21,7 @@
 #define _GNU_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/compiler/ast.h>

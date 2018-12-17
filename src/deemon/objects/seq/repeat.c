@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_REPEAT_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/format.h>
 #include <deemon/object.h>

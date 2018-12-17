@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_RUNTIME_MRO_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/mro.h>
 #include <deemon/objmethod.h>
@@ -346,7 +347,7 @@ membercache_addinstanceattrib(struct membercache *__restrict self,
 #include "mro-impl.c.inl"
 #endif
 
-#else
+#else /* TODO: Remove everything below (no longer necessary) */
 
 /* Lookup an attribute from cache.
  * @return: * :        The attribute value.

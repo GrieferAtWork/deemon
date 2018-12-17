@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_ROSET_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>

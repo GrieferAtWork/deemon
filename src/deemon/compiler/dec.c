@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/file.h>
 #include <deemon/error.h>

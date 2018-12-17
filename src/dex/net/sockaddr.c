@@ -23,6 +23,7 @@
 #include "libnet.h"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/file.h>
 #include <deemon/dex.h>
 #include <deemon/string.h>

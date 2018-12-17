@@ -23,6 +23,7 @@
 #include "libfs.h"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -64,7 +65,7 @@ open_file_for_copy(DeeObject *__restrict name, int oflags, int mode) {
 #elif defined(BUFSIZ)
 #define COPYFILE_BUFSIZE BUFSIZ
 #else
-#define COPYFILE_BUFSIZE 256
+#define COPYFILE_BUFSIZE 512
 #endif
 
 INTERN int DCALL

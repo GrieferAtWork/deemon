@@ -25,6 +25,7 @@
 #define _XOPEN_SOURCE_EXTENDED 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/bool.h>
 #include <deemon/file.h>

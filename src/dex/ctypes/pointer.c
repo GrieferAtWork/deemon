@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include "libctypes.h"
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>

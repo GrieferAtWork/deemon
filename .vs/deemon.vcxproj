@@ -67,6 +67,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\deemon\alloc.h" />
     <ClInclude Include="..\include\deemon\api.h" />
     <ClInclude Include="..\include\deemon\arg.h" />
     <ClInclude Include="..\include\deemon\asm.h" />

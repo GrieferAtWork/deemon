@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_FLOAT_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/float.h>
 #include <deemon/numeric.h>
@@ -38,7 +39,7 @@
 DECL_BEGIN
 
 typedef DeeFloatObject Float;
-DEFINE_OBJECT_CACHE(float,Float,128)
+DEFINE_OBJECT_CACHE(float,Float,128) /* TODO: Get rid of this (rely on slabs, instead) */
 #ifndef NDEBUG
 #define float_alloc() float_dbgalloc(__FILE__,__LINE__)
 #endif

@@ -30,7 +30,13 @@
  * because GCC tends to leave the PLT unaligned, meaning that any access
  * to an imported symbol could lead to an error being thrown wrongly! */
 #elif defined(__x86_64__)
-#ifdef _MSC_VER
+#if !defined(_MSC_VER) || defined(_DEBUG)
+/* Only MSVC has been tested for this purpose thus far.
+ * Additionally, it has been proven that VC's runtime checks
+ * (as enabled by passing `/RTC1' to `cl.exe') generate code
+ * that does unaligned memory accesses, preventing this type
+ * of checks where they would actually make the most sense. */
+#elif defined(_MSC_VER)
 __NAMESPACE_INT_BEGIN
 __SYSDECL_BEGIN
 unsigned __int64 __readeflags(void);

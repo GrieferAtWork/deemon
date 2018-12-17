@@ -20,6 +20,7 @@
 #define GUARD_DEX_JIT_CONTEXT_C 1
 
 #include "libjit.h"
+#include <deemon/alloc.h>
 #include <deemon/int.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
@@ -31,7 +32,7 @@
 DECL_BEGIN
 
 /* Allocate/free a JIT object table from cache. */
-DEFINE_STRUCT_CACHE(jit_object_table,struct jit_object_table,32);
+DEFINE_STRUCT_CACHE(jit_object_table,struct jit_object_table,32); /* TODO: Use slabs! */
 
 INTERN void FCALL
 JITLValue_Fini(JITLValue *__restrict self) {

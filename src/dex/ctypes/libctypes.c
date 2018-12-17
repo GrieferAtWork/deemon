@@ -32,6 +32,7 @@
 #endif
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/bytes.h>
 #include <deemon/arg.h>

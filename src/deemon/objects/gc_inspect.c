@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_GC_INSPECT_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/gc.h>
 #include <deemon/seq.h>

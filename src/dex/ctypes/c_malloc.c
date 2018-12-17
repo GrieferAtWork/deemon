@@ -23,6 +23,7 @@
 #include "c_api.h"
 
 #include <deemon/arg.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/error.h>
 #include <deemon/none.h>

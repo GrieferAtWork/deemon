@@ -34,10 +34,10 @@
 #define _XOPEN_SOURCE   500
 #endif
 
-#include <deemon/api.h>
-
 #include "libfs.h"
 
+#include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/exec.h>
 #include <deemon/string.h>
 #include <deemon/error.h>

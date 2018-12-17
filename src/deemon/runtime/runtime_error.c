@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_RUNTIME_RUNTIME_ERROR_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/error.h>
 #include <deemon/error_types.h>

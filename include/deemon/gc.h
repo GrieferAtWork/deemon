@@ -21,6 +21,9 @@
 
 #include "api.h"
 #include "object.h"
+#ifndef __INTELLISENSE__
+#include "alloc.h"
+#endif /* !__INTELLISENSE__ */
 #include <stddef.h>
 #include <stdint.h>
 
@@ -92,6 +95,12 @@ DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 #define DeeGCObject_FTryMalloc(size) DeeGCObject_TryMalloc(size)
 #define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
 #define DeeGCObject_FFree(ptr,size)  DeeGCObject_Free(ptr)
+#elif defined(__INTELLISENSE__)
+#define DeeGCObject_FMalloc(size)    DeeGCObject_Malloc(size)
+#define DeeGCObject_FCalloc(size)    DeeGCObject_Calloc(size)
+#define DeeGCObject_FTryMalloc(size) DeeGCObject_TryMalloc(size)
+#define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
+#define DeeGCObject_FFree(ptr,size) (DeeGCObject_Free(ptr),(void)(size))
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define DEFINE_SLAB_FUNCTIONS(size) \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabMalloc##size)(void); \

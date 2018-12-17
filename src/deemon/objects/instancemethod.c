@@ -41,7 +41,7 @@ typedef DeeInstanceMethodObject InstanceMethod;
 /* Since `super' and `instancemethod' objects share the same
  * size, we also let them share a pool of pre-allocated objects. */
 STATIC_ASSERT(sizeof(DeeSuperObject) == sizeof(InstanceMethod));
-DECLARE_OBJECT_CACHE(super,DeeSuperObject);
+DECLARE_OBJECT_CACHE(super,DeeSuperObject); /* TODO: Get rid of this (rely on slabs instead) */
 #ifndef NDEBUG
 #define super_alloc()  super_dbgalloc(__FILE__,__LINE__)
 #endif

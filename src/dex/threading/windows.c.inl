@@ -22,15 +22,17 @@
 #define _KOS_SOURCE 1
 
 #include "libthreading.h"
-#include <Windows.h>
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/thread.h>
 #include <deemon/error.h>
 #include <deemon/arg.h>
+
+#include <Windows.h>
 
 DECL_BEGIN
 

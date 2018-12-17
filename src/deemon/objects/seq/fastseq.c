@@ -21,6 +21,7 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+#include <deemon/alloc.h>
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
 #include <deemon/list.h>

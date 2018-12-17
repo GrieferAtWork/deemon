@@ -23,11 +23,8 @@
 
 #include "libtime.h"
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif
-
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
@@ -41,6 +38,10 @@
 #include <limits.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#endif
 
 DECL_BEGIN
 

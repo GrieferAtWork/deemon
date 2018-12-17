@@ -23,6 +23,7 @@
 #include "libipc.h"
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>

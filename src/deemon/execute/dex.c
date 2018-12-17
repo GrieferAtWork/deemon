@@ -26,6 +26,7 @@
 #include <deemon/module.h>
 
 #ifndef CONFIG_NO_DEX
+#include <deemon/alloc.h>
 #include <deemon/file.h>
 #include <deemon/class.h>
 #include <deemon/string.h>

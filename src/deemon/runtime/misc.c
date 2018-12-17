@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_RUNTIME_MISC_C 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/gc.h>
 #include <deemon/error.h>
