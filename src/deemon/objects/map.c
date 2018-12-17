@@ -833,7 +833,7 @@ map_get(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
 INTERN struct type_method map_methods[] = {
     { DeeString_STR(&str_get),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&map_get,
-      DOC("(key,def:?O=!N)->object\n"
+      DOC("(key,def:?O=!N)->\n"
           "@return The value associated with @key or @def when @key has no value associated") },
     { NULL }
 };

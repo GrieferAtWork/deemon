@@ -91,6 +91,7 @@ INTDEF int DCALL DeeGC_CollectGCReferred(GCSetMaker *__restrict self, DeeObject 
 
 /* Returns `true' if `target' is referred to by `source' */
 INTDEF bool DCALL DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target);
+#define DeeGC_IsReachable(object,from) DeeGC_ReferredBy(from,object)
 
 
 DECL_END

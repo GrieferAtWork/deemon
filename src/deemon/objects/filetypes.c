@@ -34,6 +34,7 @@
 
 #include <string.h>
 
+#include "gc_inspect.h"
 #include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
 
@@ -517,6 +518,8 @@ reader_setowner(Reader *__restrict self,
                 DeeObject *__restrict value) {
  DeeObject *old_value;
  DeeBuffer new_buffer,old_buffer;
+ if (DeeGC_IsReachable((DeeObject *)self,value))
+     return err_reference_loop((DeeObject *)self,value);
  if (DeeObject_GetBuf(value,&new_buffer,DEE_BUFFER_FREADONLY))
      return -1;
  Dee_Incref(value);
@@ -635,7 +638,7 @@ PRIVATE struct type_getset reader_getsets[] = {
     { "owner", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&reader_getowner,
                (int(DCALL *)(DeeObject *__restrict))&reader_close,
                (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&reader_setowner,
-      DOC("->object\nGet string from which data is being read") },
+      DOC("Assign the object from which data is being read") },
     { NULL }
 };
 

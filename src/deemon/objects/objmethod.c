@@ -331,7 +331,6 @@ PRIVATE struct type_getset objmethod_getsets[] = {
 
 PRIVATE struct type_member objmethod_members[] = {
     TYPE_MEMBER_FIELD_DOC("__this__",STRUCT_OBJECT,offsetof(DeeObjMethodObject,om_this),
-                          "->object\n"
                           "The object to which @this object-method is bound"),
 #define OBJMETHOD_MEMBERS_INDEXOF_KWDS 1
     TYPE_MEMBER_CONST_DOC("__kwds__",Dee_EmptySeq,objmethod_get_kwds_doc), /* NOTE: _MUST_ always code last! */

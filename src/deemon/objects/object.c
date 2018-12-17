@@ -3484,7 +3484,7 @@ PRIVATE struct type_method type_methods[] = {
           "For a list of operator names, see #hasoperator"),
       TYPE_METHOD_FKWDS },
     { meth_getinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_getinstanceattr,
-      DOC("(name:?Dstring)->object\n"
+      DOC("(name:?Dstring)->\n"
           "Lookup an attribute @name that is implemented by instances of @this type\n"
           "Normally, such attributes can also be accessed using regular attribute lookup, "
           "however in ambiguous cases where both the type, as well as instances implement "
@@ -3509,7 +3509,7 @@ PRIVATE struct type_method type_methods[] = {
           "if those attributes would normally have been overshadowed by attribute callbacks"),
       TYPE_METHOD_FKWDS },
     { meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_callinstanceattr,
-      DOC("(name:?Dstring,args!)->object\n"
+      DOC("(name:?Dstring,args!)->\n"
           "s.a. #getinstanceattr"),
       TYPE_METHOD_FKWDS },
     { meth_hasinstanceattr+2, (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&type_hasinstanceattr,
