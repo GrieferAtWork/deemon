@@ -797,7 +797,6 @@ Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
   k |= (dhash_t)packl(block[5]) << ESEL(40,16);
   k |= (dhash_t)packl(block[6]) << ESEL(48,8);
   k |= (dhash_t)packl(block[7]) << ESEL(56,0);
-  ptr += 8;
   k *= m;
   k ^= k >> r;
   k *= m;
@@ -806,19 +805,19 @@ Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
  }
  goto done;
 do_tail_7:
- h ^= (dhash_t)packl(ptr[6]) << 48;
+ h ^= (dhash_t)packl(block[6]) << 48;
 do_tail_6:
- h ^= (dhash_t)packl(ptr[5]) << 40;
+ h ^= (dhash_t)packl(block[5]) << 40;
 do_tail_5:
- h ^= (dhash_t)packl(ptr[4]) << 32;
+ h ^= (dhash_t)packl(block[4]) << 32;
 do_tail_4:
- h ^= (dhash_t)packl(ptr[3]) << 24;
+ h ^= (dhash_t)packl(block[3]) << 24;
 do_tail_3:
- h ^= (dhash_t)packl(ptr[2]) << 16;
+ h ^= (dhash_t)packl(block[2]) << 16;
 do_tail_2:
- h ^= (dhash_t)packl(ptr[1]) << 8;
+ h ^= (dhash_t)packl(block[1]) << 8;
 do_tail_1:
- h ^= (dhash_t)packl(ptr[0]);
+ h ^= (dhash_t)packl(block[0]);
  h *= m;
 done:
  h ^= h >> r;
@@ -870,7 +869,6 @@ Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
   k |= (dhash_t)packl(block[5]) << ESEL(40,16);
   k |= (dhash_t)packl(block[6]) << ESEL(48,8);
   k |= (dhash_t)packl(block[7]) << ESEL(56,0);
-  ptr += 8;
   k *= m;
   k ^= k >> r;
   k *= m;
@@ -879,19 +877,19 @@ Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
  }
  goto done;
 do_tail_7:
- h ^= (dhash_t)packl(ptr[6]) << 48;
+ h ^= (dhash_t)packl(block[6]) << 48;
 do_tail_6:
- h ^= (dhash_t)packl(ptr[5]) << 40;
+ h ^= (dhash_t)packl(block[5]) << 40;
 do_tail_5:
- h ^= (dhash_t)packl(ptr[4]) << 32;
+ h ^= (dhash_t)packl(block[4]) << 32;
 do_tail_4:
- h ^= (dhash_t)packl(ptr[3]) << 24;
+ h ^= (dhash_t)packl(block[3]) << 24;
 do_tail_3:
- h ^= (dhash_t)packl(ptr[2]) << 16;
+ h ^= (dhash_t)packl(block[2]) << 16;
 do_tail_2:
- h ^= (dhash_t)packl(ptr[1]) << 8;
+ h ^= (dhash_t)packl(block[1]) << 8;
 do_tail_1:
- h ^= (dhash_t)packl(ptr[0]);
+ h ^= (dhash_t)packl(block[0]);
  h *= m;
 done:
  h ^= h >> r;
