@@ -386,13 +386,12 @@ librt_get_BlackListVarkwds_impl_f(void) {
 }
 LOCAL DREF DeeObject *DCALL
 librt_get_BlackListMapping_impl_f(void) {
- /* `type(varkwds_func(none,**Dee_EmptyMapping))' */
- DeeObject *argv[] = { Dee_None };
+ /* `type(varkwds_func(**none))' */
  varkwds_keywords[0] = (DeeStringObject *)STR_ITERATOR;
  return get_type_of(DeeObject_CallKw((DeeObject *)&varkwds_func,
-                                      COMPILER_LENOF(argv),
-                                      argv,
-                                      Dee_EmptyMapping));
+                                      0,
+                                      NULL,
+                                      Dee_None));
 }
 
 PRIVATE DREF DeeObject *DCALL
