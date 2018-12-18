@@ -84,6 +84,27 @@ refaiter_ctor(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE int DCALL
+refaiter_copy(ReSequenceIterator *__restrict self,
+              ReSequenceIterator *__restrict other) {
+ self->re_data    = other->re_data;
+ self->re_pattern = other->re_pattern;
+ Dee_Incref(self->re_data);
+ Dee_Incref(self->re_pattern);
+ self->re_args.re_patternptr = other->re_args.re_patternptr;
+ self->re_args.re_patternlen = other->re_args.re_patternlen;
+ self->re_args.re_offset     = other->re_args.re_offset;
+ self->re_args.re_flags      = other->re_args.re_flags;
+ rwlock_init(&self->re_lock);
+ rwlock_read(&other->re_lock);
+ COMPILER_READ_BARRIER();
+ self->re_args.re_dataptr = other->re_args.re_dataptr;
+ self->re_args.re_datalen = other->re_args.re_datalen;
+ COMPILER_READ_BARRIER();
+ rwlock_endread(&other->re_lock);
+ return 0;
+}
+
+PRIVATE int DCALL
 refaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
@@ -248,10 +269,10 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&refaiter_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&refaiter_init,
+                /* .tp_ctor      = */(void *)&refaiter_ctor,
+                /* .tp_copy_ctor = */(void *)&refaiter_copy,
+                /* .tp_deep_ctor = */(void *)&refaiter_copy,
+                /* .tp_any_ctor  = */(void *)&refaiter_init,
                 TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
             }
         },
@@ -284,6 +305,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 
 
 #define relaiter_ctor    refaiter_ctor
+#define relaiter_copy    refaiter_copy
 #define relaiter_fini    refaiter_fini
 #define relaiter_bool    refaiter_bool
 #define relaiter_cmp     refaiter_cmp
@@ -381,10 +403,10 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&relaiter_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&relaiter_init,
+                /* .tp_ctor      = */(void *)&relaiter_ctor,
+                /* .tp_copy_ctor = */(void *)&relaiter_copy,
+                /* .tp_deep_ctor = */(void *)&relaiter_copy,
+                /* .tp_any_ctor  = */(void *)&relaiter_init,
                 TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
             }
         },
@@ -417,6 +439,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 
 
 #define respiter_ctor    refaiter_ctor
+#define respiter_copy    refaiter_copy
 #define respiter_fini    refaiter_fini
 #define respiter_cmp     refaiter_cmp
 #define respiter_members refaiter_members
@@ -525,10 +548,10 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&respiter_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&respiter_init,
+                /* .tp_ctor      = */(void *)&respiter_ctor,
+                /* .tp_copy_ctor = */(void *)&respiter_copy,
+                /* .tp_deep_ctor = */(void *)&respiter_copy,
+                /* .tp_any_ctor  = */(void *)&respiter_init,
                 TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
             }
         },
@@ -732,10 +755,10 @@ INTERN DeeTypeObject ReFindAll_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&refa_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&refa_init,
+                /* .tp_ctor      = */(void *)&refa_ctor,
+                /* .tp_copy_ctor = */(void *)NULL,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&refa_init,
                 TYPE_FIXED_ALLOCATOR(ReSequence)
             }
         },
@@ -820,10 +843,10 @@ INTERN DeeTypeObject ReLocateAll_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&rela_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&rela_init,
+                /* .tp_ctor      = */(void *)&rela_ctor,
+                /* .tp_copy_ctor = */(void *)NULL,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&rela_init,
                 TYPE_FIXED_ALLOCATOR(ReSequence)
             }
         },
@@ -973,10 +996,10 @@ INTERN DeeTypeObject ReSplit_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&resp_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&resp_init,
+                /* .tp_ctor      = */(void *)&resp_ctor,
+                /* .tp_copy_ctor = */(void *)NULL,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&resp_init,
                 TYPE_FIXED_ALLOCATOR(ReSequence)
             }
         },

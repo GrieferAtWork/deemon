@@ -333,10 +333,10 @@ INTERN DeeTypeObject DictIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&dictiterator_ctor,
-                /* .tp_copy_ctor = */&dictiterator_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&dictiterator_init,
+                /* .tp_ctor      = */(void *)&dictiterator_ctor,
+                /* .tp_copy_ctor = */(void *)&dictiterator_copy,
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&dictiterator_init,
                 TYPE_FIXED_ALLOCATOR(DictIterator)
             }
         },
@@ -530,7 +530,7 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
             /* .tp_alloc = */{ \
                 /* .tp_ctor      = */(void *)&dictproxyiterator_ctor, \
                 /* .tp_copy_ctor = */(void *)&dictproxyiterator_copy, \
-                /* .tp_deep_ctor = */(void *)NULL, \
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */ \
                 /* .tp_any_ctor  = */(void *)&dictproxyiterator_init, \
                 TYPE_FIXED_ALLOCATOR(DictProxyIterator) \
             } \
@@ -600,6 +600,16 @@ dict_newproxy(DeeDictObject *__restrict self,
  return (DREF DeeObject *)result;
 }
 
+
+PRIVATE int DCALL
+proxy_ctor(DictProxy *__restrict self) {
+ self->dp_dict = (DREF DeeDictObject *)DeeDict_New();
+ if unlikely(!self->dp_dict)
+    goto err;
+ return 0;
+err:
+ return -1;
+}
 
 PRIVATE int DCALL
 proxy_init(DictProxy *__restrict self,
@@ -759,10 +769,10 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&proxy_copy,
-                /* .tp_deep_ctor = */&proxy_deep,
-                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_ctor      = */(void *)&proxy_ctor,
+                /* .tp_copy_ctor = */(void *)&proxy_copy,
+                /* .tp_deep_ctor = */(void *)&proxy_deep,
+                /* .tp_any_ctor  = */(void *)&proxy_init,
                 TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
@@ -804,10 +814,10 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&proxy_copy,
-                /* .tp_deep_ctor = */&proxy_deep,
-                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_ctor      = */(void *)&proxy_ctor,
+                /* .tp_copy_ctor = */(void *)&proxy_copy,
+                /* .tp_deep_ctor = */(void *)&proxy_deep,
+                /* .tp_any_ctor  = */(void *)&proxy_init,
                 TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
@@ -849,10 +859,10 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&proxy_copy,
-                /* .tp_deep_ctor = */&proxy_deep,
-                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_ctor      = */(void *)&proxy_ctor,
+                /* .tp_copy_ctor = */(void *)&proxy_copy,
+                /* .tp_deep_ctor = */(void *)&proxy_deep,
+                /* .tp_any_ctor  = */(void *)&proxy_init,
                 TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },
@@ -894,10 +904,10 @@ PUBLIC DeeTypeObject DeeDictValues_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&proxy_copy,
-                /* .tp_deep_ctor = */&proxy_deep,
-                /* .tp_any_ctor  = */&proxy_init,
+                /* .tp_ctor      = */(void *)&proxy_ctor,
+                /* .tp_copy_ctor = */(void *)&proxy_copy,
+                /* .tp_deep_ctor = */(void *)&proxy_deep,
+                /* .tp_any_ctor  = */(void *)&proxy_init,
                 TYPE_FIXED_ALLOCATOR(DictProxy)
             }
         },

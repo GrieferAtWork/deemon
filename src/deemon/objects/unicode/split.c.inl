@@ -218,10 +218,10 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */(int(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&splititer_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&splititer_copy,
+                /* .tp_deep_ctor = */(void *)&splititer_copy,
+                /* .tp_any_ctor  = */NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(StringSplitIterator)
             }
         },
@@ -263,10 +263,10 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&splititer_copy,
+                /* .tp_deep_ctor = */(void *)&splititer_copy,
+                /* .tp_any_ctor  = */NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(StringSplitIterator)
             }
         },
@@ -277,14 +277,14 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
         /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL
+        /* .tp_bool = */NULL  /* INHERITED */
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */NULL, /*  No visit, because it only ever references strings
                                     * (or rather an object that can only reference strings). */
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */NULL, /* INHERITED */
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&casesplititer_next,
     /* .tp_attr          = */NULL,
