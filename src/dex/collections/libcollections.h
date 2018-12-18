@@ -105,20 +105,24 @@ Deque_ItemPointer(Deque *__restrict self, size_t index) {
   size_t rindex;
   /* Search for the right. */
   iter   = self->d_tail;
-  rindex = self->d_size-index;
-  if (rindex < DEQUE_TAILUSED(self))
-      return &iter->db_items[(DEQUE_TAILUSED(self)-1) - rindex];
+  rindex = self->d_size - index;
+  if (rindex <= DEQUE_TAILUSED(self))
+      return &iter->db_items[DEQUE_TAILUSED(self) - rindex];
   rindex -= DEQUE_TAILUSED(self);
-  while (rindex >= DEQUE_BUCKETSZ(self)) {
+  for (;;) {
    iter = DEQUEBUCKET_PREV(iter);
+   if (rindex <= DEQUE_BUCKETSZ(self))
+       break;
    rindex -= DEQUE_BUCKETSZ(self);
   }
-  return &iter->db_items[(DEQUE_BUCKETSZ(self)-1) - rindex];
+  return &iter->db_items[DEQUE_BUCKETSZ(self) - rindex];
  }
  /* Search for the left. */
  index -= DEQUE_HEADUSED(self);
- while (index >= DEQUE_BUCKETSZ(self)) {
+ for (;;) {
   iter = DEQUEBUCKET_NEXT(iter);
+  if (index < DEQUE_BUCKETSZ(self))
+      break;
   index -= DEQUE_BUCKETSZ(self);
  }
  return &iter->db_items[index];
