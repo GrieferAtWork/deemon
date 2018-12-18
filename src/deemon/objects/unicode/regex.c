@@ -21,6 +21,7 @@
 #define _GNU_SOURCE 1 /* memrchr */
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/error.h>

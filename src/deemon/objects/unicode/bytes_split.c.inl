@@ -24,6 +24,7 @@
 #endif
 
 #include <deemon/seq.h>
+#include <deemon/alloc.h>
 #include <deemon/string.h>
 #include "../../runtime/strings.h"
 

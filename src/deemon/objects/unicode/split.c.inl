@@ -23,6 +23,7 @@
 #include "string_functions.c"
 #endif
 
+#include <deemon/alloc.h>
 #include <deemon/seq.h>
 
 DECL_BEGIN

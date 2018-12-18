@@ -197,7 +197,7 @@ name(ReSequenceIterator *__restrict self, \
      ReSequenceIterator *__restrict other) { \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
      goto err; \
- return_bool(REITER_GETDATAPTR(self) op REITER_GETDATAPTR(other)); \
+ return_bool((REITER_GETDATAPTR(self)-1) op (REITER_GETDATAPTR(other)-1)); \
 err: \
  return NULL; \
 }

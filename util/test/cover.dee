@@ -146,6 +146,8 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		assert x.get("MISSING",false) === false;
 	}
 	function check_iterators(x) {
+		str(x);
+		repr(x);
 		local a = x.operator iter();
 		local b = x.operator iter();
 		assert a !== b;
@@ -177,6 +179,12 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		check_iterators(FixedList(x));
 		check_iterators(FixedList(x).frozen);
 	}
+	function check_generic_sequence(x) {
+		check_iterators(x);
+	}
+	function check_generic_set(x) {
+		check_iterators(x);
+	}
 	local split_markers = {
 		"",
 		"|",
@@ -186,18 +194,37 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		"oo",
 		"{}",
 		"}{",
+		"a8rochrb",
 	};
-	function check_generic_sequence(x) {
-		check_iterators(x);
-	}
-	function check_generic_set(x) {
-		check_iterators(x);
-	}
+	local builtin_codecs = {
+		"ascii",
+		"backslash-escape",
+		"latin-1",
+		"utf-8",
+	};
 	function check_string(x) {
 		check_generic_sequence(x);
-		for (local s: split_markers)
+		for (local s: split_markers) {
 			check_generic_sequence(x.split(s));
+			check_generic_sequence(x.casesplit(s));
+			check_generic_sequence(x.findall(s));
+			check_generic_sequence(x.casefindall(s));
+		}
+		check_generic_sequence(x.scanf("%s"));
+		check_generic_sequence(x.scanf(" %s"));
+		for (local r: [1:8])
+			check_generic_sequence(x.segments(r));
+		check_generic_sequence(x.splitlines(true));
+		check_generic_sequence(x.splitlines(false));
 		if (x is string) {
+			for (local pattern: [
+				r"\|",
+				r"assert?",
+			]) {
+				check_generic_sequence(x.refindall(pattern));
+				check_generic_sequence(x.relocateall(pattern));
+				check_generic_sequence(x.resplit(pattern));
+			}
 		}
 	}
 
@@ -235,37 +262,98 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		"a8rochrb sq3duw9owx vsozqogcoabap295 azq"
 		"a8rochrb sq3duw9owx vsozqogcoabap295 azq",
 		"AbCCAUssdagOASFDAFhlhASTOHAfhfdhasufdh&&&A/",
-		file.open(__FILE__).read().decode("utf-8")
+		string(file.open(__FILE__).read().decode("ascii"))
 	};
 
 	for (local s: strings) {
+		for (local c: builtin_codecs) {
+			local enc = s.encode(c);
+			check_string(enc);
+			assert enc.decode(c) == s;
+		}
 		check_string(s);
 		check_string(s.bytes());
+		check_generic_sequence(s.ordinals);
 		check_generic_sequence(s as sequence);
 		check_generic_sequence(s.bytes() as sequence);
+		check_generic_sequence(s.ordinals as sequence);
 		local character_tuple = tuple(s);
 		local bytes_tuple = tuple(s.bytes());
+		local ord_tuple = tuple(s.ordinals);
 		check_generic_sequence(character_tuple);
 		check_generic_sequence(character_tuple as sequence);
 		check_generic_sequence(bytes_tuple);
 		check_generic_sequence(bytes_tuple as sequence);
+		check_generic_sequence(ord_tuple);
+		check_generic_sequence(ord_tuple as sequence);
 		check_generic_sequence(list(character_tuple));
 		check_generic_sequence(list(character_tuple) as sequence);
 		check_generic_sequence(list(bytes_tuple));
 		check_generic_sequence(list(bytes_tuple) as sequence);
+		check_generic_sequence(list(ord_tuple));
+		check_generic_sequence(list(ord_tuple) as sequence);
 		check_generic_set(hashset(character_tuple));
 //		check_generic_set(hashset(character_tuple) as set);
 		check_generic_set(hashset(bytes_tuple));
 //		check_generic_set(hashset(bytes_tuple) as set);
+		check_generic_set(hashset(ord_tuple));
+//		check_generic_set(hashset(ord_tuple) as set);
 		check_generic_sequence(Deque(character_tuple));
 		check_generic_sequence(Deque(character_tuple) as sequence);
 		check_generic_sequence(Deque(bytes_tuple));
 		check_generic_sequence(Deque(bytes_tuple) as sequence);
+		check_generic_sequence(Deque(ord_tuple));
+		check_generic_sequence(Deque(ord_tuple) as sequence);
 		check_generic_sequence(FixedList(character_tuple));
 		check_generic_sequence(FixedList(character_tuple) as sequence);
 		check_generic_sequence(FixedList(bytes_tuple));
 		check_generic_sequence(FixedList(bytes_tuple) as sequence);
+		check_generic_sequence(FixedList(ord_tuple));
+		check_generic_sequence(FixedList(ord_tuple) as sequence);
 	}
+	local mb_strings = {
+		"\u1234",
+		"\u1234\u4321",
+		"\U12345678",
+		"\U12345678\U87654321",
+	};
+
+	for (local s: mb_strings) {
+		for (local c: builtin_codecs) {
+			if (c in ["ascii","latin-1"])
+				continue;
+			local enc = s.encode(c);
+			check_string(enc);
+			assert enc.decode(c) == s;
+		}
+		check_string(s);
+		check_generic_sequence(s.ordinals);
+		check_generic_sequence(s as sequence);
+		check_generic_sequence(s.ordinals as sequence);
+		local character_tuple = tuple(s);
+		local ord_tuple = tuple(s.ordinals);
+		check_generic_sequence(character_tuple);
+		check_generic_sequence(character_tuple as sequence);
+		check_generic_sequence(ord_tuple);
+		check_generic_sequence(ord_tuple as sequence);
+		check_generic_sequence(list(character_tuple));
+		check_generic_sequence(list(character_tuple) as sequence);
+		check_generic_sequence(list(ord_tuple));
+		check_generic_sequence(list(ord_tuple) as sequence);
+		check_generic_set(hashset(character_tuple));
+//		check_generic_set(hashset(character_tuple) as set);
+		check_generic_set(hashset(ord_tuple));
+//		check_generic_set(hashset(ord_tuple) as set);
+		check_generic_sequence(Deque(character_tuple));
+		check_generic_sequence(Deque(character_tuple) as sequence);
+		check_generic_sequence(Deque(ord_tuple));
+		check_generic_sequence(Deque(ord_tuple) as sequence);
+		check_generic_sequence(FixedList(character_tuple));
+		check_generic_sequence(FixedList(character_tuple) as sequence);
+		check_generic_sequence(FixedList(ord_tuple));
+		check_generic_sequence(FixedList(ord_tuple) as sequence);
+	}
+	
 }
 
 

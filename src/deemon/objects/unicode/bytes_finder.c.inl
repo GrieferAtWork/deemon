@@ -23,6 +23,7 @@
 #include "bytes_functions.c.inl"
 #endif
 
+#include <deemon/alloc.h>
 #include <deemon/seq.h>
 
 DECL_BEGIN

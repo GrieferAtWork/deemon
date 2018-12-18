@@ -161,7 +161,7 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeSeq_Type,
+    /* .tp_base     = */&DeeIterator_Type,
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
@@ -185,7 +185,7 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
     /* .tp_visit         = */NULL, /* No visit, because it only ever references strings. */
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */NULL, /* TODO */
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_next,
     /* .tp_attr          = */NULL,
