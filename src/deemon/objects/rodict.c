@@ -218,12 +218,14 @@ iter_exhausted:
 
 INTDEF DeeTypeObject RoDictIterator_Type;
 #define DEFINE_ITERATOR_COMPARE(name,op) \
-PRIVATE int DCALL \
+PRIVATE DREF DeeObject *DCALL \
 name(DictIterator *__restrict self, \
      DictIterator *__restrict other) { \
  if (DeeObject_AssertType((DeeObject *)other,&RoDictIterator_Type)) \
-     return -1; \
- return READ_ITEM(self) op READ_ITEM(other); \
+     goto err; \
+ return_bool(READ_ITEM(self) op READ_ITEM(other)); \
+err: \
+ return NULL; \
 }
 DEFINE_ITERATOR_COMPARE(rodictiterator_eq,==)
 DEFINE_ITERATOR_COMPARE(rodictiterator_ne,!=)
