@@ -64,6 +64,7 @@ import * from errors;
 	assert (try kw3(10,20) catch (TypeError) "nope") == "nope";
 	assert (try kw3(10,20,30) catch (TypeError) "nope") == {};
 	/* Assert keyword blacklisting */
+	assert !(kw0(x: 0, y: 1, z: 2, foo: 10) != { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 });
 	assert kw0(x: 0, y: 1, z: 2, foo: 10) == { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 };
 	assert kw1(x: 0, y: 1, z: 2, foo: 10) == { "y" : 1, "z" : 2, "foo" : 10 };
 	assert kw2(x: 0, y: 1, z: 2, foo: 10) == { "z" : 2, "foo" : 10 };
@@ -74,7 +75,81 @@ import * from errors;
 	assert kw3(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "foo" : 10 };
 }
 
-
+{
+	local x = dict {
+		"foo" : "bar",
+		11 : 22
+	};
+	local map_reprs = {
+		'{ "foo": "bar", 11: 22 }',
+		'{ 11: 22, "foo": "bar" }',
+	};
+	local seq_reprs = {
+		'{ ["foo", "bar"], [11, 22] }',
+		'{ [11, 22], ["foo", "bar"] }',
+		'{ ("foo", "bar"), (11, 22) }',
+		'{ (11, 22), ("foo", "bar") }',
+		'{ { "foo", "bar" }, { 11, 22 } }',
+		'{ { 11, 22 }, { "foo", "bar" } }',
+		'(["foo", "bar"], [11, 22])',
+		'([11, 22], ["foo", "bar"])',
+		'(("foo", "bar"), (11, 22))',
+		'((11, 22), ("foo", "bar"))',
+		'({ "foo", "bar" }, { 11, 22 })',
+		'({ 11, 22 }, { "foo", "bar" })',
+		'[["foo", "bar"], [11, 22]]',
+		'[[11, 22], ["foo", "bar"]]',
+		'[("foo", "bar"), (11, 22)]',
+		'[(11, 22), ("foo", "bar")]',
+		'[{ "foo", "bar" }, { 11, 22 }]',
+		'[{ 11, 22 }, { "foo", "bar" }]',
+	};
+	local key_reprs = {
+		'{ "foo", 11 }',
+		'{ 11, "foo" }',
+		'("foo", 11)',
+		'(11, "foo")',
+		'["foo", 11]',
+		'[11, "foo"]',
+	};
+	local value_reprs = {
+		'{ "bar", 22 }',
+		'{ 22, "bar" }',
+		'("bar", 22)',
+		'(22, "bar")',
+		'["bar", 22]',
+		'[22, "bar"]',
+	};
+	assert x is dict;
+	assert type(x) == dict;
+	assert repr(x) in map_reprs;
+	assert repr(x as mapping) in map_reprs;
+	assert repr(x as sequence) in seq_reprs;
+	assert repr(x.items) in seq_reprs;
+	assert repr(x.items as sequence) in seq_reprs;
+	assert repr((x as mapping).items) in seq_reprs;
+	assert repr((x as mapping).items as sequence) in seq_reprs;
+	assert repr(x.keys) in key_reprs;
+	assert repr(x.keys as sequence) in key_reprs;
+	assert repr((x as mapping).keys) in key_reprs;
+	assert repr((x as mapping).keys as sequence) in key_reprs;
+	assert repr(x.values) in value_reprs;
+	assert repr(x.values as sequence) in value_reprs;
+	assert repr((x as mapping).values) in value_reprs;
+	assert repr((x as mapping).values as sequence) in value_reprs;
+	assert x.keys is dict.keys;
+	assert x.values is dict.values;
+	assert x.items is dict.items;
+	assert (x as mapping).keys is mapping.keys;
+	assert (x as mapping).values is mapping.values;
+	assert (x as mapping).items is mapping.items;
+	assert x.keys.operator iter() is dict.keys.iterator;
+	assert x.values.operator iter() is dict.values.iterator;
+	assert x.items.operator iter() is dict.items.iterator;
+	assert (x as mapping).keys.operator iter() is mapping.keys.iterator;
+	assert (x as mapping).values.operator iter() is mapping.values.iterator;
+	assert (x as mapping).items.operator iter() is mapping.items.iterator;
+}
 
 
 

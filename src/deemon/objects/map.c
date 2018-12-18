@@ -120,8 +120,8 @@ proxy_iterator_next_value(MapProxyIterator *__restrict self) {
  DREF DeeObject *key_and_value[2];
  int error;
  /* Optimize using NSI */
- if (self->mpi_nsi && self->mpi_nsi->nsi_maplike.nsi_nextkey)
-     return (*self->mpi_nsi->nsi_maplike.nsi_nextkey)(self->mpi_iter);
+ if (self->mpi_nsi && self->mpi_nsi->nsi_maplike.nsi_nextvalue)
+     return (*self->mpi_nsi->nsi_maplike.nsi_nextvalue)(self->mpi_iter);
  pair = DeeObject_IterNext(self->mpi_iter);
  if (pair == ITER_DONE) return ITER_DONE;
  if unlikely(!pair) goto err;
