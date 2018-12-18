@@ -830,34 +830,107 @@ seq_ctor(DeeObject *__restrict UNUSED(self)) {
  return 0;
 }
 
+PRIVATE bool DCALL
+sequence_should_use_getitem(DeeTypeObject *__restrict self) {
+ DeeTypeObject *iter,*base; int found;
+ if (self == &DeeSeq_Type)
+     return false;
+ iter = self,found = 0;
+ do {
+  struct type_seq *seq;
+  ASSERT(iter);
+  base = DeeType_Base(iter);
+  if ((seq = iter->tp_seq) != NULL) {
+   if (seq->tp_get && seq->tp_get != &seq_getitem &&
+      (!base || !base->tp_seq || seq->tp_get != base->tp_seq->tp_get))
+       found |= 1;
+   if (seq->tp_size && seq->tp_size != &seq_size &&
+      (!base || !base->tp_seq || seq->tp_size != base->tp_seq->tp_size))
+       found |= 2;
+   if (found == (1|2))
+       return true;
+   if (seq->tp_iter_self &&
+     (!base || !base->tp_seq || seq->tp_iter_self != base->tp_seq->tp_iter_self))
+       break;
+  }
+ } while (base && (iter = base) != &DeeSeq_Type);
+ return false;
+}
+
 PRIVATE DREF DeeObject *DCALL
 seq_repr(DeeObject *__restrict self) {
+ bool is_first;
+ DREF DeeObject *iterator,*elem;
  struct unicode_printer p = UNICODE_PRINTER_INIT;
- DREF DeeObject *iterator = DeeObject_IterSelf(self);
- DREF DeeObject *elem; bool is_first = true;
- if unlikely(!iterator) return NULL;
- if unlikely(UNICODE_PRINTER_PRINT(&p,"{ ") < 0) goto err1;
- while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-  if (unicode_printer_printf(&p,"%s%r",is_first ? "" : ", ",elem) < 0) goto err2;
-  is_first = false;
-  Dee_Decref(elem);
-  if (DeeThread_CheckInterrupt()) goto err1;
+ if (sequence_should_use_getitem(Dee_TYPE(self))) {
+  size_t i,size;
+  size = DeeObject_Size(self);
+  if unlikely(size == (size_t)-1) goto err;
+  if (!size) {
+   if unlikely(UNICODE_PRINTER_PRINT(&p,"{ }") < 0) goto err;
+  } else {
+   if unlikely(UNICODE_PRINTER_PRINT(&p,"{ ") < 0)
+      goto err;
+   for (i = 0; i < size; ++i) {
+    if (i != 0 && unlikely(UNICODE_PRINTER_PRINT(&p,", ") < 0))
+        goto err;
+    elem = DeeObject_GetItemIndex(self,i);
+    if likely(elem) {
+     if (unicode_printer_printobjectrepr(&p,elem) < 0)
+         goto err_elem;
+     Dee_Decref(elem);
+    } else if (DeeError_Catch(&DeeError_UnboundItem)) {
+     if unlikely(UNICODE_PRINTER_PRINT(&p,"<unbound>") < 0)
+        goto err;
+    } else if (DeeError_Catch(&DeeError_IndexError)) {
+     /* Assume that the sequence got re-sized while we were iterating it. */
+     if unlikely(!i) {
+      if unlikely(unicode_printer_putascii(&p,'}'))
+         goto err;
+      goto done;
+     }
+     break;
+    } else {
+     goto err;
+    }
+   }
+   if unlikely(UNICODE_PRINTER_PRINT(&p," }") < 0)
+      goto err;
+  }
+ } else {
+  iterator = DeeObject_IterSelf(self);
+  if unlikely(!iterator) goto err;
+  if unlikely(UNICODE_PRINTER_PRINT(&p,"{ ") < 0) goto err1;
+  is_first = true;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   if (unicode_printer_printf(&p,"%s%r",is_first ? "" : ", ",elem) < 0) goto err2;
+   is_first = false;
+   Dee_Decref(elem);
+   if (DeeThread_CheckInterrupt()) goto err1;
+  }
+  if unlikely(!elem) goto err1;
+  if unlikely((is_first ? unicode_printer_putascii(&p,'}')
+                        : UNICODE_PRINTER_PRINT(&p," }")) < 0)
+     goto err1;
+  Dee_Decref(iterator);
  }
- if unlikely(!elem) goto err1;
- if unlikely((is_first ? unicode_printer_putascii(&p,'}')
-                       : UNICODE_PRINTER_PRINT(&p," }")) < 0)
-    goto err1;
- Dee_Decref(iterator);
+done:
  return unicode_printer_pack(&p);
-err2: Dee_Decref(elem);
-err1: Dee_Decref(iterator);
+err_elem:
+ Dee_Decref(elem);
+ goto err;
+err2:
+ Dee_Decref(elem);
+err1:
+ Dee_Decref(iterator);
+err:
  unicode_printer_fini(&p);
  return NULL;
 }
 
 PRIVATE DREF DeeTypeObject *DCALL
 seq_iterator_get(DeeTypeObject *__restrict self) {
- DeeTypeObject *iter; int found;
+ DeeTypeObject *iter,*base; int found;
  /* Special case: Accessing the `iterator' field of the raw `sequence' type
   *               will yield the (intended) base-class for all iterators. */
  if (self == &DeeSeq_Type)
@@ -866,18 +939,25 @@ seq_iterator_get(DeeTypeObject *__restrict self) {
  do {
   struct type_seq *seq;
   ASSERT(iter);
+  base = DeeType_Base(iter);
   if ((seq = iter->tp_seq) != NULL) {
    /* If sub-classes override both the get+size operators, then our stub-version is used. */
-   if (seq->tp_get && seq->tp_get != &seq_getitem) found |= 1;
-   if (seq->tp_size && seq->tp_size != &seq_size) found |= 2;
+   if (seq->tp_get && seq->tp_get != &seq_getitem &&
+      (!base || !base->tp_seq || seq->tp_get != base->tp_seq->tp_get))
+       found |= 1;
+   if (seq->tp_size && seq->tp_size != &seq_size &&
+      (!base || !base->tp_seq || seq->tp_size != base->tp_seq->tp_size))
+       found |= 2;
    /* If any sub-class that isn't the sequence type itself implements
     * the iterator interface, then it should be responsible for providing
     * the `iterator' class member.
     * With that in mind, us being here probably indicates that such a member is
     * missing, meaning that we should fail and act as though there's no such field. */
-   if (seq->tp_iter_self) goto fail;
+   if (seq->tp_iter_self &&
+     (!base || !base->tp_seq || seq->tp_iter_self != base->tp_seq->tp_iter_self))
+       goto fail;
   }
- } while ((iter = DeeType_Base(iter)) != &DeeSeq_Type);
+ } while (base && (iter = base) != &DeeSeq_Type);
  /* If we've found everything that's need to implement
   * the `generic_iterator' type, then that's the one! */
  if (found == (1|2))
@@ -3198,11 +3278,7 @@ err:
 }
 PRIVATE DREF DeeObject *DCALL
 seq_get_isfrozen(DeeObject *__restrict self) {
- int result = DeeSeq_IsMutable(self);
- if unlikely(result < 0) goto err;
- return_bool_(!result);
-err:
- return NULL;
+ return_bool(Dee_TYPE(self) == &DeeSeq_Type);
 }
 
 
@@ -3320,9 +3396,14 @@ PRIVATE struct type_getset seq_getsets[] = {
           "sequence can actually be manipulated, only that a sub-class provides special "
           "behavior for at least one of the following: #append, #extend, #insert, #insertall, "
           "#erase, #pop, #resize, #pushfront, #pushback, #popfront or #popback") },
+    /* TODO: Override this attribute as pass-though in sequence-proxy types. */
     { "isfrozen", &seq_get_isfrozen, NULL, NULL,
       DOC("->?Dbool\n"
-          "Same as ${!this.ismutable}") },
+          "Evaluates to true if the :{object.id}s of elements of "
+          "@this sequence can never change under any circumstance.\n"
+          "This differs from the inverse of #ismutable, as in the case "
+          "of a proxy sequence, this property depends on the underlying "
+          "sequence, rather than what is exposed by the proxy itself") },
     /* TODO: _YieldFunction should implement `frozen' as a lazy buffer that only
      *       enumerates elements as they are needed, and remembers then as part
      *       of a vector of generated elements. */
