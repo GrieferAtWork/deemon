@@ -21,3 +21,4 @@
 *.opendb
 *.db-shm
 *.db-wal
+*.log

@@ -1,0 +1,90 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+{
+	class Foo {
+		func() {
+			return this.id();
+		}
+	}
+	function func2(x) {
+		return x.id();
+	}
+	local x = Foo();
+	assert x.id() == x.func();
+	assert x.id() == Foo.func(x);
+	assert x.id() == Foo.func.__thiscall__(x);
+	assert x.id() == Foo.func.__thiscall__(x,());
+	assert x.id() == func2(x);
+	assert x.id() == func2(x: x);
+	assert x.id() == func2.__thiscall__(x);
+	assert x.id() == func2.__thiscall__(x,());
+}
+
+{
+	function kw0(**kwds) -> kwds;
+	function kw1(x,**kwds) -> kwds;
+	function kw2(x,y,**kwds) -> kwds;
+	function kw3(x,y,z,**kwds) -> kwds;
+	/* Assert allowed invocations */
+	assert (try kw0() catch (TypeError) "nope") == {};
+	assert (try kw0(10) catch (TypeError) "nope") == "nope";
+	assert (try kw0(10,20) catch (TypeError) "nope") == "nope";
+	assert (try kw0(10,20,30) catch (TypeError) "nope") == "nope";
+	assert (try kw1() catch (TypeError) "nope") == "nope";
+	assert (try kw1(10) catch (TypeError) "nope") == {};
+	assert (try kw1(10,20) catch (TypeError) "nope") == "nope";
+	assert (try kw1(10,20,30) catch (TypeError) "nope") == "nope";
+	assert (try kw2() catch (TypeError) "nope") == "nope";
+	assert (try kw2(10) catch (TypeError) "nope") == "nope";
+	assert (try kw2(10,20) catch (TypeError) "nope") == {};
+	assert (try kw2(10,20,30) catch (TypeError) "nope") == "nope";
+	assert (try kw3() catch (TypeError) "nope") == "nope";
+	assert (try kw3(10) catch (TypeError) "nope") == "nope";
+	assert (try kw3(10,20) catch (TypeError) "nope") == "nope";
+	assert (try kw3(10,20,30) catch (TypeError) "nope") == {};
+	/* Assert keyword blacklisting */
+	assert kw0(x: 0, y: 1, z: 2, foo: 10) == { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 };
+	assert kw1(x: 0, y: 1, z: 2, foo: 10) == { "y" : 1, "z" : 2, "foo" : 10 };
+	assert kw2(x: 0, y: 1, z: 2, foo: 10) == { "z" : 2, "foo" : 10 };
+	assert kw3(x: 0, y: 1, z: 2, foo: 10) == { "foo" : 10 };
+	assert kw0(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 };
+	assert kw1(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "y" : 1, "z" : 2, "foo" : 10 };
+	assert kw2(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "z" : 2, "foo" : 10 };
+	assert kw3(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "foo" : 10 };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
