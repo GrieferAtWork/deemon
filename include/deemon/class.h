@@ -538,10 +538,7 @@ INTDEF int (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict 
 #endif
 
 /* Get/Call/Del/Set a class attribute, as acquired
- * through `DeeClassDescriptor_QueryClassAttribute()'.
- * TODO: Adjust these functions to split between the type
- *       implementing the attribute, and the type accessing
- *       the attribute! */
+ * through `DeeClassDescriptor_QueryClassAttribute()'. */
 #ifdef __INTELLISENSE__
 INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
 INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);

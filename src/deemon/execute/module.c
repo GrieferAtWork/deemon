@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/alloc.h>
+#include <deemon/attribute.h>
 #include <deemon/object.h>
 #include <deemon/code.h>
 #include <deemon/module.h>
@@ -1053,7 +1054,7 @@ module_setattr(DeeModuleObject *__restrict self,
                                 DeeString_STR(name),
                                 DeeString_Hash(name),value);
 }
-PRIVATE dssize_t DCALL
+INTERN dssize_t DCALL
 module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
                 DeeModuleObject *__restrict self, denum_t proc, void *arg) {
  struct module_symbol *iter,*end,*doc_iter;
@@ -1087,7 +1088,8 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
 #endif
   {
    DeeObject *symbol_object;
-   if unlikely(DeeModule_RunInit((DeeObject *)self) < 0) return -1;
+   if unlikely(DeeModule_RunInit((DeeObject *)self) < 0)
+      goto err_m1;
    if (self->mo_flags&MODULE_FDIDINIT) {
 #ifndef CONFIG_NO_THREADS
     rwlock_read(&self->mo_lock);
@@ -1128,14 +1130,110 @@ module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
                   doc_iter->ss_doc,
                   perm,attr_type,arg);
   Dee_XDecref(attr_type);
-  if unlikely(temp < 0) goto err;
+  if unlikely(temp < 0)
+     goto err;
   result += temp;
  }
  temp = DeeObject_GenericEnumAttr(&DeeModule_Type,proc,arg);
- if unlikely(temp < 0) goto err;
+ if unlikely(temp < 0)
+    goto err;
  return result + temp;
 err:
  return temp;
+err_m1:
+ return -1;
+}
+
+INTERN int DCALL
+DeeModule_FindAttrString(DeeModuleObject *__restrict self,
+                         struct attribute_info *__restrict result,
+                         struct attribute_lookup_rules const *__restrict rules) {
+ ASSERT_OBJECT(self);
+ if (!(self->mo_flags & MODULE_FDIDLOAD)) {
+  if (DeeInteractiveModule_Check(self)) {
+   /* TODO: Special handling for enumerating the globals of an interactive module. */
+  }
+  return 1;
+ }
+ if (!rules->alr_decl || rules->alr_decl == (DeeObject *)self) {
+  struct module_symbol *sym,*doc_sym;
+  sym = DeeModule_GetSymbolString(self,
+                                  rules->alr_name,
+                                  rules->alr_hash);
+  if (sym) {
+   uint16_t perm;
+   DREF DeeTypeObject *attr_type;
+   perm = ATTR_IMEMBER | ATTR_ACCESS_GET;
+   ASSERT(sym->ss_index < self->mo_globalc);
+   if (!(sym->ss_flags&MODSYM_FREADONLY))
+         perm |= (ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
+   if (sym->ss_flags&MODSYM_FPROPERTY) {
+    perm &= ~(ATTR_ACCESS_GET|ATTR_ACCESS_DEL|ATTR_ACCESS_SET);
+    if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
+        perm |= ATTR_PROPERTY;
+   }
+   attr_type = NULL;
+#if 0 /* Always allow this! (we allow it for user-classes, as well!) */
+   /* For constant-expression symbols, we can predict
+    * their type (as well as their value)... */
+   if (sym->ss_flags&MODSYM_FCONSTEXPR)
+#endif
+   {
+    DeeObject *symbol_object;
+    if unlikely(DeeModule_RunInit((DeeObject *)self) < 0)
+       goto err;
+    if (self->mo_flags&MODULE_FDIDINIT) {
+#ifndef CONFIG_NO_THREADS
+     rwlock_read(&self->mo_lock);
+#endif
+     if (sym->ss_flags&MODSYM_FPROPERTY) {
+      /* Check which property operations have been bound. */
+      if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
+          perm |= ATTR_ACCESS_GET;
+      if (!(sym->ss_flags&MODSYM_FREADONLY)) {
+       /* These callbacks are only allocated if the READONLY flag isn't set. */
+       if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_DEL])
+           perm |= ATTR_ACCESS_DEL;
+       if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_SET])
+           perm |= ATTR_ACCESS_SET;
+      }
+     } else {
+      symbol_object = self->mo_globalv[sym->ss_index];
+      if (symbol_object) {
+       attr_type = Dee_TYPE(symbol_object);
+       Dee_Incref(attr_type);
+      }
+     }
+ #ifndef CONFIG_NO_THREADS
+     rwlock_endread(&self->mo_lock);
+ #endif
+    }
+   }
+   doc_sym = sym;
+   if (!doc_sym->ss_doc && (doc_sym->ss_flags & MODSYM_FALIAS)) {
+    doc_sym = DeeModule_GetSymbolID(self,doc_sym->ss_index);
+    ASSERT(doc_sym);
+   }
+   if (doc_sym->ss_flags & MODSYM_FDOCOBJ)
+       perm |= ATTR_DOCOBJ;
+   if ((perm & rules->alr_perm_mask) == rules->alr_perm_value) {
+    /* NOTE: Pass the module instance as declarator! */
+    result->a_decl     = (DREF DeeObject *)self;
+    result->a_doc      = MODULE_SYMBOL_GETDOCSTR(doc_sym);
+    result->a_perm     = perm;
+    result->a_attrtype = attr_type; /* Inherit reference. */
+    Dee_Incref(self);
+    return 0;
+   }
+   Dee_XDecref(attr_type);
+  }
+ }
+ return DeeObject_GenericFindAttrString(&DeeModule_Type,
+                                        (DeeObject *)self,
+                                         result,
+                                         rules);
+err:
+ return -1;
 }
 
 PRIVATE struct type_attr module_attr = {

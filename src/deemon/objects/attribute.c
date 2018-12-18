@@ -24,6 +24,7 @@
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/mro.h>
 #include <deemon/class.h>
@@ -1364,6 +1365,10 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
 INTDEF dssize_t DCALL
 type_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
               DeeObject *__restrict self, denum_t proc, void *arg);
+INTDEF dssize_t DCALL
+module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
+                DeeObject *__restrict self, denum_t proc, void *arg);
+
 
 PUBLIC int DCALL
 DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
@@ -1411,7 +1416,8 @@ do_iter_attr:
    if (!enumattr) break;
    if (enumattr == &type_enumattr)
        return DeeType_FindAttrString((DeeTypeObject *)self,result,rules);
-   /* TODO: Also add special case for modules. */
+   if (enumattr == &module_enumattr)
+       return DeeModule_FindAttrString((DeeModuleObject *)self,result,rules);
    data.ald_info    = result;
    data.ald_rules   = rules;
    data.ald_fnddecl = false;

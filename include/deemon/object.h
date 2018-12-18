@@ -1662,7 +1662,6 @@ INTERN WUNUSED bool DCALL DeeObject_TGenericHasAttrStringLen(DeeTypeObject *__re
 INTERN WUNUSED int DCALL DeeObject_TGenericBoundAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, dhash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 INTERN WUNUSED int DCALL DeeObject_TGenericBoundAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 INTERN WUNUSED int DCALL DeeObject_GenericFindAttrString(DeeTypeObject *__restrict tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTERN WUNUSED int DCALL DeeObject_GenericFindAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #define DeeObject_GenericBoundAttrString(self,attr,hash)            DeeObject_TGenericBoundAttrString(Dee_TYPE(self),self,attr,hash)
 #define DeeObject_GenericBoundAttrStringLen(self,attr,attrlen,hash) DeeObject_TGenericBoundAttrStringLen(Dee_TYPE(self),self,attr,attrlen,hash)
 #define DeeObject_GenericHasAttrString(self,attr,hash)              DeeObject_TGenericHasAttrString(Dee_TYPE(self),attr,hash)

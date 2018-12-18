@@ -2980,15 +2980,6 @@ do_savearg:
     sym->s_type  = SYMBOL_TYPE_LOCAL;
     sym->s_flag &= ~SYMBOL_FALLOC;
     goto do_savearg;
-#if 0
-   } else if (sym->sym_read == 0 &&
-              sym->s_symid == current_basescope->bs_argc_max &&
-              current_basescope->bs_argc_opt) {
-    /* TODO: Option arguments that were never used can something be
-     *       converted into default-arguments, at which point we may
-     *       be able to omit the runtime check for the number of
-     *       variable arguments. */
-#endif
    }
   }
  }

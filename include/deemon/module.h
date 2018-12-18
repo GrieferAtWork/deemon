@@ -887,6 +887,7 @@ INTDEF int DCALL DeeModule_DelAttrString(DeeModuleObject *__restrict self, char 
 INTDEF int DCALL DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 INTDEF int DCALL DeeModule_SetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, dhash_t hash, DeeObject *__restrict value);
 INTDEF int DCALL DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *__restrict value);
+INTDEF int DCALL DeeModule_FindAttrString(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #endif
 
 /* Lookup the module symbol associated with a given its name or GID.
