@@ -1324,7 +1324,7 @@ PRIVATE char const meth_str[]        = ":__str__";
 PRIVATE char const meth_repr[]       = ":__repr__";
 PRIVATE char const meth_bool[]       = ":__bool__";
 PRIVATE char const meth_call[]       = "o:__call__";
-PRIVATE char const meth_thiscall[]   = "oo:__thiscall__";
+PRIVATE char const meth_thiscall[]   = "o|o:__thiscall__";
 PRIVATE char const meth_hash[]       = ":__hash__";
 PRIVATE char const meth_int[]        = ":__int__";
 PRIVATE char const meth_inv[]        = ":__inv__";
@@ -1503,8 +1503,9 @@ err:
 PRIVATE DREF DeeObject *DCALL
 object_thiscall(DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- DeeObject *this_arg,*args_tuple;
- if (DeeArg_Unpack(argc,argv,meth_call,&this_arg,&args_tuple))
+ DeeObject *this_arg;
+ DeeObject *args_tuple = Dee_EmptyTuple;
+ if (DeeArg_Unpack(argc,argv,meth_thiscall,&this_arg,&args_tuple))
      goto err;
  if (DeeObject_AssertTypeExact(args_tuple,&DeeTuple_Type))
      goto err;
@@ -2147,7 +2148,7 @@ PRIVATE struct type_method object_methods[] = {
     { meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return: The :string representation of @this") },
     { meth_bool+1,       &object_bool, DOC("->?Dbool\n@return: The :bool value of @this") },
     { meth_call+2,       &object_call, DOC("(args:?Dtuple)->\nCall @this using the given @args :tuple") },
-    { meth_thiscall+3,   &object_thiscall, DOC("(this_arg,args:?Dtuple)->\nDo a this-call on @this using the given @this_arg and @args :tuple") },
+    { meth_thiscall+4,   &object_thiscall, DOC("(this_arg,args:?Dtuple)->\nDo a this-call on @this using the given @this_arg and @args :tuple") },
     { meth_hash+1,       &object_hash, DOC("->?Dint\n@return The hash-value of @this") },
     { meth_int+1,        &object_int, DOC("->?Dint\n@return The integer-value of @this") },
     { meth_inv+1,        &object_inv, DOC("->\n@return The result of ${this.operator ~ ()}") },
