@@ -1102,6 +1102,12 @@ PRIVATE struct type_getset map_getsets[] = {
      &DeeMap_GetLast,
      &DeeMap_DelLast,
       NULL },
+    { "frozen",
+     &DeeRoDict_FromSequence,
+      NULL,
+      NULL,
+      DOC("->?Dmapping\n"
+          "Returns a read-only (frozen) copy of @this mapping") },
     { NULL }
 };
 

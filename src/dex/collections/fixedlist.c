@@ -30,6 +30,7 @@
 #include <deemon/bool.h>
 #include <deemon/dex.h>
 #include <deemon/none.h>
+#include <deemon/map.h>
 #include <deemon/int.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
@@ -43,6 +44,7 @@ PRIVATE DREF FixedList *DCALL fl_ctor(void) {
  if unlikely(!result) goto done;
  rwlock_init(&result->fl_lock);
  result->fl_size = 0;
+ weakref_support_init(result);
  DeeObject_Init(result,&FixedList_Type);
  DeeGC_Track((DeeObject *)result);
 done:
@@ -63,6 +65,7 @@ fl_copy(FixedList *__restrict self) {
   Dee_XIncref(result->fl_elem[i]);
  }
  rwlock_endread(&self->fl_lock);
+ weakref_support_init(result);
  DeeObject_Init(result,&FixedList_Type);
  DeeGC_Track((DeeObject *)result);
 done:
@@ -135,6 +138,7 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 done:
  rwlock_init(&result->fl_lock);
  result->fl_size = itemc;
+ weakref_support_init(result);
  DeeObject_Init(result,&FixedList_Type);
  DeeGC_Track((DeeObject *)result);
  return result;
@@ -168,6 +172,7 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
  }
  rwlock_init(&result->fl_lock);
  result->fl_size = length;
+ weakref_support_init(result);
  DeeObject_Init(result,&FixedList_Type);
  DeeGC_Track((DeeObject *)result);
  return result;
@@ -206,6 +211,8 @@ fl_init(size_t argc, DeeObject **__restrict argv) {
   result->fl_size = size;
  } else {
   size_t i;
+  if (DeeType_IsInherited(Dee_TYPE(size_ob),&DeeMapping_Type))
+      goto init_from_iterator;
   /* Initialize from sequence. */
   size = DeeFastSeq_GetSize(size_ob);
   if (size == (size_t)-1) {
@@ -234,6 +241,7 @@ fl_init(size_t argc, DeeObject **__restrict argv) {
     if (!base) break;
     iter = base;
    }
+init_from_iterator:
    /* Initialize from iterators. */
    iterator = DeeObject_IterSelf(size_ob);
    if unlikely(!iterator) goto err;
@@ -619,20 +627,20 @@ PRIVATE struct type_nsi fl_nsi = {
             /* .nsi_getitem_fast = */(void *)&fl_nsi_getitem_fast,
             /* .nsi_getrange     = */(void *)NULL,
             /* .nsi_getrange_n   = */(void *)NULL,
-            /* .nsi_setrange     = */(void *)NULL,
-            /* .nsi_setrange_n   = */(void *)NULL,
-            /* .nsi_find         = */(void *)NULL,
-            /* .nsi_rfind        = */(void *)NULL,
+            /* .nsi_setrange     = */(void *)NULL, /* TODO */
+            /* .nsi_setrange_n   = */(void *)NULL, /* TODO */
+            /* .nsi_find         = */(void *)NULL, /* TODO */
+            /* .nsi_rfind        = */(void *)NULL, /* TODO */
             /* .nsi_xch          = */(void *)&fl_nsi_xchitem,
             /* .nsi_insert       = */(void *)NULL,
             /* .nsi_insertall    = */(void *)NULL,
             /* .nsi_insertvec    = */(void *)NULL,
-            /* .nsi_pop          = */(void *)NULL,
-            /* .nsi_erase        = */(void *)NULL,
-            /* .nsi_remove       = */(void *)NULL,
-            /* .nsi_rremove      = */(void *)NULL,
-            /* .nsi_removeall    = */(void *)NULL,
-            /* .nsi_removeif     = */(void *)NULL
+            /* .nsi_pop          = */(void *)NULL, /* TODO */
+            /* .nsi_erase        = */(void *)NULL, /* TODO */
+            /* .nsi_remove       = */(void *)NULL, /* TODO */
+            /* .nsi_rremove      = */(void *)NULL, /* TODO */
+            /* .nsi_removeall    = */(void *)NULL, /* TODO */
+            /* .nsi_removeif     = */(void *)NULL  /* TODO */
         }
     }
 };

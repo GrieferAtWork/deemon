@@ -1123,12 +1123,14 @@ setiterator_bool(SetIterator *__restrict self) {
 }
 
 #define DEFINE_ITERATOR_COMPARE(name,op) \
-PRIVATE int DCALL \
+PRIVATE DREF DeeObject *DCALL \
 name(SetIterator *__restrict self, \
      SetIterator *__restrict other) { \
  if (DeeObject_AssertType((DeeObject *)other,&HashSetIterator_Type)) \
-     return -1; \
- return READ_ITEM(self) op READ_ITEM(other); \
+     goto err; \
+ return_bool(READ_ITEM(self) op READ_ITEM(other)); \
+err: \
+ return NULL; \
 }
 DEFINE_ITERATOR_COMPARE(setiterator_eq,==)
 DEFINE_ITERATOR_COMPARE(setiterator_ne,!=)
@@ -1164,10 +1166,10 @@ INTERN DeeTypeObject HashSetIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&setiterator_ctor,
-                /* .tp_copy_ctor = */&setiterator_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&setiterator_init,
+                /* .tp_ctor      = */(void *)&setiterator_ctor,
+                /* .tp_copy_ctor = */(void *)&setiterator_copy,
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&setiterator_init,
                 TYPE_FIXED_ALLOCATOR(SetIterator)
             }
         },
