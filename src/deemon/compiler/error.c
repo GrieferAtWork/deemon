@@ -41,7 +41,6 @@
 
 DECL_BEGIN
 
-DECLARE_STRUCT_CACHE(ef,struct except_frame)
 INTERN struct parser_errors current_parser_errors;
 
 INTDEF char const *TPPCALL find_most_likely_warning(char const *__restrict name);
@@ -271,7 +270,7 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
     if (ITER_ISOK(iter->ef_trace))
         Dee_Decref(iter->ef_trace);
     --caller->t_exceptsz;
-    ef_free(iter);
+    except_frame_free(iter);
     continue;
    }
    piter = &iter->ef_prev;
@@ -402,7 +401,7 @@ err_handle_all_but_last:
    if (ITER_ISOK(iter->ef_trace))
        Dee_Decref(iter->ef_trace);
    Dee_Decref(iter->ef_error);
-   ef_free(iter);
+   except_frame_free(iter);
   }
   --caller->t_exceptsz;
  }

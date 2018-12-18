@@ -42,9 +42,6 @@
 
 DECL_BEGIN
 
-DEFINE_STRUCT_CACHE(ef,struct except_frame,8) /* TODO: Remove this (use slabs instead!) */
-DEFINE_STRUCT_CACHE_TRYALLOC(ef,struct except_frame,sizeof(struct except_frame))
-
 PUBLIC bool DCALL
 DeeError_Catch(DeeTypeObject *__restrict type) {
  DeeObject *current;
@@ -134,12 +131,12 @@ DeeError_Throw(DeeObject *__restrict ob) {
   /* Special handling for throwing a bad-allocation error.
    * >> Required to prevent infinite recursion when allocating
    *    the exception frame for an out-of-memory error. */
-  if unlikely((frame = ef_tryalloc()) == NULL)
-     goto done;
+  frame = except_frame_tryalloc();
  } else {
-  if unlikely((frame = ef_alloc()) == NULL)
-     goto done;
+  frame = except_frame_alloc();
  }
+ if unlikely(!frame)
+    goto done;
  frame->ef_prev  = ts->t_except;
  frame->ef_error = ob;
  frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
@@ -240,8 +237,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
                            (state&~(THREAD_STATE_INTERRUPTING))|
                                     THREAD_STATE_INTERRUPTED));
  /* If the frame wasn't used, then still free it! */
- if (frame)
-     ef_free(frame);
+ except_frame_xfree(frame);
 }
 #endif
 
@@ -274,7 +270,7 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
  Dee_Decref(frame->ef_error);
  if (ITER_ISOK(frame->ef_trace))
      Dee_Decref(frame->ef_trace);
- ef_free(frame);
+ except_frame_free(frame);
  return true;
 }
 

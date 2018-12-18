@@ -24,7 +24,6 @@
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/util/cache.h>
 #include <deemon/file.h>
 
 #include <hybrid/byteorder.h>
@@ -2616,9 +2615,6 @@ err:
  return -1;
 }
 
-
-DECLARE_STRUCT_CACHE(asym,struct asm_sym)
-
 INTERN bool DCALL asm_delunusedsyms(void) {
  bool result = false;
  struct asm_sym **piter,*iter;
@@ -2627,7 +2623,7 @@ INTERN bool DCALL asm_delunusedsyms(void) {
   if (iter->as_used == 0) {
    result = true;
    *piter = iter->as_next;
-   asym_free(iter);
+   DeeSlab_FREE(iter);
    continue;
   }
   piter = &iter->as_next;

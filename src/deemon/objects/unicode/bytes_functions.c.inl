@@ -3838,18 +3838,15 @@ INTERN struct type_method bytes_methods[] = {
           "This function can be used to view a sub-set of bytes from @this bytes object\n"
           "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object") },
     { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
-      DOC("->?.\n"
-          "(mask:?X3?.?Dstring?Dint)->?.\n"
+      DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all leading and trailing whitespace-characters, or "
           "characters apart of @mask, and return a sub-view of @this bytes object") },
     { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lstrip,
-      DOC("->?.\n"
-          "(mask:?X3?.?Dstring?Dint)->?.\n"
+      DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all leading whitespace-characters, or characters "
           "apart of @mask, and return a sub-view of @this bytes object") },
     { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rstrip,
-      DOC("->?.\n"
-          "(mask:?X3?.?Dstring?Dint)->?.\n"
+      DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all trailing whitespace-characters, or characters "
           "apart of @mask, and return a sub-view of @this bytes object") },
     { "sstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_sstrip,
@@ -3994,16 +3991,13 @@ INTERN struct type_method bytes_methods[] = {
           "Same as #contains, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casestrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casestrip,
-      DOC("->?.\n"
-          "(mask:?X3?.?Dstring?Dint)->?.\n"
+      DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Same as #strip, however ascii-casing is ignored during character comparisons") },
     { "caselstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caselstrip,
-      DOC("->?.\n"
-          "(mask:?X3?.?Dstring?Dint)->?.\n"
+      DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Same as #lstrip, however ascii-casing is ignored during character comparisons") },
     { "caserstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_caserstrip,
-      DOC("->?.\n"
-          "(mask:?X3?.?Dstring?Dint)->?.\n"
+      DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Same as #rstrip, however ascii-casing is ignored during character comparisons") },
     { "casesstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_casesstrip,
       DOC("(other:?X3?.?Dstring?Dint)->?.\n"

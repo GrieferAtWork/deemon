@@ -822,8 +822,6 @@ handle_iter:
 
 
 
-DECLARE_STRUCT_CACHE(ef,struct except_frame)
-
 PRIVATE DREF DeeThreadObject *DCALL
 allocate_thread_self(void) {
  DREF DeeThreadObject *result;
@@ -1766,20 +1764,6 @@ err:
  return -1;
 }
 
-PRIVATE struct except_frame *DCALL try_alloc_frame(void) {
- struct except_frame *result;
- rwlock_write(&structcache_ef_lock);
- ASSERT((structcache_ef_size != 0) == (structcache_ef_list != NULL));
- result = (struct except_frame *)structcache_ef_list;
- if (result) {
-  structcache_ef_list = ((struct cache_struct *)result)->cs_next;
-  --structcache_ef_size;
- }
- rwlock_endwrite(&structcache_ef_lock);
- if (!result)
-      result = (struct except_frame *)Dee_TryMalloc(sizeof(struct except_frame));
- return result;
-}
 PRIVATE bool DCALL
 try_alloc_wrappers(struct except_frame **__restrict presult,
                    uint16_t *__restrict pnum_wrappers) {
@@ -1791,7 +1775,7 @@ try_alloc_wrappers(struct except_frame **__restrict presult,
  }
  while (*pnum_wrappers) {
   struct except_frame *new_frame;
-  new_frame = try_alloc_frame();
+  new_frame = except_frame_tryalloc();
   if unlikely(!new_frame) goto fail;
   new_frame->ef_prev = chain;
   chain = new_frame;
@@ -2074,7 +2058,7 @@ relock_state:
        while (error_frames) {
         struct except_frame *next = error_frames->ef_prev;
         DeeObject_FFree(error_frames->ef_error,sizeof(DeeErrorObject));
-        ef_free(error_frames);
+        except_frame_free(error_frames);
         error_frames = next;
        }
        goto err;
@@ -2088,7 +2072,7 @@ relock_state:
     while (num_free--) {
      struct except_frame *next = error_frames->ef_prev;
      DeeObject_FFree(error_frames->ef_error,sizeof(DeeErrorObject));
-     ef_free(error_frames);
+     except_frame_free(error_frames);
      error_frames = next;
     }
    }
@@ -2229,7 +2213,7 @@ thread_doclear(DeeThreadObject *__restrict self) {
   Dee_Decref(old_except->ef_error);
   if (ITER_ISOK(old_except->ef_trace))
       Dee_Decref(old_except->ef_trace);
-  ef_free(old_except);
+  except_frame_free(old_except);
   old_except = next;
   result = true;
  }
@@ -2374,7 +2358,7 @@ thread_fini(DeeThreadObject *__restrict self) {
   Dee_Decref(frame->ef_error);
   if (ITER_ISOK(frame->ef_trace))
       Dee_Decref(frame->ef_trace);
-  ef_free(frame);
+  except_frame_free(frame);
   frame = next;
  }
  ASSERT(!self->t_except);

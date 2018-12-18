@@ -93,6 +93,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 
 #include <deemon/api.h>
 #include <deemon/asm.h>
+#include <deemon/alloc.h>
 
 #if defined(CONFIG_HAVE_EXEC_ASM) || defined(__DEEMON__)
 
@@ -1456,7 +1457,19 @@ target_endcatch_n:
 	decref %eax, 0, 0, 1       /* Preserve EDX */
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(ef_free,4)      /* Free the frame */
+	/* except_frame_free() */
+#ifndef CONFIG_NO_OBJECT_SLABS
+    /* WARNING: This assumes that sizeof(struct except_frame) >= 12 */
+#if DEEMON_SLAB_HASSIZE(3)
+	call   fSYM(DeeSlab_Free3,4) /* Free the frame */
+#elif DEEMON_SLAB_HASSIZE(4)
+	call   fSYM(DeeSlab_Free4,4) /* Free the frame */
+#else
+	call   fSYM(DeeSlab_Free,4)  /* Free the frame */
+#endif
+#else
+	call   fSYM(Dee_Free,4)     /* Free the frame */
+#endif
 	ADJUST_CFA_OFFSET(-4)
 	jmp   .disp
 

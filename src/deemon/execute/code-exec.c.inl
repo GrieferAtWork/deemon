@@ -103,11 +103,6 @@
 
 DECL_BEGIN
 
-#ifndef EXCEPT_FRAME_CACHE_DECLARED
-#define EXCEPT_FRAME_CACHE_DECLARED 1
-DECLARE_STRUCT_CACHE(ef,struct except_frame)
-#endif
-
 #ifndef FILE_SHL_DECLARED
 #define FILE_SHL_DECLARED 1
 INTDEF DREF DeeObject *DCALL
@@ -3957,7 +3952,7 @@ do_setattr_this_c:
           if (ITER_ISOK(frame->ef_trace))
               Dee_Decref(frame->ef_trace);
           Dee_Decref(frame->ef_error);
-          ef_free(frame);
+          except_frame_free(frame);
          }
          DISPATCH();
      }

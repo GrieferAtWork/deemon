@@ -888,11 +888,6 @@ INTDEF struct asm_sym *(DCALL asm_newsym_dbg)(char const *file, int line);
 #define asm_newsym() asm_newsym_dbg(__FILE__,__LINE__)
 #endif
 
-/* Return a newly allocated, raw and unmanaged symbol structure.
- * The caller is then required to add it to the chain of symbols in `current_assembler.a_syms' */
-INTDEF struct asm_sym *(DCALL asym_alloc)(void);
-#define asm_newsym_unbound() asym_alloc()
-
 /* Allocate and return a new assembly exception handler.
  * WARNING: The returned pointer only remains valid
  *          until the next time this function is called!

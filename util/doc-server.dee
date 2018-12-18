@@ -138,7 +138,7 @@ function print_decl_params(fp: file, decl: Declaration) {
 		for (local par: params) {
 			if (!is_first) fp << ", ";
 			is_first = false;
-			if (par.iskwargs)
+			if (par.isvarkwds)
 				fp << "**";
 			fp << "<i>" << escape_html(par.name) << "</i>";
 			if (par.isvarargs)

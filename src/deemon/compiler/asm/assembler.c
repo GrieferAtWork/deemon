@@ -35,7 +35,6 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/assembler.h>
-#include <deemon/util/cache.h>
 
 #include <string.h>
 
@@ -159,11 +158,6 @@ STATIC_ASSERT(sizeof(struct asm_exc) != sizeof(struct except_handler));
 INTERN struct assembler current_assembler;
 
 #define INITIAL_TEXTALLOC 32
-/* Cache for assembly symbols. */
-DEFINE_STRUCT_CACHE(asym,struct asm_sym,64)
-#ifndef NDEBUG
-#define asym_alloc()  asym_dbgalloc(__FILE__,__LINE__)
-#endif
 
 INTERN struct ddi_checkpoint *DCALL asm_newddi(void) {
  struct ddi_checkpoint *result;
@@ -444,7 +438,7 @@ INTERN void DCALL assembler_fini(void) {
  iter = current_assembler.a_syms;
  while (iter) {
   next = iter->as_next;
-  asym_free(iter);
+  DeeSlab_FREE(iter);
   iter = next;
  }
  /* Free up constant variables. */
@@ -488,7 +482,7 @@ INTERN bool DCALL asm_delunused_symbols(void) {
   if (!iter->as_used) {
    /* Unused symbol. */
    *piter = iter->as_next;
-   asym_free(iter); /* Free this symbol. */
+   DeeSlab_FREE(iter); /* Free this symbol. */
    continue;
   }
   piter = &iter->as_next;
@@ -502,7 +496,12 @@ INTDEF struct asm_sym *DCALL asm_newsym(void)
 INTDEF struct asm_sym *DCALL asm_newsym_dbg(char const *file, int line)
 #endif
 {
- struct asm_sym *result = asym_alloc();
+ struct asm_sym *result;
+#ifdef NDEBUG
+ result = DeeSlab_MALLOC(struct asm_sym);
+#else
+ result = DeeDbgSlab_MALLOC(struct asm_sym,file,line);
+#endif
  if unlikely(!result) goto done;
  result->as_next = current_assembler.a_syms;
  result->as_sect = SECTION_INVALID;
@@ -533,9 +532,8 @@ PRIVATE int DCALL asm_realloc_exc(void) {
  if (!new_alloc) new_alloc = 1;
  if unlikely(new_alloc < current_assembler.a_excepta) {
   if unlikely(current_assembler.a_exceptc == UINT16_MAX) {
-   DeeError_Throwf(&DeeError_CompilerError,
-                   "Too many exception handlers");
-   return -1;
+   return DeeError_Throwf(&DeeError_CompilerError,
+                          "Too many exception handlers");
   }
   new_alloc = UINT16_MAX;
  }

@@ -59,12 +59,6 @@
 DECL_BEGIN
 
 
-#ifndef EXCEPT_FRAME_CACHE_DECLARED
-#define EXCEPT_FRAME_CACHE_DECLARED 1
-DECLARE_STRUCT_CACHE(ef,struct except_frame)
-#endif
-
-
 INTERN RETURN_TYPE FCALL
 H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
  RETURN_TYPE result;
@@ -226,7 +220,7 @@ err_handle_catch_except:
       if (ITER_ISOK(exc->ef_trace))
           Dee_Decref((DeeObject *)exc->ef_trace);
       Dee_Decref(exc->ef_error);
-      Dee_Free(exc); /*ef_free(exc);*/
+      except_frame_free(exc);
      }
      continue;
     } else {

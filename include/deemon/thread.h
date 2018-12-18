@@ -64,6 +64,10 @@ struct except_frame {
                                              * NOTE: When `ITER_DONE' the traceback has yet to be allocated.
                                              * NOTE: Set to `NULL' when there is no traceback. */
 };
+#define except_frame_tryalloc() DeeSlab_TRYMALLOC(struct except_frame)
+#define except_frame_alloc()    DeeSlab_MALLOC(struct except_frame)
+#define except_frame_free(ptr)  DeeSlab_FREE(REQUIRES_TYPE(struct except_frame *,ptr))
+#define except_frame_xfree(ptr) DeeSlab_XFREE(REQUIRES_TYPE(struct except_frame *,ptr))
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Returns the traceback of a given exception-frame, or

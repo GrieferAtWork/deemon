@@ -9049,18 +9049,15 @@ INTERN struct type_method string_methods[] = {
           "as well as many others"),
       TYPE_METHOD_FKWDS },
     { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_strip,
-      DOC("->?.\n"
-          "(mask:?.)->?.\n"
+      DOC("(mask?:?.)->?.\n"
           "Strip all leading and trailing whitespace-characters, or "
           "characters apart of @mask, and return the resulting string") },
     { "lstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_lstrip,
-      DOC("->?.\n"
-          "(mask:?.)->?.\n"
+      DOC("(mask?:?.)->?.\n"
           "Strip all leading whitespace-characters, or "
           "characters apart of @mask, and return the resulting string") },
     { "rstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rstrip,
-      DOC("->?.\n"
-          "(mask:?.)->?.\n"
+      DOC("(mask?:?.)->?.\n"
           "Strip all trailing whitespace-characters, or "
           "characters apart of @mask, and return the resulting string") },
     { "sstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_sstrip,
@@ -9184,16 +9181,13 @@ INTERN struct type_method string_methods[] = {
           "Same as #contains, however perform a case-folded search (s.a. #casefold)"),
       TYPE_METHOD_FKWDS },
     { "casestrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casestrip,
-      DOC("->?.\n"
-          "(mask:?.)->?.\n"
+      DOC("(mask?:?.)->?.\n"
           "Same as #strip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
     { "caselstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caselstrip,
-      DOC("->?.\n"
-          "(mask:?.)->?.\n"
+      DOC("(mask?:?.)->?.\n"
           "Same as #lstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
     { "caserstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_caserstrip,
-      DOC("->?.\n"
-          "(mask:?.)->?.\n"
+      DOC("(mask?:?.)->?.\n"
           "Same as #rstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
     { "casesstrip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_casesstrip,
       DOC("(needle:?.)->?.\n"
@@ -9303,8 +9297,7 @@ INTERN struct type_method string_methods[] = {
           ">text = get_html();\n"
           ">text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });") },
     { "dedent", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_dedent,
-      DOC("(max_chars=!1)->?.\n"
-          "(max_chars=!1,mask:?.)->?.\n"
+      DOC("(max_chars=!1,mask?:?.)->?.\n"
           "Using @this string as result, remove up to @max_chars whitespace "
           "(s.a. #isspace) characters, or if given: characters apart of @mask "
           "from the front, as well as following any linefeed") },

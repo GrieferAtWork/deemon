@@ -17,16 +17,14 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-Cs(asym)
 Cs(sym)
-Cs(ef)
-Cs(utf)
+Cs(utf) /* TODO: Remove this */
 #ifdef CONFIG_AST_IS_STRUCT
 Cs(ast)
 #else
 Co(ast)
 #endif
-Co(super)
-Co(float)
-Co(compiler_item)
-Co(compiler_wrap)
+Co(super) /* TODO: Remove this */
+Co(float) /* TODO: Remove this */
+Co(compiler_item) /* TODO: Remove this */
+Co(compiler_wrap) /* TODO: Remove this */
