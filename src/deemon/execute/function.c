@@ -993,7 +993,7 @@ yf_get_kwds(YFunction *__restrict self) {
 PRIVATE struct type_getset yf_getsets[] = {
     { "__code__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_code, NULL, NULL,
-      DOC("->?Dcode\n"
+      DOC("->?Ert:Code\n"
           "Alias for :function.__code__ though #__func__") },
     { DeeString_STR(&str___name__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_name, NULL, NULL,
@@ -1718,7 +1718,7 @@ PRIVATE struct type_getset yfi_getsets[] = {
           "The function that is being executed") },
     { "__code__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_code, NULL, NULL,
-      DOC("->?Dcode\n"
+      DOC("->?Ert:Code\n"
           "The code object that is being executed") },
     { "__refs__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_refs, NULL, NULL,

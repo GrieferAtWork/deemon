@@ -910,6 +910,17 @@ tuple_iterator_copy(TupleIterator *__restrict self,
  self->ti_index = READ_INDEX(other);
  return 0;
 }
+PRIVATE int DCALL
+tuple_iterator_deepcopy(TupleIterator *__restrict self,
+                        TupleIterator *__restrict other) {
+ self->ti_tuple = (DREF DeeTupleObject *)DeeObject_DeepCopy((DeeObject *)other->ti_tuple);
+ if unlikely(!self->ti_tuple)
+    goto err;
+ self->ti_index = READ_INDEX(other);
+ return 0;
+err:
+ return -1;
+}
 
 PRIVATE int DCALL
 tuple_iterator_init(TupleIterator *__restrict self,
@@ -1011,10 +1022,10 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&tuple_iterator_ctor,
-                /* .tp_copy_ctor = */&tuple_iterator_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&tuple_iterator_init,
+                /* .tp_ctor      = */(void *)&tuple_iterator_ctor,
+                /* .tp_copy_ctor = */(void *)&tuple_iterator_copy,
+                /* .tp_deep_ctor = */(void *)&tuple_iterator_deepcopy,
+                /* .tp_any_ctor  = */(void *)&tuple_iterator_init,
                 TYPE_FIXED_ALLOCATOR(TupleIterator)
             }
         },
@@ -1065,7 +1076,8 @@ INTERN DREF Tuple *DCALL
 tuple_deepcopy(Tuple *__restrict self) {
  DREF Tuple *result; size_t i,size = DeeTuple_SIZE(self);
  result = (DREF Tuple *)DeeTuple_NewUninitialized(size);
- if unlikely(!result) goto err;
+ if unlikely(!result)
+    goto err;
  for (i = 0; i < size; ++i) {
   DREF DeeObject *temp;
   temp = DeeObject_DeepCopy(DeeTuple_GET(self,i));
@@ -1084,8 +1096,10 @@ PRIVATE DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
  if (DeeArg_Unpack(argc,argv,"o:tuple",&seq))
-     return NULL;
+     goto err;
  return (DREF Tuple *)DeeTuple_FromSequence(seq);
+err:
+ return NULL;
 }
 
 INTERN void DCALL
@@ -1296,10 +1310,11 @@ done:
 }
 
 PRIVATE struct type_method tuple_class_methods[] = {
-    { "unpack", &tuple_unpack,
-      DOC("(num_items:?Dint,init:?S?O)->?.\n"
-           "@throw UnpackError The given @init doesn't contain exactly @num_items elements\n"
-           "Unpack the given sequence @init into a tuple consisting of @num_items elements") },
+    { "unpack",
+      &tuple_unpack,
+      DOC("(num:?Dint,seq:?S?O)->?.\n"
+           "@throw UnpackError The given @seq doesn't contain exactly @num elements\n"
+           "Unpack the given sequence @seq into a tuple consisting of @num elements") },
     { NULL }
 };
 
@@ -1355,7 +1370,8 @@ tuple_repr(Tuple *__restrict self) {
   if (unicode_printer_printobjectrepr(&p,*iter) < 0)
       goto err;
  }
- if (unicode_printer_putascii(&p,')') < 0) goto err;
+ if (unicode_printer_putascii(&p,')') < 0)
+     goto err;
  return unicode_printer_pack(&p);
 err:
  unicode_printer_fini(&p);
@@ -1380,37 +1396,49 @@ PRIVATE DREF DeeObject *DCALL
 tuple_sizeof(Tuple *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":__sizeof__"))
-     return NULL;
+     goto err;
  return DeeInt_NewSize(offsetof(Tuple,t_elem)+
-                       self->t_size*
+                       self->t_size *
                        sizeof(DeeObject *));
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 tuple_first(Tuple *__restrict self) {
- if unlikely(DeeTuple_IsEmpty(self)) {
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
+ if unlikely(DeeTuple_IsEmpty(self))
+    goto err_empty;
  return_reference_(DeeTuple_GET(self,0));
+err_empty:
+ err_empty_sequence((DeeObject *)self);
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 tuple_last(Tuple *__restrict self) {
- if unlikely(DeeTuple_IsEmpty(self)) {
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
+ if unlikely(DeeTuple_IsEmpty(self))
+    goto err_empty;
  return_reference_(DeeTuple_GET(self,DeeTuple_SIZE(self)-1));
+err_empty:
+ err_empty_sequence((DeeObject *)self);
+ return NULL;
 }
 
 
 PRIVATE struct type_method tuple_methods[] = {
-    { "__sizeof__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&tuple_sizeof },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&tuple_sizeof,
+      DOC("->?Dint") },
     { NULL }
 };
 PRIVATE struct type_getset tuple_getsets[] = {
-    { "first", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first, NULL, NULL },
-    { "last", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last, NULL, NULL },
+    { "first",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first,
+      NULL,
+      NULL },
+    { "last",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last,
+      NULL,
+      NULL },
     { NULL }
 };
 
@@ -1679,14 +1707,14 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */&tuple_ctor,
-                /* .tp_copy_ctor = */&DeeObject_NewRef,
-                /* .tp_deep_ctor = */&tuple_deepcopy,
-                /* .tp_any_ctor  = */&tuple_init,
+                /* .tp_ctor      = */(void *)&tuple_ctor,
+                /* .tp_copy_ctor = */(void *)&DeeObject_NewRef,
+                /* .tp_deep_ctor = */(void *)&tuple_deepcopy,
+                /* .tp_any_ctor  = */(void *)&tuple_init,
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
-                /* .tp_free      = */&tuple_tp_free
+                /* .tp_free      = */(void *)&tuple_tp_free
 #else
-                /* .tp_free      = */NULL
+                /* .tp_free      = */(void *)NULL
 #endif
             }
         },

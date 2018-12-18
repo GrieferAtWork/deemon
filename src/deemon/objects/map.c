@@ -1188,8 +1188,8 @@ PRIVATE struct type_member map_class_members[] = {
     TYPE_MEMBER_END
 };
 
-INTDEF int DCALL
-seq_ctor(DeeObject *__restrict UNUSED(self));
+INTDEF int DCALL none_i1(void *UNUSED(a));
+INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 PUBLIC DeeTypeObject DeeMapping_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1221,9 +1221,9 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&seq_ctor, /* Allow default-construction of sequence objects. */
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_ctor      = */(void *)&none_i1, /* Allow default-construction of sequence objects. */
+                /* .tp_copy_ctor = */(void *)&none_i2,
+                /* .tp_deep_ctor = */(void *)&none_i2,
                 /* .tp_any_ctor  = */NULL,
                 TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }

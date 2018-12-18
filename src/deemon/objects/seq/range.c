@@ -44,14 +44,17 @@ DECL_BEGIN
 PRIVATE int DCALL
 ri_ctor(RangeIterator *__restrict self) {
  self->ri_range = (DREF Range *)DeeRange_New(Dee_None,Dee_None,NULL);
- if unlikely(!self->ri_range) return -1;
+ if unlikely(!self->ri_range)
+    goto err;
  self->ri_index = Dee_None;
  self->ri_end   = Dee_None;
  self->ri_step  = NULL;
  self->ri_first = true;
- Dee_Incref_n(Dee_None,2);
+ Dee_Incref(Dee_None);
  rwlock_init(&self->ri_lock);
  return 0;
+err:
+ return -1;
 }
 
 INTDEF DeeTypeObject SeqRange_Type;
@@ -59,19 +62,20 @@ INTDEF DeeTypeObject SeqRange_Type;
 PRIVATE int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqRangeIterator",&self->ri_range) ||
-     DeeObject_AssertTypeExact(self->ri_range,&SeqRange_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_SeqRangeIterator",&self->ri_range))
+     goto err;
+ if (DeeObject_AssertTypeExact(self->ri_range,&SeqRange_Type))
+     goto err;
  self->ri_index = self->ri_range->r_begin;
  self->ri_end   = self->ri_range->r_end;
  self->ri_step  = self->ri_range->r_step;
  Dee_Incref(self->ri_index);
  Dee_Incref(self->ri_range);
- Dee_Incref(self->ri_end);
- Dee_XIncref(self->ri_step);
  self->ri_first = true;
  rwlock_init(&self->ri_lock);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -104,10 +108,33 @@ again:
  self->ri_end   = other->ri_end;
  self->ri_step  = other->ri_step;
  Dee_Incref(self->ri_range);
- Dee_Incref(self->ri_end);
- Dee_XIncref(self->ri_step);
  return 0;
 err:
+ return -1;
+}
+
+PRIVATE int DCALL
+ri_deepcopy(RangeIterator *__restrict self,
+            RangeIterator *__restrict other) {
+ rwlock_read(&other->ri_lock);
+ self->ri_range = other->ri_range;
+ self->ri_index = other->ri_index;
+ self->ri_first = other->ri_first;
+ Dee_Incref(self->ri_range);
+ Dee_Incref(self->ri_index);
+ rwlock_endread(&other->ri_lock);
+ if (DeeObject_InplaceDeepCopy(&self->ri_index))
+     goto err_r;
+ if (DeeObject_InplaceDeepCopy((DeeObject **)&self->ri_range))
+     goto err_r;
+ rwlock_init(&self->ri_lock);
+ self->ri_end  = self->ri_range->r_end;
+ self->ri_step = self->ri_range->r_step;
+ return 0;
+err_r:
+ Dee_Decref_unlikely(self->ri_range);
+ Dee_Decref(self->ri_index);
+/*err:*/
  return -1;
 }
 
@@ -115,8 +142,6 @@ PRIVATE void DCALL
 ri_fini(RangeIterator *__restrict self) {
  Dee_Decref(self->ri_index);
  Dee_Decref(self->ri_range);
- Dee_Decref(self->ri_end);
- Dee_XDecref(self->ri_step);
 }
 PRIVATE void DCALL
 ri_visit(RangeIterator *__restrict self,
@@ -125,8 +150,6 @@ ri_visit(RangeIterator *__restrict self,
  Dee_Visit(self->ri_index);
  rwlock_endread(&self->ri_lock);
  Dee_Visit(self->ri_range);
- Dee_Visit(self->ri_end);
- Dee_XVisit(self->ri_step);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -313,7 +336,8 @@ PRIVATE struct type_cmp ri_cmp = {
 INTERN DeeTypeObject SeqRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRangeIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(seq:?Ert:SeqRange)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -321,10 +345,10 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&ri_ctor,
-                /* .tp_copy_ctor = */&ri_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&ri_init,
+                /* .tp_ctor      = */(void *)&ri_ctor,
+                /* .tp_copy_ctor = */(void *)&ri_copy,
+                /* .tp_deep_ctor = */(void *)&ri_deepcopy,
+                /* .tp_any_ctor  = */(void *)&ri_init,
                 TYPE_FIXED_ALLOCATOR(RangeIterator)
             }
         },
@@ -381,8 +405,6 @@ range_iter(Range *__restrict self) {
  result->ri_step  = self->r_step;
  Dee_Incref(result->ri_index);
  Dee_Incref(result->ri_range);
- Dee_Incref(result->ri_end);
- Dee_XIncref(result->ri_step);
  result->ri_first = true;
  rwlock_init(&result->ri_lock);
 done:
@@ -545,11 +567,87 @@ range_repr(Range *__restrict self) {
        ;
 }
 
+PRIVATE int DCALL
+range_ctor(Range *__restrict self) {
+ self->r_begin = Dee_None;
+ self->r_end   = Dee_None;
+ self->r_step  = NULL;
+ self->r_rev   = false;
+ Dee_Incref_n(Dee_None,2);
+ return 0;
+}
+
+PRIVATE int DCALL
+range_copy(Range *__restrict self,
+           Range *__restrict other) {
+ self->r_begin = other->r_begin;
+ self->r_end   = other->r_end;
+ self->r_step  = other->r_step;
+ self->r_rev   = other->r_rev;
+ Dee_Incref(self->r_begin);
+ Dee_Incref(self->r_end);
+ Dee_XIncref(self->r_step);
+ return 0;
+}
+
+PRIVATE int DCALL
+range_deepcopy(Range *__restrict self,
+               Range *__restrict other) {
+ self->r_begin = DeeObject_DeepCopy(other->r_begin);
+ if unlikely(!self->r_begin)
+    goto err;
+ self->r_end = DeeObject_DeepCopy(other->r_end);
+ if unlikely(!self->r_end)
+    goto err_begin;
+ self->r_step = NULL;
+ if (other->r_step) {
+  int temp;
+  self->r_step = DeeObject_DeepCopy(other->r_step);
+  if unlikely(!self->r_step)
+     goto err_end;
+  temp = DeeObject_CompareLo(self->r_step,&DeeInt_Zero);
+  if unlikely(temp < 0)
+     goto err_step;
+  self->r_rev = !!temp;
+ }
+ return 0;
+err_step:
+ Dee_Decref(self->r_step);
+err_end:
+ Dee_Decref(self->r_end);
+err_begin:
+ Dee_Decref(self->r_begin);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+range_init(Range *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ self->r_step = NULL;
+ if (DeeArg_Unpack(argc,argv,"oo|o:_Range",&self->r_begin,&self->r_end,&self->r_step))
+     goto err;
+ if (self->r_step) {
+  int temp;
+  temp = DeeObject_CompareLo(self->r_step,&DeeInt_Zero);
+  if unlikely(temp < 0)
+     goto err;
+  self->r_rev = !!temp;
+  Dee_Incref(self->r_step);
+ }
+ Dee_Incref(self->r_end);
+ Dee_Incref(self->r_begin);
+ return 0;
+err:
+ return -1;
+}
+
 
 INTERN DeeTypeObject SeqRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRange",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(begin,end,step?)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -557,10 +655,10 @@ INTERN DeeTypeObject SeqRange_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */NULL, /* TODO */
-                /* .tp_deep_ctor = */NULL, /* TODO */
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)&range_ctor,
+                /* .tp_copy_ctor = */(void *)&range_copy,
+                /* .tp_deep_ctor = */(void *)&range_deepcopy,
+                /* .tp_any_ctor  = */(void *)&range_init,
                 TYPE_FIXED_ALLOCATOR(Range)
             }
         },
@@ -599,6 +697,22 @@ INTERN DeeTypeObject SeqRange_Type = {
 
 
 PRIVATE int DCALL
+iri_ctor(IntRangeIterator *__restrict self) {
+ self->iri_range = DeeObject_MALLOC(IntRange);
+ if unlikely(!self->iri_range)
+    goto err;
+ DeeObject_Init(self->iri_range,&SeqIntRange_Type);
+ self->iri_range->ir_begin = 0;
+ self->iri_range->ir_end   = 0;
+ self->iri_range->ir_step  = 0;
+ self->iri_index           = 0;
+ self->iri_end             = 0;
+ self->iri_step            = 0;
+ return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
 iri_copy(IntRangeIterator *__restrict self,
          IntRangeIterator *__restrict other) {
 #ifdef CONFIG_NO_THREADS
@@ -612,6 +726,22 @@ iri_copy(IntRangeIterator *__restrict self,
  Dee_Incref(self->iri_range);
  return 0;
 }
+PRIVATE int DCALL
+iri_init(IntRangeIterator *__restrict self,
+         size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,"o:_SeqIntRangeIterator",&self->iri_range))
+     goto err;
+ if (DeeObject_AssertTypeExact(self->iri_range,&SeqIntRange_Type))
+     goto err;
+ self->iri_end   = self->iri_range->ir_end;
+ self->iri_step  = self->iri_range->ir_step;
+ self->iri_index = self->iri_range->ir_begin;
+ Dee_Incref(self->iri_range);
+ return 0;
+err:
+ return -1;
+}
+
 PRIVATE int DCALL
 iri_bool(IntRangeIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
@@ -681,7 +811,8 @@ PRIVATE struct type_member iri_members[] = {
 INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqIntRangeIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(seq:?Ert:SeqIntRange)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -689,10 +820,10 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */&iri_copy,
-                /* .tp_deep_ctor = */NULL, /* TODO */
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)&iri_ctor,
+                /* .tp_copy_ctor = */(void *)&iri_copy,
+                /* .tp_deep_ctor = */(void *)&iri_copy,
+                /* .tp_any_ctor  = */(void *)&iri_init,
                 TYPE_FIXED_ALLOCATOR(IntRangeIterator)
             }
         },
@@ -962,10 +1093,39 @@ intrange_repr(IntRange *__restrict self) {
        ;
 }
 
+PRIVATE int DCALL
+intrange_ctor(IntRange *__restrict self) {
+ self->ir_begin = 0;
+ self->ir_end   = 0;
+ self->ir_step  = 1;
+ return 0;
+}
+
+PRIVATE int DCALL
+intrange_copy(IntRange *__restrict self,
+              IntRange *__restrict other) {
+ self->ir_begin = other->ir_begin;
+ self->ir_end   = other->ir_end;
+ self->ir_step  = other->ir_step;
+ return 0;
+}
+
+PRIVATE int DCALL
+intrange_init(IntRange *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ self->ir_step = 1;
+ return DeeArg_Unpack(argc,argv,"IdId|Id:_SeqIntRange",
+                     &self->ir_begin,
+                     &self->ir_end,
+                     &self->ir_step);
+}
+
+
 INTERN DeeTypeObject SeqIntRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqIntRange",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(start:?Dint,end:?Dint,step=!1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -973,10 +1133,10 @@ INTERN DeeTypeObject SeqIntRange_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL, /* TODO */
-                /* .tp_copy_ctor = */NULL, /* TODO */
-                /* .tp_deep_ctor = */NULL, /* TODO */
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)&intrange_ctor,
+                /* .tp_copy_ctor = */(void *)&intrange_copy,
+                /* .tp_deep_ctor = */(void *)&intrange_copy,
+                /* .tp_any_ctor  = */(void *)&intrange_init,
                 TYPE_FIXED_ALLOCATOR(IntRange)
             }
         },

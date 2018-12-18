@@ -37,17 +37,17 @@ PUBLIC DeeTypeObject DeeCallable_Type = {
     /* .tp_name     = */DeeString_STR(&str_callable),
     /* .tp_doc      = */DOC("Base class for callable types such as :function or :instancemethod, "
                             "as well as any implementation-specific, wrapper object type"),
-    /* .tp_flags    = */TP_FNORMAL,
+    /* .tp_flags    = */TP_FNORMAL | TP_FABSTRACT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeObject_Type,
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&none_i1,
-                /* .tp_copy_ctor = */&none_i2,
-                /* .tp_deep_ctor = */&none_i2,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)&none_i1,
+                /* .tp_copy_ctor = */(void *)&none_i2,
+                /* .tp_deep_ctor = */(void *)&none_i2,
+                /* .tp_any_ctor  = */(void *)NULL,
                 TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
         },

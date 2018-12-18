@@ -1569,6 +1569,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "Module", (DeeObject *)&DeeModule_Type, MODSYM_FREADONLY },
     { "Set", (DeeObject *)&DeeSet_Type, MODSYM_FREADONLY },
     { "Mapping", (DeeObject *)&DeeMapping_Type, MODSYM_FREADONLY },
+    { "Code", (DeeObject *)&DeeCode_Type, MODSYM_FREADONLY },
     { "Function", (DeeObject *)&DeeFunction_Type, MODSYM_FREADONLY },
     { "Type", (DeeObject *)&DeeType_Type, MODSYM_FREADONLY },
     { "Object", (DeeObject *)&DeeObject_Type, MODSYM_FREADONLY },

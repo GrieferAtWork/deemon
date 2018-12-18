@@ -984,7 +984,7 @@ INTERN DeeTypeObject RefVector_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&rvec_init,
                 /* .tp_copy_ctor = */&rvec_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */NULL, /* TODO */
                 /* .tp_any_ctor  = */NULL,
                 TYPE_FIXED_ALLOCATOR(RefVector)
             }
@@ -1048,14 +1048,28 @@ done:
 
 
 PRIVATE int DCALL
-sveciter_ctor(SharedVectorIterator *__restrict self,
+sveciter_ctor(SharedVectorIterator *__restrict self) {
+ self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&SharedVector_Type);
+ if unlikely(!self->si_seq)
+    goto err;
+ self->si_index = 0;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+sveciter_init(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SharedVectorIterator",&self->si_seq) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->si_seq,&SharedVector_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_SharedVectorIterator",&self->si_seq))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)self->si_seq,&SharedVector_Type))
+     goto err;
  Dee_Incref(self->si_seq);
  self->si_index = 0;
  return 0;
+err:
+ return -1;
 }
 INTERN void DCALL
 sveciter_fini(SharedVectorIterator *__restrict self) {
@@ -1117,6 +1131,21 @@ sveciter_copy(SharedVectorIterator *__restrict self,
  Dee_Incref(self->si_seq);
  return 0;
 }
+INTERN int DCALL
+sveciter_deepcopy(SharedVectorIterator *__restrict self,
+                  SharedVectorIterator *__restrict other) {
+ self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);
+ if unlikely(self->si_seq)
+    goto err;
+#ifdef CONFIG_NO_THREADS
+ self->si_index = other->si_index;
+#else
+ self->si_index = ATOMIC_READ(other->si_index);
+#endif
+ return 0;
+err:
+ return -1;
+}
 
 PRIVATE struct type_member sveciter_members[] = {
     TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SharedVectorIterator,si_seq),"->?Ert:SharedVector"),
@@ -1134,53 +1163,65 @@ PRIVATE DREF DeeObject *DCALL
 sveciter_eq(SharedVectorIterator *__restrict self,
             SharedVectorIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SharedVectorIterator_Type))
-     return NULL;
+     goto err;
  return_bool_(self->si_seq == other->si_seq &&
               READ_INDEX(self) == READ_INDEX(other));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 sveciter_ne(SharedVectorIterator *__restrict self,
             SharedVectorIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SharedVectorIterator_Type))
-     return NULL;
- return_bool_(self->si_seq != other->si_seq ||
-              READ_INDEX(self) != READ_INDEX(other));
+     goto err;
+ return_bool(self->si_seq != other->si_seq ||
+             READ_INDEX(self) != READ_INDEX(other));
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 sveciter_lo(SharedVectorIterator *__restrict self,
             SharedVectorIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SharedVectorIterator_Type))
-     return NULL;
- return_bool_(self->si_seq == other->si_seq
-            ? READ_INDEX(self) < READ_INDEX(other)
-            : self->si_seq < other->si_seq);
+     goto err;
+ return_bool(self->si_seq == other->si_seq
+           ? READ_INDEX(self) < READ_INDEX(other)
+           : self->si_seq < other->si_seq);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 sveciter_le(SharedVectorIterator *__restrict self,
             SharedVectorIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SharedVectorIterator_Type))
-     return NULL;
- return_bool_(self->si_seq == other->si_seq
-            ? READ_INDEX(self) <= READ_INDEX(other)
-            : self->si_seq <= other->si_seq);
+     goto err;
+ return_bool(self->si_seq == other->si_seq
+           ? READ_INDEX(self) <= READ_INDEX(other)
+           : self->si_seq <= other->si_seq);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 sveciter_gr(SharedVectorIterator *__restrict self,
             SharedVectorIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SharedVectorIterator_Type))
-     return NULL;
- return_bool_(self->si_seq == other->si_seq
-            ? READ_INDEX(self) > READ_INDEX(other)
-            : self->si_seq > other->si_seq);
+     goto err;
+ return_bool(self->si_seq == other->si_seq
+           ? READ_INDEX(self) > READ_INDEX(other)
+           : self->si_seq > other->si_seq);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 sveciter_ge(SharedVectorIterator *__restrict self,
             SharedVectorIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SharedVectorIterator_Type))
-     return NULL;
- return_bool_(self->si_seq == other->si_seq
-            ? READ_INDEX(self) >= READ_INDEX(other)
-            : self->si_seq >= other->si_seq);
+     goto err;
+ return_bool(self->si_seq == other->si_seq
+           ? READ_INDEX(self) >= READ_INDEX(other)
+           : self->si_seq >= other->si_seq);
+err:
+ return NULL;
 }
 INTERN struct type_cmp sveciter_cmp = {
     /* .tp_hash = */NULL,
@@ -1205,10 +1246,10 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&sveciter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&sveciter_ctor,
+                /* .tp_ctor      = */(void *)&sveciter_ctor,
+                /* .tp_copy_ctor = */(void *)&sveciter_copy,
+                /* .tp_deep_ctor = */(void *)&sveciter_deepcopy,
+                /* .tp_any_ctor  = */(void *)&sveciter_init,
                 TYPE_FIXED_ALLOCATOR(SharedVectorIterator)
             }
         },
@@ -1281,30 +1322,25 @@ PRIVATE DREF DeeObject *DCALL
 svec_contains(SharedVector *__restrict self,
               DeeObject *__restrict other) {
  size_t index; int temp;
-#ifndef CONFIG_NO_THREADS
  rwlock_read(&self->sv_lock);
-#endif
  for (index = 0; index < self->sv_length; ++index) {
   DREF DeeObject *item;
   item = self->sv_vector[index];
   Dee_Incref(item);
-#ifndef CONFIG_NO_THREADS
   rwlock_endread(&self->sv_lock);
-#endif
   temp = DeeObject_CompareEq(other,item);
   Dee_Decref(item);
   if (temp != 0) {
-   if unlikely(temp < 0) return NULL;
+   if unlikely(temp < 0)
+      goto err;
    return_true;
   }
-#ifndef CONFIG_NO_THREADS
   rwlock_read(&self->sv_lock);
-#endif
  }
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->sv_lock);
-#endif
  return_false;
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1313,24 +1349,20 @@ svec_getitem(SharedVector *__restrict self,
  size_t index;
  DREF DeeObject *result;
  if (DeeObject_AsSize(index_ob,&index))
-     return NULL;
-#ifndef CONFIG_NO_THREADS
+     goto err;
  rwlock_read(&self->sv_lock);
-#endif
  if unlikely(index >= self->sv_length) {
   size_t my_length = self->sv_length;
-#ifndef CONFIG_NO_THREADS
   rwlock_endread(&self->sv_lock);
-#endif
   err_index_out_of_bounds((DeeObject *)self,index,my_length);
-  return NULL;
+  goto err;
  }
  result = self->sv_vector[index];
  Dee_Incref(result);
-#ifndef CONFIG_NO_THREADS
  rwlock_endread(&self->sv_lock);
-#endif
  return result;
+err:
+ return NULL;
 }
 
 
@@ -1479,12 +1511,54 @@ PRIVATE struct type_member svec_class_members[] = {
 
 PRIVATE int DCALL
 svec_ctor(SharedVector *__restrict self) {
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->sv_lock);
-#endif
  self->sv_length = 0;
  self->sv_vector = NULL;
  return 0;
+}
+
+PRIVATE int DCALL
+svec_copy(SharedVector *__restrict self,
+          SharedVector *__restrict other) {
+ size_t i;
+again:
+ rwlock_read(&other->sv_lock);
+ self->sv_length = other->sv_length;
+ self->sv_vector = (DREF DeeObject **)Dee_TryMalloc(self->sv_length *
+                                                    sizeof(DREF DeeObject *));
+ if unlikely(!self->sv_vector) {
+  rwlock_endread(&other->sv_lock);
+  if (Dee_CollectMemory(self->sv_length * sizeof(DREF DeeObject *)))
+      goto again;
+  goto err;
+ }
+ MEMCPY_PTR(self->sv_vector,other->sv_vector,self->sv_length);
+ for (i = 0; i < self->sv_length; ++i)
+     Dee_Incref(self->sv_vector[i]);
+ rwlock_endread(&other->sv_lock);
+ rwlock_init(&self->sv_lock);
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+svec_deepcopy(SharedVector *__restrict self,
+              SharedVector *__restrict other) {
+ size_t i;
+ if unlikely(svec_copy(self,other))
+    goto err;
+ for (i = 0; i < self->sv_length; ++i) {
+  if unlikely(DeeObject_InplaceDeepCopy(&self->sv_vector[i]))
+     goto err_r;
+ }
+ return 0;
+err_r:
+ for (i = 0; i < self->sv_length; ++i)
+     Dee_Decref(self->sv_vector[i]);
+ Dee_Free(self->sv_vector);
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -1507,10 +1581,10 @@ INTERN DeeTypeObject SharedVector_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&svec_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)&svec_ctor,
+                /* .tp_copy_ctor = */(void *)&svec_copy,
+                /* .tp_deep_ctor = */(void *)&svec_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL,
                 TYPE_FIXED_ALLOCATOR(SharedVector)
             }
         },

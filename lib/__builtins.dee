@@ -187,8 +187,8 @@ local __objects = deemon.list {
 	/* 0x008e */ rt.CMethod, /* DeeCFunction_Type (DeeCMethod_Type) */
 	/* 0x008f */ ctypes.ShLib,
 	/* 0x0090 */ ctypes.FunctionType, /* DeeForeignFunctionType_Type */
-	/* 0x0091 */ deemon.code,
-	/* 0x0092 */ deemon.code(), /* empty_code */
+	/* 0x0091 */ rt.Code,
+	/* 0x0092 */ rt.Code(), /* empty_code */
 	/* 0x0093 */ rt.Compiler.Ast, /* DeeXAst_Type */
 	/* 0x0094 */ try rt.DexModule catch (...) none, /* DeeDexModule_Type */
 	/* 0x0095 */ none, /* DeeErrorType_DexError */

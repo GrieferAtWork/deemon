@@ -226,7 +226,8 @@ PRIVATE struct type_member locatoriter_members[] = {
 INTERN DeeTypeObject SeqLocatorIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqLocatorIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(seq:?Ert:SeqLocator)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -390,7 +391,8 @@ PRIVATE struct type_seq locator_seq = {
 INTERN DeeTypeObject SeqLocator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqLocator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(seq:?Dsequence,elem,pred?:?Dcallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

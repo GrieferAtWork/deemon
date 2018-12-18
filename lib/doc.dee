@@ -3461,7 +3461,7 @@ set_is_type:
 		} else if (object is bound && object is deemon.function_) {
 			file.writer resdoc;
 			generate_function_params(resdoc,object);
-			if (code.__isconstructor__) {
+			if (object.__code__.__isconstructor__) {
 				/* Constructors always return :none */
 			} else {
 				resdoc << "->";

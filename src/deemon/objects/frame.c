@@ -594,7 +594,7 @@ PRIVATE struct type_getset frame_getsets[] = {
           "Evaluates to :true if @this frame is writable") },
     { "__code__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcode, NULL, NULL,
-      DOC("->?Dcode\n"
+      DOC("->?Ert:Code\n"
           "@throw ReferenceError The frame has continued execution, or was otherwise released\n"
           "The code object that is being executed") },
     { "__pc__",

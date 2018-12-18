@@ -1330,7 +1330,7 @@ PRIVATE struct type_getset module_getsets[] = {
           "can be accessed and modified") },
     { "__code__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_code, NULL, NULL,
-      DOC("->?Dcode\n"
+      DOC("->?Ert:Code\n"
           "@throw ValueError The module hasn't been fully loaded\n"
           "Returns the code object for the module's root initializer") },
     { "__path__",

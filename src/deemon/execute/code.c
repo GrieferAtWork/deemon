@@ -1192,11 +1192,463 @@ err_r:
  return NULL;
 }
 
+struct except_flag {
+    char     ef_name[14]; /* Flag name. */
+    uint16_t ef_flag;     /* Flag value. */
+};
+
+struct code_flag {
+    char     cf_name[14]; /* Flag name. */
+    uint16_t cf_flag;     /* Flag value. */
+};
+
+PRIVATE struct except_flag const except_flags_db[] = {
+    { "finally", EXCEPTION_HANDLER_FFINALLY },
+    { "interrupt", EXCEPTION_HANDLER_FINTERPT },
+    { "handled", EXCEPTION_HANDLER_FHANDLED },
+};
+
+PRIVATE struct code_flag const code_flags_db[] = {
+    { "yielding", CODE_FYIELDING },
+    { "copyable", CODE_FCOPYABLE },
+    { "assembly", CODE_FASSEMBLY },
+    { "lenient", CODE_FLENIENT },
+    { "varargs", CODE_FVARARGS },
+    { "varkwds", CODE_FVARKWDS },
+    { "thiscall", CODE_FTHISCALL },
+    { "heapframe", CODE_FHEAPFRAME },
+    { "finally", CODE_FFINALLY },
+    { "constructor", CODE_FCONSTRUCTOR },
+};
+
+
+PRIVATE int DCALL
+unpack_exception_descriptor(struct except_handler *__restrict self,
+                            DeeObject *__restrict desc) {
+ DeeObject *flags = Dee_None;
+ self->eh_mask = NULL;
+ if (Dee_Unpackf(desc,"(I32uI32uI32uI16u|oo)",
+                &self->eh_start,
+                &self->eh_end,
+                &self->eh_addr,
+                &self->eh_stack,
+                &flags,
+                &self->eh_mask))
+     goto err;
+ if (DeeNone_Check(self->eh_mask))
+     self->eh_mask = NULL;
+ if (self->eh_mask && DeeObject_AssertType((DeeObject *)self->eh_mask,&DeeType_Type))
+     goto err;
+ self->eh_flags = EXCEPTION_HANDLER_FNORMAL;
+ if (!DeeNone_Check(flags)) {
+  if (DeeString_Check(flags)) {
+   char const *s = DeeString_STR(flags);
+   while (*s) {
+    char const *next = strchr(s,',');
+    size_t i,len = next ? (size_t)(next - s) : strlen(s);
+    if likely(len < COMPILER_LENOF(except_flags_db[0].ef_name)) {
+     for (i = 0; i < COMPILER_LENOF(except_flags_db); ++i) {
+      if (except_flags_db[i].ef_name[len] == '\0' &&
+          memcmp(except_flags_db[i].ef_name,s,len) == 0) {
+       self->eh_flags |= except_flags_db[i].ef_flag;
+       goto got_flag;
+      }
+     }
+    }
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Unknown exception handler flag: %$q",
+                    (size_t)len,s);
+    goto err;
+got_flag:
+    if (!next) break;
+    s = next + 1;
+   }
+  } else {
+   if (DeeObject_AsUInt16(flags,&self->eh_flags))
+       goto err;
+#if EXCEPTION_HANDLER_FMASK != 0xffff
+   if (self->eh_flags & ~EXCEPTION_HANDLER_FMASK) {
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Invalid bits enabled in exception handler flags %#I16x",
+                    self->eh_flags);
+    goto err;
+   }
+#endif
+  }
+ }
+ Dee_XIncref(self->eh_mask);
+ return 0;
+err:
+ return -1;
+}
+
+
+
+
+PRIVATE DREF DeeCodeObject *DCALL
+code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeCodeObject *result;
+ DeeObject *flags = Dee_None;
+ DeeObject *except = Dee_None;
+ DeeObject *statics = Dee_None;
+ DeeObject *text = Dee_None;
+ DeeObject *keywords = Dee_None;
+ DeeObject *defaults = Dee_None;
+ DeeModuleObject *module = (DeeModuleObject *)Dee_None;
+ DeeDDIObject *ddi = (DeeDDIObject *)Dee_None;
+ uint16_t nlocal = 0;
+ uint16_t nstack = 0;
+ uint16_t refc = 0;
+ uint16_t coargc = 0;
+ DeeBuffer text_buf;
+ /* (text:?Dbytes=!N,module:?Dmodule=!N,statics:?S?O=!N,
+  *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?Dtype=!N,
+  *  localc=!0,stackc=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
+  *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
+ PRIVATE DEFINE_KWLIST(kwlist,{
+     K(text),
+     K(module),
+     K(statics),
+     K(except),
+     K(nlocal),
+     K(nstack),
+     K(refc),
+     K(argc),
+     K(keywords),
+     K(defaults),
+     K(flags),
+     K(ddi),
+     KEND
+ });
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,
+                     "|"
+                     "o"     /* text */
+                     "o"     /* module */
+                     "o"     /* statics */
+                     "o"     /* except */
+                     "I16u"  /* nlocal */
+                     "I16u"  /* nstack */
+                     "I16u"  /* refc */
+                     "I16u"  /* argc */
+                     "o"     /* keywords */
+                     "o"     /* defaults */
+                     "o"     /* flags */
+                     "o"     /* ddi */
+                     ":_Code"
+                    ,&text
+                    ,&module
+                    ,&statics
+                    ,&except
+                    ,&nlocal
+                    ,&nstack
+                    ,&refc
+                    ,&coargc
+                    ,&keywords
+                    ,&defaults
+                    ,&flags
+                    ,&ddi
+                     ))
+     goto err;
+ if (DeeNone_Check(flags))
+     flags = Dee_EmptyString;
+ if (DeeObject_GetBuf(text,&text_buf,DEE_BUFFER_FREADONLY))
+     goto err;
+#if __SIZEOF_SIZE_T__ > 4
+ if unlikely(text_buf.bb_size > (code_size_t)-1) {
+  err_integer_overflow_i(32,true);
+  goto err_buf;
+ }
+#endif
+ result = (DREF DeeCodeObject *)DeeGCObject_Malloc(COMPILER_OFFSETOF(DeeCodeObject,co_code) +
+                                                   text_buf.bb_size + INSTRLEN_MAX);
+ if unlikely(!result) goto err_buf;
+ /* Copy text bytes. */
+ result->co_codebytes = (code_size_t)text_buf.bb_size;
+ memcpy(result->co_code,text_buf.bb_base,text_buf.bb_size);
+ memset(result->co_code + text_buf.bb_size,ASM_RET_NONE,INSTRLEN_MAX);
+ DeeObject_PutBuf(text,&text_buf,DEE_BUFFER_FREADONLY);
+ result->co_argc_min = coargc;
+ result->co_argc_max = coargc;
+ result->co_defaultv = NULL;
+ /* Load default arguments */
+ if (!DeeNone_Check(defaults)) {
+  size_t i,default_c;
+  DREF DeeObject **default_vec;
+  default_c = DeeObject_Size(defaults);
+  if unlikely(default_c == (size_t)-1)
+     goto err_r;
+  if unlikely(default_c > coargc) {
+   DeeError_Throwf(&DeeError_UnpackError,
+                   "Too many default arguments (%Iu) for "
+                   "code only taking %I16u arguments at most",
+                   default_c,coargc);
+   goto err_r;
+  }
+  default_vec = (DREF DeeObject **)Dee_Malloc(default_c * sizeof(DREF DeeObject *));
+  if unlikely(!default_vec)
+     goto err_r;
+  for (i = 0; i < default_c; ++i) {
+   DREF DeeObject *elem;
+   elem = DeeObject_GetItemIndex(defaults,i);
+   if (elem)
+       default_vec[i] = elem; /* Inherit reference */
+   else if (DeeError_Catch(&DeeError_UnboundItem)) {
+    default_vec[i] = NULL; /* Optional argument */
+   } else {
+    while (i--)
+        Dee_XDecref(default_vec[i]);
+    Dee_Free(default_vec);
+    goto err_r;
+   }
+  }
+  result->co_defaultv = default_vec;
+  result->co_argc_min = (uint16_t)(coargc - (uint16_t)default_c);
+ }
+ /* Load keyword arguments */
+ result->co_keywords = NULL;
+ if (!DeeNone_Check(keywords)) {
+  DREF DeeStringObject **keyword_vec; uint16_t i;
+  keyword_vec = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
+                                                    sizeof(DREF DeeStringObject *));
+  if unlikely(!keyword_vec) goto err_r_default_v;
+  if unlikely(DeeObject_Unpack(keywords,result->co_argc_max,(DeeObject **)keyword_vec)) {
+   Dee_Free(keyword_vec);
+   goto err_r_default_v;
+  }
+  result->co_keywords = keyword_vec; /* Inherit */
+  /* Ensure that all elements are strings. */
+  for (i = 0; i < result->co_argc_max; ++i) {
+   if (DeeObject_AssertTypeExact(keyword_vec[i],&DeeString_Type))
+       goto err_r_keywords;
+  }
+ }
+ result->co_staticc = 0;
+ result->co_staticv = NULL;
+ if (!DeeNone_Check(statics)) {
+  DREF DeeObject **static_vec;
+  size_t static_cnt;
+  static_vec = DeeSeq_AsHeapVector(statics,&static_cnt);
+  if unlikely(!static_vec)
+     goto err_r_keywords;
+  if unlikely(static_cnt > (uint16_t)-1) {
+   while (static_cnt--)
+       Dee_Decref(static_vec[static_cnt]);
+   Dee_Free(static_vec);
+   err_integer_overflow_i(16,true);
+   goto err_r_keywords;
+  }
+  result->co_staticc = (uint16_t)static_cnt;
+  result->co_staticv = static_vec;
+ }
+ if (DeeNone_Check(module)) {
+  DeeThreadObject *ts = DeeThread_Self();
+  ASSERT(ts);
+  if unlikely(!ts->t_execsz) {
+   DeeError_Throwf(&DeeError_TypeError,
+                   "No module given, when the current "
+                   "module could not be determined");
+   goto err_r_statics;
+  }
+  ASSERT(ts->t_exec);
+  ASSERT(ts->t_exec->cf_func);
+  ASSERT(ts->t_exec->cf_func->fo_code);
+  ASSERT(ts->t_exec->cf_func->fo_code->co_module);
+  module = ts->t_exec->cf_func->fo_code->co_module;
+ }
+ /* NOTE: Always check this, so prevent stuff like interactive
+  *       modules to leaking into generic code objects. */
+ if (DeeObject_AssertTypeExact(module,&DeeModule_Type))
+     goto err_r_statics;
+
+ /* Generate exception handlers. */
+ result->co_exceptc = 0;
+ result->co_exceptv = NULL;
+ if (!DeeNone_Check(except)) {
+  uint16_t except_c = 0;
+  uint16_t except_a = 0;
+  struct except_handler *except_v = NULL;
+  struct except_handler *new_except_v;
+  DREF DeeObject *iter,*elem;
+  iter = DeeObject_IterSelf(except);
+  if unlikely(!iter) goto err_r_statics;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+   ASSERT(except_c <= except_a);
+   if (except_c >= except_a) {
+    uint16_t new_except_a = except_a * 2;
+    if (!except_a) new_except_a = 2;
+    else if unlikely(new_except_a <= except_a) {
+     if unlikely(except_a == (uint16_t)-1) {
+      DeeError_Throwf(&DeeError_TypeError,
+                      "Too many exception handlers");
+err_r_except_temp_iter_elem:
+      Dee_Decref(elem);
+err_r_except_temp_iter:
+      Dee_Decref(iter);
+      while (except_c--)
+          Dee_XDecref(except_v[except_c].eh_mask);
+      Dee_Free(except_v);
+      goto err_r_statics;
+     }
+     new_except_a = (uint16_t)-1;
+    }
+    new_except_v = (struct except_handler *)Dee_TryRealloc(except_v,new_except_a *
+                                                           sizeof(struct except_handler));
+    if unlikely(!new_except_v) {
+     new_except_a = except_c + 1;
+     new_except_v = (struct except_handler *)Dee_Realloc(except_v,new_except_a *
+                                                         sizeof(struct except_handler));
+     if unlikely(!new_except_v)
+        goto err_r_except_temp_iter_elem;
+    }
+    except_v = new_except_v;
+    except_a = new_except_a;
+   }
+   if unlikely(unpack_exception_descriptor(&except_v[except_c],elem))
+      goto err_r_except_temp_iter_elem;
+   Dee_Decref(elem);
+   ++except_c;
+  }
+  if unlikely(!elem)
+     goto err_r_except_temp_iter;
+  Dee_Decref(iter);
+  if (except_a > except_c) {
+   new_except_v = (struct except_handler *)Dee_TryRealloc(except_v,except_c *
+                                                          sizeof(struct except_handler));
+   if likely(new_except_v) except_v = new_except_v;
+  }
+  result->co_exceptc = except_c;
+  result->co_exceptv = except_v;
+ }
+
+ /* Load custom code flags */
+ result->co_flags = CODE_FASSEMBLY;
+ if (!DeeNone_Check(flags)) {
+  if (DeeString_Check(flags)) {
+   char const *s = DeeString_STR(flags);
+   while (*s) {
+    char const *next = strchr(s,',');
+    size_t i,len = next ? (size_t)(next - s) : strlen(s);
+    if likely(len < COMPILER_LENOF(code_flags_db[0].cf_name)) {
+     for (i = 0; i < COMPILER_LENOF(code_flags_db); ++i) {
+      if (code_flags_db[i].cf_name[len] == '\0' &&
+          memcmp(code_flags_db[i].cf_name,s,len) == 0) {
+       result->co_flags |= code_flags_db[i].cf_flag;
+       goto got_flag;
+      }
+     }
+    }
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Unknown code flag: %$q",
+                    (size_t)len,s);
+    goto err_r_except;
+got_flag:
+    if (!next) break;
+    s = next + 1;
+   }
+  } else {
+   if (DeeObject_AsUInt16(flags,&result->co_flags))
+       goto err_r_except;
+#if CODE_FMASK != 0xffff
+   if (result->co_flags & ~CODE_FMASK) {
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Invalid bits enabled in code flags %#I16x",
+                    result->co_flags);
+    goto err_r_except;
+   }
+#endif
+   result->co_flags |= CODE_FASSEMBLY;
+  }
+ }
+ if (DeeNone_Check(ddi))
+     ddi = &empty_ddi;
+ else {
+  if (DeeObject_AssertTypeExact(ddi,&DeeDDI_Type))
+      goto err_r_except;
+ }
+
+ /* Fill in remaining fields. */
+ result->co_ddi = ddi;
+ Dee_Incref(ddi);
+ result->co_module = module;
+ Dee_Incref(module);
+ result->co_localc    = nlocal;
+ result->co_refc      = refc;
+ result->co_framesize = (nlocal + nstack) * sizeof(DREF DeeObject *);
+ if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
+     result->co_flags |= CODE_FHEAPFRAME;
+ rwlock_init(&result->co_static_lock);
+
+ /* Initialize the new code object, and start tracking it. */
+ DeeObject_Init(result,&DeeCode_Type);
+ DeeGC_Track((DeeObject *)result);
+ return result;
+err_r_except:
+ if (result->co_exceptv) {
+  while (result->co_exceptc--) {
+   Dee_XDecref(result->co_exceptv[result->co_exceptc].eh_mask);
+  }
+  Dee_Free((void *)result->co_exceptv);
+ }
+err_r_statics:
+ if (result->co_staticv) {
+  uint16_t i;
+  for (i = 0; i < result->co_staticc; ++i)
+      Dee_Decref(result->co_staticv[i]);
+  Dee_Free((void *)result->co_staticv);
+ }
+err_r_keywords:
+ if (result->co_keywords) {
+  uint16_t i;
+  for (i = 0; i < result->co_argc_max; ++i)
+      Dee_Decref(result->co_keywords[i]);
+  Dee_Free((void *)result->co_keywords);
+ }
+err_r_default_v:
+ if (result->co_defaultv) {
+  result->co_argc_max -= result->co_argc_min;
+  while (result->co_argc_max--)
+      Dee_XDecref(result->co_defaultv[result->co_argc_max]);
+  Dee_Free((void *)result->co_defaultv);
+ }
+err_r:
+ DeeGCObject_Free(result);
+ goto err;
+err_buf:
+ DeeObject_PutBuf(text,&text_buf,DEE_BUFFER_FREADONLY);
+err:
+ return NULL;
+}
+
 
 PUBLIC DeeTypeObject DeeCode_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_code),
-    /* .tp_doc      = */NULL,
+    /* .tp_name     = */"_Code",
+    /* .tp_doc      = */DOC("()\n"
+                            "Return a singleton, stub code object that always returns :none\n"
+                            "\n"
+                            "(text:?Dbytes=!N,module:?Dmodule=!N,statics:?S?O=!N,"
+                            "except:?S?X3?T4?Dint?Dint?Dint?Dint"
+                                        "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
+                                        "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?Dtype"
+                                        "=!N,"
+                            "nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,"
+                            "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N)\n"
+                            "@param text The bytecode that should be executed by the code\n"
+                            "@param module The module to-be used as the declaring module\n"
+                            "@param statics An indexable sequence containing the static variables that are to be made available to the code\n"
+                            "@param except A sequence of (startpc\\: :int, endpc\\: :int, entrypc\\: :int, entrysp\\: :int, flags\\: :string \\| :int = \"\", mask\\: :type = none)-"
+                                          "tuples, with `flags' being a comma-seperated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
+                            "@param nlocal The number of local variables to-be allocated for every frame\n"
+                            "@param nstack The amount of stack space to be allocated for every frame\n"
+                            "@param argc The max number of dedicated arguments taken by the function (must be >= ${#defaults} and == ${#keywords} if those are given)\n"
+                            "@param keywords A sequence of strings describing the names of positional arguments (the length must be equal to ${#keywords})\n"
+                            "@param defaults An indexable sequence describing the values to-be used for argument default values "
+                                            "Unbound items of this sequence translate to the corresponding argument being optional\n"
+                            "@param flags A comma-seperated string of $\"yielding\", $\"copyable\", $\"lenient\", $\"varargs\", "
+                                         "$\"varkwds\", $\"thiscall\", $\"heapframe\", $\"finally\", $\"constructor\"\n"
+                            "@param ddi The debug information descriptor that should be used for providing assembly meta-information\n"
+                            "Construct a new code object from the given arguments\n"
+                            "Note that the returned code object always has the assembly tag enabled"),
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1204,11 +1656,13 @@ PUBLIC DeeTypeObject DeeCode_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */&code_ctor,
-                /* .tp_copy_ctor = */&code_copy,
-                /* .tp_deep_ctor = */&code_deepcopy,
-                /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL
+                /* .tp_ctor      = */(void *)&code_ctor,
+                /* .tp_copy_ctor = */(void *)&code_copy,
+                /* .tp_deep_ctor = */(void *)&code_deepcopy,
+                /* .tp_any_ctor  = */(void *)NULL,
+                /* .tp_free      = */(void *)NULL,
+                /* .tp_alloc     = */{ 0 },
+                /* .tp_free      = */(void *)&code_init_kw
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&code_fini,

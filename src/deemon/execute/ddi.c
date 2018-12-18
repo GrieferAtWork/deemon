@@ -669,7 +669,7 @@ PRIVATE struct type_cmp ddi_cmp = {
 
 PUBLIC DeeTypeObject DeeDDI_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"ddi",
+    /* .tp_name     = */"_Ddi",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL,
     /* .tp_weakrefs = */0,

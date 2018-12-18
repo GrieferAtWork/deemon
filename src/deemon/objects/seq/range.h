@@ -45,8 +45,8 @@ typedef struct {
     OBJECT_HEAD
     DREF DeeObject *ri_index; /* [1..1][lock(ri_lock)] The current index operated on using using `tp_inplace_add()' or `tp_inc()'. */
     DREF Range     *ri_range; /* [1..1][const] The underlying range object. */
-    DREF DeeObject *ri_end;   /* [1..1][const][== ri_range->r_end] Ending index. */
-    DREF DeeObject *ri_step;  /* [0..1][const][== ri_range->r_step] Step size (or NULL when `tp_inc()' should be used). */
+    DeeObject      *ri_end;   /* [1..1][const][== ri_range->r_end] Ending index. */
+    DeeObject      *ri_step;  /* [0..1][const][== ri_range->r_step] Step size (or NULL when `tp_inc()' should be used). */
     bool            ri_first; /* [lock(ri_lock)] Only true during the first iteration to skip the initial modification. */
 #ifndef CONFIG_NO_THREADS
     rwlock_t        ri_lock;  /* Lock for synchronizing access to ri_index. */

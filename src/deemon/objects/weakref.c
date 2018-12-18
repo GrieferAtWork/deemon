@@ -386,10 +386,10 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&ob_weakref_ctor,
-                /* .tp_copy_ctor = */&ob_weakref_copy,
-                /* .tp_deep_ctor = */&ob_weakref_deep,
-                /* .tp_any_ctor  = */&ob_weakref_init,
+                /* .tp_ctor      = */(void *)&ob_weakref_ctor,
+                /* .tp_copy_ctor = */(void *)&ob_weakref_copy,
+                /* .tp_deep_ctor = */(void *)&ob_weakref_deep,
+                /* .tp_any_ctor  = */(void *)&ob_weakref_init,
                 TYPE_FIXED_ALLOCATOR(WeakRef)
             }
         },

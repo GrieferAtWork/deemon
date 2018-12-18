@@ -24,6 +24,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/int.h>
+#include <deemon/map.h>
 #include <deemon/bool.h>
 #include <deemon/attribute.h>
 #include <deemon/none.h>
@@ -825,15 +826,12 @@ PRIVATE struct type_math seq_math = {
 };
 
 
-INTERN int DCALL
-seq_ctor(DeeObject *__restrict UNUSED(self)) {
- return 0;
-}
-
 PRIVATE bool DCALL
 sequence_should_use_getitem(DeeTypeObject *__restrict self) {
  DeeTypeObject *iter,*base; int found;
  if (self == &DeeSeq_Type)
+     return false;
+ if (DeeType_IsInherited(self,&DeeMapping_Type))
      return false;
  iter = self,found = 0;
  do {
@@ -3522,6 +3520,10 @@ seq_assign(DeeObject *__restrict self,
 }
 
 
+INTDEF int DCALL none_i1(void *UNUSED(a));
+INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
+
+
 PUBLIC DeeTypeObject DeeSeq_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_sequence),
@@ -4078,9 +4080,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&seq_ctor, /* Allow default-construction of sequence objects. */
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_ctor      = */(void *)&none_i1, /* Allow default-construction of sequence objects. */
+                /* .tp_copy_ctor = */(void *)&none_i2,
+                /* .tp_deep_ctor = */(void *)&none_i2,
                 /* .tp_any_ctor  = */NULL,
                 TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
@@ -4504,9 +4506,9 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&seq_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_ctor      = */(void *)&none_i1,
+                /* .tp_copy_ctor = */(void *)&none_i2,
+                /* .tp_deep_ctor = */(void *)&none_i2,
                 /* .tp_any_ctor  = */NULL,
                 TYPE_FIXED_ALLOCATOR_S(DeeObject)
             }
@@ -4566,6 +4568,28 @@ if_ctor(IteratorFuture *__restrict self) {
 }
 
 PRIVATE int DCALL
+if_copy(IteratorFuture *__restrict self,
+        IteratorFuture *__restrict other) {
+ self->if_iter = DeeObject_Copy(other->if_iter);
+ if unlikely(!self->if_iter)
+    goto err;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+if_deepcopy(IteratorFuture *__restrict self,
+            IteratorFuture *__restrict other) {
+ self->if_iter = DeeObject_DeepCopy(other->if_iter);
+ if unlikely(!self->if_iter)
+    goto err;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 if_init(IteratorFuture *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"o:_IteratorFuture",&self->if_iter))
@@ -4601,7 +4625,7 @@ PRIVATE struct type_seq if_seq = {
 };
 
 PRIVATE struct type_member if_members[] = {
-    TYPE_MEMBER_FIELD("__iter__",STRUCT_OBJECT,offsetof(IteratorFuture,if_iter)),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(IteratorFuture,if_iter),"->?Diterator"),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member if_class_members[] = {
@@ -4625,10 +4649,10 @@ INTERN DeeTypeObject IteratorFuture_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&if_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&if_init,
+                /* .tp_ctor      = */(void *)&if_ctor,
+                /* .tp_copy_ctor = */(void *)&if_copy,
+                /* .tp_deep_ctor = */(void *)&if_deepcopy,
+                /* .tp_any_ctor  = */(void *)&if_init,
                 TYPE_FIXED_ALLOCATOR(IteratorFuture)
             }
         },
@@ -4684,6 +4708,25 @@ STATIC_ASSERT(COMPILER_OFFSETOF(IteratorFuture,if_iter) ==
 #define ip_ctor  if_ctor
 
 PRIVATE int DCALL
+ip_copy(IteratorPending *__restrict self,
+        IteratorPending *__restrict other) {
+ self->ip_iter = other->ip_iter;
+ Dee_Incref(self->ip_iter);
+ return 0;
+}
+
+PRIVATE int DCALL
+ip_deepcopy(IteratorPending *__restrict self,
+            IteratorPending *__restrict other) {
+ self->ip_iter = DeeObject_DeepCopy(other->ip_iter);
+ if unlikely(!self->ip_iter)
+    goto err;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 ip_init(IteratorPending *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"o:_IteratorPending",&self->ip_iter))
@@ -4720,10 +4763,10 @@ INTERN DeeTypeObject IteratorPending_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&ip_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&ip_init,
+                /* .tp_ctor      = */(void *)&ip_ctor,
+                /* .tp_copy_ctor = */(void *)&ip_copy,
+                /* .tp_deep_ctor = */(void *)&ip_deepcopy,
+                /* .tp_any_ctor  = */(void *)&ip_init,
                 TYPE_FIXED_ALLOCATOR(IteratorPending)
             }
         },
