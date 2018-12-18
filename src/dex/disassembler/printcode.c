@@ -44,7 +44,7 @@ DECL_BEGIN
  * Remaining bytes are then printed in the following line. */
 #define LINE_MAXBYTES 4
 
-#if 1
+#if 0
 #define DIRECTIVE_DEDENT_WIDTH 0 /* Doesn't really look that good... */
 #else
 #define DIRECTIVE_DEDENT_WIDTH 4
@@ -616,9 +616,10 @@ libdisasm_printcode(dformatprinter printer, void *arg,
  struct ddi_state ddi; uint8_t *ddi_ip = DDI_NEXT_DONE;
  struct ddi_regs last_print_ddi;
  unsigned int sp_width = 1;
- if (!(flags & PCODE_FNOJUMPARROW) &&
-       textjumps_collect(&jumps,instr_start,instr_end,start_addr))
-       goto err_n1;
+ if ((flags & (PCODE_FNOJUMPARROW | PCODE_FNOLABELS)) !=
+              (PCODE_FNOJUMPARROW | PCODE_FNOLABELS) &&
+      textjumps_collect(&jumps,instr_start,instr_end,start_addr))
+      goto err_n1;
  memset(&last_print_ddi,0xff,sizeof(last_print_ddi));
  if (code) {
   uint16_t stack_max;
@@ -749,6 +750,38 @@ get_next_instruction_without_stack:
     if (next >= instr_end) goto done;
     iter = next;
     next = asm_nextinstr(iter);
+   }
+  }
+  /* Print jump labels */
+  if (!(flags & PCODE_FNOLABELS) && code) {
+   size_t i;
+   code_addr_t instr_min = (code_addr_t)(iter - start_addr);
+   code_addr_t instr_max = (code_addr_t)(next - start_addr);
+   for (i = 0; i < jumps.tj_cnt; ++i) {
+    struct textjump *jmp;
+    jmp = &jumps.tj_vec[i];
+    if (jmp->tj_target < instr_max && jmp->tj_target >= instr_min) {
+     instruction_t *orig_pc; uint16_t opcode;
+     orig_pc = code->co_code + jmp->tj_origin;
+     opcode  = *orig_pc;
+     if (ASM_ISEXTENDED(opcode))
+         opcode = (opcode << 8) | orig_pc[1];
+     if (prefix_len) print(line_prefix,prefix_len);
+     if (!(flags & PCODE_FNOADDRESS)) print(whitespace,7);
+     if (!(flags & PCODE_FNOBYTES)) print(whitespace,LINE_MAXBYTES*3);
+     if (!(flags & PCODE_FNODEPTH)) print(whitespace,(sp_width*2)+7);
+     if (!(flags & PCODE_FNOJUMPARROW)) {
+      temp = textjumps_print(printer,arg,&jumps,code_ip,code_ip);
+      if unlikely(temp < 0) goto err;
+      result += temp;
+     }
+     temp = libdisasm_printlabel(printer,arg,opcode,
+                                 jmp->tj_origin,
+                                 jmp->tj_target);
+     if unlikely(temp < 0) goto err;
+     result += temp;
+     PRINT(":\n");
+    }
    }
   }
   /* Print exception labels & directives. */

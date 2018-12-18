@@ -61,6 +61,7 @@ PRIVATE struct disasm_flag const disasm_flags[] = {
     { "address",    1, PCODE_FNOADDRESS },
     { "bytes",      1, PCODE_FNOBYTES },
     { "inner",      1, PCODE_FNOINNER },
+    { "label",      1, PCODE_FNOLABELS },
 };
 
 PRIVATE int DCALL
@@ -172,13 +173,14 @@ PRIVATE struct dex_symbol symbols[] = {
           "$\"address\"|Print instruction addresses\n"
           "$\"bytes\"|Include raw text bytes in output\n"
           "$\"inner\"|Also print the code of inner assembly recursively\n"
+          "$\"label\"|Assign label names for jumps\n"
           "$\"\"|Empty options are simply ignored}\n"
           //"$\"RAW\": Alias for $\"ddi,except,no-jmparrow,no-depth,no-address,no-bytes\". "
           //          "Used to direct the disassembler to produce output as close to what "
           //          "user-defined input assembly may have looked like\n"
           "Any option may be prefixed with $\"n\" or $\"no-\" to disable that feature.\n"
           "The initial options state is identical to $\"no-ddi,coflags,except,jmparrow,"
-          "badcomment,argcomment,no-altcomment,depth,skipdelop,address,bytes,inner\"") },
+          "badcomment,argcomment,no-altcomment,depth,skipdelop,address,bytes,inner,label\"") },
     /* TODO: API for enumerate code instructions, analyzing & grouping their effect,
      *       as well as query available instructions by id, and by name. */
     { NULL }

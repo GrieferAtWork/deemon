@@ -71,6 +71,12 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
                      uint16_t stacksz, struct ddi_state *ddi_info,
                      DeeCodeObject *code, unsigned int flags);
 
+INTDEF dssize_t DCALL
+libdisasm_printlabel(dformatprinter printer, void *arg,
+                     uint16_t opcode, code_addr_t source,
+                     code_addr_t target);
+
+
 /* Print assembly for `code', one instruction per line.
  * When non-NULL, prefix `line_prefix' infront of every
  * line, allowing the caller to specify an indentation. */
@@ -90,6 +96,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 #define PCODE_FNOBADCOMMENT 0x0010 /* FLAG: Do not include comments about invalid instructions/operands. */
 #define PCODE_FNOARGCOMMENT 0x0020 /* FLAG: Do not include comments about the typing of operands. */
 #define PCODE_FALTCOMMENT   0x0040 /* FLAG: Include comments about alternate operand representations. */
+#define PCODE_FNOLABELS     0x0400 /* FLAG: Do not print labels, but use immediate addresses. */
 #define PCODE_FNOINNER      0x0800 /* FLAG: Do not print the code of inner assembly recursively. */
 #define PCODE_FNODEPTH      0x1000 /* FLAG: Do not include stack-depth information. */
 #define PCODE_FNOSKIPDELOP  0x2000 /* FLAG: Do not omit ASM_DELOP from output. */

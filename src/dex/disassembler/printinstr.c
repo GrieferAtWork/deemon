@@ -1182,6 +1182,32 @@ do_local_prefix:
  return 0;
 }
 
+
+INTERN dssize_t DCALL
+libdisasm_printlabel(dformatprinter printer, void *arg,
+                     uint16_t opcode, code_addr_t source,
+                     code_addr_t target) {
+ char const *op_name = "";
+ switch (opcode) {
+ case ASM32_JMP: op_name = "jmp32_"; break;
+ case ASM_JF16: op_name = "jf16_"; break;
+ case ASM_JT16: op_name = "jt16_"; break;
+ case ASM_JMP16: op_name = "jmp16_"; break;
+ case ASM_FOREACH16: op_name = "fe16_"; break;
+ case ASM_JF: op_name = "jf_"; break;
+ case ASM_JT: op_name = "jt_"; break;
+ case ASM_JMP: op_name = "jmp_"; break;
+ case ASM_FOREACH: op_name = "fe_"; break;
+ default: break;
+ }
+ return DeeFormat_Printf(printer,arg,
+                         ".L%s%.4I32X_%.4I32X",
+                         op_name,
+                         source,
+                         target);
+}
+
+
 PRIVATE char const class_flag_names[4][10] = {
     /* [TP_FFINAL]     = */"FINAL",
     /* [TP_FTRUNCATE]  = */"TRUNCATE",
@@ -1749,13 +1775,19 @@ do_instruction_specific:
  case ASM_FOREACH:
   jump_offset = READ_Simm8(iter);
 do_jmp_target:
-  /* TODO: Make use of disassembler label names. */
   if (code) {
    code_addr_t target_ip;
    target_ip = (code_addr_t)(iter.ptr - code->co_code) + jump_offset;
-   printf("%.4I32X",target_ip);
-   if (target_ip >= code->co_codebytes)
-       PRINT(" /* invalid ip */");
+   if (!(flags & PCODE_FNOLABELS) && target_ip < code->co_codebytes) {
+    /* Make use of disassembler label names. */
+    INVOKE(libdisasm_printlabel(printer,arg,opcode,
+                               (code_addr_t)(instr_start - code->co_code),
+                                target_ip));
+   } else {
+    printf("%.4I32X",target_ip);
+    if (target_ip >= code->co_codebytes)
+        PRINT(" /* invalid ip */");
+   }
   } else {
    printf("PC%+#I32X",jump_offset);
   }

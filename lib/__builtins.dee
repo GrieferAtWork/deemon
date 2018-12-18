@@ -403,7 +403,7 @@ local __objects = deemon.list {
 	/* 0x0166 */ none, /* __builtin_fs_win32systemwindowsdirectory */
 	/* 0x0167 */ none, /* __builtin_fs_win32syswow64directory */
 	/* 0x0168 */ tmpname from .include.m_fs,
-	/* 0x0169 */ none, /* TODO: __builtin_code -- Return the code object of the caller */
+	/* 0x0169 */ []() -> deemon.traceback()[1].__code__, /* __builtin_code -- Return the code object of the caller */
 	/* 0x016A */ deemon.Error.RuntimeError.UnboundLocal,
 	/* 0x016B */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
 	/* 0x016C */ deemon.iterator, /* DeeGenericSequenceIterator_Type */
