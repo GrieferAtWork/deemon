@@ -1110,7 +1110,7 @@ link_forward_symbol(struct symbol *__restrict self) {
   symbol_incref(outer_match);
   return 0;
  }
- if (WARNAT(&self->s_decl,W_UNKNOWN_VARIABLE,SYMBOL_NAME(self)))
+ if (WARNSYM(self,W_UNKNOWN_VARIABLE,SYMBOL_NAME(self)))
      goto err;
  self->s_type = SYMBOL_TYPE_NONE; /* Prevent the assembler from crashing later... */
  return 0;

@@ -288,7 +288,7 @@ make_bound_expression(struct ast *__restrict base_expr,
   result = ast_action2(AST_FACTION_BOUNDITEM,
                        base_expr->a_operator.o_op0,
                        base_expr->a_operator.o_op1);
- } else if (WARNAT(&base_expr->a_ddi,W_CANNOT_TEST_EXPRESSION_BINDING)) {
+ } else if (WARNAST(base_expr,W_CANNOT_TEST_EXPRESSION_BINDING)) {
   result = NULL;
  } else {
   /* Fallback-after-warning: Return `true' */

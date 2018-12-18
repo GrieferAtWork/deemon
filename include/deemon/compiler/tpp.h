@@ -62,6 +62,7 @@ struct ast;
  *              max number of compiler errors has yet to be reached. */
 INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
 /* Similar to `parser_warnf()', but force the warning
@@ -69,6 +70,7 @@ INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum,
  * @return: -1: Always returns -1. */
 INTDEF ATTR_COLD int (parser_errf)(int wnum, ...);
 INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
+INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
 DFUNDEF ATTR_COLD int DCALL Dee_BadAlloc(size_t req_bytes);
@@ -246,9 +248,11 @@ tok_t yieldnbif(bool allow);
 #define HAS(ext)         TPPLexer_HasExtension(ext)
 #define WARN(...)        parser_warnf(__VA_ARGS__)
 #define WARNAT(loc,...)  parser_warnatf(loc,__VA_ARGS__)
+#define WARNSYM(sym,...) parser_warnatrf(&(sym)->s_decl,__VA_ARGS__)
 #define WARNAST(ast,...) parser_warnastf(ast,__VA_ARGS__)
 #define PERR(...)        parser_errf(__VA_ARGS__)
 #define PERRAT(loc,...)  parser_erratf(loc,__VA_ARGS__)
+#define PERRSYM(sym,...) parser_erratrf(&(sym)->s_decl,__VA_ARGS__)
 #define PERRAST(ast,...) parser_errastf(ast,__VA_ARGS__)
 #define TPP_PUSHF()      do{uint32_t _old_flags = TPPLexer_Current->l_flags
 #define TPP_BREAKF()     TPPLexer_Current->l_flags = _old_flags

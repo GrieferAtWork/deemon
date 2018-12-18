@@ -550,7 +550,9 @@ nope:
 
 
 PRIVATE int DCALL
-handle_compiler_warning(struct ast_loc *loc, bool force_fatal,
+handle_compiler_warning(struct ast_loc *loc,
+                        bool force_fatal,
+                        bool is_reachable_file,
                         int wnum, va_list args) {
  DREF DeeCompilerErrorObject *error; int mode;
  ++TPPLexer_Current->l_warncount;
@@ -581,7 +583,8 @@ handle_compiler_warning(struct ast_loc *loc, bool force_fatal,
  error->ce_mode   = mode;
  error->ce_wnum   = wnum;
  /* Collect/inherit debug information. */
- if (loc && loc->l_file && tpp_is_reachable_file(loc->l_file)) {
+ if (loc && loc->l_file &&
+    (is_reachable_file || tpp_is_reachable_file(loc->l_file))) {
   /* Make sure that the file owns its own filename,
    * as otherwise, the name may have been de-allocated
    * once the user actually wants to print it. */
@@ -668,14 +671,14 @@ err:
 INTERN ATTR_COLD int (parser_warnf)(int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(NULL,false,wnum,args);
+ result = handle_compiler_warning(NULL,false,false,wnum,args);
  va_end(args);
  return result;
 }
 INTERN ATTR_COLD int (parser_errf)(int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(NULL,true,wnum,args);
+ result = handle_compiler_warning(NULL,true,true,wnum,args);
  va_end(args);
  ASSERT(result != 0);
  return result;
@@ -684,14 +687,29 @@ INTERN ATTR_COLD int (parser_errf)(int wnum, ...) {
 INTERN ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(loc,false,wnum,args);
+ result = handle_compiler_warning(loc,false,false,wnum,args);
+ va_end(args);
+ return result;
+}
+INTERN ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...) {
+ va_list args; int result;
+ va_start(args,wnum);
+ result = handle_compiler_warning(loc,false,true,wnum,args);
  va_end(args);
  return result;
 }
 INTERN ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(loc,true,wnum,args);
+ result = handle_compiler_warning(loc,true,false,wnum,args);
+ va_end(args);
+ ASSERT(result != 0);
+ return result;
+}
+INTERN ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...) {
+ va_list args; int result;
+ va_start(args,wnum);
+ result = handle_compiler_warning(loc,true,true,wnum,args);
  va_end(args);
  ASSERT(result != 0);
  return result;
@@ -700,14 +718,14 @@ INTERN ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...) {
 INTERN ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(&loc_ast->a_ddi,false,wnum,args);
+ result = handle_compiler_warning(&loc_ast->a_ddi,false,true,wnum,args);
  va_end(args);
  return result;
 }
 INTERN ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...) {
  va_list args; int result;
  va_start(args,wnum);
- result = handle_compiler_warning(&loc_ast->a_ddi,true,wnum,args);
+ result = handle_compiler_warning(&loc_ast->a_ddi,true,true,wnum,args);
  va_end(args);
  ASSERT(result != 0);
  return result;
