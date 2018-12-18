@@ -20,6 +20,9 @@
 
 import * from deemon;
 import * from errors;
+import * from collections;
+
+assert((try (assert(false),) catch (AssertionError) "here") == "here");
 
 {
 	class Foo {
@@ -120,35 +123,81 @@ import * from errors;
 		'["bar", 22]',
 		'[22, "bar"]',
 	};
+	function check_mapping(x) {
+		assert repr(x) in map_reprs;
+		assert repr(x as mapping) in map_reprs;
+		assert repr(x as sequence) in seq_reprs;
+		assert repr(x.items) in seq_reprs;
+		assert repr(x.items as sequence) in seq_reprs;
+		assert repr(x.keys) in key_reprs;
+		assert repr(x.keys as sequence) in key_reprs;
+		assert repr(x.values) in value_reprs;
+		assert repr(x.values as sequence) in value_reprs;
+		assert x.keys is x.class.keys;
+		assert x.values is x.class.values;
+		assert x.items is x.class.items;
+		assert x.keys.operator iter() is x.class.keys.iterator;
+		assert x.values.operator iter() is x.class.values.iterator;
+		assert x.items.operator iter() is x.class.items.iterator;
+		assert x.get("foo") == "bar";
+		assert x.get(11) == 22;
+		assert x.get("MISSING") === none;
+		assert x.get("MISSING",true) === true;
+		assert x.get("MISSING",false) === false;
+	}
+	function check_iterators_impl(x) {
+		local a = x.operator iter();
+		local b = x.operator iter();
+		assert a !== b;
+		assert a == b;
+		assert !(a != b);
+		assert !(a > b);
+		assert !(a < b);
+		assert a >= b;
+		assert a <= b;
+		b.operator next();
+		assert !(a == b);
+		assert a != b;
+		assert !(a > b);
+		assert !(a >= b);
+		assert a < b;
+		assert a <= b;
+	}
+	function check_iterators(x) {
+		check_iterators_impl(x);
+		check_iterators_impl(tuple(x));
+		check_iterators_impl(list(x));
+		check_iterators_impl(list(x).frozen);
+		check_iterators_impl(hashset(x));
+		check_iterators_impl(hashset(x).frozen);
+		check_iterators_impl(Deque(x));
+		check_iterators_impl(Deque(x).frozen);
+		check_iterators_impl(FixedList(x));
+		check_iterators_impl(FixedList(x).frozen);
+	}
+
 	assert x is dict;
+	assert x.frozen is dict.frozen;
 	assert type(x) == dict;
-	assert repr(x) in map_reprs;
-	assert repr(x as mapping) in map_reprs;
-	assert repr(x as sequence) in seq_reprs;
-	assert repr(x.items) in seq_reprs;
-	assert repr(x.items as sequence) in seq_reprs;
-	assert repr((x as mapping).items) in seq_reprs;
-	assert repr((x as mapping).items as sequence) in seq_reprs;
-	assert repr(x.keys) in key_reprs;
-	assert repr(x.keys as sequence) in key_reprs;
-	assert repr((x as mapping).keys) in key_reprs;
-	assert repr((x as mapping).keys as sequence) in key_reprs;
-	assert repr(x.values) in value_reprs;
-	assert repr(x.values as sequence) in value_reprs;
-	assert repr((x as mapping).values) in value_reprs;
-	assert repr((x as mapping).values as sequence) in value_reprs;
-	assert x.keys is dict.keys;
-	assert x.values is dict.values;
-	assert x.items is dict.items;
-	assert (x as mapping).keys is mapping.keys;
-	assert (x as mapping).values is mapping.values;
-	assert (x as mapping).items is mapping.items;
-	assert x.keys.operator iter() is dict.keys.iterator;
-	assert x.values.operator iter() is dict.values.iterator;
-	assert x.items.operator iter() is dict.items.iterator;
-	assert (x as mapping).keys.operator iter() is mapping.keys.iterator;
-	assert (x as mapping).values.operator iter() is mapping.values.iterator;
-	assert (x as mapping).items.operator iter() is mapping.items.iterator;
+	assert type(x.frozen) == dict.frozen;
+	check_mapping(x);
+	check_mapping(x as mapping);
+	check_mapping(x.frozen);
+	check_mapping((x as mapping).frozen);
+
+	check_iterators(x);
+	check_iterators(x.keys);
+	check_iterators(x.values);
+	check_iterators(x.items);
+	check_iterators(x.frozen);
+	check_iterators(x.frozen.keys);
+	check_iterators(x.frozen.values);
+	check_iterators(x.frozen.items);
+	check_iterators((x as mapping).frozen);
+	check_iterators((x as mapping).frozen.keys);
+	check_iterators((x as mapping).frozen.values);
+	check_iterators((x as mapping).frozen.items);
+
 }
 
 
