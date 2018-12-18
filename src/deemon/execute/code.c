@@ -1254,6 +1254,8 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
        goto got_flag;
       }
      }
+     if unlikely(!len)
+        goto got_flag;
     }
     DeeError_Throwf(&DeeError_ValueError,
                     "Unknown exception handler flag: %$q",
@@ -1367,6 +1369,40 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  memcpy(result->co_code,text_buf.bb_base,text_buf.bb_size);
  memset(result->co_code + text_buf.bb_size,ASM_RET_NONE,INSTRLEN_MAX);
  DeeObject_PutBuf(text,&text_buf,DEE_BUFFER_FREADONLY);
+ /* Load keyword arguments */
+ result->co_keywords = NULL;
+ if (!DeeNone_Check(keywords)) {
+  DREF DeeStringObject **keyword_vec; uint16_t i;
+  if (!coargc) {
+   /* Automatically determine the argument count. */
+   size_t keyword_count;
+   keyword_vec = (DREF DeeStringObject **)DeeSeq_AsHeapVector(keywords,
+                                                             &keyword_count);
+   if unlikely(!keyword_vec) goto err_r;
+   if unlikely(keyword_count > (uint16_t)-1) {
+    DeeError_Throwf(&DeeError_IntegerOverflow,
+                    "Too many arguments %Iu for when at most 0xffff can be used",
+                    keyword_count);
+    goto err_r;
+   }
+   coargc = (uint16_t)keyword_count;
+  } else {
+   keyword_vec = (DREF DeeStringObject **)Dee_Malloc(coargc *
+                                                     sizeof(DREF DeeStringObject *));
+   if unlikely(!keyword_vec) goto err_r;
+   if unlikely(DeeObject_Unpack(keywords,coargc,(DeeObject **)keyword_vec)) {
+    Dee_Free(keyword_vec);
+    goto err_r;
+   }
+  }
+  result->co_keywords = keyword_vec; /* Inherit */
+  /* Ensure that all elements are strings. */
+  for (i = 0; i < coargc; ++i) {
+   if (DeeObject_AssertTypeExact(keyword_vec[i],&DeeString_Type))
+       goto err_r_keywords;
+  }
+ }
+
  result->co_argc_min = coargc;
  result->co_argc_max = coargc;
  result->co_defaultv = NULL;
@@ -1376,17 +1412,17 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   DREF DeeObject **default_vec;
   default_c = DeeObject_Size(defaults);
   if unlikely(default_c == (size_t)-1)
-     goto err_r;
+     goto err_r_keywords;
   if unlikely(default_c > coargc) {
-   DeeError_Throwf(&DeeError_UnpackError,
+   DeeError_Throwf(&DeeError_IntegerOverflow,
                    "Too many default arguments (%Iu) for "
                    "code only taking %I16u arguments at most",
                    default_c,coargc);
-   goto err_r;
+   goto err_r_keywords;
   }
   default_vec = (DREF DeeObject **)Dee_Malloc(default_c * sizeof(DREF DeeObject *));
   if unlikely(!default_vec)
-     goto err_r;
+     goto err_r_keywords;
   for (i = 0; i < default_c; ++i) {
    DREF DeeObject *elem;
    elem = DeeObject_GetItemIndex(defaults,i);
@@ -1398,29 +1434,11 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
     while (i--)
         Dee_XDecref(default_vec[i]);
     Dee_Free(default_vec);
-    goto err_r;
+    goto err_r_keywords;
    }
   }
   result->co_defaultv = default_vec;
   result->co_argc_min = (uint16_t)(coargc - (uint16_t)default_c);
- }
- /* Load keyword arguments */
- result->co_keywords = NULL;
- if (!DeeNone_Check(keywords)) {
-  DREF DeeStringObject **keyword_vec; uint16_t i;
-  keyword_vec = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
-                                                    sizeof(DREF DeeStringObject *));
-  if unlikely(!keyword_vec) goto err_r_default_v;
-  if unlikely(DeeObject_Unpack(keywords,result->co_argc_max,(DeeObject **)keyword_vec)) {
-   Dee_Free(keyword_vec);
-   goto err_r_default_v;
-  }
-  result->co_keywords = keyword_vec; /* Inherit */
-  /* Ensure that all elements are strings. */
-  for (i = 0; i < result->co_argc_max; ++i) {
-   if (DeeObject_AssertTypeExact(keyword_vec[i],&DeeString_Type))
-       goto err_r_keywords;
-  }
  }
  result->co_staticc = 0;
  result->co_staticv = NULL;
@@ -1429,13 +1447,13 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   size_t static_cnt;
   static_vec = DeeSeq_AsHeapVector(statics,&static_cnt);
   if unlikely(!static_vec)
-     goto err_r_keywords;
+     goto err_r_default_v;
   if unlikely(static_cnt > (uint16_t)-1) {
    while (static_cnt--)
        Dee_Decref(static_vec[static_cnt]);
    Dee_Free(static_vec);
    err_integer_overflow_i(16,true);
-   goto err_r_keywords;
+   goto err_r_default_v;
   }
   result->co_staticc = (uint16_t)static_cnt;
   result->co_staticv = static_vec;
@@ -1478,7 +1496,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
     if (!except_a) new_except_a = 2;
     else if unlikely(new_except_a <= except_a) {
      if unlikely(except_a == (uint16_t)-1) {
-      DeeError_Throwf(&DeeError_TypeError,
+      DeeError_Throwf(&DeeError_IntegerOverflow,
                       "Too many exception handlers");
 err_r_except_temp_iter_elem:
       Dee_Decref(elem);
@@ -1514,7 +1532,8 @@ err_r_except_temp_iter:
   if (except_a > except_c) {
    new_except_v = (struct except_handler *)Dee_TryRealloc(except_v,except_c *
                                                           sizeof(struct except_handler));
-   if likely(new_except_v) except_v = new_except_v;
+   if likely(new_except_v)
+      except_v = new_except_v;
   }
   result->co_exceptc = except_c;
   result->co_exceptv = except_v;
@@ -1536,6 +1555,8 @@ err_r_except_temp_iter:
        goto got_flag;
       }
      }
+     if unlikely(!len)
+        goto got_flag;
     }
     DeeError_Throwf(&DeeError_ValueError,
                     "Unknown code flag: %$q",
@@ -1596,19 +1617,19 @@ err_r_statics:
       Dee_Decref(result->co_staticv[i]);
   Dee_Free((void *)result->co_staticv);
  }
-err_r_keywords:
- if (result->co_keywords) {
-  uint16_t i;
-  for (i = 0; i < result->co_argc_max; ++i)
-      Dee_Decref(result->co_keywords[i]);
-  Dee_Free((void *)result->co_keywords);
- }
 err_r_default_v:
  if (result->co_defaultv) {
   result->co_argc_max -= result->co_argc_min;
   while (result->co_argc_max--)
       Dee_XDecref(result->co_defaultv[result->co_argc_max]);
   Dee_Free((void *)result->co_defaultv);
+ }
+err_r_keywords:
+ if (result->co_keywords) {
+  uint16_t i;
+  for (i = 0; i < result->co_argc_max; ++i)
+      Dee_Decref(result->co_keywords[i]);
+  Dee_Free((void *)result->co_keywords);
  }
 err_r:
  DeeGCObject_Free(result);
@@ -1633,6 +1654,9 @@ PUBLIC DeeTypeObject DeeCode_Type = {
                                         "=!N,"
                             "nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,"
                             "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N)\n"
+                            "@throw IntegerOverflow One of the specified arguments exceeds its associated implementation limit "
+                                                   "(the usual limit is $0xffff for most arguments, and $0xffffffff for @text)\n"
+                            "@throw ValueError The given @flags, or the flags associated with a given @except are invalid\n"
                             "@param text The bytecode that should be executed by the code\n"
                             "@param module The module to-be used as the declaring module\n"
                             "@param statics An indexable sequence containing the static variables that are to be made available to the code\n"
@@ -1640,7 +1664,8 @@ PUBLIC DeeTypeObject DeeCode_Type = {
                                           "tuples, with `flags' being a comma-seperated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
                             "@param nlocal The number of local variables to-be allocated for every frame\n"
                             "@param nstack The amount of stack space to be allocated for every frame\n"
-                            "@param argc The max number of dedicated arguments taken by the function (must be >= ${#defaults} and == ${#keywords} if those are given)\n"
+                            "@param argc The max number of dedicated arguments taken by the function (must be >= ${#defaults} and == ${#keywords} if those are given). "
+                                        "Alternatively, you may omit this parameter, or pass 0 and provide @keywords in order to use ${#keywords} instead\n"
                             "@param keywords A sequence of strings describing the names of positional arguments (the length must be equal to ${#keywords})\n"
                             "@param defaults An indexable sequence describing the values to-be used for argument default values "
                                             "Unbound items of this sequence translate to the corresponding argument being optional\n"
