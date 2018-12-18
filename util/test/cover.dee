@@ -148,7 +148,9 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	function check_iterators(x) {
 		str(x);
 		repr(x);
+		assert x is sequence;
 		local a = x.operator iter();
+		assert a is iterator, "" + type(a);
 		local b = x.operator iter();
 		assert a !== b;
 		assert a == b;
@@ -158,6 +160,8 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		assert a >= b;
 		assert a <= b;
 		if (x) {
+			assert a;
+			assert copy a;
 			b.operator next();
 			assert !(a == b);
 			assert a != b;
@@ -203,7 +207,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		"utf-8",
 	};
 	function check_string(x) {
-		check_generic_sequence(x);
+		check_iterators(x);
 		for (local s: split_markers) {
 			check_generic_sequence(x.split(s));
 			check_generic_sequence(x.casesplit(s));
