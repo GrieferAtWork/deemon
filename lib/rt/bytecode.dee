@@ -1,0 +1,438 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+/*[[[deemon
+import * from deemon;
+for (local l: file.open("../../include/deemon/asm.h")) {
+	local name,id;
+	try {
+		name,id = l.scanf(" # define ASM%[^ ] 0x%[^ /\r\n]")...;
+	} catch (...) {
+		continue;
+	}
+	print "final global ASM" + name,"=","0x"+id+";";
+}
+]]]*/
+final global ASM_RET_NONE = 0x00;
+final global ASM_RET = 0x01;
+final global ASM_YIELD = 0x01;
+final global ASM_YIELDALL = 0x02;
+final global ASM_THROW = 0x03;
+final global ASM_RETHROW = 0x04;
+final global ASM_SETRET = 0x05;
+final global ASM_ENDCATCH = 0x06;
+final global ASM_ENDFINALLY = 0x07;
+final global ASM_CALL_KW = 0x08;
+final global ASM_CALL_TUPLE_KW = 0x09;
+final global ASM_PUSH_BND_ARG = 0x0c;
+final global ASM_PUSH_BND_EXTERN = 0x0d;
+final global ASM_PUSH_BND_GLOBAL = 0x0e;
+final global ASM_PUSH_BND_LOCAL = 0x0f;
+final global ASM_JF = 0x10;
+final global ASM_JF16 = 0x11;
+final global ASM_JT = 0x12;
+final global ASM_JT16 = 0x13;
+final global ASM_JMP = 0x14;
+final global ASM_JMP16 = 0x15;
+final global ASM_FOREACH = 0x16;
+final global ASM_FOREACH16 = 0x17;
+final global ASM_JMP_POP = 0x18;
+final global ASM_OPERATOR = 0x19;
+final global ASM_OPERATOR_TUPLE = 0x1a;
+final global ASM_CALL = 0x1b;
+final global ASM_CALL_TUPLE = 0x1c;
+final global ASM_DEL_GLOBAL = 0x1e;
+final global ASM_DEL_LOCAL = 0x1f;
+final global ASM_SWAP = 0x20;
+final global ASM_LROT = 0x21;
+final global ASM_RROT = 0x22;
+final global ASM_DUP = 0x23;
+final global ASM_DUP_N = 0x24;
+final global ASM_POP = 0x25;
+final global ASM_POP_N = 0x26;
+final global ASM_ADJSTACK = 0x27;
+final global ASM_SUPER = 0x28;
+final global ASM_SUPER_THIS_R = 0x29;
+final global ASM_POP_STATIC = 0x2c;
+final global ASM_POP_EXTERN = 0x2d;
+final global ASM_POP_GLOBAL = 0x2e;
+final global ASM_POP_LOCAL = 0x2f;
+final global ASM_PUSH_NONE = 0x33;
+final global ASM_PUSH_VARARGS = 0x36;
+final global ASM_PUSH_VARKWDS = 0x37;
+final global ASM_PUSH_MODULE = 0x38;
+final global ASM_PUSH_ARG = 0x39;
+final global ASM_PUSH_CONST = 0x3a;
+final global ASM_PUSH_REF = 0x3b;
+final global ASM_PUSH_STATIC = 0x3c;
+final global ASM_PUSH_EXTERN = 0x3d;
+final global ASM_PUSH_GLOBAL = 0x3e;
+final global ASM_PUSH_LOCAL = 0x3f;
+final global ASM_CAST_TUPLE = 0x40;
+final global ASM_CAST_LIST = 0x41;
+final global ASM_PACK_TUPLE = 0x42;
+final global ASM_PACK_LIST = 0x43;
+final global ASM_UNPACK = 0x46;
+final global ASM_CONCAT = 0x47;
+final global ASM_EXTEND = 0x48;
+final global ASM_TYPEOF = 0x49;
+final global ASM_CLASSOF = 0x4a;
+final global ASM_SUPEROF = 0x4b;
+final global ASM_INSTANCEOF = 0x4c;
+final global ASM_STR = 0x4d;
+final global ASM_REPR = 0x4e;
+final global ASM_BOOL = 0x50;
+final global ASM_NOT = 0x51;
+final global ASM_ASSIGN = 0x52;
+final global ASM_MOVE_ASSIGN = 0x53;
+final global ASM_COPY = 0x54;
+final global ASM_DEEPCOPY = 0x55;
+final global ASM_GETATTR = 0x56;
+final global ASM_DELATTR = 0x57;
+final global ASM_SETATTR = 0x58;
+final global ASM_BOUNDATTR = 0x59;
+final global ASM_GETATTR_C = 0x5a;
+final global ASM_DELATTR_C = 0x5b;
+final global ASM_SETATTR_C = 0x5c;
+final global ASM_GETATTR_THIS_C = 0x5d;
+final global ASM_DELATTR_THIS_C = 0x5e;
+final global ASM_SETATTR_THIS_C = 0x5f;
+final global ASM_CMP_EQ = 0x60;
+final global ASM_CMP_NE = 0x61;
+final global ASM_CMP_LO = 0x62;
+final global ASM_CMP_LE = 0x63;
+final global ASM_CMP_GR = 0x64;
+final global ASM_CMP_GE = 0x65;
+final global ASM_CLASS_C = 0x66;
+final global ASM_CLASS_GC = 0x67;
+final global ASM_CLASS_EC = 0x68;
+final global ASM_DEFCMEMBER = 0x69;
+final global ASM_GETCMEMBER_R = 0x6a;
+final global ASM_CALLCMEMBER_THIS_R = 0x6b;
+final global ASM_FUNCTION_C = 0x6e;
+final global ASM_FUNCTION_C_16 = 0x6f;
+final global ASM_CAST_INT = 0x70;
+final global ASM_INV = 0x71;
+final global ASM_POS = 0x72;
+final global ASM_NEG = 0x73;
+final global ASM_ADD = 0x74;
+final global ASM_SUB = 0x75;
+final global ASM_MUL = 0x76;
+final global ASM_DIV = 0x77;
+final global ASM_MOD = 0x78;
+final global ASM_SHL = 0x79;
+final global ASM_SHR = 0x7a;
+final global ASM_AND = 0x7b;
+final global ASM_OR = 0x7c;
+final global ASM_XOR = 0x7d;
+final global ASM_POW = 0x7e;
+final global ASM_INC = 0x7f;
+final global ASM_DEC = 0x80;
+final global ASM_ADD_SIMM8 = 0x81;
+final global ASM_ADD_IMM32 = 0x82;
+final global ASM_SUB_SIMM8 = 0x83;
+final global ASM_SUB_IMM32 = 0x84;
+final global ASM_MUL_SIMM8 = 0x85;
+final global ASM_DIV_SIMM8 = 0x86;
+final global ASM_MOD_SIMM8 = 0x87;
+final global ASM_SHL_IMM8 = 0x88;
+final global ASM_SHR_IMM8 = 0x89;
+final global ASM_AND_IMM32 = 0x8a;
+final global ASM_OR_IMM32 = 0x8b;
+final global ASM_XOR_IMM32 = 0x8c;
+final global ASM_ISNONE = 0x8d;
+final global ASM_DELOP = 0x8f;
+final global ASM_NOP = 0x90;
+final global ASM_PRINT = 0x91;
+final global ASM_PRINT_SP = 0x92;
+final global ASM_PRINT_NL = 0x93;
+final global ASM_PRINTNL = 0x94;
+final global ASM_PRINTALL = 0x95;
+final global ASM_PRINTALL_SP = 0x96;
+final global ASM_PRINTALL_NL = 0x97;
+final global ASM_FPRINT = 0x99;
+final global ASM_FPRINT_SP = 0x9a;
+final global ASM_FPRINT_NL = 0x9b;
+final global ASM_FPRINTNL = 0x9c;
+final global ASM_FPRINTALL = 0x9d;
+final global ASM_FPRINTALL_SP = 0x9e;
+final global ASM_FPRINTALL_NL = 0x9f;
+final global ASM_PRINT_C = 0xa1;
+final global ASM_PRINT_C_SP = 0xa2;
+final global ASM_PRINT_C_NL = 0xa3;
+final global ASM_RANGE_0_I16 = 0xa4;
+final global ASM_ENTER = 0xa6;
+final global ASM_LEAVE = 0xa7;
+final global ASM_FPRINT_C = 0xa9;
+final global ASM_FPRINT_C_SP = 0xaa;
+final global ASM_FPRINT_C_NL = 0xab;
+final global ASM_RANGE = 0xac;
+final global ASM_RANGE_DEF = 0xad;
+final global ASM_RANGE_STEP = 0xae;
+final global ASM_RANGE_STEP_DEF = 0xaf;
+final global ASM_CONTAINS = 0xb0;
+final global ASM_CONTAINS_C = 0xb1;
+final global ASM_GETITEM = 0xb2;
+final global ASM_GETITEM_I = 0xb3;
+final global ASM_GETITEM_C = 0xb4;
+final global ASM_GETSIZE = 0xb5;
+final global ASM_SETITEM = 0xb6;
+final global ASM_SETITEM_I = 0xb7;
+final global ASM_SETITEM_C = 0xb8;
+final global ASM_ITERSELF = 0xb9;
+final global ASM_DELITEM = 0xba;
+final global ASM_GETRANGE = 0xbb;
+final global ASM_GETRANGE_PN = 0xbc;
+final global ASM_GETRANGE_NP = 0xbd;
+final global ASM_GETRANGE_PI = 0xbe;
+final global ASM_GETRANGE_IP = 0xbf;
+final global ASM_GETRANGE_NI = 0xc0;
+final global ASM_GETRANGE_IN = 0xc1;
+final global ASM_GETRANGE_II = 0xc2;
+final global ASM_DELRANGE = 0xc3;
+final global ASM_SETRANGE = 0xc4;
+final global ASM_SETRANGE_PN = 0xc5;
+final global ASM_SETRANGE_NP = 0xc6;
+final global ASM_SETRANGE_PI = 0xc7;
+final global ASM_SETRANGE_IP = 0xc8;
+final global ASM_SETRANGE_NI = 0xc9;
+final global ASM_SETRANGE_IN = 0xca;
+final global ASM_SETRANGE_II = 0xcb;
+final global ASM_BREAKPOINT = 0xcc;
+final global ASM_UD = 0xcd;
+final global ASM_CALLATTR_C_KW = 0xce;
+final global ASM_CALLATTR_C_TUPLE_KW = 0xcf;
+final global ASM_CALLATTR = 0xd0;
+final global ASM_CALLATTR_TUPLE = 0xd1;
+final global ASM_CALLATTR_C = 0xd2;
+final global ASM_CALLATTR_C_TUPLE = 0xd3;
+final global ASM_CALLATTR_THIS_C = 0xd4;
+final global ASM_CALLATTR_THIS_C_TUPLE = 0xd5;
+final global ASM_CALLATTR_C_SEQ = 0xd6;
+final global ASM_CALLATTR_C_MAP = 0xd7;
+final global ASM_GETMEMBER_THIS_R = 0xd9;
+final global ASM_DELMEMBER_THIS_R = 0xda;
+final global ASM_SETMEMBER_THIS_R = 0xdb;
+final global ASM_BOUNDMEMBER_THIS_R = 0xdc;
+final global ASM_CALL_EXTERN = 0xdd;
+final global ASM_CALL_GLOBAL = 0xde;
+final global ASM_CALL_LOCAL = 0xdf;
+final global ASM_EXTENDED1 = 0xf0;
+final global ASM_RESERVED1 = 0xf1;
+final global ASM_RESERVED2 = 0xf2;
+final global ASM_RESERVED3 = 0xf3;
+final global ASM_RESERVED4 = 0xf4;
+final global ASM_RESERVED5 = 0xf5;
+final global ASM_RESERVED6 = 0xf6;
+final global ASM_RESERVED7 = 0xf7;
+final global ASM_EXTENDEDMIN = 0xf0;
+final global ASM_EXTENDEDMAX = 0xf7;
+final global ASM_STACK = 0xfb;
+final global ASM_STATIC = 0xfc;
+final global ASM_EXTERN = 0xfd;
+final global ASM_GLOBAL = 0xfe;
+final global ASM_LOCAL = 0xff;
+final global ASM_PREFIXMIN = 0xf8;
+final global ASM_PREFIXMAX = 0xff;
+final global ASM_ENDCATCH_N = 0xf006;
+final global ASM_ENDFINALLY_N = 0xf007;
+final global ASM16_CALL_KW = 0xf008;
+final global ASM16_CALL_TUPLE_KW = 0xf009;
+final global ASM16_PUSH_BND_ARG = 0xf00c;
+final global ASM16_PUSH_BND_EXTERN = 0xf00d;
+final global ASM16_PUSH_BND_GLOBAL = 0xf00e;
+final global ASM16_PUSH_BND_LOCAL = 0xf00f;
+final global ASM32_JMP = 0xf014;
+final global ASM_JMP_POP_POP = 0xf018;
+final global ASM16_OPERATOR = 0xf019;
+final global ASM16_OPERATOR_TUPLE = 0xf01a;
+final global ASM_CALL_SEQ = 0xf01b;
+final global ASM_CALL_MAP = 0xf01c;
+final global ASM_THISCALL_TUPLE = 0xf01d;
+final global ASM16_DEL_GLOBAL = 0xf01e;
+final global ASM16_DEL_LOCAL = 0xf01f;
+final global ASM_CALL_TUPLE_KWDS = 0xf020;
+final global ASM16_LROT = 0xf021;
+final global ASM16_RROT = 0xf022;
+final global ASM16_DUP_N = 0xf024;
+final global ASM16_POP_N = 0xf026;
+final global ASM16_ADJSTACK = 0xf027;
+final global ASM16_SUPER_THIS_R = 0xf029;
+final global ASM16_POP_STATIC = 0xf02c;
+final global ASM16_POP_EXTERN = 0xf02d;
+final global ASM16_POP_GLOBAL = 0xf02e;
+final global ASM16_POP_LOCAL = 0xf02f;
+final global ASM_PUSH_EXCEPT = 0xf034;
+final global ASM_PUSH_THIS = 0xf035;
+final global ASM_PUSH_THIS_MODULE = 0xf036;
+final global ASM_PUSH_THIS_FUNCTION = 0xf037;
+final global ASM16_PUSH_MODULE = 0xf038;
+final global ASM16_PUSH_ARG = 0xf039;
+final global ASM16_PUSH_CONST = 0xf03a;
+final global ASM16_PUSH_REF = 0xf03b;
+final global ASM16_PUSH_STATIC = 0xf03c;
+final global ASM16_PUSH_EXTERN = 0xf03d;
+final global ASM16_PUSH_GLOBAL = 0xf03e;
+final global ASM16_PUSH_LOCAL = 0xf03f;
+final global ASM_CAST_HASHSET = 0xf040;
+final global ASM_CAST_DICT = 0xf041;
+final global ASM16_PACK_TUPLE = 0xf042;
+final global ASM16_PACK_LIST = 0xf043;
+final global ASM16_UNPACK = 0xf046;
+final global ASM_PUSH_TRUE = 0xf050;
+final global ASM_PUSH_FALSE = 0xf051;
+final global ASM_PACK_HASHSET = 0xf052;
+final global ASM_PACK_DICT = 0xf053;
+final global ASM_BOUNDITEM = 0xf059;
+final global ASM16_GETATTR_C = 0xf05a;
+final global ASM16_DELATTR_C = 0xf05b;
+final global ASM16_SETATTR_C = 0xf05c;
+final global ASM16_GETATTR_THIS_C = 0xf05d;
+final global ASM16_DELATTR_THIS_C = 0xf05e;
+final global ASM16_SETATTR_THIS_C = 0xf05f;
+final global ASM_CMP_SO = 0xf060;
+final global ASM_CMP_DO = 0xf061;
+final global ASM16_PACK_HASHSET = 0xf062;
+final global ASM16_PACK_DICT = 0xf063;
+final global ASM16_GETCMEMBER = 0xf064;
+final global ASM_CLASS = 0xf065;
+final global ASM16_CLASS_C = 0xf066;
+final global ASM16_CLASS_GC = 0xf067;
+final global ASM16_CLASS_EC = 0xf068;
+final global ASM16_DEFCMEMBER = 0xf069;
+final global ASM16_GETCMEMBER_R = 0xf06a;
+final global ASM16_CALLCMEMBER_THIS_R = 0xf06b;
+final global ASM16_FUNCTION_C = 0xf06e;
+final global ASM16_FUNCTION_C_16 = 0xf06f;
+final global ASM_SUPERGETATTR_THIS_RC = 0xf070;
+final global ASM16_SUPERGETATTR_THIS_RC = 0xf071;
+final global ASM_SUPERCALLATTR_THIS_RC = 0xf072;
+final global ASM16_SUPERCALLATTR_THIS_RC = 0xf073;
+final global ASM_INCPOST = 0xf07f;
+final global ASM_DECPOST = 0xf080;
+final global ASM16_DELOP = 0xf08f;
+final global ASM16_NOP = 0xf090;
+final global ASM_REDUCE_MIN = 0xf091;
+final global ASM_REDUCE_MAX = 0xf092;
+final global ASM_REDUCE_SUM = 0xf093;
+final global ASM_REDUCE_ANY = 0xf094;
+final global ASM_REDUCE_ALL = 0xf095;
+final global ASM16_PRINT_C = 0xf0a1;
+final global ASM16_PRINT_C_SP = 0xf0a2;
+final global ASM16_PRINT_C_NL = 0xf0a3;
+final global ASM_RANGE_0_I32 = 0xf0a4;
+final global ASM_VARARGS_UNPACK = 0xf0a6;
+final global ASM16_FPRINT_C = 0xf0a9;
+final global ASM16_FPRINT_C_SP = 0xf0aa;
+final global ASM16_FPRINT_C_NL = 0xf0ab;
+final global ASM_VARARGS_CMP_EQ_SZ = 0xf0ac;
+final global ASM_VARARGS_CMP_GR_SZ = 0xf0ad;
+final global ASM16_CONTAINS_C = 0xf0b1;
+final global ASM_VARARGS_GETITEM = 0xf0b2;
+final global ASM_VARARGS_GETITEM_I = 0xf0b3;
+final global ASM16_GETITEM_C = 0xf0b4;
+final global ASM_VARARGS_GETSIZE = 0xf0b5;
+final global ASM16_SETITEM_C = 0xf0b8;
+final global ASM_ITERNEXT = 0xf0b9;
+final global ASM_GETMEMBER = 0xf0be;
+final global ASM16_GETMEMBER = 0xf0bf;
+final global ASM_DELMEMBER = 0xf0c0;
+final global ASM16_DELMEMBER = 0xf0c1;
+final global ASM_SETMEMBER = 0xf0c2;
+final global ASM16_SETMEMBER = 0xf0c3;
+final global ASM_BOUNDMEMBER = 0xf0c4;
+final global ASM16_BOUNDMEMBER = 0xf0c5;
+final global ASM_GETMEMBER_THIS = 0xf0c6;
+final global ASM16_GETMEMBER_THIS = 0xf0c7;
+final global ASM_DELMEMBER_THIS = 0xf0c8;
+final global ASM16_DELMEMBER_THIS = 0xf0c9;
+final global ASM_SETMEMBER_THIS = 0xf0ca;
+final global ASM16_SETMEMBER_THIS = 0xf0cb;
+final global ASM_BOUNDMEMBER_THIS = 0xf0cc;
+final global ASM16_BOUNDMEMBER_THIS = 0xf0cd;
+final global ASM16_CALLATTR_C_KW = 0xf0ce;
+final global ASM16_CALLATTR_C_TUPLE_KW = 0xf0cf;
+final global ASM_CALLATTR_KWDS = 0xf0d0;
+final global ASM_CALLATTR_TUPLE_KWDS = 0xf0d1;
+final global ASM16_CALLATTR_C = 0xf0d2;
+final global ASM16_CALLATTR_C_TUPLE = 0xf0d3;
+final global ASM16_CALLATTR_THIS_C = 0xf0d4;
+final global ASM16_CALLATTR_THIS_C_TUPLE = 0xf0d5;
+final global ASM16_CALLATTR_C_SEQ = 0xf0d6;
+final global ASM16_CALLATTR_C_MAP = 0xf0d7;
+final global ASM16_GETMEMBER_THIS_R = 0xf0d9;
+final global ASM16_DELMEMBER_THIS_R = 0xf0da;
+final global ASM16_SETMEMBER_THIS_R = 0xf0db;
+final global ASM16_BOUNDMEMBER_THIS_R = 0xf0dc;
+final global ASM16_CALL_EXTERN = 0xf0dd;
+final global ASM16_CALL_GLOBAL = 0xf0de;
+final global ASM16_CALL_LOCAL = 0xf0df;
+final global ASM16_STACK = 0xf0fb;
+final global ASM16_STATIC = 0xf0fc;
+final global ASM16_EXTERN = 0xf0fd;
+final global ASM16_GLOBAL = 0xf0fe;
+final global ASM16_LOCAL = 0xf0ff;
+//[[[end]]]
+
+
+
+
+import * from deemon;
+
+@@Helper functions for constructing deemon bytecode such that the
+@@caller does not need to care about the length of individual opcodes:
+@@>import * from rt;
+@@>import * from rt.bytecode;
+@@>local fun = Function(Code(
+@@> text: code {
+@@>  ASM_PUSH_CONST,0x00,
+@@>  ASM16_PUSH_CONST,0x01,0x00,
+@@>  ASM_ADD,
+@@>  ASM_RET,
+@@> },
+@@> nstack: 2,
+@@> statics: { "foo", "bar" }
+@@>));
+@@>print fun(); /* "foobar" */
+function code(data) {
+	file.writer w;
+	for (local d: data) {
+		local b = d.tobytes(d.bytecount,"little",false);
+		b.reverse();
+		/* Really ugly hack
+		 * TODO: Add 2 new file types `file.bytereader' and
+		 *      `file.bytewriter' that operate on bytes objects! */
+		w.write(b.encode("utf-8"));
+	}
+	return w.string.bytes();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

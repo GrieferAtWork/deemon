@@ -19,6 +19,17 @@
 #ifndef GUARD_DEEMON_ASM_H
 #define GUARD_DEEMON_ASM_H 1
 
+/* NOTE: Apply modifications using:
+ * $ deemon -F src/deemon/compiler/instrlen.c
+ * $ deemon -F src/deemon/execute/code-exec-targets.c.inl
+ * $ deemon -F src/deemon/execute/asm/exec-386.S
+ * $ deemon -F src/dex/disassembler/printinstr.c
+ * $ deemon -F lib/rt/bytecode.dee
+ * Or the 1-line variant:
+ * $ deemon -F src/deemon/compiler/instrlen.c && deemon -F src/deemon/execute/code-exec-targets.c.inl && deemon -F src/deemon/execute/asm/exec-386.S && deemon -F src/dex/disassembler/printinstr.c && deemon -F lib/rt/bytecode.dee
+ */
+
+
 /* Deemon assembly definitions and instruction codes.
  * Starting in v200, deemon uses an entirely new assembly design that is
  * no longer restricted by rules on the length of individual instructions.
