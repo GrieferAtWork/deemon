@@ -727,6 +727,88 @@ PRIVATE struct type_seq map_seq = {
 };
 
 
+PRIVATE int DCALL
+map_eq_impl(DeeObject *__restrict self,
+            DeeObject *__restrict other) {
+ size_t pair_count = 0,other_size; int temp;
+ DREF DeeObject *iter,*elem,*pair[2];
+ DREF DeeObject *other_value;
+ /* Check of all keys from `self' have the same value within `other' */
+ iter = DeeObject_IterSelf(self);
+ if unlikely(!iter)
+    goto err;
+ while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+  if (DeeObject_Unpack(elem,2,pair))
+      goto err_elem;
+  Dee_Decref(elem);
+  other_value = DeeObject_GetItemDef(other,pair[0],ITER_DONE);
+  Dee_Decref(pair[0]);
+  if (!ITER_ISOK(other_value)) {
+   Dee_Decref(pair[1]);
+   Dee_Decref(iter);
+   if unlikely(!other_value)
+      goto err;
+   return 0; /* Key wasn't provided by `other' */
+  }
+  temp = DeeObject_CompareEq(pair[1],other_value);
+  Dee_Decref(other_value);
+  Dee_Decref(pair[1]);
+  if (temp <= 0) {
+   Dee_Decref(iter);
+   return temp;
+  }
+  /* Track the number of pairs found in `self' */
+  ++pair_count;
+ }
+ if unlikely(!elem)
+    goto err_iter;
+ Dee_Decref(iter);
+ /* Make sure that `other' has the same size as `self' */
+ other_size = DeeObject_Size(other);
+ if unlikely(other_size == (size_t)-1)
+    goto err;
+ return pair_count == other_size;
+err_elem:
+ Dee_Decref(elem);
+err_iter:
+ Dee_Decref(iter);
+err:
+ return -1;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+map_eq(DeeObject *__restrict self,
+       DeeObject *__restrict other) {
+ int error = map_eq_impl(self,other);
+ if unlikely(error < 0)
+    goto err;
+ return_bool_(error);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+map_ne(DeeObject *__restrict self,
+       DeeObject *__restrict other) {
+ int error = map_eq_impl(self,other);
+ if unlikely(error < 0)
+    goto err;
+ return_bool_(!error);
+err:
+ return NULL;
+}
+
+PRIVATE struct type_cmp map_cmp = {
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */&map_eq,
+    /* .tp_ne   = */&map_ne,
+    /* .tp_lo   = */NULL, /* XXX: Sub-set */
+    /* .tp_le   = */NULL, /* XXX: Sub-set, or same */
+    /* .tp_gr   = */NULL, /* XXX: Super-set */
+    /* .tp_ge   = */NULL, /* XXX: Super-set, or same */
+};
+
+
 PRIVATE DREF DeeObject *DCALL
 map_repr(DeeObject *__restrict self) {
  struct unicode_printer p = UNICODE_PRINTER_INIT;
@@ -1153,7 +1235,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */&map_math,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&map_cmp,
     /* .tp_seq           = */&map_seq,
     /* .tp_iter_next     = */NULL,
     /* .tp_attr          = */NULL,
