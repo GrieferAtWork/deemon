@@ -163,8 +163,10 @@ PRIVATE DREF DeeObject * \
 name(StringSplitIterator *__restrict self, \
      StringSplitIterator *__restrict other) { \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
-     return NULL; \
- return_bool(GET_SPLIT_NEXT(self) op GET_SPLIT_NEXT(other)); \
+     goto err; \
+ return_bool((GET_SPLIT_NEXT(self)-1) op (GET_SPLIT_NEXT(other)-1)); \
+err: \
+ return NULL; \
 }
 DEFINE_SPLITITER_CMP(splititer_eq,==)
 DEFINE_SPLITITER_CMP(splititer_ne,!=)

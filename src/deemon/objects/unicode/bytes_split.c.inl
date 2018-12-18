@@ -120,8 +120,10 @@ PRIVATE DREF DeeObject *DCALL \
 name(BytesSplitIterator *__restrict self, \
      BytesSplitIterator *__restrict other) { \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
-     return NULL; \
- return_bool(READ_BSI_ITER(self) op READ_BSI_ITER(other)); \
+     goto err; \
+ return_bool((READ_BSI_ITER(self)-1) op (READ_BSI_ITER(other)-1)); \
+err: \
+ return NULL; \
 }
 DEFINE_BSI_COMPARE(bsi_eq,==)
 DEFINE_BSI_COMPARE(bsi_ne,!=)
