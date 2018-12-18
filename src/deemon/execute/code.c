@@ -657,6 +657,10 @@ code_hasvarargs(DeeCodeObject *__restrict self) {
  return_bool_(self->co_flags & CODE_FVARARGS);
 }
 PRIVATE DREF DeeObject *DCALL
+code_hasvarkwds(DeeCodeObject *__restrict self) {
+ return_bool_(self->co_flags & CODE_FVARKWDS);
+}
+PRIVATE DREF DeeObject *DCALL
 code_isthiscall(DeeCodeObject *__restrict self) {
  return_bool_(self->co_flags & CODE_FTHISCALL);
 }
@@ -775,6 +779,14 @@ PRIVATE struct type_member code_members[] = {
 };
 
 PRIVATE struct type_getset code_getsets[] = {
+    /* General-purpose callable object RTTI interface implementation.
+     * These functions are mangled with leading/trailing underscores,
+     * as they also appear in other (standard-compliant) runtime types,
+     * where they must be kept hidden from the basic namespace provided
+     * for standard-compliant deemon code.
+     * Properties matching these names can be found in a variety of other
+     * types, including `function', `objmethod', etc.
+     */
     { DeeString_STR(&str___name__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
@@ -818,45 +830,52 @@ PRIVATE struct type_getset code_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
       DOC("->?S?O\n"
           "Access to the default values of arguments") },
-    { "__static__",
+    /* Code-specific RTTI fields don't have leading/trailing underscores,
+     * because they don't need to match the ABI also provided by numerous
+     * other types (such as `function', `objmethod', etc.) */
+    { "statics",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
       DOC("->?S?O\n"
           "Access to the static values of @this code object") },
-    { "__isyielding__",
+    { "isyielding",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isyielding, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the code object is for a yield-function") },
-    { "__iscopyable__",
+    { "iscopyable",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_iscopyable, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if execution frames of the code object can be copied") },
-    { "__hasassembly__",
+    { "hasassembly",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasassembly, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if assembly of the code object is executed in safe-mode") },
-    { "__islenient__",
+    { "islenient",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_islenient, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the runtime stack allocation allows for leniency") },
-    { "__hasvarargs__",
+    { "hasvarargs",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarargs, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the code object takes its last argument as a varargs-tuple") },
-    { "__isthiscall__",
+          "Check if the code object accepts variable arguments as overflow") },
+    { "hasvarkwds",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarkwds, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Check if the code object accepts variable keyword arguments as overflow") },
+    { "isthiscall",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isthiscall, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the code object requires a hidden leading this-argument") },
-    { "__hasheapframe__",
+    { "hasheapframe",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasheapframe, NULL, NULL,
       DOC("->?Dbool\n"
           "Check if the runtime stack-frame must be allocated on the heap") },
-    { "__hasfinally__",
+    { "hasfinally",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasfinally, NULL, NULL,
       DOC("->?Dbool\n"
           "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
           "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
           "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution") },
-    { "__isconstructor__",
+    { "isconstructor",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isconstructor, NULL, NULL,
       DOC("->?Dbool\n"
           "True for class constructor code objects. - When set, don't include the this-argument in "

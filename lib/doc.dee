@@ -2682,7 +2682,7 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 			}
 		}
 	}
-	if (code.__hasvarargs__) {
+	if (code.hasvarargs) {
 		if (argc_max)
 			fp << ",";
 		fp << (argc_max < n_kwds
@@ -3461,7 +3461,7 @@ set_is_type:
 		} else if (object is bound && object is deemon.function_) {
 			file.writer resdoc;
 			generate_function_params(resdoc,object);
-			if (object.__code__.__isconstructor__) {
+			if (object.__code__.isconstructor) {
 				/* Constructors always return :none */
 			} else {
 				resdoc << "->";
