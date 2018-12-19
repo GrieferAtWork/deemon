@@ -4099,7 +4099,7 @@ PUBLIC int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self,
    Dee_Decref(index_ob);
    return result;
   }
- } while (type_inherit_getitem(tp_self));
+ } while (type_inherit_delitem(tp_self));
  err_unimplemented_operator(tp_self,OPERATOR_DELITEM);
 err:
  return -1;
@@ -4126,7 +4126,7 @@ PUBLIC int (DCALL DeeObject_SetItemIndex)(DeeObject *__restrict self,
    Dee_Decref(index_ob);
    return result;
   }
- } while (type_inherit_getitem(tp_self));
+ } while (type_inherit_setitem(tp_self));
  err_unimplemented_operator(tp_self,OPERATOR_DELITEM);
 err:
  return -1;

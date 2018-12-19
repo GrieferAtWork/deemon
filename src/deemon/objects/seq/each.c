@@ -30,6 +30,7 @@
 #include <deemon/util/string.h>
 
 #include "each.h"
+#include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 
@@ -798,17 +799,82 @@ DEFINE_SEW_BINARY(sew_le,OPERATOR_LE)
 DEFINE_SEW_BINARY(sew_gr,OPERATOR_GR)
 DEFINE_SEW_BINARY(sew_ge,OPERATOR_GE)
 
-#define DEFINE_SEW_UNARY_INPLACE(name,func) \
+
+PRIVATE DREF DeeObject *DCALL
+seo_getitem_for_inplace(SeqEachOperator *__restrict self,
+                        DREF DeeObject **__restrict pbaseelem,
+                        size_t index, uint16_t operator_name) {
+ DREF DeeObject *result,*baseelem;
+ baseelem = DeeObject_GetItemIndex(self->se_seq,index);
+ if unlikely(!baseelem)
+    goto err;
+ switch (self->so_opname) {
+  /* Only a select few operators can be used for inplace. */
+ case OPERATOR_GETATTR:
+  if unlikely(self->so_opargc < 1)
+     goto err_noimp;
+  if (DeeObject_AssertTypeExact(self->so_opargv[0],&DeeString_Type))
+      goto err_baseelem;
+  result = DeeObject_GetAttr(baseelem,self->so_opargv[0]);
+  break;
+ case OPERATOR_GETITEM:
+  if unlikely(self->so_opargc < 1)
+     goto err_noimp;
+  result = DeeObject_GetItem(baseelem,self->so_opargv[0]);
+  break;
+ case OPERATOR_GETRANGE:
+  if unlikely(self->so_opargc < 2)
+     goto err_noimp;
+  result = DeeObject_GetRange(baseelem,
+                              self->so_opargv[0],
+                              self->so_opargv[1]);
+  break;
+ default: goto err_noimp;
+ }
+ *pbaseelem = baseelem;
+ return result;
+err_noimp:
+ err_unimplemented_operator(&SeqEachOperator_Type,operator_name);
+err_baseelem:
+ Dee_Decref(baseelem);
+err:
+ return NULL;
+}
+PRIVATE int DCALL
+seo_setitem_for_inplace(SeqEachOperator *__restrict self,
+                        DeeObject *__restrict baseelem,
+                        DeeObject *__restrict value) {
+ switch (self->so_opname) {
+  /* Only a select few operators can be used for inplace. */
+ case OPERATOR_GETATTR:
+  ASSERT(self->so_opargc >= 1);
+  ASSERT_OBJECT_TYPE_EXACT(self->so_opargv[0],&DeeString_Type);
+  return DeeObject_SetAttr(baseelem,self->so_opargv[0],value);
+ case OPERATOR_GETITEM:
+  ASSERT(self->so_opargc >= 1);
+  return DeeObject_SetItem(baseelem,self->so_opargv[0],value);
+ case OPERATOR_GETRANGE:
+  ASSERT(self->so_opargc >= 2);
+  return DeeObject_SetRange(baseelem,
+                            self->so_opargv[0],
+                            self->so_opargv[1],
+                            value);
+ default: __builtin_unreachable();
+ }
+}
+
+
+#define DEFINE_SEO_UNARY_INPLACE(name,func,op) \
 PRIVATE int DCALL \
-name(DeeObject **__restrict pself) { \
+name(SeqEachOperator **__restrict pself) { \
  size_t i,size; \
- DeeObject *seq = *pself; \
- DREF DeeObject *elem; \
- size = DeeObject_Size(seq); \
+ SeqEachOperator *seq = *pself; \
+ DREF DeeObject *elem,*baseelem; \
+ size = DeeObject_Size(seq->se_seq); \
  if unlikely(size == (size_t)-1) \
     goto err; \
  for (i = 0; i < size; ++i) { \
-  elem = DeeObject_GetItemIndex(seq,i); \
+  elem = seo_getitem_for_inplace(seq,&baseelem,i,op); \
   if unlikely(!elem) { \
    if (DeeError_Catch(&DeeError_UnboundItem)) \
        continue; \
@@ -816,28 +882,30 @@ name(DeeObject **__restrict pself) { \
   } \
   if (func(&elem)) \
       goto err_elem; \
-  if (DeeObject_SetItemIndex(seq,i,elem)) \
+  if (seo_setitem_for_inplace(seq,baseelem,elem)) \
       goto err_elem; \
+  Dee_Decref(baseelem); \
   Dee_Decref(elem); \
  } \
  return 0; \
 err_elem: \
+ Dee_Decref(baseelem); \
  Dee_Decref(elem); \
 err: \
  return -1; \
 }
 
-#define DEFINE_SEW_BINARY_INPLACE(name,func) \
+#define DEFINE_SEO_BINARY_INPLACE(name,func,op) \
 PRIVATE int DCALL \
-name(DeeObject **__restrict pself, DeeObject *__restrict other) { \
+name(SeqEachOperator **__restrict pself, DeeObject *__restrict other) { \
  size_t i,size; \
- DeeObject *seq = *pself; \
- DREF DeeObject *elem; \
- size = DeeObject_Size(seq); \
+ SeqEachOperator *seq = *pself; \
+ DREF DeeObject *elem,*baseelem; \
+ size = DeeObject_Size(seq->se_seq); \
  if unlikely(size == (size_t)-1) \
     goto err; \
  for (i = 0; i < size; ++i) { \
-  elem = DeeObject_GetItemIndex(seq,i); \
+  elem = seo_getitem_for_inplace(seq,&baseelem,i,op); \
   if unlikely(!elem) { \
    if (DeeError_Catch(&DeeError_UnboundItem)) \
        continue; \
@@ -845,33 +913,37 @@ name(DeeObject **__restrict pself, DeeObject *__restrict other) { \
   } \
   if (func(&elem,other)) \
       goto err_elem; \
-  if (DeeObject_SetItemIndex(seq,i,elem)) \
+  if (seo_setitem_for_inplace(seq,baseelem,elem)) \
       goto err_elem; \
+  Dee_Decref(baseelem); \
   Dee_Decref(elem); \
  } \
  return 0; \
 err_elem: \
+ Dee_Decref(baseelem); \
  Dee_Decref(elem); \
 err: \
  return -1; \
 }
-DEFINE_SEW_UNARY_INPLACE(sew_inc,DeeObject_Inc)
-DEFINE_SEW_UNARY_INPLACE(sew_dec,DeeObject_Dec)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_add,DeeObject_InplaceAdd)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_sub,DeeObject_InplaceSub)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_mul,DeeObject_InplaceMul)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_div,DeeObject_InplaceDiv)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_mod,DeeObject_InplaceMod)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_shl,DeeObject_InplaceShl)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_shr,DeeObject_InplaceShr)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_and,DeeObject_InplaceAnd)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_or,DeeObject_InplaceOr)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_xor,DeeObject_InplaceXor)
-DEFINE_SEW_BINARY_INPLACE(sew_inplace_pow,DeeObject_InplacePow)
+DEFINE_SEO_UNARY_INPLACE(seo_inc,DeeObject_Inc,OPERATOR_INC)
+DEFINE_SEO_UNARY_INPLACE(seo_dec,DeeObject_Dec,OPERATOR_DEC)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_add,DeeObject_InplaceAdd,OPERATOR_INPLACE_ADD)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_sub,DeeObject_InplaceSub,OPERATOR_INPLACE_SUB)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_mul,DeeObject_InplaceMul,OPERATOR_INPLACE_MUL)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_div,DeeObject_InplaceDiv,OPERATOR_INPLACE_DIV)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_mod,DeeObject_InplaceMod,OPERATOR_INPLACE_MOD)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_shl,DeeObject_InplaceShl,OPERATOR_INPLACE_SHL)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_shr,DeeObject_InplaceShr,OPERATOR_INPLACE_SHR)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_and,DeeObject_InplaceAnd,OPERATOR_INPLACE_AND)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_or,DeeObject_InplaceOr,OPERATOR_INPLACE_OR)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_xor,DeeObject_InplaceXor,OPERATOR_INPLACE_XOR)
+DEFINE_SEO_BINARY_INPLACE(seo_inplace_pow,DeeObject_InplacePow,OPERATOR_INPLACE_POW)
+#undef DEFINE_SEO_UNARY_INPLACE
+#undef DEFINE_SEO_BINARY_INPLACE
 
 
 
-PRIVATE struct type_math sew_math = {
+PRIVATE struct type_math seo_math = {
     /* .tp_int32       = */NULL,
     /* .tp_int64       = */NULL,
     /* .tp_double      = */NULL,
@@ -890,19 +962,19 @@ PRIVATE struct type_math sew_math = {
     /* .tp_or          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sew_or,
     /* .tp_xor         = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sew_xor,
     /* .tp_pow         = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sew_pow,
-    /* .tp_inc         = */(int(DCALL *)(DeeObject **__restrict))&sew_inc,
-    /* .tp_dec         = */(int(DCALL *)(DeeObject **__restrict))&sew_dec,
-    /* .tp_inplace_add = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_add,
-    /* .tp_inplace_sub = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_sub,
-    /* .tp_inplace_mul = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_mul,
-    /* .tp_inplace_div = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_div,
-    /* .tp_inplace_mod = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_mod,
-    /* .tp_inplace_shl = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_shl,
-    /* .tp_inplace_shr = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_shr,
-    /* .tp_inplace_and = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_and,
-    /* .tp_inplace_or  = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_or,
-    /* .tp_inplace_xor = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_xor,
-    /* .tp_inplace_pow = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))sew_inplace_pow
+    /* .tp_inc         = */(int(DCALL *)(DeeObject **__restrict))&seo_inc,
+    /* .tp_dec         = */(int(DCALL *)(DeeObject **__restrict))&seo_dec,
+    /* .tp_inplace_add = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_add,
+    /* .tp_inplace_sub = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_sub,
+    /* .tp_inplace_mul = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_mul,
+    /* .tp_inplace_div = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_div,
+    /* .tp_inplace_mod = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_mod,
+    /* .tp_inplace_shl = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_shl,
+    /* .tp_inplace_shr = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_shr,
+    /* .tp_inplace_and = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_and,
+    /* .tp_inplace_or  = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_or,
+    /* .tp_inplace_xor = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_xor,
+    /* .tp_inplace_pow = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))seo_inplace_pow
 };
 
 PRIVATE struct type_cmp sew_cmp = {
@@ -1153,7 +1225,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
     /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sew_call,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&seo_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */&sew_math,
+    /* .tp_math          = */&seo_math,
     /* .tp_cmp           = */&sew_cmp,
     /* .tp_seq           = */&seo_seq,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iter_next,
