@@ -495,7 +495,7 @@ PRIVATE void DCALL ssi_fini(StringScanIterator *__restrict self) {
 }
 
 #define DEFINE_SPLITITER_CMP(name,op) \
-PRIVATE DREF DeeObject * \
+PRIVATE DREF DeeObject *DCALL \
 name(StringScanIterator *__restrict self, \
      StringScanIterator *__restrict other) { \
  if (DeeObject_AssertTypeExact((DeeObject *)other,&StringScanIterator_Type)) \
