@@ -744,26 +744,37 @@ typedef dssize_t (DCALL *denum_t)(DeeObject *__restrict declarator,
 
 
 
-
+#ifndef TYPE_ALLOCATOR
 /* Specifies a custom object allocator declaration. */
 #define TYPE_ALLOCATOR(tp_malloc,tp_free) (void *)(tp_free),{(uintptr_t)(void *)(tp_malloc) }
 
 /* Specifies an automatic object allocator. */
-#define TYPE_AUTO_ALLOCATOR(T)     NULL,{(uintptr_t)sizeof(T) }
+#define TYPE_AUTOSIZED_ALLOCATOR(size)                NULL,{(uintptr_t)(size) }
+#define TYPE_AUTOSIZED_ALLOCATOR_R(min_size,max_size) NULL,{(uintptr_t)(max_size) }
+#define TYPE_AUTO_ALLOCATOR(T)                        NULL,{(uintptr_t)sizeof(T) }
+#endif /* !TYPE_ALLOCATOR */
 
 #ifdef GUARD_DEEMON_ALLOC_H
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef CONFIG_NO_OBJECT_SLABS
+#define TYPE_SIZED_ALLOCATOR_R     TYPE_AUTOSIZED_ALLOCATOR_R
+#define TYPE_SIZED_ALLOCATOR_GC_R  TYPE_AUTOSIZED_ALLOCATOR_R
+#define TYPE_SIZED_ALLOCATOR       TYPE_AUTOSIZED_ALLOCATOR
+#define TYPE_SIZED_ALLOCATOR_GC    TYPE_AUTOSIZED_ALLOCATOR
 #define TYPE_FIXED_ALLOCATOR       TYPE_AUTO_ALLOCATOR
 #define TYPE_FIXED_ALLOCATOR_GC    TYPE_AUTO_ALLOCATOR
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define TYPE_FIXED_ALLOCATOR(T) \
-    DeeSlab_Invoke((void *)&DeeObject_SlabFree,sizeof(T),,NULL), \
-  { DeeSlab_Invoke((uintptr_t)(void *)&DeeObject_SlabMalloc,sizeof(T),,sizeof(T)) }
-#define TYPE_FIXED_ALLOCATOR_GC(T) \
-    DeeSlab_Invoke((void *)&DeeGCObject_SlabFree,sizeof(T),,NULL), \
-  { DeeSlab_Invoke((uintptr_t)(void *)&DeeGCObject_SlabMalloc,sizeof(T),,sizeof(T)) }
+#define TYPE_SIZED_ALLOCATOR_R(min_size,max_size) \
+    DeeSlab_Invoke((void *)&DeeObject_SlabFree,min_size,,NULL), \
+  { DeeSlab_Invoke((uintptr_t)(void *)&DeeObject_SlabMalloc,max_size,,max_size) }
+#define TYPE_SIZED_ALLOCATOR_GC_R(min_size,max_size) \
+    DeeSlab_Invoke((void *)&DeeGCObject_SlabFree,min_size,,NULL), \
+  { DeeSlab_Invoke((uintptr_t)(void *)&DeeGCObject_SlabMalloc,max_size,,max_size) }
+#define TYPE_SIZED_ALLOCATOR(size)    TYPE_SIZED_ALLOCATOR_R(size,size)
+#define TYPE_SIZED_ALLOCATOR_GC(size) TYPE_SIZED_ALLOCATOR_GC_R(size,size)
+#define TYPE_FIXED_ALLOCATOR(T)       TYPE_SIZED_ALLOCATOR_R(sizeof(T),sizeof(T))
+#define TYPE_FIXED_ALLOCATOR_GC(T)    TYPE_SIZED_ALLOCATOR_GC_R(sizeof(T),sizeof(T))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as `TYPE_FIXED_ALLOCATOR()', but don't link agains dedicated

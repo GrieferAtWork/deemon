@@ -588,14 +588,16 @@ invoke_operator(DeeObject *__restrict self,
   return_bool_(result);
  }
 
+ {
+  DeeObject *kw;
  case OPERATOR_CALL:
-  if (DeeArg_Unpack(argc,argv,"o:__call__",&other))
+  kw = NULL;
+  if (DeeArg_Unpack(argc,argv,"o|o:__call__",&other,&kw))
       goto err;
   if (DeeObject_AssertTypeExact(other,&DeeTuple_Type))
       goto err;
-  return DeeObject_Call(self,
-                        DeeTuple_SIZE(other),
-                        DeeTuple_ELEM(other));
+  return DeeObject_CallTupleKw(self,other,kw);
+ }
 
  {
   dhash_t result;

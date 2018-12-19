@@ -56,6 +56,7 @@
 #include "strings.h"
 #include "../objects/seq/svec.h"
 #include "../objects/seq/varkwds.h"
+#include "../objects/seq/each.h"
 #include "../objects/int_logic.h"
 
 /* Operator invocation. */
@@ -4545,6 +4546,7 @@ INTDEF DREF DeeObject *DCALL super_getattr(DeeObject *__restrict self, DeeObject
 INTDEF DREF DeeObject *DCALL DeeObject_TCallAttr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
 #endif
 
+
 DEFINE_OPERATOR(DREF DeeObject *,CallAttr,
                (DeeObject *__restrict self,
                 /*String*/DeeObject *__restrict attr_name,
@@ -4589,15 +4591,23 @@ DEFINE_OPERATOR(DREF DeeObject *,CallAttr,
   iter = DeeType_Base(iter);
   if (!iter) break;
   if (iter->tp_attr) {
+   DREF DeeObject *(DCALL *getattr)(DeeObject *__restrict,/*String*/DeeObject *__restrict);
 do_iter_attr:
-   if (iter->tp_attr->tp_getattr == &type_getattr)
+   getattr = iter->tp_attr->tp_getattr;
+   if (getattr == &type_getattr)
        return type_callattr(self,attr_name,argc,argv);
 #ifndef DEFINE_TYPE_OPERATORS
-   if (iter->tp_attr->tp_getattr == &super_getattr)
+   if (getattr == &super_getattr)
        return DeeObject_TCallAttr(DeeSuper_TYPE(self),DeeSuper_SELF(self),attr_name,argc,argv);
 #endif
-   if (!iter->tp_attr->tp_getattr) break;
-   result = (*iter->tp_attr->tp_getattr)(self,attr_name);
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttr(((SeqEachBase *)self)->se_seq,attr_name,argc,argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttr(self,attr_name,argc,argv);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+   if (!getattr) break;
+   result = (*getattr)(self,attr_name);
    goto done_invoke;
   }
  }

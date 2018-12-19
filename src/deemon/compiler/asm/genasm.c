@@ -1072,13 +1072,34 @@ done_fake_none:
    if (asm_gunpack_expr(self->a_expand,1,self))
        goto err;
   } else {
+   /* TODO: Don't generate any code for constant expressions
+    *       when their enumeration doesn't have any side-effects! */
    /* If the result isn't being used, follow the regular comma-rule
     * to generate expected assembly for code like this:
     * >> foo()...; // the results of foo() can be as comma-separated,
     * >>           // but doing so doesn't have any special meaning.
     */
-   if (ast_genasm(self->a_expand,gflags))
+   struct asm_sym *loop,*stop;
+   if (ast_genasm(self->a_expand,ASM_G_FPUSHRES))
        goto err;
+   /* Generate code to enumerate the sequence
+    *
+    */
+   if (asm_putddi(self)) goto err;
+   if (asm_giterself()) goto err;
+   loop = asm_newsym();
+   if unlikely(!loop) goto err;
+   stop = asm_newsym();
+   if unlikely(!stop) goto err;
+   asm_defsym(loop);
+   if (asm_put(ASM_FOREACH)) goto err;
+   if (asm_putrel(R_DMN_DISP8,stop,0)) goto err;
+   if (asm_put((instruction_t)(uint8_t)(int8_t)-1)) goto err;
+   if (asm_gpop()) goto err; /* The sequence element pushed by `foreach' */
+   if (asm_put(ASM_JMP)) goto err;
+   if (asm_putrel(R_DMN_DISP8,loop,0)) goto err;
+   if (asm_put((instruction_t)(uint8_t)(int8_t)-1)) goto err;
+   asm_defsym(stop);
   }
   break;
 

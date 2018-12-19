@@ -339,6 +339,9 @@
     <ClInclude Include="..\include\deemon\alloc.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\each.h">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -822,6 +825,9 @@
       <Filter>src\deemon\compiler\lexer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\seq\varkwds.c">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\each.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
   </ItemGroup>

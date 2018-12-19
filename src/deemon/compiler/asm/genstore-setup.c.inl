@@ -19,7 +19,7 @@
 
 #ifdef __INTELLISENSE__
 #include "genstore.c"
-#define ENTER 1
+//#define ENTER 1
 #endif
 
 #ifndef ENTER
@@ -65,7 +65,7 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int
     ASM_POP_SCOPE(0,err);
    }
    ASSERT(i == self->a_multiple.m_astc-1);
-   if (asm_gpop_expr_enter(self->a_multiple.m_astv[i])) goto err;
+   return asm_gpop_expr_enter(self->a_multiple.m_astv[i]);
 #else
    if (!self->a_multiple.m_astc) {
     if (PUSH_RESULT) goto done;
@@ -91,45 +91,61 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int
 #else
    {
     uint16_t total_diff = 0;
-    size_t count;
+    size_t cnt;
+    struct ast **vec;
     /* Move the result below the block of stack-temporaries used by target-expressions. */
-    count = self->a_multiple.m_astc;
+    cnt = self->a_multiple.m_astc;
+    vec = self->a_multiple.m_astv;
     if (asm_putddi(self)) goto err;
-    if (asm_gunpack((uint16_t)count)) goto err;
-    i = count;
-    while (i--) total_diff += self->a_multiple.m_astv[i]->a_temp;
+    i = cnt;
+    while (i--) total_diff += vec[i]->a_temp;
+    if (current_assembler.a_flag & ASM_FSTACKDISP) {
+     /* This is where it gets _really_ complicated, because
+      * we need to look out for stack variables being lazily
+      * initialized.
+      * >> __stack local x,y,z = get_values()...;
+      * ASM:
+      * >> push call get_values, #0
+      * >> unpack pop, #3
+      * >> .ddi bind("x"), #SP - 3
+      * >> .ddi bind("y"), #SP - 2
+      * >> .ddi bind("z"), #SP - 1
+      */
+     /* TODO */
+    }
     if (PUSH_RESULT) {
      if (asm_gdup()) goto err; /* <temp...>, result, result */
      if (total_diff != 0 && asm_grrot(total_diff + 2)) goto err; /* result, <temp...>, result */
     }
+    if (asm_gunpack((uint16_t)cnt)) goto err;
     /* Directly leave expressions that didn't use any stack-temporaries. */
-    while (count && self->a_multiple.m_astv[count-1]->a_temp == 0) {
-     if (asm_gpop_expr_leave(self->a_multiple.m_astv[count-1],ASM_G_FNORMAL))
+    while (cnt && vec[cnt-1]->a_temp == 0) {
+     if (asm_gpop_expr_leave(vec[cnt-1],ASM_G_FNORMAL))
          goto err;
-     --count;
+     --cnt;
     }
-    if (count) {
+    if (cnt) {
      size_t j;
      /* Right now, the stack looks like this:
       * [result], T0a, T0b, T1a, T1b, T2a, T2b, V0, V1, V2
       * However, we want it to look like this:
       * [result], T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2
       * Because of this, we must adjust the stack. */
-     if (asm_grrot((uint16_t)count))
+     if (asm_grrot((uint16_t)cnt))
          goto err; /* T0a, T0b, T1a, T1b, T2a, T2b, V2, V0, V1 */
      /* -> asm_grrot(5); // T0a, T0b, T1a, T1b, V1, T2a, T2b, V2, V0 */
      /* -> asm_grrot(7); // T0a, T0b, V0, T1a, T1b, V1, T2a, T2b, V2 */
-     i = count;
+     i = cnt;
      while (i-- > 1) {
-      uint16_t total = (uint16_t)count;
-      for (j = i; j < count; ++j)
-          total += self->a_multiple.m_astv[j]->a_temp;
+      uint16_t total = (uint16_t)cnt;
+      for (j = i; j < cnt; ++j)
+          total += vec[j]->a_temp;
       if (asm_grrot(total)) goto err;
      }
      /* The leave-stack is unwound in reverse order! */
-     i = count;
+     i = cnt;
      while (i--) {
-      if (asm_gpop_expr_leave(self->a_multiple.m_astv[i],ASM_G_FNORMAL))
+      if (asm_gpop_expr_leave(vec[i],ASM_G_FNORMAL))
           goto err;
      }
     }

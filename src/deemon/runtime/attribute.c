@@ -35,6 +35,7 @@
 #include <stdarg.h>
 
 #include "runtime_error.h"
+#include "../objects/seq/each.h"
 
 /* Attribute access. */
 
@@ -2515,6 +2516,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrKw(((SeqEachBase *)self)->se_seq,attr_name,argc,argv,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrKw(self,attr_name,argc,argv,kw);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    result = (*getattr)(self,attr_name);
    goto done_invoke;
@@ -2597,6 +2604,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrStringKw(((SeqEachBase *)self)->se_seq,attr_name,hash,argc,argv,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrStringKw(self,attr_name,hash,argc,argv,kw);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewWithHash(attr_name,hash);
    if unlikely(!attr_name_ob) goto err;
@@ -2684,6 +2697,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrStringLenKw(((SeqEachBase *)self)->se_seq,attr_name,attrlen,hash,argc,argv,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrStringLenKw(self,attr_name,attrlen,hash,argc,argv,kw);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewSizedWithHash(attr_name,attrlen,hash);
    if unlikely(!attr_name_ob) goto err;
@@ -2765,6 +2784,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrTuple(((SeqEachBase *)self)->se_seq,attr_name,args);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrTuple(self,attr_name,args);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    result = (*getattr)(self,attr_name);
    goto done_invoke;
@@ -2842,6 +2867,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrTupleKw(((SeqEachBase *)self)->se_seq,attr_name,args,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrTupleKw(self,attr_name,args,kw);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    result = (*getattr)(self,attr_name);
    goto done_invoke;
@@ -2867,7 +2898,10 @@ PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
                                 /*String*/DeeObject *__restrict attr_name,
                                 DeeObject *__restrict args) {
- return DeeObject_CallAttr(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args));
+ return DeeObject_CallAttr(self,
+                           attr_name,
+                           DeeTuple_SIZE(args),
+                           DeeTuple_ELEM(args));
 }
 
 PUBLIC DREF DeeObject *
@@ -2875,7 +2909,11 @@ PUBLIC DREF DeeObject *
                                   /*String*/DeeObject *__restrict attr_name,
                                   DeeObject *__restrict args,
                                   DeeObject *kw) {
- return DeeObject_CallAttrKw(self,attr_name,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw);
+ return DeeObject_CallAttrKw(self,
+                             attr_name,
+                             DeeTuple_SIZE(args),
+                             DeeTuple_ELEM(args),
+                             kw);
 }
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
@@ -3382,6 +3420,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrString(((SeqEachBase *)self)->se_seq,attr_name,hash,argc,argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrString(self,attr_name,hash,argc,argv);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewWithHash(attr_name,hash);
    if unlikely(!attr_name_ob) goto err;
@@ -3462,6 +3506,12 @@ do_iter_attr:
     tp_self = iter;
     goto again;
    }
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrStringLen(((SeqEachBase *)self)->se_seq,attr_name,attrlen,hash,argc,argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrStringLen(self,attr_name,attrlen,hash,argc,argv);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewSizedWithHash(attr_name,attrlen,hash);
    if unlikely(!attr_name_ob) goto err;

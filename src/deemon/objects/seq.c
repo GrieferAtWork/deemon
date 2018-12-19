@@ -39,6 +39,7 @@
 #endif
 
 #include "seq/svec.h"
+#include "seq/each.h"
 #include "seq_functions.h"
 
 #include "../runtime/strings.h"
@@ -3394,6 +3395,28 @@ PRIVATE struct type_getset seq_getsets[] = {
           "sequence can actually be manipulated, only that a sub-class provides special "
           "behavior for at least one of the following: #append, #extend, #insert, #insertall, "
           "#erase, #pop, #resize, #pushfront, #pushback, #popfront or #popback") },
+    { "each", &DeeSeq_Each, NULL, NULL,
+      DOC("->?S?O\n"
+          "Returns a special proxy object that mirrors any operation performed on "
+          "it onto each element of @this sequence, evaluating to another proxy object "
+          "that allows the same, but also allows being used as a regular sequence:\n"
+          ">local locks = { get_lock(\"a\"), get_lock(\"b\") };\n"
+          ">with (locks.each) { ... }\n"
+          ">local strings = { \"foo\", \"bar\", \"foobar\" };\n"
+          ">for (local x: strings.each.upper())\n"
+          "> print x; /* \"FOO\", \"BAR\", \"FOOBAR\" */\n"
+          ">local lists = { [10,20,30], [1,2,3], [19,41,57] };\n"
+          ">del lists.each[0];\n"
+          ">print repr lists; /* { [20,30], [2,3], [41,57] } */\n"
+          "WARNING: When invoking member functions, be sure to expand the generated "
+                   "sequence to ensure that the operator actually gets applied. "
+                   "The only exception to this rule are operators that don't have an "
+                   "actual return value and thus cannot be used in expand expressions:\n"
+          ">local lists = { [10,20,30], [1,2,3], [19,41,57] };\n"
+          ">lists.each.insert(0,9)...; /* Expand the wrapped sequence to ensure invocation */\n"
+          ">lists.each[0] = 8;         /* No need for expand in this case */\n"
+          ">del lists.each[0];         /* No need for expand in this case */\n"
+          ) },
     /* TODO: Override this attribute as pass-though in sequence-proxy types. */
     { "isfrozen", &seq_get_isfrozen, NULL, NULL,
       DOC("->?Dbool\n"

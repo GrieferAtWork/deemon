@@ -615,7 +615,7 @@ DFUNDEF size_t DCALL DeeFastSeq_GetSize(DeeObject *__restrict self);
  *          returned something other than `DEE_FASTSEQ_NOTFAST'. */
 DFUNDEF DREF DeeObject *DCALL DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index);
 
-/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE an error
+/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE if an error
  * occurred, and `NULL' if the item has been marked as unbound. */
 DFUNDEF DREF DeeObject *DCALL DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index);
 
