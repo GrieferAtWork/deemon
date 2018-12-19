@@ -96,7 +96,7 @@ ast_gen_operator_func(struct ast *binding,
   if (asm_gpush_extern(opmod_id,opsym_id))
       goto err_module; /* <...> from operators */
   if (binding) {
-   if (ast_genasm(binding,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(binding,ASM_G_FPUSHRES)) goto err;
    deemon_module_id = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_module_id < 0) goto err_module;
    if (asm_gcall_extern((uint16_t)deemon_module_id,id_instancemethod,2))
@@ -124,7 +124,7 @@ generic_operator:
   if (asm_gcall_extern((uint16_t)deemon_module_id,id_instancemethod,2))
       goto err_module; /* instancemethod(operator from operators,opname) */
   if (binding) {
-   if (ast_genasm(binding,ASM_G_FPUSHRES)) goto err_module;
+   if (ast_genasm_one(binding,ASM_G_FPUSHRES)) goto err_module;
    if (asm_gcall_extern((uint16_t)deemon_module_id,id_instancemethod,2))
        goto err_module; /* instancemethod(instancemethod(operator from operators,opname),binding) */
   }

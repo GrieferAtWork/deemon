@@ -47,8 +47,8 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
  if unlikely((guard_begin = asm_newsym()) == NULL) goto err;
  if unlikely((guard_end = asm_newsym()) == NULL) goto err;
  if (asm_putddi(ddi_ast)) goto err;
- if (asm_gdup()) goto err;                           /* expr, expr */
- if (ast_genasm(case_expr,ASM_G_FPUSHRES)) goto err; /* expr, expr, case */
+ if (asm_gdup()) goto err;                               /* expr, expr */
+ if (ast_genasm_one(case_expr,ASM_G_FPUSHRES)) goto err; /* expr, expr, case */
  /* This instruction must be protected by an exception
   * handler for NOT_IMPLEMENTED and TYPE errors that
   * are handled by jumping to the next check. */
@@ -322,7 +322,11 @@ err_jump_table:
   Dee_Decref_unlikely(jump_table);
   if (!has_expression) {
    /* Assemble text for the switch expression. */
-   if (ast_genasm(self->a_switch.s_expr,ASM_G_FPUSHRES))
+   /* NOTE: Enforcing single-value mode here is _very_ important,
+    *       as failing to do so could allow user-code to construct
+    *       exploiting code that is capable of jumping to arbitrary
+    *       memory locations, whilst in exec-fast mode! */
+   if (ast_genasm_one(self->a_switch.s_expr,ASM_G_FPUSHRES))
        goto err_cases;
    has_expression = true;
   } else {

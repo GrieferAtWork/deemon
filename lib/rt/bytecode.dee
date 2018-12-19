@@ -411,7 +411,7 @@ import * from deemon;
 @@> statics: { "foo", "bar" }
 @@>));
 @@>print fun(); /* "foobar" */
-function code(data) {
+function code(data: {int...}): bytes {
 	file.writer w;
 	for (local d: data) {
 		local b = d.tobytes(d.bytecount,"little",false);

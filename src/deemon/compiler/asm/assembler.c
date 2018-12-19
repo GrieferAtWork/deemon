@@ -2006,7 +2006,7 @@ asm_do_gjcc(struct ast *__restrict cond,
  struct asm_rel *rel;
  ASSERT(instr == ASM_JT || instr == ASM_JF);
  if (cond->a_type != AST_SYM || !asm_can_prefix_symbol_for_read(cond->a_sym)) {
-  if (ast_genasm(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL))
+  if (ast_genasm_one(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL))
       goto err;
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_do_gjmp(instr,target)) goto err;
@@ -2179,7 +2179,7 @@ err:
       instr = ASM_JX_NOT(instr);
   cond = cond->a_bool;
  }
- if (ast_genasm(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL)) goto err;
+ if (ast_genasm_one(cond,ASM_G_FPUSHRES|ASM_G_FLAZYBOOL)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gjmp(instr,target)) goto err;
  asm_decsp(); /* Adjust for `ASM_JT' / `ASM_JF' popping a condition. */

@@ -171,11 +171,13 @@ INTERN struct asm_sym *
 
    /* Generate the loop itself. */
    if (block &&
-       ast_genasm(block,ASM_G_FNORMAL)) goto err;
+       ast_genasm(block,ASM_G_FNORMAL))
+       goto err;
 
    if (iter_or_next) {
     asm_defsym(loop_continue);
-    if (ast_genasm(iter_or_next,ASM_G_FNORMAL)) goto err;
+    if (ast_genasm(iter_or_next,ASM_G_FNORMAL))
+        goto err;
    }
    /* Jump back to re-evaluate the condition. */
    if (asm_putddi(ddi_ast)) goto err;
@@ -188,11 +190,13 @@ INTERN struct asm_sym *
 
    /* Generate the loop itself. */
    if (block &&
-       ast_genasm(block,ASM_G_FNORMAL)) goto err;
+       ast_genasm(block,ASM_G_FNORMAL))
+       goto err;
 
    if (iter_or_next) {
     asm_defsym(loop_continue);
-    if (ast_genasm(iter_or_next,ASM_G_FNORMAL)) goto err;
+    if (ast_genasm(iter_or_next,ASM_G_FNORMAL))
+        goto err;
    }
    /* Jump back to re-evaluate the condition. */
    if (asm_putddi(ddi_ast)) goto err;

@@ -1407,7 +1407,7 @@ write_regular_local:
       AST_FMULTIPLE_ISDICT(self->a_flag)) {
    size_t i,length = self->a_multiple.m_astc & ~1;
    for (i = 0; i < length; ++i) {
-    if (ast_genasm(self->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+    if (ast_genasm_one(self->a_multiple.m_astv[i],ASM_G_FPUSHRES))
         goto err;
    }
    result = DeeString_Newf("{#%u}",length);
@@ -1460,7 +1460,7 @@ write_regular_local:
      !AST_FMULTIPLE_ISDICT(self->a_flag)) {
    size_t i,length = self->a_multiple.m_astc;
    for (i = 0; i < length; ++i) {
-    if (ast_genasm(self->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+    if (ast_genasm_one(self->a_multiple.m_astv[i],ASM_G_FPUSHRES))
         goto err;
    }
    result = DeeString_Newf("[#%u]",length);

@@ -324,6 +324,86 @@ err:
 }
 
 
+PRIVATE int DCALL
+readjust_stack_after_bad_init(uint16_t wnt_sp) {
+ /* Go trough all currently defined stack variables, and
+  * deallocate all that have been allocated within the
+  * offending segment of the stack. */
+ DeeScopeObject *scope;
+ scope = current_assembler.a_scope;
+ ASSERT(scope);
+ ASSERT(scope->s_base == current_basescope);
+ do {
+  struct symbol **bucket_iter,**bucket_end,*iter;
+  bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
+  for (; bucket_iter < bucket_end; ++bucket_iter)
+  for (iter = *bucket_iter; iter; iter = iter->s_next)
+  if (iter->s_type == SYMBOL_TYPE_STACK &&
+     (iter->s_flag & SYMBOL_FALLOC) &&
+     (iter->s_symid >= wnt_sp)) {
+   if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
+       goto err;
+   iter->s_flag &= ~SYMBOL_FALLOC;
+  }
+  for (iter = scope->s_del; iter; iter = iter->s_next)
+  if (iter->s_type == SYMBOL_TYPE_STACK &&
+     (iter->s_flag & SYMBOL_FALLOC) &&
+     (iter->s_symid >= wnt_sp)) {
+   if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
+       goto err;
+   iter->s_flag &= ~SYMBOL_FALLOC;
+  }
+  scope = scope->s_prev;
+ } while (scope && scope->s_base == current_basescope);
+
+ return asm_gadjstack((int16_t)((int32_t)wnt_sp -
+                                (int32_t)current_assembler.a_stackcur));
+err:
+ return -1;
+}
+
+INTERN int
+(DCALL ast_genasm_one)(struct ast *__restrict self,
+                       unsigned int gflags) {
+ uint16_t old_sp = current_assembler.a_stackcur;
+ uint16_t wnt_sp;
+ int result = ast_genasm(self,gflags);
+ if unlikely(result) goto done;
+ wnt_sp = old_sp;
+ if (gflags & ASM_G_FPUSHRES)
+     ++wnt_sp;
+ if unlikely(current_assembler.a_stackcur != wnt_sp) {
+  /* Emit a warning and forcefully re-align the stack. */
+  result = WARNAST(self,W_ASM_MISSALIGNED_STACK);
+  if (result) goto done;
+  result = readjust_stack_after_bad_init(wnt_sp);
+ }
+done:
+ return result;
+}
+
+INTERN int
+(DCALL ast_genasm_set_one)(struct ast *__restrict self,
+                           unsigned int gflags) {
+ uint16_t old_sp = current_assembler.a_stackcur;
+ uint16_t wnt_sp;
+ int result = ast_genasm_set(self,gflags);
+ if unlikely(result) goto done;
+ wnt_sp = old_sp;
+ if (gflags & ASM_G_FPUSHRES)
+     ++wnt_sp;
+ if unlikely(current_assembler.a_stackcur != wnt_sp) {
+  /* Emit a warning and forcefully re-align the stack. */
+  result = WARNAST(self,W_ASM_MISSALIGNED_STACK);
+  if (result) goto done;
+  result = readjust_stack_after_bad_init(wnt_sp);
+ }
+done:
+ return result;
+}
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_ASM_SCOPE_C */

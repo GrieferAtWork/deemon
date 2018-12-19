@@ -146,7 +146,7 @@ ast_gen_setattr_inplace(struct ast *__restrict base,
    if (asm_grrot(3)) goto err; /* COPY(base.name), base, base.name */
   }
   if (operand) {
-   if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, base.name, operand */
+   if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, base.name, operand */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
    if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -166,7 +166,7 @@ ast_gen_setattr_inplace(struct ast *__restrict base,
  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;
- if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;                         /* base, base, name, name */
  if (asm_grrot(3)) goto err;                       /* base, name, base, name */
@@ -177,7 +177,7 @@ ast_gen_setattr_inplace(struct ast *__restrict base,
   if (asm_grrot(4)) goto err; /* COPY(base.name), base, name, base.name */
  }
  if (operand) {
-  if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, name, base.name, operand */
+  if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, name, base.name, operand */
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
   if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -224,7 +224,7 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
      if (asm_grrot(3)) goto err; /* COPY(base[index]), base, base[index] */
     }
     if (operand) {
-     if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, base[index], operand */
+     if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, base[index], operand */
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
      if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -255,7 +255,7 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
     if (asm_grrot(3)) goto err; /* COPY(base[index]), base, base[index] */
    }
    if (operand) {
-    if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, base[index], operand */
+    if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, base[index], operand */
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
     if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -276,7 +276,7 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;
- if (ast_genasm(index,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm_one(index,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;                         /* base, base, index, index */
  if (asm_grrot(3)) goto err;                       /* base, index, base, index */
@@ -287,7 +287,7 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
   if (asm_grrot(4)) goto err; /* COPY(base[index]), base, index, base[index] */
  }
  if (operand) {
-  if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, index, base[index], operand */
+  if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, index, base[index], operand */
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
   if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -337,7 +337,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
       if (asm_grrot(3)) goto err; /* COPY(base[none:43]), base, base[none:43] */
      }
      if (operand) {
-      if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, base[none:43], operand */
+      if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, base[none:43], operand */
       if (asm_putddi(ddi_ast)) goto err;
       if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
       if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -359,7 +359,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;
-   if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* base, base, end, end */
    if (asm_grrot(3)) goto err;       /* base, end, base, end */
@@ -370,7 +370,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
     if (asm_grrot(4)) goto err; /* COPY(base[none:end]), base, end, base[none:end] */
    }
    if (operand) {
-    if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, end, base[none:end], operand */
+    if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, end, base[none:end], operand */
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
     if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -404,7 +404,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
        if (asm_grrot(3)) goto err; /* COPY(base[42:none]), base, base[42:none] */
       }
       if (operand) {
-       if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, base[42:none], operand */
+       if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, base[42:none], operand */
        if (asm_putddi(ddi_ast)) goto err;
        if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
        if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -434,7 +434,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
        if (asm_grrot(3)) goto err; /* COPY(base[42:43]), base, base[42:43] */
       }
       if (operand) {
-       if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, base[42:43], operand */
+       if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, base[42:43], operand */
        if (asm_putddi(ddi_ast)) goto err;
        if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
        if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -456,7 +456,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gdup()) goto err;
-    if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gdup()) goto err;                             /* base, base, end, end */
     if (asm_grrot(3)) goto err;                           /* base, end, base, end */
@@ -467,7 +467,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
      if (asm_grrot(4)) goto err; /* COPY(base[42:end]), base, end, base[42:end] */
     }
     if (operand) {
-     if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, end, base[42:end], operand */
+     if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, end, base[42:end], operand */
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
      if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -493,7 +493,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;
-   if (ast_genasm(start,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(start,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* base, base, start, start */
    if (asm_grrot(3)) goto err;       /* base, start, base, start */
@@ -504,7 +504,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
     if (asm_grrot(4)) goto err; /* COPY(base[start:none]), base, start, base[start:none] */
    }
    if (operand) {
-    if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, start, base[start:none], operand */
+    if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, start, base[start:none], operand */
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
     if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -527,7 +527,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;
-   if (ast_genasm(start,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(start,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;                           /* base, base, start, start */
    if (asm_grrot(3)) goto err;                         /* base, start, base, start */
@@ -538,7 +538,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
     if (asm_grrot(4)) goto err; /* COPY(base[start:42]), base, start, base[start:42] */
    }
    if (operand) {
-    if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, start, base[start:42], operand */
+    if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, start, base[start:42], operand */
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
     if (asm_put(operator_instr_table[inplace_operator_name])) goto err;
@@ -559,11 +559,11 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;   /* base */
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;                        /* base, base */
- if (ast_genasm(start,ASM_G_FPUSHRES)) goto err;  /* base, base, start */
+ if (ast_genasm_one(start,ASM_G_FPUSHRES)) goto err;/* base, base, start */
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;                        /* base, base, start, start */
  if (asm_grrot(3)) goto err;                      /* base, start, base, start */
- if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;    /* base, start, base, start, end */
+ if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;/* base, start, base, start, end */
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gdup()) goto err;                        /* base, start, base, start, end, end */
  if (asm_grrot(4)) goto err;                      /* base, start, end, base, start, end */
@@ -574,7 +574,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
   if (asm_grrot(5)) goto err; /* COPY(base[start:end]), base, start, end, base[start:end] */
  }
  if (operand) {
-  if (ast_genasm(operand,ASM_G_FPUSHRES)) goto err; /* base, start, end, base[start:end], operand */
+  if (ast_genasm_one(operand,ASM_G_FPUSHRES)) goto err; /* base, start, end, base[start:end], operand */
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_pstack(current_assembler.a_stackcur-2)) goto err;
   if (asm_put(operator_instr_table[inplace_operator_name])) goto err;

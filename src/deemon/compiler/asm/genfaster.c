@@ -132,7 +132,6 @@ push_generic:
  return ast_genasm(self,gflags);
 }
 
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_ASM_GENFASTER_C */

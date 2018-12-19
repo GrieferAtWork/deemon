@@ -108,17 +108,17 @@ INTERN int
   if (!expr->a_operator.o_op1)
        goto emit_instruction;
   ++argc;
-  if (ast_genasm(expr->a_operator.o_op1,ASM_G_FPUSHRES))
+  if (ast_genasm_one(expr->a_operator.o_op1,ASM_G_FPUSHRES))
       goto err;
   if (!expr->a_operator.o_op2)
        goto emit_instruction;
   ++argc;
-  if (ast_genasm(expr->a_operator.o_op2,ASM_G_FPUSHRES))
+  if (ast_genasm_one(expr->a_operator.o_op2,ASM_G_FPUSHRES))
       goto err;
   if (!expr->a_operator.o_op3)
        goto emit_instruction;
   ++argc;
-  if (ast_genasm(expr->a_operator.o_op3,ASM_G_FPUSHRES))
+  if (ast_genasm_one(expr->a_operator.o_op3,ASM_G_FPUSHRES))
       goto err;
 emit_instruction:
   /* Duplicate all operands. */
@@ -203,7 +203,7 @@ emit_instruction:
   /* STACK: a, [b, [c, [d]]], [condition] */
   if ((gflags & ASM_G_FPUSHRES) && asm_gpop()) goto err; /* Pop the duplicated `condition' */
   /* STACK: a, [b, [c, [d]]] */
-  if (message ? (ast_genasm(message,ASM_G_FPUSHRES) || asm_putddi(ddi_ast))
+  if (message ? (ast_genasm_one(message,ASM_G_FPUSHRES) || asm_putddi(ddi_ast))
               :  asm_gpush_none())
       goto err;
   /* STACK: a, [b, [c, [d]]], message */
@@ -244,7 +244,7 @@ emit_instruction:
   operator_name = OPERATOR_CONTAINS;
   argc          = 2;
   if (ast_genasm(expr->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(expr->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(expr->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gswap()) goto err;
   goto emit_instruction;
@@ -283,7 +283,7 @@ emit_instruction:
  argc = 0;
  /* Generate code for the assertion message. */
  if (message) {
-  if (ast_genasm(message,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(message,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
   ++argc;
  }

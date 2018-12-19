@@ -658,10 +658,8 @@ struct assembler {
     struct asm_sym        *a_loopctl[ASM_LOOPCTL_COUNT]; /* Loop control symbols. */
     DeeScopeObject        *a_scope;    /* [0..1] The scope of the last AST (Used for tracking stack-based variables) */
     struct ast_loc        *a_error;    /* [0..1] An AST location that is used as context for displaying assembler messages/warnings. */
-#define ASM_ERR(...)        PERRAT(current_assembler.a_error,__VA_ARGS__)
-#define ASM_WARN(...)       WARNAT(current_assembler.a_error,__VA_ARGS__)
-#define ASM_ERRAT(loc,...)  PERRAT(loc,__VA_ARGS__)
-#define ASM_WARNAT(loc,...) WARNAT(loc,__VA_ARGS__)
+#define ASM_ERR(...)        parser_erratrf(current_assembler.a_error,__VA_ARGS__)
+#define ASM_WARN(...)       parser_warnatrf(current_assembler.a_error,__VA_ARGS__)
     struct ddi_assembler   a_ddi;      /* Deemon debug information assembler subsystem. */
     struct handler_frame  *a_handler;  /* [0..1][(!= NULL) == (a_handlerc != 0)] Chain of active exception handlers. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
@@ -1797,6 +1795,10 @@ DeeInstruction_Decode(instruction_t const *__restrict ip,
 
 /* Generate assembly for the given AST. */
 INTDEF int DCALL ast_genasm(struct ast *__restrict self, unsigned int gflags);
+/* Same as `ast_genasm()', but emit a compiler error and forcefully
+ * re-adjust the stack if generated assembly produces more than 0/1
+ * stack value(s) depending on `ASM_G_FPUSHRES' having been given. */
+INTDEF int DCALL ast_genasm_one(struct ast *__restrict self, unsigned int gflags);
 
 /* Variants of `ast_genasm()' that will attempt to emit the expression
  * as either an AbstractSequeceProxy, or as a Set. In either case, if
@@ -1816,6 +1818,7 @@ INTDEF int DCALL ast_genasm(struct ast *__restrict self, unsigned int gflags);
  *    casts from the expression, the same way `ast_genasm_asp()' would. */
 INTDEF int DCALL ast_genasm_asp(struct ast *__restrict self, unsigned int gflags);
 INTDEF int DCALL ast_genasm_set(struct ast *__restrict self, unsigned int gflags);
+INTDEF int DCALL ast_genasm_set_one(struct ast *__restrict self, unsigned int gflags);
 
 /* Strip sequence-style cast expressions from `ast' and return an inner sequence.
  * If `ast' is no sequence expression, re-return it directly. */
@@ -1973,6 +1976,7 @@ INTDEF int (DCALL asm_genassert)(struct ast *__restrict expr,
 #define asm_gdel_symbol(sym,warn_ast)                   __builtin_expect(asm_gdel_symbol(sym,warn_ast),0)
 #define asm_gpop_symbol(sym,warn_ast)                   __builtin_expect(asm_gpop_symbol(sym,warn_ast),0)
 #define ast_genasm(ast,gflags)                          __builtin_expect(ast_genasm(ast,gflags),0)
+#define ast_genasm_one(ast,gflags)                      __builtin_expect(ast_genasm_one(ast,gflags),0)
 #define asm_putrel(type,sym,value)                      __builtin_expect(asm_putrel(type,sym,value),0)
 #ifndef asm_put_data16
 #define asm_put_data16(data)                            __builtin_expect(asm_put_data16(data),0)

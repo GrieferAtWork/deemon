@@ -557,7 +557,7 @@ done_push_none:
       if unlikely(pack_sequence(self->a_flag,active_size)) goto err;
      }
     }
-    error = ast_genasm(elem->a_expand,ASM_G_FPUSHRES);
+    error = ast_genasm_one(elem->a_expand,ASM_G_FPUSHRES);
     if unlikely(error) goto err;
     if (active_size || expand_encountered) {
      /* Concat the old an new parts. */
@@ -583,7 +583,10 @@ done_push_none:
      }
      ++active_size;
     }
-    error = ast_genasm(elem,need_this);
+    error = self->a_flag != AST_FMULTIPLE_KEEPLAST
+          ? ast_genasm_one(elem,need_this)
+          : ast_genasm(elem,need_this)
+          ;
    }
    if unlikely(error) goto err;
   }
@@ -1123,7 +1126,7 @@ varop_without_prefix:
    }
    /* Compile operand tuple or push an empty one. */
    if (self->a_operator.o_op1) {
-    if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(self)) goto err;
    } else {
     if (asm_putddi(self)) goto err;
@@ -1247,7 +1250,7 @@ pop_unused:
      }
     }
     if (DeeNone_Check(const_begin)) {
-     if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self)) goto err;
      if (asm_ggetrange_np()) goto err;
      goto pop_unused;
@@ -1255,7 +1258,7 @@ pop_unused:
     if (DeeInt_Check(const_begin) &&
         DeeInt_TryAsS32(const_begin,&intval) &&
         intval >= INT16_MIN && intval <= INT16_MAX) {
-     if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self)) goto err;
      if (asm_ggetrange_ip((int16_t)intval)) goto err;
      goto pop_unused;
@@ -1263,7 +1266,7 @@ pop_unused:
    } else if (end->a_type == AST_CONSTEXPR) {
     DeeObject *const_end = end->a_constexpr;
     if (DeeNone_Check(const_end)) {
-     if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(begin,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self)) goto err;
      if (asm_ggetrange_pn()) goto err;
      goto pop_unused;
@@ -1271,14 +1274,14 @@ pop_unused:
     if (DeeInt_Check(const_end) &&
         DeeInt_TryAsS32(const_end,&intval) &&
         intval >= INT16_MIN && intval <= INT16_MAX) {
-     if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(begin,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self)) goto err;
      if (asm_ggetrange_pi((int16_t)intval)) goto err;
      goto pop_unused;
     }
    }
-   if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(begin,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self)) goto err;
    if (asm_ggetrange()) goto err;
    goto pop_unused;
@@ -1593,7 +1596,7 @@ push_a_if_used:
     if (asm_putddi(self) || asm_gcontains_const((uint16_t)cid)) goto err;
    } else {
     if (ast_genasm_set(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(self) || asm_gcontains()) goto err;
    }
    goto pop_unused;
@@ -1644,7 +1647,7 @@ push_a_if_used:
   case OPERATOR_GETATTR:
    if unlikely(!self->a_operator.o_op1) goto generic_operator;
    if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self)) goto err;
    ASSERT(operator_instr_table[operator_name] != 0);
    if ((asm_ddicsp(),asm_put(operator_instr_table[operator_name]))) goto err;
@@ -1654,7 +1657,7 @@ push_a_if_used:
   case OPERATOR_DELATTR:
    if unlikely(!self->a_operator.o_op1) goto generic_operator;
    if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self)) goto err;
    ASSERT(operator_instr_table[operator_name] != 0);
    if ((asm_ddcsp(),asm_put(operator_instr_table[operator_name]))) goto err;
@@ -1670,11 +1673,11 @@ push_a_if_used:
     /* Optimization when A and B can be exchanged. */
     if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(self) || asm_gdup()) goto err;
-    if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(self) || asm_gswap()) goto err;
    } else {
     if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(self)) goto err;
     if (PUSH_RESULT && (asm_gdup() || asm_grrot(3))) goto err;
    }
@@ -1685,8 +1688,8 @@ push_a_if_used:
    if unlikely(!self->a_operator.o_op1) goto generic_operator;
    if unlikely(!self->a_operator.o_op2) goto generic_operator;
    if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_operator.o_op2,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op2,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self)) goto err;
    ASSERT(operator_instr_table[operator_name] != 0);
    if ((asm_dddcsp(),asm_put(operator_instr_table[operator_name]))) goto err;
@@ -1800,11 +1803,11 @@ operator_without_prefix:
    }
    /* Compile operands. */
    if (self->a_operator.o_op1 &&
-      (++argc,ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES))) goto err;
+      (++argc,ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES))) goto err;
    if (self->a_operator.o_op2 &&
-      (++argc,ast_genasm(self->a_operator.o_op2,ASM_G_FPUSHRES))) goto err;
+      (++argc,ast_genasm_one(self->a_operator.o_op2,ASM_G_FPUSHRES))) goto err;
    if (self->a_operator.o_op3 &&
-      (++argc,ast_genasm(self->a_operator.o_op3,ASM_G_FPUSHRES))) goto err;
+      (++argc,ast_genasm_one(self->a_operator.o_op3,ASM_G_FPUSHRES))) goto err;
    if (asm_putddi(self)) goto err;
    if (prefix_symbol) {
     if (asm_gprefix_symbol(prefix_symbol,self->a_operator.o_op0)) goto err;
@@ -1888,7 +1891,7 @@ do_this_as_typesym_ref:
     }
    }
    if (ast_genasm(self->a_action.a_act0,PUSH_RESULT)) goto err;
-   if (ast_genasm(self->a_action.a_act1,PUSH_RESULT)) goto err;
+   if (ast_genasm_one(self->a_action.a_act1,PUSH_RESULT)) goto err;
    if (PUSH_RESULT && (asm_putddi(self) || asm_gsuper())) goto err;
    break;
   ACTION(AST_FACTION_PRINT)
@@ -1935,18 +1938,18 @@ do_this_as_typesym_ref:
      if (AST_ISNONE(self->a_action.a_act2)) {
       if (PUSH_RESULT && (asm_putddi(self) || asm_grange_0())) goto err;
      } else {
-      if (ast_genasm(self->a_action.a_act2,PUSH_RESULT)) goto err;
+      if (ast_genasm_one(self->a_action.a_act2,PUSH_RESULT)) goto err;
       if (PUSH_RESULT && (asm_putddi(self) || asm_grange_step_0())) goto err;
      }
      break;
     }
    }
    if (ast_genasm(self->a_action.a_act0,PUSH_RESULT)) goto err;
-   if (ast_genasm(self->a_action.a_act1,PUSH_RESULT)) goto err;
+   if (ast_genasm_one(self->a_action.a_act1,PUSH_RESULT)) goto err;
    if (AST_ISNONE(self->a_action.a_act2)) {
     if (PUSH_RESULT && (asm_putddi(self) || asm_grange())) goto err;
    } else {
-    if (ast_genasm(self->a_action.a_act2,PUSH_RESULT)) goto err;
+    if (ast_genasm_one(self->a_action.a_act2,PUSH_RESULT)) goto err;
     if (PUSH_RESULT && (asm_putddi(self) || asm_grange_step())) goto err;
    }
    break;
@@ -1967,7 +1970,7 @@ do_this_as_typesym_ref:
     if (asm_gisnone()) goto err;
     break;
    }
-   if (ast_genasm(self->a_action.a_act1,PUSH_RESULT)) goto err;
+   if (ast_genasm_one(self->a_action.a_act1,PUSH_RESULT)) goto err;
    if (PUSH_RESULT && (asm_putddi(self) || asm_ginstanceof())) goto err;
    break;
   ACTION(AST_FACTION_IN)
@@ -1995,11 +1998,11 @@ action_in_without_const:
     if (ast_can_exchange(self->a_action.a_act0,
                          self->a_action.a_act1)) {
      if (ast_genasm_set(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
-     if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self) || asm_gcontains()) goto err;
     } else {
      if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
-     if (ast_genasm_set(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_set_one(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(self) || asm_gswap() || asm_gcontains()) goto err;
     }
    }
@@ -2040,7 +2043,7 @@ action_in_without_const:
 
   ACTION(AST_FACTION_BOUNDITEM)
    if (ast_genasm(self->a_action.a_act0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_action.a_act1,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self) || asm_gbounditem()) goto err;
    goto pop_unused;
 
@@ -2067,12 +2070,12 @@ action_in_without_const:
 
   ACTION(AST_FACTION_SAMEOBJ)
    if (ast_genasm(self->a_action.a_act0,PUSH_RESULT)) goto err;
-   if (ast_genasm(self->a_action.a_act1,PUSH_RESULT)) goto err;
+   if (ast_genasm_one(self->a_action.a_act1,PUSH_RESULT)) goto err;
    if (PUSH_RESULT && (asm_putddi(self) || asm_gsameobj())) goto err;
    goto pop_unused;
   ACTION(AST_FACTION_DIFFOBJ)
    if (ast_genasm(self->a_action.a_act0,PUSH_RESULT)) goto err;
-   if (ast_genasm(self->a_action.a_act1,PUSH_RESULT)) goto err;
+   if (ast_genasm_one(self->a_action.a_act1,PUSH_RESULT)) goto err;
    if (PUSH_RESULT && (asm_putddi(self) || asm_gdiffobj())) goto err;
    goto pop_unused;
 
@@ -2195,6 +2198,7 @@ err:
  return -1;
 #undef PUSH_RESULT
 }
+
 
 DECL_END
 

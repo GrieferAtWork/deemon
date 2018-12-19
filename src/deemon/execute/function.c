@@ -474,7 +474,7 @@ PRIVATE struct type_getset function_getsets[] = {
       DOC("->?X2?Dtype?N\n"
           "Try to determine if @this function is defined as part of a user-defined class, "
           "and if it is, return that class type, or :none if that class couldn't be found, "
-          "of if @this function is defined as stand-alone") },
+          "or if @this function is defined as stand-alone") },
     { DeeString_STR(&str___module__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_module, NULL, NULL,
       DOC("->?Dmodule\n"

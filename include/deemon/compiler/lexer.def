@@ -556,6 +556,7 @@ DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY,(WG_SYMBOL),WSTATE_ERROR,{ struct 
 DEF_WARNING(W_ASM_MULTIPLE_WRITES_TO_FINAL,(WG_READONLY),WSTATE_DISABLED,{ struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final variable `%s' generate additional checks",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_UNBIND_FINAL_SYMBOL,(WG_READONLY),WSTATE_WARN,{ struct symbol *sym = ARG(struct symbol *); WARNF("Cannot delete final variable `%s'",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE,(WG_READONLY),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final symbol `%s' of type `%s' cannot be handled",SYMBOL_NAME(sym),SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_MISSALIGNED_STACK,(WG_VALUE),WSTATE_ERROR,WARNF("Miss-aligned stack after expression (this might happen due to incorrectly placed initializers for `__stack' variables)"))
 
 WARNING_NAMESPACE(WN_ASSEMBLER_LABLES,8120)
 DEF_WARNING(W_ASM_LABEL_ALREADY_DEFINED,(WG_SYNTAX),WSTATE_ERROR,WARNF("Label `%s' has already been defined",ARG(char *)))

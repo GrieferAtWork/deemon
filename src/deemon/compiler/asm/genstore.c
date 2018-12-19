@@ -43,12 +43,12 @@ asm_gpush2_duplast(struct ast *__restrict a,
  if (PUSH_RESULT) {
   if (ast_can_exchange(b,a)) {
    if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(a,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup_n(2-2)) goto err;
   } else if (current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) {
    if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err; /* a, b */
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err; /* a, b */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* a, b, b */
    if (asm_grrot(3)) goto err;       /* b, a, b */
@@ -56,14 +56,14 @@ asm_gpush2_duplast(struct ast *__restrict a,
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gpush_none()) goto err;
    if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err; /* none, a, b */
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err; /* none, a, b */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* none, a, b, b */
    if (asm_gpop_n(4-2)) goto err;    /* b,    a, b */
   }
  } else {
   if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
  }
  return 0;
@@ -80,14 +80,14 @@ asm_gpush3_duplast(struct ast *__restrict a,
  if (PUSH_RESULT) {
   if (ast_can_exchange(c,b) && ast_can_exchange(c,a)) {
    if (ast_genasm(c,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(a,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup_n(3-2)) goto err;
   } else if (current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) {
    if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(c,ASM_G_FPUSHRES)) goto err; /* a, b, c */
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err; /* a, b, c */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* a, b, c, c */
    if (asm_grrot(4)) goto err;       /* c, a, b, c */
@@ -95,16 +95,16 @@ asm_gpush3_duplast(struct ast *__restrict a,
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gpush_none()) goto err;
    if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(c,ASM_G_FPUSHRES)) goto err; /* none, a, b, c */
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err; /* none, a, b, c */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* none, a, b, c, c */
    if (asm_gpop_n(5-2)) goto err;    /* c,    a, b, c */
   }
  } else {
   if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(c,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
  }
  return 0;
@@ -124,16 +124,16 @@ asm_gpush4_duplast(struct ast *__restrict a,
       ast_can_exchange(d,b) &&
       ast_can_exchange(d,a)) {
    if (ast_genasm(d,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(c,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(a,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup_n(4-2)) goto err;
   } else if (current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) {
    if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(c,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(d,ASM_G_FPUSHRES)) goto err; /* a, b, c, d */
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(d,ASM_G_FPUSHRES)) goto err; /* a, b, c, d */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* a, b, c, d, d */
    if (asm_grrot(5)) goto err;       /* d, a, b, c, d */
@@ -141,18 +141,18 @@ asm_gpush4_duplast(struct ast *__restrict a,
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gpush_none()) goto err;
    if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(c,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(d,ASM_G_FPUSHRES)) goto err; /* none, a, b, c, d */
+   if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(d,ASM_G_FPUSHRES)) goto err; /* none, a, b, c, d */
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gdup()) goto err;         /* none, a, b, c, d, d */
    if (asm_gpop_n(6-2)) goto err;    /* d,    a, b, c, d */
   }
  } else {
   if (ast_genasm(a,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(b,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(c,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(d,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(b,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(c,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(d,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
  }
  return 0;
@@ -302,7 +302,7 @@ do_perform_supergetattr:
   goto pop_unused;
  }
  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
- if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_ggetattr()) goto err;
 pop_unused:
@@ -405,7 +405,7 @@ check_boundattr_sym:
   }
  }
  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
- if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gboundattr()) goto err;
 pop_unused:
@@ -493,7 +493,7 @@ check_delattr_sym:
   return asm_gdelattr_const(attrid);
  }
  if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
- if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  return asm_gdelattr();
 err:
@@ -541,7 +541,7 @@ set_class_attribute:
     if (PUSH_RESULT) {
      if (asm_gdup_n(1)) goto err;                        /* result, setter, class, value */
     } else {
-     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* setter, class, value */
+     if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err; /* setter, class, value */
      if (asm_putddi(ddi_ast)) goto err;
     }
     if (asm_gcall(2)) goto err;                          /* [result], discard */
@@ -549,7 +549,7 @@ set_class_attribute:
     if (PUSH_RESULT) {
      if (asm_gdup_n(0)) goto err;                        /* result, setter, value */
     } else {
-     if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* setter, value */
+     if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err; /* setter, value */
      if (asm_putddi(ddi_ast)) goto err;
     }
     if (asm_gcall(1)) goto err;                          /* [result], discard */
@@ -564,7 +564,7 @@ set_class_attribute:
   } else {
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;      /* class */
-   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;         /* class, value */
+   if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err;     /* class, value */
    if (asm_putddi(ddi_ast)) goto err;
   }
   if (asm_gdefcmember(attr->ca_addr)) goto err;            /* [result], class */
@@ -590,16 +590,16 @@ set_class_attribute:
    if (asm_gdup_n(0)) goto err;                      /* result, this_sym, value */
   } else {
    if (asm_putddi(ddi_ast)) goto err;
-   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err; /* this_sym */
-   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;   /* this_sym, value */
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err;   /* this_sym */
+   if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err; /* this_sym, value */
    if (asm_putddi(ddi_ast)) goto err;
   }
   return asm_gsetattr_const((uint16_t)symid);        /* [result] */
  }
  /* Regular, old member variable. */
  if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-  /* Call the delete function of the attribute. */
-  if (PUSH_RESULT && ast_genasm(value,ASM_G_FPUSHRES)) goto err;  /* setter, value */
+  /* Call the setter function of the attribute. */
+  if (PUSH_RESULT && ast_genasm(value,ASM_G_FPUSHRES)) goto err;  /* value */
   if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
    if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
     symid = asm_rsymid(class_sym);
@@ -608,7 +608,7 @@ set_class_attribute:
                          (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
          this_sym->s_type == SYMBOL_TYPE_THIS &&
         !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-     /* Invoke the delete callback. */
+     /* Invoke the setter callback. */
      if (!PUSH_RESULT && ast_genasm(value,ASM_G_FPUSHRES)) goto err;  /* value */
      if (asm_putddi(ddi_ast)) goto err;
      if (PUSH_RESULT && asm_gdup()) goto err;          /* [result], value */
@@ -639,22 +639,22 @@ set_class_attribute:
   /* [result], setter */
   if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
    if (PUSH_RESULT) {
-    if (asm_gdup_n(0)) goto err;                    /* result, setter, value */
+    if (asm_gdup_n(0)) goto err;                        /* result, setter, value */
    } else {
-    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err; /* setter, value */
+    if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err; /* setter, value */
     if (asm_putddi(ddi_ast)) goto err;
    }
-   if (asm_gcall(1)) goto err;                      /* [result], discard */
+   if (asm_gcall(1)) goto err;                          /* [result], discard */
   } else {
    /* Invoke as a this-call. */
-   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err; /* [result], setter, this */
+   if (asm_gpush_symbol(this_sym,ddi_ast)) goto err;    /* [result], setter, this */
    if (PUSH_RESULT) {
-    if (asm_gdup_n(1)) goto err;                    /* result, setter, this, value */
+    if (asm_gdup_n(1)) goto err;                        /* result, setter, this, value */
    } else {
-    if (ast_genasm(value,ASM_G_FPUSHRES)) goto err; /* setter, this, value */
+    if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err; /* setter, this, value */
     if (asm_putddi(ddi_ast)) goto err;
    }
-   if (asm_gcall(2)) goto err;                      /* [result], discard */
+   if (asm_gcall(2)) goto err;                          /* [result], discard */
   }
 pop_unused_result:
   return asm_gpop();
@@ -673,7 +673,7 @@ pop_unused_result:
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gpush_symbol(this_sym,ddi_ast)) goto err;  /* this */
    if (asm_gpush_symbol(class_sym,ddi_ast)) goto err; /* this, class */
-   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;    /* this, class, value */
+   if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err;/* this, class, value */
    if (asm_putddi(ddi_ast)) goto err;
   }
   if (asm_gsetmember(attr->ca_addr)) goto err;        /* [result] */
@@ -693,7 +693,7 @@ pop_unused_result:
   } else {
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gpush_symbol(class_sym,ddi_ast)) goto err;  /* class */
-   if (ast_genasm(value,ASM_G_FPUSHRES)) goto err;     /* class, value */
+   if (ast_genasm_one(value,ASM_G_FPUSHRES)) goto err; /* class, value */
    if (asm_putddi(ddi_ast)) goto err;
   }
   if (asm_gsetmember_this(attr->ca_addr)) goto err;   /* [result] */
@@ -1307,8 +1307,11 @@ check_dst_sym_class:
   case SYMBOL_TYPE_EXTERN:
   case SYMBOL_TYPE_LOCAL:
   case SYMBOL_TYPE_STACK:
-   if (ast_genasm(src,ASM_G_FPUSHRES)) goto err;
-   if (PUSH_RESULT && (asm_putddi(ddi_ast) || asm_gdup())) goto err;
+   if (ast_genasm(src,ASM_G_FPUSHRES))
+       goto err;
+   if (PUSH_RESULT &&
+      (asm_putddi(ddi_ast) || asm_gdup()))
+       goto err;
    if (asm_putddi(dst)) goto err;
    return asm_gpop_symbol(dst_sym,dst);
 
@@ -1563,14 +1566,14 @@ asm_gpop_expr(struct ast *__restrict self) {
       goto done;
      }
     }
-    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(base,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(self)) goto err;
     if (asm_gswap()) goto err;
     if (asm_gsetattr_const((uint16_t)cid)) goto err;
     goto done;
    }
-   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op1,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self)) goto err;
    if (asm_glrot(3)) goto err;
    if (asm_gsetattr()) goto err;
@@ -1582,7 +1585,7 @@ asm_gpop_expr(struct ast *__restrict self) {
    struct ast *index;
   case OPERATOR_GETITEM:
    if unlikely((index = self->a_operator.o_op1) == NULL) break;
-   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
    if (index->a_type == AST_CONSTEXPR) {
     int32_t int_index;
     /* Special optimizations for constant indices. */
@@ -1603,7 +1606,7 @@ asm_gpop_expr(struct ast *__restrict self) {
      goto done;
     }
    }
-   if (ast_genasm(index,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, index */
+   if (ast_genasm_one(index,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, index */
    if (asm_putddi(self)) goto err;
    if (asm_glrot(3)) goto err;           /* STACK: base, index, item */
    if (asm_gsetitem()) goto err;         /* STACK: - */
@@ -1615,7 +1618,7 @@ asm_gpop_expr(struct ast *__restrict self) {
    int32_t index;
   case OPERATOR_GETRANGE:
    if unlikely(!self->a_operator.o_op2) break;
-   if (ast_genasm(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(self->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
    begin = self->a_operator.o_op1;
    end   = self->a_operator.o_op2;
    /* Special optimizations for certain ranges. */
@@ -1634,7 +1637,7 @@ asm_gpop_expr(struct ast *__restrict self) {
       goto done;
      }
      /* `setrange pop, none, pop, pop' */
-     if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
+     if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
      if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;         /* STACK: base, end, item */
      if (asm_gsetrange_np()) goto err;   /* STACK: - */
@@ -1663,7 +1666,7 @@ asm_gpop_expr(struct ast *__restrict self) {
        goto done;
       }
      }
-     if (ast_genasm(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
+     if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, end */
      if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;         /* STACK: base, end, item */
      if (asm_gsetrange_ip((int16_t)index)) goto err; /* STACK: - */
@@ -1675,7 +1678,7 @@ asm_gpop_expr(struct ast *__restrict self) {
     int32_t index;
     if (DeeNone_Check(end_index)) {
      /* `setrange pop, pop, none, pop' */
-     if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, begin */
+     if (ast_genasm_one(begin,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, begin */
      if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;           /* STACK: base, begin, item */
      if (asm_gsetrange_pn()) goto err;     /* STACK: - */
@@ -1685,15 +1688,15 @@ asm_gpop_expr(struct ast *__restrict self) {
         DeeInt_TryAsS32(end_index,&index) &&
         index >= INT16_MIN && index <= INT16_MAX) {
      /* `setrange pop, pop, $<Simm16>, pop' */
-     if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;           /* STACK: item, base, begin */
+     if (ast_genasm_one(begin,ASM_G_FPUSHRES)) goto err; /* STACK: item, base, begin */
      if (asm_putddi(self)) goto err;
      if (asm_glrot(3)) goto err;                     /* STACK: base, begin, item */
      if (asm_gsetrange_pi((int16_t)index)) goto err; /* STACK: - */
      goto done;
     }
    }
-   if (ast_genasm(begin,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(end,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(begin,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(end,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(self)) goto err;
                                   /* STACK: item, base, begin, end */
    if (asm_glrot(4)) goto err;    /* STACK: base, begin, end, item */
@@ -1719,7 +1722,7 @@ default_case:
   if (WARNAST(self,W_ASM_STORE_TO_RVALUE))
       goto err;
   /* Fallback: Generate the ast and store it directly. */
-  if (ast_genasm(self,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(self,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(self)) goto err;
   if (asm_gswap()) goto err;
   if (asm_gassign()) goto err;

@@ -72,7 +72,7 @@ INTERN int
   if (asm_gclass_c((uint16_t)cid))
       goto err;
  } else {
-  if (ast_genasm(class_ast->a_class.c_desc,ASM_G_FPUSHRES))
+  if (ast_genasm_one(class_ast->a_class.c_desc,ASM_G_FPUSHRES))
       goto err;
   if (asm_putddi(class_ast)) goto err;
   if (asm_gclass())
@@ -99,12 +99,12 @@ INTERN int
   struct class_member *member;
   member = &class_ast->a_class.c_memberv[i];
   if likely(member->cm_index != (uint16_t)-1) {
-   if (ast_genasm(member->cm_ast,ASM_G_FPUSHRES))
+   if (ast_genasm_one(member->cm_ast,ASM_G_FPUSHRES))
        goto err;
    if (asm_putddi(class_ast)) goto err;
    if (asm_gdefcmember(member->cm_index)) goto err;
   } else {
-   if (ast_genasm(member->cm_ast,ASM_G_FNORMAL))
+   if (ast_genasm_one(member->cm_ast,ASM_G_FNORMAL))
        goto err;
   }
  }

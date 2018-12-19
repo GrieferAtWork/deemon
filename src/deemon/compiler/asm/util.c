@@ -762,9 +762,10 @@ err:
  return -1;
 }
 
-PRIVATE ATTR_COLD int (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
+PRIVATE ATTR_COLD int
+(DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
  ASSERT(sym->s_type == SYMBOL_TYPE_AMBIG);
- return ASM_WARNAT(&sym->s_decl,W_ASM_AMBIGUOUS_SYMBOL,sym);
+ return ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL,sym);
 }
 
 
@@ -842,8 +843,8 @@ check_sym_class:
        goto err;
    return asm_gpush_none();
   }
-  offset = (current_assembler.a_stackcur-1)-absolute_stack_addr;
-  return offset == 0 ? asm_gdup() : asm_gdup_n(offset-1);
+  offset = (current_assembler.a_stackcur - 1) - absolute_stack_addr;
+  return offset == 0 ? asm_gdup() : asm_gdup_n(offset - 1);
  } break;
 
  case SYMBOL_TYPE_ARG:

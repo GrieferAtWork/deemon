@@ -526,9 +526,9 @@ handle_mask_ast:
         if (!enter_handler && (enter_handler = asm_newsym()) == NULL)
              goto err_hand_frame;
         /* Generate code of this mask. */
-        if (asm_gpush_except()) goto err_hand_frame;                  /* except */
-        if (ast_genasm(mask_ast,ASM_G_FPUSHRES)) goto err_hand_frame; /* except, mask */
-        if (asm_ginstanceof()) goto err_hand_frame;                   /* except instanceof mask */
+        if (asm_gpush_except()) goto err_hand_frame;                      /* except */
+        if (ast_genasm_one(mask_ast,ASM_G_FPUSHRES)) goto err_hand_frame; /* except, mask */
+        if (asm_ginstanceof()) goto err_hand_frame;                       /* except is mask */
         /* Jump to the handler entry point if the mask matches. */
         if (asm_gjmp(ASM_JT,enter_handler)) goto err_hand_frame;
         asm_decsp(); /* Popped by `ASM_JF' */
@@ -551,9 +551,9 @@ do_multimask_rethrow:
      }
     } else {
      /* Fallback: generate a check at runtime. */
-     if (asm_gpush_except()) goto err_hand_frame;                  /* except */
-     if (ast_genasm(mask_ast,ASM_G_FPUSHRES)) goto err_hand_frame; /* except, mask */
-     if (asm_ginstanceof()) goto err_hand_frame;                   /* except instanceof mask */
+     if (asm_gpush_except()) goto err_hand_frame;                      /* except */
+     if (ast_genasm_one(mask_ast,ASM_G_FPUSHRES)) goto err_hand_frame; /* except, mask */
+     if (asm_ginstanceof()) goto err_hand_frame;                       /* except is mask */
 
      if (!IS_LAST_HANDLER()) {
       next_handler = asm_newsym();

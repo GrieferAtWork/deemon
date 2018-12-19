@@ -208,6 +208,7 @@ do_xcopy_3:
   /* XXX: Couldn't we must always do a move-construction like this? */
   memcpy(buffer,&other->a_type,sizeof(buffer));
   memset(&other->a_type,0,sizeof(buffer));
+  other->a_type = AST_RETURN;
   break;
  }
  if (self != other) {

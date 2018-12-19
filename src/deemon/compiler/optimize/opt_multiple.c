@@ -207,6 +207,7 @@ multiple_continue_at_iter:
   goto did_optimize;
  }
 after_multiple_constexpr:
+ ASSERT(self->a_type == AST_MULTIPLE);
  if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
   switch (self->a_multiple.m_astc) {
   case 1:

@@ -800,7 +800,7 @@ PRIVATE struct type_getset code_getsets[] = {
       DOC("->?X2?Dtype?N\n"
           "Try to determine if @this code object is defined as part of a user-defined class, "
           "and if it is, return that class type, or :none if that class couldn't be found, "
-          "of if @this code object is defined as stand-alone (s.a. :function.__type__)") },
+          "or if @this code object is defined as stand-alone (s.a. :function.__type__)") },
     { DeeString_STR(&str___kwds__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_kwds, NULL, NULL,
       DOC("->?S?Dstring\n"

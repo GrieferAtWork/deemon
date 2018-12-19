@@ -209,7 +209,7 @@ asm_gcall_func(struct ast *__restrict func,
   if (args->a_multiple.m_astc + refargc > UINT8_MAX)
       goto generic_call;
   for (i = 0; i < (uint8_t)args->a_multiple.m_astc; ++i) {
-   if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+   if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
        goto err_refargv;
   }
   if (refargc) {
@@ -249,7 +249,7 @@ asm_gcall_func(struct ast *__restrict func,
 
  /* Fallback: Push the arguments as a tuple, then concat that with refargs. */
 generic_call:
- if (ast_genasm(args,ASM_G_FPUSHRES)) goto err_refargv;
+ if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err_refargv;
  if (ast_predict_type(args) != &DeeTuple_Type &&
     (asm_putddi(args) || asm_gcast_tuple())) goto err_refargv;
  if (refargv) {
@@ -681,7 +681,7 @@ do_perform_supercallattr_small:
       * Due to the runtime optimization impact that optimizing this still has,
       * there is also an opcode for this (callattr() is much faster than getattr+call). */
      if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
-     if (ast_genasm(function_attr,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(function_attr,ASM_G_FPUSHRES)) goto err;
      if unlikely(push_tuple_items(args->a_constexpr,args)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr(argc)) goto err;
@@ -717,15 +717,15 @@ invoke_cattr_funsym_tuple:
        if (asm_gcall(0)) goto err;
       }
      } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-      if (asm_gpush_symbol(class_sym,func)) goto err; /* func, class_sym */
-      if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, class_sym, args */
+      if (asm_gpush_symbol(class_sym,func)) goto err;    /* func, class_sym */
+      if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err; /* func, class_sym, args */
       if (ast_predict_type(args) != &DeeTuple_Type &&
          (asm_putddi(args) || asm_gcast_tuple())) goto err;
       if (asm_putddi(ddi_ast)) goto err;
       if (asm_gthiscall_tuple()) goto err; /* result */
       goto pop_unused;
      }
-     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
+     if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
      if (ast_predict_type(args) != &DeeTuple_Type &&
         (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
@@ -747,7 +747,7 @@ invoke_cattr_funsym_tuple:
      }
      if (asm_putddi(func)) goto err;
      if (asm_gpush_symbol(this_sym,func)) goto err;             /* this */
-     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;             /* this, args */
+     if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;         /* this, args */
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_tuple((uint16_t)symid)) goto err;  /* result */
      goto pop_unused;
@@ -791,15 +791,15 @@ invoke_cattr_funsym_tuple:
      }
     } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
      /* Access to an instance member function (must produce a bound method). */
-     if (asm_gpush_symbol(this_sym,func)) goto err; /* func, this */
-     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err; /* func, this, args */
+     if (asm_gpush_symbol(this_sym,func)) goto err;     /* func, this */
+     if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err; /* func, this, args */
      if (asm_putddi(ddi_ast)) goto err;
-     if (asm_gthiscall_tuple()) goto err;           /* result */
+     if (asm_gthiscall_tuple()) goto err;               /* result */
      goto pop_unused;
     }
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
+    if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;  /* func, args */
     if (asm_putddi(ddi_ast)) goto err;
-    if (asm_gcall_tuple()) goto err;                /* result */
+    if (asm_gcall_tuple()) goto err;                    /* result */
     goto pop_unused;
    }
   }
@@ -815,7 +815,7 @@ invoke_cattr_funsym_tuple:
     Dee_Decref(name_ob);
     if unlikely(attrid < 0) goto err;
     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
        (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
@@ -878,7 +878,7 @@ check_getattr_base_symbol_class_tuple:
      }
     }
     if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
        (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
@@ -886,8 +886,8 @@ check_getattr_base_symbol_class_tuple:
     goto pop_unused;
    }
    if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(function_attr,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(function_attr,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
       (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (asm_putddi(ddi_ast)) goto err;
@@ -928,7 +928,7 @@ check_getattr_base_symbol_class_tuple:
       if unlikely(attrid < 0) goto err;
       /* callattr with sequence argument. */
       if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
-      for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+      for (i = 0; i < seq_argc; ++i) if (ast_genasm_one(seq_argv[i],ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err;
       if (asm_gcallattr_const_seq((uint16_t)attrid,(uint8_t)seq_argc)) goto err;
       goto pop_unused;
@@ -945,13 +945,13 @@ check_getattr_base_symbol_class_tuple:
      if (ast_genasm(func->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
      cid = asm_newconst(func->a_operator.o_op1->a_constexpr);
      if unlikely(cid < 0) goto err;
-     for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < seq_argc; ++i) if (ast_genasm_one(seq_argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_seq((uint16_t)cid,(uint8_t)seq_argc)) goto err;
      goto pop_unused;
     }
     if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
-    for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+    for (i = 0; i < seq_argc; ++i) if (ast_genasm_one(seq_argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcall_seq((uint8_t)seq_argc)) goto err;
     goto pop_unused;
@@ -972,7 +972,7 @@ check_getattr_base_symbol_class_tuple:
      if (ast_genasm(func->a_operator.o_op0,ASM_G_FPUSHRES)) goto err;
      cid = asm_newconst(func->a_operator.o_op1->a_constexpr);
      if unlikely(cid < 0) goto err;
-     for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < seq_argc; ++i) if (ast_genasm_one(seq_argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_const_map((uint16_t)cid,(uint8_t)(seq_argc / 2))) goto err;
      goto pop_unused;
@@ -980,7 +980,7 @@ check_getattr_base_symbol_class_tuple:
 #endif
     /* Special case: Brace initializer-call with keys can be encoded as ASM_CALL_MAP. */
     if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
-    for (i = 0; i < seq_argc; ++i) if (ast_genasm(seq_argv[i],ASM_G_FPUSHRES)) goto err;
+    for (i = 0; i < seq_argc; ++i) if (ast_genasm_one(seq_argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcall_map((uint8_t)(seq_argc / 2))) goto err;
     goto pop_unused;
@@ -1057,7 +1057,7 @@ check_funsym_class:
     symid = asm_esymid(funsym);
    }
    if unlikely(symid < 0) goto err;
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcall_extern((uint16_t)symid,funsym->s_extern.e_symbol->ss_index,argc))
        goto err;
@@ -1067,7 +1067,7 @@ check_funsym_class:
    if (SYMBOL_MUST_REFERENCE_NOTTHIS(funsym)) break;
    symid = asm_lsymid_for_read(funsym,func);
    if unlikely(symid < 0) goto err;
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcall_local((uint16_t)symid,argc))
        goto err;
@@ -1076,7 +1076,7 @@ check_funsym_class:
   case SYMBOL_TYPE_GLOBAL:
    symid = asm_gsymid_for_read(funsym,func);
    if unlikely(symid < 0) goto err;
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcall_global((uint16_t)symid,argc))
        goto err;
@@ -1111,7 +1111,7 @@ invoke_cattr_funsym_argv:
     } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
      if (asm_gpush_symbol(class_sym,func)) goto err; /* func, class_sym */
      if (argc != (uint8_t)-1) {
-      for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+      for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err; /* func, class_sym, args... */
       if (asm_gcall(argc + 1)) goto err; /* result */
       goto pop_unused;
@@ -1121,7 +1121,7 @@ invoke_cattr_funsym_argv:
      if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err;
      /* Fallthrough to invoke the instancemethod normally. */
     }
-    for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+    for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err; /* func, args... */
     if (asm_gcall(argc)) goto err;     /* result */
     goto pop_unused;
@@ -1134,14 +1134,14 @@ invoke_cattr_funsym_argv:
     if unlikely(symid < 0) goto err;
     if (this_sym->s_type == SYMBOL_TYPE_THIS &&
        !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;                        /* args... */
      if (asm_gcallattr_this_const((uint16_t)symid,argc)) goto err;
      goto pop_unused;
     }
     if (asm_putddi(func)) goto err;
     if (asm_gpush_symbol(this_sym,func)) goto err;             /* this */
-    for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+    for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;                         /* this, args... */
     if (asm_gcallattr_const((uint16_t)symid,argc)) goto err;  /* result */
     goto pop_unused;
@@ -1159,7 +1159,7 @@ invoke_cattr_funsym_argv:
        if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr + CLASS_GETSET_GET,0)) goto err;
        goto got_method;
       }
-      for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+      for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
       if (asm_putddi(ddi_ast)) goto err;
       if (asm_gcallcmember_this_r((uint16_t)symid,attr->ca_addr,argc)) goto err;
       goto pop_unused;
@@ -1200,7 +1200,7 @@ invoke_cattr_funsym_argv:
     /* Access to an instance member function (must produce a bound method). */
     if (asm_gpush_symbol(this_sym,func)) goto err; /* func, this */
     if unlikely(argc != (uint8_t)-1) {
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcall(argc + 1)) goto err;
      goto pop_unused;
@@ -1211,7 +1211,7 @@ invoke_cattr_funsym_argv:
     /* Fallthrough to invoke the instancemethod normally. */
    }
 got_method:
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err; /* func, args... */
    if (asm_gcall(argc)) goto err;     /* result */
    goto pop_unused;
@@ -1234,7 +1234,7 @@ got_method:
    if (asm_putddi(func)) goto err;
    if (asm_gpush_this_function()) goto err;
    if (asm_gpush_this()) goto err;
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcall(argc + 1)) goto err;
    goto pop_unused;
@@ -1256,7 +1256,7 @@ got_method:
    if unlikely(attrid < 0) goto err;
    /* call to some other object. */
    if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcallattr_const((uint16_t)attrid,argc)) goto err;
    goto pop_unused;
@@ -1306,7 +1306,7 @@ check_getattr_base_symbol_class_argv:
     case SYMBOL_TYPE_THIS:
      if (SYMBOL_MUST_REFERENCE_THIS(sym)) break;
      /* call to the `this' argument. (aka. in-class member call) */
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
      attrid = asm_newconst(function_attr->a_constexpr);
      if unlikely(attrid < 0) goto err;
      if (asm_putddi(ddi_ast)) goto err;
@@ -1328,7 +1328,7 @@ check_getattr_base_symbol_class_argv:
      }
      if unlikely(module_id < 0) goto err;
      /* Do a call to an external symbol. `ASM_CALL_EXTERN' */
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcall_extern((uint16_t)module_id,modsym->ss_index,argc)) goto err;
      goto pop_unused;
@@ -1355,7 +1355,7 @@ do_perform_supercallattr_argv:
      if unlikely(type_rid < 0) goto err;
      attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
      if unlikely(attrid < 0) goto err;
-     for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+     for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gsupercallattr_this_rc((uint16_t)type_rid,(uint16_t)attrid,argc)) goto err;
      goto pop_unused;
@@ -1379,7 +1379,7 @@ do_perform_supercallattr_argv:
    attrid = asm_newconst(function_attr->a_constexpr);
    if unlikely(attrid < 0) goto err;
    if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
-   for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+   for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcallattr_const((uint16_t)attrid,argc)) goto err;
    goto pop_unused;
@@ -1388,15 +1388,15 @@ do_perform_supercallattr_argv:
    * Due to the runtime optimization impact that optimizing this still has,
    * there is also an opcode for this (callattr() is much faster than getattr+call). */
   if (ast_genasm(function_self,ASM_G_FPUSHRES)) goto err;
-  if (ast_genasm(function_attr,ASM_G_FPUSHRES)) goto err;
-  for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(function_attr,ASM_G_FPUSHRES)) goto err;
+  for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gcallattr(argc)) goto err;
   goto pop_unused;
  }
  /* Call with stack-based argument list. */
  if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
- for (i = 0; i < argc; ++i) if (ast_genasm(argv[i],ASM_G_FPUSHRES)) goto err;
+ for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
  if (asm_putddi(ddi_ast)) goto err;
  if (asm_gcall(argc)) goto err;
 pop_unused:
@@ -1404,7 +1404,7 @@ pop_unused:
  return 0;
 generic_call:
  if (ast_genasm(func,ASM_G_FPUSHRES)) goto err;
- if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+ if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
  if (ast_predict_type(args) != &DeeTuple_Type &&
     (asm_putddi(args) || asm_gcast_tuple())) goto err;
  if (asm_putddi(ddi_ast)) goto err;
@@ -1444,7 +1444,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
      size_t i;
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
      for (i = 0; i < args->a_multiple.m_astc; ++i) {
-      if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+      if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
           goto err;
      }
      if (ast_predict_type(args) != &DeeTuple_Type &&
@@ -1458,7 +1458,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     if (args->a_type == AST_CONSTEXPR &&
         args->a_constexpr == Dee_EmptyTuple) {
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
-     if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
      if (ast_predict_type(args) != &DeeTuple_Type &&
         (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
@@ -1466,7 +1466,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
      goto pop_unused;
     }
     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
        (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
@@ -1481,13 +1481,13 @@ asm_gcall_kw_expr(struct ast *__restrict func,
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
      if (asm_gpush_const((uint16_t)attrid)) goto err;
      for (i = 0; i < args->a_multiple.m_astc; ++i) {
-      if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+      if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
           goto err;
      }
      if (ast_predict_type(args) != &DeeTuple_Type &&
         (asm_putddi(args) || asm_gcast_tuple())) goto err;
      if (asm_putddi(ddi_ast)) goto err;
-     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
      if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc)) goto err;
      goto pop_unused;
     }
@@ -1495,17 +1495,17 @@ asm_gcall_kw_expr(struct ast *__restrict func,
         args->a_constexpr == Dee_EmptyTuple) {
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
      if (asm_gpush_const((uint16_t)attrid)) goto err;
-     if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+     if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
      if (asm_putddi(ddi_ast)) goto err;
      if (asm_gcallattr_kwds(0)) goto err;
      goto pop_unused;
     }
     if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
     if (asm_gpush_const((uint16_t)attrid)) goto err;
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
        (asm_putddi(args) || asm_gcast_tuple())) goto err;
-    if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_tuple_kwds()) goto err;
     goto pop_unused;
@@ -1533,7 +1533,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     size_t i;
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
     for (i = 0; i < args->a_multiple.m_astc; ++i) {
-     if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+     if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
          goto err;
     }
     if (ast_predict_type(args) != &DeeTuple_Type &&
@@ -1547,7 +1547,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    if (args->a_type == AST_CONSTEXPR &&
        args->a_constexpr == Dee_EmptyTuple) {
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
     if (ast_predict_type(args) != &DeeTuple_Type &&
        (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
@@ -1555,7 +1555,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     goto pop_unused;
    }
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
       (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (asm_putddi(ddi_ast)) goto err;
@@ -1568,33 +1568,33 @@ asm_gcall_kw_expr(struct ast *__restrict func,
       !ast_multiple_hasexpand(args)) {
     size_t i;
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
     for (i = 0; i < args->a_multiple.m_astc; ++i) {
-     if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+     if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
          goto err;
     }
     if (ast_predict_type(args) != &DeeTuple_Type &&
        (asm_putddi(args) || asm_gcast_tuple())) goto err;
     if (asm_putddi(ddi_ast)) goto err;
-    if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
     if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc)) goto err;
     goto pop_unused;
    }
    if (args->a_type == AST_CONSTEXPR &&
        args->a_constexpr == Dee_EmptyTuple) {
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
-    if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
+    if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err;
     if (asm_gcallattr_kwds(0)) goto err;
     goto pop_unused;
    }
    if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(name,ASM_G_FPUSHRES)) goto err;
-   if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
       (asm_putddi(args) || asm_gcast_tuple())) goto err;
-   if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
    if (asm_putddi(ddi_ast)) goto err;
    if (asm_gcallattr_tuple_kwds()) goto err;
    goto pop_unused;
@@ -1612,7 +1612,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
      !ast_multiple_hasexpand(args)) {
    size_t i;
    for (i = 0; i < args->a_multiple.m_astc; ++i) {
-    if (ast_genasm(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
+    if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))
         goto err;
    }
    if (asm_putddi(ddi_ast)) goto err;
@@ -1625,7 +1625,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    if (asm_gcall_kw(0,(uint16_t)kwd_cid))
        goto err;
   } else {
-   if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+   if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
    if (ast_predict_type(args) != &DeeTuple_Type &&
       (asm_putddi(args) || asm_gcast_tuple())) goto err;
    if (asm_putddi(ddi_ast)) goto err;
@@ -1633,10 +1633,10 @@ asm_gcall_kw_expr(struct ast *__restrict func,
   }
  } else {
   /* Fallback: use the stack to pass all the arguments. */
-  if (ast_genasm(args,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(args,ASM_G_FPUSHRES)) goto err;
   if (ast_predict_type(args) != &DeeTuple_Type &&
      (asm_putddi(args) || asm_gcast_tuple())) goto err;
-  if (ast_genasm(kwds,ASM_G_FPUSHRES)) goto err;
+  if (ast_genasm_one(kwds,ASM_G_FPUSHRES)) goto err;
   if (asm_putddi(ddi_ast)) goto err;
   if (asm_gcall_tuple_kwds()) goto err;
  }
