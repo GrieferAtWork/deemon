@@ -722,6 +722,8 @@ struct function_object {
     DREF DeeCodeObject       *fo_code;    /* [1..1][const] Associated code object. */
     DREF DeeObject           *fo_refv[1]; /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
 };
+#define DeeFunction_CODE(x) ((DeeFunctionObject *)REQUIRES_OBJECT(x))->fo_code
+#define DeeFunction_REFS(x) ((DeeFunctionObject *)REQUIRES_OBJECT(x))->fo_refv
 
 #define DEFINE_FUNCTION(name,fo_code_,fo_refc_,...) \
 struct { \

@@ -1425,6 +1425,8 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+/* TODO */
+
 INTERN DeeTypeObject SeqEachGetAttr_Type;
 INTERN DeeTypeObject SeqEachGetAttrIterator_Type;
 INTERN DeeTypeObject SeqEachCallAttr_Type;

@@ -109,13 +109,20 @@ next_opt:
 
 PRIVATE DREF DeeObject *DCALL
 libdisasm_public_printcode_f(size_t argc,
-                             DeeObject **__restrict argv) {
+                             DeeObject **__restrict argv,
+                             DeeObject *kw) {
  DeeObject *fp = NULL; DeeCodeObject *code;
  dssize_t error; DeeObject *flags_ob = NULL;
  unsigned int flags = PCODE_FNORMAL/*|PCODE_FDDI*/;
- if (DeeArg_Unpack(argc,argv,"o|oo:printcode",&code,&fp,&flags_ob) ||
-     DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
+ PRIVATE DEFINE_KWLIST(kwlist,{ K(code), K(out), K(flags), KEND });
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:printcode",&code,&fp,&flags_ob))
      goto err;
+ if (DeeFunction_Check(code))
+     code = DeeFunction_CODE(code);
+ else {
+  if (DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
+      goto err;
+ }
  if (fp && DeeString_Check(fp)) {
   flags_ob = fp;
   fp       = NULL;
@@ -148,14 +155,14 @@ libdisasm_public_printcode_f(size_t argc,
 err:
  return NULL;
 }
-PRIVATE DEFINE_CMETHOD(libdisasm_public_printcode,libdisasm_public_printcode_f);
+PRIVATE DEFINE_KWCMETHOD(libdisasm_public_printcode,libdisasm_public_printcode_f);
 
 PRIVATE struct dex_symbol symbols[] = {
     { "printcode", (DeeObject *)&libdisasm_public_printcode, MODSYM_FNORMAL,
-      DOC("(co:?Ert:Code,flags=!0)->?Dstring\n"
-          "(co:?Ert:Code,flags=!P{})->?Dstring\n"
-          "(co:?Ert:Code,out:?Dfile,flags=!0)->?Dint\n"
-          "(co:?Ert:Code,out:?Dfile,flags=!P{})->?Dint\n"
+      DOC("(co:?X2?Dfunction?Ert:Code,flags=!0)->?Dstring\n"
+          "(co:?X2?Dfunction?Ert:Code,flags=!P{})->?Dstring\n"
+          "(co:?X2?Dfunction?Ert:Code,out:?Dfile,flags=!0)->?Dint\n"
+          "(co:?X2?Dfunction?Ert:Code,out:?Dfile,flags=!P{})->?Dint\n"
           "@throw ValueError The given @flags string contains an unknown flag\n"
           "@param flags Either an integer set of internal flags, or a comma-separated options list (see below)\n"
           "Print the given code object @co, either to file @out, or into a string that is then returned\n"
