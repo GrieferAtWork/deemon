@@ -86,7 +86,7 @@ typedef struct {
 
 #ifndef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #if !defined(__OPTIMIZE_SIZE__) && \
-    !defined(CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS) && 0 /* TODO */
+    !defined(CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS)
 #define CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS 1
 #endif
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
@@ -107,7 +107,7 @@ typedef struct {
 typedef struct {
     SEQ_EACH_HEAD
     DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
-    DREF DeeObject            *sg_kw;         /* [0..1][const] Additional keyword to pass during invocation. */
+    DREF DeeObject            *sg_kw;         /* [1..1][const] Additional keyword to pass during invocation. */
     size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
     DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
 } SeqEachCallAttrKw;
@@ -136,13 +136,8 @@ INTDEF DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLen(DeeObject *__restrict 
 INTDEF DREF DeeObject *DCALL DeeSeqEach_CallAttrKw(DeeObject *__restrict self, DeeObject *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF DREF DeeObject *DCALL DeeSeqEach_CallAttrStringKw(DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenKw(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeSeqEach_CallAttrTuple(DeeObject *__restrict self, DeeObject *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeSeqEach_CallAttrTupleKw(DeeObject *__restrict self, DeeObject *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
-#else
 #define DeeSeqEach_CallAttrTuple(self,attr,args)      DeeSeqEach_CallAttr(self,attr,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
 #define DeeSeqEach_CallAttrTupleKw(self,attr,args,kw) DeeSeqEach_CallAttrKw(self,attr,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
-#endif
 INTDEF DREF SeqEachGetAttr *DCALL seqeach_getattr(SeqEachBase *__restrict self, struct string_object *__restrict attr);
 INTDEF DREF SeqEachGetAttr *DCALL seqeachw_getattr(DeeObject *__restrict self, struct string_object *__restrict attr);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */

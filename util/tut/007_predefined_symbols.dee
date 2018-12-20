@@ -70,9 +70,9 @@ print x,y; /* 10 30 */
 local x = "foobar";
 
 print x.this;  /* Same as `x' */
-print x.super; /* Same as `x as object from deemon' */
-print x.class; /* Same as `string' (differs from `type' in that the viewed type is returned for super-wrappers) */
-print x.operator + ("baz"); /* Same as `x + "bar"' */
+print x.super; /* Same as `x as x.class.__base__' */
+print x.class; /* Same as `string' (differs from `type(x)' in that the viewed type is returned for super-wrappers) */
+print x.operator + ("baz"); /* Same as `x + "baz"' */
 
 /* Note that the `operator' attribute is very special, in that
  * it can be used to construct bound operator functions. */

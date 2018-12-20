@@ -385,17 +385,17 @@ PRIVATE struct type_math se_math = {
     /* .tp_pow         = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&se_pow,
     /* .tp_inc         = */(int(DCALL *)(DeeObject **__restrict))&se_inc,
     /* .tp_dec         = */(int(DCALL *)(DeeObject **__restrict))&se_dec,
-    /* .tp_inplace_add = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_add,
-    /* .tp_inplace_sub = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_sub,
-    /* .tp_inplace_mul = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_mul,
-    /* .tp_inplace_div = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_div,
-    /* .tp_inplace_mod = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_mod,
-    /* .tp_inplace_shl = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_shl,
-    /* .tp_inplace_shr = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_shr,
-    /* .tp_inplace_and = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_and,
-    /* .tp_inplace_or  = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_or,
-    /* .tp_inplace_xor = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_xor,
-    /* .tp_inplace_pow = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))se_inplace_pow
+    /* .tp_inplace_add = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_add,
+    /* .tp_inplace_sub = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_sub,
+    /* .tp_inplace_mul = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_mul,
+    /* .tp_inplace_div = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_div,
+    /* .tp_inplace_mod = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_mod,
+    /* .tp_inplace_shl = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_shl,
+    /* .tp_inplace_shr = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_shr,
+    /* .tp_inplace_and = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_and,
+    /* .tp_inplace_or  = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_or,
+    /* .tp_inplace_xor = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_xor,
+    /* .tp_inplace_pow = */(int(DCALL *)(DeeObject **__restrict,DeeObject *__restrict))&se_inplace_pow
 };
 
 PRIVATE struct type_cmp se_cmp = {
@@ -831,6 +831,8 @@ seo_getitem_for_inplace(SeqEachOperator *__restrict self,
   break;
  default: goto err_noimp;
  }
+ if unlikely(!result)
+    goto err_baseelem;
  *pbaseelem = baseelem;
  return result;
 err_noimp:
@@ -1108,7 +1110,7 @@ sew_size(SeqEachBase *__restrict self) {
  return DeeObject_SizeObject(self->se_seq);
 }
 
-PRIVATE DREF DeeObject *DCALL
+LOCAL DREF DeeObject *DCALL
 seo_transform(SeqEachOperator *__restrict self,
               /*inherit(always)*/DREF DeeObject *__restrict elem) {
  DREF DeeObject *result;
@@ -1425,17 +1427,6 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-/* TODO */
-
-INTERN DeeTypeObject SeqEachGetAttr_Type;
-INTERN DeeTypeObject SeqEachGetAttrIterator_Type;
-INTERN DeeTypeObject SeqEachCallAttr_Type;
-INTERN DeeTypeObject SeqEachCallAttrIterator_Type;
-INTERN DeeTypeObject SeqEachCallAttrKw_Type;
-INTERN DeeTypeObject SeqEachCallAttrKwIterator_Type;
-
-
-
 INTERN DREF DeeObject *DCALL
 DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     DeeObject *__restrict attr,
@@ -1485,9 +1476,95 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 done:
  return (DREF DeeObject *)result;
 }
+
+
+INTERN DREF DeeObject *DCALL
+DeeSeqEach_CallAttrString(DeeObject *__restrict self,
+                          char const *__restrict attr, dhash_t hash,
+                          size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result;
+ DREF DeeStringObject *attr_ob;
+ attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr,hash);
+ if unlikely(!attr_ob)
+    goto err;
+ result = DeeSeqEach_CallAttr(self,
+                             (DeeObject *)attr_ob,
+                              argc,
+                              argv);
+ Dee_Decref_unlikely(attr_ob);
+ return result;
+err:
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+DeeSeqEach_CallAttrStringLen(DeeObject *__restrict self,
+                             char const *__restrict attr, size_t attrlen, dhash_t hash,
+                             size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result;
+ DREF DeeStringObject *attr_ob;
+ attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr,attrlen,hash);
+ if unlikely(!attr_ob)
+    goto err;
+ result = DeeSeqEach_CallAttr(self,
+                             (DeeObject *)attr_ob,
+                              argc,
+                              argv);
+ Dee_Decref_unlikely(attr_ob);
+ return result;
+err:
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+DeeSeqEach_CallAttrStringKw(DeeObject *__restrict self,
+                            char const *__restrict attr, dhash_t hash,
+                            size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeObject *result;
+ DREF DeeStringObject *attr_ob;
+ attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr,hash);
+ if unlikely(!attr_ob)
+    goto err;
+ result = DeeSeqEach_CallAttrKw(self,
+                               (DeeObject *)attr_ob,
+                                argc,
+                                argv,
+                                kw);
+ Dee_Decref_unlikely(attr_ob);
+ return result;
+err:
+ return NULL;
+}
+INTERN DREF DeeObject *DCALL
+DeeSeqEach_CallAttrStringLenKw(DeeObject *__restrict self,
+                               char const *__restrict attr, size_t attrlen, dhash_t hash,
+                               size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DREF DeeObject *result;
+ DREF DeeStringObject *attr_ob;
+ attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr,attrlen,hash);
+ if unlikely(!attr_ob)
+    goto err;
+ result = DeeSeqEach_CallAttrKw(self,
+                               (DeeObject *)attr_ob,
+                                argc,
+                                argv,
+                                kw);
+ Dee_Decref_unlikely(attr_ob);
+ return result;
+err:
+ return NULL;
+}
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
-
 DECL_END
+
+#ifndef __INTELLISENSE__
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+#define DEFINE_GETATTR 1
+#include "each-fastpass.c.inl"
+#define DEFINE_CALLATTR 1
+#include "each-fastpass.c.inl"
+#define DEFINE_CALLATTRKW 1
+#include "each-fastpass.c.inl"
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#endif
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_EACH_C */

@@ -922,6 +922,9 @@
     <None Include="..\src\deemon\execute\code-invoke-kw.c.inl">
       <Filter>src\deemon\execute</Filter>
     </None>
+    <None Include="..\src\deemon\objects\seq\each-fastpass.c.inl">
+      <Filter>src\deemon\objects\seq</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

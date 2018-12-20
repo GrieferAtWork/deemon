@@ -604,7 +604,8 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
  * The string itself may contain characters above 127, which are then
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
 DFUNDEF DREF DeeObject *DCALL DeeString_New(/*unsigned*/char const *__restrict str);
-#define DeeString_NewWithHash(str,hash) DeeString_New(str) /* XXX: Take advantage of this? */
+#define DeeString_NewWithHash(str,hash) \
+      ((void)(hash),DeeString_New(str)) /* XXX: Take advantage of this? */
 
 
 /* Check if `str' is the `DeeString_STR()' of a string object, and return
@@ -690,7 +691,8 @@ DFUNDEF DREF DeeObject *DCALL DeeString_VNewf(/*utf-8*/char const *__restrict fo
 DFUNDEF DREF DeeObject *DCALL DeeString_NewSized(/*unsigned*/char const *__restrict str, size_t length);
 DFUNDEF DREF DeeObject *DCALL DeeString_New2Byte(uint16_t const *__restrict str, size_t length);
 DFUNDEF DREF DeeObject *DCALL DeeString_New4Byte(uint32_t const *__restrict str, size_t length);
-#define DeeString_NewSizedWithHash(str,length,hash) DeeString_NewSized(str,length) /* XXX: Take advantage of this? */
+#define DeeString_NewSizedWithHash(str,length,hash) \
+      ((void)(hash),DeeString_NewSized(str,length)) /* XXX: Take advantage of this? */
 
 #ifdef __INTELLISENSE__
 DREF DeeObject *DeeString_New1Byte(uint8_t const *__restrict str, size_t length);

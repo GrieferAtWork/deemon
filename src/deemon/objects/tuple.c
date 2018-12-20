@@ -503,7 +503,7 @@ DeeTuple_FromIterator(DeeObject *__restrict self) {
  used_size = 2;
  while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
   ASSERT(used_size <= result->t_size);
-  if (used_size == result->t_size) {
+  if (used_size >= result->t_size) {
    /* Allocate more memory. */
    DREF DeeObject *new_result;
    new_result = DeeTuple_ResizeUninitialized((DeeObject *)result,
