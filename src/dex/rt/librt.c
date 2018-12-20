@@ -708,6 +708,102 @@ librt_get_SeqItemRepeatIterator_f(size_t UNUSED(argc), DeeObject **__restrict UN
 }
 
 LOCAL DREF DeeObject *DCALL
+librt_get_SeqEach_stub_instance(void) {
+ return DeeObject_GetAttrString(Dee_EmptySeq,"each");
+}
+LOCAL DREF DeeObject *DCALL
+librt_get_SeqEachOperator_stub_instance(void) {
+ DREF DeeObject *result;
+ result = librt_get_SeqEach_stub_instance();
+ if likely(result) {
+  DREF DeeObject *temp;
+  temp = DeeObject_Pos(result);
+  Dee_Decref(result);
+  result = temp;
+ }
+ return result;
+}
+LOCAL DREF DeeObject *DCALL
+librt_get_SeqEachGetAttr_stub_instance(void) {
+ DREF DeeObject *result;
+ result = librt_get_SeqEach_stub_instance();
+ if likely(result) {
+  DREF DeeObject *temp;
+  temp = DeeObject_GetAttr(result,(DeeObject *)STR_ITERATOR);
+  Dee_Decref(result);
+  result = temp;
+ }
+ return result;
+}
+LOCAL DREF DeeObject *DCALL
+librt_get_SeqEachCallAttr_stub_instance(void) {
+ DREF DeeObject *result;
+ result = librt_get_SeqEach_stub_instance();
+ if likely(result) {
+  DREF DeeObject *temp;
+  temp = DeeObject_CallAttr(result,(DeeObject *)STR_ITERATOR,0,NULL);
+  Dee_Decref(result);
+  result = temp;
+ }
+ return result;
+}
+LOCAL DREF DeeObject *DCALL
+librt_get_SeqEachCallAttrKw_stub_instance(void) {
+ DREF DeeObject *result;
+ result = librt_get_SeqEach_stub_instance();
+ if likely(result) {
+  DREF DeeObject *temp;
+  temp = DeeObject_CallAttrKw(result,(DeeObject *)STR_ITERATOR,
+                              0,
+                              NULL,
+                              Dee_EmptyMapping);
+  Dee_Decref(result);
+  result = temp;
+ }
+ return result;
+}
+
+
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEach_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_type_of(librt_get_SeqEach_stub_instance());
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachOperator_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_type_of(librt_get_SeqEachOperator_stub_instance());
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachOperatorIterator_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_iterator_of(get_type_of(librt_get_SeqEachOperator_stub_instance()));
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachGetAttr_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_type_of(librt_get_SeqEachGetAttr_stub_instance());
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachGetAttrIterator_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_iterator_of(get_type_of(librt_get_SeqEachGetAttr_stub_instance()));
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachCallAttr_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_type_of(librt_get_SeqEachCallAttr_stub_instance());
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachCallAttrIterator_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_iterator_of(get_type_of(librt_get_SeqEachCallAttr_stub_instance()));
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachCallAttrKw_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_type_of(librt_get_SeqEachCallAttrKw_stub_instance());
+}
+PRIVATE DREF DeeObject *DCALL
+librt_get_SeqEachCallAttrKwIterator_Type_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return get_iterator_of(get_type_of(librt_get_SeqEachCallAttrKw_stub_instance()));
+}
+
+
+
+LOCAL DREF DeeObject *DCALL
 librt_get_nonempty_stub_set(void) {
  DREF DeeObject *result;
  result = DeeRoSet_NewWithHint(1);
@@ -1153,6 +1249,15 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqRepeat,librt_get_SeqRepeat_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqRepeatIterator,librt_get_SeqRepeatIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqItemRepeat,librt_get_SeqItemRepeat_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqItemRepeatIterator,librt_get_SeqItemRepeatIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEach,librt_get_SeqEach_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachOperator,librt_get_SeqEachOperator_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachOperatorIterator,librt_get_SeqEachOperatorIterator_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachGetAttr,librt_get_SeqEachGetAttr_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachGetAttrIterator,librt_get_SeqEachGetAttrIterator_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttr,librt_get_SeqEachCallAttr_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrIterator,librt_get_SeqEachCallAttrIterator_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKw,librt_get_SeqEachCallAttrKw_Type_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKwIterator,librt_get_SeqEachCallAttrKwIterator_Type_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnion,librt_get_SetUnion_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnionIterator,librt_get_SetUnionIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SetSymmetricDifference,librt_get_SetSymmetricDifference_f);
@@ -1323,7 +1428,18 @@ PRIVATE struct dex_symbol symbols[] = {
     { "SeqRepeatIterator", (DeeObject *)&librt_get_SeqRepeatIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqRepeatIterator_Type */
     { "SeqItemRepeat", (DeeObject *)&librt_get_SeqItemRepeat, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqItemRepeat_Type */
     { "SeqItemRepeatIterator", (DeeObject *)&librt_get_SeqItemRepeatIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqItemRepeatIterator_Type */
+    /* Seq-each wrapper types. */
+    { "SeqEach", (DeeObject *)&librt_get_SeqEach, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEach_Type */
+    { "SeqEachOperator", (DeeObject *)&librt_get_SeqEachOperator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachOperator_Type */
+    { "SeqEachOperatorIterator", (DeeObject *)&librt_get_SeqEachOperatorIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachOperatorIterator_Type */
+    { "SeqEachGetAttr", (DeeObject *)&librt_get_SeqEachGetAttr, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachGetAttr_Type */
+    { "SeqEachGetAttrIterator", (DeeObject *)&librt_get_SeqEachGetAttrIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachGetAttrIterator_Type */
+    { "SeqEachCallAttr", (DeeObject *)&librt_get_SeqEachCallAttr, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachCallAttr_Type */
+    { "SeqEachCallAttrIterator", (DeeObject *)&librt_get_SeqEachCallAttrIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachCallAttrIterator_Type */
+    { "SeqEachCallAttrKw", (DeeObject *)&librt_get_SeqEachCallAttrKw, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachCallAttrKw_Type */
+    { "SeqEachCallAttrKwIterator", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqEachCallAttrKwIterator_Type */
     /* TODO: SeqRemoveIfAllWrapper_Type */
+
 
     /* Internal types used to drive set proxies */
     { "SetUnion", (DeeObject *)&librt_get_SetUnion, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SetUnion_Type */

@@ -733,6 +733,7 @@ EXPORTS
 	_DeeTuple_NewVectorSymbolic@8=DeeTuple_NewVectorSymbolic@8
 	_DeeTuple_ResizeUninitialized@8=DeeTuple_ResizeUninitialized@8
 	_DeeTuple_TruncateUninitialized@8=DeeTuple_TruncateUninitialized@8
+	_DeeTuple_TryNewUninitialized@4=DeeTuple_TryNewUninitialized@4
 	_DeeTuple_Types@4=DeeTuple_Types@4
 	_DeeTuple_VNewf@8=DeeTuple_VNewf@8
 	_DeeTuple_VPack@8=DeeTuple_VPack@8
