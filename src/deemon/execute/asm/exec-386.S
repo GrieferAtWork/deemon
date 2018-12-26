@@ -3470,17 +3470,17 @@ target_instanceof:
 	je     1f
 	pushl  %edx /* FIRST */
 	ADJUST_CFA_OFFSET(4)
-	movl   ob_type(%ecx), %ecx
-	cmpl   $(SYM(DeeSuper_Type)), %ecx
+	movl   ob_type(%ecx), %eax
+	cmpl   $(SYM(DeeSuper_Type)), %eax
 	jne    3f
 	/* Check against the effective class of the
 	 * super-wrapper, not the super-type itself. */
-	movl   s_type(%ecx), %ecx
-3:	pushl  %ecx
+	movl   s_type(%ecx), %eax
+3:	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeType_IsInherited,8)
 	ADJUST_CFA_OFFSET(-8)
-2:	ASSERT_BELOW_EQUAL(%eax,$2)
+2:	ASSERT_BELOW_EQUAL(%eax,$1)
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref %eax
 	xchgl  SECOND, %eax /* Exchange the lower-order operand with the boolean object. */
