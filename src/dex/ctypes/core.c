@@ -367,6 +367,10 @@ ptype_fini(DeePointerTypeObject *__restrict self) {
 }
 PRIVATE void DCALL
 ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
+ ASSERTF(DeeObject_Check((DeeObject *)self->pt_orig),
+         "Missing base type for %p:%s",
+         self,
+         self->pt_base.st_base.tp_name);
  Dee_Visit((DeeObject *)self->pt_orig);
 }
 

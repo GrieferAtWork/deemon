@@ -165,7 +165,14 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 			b.operator next();
 			assert !(a == b);
 			assert a != b;
-			assert !(a > b), "" + type(a) + " -- " + type(b);
+			assert !(a > b),
+				"{}: {},{} -- {},{}".format({
+					try repr(x) catch (...) "NO REPR",
+					type(a),
+					type(b),
+					try repr(a) catch (...) "NO REPR",
+					try repr(b) catch (...) "NO REPR",
+				});
 			assert !(a >= b);
 			assert a < b;
 			assert a <= b;

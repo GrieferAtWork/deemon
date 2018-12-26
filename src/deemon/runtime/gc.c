@@ -369,6 +369,7 @@ visit_object(DeeObject *__restrict self,
  struct gc_dep_chain node;
  struct gc_dep_chain *link;
  DeeTypeObject *tp_self;
+ ASSERT_OBJECT(self);
 again:
  /* Optimization: An object that cannot be visited can be skipped. */
  for (tp_self = Dee_TYPE(self); likely(tp_self); tp_self = tp_self->tp_base) {
@@ -452,9 +453,9 @@ found_chain_link:
    * When c's link to b is first encountered, we get here to increment the
    * known-reference counter of b. However, as can be seen above, `b' later
    * points to another object d, which then points back to a.
-   * Without us manually adding all objects part of the reference loop pointing
+   * If we didn't manually add all objects part of the reference loop pointing
    * back to b, then they wouldn't appear as dependencies of a, and would have
-   * no influence of when a could get destroyed.
+   * no influence of when a can be destroyed.
    * The solution is to keep a local set of partner-dependencies in each chain
    * entry, that are added alongside the chain entry itself in the event that
    * the chain gets added as a true dependency.

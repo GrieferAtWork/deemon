@@ -22,7 +22,7 @@ import file, int from deemon;
 import fs;
 import Process, Pipe from ipc;
 
-local proc = Process("x86_64-w64-mingw32-addr2line.exe",["-f","-e","deemon-gcc.exe"]);
+local proc = Process("x86_64-w64-mingw32-addr2line.exe",["-f","-e","deemon.exe"]);
 local ir,iw = Pipe.new()...;
 local or,ow = Pipe.new()...;
 
@@ -34,7 +34,7 @@ ow.close();
 or = file.buffer(or);
 
 local info = [];
-for (local l: file.open("deemon-gcc.exe.stackdump")) {
+for (local l: file.open("deemon.exe.stackdump")) {
 	try {
 		local arg = (for (local x: l.split(" ")) if (x) x)[1];
 		if (!arg) continue;

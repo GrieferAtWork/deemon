@@ -216,9 +216,14 @@ refaiter_getseq(ReSequenceIterator *__restrict self) {
 PRIVATE DREF DeeObject *DCALL \
 name(ReSequenceIterator *__restrict self, \
      ReSequenceIterator *__restrict other) { \
+ char *x,*y; \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
      goto err; \
- return_bool((REITER_GETDATAPTR(self)-1) op (REITER_GETDATAPTR(other)-1)); \
+ x = REITER_GETDATAPTR(self); \
+ y = REITER_GETDATAPTR(other); \
+ if (!x) x = (char *)-1; \
+ if (!y) y = (char *)-1; \
+ return_bool(x op y); \
 err: \
  return NULL; \
 }

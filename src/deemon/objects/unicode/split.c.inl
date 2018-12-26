@@ -163,9 +163,14 @@ splititer_bool(StringSplitIterator *__restrict self) {
 PRIVATE DREF DeeObject *DCALL \
 name(StringSplitIterator *__restrict self, \
      StringSplitIterator *__restrict other) { \
+ uint8_t *x,*y; \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
      goto err; \
- return_bool((GET_SPLIT_NEXT(self)-1) op (GET_SPLIT_NEXT(other)-1)); \
+ x = GET_SPLIT_NEXT(self); \
+ y = GET_SPLIT_NEXT(other); \
+ if (!x) x = (uint8_t *)-1; \
+ if (!y) y = (uint8_t *)-1; \
+ return_bool(x op y); \
 err: \
  return NULL; \
 }

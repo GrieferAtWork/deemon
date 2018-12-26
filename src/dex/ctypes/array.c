@@ -655,11 +655,9 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
         /* .st_seq      = */&array_seq,
         /* .st_attr     = */NULL
     },
-#ifndef CONFIG_NO_CFUNCTION
     /* .at_orig  = */&DeeStructured_Type,
     /* .at_chain = */{ NULL, NULL },
     /* .at_count = */0
-#endif /* !CONFIG_NO_CFUNCTION */
 };
 
 

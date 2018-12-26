@@ -120,9 +120,14 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 PRIVATE DREF DeeObject *DCALL \
 name(BytesSplitIterator *__restrict self, \
      BytesSplitIterator *__restrict other) { \
+ uint8_t *x,*y; \
  if (DeeObject_AssertTypeExact((DeeObject *)other,Dee_TYPE(self))) \
      goto err; \
- return_bool((READ_BSI_ITER(self)-1) op (READ_BSI_ITER(other)-1)); \
+ x = READ_BSI_ITER(self); \
+ y = READ_BSI_ITER(other); \
+ if (!x) x = (uint8_t *)-1; \
+ if (!y) y = (uint8_t *)-1; \
+ return_bool(x op y); \
 err: \
  return NULL; \
 }

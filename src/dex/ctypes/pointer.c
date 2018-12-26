@@ -201,7 +201,7 @@ PRIVATE struct type_getset pointer_getsets[] = {
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pointer_get_deref,
       (int(DCALL *)(DeeObject *__restrict))&pointer_del_deref,
       (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&pointer_set_deref,
-       DOC("->?Glvalue\nGet/clear/set the dereferenced memory location of @this pointer") },
+       DOC("->?GLValue\nGet/clear/set the dereferenced memory location of @this pointer") },
     { NULL }
 };
 
@@ -676,7 +676,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
         /* .st_seq      = */&lvalue_seq,
         /* .st_attr     = */&lvalue_attr
     },
-    /* .pt_orig = */&DeeStructured_Type
+    /* .lt_orig = */&DeeStructured_Type
 };
 
 
