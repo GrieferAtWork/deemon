@@ -287,7 +287,7 @@ DFUNDEF void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restrict self);
 
 
 /* The module of builtin objects accessible by opening `deemon'. */
-DFUNDEF ATTR_RETNONNULL DeeModuleObject *DCALL DeeModule_GetDeemon(void);
+DFUNDEF ATTR_CONST ATTR_RETNONNULL DeeModuleObject *DCALL DeeModule_GetDeemon(void);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* A stub module-object named `' (empty string), and pointing to `empty_code'. */

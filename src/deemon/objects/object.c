@@ -96,7 +96,8 @@ PUBLIC bool DCALL
 DeeType_IsInherited(DeeTypeObject *__restrict test_type,
                     DeeTypeObject *__restrict inherited_type) {
  do if (test_type == inherited_type) return true;
- while ((test_type = test_type->tp_base) != NULL);
+ while ((test_type != test_type->tp_base) &&
+        (test_type = test_type->tp_base) != NULL);
  return false;
 }
 

@@ -152,7 +152,7 @@ PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
 #endif
 PRIVATE int init_state = INIT_PENDING;
 
-INTERN ATTR_RETNONNULL DeeModuleObject *
+PUBLIC ATTR_RETNONNULL DeeModuleObject *
 DCALL DeeModule_GetDeemon(void) {
  /* Lazily calculate hashes of exported objects upon first access. */
  if unlikely(init_state != INIT_COMPLET) {

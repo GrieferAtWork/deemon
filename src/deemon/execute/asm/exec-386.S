@@ -27,8 +27,8 @@
  * This can be enabled to figure out the last instruction that
  * was executed before something goes wrong, narrowing down
  * the search for bugs. */
-#undef TRACE_EXECUTION
-//#define TRACE_EXECUTION 1
+//#undef TRACE_EXECUTION
+#define TRACE_EXECUTION 1
 
 #ifdef NDEBUG
 /* Always use a register for `code' outside of debug-mode. */
@@ -607,28 +607,40 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 	movl   SP, %eax
 	subl   FRAME_STACK, %eax
 	shrl   $2, %eax
-	pushl  %eax
-	
+	pushl  %eax /* SP */
 	ADJUST_CFA_OFFSET(4)
+
+	LOAD_CODE(%edx)
+	movl   co_ddi(CODE_OR_EDX), %ecx
+	movzwl 44(%ecx), %ecx /* struct ddi_object::d_start.dr_name */
+	pushl  %ecx
+	ADJUST_CFA_OFFSET(4)
+	pushl  CODE_OR_EDX
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeCode_GetDDIString,8)
+	ADJUST_CFA_OFFSET(-8)
+	pushl  %eax  /* NAME */
+	ADJUST_CFA_OFFSET(4)
+
 	movl   FRAME_PC, %edx
 	LOAD_CODE(%ecx)
 	leal   co_code(CODE_OR_ECX), %ecx
 	subl   %ecx, %edx
 
-	pushl  4(%esp)
+	pushl  8(%esp) /* OPCODE */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
+	pushl  %edx /* ADDR */
 	ADJUST_CFA_OFFSET(4)
-	pushl  $1f
+	pushl  $1f /* FORMAT */
 	ADJUST_CFA_OFFSET(4)
-	call   SYM(printf)
-	addl   $16, %esp
-	ADJUST_CFA_OFFSET(-16)
+	call   SYM(_Dee_dprintf)
+	addl   $20, %esp
+	ADJUST_CFA_OFFSET(-20)
 
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 .section .rodata
-1:	.string "TRACE: %.4X - %.2X (SP = %u)\n"
+1:	.string "TRACE: %.4X - %.2X (in %s) (SP = %u)\n"
 .text
 #endif
 
@@ -685,7 +697,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 	ADJUST_CFA_OFFSET(4)
 	pushl  $1f
 	ADJUST_CFA_OFFSET(4)
-	call   SYM(printf)
+	call   SYM(_Dee_dprintf)
 	addl   $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 .section .rodata
@@ -704,7 +716,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 /*	pushl  %eax
 	pushl  %ebp
 	pushl  $1f
-	call   SYM(printf)
+	call   SYM(_Dee_dprintf)
 	addl   $8, %esp
 .section .rodata
 1:	.string "EBP = %p\n"
@@ -2602,11 +2614,10 @@ target_adjstack:
 
 
 target_super:
-	jmp    .disp
 	/* Create the super-wrapper. */
-	pushl   FIRST
-	ADJUST_CFA_OFFSET(4)
 	pushl   SECOND
+	ADJUST_CFA_OFFSET(4)
+	pushl   FIRST
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeSuper_New,8)
 	ADJUST_CFA_OFFSET(-8)
@@ -2616,6 +2627,7 @@ target_super:
 	decref  %eax
 	sp_popref %eax
 	jmp    .disp
+
 target16_super_this_r:
 	lodsw
 	jmp     1f
@@ -2960,7 +2972,7 @@ target_push_varkwds:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushlf  FRAME_ARGC    /* positional_argc */
+	pushl   FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
@@ -2970,7 +2982,7 @@ target_push_varkwds:
 	/* } else { */
 1:	pushl   %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushlf  FRAME_ARGC    /* positional_argc */
+	pushl   FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
@@ -7155,7 +7167,7 @@ prefix_target_push_varkwds:
 	ADJUST_CFA_OFFSET(4)
 	pushl   %edx          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushlf  FRAME_ARGC    /* positional_argc */
+	pushl   FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
@@ -7165,7 +7177,7 @@ prefix_target_push_varkwds:
 	/* } else { */
 1:	pushl   %edx          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushlf  FRAME_ARGC    /* positional_argc */
+	pushl   FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl   CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)

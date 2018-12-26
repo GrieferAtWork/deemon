@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/code.h>
+#include <deemon/none.h>
 #include <deemon/module.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
@@ -1526,6 +1527,11 @@ DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t modu
  DREF DeeModuleObject *result;
  char *buf,*dst,*module_name_start; size_t i,len;
  dhash_t hash;
+ DEE_DPRINTF("[TRACE] DeeModule_OpenInPathAbs(%$q,%$q,%r,%p,%x)\n",
+             module_pathsize,module_path,
+             module_namesize,module_name,
+             module_global_name ? module_global_name : Dee_None,
+             options,mode);
 #ifndef CONFIG_NO_DEC
  buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 6) * sizeof(char));
 #else

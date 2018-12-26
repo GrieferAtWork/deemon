@@ -32,7 +32,7 @@ DECL_BEGIN
 
 /* Special symbol names to generate function calls to
  * when the argument count cannot be determined. */
-INTERN char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)][8] = {
+INTERN_CONST char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)][8] = {
     /* [AST_OPERATOR_POS_OR_ADD           - AST_OPERATOR_MIN] = */"__pooad",
     /* [AST_OPERATOR_NEG_OR_SUB           - AST_OPERATOR_MIN] = */"__neosb",
     /* [AST_OPERATOR_GETITEM_OR_SETITEM   - AST_OPERATOR_MIN] = */"__giosi",

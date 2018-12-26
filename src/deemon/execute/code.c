@@ -67,6 +67,7 @@
 
 DECL_BEGIN
 
+
 #ifdef CONFIG_HOST_WINDOWS
 #define ALTSTACK_ALLOC_FAILED   NULL
 #elif defined(MAP_FAILED)

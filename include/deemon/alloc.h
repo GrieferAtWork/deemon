@@ -22,6 +22,8 @@
 #include "api.h"
 #ifdef __CC__
 #include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <hybrid/typecore.h>
 
@@ -652,7 +654,12 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) { DBG_ALIGNMENT_E
 #endif
 
 
-#define DEE_AMALLOC_ALIGN    8 /* TODO: __SIZEOF_POINTER__ should always be good enough for this! */
+#ifdef __SIZEOF_POINTER__
+/* WARNING: This makes amalloc() unsuitable for floating point allocations. */
+#define DEE_AMALLOC_ALIGN    __SIZEOF_POINTER__
+#else
+#define DEE_AMALLOC_ALIGN    8
+#endif
 #define DEE_AMALLOC_MAX      512
 
 #ifdef NDEBUG

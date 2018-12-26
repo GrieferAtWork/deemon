@@ -19,6 +19,7 @@
 #ifndef GUARD_DEEMON_EXECUTE_DEX_C
 #define GUARD_DEEMON_EXECUTE_DEX_C 1
 #define _KOS_SOURCE 1
+#define _GNU_SOURCE 1 /* dl_iterate_phdr */
 
 #include <deemon/api.h>
 #include <deemon/object.h>
@@ -52,6 +53,40 @@
 #define USE_LOADLIBRARY 1
 #include <Windows.h>
 #else
+#if defined(CONFIG_NO_LINK_H) || defined(CONFIG_HOST_WINDOWS)
+#undef CONFIG_HAVE_LINK_H
+#elif !defined(CONFIG_HAVE_LINK_H)
+#ifdef __NO_has_include
+#define CONFIG_HAVE_LINK_H 1
+#elif __has_include(<link.h>)
+#define CONFIG_HAVE_LINK_H 1
+#endif
+#endif
+#ifdef CONFIG_HAVE_LINK_H
+#include <link.h>
+#ifndef __USE_GNU
+#undef CONFIG_HAVE_LINK_H
+#endif /* !__USE_GNU */
+#endif /* CONFIG_HAVE_LINK_H */
+#ifndef CONFIG_HAVE_LINK_H
+#if defined(__KOS__) && __KOS_VERSION__ >= 300
+#ifdef CONFIG_NO_KOS_DL_H
+#undef CONFIG_HAVE_KOS_DL_H
+#elif !defined(CONFIG_HAVE_KOS_DL_H)
+#ifdef __NO_has_include
+#define CONFIG_HAVE_KOS_DL_H 1
+#elif __has_include(<kos/dl.h>)
+#define CONFIG_HAVE_KOS_DL_H 1
+#endif
+#endif
+#ifdef CONFIG_HAVE_KOS_DL_H
+#include <kos/dl.h>
+#endif /* CONFIG_HAVE_KOS_DL_H */
+#endif /* __KOS__ */
+#endif /* !CONFIG_HAVE_LINK_H */
+#ifndef CONFIG_HAVE_KOS_DL_H
+/* ... */
+#endif
 #include <dlfcn.h>
 #endif
 
@@ -421,6 +456,9 @@ dex_fini(DeeDexObject *__restrict self) {
   DBG_ALIGNMENT_ENABLE();
  }
 }
+
+
+#if 0
 PRIVATE void DCALL
 dex_visit(DeeDexObject *__restrict self,
           dvisit_t proc, void *arg) {
@@ -434,6 +472,7 @@ dex_visit(DeeDexObject *__restrict self,
   }
  }
 }
+#endif
 
 
 PUBLIC DeeTypeObject DeeDex_Type = {
@@ -464,7 +503,7 @@ PUBLIC DeeTypeObject DeeDex_Type = {
         /* .tp_bool = */NULL
     },
     /* .tp_call          = */NULL,
-    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&dex_visit,
+    /* .tp_visit         = */NULL, // (void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&dex_visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
     /* .tp_cmp           = */NULL,
@@ -491,9 +530,9 @@ extern IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT   GetModuleHandleW(NULL)
 #endif
 
+#ifdef USE_LOADLIBRARY /* Windows */
 PUBLIC DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr) {
-#ifdef USE_LOADLIBRARY
  HMODULE hTypeModule;
  DBG_ALIGNMENT_DISABLE();
  if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -519,11 +558,110 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
   }
   DBG_ALIGNMENT_ENABLE();
  }
-#else
- /* TODO: Implement for ELF */
-#endif
  return NULL;
 }
+#elif defined(CONFIG_HAVE_LINK_H) /* linux + ELF */
+PRIVATE DREF DeeObject *DCALL
+DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
+ DeeDexObject *iter;
+ rwlock_read(&dex_lock);
+ for (iter = dex_chain; iter; iter = iter->d_next) {
+  struct link_map *lm;
+  lm = (struct link_map *)iter->d_handle;
+  if (lm->l_addr != addr)
+      continue;
+  Dee_Incref((DeeModuleObject *)iter);
+  rwlock_endread(&dex_lock);
+  return (DREF DeeObject *)iter;
+ }
+ rwlock_endread(&dex_lock);
+ return NULL;
+}
+struct iter_modules_data {
+    void const     *search_ptr; /* [const] The pointer who's associated module should be located. */
+    DREF DeeObject *search_res; /* [0..1][lock(WRITE_ONCE)] The module found to be associated with `search_ptr' */
+};
+PRIVATE int
+iter_modules_callback(struct dl_phdr_info *info,
+                      size_t size, void *cookie) {
+ ElfW(Half) i;
+ struct iter_modules_data *data;
+ if unlikely(size < COMPILER_OFFSETAFTER(struct dl_phdr_info,dlpi_phnum))
+    return 0;
+ data = (struct iter_modules_data *)cookie;
+ if unlikely(data->search_res)
+    return 1;
+ for (i = 0; i < info->dlpi_phnum; ++i) {
+  uintptr_t start = (uintptr_t)info->dlpi_addr + (uintptr_t)info->dlpi_phdr[i].p_vaddr;
+  uintptr_t end = (uintptr_t)start + (uintptr_t)info->dlpi_phdr[i].p_memsz;
+  if ((uintptr_t)data->search_ptr < start) continue;
+  if ((uintptr_t)data->search_ptr >= end) continue;
+  /* Check for the special case of this being the deemon core module. */
+  if ((uintptr_t)&DeeObject_Type >= start &&
+      (uintptr_t)&DeeObject_Type < end) {
+   data->search_res = (DREF DeeObject *)DeeModule_GetDeemon();
+   Dee_Incref(data->search_res);
+  } else {
+   /* Given a loaded module, search for its base
+    * address as one of the loaded modules. */
+   data->search_res = DeeModule_FromElfLoadAddr(info->dlpi_addr);
+  }
+  return 1;
+ }
+ return 0;
+}
+PUBLIC DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *__restrict ptr) {
+ struct iter_modules_data data;
+ data.search_ptr = ptr;
+ data.search_res = NULL;
+ /* Enumerate all loaded modules. */
+ dl_iterate_phdr(&iter_modules_callback,(void *)&data);
+ return data.search_res;
+}
+#elif defined(CONFIG_HAVE_KOS_DL_H) /* KOS + ELF */
+PUBLIC DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *__restrict ptr) {
+ struct module_basic_info info;
+ DeeDexObject *iter;
+ rwlock_read(&dex_lock);
+ for (iter = dex_chain; iter; iter = iter->d_next) {
+  if (xdlmodule_info(iter->d_handle,MODULE_INFO_CLASS_BASIC,&info,sizeof(info)) < sizeof(info))
+      continue;
+  if ((uintptr_t)ptr < info.mi_segstart) continue;
+  if ((uintptr_t)ptr >= info.mi_segend) continue;
+  Dee_Incref((DeeModuleObject *)iter);
+  rwlock_endread(&dex_lock);
+  return (DREF DeeObject *)iter;
+ }
+ rwlock_endread(&dex_lock);
+ /* Check if we're dealing with the deemon core itself.
+  * NOTE: This assumes KOS's special linker behavior where any
+  *       pointer apart of a module can also be used as an
+  *       alternative value for that module's handle. */
+ if (xdlmodule_info(ptr,MODULE_INFO_CLASS_BASIC,&info,sizeof(info)) >= sizeof(info)) {
+  if ((uintptr_t)ptr >= info.mi_segstart && (uintptr_t)ptr < info.mi_segend) {
+   /* Now just check if the info relates to the deemon core by checking
+    * if something that is known to be located within the core is also
+    * located with the segment we've just found. */
+   if ((uintptr_t)&DeeObject_Type >= info.mi_segstart &&
+       (uintptr_t)&DeeObject_Type < info.mi_segend) {
+    /* It is the deemon core. */
+    data.search_res = (DREF DeeObject *)DeeModule_GetDeemon();
+    Dee_Incref(data.search_res);
+   }
+  }
+ }
+ return NULL;
+}
+#else
+PUBLIC DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *__restrict ptr) {
+ /* XXX: Further support? */
+ (void)ptr;
+ return NULL;
+}
+#endif
 
 DECL_END
 #else /* !CONFIG_NO_DEX */

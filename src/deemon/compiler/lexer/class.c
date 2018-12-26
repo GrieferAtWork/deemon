@@ -432,7 +432,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
   /* TODO: The creation of doc strings must be prolonged
    *       until the entire class is being finalized.
-   *    -> Only fater FORWARD symbols have been resolved
+   *    -> Only after FORWARD symbols have been resolved
    *       can we actually encode type annotations.
    * XXX: What about recursive class declarations?
    *      we'd have to wait until _all_ classes have
