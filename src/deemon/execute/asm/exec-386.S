@@ -1081,8 +1081,23 @@ run_finally_after_return:
 .except_x4:
 	addl   $4, %esp
 	ADJUST_CFA_OFFSET(-4)
-.except: /* Entry point for general-purpose exception handlers. */
-	/* Execute exception handlers. */
+	/* Entry point for general-purpose exception handlers. */
+.except:
+	/* STEP #1: Lazily allocate a traceback. */
+	movl   L_THIS_THREAD, %edx
+	movl   t_except(%edx), %eax
+	ASSERT_NONZERO(%eax)
+	cmpl   $(ITER_DONE), ef_trace(%eax)
+	jne    .except_no_traceback
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeTraceback_New,4)
+	ADJUST_CFA_OFFSET(-4)
+	movl   L_THIS_THREAD, %edx
+	movl   t_except(%edx), %edx
+	movl   %eax, ef_trace(%edx)
+.except_no_traceback:
+	/* STEP #2: Execute exception handlers. */
 	LOAD_CODE(%edx)
 	movl   FRAME_PC,                %eax
 	subl   CODE_OR_EDX,             %eax
@@ -1109,30 +1124,7 @@ run_finally_after_return:
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	movl   SP_OFFSET(4) L_THIS_THREAD, %eax
-	movl   t_except(%eax), %eax
-	ASSERT_NONZERO(%eax)
-	cmpl   $(ITER_DONE), ef_trace(%eax)
-	jne    5f
-	/* Lazily allocate tracebacks. */
-	pushl  %eax
-	ADJUST_CFA_OFFSET(4)
-	pushl  %ecx
-	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	pushl  SP_OFFSET(16) L_THIS_THREAD
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeTraceback_New,4)
-	ADJUST_CFA_OFFSET(-4)
-	movl   8(%esp), %edx
-	movl   %eax, ef_trace(%edx)
-	popl   %edx
-	ADJUST_CFA_OFFSET(-4)
-	popl   %ecx
-	ADJUST_CFA_OFFSET(-4)
-	popl   %eax
-	ADJUST_CFA_OFFSET(-4)
-5:	movl   ef_error(%eax), %eax /* eax = this_thread->t_except->ef_error */
+	movl   ef_error(%eax), %eax /* eax = this_thread->t_except->ef_error */
 	ASSERT_NONZERO(%eax)
 	/* Check if the error is an interrupt and if so, make
 	 * sure that the handler is allowed to process interrupts. */
