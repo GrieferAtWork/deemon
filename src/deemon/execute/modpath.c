@@ -1958,7 +1958,7 @@ load_module_after_dec_failure:
 #endif
    dst[module_namesize + 2] = 'e';
    dst[module_namesize + 3] = 'e';
-   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len,STRING_ERROR_FSTRICT);
+   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,len,STRING_ERROR_FSTRICT);
    if unlikely(!module_path_ob) goto err_buf;
 #endif /* !USE_LOADLIBRARY */
   } else {
@@ -1966,17 +1966,17 @@ load_module_after_dec_failure:
    DeeModuleObject *existing_module;
 #ifndef USE_LOADLIBRARY
 #ifdef CONFIG_HOST_WINDOWS
-   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len,STRING_ERROR_FSTRICT);
+   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,len,STRING_ERROR_FSTRICT);
 #else
-   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst,len - 1,STRING_ERROR_FSTRICT);
+   module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,len - 1,STRING_ERROR_FSTRICT);
 #endif
-   if unlikely(!module_path_ob) goto err_buf_name_module;
+   if unlikely(!module_path_ob) {
+    CLOSE_MODULE(hModule);
+    goto err_buf_module_name;
+   }
 #endif /* !USE_LOADLIBRARY */
    result = (DREF DeeModuleObject *)DeeDex_New((DeeObject *)module_name_ob);
    if unlikely(!result) {
-#ifndef USE_LOADLIBRARY
-err_buf_name_module:
-#endif /* !USE_LOADLIBRARY */
     CLOSE_MODULE(hModule);
     goto err_buf_module_name_path;
    }

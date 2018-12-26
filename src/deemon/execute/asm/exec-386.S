@@ -27,8 +27,8 @@
  * This can be enabled to figure out the last instruction that
  * was executed before something goes wrong, narrowing down
  * the search for bugs. */
-//#undef TRACE_EXECUTION
-#define TRACE_EXECUTION 1
+#undef TRACE_EXECUTION
+//#define TRACE_EXECUTION 1
 
 #ifdef NDEBUG
 /* Always use a register for `code' outside of debug-mode. */
