@@ -2235,7 +2235,7 @@ PRIVATE struct type_getset object_getsets[] = {
           "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. when ${this.class.__isclass__} is :false), an empty sequence is returned\n"
           "The class-attribute table can be accessed through :type.__ctable__") },
-    /* Helper function: `foo.id()' returns a unique id for any object. */
+    /* Helper function: `foo.id' returns a unique id for any object. */
     { "id", &object_id_get, NULL, NULL,
       DOC("->?Dint\n"
           "Returns a unique id identifying this specific object instance") },

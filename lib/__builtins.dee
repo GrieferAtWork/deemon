@@ -39,6 +39,16 @@ import ipc;
 import util;
 import net;
 import rt;
+import math;
+import files;
+import random;
+import compat_util = .include.m_util;
+import compat_util_attr = .include.m_util_attr;
+import compat_math = .include.m_math;
+import compat_gcc = .include.__builtin_gcc;
+import compat_sys = .include.m_sys;
+import compat_fs = .include.m_fs;
+final local opt_win32 = try import("win32") catch (...) none;
 
 
 local __objects = deemon.list {
@@ -89,7 +99,7 @@ local __objects = deemon.list {
 	/* 0x002c */ operators.operator . ("copy"),
 	/* 0x002d */ operators.operator . ("copy"), /* operator move (removed in d200) */
 	/* 0x002e */ none, /* __builtin_last_exception */
-	/* 0x002f */ [] -> (traceback from deemon).current, /* __builtin_last_traceback */
+	/* 0x002f */ [] -> deemon.traceback.current, /* __builtin_last_traceback */
 	/* 0x0030 */ operators.assign, /* __copyassign__ */
 	/* 0x0031 */ [](x) -> !x, /* __not__ */
 	/* 0x0032 */ operators.neg,
@@ -242,24 +252,24 @@ local __objects = deemon.list {
 	/* 0x00c5 */ ctypes.memcpy,
 	/* 0x00c6 */ ctypes.memmove,
 	/* 0x00c7 */ ctypes.memcmp,
-	/* 0x00c8 */ none, /* TODO: ctypes.strcoll */
-	/* 0x00c9 */ none, /* TODO: ctypes.strcmp */
-	/* 0x00ca */ none, /* TODO: ctypes.strncmp */
-	/* 0x00cb */ none, /* TODO: ctypes.strxfrm */
-	/* 0x00cc */ none, /* TODO: ctypes.strcpy */
-	/* 0x00cd */ none, /* TODO: ctypes.strncpy */
-	/* 0x00ce */ none, /* TODO: ctypes.strcat */
+	/* 0x00c8 */ ctypes.strcoll,
+	/* 0x00c9 */ ctypes.strcmp,
+	/* 0x00ca */ ctypes.strncmp,
+	/* 0x00cb */ ctypes.strxfrm,
+	/* 0x00cc */ ctypes.strcpy,
+	/* 0x00cd */ ctypes.strncpy,
+	/* 0x00ce */ ctypes.strcat,
 	/* 0x00cf */ ctypes.memchr,
-	/* 0x00d0 */ none, /* TODO: ctypes.strchr */
-	/* 0x00d1 */ none, /* TODO: ctypes.strcspn */
-	/* 0x00d2 */ none, /* TODO: ctypes.strpbrk */
-	/* 0x00d3 */ none, /* TODO: ctypes.strrchr */
-	/* 0x00d4 */ none, /* TODO: ctypes.strspn */
-	/* 0x00d5 */ none, /* TODO: ctypes.strstr */
-	/* 0x00d6 */ none, /* TODO: ctypes.strtok */
-	/* 0x00d7 */ none, /* TODO: ctypes.strerror */
-	/* 0x00d8 */ none, /* TODO: ctypes.strlen */
-	/* 0x00d9 */ none, /* TODO: ctypes.strnlen */
+	/* 0x00d0 */ ctypes.strchr,
+	/* 0x00d1 */ ctypes.strcspn,
+	/* 0x00d2 */ ctypes.strpbrk,
+	/* 0x00d3 */ ctypes.strrchr,
+	/* 0x00d4 */ ctypes.strspn,
+	/* 0x00d5 */ ctypes.strstr,
+	/* 0x00d6 */ ctypes.strtok,
+	/* 0x00d7 */ ctypes.strerror,
+	/* 0x00d8 */ ctypes.strlen,
+	/* 0x00d9 */ ctypes.strnlen,
 	/* 0x00da */ ctypes.malloc,
 	/* 0x00db */ ctypes.calloc,
 	/* 0x00dc */ ctypes.realloc,
@@ -274,13 +284,13 @@ local __objects = deemon.list {
 	/* 0x00e5 */ deemon.Error.RuntimeError.SegFault,
 	/* 0x00e6 */ deemon.gc.collect, /* __builtin_gc_collect_now */
 	/* 0x00e7 */ fs.stat.isexe,
-	/* 0x00e8 */ none, /* TODO: ctypes.strdup */
-	/* 0x00e9 */ none, /* TODO: ctypes.strndup */
-	/* 0x00ea */ none, /* TODO: ctypes.strncat */
+	/* 0x00e8 */ ctypes.strdup,
+	/* 0x00e9 */ ctypes.strdup, /* strndup  (`ctypes.strdup' is overloaded to implement this as well) */
+	/* 0x00ea */ ctypes.strncat,
 	/* 0x00eb */ fs.query,
 	/* 0x00ec */ fs.query.iterator,
 	/* 0x00ed */ fs.link,
-	/* 0x00ee */ try import("win32").GetModuleFileName catch (...) none, /* __builtin_fs_win32modulename */
+	/* 0x00ee */ opt_win32.GetModuleFileName, /* __builtin_fs_win32modulename */
 	/* 0x00ef */ deemon.Error.AppExit.exit,
 	/* 0x00f0 */ [](x) -> deemon.Error.AppExit.exit(x,false),
 	/* 0x00f1 */ [](x) -> deemon.Error.AppExit.exit(1,false),
@@ -292,14 +302,14 @@ local __objects = deemon.list {
 	/* 0x00f7 */ ctypes.memccpy,
 	/* 0x00f8 */ ctypes.rawmemchr,
 	/* 0x00f9 */ ctypes.memrchr,
-	/* 0x00fa */ none, /* TODO: ctypes.strchrnul */
-	/* 0x00fb */ none, /* TODO: ctypes.strcasestr */
-	/* 0x00fc */ none, /* TODO: ctypes.strcasecmp */
+	/* 0x00fa */ ctypes.strchrnul,
+	/* 0x00fb */ ctypes.strcasestr,
+	/* 0x00fc */ ctypes.strcasecmp,
 	/* 0x00fd */ ctypes.memmem,
-	/* 0x00fe */ none, /* TODO: ctypes.strncasecmp */
-	/* 0x00ff */ none, /* TODO: ctypes.stpcpy */
-	/* 0x0100 */ none, /* TODO: ctypes.stpncpy */
-	/* 0x0101 */ none, /* TODO: random */
+	/* 0x00fe */ ctypes.strncasecmp,
+	/* 0x00ff */ ctypes.stpcpy,
+	/* 0x0100 */ ctypes.stpncpy,
+	/* 0x0101 */ random.Random,
 	/* 0x0102 */ util.min,
 	/* 0x0103 */ util.max,
 	/* 0x0104 */ util.avg,
@@ -307,7 +317,7 @@ local __objects = deemon.list {
 	/* 0x0106 */ util.any,
 	/* 0x0107 */ util.sum,
 	/* 0x0108 */ util.sqr,
-	/* 0x0109 */ ord from .include.m_util,
+	/* 0x0109 */ compat_util.ord,
 	/* 0x010a */ util.abs,
 	/* 0x010b */ util.ceil,
 	/* 0x010c */ util.floor,
@@ -323,86 +333,86 @@ local __objects = deemon.list {
 	/* 0x0116 */ rt.SeqIntRangeIterator, /* DeeGenericRangeIterator_Type */
 	/* 0x0117 */ deemon.sequence.range,
 	/* 0x0118 */ deemon.object.id,
-	/* 0x0119 */ none, /* TODO: math.sin */
-	/* 0x011a */ none, /* TODO: math.cos */
-	/* 0x011b */ none, /* TODO: math.tan */
-	/* 0x011C */ none, /* TODO: math.sincos */
-	/* 0x011D */ none, /* TODO: math.asin */
-	/* 0x011E */ none, /* TODO: math.acos */
-	/* 0x011F */ none, /* TODO: math.atan */
-	/* 0x0120 */ none, /* TODO: math.atan2 */
-	/* 0x0121 */ none, /* TODO: math.asincos */
-	/* 0x0122 */ none, /* TODO: math.sinh */
-	/* 0x0123 */ none, /* TODO: math.cosh */
-	/* 0x0124 */ none, /* TODO: math.tanh */
-	/* 0x0125 */ none, /* TODO: math.sincosh */
-	/* 0x0126 */ none, /* TODO: math.asinh */
-	/* 0x0127 */ none, /* TODO: math.acosh */
-	/* 0x0128 */ none, /* TODO: math.atanh */
-	/* 0x0129 */ none, /* TODO: math.asincosh */
-	/* 0x012A */ none, /* TODO: math.exp */
-	/* 0x012B */ none, /* TODO: math.frexp */
-	/* 0x012C */ none, /* TODO: math.log */
-	/* 0x012D */ none, /* TODO: math.log10 */
-	/* 0x012E */ none, /* TODO: math.modf */
-	/* 0x012F */ none, /* TODO: math.exp2 */
-	/* 0x0130 */ none, /* TODO: math.expm1 */
-	/* 0x0131 */ none, /* TODO: math.ilogb */
-	/* 0x0132 */ none, /* TODO: math.log1p */
-	/* 0x0133 */ none, /* TODO: math.log2 */
-	/* 0x0134 */ none, /* TODO: math.logb */
-	/* 0x0135 */ none, /* TODO: math.scalbn */
-	/* 0x0136 */ none, /* TODO: math.scalbi32n */
-	/* 0x0137 */ none, /* TODO: math.sqrt */
-	/* 0x0138 */ none, /* TODO: math.cbrt */
-	/* 0x0139 */ none, /* TODO: math.hypot */
-	/* 0x013A */ none, /* TODO: math.erf */
-	/* 0x013B */ none, /* TODO: math.tgamma */
-	/* 0x013C */ none, /* TODO: math.lgamma */
-	/* 0x013D */ none, /* TODO: math.ceilf */
-	/* 0x013E */ none, /* TODO: math.floorf */
-	/* 0x013F */ none, /* TODO: math.truncf */
-	/* 0x0140 */ none, /* TODO: math.roundf */
-	/* 0x0141 */ none, /* TODO: math.i32round */
-	/* 0x0142 */ none, /* TODO: math.i64round */
-	/* 0x0143 */ none, /* TODO: math.fmod */
-	/* 0x0144 */ none, /* TODO: math.rint */
-	/* 0x0145 */ none, /* TODO: math.i32rint */
-	/* 0x0146 */ none, /* TODO: math.i64rint */
-	/* 0x0147 */ none, /* TODO: math.nearbyint */
-	/* 0x0148 */ none, /* TODO: math.remainder */
-	/* 0x0149 */ none, /* TODO: math.remquo */
-	/* 0x014A */ none, /* TODO: math.copysign */
-	/* 0x014B */ none, /* TODO: math.nextafter */
-	/* 0x014C */ none, /* TODO: math.nexttoward */
-	/* 0x014D */ none, /* TODO: math.fdim */
-	/* 0x014E */ none, /* TODO: math.isfinite */
-	/* 0x014F */ none, /* TODO: math.isinf */
-	/* 0x0150 */ none, /* TODO: math.isnan */
-	/* 0x0151 */ none, /* TODO: math.isnormal */
-	/* 0x0152 */ none, /* TODO: math.signbit */
-	/* 0x0153 */ none, /* TODO: math.isgreater */
-	/* 0x0154 */ none, /* TODO: math.isgreaterequal */
-	/* 0x0155 */ none, /* TODO: math.isless */
-	/* 0x0156 */ none, /* TODO: math.islessequal */
-	/* 0x0157 */ none, /* TODO: math.islessgreater */
-	/* 0x0158 */ none, /* TODO: math.isunordered */
+	/* 0x0119 */ math.sin,            /* __builtin_sin */
+	/* 0x011a */ math.cos,            /* __builtin_cos */
+	/* 0x011b */ math.tan,            /* __builtin_tan */
+	/* 0x011C */ math.sincos,         /* __builtin_sincos */
+	/* 0x011D */ math.asin,           /* __builtin_asin */
+	/* 0x011E */ math.acos,           /* __builtin_acos */
+	/* 0x011F */ math.atan,           /* __builtin_atan */
+	/* 0x0120 */ math.atan2,          /* __builtin_atan2 */
+	/* 0x0121 */ math.asincos,        /* __builtin_asincos */
+	/* 0x0122 */ math.sinh,           /* __builtin_sinh */
+	/* 0x0123 */ math.cosh,           /* __builtin_cosh */
+	/* 0x0124 */ math.tanh,           /* __builtin_tanh */
+	/* 0x0125 */ math.sincosh,        /* __builtin_sincosh */
+	/* 0x0126 */ math.asinh,          /* __builtin_asinh */
+	/* 0x0127 */ math.acosh,          /* __builtin_acosh */
+	/* 0x0128 */ math.atanh,          /* __builtin_atanh */
+	/* 0x0129 */ math.asincosh,       /* __builtin_asincosh */
+	/* 0x012A */ math.exp,            /* __builtin_exp */
+	/* 0x012B */ math.frexp,          /* __builtin_frexp */
+	/* 0x012C */ math.log,            /* __builtin_log */
+	/* 0x012D */ math.log10,          /* __builtin_log10 */
+	/* 0x012E */ math.modf,           /* __builtin_modf */
+	/* 0x012F */ math.exp2,           /* __builtin_exp2 */
+	/* 0x0130 */ math.expm1,          /* __builtin_expm1 */
+	/* 0x0131 */ math.ilogb,          /* __builtin_ilogb */
+	/* 0x0132 */ math.log1p,          /* __builtin_log1p */
+	/* 0x0133 */ math.log2,           /* __builtin_log2 */
+	/* 0x0134 */ math.logb,           /* __builtin_logb */
+	/* 0x0135 */ math.scalbn,         /* __builtin_scalbn */
+	/* 0x0136 */ math.scalbn,         /* __builtin_scalbi32n */
+	/* 0x0137 */ math.sqrt,           /* __builtin_sqrt */
+	/* 0x0138 */ math.cbrt,           /* __builtin_cbrt */
+	/* 0x0139 */ math.hypot,          /* __builtin_hypot */
+	/* 0x013A */ math.erf,            /* __builtin_erf */
+	/* 0x013B */ math.tgamma,         /* __builtin_tgamma */
+	/* 0x013C */ math.lgamma,         /* __builtin_lgamma */
+	/* 0x013D */ compat_math.ceilf,   /* __builtin_ceilf */
+	/* 0x013E */ compat_math.floorf,  /* __builtin_floorf */
+	/* 0x013F */ compat_math.truncf,  /* __builtin_truncf */
+	/* 0x0140 */ compat_math.roundf,  /* __builtin_roundf */
+	/* 0x0141 */ util.round,          /* __builtin_i32round */
+	/* 0x0142 */ util.round,          /* __builtin_i64round */
+	/* 0x0143 */ math.fmod,           /* __builtin_fmod */
+	/* 0x0144 */ compat_math.rint,    /* __builtin_rint */
+	/* 0x0145 */ util.round,          /* __builtin_i32rint */
+	/* 0x0146 */ util.round,          /* __builtin_i64rint */
+	/* 0x0147 */ util.round,          /* __builtin_nearbyint */
+	/* 0x0148 */ math.remainder,      /* __builtin_remainder */
+	/* 0x0149 */ math.remquo,         /* __builtin_remquo */
+	/* 0x014A */ math.copysign,       /* __builtin_copysign */
+	/* 0x014B */ math.nextafter,      /* __builtin_nextafter */
+	/* 0x014C */ math.nextafter,      /* __builtin_nexttoward */
+	/* 0x014D */ math.fdim,           /* __builtin_fdim */
+	/* 0x014E */ math.isfinite,       /* __builtin_isfinite */
+	/* 0x014F */ math.isinf,          /* __builtin_isinf */
+	/* 0x0150 */ math.isnan,          /* __builtin_isnan */
+	/* 0x0151 */ math.isnormal,       /* __builtin_isnormal */
+	/* 0x0152 */ math.signbit,        /* __builtin_signbit */
+	/* 0x0153 */ math.isgreater,      /* __builtin_isgreater */
+	/* 0x0154 */ math.isgreaterequal, /* __builtin_isgreaterequal */
+	/* 0x0155 */ math.isless,         /* __builtin_isless */
+	/* 0x0156 */ math.islessequal,    /* __builtin_islessequal */
+	/* 0x0157 */ math.islessgreater,  /* __builtin_islessgreater */
+	/* 0x0158 */ math.isunordered,    /* __builtin_isunordered */
 	/* 0x0159 */ deemon.string, /* string.wide */
 	/* 0x015A */ deemon.string, /* string.utf16 */
 	/* 0x015B */ deemon.string, /* string.utf32 */
 	/* 0x015C */ net.sockaddr,
 	/* 0x015D */ deemon.function_.yieldfunction.iterator, /* DeeZipIterator_Type */
-	/* 0x015E */ none, /* TODO: __builtin_FILE */
-	/* 0x015F */ none, /* TODO: __builtin_LINE */
-	/* 0x0160 */ none, /* TODO: __builtin_FUNCTION */
-	/* 0x0161 */ argv from .include.m_sys,
+	/* 0x015E */ compat_gcc.__builtin_FILE,     /* __builtin_FILE */
+	/* 0x015F */ compat_gcc.__builtin_LINE,     /* __builtin_LINE */
+	/* 0x0160 */ compat_gcc.__builtin_FUNCTION, /* __builtin_FUNCTION */
+	/* 0x0161 */ compat_sys.argv,
 	/* 0x0162 */ none, /* __builtin_fs_win32dlldirectory */
 	/* 0x0163 */ none, /* __builtin_fs_win32systemdirectory */
 	/* 0x0164 */ fs.gettmp,
 	/* 0x0165 */ none, /* __builtin_fs_win32windowsdirectory */
 	/* 0x0166 */ none, /* __builtin_fs_win32systemwindowsdirectory */
 	/* 0x0167 */ none, /* __builtin_fs_win32syswow64directory */
-	/* 0x0168 */ tmpname from .include.m_fs,
+	/* 0x0168 */ compat_fs.tmpname,
 	/* 0x0169 */ []() -> deemon.traceback()[1].__code__, /* __builtin_code -- Return the code object of the caller */
 	/* 0x016A */ deemon.Error.RuntimeError.UnboundLocal,
 	/* 0x016B */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
@@ -415,8 +425,8 @@ local __objects = deemon.list {
 	/* 0x0172 */ deemon.instancemethod,
 	/* 0x0173 */ none, /* __builtin_class */
 	/* 0x0174 */ deemon.Error.ThreadCrash,
-	/* 0x0175 */ swap from .include.m_util,
-	/* 0x0176 */ deemon.string.iterator,
+	/* 0x0175 */ compat_util.swap,
+	/* 0x0176 */ rt.StringIterator,
 	/* 0x0177 */ ctypes.bswap16,
 	/* 0x0178 */ ctypes.bswap32,
 	/* 0x0179 */ ctypes.bswap64,
@@ -429,23 +439,23 @@ local __objects = deemon.list {
 	/* 0x0180 */ [](path,val) -> fs.chtime(path,val,none,none),
 	/* 0x0181 */ [](path,val) -> fs.chtime(path,none,none,val),
 	/* 0x0182 */ [](path,val) -> fs.chtime(path,none,val,none),
-	/* 0x0183 */ [](path,at = none,ct = none,mt = none) -> (chtime from fs)(path,at,mt,ct),
+	/* 0x0183 */ [](path,at = none,ct = none,mt = none) -> fs.chtime(path,at,mt,ct),
 	/* 0x0184 */ ctypes.ArrayType,
 	/* 0x0185 */ ctypes.Array.iterator,
-	/* 0x0186 */ Joined from files,
+	/* 0x0186 */ files.Joined,
 	/* 0x0187 */ deemon.property_,
 	/* 0x0188 */ ipc.Process,
 	/* 0x0189 */ deemon.sequence.contains,
 	/* 0x018A */ net.socket,
 	/* 0x018B */ deemon.hasattr,
-	/* 0x018C */ type(([]{ yield none; })()[0:1]).iterator, /* SeqSubRangeIterator_Type */
+	/* 0x018C */ rt.SeqSubRangeIterator, /* SeqSubRangeIterator_Type */
 	/* 0x018D */ none, /* DeeSocketFile_Type -- Sockets no longer implement the file protocol */
 	/* 0x018E */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the file protocol */
-	/* 0x018F */ deemon.string.iterator, /* DeeWideStringIterator_Type */
+	/* 0x018F */ rt.StringIterator, /* DeeWideStringIterator_Type */
 	/* 0x0190 */ "", /* _Dee_EmptyWideString, */
-	/* 0x0191 */ deemon.string.iterator, /* DeeUtf16StringIterator_Type */
+	/* 0x0191 */ rt.StringIterator, /* DeeUtf16StringIterator_Type */
 	/* 0x0192 */ "", /* _Dee_EmptyUtf16String */
-	/* 0x0193 */ deemon.string.iterator, /* DeeUtf32StringIterator_Type */
+	/* 0x0193 */ rt.StringIterator, /* DeeUtf32StringIterator_Type */
 	/* 0x0194 */ "", /* _Dee_EmptyUtf32String */
 	/* 0x0195 */ []() -> fs.user.name,
 	/* 0x0196 */ fs.gethostname,
@@ -524,7 +534,7 @@ local __objects = deemon.list {
 	/* 0x01DF */ operators.bool, /* DeeBuiltinFunction___bool__ */
 	/* 0x01E0 */ [](f,n,t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
 	/* 0x01E1 */ none, /* TODO: Add closure support to ctypes -- DeeBuiltinFunction___builtin_ff_closure */
-	/* 0x01E2 */ enumattr from .include.m_util_attr, /* DeeBuiltinFunction___builtin_enumattr */
+	/* 0x01E2 */ compat_util_attr.enumattr, /* DeeBuiltinFunction___builtin_enumattr */
 	/* 0x01E3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */
 	// Builtin file operators
 	/* 0x01E3 */ operators.read, /* DeeBuiltinFunction___read__ */
@@ -542,6 +552,8 @@ local __objects = deemon.list {
 	/* 0x01F0 */ deemon.function_.yieldfunction.iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a user-function) */
 	/* 0x01F1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */
 };
+//assert #__objects == 0x01F1 + 1;
+
 
 @@Library function implementing the deprecated ${__builtin_object()} builtin function
 @@Prior to deemon 200, and in the absence of module support, stuff you'd now find in the :deemon module was provided for using builtin-functions.
@@ -550,7 +562,7 @@ local __objects = deemon.list {
 @@>local __builtin_range = __builtin_object(0x0117);
 @@>for (local x: __builtin_range(20))
 @@> print x;
-global function get_builtin(id: deemon.int) {
+final global function get_builtin(id: deemon.int) {
 	return __objects[id];
 }
 
