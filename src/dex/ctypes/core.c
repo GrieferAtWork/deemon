@@ -229,15 +229,15 @@ stype_alignof(DeeSTypeObject *__restrict self) {
 
 PRIVATE struct type_getset stype_getsets[] = {
     { "ptr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-      DOC("->?Gpointer_type\nReturns the pointer type associated with @this :structured_type") },
+      DOC("->?GPointerType\nReturns the pointer type associated with @this :structured_type") },
     { "lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_LValue, NULL, NULL,
-      DOC("->?Glvalue_type\nReturns the l-value type associated with @this :structured_type") },
+      DOC("->?GLValueType\nReturns the l-value type associated with @this :structured_type") },
     { "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_sizeof, NULL, NULL,
       DOC("->?Dint\nReturns the size of @this :structured_type in bytes") },
     { "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_alignof, NULL, NULL,
       DOC("->?Dint\nReturns the alignment of @this :structured_type in bytes") },
     { "pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-      DOC("->?Gpointer_type\nAlias for #ptr") },
+      DOC("->?GPointerType\nAlias for #ptr") },
     { NULL }
 };
 
@@ -984,7 +984,7 @@ PRIVATE struct type_getset struct_getsets[] = {
       DOC("->?Dint\n"
           "Returns the alignment of @this :structured object") },
     { "ref", &struct_ref, NULL, NULL,
-      DOC("->pointer\n"
+      DOC("->?GPointer\n"
           "Returns a pointer to @this :structured object") },
     { NULL }
 };
