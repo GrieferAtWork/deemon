@@ -3016,19 +3016,31 @@ search_suitable_end_again:
        if (*iter == '/') mode &= ~(MODE_INCOMMENT);
        ++iter;
       }
-     } else if (!(mode&(MODE_INSTRING|MODE_INCHAR)) && ch == '/') {
-      while (SKIP_WRAPLF(iter,end));
-      ch = *iter;
-      if (ch == '*') {
-       /* Multi-line comment. */
-       mode |= MODE_INCOMMENT;
-       ++iter;
-      } else if (ch == '/') {
-       /* Line-comment. */
-       while (iter != end && !tpp_islf(*iter)) ++iter;
-       if (iter != end && *iter == '\r') ++iter;
-       if (iter != end && *iter == '\n') ++iter;
+     } else if (!(mode&(MODE_INSTRING|MODE_INCHAR))) {
+      if (ch == '/') {
+       while (SKIP_WRAPLF(iter,end));
+       ch = *iter;
+       if (ch == '*') {
+        /* Multi-line comment. */
+        mode |= MODE_INCOMMENT;
+        ++iter;
+       } else if (ch == '/') {
+        /* Line-comment. */
+#ifdef CONFIG_BUILDING_DEEMON
+skip_line_comment:
+#endif
+        while (iter != end && !tpp_islf(*iter)) ++iter;
+        if (iter != end && *iter == '\r') ++iter;
+        if (iter != end && *iter == '\n') ++iter;
+       }
       }
+#ifdef CONFIG_BUILDING_DEEMON
+      else if (ch == '@') {
+       while (SKIP_WRAPLF(iter,end));
+       if (*iter == '@')
+           goto skip_line_comment;
+      }
+#endif
      }
     }
    }
