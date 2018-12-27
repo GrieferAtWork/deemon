@@ -341,6 +341,8 @@ DeePointer_NewFor(DeeSTypeObject *__restrict pointer_type,
                   void *pointer_value);
 #define DeePointer_NewVoid(pointer_value) \
         DeePointer_NewFor(&DeeCVoid_Type,pointer_value)
+#define DeePointer_NewChar(pointer_value) \
+        DeePointer_NewFor(&DeeCChar_Type,pointer_value)
 
 
 /* The main functions for the new `ref' (`&self') and `ind' (`*self')

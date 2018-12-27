@@ -24,14 +24,67 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
+#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
+#define CTYPES_PROTECTED(action_libcall,action_inline,action_error) \
+        CTYPES_FAULTPROTECT(action_libcall,action_error)
+#else
+#define CTYPES_PROTECTED(action_libcall,action_inline,action_error) \
+        CTYPES_FAULTPROTECT(action_inline,action_error)
+#endif
+#else
+#define CTYPES_PROTECTED(action_libcall,action_inline,action_error) \
+        do{ action_libcall; }__WHILE0
+#endif
+#define CTYPES_PROTECTED_I(action_inline,action_error) \
+        CTYPES_PROTECTED(action_inline,action_inline,action_error)
+
+
+#define CTYPES_PROTECTED_STRLEN(result,str,action_error) \
+    CTYPES_PROTECTED(\
+        (result) = strlen(str),\
+        { \
+            char const *_p = (str); \
+            (result) = 0; \
+            while (*_p++) \
+                ++(result); \
+        },action_error)
+#define CTYPES_PROTECTED_STRNLEN(result,str,maxlen,action_error) \
+    CTYPES_PROTECTED(\
+        (result) = strnlen(str,maxlen),\
+        { \
+            char const *_p = (str); \
+            size_t _maxlen = (maxlen); \
+            (result) = 0; \
+            while (_maxlen-- && *_p++) \
+                ++(result); \
+        },action_error)
+#define CTYPES_PROTECTED_MEMCPY(dst,src,num_bytes,action_error) \
+    CTYPES_PROTECTED(\
+        memcpy(dst,src,num_bytes),\
+        { \
+            union pointer _dst_iter; \
+            union pointer _src_iter; \
+            size_t _num_bytes = (num_bytes); \
+            _dst_iter.ptr = (dst); \
+            _src_iter.ptr = (src); \
+            while (_num_bytes--) \
+                *_dst_iter.p8++ = *_src_iter.p8++; \
+        },action_error)
+
+
+
+
 /* c_malloc */
 INTDEF DREF DeeObject *DCALL capi_malloc(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_free(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_realloc(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_calloc(size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL capi_strdup(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_trymalloc(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_tryrealloc(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_trycalloc(size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL capi_trystrdup(size_t argc, DeeObject **__restrict argv);
 
 /* c_string (memory) */
 INTDEF DREF DeeObject *DCALL capi_memcpy(size_t argc, DeeObject **__restrict argv);
@@ -101,9 +154,7 @@ INTDEF DREF DeeObject *DCALL capi_stpncpy(size_t argc, DeeObject **__restrict ar
 INTDEF DREF DeeObject *DCALL capi_strstr(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_strcasestr(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_strverscmp(size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_strtok(size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_index(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_rindex(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_strspn(size_t argc, DeeObject **__restrict argv);
@@ -121,6 +172,8 @@ INTDEF DREF DeeObject *DCALL capi_strupr(size_t argc, DeeObject **__restrict arg
 INTDEF DREF DeeObject *DCALL capi_strset(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_strnset(size_t argc, DeeObject **__restrict argv);
 INTDEF DREF DeeObject *DCALL capi_strfry(size_t argc, DeeObject **__restrict argv);
+//TODO:INTDEF DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject **__restrict argv);
+//TODO:INTDEF DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject **__restrict argv);
 #endif
 
 DECL_END

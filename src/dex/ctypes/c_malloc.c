@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_CTYPES_C_MALLOC_C
 #define GUARD_DEX_CTYPES_C_MALLOC_C 1
+#define _GNU_SOURCE 1 /* strnlen() */
 
 #include "libctypes.h"
 #include "c_api.h"
@@ -29,8 +30,22 @@
 #include <deemon/none.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 DECL_BEGIN
+
+
+#ifndef __USE_GNU
+#ifndef _MSC_VER
+#define strnlen dee_strnlen
+LOCAL size_t dee_strnlen(char const *__restrict str, size_t maxlen) {
+ size_t result;
+ for (result = 0; maxlen && *str; --maxlen,++str,++result);
+ return result;
+}
+#endif
+#endif /* !__USE_GNU */
+
 
 INTERN DREF DeeObject *DCALL
 capi_free(size_t argc, DeeObject **__restrict argv) {
@@ -174,6 +189,52 @@ err:
 }
 
 
+
+INTERN DREF DeeObject *DCALL
+capi_strdup(size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result; size_t len,maxlen = (size_t)-1;
+ DeeObject *str_ob; union pointer str; void *resptr;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:strdup",&str_ob,&maxlen))
+     goto err;
+ if (DeeObject_AsPointer(str_ob,&DeeCChar_Type,&str))
+     goto err;
+ CTYPES_PROTECTED_STRNLEN(len,str.pchar,maxlen,goto err);
+ resptr = Dee_Malloc((len + 1) * sizeof(char));
+ if unlikely(!resptr) goto err;
+ CTYPES_PROTECTED_MEMCPY(resptr,str.pchar,len * sizeof(char),goto err_r);
+ ((char *)resptr)[len] = '\0';
+ result = DeePointer_NewChar(resptr);
+ if unlikely(!result) goto err_r;
+ return result;
+err_r:
+ Dee_Free(resptr);
+err:
+ return NULL;
+}
+
+
+INTERN DREF DeeObject *DCALL
+capi_trystrdup(size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result; size_t len,maxlen = (size_t)-1;
+ DeeObject *str_ob; union pointer str; void *resptr;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:trystrdup",&str_ob,&maxlen))
+     goto err;
+ if (DeeObject_AsPointer(str_ob,&DeeCChar_Type,&str))
+     goto err;
+ CTYPES_PROTECTED_STRNLEN(len,str.pchar,maxlen,goto err);
+ resptr = Dee_TryMalloc((len + 1) * sizeof(char));
+ if likely(resptr) {
+  CTYPES_PROTECTED_MEMCPY(resptr,str.pchar,len * sizeof(char),goto err_r);
+  ((char *)resptr)[len] = '\0';
+ }
+ result = DeePointer_NewChar(resptr);
+ if unlikely(!result) goto err_r;
+ return result;
+err_r:
+ Dee_Free(resptr);
+err:
+ return NULL;
+}
 
 
 

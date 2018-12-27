@@ -106,7 +106,7 @@ dex_load_handle(DeeDexObject *__restrict self,
  struct module_symbol *modsym;
  struct dex_symbol *symbols; struct dex *descriptor;
  DREF DeeObject **globals; DREF DeeModuleObject **imports;
- size_t symcount,impcount; uint16_t symi,bucket_mask;
+ size_t symcount,glbcount,impcount; uint16_t symi,bucket_mask;
 #ifdef USE_LOADLIBRARY
  DBG_ALIGNMENT_DISABLE();
  descriptor = (struct dex *)GetProcAddress((HMODULE)handle,"DEX");
@@ -161,16 +161,28 @@ dex_load_handle(DeeDexObject *__restrict self,
  /* Load the extension's symbol table. */
  symbols = descriptor->d_symbols;
  symcount = 0;
- if (symbols) while (symbols->ds_name) ++symbols,++symcount;
- if unlikely(symcount > UINT16_MAX) {
+ glbcount = 0;
+ if (symbols) {
+  while (symbols->ds_name) {
+   if ((symbols->ds_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
+    symbols += 2;
+    glbcount += 2;
+   }
+   ++symbols;
+   ++symcount;
+  }
+ }
+ glbcount += symcount;
+ if unlikely(glbcount > UINT16_MAX) {
   DeeError_Throwf(&DeeError_RuntimeError,
                   "Dex extension %r is too large",
                   input_file);
   goto err_imp_elem;
  }
+ ASSERT(glbcount >= symcount);
  /* Generate the global variable table. */
  symbols = descriptor->d_symbols;
- globals = (DREF DeeObject **)Dee_Malloc(symcount*sizeof(DREF DeeObject *));
+ globals = (DREF DeeObject **)Dee_Malloc(glbcount*sizeof(DREF DeeObject *));
  if unlikely(!globals) goto err_imp_elem;
  /* Figure out how large the hash-mask should be. */
  bucket_mask = 1;
@@ -181,7 +193,7 @@ dex_load_handle(DeeDexObject *__restrict self,
                                               sizeof(struct module_symbol));
  if unlikely(!modsym) goto err_glob;
  /* Set the symbol table and global variable vector. */
- for (symi = 0; symi < (uint16_t)symcount; ++symi) {
+ for (symi = 0; symi < (uint16_t)glbcount; ++symi) {
   struct dex_symbol *sym = &symbols[symi];
   dhash_t i,perturb,hash;
   ASSERT(sym->ds_name);
@@ -204,11 +216,19 @@ dex_load_handle(DeeDexObject *__restrict self,
   /* Safe the proper initialization object in the global table. */
   globals[symi] = sym->ds_obj;
   Dee_XIncref(sym->ds_obj);
+  if ((sym->ds_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
+   /* Initialize a property */
+   globals[symi + 1] = sym[1].ds_obj;
+   globals[symi + 2] = sym[2].ds_obj;
+   Dee_XIncref(sym[1].ds_obj);
+   Dee_XIncref(sym[2].ds_obj);
+   symi += 2;
+  }
  }
  /* Write the tables into the module descriptor. */
  self->d_module.mo_importc = (uint16_t)impcount;
  self->d_module.mo_importv = imports;
- self->d_module.mo_globalc = (uint16_t)symcount;
+ self->d_module.mo_globalc = (uint16_t)glbcount;
  self->d_module.mo_globalv = globals;
  self->d_module.mo_bucketm = bucket_mask;
  self->d_module.mo_bucketv = modsym;

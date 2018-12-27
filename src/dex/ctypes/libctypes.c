@@ -32,6 +32,7 @@
 #endif
 
 #include <deemon/api.h>
+#include <deemon/none.h>
 #include <deemon/alloc.h>
 #include <deemon/dex.h>
 #include <deemon/bytes.h>
@@ -42,6 +43,21 @@
 #include <hybrid/typecore.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/byteorder.h>
+
+#ifdef CONFIG_NO_ERRNO_H
+#undef CONFIG_HAVE_ERRNO_H
+#elif !defined(CONFIG_HAVE_ERRNO_H)
+#ifdef __NO_has_include
+#define CONFIG_HAVE_ERRNO_H 1
+#elif __has_include(<errno.h>)
+#define CONFIG_HAVE_ERRNO_H 1
+#endif
+#endif
+
+#ifdef CONFIG_HAVE_ERRNO_H
+#include <errno.h>
+#endif /* CONFIG_HAVE_ERRNO_H */
+#include <string.h>
 
 DECL_BEGIN
 
@@ -293,9 +309,11 @@ PRIVATE DEFINE_CMETHOD(ctypes_malloc,capi_malloc);
 PRIVATE DEFINE_CMETHOD(ctypes_free,capi_free);
 PRIVATE DEFINE_CMETHOD(ctypes_realloc,capi_realloc);
 PRIVATE DEFINE_CMETHOD(ctypes_calloc,capi_calloc);
+PRIVATE DEFINE_CMETHOD(ctypes_strdup,capi_strdup);
 PRIVATE DEFINE_CMETHOD(ctypes_trymalloc,capi_trymalloc);
 PRIVATE DEFINE_CMETHOD(ctypes_tryrealloc,capi_tryrealloc);
 PRIVATE DEFINE_CMETHOD(ctypes_trycalloc,capi_trycalloc);
+PRIVATE DEFINE_CMETHOD(ctypes_trystrdup,capi_trystrdup);
 
 PRIVATE DEFINE_CMETHOD(ctypes_memcpy,capi_memcpy);
 PRIVATE DEFINE_CMETHOD(ctypes_mempcpy,capi_mempcpy);
@@ -332,7 +350,6 @@ PRIVATE DEFINE_CMETHOD(ctypes_memrmem,capi_memrmem);
 PRIVATE DEFINE_CMETHOD(ctypes_memcasermem,capi_memcasermem);
 PRIVATE DEFINE_CMETHOD(ctypes_memrev,capi_memrev);
 
-#if 0
 PRIVATE DEFINE_CMETHOD(ctypes_strlen,capi_strlen);
 PRIVATE DEFINE_CMETHOD(ctypes_strend,capi_strend);
 PRIVATE DEFINE_CMETHOD(ctypes_strnlen,capi_strnlen);
@@ -362,9 +379,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_stpncpy,capi_stpncpy);
 PRIVATE DEFINE_CMETHOD(ctypes_strstr,capi_strstr);
 PRIVATE DEFINE_CMETHOD(ctypes_strcasestr,capi_strcasestr);
 PRIVATE DEFINE_CMETHOD(ctypes_strverscmp,capi_strverscmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
 PRIVATE DEFINE_CMETHOD(ctypes_strtok,capi_strtok);
-PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
 PRIVATE DEFINE_CMETHOD(ctypes_index,capi_index);
 PRIVATE DEFINE_CMETHOD(ctypes_rindex,capi_rindex);
 PRIVATE DEFINE_CMETHOD(ctypes_strspn,capi_strspn);
@@ -382,7 +397,66 @@ PRIVATE DEFINE_CMETHOD(ctypes_strupr,capi_strupr);
 PRIVATE DEFINE_CMETHOD(ctypes_strset,capi_strset);
 PRIVATE DEFINE_CMETHOD(ctypes_strnset,capi_strnset);
 PRIVATE DEFINE_CMETHOD(ctypes_strfry,capi_strfry);
+//PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
+//PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
+
+#ifdef CONFIG_HAVE_ERRNO_H
+PRIVATE DREF DeeObject *DCALL
+capi_errno_get(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ return DeeInt_NewInt(errno);
+}
+PRIVATE DREF DeeObject *DCALL
+capi_errno_del(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ errno = 0;
+ return_none;
+}
+PRIVATE DREF DeeObject *DCALL
+capi_errno_set(size_t argc, DeeObject **__restrict argv) {
+ int newval;
+ if (DeeArg_Unpack(argc,argv,"d:errno.setter",&newval))
+     goto err;
+ errno = newval;
+ return_none;
+err:
+ return NULL;
+}
+PRIVATE DEFINE_CMETHOD(ctypes_errno_get,capi_errno_get);
+PRIVATE DEFINE_CMETHOD(ctypes_errno_del,capi_errno_del);
+PRIVATE DEFINE_CMETHOD(ctypes_errno_set,capi_errno_set);
+#else /* CONFIG_HAVE_ERRNO_H */
+PRIVATE DREF DeeObject *DCALL
+capi_errno_access(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+ DeeError_Throwf(&DeeError_UnsupportedAPI,"No errno support");
+ return NULL;
+}
+PRIVATE DEFINE_CMETHOD(ctypes_errno_access,capi_errno_access);
+#define ctypes_errno_get  ctypes_errno_access
+#define ctypes_errno_del  ctypes_errno_access
+#define ctypes_errno_set  ctypes_errno_access
+#endif /* !CONFIG_HAVE_ERRNO_H */
+
+PRIVATE DREF DeeObject *DCALL
+capi_strerror(size_t argc, DeeObject **__restrict argv) {
+#if !defined(CONFIG_HAVE_ERRNO_H) || defined(CONFIG_NO_STRERROR)
+ int no;
+ if (DeeArg_Unpack(argc,argv,"|d:strerror",&no))
+     goto err;
+ return_none;
+#else
+ int no = errno; char *name;
+ if (DeeArg_Unpack(argc,argv,"|d:strerror",&no))
+     goto err;
+ name = strerror(no);
+ if (name)
+     return DeeString_New(name);
 #endif
+ return_none;
+err:
+ return NULL;
+}
+PRIVATE DEFINE_CMETHOD(ctypes_strerror,capi_strerror);
+
+
 
 PRIVATE struct dex_symbol symbols[] = {
     /* Export the underlying type-system used by ctypes. */
@@ -440,16 +514,16 @@ PRIVATE struct dex_symbol symbols[] = {
 
     /* Export some helper functions */
     { "sizeof", (DeeObject *)&ctypes_sizeof, MODSYM_FNORMAL,
-      DOC("(ob:?#structured_type)->?Dint\n"
-          "(ob:?#structured)->?Dint\n"
+      DOC("(ob:?GStructuredType)->?Dint\n"
+          "(ob:?GStructured)->?Dint\n"
           "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
           "Returns the size of a given structured type or object in bytes\n"
           "\n"
           "(ob:?Dbytes)->?Dint\n"
           "Returns the size of the given :bytes ob, which is the same as ${#ob}") },
     { "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
-      DOC("(ob:?#structured_type)->?Dint\n"
-          "(ob:?#structured)->?Dint\n"
+      DOC("(ob:?GStructuredType)->?Dint\n"
+          "(ob:?GStructured)->?Dint\n"
           "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
           "Returns the alignment of a given structured type or object in bytes") },
     { "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FNORMAL,
@@ -457,33 +531,44 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw ValueError No integer matching the requirements of @size is supported") },
 
     { "bswap16", (DeeObject *)&ctypes_bswap16, MODSYM_FNORMAL,
-      DOC("(x:?#uint16_t)->?#uint16_t\n"
+      DOC("(x:?Guint16_t)->?Guint16_t\n"
           "Return @x with reversed endian") },
     { "bswap32", (DeeObject *)&ctypes_bswap32, MODSYM_FNORMAL,
-      DOC("(x:?#uint32_t)->?#uint32_t\n"
+      DOC("(x:?Guint32_t)->?Guint32_t\n"
           "Return @x with reversed endian") },
     { "bswap64", (DeeObject *)&ctypes_bswap64, MODSYM_FNORMAL,
-      DOC("(x:?#uint64_t)->?#uint64_t\n"
+      DOC("(x:?Guint64_t)->?Guint64_t\n"
           "Return @x with reversed endian") },
 
     { "leswap16", (DeeObject *)&ctypes_leswap16, MODSYM_FNORMAL,
-      DOC("(x:?#uint16_t)->?#uint16_t\n"
+      DOC("(x:?Guint16_t)->?Guint16_t\n"
           "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
     { "leswap32", (DeeObject *)&ctypes_leswap32, MODSYM_FNORMAL,
-      DOC("(x:?#uint32_t)->?#uint32_t\n"
+      DOC("(x:?Guint32_t)->?Guint32_t\n"
           "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
     { "leswap64", (DeeObject *)&ctypes_leswap64, MODSYM_FNORMAL,
-      DOC("(x:?#uint64_t)->?#uint64_t\n"
+      DOC("(x:?Guint64_t)->?Guint64_t\n"
           "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
     { "beswap16", (DeeObject *)&ctypes_beswap16, MODSYM_FNORMAL,
-      DOC("(x:?#uint16_t)->?#uint16_t\n"
+      DOC("(x:?Guint16_t)->?Guint16_t\n"
           "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
     { "beswap32", (DeeObject *)&ctypes_beswap32, MODSYM_FNORMAL,
-      DOC("(x:?#uint32_t)->?#uint32_t\n"
+      DOC("(x:?Guint32_t)->?Guint32_t\n"
           "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
     { "beswap64", (DeeObject *)&ctypes_beswap64, MODSYM_FNORMAL,
-      DOC("(x:?#uint64_t)->?#uint64_t\n"
+      DOC("(x:?Guint64_t)->?Guint64_t\n"
           "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
+
+    /* <errno.h> - style accessors. */
+    { "errno", (DeeObject *)&ctypes_errno_get, MODSYM_FPROPERTY,
+      DOC("->?Dint\nAccess the system's errno runtime variable") },
+    { NULL, (DeeObject *)&ctypes_errno_del }, /* PROPERTY.DELETE */
+    { NULL, (DeeObject *)&ctypes_errno_set }, /* PROPERTY.SETTER */
+    { "strerror", (DeeObject *)&ctypes_strerror, MODSYM_FNORMAL,
+      DOC("(errno?:?Dint)->?X2?Dstring?N\n"
+          "Return the name of a given @errno (which defaults to #errno), "
+          "or return :none if the error doesn't have an associated name") },
+
 
     /* <string.h> & <stdlib.h> - style ctypes functions */
     { "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FNORMAL,
@@ -538,6 +623,34 @@ PRIVATE struct dex_symbol symbols[] = {
           "Same as :realloc, but return a NULL-pointer if allocation isn't "
           "possible due to lack of memory, rather than throwing a :NoMemory error\n"
           "In this event, the pre-existing heap-block passed for @ptr is not freed") },
+    { "strdup", (DeeObject *)&ctypes_strdup, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,maxlen:?Dint=!Amax!Gsize_t)->?Aptr?Gchar\n"
+          "@throw NoMemory Insufficient memory\n"
+          "Duplicate the given @str into a heap-allocated memory block\n"
+          ">function strndup(str,maxlen?) {\n"
+          "> import * from ctypes;\n"
+          "> if (maxlen !is bound)\n"
+          ">  maxlen = size_t.max;\n"
+          "> local len = strnlen(str,maxlen) * sizeof(char);\n"
+          "> local res = (char.ptr)memcpy(malloc(len + sizeof(char)),str,len);\n"
+          "> res[len] = 0;\n"
+          "> return res;\n"
+          ">}") },
+    { "trystrdup", (DeeObject *)&ctypes_trystrdup, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,maxlen:?Dint=!Amax!Gsize_t)->?Aptr?Gchar\n"
+          "Try to duplicate the given @str into a heap-allocated memory block\n"
+          ">function trystrndup(str,maxlen?) {\n"
+          "> import * from ctypes;\n"
+          "> if (maxlen !is bound)\n"
+          ">  maxlen = size_t.max;\n"
+          "> local len = strnlen(str,maxlen) * sizeof(char);\n"
+          "> local res = (char.ptr)trymalloc(len + sizeof(char));\n"
+          "> if (res) {\n"
+          ">  memcpy(res,str,len);\n"
+          ">  res[len] = 0;\n"
+          "> }\n"
+          "> return res;\n"
+          ">}") },
 
 
       
@@ -638,13 +751,13 @@ PRIVATE struct dex_symbol symbols[] = {
       DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
           "Same as :rawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
     { "memcmp",      (DeeObject *)&ctypes_memcmp, MODSYM_FNORMAL,
-      DOC("(void.ptr a,void.ptr b,haystack_size:?Dint)->?Dint\n"
+      DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,haystack_size:?Dint)->?Dint\n"
           "Compare bytes from 2 buffers in @a and @b of equal haystack_size @haystack_size, and "
           "search for the first non-matching byte, returning ${< 0} if that byte "
           "in @a is smaller than its counterpart in @b, ${> 0} if the opposite "
           "is true, and ${== 0} no such byte exists") },
     { "memcasecmp",  (DeeObject *)&ctypes_memcasecmp, MODSYM_FNORMAL,
-      DOC("(void.ptr a,void.ptr b,haystack_size:?Dint)->?Dint\n"
+      DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,haystack_size:?Dint)->?Dint\n"
           "Same as :memcmp, but bytes are casted as ASCII characters into a "
           "common casing prior to comparison") },
     { "memmem",      (DeeObject *)&ctypes_memmem, MODSYM_FNORMAL,
@@ -667,59 +780,181 @@ PRIVATE struct dex_symbol symbols[] = {
           "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
           "byte contains the old value of the last byte, and the last byte the value of the first, "
           "and so on.") },
-#if 0
-PRIVATE DEFINE_CMETHOD(ctypes_strlen,capi_strlen);
-PRIVATE DEFINE_CMETHOD(ctypes_strend,capi_strend);
-PRIVATE DEFINE_CMETHOD(ctypes_strnlen,capi_strnlen);
-PRIVATE DEFINE_CMETHOD(ctypes_strnend,capi_strnend);
-PRIVATE DEFINE_CMETHOD(ctypes_strchr,capi_strchr);
-PRIVATE DEFINE_CMETHOD(ctypes_strrchr,capi_strrchr);
-PRIVATE DEFINE_CMETHOD(ctypes_strnchr,capi_strnchr);
-PRIVATE DEFINE_CMETHOD(ctypes_strnrchr,capi_strnrchr);
-PRIVATE DEFINE_CMETHOD(ctypes_stroff,capi_stroff);
-PRIVATE DEFINE_CMETHOD(ctypes_strroff,capi_strroff);
-PRIVATE DEFINE_CMETHOD(ctypes_strnoff,capi_strnoff);
-PRIVATE DEFINE_CMETHOD(ctypes_strnroff,capi_strnroff);
-PRIVATE DEFINE_CMETHOD(ctypes_strchrnul,capi_strchrnul);
-PRIVATE DEFINE_CMETHOD(ctypes_strrchrnul,capi_strrchrnul);
-PRIVATE DEFINE_CMETHOD(ctypes_strnchrnul,capi_strnchrnul);
-PRIVATE DEFINE_CMETHOD(ctypes_strnrchrnul,capi_strnrchrnul);
-PRIVATE DEFINE_CMETHOD(ctypes_strcmp,capi_strcmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strncmp,capi_strncmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strcasecmp,capi_strcasecmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strncasecmp,capi_strncasecmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strcpy,capi_strcpy);
-PRIVATE DEFINE_CMETHOD(ctypes_strcat,capi_strcat);
-PRIVATE DEFINE_CMETHOD(ctypes_strncpy,capi_strncpy);
-PRIVATE DEFINE_CMETHOD(ctypes_strncat,capi_strncat);
-PRIVATE DEFINE_CMETHOD(ctypes_stpcpy,capi_stpcpy);
-PRIVATE DEFINE_CMETHOD(ctypes_stpncpy,capi_stpncpy);
-PRIVATE DEFINE_CMETHOD(ctypes_strstr,capi_strstr);
-PRIVATE DEFINE_CMETHOD(ctypes_strcasestr,capi_strcasestr);
-PRIVATE DEFINE_CMETHOD(ctypes_strverscmp,capi_strverscmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
-PRIVATE DEFINE_CMETHOD(ctypes_strtok,capi_strtok);
-PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
-PRIVATE DEFINE_CMETHOD(ctypes_index,capi_index);
-PRIVATE DEFINE_CMETHOD(ctypes_rindex,capi_rindex);
-PRIVATE DEFINE_CMETHOD(ctypes_strspn,capi_strspn);
-PRIVATE DEFINE_CMETHOD(ctypes_strcspn,capi_strcspn);
-PRIVATE DEFINE_CMETHOD(ctypes_strpbrk,capi_strpbrk);
-PRIVATE DEFINE_CMETHOD(ctypes_strcoll,capi_strcoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strncoll,capi_strncoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strcasecoll,capi_strcasecoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strncasecoll,capi_strncasecoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strxfrm,capi_strxfrm);
-PRIVATE DEFINE_CMETHOD(ctypes_strrev,capi_strrev);
-PRIVATE DEFINE_CMETHOD(ctypes_strnrev,capi_strnrev);
-PRIVATE DEFINE_CMETHOD(ctypes_strlwr,capi_strlwr);
-PRIVATE DEFINE_CMETHOD(ctypes_strupr,capi_strupr);
-PRIVATE DEFINE_CMETHOD(ctypes_strset,capi_strset);
-PRIVATE DEFINE_CMETHOD(ctypes_strnset,capi_strnset);
-PRIVATE DEFINE_CMETHOD(ctypes_strfry,capi_strfry);
-#endif
 
-
+    { "strlen",      (DeeObject *)&ctypes_strlen, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar)->?Dint\n"
+          "Returns the length of a given @str in characters") },
+    { "strend",      (DeeObject *)&ctypes_strend, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Return a pointer to the end of a given @str") },
+    { "strnlen",     (DeeObject *)&ctypes_strnlen, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+          "Same as #strlen, but limit the max number of scanned characters to @maxlen") },
+    { "strnend",     (DeeObject *)&ctypes_strnend, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Same as #strend, but limit the max number of scanned characters to @maxlen") },
+    { "strchr",      (DeeObject *)&ctypes_strchr, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+          "Search for the first character equal to @needle within @haystack\n"
+          "If no such character exists, return a NULL-pointer instead") },
+    { "strrchr",     (DeeObject *)&ctypes_strrchr, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+          "Search for the last character equal to @needle within @haystack\n"
+          "If no such character exists, return a NULL-pointer instead") },
+    { "strnchr",     (DeeObject *)&ctypes_strnchr, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Same as #strchr, but limit the max number of scanned characters to @maxlen") },
+    { "strnrchr",    (DeeObject *)&ctypes_strnrchr, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Same as #strrchr, but limit the max number of scanned characters to @maxlen") },
+    { "stroff",      (DeeObject *)&ctypes_stroff, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
+          "Same #strchr, but return the offset of the found character from @haystack, or ${strlen(haystack)} if @needle wasn't found") },
+    { "strroff",     (DeeObject *)&ctypes_strroff, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
+          "Same #strrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
+    { "strnoff",     (DeeObject *)&ctypes_strnoff, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
+          "Same #strnchr, but return the offset of the found character from @haystack, or ${strnlen(haystack,maxlen)} if @needle wasn't found") },
+    { "strnroff",    (DeeObject *)&ctypes_strnroff, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
+          "Same #strnrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
+    { "strchrnul",   (DeeObject *)&ctypes_strchrnul, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+          "Same as #strchr, but return ${strend(haystack)} if @needle wasn't found") },
+    { "strrchrnul",  (DeeObject *)&ctypes_strrchrnul, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+          "Same as #strrchr, but return ${haystack-1} if @needle wasn't found") },
+    { "strnchrnul",  (DeeObject *)&ctypes_strnchrnul, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Same as #strnchr, but return ${strnend(haystack,maxlen)} if @needle wasn't found") },
+    { "strnrchrnul", (DeeObject *)&ctypes_strnrchrnul, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Same as #strnrchr, but return ${haystack-1} if @needle wasn't found") },
+    { "strcmp",      (DeeObject *)&ctypes_strcmp, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+          "Compare the given strings @a and @b, returning ${<0}, "
+          "${==0} or ${>0} indicative of their relation to one-another") },
+    { "strncmp",     (DeeObject *)&ctypes_strncmp, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+          "Same as #strcmp, but limit the max number of compared characters to @maxlen") },
+    { "strcasecmp",  (DeeObject *)&ctypes_strcasecmp, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+          "Same as #strcmp, but ignore casing") },
+    { "strncasecmp", (DeeObject *)&ctypes_strncasecmp, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+          "Same as #strncmp, but ignore casing") },
+    { "strcpy",      (DeeObject *)&ctypes_strcpy, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Same as ${(char.ptr)memcpy(dst,src,(strlen(src)+1)*sizeof(char))}") },
+    { "strcat",      (DeeObject *)&ctypes_strcat, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Same as ${({ local r = dst; strcpy(strend(dst),src); (char.ptr)r; })}") },
+    { "strncpy",     (DeeObject *)&ctypes_strncpy, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
+          "Implemented as:\n"
+          ">function strncpy(dst,src,count) {\n"
+          "> import * from ctypes;\n"
+          "> local srclen = strnlen(src,count);\n"
+          "> memcpy(dst,src,srclen * sizeof(char));\n"
+          "> memset(dst + strlen,0,(count - srclen) * sizeof(char));\n"
+          "> return dst;\n"
+          ">}") },
+    { "strncat",     (DeeObject *)&ctypes_strncat, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
+          "Implemented as:\n"
+          ">function strncat(dst,src,count) {\n"
+          "> import * from ctypes;\n"
+          "> local srclen = strnlen(src,count);\n"
+          "> local buf = strend(dst);\n"
+          "> memcpy(buf,src,srclen * sizeof(char));\n"
+          "> buf[srclen] = 0;\n"
+          "> return dst;\n"
+          ">}") },
+    { "stpcpy",      (DeeObject *)&ctypes_stpcpy, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Same as ${(char.ptr)mempcpy(dst,src,(strlen(src) + 1) * sizeof(char)) - 1}") },
+    { "stpncpy",     (DeeObject *)&ctypes_stpncpy, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Implemented as:\n"
+          ">function stpncpy(dst,src,dstsize) {\n"
+          "> import * from ctypes;\n"
+          "> local srclen = strnlen(src,dstsize);\n"
+          "> memcpy(dst,src,srclen * sizeof(char));\n"
+          "> memset(dst + srclen,0,(dstsize - srclen) * sizeof(char));\n"
+          "> return dst + srclen;\n"
+          ">}") },
+    { "strstr",      (DeeObject *)&ctypes_strstr, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
+    { "strcasestr",  (DeeObject *)&ctypes_strcasestr, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Same as #strstr, but ignore casing") },
+    { "strverscmp",  (DeeObject *)&ctypes_strverscmp, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+          "Same as #strcmp, but do special handling for version strings (s.a. :string.vercompare)") },
+    { "strtok",      (DeeObject *)&ctypes_strtok, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Split @str at each occurance of @delim and return the resulting strings individually") },
+    { "index",       (DeeObject *)&ctypes_index, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+          "Same as #strchr, but return ${strend(haystack)} when @needle is $0") },
+    { "rindex",      (DeeObject *)&ctypes_rindex, MODSYM_FNORMAL,
+      DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
+          "Same as #strrchr, but return ${strend(haystack)} when @needle is $0") },
+    { "strspn",      (DeeObject *)&ctypes_strspn, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
+          "Returns the offset to the first character in @str that is also "
+          "apart of @accept, or ${strlen(str)} when no such character exists") },
+    { "strcspn",     (DeeObject *)&ctypes_strcspn, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,reject:?Aptr?Gchar)->?Dint\n"
+          "Returns the offset to the first character in @str that isn't "
+          "apart of @accept, or ${strlen(str)} when no such character exists") },
+    { "strpbrk",     (DeeObject *)&ctypes_strpbrk, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Return a pointer to the first character in @str, that is also apart of @accept\n"
+          "If no such character exists, a NULL-pointer is returned") },
+    { "strcoll",     (DeeObject *)&ctypes_strcoll, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+          "Compare @a and @b using the currently set locale") },
+    { "strncoll",    (DeeObject *)&ctypes_strncoll, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+          "Same as #strcoll, but limit the number of scanned characters to @maxlen") },
+    { "strcasecoll", (DeeObject *)&ctypes_strcasecoll, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+          "Same as #strcoll, but ignore casing") },
+    { "strncasecoll",(DeeObject *)&ctypes_strncasecoll, MODSYM_FNORMAL,
+      DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+          "Same as #strcasecoll, but limit the number of scanned characters to @maxlen") },
+    { "strxfrm",     (DeeObject *)&ctypes_strxfrm, MODSYM_FNORMAL,
+      DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,num:?Dint)->?Dint\n"
+          "Transform up to @num characters from @src, using the current locale, and "
+          "store them in @dst before returning the number of stored characters") },
+    { "strrev",      (DeeObject *)&ctypes_strrev, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Reverse the order of characters in @str and re-return the given @str") },
+    { "strnrev",     (DeeObject *)&ctypes_strnrev, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Reverse the order of up to @maxlen characters in @str and re-return the given @str") },
+    { "strlwr",      (DeeObject *)&ctypes_strlwr, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Convert all characters in @str to lower-case and re-return the given @str") },
+    { "strupr",      (DeeObject *)&ctypes_strupr, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "Convert all characters in @str to upper-case and re-return the given @str") },
+    { "strset",      (DeeObject *)&ctypes_strset, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,chr:?Dint)->?Aptr?Gchar\n"
+          "Set all characters in @str to @chr and re-return the given @str") },
+    { "strnset",     (DeeObject *)&ctypes_strnset, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar,chr:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
+          "Same as #strset, but limit the operator to up to @maxlen characters") },
+    { "strfry",      (DeeObject *)&ctypes_strfry, MODSYM_FNORMAL,
+      DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
+          "xor all characters within @str with $42, implementing _very_ simplistic encryption") },
+//    { "strsep",      (DeeObject *)&ctypes_strsep, MODSYM_FNORMAL,
+//      DOC("TODO") },
+//    { "strtok_r",    (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
+//      DOC("TODO") },
     { NULL }
 };
 

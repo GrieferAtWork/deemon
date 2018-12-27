@@ -46,24 +46,13 @@ INTERN DREF DeeObject *DCALL
 capi_memcpy(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *ob_dst,*ob_src;
  union pointer dst,src; size_t num_bytes;
- if (DeeArg_Unpack(argc,argv,"ooIu:memcpy",&ob_dst,&ob_src,&num_bytes) ||
-     DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst) ||
-     DeeObject_AsPointer(ob_src,&DeeCVoid_Type,&src))
+ if (DeeArg_Unpack(argc,argv,"ooIu:memcpy",&ob_dst,&ob_src,&num_bytes))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(memcpy(dst.ptr,src.ptr,num_bytes),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
-  union pointer iter = dst;
-  while (num_bytes--)
-      *iter.p8++ = *src.p8++;
- },goto err);
-#endif
-#else
- memcpy(dst.ptr,src.ptr,num_bytes);
-#endif
+ if (DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst))
+     goto err;
+ if (DeeObject_AsPointer(ob_src,&DeeCVoid_Type,&src))
+     goto err;
+ CTYPES_PROTECTED_MEMCPY(dst.ptr,src.ptr,num_bytes,goto err);
  return DeePointer_NewVoid(dst.ptr);
 err:
  return NULL;
@@ -73,23 +62,13 @@ INTERN DREF DeeObject *DCALL
 capi_mempcpy(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *ob_dst,*ob_src;
  union pointer dst,src; size_t num_bytes;
- if (DeeArg_Unpack(argc,argv,"ooIu:mempcpy",&ob_dst,&ob_src,&num_bytes) ||
-     DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst) ||
-     DeeObject_AsPointer(ob_src,&DeeCVoid_Type,&src))
+ if (DeeArg_Unpack(argc,argv,"ooIu:mempcpy",&ob_dst,&ob_src,&num_bytes))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(memcpy(dst.ptr,src.ptr,num_bytes),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
-  while (num_bytes--)
-      *dst.p8++ = *src.p8++;
- },goto err);
-#endif
-#else
- memcpy(dst.ptr,src.ptr,num_bytes);
-#endif
+ if (DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst))
+     goto err;
+ if (DeeObject_AsPointer(ob_src,&DeeCVoid_Type,&src))
+     goto err;
+ CTYPES_PROTECTED_MEMCPY(dst.ptr,src.ptr,num_bytes,goto err);
  return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
 err:
  return NULL;
@@ -278,6 +257,16 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_len,
  }
  return NULL;
 }
+
+#ifndef _MSC_VER
+#define strnlen dee_strnlen
+LOCAL size_t dee_strnlen(char const *__restrict str, size_t maxlen) {
+ size_t result;
+ for (result = 0; maxlen && *str; --maxlen,++str,++result);
+ return result;
+}
+#endif
+
 #endif /* !__USE_GNU */
 
 #ifndef __USE_KOS
@@ -1004,22 +993,13 @@ capi_rawmemxrchr(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"od:rawmemxrchr",&ob_dst,&val) ||
      DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = rawmemxrchr(dst.ptr,val),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = rawmemxrchr(dst.ptr,val),{
   result = dst.p8;
   for (;;) {
    if (*--result != (uint8_t)byte)
         break;
   }
  },goto err);
-#endif
-#else
- result = rawmemxrchr(dst.ptr,val);
-#endif
  return DeePointer_NewVoid(result);
 err:
  return NULL;
@@ -1032,12 +1012,7 @@ capi_rawmemxlen(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"od:rawmemxlen",&ob_dst,&val) ||
      DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = rawmemxlen(dst.ptr,val),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = rawmemxlen(dst.ptr,val),{
   uint8_t *iter = dst.p8;
   for (;; ++iter) {
    if (*iter != (uint8_t)byte)
@@ -1045,10 +1020,6 @@ capi_rawmemxlen(size_t argc, DeeObject **__restrict argv) {
   }
   result = (size_t)(iter - dst.p8);
  },goto err);
-#endif
-#else
- result = rawmemxlen(dst.ptr,val);
-#endif
  return DeeInt_NewSize(result);
 err:
  return NULL;
@@ -1061,12 +1032,7 @@ capi_rawmemxrlen(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"od:rawmemxrlen",&ob_dst,&val) ||
      DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = rawmemxrlen(dst.ptr,val),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = rawmemxrlen(dst.ptr,val),{
   uint8_t *iter = dst.p8;
   for (;;) {
    if (*--iter != (uint8_t)byte)
@@ -1074,10 +1040,6 @@ capi_rawmemxrlen(size_t argc, DeeObject **__restrict argv) {
   }
   result = (size_t)(iter - dst.p8);
  },goto err);
-#endif
-#else
- result = rawmemxrlen(dst.ptr,val);
-#endif
  return DeeInt_NewSize(result);
 err:
  return NULL;
@@ -1093,20 +1055,11 @@ capi_memcmp(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AsPointer(ob_a,&DeeCVoid_Type,&a) ||
      DeeObject_AsPointer(ob_b,&DeeCVoid_Type,&b))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = memcmp(a.ptr,b.ptr,num_bytes),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = memcmp(a.ptr,b.ptr,num_bytes),{
   uint8_t av; uint8_t bv; av = bv = 0;
   while (num_bytes-- && ((av = *a.p8++) == (bv = *b.p8++)));
   result = (int)av - (int)bv;
  },goto err);
-#endif
-#else
- result = memcmp(a.ptr,b.ptr,num_bytes);
-#endif
  return DeeInt_NewInt(result);
 err:
  return NULL;
@@ -1120,23 +1073,15 @@ capi_memcasecmp(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AsPointer(ob_a,&DeeCVoid_Type,&a) ||
      DeeObject_AsPointer(ob_b,&DeeCVoid_Type,&b))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = memcasecmp(a.ptr,b.ptr,num_bytes),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
-  uint8_t av; uint8_t bv; av = bv = 0;
+ CTYPES_PROTECTED(result = memcasecmp(a.ptr,b.ptr,num_bytes),{
+  uint8_t av; uint8_t bv;
+  av = bv = 0;
   while (num_bytes-- &&
       (((av = *a.p8++) == (bv = *b.p8++)) ||
         (av = tolower(av),bv = tolower(bv),
          av == bv)));
   result = (int)av - (int)bv;
  },goto err);
-#endif
-#else
- result = memcasecmp(a.ptr,b.ptr,num_bytes);
-#endif
  return DeeInt_NewInt(result);
 err:
  return NULL;
@@ -1150,12 +1095,7 @@ capi_memmem(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AsPointer(ob_a,&DeeCVoid_Type,&a) ||
      DeeObject_AsPointer(ob_b,&DeeCVoid_Type,&b))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = memmem(a.ptr,haystack_len,b.ptr,needle_len),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = memmem(a.ptr,haystack_len,b.ptr,needle_len),{
   void const *candidate; uint8_t marker;
   result = NULL;
   if unlikely(!needle_len || needle_len > haystack_len)
@@ -1187,10 +1127,6 @@ capi_memmem(size_t argc, DeeObject **__restrict argv) {
    }
   }
  },goto err);
-#endif
-#else
- result = memmem(a.ptr,haystack_len,b.ptr,needle_len);
-#endif
  return DeePointer_NewVoid(result);
 err:
  return NULL;
@@ -1205,13 +1141,10 @@ capi_memcasemem(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AsPointer(ob_a,&DeeCVoid_Type,&a) ||
      DeeObject_AsPointer(ob_b,&DeeCVoid_Type,&b))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = memcasemem(a.ptr,haystack_len,b.ptr,needle_len),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
-  void const *candidate; uint8_t marker1,marker2;
+ CTYPES_PROTECTED(result = memcasemem(a.ptr,haystack_len,b.ptr,needle_len),{
+  void const *candidate;
+  uint8_t marker1;
+  uint8_t marker2;
   result = NULL;
   if unlikely(!needle_len || needle_len > haystack_len)
      ;
@@ -1246,10 +1179,6 @@ capi_memcasemem(size_t argc, DeeObject **__restrict argv) {
    }
   }
  },goto err);
-#endif
-#else
- result = memcasemem(a.ptr,haystack_len,b.ptr,needle_len);
-#endif
  return DeePointer_NewVoid(result);
 err:
  return NULL;
@@ -1265,12 +1194,7 @@ capi_memrmem(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AsPointer(ob_a,&DeeCVoid_Type,&a) ||
      DeeObject_AsPointer(ob_b,&DeeCVoid_Type,&b))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = memrmem(a.ptr,haystack_len,b.ptr,needle_len),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = memrmem(a.ptr,haystack_len,b.ptr,needle_len),{
   void const *candidate; uint8_t marker;
   result = NULL;
   if unlikely(!needle_len || needle_len > haystack_len)
@@ -1301,10 +1225,6 @@ capi_memrmem(size_t argc, DeeObject **__restrict argv) {
    }
   }
  },goto err);
-#endif
-#else
- result = memrmem(a.ptr,haystack_len,b.ptr,needle_len);
-#endif
  return DeePointer_NewVoid(result);
 err:
  return NULL;
@@ -1320,12 +1240,7 @@ capi_memcasermem(size_t argc, DeeObject **__restrict argv) {
      DeeObject_AsPointer(ob_a,&DeeCVoid_Type,&a) ||
      DeeObject_AsPointer(ob_b,&DeeCVoid_Type,&b))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(result = memcasermem(a.ptr,haystack_len,b.ptr,needle_len),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(result = memcasermem(a.ptr,haystack_len,b.ptr,needle_len),{
   void const *candidate;
   uint8_t marker1;
   uint8_t marker2;
@@ -1364,10 +1279,6 @@ capi_memcasermem(size_t argc, DeeObject **__restrict argv) {
    }
   }
  },goto err);
-#endif
-#else
- result = memcasermem(a.ptr,haystack_len,b.ptr,needle_len);
-#endif
  return DeePointer_NewVoid(result);
 err:
  return NULL;
@@ -1380,12 +1291,7 @@ capi_memrev(size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"oIu:memrev",&ob_dst,&num_bytes) ||
      DeeObject_AsPointer(ob_dst,&DeeCVoid_Type,&dst))
      goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
- CTYPES_FAULTPROTECT(memrev(dst.ptr,num_bytes),
-                     goto err);
-#else
- CTYPES_FAULTPROTECT({
+ CTYPES_PROTECTED(memrev(dst.ptr,num_bytes),{
   uint8_t *iter;
   uint8_t *end;
   end = (iter = (uint8_t *)dst.ptr)+num_bytes;
@@ -1395,15 +1301,471 @@ capi_memrev(size_t argc, DeeObject **__restrict argv) {
    *end = temp;
   }
  },goto err);
-#endif
-#else
- memrev(dst.ptr,num_bytes);
-#endif
  return DeePointer_NewVoid(dst.ptr);
 err:
  return NULL;
 }
 
+
+
+#ifndef __USE_KOS
+#define strend(s)       ((s)+strlen(s))
+#define strnend(s,len)  ((s)+strnlen(s,len))
+#endif
+
+
+INTERN DREF DeeObject *DCALL
+capi_strlen(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *ob_str;
+ union pointer str; size_t result;
+ if (DeeArg_Unpack(argc,argv,"o:strlen",&ob_str))
+     goto err;
+ if (DeeObject_AsPointer(ob_str,&DeeCChar_Type,&str))
+     goto err;
+ CTYPES_PROTECTED_STRLEN(result,str.pchar,goto err);
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strend(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *ob_str;
+ union pointer str;
+ if (DeeArg_Unpack(argc,argv,"o:strend",&ob_str))
+     goto err;
+ if (DeeObject_AsPointer(ob_str,&DeeCChar_Type,&str))
+     goto err;
+ CTYPES_PROTECTED(str.pchar = strend(str.pchar),{
+  while (*str.pchar++);
+ },goto err);
+ return DeePointer_NewFor(&DeeCChar_Type,str.ptr);
+err:
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnlen(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *ob_str; size_t maxlen;
+ union pointer str; size_t result;
+ if (DeeArg_Unpack(argc,argv,"oIu:strnlen",&ob_str,&maxlen))
+     goto err;
+ if (DeeObject_AsPointer(ob_str,&DeeCChar_Type,&str))
+     goto err;
+ CTYPES_PROTECTED_STRNLEN(result,str.pchar,maxlen,goto err);
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnend(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *ob_str;
+ union pointer str; size_t maxlen;
+ if (DeeArg_Unpack(argc,argv,"o:strnend",&ob_str,&maxlen))
+     goto err;
+ if (DeeObject_AsPointer(ob_str,&DeeCChar_Type,&str))
+     goto err;
+ CTYPES_PROTECTED(str.pchar = strnend(str.pchar,maxlen),{
+  for (; maxlen && *str.pchar; --maxlen,++str.pchar);
+ },goto err);
+ return DeePointer_NewFor(&DeeCChar_Type,str.ptr);
+err:
+ return NULL;
+}
+
+
+
+INTERN DREF DeeObject *DCALL
+capi_strchr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+
+INTERN DREF DeeObject *DCALL
+capi_strrchr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnchr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnrchr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_stroff(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strroff(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnoff(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnroff(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strchrnul(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strrchrnul(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnchrnul(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnrchrnul(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcmp(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strncmp(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcasecmp(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strncasecmp(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcpy(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcat(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strncpy(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strncat(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_stpcpy(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_stpncpy(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strstr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcasestr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strverscmp(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strtok(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_index(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_rindex(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strspn(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcspn(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strpbrk(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcoll(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strncoll(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strcasecoll(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strncasecoll(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strxfrm(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strrev(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnrev(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strlwr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strupr(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strset(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strnset(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+INTERN DREF DeeObject *DCALL
+capi_strfry(size_t argc, DeeObject **__restrict argv) {
+ (void)argc;
+ (void)argv;
+ /* TODO */
+ DERROR_NOTIMPLEMENTED();
+ return NULL;
+}
+
+//INTERN DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject **__restrict argv);
+//INTERN DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject **__restrict argv);
 
 
 DECL_END
