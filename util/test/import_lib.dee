@@ -17,20 +17,60 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-import query, chdir, headof from fs;
 
+import * from deemon;
+import * from fs;
 
+/* Import all modules reachable via deemon library path. */
 
-
-#ifdef __MAIN__
-chdir(headof(__FILE__));
-
-for (local x: query("test/*.dee")) {
-	local test_name = x[:-4];
-	print ">> Running test:",test_name;
-	import(".test." + test_name);
+function status(message) {
+	if (#message > 60)
+		message = message[:57] + "...";
+	print "\r"," " * 60,;
+	print "\r",;
+	print message,;
+	file.stdout.sync();
 }
 
-print "DONE";
-#endif /* __MAIN__ */
+function scan_path(p: string, rel: string) {
+	local files;
+	try {
+		files = list(dir(p));
+	} catch (e...) {
+		print "WARNING: Broken library path",repr p;
+		print ">",e;
+		return;
+	}
+	for (local x: files) {
+		local n = rel + x;
+		local y = joinpath(p,x);
+		if (stat.isdir(y)) {
+			scan_path(y,n + ".");
+		} else if (y.endswith(".dee")) {
+//			local decname = joinpath(p,"."+x[:-4]+".dec");
+//			try unlink(decname); catch (...);
+			n = n[:-4];
+			status("\tImporting: " + repr n);
+			import(n);
+		}
+	}
+}
+
+for (local p: module.path) {
+	scan_path(p,"");
+}
+
+status("");
+
+
+
+
+
+
+
+
+
+
+
+
 
