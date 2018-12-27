@@ -25,6 +25,7 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
+#include <deemon/error.h>
 #include <deemon/objmethod.h>
 #include <deemon/tuple.h>
 #include <deemon/arg.h>
@@ -52,6 +53,54 @@ DECL_BEGIN
 #define isnan(x) ((x) != (x))
 #endif
 
+#ifndef EOK
+#ifdef ENOERR
+#define EOK ENOERR
+#elif defined(ENOERROR)
+#define EOK ENOERROR
+#else
+#define EOK 0
+#endif
+#endif
+
+PRIVATE ATTR_COLD int DCALL err_domain(void) {
+ return DeeError_Throwf(&DeeError_ValueError,"math domain error");
+}
+PRIVATE ATTR_COLD int DCALL err_overflow(void) {
+ return DeeError_Throwf(&DeeError_IntegerOverflow,"math range error");
+}
+PRIVATE ATTR_COLD int DCALL err_math(int e) {
+ return DeeError_Throwf(&DeeError_ValueError,"Math error %d",e);
+}
+
+LOCAL int DCALL math_checkerr(double x) {
+ int e = errno;
+ if (e == EDOM)
+     return err_domain();
+ if (e == ERANGE) {
+  /* Prevent exceptions on underflow. */
+  if (fabs(x) >= 1.0)
+      return err_overflow();
+ } else if (e != EOK) {
+  return err_math(e);
+ }
+ return 0;
+}
+LOCAL int DCALL math_checkerr_i(int x) {
+ int e = errno;
+ if (e == EDOM)
+     return err_domain();
+ if (e == ERANGE) {
+  /* Prevent exceptions on underflow. */
+  if (abs(x) >= 1.0)
+      return err_overflow();
+ } else if (e != EOK) {
+  return err_math(e);
+ }
+ return 0;
+}
+
+
 #define DEFINE_MATH_CONVERSION_1(name) \
 PRIVATE DREF DeeObject *DCALL \
 f_math_##name(size_t argc, DeeObject **__restrict argv) \
@@ -60,6 +109,22 @@ f_math_##name(size_t argc, DeeObject **__restrict argv) \
  if (DeeArg_Unpack(argc,argv,"D:" #name,&x)) \
      goto err; \
  return DeeFloat_New(name(x)); \
+err: \
+ return NULL; \
+} \
+PRIVATE DEFINE_CMETHOD(math_##name,f_math_##name);
+#define DEFINE_MATH_CONVERSION_1_E(name) \
+PRIVATE DREF DeeObject *DCALL \
+f_math_##name(size_t argc, DeeObject **__restrict argv) \
+{ \
+ double x,result; \
+ if (DeeArg_Unpack(argc,argv,"D:" #name,&x)) \
+     goto err; \
+ errno = EOK; \
+ result = name(x); \
+ if (math_checkerr(result)) \
+     goto err; \
+ return DeeFloat_New(result); \
 err: \
  return NULL; \
 } \
@@ -76,6 +141,22 @@ err: \
  return NULL; \
 } \
 PRIVATE DEFINE_CMETHOD(math_##name,f_math_##name);
+#define DEFINE_MATH_CONVERSION_2_E(name) \
+PRIVATE DREF DeeObject *DCALL \
+f_math_##name(size_t argc, DeeObject **__restrict argv) \
+{ \
+ double x,y,result; \
+ if (DeeArg_Unpack(argc,argv,"DD:" #name,&x,&y)) \
+     goto err; \
+ errno = EOK; \
+ result = name(x,y); \
+ if (math_checkerr(result)) \
+     goto err; \
+ return DeeFloat_New(result); \
+err: \
+ return NULL; \
+} \
+PRIVATE DEFINE_CMETHOD(math_##name,f_math_##name);
 #define DEFINE_MATH_FLOAT_TRAIT(name) \
 PRIVATE DREF DeeObject *DCALL \
 f_math_##name(size_t argc, DeeObject **__restrict argv) \
@@ -88,52 +169,84 @@ err: \
  return NULL; \
 } \
 PRIVATE DEFINE_CMETHOD(math_##name,f_math_##name);
+#define DEFINE_MATH_FLOAT_TRAIT2(name) \
+PRIVATE DREF DeeObject *DCALL \
+f_math_##name(size_t argc, DeeObject **__restrict argv) \
+{ \
+ double x,y; \
+ if (DeeArg_Unpack(argc,argv,"DD:" #name,&x,&y)) \
+     goto err; \
+ return_bool(name(x,y)); \
+err: \
+ return NULL; \
+} \
+PRIVATE DEFINE_CMETHOD(math_##name,f_math_##name);
 DEFINE_MATH_CONVERSION_1(sin)
 DEFINE_MATH_CONVERSION_1(cos)
 DEFINE_MATH_CONVERSION_1(tan)
-DEFINE_MATH_CONVERSION_1(asin)
-DEFINE_MATH_CONVERSION_1(acos)
-DEFINE_MATH_CONVERSION_1(atan)
-DEFINE_MATH_CONVERSION_1(sinh)
-DEFINE_MATH_CONVERSION_1(cosh)
-DEFINE_MATH_CONVERSION_1(tanh)
-DEFINE_MATH_CONVERSION_1(asinh)
-DEFINE_MATH_CONVERSION_1(acosh)
-DEFINE_MATH_CONVERSION_1(atanh)
+DEFINE_MATH_CONVERSION_1_E(asin)
+DEFINE_MATH_CONVERSION_1_E(acos)
+DEFINE_MATH_CONVERSION_1_E(atan)
+DEFINE_MATH_CONVERSION_1_E(sinh)
+DEFINE_MATH_CONVERSION_1_E(cosh)
+DEFINE_MATH_CONVERSION_1_E(tanh)
+DEFINE_MATH_CONVERSION_1_E(asinh)
+DEFINE_MATH_CONVERSION_1_E(acosh)
+DEFINE_MATH_CONVERSION_1_E(atanh)
 DEFINE_MATH_CONVERSION_2(copysign)
-DEFINE_MATH_CONVERSION_2(atan2)
-DEFINE_MATH_CONVERSION_1(exp)
-DEFINE_MATH_CONVERSION_1(exp2)
-DEFINE_MATH_CONVERSION_1(expm1)
+DEFINE_MATH_CONVERSION_2_E(atan2)
+DEFINE_MATH_CONVERSION_1_E(exp)
+DEFINE_MATH_CONVERSION_1_E(exp2)
+DEFINE_MATH_CONVERSION_1_E(expm1)
 DEFINE_MATH_CONVERSION_1(erf)
-DEFINE_MATH_CONVERSION_1(erfc)
+DEFINE_MATH_CONVERSION_1_E(erfc)
 DEFINE_MATH_CONVERSION_1(fabs)
-DEFINE_MATH_CONVERSION_1(sqrt)
-DEFINE_MATH_CONVERSION_1(log)
-DEFINE_MATH_CONVERSION_1(log2)
-DEFINE_MATH_CONVERSION_1(logb)
-DEFINE_MATH_CONVERSION_1(log1p)
-DEFINE_MATH_CONVERSION_1(log10)
-DEFINE_MATH_CONVERSION_1(cbrt)
-DEFINE_MATH_CONVERSION_2(pow)
+DEFINE_MATH_CONVERSION_1_E(sqrt)
+DEFINE_MATH_CONVERSION_1_E(log)
+DEFINE_MATH_CONVERSION_1_E(log2)
+DEFINE_MATH_CONVERSION_1_E(logb)
+DEFINE_MATH_CONVERSION_1_E(log1p)
+DEFINE_MATH_CONVERSION_1_E(log10)
+DEFINE_MATH_CONVERSION_1_E(cbrt)
+DEFINE_MATH_CONVERSION_1_E(tgamma)
+DEFINE_MATH_CONVERSION_1_E(lgamma)
+DEFINE_MATH_CONVERSION_2_E(pow)
 DEFINE_MATH_CONVERSION_1(ceil)
 DEFINE_MATH_CONVERSION_1(floor)
 DEFINE_MATH_CONVERSION_1(round)
-DEFINE_MATH_CONVERSION_2(fmod)
+DEFINE_MATH_CONVERSION_2_E(fmod)
+DEFINE_MATH_CONVERSION_2_E(hypot)
+DEFINE_MATH_CONVERSION_2_E(remainder)
+DEFINE_MATH_CONVERSION_2_E(nextafter)
+DEFINE_MATH_CONVERSION_2(fdim)
 DEFINE_MATH_FLOAT_TRAIT(isnan)
 DEFINE_MATH_FLOAT_TRAIT(isinf)
 DEFINE_MATH_FLOAT_TRAIT(isfinite)
 DEFINE_MATH_FLOAT_TRAIT(isnormal)
+DEFINE_MATH_FLOAT_TRAIT(signbit)
+DEFINE_MATH_FLOAT_TRAIT2(isgreater)
+DEFINE_MATH_FLOAT_TRAIT2(isgreaterequal)
+DEFINE_MATH_FLOAT_TRAIT2(isless)
+DEFINE_MATH_FLOAT_TRAIT2(islessequal)
+DEFINE_MATH_FLOAT_TRAIT2(islessgreater)
+DEFINE_MATH_FLOAT_TRAIT2(isunordered)
+#undef DEFINE_MATH_FLOAT_TRAIT2
 #undef DEFINE_MATH_FLOAT_TRAIT
+#undef DEFINE_MATH_CONVERSION_2_E
 #undef DEFINE_MATH_CONVERSION_2
+#undef DEFINE_MATH_CONVERSION_1_E
 #undef DEFINE_MATH_CONVERSION_1
 
 PRIVATE DREF DeeObject *DCALL
 f_math_ilogb(size_t argc, DeeObject **__restrict argv) {
- double x;
+ double x; int result;
  if (DeeArg_Unpack(argc,argv,"D:ilogb",&x))
      goto err;
- return DeeInt_NewInt(ilogb(x));
+ errno = EOK;
+ result = ilogb(x);
+ if (math_checkerr_i(result))
+     goto err;
+ return DeeInt_NewInt(result);
 err:
  return NULL;
 }
@@ -145,7 +258,10 @@ f_math_frexp(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result,*a,*b;
  if (DeeArg_Unpack(argc,argv,"DD:frexp",&x,&y))
      goto err;
+ errno = EOK;
  mat = frexp(x,&ex);
+ if (math_checkerr(mat))
+     goto err;
  a = DeeFloat_New(mat);
  if unlikely(!a) goto err;
  b = DeeInt_NewInt(ex);
@@ -187,7 +303,7 @@ PRIVATE DEFINE_CMETHOD(math_modf,f_math_modf);
 
 PRIVATE DREF DeeObject *DCALL
 f_math_ldexp(size_t argc, DeeObject **__restrict argv) {
- double x; DeeObject *y;
+ double x,result; DeeObject *y;
  int error,y_value;
  if (DeeArg_Unpack(argc,argv,"Do:ldexp",&x,&y))
      goto err;
@@ -208,11 +324,103 @@ f_math_ldexp(size_t argc, DeeObject **__restrict argv) {
      y_value = INT_MAX;
  else if (error == INT_NEG_OVERFLOW)
      y_value = INT_MIN;
- return DeeFloat_New(ldexp(x,y_value));
+ errno = EOK;
+ result = ldexp(x,y_value);
+ if (math_checkerr(result))
+     goto err;
+ return DeeFloat_New(result);
 err:
  return NULL;
 }
 PRIVATE DEFINE_CMETHOD(math_ldexp,f_math_ldexp);
+
+PRIVATE DREF DeeObject *DCALL
+f_math_sincos(size_t argc, DeeObject **__restrict argv) {
+ double x;
+ if (DeeArg_Unpack(argc,argv,"D:sincos",&x))
+     goto err;
+ /* XXX: sin() and cos() can be done faster when combined! */
+ return DeeTuple_Newf("ff",sin(x),cos(x));
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+f_math_asincos(size_t argc, DeeObject **__restrict argv) {
+ double x,rx,ry;
+ if (DeeArg_Unpack(argc,argv,"D:asincos",&x))
+     goto err;
+ errno = EOK;
+ rx = asin(x);
+ ry = acos(x);
+ if (math_checkerr(ry))
+     goto err;
+ return DeeTuple_Newf("ff",rx,ry);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+f_math_sincosh(size_t argc, DeeObject **__restrict argv) {
+ double x,rx,ry;
+ if (DeeArg_Unpack(argc,argv,"D:sincosh",&x))
+     goto err;
+ errno = EOK;
+ rx = sinh(x);
+ ry = cosh(x);
+ if (math_checkerr(ry))
+     goto err;
+ return DeeTuple_Newf("ff",rx,ry);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+f_math_asincosh(size_t argc, DeeObject **__restrict argv) {
+ double x,rx,ry;
+ if (DeeArg_Unpack(argc,argv,"D:asincosh",&x))
+     goto err;
+ errno = EOK;
+ rx = asinh(x);
+ ry = acosh(x);
+ if (math_checkerr(ry))
+     goto err;
+ return DeeTuple_Newf("ff",rx,ry);
+err:
+ return NULL;
+}
+PRIVATE DEFINE_CMETHOD(math_sincos,f_math_sincos);
+PRIVATE DEFINE_CMETHOD(math_asincos,f_math_asincos);
+PRIVATE DEFINE_CMETHOD(math_sincosh,f_math_sincosh);
+PRIVATE DEFINE_CMETHOD(math_asincosh,f_math_asincosh);
+
+PRIVATE DREF DeeObject *DCALL
+f_math_scalbn(size_t argc, DeeObject **__restrict argv) {
+ double x,result; int n;
+ if (DeeArg_Unpack(argc,argv,"Dd:scalbn",&x,&n))
+     goto err;
+ errno = EOK;
+ /* XXX: scalbln */
+ result = scalbn(x,n);
+ if (math_checkerr(result))
+     goto err;
+ return DeeFloat_New(result);
+err:
+ return NULL;
+}
+PRIVATE DEFINE_CMETHOD(math_scalbn,f_math_scalbn);
+
+PRIVATE DREF DeeObject *DCALL
+f_math_remquo(size_t argc, DeeObject **__restrict argv) {
+ double x,y,result; int z;
+ if (DeeArg_Unpack(argc,argv,"DD:remquo",&x,&y))
+     goto err;
+ errno = EOK;
+ result = remquo(x,y,&z);
+ if (math_checkerr(result))
+     goto err;
+ return DeeTuple_Newf("fd",result,z);
+err:
+ return NULL;
+}
+PRIVATE DEFINE_CMETHOD(math_remquo,f_math_remquo);
 
 PRIVATE DEFINE_FLOAT(math_pi,M_PI);
 PRIVATE DEFINE_FLOAT(math_tau,M_TAU);
@@ -222,6 +430,11 @@ PRIVATE DEFINE_FLOAT(math_inf,INFINITY);
 
 
 PRIVATE struct dex_symbol symbols[] = {
+    /* NOTE: Some doc comments are gathered from the following sources:
+     *   - Python source tree: /Modules/mathmodule.c
+     *   - http://www.cplusplus.com/reference/cmath
+     * Other comments I wrote myself.
+     */
     { "acos", (DeeObject *)&math_acos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the arc cosine of @x") },
     { "acosh", (DeeObject *)&math_acosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the area hyperbolic cosine of @x") },
     { "asin", (DeeObject *)&math_asin, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the arc sinus of @x") },
@@ -267,6 +480,25 @@ PRIVATE struct dex_symbol symbols[] = {
     { "sqrt", (DeeObject *)&math_sqrt, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the square root of @x") },
     { "tan", (DeeObject *)&math_tan, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the tangent of @x") },
     { "tanh", (DeeObject *)&math_tanh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the hyperbolic tangent of @x") },
+    { "sincos", (DeeObject *)&math_sincos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(sin(x),cos(x))}") },
+    { "asincos", (DeeObject *)&math_asincos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(asin(x),acos(x))}") },
+    { "sincosh", (DeeObject *)&math_sincosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(sinh(x),cosh(x))}") },
+    { "asincosh", (DeeObject *)&math_asincosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(asinh(x),acosh(x))}") },
+    { "scalbn", (DeeObject *)&math_scalbn, MODSYM_FNORMAL, DOC("(x:?Dfloat,n:?Dint)->?Dfloat\nScales @x by :float.radix raised to the power of @n") },
+    { "hypot", (DeeObject *)&math_hypot, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the hypotenuse of a right-angled triangle whose legs are @x and @y") },
+    { "tgamma", (DeeObject *)&math_tgamma, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the gamma function of @x") },
+    { "lgamma", (DeeObject *)&math_lgamma, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the natural logarithm of the absolute value of the gamma function of @x") },
+    { "remainder", (DeeObject *)&math_remainder, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?Dfloat\nReturns the floating-point remainder of numer/denom (rounded to nearest)") },
+    { "remquo", (DeeObject *)&math_remquo, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\nReturns the same as #remainder, but additionally returns the quotient internally used to determine its result") },
+    { "nextafter", (DeeObject *)&math_nextafter, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the next representable value after @x in the direction of @y") },
+    { "fdim", (DeeObject *)&math_fdim, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the positive difference between @x and @y") },
+    { "signbit", (DeeObject *)&math_signbit, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns whether the sign of @x is negative") },
+    { "isgreater", (DeeObject *)&math_isgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than @y, returning :false if either is #nan") },
+    { "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than or equal to @y, returning :false if either is #nan") },
+    { "isless", (DeeObject *)&math_isless, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than @y, returning :false if either is #nan") },
+    { "islessequal", (DeeObject *)&math_islessequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or equal to @y, returning :false if either is #nan") },
+    { "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or greater than @y, returning :false if either is #nan") },
+    { "isunordered", (DeeObject *)&math_isunordered, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns :true if either @x or @y is #nan") },
     { NULL }
 };
 
