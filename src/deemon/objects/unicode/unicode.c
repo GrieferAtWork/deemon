@@ -21,6 +21,7 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -1582,6 +1583,7 @@ read_text_i:
     if (error_mode & STRING_ERROR_FIGNORE) {
      text[i] = 0;
      --length;
+     ((size_t *)text)[-1] = length;
      break;
     }
     DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -1598,6 +1600,7 @@ read_text_i:
     if (error_mode & STRING_ERROR_FREPLAC) {
      text[i-1] = '?';
      --length;
+     ((size_t *)text)[-1] = length;
      memmove(&text[i],&text[i+1],(length-i)*sizeof(uint16_t));
      goto read_text_i;
     }
@@ -1605,6 +1608,7 @@ read_text_i:
      --i;
      length -= 2;
      ASSERT(length >= i);
+     ((size_t *)text)[-1] = length;
      memmove(&text[i],&text[i+2],(length-i)*sizeof(uint16_t));
      goto continue_at_i;
     }
@@ -1630,6 +1634,7 @@ read_text_i:
    utf8_length += 4;
   }
  }
+ ASSERT(((size_t *)text)[-1] == length);
  ASSERT(utf8_length >= length);
  result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String,s_str)+
                                          (utf8_length + 1)*sizeof(char));
@@ -1656,7 +1661,16 @@ read_text_i:
   case 0: /* Pure UTF-16 (without surrogates) */
    utf->u_width = STRING_WIDTH_2BYTE;
    utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
-   ASSERT(character_count == WSTR_LENGTH(text));
+   ASSERTF(character_count == WSTR_LENGTH(text),
+           "character_count   = %Iu\n"
+           "WSTR_LENGTH(text) = %Iu\n"
+           "length            = %Iu\n"
+           "text              = %$I16s\n"
+           ,character_count
+           ,WSTR_LENGTH(text)
+           ,length
+           ,WSTR_LENGTH(text),text
+           );
    char16_to_utf8(text,length,(uint8_t *)result->s_str);
    break;
   {
@@ -1735,6 +1749,7 @@ continue_at_i:
     /* Missing high surrogate. */
     text[i] = 0;
     --length;
+    ((size_t *)text)[-1] = length;
     break;
    }
    ch = (ch - UTF16_HIGH_SURROGATE_MIN) << 10;
@@ -1745,6 +1760,7 @@ continue_at_i:
     /* Invalid low surrogate. */
     --i;
     length -= 2;
+    ((size_t *)text)[-1] = length;
     ASSERT(length >= i);
     memmove(&text[i],&text[i+2],(length-i)*sizeof(uint16_t));
     goto continue_at_i;
@@ -1766,6 +1782,7 @@ continue_at_i:
    utf8_length += 4;
   }
  }
+ ASSERT(((size_t *)text)[-1] == length);
  ASSERT(utf8_length >= length);
  result = (DREF String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String,s_str) +
                                             (utf8_length + 1) * sizeof(char));
@@ -1792,7 +1809,16 @@ continue_at_i:
   case 0: /* Pure UTF-16 (without surrogates) */
    utf->u_width = STRING_WIDTH_2BYTE;
    utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
-   ASSERT(character_count == WSTR_LENGTH(text));
+   ASSERTF(character_count == WSTR_LENGTH(text),
+           "character_count   = %Iu\n"
+           "WSTR_LENGTH(text) = %Iu\n"
+           "length            = %Iu\n"
+           "text              = %$I16s\n"
+           ,character_count
+           ,WSTR_LENGTH(text)
+           ,length
+           ,WSTR_LENGTH(text),text
+           );
    char16_to_utf8(text,length,(uint8_t *)result->s_str);
    break;
   {

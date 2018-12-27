@@ -560,8 +560,8 @@ struct code_frame_kwds {
                                                *          special actions to be taken before being decref'd by their
                                                *          creator / stack-owner. */
     DREF DeeObject           *fk_kw;          /* [1..1][const] The original `kw' object that was passed to the function.
-                                              *  NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
-                                              *        aka. at the end of the standard-accessible argument vector.
+                                               * NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
+                                               *       aka. at the end of the standard-accessible argument vector.
                                                * NOTE: May only be accessed by a code interpreter when the associated
                                                *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
                                                *       field may not actually exist) */
@@ -602,6 +602,7 @@ struct code_frame {
     uint16_t                  cf_padding[2]; /* ... */
 #endif
 };
+
 
 
 /* Continue execution of the given code frame until it returns.
