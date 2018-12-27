@@ -371,6 +371,39 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 import("__builtins");
 
 
+{
+	function t(T) {
+		local i = T();
+		repr i;
+		copy i;
+		deepcopy i;
+		if (i) {}
+		local itT = T.iterator;
+		local iti = itT();
+		repr iti;
+		local iti2 = copy iti;
+		assert iti == iti2;
+		assert !(iti != iti2);
+		assert !(iti < iti2);
+		assert !(iti > iti2);
+		assert iti <= iti2;
+		assert iti >= iti2;
+		deepcopy iti;
+		iti = i.operator iter();
+		iti2 = itT(i);
+		assert iti == iti2;
+		assert !(iti != iti2);
+		assert !(iti < iti2);
+		assert !(iti > iti2);
+		assert iti <= iti2;
+		assert iti >= iti2;
+	}
+	import * from rt;
+	t(SeqCombinations);
+	t(SeqRepeatCombinations);
+	t(SeqPermutations);
+}
+
 
 
 

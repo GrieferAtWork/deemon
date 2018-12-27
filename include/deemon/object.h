@@ -1539,7 +1539,7 @@ struct type_object {
     struct type_math       *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
     struct type_cmp        *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */
     struct type_seq        *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
-#define ITER_ISOK(x) (((uintptr_t)(x)-1) < (uintptr_t)-2l) /* `x == NULL || x == ITER_DONE' */
+#define ITER_ISOK(x) (((uintptr_t)(x)-1) < (uintptr_t)-2l) /* `x != NULL && x != ITER_DONE' */
 #define ITER_DONE     ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
     DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
     struct type_attr       *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
@@ -1547,11 +1547,11 @@ struct type_object {
     struct type_buffer     *tp_buffer;   /* [0..1] Raw buffer interface. */
     /* NOTE: All of the following as sentinel-terminated vectors. */
     struct type_method     *tp_methods;  /* [0..1] Instance methods. */
-    struct type_getset     *tp_getsets;  /* [0..1] Instance getset. */
+    struct type_getset     *tp_getsets;  /* [0..1] Instance getsets. */
     struct type_member     *tp_members;  /* [0..1] Instance member fields. */
     struct type_method     *tp_class_methods; /* [0..1] Class methods. */
-    struct type_getset     *tp_class_getsets; /* [0..1] Class getset. */
-    struct type_member     *tp_class_members; /* [0..1] Class members. */
+    struct type_getset     *tp_class_getsets; /* [0..1] Class getsets. */
+    struct type_member     *tp_class_members; /* [0..1] Class members (usually constants). */
     /* [0..1] Same as `tp_call', but using keywords. */
     DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *__restrict self, size_t argc,
                                         DeeObject **__restrict argv, DeeObject *kw);
