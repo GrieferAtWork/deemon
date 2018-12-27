@@ -738,13 +738,15 @@ fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
   end = begin+WSTR_LENGTH(begin);
   while (begin < end) {
    next = begin;
-   ch = utf8_readchar(&next,end);
-   if (!DeeUni_IsSpace(ch) && !ISSEP(ch)) break;
+   ch = utf8_readchar((char const **)&next,end);
+   if (!DeeUni_IsSpace(ch) && /* Don't skip leading SEPs */
+      (UNICODE_PRINTER_ISEMPTY(&printer) || !ISSEP(ch)))
+       break;
    begin = next;
   }
   while (end > begin) {
    next = end;
-   ch = utf8_readchar_rev(&next,end);
+   ch = utf8_readchar_rev((char const **)&next,begin);
    if (!DeeUni_IsSpace(ch) && !ISSEP(ch)) break;
    end = next;
   }
@@ -757,7 +759,7 @@ fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
     if (unicode_printer_putascii(&printer,nextsep)) goto err;
    }
   }
-  if (unicode_printer_print(&printer,begin,(size_t)(end-begin)) < 0)
+  if (unicode_printer_print(&printer,begin,(size_t)(end - begin)) < 0)
       goto err;
   /* Set the separator that should be preferred for the next part. */
   nextsep = end[0];
