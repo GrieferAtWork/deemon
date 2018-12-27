@@ -1914,9 +1914,9 @@ DecFile_LoadDDI(DecFile *__restrict self,
  ddi_text = self->df_base + ddi_ddiaddr;
 
  /* Make sure that DDI text is contained entirely within the DEC object file. */
- if ((ddi_text               <  self->df_base ||
-      ddi_text + ddi_ddisize <  ddi_text ||
-      ddi_text + ddi_ddisize >= self->df_base + self->df_size) && ddi_ddisize != 0)
+ if ((ddi_text               < self->df_base ||
+      ddi_text + ddi_ddisize < ddi_text ||
+      ddi_text + ddi_ddisize > self->df_base + self->df_size) && ddi_ddisize != 0)
       GOTO_CORRUPTED(reader,err_currupted);
  result = (DREF DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject,d_ddi) +
                                                 ddi_ddisize + DDI_INSTRLEN_MAX);
