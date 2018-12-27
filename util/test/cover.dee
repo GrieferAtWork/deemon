@@ -27,21 +27,21 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 {
 	class Foo {
 		func() {
-			return this.id();
+			return this.id;
 		}
 	}
 	function func2(x) {
-		return x.id();
+		return x.id;
 	}
 	local x = Foo();
-	assert x.id() == x.func();
-	assert x.id() == Foo.func(x);
-	assert x.id() == Foo.func.__thiscall__(x);
-	assert x.id() == Foo.func.__thiscall__(x,());
-	assert x.id() == func2(x);
-	assert x.id() == func2(x: x);
-	assert x.id() == func2.__thiscall__(x);
-	assert x.id() == func2.__thiscall__(x,());
+	assert x.id == x.func();
+	assert x.id == Foo.func(x);
+	assert x.id == Foo.func.__thiscall__(x);
+	assert x.id == Foo.func.__thiscall__(x,());
+	assert x.id == func2(x);
+	assert x.id == func2(x: x);
+	assert x.id == func2.__thiscall__(x);
+	assert x.id == func2.__thiscall__(x,());
 }
 
 {

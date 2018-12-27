@@ -2019,7 +2019,11 @@ LOCAL char *TPPCALL
 string_find_eol_after_comments(char *iter, char *end) {
  assert(iter <= end);
  while (iter != end) {
-  /**/ if (*iter == '\\') { if (++iter == end) break; }
+  /**/ if (*iter == '\\') {
+   if (++iter == end) break;
+   if (*iter == '\r' && iter + 1 < end && iter[1] == '\n')
+       ++iter;
+  }
   else if (tpp_islf(*iter)) break;
   else if (*iter == '/' &&
           (CURRENT.l_extokens&TPPLEXER_TOKEN_C_COMMENT)) {
@@ -2980,27 +2984,64 @@ search_suitable_end_again:
     assert(iter < end);
     if (!mode) last_zero_mode = iter;
     ch = *iter++;
+    if (ch == '\\') {
+     /* Ensure that an escaped backslash is followed by at least 1 more character!
+      * Also: Prevent escaped line-feeds from terminating preprocessor directives, and the like. */
+     if (iter >= end) goto extend_more;
+     ch = *iter;
+     if (tpp_islf(ch)) {
+      if (++iter >= end)
+          goto extend_more;
+      if (ch == '\r' && *iter == '\n') {
+       if (++iter >= end)
+           goto extend_more;
+      }
+      if (iter >= end)
+          goto extend_more;
+      continue;
+     }
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
-    if (ch == '\\' && iter != end) { if (!(mode & MODE_RAW) && (*iter++ == '\r' && iter != end && *iter == '\n')) ++iter; }
-    else if (ch == '\'' && !(mode&~(MODE_INCHAR))) { mode ^= MODE_INCHAR; if ((mode & MODE_INCHAR) && iter-1 > self->f_begin && iter[-2] == 'r') mode |= MODE_RAW; }
-    else if (ch == '\"' && !(mode&~(MODE_INSTRING))) { mode ^= MODE_INSTRING; if ((mode & MODE_INSTRING) && iter-1 > self->f_begin && iter[-2] == 'r') mode |= MODE_RAW; }
-#else
-    if (ch == '\\' && iter != end) { if (*iter++ == '\r' && iter != end && *iter == '\n') ++iter; }
-    else if (ch == '\'' && !(mode&~(MODE_INCHAR))) mode ^= MODE_INCHAR;
-    else if (ch == '\"' && !(mode&~(MODE_INSTRING))) mode ^= MODE_INSTRING;
+     if (mode & MODE_RAW) {
+      if (ch == '\'' && (mode & MODE_INCHAR)) { ++iter; continue; }
+      if (ch == '\"' && (mode & MODE_INSTRING)) { ++iter; continue; }
+     }
 #endif
+     continue;
+    }
+    if (ch == '\'' && !(mode&~(MODE_INCHAR))) {
+     mode ^= MODE_INCHAR;
+#ifdef TPP_CONFIG_RAW_STRING_LITERALS
+     if ((mode & MODE_INCHAR) && iter-1 > self->f_begin && iter[-2] == 'r')
+          mode |= MODE_RAW;
+#endif
+     continue;
+    }
+    if (ch == '\"' && !(mode&~(MODE_INSTRING))) {
+     mode ^= MODE_INSTRING;
+#ifdef TPP_CONFIG_RAW_STRING_LITERALS
+     if ((mode & MODE_INSTRING) && iter-1 > self->f_begin && iter[-2] == 'r')
+          mode |= MODE_RAW;
+#endif
+     continue;
+    }
     /* Linefeeds should also terminate strings when the line started with a `#':
      * >> #define m  This macro's fine!
      * >> #error This error contains an unmatched ", but that's OK (< and so was that)
      * NOTE: Though remember that escaped linefeeds are always more powerful!
      */
-    else if (tpp_islf(ch)) {
-     if (ch == '\r' && iter != end && *iter == '\n') ++iter;
+    if (tpp_islf(ch)) {
+     if (ch == '\r') {
+      if (iter >= end) goto extend_more;
+      if (*iter == '\n')
+          ++iter;
+     }
      mode &= ~(MODE_INPP);
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
-     if (termstring_onlf) mode &= ~(MODE_INCHAR|MODE_INSTRING|MODE_RAW);
+     if (termstring_onlf)
+         mode &= ~(MODE_INCHAR|MODE_INSTRING|MODE_RAW);
 #else
-     if (termstring_onlf) mode &= ~(MODE_INCHAR|MODE_INSTRING);
+     if (termstring_onlf)
+         mode &= ~(MODE_INCHAR|MODE_INSTRING);
 #endif
 #if 1
      if (!mode) last_zero_mode = iter;
@@ -3008,8 +3049,10 @@ search_suitable_end_again:
        !(mode&(MODE_INCHAR|MODE_INSTRING)))
          mode |= MODE_INPP;
 #endif
-    } else if (iter != end) {
-     if (mode&MODE_INCOMMENT) {
+     continue;
+    }
+    if (iter != end) {
+     if (mode & MODE_INCOMMENT) {
       /* End multi-line comment. */
       if (ch == '*') {
        while (SKIP_WRAPLF(iter,end));
@@ -3044,7 +3087,8 @@ skip_line_comment:
      }
     }
    }
-   if (!mode) break; /* everything's OK! */
+   if (!mode)
+       break; /* everything's OK! */
    /* The special mode doesn't terminate.
     * Instead: Take the last time the current mode was ZERO(0)
     *          and perform another search for a suitable end
