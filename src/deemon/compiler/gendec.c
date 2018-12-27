@@ -86,9 +86,12 @@ decgen_imports(DeeModuleObject *__restrict self) {
   dec_curr = SC_STRING;
   if (mod->mo_globpself) {
    /* Globally available module (loadable as part of the library path). */
+   char const *global_name;
 import_module_by_name:
-   data = dec_allocstr(DeeString_STR(mod->mo_name),
-                      (DeeString_SIZE(mod->mo_name)+1)*sizeof(char));
+   global_name = DeeString_AsUtf8((DeeObject *)mod->mo_name);
+   if unlikely(!global_name) goto err;
+   data = dec_allocstr(global_name,
+                      (WSTR_LENGTH(global_name) + 1) * sizeof(char));
    if unlikely(!data) goto err;
   } else {
    char *self_pathstr,*other_pathstr;
@@ -100,12 +103,14 @@ import_module_by_name:
     *       the empty module don't have a path assigned. */
    if (!mod->mo_path)
         goto import_module_by_name;
-   other_pathstr = DeeString_STR(mod->mo_path);
-   other_pathend = other_pathstr+DeeString_SIZE(mod->mo_path);
+   other_pathstr = DeeString_AsUtf8((DeeObject *)mod->mo_path);
+   if unlikely(!other_pathstr) goto err;
+   other_pathend = other_pathstr + WSTR_LENGTH(other_pathstr);
    if (!module_pathstr) {
     /* Lazily calculate the module's path when it's start being used. */
-    module_pathstr = DeeString_STR(self->mo_path);
-    module_pathend = module_pathstr+DeeString_SIZE(self->mo_path);
+    module_pathstr = DeeString_AsUtf8((DeeObject *)self->mo_path);
+    if unlikely(!module_pathstr) goto err;
+    module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
     /* NOTE: No need to check for alternative separators
      *       because the path has been sanitized. */
     while (module_pathstr != module_pathend &&

@@ -881,8 +881,9 @@ DecFile_LoadImports(DecFile *__restrict self) {
 
  /* Load the import table. */
  strtab = (char *)(self->df_base+LESWAP32(hdr->e_stroff));
- module_pathstr = DeeString_STR(self->df_name);
- module_pathlen = DeeString_SIZE(self->df_name);
+ module_pathstr = DeeString_AsUtf8((DeeObject *)self->df_name);
+ if unlikely(!module_pathstr) goto err;
+ module_pathlen = WSTR_LENGTH(module_pathstr);
  while (module_pathlen &&
         module_pathstr[module_pathlen-1] != '/'
 #ifdef CONFIG_HOST_WINDOWS
@@ -897,20 +898,26 @@ DecFile_LoadImports(DecFile *__restrict self) {
  modend = (moditer = importv) + importc;
  reader = impmap->i_map;
  for (; moditer != modend; ++moditer) {
-  uint32_t off; DREF DeeStringObject *module_name;
+  uint32_t off; char const *module_name;
   if unlikely(reader >= end) GOTO_CORRUPTED(reader,stop_imports);
   off = Dec_DecodePointer(&reader);
   if unlikely(off >= LESWAP32(hdr->e_strsiz)) GOTO_CORRUPTED(reader,stop_imports);
-  module_name = (DREF DeeStringObject *)DeeString_New(strtab+off);
-  if unlikely(!module_name) goto err_imports;
+  module_name = strtab + off;
   /* Load the imported module. */
-  module = (DREF DeeModuleObject *)DeeModule_OpenRelative((DeeObject *)module_name,
-                                                           module_pathstr,module_pathlen,
-                                                           self->df_options ?
-                                                           self->df_options->co_inner : NULL,
-                                                           true);
-  Dee_Decref(module_name);
-  if unlikely(!module) goto err_imports;
+  module = (DREF DeeModuleObject *)DeeModule_OpenRelativeString(module_name,strlen(module_name),
+                                                                module_pathstr,module_pathlen,
+                                                                self->df_options ?
+                                                                self->df_options->co_inner : NULL,
+                                                                false);
+  if unlikely(!ITER_ISOK(module)) {
+   if (module) {
+    DeeError_Throwf(&DeeError_FileNotFound,
+                    "Dependency %q of module %r in %$q could not be found",
+                    strtab+off,self->df_module->mo_name,
+                    module_pathlen,module_pathstr);
+   }
+   goto err_imports;
+  }
   /* Check if the module has changed. */
   if (!self->df_options || !(self->df_options->co_decloader&DEC_FLOADOUTDATED)) {
    uint64_t modtime = DeeModule_GetCTime((DeeObject *)module);
@@ -2443,7 +2450,7 @@ PUBLIC uint64_t DCALL
 DeeModule_GetCTime(/*Module*/DeeObject *__restrict self) {
  uint64_t result;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
- if (((DeeModuleObject *)self)->mo_flags&MODULE_FHASCTIME) {
+ if (((DeeModuleObject *)self)->mo_flags & MODULE_FHASCTIME) {
   result = ((DeeModuleObject *)self)->mo_ctime;
   ASSERT(result != (uint64_t)-1);
  } else if ((DeeModuleObject *)self == &deemon_module) {

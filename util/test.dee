@@ -17,9 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+
 import query, chdir, headof from fs;
-
-
 
 
 #ifdef __MAIN__

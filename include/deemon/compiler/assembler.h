@@ -1611,7 +1611,7 @@ ast_gen_setrange(struct ast *__restrict sequence,
                  unsigned int gflags);
 INTDEF int DCALL
 ast_gen_operator_func(struct ast *binding,
-                      struct ast *ddi_ast,
+                      struct ast *__restrict ddi_ast,
                       uint16_t operator_name);
 
 

@@ -593,7 +593,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x))
 #else
 #define exec_timestamp         deemon_module.mo_ctime
-#define HAS_EXEC_TIMESTAMP    (deemon_module.mo_flags&MODULE_FHASCTIME)
+#define HAS_EXEC_TIMESTAMP    (deemon_module.mo_flags & MODULE_FHASCTIME)
 #ifdef CONFIG_NO_THREADS
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x),deemon_module.mo_flags |= MODULE_FHASCTIME)
 #else

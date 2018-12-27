@@ -83,8 +83,7 @@ err:
 
 
 INTDEF DREF DeeObject *DCALL
-_DeeObject_IdFunc(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv);
+object_id_get(DeeObject *__restrict self);
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
 PRIVATE DREF DeeObject *DCALL
@@ -97,13 +96,17 @@ emulate_method_call(DeeObject *__restrict self,
    * NOTE: Both `string' and `bytes' use the same underlying
    *       function in order to implement `encode' and `decode'! */
   dobjmethod_t method;
-  method = ((DeeObjMethodObject *)self)->om_func;
+  method = DeeObjMethod_FUNC(self);
   if (method == (dobjmethod_t)&string_encode)
-      return emulate_object_encode(((DeeObjMethodObject *)self)->om_this,argc,argv);
+      return emulate_object_encode(DeeObjMethod_SELF(self),argc,argv);
   if (method == (dobjmethod_t)&string_decode)
-      return emulate_object_decode(((DeeObjMethodObject *)self)->om_this,argc,argv);
+      return emulate_object_decode(DeeObjMethod_SELF(self),argc,argv);
+ }
+ if (DeeClsProperty_Check(self)) {
+  dgetmethod_t get;
+  get = DeeClsProperty_GET(self);
   /* `object.id()' should not be evaluated at compile-time! */
-  if (method == (dobjmethod_t)&_DeeObject_IdFunc)
+  if (get == &object_id_get)
       return ITER_DONE;
  }
  return DeeObject_Call(self,argc,argv);

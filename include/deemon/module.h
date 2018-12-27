@@ -826,6 +826,66 @@ DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t
                              struct compiler_options *options,
                              bool throw_error);
 
+
+/* Low-level module import processing function, used for importing modules
+ * relative to some given base-path, while also able to process relative module
+ * names, as well as support all of the various form in which modules can appear.
+ * @param: module_path:        The base path from which to offset `module_name'
+ *                             If this path is relative, it will be made absolute to
+ *                             the current working directory.
+ * @param: module_pathsize:    The length of `module_path' in bytes
+ * @param: module_name:        The demangled name of the module to import
+ * @param: module_namesize:    The length of `module_name' in bytes
+ * @param: module_global_name: The name that should be used to register the module
+ *                             in the global module namespace, or `NULL' if the module
+ *                             should not be registered as global, or `ITER_DONE' if
+ *                             the name should automatically be generated from `module_path'
+ *                             NOTE: If another module with the same global name already
+ *                                   exists by the time to module gets registered as global,
+ *                                   that module will be returned instead!
+ * @param: options:            Compiler options detailing how a module should be loaded
+ * @param: mode:               The open mode (set of `MODULE_OPENINPATH_F*')
+ * Module files are attempted to be opened in the following order:
+ * >> SEARCH_MODULE_FILESYSTEM_CACHE(joinpath(module_path,module_name + ".dee"));
+ * >>#ifndef CONFIG_NO_DEC
+ * >> TRY_LOAD_DEC_FILE(joinpath(module_path,"." + module_name + ".dec"));
+ * >>#endif // !CONFIG_NO_DEC
+ * >>#ifndef CONFIG_NO_DEX
+ * >>#ifdef CONFIG_HOST_WINDOWS
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".dll"));
+ * >>#else
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".so"));
+ * >>#endif
+ * >>#endif // !CONFIG_NO_DEX
+ * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path,module_name + ".dee"));
+ * EXAMPLES:
+ * >> char const *path = "/usr/lib/deemon/lib";
+ * >> char const *name = "util";
+ * >> // Opens:
+ * >> //   - /usr/lib/deemon/lib/
+ * >> DeeModule_OpenInPath(path,strlen(path),
+ * >>                      name,strlen(name),
+ * >>                      NULL,NULL,
+ * >>                      MODULE_OPENINPATH_FTHROWERROR);
+ * @return: * :        The module that was imported.
+ * @return: ITER_DONE: The module could not be found (only when `MODULE_OPENINPATH_FTHROWERROR' isn't set)
+ * @return: NULL:      An error occurred. */
+DFUNDEF DREF DeeObject *DCALL
+DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
+                     /*utf-8*/char const *__restrict module_name, size_t module_namesize,
+                     DeeObject *module_global_name,
+                     struct compiler_options *options,
+                     unsigned int mode);
+#define MODULE_OPENINPATH_FNORMAL      0x0000 /* Normal flags */
+#define MODULE_OPENINPATH_FRELMODULE   0x0001 /* The module name may be interpreted relatively.
+                                               * When set, each leading `.' characters in `module_name'
+                                               * will remove 1 trailing path node from `module_path'.
+                                               * When not set, leading `.' characters are considered to
+                                               * be apart of the module's name. */
+#define MODULE_OPENINPATH_FTHROWERROR  0x0002 /* If set, throw a FileNotFound error if the module could not be found.
+                                               * Otherwise, return `ITER_DONE' without throwing an error. */
+
+
 /* Create a new function object for the root code-object of a given module.
  * NOTE: This function will also ensure that all modules
  *       imported by this one have been fully initialized.

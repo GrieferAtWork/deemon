@@ -2204,14 +2204,50 @@ err:
 }
 
 
-/* @param: module_global_name: The name that should be used to register the module
+/* Low-level module import processing function, used for importing modules
+ * relative to some given base-path, while also able to process relative module
+ * names, as well as support all of the various form in which modules can appear.
+ * @param: module_path:        The base path from which to offset `module_name'
+ *                             If this path is relative, it will be made absolute to
+ *                             the current working directory.
+ * @param: module_pathsize:    The length of `module_path' in bytes
+ * @param: module_name:        The demangled name of the module to import
+ * @param: module_namesize:    The length of `module_name' in bytes
+ * @param: module_global_name: The name that should be used to register the module
  *                             in the global module namespace, or `NULL' if the module
  *                             should not be registered as global, or `ITER_DONE' if
  *                             the name should automatically be generated from `module_path'
  *                             NOTE: If another module with the same global name already
  *                                   exists by the time to module gets registered as global,
- *                                   that module will be returned instead! */
-PRIVATE DREF DeeModuleObject *DCALL
+ *                                   that module will be returned instead!
+ * @param: options:            Compiler options detailing how a module should be loaded
+ * @param: mode:               The open mode (set of `MODULE_OPENINPATH_F*')
+ * Module files are attempted to be opened in the following order:
+ * >> SEARCH_MODULE_FILESYSTEM_CACHE(joinpath(module_path,module_name + ".dee"));
+ * >>#ifndef CONFIG_NO_DEC
+ * >> TRY_LOAD_DEC_FILE(joinpath(module_path,"." + module_name + ".dec"));
+ * >>#endif // !CONFIG_NO_DEC
+ * >>#ifndef CONFIG_NO_DEX
+ * >>#ifdef CONFIG_HOST_WINDOWS
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".dll"));
+ * >>#else
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".so"));
+ * >>#endif
+ * >>#endif // !CONFIG_NO_DEX
+ * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path,module_name + ".dee"));
+ * EXAMPLES:
+ * >> char const *path = "/usr/lib/deemon/lib";
+ * >> char const *name = "util";
+ * >> // Opens:
+ * >> //   - /usr/lib/deemon/lib/
+ * >> DeeModule_OpenInPath(path,strlen(path),
+ * >>                      name,strlen(name),
+ * >>                      NULL,NULL,
+ * >>                      MODULE_OPENINPATH_FTHROWERROR);
+ * @return: * :        The module that was imported.
+ * @return: ITER_DONE: The module could not be found (only when `MODULE_OPENINPATH_FTHROWERROR' isn't set)
+ * @return: NULL:      An error occurred. */
+PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
                      /*utf-8*/char const *__restrict module_name, size_t module_namesize,
                      DeeObject *module_global_name,
@@ -2276,7 +2312,7 @@ DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_
                                    options,
                                    mode);
   Dee_Decref(abs_path);
-  return result;
+  return (DREF DeeObject *)result;
 err_abs_path:
   Dee_Decref(abs_path);
   goto err;
@@ -2284,11 +2320,11 @@ err_printer:
   unicode_printer_fini(&printer);
   goto err;
  }
- return DeeModule_OpenInPathAbs(module_path,module_pathsize,
-                                module_name,module_namesize,
-                                module_global_name,
-                                options,
-                                mode);
+ return (DREF DeeObject *)DeeModule_OpenInPathAbs(module_path,module_pathsize,
+                                                  module_name,module_namesize,
+                                                  module_global_name,
+                                                  options,
+                                                  mode);
 err:
  return NULL;
 }
@@ -2341,13 +2377,13 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
    /*utf-8*/char const *path_str;
    path_str = DeeString_AsUtf8(path);
    if unlikely(!path_str) goto err_path;
-   result = DeeModule_OpenInPath(path_str,
-                                 WSTR_LENGTH(path_str),
-                                 module_namestr,
-                                 module_namelen,
-                                 module_name,
-                                 options,
-                                 MODULE_OPENINPATH_FNORMAL);
+   result = (DREF DeeModuleObject *)DeeModule_OpenInPath(path_str,
+                                                         WSTR_LENGTH(path_str),
+                                                         module_namestr,
+                                                         module_namelen,
+                                                         module_name,
+                                                         options,
+                                                         MODULE_OPENINPATH_FNORMAL);
    if (result != (DREF DeeModuleObject *)ITER_DONE)
        goto done_path;
   } else {
@@ -2401,14 +2437,14 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
     goto err;
  if (*module_name_str != '.')
      return DeeModule_OpenGlobal(module_name,options,throw_error);
- return (DREF DeeObject *)DeeModule_OpenInPath(module_pathname,
-                                               module_pathsize,
-                                               module_name_str,
-                                               WSTR_LENGTH(module_name_str),
-                                               NULL,
-                                               options,
-                                               throw_error ? (MODULE_OPENINPATH_FRELMODULE|MODULE_OPENINPATH_FTHROWERROR)
-                                                           : (MODULE_OPENINPATH_FRELMODULE));
+ return DeeModule_OpenInPath(module_pathname,
+                             module_pathsize,
+                             module_name_str,
+                             WSTR_LENGTH(module_name_str),
+                             NULL,
+                             options,
+                             throw_error ? (MODULE_OPENINPATH_FRELMODULE|MODULE_OPENINPATH_FTHROWERROR)
+                                         : (MODULE_OPENINPATH_FRELMODULE));
 err:
  return NULL;
 }

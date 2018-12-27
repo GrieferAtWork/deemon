@@ -685,20 +685,6 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out*/size_t *__restrict pallocated,
                                         /*in*/size_t offset);
 
-
-#ifdef GUARD_DEEMON_OBJMETHOD_H
-#ifdef CONFIG_BUILDING_DEEMON
-#define DeeSeq_KeyIsID(key) ((DeeObject *)REQUIRES_OBJECT(key) == (DeeObject *)&_DeeObject_IdObjMethod)
-INTDEF DeeClsMethodObject _DeeObject_IdObjMethod;
-#else /* CONFIG_BUILDING_DEEMON */
-#define DeeSeq_KeyIsID(key) ((key) && DeeClsMethod_Check(key) && DeeClsMethod_FUNC(key) == &_DeeObject_IdFunc)
-DFUNDEF DREF DeeObject *DCALL
-_DeeObject_IdFunc(DeeObject *__restrict self, size_t argc,
-                  DeeObject **__restrict argv);
-#endif /* !CONFIG_BUILDING_DEEMON */
-#endif /* GUARD_DEEMON_OBJMETHOD_H */
-
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_SEQ_H */

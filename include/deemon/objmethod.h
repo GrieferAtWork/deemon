@@ -123,6 +123,9 @@ DDATDEF DeeTypeObject DeeClsProperty_Type;
 #define DeeClsProperty_SET(x)          ((DeeClsPropertyObject *)REQUIRES_OBJECT(x))->cp_set
 #define DeeClsProperty_Check(x)        DeeObject_InstanceOfExact(x,&DeeClsProperty_Type) /* `_classproperty' is final. */
 #define DeeClsProperty_CheckExact(x)   DeeObject_InstanceOfExact(x,&DeeClsProperty_Type)
+#define DEFINE_CLSPROPERTY(name,type,get,del,set) \
+  DeeClsPropertyObject name = { OBJECT_HEAD_INIT(&DeeClsProperty_Type), get, type, del, set }
+
 
 /* Create a new unbound class property object. */
 DFUNDEF DREF /*ClsProperty*/DeeObject *DCALL
@@ -214,19 +217,6 @@ INTDEF DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t ar
 INTDEF DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #endif
 #endif /* CONFIG_BUILDING_DEEMON */
-
-
-#ifdef GUARD_DEEMON_SEQ_H
-#ifdef CONFIG_BUILDING_DEEMON
-#define DeeSeq_KeyIsID(key) ((DeeObject *)REQUIRES_OBJECT(key) == (DeeObject *)&_DeeObject_IdObjMethod)
-INTDEF DeeClsMethodObject _DeeObject_IdObjMethod;
-#else /* CONFIG_BUILDING_DEEMON */
-#define DeeSeq_KeyIsID(key) ((key) && DeeClsMethod_Check(key) && DeeClsMethod_FUNC(key) == &_DeeObject_IdFunc)
-DFUNDEF DREF DeeObject *DCALL
-_DeeObject_IdFunc(DeeObject *__restrict self, size_t argc,
-                  DeeObject **__restrict argv);
-#endif /* !CONFIG_BUILDING_DEEMON */
-#endif /* GUARD_DEEMON_SEQ_H */
 
 DECL_END
 

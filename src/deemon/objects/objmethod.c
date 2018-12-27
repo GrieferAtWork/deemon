@@ -859,7 +859,7 @@ clsmethod_call(DeeClsMethodObject *__restrict self,
   return NULL;
  }
  /* Allow non-instance objects for generic types. */
- if (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
+ if (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(argv[0],self->cm_type))
        return NULL;
  /* Use the first argument as the this-argument. */
@@ -1076,7 +1076,7 @@ kwclsmethod_call(DeeKwClsMethodObject *__restrict self,
   return NULL;
  }
  /* Allow non-instance objects for generic types. */
- if (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
+ if (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(argv[0],self->cm_type))
        return NULL;
  /* Use the first argument as the this-argument. */
@@ -1093,7 +1093,7 @@ kwclsmethod_call_kw(DeeKwClsMethodObject *__restrict self,
   return NULL;
  }
  /* Allow non-instance objects for generic types. */
- if (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
+ if (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(argv[0],self->cm_type))
        return NULL;
  /* Use the first argument as the this-argument. */
@@ -1239,20 +1239,43 @@ INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
 PRIVATE struct keyword setter_kwlist[] = { K(thisarg), K(value), KEND };
 
 PRIVATE DREF DeeObject *DCALL
+clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
+                     size_t argc, DREF DeeObject **__restrict argv) {
+ DeeObject *thisarg;
+ if (!self->cp_get) {
+  err_cant_access_attribute(&DeeClsProperty_Type,"get",ATTR_ACCESS_GET);
+  goto err;
+ }
+ if (DeeArg_Unpack(argc,argv,"o:get",&thisarg))
+     goto err;
+ /* Allow non-instance objects for generic types. */
+ if (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
+       DeeObject_AssertType(thisarg,self->cp_type))
+     goto err;
+ return (*self->cp_get)(thisarg);
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
 clsproperty_get(DeeClsPropertyObject *__restrict self,
                 size_t argc, DREF DeeObject **__restrict argv,
                 DeeObject *kw) {
  DeeObject *thisarg;
  if (!self->cp_get) {
   err_cant_access_attribute(&DeeClsProperty_Type,"get",ATTR_ACCESS_GET);
-  return NULL;
+  goto err;
  }
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg) ||
-       /* Allow non-instance objects for generic types. */
-    (!(self->cp_type->tp_flags&TP_FABSTRACT) &&
-       DeeObject_AssertType(thisarg,self->cp_type)))
-       return NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg))
+     goto err;
+ if (DeeArg_Unpack(argc,argv,"o:get",&thisarg))
+     goto err;
+ /* Allow non-instance objects for generic types. */
+ if (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
+       DeeObject_AssertType(thisarg,self->cp_type))
+     goto err;
  return (*self->cp_get)(thisarg);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 clsproperty_delete(DeeClsPropertyObject *__restrict self,
@@ -1265,7 +1288,7 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
  }
  if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:delete",&thisarg) ||
        /* Allow non-instance objects for generic types. */
-    (!(self->cp_type->tp_flags&TP_FABSTRACT) &&
+    (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cp_type)))
        return NULL;
  if unlikely((*self->cp_del)(thisarg))
@@ -1283,7 +1306,7 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
  }
  if (DeeArg_UnpackKw(argc,argv,kw,setter_kwlist,"oo:set",&thisarg,&value) ||
        /* Allow non-instance objects for generic types. */
-    (!(self->cp_type->tp_flags&TP_FABSTRACT) &&
+    (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cp_type)))
        return NULL;
  if unlikely((*self->cp_set)(thisarg,value))
@@ -1427,7 +1450,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
         /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_repr,
         /* .tp_bool = */NULL
     },
-    /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
+    /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get_nokw,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&clsmethod_visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
@@ -1442,7 +1465,8 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
     /* .tp_members       = */clsproperty_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+    /* .tp_class_members = */NULL,
+    /* .tp_call          = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict,DeeObject *))&clsproperty_get,
 };
 
 
@@ -1489,7 +1513,7 @@ clsmember_get(DeeClsMemberObject *__restrict self,
  DeeObject *thisarg;
  if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg) ||
        /* Allow non-instance objects for generic types. */
-    (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
+    (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)))
        return NULL;
  return type_member_get(&self->cm_memb,thisarg);
@@ -1501,7 +1525,7 @@ clsmember_delete(DeeClsMemberObject *__restrict self,
  DeeObject *thisarg;
  if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:delete",&thisarg) ||
        /* Allow non-instance objects for generic types. */
-    (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
+    (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)) ||
        type_member_del(&self->cm_memb,thisarg))
        return NULL;
@@ -1514,7 +1538,7 @@ clsmember_set(DeeClsMemberObject *__restrict self,
  DeeObject *thisarg,*value;
  if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"oo:set",&thisarg,&value) ||
        /* Allow non-instance objects for generic types. */
-    (!(self->cm_type->tp_flags&TP_FABSTRACT) &&
+    (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)) ||
        type_member_set(&self->cm_memb,thisarg,value))
        return NULL;

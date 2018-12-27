@@ -228,7 +228,7 @@ type_obmeth_call(DeeTypeObject *__restrict cls_type,
                   desc->m_name);
   goto err;
  }
- if (!(cls_type->tp_flags&TP_FABSTRACT) &&
+ if (!(cls_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(argv[0],cls_type))
        goto err;
  /* Use the first argument as the this-argument. */
@@ -250,7 +250,7 @@ type_obmeth_call_kw(DeeTypeObject *__restrict cls_type,
                   desc->m_name);
   goto err;
  }
- if (!(cls_type->tp_flags&TP_FABSTRACT) &&
+ if (!(cls_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(argv[0],cls_type))
        goto err;
  /* Use the first argument as the this-argument. */
@@ -334,7 +334,7 @@ type_obprop_call(DeeTypeObject *__restrict cls_type,
     goto err_unbound;
  if unlikely(DeeArg_Unpack(argc,argv,"o:get",&thisarg))
     goto err;
- if unlikely(!(cls_type->tp_flags&TP_FABSTRACT) && DeeObject_AssertType(thisarg,cls_type))
+ if unlikely(!(cls_type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(thisarg,cls_type))
     goto err;
  return (*desc->gs_get)(thisarg);
 err_unbound:
@@ -352,7 +352,7 @@ type_obprop_call_kw(DeeTypeObject *__restrict cls_type,
     goto err_unbound;
  if unlikely(DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg))
     goto err;
- if unlikely(!(cls_type->tp_flags&TP_FABSTRACT) && DeeObject_AssertType(thisarg,cls_type))
+ if unlikely(!(cls_type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(thisarg,cls_type))
     goto err;
  return (*desc->gs_get)(thisarg);
 err_unbound:
@@ -367,7 +367,7 @@ type_obmemb_call(DeeTypeObject *__restrict cls_type,
  DeeObject *thisarg;
  if (DeeArg_Unpack(argc,argv,"o:get",&thisarg) ||
        /* Allow non-instance objects for generic types. */
-    (!(cls_type->tp_flags&TP_FABSTRACT) &&
+    (!(cls_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,cls_type)))
        return NULL;
  return type_member_get(desc,thisarg);
@@ -380,7 +380,7 @@ type_obmemb_call_kw(DeeTypeObject *__restrict cls_type,
  DeeObject *thisarg;
  if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg) ||
        /* Allow non-instance objects for generic types. */
-    (!(cls_type->tp_flags&TP_FABSTRACT) &&
+    (!(cls_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,cls_type)))
        return NULL;
  return type_member_get(desc,thisarg);

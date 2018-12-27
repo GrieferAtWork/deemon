@@ -349,6 +349,7 @@ EXPORTS
 	DeeModule_NewString@8=_DeeModule_NewString@8
 	DeeModule_OpenGlobal@12=_DeeModule_OpenGlobal@12
 	DeeModule_OpenGlobalString@16=_DeeModule_OpenGlobalString@16
+	DeeModule_OpenInPath@28=_DeeModule_OpenInPath@28
 	DeeModule_OpenInteractive@36=_DeeModule_OpenInteractive@36
 	DeeModule_OpenInteractiveString@44=_DeeModule_OpenInteractiveString@44
 	DeeModule_OpenRelative@20=_DeeModule_OpenRelative@20
@@ -818,7 +819,6 @@ EXPORTS
 	Dee_weakref_set@8=_Dee_weakref_set@8
 	Dee_weakref_support_fini@4=_Dee_weakref_support_fini@4
 	_DeeAssert_Fail@12=__DeeAssert_Fail@12
-	_DeeObject_IdFunc@12=__DeeObject_IdFunc@12
 	_DeeString_Chr16@4=__DeeString_Chr16@4
 	_DeeString_Chr32@4=__DeeString_Chr32@4
 	_DeeString_Chr8@4=__DeeString_Chr8@4

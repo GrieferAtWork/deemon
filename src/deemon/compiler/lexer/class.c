@@ -1214,8 +1214,20 @@ do_parse_class_base:
    PRIVATE char const old_base[] = "OldUserClass";
    struct module_symbol *oldbase_sym;
    struct symbol *base_symbol;
-   d200_module = (DeeModuleObject *)DeeModule_OpenGlobal(&str_d200,inner_compiler_options,true);
-   if unlikely(!d200_module) goto err;
+   d200_module = (DeeModuleObject *)DeeModule_OpenGlobal(&str_d200,inner_compiler_options,false);
+   if unlikely(!ITER_ISOK(d200_module)) {
+    if (d200_module) {
+#if 1
+     if (WARN(W_MODULE_NOT_FOUND,&str_d200))
+         goto err;
+#else
+     if (WARN(W_NO_D200_OLD_USER_CLASS))
+         goto err;
+#endif
+     goto use_object_base;
+    }
+    goto err;
+   }
    oldbase_sym = DeeModule_GetSymbolString(d200_module,old_base,Dee_HashStr(old_base));
    if unlikely(!oldbase_sym) {
     Dee_Decref(d200_module);

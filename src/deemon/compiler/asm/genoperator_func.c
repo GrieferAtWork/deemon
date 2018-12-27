@@ -63,7 +63,7 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 
 INTERN int DCALL
 ast_gen_operator_func(struct ast *binding,
-                      struct ast *ddi_ast,
+                      struct ast *__restrict ddi_ast,
                       uint16_t operator_name) {
  struct opinfo *info; int temp;
  char const *symbol_name = NULL;
@@ -82,8 +82,15 @@ ast_gen_operator_func(struct ast *binding,
  /* Import the operators module. */
  operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(&str_operators,
                                                                   inner_compiler_options,
-                                                                  true);
- if unlikely(!operators_module) goto err;
+                                                                  false);
+ if unlikely(!ITER_ISOK(operators_module)) {
+  if (operators_module) {
+   if (WARNAST(ddi_ast,W_MODULE_NOT_FOUND,&str_operators))
+       goto err;
+   return asm_gpush_none();
+  }
+  goto err;
+ }
  if (symbol_name) {
   /* Lookup a symbol matching the operator's name. */
   temp = bind_module_symbol(operators_module,&opmod_id,&opsym_id,symbol_name);

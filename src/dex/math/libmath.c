@@ -37,6 +37,21 @@
 #include <limits.h>
 #include <math.h>
 
+#ifdef CONFIG_NO_ERRNO_H
+#undef CONFIG_HAVE_ERRNO_H
+#elif !defined(CONFIG_HAVE_ERRNO_H)
+#ifdef __NO_has_include
+#define CONFIG_HAVE_ERRNO_H 1
+#elif __has_include(<errno.h>)
+#define CONFIG_HAVE_ERRNO_H 1
+#endif
+#endif
+
+#ifdef CONFIG_HAVE_ERRNO_H
+#include <errno.h>
+#endif /* CONFIG_HAVE_ERRNO_H */
+
+
 DECL_BEGIN
 
 #ifndef M_PI
@@ -53,6 +68,9 @@ DECL_BEGIN
 #define isnan(x) ((x) != (x))
 #endif
 
+
+#ifdef CONFIG_HAVE_ERRNO_H
+
 #ifndef EOK
 #ifdef ENOERR
 #define EOK ENOERR
@@ -63,6 +81,7 @@ DECL_BEGIN
 #endif
 #endif
 
+#define SET_OK()  errno = EOK
 PRIVATE ATTR_COLD int DCALL err_domain(void) {
  return DeeError_Throwf(&DeeError_ValueError,"math domain error");
 }
@@ -92,13 +111,18 @@ LOCAL int DCALL math_checkerr_i(int x) {
      return err_domain();
  if (e == ERANGE) {
   /* Prevent exceptions on underflow. */
-  if (abs(x) >= 1.0)
+  if (x != 0)
       return err_overflow();
  } else if (e != EOK) {
   return err_math(e);
  }
  return 0;
 }
+#else /* CONFIG_HAVE_ERRNO_H */
+#define SET_OK()           0
+#define math_checkerr(x)   0
+#define math_checkerr_i(x) 0
+#endif /* !CONFIG_HAVE_ERRNO_H */
 
 
 #define DEFINE_MATH_CONVERSION_1(name) \
@@ -120,7 +144,7 @@ f_math_##name(size_t argc, DeeObject **__restrict argv) \
  double x,result; \
  if (DeeArg_Unpack(argc,argv,"D:" #name,&x)) \
      goto err; \
- errno = EOK; \
+ SET_OK(); \
  result = name(x); \
  if (math_checkerr(result)) \
      goto err; \
@@ -148,7 +172,7 @@ f_math_##name(size_t argc, DeeObject **__restrict argv) \
  double x,y,result; \
  if (DeeArg_Unpack(argc,argv,"DD:" #name,&x,&y)) \
      goto err; \
- errno = EOK; \
+ SET_OK(); \
  result = name(x,y); \
  if (math_checkerr(result)) \
      goto err; \
@@ -181,6 +205,14 @@ err: \
  return NULL; \
 } \
 PRIVATE DEFINE_CMETHOD(math_##name,f_math_##name);
+
+#ifndef CONFIG_HAVE_ERRNO_H
+#undef DEFINE_MATH_CONVERSION_1_E
+#undef DEFINE_MATH_CONVERSION_2_E
+#define DEFINE_MATH_CONVERSION_1_E DEFINE_MATH_CONVERSION_1
+#define DEFINE_MATH_CONVERSION_2_E DEFINE_MATH_CONVERSION_2
+#endif
+
 DEFINE_MATH_CONVERSION_1(sin)
 DEFINE_MATH_CONVERSION_1(cos)
 DEFINE_MATH_CONVERSION_1(tan)
@@ -242,7 +274,7 @@ f_math_ilogb(size_t argc, DeeObject **__restrict argv) {
  double x; int result;
  if (DeeArg_Unpack(argc,argv,"D:ilogb",&x))
      goto err;
- errno = EOK;
+ SET_OK();
  result = ilogb(x);
  if (math_checkerr_i(result))
      goto err;
@@ -258,7 +290,7 @@ f_math_frexp(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result,*a,*b;
  if (DeeArg_Unpack(argc,argv,"DD:frexp",&x,&y))
      goto err;
- errno = EOK;
+ SET_OK();
  mat = frexp(x,&ex);
  if (math_checkerr(mat))
      goto err;
@@ -324,7 +356,7 @@ f_math_ldexp(size_t argc, DeeObject **__restrict argv) {
      y_value = INT_MAX;
  else if (error == INT_NEG_OVERFLOW)
      y_value = INT_MIN;
- errno = EOK;
+ SET_OK();
  result = ldexp(x,y_value);
  if (math_checkerr(result))
      goto err;
@@ -349,7 +381,7 @@ f_math_asincos(size_t argc, DeeObject **__restrict argv) {
  double x,rx,ry;
  if (DeeArg_Unpack(argc,argv,"D:asincos",&x))
      goto err;
- errno = EOK;
+ SET_OK();
  rx = asin(x);
  ry = acos(x);
  if (math_checkerr(ry))
@@ -363,7 +395,7 @@ f_math_sincosh(size_t argc, DeeObject **__restrict argv) {
  double x,rx,ry;
  if (DeeArg_Unpack(argc,argv,"D:sincosh",&x))
      goto err;
- errno = EOK;
+ SET_OK();
  rx = sinh(x);
  ry = cosh(x);
  if (math_checkerr(ry))
@@ -377,7 +409,7 @@ f_math_asincosh(size_t argc, DeeObject **__restrict argv) {
  double x,rx,ry;
  if (DeeArg_Unpack(argc,argv,"D:asincosh",&x))
      goto err;
- errno = EOK;
+ SET_OK();
  rx = asinh(x);
  ry = acosh(x);
  if (math_checkerr(ry))
@@ -396,7 +428,7 @@ f_math_scalbn(size_t argc, DeeObject **__restrict argv) {
  double x,result; int n;
  if (DeeArg_Unpack(argc,argv,"Dd:scalbn",&x,&n))
      goto err;
- errno = EOK;
+ SET_OK();
  /* XXX: scalbln */
  result = scalbn(x,n);
  if (math_checkerr(result))
@@ -412,7 +444,7 @@ f_math_remquo(size_t argc, DeeObject **__restrict argv) {
  double x,y,result; int z;
  if (DeeArg_Unpack(argc,argv,"DD:remquo",&x,&y))
      goto err;
- errno = EOK;
+ SET_OK();
  result = remquo(x,y,&z);
  if (math_checkerr(result))
      goto err;

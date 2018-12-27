@@ -1920,16 +1920,6 @@ err:
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-_DeeObject_IdFunc(DeeObject *__restrict self, size_t argc,
-                  DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":id"))
-     goto err;
- return DeeInt_NewUIntptr(DeeObject_Id(self));
-err:
- return NULL;
-}
-
 INTDEF dssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
@@ -2122,19 +2112,7 @@ DEFINE_DEPRECATED_INPLACE_BINARY(ipow,DeeObject_InplacePow)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 
-INTERN DEFINE_CLSMETHOD(_DeeObject_IdObjMethod,_DeeObject_IdFunc,&DeeObject_Type);
-PRIVATE struct type_member object_class_members[] = {
-    TYPE_MEMBER_CONST_DOC("id",&_DeeObject_IdObjMethod,
-                          "Alias of #i:id (to provide a static instance to return when "
-                          "calling ${object.id} for the purposes of creating a key function)"),
-    TYPE_MEMBER_END
-};
-
 PRIVATE struct type_method object_methods[] = {
-    /* Helper function: `foo.id()' returns a unique id for any object. */
-    { "id",              &_DeeObject_IdFunc,
-      DOC("->?Dint\n"
-          "Returns a unique id identifying this specific object instance") },
     /* Utility function: Return the size of a given object (in bytes) */
     { "__sizeof__",      &object_sizeof,
       DOC("->?Dint\n"
@@ -2228,6 +2206,18 @@ object_class_get(DeeObject *__restrict self) {
  return_reference((DeeObject *)DeeObject_Class(self));
 }
 
+INTERN DREF DeeObject *DCALL
+object_id_get(DeeObject *__restrict self) {
+ return DeeInt_NewUIntptr(DeeObject_Id(self));
+}
+
+PRIVATE DEFINE_CLSPROPERTY(object_id_get_cobj,&DeeObject_Type,&object_id_get,NULL,NULL);
+PRIVATE struct type_member object_class_members[] = {
+    TYPE_MEMBER_CONST_DOC("id",&object_id_get_cobj,"Alias for #id to speed up expressions such as ${object.id}"),
+    TYPE_MEMBER_END
+};
+
+
 INTDEF DREF DeeObject *DCALL instance_get_itable(DeeObject *__restrict self);
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
@@ -2245,6 +2235,10 @@ PRIVATE struct type_getset object_getsets[] = {
           "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
           "For non-user-defined classes (aka. when ${this.class.__isclass__} is :false), an empty sequence is returned\n"
           "The class-attribute table can be accessed through :type.__ctable__") },
+    /* Helper function: `foo.id()' returns a unique id for any object. */
+    { "id", &object_id_get, NULL, NULL,
+      DOC("->?Dint\n"
+          "Returns a unique id identifying this specific object instance") },
     { NULL }
 };
 
@@ -2274,7 +2268,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT|TP_FABSTRACT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
-    /* .tp_base     = */NULL,
+    /* .tp_base     = */NULL,    /* No base */
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
