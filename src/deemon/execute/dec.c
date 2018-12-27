@@ -632,7 +632,7 @@ PRIVATE void DCALL corrupt_here(DecFile *__restrict self,
                                 char const *file, int line) {
  DEE_DPRINTF("%s(%d) : %k",file,line,self->df_name);
  if (reader) DEE_DPRINTF("@%#Ix",(size_t)((uint8_t *)reader - self->df_base));
- DEE_DPRINT(" : Module corruption detected\n");
+ DEE_DPRINT(" : ERROR : Module corruption detected\n");
 }
 PRIVATE void corrupt_heref(DecFile *__restrict self,
                            void const *reader,
@@ -641,7 +641,7 @@ PRIVATE void corrupt_heref(DecFile *__restrict self,
  va_list args;
  DEE_DPRINTF("%s(%d) : %k",file,line,self->df_name);
  if (reader) DEE_DPRINTF("@%#Ix",(size_t)((uint8_t *)reader - self->df_base));
- DEE_DPRINT(" : Module corruption detected : ");
+ DEE_DPRINT(" : ERROR : Module corruption detected : ");
  va_start(args,format);
  DEE_VDPRINTF(format,args);
  va_end(args);
@@ -911,6 +911,27 @@ DecFile_LoadImports(DecFile *__restrict self) {
                                                                 false);
   if unlikely(!ITER_ISOK(module)) {
    if (module) {
+    /* Don't throw an error for this when `module_name' describes
+     * the name of a global module. - This could happen if the
+     * module library path was set up differently when this DEC file
+     * was generated last, now resulting in that module no longer being
+     * reachable as one that is global.
+     * Technically, this is a problem with how the DEC encoder generates
+     * dependency names, as it no longer knows if the original source
+     * addressed its dependencies as relative, or global modules, forcing
+     * it to guess which one it should choose.
+     * However, since DEC files are intended as simple caches, rather than
+     * stand-alone object files, or even executables all-together, we can
+     * simply indicate that the DEC cache has been corrupted, or has fallen
+     * out-of-date, and have the caller re-compile the module, thus updating
+     * the dependency, and loading the required module via its actual location. */
+    if (*module_name != '.')
+        goto stop_imports;
+    /* A missing relative import is something that even re-compiling won't
+     * fix, so we may as well throw the error now, and include some helpful
+     * context information about where the dependency came from.
+     * -> This can happen if global modules that were previously used
+     *    suddenly disappear between execution cycles. */
     DeeError_Throwf(&DeeError_FileNotFound,
                     "Dependency %q of module %r in %$q could not be found",
                     strtab+off,self->df_module->mo_name,

@@ -1379,7 +1379,7 @@ err:
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC DREF /*Module*/DeeObject *DCALL
 DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen) {
  DREF DeeObject *name_object,*result;
  name_object = DeeString_NewUtf8(name,
@@ -1392,8 +1392,8 @@ DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen) {
 err:
  return NULL;
 }
-PUBLIC DREF DeeObject *DCALL
-DeeModule_New(DeeObject *__restrict name) {
+PUBLIC DREF /*Module*/DeeObject *DCALL
+DeeModule_New(/*String*/DeeObject *__restrict name) {
  DeeModuleObject *result;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
  result = DeeGCObject_CALLOC(DeeModuleObject);
@@ -1527,11 +1527,11 @@ DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t modu
  DREF DeeModuleObject *result;
  char *buf,*dst,*module_name_start; size_t i,len;
  dhash_t hash;
- DEE_DPRINTF("[TRACE] DeeModule_OpenInPathAbs(%$q,%$q,%r,%p,%x)\n",
+ DEE_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
+             module_global_name ? "global module " : "",
+             module_global_name ? module_global_name : Dee_EmptyString,
              module_pathsize,module_path,
-             module_namesize,module_name,
-             module_global_name ? module_global_name : Dee_None,
-             options,mode);
+             module_namesize,module_name);
 #ifndef CONFIG_NO_DEC
  buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 6) * sizeof(char));
 #else
@@ -1644,6 +1644,30 @@ again_find_existing_global_module:
     rwlock_write(&modules_glob_lock);
     COMPILER_READ_BARRIER();
     if likely(result->mo_globpself == NULL) {
+     /* TODO: Must change `result->mo_name' to `module_global_name'
+      * ${LIBPATH}/foo/bar.dee:
+      * >> global helper = import(".bar");
+      * ${LIBPATH}/foo/baz.dee:
+      * >> print "Hi, I'm a helper module";
+      * main.dee:
+      * >> local a = import("foo.bar");
+      * >> print a.__name__;            // "foo.bar"
+      * >> print a.helper.__name__;     // "baz"
+      * >> print a.helper.__isglobal__; // false
+      * >> assert a.helper === import("foo.baz");
+      * >> // The re-import as global must changed the name to "foo.baz".
+      * >> // If we don't do this, then "foo.baz" will (incorrectly) become
+      * >> // available as `import("baz")', even though it's file location
+      * >> // in relation to the system library path would require it to be
+      * >> // addressed as "foo.baz".
+      * >> print a.helper.__name__;     // "foo.baz" (currently, and wrongly still "baz")
+      * >> print a.helper.__isglobal__; // true
+      * NOTE: This requires some changes to the runtime, as `mo_name' is
+      *       currently assumed to be `[const]', when that must to be changed to:
+      *      [const_if(mo_globpself != NULL)]
+      *      [lock_if(mo_globpself == NULL,INTERNAL(modules_glob_lock))]
+      */
+
      existing_module = find_glob_module(result->mo_name);
      if unlikely(existing_module) {
       Dee_Incref(existing_module);

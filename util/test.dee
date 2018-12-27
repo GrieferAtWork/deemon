@@ -18,18 +18,20 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import query, chdir, headof from fs;
+import * from fs;
 
-
-#ifdef __MAIN__
-chdir(headof(__FILE__));
-
-for (local x: query("test/*.dee")) {
-	local test_name = x[:-4];
-	print ">> Running test:",test_name;
-	import(".test." + test_name);
+@@Run all tests found in the `/util/test' directory
+function runall() {
+	local path = joinpath(headof(__FILE__),"test/*.dee");
+	for (local x: query(path)) {
+		local test_name = x[:-4];
+		print ">> Running test:",test_name;
+		import(".test." + test_name);
+	}
+	print "DONE";
 }
 
-print "DONE";
+#ifdef __MAIN__
+runall();
 #endif /* __MAIN__ */
 
