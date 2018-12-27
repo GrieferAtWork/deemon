@@ -32,35 +32,17 @@
 #define __MEMORY_ORDER_SEQ_CST 5
 #endif
 
-#pragma push_macro("memory_order_relaxed")
-#pragma push_macro("memory_order_consume")
-#pragma push_macro("memory_order_acquire")
-#pragma push_macro("memory_order_release")
-#pragma push_macro("memory_order_acq_rel")
-#pragma push_macro("memory_order_seq_cst")
-#undef memory_order_relaxed
-#undef memory_order_consume
-#undef memory_order_acquire
-#undef memory_order_release
-#undef memory_order_acq_rel
-#undef memory_order_seq_cst
-
 #ifndef __memory_order_relaxed_defined
 #define __memory_order_relaxed_defined 1
+#pragma push_macro(undef,"local","memory_order_relaxed","memory_order_consume","memory_order_acquire","memory_order_release","memory_order_acq_rel","memory_order_seq_cst")
 local memory_order_relaxed = __MEMORY_ORDER_RELAXED;
 local memory_order_consume = __MEMORY_ORDER_CONSUME;
 local memory_order_acquire = __MEMORY_ORDER_ACQUIRE;
 local memory_order_release = __MEMORY_ORDER_RELEASE;
 local memory_order_acq_rel = __MEMORY_ORDER_ACQ_REL;
 local memory_order_seq_cst = __MEMORY_ORDER_SEQ_CST;
+#pragma pop_macro("local","memory_order_relaxed","memory_order_consume","memory_order_acquire","memory_order_release","memory_order_acq_rel","memory_order_seq_cst")
 #endif
-
-#pragma pop_macro("memory_order_relaxed")
-#pragma pop_macro("memory_order_consume")
-#pragma pop_macro("memory_order_acquire")
-#pragma pop_macro("memory_order_release")
-#pragma pop_macro("memory_order_acq_rel")
-#pragma pop_macro("memory_order_seq_cst")
 
 #ifdef __DEEMON_GUARD___CXXDEFAULT_DEE
 #include <cxx/atomic>

@@ -19,6 +19,8 @@
 #pragma once
 #include "__stddef.dee"
 
-function __builtin_bswap16(x) -> ((x & 0xff) << 8) | ((x >> 8) & 0xff);
-function __builtin_bswap32(x) -> (__builtin_bswap16(x) << 16) | __builtin_bswap16((x) >> 16);
-function __builtin_bswap64(x) -> (__builtin_bswap32(x) << 32) | __builtin_bswap32((x) >> 32);
+#pragma push_macro(undef,"function")
+function __builtin_bswap16(__x) -> ((__x & 0xff) << 8) | ((__x >> 8) & 0xff);
+function __builtin_bswap32(__x) -> (__builtin_bswap16(__x) << 16) | __builtin_bswap16((__x) >> 16);
+function __builtin_bswap64(__x) -> (__builtin_bswap32(__x) << 32) | __builtin_bswap32((__x) >> 32);
+#pragma pop_macro("function")

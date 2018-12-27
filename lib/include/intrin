@@ -21,85 +21,80 @@
 
 /* !!! This header has been replaced by the `operators' module !!! */
 
-import __str__ = str from operators;
-import __repr__ = repr from operators;
-function __type__(x) -> type x;
-import __copy__ = copy from operators;
-import __move__ = copy from operators; /* Move-constructors have been removed. */
-import __copyassign__ = assign from operators; /* copyassign and assign have been merged. */
-import __moveassign__ = moveassign from operators;
-import __assign__ = assign from operators;
-function __not__(x) -> !x; /* The not-operator has been removed. */
-import __neg__ = neg from operators;
-import __pos__ = pos from operators;
-import __inv__ = inv from operators;
-/* function __ref__(x) -> &x; */
-/* function __deref__(x) -> *x; */
-import __inc__ = inc from operators;
-import __dec__ = dec from operators;
-function __incpost__(x) -> x++;
-function __decpost__(x) -> x--;
-import __lo__ = lo from operators;
-import __le__ = le from operators;
-import __eq__ = eq from operators;
-import __ne__ = ne from operators;
-import __gr__ = gr from operators;
-import __ge__ = ge from operators;
-import __add__ = add from operators;
-import __iadd__ = iadd from operators;
-import __sub__ = sub from operators;
-import __isub__ = isub from operators;
-import __mul__ = mul from operators;
-import __imul__ = imul from operators;
-import __div__ = div from operators;
-import __idiv__ = idiv from operators;
-import __mod__ = mod from operators;
-import __imod__ = imod from operators;
-import __shl__ = shl from operators;
-import __ishl__ = ishl from operators;
-import __shr__ = shr from operators;
-import __ishr__ = ishr from operators;
-import __and__ = and from operators;
-import __iand__ = iand from operators;
-import __or__ = or from operators;
-import __ior__ = ior from operators;
-import __xor__ = xor from operators;
-import __ixor__ = ixor from operators;
-import __pow__ = pow from operators;
-import __ipow__ = ipow from operators;
-import __call__ = call from operators;
-import __size__ = size from operators;
-import __getitem__ = getitem from operators;
-import __setitem__ = setitem from operators;
-import __delitem__ = delitem from operators;
-import __getrange__ = getrange from operators;
-import __setrange__ = setrange from operators;
-import __delrange__ = delrange from operators;
-function __is__(x,y) -> x is y;
-import __contains__ = contains from operators;
-import __getattr__ = getattr from operators;
-import __delattr__ = delattr from operators;
-import __setattr__ = setattr from operators;
-import __iterself__ = iter from operators;
-import __iternext__ = next from operators;
-function __hasattr__(x,y) {
-	try {
-		x.operator . (y);
-	} catch ((Error from deemon).AttributeError |
-	         (Error from deemon).RuntimeError.NotImplemented
-	) {
-		return false;
-	}
-	return true;
-}
-function __callv__(x,y...) -> x(y...);
-import __hash__ = hash from operators;
-import __bool__ = bool from operators;
-import __read__ = read from operators;
-import __write__ = write from operators;
-import __readnp__ = read from operators;
-import __writenp__ = write from operators;
-import __seek__ = seek from operators;
-function __flush__(x) -> x.sync();
-import __trunc__ = trunc from operators;
-import __close__ = close from operators;
+#pragma push_macro(undef,"import","from","operators","function","type","is","operator")
+from operators import
+	__str__ = "str",
+	__repr__ = "repr",
+	__copy__ = "copy",
+	__move__ = "copy", /* Move-constructors have been removed. */
+	__copyassign__ = "assign", /* copyassign and assign have been merged. */
+	__moveassign__ = "moveassign",
+	__assign__ = "assign",
+	__neg__ = "neg",
+	__pos__ = "pos",
+	__inv__ = "inv",
+	__inc__ = "inc",
+	__dec__ = "dec",
+	__lo__ = "lo",
+	__le__ = "le",
+	__eq__ = "eq",
+	__ne__ = "ne",
+	__gr__ = "gr",
+	__ge__ = "ge",
+	__add__ = "add",
+	__iadd__ = "iadd",
+	__sub__ = "sub",
+	__isub__ = "isub",
+	__mul__ = "mul",
+	__imul__ = "imul",
+	__div__ = "div",
+	__idiv__ = "idiv",
+	__mod__ = "mod",
+	__imod__ = "imod",
+	__shl__ = "shl",
+	__ishl__ = "ishl",
+	__shr__ = "shr",
+	__ishr__ = "ishr",
+	__and__ = "and",
+	__iand__ = "iand",
+	__or__ = "or",
+	__ior__ = "ior",
+	__xor__ = "xor",
+	__ixor__ = "ixor",
+	__pow__ = "pow",
+	__ipow__ = "ipow",
+	__call__ = "call",
+	__size__ = "size",
+	__getitem__ = "getitem",
+	__setitem__ = "setitem",
+	__delitem__ = "delitem",
+	__getrange__ = "getrange",
+	__setrange__ = "setrange",
+	__delrange__ = "delrange",
+	__contains__ = "contains",
+	__getattr__ = "getattr",
+	__delattr__ = "delattr",
+	__setattr__ = "setattr",
+	__iterself__ = "iter",
+	__iternext__ = "next",
+	__hash__ = "hash",
+	__bool__ = "bool",
+	__read__ = "read",
+	__write__ = "write",
+	__readnp__ = "read",
+	__writenp__ = "write",
+	__seek__ = "seek",
+	__trunc__ = "trunc",
+	__close__ = "close",
+	__flush__ = "sync";
+from "deemon" import __hasattr__ = "hasattr";
+
+function __type__(__x) -> type __x;
+function __not__(__x) -> !__x; /* The not-operator has been removed. */
+function __ref__(__x) -> __x.operator . ("ref");
+function __deref__(__x) -> __x.operator . ("ind");
+function __incpost__(__x) -> __x++;
+function __decpost__(__x) -> __x--;
+function __is__(__x,__y) -> __x is __y;
+function __callv__(__x,__y...) -> __x(__y...);
+#pragma pop_macro("import","from","operators","function","type","is","operator")

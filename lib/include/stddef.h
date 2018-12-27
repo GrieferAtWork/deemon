@@ -23,22 +23,25 @@
 #define offsetof(t,m) size_t((t).ptr(none).deref.m.ref)
 #endif
 
+#pragma push_macro(undef,"import","from","ctypes","type","none")
 #ifndef __ptrdiff_t_defined
 #define __ptrdiff_t_defined 1
-import ptrdiff_t from ctypes;
+import ptrdiff_t = "ptrdiff_t" from ctypes;
 #endif
 #ifndef __size_t_defined
 #define __size_t_defined 1
-import size_t from ctypes;
+import size_t = "size_t" from ctypes;
 #endif
 #ifndef __ssize_t_defined
 #define __ssize_t_defined 1
-import ssize_t from ctypes;
+import ssize_t = "ssize_t" from ctypes;
 #endif
 #ifndef __nullptr_t_defined
 #define __nullptr_t_defined 1
 local nullptr_t = type none;
 #endif
+#pragma pop_macro("import","from","ctypes","type","none")
+
 #ifndef NULL
 #define NULL none
 #endif

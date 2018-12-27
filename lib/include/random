@@ -19,7 +19,7 @@
 #pragma once
 #include <__stddef.dee>
 
-#pragma push_macro("random")
-#undef random
-from random import random = Random;
-#pragma pop_macro("random")
+#pragma push_macro(undef,"from","random","import")
+from random import
+#pragma pop_macro("from","random","import")
+	random = "Random";

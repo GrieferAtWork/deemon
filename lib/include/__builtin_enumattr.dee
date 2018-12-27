@@ -18,4 +18,6 @@
  */
 #pragma once
 #include "__stddef.dee"
-import __builtin_enumattr = enumattr from .m_util_attr;
+#pragma push_macro(undef,"from","import")
+from ".m_util_attr" import __builtin_enumattr = "enumattr";
+#pragma pop_macro("from","import")

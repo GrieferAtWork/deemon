@@ -17,18 +17,16 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import * from deemon;
 
-@"({bytes...} lines)->string,string"
-@"({string...} lines)->string,string"
-@"({bytes...} lines)->none"
-@"({string...} lines)->none"
-@"Decode the lines of a unicode definitions file, and return "
- "a 256-character string that can be used to decode that format"
-@"If the input @lines contain characters greater than $0xff, :none is "
- "returned, and the caller should not attempt to override the codec file, "
- "as special handling is required for the codepage format"
-function ParseUnicodeDefinitionsFile(lines) {
-	import string from deemon;
+
+@@Decode the lines of a unicode definitions file, and return
+@@a 256-character string that can be used to decode that format
+@@If the input @lines contain characters greater than $0xff, :none is
+@@returned, and the caller should not attempt to override the codec file,
+@@as special handling is required for the codepage format
+function ParseUnicodeDefinitionsFile(
+	lines: {bytes...} | {string...}): (string,string) | none {
 	local result = [0] * 256;
 	for (local i: [:128])
 		result[i] = i;
@@ -65,7 +63,7 @@ function ParseUnicodeDefinitionsFile(lines) {
 }
 
 function FormatCodecPageSourceFile(page,name) {
-	local pattern = 
+	local pattern =
 	"/* Copyright (c) 2018 Griefer@Work                                            *\n"
 	" *                                                                            *\n"
 	" * This software is provided 'as-is', without any express or implied          *\n"
@@ -100,7 +98,6 @@ function FormatCodecPageSourceFile(page,name) {
 #if defined(__MAIN__)
 
 import fs;
-import file from deemon;
 import socket from net;
 import FTPClient from net.ftp;
 

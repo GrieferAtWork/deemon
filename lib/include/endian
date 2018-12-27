@@ -47,12 +47,16 @@
 	(((x)&0x00ff000000000000ui64)>>40)|\
 	(((x)&0xff00000000000000ui64)>>56))
 
-import __swap16 = bswap16 from ctypes;
-import __swap32 = bswap32 from ctypes;
-import __swap64 = bswap64 from ctypes;
-import __swap_le16 = leswap16 from ctypes;
-import __swap_le32 = leswap32 from ctypes;
-import __swap_le64 = leswap64 from ctypes;
-import __swap_be16 = beswap16 from ctypes;
-import __swap_be32 = beswap32 from ctypes;
-import __swap_be64 = beswap64 from ctypes;
+#pragma push_macro(undef,"import","from","ctypes")
+from ctypes import
+	__swap16 = "bswap16",
+	__swap32 = "bswap32",
+	__swap64 = "bswap64",
+	__swap_le16 = "leswap16",
+	__swap_le32 = "leswap32",
+	__swap_le64 = "leswap64",
+	__swap_be16 = "beswap16",
+	__swap_be32 = "beswap32",
+	__swap_be64 = "beswap64"
+;
+#pragma pop_macro("import","from","ctypes")

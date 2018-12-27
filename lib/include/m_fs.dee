@@ -19,76 +19,75 @@
 import fs;
 import fs_path = .m_fs_path;
 
-global getcwd = fs.getcwd;
-global chdir = fs.chdir;
-global tmp = fs.gettmp;
-global tmpname = none; /* TODO */
-function home(...) -> fs.user(...).home;
-function listenv() -> [fs.environ...];
-function getenv(name) -> fs.environ[name];
-function delenv(name) -> fs.environ.operator del[](name);
-function setenv(name,value) -> fs.environ.operator [] (name,value);
-function user() -> fs.user.name;
-global host = fs.gethostname;
-global path = fs_path;
-function getatime(path) -> fs.stat(path).st_atime;
-function getmtime(path) -> fs.stat(path).st_mtime;
-function getctime(path) -> fs.stat(path).st_ctime;
-function gettimes(path) {
+final global getcwd = fs.getcwd;
+final global chdir = fs.chdir;
+final global tmp = fs.gettmp;
+final global tmpname = none; /* TODO */
+final function home(...) -> fs.user(...).home;
+final function listenv() -> [fs.environ...];
+final function getenv(name) -> fs.environ[name];
+final function delenv(name) -> fs.environ.operator del[](name);
+final function setenv(name,value) -> fs.environ.operator [] (name,value);
+final function user() -> fs.user.name;
+final global host = fs.gethostname;
+final global path = fs_path;
+final function getatime(path) -> fs.stat(path).st_atime;
+final function getmtime(path) -> fs.stat(path).st_mtime;
+final function getctime(path) -> fs.stat(path).st_ctime;
+final function gettimes(path) {
 	__stack local st = fs.stat(path);
 	return (st.st_atime,st.st_ctime,st.st_mtime);
 }
-function setatime(path,val) -> fs.chtime(val,none,none);
-function setmtime(path,val) -> fs.chtime(none,val,none);
-function setctime(path,val) -> fs.chtime(none,none,val);
-function settimes(path,at = none,ct = none,mt = none)
-	-> fs.chtime(at,mt,ct);
-global isabs = fs.isabs;
-global isfile = fs.stat.isreg;
-global isdir = fs.stat.isdir;
-global islink = fs.stat.islnk;
-function isdrive(path) {
+final function setatime(path,val) -> fs.chtime(val,none,none);
+final function setmtime(path,val) -> fs.chtime(none,val,none);
+final function setctime(path,val) -> fs.chtime(none,none,val);
+final function settimes(path,at = none,ct = none,mt = none) -> fs.chtime(at,mt,ct);
+final global isabs = fs.isabs;
+final global isfile = fs.stat.isreg;
+final global isdir = fs.stat.isdir;
+final global islink = fs.stat.islnk;
+final function isdrive(path) {
 	path = fs.inctrail(fs.expand(path,"pc"));
 	return fs.driveof(path) == path;
 }
-global ismount = isdrive;
-global ishidden = fs.stat.ishidden;
-global isxfile = fs.stat.isexe;
-global ischrdev = fs.stat.ischr;
-global isblkdev = fs.stat.isblk;
-global isfifo = fs.stat.isfifo;
-global issocket = fs.stat.issock;
-global exists = fs.stat.exists;
-global remove = fs.remove;
-global unlink = fs.unlink;
-global rmfile = fs.unlink;
-global mkdir = fs.mkdir;
-global rmdir = fs.rmdir;
-global copy_ = fs.copyfile;
-global move_ = fs.rename;
-global link = fs.symlink;
-global readlink = fs.readlink;
-global uid_t = fs.user;
-global gid_t = fs.group;
-global chmod = fs.chmod;
-function getmod(path) -> fs.stat(path).st_mode;
-global chown = fs.chown;
-function getown(path) {
+final global ismount = isdrive;
+final global ishidden = fs.stat.ishidden;
+final global isxfile = fs.stat.isexe;
+final global ischrdev = fs.stat.ischr;
+final global isblkdev = fs.stat.isblk;
+final global isfifo = fs.stat.isfifo;
+final global issocket = fs.stat.issock;
+final global exists = fs.stat.exists;
+final global remove = fs.remove;
+final global unlink = fs.unlink;
+final global rmfile = fs.unlink;
+final global mkdir = fs.mkdir;
+final global rmdir = fs.rmdir;
+final global copy_ = fs.copyfile;
+final global move_ = fs.rename;
+final global link = fs.symlink;
+final global readlink = fs.readlink;
+final global uid_t = fs.user;
+final global gid_t = fs.group;
+final global chmod = fs.chmod;
+final function getmod(path) -> fs.stat(path).st_mode;
+final global chown = fs.chown;
+final function getown(path) {
 	__stack local st = fs.stat(path);
 	return (st.st_uid,st.st_gid);
 }
-global uidof = fs.user;
-global gidof = fs.group;
-function uidname(uid) {
+final global uidof = fs.user;
+final global gidof = fs.group;
+final function uidname(uid) {
 	if (uid !is fs.user)
 		uid = fs.user(uid);
 	return uid.name;
 }
-function gidname(gid) {
+final function gidname(gid) {
 	if (gid !is fs.group)
 		gid = fs.group(gid);
 	return gid.name;
 }
-global dir = fs.dir;
-global query = fs.query;
-global env = fs.environ;
+final global dir = fs.dir;
+final global query = fs.query;
+final global env = fs.environ;

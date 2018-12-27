@@ -19,6 +19,8 @@
 #pragma once
 #include "__stddef.dee"
 
-function __builtin_FILE() -> (traceback from deemon)()[1].file;
-function __builtin_LINE() -> (traceback from deemon)()[1].line;
-function __builtin_FUNCTION() -> (traceback from deemon)()[1].func;
+#pragma push_macro(undef,"function","traceback","from","deemon")
+function __builtin_FILE() -> (traceback from deemon)()[1].operator . ("file");
+function __builtin_LINE() -> (traceback from deemon)()[1].operator . ("line");
+function __builtin_FUNCTION() -> (traceback from deemon)()[1].operator . ("name");
+#pragma pop_macro("function","traceback","from","deemon")

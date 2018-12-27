@@ -19,4 +19,6 @@
 #pragma once
 #include "__stddef.dee"
 
-import gc from deemon;
+#pragma push_macro(undef,"import","from","deemon")
+import gc = "gc" from deemon;
+#pragma pop_macro("import","from","deemon")

@@ -19,13 +19,15 @@
 #pragma once
 #include "__stddef.dee"
 
+#pragma push_macro(undef,"from","ctypes","import")
 from ctypes import
-	__builtin_malloc = malloc,
-	__builtin_calloc = calloc,
-	__builtin_realloc = realloc,
-	__builtin_free = free
+	__builtin_malloc = "malloc",
+	__builtin_calloc = "calloc",
+	__builtin_realloc = "realloc",
+	__builtin_free = "free"
 	//TODO:__builtin_aligned_malloc = __builtin_object(0x00DE);
 	//TODO:__builtin_aligned_calloc = __builtin_object(0x00DF);
 	//TODO:__builtin_aligned_realloc = __builtin_object(0x00E0);
 	//TODO:__builtin_aligned_free = __builtin_object(0x00E1);
 ;
+#pragma pop_macro("from","ctypes","import")

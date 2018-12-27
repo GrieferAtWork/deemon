@@ -21,103 +21,108 @@
 #pragma once
 #include "__stddef.dee"
 
+#pragma push_macro(undef,"from","fs","import","user","environ","function","return","if","expand","chtime","stat","local","group")
 from fs import
-	__builtin_fs_getcwd = getcwd,
-	__builtin_fs_wgetcwd = getcwd,
-	__builtin_fs_chdir = chdir,
-	__builtin_fs_gettmp = gettmp
-	__builtin_fs_path_head = headof,
-	__builtin_fs_path_tail = tailof,
-	__builtin_fs_path_file = fileof,
-	__builtin_fs_path_ext = extof,
-	__builtin_fs_path_drive = driveof,
-	__builtin_fs_path_inctrail = inctrail,
-	__builtin_fs_path_exctrail = exctrail,
-	__builtin_fs_path_abs = abspath,
-	__builtin_fs_path_rel = relpath,
-	__builtin_fs_path_join = joinpath,
-	__builtin_fs_isabs = isabs,
-	__builtin_fs_remove = remove,
-	__builtin_fs_rmfile = unlink,
-	__builtin_fs_mkdir = mkdir,
-	__builtin_fs_rmdir = rmdir,
-	__builtin_fs_copy = copyfile,
-	__builtin_fs_move = rename,
-	__builtin_fs_link = symlink,
-	__builtin_fs_readlink = readlink,
-	__builtin_fs_chmod = chmod,
-	__builtin_fs_chown = chown,
-	__builtin_fs_uidof = user,
-	__builtin_fs_gidof = group,
-	__builtin_fs_machine = gethostname
+	__builtin_fs_getcwd = "getcwd",
+	__builtin_fs_wgetcwd = "getcwd",
+	__builtin_fs_chdir = "chdir",
+	__builtin_fs_gettmp = "gettmp",
+	__builtin_fs_path_head = "headof",
+	__builtin_fs_path_tail = "tailof",
+	__builtin_fs_path_file = "fileof",
+	__builtin_fs_path_ext = "extof",
+	__builtin_fs_path_drive = "driveof",
+	__builtin_fs_path_inctrail = "inctrail",
+	__builtin_fs_path_exctrail = "exctrail",
+	__builtin_fs_path_abs = "abspath",
+	__builtin_fs_path_rel = "relpath",
+	__builtin_fs_path_join = "joinpath",
+	__builtin_fs_isabs = "isabs",
+	__builtin_fs_remove = "remove",
+	__builtin_fs_rmfile = "unlink",
+	__builtin_fs_mkdir = "mkdir",
+	__builtin_fs_rmdir = "rmdir",
+	__builtin_fs_copy = "copyfile",
+	__builtin_fs_move = "rename",
+	__builtin_fs_link = "symlink",
+	__builtin_fs_readlink = "readlink",
+	__builtin_fs_chmod = "chmod",
+	__builtin_fs_chown = "chown",
+	__builtin_fs_uidof = "user",
+	__builtin_fs_gidof = "group",
+	__builtin_fs_machine = "gethostname"
 #define __builtin_fs_wmachine __builtin_fs_machine
 #ifdef __WINDOWS__
 	,
-	__builtin_fs_win32hardlink = link
+	__builtin_fs_win32hardlink = "link"
 #endif
 ;
 
-function __builtin_fs_gethome() -> (user from fs).home;
+function __builtin_fs_gethome() -> (user from fs).operator . ("home");
 #define __builtin_fs_wgethome __builtin_fs_gethome
 #define __builtin_fs_wgettmp __builtin_fs_gettmp
 //const __builtin_fs_gettmpname = __builtin_object(0x0168); /* TODO */
 //#define __builtin_fs_wgettmpname __builtin_fs_gettmpname
 function __builtin_fs_listenv() -> environ from fs;
 #define __builtin_fs_wlistenv  __builtin_fs_listenv
-function __builtin_fs_getenv(name) -> (environ from fs)[name];
-function __builtin_fs_delenv(name) -> (environ from fs).operator del[](name);
-function __builtin_fs_setenv(name,val) -> (environ from fs).operator[](name,val);
-function __builtin_fs_path_expanduser(path) -> (expand from fs)(path,"h");
-function __builtin_fs_path_expandvars(path) -> (expand from fs)(path,"vV");
-function __builtin_fs_getatime(path) -> (stat from fs)(path).st_atime;
-function __builtin_fs_getctime(path) -> (stat from fs)(path).st_mtime;
-function __builtin_fs_getmtime(path) -> (stat from fs)(path).st_ctime;
-function __builtin_fs_gettimes(path) {
-	local st = (stat from fs)(path);
-	return (st.st_atime,st.st_ctime,st.st_mtime);
+function __builtin_fs_getenv(__name) -> (environ from fs)[__name];
+function __builtin_fs_delenv(__name) -> (environ from fs).operator del[](__name);
+function __builtin_fs_setenv(__name,__val) -> (environ from fs).operator[](__name,__val);
+function __builtin_fs_path_expanduser(__path) -> (expand from fs)(__path,"h");
+function __builtin_fs_path_expandvars(__path) -> (expand from fs)(__path,"vV");
+function __builtin_fs_getatime(__path) -> (stat from fs)(__path).operator . ("st_atime");
+function __builtin_fs_getctime(__path) -> (stat from fs)(__path).operator . ("st_mtime");
+function __builtin_fs_getmtime(__path) -> (stat from fs)(__path).operator . ("st_ctime");
+function __builtin_fs_gettimes(__path) {
+	local __st = (stat from fs)(__path);
+	return (
+		__st.operator . ("st_atime"),
+		__st.operator . ("st_ctime"),
+		__st.operator . ("st_mtime"));
 }
-function __builtin_fs_setatime(path,val) -> (chtime from fs)(path,val,none,none);
-function __builtin_fs_setctime(path,val) -> (chtime from fs)(path,none,val,none);
-function __builtin_fs_setmtime(path,val) -> (chtime from fs)(path,none,none,val);
-function __builtin_fs_settimes(path,at = none,ct = none,mt = none)
-	-> (chtime from fs)(path,at,mt,ct);
-function __builtin_fs_isfile(path) -> (stat from fs).isreg(path);
-function __builtin_fs_isdir(path) -> (stat from fs).isdir(path);
-function __builtin_fs_islink(path) -> (stat from fs).islnk(path);
-function __builtin_fs_isdrive(path) {
+function __builtin_fs_setatime(__path,val) -> (chtime from fs)(__path,val,none,none);
+function __builtin_fs_setctime(__path,val) -> (chtime from fs)(__path,none,val,none);
+function __builtin_fs_setmtime(__path,val) -> (chtime from fs)(__path,none,none,val);
+function __builtin_fs_settimes(__path,at = none,ct = none,mt = none)
+	-> (chtime from fs)(__path,at,mt,ct);
+function __builtin_fs_isfile(__path) -> (stat from fs).operator . ("isreg")(__path);
+function __builtin_fs_isdir(__path) -> (stat from fs).operator . ("isdir")(__path);
+function __builtin_fs_islink(__path) -> (stat from fs).operator . ("islnk")(__path);
+function __builtin_fs_isdrive(__path) {
 	import fs;
-	path = fs.inctrail(fs.expand(path,"pc"));
-	return fs.driveof(path) == path;
+	__path = fs.operator . ("inctrail")(fs.expand(__path,"pc"));
+	return fs.operator . ("driveof")(__path) == __path;
 }
 #define __builtin_fs_ismount  __builtin_fs_isdrive
-function __builtin_fs_ishidden(path) -> (stat from fs).ishidden(path);
-function __builtin_fs_isxfile(path) -> (stat from fs).isexe(path);
-function __builtin_fs_ischrdev(path) -> (stat from fs).ischr(path);
-function __builtin_fs_isblkdev(path) -> (stat from fs).isblk(path);
-function __builtin_fs_isfifo(path) -> (stat from fs).isfifo(path);
-function __builtin_fs_issocket(path) -> (stat from fs).issock(path);
-function __builtin_fs_exists(path) -> (stat from fs).exists(path);
-function __builtin_fs_getmod(path) -> (stat from fs)(path).st_mode;
-function __builtin_fs_getown(path) {
-	local st = (stat from fs)(path);
-	return (st.st_uid,st.st_gid);
+function __builtin_fs_ishidden(__path) -> (stat from fs).operator . ("ishidden")(__path);
+function __builtin_fs_isxfile(__path) -> (stat from fs).operator . ("isexe")(__path);
+function __builtin_fs_ischrdev(__path) -> (stat from fs).operator . ("ischr")(__path);
+function __builtin_fs_isblkdev(__path) -> (stat from fs).operator . ("isblk")(__path);
+function __builtin_fs_isfifo(__path) -> (stat from fs).operator . ("isfifo")(__path);
+function __builtin_fs_issocket(__path) -> (stat from fs).operator . ("issock")(__path);
+function __builtin_fs_exists(__path) -> (stat from fs).operator . ("exists")(__path);
+function __builtin_fs_getmod(__path) -> (stat from fs)(__path).operator . ("st_mode");
+function __builtin_fs_getown(__path) {
+	local st = (stat from fs)(__path);
+	return (st.operator . ("st_uid"),st.operator . ("st_gid"));
 }
 
 #define __builtin_fs_wuidname __builtin_fs_uidname
-function __builtin_fs_uidname(uid) {
-	if (uid !is user from fs)
-		uid = (user from fs)(uid);
-	return uid.name;
+function __builtin_fs_uidname(__uid) {
+	if (__uid !is user from fs)
+		__uid = (user from fs)(__uid);
+	return __uid.operator . ("name");
 }
 
 #define __builtin_fs_wgidname __builtin_fs_gidname
-function __builtin_fs_gidname(gid) {
-	if (gid !is group from fs)
-		gid = (group from fs)(gid);
-	return gid.name;
+function __builtin_fs_gidname(__gid) {
+	if (__gid !is group from fs)
+		__gid = (group from fs)(__gid);
+	return __gid.operator . ("name");
 }
 
 #ifdef __WINDOWS__
+/* TODO: Implement these using the `win32' module. */
 //const __builtin_fs_win32modulename = __builtin_object(0x00EE); /* TODO */
 //#define __builtin_fs_win32wmodulename __builtin_fs_win32modulename
 //const __builtin_fs_win32dlldirectory = __builtin_object(0x0162); /* TODO */
@@ -134,7 +139,7 @@ function __builtin_fs_gidname(gid) {
 //#define __builtin_fs_win32wdrives __builtin_fs_win32drives
 #endif
 
-function __builtin_fs_user() -> (user from fs).name;
+function __builtin_fs_user() -> (user from fs).operator . ("name");
 #define __builtin_fs_wuser __builtin_fs_user
 
 

@@ -19,41 +19,48 @@
 #pragma once
 #include "__stddef.dee"
 
-import __builtin_avg = avg from util;
-import __builtin_all = all from util;
-import __builtin_any = any from util;
-import __builtin_sum = sum from util;
-import __builtin_ord = ord from .m_util;
-local __builtin_range = (sequence from deemon).range;
-local __builtin_id = (object from deemon).id;
-import __builtin_swap = swap from .m_util;
-local __builtin_seq_find = (sequence from deemon).find;
-local __builtin_seq_rfind = (sequence from deemon).rfind;
-local __builtin_seq_index = (sequence from deemon).index;
-local __builtin_seq_rindex = (sequence from deemon).rindex;
-local __builtin_seq_contains = (sequence from deemon).contains;
-local __builtin_seq_count = (sequence from deemon).count;
-local __builtin_seq_locate = (sequence from deemon).locate;
-local __builtin_seq_rlocate = (sequence from deemon).rlocate;
-local __builtin_seq_locate_all = (sequence from deemon).locateall;
-local __builtin_seq_transform = (sequence from deemon).transform;
-local __builtin_seq_empty = (sequence from deemon).empty;
-local __builtin_seq_non_empty = (sequence from deemon).nonempty;
-local __builtin_seq_front = (sequence from deemon).front;
-local __builtin_seq_back = (sequence from deemon).back;
-local __builtin_seq_get = (sequence from deemon).get;
-local __builtin_seq_at = (sequence from deemon).at;
-local __builtin_seq_reversed = (sequence from deemon).reversed;
-local __builtin_seq_sorted = (sequence from deemon).sorted;
-local __builtin_seq_segments = (sequence from deemon).segments;
-
+#pragma push_macro(undef,"from","import","sequence","deemon","operator","final","local")
+from "util" import
+	__builtin_avg = "avg",
+	__builtin_all = "all",
+	__builtin_any = "any",
+	__builtin_sum = "sum"
 #ifndef ____builtin_min_defined
 #define ____builtin_min_defined 1
-import __builtin_min = min from util;
-import __builtin_max = max from util;
-import __builtin_abs = abs from util;
-import __builtin_sqr = sqr from util;
-import __builtin_ceil = ceil from util;
-import __builtin_floor = floor from util;
-import __builtin_round = round from util;
+	,
+	__builtin_min = "min",
+	__builtin_max = "max",
+	__builtin_abs = "abs",
+	__builtin_sqr = "sqr",
+	__builtin_ceil = "ceil",
+	__builtin_floor = "floor",
+	__builtin_round = "round"
 #endif
+;
+from ".m_util" import
+	__builtin_ord = "ord",
+	__builtin_swap = "swap"
+;
+final local __builtin_range = (sequence from deemon).operator . ("range");
+final local __builtin_id = (object from deemon).operator . ("id");
+final local __builtin_seq_find = (sequence from deemon).operator . ("find");
+final local __builtin_seq_rfind = (sequence from deemon).operator . ("rfind");
+final local __builtin_seq_index = (sequence from deemon).operator . ("index");
+final local __builtin_seq_rindex = (sequence from deemon).operator . ("rindex");
+final local __builtin_seq_contains = (sequence from deemon).operator . ("contains");
+final local __builtin_seq_count = (sequence from deemon).operator . ("count");
+final local __builtin_seq_locate = (sequence from deemon).operator . ("locate");
+final local __builtin_seq_rlocate = (sequence from deemon).operator . ("rlocate");
+final local __builtin_seq_locate_all = (sequence from deemon).operator . ("locateall");
+final local __builtin_seq_transform = (sequence from deemon).operator . ("transform");
+final local __builtin_seq_empty = (sequence from deemon).operator . ("empty");
+final local __builtin_seq_non_empty = (sequence from deemon).operator . ("nonempty");
+final local __builtin_seq_front = (sequence from deemon).operator . ("front");
+final local __builtin_seq_back = (sequence from deemon).operator . ("back");
+final local __builtin_seq_get = (sequence from deemon).operator . ("get");
+final local __builtin_seq_at = (sequence from deemon).operator . ("at");
+final local __builtin_seq_reversed = (sequence from deemon).operator . ("reversed");
+final local __builtin_seq_sorted = (sequence from deemon).operator . ("sorted");
+final local __builtin_seq_segments = (sequence from deemon).operator . ("segments");
+#pragma pop_macro("from","util","import","sequence","deemon","operator","final","local")
+

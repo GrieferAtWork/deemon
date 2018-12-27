@@ -19,6 +19,7 @@
 #pragma once
 #include "__stddef.dee"
 
-import process_id = int from deemon;
-import process_return = int from deemon;
-import process = Process from ipc;
+#pragma push_macro(undef,"from","deemon","import","ipc")
+from deemon import process_id = "int", process_return = "int";
+from ipc import process = "Process";
+#pragma pop_macro("from","deemon","import","ipc")

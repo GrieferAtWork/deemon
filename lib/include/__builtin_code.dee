@@ -23,5 +23,5 @@
 	(({ \
 		__stack local _res; \
 		__asm__("push this_function" : "=s" (_res)); \
-		_res.code; \
+		_res.__code__; \
 	}))

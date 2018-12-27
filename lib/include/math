@@ -18,4 +18,7 @@
  */
 #pragma once
 #include "__stddef.dee"
-import math = .m_math;
+
+#pragma push_macro(undef,"import")
+import math = ".m_math";
+#pragma pop_macro(undef,"import")

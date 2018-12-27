@@ -19,15 +19,6 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro("shared_lib")
-#pragma push_macro("shlib")
-#pragma push_macro("ctypes")
-#undef shared_lib
-#undef shlib
-#undef ctypes
-
-from ctypes import shared_lib = ShLib;
-
-#pragma pop_macro("ctypes")
-#pragma pop_macro("shlib")
-#pragma pop_macro("shared_lib")
+#pragma push_macro(undef,"from","import","ctypes")
+from ctypes import shared_lib = "ShLib";
+#pragma pop_macro("from","import","ctypes")

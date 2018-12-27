@@ -19,7 +19,9 @@
 #pragma once
 #include "__stddef.dee"
 
-function __builtin_pointer_add(__x) -> __x.ptr;
-function __builtin_pointer_rem(__x) -> __x.base;
-function __builtin_lvalule_add(__x) -> __x.lvalue;
-function __builtin_lvalule_rem(__x) -> __x.base;
+#pragma push_macro(undef,"function","operator")
+function __builtin_pointer_add(__x) -> __x.operator . ("ptr");
+function __builtin_pointer_rem(__x) -> __x.operator . ("base");
+function __builtin_lvalule_add(__x) -> __x.operator . ("lvalue");
+function __builtin_lvalule_rem(__x) -> __x.operator . ("base");
+#pragma pop_macro("function","operator")

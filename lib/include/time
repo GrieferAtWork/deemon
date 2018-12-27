@@ -19,4 +19,7 @@
 #pragma once
 #include "__stddef.dee"
 
-from time import time = Time;
+#pragma push_macro(undef,"from","time","import")
+from time import
+#pragma pop_macro("from","time","import")
+	time = "Time";

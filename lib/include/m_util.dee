@@ -20,31 +20,31 @@ import util;
 import string, sequence, Signal, Error, object from deemon;
 import util_attr = .m_util_attr;
 
-global min = util.min;
-global max = util.max;
-global avg = util.avg;
-global all = util.all;
-global any = util.any;
-global sum = util.sum;
-global chr = string.chr;
-function ord(s) -> s.ord();
-global sqr = util.sqr;
-function len(seq) -> #seq;
-global ceil = util.ceil;
-global floor = util.floor;
-global round = util.round;
-global range = sequence.range;
-global id = object.id;
-global zip = util.zip;
-global enumerate = util.enumerate;
-function swap(a,b) {
+final global min = util.min;
+final global max = util.max;
+final global avg = util.avg;
+final global all = util.all;
+final global any = util.any;
+final global sum = util.sum;
+final global chr = string.chr;
+final function ord(s) -> s.ord();
+final global sqr = util.sqr;
+final function len(seq) -> #seq;
+final global ceil = util.ceil;
+final global floor = util.floor;
+final global round = util.round;
+final global range = sequence.range;
+final global id = object.id;
+final global zip = util.zip;
+final global enumerate = util.enumerate;
+final function swap(a,b) {
 	local temp = copy a;
 	a.operator = move(b);
 	b.operator = move(temp);
 }
-global abs = util.abs;
+final global abs = util.abs;
 
-function reduce(fun,iterable,initializer = none) {
+final function reduce(fun,iterable,initializer = none) {
 	local it = iterable.operator iter();
 	if (initializer is none) {
 		try initializer = it.operator next();
@@ -59,5 +59,5 @@ function reduce(fun,iterable,initializer = none) {
 	return initializer;
 }
 
-global seq = sequence from deemon;
-global attr = util_attr;
+final global seq = sequence from deemon;
+final global attr = util_attr;

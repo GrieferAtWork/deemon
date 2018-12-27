@@ -22,4 +22,6 @@
 
 /* `switch' can't be used in expressions anymore... */
 //#define _Generic(x,...) (switch (type(x)) { __VA_ARGS__ })
-import void, sizeof from ctypes;
+#pragma push_macro(undef,"from","ctypes","import")
+from ctypes import void = "void", sizeof = "sizeof";
+#pragma pop_macro("from","ctypes","import")

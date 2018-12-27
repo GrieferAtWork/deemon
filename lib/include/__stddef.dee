@@ -196,7 +196,7 @@ local function __ctypes_new(tp) {
 /* Import some of the symbols that old code assumes to be visible. */
 from deemon import
 	bool, string, tuple, list, int,
-	float, object, dict, set = hashset
+	float, object, dict, set = "hashset"
 ;
 
 /* Import some C-types.

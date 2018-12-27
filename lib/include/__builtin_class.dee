@@ -19,14 +19,12 @@
 #pragma once
 #include "__stddef.dee"
 
+#pragma push_macro(undef,"from","import","return","rt","makeclass","ClassDescriptor","name")
 function __builtin_class(__base = object from deemon,
                          __name = "",
                          __uuid_str = none) {
-	__stack local __res;
-	__asm__(
-		"push class $0, b:pop, n:pop"
-		: "=s" (__res)
-		: "s" (__base)
-		, "s" (__name));
-	return __res;
+	import rt;
+	return rt.makeclass(__base,rt.ClassDescriptor(name: __name));
 }
+#pragma pop_macro("from","import","return","rt","makeclass","ClassDescriptor","name")
+
