@@ -65,6 +65,13 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
  }
  return NULL;
 }
+#endif /* !__USE_GNU */
+
+/* linux's memmem() doesn't do what we need it to do. - We
+ * need it to return `NULL' when `needle_length' is 0
+ * Additionally, there has never been a point where
+ * it was working entirely flawless. */
+#if !defined(__USE_KOS) || !defined(__USE_GNU)
 #define memmem  dee_memmem
 LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
                        void const *__restrict needle, size_t needle_length) {
@@ -81,7 +88,7 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
  }
  return NULL;
 }
-#endif /* !__USE_GNU */
+#endif /* !__KOS__ || !__USE_GNU */
 
 #ifndef __USE_KOS
 #define memmoveb(dst,src,n) memmove(dst,src,(n)*1)

@@ -18,7 +18,8 @@
  */
 #ifndef GUARD_DEX_XML_XML_C
 #define GUARD_DEX_XML_XML_C 1
-#define CONFIG_BUILDING_LIBXML
+#define CONFIG_BUILDING_LIBXML 1
+#define _KOS_SOURCE 1
 #define _GNU_SOURCE 1
 
 #include "libxml.h"
@@ -30,23 +31,28 @@
 
 DECL_BEGIN
 
-#ifndef __USE_GNU
+/* linux's memmem() doesn't do what we need it to do. - We
+ * need it to return `NULL' when `needle_length' is 0
+ * Additionally, there has never been a point where
+ * it was working entirely flawless. */
+#if !defined(__USE_KOS) || !defined(__USE_GNU)
 #define memmem  dee_memmem
-LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_len,
-                       void const *__restrict needle, size_t needle_len) {
- void const *candidate; uint8_t marker;
- if unlikely(!needle_len || needle_len > haystack_len)
+LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
+                       void const *__restrict needle, size_t needle_length) {
+ uint8_t *candidate; uint8_t marker;
+ if unlikely(!needle_length || needle_length > haystack_length)
     return NULL;
- haystack_len -= (needle_len - 1),marker = *(uint8_t *)needle;
- while ((candidate = memchr(haystack,marker,haystack_len)) != NULL) {
-  if (memcmp(candidate,needle,needle_len) == 0)
+ haystack_length -= (needle_length - 1),marker = *(uint8_t *)needle;
+ while ((candidate = (uint8_t *)memchr(haystack,marker,haystack_length)) != NULL) {
+  if (memcmp(candidate,needle,needle_length) == 0)
       return (void *)candidate;
-  haystack_len = ((uintptr_t)haystack+haystack_len)-((uintptr_t)candidate+1);
-  haystack     = (void const *)((uintptr_t)candidate+1);
+  ++candidate;
+  haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
+  haystack        = (void const *)candidate;
  }
  return NULL;
 }
-#endif /* !__USE_GNU */
+#endif /* !__KOS__ || !__USE_GNU */
 
 
 INTERN void DCALL
