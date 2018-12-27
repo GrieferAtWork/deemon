@@ -5710,7 +5710,8 @@ PRIVATE size_t TPPCALL fuzzy_match(char const *__restrict a,
 PRIVATE size_t TPPCALL
 fuzzy_match(char const *__restrict a, size_t alen,
             char const *__restrict b, size_t blen) {
- size_t *v0,*v1,i,j,cost,temp; bool isheap;
+ size_t *v0,*v1,i,j,cost,temp;
+ int isheap;
  if unlikely(!alen) return blen;
  if unlikely(!blen) return alen;
  if (blen > (128+1)*sizeof(size_t)) {
@@ -5718,12 +5719,12 @@ fuzzy_match(char const *__restrict a, size_t alen,
   if unlikely(!v0) goto allocate_stack;
   v1 = (size_t *)malloc((blen+1)*sizeof(size_t));
   if unlikely(!v1) { free(v0); goto allocate_stack; }
-  isheap = true;
+  isheap = 1;
  } else {
 allocate_stack:
   v0 = (size_t *)alloca((blen+1)*sizeof(size_t));
   v1 = (size_t *)alloca((blen+1)*sizeof(size_t));
-  isheap = false;
+  isheap = 0;
  }
  for (i = 0; i < blen; ++i) v0[i] = i;
  for (i = 0; i < alen; ++i) {
@@ -6958,7 +6959,7 @@ parse_multichar:
    do {
     char *lf_start = ++forward;
     if (SKIP_WRAPLF(forward,end)) {
-     bool intended = false;
+     int intended = 0;
      for (;;) {
       while (SKIP_WRAPLF(forward,end));
       if (!tpp_isspace(*forward)) break;
@@ -6975,7 +6976,7 @@ parse_multichar:
       ++forward;
       while (SKIP_WRAPLF(forward,end));
       if (forward[0] == '/')
-          intended = true;
+          intended = 1;
      }
      if (!intended && unlikely(!WARN(W_LINE_COMMENT_CONTINUED,lf_start)))
           goto err;
@@ -11860,7 +11861,7 @@ PRIVATE int TPPCALL parse_pragma_once(void) {
  return 1;
 }
 
-PRIVATE int TPPCALL parse_pragma_pushpop_macro(bool is_push_macro) {
+PRIVATE int TPPCALL parse_pragma_pushpop_macro(int is_push_macro) {
  /* push/pop a macro definition. */
  struct TPPKeyword *keyword;
  struct TPPConst const_val;
@@ -12566,9 +12567,9 @@ TPPLexer_ParseBuiltinPragma(void) {
  if (IS_KEYWORD("tpp_exec"))
      return parse_pragma_tpp_exec();
  if (IS_KEYWORD("push_macro"))
-     return parse_pragma_pushpop_macro(true);
+     return parse_pragma_pushpop_macro(1);
  if (IS_KEYWORD("pop_macro"))
-     return parse_pragma_pushpop_macro(false);
+     return parse_pragma_pushpop_macro(0);
  if (IS_KEYWORD("message"))
      return parse_pragma_message();
  if (IS_KEYWORD("deprecated"))
