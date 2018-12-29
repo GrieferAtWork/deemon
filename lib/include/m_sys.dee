@@ -17,8 +17,11 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-final global exit = (Error from deemon).AppExit.exit;
-final function _exit(exitcode = 1) -> exit(exitcode,false);
+import * from deemon;
+import rt;
+
+final global exit = Error.AppExit.exit;
+final function _exit(exitcode: int = 1) -> exit(exitcode,false);
 final function fatal() -> exit(1,false);
-final global atexit = (Error from deemon).AppExit.atexit;
-final global argv = [...];
+final global atexit = Error.AppExit.atexit;
+final global argv = rt.argv;
