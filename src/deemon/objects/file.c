@@ -1499,6 +1499,24 @@ PRIVATE struct type_getset file_class_getsets[] = {
     { NULL }
 };
 
+
+#if SEEK_SET == 0
+#define file_SEEK_SET DeeInt_Zero
+#else
+PRIVATE DEFINE_UINT32(file_SEEK_SET,SEEK_SET);
+#endif
+#if SEEK_CUR == 1
+#define file_SEEK_CUR DeeInt_One
+#else
+PRIVATE DEFINE_UINT32(file_SEEK_CUR,SEEK_CUR);
+#endif
+#if SEEK_END <= ((1 << 15)-1)
+PRIVATE DEFINE_UINT15(file_SEEK_END,SEEK_END);
+#else
+PRIVATE DEFINE_UINT32(file_SEEK_END,SEEK_END);
+#endif
+
+
 PRIVATE struct type_member file_class_members[] = {
     TYPE_MEMBER_CONST("iterator",(DeeObject *)&DeeFile_Type),
     TYPE_MEMBER_CONST("reader",(DeeObject *)&DeeFileReader_Type),
@@ -1512,6 +1530,9 @@ PRIVATE struct type_member file_class_members[] = {
                           "under ${file.stdxxx} and the ${file.io} type has been "
                           "renamed to #system\n"
                           "With that in mind, this field is now simply an alias for :file"),
+    TYPE_MEMBER_CONST_DOC("SEEK_SET",(DeeObject *)&file_SEEK_SET,"Deprecated argument for #seek\nInstead, pass it the string $\"set\""),
+    TYPE_MEMBER_CONST_DOC("SEEK_CUR",(DeeObject *)&file_SEEK_CUR,"Deprecated argument for #seek\nInstead, pass it the string $\"cur\""),
+    TYPE_MEMBER_CONST_DOC("SEEK_END",(DeeObject *)&file_SEEK_END,"Deprecated argument for #seek\nInstead, pass it the string $\"end\""),
     TYPE_MEMBER_END
 };
 
