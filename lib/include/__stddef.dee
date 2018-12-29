@@ -208,7 +208,7 @@ from ctypes import
 	int8 = int8_t, int16 = int16_t, int32 = int32_t, int64 = int64_t,
 	uint8 = uint8_t, uint16 = uint16_t, uint32 = uint32_t, uint64 = uint64_t,
 	_Bool = bool, signed = int, unsigned = uint, char = char, short = short,
-	long = long, double = double, int8_t = int8_t, int16_t = int16_t,
+	/*long = long,*/ double = double, int8_t = int8_t, int16_t = int16_t,
 	int32_t = int32_t, int64_t = int64_t, uint8_t = uint8_t, uint16_t = uint16_t,
 	uint32_t = uint32_t, uint64_t = uint64_t, char16_t = char16_t, char32_t = char32_t,
 	__signed = int, __signed__ = int, __unsigned = uint, __unsigned__ = uint

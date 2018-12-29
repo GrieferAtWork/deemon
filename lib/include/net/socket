@@ -19,4 +19,6 @@
 #pragma once
 #include <__stddef.dee>
 
-import net;
+#pragma push_macro(undef,"import")
+import net = "net";
+#pragma pop_macro("import")

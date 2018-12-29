@@ -16,10 +16,36 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#pragma once
-#include "__stddef.dee"
 
-#pragma push_macro(undef,"from","random","import")
-from random import
-#pragma pop_macro("from","random","import")
-	random = "Random";
+import * from deemon;
+import ctypes;
+
+/* Signed names */
+global final ShortInt = ctypes.int8_t;
+global final SmallInt = ctypes.int16_t;
+global final Integer = ctypes.int32_t;
+global final Int = ctypes.int32_t;
+global final LongInt = ctypes.int32_t;
+global final Int64 = ctypes.int64_t;
+
+/* UnSigned names (Ugh! that casing...) */
+global final Boolean = bool;
+global final Byte = ctypes.uint8_t;
+global final Word = ctypes.uint16_t;
+global final LongWord = ctypes.uint32_t;
+
+/* Floating names */
+global final Single = ctypes.float;
+
+global final signedNumbers   = pack ctypes.int8_t,ctypes.int16_t,ctypes.int32_t,ctypes.int64_t;
+global final unSignedNumbers = pack ctypes.uint8_t,ctypes.uint16_t,ctypes.uint32_t,ctypes.uint64_t;
+global final floatingNumbers = pack ctypes.float,ctypes.double,ctypes.ldouble;
+
+/* OMG! The f#$%ing casing! Who the hell designed this $hit?
+ * ... oh right: me */
+global final function   isSignedNum(a: object): bool -> type a in   signedNumbers;
+global final function isUnSignedNum(a: object): bool -> type a in unSignedNumbers;
+global final function isFloatingNum(a: object): bool -> type a in floatingNumbers;
+
+
+

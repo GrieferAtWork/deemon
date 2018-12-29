@@ -22,4 +22,6 @@
 #undef __NET_ENDIAN__
 #define __NET_ENDIAN__ 4321
 
-import net;
+#pragma push_macro(undef,"import")
+import net = "net";
+#pragma pop_macro("import")

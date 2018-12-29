@@ -16,10 +16,51 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#pragma once
-#include "__stddef.dee"
 
-#pragma push_macro(undef,"from","random","import")
-from random import
-#pragma pop_macro("from","random","import")
-	random = "Random";
+import * from deemon;
+import * from errors;
+
+@@Usage:
+@@>#include <tr1/unique_iterator>
+@@>local list elem = { 10,20,20,30,30,40,50,11,12,12,20,12,70 };
+@@>/* Skip equivalent consecutive entries in any given iterator
+@@> * This will print '10 20 30 40 50 11 12 20 12 70' */
+@@>print tr1::unique_iterator(elem.operator __iterself__())...;
+class unique_iterator: iterator {
+	public member __iter__: iterator;
+	this(iter: iterator)
+		: __iter__(iter)
+	{ }
+
+	@@have the iterator double as an iterable
+	operator iter(): iterator -> copy this;
+
+	private member m_first;
+	private member m_second;
+
+	operator next() {
+		local result;
+		if (m_first !is bound)
+			m_first = __iter__.operator next();
+		while (true) {
+			try {
+				m_second = __iter__.operator next();
+			} catch (StopIteration) {
+				result = m_first;
+				del m_first;
+				return result;
+			}
+			if (m_first != m_second)
+				break;
+			m_first = m_second;
+		}
+		result = m_first;
+		m_first = m_second;
+		return result;
+	}
+}
+
+
+import .m_tr1_geometry;
+global geometry = m_tr1_geometry;
+

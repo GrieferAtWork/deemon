@@ -19,7 +19,8 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","random","import")
-from random import
-#pragma pop_macro("from","random","import")
-	random = "Random";
+#pragma push_macro(undef,"from","import")
+from "rt" import
+	__builtin_get_stacklimit = "getstacklimit",
+	__builtin_set_stacklimit = "setstacklimit";
+#pragma pop_macro("from","import")

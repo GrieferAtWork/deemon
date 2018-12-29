@@ -17,9 +17,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #pragma once
-#include "__stddef.dee"
+#include "__gc_default.dee"
 
-#pragma push_macro(undef,"from","random","import")
-from random import
-#pragma pop_macro("from","random","import")
-	random = "Random";
+#pragma push_macro(undef,"import")
+import types = ".m_gcode_types";
+#pragma pop_macro("import")

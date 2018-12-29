@@ -1,0 +1,284 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import * from math;
+import * from util;
+
+global class point {
+	public member x: numeric;
+	public member y: numeric;
+
+	this(x: numeric, y: numeric) {
+		this.x = x;
+		this.y = y;
+	}
+
+	copy(other: point) {
+		x = other.x;
+		y = other.y;
+	}
+	operator = (other: point) {
+		x = other.x;
+		y = other.y;
+	}
+
+	/* `x || y' would have made more sense, but
+	 * this is only for backwards compatibility */
+	operator bool(): bool {
+		return x && y;
+	}
+
+	operator str(): string {
+		return "({},{})".format({ x,y });
+	}
+	operator repr(): string {
+		return "point({!r},{!r})".format({ x,y });
+	}
+
+	operator + (other: point) -> point(x + other.x, y + other.y);
+	operator - (other: point) -> point(x - other.x, y - other.y);
+	operator * (other: numeric) -> point(x * other, y * other);
+	operator / (other: numeric) -> point(x / other, y / other);
+	operator += (other: point) { x += other.x; y += other.y; return this; }
+	operator -= (other: point) { x -= other.x; y -= other.y; return this; }
+	operator *= (other: numeric) { x *= other; y *= other; return this; }
+	operator /= (other: numeric) { x /= other; y /= other; return this; }
+
+	function distance(to: point): float -> sqrt(distance_sqr(to));
+	function distance_sqr(to: point): float -> sqr(to.x - x) + sqr(to.y - y);
+	function project(angle: float, distance: float): point {
+		local s,c = sincos(angle)...;
+		return point(x + s * distance,y + c * distance);
+	}
+	function bearing(to: point): float -> atan2(to.x - x, to.y - y);
+}
+
+global class rect {
+
+	public member xmin: numeric;
+	public member ymin: numeric;
+	public member xmax: numeric;
+	public member ymax: numeric;
+
+	@"()"
+	@"(min:?Gpoint,max:?Gpoint)"
+	@"(xmin:?Dnumeric,xmax:?Dnumeric,ymin:?Dnumeric,ymax:?Dnumeric)"
+	this(args...) {
+		switch (#args) {
+		case 0:
+			xmin = none;
+			xmax = none;
+			ymin = none;
+			ymax = none;
+			break;
+		case 2: {
+			local min = args[0];
+			local max = args[1];
+			xmin = min.x;
+			ymin = min.y;
+			xmax = max.x;
+			ymax = max.y;
+		}	break;
+		case 4:
+			xmin = args[0];
+#if 1 /* True deemon 101+ has the order (xmin,xmax,ymin,ymax).
+       * However, since everything (including other functions within this file)
+       * assumed the argument order (xmin,ymin,xmax,ymax), we fix that here,
+       * even though it was broken in the original */
+			ymin = args[1];
+			xmax = args[2];
+#else
+			xmax = args[1];
+			ymin = args[2];
+#endif
+			ymax = args[3];
+			break;
+		default:
+			throw TypeError(
+				"rect() expected 0, 2 or 4 arguments when {} were given"
+				.format({ #args }));
+		}
+	}
+
+	copy(other: rect) {
+		xmin = other.xmin;
+		ymin = other.ymin;
+		xmax = other.xmax;
+		ymax = other.ymax;
+	}
+
+	operator = (other: rect) {
+		xmin = other.xmin;
+		xmax = other.xmax;
+		ymin = other.ymin;
+		ymax = other.ymax;
+	}
+
+	property sizex: numeric = {
+		get(): numeric {
+			return abs(xmax - xmin);
+		}
+		set(x: numeric) {
+			xmax = xmin + x;
+		}
+	}
+	property sizey: numeric = {
+		get(): numeric {
+			return abs(ymax - ymin);
+		}
+		set(y: numeric) {
+			ymax = ymin + y;
+		}
+	}
+	property size: point = {
+		get(): point {
+			return point(sizex,sizey);
+		}
+		set(size: point) {
+			sizex = size.x;
+			sizey = size.y;
+		}
+	}
+	property min: point = {
+		get(): point {
+			return point(xmin,ymin);
+		}
+		set(min: point) {
+			xmin = min.x;
+			ymin = min.y;
+		}
+	}
+	property max: point = {
+		get(): point {
+			return point(xmax,ymax);
+		}
+		set(max: point) {
+			xmax = max.x;
+			ymax = max.y;
+		}
+	}
+
+	operator bool(): bool {
+		return xmax != xmin && ymax != ymin;
+	}
+
+	operator str(): string {
+		return "(({},{}),({},{}))".format({ xmin,ymin,xmax,ymax });
+	}
+	operator repr(): string {
+		return "rect(point({!r},{}),point({!r},{!r}))".format({ xmin,ymin,xmax,ymax });
+	}
+	operator + (other: rect | point): rect {
+		if (other is rect) {
+			return rect(xmin + other.xmin,ymin + other.ymin,
+			            xmax + other.xmax,ymax + other.ymax);
+		}
+		return rect(xmin + other.x,ymin + other.y,
+		            xmax + other.x,ymax + other.y);
+	}
+	operator - (other: rect | point): rect {
+		if (other is rect) {
+			return rect(xmin - other.xmin,ymin - other.ymin,
+			            xmax - other.xmax,ymax - other.ymax);
+		}
+		return rect(xmin - other.x,ymin - other.y,
+		            xmax - other.x,ymax - other.y);
+	}
+	operator += (other: rect | point): rect {
+		if (other is rect) {
+			xmin += other.xmin;
+			ymin += other.ymin;
+			xmax += other.xmax;
+			ymax += other.ymax;
+		} else {
+			local x = other.x;
+			local y = other.y;
+			xmin += x;
+			ymin += y;
+			xmax += x;
+			ymax += y;
+		}
+		return this;
+	}
+	operator -= (other: rect | point): rect {
+		if (other is rect) {
+			xmin -= other.xmin;
+			ymin -= other.ymin;
+			xmax -= other.xmax;
+			ymax -= other.ymax;
+		} else {
+			local x = other.x;
+			local y = other.y;
+			xmin -= x;
+			ymin -= y;
+			xmax -= x;
+			ymax -= y;
+		}
+		return this;
+	}
+
+	operator * (other: point): rect {
+		return rect(xmin * other.x,ymin * other.y,
+		            xmax * other.x,ymax * other.y);
+	}
+	operator / (other: point): rect {
+		return rect(xmin / other.x,ymin / other.y,
+		            xmax / other.x,ymax / other.y);
+	}
+	operator *= (other: point): rect {
+		local x = other.x;
+		local y = other.y;
+		xmin *= x;
+		ymin *= y;
+		xmax *= x;
+		ymax *= y;
+		return this;
+	}
+	operator /= (other: point): rect {
+		local x = other.x;
+		local y = other.y;
+		xmin /= x;
+		ymin /= y;
+		xmax /= x;
+		ymax /= y;
+		return this;
+	}
+
+	operator contains(other: rect | point): bool {
+		if (other is rect) {
+			return other.xmin >= xmin && other.xmax < xmax &&
+			       other.ymin >= ymin && other.ymax < ymax;
+		}
+		local x = other.x;
+		local y = other.y;
+		return x >= xmin && x < xmax &&
+		       y >= ymin && y < ymax;
+	}
+
+}
+
+
+
+
+
+
+
+

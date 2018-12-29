@@ -17,9 +17,13 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #pragma once
-#include "__stddef.dee"
+#include "../__stddef.dee"
+#include "../error"
 
-#pragma push_macro(undef,"from","random","import")
-from random import
-#pragma pop_macro("from","random","import")
-	random = "Random";
+#ifndef __tr1_defined
+#define __tr1_defined 1
+#pragma push_macro(undef,"import")
+import tr1 = ".m_tr1";
+#pragma pop_macro("import")
+#endif /* !__tr1_defined */
+
