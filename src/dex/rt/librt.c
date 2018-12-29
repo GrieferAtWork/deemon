@@ -1357,6 +1357,35 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReSplit,librt_get_ReSplit_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ReSplitIterator,librt_get_ReSplitIterator_f);
 
 
+
+PRIVATE DREF DeeObject *DCALL
+librt_argv_get_f(size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":argv.getter"))
+     goto err;
+ return Dee_GetArgv();
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+librt_argv_set_f(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *new_tuple;
+ if (DeeArg_Unpack(argc,argv,"o:argv.setter",&new_tuple))
+     goto err;
+ if (DeeObject_AssertTypeExact(new_tuple,&DeeTuple_Type))
+     goto err;
+ Dee_SetArgv(new_tuple);
+ return_none;
+err:
+ return NULL;
+}
+
+PRIVATE DEFINE_CMETHOD(librt_argv_get,librt_argv_get_f);
+PRIVATE DEFINE_CMETHOD(librt_argv_set,librt_argv_set_f);
+
+
+
+
+
 /* NOTE: At first glance, the combination of `MODSYM_FPROPERTY|MODSYM_FCONSTEXPR' may
  *       not look like it would make sense, but by using this combination, we prevent
  *       the symbols to be considered properties during enumeration (`ATTR_PROPERTY'
@@ -1399,6 +1428,21 @@ PRIVATE struct dex_symbol symbols[] = {
     { "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
       DOC("(base:?X2?Dtype?N,descriptor:?#ClassDescriptor)->?Dtype\n"
           "Construct a new class from a given @base type, as well as class @descriptor") },
+
+    /* Access of the arguments passed to the __MAIN__ module. */
+    { "argv", (DeeObject *)&librt_argv_get, MODSYM_FPROPERTY,
+      DOC("->?Dtuple\n"
+          "The arguments that are passed to the __MAIN__ user-code "
+          "module, where they are available as ${[...]}\n"
+          "Since because of this these arguments aren't accessible from any other "
+          "module if not explicitly passed by the __MAIN__ module itself (similar "
+          "to how you'd have to forward `argc' + `argv' in C), this rt-specific "
+          "extension property allows you to get and set that tuple of arguments.\n"
+          "Note however that setting a new argument tuple will not change the tuple "
+          "which the __MAIN__ module has access to") },
+    { NULL, NULL, MODSYM_FNORMAL },
+    { NULL, (DeeObject *)&librt_argv_set, MODSYM_FNORMAL },
+
 
     /* Internal types used to drive sequence proxies */
     { "SeqCombinations", (DeeObject *)&librt_get_SeqCombinations, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* SeqCombinations_Type */
