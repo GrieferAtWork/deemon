@@ -1,0 +1,59 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+
+local caught_errors = [];
+try {
+	try {
+		/* Throw an error */
+		throw "Error!";
+	} catch (string as e) {
+		assert e == "Error!";
+		/* This handler should get executed */
+		caught_errors.append(e);
+		/* Throwing another exception won't invoke
+		 * another handler from the list of handlers
+		 * associated with this try-block */
+		throw 42;
+	} catch (...) {
+		/* aka. This shouldn't get executed! */
+		assert false;
+	}
+	/* We shouldn't get here either... (sanity check) */
+	assert false;
+} catch (e...) {
+	if (e is AssertionError)
+		throw; /* forward assertion errors */
+	/* This is where the 'throw 42;' should jump to
+	 * >> Make sure it's the right error and add it to the list of caught ones */
+	assert e is int;
+	assert e == 42;
+	caught_errors.append(e);
+}
+
+/* Make sure all the right errors were caught in the right order */
+assert caught_errors == ["Error!",42];
+
+
+
+
