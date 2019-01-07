@@ -192,12 +192,13 @@ PUBLIC int DCALL DeeFile_Getc(DeeObject *__restrict self) {
     result = (*((DeeFileTypeObject *)tp_self)->ft_getc)((DeeFileObject *)self,
                                                          DEE_FILEIO_FNORMAL);
    } else if (((DeeFileTypeObject *)tp_self)->ft_read) {
-    char value; dssize_t error;
+    unsigned char value; dssize_t error;
     error = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self,
-                                                       &value,sizeof(char),
+                                                       &value,sizeof(unsigned char),
                                                         DEE_FILEIO_FNORMAL);
     /* */if (error < 0) result = GETC_ERR;
-    else if ((size_t)error >= sizeof(char)) result = (int)value;
+    else if ((size_t)error >= sizeof(char))
+        result = (int)(unsigned int)value;
     else result = GETC_EOF;
    } else break;
    return result;

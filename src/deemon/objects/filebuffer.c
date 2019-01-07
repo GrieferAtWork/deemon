@@ -878,7 +878,7 @@ again:
  if (self->fb_cnt) {
 read_from_buffer:
   /* Simple case: we can read from the active buffer. */
-  result = (int)(char)*self->fb_ptr++;
+  result = (int)(unsigned int)(unsigned char)*self->fb_ptr++;
   --self->fb_cnt;
   goto done;
  }
@@ -1001,7 +1001,7 @@ read_through:
  else {
   self->fb_cnt = read_size-1;
   self->fb_ptr = self->fb_base+1;
-  result = (int)(char)*self->fb_base;
+  result = (int)(unsigned int)(unsigned char)*self->fb_base;
  }
 done:
  return result;
@@ -1054,7 +1054,7 @@ again:
  ASSERT(self->fb_ptr != self->fb_base);
  /* Finally, insert the character into the buffer. */
 unget_in_buffer:
- *--self->fb_ptr = (uint8_t)(char)ch;
+ *--self->fb_ptr = (uint8_t)(unsigned char)(unsigned int)ch;
  ++self->fb_cnt;
  return 0;
 eof: return GETC_EOF;

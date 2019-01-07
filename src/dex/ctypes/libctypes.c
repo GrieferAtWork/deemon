@@ -505,6 +505,8 @@ PRIVATE struct dex_symbol symbols[] = {
     { "llong", (DeeObject *)&DeeCLLong_Type },
     { "ullong", (DeeObject *)&DeeCULLong_Type },
 
+    /* TODO: Support for atomics */
+
     /* Other, platform-specific C-types. */
     { "size_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_SIZE_T__) },
     { "ssize_t", (DeeObject *)&CINT_SIZED(__SIZEOF_SIZE_T__) },
