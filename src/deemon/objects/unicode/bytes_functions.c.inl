@@ -2614,7 +2614,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 bytes_unifylines(Bytes *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
- DeeObject *replace_ob; Needle replace;
+ DeeObject *replace_ob = NULL; Needle replace;
  if (DeeArg_Unpack(argc,argv,"|o:unifylines",&replace_ob))
      goto err;
  if (replace_ob) {
@@ -3836,7 +3836,8 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(start=!0,end=!-1)->?.\n"
           "Similar to ${this[start:end]}, and semantically equialent to :string.substr\n"
           "This function can be used to view a sub-set of bytes from @this bytes object\n"
-          "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object") },
+          "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object"),
+      TYPE_METHOD_FKWDS },
     { "strip", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
       DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all leading and trailing whitespace-characters, or "
