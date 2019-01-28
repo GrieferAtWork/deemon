@@ -3425,7 +3425,7 @@ fs_rename(DeeObject *__restrict existing_path,
      goto err;
 again_movefile:
  error = nt_MoveFile(existing_path,new_path);
- if likely(error <= 0) goto err_nt;
+ if (error > 0) goto err_nt;
  return error;
 err_nt:
  DBG_ALIGNMENT_DISABLE();
