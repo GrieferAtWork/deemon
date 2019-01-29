@@ -166,7 +166,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeObject **_
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetLastError,libwin32_SetLastError_f);
 #ifndef LIBWIN32_KWDS_DWERRCODE_DEFINED
 #define LIBWIN32_KWDS_DWERRCODE_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_dwErrCode,{ K(dwErrCode) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_dwErrCode,{ K(dwErrCode), KEND });
 #endif /* !LIBWIN32_KWDS_DWERRCODE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	DWORD dwErrCode;
@@ -191,7 +191,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObject **__
 PRIVATE DEFINE_KWCMETHOD(libwin32_CloseHandle,libwin32_CloseHandle_f);
 #ifndef LIBWIN32_KWDS_HOBJECT_DEFINED
 #define LIBWIN32_KWDS_HOBJECT_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hObject,{ K(hObject) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hObject,{ K(hObject), KEND });
 #endif /* !LIBWIN32_KWDS_HOBJECT_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hObject;
@@ -223,7 +223,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(libwin32_DuplicateHandle,libwin32_DuplicateHandle_f);
 #ifndef LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED
 #define LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions,{ K(hSourceProcessHandle), K(hSourceHandle), K(hTargetProcessHandle), K(dwDesiredAccess), K(bInheritHandle), K(dwOptions) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions,{ K(hSourceProcessHandle), K(hSourceHandle), K(hTargetProcessHandle), K(dwDesiredAccess), K(bInheritHandle), K(dwOptions), KEND });
 #endif /* !LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hSourceProcessHandle;
@@ -287,7 +287,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObject **__r
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFile,libwin32_CreateFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile,{ K(lpFileName), K(dwDesiredAccess), K(dwShareMode), K(lpSecurityAttributes), K(dwCreationDisposition), K(dwFlagsAndAttributes), K(hTemplateFile) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile,{ K(lpFileName), K(dwDesiredAccess), K(dwShareMode), K(lpSecurityAttributes), K(dwCreationDisposition), K(dwFlagsAndAttributes), K(hTemplateFile), KEND });
 #endif /* !LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	LPCWSTR lpFileName_str;
@@ -356,7 +356,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObject **__re
 PRIVATE DEFINE_KWCMETHOD(libwin32_WriteFile,libwin32_WriteFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpBuffer_lpOverlapped,{ K(hFile), K(lpBuffer), K(lpOverlapped) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpBuffer_lpOverlapped,{ K(hFile), K(lpBuffer), K(lpOverlapped), KEND });
 #endif /* !LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hFile;
@@ -418,7 +418,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject **__res
 PRIVATE DEFINE_KWCMETHOD(libwin32_ReadFile,libwin32_ReadFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpBuffer_lpOverlapped,{ K(hFile), K(lpBuffer), K(lpOverlapped) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpBuffer_lpOverlapped,{ K(hFile), K(lpBuffer), K(lpOverlapped), KEND });
 #endif /* !LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hFile;
@@ -474,7 +474,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_CreateDirectory_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateDirectory,libwin32_CreateDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName_lpSecurityAttributes,{ K(lpPathName), K(lpSecurityAttributes) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName_lpSecurityAttributes,{ K(lpPathName), K(lpSecurityAttributes), KEND });
 #endif /* !LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_CreateDirectory_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	LPCWSTR lpPathName_str;
@@ -519,7 +519,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_RemoveDirectory_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(libwin32_RemoveDirectory,libwin32_RemoveDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName,{ K(lpPathName) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName,{ K(lpPathName), KEND });
 #endif /* !LIBWIN32_KWDS_LPPATHNAME_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_RemoveDirectory_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	LPCWSTR lpPathName_str;
@@ -562,7 +562,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_DeleteFile_f(size_t argc, DeeObject **__r
 PRIVATE DEFINE_KWCMETHOD(libwin32_DeleteFile,libwin32_DeleteFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName,{ K(lpFileName) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName,{ K(lpFileName), KEND });
 #endif /* !LIBWIN32_KWDS_LPFILENAME_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_DeleteFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	LPCWSTR lpFileName_str;
@@ -605,7 +605,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeObject **_
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetEndOfFile,libwin32_SetEndOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile,{ K(hFile) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile,{ K(hFile), KEND });
 #endif /* !LIBWIN32_KWDS_HFILE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hFile;
@@ -642,7 +642,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc, DeeObje
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributesW,libwin32_SetFileAttributesW_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwFileAttributes,{ K(lpFileName), K(dwFileAttributes) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwFileAttributes,{ K(lpFileName), K(dwFileAttributes), KEND });
 #endif /* !LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	LPCWSTR lpFileName_str;
@@ -687,7 +687,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFilePointer,libwin32_SetFilePointer_f);
 #ifndef LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED
 #define LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod,{ K(hFile), K(lDistanceToMove), K(dwMoveMethod) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod,{ K(hFile), K(lDistanceToMove), K(dwMoveMethod), KEND });
 #endif /* !LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hFile;
@@ -747,7 +747,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObject **__
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileTime,libwin32_SetFileTime_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpCreationTime_lpLastAccessTime_lpLastWriteTime,{ K(hFile), K(lpCreationTime), K(lpLastAccessTime), K(lpLastWriteTime) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpCreationTime_lpLastAccessTime_lpLastWriteTime,{ K(hFile), K(lpCreationTime), K(lpLastAccessTime), K(lpLastWriteTime), KEND });
 #endif /* !LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hFile;
@@ -801,7 +801,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, DeeObject
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileValidData,libwin32_SetFileValidData_f);
 #ifndef LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED
 #define LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_ValidDataLength,{ K(hFile), K(ValidDataLength) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_ValidDataLength,{ K(hFile), K(ValidDataLength), KEND });
 #endif /* !LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hFile;
@@ -889,7 +889,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f(size_t argc, DeeObject
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpace,libwin32_GetDiskFreeSpace_f);
 #ifndef LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpRootPathName,{ K(lpRootPathName) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpRootPathName,{ K(lpRootPathName), KEND });
 #endif /* !LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	LPCWSTR lpRootPathName_str;
@@ -949,7 +949,7 @@ PRIVATE DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, DeeObjec
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileName,libwin32_GetModuleFileName_f);
 #ifndef LIBWIN32_KWDS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HMODULE_DEFINED 1
-PRIVATE DEFINE_KWLIST(libwin32_kwds_hModule,{ K(hModule) });
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hModule,{ K(hModule), KEND });
 #endif /* !LIBWIN32_KWDS_HMODULE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	HANDLE hModule;

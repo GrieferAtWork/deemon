@@ -26,6 +26,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/format.h>
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/thread.h>
 #include <deemon/error.h>

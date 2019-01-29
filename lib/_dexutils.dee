@@ -222,7 +222,7 @@ function gii(name: string, value: string = none, libname: string = none, visi: s
 @@>PRIVATE DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 @@>#define LIBFOO_BAR_DEF(doc) { "bar", (DeeObject *)&libfoo_bar, MODSYM_FNORMAL, DOC("(arg1:?Dstring,arg2,arg3?,arg4:?Dbool=!t)\n" doc)}
 @@>PRIVATE DEFINE_KWCMETHOD(libfoo_bar,libfoo_bar_f);
-@@>PRIVATE DEFINE_KWLIST(libfoo_bar_kwds,{ K(arg1), K(arg2), K(arg3), K(arg4) });
+@@>PRIVATE DEFINE_KWLIST(libfoo_bar_kwds,{ K(arg1), K(arg2), K(arg3), K(arg4), KEND });
 @@>PRIVATE DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 @@>	DeeStringObject *arg1;
 @@>	DeeObject *arg2;
@@ -386,11 +386,10 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		local kwlist_def_name = "{}_DEFINED".format({ kwlist_name.upper() });
 		print "#ifndef",kwlist_def_name;
 		print "#define",kwlist_def_name,"1";
-		print visi,"DEFINE_KWLIST({},{{".format({ kwlist_name }),
-			", ".join(
-				for (local x,y,z: arg_data)
-					"K({})".format({ x })),
-			"});";
+		print visi,"DEFINE_KWLIST({},{{ ".format({ kwlist_name }),;
+		for (local x,y,z: arg_data)
+			print "K({}), ".format({ x }),;
+		print "KEND });";
 		print "#endif /* !"+kwlist_def_name,"*/";
 		print visi,"DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {{".format({ libname, name });
 	} else {

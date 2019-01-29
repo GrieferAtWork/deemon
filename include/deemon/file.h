@@ -309,9 +309,9 @@ DFUNDEF DREF /*String*/DeeObject *DCALL DeeFile_Filename(DeeObject *__restrict s
  *                  actually returns ZERO(0), rather than stopping one it returns
  *                  something other than the then effective read buffer size.
  * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
-DFUNDEF DREF DeeObject *DCALL DeeFile_ReadLine(DeeObject *__restrict self, size_t max_length, bool keep_lf);
-DFUNDEF DREF DeeObject *DCALL DeeFile_ReadText(DeeObject *__restrict self, size_t max_length, bool readall);
-DFUNDEF DREF DeeObject *DCALL DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, dpos_t pos, bool readall);
+DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_ReadLine(DeeObject *__restrict self, size_t max_length, bool keep_lf);
+DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_ReadText(DeeObject *__restrict self, size_t max_length, bool readall);
+DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, dpos_t pos, bool readall);
 
 
 /* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll,self,format,...)' */
