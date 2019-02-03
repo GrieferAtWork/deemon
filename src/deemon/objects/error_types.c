@@ -469,7 +469,7 @@ INIT_CUSTOM_ERROR("ThreadCrash",NULL,TP_FNORMAL|TP_FINHERITCTOR,&DeeError_Error,
 
 /* BEGIN::NoMemory */
 PRIVATE struct type_member nomemory_members[] = {
-    TYPE_MEMBER_FIELD("bytes",STRUCT_SIZE_T,offsetof(DeeNoMemoryErrorObject,nm_allocsize)),
+    TYPE_MEMBER_FIELD("size",STRUCT_SIZE_T,offsetof(DeeNoMemoryErrorObject,nm_allocsize)),
     TYPE_MEMBER_END
 };
 PRIVATE int DCALL

@@ -63,9 +63,10 @@ struct class_maker {
     uint16_t                   cm_null_member; /* The address of a class member that is always unbound (used for
                                                 * deleted operator), or `(uint16_t)-1' when no such address has
                                                 * yet to be designated. */
-#define CLASS_MAKER_CTOR_FNORMAL  0x0000       /* Normal constructor flags. */
-#define CLASS_MAKER_CTOR_FDELETED 0x0001       /* The constructor has been deleted. */
-#define CLASS_MAKER_CTOR_FSUPER   0x0002       /* The constructor has explicitly been inherited from the super-type. */
+#define CLASS_MAKER_CTOR_FNORMAL    0x0000     /* Normal constructor flags. */
+#define CLASS_MAKER_CTOR_FDELETED   0x0001     /* The constructor has been deleted. */
+#define CLASS_MAKER_CTOR_FSUPER     0x0002     /* The constructor has explicitly been inherited from the super-type. */
+#define CLASS_MAKER_CTOR_FSUPERKWDS 0x0004     /* The superargs operator returns an (args,kwds) pair. */
     uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
     uint16_t                   cm_pad;         /* ... */
     DREF struct ast           *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
@@ -763,6 +764,8 @@ class_maker_pack(struct class_maker *__restrict self) {
  /* Set the constructor-inherited flag for the resulting descriptor. */
  if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER)
      self->cm_desc->cd_flags |= TP_FINHERITCTOR;
+ if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPERKWDS)
+     self->cm_desc->cd_flags |= CLASS_TP_FSUPERKWDS;
 
  /* With all class members/operators out of the
   * way, truncate the class operator table. */
@@ -857,6 +860,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
   if (self->cm_base && (initializer_name->k_id == KWD_super ||
      (self->cm_base->a_type == AST_SYM &&
       self->cm_base->a_sym->s_name == initializer_name))) {
+   DREF struct ast *superkwds;
    DREF struct ast *superargs,*merge;
    int temp; bool has_paren;
    old_flags = TPPLexer_Current->l_flags;
@@ -885,8 +889,27 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
    /* Now we must mirror argument symbols from the constructor scope in this new one. */
    if unlikely(copy_argument_symbols(self->cm_ctor_scope)) goto err_flags;
    /* Now we need to parse the argument list that's going to be provided as super-args. */
-   superargs = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,AST_FMULTIPLE_TUPLE,NULL);
+   superargs = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE,&superkwds);
    if unlikely(!superargs) goto err_flags;
+   if (superkwds) {
+    DREF struct ast **pair;
+    pair = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+    if unlikely(!pair) {
+err_flags_superargs_superkwds:
+     Dee_Free(pair);
+     ast_decref(superkwds);
+     ast_decref(superargs);
+     goto err_flags;
+    }
+    pair[0] = superargs; /* Inherit reference (on success) */
+    pair[1] = superkwds; /* Inherit reference (on success) */
+    merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,2,pair),&loc);
+    if unlikely(!merge)
+       goto err_flags_superargs_superkwds;
+    superargs = merge;
+    self->cm_ctor_flags |= CLASS_MAKER_CTOR_FSUPERKWDS;
+   }
+
    /* With the argument-tuple at hand, wrap it in a return + function ast. */
    merge = ast_setddi(ast_return(superargs),&loc);
    ast_decref(superargs);

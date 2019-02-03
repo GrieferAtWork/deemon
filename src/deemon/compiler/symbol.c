@@ -1034,9 +1034,10 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
  ASSERT(!current_basescope->bs_argv);
  ASSERT(!current_basescope->bs_default);
  ASSERT(!current_basescope->bs_varargs);
- ASSERT(!(current_basescope->bs_flags&CODE_FVARARGS));
+ ASSERT(!current_basescope->bs_varkwds);
+ ASSERT(!(current_basescope->bs_flags & (CODE_FVARARGS | CODE_FVARKWDS)));
  /* Copy basic flags and counters. */
- current_basescope->bs_flags   |= other->bs_flags&CODE_FVARARGS;
+ current_basescope->bs_flags   |= other->bs_flags & (CODE_FVARARGS | CODE_FVARKWDS);
  current_basescope->bs_argc_max = other->bs_argc_max;
  current_basescope->bs_argc_min = other->bs_argc_min;
  current_basescope->bs_argc     = other->bs_argc;
@@ -1074,7 +1075,13 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
  if (other->bs_varargs) {
   ASSERT(current_basescope->bs_argv != NULL);
   ASSERT(current_basescope->bs_argc != 0);
-  current_basescope->bs_varargs = current_basescope->bs_argv[current_basescope->bs_argc-1];
+  ASSERT(other->bs_varargs->s_symid < current_basescope->bs_argc);
+  current_basescope->bs_varargs = current_basescope->bs_argv[other->bs_varargs->s_symid];
+ }
+ if (other->bs_varkwds) {
+  ASSERT(current_basescope->bs_argv != NULL);
+  ASSERT(other->bs_varkwds->s_symid < current_basescope->bs_argc);
+  current_basescope->bs_varkwds = current_basescope->bs_argv[other->bs_varkwds->s_symid];
  }
  return 0;
 err:
