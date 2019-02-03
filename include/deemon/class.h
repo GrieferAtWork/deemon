@@ -244,8 +244,8 @@ struct class_attribute {
 #endif
 };
 #define CLASS_ATTRIBUTE_ALLOW_AUTOINIT(x) \
-      (((x)->ca_flag & CLASS_ATTRIBUTE_FGETSET) || \
-      !((x)->ca_flag & (CLASS_ATTRIBUTE_FMETHOD | CLASS_ATTRIBUTE_FCLASSMEM)))
+    (!((x)->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FGETSET | \
+                       CLASS_ATTRIBUTE_FMETHOD | CLASS_ATTRIBUTE_FCLASSMEM)))
 
 
 #ifdef CONFIG_BUILDING_DEEMON

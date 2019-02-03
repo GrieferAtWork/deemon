@@ -1,0 +1,101 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+{
+	class MyClass {
+		public member x;
+
+		@@Private members mustn't partake in auto-constructors
+		@@Instead, private members are merely default-initialized.
+		private member i_am_private = 1234;
+
+		public member y;
+
+		@@Members with default values use that value if not otherwise specified.
+		public member another_one = "Bites the dust";
+
+		/* Default constructor: Load class members from the argument list
+		 * In this case, this is identical to a constructor:
+		 * >> this(x?,y?,another_one?) {
+		 * >> 	this.i_am_private = 1234;
+		 * >> 	this.another_one = "Bites the dust";
+		 * >> 	if (x is bound)
+		 * >> 		this.x = x;
+		 * >> 	if (y is bound)
+		 * >> 		this.y = y;
+		 * >> 	if (another_one is bound)
+		 * >> 		this.another_one = another_one;
+		 * >> }
+		 */
+		this = default;
+
+		public property priv_var = {
+			get() {
+				return i_am_private;
+			}
+		}
+	}
+
+	local inst = MyClass(10,20);
+	assert inst.x == 10;
+	assert inst.y == 20;
+	assert inst.priv_var == 1234;
+	assert inst.another_one == "Bites the dust";
+
+	local inst = MyClass(y: 10, x: 3);
+	assert inst.x == 3;
+	assert inst.y == 10;
+	assert inst.priv_var == 1234;
+	assert inst.another_one == "Bites the dust";
+
+	/* Any member not explicitly specified is initialized as UNBOUND */
+	local inst = MyClass();
+	assert inst.x !is bound;
+	assert inst.y !is bound;
+	assert inst.priv_var == 1234;
+	assert inst.another_one == "Bites the dust";
+
+	local inst = MyClass(another_one: "Hey, no matter what you do...");
+	assert inst.x !is bound;
+	assert inst.y !is bound;
+	assert inst.priv_var == 1234;
+	assert inst.another_one == "Hey, no matter what you do...";
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
