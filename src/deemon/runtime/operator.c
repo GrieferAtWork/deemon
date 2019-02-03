@@ -136,7 +136,13 @@ DECL_BEGIN
 #define DeeType_INVOKE_ASSIGN(tp_self,self,other)              ((tp_self)->tp_init.tp_assign == &instance_assign ? instance_tassign(tp_self,self,other) : (*(tp_self)->tp_init.tp_assign)(self,other))
 #define DeeType_INVOKE_MOVEASSIGN(tp_self,self,other)          ((tp_self)->tp_init.tp_move_assign == &instance_moveassign ? instance_tmoveassign(tp_self,self,other) : (*(tp_self)->tp_init.tp_move_assign)(self,other))
 #define DeeType_INVOKE_STR(tp_self,self)                       ((tp_self)->tp_cast.tp_str == &instance_str ? instance_tstr(tp_self,self) : (*(tp_self)->tp_cast.tp_str)(self))
+#ifdef CLASS_TP_FAUTOINIT
+#define DeeType_INVOKE_REPR(tp_self,self)                      ((tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self,self) : \
+                                                                (tp_self)->tp_cast.tp_repr == &instance_builtin_auto_repr ? instance_builtin_auto_trepr(tp_self,self) : \
+                                                              (*(tp_self)->tp_cast.tp_repr)(self))
+#else /* CLASS_TP_FAUTOINIT */
 #define DeeType_INVOKE_REPR(tp_self,self)                      ((tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self,self) : (*(tp_self)->tp_cast.tp_repr)(self))
+#endif /* !CLASS_TP_FAUTOINIT */
 #define DeeType_INVOKE_BOOL(tp_self,self)                      ((tp_self)->tp_cast.tp_bool == &instance_bool ? instance_tbool(tp_self,self) : (*(tp_self)->tp_cast.tp_bool)(self))
 #define DeeType_INVOKE_NEXT(tp_self,self)                      ((tp_self)->tp_iter_next == &instance_next ? instance_tnext(tp_self,self) : (*(tp_self)->tp_iter_next)(self))
 #define DeeType_INVOKE_CALL(tp_self,self,argc,argv)            ((tp_self)->tp_call == &instance_call ? instance_tcall(tp_self,self,argc,argv) : (*(tp_self)->tp_call)(self,argc,argv))

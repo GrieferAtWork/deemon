@@ -57,6 +57,40 @@
  *
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     member foo = 42;                 >>     member foo;
+ * >>     private member bar;              >>     private member bar;
+ * >>     this = default;                  >>     this(foo?,bar?): super() {
+ * >> }                                    >>         this.foo = 42;
+ *                                         >>         if (foo is bound)
+ *                                         >>             this.foo = foo;
+ *                                         >>         if (bar is bound)
+ *                                         >>             this.bar = bar;
+ *                                         >>     }
+ *                                         >>     // NOTE: `operator repr' is only implemented if not already defined by the user
+ *                                         >>     operator repr(): string {
+ *                                         >>         file.writer fp;
+ *                                         >>         fp << "MyClass(";
+ *                                         >>         local is_first = true;
+ *                                         >>         if (this.foo is bound) {
+ *                                         >>             if (!is_first) fp << ", ";
+ *                                         >>             is_first = false;
+ *                                         >>             fp << "foo: " << repr this.foo;
+ *                                         >>         }
+ *                                         >>         if (this.bar is bound) {
+ *                                         >>             if (!is_first) fp << ", ";
+ *                                         >>             is_first = false;
+ *                                         >>             fp << "bar: " << repr this.bar;
+ *                                         >>         }
+ *                                         >>         fp << ")";
+ *                                         >>         return fp.string;
+ *                                         >>     }
+ *                                         >>     ~this() {
+ *                                         >>         del this.foo;
+ *                                         >>         del this.bar;
+ *                                         >>     }
+ *                                         >> }
+ *
+ * >> class MyClass: Base {                >> class MyClass: Base {
+ * >>     member foo = 42;                 >>     member foo;
  * >>     this = super;                    >>     this(args...,**kwds): super(args...,**kwds) {
  * >> }                                    >>         foo = 42;
  *                                         >>     }
@@ -209,6 +243,10 @@ struct class_attribute {
     uint16_t                   ca_pad[(sizeof(void *)/2)-2];
 #endif
 };
+#define CLASS_ATTRIBUTE_ALLOW_AUTOINIT(x) \
+      (((x)->ca_flag & CLASS_ATTRIBUTE_FGETSET) || \
+      !((x)->ca_flag & (CLASS_ATTRIBUTE_FMETHOD | CLASS_ATTRIBUTE_FCLASSMEM)))
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Check if the current execution context allows access to `member',
@@ -319,6 +357,11 @@ struct class_descriptor_object {
     OBJECT_HEAD
     DREF struct string_object *cd_name;          /* [0..1][const] Name of the class. */
     DREF struct string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
+#define CLASS_TP_FAUTOINIT     TP_FGC            /* FLAG: When set, the construction operator is implemented to automatically initialize
+                                                  *       class members in compliance to the `this = default;' constructor definition.
+                                                  *       Additionally, if not already defined by the caller, this flag also causes
+                                                  *      `operator repr' to be implemented (see above).
+                                                  * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
 #define CLASS_TP_FSUPERKWDS    TP_FHEAP          /* FLAG: When set, the superargs operator actually returns a tuple `(args,kwds)' which
                                                   *       should then be used to invoke the super-constructor as `super(args...,**kwds)'
                                                   *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
@@ -736,6 +779,39 @@ INTDEF int DCALL instance_builtin_tassign(DeeTypeObject *__restrict tp_self, Dee
 INTDEF int DCALL instance_builtin_assign(DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF int DCALL instance_builtin_tmoveassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF int DCALL instance_builtin_moveassign(DeeObject *__restrict self, DeeObject *__restrict other);
+
+#ifdef CLASS_TP_FAUTOINIT
+/* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
+#define instance_auto_tctor instance_tctor
+#define instance_auto_ctor  instance_ctor
+INTDEF int DCALL instance_auto_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_auto_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_auto_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#define instance_builtin_auto_tctor instance_builtin_tctor
+#define instance_builtin_auto_ctor  instance_builtin_ctor
+INTDEF int DCALL instance_builtin_auto_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_auto_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_auto_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#define instance_auto_nobase_tctor instance_nobase_tctor
+#define instance_auto_nobase_ctor  instance_nobase_ctor
+INTDEF int DCALL instance_auto_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#define instance_builtin_auto_nobase_tctor instance_builtin_nobase_tctor
+#define instance_builtin_auto_nobase_ctor  instance_builtin_nobase_ctor
+INTDEF int DCALL instance_builtin_auto_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
+INTDEF int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF int DCALL instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+INTDEF DREF DeeObject *DCALL instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF DREF DeeObject *DCALL instance_builtin_auto_repr(DeeObject *__restrict self);
+#endif /* CLASS_TP_FAUTOINIT */
+
 
 /* Hooks when the user-class overrides the associated operator. */
 INTDEF int DCALL instance_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);

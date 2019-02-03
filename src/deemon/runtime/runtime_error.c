@@ -348,6 +348,12 @@ err_keywords_not_found(char const *__restrict keyword) {
                         keyword);
 }
 INTERN ATTR_COLD int DCALL
+err_keywords_shadows_positional(char const *__restrict keyword) {
+ return DeeError_Throwf(&DeeError_TypeError,
+                        "Keyword argument %s has already been passed as positional",
+                         keyword);
+}
+INTERN ATTR_COLD int DCALL
 err_invalid_segment_size(size_t segsz) {
  return DeeError_Throwf(&DeeError_ValueError,
                         "Invalid segment size: %Iu",

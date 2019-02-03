@@ -66,7 +66,8 @@ struct class_maker {
 #define CLASS_MAKER_CTOR_FNORMAL    0x0000     /* Normal constructor flags. */
 #define CLASS_MAKER_CTOR_FDELETED   0x0001     /* The constructor has been deleted. */
 #define CLASS_MAKER_CTOR_FSUPER     0x0002     /* The constructor has explicitly been inherited from the super-type. */
-#define CLASS_MAKER_CTOR_FSUPERKWDS 0x0004     /* The superargs operator returns an (args,kwds) pair. */
+#define CLASS_MAKER_CTOR_FDEFAULT   0x0004     /* The constructor has explicitly been defined to be default-implemented. */
+#define CLASS_MAKER_CTOR_FSUPERKWDS 0x0008     /* The superargs operator returns an (args,kwds) pair. */
     uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
     uint16_t                   cm_pad;         /* ... */
     DREF struct ast           *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
@@ -764,6 +765,8 @@ class_maker_pack(struct class_maker *__restrict self) {
  /* Set the constructor-inherited flag for the resulting descriptor. */
  if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER)
      self->cm_desc->cd_flags |= TP_FINHERITCTOR;
+ if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FDEFAULT)
+     self->cm_desc->cd_flags |= CLASS_TP_FAUTOINIT;
  if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPERKWDS)
      self->cm_desc->cd_flags |= CLASS_TP_FSUPERKWDS;
 
@@ -1693,6 +1696,12 @@ define_constructor:
             goto err;
         maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FSUPER;
        }
+       if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDEFAULT) {
+        if (WARN(W_CANNOT_DELETE_DEFAULT_CONSTRUCTOR,
+                 maker.cm_classsym->s_name->k_name))
+            goto err;
+        maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDEFAULT;
+       }
        /* Warn about instance member initializers being used,
         * as well as set a flag that will warn about future
         * use of instance member initializers. */
@@ -1723,7 +1732,29 @@ define_constructor:
            goto err;
        maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDELETED;
       }
+      if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDEFAULT) {
+       if (WARNAT(&loc,W_CANNOT_INHERIT_DEFAULT_CONSTRUCTOR,
+                   maker.cm_classsym->s_name->k_name))
+           goto err;
+       maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDEFAULT;
+      }
       maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FSUPER;
+      if unlikely(yield() < 0) goto err;
+      goto do_yield_semicollon;
+     }
+     if (tok == KWD_default) {
+      /* Default constructors. */
+      if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER) {
+       if (WARNAT(&loc,W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR,
+                  maker.cm_classsym->s_name->k_name))
+           goto err;
+      } else if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED) {
+       if (WARNAT(&loc,W_CANNOT_DEFAULT_DELETED_CONSTRUCTOR,
+                  maker.cm_classsym->s_name->k_name))
+           goto err;
+      } else {
+       maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FDEFAULT;
+      }
       if unlikely(yield() < 0) goto err;
       goto do_yield_semicollon;
      }

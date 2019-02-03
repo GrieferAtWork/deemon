@@ -1158,6 +1158,10 @@ cd_hassuperkwds(ClassDescriptor *__restrict self) {
  return_bool(self->cd_flags & CLASS_TP_FSUPERKWDS);
 }
 PRIVATE DREF DeeObject *DCALL
+cd_hasautoinit(ClassDescriptor *__restrict self) {
+ return_bool(self->cd_flags & CLASS_TP_FAUTOINIT);
+}
+PRIVATE DREF DeeObject *DCALL
 cd_ismoveany(ClassDescriptor *__restrict self) {
  return_bool(self->cd_flags & TP_FMOVEANY);
 }
@@ -1208,6 +1212,7 @@ PRIVATE struct class_flag_entry const class_flags_db[] = {
     { TP_FINTERRUPT,       "interrupt" },
     { TP_FINHERITCTOR,     "superctor" },
     { CLASS_TP_FSUPERKWDS, "superkwds" },
+    { CLASS_TP_FAUTOINIT,  "autoinit" },
     { TP_FTRUNCATE,        "inttrunc" },
     { TP_FMOVEANY,         "moveany" },
 };
@@ -1257,6 +1262,10 @@ PRIVATE struct type_getset cd_getsets[] = {
           "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
           "Otherwise, the super-args operator simply returns args and the super-constructor "
           "is called as ${super(args...)}") },
+    { "__hasautoinit__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hasautoinit, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class provides an automatic initializer and ${operator repr}\n"
+          "This is used to implement the user-code ${this = default;} constructor definition") },
     { "__isinttruncated__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL, DOC("->?Dbool") },
     { "__hasmoveany__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL, DOC("->?Dbool") },
     { "flags", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
@@ -1268,6 +1277,7 @@ PRIVATE struct type_getset cd_getsets[] = {
           "$\"interrupt\"|#isinterrupt\n"
           "$\"superctor\"|#hassuperconstructor\n"
           "$\"superkwds\"|#__hassuperkwds__\n"
+          "$\"autoinit\"|#__hasautoinit__\n"
           "$\"inttrunc\"|#__isinttruncated__\n"
           "$\"moveany\"|#__hasmoveany__\n}") },
     { "operators", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
@@ -1732,7 +1742,8 @@ got_flag:
    if (DeeObject_AsUInt16((DeeObject *)class_flags,&result->cd_flags))
        goto err_r_imemb;
    if (result->cd_flags & ~(TP_FFINAL|TP_FINTERRUPT|TP_FINHERITCTOR|
-                            CLASS_TP_FSUPERKWDS|TP_FTRUNCATE|TP_FMOVEANY)) {
+                            CLASS_TP_FAUTOINIT|CLASS_TP_FSUPERKWDS|
+                            TP_FTRUNCATE|TP_FMOVEANY)) {
     DeeError_Throwf(&DeeError_ValueError,
                     "Invalid set of class flags: 0x%.4I16x",
                      result->cd_flags);

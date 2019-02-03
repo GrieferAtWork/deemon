@@ -61,6 +61,7 @@ INTDEF ATTR_COLD int DCALL err_keywords_func_not_accepted(char const *__restrict
 INTDEF ATTR_COLD int DCALL err_keywords_ctor_not_accepted(DeeTypeObject *__restrict tp_self, DeeObject *__restrict kw);
 INTDEF ATTR_COLD int DCALL err_keywords_bad_for_argc(size_t argc, size_t kwdc);
 INTDEF ATTR_COLD int DCALL err_keywords_not_found(char const *__restrict keyword);
+INTDEF ATTR_COLD int DCALL err_keywords_shadows_positional(char const *__restrict keyword);
 INTDEF ATTR_COLD int DCALL err_invalid_segment_size(size_t segsz);
 INTDEF ATTR_COLD int DCALL err_invalid_distribution_count(size_t distcnt);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_missing_kw(char const *__restrict argument_name, char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);

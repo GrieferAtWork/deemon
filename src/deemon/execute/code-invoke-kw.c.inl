@@ -168,21 +168,21 @@ PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
    DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
    ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
 #ifdef KW_IS_MAPPING
-  val = DeeObject_GetItemDef(kw,(DeeObject *)name,ITER_DONE);
-  if unlikely(!ITER_ISOK(val)) {
-   while (i--)
-       Dee_XDecref(frame.cf_kw->fk_kargv[i]);
-   if (val != NULL) {
-    /* Missing, mandatory argument. */
-    err_invalid_argc_missing_kw(DeeString_STR(name),
-                                DeeCode_NAME(code),
-                                GET_ARGC(),
-                                code->co_argc_min,
-                                code->co_argc_max);
+   val = DeeObject_GetItemDef(kw,(DeeObject *)name,ITER_DONE);
+   if unlikely(!ITER_ISOK(val)) {
+    while (i--)
+        Dee_XDecref(frame.cf_kw->fk_kargv[i]);
+    if (val != NULL) {
+     /* Missing, mandatory argument. */
+     err_invalid_argc_missing_kw(DeeString_STR(name),
+                                 DeeCode_NAME(code),
+                                 GET_ARGC(),
+                                 code->co_argc_min,
+                                 code->co_argc_max);
+    }
+    goto err_ex_frame;
    }
-   goto err_ex_frame;
-  }
-  frame.cf_kw->fk_kargv[i] = val; /* Inherit reference. */
+   frame.cf_kw->fk_kargv[i] = val; /* Inherit reference. */
 #else /* KW_IS_MAPPING */
    index = kwds_find_index((DeeKwdsObject *)kw,name);
    if unlikely(index == (size_t)-1) {
