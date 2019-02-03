@@ -738,6 +738,43 @@ ca_getisclassns(ClassAttribute *__restrict self) {
                                 desc->cd_iattr_mask));
 }
 
+
+struct attr_flag_entry {
+    uint16_t fe_flag;
+    char     fe_name[14];
+};
+PRIVATE struct attr_flag_entry const class_attribute_flags_db[] = {
+    { CLASS_ATTRIBUTE_FPRIVATE,  "private" },
+    { CLASS_ATTRIBUTE_FFINAL,    "final" },
+    { CLASS_ATTRIBUTE_FREADONLY, "readonly" },
+    { CLASS_ATTRIBUTE_FMETHOD,   "method" },
+    { CLASS_ATTRIBUTE_FGETSET,   "property" },
+    { CLASS_ATTRIBUTE_FCLASSMEM, "classns" },
+};
+
+PRIVATE DREF DeeObject *DCALL
+ca_getflags(ClassAttribute *__restrict self) {
+ unsigned int i; uint16_t flags;
+ struct ascii_printer printer = ASCII_PRINTER_INIT;
+ flags = self->ca_attr->ca_flag;
+ for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
+  char const *name;
+  if (!(flags & class_attribute_flags_db[i].fe_flag))
+      continue;
+  if (ASCII_PRINTER_LEN(&printer) != 0 &&
+      ascii_printer_putc(&printer,','))
+      goto err;
+  name = class_attribute_flags_db[i].fe_name;
+  if (ascii_printer_print(&printer,name,strlen(name)) < 0)
+      goto err;
+ }
+ return ascii_printer_pack(&printer);
+err:
+ ascii_printer_fini(&printer);
+ return NULL;
+}
+
+
 PRIVATE struct type_getset ca_getsets[] = {
     { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getname, NULL, NULL, DOC("->?Dstring") },
     { "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getdoc, NULL, NULL, DOC("->?X2?Dstring?N") },
@@ -792,6 +829,17 @@ PRIVATE struct type_getset ca_getsets[] = {
           "During enumeration of attributes, all attributes where this is :true "
           "are enumated by :ClassDescriptor.cattr, while all for which it isn't "
           "are enumated by :ClassDescriptor.iattr") },
+    { "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getflags, NULL, NULL,
+      DOC("->?Dstring\n"
+          "Returns a comma-seperated string describing the flags of @this class attribute\n"
+          "%{table Flag|Property\n"
+          "$\"private\"|#isprivate\n"
+          "$\"final\"|#isfinal\n"
+          "$\"readonly\"|#isreadonly\n"
+          "$\"method\"|#ismethod\n"
+          "$\"property\"|#isproperty\n"
+          "$\"classns\"|#isclassns}\n"
+          ) },
     { NULL }
 };
 
@@ -1106,6 +1154,10 @@ cd_hassuperconstructor(ClassDescriptor *__restrict self) {
  return_bool(self->cd_flags & TP_FINHERITCTOR);
 }
 PRIVATE DREF DeeObject *DCALL
+cd_hassuperkwds(ClassDescriptor *__restrict self) {
+ return_bool(self->cd_flags & CLASS_TP_FSUPERKWDS);
+}
+PRIVATE DREF DeeObject *DCALL
 cd_ismoveany(ClassDescriptor *__restrict self) {
  return_bool(self->cd_flags & TP_FMOVEANY);
 }
@@ -1147,14 +1199,77 @@ done:
  return result;
 }
 
+struct class_flag_entry {
+    uint16_t fe_flag;
+    char     fe_name[14];
+};
+PRIVATE struct class_flag_entry const class_flags_db[] = {
+    { TP_FFINAL,           "final" },
+    { TP_FINTERRUPT,       "interrupt" },
+    { TP_FINHERITCTOR,     "superctor" },
+    { CLASS_TP_FSUPERKWDS, "superkwds" },
+    { TP_FTRUNCATE,        "inttrunc" },
+    { TP_FMOVEANY,         "moveany" },
+};
+
+PRIVATE DREF DeeObject *DCALL
+cd_getflags(ClassDescriptor *__restrict self) {
+ unsigned int i;
+ struct ascii_printer printer = ASCII_PRINTER_INIT;
+ for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
+  char const *name;
+  if (!(self->cd_flags & class_flags_db[i].fe_flag))
+      continue;
+  if (ASCII_PRINTER_LEN(&printer) != 0 &&
+      ascii_printer_putc(&printer,','))
+      goto err;
+  name = class_flags_db[i].fe_name;
+  if (ascii_printer_print(&printer,name,strlen(name)) < 0)
+      goto err;
+ }
+ return ascii_printer_pack(&printer);
+err:
+ ascii_printer_fini(&printer);
+ return NULL;
+}
+
+
 PRIVATE struct type_getset cd_getsets[] = {
     { "isfinal", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL, DOC("->?Dbool") },
-    { "isinterrupt", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL, DOC("->?Dbool") },
+    { "isinterrupt", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this class behaves as an interrupt exception when thrown\n"
+          "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
+          "statements, but only by statements marked as ${@:interrupt catch(...)}\n"
+          "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
+          "optional function calls such as invocations of :fs:unlink from accidentally handling "
+          "unwanted types of exceptions such as :Signal.Interrupt.KeyboardInterrupt, as caused "
+          "by the user pressing CTRL+C to terminate the running script, and (normally) not "
+          "expecting it to continue running because the error was silently swallowed by an "
+          "unrelated catch-all block") },
     { "hassuperconstructor", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperconstructor, NULL, NULL,
       DOC("->?Dbool\n"
-          "Evaluates to :true if @this class inherits its constructor from its base-type") },
+          "Evaluates to :true if @this class inherits its constructor from its base-type\n"
+          "In user-defined classes, this behavior is encoded as ${this = super;}") },
+    { "__hassuperkwds__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperkwds, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if the super-args operator of @this class returns a tuple (args,kwds) "
+          "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
+          "Otherwise, the super-args operator simply returns args and the super-constructor "
+          "is called as ${super(args...)}") },
     { "__isinttruncated__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL, DOC("->?Dbool") },
-    { "__ismoveany__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL, DOC("->?Dbool") },
+    { "__hasmoveany__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL, DOC("->?Dbool") },
+    { "flags", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
+      DOC("->?Dstring\n"
+          "Return a comma-seperated string of flags used to describe the combination of properties described by "
+          "#isfinal, #isinterrupt, #hassuperconstructor, #__hassuperkwds__, #__isinttruncated__, and #__hasmoveany__\n"
+          "%{table Flag|Property\n"
+          "$\"final\"|#isfinal\n"
+          "$\"interrupt\"|#isinterrupt\n"
+          "$\"superctor\"|#hassuperconstructor\n"
+          "$\"superkwds\"|#__hassuperkwds__\n"
+          "$\"inttrunc\"|#__isinttruncated__\n"
+          "$\"moveany\"|#__hasmoveany__\n}") },
     { "operators", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
       DOC("->?#OperatorTable\n"
           "Enumerate operators implemented by @this class, as well as their associated "
@@ -1180,9 +1295,9 @@ PRIVATE struct type_member cd_members[] = {
 
 INTDEF DeeTypeObject ObjectTable_Type;
 PRIVATE struct type_member cd_class_members[] = {
-    TYPE_MEMBER_CONST("OperatorTable",&ClassOperatorTable_Type),
     TYPE_MEMBER_CONST("Attribute",&ClassAttribute_Type),
     TYPE_MEMBER_CONST("AttributeTable",&ClassAttributeTable_Type),
+    TYPE_MEMBER_CONST("OperatorTable",&ClassOperatorTable_Type),
     TYPE_MEMBER_CONST("ObjectTable",&ObjectTable_Type),
     TYPE_MEMBER_END
 };
@@ -1195,10 +1310,611 @@ cd_str(ClassDescriptor *__restrict self) {
 }
 
 
+/* NOTE: This function only initializes `ca_doc', `ca_addr' and `ca_flag' */
+LOCAL int DCALL
+class_attribute_init(struct class_attribute *__restrict self,
+                     DeeObject *__restrict data,
+                     bool is_class_attribute) {
+ DREF DeeObject *iter;
+ DREF DeeObject *addr,*flags,*doc;
+ size_t fast_size;
+ /* ?Dint */
+ /* ?T2?Dint?Dstring */
+ /* ?T2?Dint?Dint */
+ /* ?T3?Dint?Dstring?Dstring */
+ /* ?T3?Dint?Dint?Dstring */
+ if (DeeInt_Check(data)) {
+  if (DeeInt_AsU16(data,&self->ca_addr))
+      goto err;
+  self->ca_doc  = NULL;
+  self->ca_flag = CLASS_ATTRIBUTE_FPUBLIC;
+  return 0;
+ }
+ doc = NULL;
+ fast_size = DeeFastSeq_GetSize(data);
+ if (fast_size != DEE_FASTSEQ_NOTFAST) {
+  if (fast_size != 2 && fast_size != 3) {
+   err_invalid_unpack_size_minmax(data,2,3,fast_size);
+   goto err;
+  }
+  addr = DeeFastSeq_GetItem(data,0);
+  if unlikely(!addr) goto err;
+  flags = DeeFastSeq_GetItem(data,1);
+  if unlikely(!addr) goto err_addr;
+  if (fast_size >= 3) {
+   doc = DeeFastSeq_GetItem(data,2);
+   if unlikely(!addr) goto err_addr_flags;
+  }
+ } else {
+  iter = DeeObject_IterSelf(data);
+  if unlikely(!iter) goto err;
+  addr = DeeObject_IterNext(iter);
+  if unlikely(!ITER_ISOK(addr)) {
+   if (addr == ITER_DONE)
+       err_invalid_unpack_size_minmax(data,2,3,0);
+   goto err_iter;
+  }
+  flags = DeeObject_IterNext(iter);
+  if unlikely(!ITER_ISOK(flags)) {
+   if (flags == ITER_DONE)
+       err_invalid_unpack_size_minmax(data,2,3,1);
+   goto err_iter_addr;
+  }
+  doc = DeeObject_IterNext(iter);
+  if (doc == ITER_DONE) {
+   doc = NULL;
+  } else {
+   DREF DeeObject *tail;
+   if unlikely(!doc)
+      goto err_iter_addr_flags;
+   tail = DeeObject_IterNext(iter);
+   if unlikely(tail != ITER_DONE) {
+    if (tail) {
+     Dee_Decref(tail);
+     err_invalid_unpack_iter_size_minmax(data,iter,2,3);
+    }
+    goto err_iter_addr_flags_doc;
+   }
+  }
+  Dee_Decref(iter);
+ }
+ if (doc && DeeObject_AssertTypeExact(doc,&DeeString_Type))
+     goto err_addr_flags_doc;
+ if (DeeObject_AsUInt16(addr,&self->ca_addr))
+     goto err_addr_flags_doc;
+ if (DeeString_Check(flags)) {
+  char *pos;
+  self->ca_flag = 0;
+  pos = DeeString_STR(flags);
+  for (;;) {
+   char *next; size_t flag_len;
+   next = strchr(pos,',');
+   flag_len = next ? (size_t)(next - pos) : strlen(pos);
+   if likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name)) {
+    unsigned int i;
+    for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
+     if (class_attribute_flags_db[i].fe_name[flag_len] != '\0')
+         continue;
+     if (memcmp(class_attribute_flags_db[i].fe_name,pos,flag_len * sizeof(char)) != 0)
+         continue;
+     self->ca_flag |= class_attribute_flags_db[i].fe_flag;
+     goto got_flag;
+    }
+   }
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Invalid flag %$q for %s-attribute %r",
+                    flag_len,pos,
+                    is_class_attribute ? "class" : "instance",
+                    self->ca_name);
+   goto err_addr_flags_doc;
+got_flag:
+   if (!next)
+       break;
+   pos = next + 1;
+  }
+ } else {
+  if (DeeObject_AsUInt16(addr,&self->ca_flag))
+      goto err_addr_flags_doc;
+  if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK) {
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Invalid flags for %s-attribute %r (0x%.4I16x)",
+                    is_class_attribute ? "class" : "instance",
+                    self->ca_name,self->ca_flag);
+   goto err_addr_flags_doc;
+  }
+ }
+ self->ca_doc = (DREF struct string_object *)doc; /* Inherit reference. */
+ Dee_Decref(flags);
+ Dee_Decref(addr);
+ return 0;
+err_iter_addr_flags_doc:
+ Dee_Decref(doc);
+err_iter_addr_flags:
+ Dee_Decref(flags);
+err_iter_addr:
+ Dee_Decref(addr);
+err_iter:
+ Dee_Decref(iter);
+ goto err;
+err_addr_flags_doc:
+ Dee_XDecref(doc);
+err_addr_flags:
+ Dee_Decref(flags);
+err_addr:
+ Dee_Decref(addr);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+cd_rehash_cattr(ClassDescriptor *__restrict self) {
+ struct class_attribute *new_map;
+ size_t new_mask;
+ new_mask = (self->cd_cattr_mask << 1) | 1;
+ if (new_mask < 7)
+     new_mask = 7;
+ new_map = (struct class_attribute *)Dee_Calloc((new_mask + 1) *
+                                                 sizeof(struct class_attribute));
+ if unlikely(!new_map)
+    goto err;
+ if (self->cd_cattr_list != empty_class_attributes) {
+  /* Rehash the old table. */
+  size_t i,j,perturb;
+  for (i = 0; i <= self->cd_cattr_mask; ++i) {
+   struct class_attribute *srcent;
+   struct class_attribute *dstent;
+   srcent = &self->cd_cattr_list[i];
+   if (!srcent->ca_name)
+        continue;
+   j = perturb = srcent->ca_hash & new_mask;
+   for (;; DeeClassDescriptor_CATTRNEXT(j,perturb)) {
+    dstent = &new_map[j & new_mask];
+    if (!dstent->ca_name)
+         break;
+   }
+   memcpy(dstent,srcent,sizeof(struct class_attribute));
+  }
+  Dee_Free(self->cd_cattr_list);
+ }
+ self->cd_cattr_mask = new_mask;
+ self->cd_cattr_list = new_map;
+ return 0;
+err:
+ return -1;
+}
+
+
+PRIVATE ClassDescriptor *DCALL
+cd_alloc_from_iattr(DeeObject *__restrict iattr,
+                    uint16_t imemb_size,
+                    uint16_t cmemb_size) {
+ size_t iattr_used = 0,imask = 7;
+ DREF DeeObject *iterator,*elem;
+ DREF DeeObject *data[2];
+ ClassDescriptor *result;
+ iterator = DeeObject_IterSelf(iattr);
+ if unlikely(!iterator)
+    goto err;
+ result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor,cd_iattr_list) +
+                                             (8 * sizeof(struct class_attribute)));
+ if unlikely(!result)
+    goto err_iter;
+ while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+  struct class_attribute *ent;
+  dhash_t hash,j,perturb;
+  if (iattr_used >= (imask / 3) * 2) {
+   ClassDescriptor *new_result;
+   size_t i,new_mask;
+   new_mask = (imask << 1) | 1;
+   new_result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor,cd_iattr_list) +
+                                                  ((new_mask + 1) * sizeof(struct class_attribute)));
+   if unlikely(!new_result)
+      goto err_iter_r_elem;
+   /* Rehash the already existing instance attribute table. */
+   for (i = 0; i <= imask; ++i) {
+    if (!result->cd_iattr_list[i].ca_name)
+         continue;
+    j = perturb = result->cd_iattr_list[i].ca_hash & new_mask;
+    for (;; DeeClassDescriptor_IATTRNEXT(j,perturb)) {
+     ent = &new_result->cd_iattr_list[j & new_mask];
+     if (ent->ca_name)
+         continue;
+     *ent = result->cd_iattr_list[i];
+     break;
+    }
+   }
+   new_result->cd_imemb_size = result->cd_imemb_size;
+   new_result->cd_cmemb_size = result->cd_cmemb_size;
+   DeeObject_Free(result);
+   result = new_result;
+   imask  = new_mask;
+  }
+  if (DeeObject_Unpack(elem,2,data))
+      goto err_iter_r_elem;
+  Dee_Decref(elem);
+  if (DeeObject_AssertType(data[0],&DeeString_Type))
+      goto err_iter_r_data;
+  hash = DeeString_Hash(data[0]);
+  j = perturb = hash & imask;
+  for (;; DeeClassDescriptor_IATTRNEXT(j,perturb)) {
+   ent = &result->cd_iattr_list[j & imask];
+   if (!ent->ca_name) break;
+   if (ent->ca_hash != hash) continue;
+   if (DeeString_SIZE(ent->ca_name) != DeeString_SIZE(data[0])) continue;
+   if (memcmp(DeeString_STR(ent->ca_name),
+              DeeString_STR(data[0]),
+              DeeString_SIZE(ent->ca_name)) != 0)
+       continue;
+   /* Duplicate attribute. */
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Duplicate instance attribute %r",
+                    data[0]);
+   goto err_iter_r_data;
+  }
+  ent->ca_name = (DREF struct string_object *)data[0]; /* Inherit reference (on success). */
+  ent->ca_hash = hash;
+  if (class_attribute_init(ent,data[1],false))
+      goto err_iter_r_data;
+  ++iattr_used;
+  Dee_Decref(data[1]);
+  {
+   uint16_t maxid;
+   maxid = ent->ca_addr;
+   if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
+        maxid += CLASS_GETSET_SET;
+   if (ent->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+    if (cmemb_size != (uint16_t)-1 && maxid >= cmemb_size) {
+     DeeError_Throwf(&DeeError_ValueError,
+                     "Instance attribute %r uses out-of-bounds class object table index %I16u (>= %I16u)",
+                     ent->ca_name,maxid,cmemb_size);
+     goto err_iter_r;
+    }
+    if (result->cd_cmemb_size <= maxid)
+        result->cd_cmemb_size = maxid + 1;
+   } else {
+    if (imemb_size != (uint16_t)-1 && maxid >= imemb_size) {
+     DeeError_Throwf(&DeeError_ValueError,
+                     "Instance attribute %r uses out-of-bounds object table index %I16u (>= %I16u)",
+                     ent->ca_name,maxid,imemb_size);
+     goto err_iter_r;
+    }
+    if (result->cd_imemb_size <= maxid)
+        result->cd_imemb_size = maxid + 1;
+   }
+  }
+ }
+ if (!elem)
+      goto err_iter_r;
+ result->cd_iattr_mask = imask;
+ if (imemb_size != (uint16_t)-1)
+     result->cd_imemb_size = imemb_size;
+ if (cmemb_size != (uint16_t)-1)
+     result->cd_cmemb_size = cmemb_size;
+ Dee_Decref(iterator);
+ return result;
+err_iter_r_data:
+ Dee_Decref(data[1]);
+ Dee_Decref(data[0]);
+ goto err_iter_r;
+err_iter_r_elem:
+ Dee_Decref(elem);
+err_iter_r:
+ do {
+  if (result->cd_iattr_list[imask].ca_name) {
+   Dee_XDecref(result->cd_iattr_list[imask].ca_doc);
+   Dee_Decref(result->cd_iattr_list[imask].ca_name);
+  }
+ } while (imask--);
+ DeeObject_Free(result);
+err_iter:
+ Dee_Decref(iterator);
+err:
+ return NULL;
+}
+
+PRIVATE int DCALL
+cd_add_operator(ClassDescriptor *__restrict self,
+                uint16_t name, uint16_t index,
+                uint16_t *__restrict operator_count) {
+ uint16_t i,perturb,mask;
+ struct class_operator *map,*ent;
+ if (name == (uint16_t)-1)
+     goto err_invalid_name;
+ if (*operator_count >= (self->cd_clsop_mask / 3) * 2) {
+  mask = (self->cd_clsop_mask << 1) | 1;
+  if (mask <= 1)
+      mask = 3;
+  map = (struct class_operator *)Dee_Malloc((mask + 1) *
+                                             sizeof(struct class_operator));
+  if unlikely(!map)
+     goto err;
+  memset(map,0xff,(mask + 1) * sizeof(struct class_operator));
+  for (i = 0; i <= self->cd_clsop_mask; ++i) {
+  }
+  if (self->cd_clsop_list != empty_class_operators)
+      Dee_Free(self->cd_clsop_list);
+  self->cd_clsop_list = map;
+  self->cd_clsop_mask = mask;
+ }
+ map  = self->cd_clsop_list;
+ mask = self->cd_clsop_mask;
+ i = perturb = name & mask;
+ for (;; DeeClassDescriptor_CLSOPNEXT(i,perturb)) {
+  ent = &map[i & mask];
+  if (ent->co_name == name)
+      goto err_duplicate_name;
+  if (ent->co_name == (uint16_t)-1)
+      break;
+ }
+ ent->co_name = name;
+ ent->co_addr = index;
+ return 0;
+err_duplicate_name:
+ {
+  struct opinfo *op = Dee_OperatorInfo(NULL,name);
+  if (op) {
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Duplicate operator `%s'",
+                    op->oi_sname);
+  } else {
+   DeeError_Throwf(&DeeError_ValueError,
+                   "Duplicate operator `0x%.4I16x'",
+                    name);
+  }
+ }
+ goto err;
+err_invalid_name:
+ DeeError_Throwf(&DeeError_ValueError,
+                 "Invalid operator name: 0xffff");
+err:
+ return -1;
+}
+
+
+PRIVATE DREF ClassDescriptor *DCALL
+cd_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+ DREF ClassDescriptor *result;
+ DREF DeeObject *iterator,*elem,*data[2];
+ DeeStringObject *class_name;
+ DeeStringObject *class_doc = (DeeStringObject *)Dee_EmptyString;
+ DeeStringObject *class_flags = (DeeStringObject *)Dee_EmptyString;
+ DeeObject *class_operators = Dee_EmptyTuple;
+ DeeObject *class_iattr = Dee_EmptyTuple;
+ DeeObject *class_cattr = Dee_EmptyTuple;
+ uint16_t class_isize = (uint16_t)-1;
+ uint16_t class_csize = (uint16_t)-1;
+ PRIVATE DEFINE_KWLIST(kwlist,{ K(name), K(doc), K(flags), K(operators), K(iattr), K(cattr), K(isize), K(csize), KEND });
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oooooI16uI16u",
+                    &class_name,&class_doc,
+                    &class_flags,&class_operators,
+                    &class_iattr,&class_cattr,
+                    &class_isize,&class_csize))
+     goto err;
+ if (DeeObject_AssertType((DeeObject *)class_name,&DeeString_Type))
+     goto err;
+ if (class_doc &&
+     DeeObject_AssertType((DeeObject *)class_doc,&DeeString_Type))
+     goto err;
+
+ result = cd_alloc_from_iattr(class_iattr,class_isize,class_csize);
+ if unlikely(!result)
+    goto err;
+ result->cd_flags = TP_FNORMAL;
+ if (class_flags != (DeeStringObject *)Dee_EmptyString) {
+  if (DeeString_Check(class_flags)) {
+   char *pos;
+   pos = DeeString_STR(class_flags);
+   for (;;) {
+    char *next; size_t flag_len;
+    next = strchr(pos,',');
+    flag_len = next ? (size_t)(next - pos) : strlen(pos);
+    if likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name)) {
+     unsigned int i;
+     for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
+      if (class_flags_db[i].fe_name[flag_len] != '\0')
+          continue;
+      if (memcmp(class_flags_db[i].fe_name,pos,flag_len * sizeof(char)) != 0)
+          continue;
+      result->cd_flags |= class_flags_db[i].fe_flag;
+      goto got_flag;
+     }
+    }
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Invalid class flag %$q",
+                     flag_len,pos);
+    goto err_r_imemb;
+got_flag:
+    if (!next)
+        break;
+    pos = next + 1;
+   }
+  } else {
+   if (DeeObject_AsUInt16((DeeObject *)class_flags,&result->cd_flags))
+       goto err_r_imemb;
+   if (result->cd_flags & ~(TP_FFINAL|TP_FINTERRUPT|TP_FINHERITCTOR|
+                            CLASS_TP_FSUPERKWDS|TP_FTRUNCATE|TP_FMOVEANY)) {
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Invalid set of class flags: 0x%.4I16x",
+                     result->cd_flags);
+    goto err_r_imemb;
+   }
+  }
+ }
+ result->cd_clsop_list = empty_class_operators;
+ result->cd_clsop_mask = 0;
+ result->cd_cattr_list = empty_class_attributes;
+ result->cd_cattr_mask = 0;
+ if (class_cattr != Dee_EmptyTuple) {
+  size_t used_attr = 0;
+  iterator = DeeObject_IterSelf(class_cattr);
+  if unlikely(!iterator)
+     goto err_r_imemb;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   struct class_attribute *ent;
+   dhash_t hash,i,perturb;
+   if (DeeObject_Unpack(elem,2,data))
+       goto err_r_imemb_iter_elem;
+   Dee_Decref(elem);
+   if (DeeObject_AssertType(data[0],&DeeString_Type))
+       goto err_r_imemb_iter_data;
+   if (used_attr >= (result->cd_cattr_mask / 3) * 2) {
+    /* Rehash the class attribute table. */
+    if (cd_rehash_cattr(result))
+        goto err_r_imemb_iter_data;
+   }
+   hash = DeeString_Hash(data[0]);
+   i = perturb = hash & result->cd_cattr_mask;
+   for (;; DeeClassDescriptor_CATTRNEXT(i,perturb)) {
+    ent = &result->cd_cattr_list[i & result->cd_cattr_mask];
+    if (!ent->ca_name)
+         break;
+    if (ent->ca_hash != hash)
+        continue;
+    if (DeeString_SIZE(ent->ca_name) != DeeString_SIZE(data[0]))
+        continue;
+    if (memcmp(DeeString_STR(ent->ca_name),DeeString_STR(data[0]),DeeString_SIZE(data[0])) != 0)
+        continue;
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Duplicate class attribute %r",
+                     data[0]);
+    goto err_r_imemb_iter_data;
+   }
+   ent->ca_name = (DREF struct string_object *)data[0]; /* Inherit reference (on success) */
+   ent->ca_hash = hash;
+   if (class_attribute_init(ent,data[1],true))
+       goto err_r_imemb_iter_data;
+   ++used_attr;
+   Dee_Decref(data[1]);
+   {
+    uint16_t maxid;
+    maxid = ent->ca_addr;
+    if ((ent->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) == CLASS_ATTRIBUTE_FGETSET)
+         maxid += CLASS_GETSET_SET;
+    if (class_csize != (uint16_t)-1 && maxid >= class_csize) {
+     DeeError_Throwf(&DeeError_ValueError,
+                     "Class attribute %r uses out-of-bounds class object table index %I16u (>= %I16u)",
+                     ent->ca_name,maxid,class_csize);
+     goto err_r_imemb_iter;
+    }
+    if (result->cd_cmemb_size <= maxid)
+        result->cd_cmemb_size = maxid + 1;
+   }
+  }
+  if (!elem)
+      goto err_r_imemb_iter;
+  Dee_Decref(iterator);
+ }
+ if (class_operators != Dee_EmptyTuple) {
+  uint16_t operator_count = 0;
+  iterator = DeeObject_IterSelf(class_operators);
+  if unlikely(!iterator)
+     goto err_r_imemb_cmemb;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   uint16_t name,index;
+   if (DeeObject_Unpack(elem,2,data))
+       goto err_r_imemb_iter_elem;
+   Dee_Decref(elem);
+   if (DeeObject_AsUInt16(data[1],&index))
+       goto err_r_imemb_iter_data;
+   if (DeeString_Check(data[0])) {
+    name = Dee_OperatorFromName(NULL,DeeString_STR(data[0]));
+    if (name == (uint16_t)-1) {
+     DeeError_Throwf(&DeeError_ValueError,
+                     "Unknown operator %r",
+                      data[0]);
+     goto err_r_imemb_iter_data;
+    }
+   } else {
+    if (DeeObject_AsUInt16(data[0],&name))
+        goto err_r_imemb_iter_data;
+   }
+   Dee_Decref(data[1]);
+   Dee_Decref(data[0]);
+   if (class_csize != (uint16_t)-1 && index >= class_csize) {
+    struct opinfo *op = Dee_OperatorInfo(NULL,name);
+    if (op) {
+     DeeError_Throwf(&DeeError_ValueError,
+                     "Operator %s uses out-of-bounds class object table index %I16u (>= %I16u)",
+                     op->oi_sname,index,class_csize);
+    } else {
+     DeeError_Throwf(&DeeError_ValueError,
+                     "Operator 0x%.4I16x uses out-of-bounds class object table index %I16u (>= %I16u)",
+                     name,index,class_csize);
+    }
+    goto err_r_imemb_iter;
+   }
+   if (result->cd_cmemb_size <= index)
+       result->cd_cmemb_size = index + 1;
+   if (cd_add_operator(result,name,index,&operator_count))
+       goto err_r_imemb_iter;
+  }
+  if (!elem)
+      goto err_r_imemb_iter;
+  Dee_Decref(iterator);
+ }
+ result->cd_name  = class_name;
+ result->cd_doc   = class_doc;
+ Dee_Incref(class_name);
+ Dee_XIncref(class_doc);
+ DeeObject_Init(result,&DeeClassDescriptor_Type);
+ return result;
+err_r_imemb_iter_data:
+ Dee_Decref(data[1]);
+ Dee_Decref(data[0]);
+ goto err_r_imemb_iter;
+err_r_imemb_iter_elem:
+ Dee_Decref(elem);
+err_r_imemb_iter:
+ Dee_Decref(iterator);
+err_r_imemb_cmemb:
+ if (result->cd_clsop_list != empty_class_operators)
+     Dee_Free(result->cd_clsop_list);
+ if (result->cd_cattr_list != empty_class_attributes) {
+  do {
+   if (result->cd_cattr_list[result->cd_cattr_mask].ca_name) {
+    Dee_XDecref(result->cd_cattr_list[result->cd_cattr_mask].ca_doc);
+    Dee_Decref(result->cd_cattr_list[result->cd_cattr_mask].ca_name);
+   }
+  } while (result->cd_cattr_mask--);
+  Dee_Free(result->cd_cattr_list);
+ }
+err_r_imemb:
+ do {
+  if (result->cd_iattr_list[result->cd_iattr_mask].ca_name) {
+   Dee_XDecref(result->cd_iattr_list[result->cd_iattr_mask].ca_doc);
+   Dee_Decref(result->cd_iattr_list[result->cd_iattr_mask].ca_name);
+  }
+ } while (result->cd_iattr_mask--);
+ DeeObject_Free(result);
+err:
+ return NULL;
+}
+
+
+
 PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_ClassDescriptor",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(name:?Dstring,doc:?Dstring=!P{},flags:?X2?Dstring?Dint=!P{},"
+                            "operators:?S?T2?X2?Dstring?Dint?Dint=!T0,"
+                            "iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
+                            "cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
+                            "isize?:?Dint,csize?:?Dint)\n"
+                            "@throw ValueError Some operator or attribute was defined multiple times\n"
+                            "@throw ValueError A specified operator name wasn't recognized (custom operators must be encoded as IDs)\n"
+                            "@throw ValueError A specified set of flags contains an invalid option\n"
+                            "@throw ValueError An attribute or operator is bound to an out-of-bounds object table index\n"
+                            "@throw IntergerOverflow A used object table index exceeds the hard limit of $0xffff (unsigned 16-bit)\n"
+                            "Create a new class descriptor\n"
+                            "The given @flags is a comma-seperated string of flags as described in #flags\n"
+                            "The given @isize and @csize determine the allocated sizes of the instance class "
+                            "member tables. - When omitted, these sizes are automatically calculated by "
+                            "determining the greatest used table indices within @operators, @iattr and @cattr\n"
+                            "Note that both @iattr and @cattr take mappings of attribute names to one either "
+                            "the associated table_index, or a tuple of (table_index,flags[,doc]), where flags is "
+                            "a comma-seperated string of flags as described in #Attribute.flags\n"
+                            "Hint: Once created, a _ClassDescriptor object can be used "
+                            "with :rt:makeclass to create custom class types at runtime"),
     /* .tp_flags    = */TP_FVARIABLE | TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1210,7 +1926,9 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
                 /* .tp_copy_ctor   = */&DeeObject_NewRef,
                 /* .tp_deep_ctor   = */&DeeObject_NewRef,
                 /* .tp_any_ctor    = */NULL,
-                /* .tp_free        = */NULL
+                /* .tp_free        = */NULL,
+                /* .tp_pad         = */{ 0 },
+                /* .tp_any_ctor_kw = */&cd_init_kw,
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&cd_fini,
@@ -1450,8 +2168,8 @@ PRIVATE struct type_nsi ot_nsi = {
 
 PRIVATE struct type_seq ot_seq = {
     /* .tp_iter_self = */NULL, /* WARNING: If you assign a dedicated iterator here, `librt' will
-                                * not longer be able to reverse-engineer `DeeGenericIterator_Type',
-                                * as in order to do that, it does `DeeObject_GetAttr()'
+                                * not longer be able to reverse-engineer `DeeGenericIterator_Type', as in
+                                * order to do that, it does `DeeObject_GetAttr(&ObjectTable_Type,"iterator")'
                                 */
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ot_size,
     /* .tp_contains  = */NULL,
@@ -1512,16 +2230,63 @@ PRIVATE struct type_getset ot_getsets[] = {
 };
 
 PRIVATE struct type_member ot_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__owner__",STRUCT_OBJECT,offsetof(ClassOperatorTableIterator,co_desc),
+    TYPE_MEMBER_FIELD_DOC("__owner__",STRUCT_OBJECT,offsetof(ObjectTable,ot_owner),
                           "The object that owns @this object table"),
     TYPE_MEMBER_END
 };
 
 
+PRIVATE int DCALL
+ot_init(ObjectTable *__restrict self,
+        size_t argc, DeeObject **__restrict argv) {
+ DeeObject *ob;
+ DeeTypeObject *type = NULL;
+ struct class_desc *desc;
+ if (DeeArg_Unpack(argc,argv,"o|o:_ObjectTable",&ob,&type))
+     goto err;
+ if (type) {
+  if (DeeObject_AssertType(ob,type))
+      goto err;
+ } else {
+  type = Dee_TYPE(ob);
+  if (type == &DeeSuper_Type) {
+   type = DeeSuper_TYPE(ob);
+   ob   = DeeSuper_SELF(ob);
+  }
+ }
+ if (type == &DeeType_Type) {
+  if (!DeeType_IsClass(ob))
+       goto err_no_class;
+  /* Class member table. */
+  desc = DeeClass_DESC(ob);
+  self->ot_desc = class_desc_as_instance(desc);
+  self->ot_size = desc->cd_desc->cd_cmemb_size;
+ } else {
+  if (!DeeType_IsClass(type))
+       goto err_no_class;
+  /* Instance member table. */
+  desc = DeeClass_DESC(type);
+  self->ot_desc  = DeeInstance_DESC(desc,ob);
+  self->ot_size  = desc->cd_desc->cd_imemb_size;
+ }
+ self->ot_owner = (DREF DeeObject *)ob;
+ Dee_Incref(ob);
+ return 0;
+err_no_class:
+ DeeError_Throwf(&DeeError_TypeError,
+                  "Type `%k' isn't a class",
+                  type);
+err:
+ return -1;
+}
+
+
 INTERN DeeTypeObject ObjectTable_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_ObjectTable",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(ob:?X2?O?Dtype)\n"
+                            "@throw TypeError The given @ob isn't a class or class instance\n"
+                            "Load the object member table of a class, or class instance"),
     /* .tp_flags    = */TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1532,7 +2297,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
                 /* .tp_ctor      = */NULL,
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_any_ctor  = */(void *)&ot_init,
                 TYPE_FIXED_ALLOCATOR(ObjectTable)
             }
         },

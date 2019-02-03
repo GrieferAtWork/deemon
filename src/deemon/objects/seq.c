@@ -2071,7 +2071,7 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           ">}") },
     { "transform", &seq_transform,
-      DOC("(callable transformation)->?Dsequence\n"
+      DOC("(transformation:?Dcallable)->?Dsequence\n"
           "@param transformation A key function invoked to transform members of @this sequence\n"
           "Returns a sequence that is a transformation of @this, with each element passed "
           "to @transformation for processing before being returned\n"

@@ -21,6 +21,7 @@
 
 #include "../api.h"
 #include "../object.h"
+#include "../alloc.h"
 #include <string.h>
 
 DECL_BEGIN
@@ -36,7 +37,7 @@ struct bytewriter {
 #define bytewriter_fini(x)   Dee_Free((x)->bw_base)
 
 /* Reserve memory for at least `n_bytes'  */
-LOCAL uint8_t *KCALL
+LOCAL uint8_t *DCALL
 bytewriter_alloc(struct bytewriter *__restrict self, size_t n_bytes) {
  uint8_t *result;
  ASSERT(self->bw_size <= self->bw_alloc);
@@ -65,7 +66,7 @@ err:
 
 /* Append a single byte/word/dword or qword, returning -1 on error and 0 on success */
 #define DEFINE_BYTEWRITER_PUTX(name,T,x) \
-LOCAL int (KCALL name)(struct bytewriter *__restrict self, T x) { \
+LOCAL int (DCALL name)(struct bytewriter *__restrict self, T x) { \
  T *buf; \
  buf = (T *)bytewriter_alloc(self,sizeof(T)); \
  if unlikely(!buf) goto err; \
@@ -93,7 +94,7 @@ DEFINE_BYTEWRITER_PUTX(bytewriter_putq,uint64_t,qword)
 /* Deallocate all unused bytes, and return a heap-allocated pointer to what has been written.
  * When nothing has been written, `NULL' may be returned, which does not indicate an error,
  * as this function will never throw any. */
-LOCAL uint8_t *KCALL
+LOCAL uint8_t *DCALL
 bytewriter_flush(struct bytewriter *__restrict self) {
  ASSERT(self->bw_alloc >= self->bw_size);
  if (self->bw_alloc > self->bw_size) {

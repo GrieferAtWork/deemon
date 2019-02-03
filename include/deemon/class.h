@@ -57,7 +57,7 @@
  *
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     member foo = 42;                 >>     member foo;
- * >>     this = super;                    >>     this(args...): super(args...) {
+ * >>     this = super;                    >>     this(args...,**kwds): super(args...,**kwds) {
  * >> }                                    >>         foo = 42;
  *                                         >>     }
  *                                         >>     ~this() {
@@ -93,22 +93,22 @@
  * For this purpose, the following groups  >>         // super.copy(other);
  * exist:                                  >>         if (other !is MyClass)
  *  - copy                                 >>             throw Error.TypeError("...");
- *  - constructor                          >>         foo    = (other as MyClass).foo;
- *  - destructor                           >>         bar    = (other as MyClass).bar;
- *  - assign, moveassign                   >>         foobar = (other as MyClass).foobar;
+ *  - constructor                          >>         if ((other as MyClass).foo    is bound) foo    = (other as MyClass).foo;
+ *  - destructor                           >>         if ((other as MyClass).bar    is bound) bar    = (other as MyClass).bar;
+ *  - assign, moveassign                   >>         if ((other as MyClass).foobar is bound) foobar = (other as MyClass).foobar;
  *  - hash, eq, ne, lo, le, gr, ge         >>     }
  * Also note that when providing a `copy'  >>     operator deepcopy(other) {
  * operator, is will also be invoke when   >>         // super.deepcopy(other);
  * `deepcopy' is called, after with each   >>         if (other !is MyClass)
  * of the instance's bound members will be >>             throw Error.TypeError("...");
- * replace with a deep copy of itself.     >>         foo    = deepcopy((other as MyClass).foo);
- *                                         >>         bar    = deepcopy((other as MyClass).bar);
- * Note that attribute accesses made on    >>         foobar = deepcopy((other as MyClass).foobar);
+ * replace with a deep copy of itself.     >>         if ((other as MyClass).foo    is bound) foo    = deepcopy((other as MyClass).foo);
+ *                                         >>         if ((other as MyClass).bar    is bound) bar    = deepcopy((other as MyClass).bar);
+ * Note that attribute accesses made on    >>         if ((other as MyClass).foobar is bound) foobar = deepcopy((other as MyClass).foobar);
  * `other' in automatic operators will not >>     }
  * invoke a potential `operator getattr',  >>     operator hash() {
- * but will always access the native       >>         return foo.operator hash() ^
- * attribute.                              >>                bar.operator hash() ^
- *                                         >>                foobar.operator hash();
+ * but will always access the native       >>         return (foo !is bound ? 0 : foo.operator hash()) ^
+ * attribute.                              >>                (bar !is bound ? 0 : bar.operator hash()) ^
+ *                                         >>                (foobar !is bound ? 0 : foobar.operator hash());
  * During member access, only `member'-    >>     }
  * like fields are accessed, meaning that  >>     operator == (other) {
  * instance-properties will not be invoked >>         if (other !is MyClass)
@@ -333,7 +333,9 @@ struct class_descriptor_object {
                                                   *       the `TP_FINHERITCTOR' flag is simply ignored.
                                                   *       If the user overrides `OPERATOR_CONSTRUCTOR',
                                                   *       the user's constructor will be invoked, though
-                                                  *       no arguments will be passed to it. */
+                                                  *       no arguments will be passed to it (this is done to
+                                                  *       allow for class member initialization to still take
+                                                  *       place when no constructor has actually been defined). */
     uint16_t                   cd_cmemb_size;    /* [const] The allocation size of the class member table. */
     uint16_t                   cd_imemb_size;    /* [const] The allocation size of the instance member table. */
     uint16_t                   cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */
@@ -343,7 +345,7 @@ struct class_descriptor_object {
                                                   * [const] The class operator address hash-vector. */
     struct class_attribute    *cd_cattr_list;    /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
                                                   * [const] The class attribute hash-vector. */
-    struct class_attribute     cd_iattr_list[1]; /* [cd_cattr_mask+1] The instance attribute hash-vector. */
+    struct class_attribute     cd_iattr_list[1]; /* [cd_iattr_mask+1] The instance attribute hash-vector. */
 };
 #define DeeClassDescriptor_CLSOPNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
 #define DeeClassDescriptor_CATTRNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)

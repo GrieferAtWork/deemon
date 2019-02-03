@@ -95,9 +95,10 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-librt_makeclass_f(size_t argc, DeeObject **__restrict argv) {
+librt_makeclass_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeTypeObject *base; DeeObject *descriptor;
- if (DeeArg_Unpack(argc,argv,"oo:makeclass",&base,&descriptor))
+ PRIVATE DEFINE_KWLIST(kwlist,{ K(base), K(descriptor), KEND });
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:makeclass",&base,&descriptor))
      goto err;
  if (DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
      goto err;
@@ -108,7 +109,7 @@ err:
 
 PRIVATE DEFINE_CMETHOD(librt_getstacklimit,librt_getstacklimit_f);
 PRIVATE DEFINE_CMETHOD(librt_setstacklimit,librt_setstacklimit_f);
-PRIVATE DEFINE_CMETHOD(librt_makeclass,librt_makeclass_f);
+PRIVATE DEFINE_KWCMETHOD(librt_makeclass,librt_makeclass_f);
 
 #if 1
 #define STR_ITERATOR  COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name,DeeStringObject,s_str)

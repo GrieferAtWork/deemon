@@ -191,7 +191,8 @@ rehash_operator_bindings(DeeClassDescriptorObject *__restrict self) {
                                                   sizeof(struct class_operator));
  if unlikely(!new_table) goto err;
  /* Fill the new table with all unused entries. */
- memset(new_table,0xff,(new_mask + 1) * sizeof(struct class_operator));
+ memset(new_table,0xff,(new_mask + 1) *
+        sizeof(struct class_operator));
  /* Rehash all pre-existing bindings. */
  for (i = 0; i <= self->cd_clsop_mask; ++i) {
   struct class_operator *op,*new_op;

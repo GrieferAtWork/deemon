@@ -960,7 +960,9 @@ PUBLIC int
     if unlikely(temp) return temp;
     ASSERT(kw_argc);
     if (!--kw_argc) {
-     if (is_optional || *format == '|') break;
+     if (is_optional ||
+        (*format == '|' || *format == ':' || *format == '\0'))
+         break;
      /* TODO: This can also happen when:
       * >> function foo(x,bar);
       * >> foo(x: 10, baz: 20);

@@ -3563,22 +3563,24 @@ import file from deemon;
 local options = [];
 for (local line: file.open("../../../include/deemon/object.h")) {
     local name;
-    try name = line.scanf(" # define DeeType_Is%[^(](")...;
+    try name = "Is" + line.scanf(" # define DeeType_Is%[^(](")[0];
+    catch (...)
+    try name = "Has" + line.scanf(" # define DeeType_Has%[^(](")[0];
     catch (...) continue;
     options.append(name);
 }
 for (local o: options) {
     print "PRIVATE DREF DeeObject *DCALL";
-    print "type_is"+o.lower()+"(DeeObject *__restrict self) {";
-    print "    return_bool(DeeType_Is"+o+"(self));";
+    print "type_"+o.lower()+"(DeeObject *__restrict self) {";
+    print "    return_bool(DeeType_"+o+"(self));";
     print "}";
 }
 print "#define TYPE_FEATURE_GETSETS \\";
 for (local o: options) {
-    local isname = "is" + o.lower();
+    local isname = o.lower();
     if (isname !in ["isfinal","isabstract","isinterrupt"])
         isname = "__" + isname + "__";
-    print "    { "+repr(isname)+", &type_is"+o.lower()+", NULL, NULL, DOC(\"->?Dbool\") }, \\";
+    print "    { "+repr(isname)+", &type_"+o.lower()+", NULL, NULL, DOC(\"->?Dbool\") }, \\";
 }
 print "/" "* ... *" "/";
 ]]]*/
@@ -3623,8 +3625,8 @@ type_isinttruncated(DeeObject *__restrict self) {
     return_bool(DeeType_IsIntTruncated(self));
 }
 PRIVATE DREF DeeObject *DCALL
-type_ismoveany(DeeObject *__restrict self) {
-    return_bool(DeeType_IsMoveAny(self));
+type_hasmoveany(DeeObject *__restrict self) {
+    return_bool(DeeType_HasMoveAny(self));
 }
 PRIVATE DREF DeeObject *DCALL
 type_isiterator(DeeObject *__restrict self) {
@@ -3669,7 +3671,7 @@ type_iscopyable(DeeObject *__restrict self) {
     { "__iscomparable__", &type_iscomparable, NULL, NULL, DOC("->?Dbool") }, \
     { "__issequence__", &type_issequence, NULL, NULL, DOC("->?Dbool") }, \
     { "__isinttruncated__", &type_isinttruncated, NULL, NULL, DOC("->?Dbool") }, \
-    { "__ismoveany__", &type_ismoveany, NULL, NULL, DOC("->?Dbool") }, \
+    { "__hasmoveany__", &type_hasmoveany, NULL, NULL, DOC("->?Dbool") }, \
     { "__isiterator__", &type_isiterator, NULL, NULL, DOC("->?Dbool") }, \
     { "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") }, \
     { "__iscustom__", &type_iscustom, NULL, NULL, DOC("->?Dbool") }, \

@@ -841,7 +841,7 @@ struct type_constructor {
             DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
             DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject **__restrict argv);
             void            (DCALL *tp_free)(void *__restrict ob);
-            void                   *tp_pad; /* ... */
+            struct { uintptr_t tp_pad; } tp_pad; /* ... */
             DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
         } tp_var; /* [valid_if(TP_FVARIABLE)] */
     };
@@ -1577,7 +1577,7 @@ struct type_object {
 #define DeeType_IsComparable(x)   (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_cmp != NULL)
 #define DeeType_IsSequence(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_seq != NULL)
 #define DeeType_IsIntTruncated(x) (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FTRUNCATE)
-#define DeeType_IsMoveAny(x)      (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FMOVEANY)
+#define DeeType_HasMoveAny(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FMOVEANY)
 #define DeeType_IsIterator(x)     (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)        DeeType_IsInherited((DeeTypeObject *)REQUIRES_OBJECT(x),&DeeType_Type)
 #define DeeType_IsCustom(x)       (((DeeTypeObject *)REQUIRES_OBJECT(x))->tp_flags & TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
