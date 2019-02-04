@@ -938,6 +938,21 @@ invoke_operator(DeeObject *__restrict self,
       goto err;
   goto return_none_;
 
+ case OPERATOR_CLEAR:
+  if (DeeArg_Unpack(argc,argv,":__clear__"))
+      goto err;
+  DeeObject_Clear(self);
+  goto return_none_;
+
+ {
+  unsigned int gc_prio;
+ case OPERATOR_PCLEAR:
+  if (DeeArg_Unpack(argc,argv,"u:__pclear__",&gc_prio))
+      goto err;
+  DeeObject_PClear(self,gc_prio);
+  goto return_none_;
+ }
+
  default: break;
  }
  {

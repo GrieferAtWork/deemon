@@ -577,7 +577,8 @@ next:
    case '\\':
     /* Match special character trait sub-classes (currently only digit) */
     if (content_start[2] == 'd') {
-     uint8_t low,high;
+     uint8_t COMPILER_IGNORE_UNINITIALIZED(low);
+     uint8_t COMPILER_IGNORE_UNINITIALIZED(high);
      if (parse_digit_range(content_start + 3,content_end,&low,&high))
          goto err;
      /* Match digit characters with a numerical value >= low && <= high */

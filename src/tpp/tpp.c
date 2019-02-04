@@ -4211,7 +4211,8 @@ PUBLIC struct TPPFile *TPPCALL
 TPPFile_NewDefine(void) {
  struct TPPFile *result,*curfile; uint32_t macro_flags;
  struct TPPKeyword *keyword_entry; int fix_linenumber = 0;
- tok_t argend_token,argument_name;
+ tok_t argument_name;
+ tok_t COMPILER_IGNORE_UNINITIALIZED(argend_token);
  struct arginfo_t *arginfo_v,*new_arginfo_v; size_t arginfo_a;
  assert(CURRENT.l_flags&TPPLEXER_FLAG_WANTLF);
  assert(TPP_ISKEYWORD(tok));
@@ -6643,7 +6644,8 @@ done:
 
 PUBLIC tok_t TPPCALL TPPLexer_YieldRaw(void) {
  struct TPPFile *file,*prev_file;
- char *iter,*end,*forward; tok_t ch;
+ char *iter,*end; tok_t ch;
+ char *COMPILER_IGNORE_UNINITIALIZED(forward);
  assert(TPPLexer_Current);
  /* Check for special lexer state. */
 again:

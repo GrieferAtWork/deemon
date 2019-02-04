@@ -112,8 +112,8 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
  tail = ((uint8_t const *)ptr)+(nblocks*4);
  k1 = 0;
  switch (n_bytes & 3) {
- case 3:  k1 ^= (uint32_t)tail[2] << 16;
- case 2:  k1 ^= (uint32_t)tail[1] << 8;
+ case 3:  k1 ^= (uint32_t)tail[2] << 16; ATTR_FALLTHROUGH
+ case 2:  k1 ^= (uint32_t)tail[1] << 8; ATTR_FALLTHROUGH
  case 1:  k1 ^= (uint32_t)tail[0];
           k1 *= c1;
           k1 = ROT32(k1, r1);
@@ -157,8 +157,8 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
  tail = ((uint16_t const *)ptr)+(nblocks*4);
  k1 = 0;
  switch (n_words & 3) {
- case 3:  k1 ^= packw(tail[2]) << 16;
- case 2:  k1 ^= packw(tail[1]) << 8;
+ case 3:  k1 ^= packw(tail[2]) << 16; ATTR_FALLTHROUGH
+ case 2:  k1 ^= packw(tail[1]) << 8; ATTR_FALLTHROUGH
  case 1:  k1 ^= packw(tail[0]);
           k1 *= c1;
           k1 = ROT32(k1, r1);
@@ -203,15 +203,17 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
  switch (n_dwords & 3) {
  case 3:  ch = tail[2];
           k1 ^= packl(ch) << 16;
+          ATTR_FALLTHROUGH
  case 2:  ch = tail[1];
           k1 ^= packl(ch) << 8;
+          ATTR_FALLTHROUGH
  case 1:  ch = tail[0];
           k1 ^= packl(ch);
           k1 *= c1;
           k1 = ROT32(k1, r1);
           k1 *= c2;
           hash ^= k1;
-          break;
+          ATTR_FALLTHROUGH
  default: break;
  }
  hash ^= n_dwords;
@@ -250,14 +252,14 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
  tail = ((uint8_t const *)ptr)+(nblocks*4);
  k1 = 0;
  switch (n_bytes & 3) {
- case 3:  k1 ^= (uint8_t)DeeUni_ToLower(tail[2]) << 16;
- case 2:  k1 ^= (uint8_t)DeeUni_ToLower(tail[1]) << 8;
+ case 3:  k1 ^= (uint8_t)DeeUni_ToLower(tail[2]) << 16; ATTR_FALLTHROUGH
+ case 2:  k1 ^= (uint8_t)DeeUni_ToLower(tail[1]) << 8; ATTR_FALLTHROUGH
  case 1:  k1 ^= (uint8_t)DeeUni_ToLower(tail[0]);
           k1 *= c1;
           k1 = ROT32(k1, r1);
           k1 *= c2;
           hash ^= k1;
-          break;
+          ATTR_FALLTHROUGH
  default: break;
  }
  hash ^= n_bytes;
@@ -295,14 +297,14 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
  tail = ((uint16_t const *)ptr)+(nblocks*4);
  k1 = 0;
  switch (n_words & 3) {
- case 3:  k1 ^= packw(DeeUni_ToLower(tail[2])) << 16;
- case 2:  k1 ^= packw(DeeUni_ToLower(tail[1])) << 8;
+ case 3:  k1 ^= packw(DeeUni_ToLower(tail[2])) << 16; ATTR_FALLTHROUGH
+ case 2:  k1 ^= packw(DeeUni_ToLower(tail[1])) << 8; ATTR_FALLTHROUGH
  case 1:  k1 ^= packw(DeeUni_ToLower(tail[0]));
           k1 *= c1;
           k1 = ROT32(k1, r1);
           k1 *= c2;
           hash ^= k1;
-          break;
+          ATTR_FALLTHROUGH
  default: break;
  }
  hash ^= n_words;
@@ -341,15 +343,17 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
  switch (n_dwords & 3) {
  case 3:  ch = DeeUni_ToLower(tail[2]);
           k1 ^= packl(ch) << 16;
+          ATTR_FALLTHROUGH
  case 2:  ch = DeeUni_ToLower(tail[1]);
           k1 ^= packl(ch) << 8;
+          ATTR_FALLTHROUGH
  case 1:  ch = DeeUni_ToLower(tail[0]);
           k1 ^= packl(ch);
           k1 *= c1;
           k1 = ROT32(k1, r1);
           k1 *= c2;
           hash ^= k1;
-          break;
+          ATTR_FALLTHROUGH
  default: break;
  }
  hash ^= n_dwords;

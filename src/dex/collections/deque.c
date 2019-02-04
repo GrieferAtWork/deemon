@@ -783,19 +783,38 @@ deq_init(Deque *__restrict self,
 
 
 
+#ifndef CONFIG_NO_THREADS
+#define DEQUE_BUFFER_START  d_lock
+#else
+#define DEQUE_BUFFER_START  d_head
+#endif
+
+
+
 #define DEQUE_BUFFER_SIZE  \
-   (sizeof(Deque) - COMPILER_OFFSETOF(Deque,d_head))
+   (sizeof(Deque) - COMPILER_OFFSETOF(Deque,DEQUE_BUFFER_START))
 #define DEQUE_BUFFER_SIZE_NOVERSION  \
+   (COMPILER_OFFSETOF(Deque,d_version) - COMPILER_OFFSETOF(Deque,DEQUE_BUFFER_START))
+#define DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION  \
    (COMPILER_OFFSETOF(Deque,d_version) - COMPILER_OFFSETOF(Deque,d_head))
 typedef unsigned char DEQUE_BUFFER_TYPE[DEQUE_BUFFER_SIZE];
-#define DEQUE_BUFFER_GET(x) ((Deque *)((x) - COMPILER_OFFSETOF(Deque,d_head)))
-#define DEQUE_BUFFER_FOR(x) ((unsigned char *)&(x)->d_head)
+typedef unsigned char DEQUE_BUFFER_TYPE_NOLOCK_NOVERSION[DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION];
+#define DEQUE_BUFFER_GET(x)        ((Deque *)((x) - COMPILER_OFFSETOF(Deque,DEQUE_BUFFER_START)))
+#define DEQUE_BUFFER_FOR(x)        ((unsigned char *)&(x)->DEQUE_BUFFER_START)
+#ifndef CONFIG_NO_THREADS
+#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((x) - COMPILER_OFFSETOF(Deque,d_head)))
+#define DEQUE_BUFFER_FOR_NOLOCK(x) ((unsigned char *)&(x)->d_head)
+#else
+#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((x) - COMPILER_OFFSETOF(Deque,d_head)))
+#define DEQUE_BUFFER_FOR_NOLOCK(x) ((unsigned char *)&(x)->d_head)
+#endif
 
 PRIVATE int DCALL
 deq_assign(Deque *__restrict self,
            DeeObject *__restrict seq) {
  DEQUE_BUFFER_TYPE bTemp,bOld;
  Deque *temp = DEQUE_BUFFER_GET(bTemp);
+ weakref_support_init(temp);
  if (DeeObject_InstanceOfExact(seq,&Deque_Type)) {
   if (deq_copy(temp,(Deque *)seq))
       return -1;
@@ -807,6 +826,7 @@ deq_assign(Deque *__restrict self,
   temp->d_head_use  = 0;
   temp->d_tail_sz   = 0;
   temp->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
+  rwlock_init(&temp->d_lock);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
   if (DeeObject_Foreach(seq,(dforeach_t)&Deque_PushBack,temp) < 0)
 #else
@@ -819,10 +839,16 @@ deq_assign(Deque *__restrict self,
  }
  /* Save the new deque into the current. */
  Deque_LockWrite(self);
- memcpy(&bOld,DEQUE_BUFFER_FOR(self),DEQUE_BUFFER_SIZE_NOVERSION);
- memcpy(DEQUE_BUFFER_FOR(self),&bTemp,DEQUE_BUFFER_SIZE_NOVERSION);
+ memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bOld)),
+        DEQUE_BUFFER_FOR_NOLOCK(self),
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+ memcpy(DEQUE_BUFFER_FOR_NOLOCK(self),
+        DEQUE_BUFFER_FOR_NOLOCK(temp),
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
  ++self->d_version;
  Deque_LockEndWrite(self);
+ weakref_support_init(DEQUE_BUFFER_GET(bOld));
+
  /* Free the old deque state. */
  deq_fini(DEQUE_BUFFER_GET(bOld));
  return 0;
@@ -834,19 +860,25 @@ deq_moveassign(Deque *__restrict self,
  DEQUE_BUFFER_TYPE bNew,bOld;
  if (self == other) return 0;
  Deque_LockWrite(other);
- memcpy(&bNew,DEQUE_BUFFER_FOR(other),DEQUE_BUFFER_SIZE_NOVERSION);
+ memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bNew)),
+        DEQUE_BUFFER_FOR_NOLOCK(other),
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
  /* Clear out the state of the other deque, thus stealing all of its references. */
- memset(&other->d_head,0,
-        COMPILER_OFFSETOF(Deque,d_version)-
-        COMPILER_OFFSETOF(Deque,d_head));
+ memset(DEQUE_BUFFER_FOR_NOLOCK(other),0,
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
  ++other->d_version;
  Deque_LockEndWrite(other);
  /* Override the state of our own deque. */
  Deque_LockWrite(self);
- memcpy(&bOld,DEQUE_BUFFER_FOR(self),DEQUE_BUFFER_SIZE_NOVERSION);
- memcpy(DEQUE_BUFFER_FOR(self),&bNew,DEQUE_BUFFER_SIZE_NOVERSION);
+ memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bOld)),
+        DEQUE_BUFFER_FOR_NOLOCK(self),
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+ memcpy(DEQUE_BUFFER_FOR_NOLOCK(self),
+        DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bNew)),
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
  ++self->d_version;
  Deque_LockEndWrite(self);
+ weakref_support_init(DEQUE_BUFFER_GET(bOld));
  /* Free the old state of our own deque. */
  deq_fini(DEQUE_BUFFER_GET(bOld));
  return 0;
@@ -884,14 +916,16 @@ PRIVATE void DCALL
 deq_clear(Deque *__restrict self) {
  DEQUE_BUFFER_TYPE bData;
  Deque_LockWrite(self);
- memcpy(&bData,DEQUE_BUFFER_FOR(self),DEQUE_BUFFER_SIZE_NOVERSION);
+ memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bData)),
+        DEQUE_BUFFER_FOR_NOLOCK(self),
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
  /* Clear out the state of the other deque,
   * thus stealing all of its references. */
- memset(&self->d_head,0,
-        COMPILER_OFFSETOF(Deque,d_version)-
-        COMPILER_OFFSETOF(Deque,d_head));
+ memset(DEQUE_BUFFER_FOR_NOLOCK(self),0,
+        DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
  ++self->d_version;
  Deque_LockEndWrite(self);
+ weakref_support_init(DEQUE_BUFFER_GET(bData));
  /* Destroy the cloned buffer. */
  deq_fini(DEQUE_BUFFER_GET(bData));
 }

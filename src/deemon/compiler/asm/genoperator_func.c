@@ -68,7 +68,8 @@ ast_gen_operator_func(struct ast *binding,
  struct opinfo *info; int temp;
  char const *symbol_name = NULL;
  DREF DeeModuleObject *operators_module;
- uint16_t opmod_id,opsym_id;
+ uint16_t COMPILER_IGNORE_UNINITIALIZED(opmod_id);
+ uint16_t COMPILER_IGNORE_UNINITIALIZED(opsym_id);
  int32_t deemon_module_id;
  if (operator_name >= AST_OPERATOR_MIN &&
      operator_name <= AST_OPERATOR_MAX) {
