@@ -98,7 +98,11 @@ local __objects = deemon.list {
 	/* 0x002b */ [](x) -> type x,
 	/* 0x002c */ operators.operator . ("copy"),
 	/* 0x002d */ operators.operator . ("copy"), /* operator move (removed in d200) */
-	/* 0x002e */ none, /* __builtin_last_exception */
+	/* 0x002e */ [] { /* __builtin_last_exception */
+		__stack local result;
+		__asm__("push except" : "=s" (result));
+		return result;
+	},
 	/* 0x002f */ [] -> deemon.traceback.current, /* __builtin_last_traceback */
 	/* 0x0030 */ operators.assign, /* __copyassign__ */
 	/* 0x0031 */ [](x) -> !x, /* __not__ */
@@ -203,7 +207,7 @@ local __objects = deemon.list {
 	/* 0x0094 */ try rt.DexModule catch (...) none, /* DeeDexModule_Type */
 	/* 0x0095 */ none, /* DeeErrorType_DexError */
 	/* 0x0096 */ rt.Compiler.Lexer.Token, /* DeeToken_Type */
-	/* 0x0097 */ none, /* DeeLocalVar_Type */
+	/* 0x0097 */ rt.Compiler.Symbol, /* DeeLocalVar_Type */
 	/* 0x0098 */ rt.Compiler.Lexer, /* DeeLexer_Type */
 	/* 0x0099 */ rt.Compiler.Ast, /* DeeSAst_Type */
 	/* 0x009a */ fs.getcwd,
@@ -406,12 +410,12 @@ local __objects = deemon.list {
 	/* 0x015F */ compat_gcc.__builtin_LINE,     /* __builtin_LINE */
 	/* 0x0160 */ compat_gcc.__builtin_FUNCTION, /* __builtin_FUNCTION */
 	/* 0x0161 */ compat_sys.argv,
-	/* 0x0162 */ none, /* __builtin_fs_win32dlldirectory */
-	/* 0x0163 */ none, /* __builtin_fs_win32systemdirectory */
+	/* 0x0162 */ opt_win32.GetDllDirectory, /* __builtin_fs_win32dlldirectory */
+	/* 0x0163 */ opt_win32.GetSystemDirectory, /* __builtin_fs_win32systemdirectory */
 	/* 0x0164 */ fs.gettmp,
-	/* 0x0165 */ none, /* __builtin_fs_win32windowsdirectory */
-	/* 0x0166 */ none, /* __builtin_fs_win32systemwindowsdirectory */
-	/* 0x0167 */ none, /* __builtin_fs_win32syswow64directory */
+	/* 0x0165 */ opt_win32.GetWindowsDirectory, /* __builtin_fs_win32windowsdirectory */
+	/* 0x0166 */ opt_win32.GetSystemWindowsDirectory, /* __builtin_fs_win32systemwindowsdirectory */
+	/* 0x0167 */ opt_win32.GetSystemWow64Directory, /* __builtin_fs_win32syswow64directory */
 	/* 0x0168 */ compat_fs.tmpname,
 	/* 0x0169 */ []() -> deemon.traceback()[1].__code__, /* __builtin_code -- Return the code object of the caller */
 	/* 0x016A */ deemon.Error.RuntimeError.UnboundLocal,
@@ -423,7 +427,7 @@ local __objects = deemon.list {
 	/* 0x0170 */ fs.stat.isfifo,
 	/* 0x0171 */ fs.stat.issock,
 	/* 0x0172 */ deemon.instancemethod,
-	/* 0x0173 */ none, /* __builtin_class */
+	/* 0x0173 */ rt.makeclass, /* __builtin_class */
 	/* 0x0174 */ deemon.Error.ThreadCrash,
 	/* 0x0175 */ compat_util.swap,
 	/* 0x0176 */ rt.StringIterator,
@@ -465,12 +469,12 @@ local __objects = deemon.list {
 	/* 0x019A */ fs.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
 	/* 0x019B */ [](...) -> fs.user(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
 	/* 0x019C */ []() -> fs.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
-	/* 0x019D */ none, /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
-	/* 0x019E */ none, /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */
-	/* 0x019F */ none, /* DeeBuiltinFunction___builtin_fs_win32wsystemdirectory */
-	/* 0x01A0 */ none, /* DeeBuiltinFunction___builtin_fs_win32wwindowsdirectory */
-	/* 0x01A1 */ none, /* DeeBuiltinFunction___builtin_fs_win32wsystemwindowsdirectory */
-	/* 0x01A2 */ none, /* DeeBuiltinFunction___builtin_fs_win32wsyswow64directory */
+	/* 0x019D */ opt_win32.GetModuleFileName, /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
+	/* 0x019E */ opt_win32.GetDllDirectory, /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */
+	/* 0x019F */ opt_win32.GetSystemDirectory, /* DeeBuiltinFunction___builtin_fs_win32wsystemdirectory */
+	/* 0x01A0 */ opt_win32.GetWindowsDirectory, /* DeeBuiltinFunction___builtin_fs_win32wwindowsdirectory */
+	/* 0x01A1 */ opt_win32.GetSystemWindowsDirectory, /* DeeBuiltinFunction___builtin_fs_win32wsystemwindowsdirectory */
+	/* 0x01A2 */ opt_win32.GetSystemWow64Directory, /* DeeBuiltinFunction___builtin_fs_win32wsyswow64directory */
 	/* 0x01A3 */ none, /* TODO: DeeBuiltinFunction___builtin_fs_wgettmpname */
 	/* 0x01A4 */ deemon.list.iterator,
 	/* 0x01A5 */ deemon.super_,
@@ -515,8 +519,8 @@ local __objects = deemon.list {
 	/* 0x01CC */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wuidname */
 	/* 0x01CD */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name; },
 	/* 0x01CE */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wgidname */
-	/* 0x01CF */ none, /* TODO: DeeBuiltinFunction___builtin_fs_win32drives */
-	/* 0x01D0 */ none, /* TODO: DeeBuiltinFunction___builtin_fs_win32wdrives */
+	/* 0x01CF */ [] -> opt_win32.GetLogicalDriveStrings().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32drives */
+	/* 0x01D0 */ [] -> opt_win32.GetLogicalDriveStrings().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32wdrives */
 	/* 0x01D1 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64encode */
 	/* 0x01D2 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64decode */
 	/* 0x01D3 */ deemon.sequence.iterator(), /* _Dee_EmptyZipIterator */
@@ -525,11 +529,11 @@ local __objects = deemon.list {
 	/* 0x01D6 */ operators.hash, /* DeeBuiltinFunction___hash__ */
 	/* 0x01D7 */ deemon.__pooad, /* DeeBuiltinFunction___dual_posoradd__ */
 	/* 0x01D8 */ deemon.__neosb, /* DeeBuiltinFunction___dual_negorsub__ */
-	/* 0x01D9 */ [](a,b...) { if (!b) return a.ind; return a * b...; }, /* DeeBuiltinFunction___dual_dereformul__ */
-	/* 0x01DA */ [](a,b...) { if (!b) return a.ref; return a & b...; }, /* DeeBuiltinFunction___dual_reforand__ */
-	/* 0x01DB */ [](seq,a,b...) { if (!b) return seq[a]; return seq[a:b...]; }, /* DeeBuiltinFunction___dual_getitemorgetrange__ */
-	/* 0x01DC */ [](seq,a,b...) { if (!b) return seq.operator del[](a); return seq.operator del[:](a,b...); }, /* DeeBuiltinFunction___dual_delitemordelrange__ */
-	/* 0x01DD */ [](seq,a,b,c...) { if (!c) return seq.operator[]=(a,b); return seq.operator [:](a,b,c...); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
+	/* 0x01D9 */ [](a,b?) { if (b !is bound) return a.ind; return a * b; }, /* DeeBuiltinFunction___dual_dereformul__ */
+	/* 0x01DA */ [](a,b?) { if (b !is bound) return a.ref; return a & b; }, /* DeeBuiltinFunction___dual_reforand__ */
+	/* 0x01DB */ [](seq,a,b?) { if (b !is bound) return seq[a]; return seq[a:b]; }, /* DeeBuiltinFunction___dual_getitemorgetrange__ */
+	/* 0x01DC */ [](seq,a,b?) { if (b !is bound) return seq.operator del[](a); return seq.operator del[:](a,b); }, /* DeeBuiltinFunction___dual_delitemordelrange__ */
+	/* 0x01DD */ [](seq,a,b,c?) { if (c !is bound) return seq.operator[]=(a,b); return seq.operator [:](a,b,c); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
 	/* 0x01DE */ deemon.import_, /* DeeBuiltinFunction___builtin_dex */
 	/* 0x01DF */ operators.bool, /* DeeBuiltinFunction___bool__ */
 	/* 0x01E0 */ [](f,n,t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
@@ -557,7 +561,7 @@ local __objects = deemon.list {
 
 @@Library function implementing the deprecated ${__builtin_object()} builtin function
 @@Prior to deemon 200, and in the absence of module support, stuff you'd now find in the :deemon module was provided for using builtin-functions.
-@@Due to their rediculous amount, not every builtin had its own keyword, but instead, a single access symbol was defined by the compiler: ${__builtin_object}
+@@Due to the rediculous number of them, not every builtin had its own keyword, but instead, a single access symbol was defined by the compiler: ${__builtin_object}
 @@Using this symbol, as well as a fixed (and now emulated) symbol index, one was able to access these functions, as could be seen in the include-folder of deemon prior to its rewrite:
 @@>local __builtin_range = __builtin_object(0x0117);
 @@>for (local x: __builtin_range(20))

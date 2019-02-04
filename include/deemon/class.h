@@ -57,7 +57,8 @@
  *
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     member foo = 42;                 >>     member foo;
- * >>     private member bar;              >>     private member bar;
+ * >>     member bar;                      >>     member bar;
+ * >>     private member foobar;           >>     private member foobar; // Not initialized by the default constructor
  * >>     this = default;                  >>     this(foo?,bar?): super() {
  * >> }                                    >>         this.foo = 42;
  *                                         >>         if (foo is bound)

@@ -18,7 +18,7 @@
  */
 #ifndef GUARD_DEX_WIN32_LIBWIN32_C
 #define GUARD_DEX_WIN32_LIBWIN32_C 1
-#define CONFIG_BUILDING_LIBWIN32
+#define CONFIG_BUILDING_LIBWIN32 1
 
 #include "libwin32.h"
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
@@ -862,7 +862,8 @@ again:
    DBG_ALIGNMENT_ENABLE();
    if (dwError == ERROR_OPERATION_ABORTED)
        goto again;
-   return_none;
+   if (dwError != 0)
+       return_none;
   }
   DBG_ALIGNMENT_ENABLE();
   if (dwError <= dwBufSize) break;
@@ -877,6 +878,132 @@ again:
  return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
 err_result:
  DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+/*[[[deemon import("_dexutils").gw("GetDllDirectory","->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void);
+PRIVATE DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, DeeObject **__restrict argv);
+#define LIBWIN32_GETDLLDIRECTORY_DEF { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N") },
+#define LIBWIN32_GETDLLDIRECTORY_DEF_DOC(doc) { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetDllDirectory,libwin32_GetDllDirectory_f);
+PRIVATE DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, DeeObject **__restrict argv) {
+	if (DeeArg_Unpack(argc,argv,":GetDllDirectory"))
+	    goto err;
+	return libwin32_GetDllDirectory_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
+//[[[end]]]
+{
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ typedef DWORD (WINAPI *LPGETDLLDIRECTORYW)(DWORD nBufferLength, LPWSTR lpBuffer);
+ PRIVATE LPGETDLLDIRECTORYW pGetDllDirectoryW = NULL;
+ if (pGetDllDirectoryW == NULL) {
+  LPGETDLLDIRECTORYW new_pGetDllDirectoryW;
+  DBG_ALIGNMENT_DISABLE();
+  new_pGetDllDirectoryW = (LPGETDLLDIRECTORYW)GetProcAddress(GetModuleHandle(TEXT("KERNEL32")),
+                                                             "GetDllDirectoryW");
+  DBG_ALIGNMENT_ENABLE();
+  if (new_pGetDllDirectoryW == NULL)
+      new_pGetDllDirectoryW = (LPGETDLLDIRECTORYW)(void *)(uintptr_t)-1;
+  pGetDllDirectoryW = new_pGetDllDirectoryW;
+ }
+ if (pGetDllDirectoryW == (LPGETDLLDIRECTORYW)(void *)(uintptr_t)-1) {
+  SetLastError(ERROR_INVALID_FUNCTION);
+  return_none;
+ }
+
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  dwError = (*pGetDllDirectoryW)(dwBufSize+1,lpBuffer);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   if (dwError != 0)
+       return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError <= dwBufSize) break;
+  /* Resize to fit. */
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
+ }
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+/*[[[deemon import("_dexutils").gw("SetDllDirectory","lpPathName:nt:LPCWSTR->?Dbool"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR lpPathName);
+PRIVATE DREF DeeObject *DCALL libwin32_SetDllDirectory_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#define LIBWIN32_SETDLLDIRECTORY_DEF { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)->?Dbool") },
+#define LIBWIN32_SETDLLDIRECTORY_DEF_DOC(doc) { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)->?Dbool\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetDllDirectory,libwin32_SetDllDirectory_f);
+#ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
+#define LIBWIN32_KWDS_LPPATHNAME_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName,{ K(lpPathName), KEND });
+#endif /* !LIBWIN32_KWDS_LPPATHNAME_DEFINED */
+PRIVATE DREF DeeObject *DCALL libwin32_SetDllDirectory_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+	LPCWSTR lpPathName_str;
+	DeeStringObject *lpPathName;
+	if (DeeArg_UnpackKw(argc,argv,kw,libwin32_kwds_lpPathName,"o:SetDllDirectory",&lpPathName))
+	    goto err;
+	if (DeeObject_AssertTypeExact(lpPathName,&DeeString_Type))
+	    goto err;
+	lpPathName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpPathName);
+	if unlikely(!lpPathName_str)
+	    goto err;
+	return libwin32_SetDllDirectory_f_impl(lpPathName_str);
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR lpPathName)
+//[[[end]]]
+{
+ BOOL bResult;
+ typedef BOOL (WINAPI *LPSETDLLDIRECTORYW)(LPCWSTR lpPathName);
+ PRIVATE LPSETDLLDIRECTORYW pSetDllDirectoryW = NULL;
+ if (pSetDllDirectoryW == NULL) {
+  LPSETDLLDIRECTORYW new_pSetDllDirectoryW;
+  DBG_ALIGNMENT_DISABLE();
+  new_pSetDllDirectoryW = (LPSETDLLDIRECTORYW)GetProcAddress(GetModuleHandle(TEXT("KERNEL32")),
+                                                             "SetDllDirectoryW");
+  DBG_ALIGNMENT_ENABLE();
+  if (new_pSetDllDirectoryW == NULL)
+      new_pSetDllDirectoryW = (LPSETDLLDIRECTORYW)(void *)(uintptr_t)-1;
+  pSetDllDirectoryW = new_pSetDllDirectoryW;
+ }
+ if (pSetDllDirectoryW == (LPSETDLLDIRECTORYW)(void *)(uintptr_t)-1) {
+  SetLastError(ERROR_INVALID_FUNCTION);
+  return_none;
+ }
+again:
+ if (DeeThread_CheckInterrupt())
+     goto err;
+ DBG_ALIGNMENT_DISABLE();
+ bResult = (*pSetDllDirectoryW)(lpPathName);
+ if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+  DBG_ALIGNMENT_ENABLE();
+  goto again;
+ }
+ DBG_ALIGNMENT_ENABLE();
+ return_bool(bResult);
 err:
  return NULL;
 }
@@ -1005,6 +1132,296 @@ err:
 
 
 
+/*[[[deemon import("_dexutils").gw("GetSystemDirectory","->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemDirectory_f_impl(void);
+PRIVATE DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc, DeeObject **__restrict argv);
+#define LIBWIN32_GETSYSTEMDIRECTORY_DEF { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N") },
+#define LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC(doc) { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetSystemDirectory,libwin32_GetSystemDirectory_f);
+PRIVATE DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc, DeeObject **__restrict argv) {
+	if (DeeArg_Unpack(argc,argv,":GetSystemDirectory"))
+	    goto err;
+	return libwin32_GetSystemDirectory_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemDirectory_f_impl(void)
+//[[[end]]]
+{
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetSystemDirectoryW(lpBuffer,dwBufSize+1);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   if (dwError != 0)
+       return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError <= dwBufSize) break;
+  /* Resize to fit. */
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
+ }
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+
+
+
+/*[[[deemon import("_dexutils").gw("GetWindowsDirectory","->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f_impl(void);
+PRIVATE DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc, DeeObject **__restrict argv);
+#define LIBWIN32_GETWINDOWSDIRECTORY_DEF { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N") },
+#define LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC(doc) { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetWindowsDirectory,libwin32_GetWindowsDirectory_f);
+PRIVATE DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc, DeeObject **__restrict argv) {
+	if (DeeArg_Unpack(argc,argv,":GetWindowsDirectory"))
+	    goto err;
+	return libwin32_GetWindowsDirectory_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f_impl(void)
+//[[[end]]]
+{
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetWindowsDirectoryW(lpBuffer,dwBufSize+1);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   if (dwError != 0)
+       return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError <= dwBufSize) break;
+  /* Resize to fit. */
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
+ }
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+
+/*[[[deemon import("_dexutils").gw("GetSystemWindowsDirectory","->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f_impl(void);
+PRIVATE DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_t argc, DeeObject **__restrict argv);
+#define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N") },
+#define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC(doc) { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWindowsDirectory,libwin32_GetSystemWindowsDirectory_f);
+PRIVATE DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_t argc, DeeObject **__restrict argv) {
+	if (DeeArg_Unpack(argc,argv,":GetSystemWindowsDirectory"))
+	    goto err;
+	return libwin32_GetSystemWindowsDirectory_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f_impl(void)
+//[[[end]]]
+{
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetSystemWindowsDirectoryW(lpBuffer,dwBufSize+1);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   if (dwError != 0)
+       return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError <= dwBufSize) break;
+  /* Resize to fit. */
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
+ }
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+
+
+
+/*[[[deemon import("_dexutils").gw("GetSystemWow64Directory","->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(void);
+PRIVATE DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t argc, DeeObject **__restrict argv);
+#define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N") },
+#define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC(doc) { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWow64Directory,libwin32_GetSystemWow64Directory_f);
+PRIVATE DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t argc, DeeObject **__restrict argv) {
+	if (DeeArg_Unpack(argc,argv,":GetSystemWow64Directory"))
+	    goto err;
+	return libwin32_GetSystemWow64Directory_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(void)
+//[[[end]]]
+{
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ PRIVATE PGET_SYSTEM_WOW64_DIRECTORY_W pGetSystemWow64DirectoryW = NULL;
+ if (pGetSystemWow64DirectoryW == NULL) {
+  PGET_SYSTEM_WOW64_DIRECTORY_W new_pGetSystemWow64DirectoryW;
+  DBG_ALIGNMENT_DISABLE();
+#ifndef GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A
+#define GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A      "GetSystemWow64DirectoryW"
+#endif
+  new_pGetSystemWow64DirectoryW = (PGET_SYSTEM_WOW64_DIRECTORY_W)GetProcAddress(GetModuleHandle(TEXT("KERNEL32")),
+                                                                                GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A);
+  DBG_ALIGNMENT_ENABLE();
+  if (new_pGetSystemWow64DirectoryW == NULL)
+      new_pGetSystemWow64DirectoryW = (PGET_SYSTEM_WOW64_DIRECTORY_W)(void *)(uintptr_t)-1;
+  pGetSystemWow64DirectoryW = new_pGetSystemWow64DirectoryW;
+ }
+ if (pGetSystemWow64DirectoryW == (PGET_SYSTEM_WOW64_DIRECTORY_W)(void *)(uintptr_t)-1) {
+  SetLastError(ERROR_INVALID_FUNCTION);
+  return_none;
+ }
+
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  dwError = (*pGetSystemWow64DirectoryW)(lpBuffer,dwBufSize+1);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   if (dwError != 0)
+       return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError <= dwBufSize) break;
+  /* Resize to fit. */
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
+ }
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+
+
+
+/*[[[deemon import("_dexutils").gw("GetLogicalDriveStrings","->?X2?Dstring?N"); ]]]*/
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(void);
+PRIVATE DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject **__restrict argv);
+#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N") },
+#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC(doc) { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("()->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetLogicalDriveStrings,libwin32_GetLogicalDriveStrings_f);
+PRIVATE DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject **__restrict argv) {
+	if (DeeArg_Unpack(argc,argv,":GetLogicalDriveStrings"))
+	    goto err;
+	return libwin32_GetLogicalDriveStrings_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(void)
+//[[[end]]]
+{
+ LPWSTR lpBuffer,lpNewBuffer;
+ DWORD dwBufSize = PATH_MAX,dwError;
+ lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+ if unlikely(!lpBuffer) goto err;
+again:
+ if (DeeThread_CheckInterrupt()) goto err_result;
+ for (;;) {
+  DBG_ALIGNMENT_DISABLE();
+  dwError = GetLogicalDriveStringsW(dwBufSize+1,lpBuffer);
+  if (!dwError) {
+   dwError = GetLastError();
+   DBG_ALIGNMENT_ENABLE();
+   if (dwError == ERROR_OPERATION_ABORTED)
+       goto again;
+   if (dwError != 0)
+       return_none;
+  }
+  DBG_ALIGNMENT_ENABLE();
+  if (dwError <= dwBufSize) break;
+  /* Resize to fit. */
+  lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer,dwError);
+  if unlikely(!lpNewBuffer) goto err_result;
+  lpBuffer  = lpNewBuffer;
+  dwBufSize = dwError;
+ }
+ lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer,dwError);
+ if likely(lpNewBuffer) lpBuffer = lpNewBuffer;
+ return DeeString_PackWideBuffer(lpBuffer,STRING_ERROR_FREPLAC);
+err_result:
+ DeeString_FreeWideBuffer(lpBuffer);
+err:
+ return NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 PRIVATE struct dex_symbol symbols[] = {
     /* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
     /* TODO: Wrapper types for `WIN32_FIND_DATA' */
@@ -1023,13 +1440,22 @@ PRIVATE struct dex_symbol symbols[] = {
     LIBWIN32_SETFILEPOINTER_DEF_DOC("Returns :none upon error, or the new stream position upon success (s.a. #GetLastError)")
     LIBWIN32_SETFILETIME_DEF
     LIBWIN32_SETFILEVALIDDATA_DEF
-    LIBWIN32_GETTEMPPATH_DEF_DOC("Returns :none upon error, or a string containing a temporary path (s.a. #GetLastError)")
     LIBWIN32_GETDISKFREESPACE_DEF_DOC("Returns :none upon error, or a tuple (lpSectorsPerCluster,lpBytesPerSector,lpNumberOfFreeClusters,lpTotalNumberOfClusters) (s.a. #GetLastError)")
+    LIBWIN32_GETTEMPPATH_DEF_DOC("Returns :none upon error, or a string containing a temporary path (s.a. #GetLastError)")
+    LIBWIN32_GETDLLDIRECTORY_DEF_DOC("Returns :none upon error, or a string describing the windows DLL directory (s.a. #GetLastError)")
+    LIBWIN32_SETDLLDIRECTORY_DEF_DOC("Set the windows DLL directory, as used when loading dynamic libraries, and as returned by #GetDllDirectory")
 
     /* Filesystem functions */
     LIBWIN32_REMOVEDIRECTORY_DEF
     LIBWIN32_CREATEDIRECTORY_DEF
     LIBWIN32_DELETEFILE_DEF
+    LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC("Returns :none upon error, the windows system directory ($\"C:\\\\Windows\\\\system32\") (s.a. #GetLastError)")
+    LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns :none upon error, the windows system directory ($\"C:\\\\Windows\") (s.a. #GetLastError)")
+    LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns :none upon error, the system windows directory ($\"C:\\\\Windows\") (s.a. #GetLastError)")
+    LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns :none upon error, the windows SysWOW64 directory ($\"C:\\\\Windows\\\\SysWOW64\") (s.a. #GetLastError)")
+    LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC("Returns :none upon error, or a $\"\\0\"-seperated list of all of the known system drives ($\"C:\\\\;D:\\\\;E:\\\\\") (s.a. #GetLastError)")
+
+    /* DLL functions */
     LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module (s.a. #GetLastError)")
 
     /* Constant flags. */
