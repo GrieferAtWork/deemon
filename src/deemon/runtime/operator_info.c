@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
+#include <deemon/bytes.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -35,6 +36,8 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
+
+#include "../objects/gc_inspect.h"
 
 #include "runtime_error.h"
 
@@ -938,6 +941,13 @@ invoke_operator(DeeObject *__restrict self,
       goto err;
   goto return_none_;
 
+
+  /* Hidden private operators */
+ case OPERATOR_VISIT:
+  if (DeeArg_Unpack(argc,argv,":__visit__"))
+      goto err;
+  return (DREF DeeObject *)DeeGC_NewReferred(self);
+
  case OPERATOR_CLEAR:
   if (DeeArg_Unpack(argc,argv,":__clear__"))
       goto err;
@@ -952,6 +962,21 @@ invoke_operator(DeeObject *__restrict self,
   DeeObject_PClear(self,gc_prio);
   goto return_none_;
  }
+
+ {
+  bool writable;
+  size_t start,end;
+ case OPERATOR_GETBUF:
+  writable = false;
+  start = 0,end = (size_t)-1;
+  if (DeeArg_Unpack(argc,argv,"|bIuIu:__getbuf__",&writable,&start,&end))
+      goto err;
+  return DeeObject_Bytes(self,
+                         writable ? DEE_BUFFER_FWRITABLE
+                                  : DEE_BUFFER_FREADONLY,
+                         start,
+                         end);
+ } break;
 
  default: break;
  }
