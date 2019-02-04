@@ -1178,6 +1178,7 @@
 #define ASM_RANGE_0_I32       0xf0a4 /* [5][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
 /*      ASM_                  0xf0a5  *               --------                            - ------------------ */
 #define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs tuple doesn't need to be pushed. */
+#define ASM_PUSH_VARKWDS_NE   0xf0a7 /* [2][-0,+1]   `push bool varkwds'                  - Push true/false indicative of variable arguments being present. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set) */
 /*      ASM_                  0xf0a7  *               --------                            - ------------------ */
 /*      ASM_                  0xf0a8  *               --------                            - ------------------ */
 #define ASM16_FPRINT_C        0xf0a9 /* [4][-1,+1]   `print top, const <imm16>'           - Print a constant from `<imm16>' to a file in stack-top. */

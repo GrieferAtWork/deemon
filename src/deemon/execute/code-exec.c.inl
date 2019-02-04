@@ -4951,6 +4951,46 @@ do_pack_dict:
          DISPATCH();
      }
 
+     TARGET(ASM_PUSH_VARKWDS_NE,-0,+1) {
+         DeeObject *value = Dee_False;
+#ifdef EXEC_SAFE
+         if (!(code->co_flags & CODE_FVARKWDS))
+             goto err_requires_varkwds_code;
+#else
+         ASSERT(code->co_flags & CODE_FVARKWDS);
+#endif
+         if (frame->cf_kw) {
+          int temp;
+          value = frame->cf_kw->fk_varkwds;
+          if (!value) {
+           DeeObject *oldval;
+           value = construct_varkwds_mapping();
+           if unlikely(!value) HANDLE_EXCEPT();
+#ifdef CONFIG_NO_THREADS
+           oldval = frame->cf_kw->fk_varkwds;
+           if unlikely(oldval) {
+            VARKWDS_DECREF(value);
+            value = oldval;
+           } else {
+            frame->cf_kw->fk_varkwds = value;
+           }
+#else
+           oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,value);
+           if unlikely(oldval) {
+            VARKWDS_DECREF(value);
+            value = oldval;
+           }
+#endif
+          }
+          temp = DeeObject_Bool(value);
+          if unlikely(temp < 0)
+             HANDLE_EXCEPT();
+          value = DeeBool_For(temp);
+         }
+         PUSHREF(value);
+         DISPATCH();
+     }
+
      /* Variable argument API. */
      TARGET(ASM_VARARGS_GETSIZE,-0,+1) {
          DREF DeeObject *varsize;

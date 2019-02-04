@@ -77,8 +77,8 @@ DECL_BEGIN
  * stack recursion, objects and types used to implement the compiler, as well
  * as other internal types.
  * --------------------------------------------------------------------------------
- * Since the `rt' module as a whole is non-portable, exports symbols are not
- * required to include the `_np' suffix normally required for such symbols. */
+ * Since the `rt' module as a whole is non-portable, exported symbols are not
+ * required to include the `_np' suffix normally required to indicate non-portable. */
 
 
 

@@ -582,7 +582,7 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf0a4 */ "push   range $0, " PREFIX_INTEGERAL, /* `ASM_RANGE_0_I32' */
     /* 0xf0a5 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf0a6 */ "unpack varargs, " PREFIX_STACKEFFECT, /* `ASM_VARARGS_UNPACK' */
-    /* 0xf0a7 */ UNKNOWN_MNEMONIC, /* --- */
+    /* 0xf0a7 */ "push   bool varkwds", /* `ASM_PUSH_VARKWDS_NE' */
     /* 0xf0a8 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf0a9 */ "print  top, ", /* `ASM16_FPRINT_C' */
     /* 0xf0aa */ "print  top, ", /* `ASM16_FPRINT_C_SP' */

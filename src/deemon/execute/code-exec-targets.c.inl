@@ -485,7 +485,7 @@ static void *const f0_targets[256] = {
     /* 0xa4 */ &&target_ASM_RANGE_0_I32,
     /* 0xa5 */ &&unknown_instruction,
     /* 0xa6 */ &&target_ASM_VARARGS_UNPACK,
-    /* 0xa7 */ &&unknown_instruction,
+    /* 0xa7 */ &&target_ASM_PUSH_VARKWDS_NE,
     /* 0xa8 */ &&unknown_instruction,
     /* 0xa9 */ &&target_ASM16_FPRINT_C,
     /* 0xaa */ &&target_ASM16_FPRINT_C_SP,

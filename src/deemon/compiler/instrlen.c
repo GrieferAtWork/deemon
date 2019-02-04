@@ -548,7 +548,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
     /* 0xa4 */ 5, /* `ASM_RANGE_0_I32':             `push range $0, $<imm32>' */
     /* 0xa5 */ 2, /* --- */
     /* 0xa6 */ 3, /* `ASM_VARARGS_UNPACK':          `unpack varargs, #<imm8>' */
-    /* 0xa7 */ 2, /* --- */
+    /* 0xa7 */ 2, /* `ASM_PUSH_VARKWDS_NE':         `push bool varkwds' */
     /* 0xa8 */ 2, /* --- */
     /* 0xa9 */ 4, /* `ASM16_FPRINT_C':              `print top, const <imm16>' */
     /* 0xaa */ 4, /* `ASM16_FPRINT_C_SP':           `print top, const <imm16>, sp' */
@@ -1064,7 +1064,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
     /* 0xa4 */ STACK_EFFECT(0,1),  /* `ASM_RANGE_0_I32':             `push range $0, $<imm32>' */
     /* 0xa5 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xa6 */ STACK_EFFECT_UNDEF, /* `ASM_VARARGS_UNPACK':          `unpack varargs, #<imm8>' */
-    /* 0xa7 */ STACK_EFFECT_UNDEF, /* --- */
+    /* 0xa7 */ STACK_EFFECT(0,1),  /* `ASM_PUSH_VARKWDS_NE':         `push bool varkwds' */
     /* 0xa8 */ STACK_EFFECT_UNDEF, /* --- */
     /* 0xa9 */ STACK_EFFECT(1,1),  /* `ASM16_FPRINT_C':              `print top, const <imm16>' */
     /* 0xaa */ STACK_EFFECT(1,1),  /* `ASM16_FPRINT_C_SP':           `print top, const <imm16>, sp' */
@@ -1622,8 +1622,8 @@ do_prefix:
    op = prefix_ip[1];
    switch (op) {
    case ASM16_OPERATOR & 0xff:
-    ++*psp_add;
-    *psp_sub  += 1 + *(uint8_t *)(prefix_ip + 4);
+    *psp_add   = 1;
+    *psp_sub   = 1 + *(uint8_t *)(prefix_ip + 4);
     *pstacksz -= *(uint8_t *)(prefix_ip + 4);
     break;
    case ASM16_FUNCTION_C & 0xff:
@@ -1671,8 +1671,8 @@ do_prefix:
   }
   /* Adjust the add/sub pair to take a stack prefix into account. */
   if (prefix_stack_sub > *psp_sub) {
-   *psp_add += (prefix_stack_sub-*psp_sub);
-   *psp_sub = prefix_stack_sub;
+   *psp_add += (prefix_stack_sub - *psp_sub);
+   *psp_sub  = prefix_stack_sub;
   }
   break;
 

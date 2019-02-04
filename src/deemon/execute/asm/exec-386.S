@@ -3311,6 +3311,121 @@ target_varargs_unpack:
 	jmp   .except
 
 
+target_push_varkwds_ne:
+#ifndef NDEBUG
+	LOAD_CODE(%eax)
+	ASSERT_BIT(w,$(CODE_FVARKWDS),co_flags(CODE_OR_EAX))
+#endif
+	movl    FRAME_KW, %edx
+	testl   %edx, %edx
+	jz      target_push_false
+	movl    fk_varkwds(%edx), %eax
+	testl   %eax, %eax
+	jz      1f
+.Ltarget_push_varkwds_ne_impl:
+	pushl   %eax /* DeeObject_Bool:self */
+	ADJUST_CFA_OFFSET(4)
+.Ltarget_push_varkwds_ne_impl_onstack:
+	call    fSYM(DeeObject_Bool,4)
+	ADJUST_CFA_OFFSET(-4)
+	xorl    %ecx, %ecx
+	cmpl    $0, %eax
+	jl     .except
+	setg    %cl
+	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	sp_push %eax, 1
+	jmp    .disp
+1:	/* construct_varkwds_mapping() { */
+	movl    fk_kw(%edx), %eax
+	/* if likely(DeeKwds_Check(kw)) */
+	cmpl    $SYM(DeeKwds_Type), ob_type(%eax)
+	jne     1f
+	/* { */
+	movl    FRAME_ARGC, %ecx
+	movl    FRAME_ARGV, %edx
+	leal    (%edx,%ecx,4), %ecx
+	pushl   %ecx /* frame->cf_argv + frame->cf_argc */
+	ADJUST_CFA_OFFSET(4)
+	pushl   %eax          /* kw */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_ARGC    /* positional_argc */
+	ADJUST_CFA_OFFSET(4)
+	pushl   CODE_OR_LOC   /* code */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(BlackListVarkwds_New,16)
+	ADJUST_CFA_OFFSET(-16)
+	jmp     60f
+	/* } else { */
+1:	pushl   %eax          /* kw */
+	ADJUST_CFA_OFFSET(4)
+	pushl   FRAME_ARGC    /* positional_argc */
+	ADJUST_CFA_OFFSET(4)
+	pushl   CODE_OR_LOC   /* code */
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(BlackListMapping_New,12)
+	ADJUST_CFA_OFFSET(-12)
+	/* } */
+60:	testl   %eax, %eax
+	jz     .except
+	/* Cache the newly generated varkwds object. */
+	movl    FRAME_KW, %ecx
+#ifdef CONFIG_NO_THREADS
+	movl    fk_varkwds(%ecx), %edx
+	testl   %edx, %edx
+	jnz     61f
+	movl    %eax, fk_varkwds(%ecx) /* Inherit reference */
+	jmp    .Ltarget_push_varkwds_ne_impl
+61:	decref  %eax, 0, 0, 1 /* Preserve EDX */
+	pushl   %edx
+	ADJUST_CFA_OFFSET(4)
+	jmp    .Ltarget_push_varkwds_ne_impl_onstack
+	ADJUST_CFA_OFFSET(-4)
+#else /* CONFIG_NO_THREADS */
+	movl    %eax, %edx
+	xorl    %eax, %eax
+	/* EAX = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,EDX); */
+	cmpxchgl %edx, fk_varkwds(%ecx)
+	/* if (EAX != NULL) */
+	jnz     1f
+	/* { */
+	pushl   %edx
+	ADJUST_CFA_OFFSET(4)
+	jmp    .Ltarget_push_varkwds_ne_impl_onstack
+	ADJUST_CFA_OFFSET(-4)
+	/* } */
+1:	/* Another thread already loaded `EAX'. */
+	movl    ob_type(%edx), %ecx
+	cmpl    $SYM(DeeKwdsMapping_Type), %ecx
+	jne     1f
+	/* Cleanup: DeeKwdsMapping_CheckExact() */
+	pushl   %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl   %edx
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(DeeKwdsMapping_Decref,4)
+	ADJUST_CFA_OFFSET(-4)
+	jmp    .Ltarget_push_varkwds_ne_impl_onstack
+	ADJUST_CFA_OFFSET(-4)
+1:	cmpl    $SYM(BlackListVarkwds_Type), %ecx
+	jne     1f
+	/* Cleanup: BlackListVarkwds_CheckExact() */
+	pushl   %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl   %edx
+	ADJUST_CFA_OFFSET(4)
+	call    fSYM(BlackListVarkwds_Decref,4)
+	ADJUST_CFA_OFFSET(-4)
+	jmp    .Ltarget_push_varkwds_ne_impl_onstack
+	ADJUST_CFA_OFFSET(-4)
+	/* Cleanup: Dee_Decref() */
+1:	pushl   %eax
+	ADJUST_CFA_OFFSET(4)
+	decref  %edx
+	jmp    .Ltarget_push_varkwds_ne_impl_onstack
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+
+
 target_varargs_getsize:
 	LOAD_CODE(%ecx)
 	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
@@ -9053,6 +9168,9 @@ prefix_target_range_0_i32 = prefix_invop
 .ifndef prefix_target_varargs_unpack
 prefix_target_varargs_unpack = prefix_invop
 .endif
+.ifndef prefix_target_push_varkwds_ne
+prefix_target_push_varkwds_ne = prefix_invop
+.endif
 .ifndef prefix_target16_fprint_c
 prefix_target16_fprint_c = prefix_invop
 .endif
@@ -9629,7 +9747,7 @@ inst_table_f0:
 	.long target_range_0_i32             /* `push range $0, $<imm32>' */
 	.long invop
 	.long target_varargs_unpack          /* `unpack varargs, #<imm8>' */
-	.long invop
+	.long target_push_varkwds_ne         /* `push bool varkwds' */
 	.long invop
 	.long target16_fprint_c              /* `print top, const <imm16>' */
 	.long target16_fprint_c_sp           /* `print top, const <imm16>, sp' */
@@ -10145,7 +10263,7 @@ prefix_inst_table_f0:
 	.long prefix_target_range_0_i32             /* `push range $0, $<imm32>' */
 	.long prefix_invop
 	.long prefix_target_varargs_unpack          /* `unpack varargs, #<imm8>' */
-	.long prefix_invop
+	.long prefix_target_push_varkwds_ne         /* `push bool varkwds' */
 	.long prefix_invop
 	.long prefix_target16_fprint_c              /* `print top, const <imm16>' */
 	.long prefix_target16_fprint_c_sp           /* `print top, const <imm16>, sp' */
