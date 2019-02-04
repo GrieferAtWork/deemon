@@ -21,36 +21,45 @@
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/asm.h>
+#include <deemon/attribute.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
+#include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/asm.h>
-#include <deemon/float.h>
-#include <deemon/map.h>
-#include <deemon/set.h>
-#include <deemon/module.h>
-#include <deemon/string.h>
-#include <deemon/traceback.h>
-#include <deemon/bytes.h>
-#include <deemon/seq.h>
-#include <deemon/list.h>
-#include <deemon/tuple.h>
-#include <deemon/hashset.h>
-#include <deemon/dict.h>
 #include <deemon/compiler/compiler.h>
+#include <deemon/cell.h>
 #include <deemon/dex.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/float.h>
+#include <deemon/gc.h>
+#include <deemon/hashset.h>
+#include <deemon/instancemethod.h>
 #include <deemon/int.h>
+#include <deemon/list.h>
+#include <deemon/map.h>
+#include <deemon/module.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/property.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
+#include <deemon/string.h>
+#include <deemon/super.h>
 #include <deemon/thread.h>
+#include <deemon/traceback.h>
+#include <deemon/tuple.h>
+#include <deemon/weakref.h>
 
 #include "librt.h"
 
@@ -301,28 +310,14 @@ librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED
  return DeeObject_GetAttr((DeeObject *)&DeeTraceback_Type,
                           (DeeObject *)STR_ITERATOR);
 }
-LOCAL DREF DeeObject *DCALL
-librt_get_GCEnum_singleton_impl_f(void) {
- return DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(),"gc");
-}
-PRIVATE DREF DeeObject *DCALL
-librt_get_GCEnum_singleton_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
- return librt_get_GCEnum_singleton_impl_f();
-}
 PRIVATE DREF DeeObject *DCALL
 librt_get_GCEnum_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
- return get_type_of(librt_get_GCEnum_singleton_impl_f());
+ return_reference((DREF DeeObject *)Dee_TYPE(&DeeGCEnumTracked_Singleton));
 }
 LOCAL DREF DeeObject *DCALL
 librt_get_GCSet_empty_impl_f(void) {
- DREF DeeObject *gc,*result = NULL;
- gc = librt_get_GCEnum_singleton_impl_f();
- if likely(gc) {
-  DeeObject *argv[] = { Dee_None };
-  result = DeeObject_CallAttrString(gc,"reachable",1,argv);
-  Dee_Decref(gc);
- }
- return result;
+ DeeObject *argv[] = { Dee_None };
+ return DeeObject_CallAttrString(&DeeGCEnumTracked_Singleton,"reachable",1,argv);
 }
 PRIVATE DREF DeeObject *DCALL
 librt_get_GCSet_empty_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
@@ -1298,7 +1293,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwds,librt_get_BlackListVarkwds_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwdsIterator,librt_get_BlackListVarkwdsIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListMapping,librt_get_BlackListMapping_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListMappingIterator,librt_get_BlackListMappingIterator_f);
-PRIVATE DEFINE_CMETHOD(librt_get_GCEnum_singleton,librt_get_GCEnum_singleton_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCEnum,librt_get_GCEnum_f);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwds,librt_get_DocKwds_f);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwdsIterator,librt_get_DocKwdsIterator_f);
@@ -1672,7 +1666,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "StopIteration_instance", (DeeObject *)&DeeError_StopIteration_instance, MODSYM_FREADONLY },
     { "Interrupt_instance", (DeeObject *)&DeeError_Interrupt_instance, MODSYM_FREADONLY },
 
-    /* Types used to drive general purpose iteartor support */
+    /* Types used to drive general purpose iterator support */
     { "GenericIterator", (DeeObject *)&librt_get_GenericIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* DeeGenericIterator_Type */
     { "IteratorPending", (DeeObject *)&librt_get_IteratorPending, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* IteratorPending_Type */
     { "IteratorFuture", (DeeObject *)&librt_get_IteratorFuture, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* IteratorFuture_Type */
@@ -1708,7 +1702,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "Int_m1", (DeeObject *)&DeeInt_MinusOne, MODSYM_FREADONLY, DOC("The integer constant ${-1}") },
     { "GCSet_empty", (DeeObject *)&librt_get_GCSet_empty, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR,
       DOC("Special instance of #GCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
-    { "GCEnum_singleton", (DeeObject *)&librt_get_GCEnum_singleton, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR,
+    { "GCEnum_singleton", &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY|MODSYM_FCONSTEXPR,
       DOC("The gc-singleton which can also be found under :deemon:gc") }, /* DeeGCEnumTracked_Singleton */
     { "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR,
       DOC("The result of ${type(gc from deemon)}") }, /* GCEnum_Type */
@@ -1734,11 +1728,20 @@ PRIVATE struct dex_symbol symbols[] = {
     { "Function", (DeeObject *)&DeeFunction_Type, MODSYM_FREADONLY },
     { "Type", (DeeObject *)&DeeType_Type, MODSYM_FREADONLY },
     { "Object", (DeeObject *)&DeeObject_Type, MODSYM_FREADONLY },
+    { "Callable", (DeeObject *)&DeeCallable_Type, MODSYM_FREADONLY },
+    { "Numeric", (DeeObject *)&DeeNumeric_Type, MODSYM_FREADONLY },
+    { "InstanceMethod", (DeeObject *)&DeeInstanceMethod_Type, MODSYM_FREADONLY },
+    { "Property", (DeeObject *)&DeeProperty_Type, MODSYM_FREADONLY },
+    { "Super", (DeeObject *)&DeeSuper_Type, MODSYM_FREADONLY },
+    { "Thread", (DeeObject *)&DeeThread_Type, MODSYM_FREADONLY },
+    { "WeakRef", (DeeObject *)&DeeWeakRef_Type, MODSYM_FREADONLY },
+    { "Cell", (DeeObject *)&DeeCell_Type, MODSYM_FREADONLY },
     { "File", (DeeObject *)&DeeFile_Type, MODSYM_FREADONLY },                       /* (intended) base class for all file types (is to `FileType' what `Object' is to `Type'). */
     { "FileBuffer", (DeeObject *)&DeeFileBuffer_Type, MODSYM_FREADONLY },           /* `file.buffer' */
     { "SystemFile", (DeeObject *)&DeeSystemFile_Type, MODSYM_FREADONLY },           /* Base class for file types that are managed by the system. */
     { "FSFile", (DeeObject *)&DeeFSFile_Type, MODSYM_FREADONLY },                   /* Derived from `SystemFile': A system file that has been opened via the file system. */
     { "NoneType", (DeeObject *)&DeeNone_Type, MODSYM_FREADONLY },                   /* `type(none)' */
+    { "None", Dee_None, MODSYM_FREADONLY },                                         /* `none' */
     { "MemoryFile", (DeeObject *)&DeeMemoryFile_Type, MODSYM_FREADONLY,             /* An internal file type for streaming from read-only raw memory. */
       DOC("A special file type that may be used by the deemon runtime to temporarily "
           "allow user-code access to raw memory regions via the file interface, rather "
@@ -1748,6 +1751,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "access to wrapped memory once the file's creator destroys it") },
     { "FileReader", (DeeObject *)&DeeFileReader_Type, MODSYM_FREADONLY },           /* `file.reader' */
     { "FileWriter", (DeeObject *)&DeeFileWriter_Type, MODSYM_FREADONLY },           /* `file.writer' */
+    { "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },             /* `attribute' */
+    { "EnumAttr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY },               /* `enumattr' */
+    { "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.iterator' */
 
     { NULL }
 };
