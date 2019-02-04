@@ -213,39 +213,39 @@ done:
 
 PRIVATE DREF DeeObject *DCALL
 attr_canget(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_PERMGET);
+ return_bool_(self->a_info.a_perm & ATTR_PERMGET);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_candel(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_PERMDEL);
+ return_bool_(self->a_info.a_perm & ATTR_PERMDEL);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_canset(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_PERMSET);
+ return_bool_(self->a_info.a_perm & ATTR_PERMSET);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_cancall(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_PERMCALL);
+ return_bool_(self->a_info.a_perm & ATTR_PERMCALL);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_isprivate(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_PRIVATE);
+ return_bool_(self->a_info.a_perm & ATTR_PRIVATE);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_isinstance(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_IMEMBER);
+ return_bool_(self->a_info.a_perm & ATTR_IMEMBER);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_isproperty(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_PROPERTY);
+ return_bool_(self->a_info.a_perm & ATTR_PROPERTY);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_iswrapper(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_WRAPPER);
+ return_bool_(self->a_info.a_perm & ATTR_WRAPPER);
 }
 PRIVATE DREF DeeObject *DCALL
 attr_isclass(Attr *__restrict self) {
- return_bool_(self->a_info.a_perm&ATTR_CMEMBER);
+ return_bool_(self->a_info.a_perm & ATTR_CMEMBER);
 }
 
 
@@ -604,10 +604,7 @@ err:
 
 PRIVATE struct type_method attr_class_methods[] = {
     { "exists", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&attribute_exists,
-      DOC("(ob,name:?Dstring,flagmask=!0,flagval:?Dint=!VAflagmask,decl?)->?Dbool\n"
-          "(ob,name:?Dstring,flagmask=!P{},flagval:?Dint=!VAflagmask,decl?)->?Dbool\n"
-          "(ob,name:?Dstring,flagmask=!0,flagval:?Dstring=!VAflagmask,decl?)->?Dbool\n"
-          "(ob,name:?Dstring,flagmask=!P{},flagval:?Dstring=!VAflagmask,decl?)->?Dbool\n"
+      DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
           "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
           "Taking the same arguments as #op:constructor, check if the an attribute matching "
           "the given arguments exists, returning :true/:false indicative of this\n"
@@ -623,14 +620,7 @@ PRIVATE struct type_method attr_class_methods[] = {
           ),
       TYPE_METHOD_FKWDS },
     { "lookup", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&attribute_lookup,
-      DOC("(ob,name:?Dstring,flagmask=!0,flagval:?Dint=!VAflagmask,decl?)->?.\n"
-          "(ob,name:?Dstring,flagmask=!0,flagval:?Dint=!VAflagmask,decl?)->?N\n"
-          "(ob,name:?Dstring,flagmask=!P{},flagval:?Dint=!VAflagmask,decl?)->?.\n"
-          "(ob,name:?Dstring,flagmask=!P{},flagval:?Dint=!VAflagmask,decl?)->?N\n"
-          "(ob,name:?Dstring,flagmask=!0,flagval:?Dstring=!VAflagmask,decl?)->?.\n"
-          "(ob,name:?Dstring,flagmask=!0,flagval:?Dstring=!VAflagmask,decl?)->?N\n"
-          "(ob,name:?Dstring,flagmask=!P{},flagval:?Dstring=!VAflagmask,decl?)->?.\n"
-          "(ob,name:?Dstring,flagmask=!P{},flagval:?Dstring=!VAflagmask,decl?)->?N\n"
+      DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
           "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
           "Same as #op:constructor, but return :none if the attribute doesn't exist\n"
           ">static function lookup(ob,name,flagmask = \"\",flagval = \"\",decl?) {\n"
@@ -652,10 +642,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
     /* .tp_name     = */DeeString_STR(&str_attribute),
     /* .tp_doc      = */DOC("The descriptor object for abstract object attributes\n"
                             "\n"
-                            "(ob,name:?Dstring,flagmask=!0,flagval:?Dint=!VAflagmask,decl?)\n"
-                            "(ob,name:?Dstring,flagmask=!P{},flagval:?Dint=!VAflagmask,decl?)\n"
-                            "(ob,name:?Dstring,flagmask=!0,flagval:?Dstring=!VAflagmask,decl?)\n"
-                            "(ob,name:?Dstring,flagmask=!P{},flagval:?Dstring=!VAflagmask,decl?)\n"
+                            "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)\n"
                             "@param flagmask Set of attribute flags to mask when searching for matches (s.a. #flags)\n"
                             "@param flagval Set of attribute flags required when searching for matches (s.a. #flags) "
                                            "(When only this is given, and @flagmask is omit (as possible when "
@@ -867,8 +854,8 @@ enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE void DCALL
-enumattriter_init(EnumAttrIter *__restrict self,
-                  EnumAttr *__restrict seq) {
+enumattriter_setup(EnumAttrIter *__restrict self,
+                   EnumAttr *__restrict seq) {
  self->ei_seq = seq;
  Dee_Incref(seq);
 #ifdef CONFIG_LONGJMP_ENUMATTR
@@ -887,7 +874,7 @@ enumattr_iter(EnumAttr *__restrict self) {
  result = DeeObject_MALLOC(EnumAttrIter);
  if unlikely(!result) goto done;
  DeeObject_Init(result,&DeeEnumAttrIterator_Type);
- enumattriter_init(result,self);
+ enumattriter_setup(result,self);
 done:
  return result;
 }
@@ -1000,14 +987,17 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 
 
 PRIVATE int DCALL
-enumattriter_ctor(EnumAttrIter *__restrict self,
+enumattriter_init(EnumAttrIter *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  EnumAttr *seq;
- if (DeeArg_Unpack(argc,argv,"o:_EnumAttrIterator",&seq) ||
-     DeeObject_AssertType((DeeObject *)seq,&DeeEnumAttr_Type))
-     return -1;
- enumattriter_init(self,seq);
+ if (DeeArg_Unpack(argc,argv,"o:_EnumAttrIterator",&seq))
+     goto err;
+ if (DeeObject_AssertType((DeeObject *)seq,&DeeEnumAttr_Type))
+     goto err;
+ enumattriter_setup(self,seq);
  return 0;
+err:
+ return -1;
 }
 PRIVATE void DCALL
 enumattriter_fini(EnumAttrIter *__restrict self) {
@@ -1271,10 +1261,10 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&enumattriter_ctor,
+                /* .tp_ctor      = */(void *)NULL,
+                /* .tp_copy_ctor = */(void *)NULL,
+                /* .tp_deep_ctor = */(void *)NULL,
+                /* .tp_any_ctor  = */(void *)&enumattriter_init,
                 TYPE_FIXED_ALLOCATOR(EnumAttrIter)
             }
         },
