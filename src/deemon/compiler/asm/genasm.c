@@ -466,15 +466,28 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
       !symbol_get_haseffect(sym,self->a_scope))
        break;
   if (asm_putddi(self)) goto err;
-  if ((gflags & ASM_G_FLAZYBOOL) &&
-       DeeBaseScope_IsVarargs(current_basescope,sym)) {
-   /* Special case: If the caller accesses the varargs-symbol in a boolean-context,
-    *               then we can simply check if the number of varargs is non-zero,
-    *               emulating the behavior of tuple's `operator bool()'. */
-   if (asm_gcmp_gr_varargs_sz(0)) goto err;
-   goto done;
+  if (gflags & ASM_G_FLAZYBOOL) {
+   if (DeeBaseScope_IsVarargs(current_basescope,sym)) {
+    /* Special case: If the caller accesses the varargs-symbol in a boolean-context,
+     *               then we can simply check if the number of varargs is non-zero,
+     *               emulating the behavior of tuple's `operator bool()'. */
+    if (asm_gcmp_gr_varargs_sz(0))
+        goto err;
+    goto done;
+   }
+   if (DeeBaseScope_IsVarkwds(current_basescope,sym)) {
+    /* Special case: If the caller accesses the varkwds-symbol in a boolean-context.
+     * NOTE: Don't do this when optimizing for size, as `push bool varkwds' takes
+     *       one additional byte of text when compared to `push varkwds' */
+    if (!(current_assembler.a_flag & ASM_FOPTIMIZE_SIZE)) {
+     if (asm_gbool_varkwds())
+         goto err;
+     goto done;
+    }
+   }
   }
-  if (asm_gpush_symbol(sym,self)) goto err;
+  if (asm_gpush_symbol(sym,self))
+      goto err;
   goto pop_unused;
  } break;
 
@@ -1541,6 +1554,11 @@ push_a_if_used:
       if (asm_ggetsize_varargs()) goto err;
      }
      goto done;
+    }
+    if (DeeBaseScope_IsVarkwds(current_basescope,sym) &&
+       (gflags & ASM_G_FLAZYBOOL)) {
+     if (asm_gbool_varkwds())
+         goto err;
     }
    }
    break;

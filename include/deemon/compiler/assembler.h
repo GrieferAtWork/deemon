@@ -1252,6 +1252,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gstr()                    (asm_dicsp(),asm_put(ASM_STR))
 #define asm_grepr()                   (asm_dicsp(),asm_put(ASM_REPR))
 #define asm_gbool(invert)             (asm_dicsp(),asm_put(ASM_BOOL^(instruction_t)!!(invert)))
+#define asm_gbool_varkwds()           (asm_incsp(),asm_put16(ASM_PUSH_VARKWDS_NE))
 #define asm_gassign()                 (asm_ddcsp(),asm_put(ASM_ASSIGN))
 #define asm_gmove_assign()            (asm_ddcsp(),asm_put(ASM_MOVE_ASSIGN))
 #define asm_gcopy()                   (asm_dicsp(),asm_put(ASM_COPY))
