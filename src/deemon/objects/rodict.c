@@ -824,7 +824,8 @@ PRIVATE struct type_method rodict_methods[] = {
 };
 
 PRIVATE struct type_getset rodict_getsets[] = {
-    { "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") }
+    { "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+    { NULL }
 };
 
 PRIVATE struct type_member rodict_members[] = {

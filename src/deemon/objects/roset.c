@@ -561,7 +561,8 @@ PRIVATE struct type_method roset_methods[] = {
 };
 
 PRIVATE struct type_getset roset_getsets[] = {
-    { "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") }
+    { "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+    { NULL }
 };
 
 PRIVATE struct type_member roset_members[] = {

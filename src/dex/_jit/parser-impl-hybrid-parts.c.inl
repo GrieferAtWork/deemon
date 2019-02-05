@@ -453,15 +453,29 @@ INTERN RETURN_TYPE FCALL
 H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
 #endif
 {
+ RETURN_TYPE result;
  ASSERT(is_from_import
       ? JITLexer_ISKWD(self,"from")
       : JITLexer_ISKWD(self,"import"));
+#ifdef JIT_HYBRID
+ if (!is_from_import) {
+  *pwas_expression = AST_PARSE_WASEXPR_YES;
+#ifdef JIT_EVAL
+  result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(),"import");
+#else /* JIT_EVAL */
+  result = 0;
+#endif /* !JIT_EVAL */
+  return result;
+ }
+#endif
+
  (void)is_from_import;
 #ifdef JIT_HYBRID
  (void)pwas_expression;
 #endif
  DERROR_NOTIMPLEMENTED();
- return ERROR;
+ result = ERROR;
+ return result;
 }
 
 
