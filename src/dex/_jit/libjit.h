@@ -530,9 +530,6 @@ struct jit_context {
 #define JITContext_Init(x)   memset(x,0,sizeof(JITContext))
 #define JITContext_Fini(x)  (void)0
 
-/* Check if exception handling is allowed. */
-#define JITContext_AllowCatch(x) ((x)->jc_except != (uint16_t)-1)
-
 
 /* Check if the current scope is the global scope. */
 #define JITContext_IsGlobalScope(x) \
@@ -612,7 +609,7 @@ INTDEF int32_t FCALL JITLexer_ParseOperatorName(JITLexer *__restrict self, uint1
 #define AST_OPERATOR_FOR                  0xf005 /* `for' */
 
 
-/* Check if a token `tok_id' may referr to the start of an expression. */
+/* Check if a token `tok_id' may refer to the start of an expression. */
 INTDEF bool FCALL JIT_MaybeExpressionBegin(unsigned int tok_id);
 
 

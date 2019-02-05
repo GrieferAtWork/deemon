@@ -134,6 +134,7 @@ assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
 	assert x.__kwds__ == { "x", "y" };
 	assert x.__argc_min__ == 0;
 	assert x.__argc_max__ == 2;
+	assert x.__globals__ === glob;
 }
 
 
