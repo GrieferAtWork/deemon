@@ -773,9 +773,9 @@ PRIVATE struct type_member code_members[] = {
     TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),
                           "->?Dmodule"),
     TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),
-                          "Min amount of arguments required to execute this code"),
+                          "Min amount of arguments required to execute @this code"),
     TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),
-                          "Max amount of arguments accepted by this code (excluding a varargs argument)"),
+                          "Max amount of arguments accepted by @this code (excluding a varargs or varkwds argument)"),
     TYPE_MEMBER_END
 };
 

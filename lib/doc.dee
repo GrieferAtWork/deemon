@@ -87,8 +87,6 @@ local function lookup_object_in_module(mod: deemon.module,ob): string | none {
 local function encode_type(tp: deemon.type_): string {
 	if (tp === deemon.object)
 		return "?O";
-	if (tp === deemon.object)
-		return "?O";
 	local mod = deemon.type_.__module__(tp);
 	if (mod is none) /* Module could not be determined */
 		return "?U" + encode_name(tp.__name__);

@@ -280,6 +280,16 @@ PUBLIC DeeObject *DCALL DeeError_Current(void) {
  return ts->t_except ? ts->t_except->ef_error : NULL;
 }
 
+/* Check if the current exception is an instance of `tp' */
+PUBLIC bool DCALL DeeError_CurrentIs(DeeTypeObject *__restrict tp) {
+ DeeThreadObject *ts = DeeThread_Self();
+ ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
+ if unlikely(!ts->t_except)
+    return false;
+ return DeeObject_InstanceOf(ts->t_except->ef_error,tp);
+}
+
+
 
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_NO_THREADS

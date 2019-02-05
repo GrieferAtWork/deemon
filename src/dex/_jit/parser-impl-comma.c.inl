@@ -54,6 +54,7 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
   *                                          expr_comma = { }
   */
 #ifdef JIT_EVAL
+ JITSymbol var_symbol;
  size_t expand_count;
  struct objectlist expr_batch = OBJECTLIST_INIT; /* Expressions that have already been written to. */
  JITLValueList expr_comma = JITLVALUELIST_INIT;  /* Expressions that are pending getting assigned. */
@@ -74,7 +75,7 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 next_expr:
  need_semi = !!(mode&AST_COMMA_PARSESEMI);
  /* Parse an expression (special handling for functions/classes) */
-#if 0 /* TODO */
+#if 0 /* TODO: Class declarations */
  if (self->jl_tok == KWD_final || self->jl_tok == KWD_class) {
   /* Declare a new class */
   uint16_t class_flags = current_tags.at_class_flags & 0xf; /* From tags. */
@@ -109,48 +110,168 @@ next_expr:
                       &loc);
   if unlikely(!current) goto err;
   need_semi = false; /* Classes always have braces and don't need semicolons. */
- } else if (self->jl_tok == KWD_function) {
+ } else
+#endif
+#if 1
+ if (JITLexer_ISKWD(self,"function")) {
   /* Declare a new function */
-  struct TPPKeyword *function_name = NULL;
-  struct symbol *function_symbol = NULL;
-  unsigned int symbol_mode = lookup_mode;
-  struct ast_loc function_name_loc;
-  loc_here(&loc);
-  if unlikely(yield() < 0) goto err;
-  if (TPP_ISKEYWORD(self->jl_tok)) {
-   loc_here(&function_name_loc);
-   function_name = token.t_kwd;
-   if unlikely(yield() < 0) goto err;
+#ifdef JIT_EVAL
+  unsigned char *name_start;
+  unsigned char *name_end;
+  unsigned char *param_start;
+  unsigned char *param_end;
+  unsigned int recursion;
+  name_start = name_end = NULL;
+  var_symbol.js_kind = JIT_SYMBOL_NONE;
+#endif
+  JITLexer_Yield(self);
+  if (self->jl_tok == JIT_KEYWORD) {
+   unsigned int symbol_mode = lookup_mode;
    if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
     /* Use the default mode appropriate for the current scope. */
-    if (current_scope == &current_rootscope->rs_scope.bs_scope)
+    if (JITContext_IsGlobalScope(self->jl_context))
          symbol_mode |= LOOKUP_SYM_VGLOBAL;
     else symbol_mode |= LOOKUP_SYM_VLOCAL;
    }
    /* Create the symbol that will be used by the function. */
-   function_symbol = lookup_symbol(symbol_mode,function_name,&loc);
-   if unlikely(!function_symbol) goto err;
+#ifdef JIT_EVAL
+   name_start = self->jl_tokstart;
+   name_end   = self->jl_tokend;
+   if (JITContext_Lookup(self->jl_context,
+                        &var_symbol,
+                        (char const *)name_start,
+                        (size_t)(name_end - name_start),
+                         symbol_mode) < 0)
+       goto err;
+#endif
+   JITLexer_Yield(self);
   }
-  {
-   struct ast_tags_printers temp;
-   AST_TAGS_BACKUP_PRINTERS(temp);
-   current = ast_parse_function(function_name,&need_semi,false,&loc);
-   AST_TAGS_RESTORE_PRINTERS(temp);
+  if (self->jl_tok == '(') {
+   JITLexer_Yield(self);
+#ifdef JIT_EVAL
+   param_end = param_start = self->jl_tokstart;
+   recursion = 1;
+   while (self->jl_tok) {
+    if (self->jl_tok == '(')
+     ++recursion;
+    else if (self->jl_tok == ')') {
+     --recursion;
+     if (!recursion) {
+      JITLexer_Yield(self);
+      break;
+     }
+    }
+    param_end = self->jl_tokend;
+    JITLexer_Yield(self);
+   }
+#else
+   if (JITLexer_SkipPair(self,'(',')'))
+       goto err;
+#endif
+  } else {
+   SYNTAXERROR("Expected `(' after `function', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+                       self->jl_tokstart);
+err_var_symbol:
+#ifdef JIT_EVAL
+   JITSymbol_Fini(&var_symbol);
+#endif
+   goto err;
   }
-  if unlikely(!current) goto err;
-  /* Pack together the documentation string for the function. */
-  if unlikely(ast_tags_clear()) goto err_current;
-  if (function_symbol) {
-   DREF struct ast *function_name_ast,*merge;
-   /* Store the function in the parsed symbol. */
-   function_name_ast = ast_setddi(ast_sym(function_symbol),&function_name_loc);
-   if unlikely(!function_name_ast) goto err_current;
-   merge = ast_setddi(ast_action2(AST_FACTION_STORE,function_name_ast,current),&loc);
-   Dee_Decref(function_name_ast);
-   if unlikely(!merge) goto err_current;
-   Dee_Decref(current);
-   current = merge;
+  if (self->jl_tok == TOK_ARROW) {
+#ifdef JIT_EVAL
+   unsigned char *source_start;
+   unsigned char *source_end;
+   JITLexer_Yield(self);
+   source_start = self->jl_tokstart;
+   if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FSECONDARY))
+       goto err;
+   source_end = self->jl_tokstart;
+   /* Trim trailing whitespace. */
+   while (source_end > source_start) {
+    uint32_t ch;
+    char const *next = (char const *)source_end;
+    ch = utf8_readchar_rev(&next,(char const *)source_start);
+    if (!DeeUni_IsSpace(ch)) break;
+    source_end = (unsigned char *)next;
+   }
+   current = JITFunction_New((char const *)name_start,
+                             (char const *)name_end,
+                             (char const *)param_start,
+                             (char const *)param_end,
+                             (char const *)source_start,
+                             (char const *)source_end,
+                              self->jl_context->jc_locals.otp_tab,
+                              self->jl_text,
+                              self->jl_context->jc_impbase,
+                              self->jl_context->jc_globals,
+                              JIT_FUNCTION_FRETEXPR);
+   if (!current && DeeError_CurrentIs(&DeeError_SyntaxError))
+        self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
+#else
+   JITLexer_Yield(self);
+   current = JITLexer_SkipExpression(self,JITLEXER_EVAL_FSECONDARY);
+#endif
+   need_semi = true;
+  } else if (self->jl_tok == '{') {
+#ifdef JIT_EVAL
+   /* Lambda function. */
+   unsigned char *source_start;
+   unsigned char *source_end;
+   unsigned int recursion = 1;
+   JITLexer_Yield(self);
+   source_end = source_start = self->jl_tokstart;
+   /* Scan the body of the function. */
+   while (self->jl_tok) {
+    if (self->jl_tok == '{')
+     ++recursion;
+    else if (self->jl_tok == '}') {
+     --recursion;
+     if (!recursion) {
+      JITLexer_Yield(self);
+      break;
+     }
+    }
+    source_end = self->jl_tokend;
+    JITLexer_Yield(self);
+   }
+   current = JITFunction_New((char const *)name_start,
+                             (char const *)name_end,
+                             (char const *)param_start,
+                             (char const *)param_end,
+                             (char const *)source_start,
+                             (char const *)source_end,
+                              self->jl_context->jc_locals.otp_tab,
+                              self->jl_text,
+                              self->jl_context->jc_impbase,
+                              self->jl_context->jc_globals,
+                              JIT_FUNCTION_FNORMAL);
+   if (!current && DeeError_CurrentIs(&DeeError_SyntaxError))
+        self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
+#else
+   JITLexer_Yield(self);
+   current = JITLexer_SkipPair(self,'{','}');
+#endif
+   need_semi = false;
+  } else {
+   SYNTAXERROR("Expected `->' or `{' after `function(...)', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+                       self->jl_tokstart);
+   goto err_var_symbol;
   }
+  if (ISERR(current))
+      goto err_var_symbol;
+#ifdef JIT_EVAL
+  if (var_symbol.js_kind != JIT_SYMBOL_NONE) {
+   /* Now store the generated value into the target symbol. */
+   error = JITLValue_SetValue((JITLValue *)&var_symbol,
+                               self->jl_context,
+                               current);
+   if unlikely(error)
+      goto err_currrent_var_symbol;
+  }
+  JITSymbol_Fini(&var_symbol);
+#endif
  } else
 #endif
  {
@@ -176,7 +297,6 @@ next_expr:
    RETURN_TYPE args;
 #ifdef JIT_EVAL
    RETURN_TYPE merge;
-   JITSymbol var_symbol;
    unsigned int used_lookup_mode = lookup_mode;
    LOAD_LVALUE(current,err);
    if (!(lookup_mode & LOOKUP_SYM_VMASK) &&

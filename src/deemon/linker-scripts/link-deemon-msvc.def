@@ -102,6 +102,7 @@ EXPORTS
 	DeeDict_NewKeyItemsInherited@8=_DeeDict_NewKeyItemsInherited@8
 	DeeError_Catch@4=_DeeError_Catch@4
 	DeeError_Current@0=_DeeError_Current@0
+	DeeError_CurrentIs@4=_DeeError_CurrentIs@4
 	DeeError_Display@12=_DeeError_Display@12
 	DeeError_Handled@4=_DeeError_Handled@4
 	DeeError_Print@8=_DeeError_Print@8

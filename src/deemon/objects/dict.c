@@ -860,7 +860,10 @@ again:
   return 0;
  }
  /* Rehash the dict and try again. */
- if (dict_rehash(me,1)) goto again;
+ if (dict_rehash(me,1)) {
+  DeeDict_LockDowngrade(self);
+  goto again;
+ }
 collect_memory:
  DeeDict_LockEndWrite(self);
  if (Dee_CollectMemory(1)) goto again_lock;
@@ -943,7 +946,10 @@ again:
   return 0;
  }
  /* Rehash the dict and try again. */
- if (dict_rehash(me,1)) goto again;
+ if (dict_rehash(me,1)) {
+  DeeDict_LockDowngrade(self);
+  goto again;
+ }
 collect_memory:
  DeeDict_LockEndWrite(self);
  if (Dee_CollectMemory(1)) goto again_lock;

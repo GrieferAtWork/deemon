@@ -44,6 +44,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  char const *usertext; size_t usersize;
  DeeThreadObject *ts;
  PRIVATE struct keyword kwlist[] = { K(expr), K(globals), K(base), KEND };
+ globals = NULL;
  context.jc_impbase = NULL;
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:exec",
                     &lexer.jl_text,
@@ -86,6 +87,23 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  JITLexer_Start(&lexer,
                (unsigned char *)usertext,
                (unsigned char *)usertext + usersize);
+#if 1
+ {
+  unsigned int was;
+  result = JITLexer_EvalHybrid(&lexer,&was);
+  while (lexer.jl_tok) {
+   if unlikely(!result)
+      break;
+   if (result == JIT_LVALUE) {
+    JITLValue_Fini(&lexer.jl_lvalue);
+    lexer.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+   } else {
+    Dee_Decref(result);
+   }
+   result = JITLexer_EvalHybridSecondary(&lexer,&was);
+  }
+ }
+#else
  result = JITLexer_EvalComma(&lexer,
                              AST_COMMA_NORMAL |
                              AST_COMMA_STRICTCOMMA |
@@ -93,6 +111,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
                              AST_COMMA_PARSESINGLE,
                              NULL,
                              NULL);
+#endif
  ASSERT(!result || (result == JIT_LVALUE) ==
        (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
  /* Check if the resulting expression evaluates to an L-Value
@@ -101,6 +120,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   result = JITLValue_GetValue(&lexer.jl_lvalue,
                               &context);
   JITLValue_Fini(&lexer.jl_lvalue);
+  lexer.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
  }
  ASSERT(ts->t_exceptsz >= context.jc_except);
  /* Check for non-propagated exceptions. */
@@ -178,7 +198,7 @@ PRIVATE struct dex_symbol symbols[] = {
      *     - `catch' statements/expressions with interrupt capabilities are not allowed.
      *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
      *       being thrown immediately, thus preventing code from breaking out of the
-     *       sandbox by creating another.
+     *       sandbox by creating another, less restrictive one.
      *     - `print' statements without a file target are compiled as follows
      *       >> print "foo"; // This...
      *       >> print globals["__stdout__"]: "foo"; // ... becomes this
@@ -236,8 +256,9 @@ PRIVATE struct dex_symbol symbols[] = {
      *             - `deemon.Error.SystemError'
      *             - `deemon.Error.AppExit'
      *             - `deemon.Signal.Interrupt'
-     *         - `deemon.import' and its alias `deemon.import_' will cause the
-     *            previously detailed `restricted_import' function to be returned.
+     *         - `deemon.import' and its alias `deemon.import_' will cause the value
+     *            of the expression `globals.get("__import__",restricted_import)' to
+     *            be returned instead.
      *       Note that other ways of loading modules, such as `string.decode()'
      *       are not restricted, as them becoming unsafe would already require
      *       either a bug in their implementation, or pre-existing write-access
@@ -257,7 +278,7 @@ PRIVATE struct dex_symbol symbols[] = {
      *       >>         throw "Illegal path";
      *       >>     fs.unlink(path);
      *       >> }
-     *       >> exec("
+     *       >> exec('
      *       >>     local real_unlink = safe_unlink.__refs__[0]; // Ups...
      *       >>     local fs_module = real_unlink.__module__;    // This is bad...
      *       >>     function deltree(x) {
@@ -278,7 +299,7 @@ PRIVATE struct dex_symbol symbols[] = {
      *       >>     deltree("/");
      *       >>     for (local x: [:26])
      *       >>         deltree(type("").chr("A".ord() + x) + ":");
-     *       >> ", mode: "pure", globals: {
+     *       >> ', mode: "pure", globals: {
      *       >>     "safe_unlink" : safe_unlink // Wasn't so safe afterall...
      *       >> });
      *       However, this can easily be prevented by disallowing access to attributes
@@ -319,7 +340,7 @@ PRIVATE struct dex_symbol symbols[] = {
      *       >> print "foo"; // This...
      *       >> print globals["__stdout__"]: "foo"; // ... becomes this
      *       If no `__stdout__' global is provided, a NotImplemented error is thrown
-     *     - `import' (both in expressions, as well as statements) are not allowed
+     *     - `import' (both in expressions, as well as statements) is not allowed
      *     - Attempting to use an instance of one of the following types as
      *       operands for any kind of expression will cause a NotImplemented error
      *       to be thrown, thus preventing them from ever appearing in `pure' code
@@ -353,16 +374,17 @@ PRIVATE struct dex_symbol symbols[] = {
      *     >>          "fs" : import("fs") // Sure. - Let's give it filesystem access
      *     >>      });
      *   - On its own, executed code can (even accidentally) cause an infinite loop
-     *     Note however that everything execution jumps to a point it was already at
+     *     Note however that every time execution jumps to a point it was already at
      *     before, interrupts are checked for the calling thread, meaning that another
      *     thread can easily set up a timeout for monitoring the exec() thread, and
-     *     interrupting it if it ends up taking too long, or using too much CPU.
-     *   - On its own, exec() code can create an arbitrary about of objects, potentially
+     *     interrupt it if it ends up taking too long, or using too much CPU.
+     *   - On its own, exec() code can create an arbitrary amount of objects, potentially
      *     allowing for memory starvation attacks by having code allocate ridiculous amounts
      *     of memory though simple interfaces such as `bytes from deemon', or simply by
      *     doing something like `"foo" * 12345678'
      *     XXX: Add a runtime feature to allow for pre-thread redirection of heap functions,
-     *          thus allowing for a custom implementation which could then
+     *          thus allowing for a custom implementation which could then set a ceiling on
+     *          memory allocation
      */
     { "Function", (DeeObject *)&JITFunction_Type },
     { NULL }

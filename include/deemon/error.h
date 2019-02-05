@@ -200,6 +200,8 @@ DFUNDEF int DCALL DeeError_VSysThrowf(DeeTypeObject *__restrict tp, syserrno_t e
 
 /* Return the currently effective error, or NULL if none is. */
 DFUNDEF DeeObject *DCALL DeeError_Current(void);
+/* Check if the current exception is an instance of `tp' */
+DFUNDEF bool DCALL DeeError_CurrentIs(DeeTypeObject *__restrict tp);
 
 /* Handle an error and print it, alongside a human-readable message to `stderr'
  * @param: handle_errors: Describes how (if at all) errors should be handled.

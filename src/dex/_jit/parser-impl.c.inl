@@ -829,6 +829,8 @@ done_y1:
                               self->jl_context->jc_impbase,
                               self->jl_context->jc_globals,
                               JIT_FUNCTION_FRETEXPR);
+     if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
+          self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
      goto done;
 #else
      goto skip_arrow_lambda;
@@ -866,6 +868,8 @@ done_y1:
                               self->jl_context->jc_impbase,
                               self->jl_context->jc_globals,
                               JIT_FUNCTION_FNORMAL);
+     if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
+          self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
      goto done;
 #else
      goto skip_brace_lambda;
@@ -906,6 +910,8 @@ done_y1:
                              self->jl_context->jc_impbase,
                              self->jl_context->jc_globals,
                              JIT_FUNCTION_FRETEXPR);
+    if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
+         self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
     goto done;
 #else
 skip_arrow_lambda:
@@ -947,6 +953,8 @@ skip_arrow_lambda:
                              self->jl_context->jc_impbase,
                              self->jl_context->jc_globals,
                              JIT_FUNCTION_FNORMAL);
+    if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
+         self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
     goto done;
 #else
 skip_brace_lambda:

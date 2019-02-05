@@ -22,6 +22,7 @@
 #include "libjit.h"
 #include <deemon/alloc.h>
 #include <deemon/int.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/class.h>
@@ -130,7 +131,8 @@ JITLValue_IsBound(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_GLOBAL:
-  ASSERT(context->jc_globals);
+  if unlikely(!context->jc_globals)
+     return 0;
   result = DeeObject_BoundItem(context->jc_globals,
                               (DeeObject *)self->lv_global,
                                true);
@@ -138,7 +140,8 @@ JITLValue_IsBound(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_GLOBALSTR:
-  ASSERT(context->jc_globals);
+  if unlikely(!context->jc_globals)
+     return 0;
   result = DeeObject_BoundItemStringLen(context->jc_globals,
                                         self->lv_globalstr.lg_namestr,
                                         self->lv_globalstr.lg_namelen,
@@ -221,13 +224,20 @@ err_unbound:
   break;
 
  case JIT_LVALUE_GLOBAL:
-  ASSERT(context->jc_globals);
+  if unlikely(!context->jc_globals) {
+   err_unknown_global((DeeObject *)self->lv_global);
+   goto err;
+  }
   result = DeeObject_GetItem(context->jc_globals,
                             (DeeObject *)self->lv_global);
   break;
 
  case JIT_LVALUE_GLOBALSTR:
-  ASSERT(context->jc_globals);
+  if unlikely(!context->jc_globals) {
+   err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
+                              self->lv_globalstr.lg_namelen);
+   goto err;
+  }
   result = DeeObject_GetItemStringLen(context->jc_globals,
                                       self->lv_globalstr.lg_namestr,
                                       self->lv_globalstr.lg_namelen,
@@ -304,13 +314,16 @@ JITLValue_DelValue(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_GLOBAL:
-  ASSERT(context->jc_globals);
+  if unlikely(!context->jc_globals)
+     return err_unknown_global((DeeObject *)self->lv_global);
   result = DeeObject_DelItem(context->jc_globals,
                             (DeeObject *)self->lv_global);
   break;
 
  case JIT_LVALUE_GLOBALSTR:
-  ASSERT(context->jc_globals);
+  if unlikely(!context->jc_globals)
+     return err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
+                                       self->lv_globalstr.lg_namelen);
   result = DeeObject_DelItemStringLen(context->jc_globals,
                                       self->lv_globalstr.lg_namestr,
                                       self->lv_globalstr.lg_namelen,
@@ -391,14 +404,22 @@ JITLValue_SetValue(JITLValue *__restrict self,
   break;
 
  case JIT_LVALUE_GLOBAL:
-  ASSERT(context->jc_globals);
+  if (!context->jc_globals) {
+   context->jc_globals = DeeDict_New();
+   if unlikely(!context->jc_globals)
+      goto err;
+  }
   result = DeeObject_SetItem(context->jc_globals,
                             (DeeObject *)self->lv_global,
                              value);
   break;
 
  case JIT_LVALUE_GLOBALSTR:
-  ASSERT(context->jc_globals);
+  if (!context->jc_globals) {
+   context->jc_globals = DeeDict_New();
+   if unlikely(!context->jc_globals)
+      goto err;
+  }
   result = DeeObject_SetItemStringLen(context->jc_globals,
                                       self->lv_globalstr.lg_namestr,
                                       self->lv_globalstr.lg_namelen,
@@ -580,7 +601,7 @@ _JITContext_PopLocals(JITContext *__restrict self) {
 INTERN JITObjectTable *DCALL
 JITContext_GetRWLocals(JITContext *__restrict self) {
  JITObjectTable *result;
- ASSERT(self->jc_locals.otp_ind >= 1);
+ /*ASSERT(self->jc_locals.otp_ind >= 1);*/
  result = self->jc_locals.otp_tab;
  if (result && self->jc_locals.otp_ind == 1)
      return result;
@@ -631,6 +652,13 @@ done:
   return 0;
  case LOOKUP_SYM_VGLOBAL:
 set_global:
+#if 0
+  if (!self->jc_globals) {
+   self->jc_globals = DeeDict_New();
+   if unlikely(!self->jc_globals)
+      goto err;
+  }
+#endif
   result->js_kind = JIT_SYMBOL_GLOBALSTR;
   result->js_globalstr.jg_namestr = name;
   result->js_globalstr.jg_namelen = namelen;
@@ -649,6 +677,10 @@ set_global:
   /* If we're not allowed to declare things, always
    * assume that this is referring to a global */
   if (!(mode & LOOKUP_SYM_ALLOWDECL))
+      goto set_global;
+  /* While inside of the global scope, untyped
+   * symbols are always declared as global! */
+  if (JITContext_IsGlobalScope(self))
       goto set_global;
   /* Check if the symbol exists within the global symbol table. */
   {

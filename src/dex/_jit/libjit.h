@@ -145,6 +145,7 @@ typedef struct jit_lvalue_list JITLValueList;
 typedef struct jit_lexer JITLexer;
 typedef struct jit_context JITContext;
 typedef struct jit_object_table JITObjectTable;
+typedef struct jit_function_object JITFunctionObject;
 
 
 /* Check if the given token qualifies for the associated operation parser function. */
@@ -620,8 +621,8 @@ INTDEF DREF DeeObject *FCALL JIT_GetOperatorFunction(uint16_t opname);
 
 /* JIT-specific evaluation flags (may be optionally or'd with `LOOKUP_SYM_*'). */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */
-#define JITLEXER_EVAL_FALLOWINPLACE 0x0010 /* Primary expression evaluation */
-#define JITLEXER_EVAL_FALLOWISBOUND 0x0020 /* Primary expression evaluation */
+#define JITLEXER_EVAL_FALLOWINPLACE 0x0010 /* Allow inplace operations */
+#define JITLEXER_EVAL_FALLOWISBOUND 0x0020 /* Allow  */
 #define JITLEXER_EVAL_FDISALLOWCAST 0x0040 /* Disallow cast expressions. */
 #define JITLEXER_EVAL_FPRIMARY     (JITLEXER_EVAL_FALLOWISBOUND | JITLEXER_EVAL_FALLOWINPLACE)
 
@@ -906,7 +907,6 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 
 
 
-typedef struct jit_function_object JITFunctionObject;
 
 #define JIT_FUNCTION_FNORMAL  0x0000 /* Normal function flags. */
 #define JIT_FUNCTION_FRETEXPR 0x0001 /* The function's source text describes an arrow-like return expression */
@@ -929,7 +929,7 @@ struct jit_function_object {
                                               * arguments. */
     size_t                  jf_selfarg;      /* [const] Index for `jf_args', to the self-argument, or (size_t)-1 if the function is anonymous. */
     size_t                  jf_varargs;      /* [const] Index for `jf_args', to the varargs argument, or (size_t)-1 if the function doesn't take a variable amount of arguments. */
-    size_t                  jf_kwargs;       /* [const] Index for `jf_args', to the kwargs argument, or (size_t)-1 if the function doesn't take a keyword arguments. */
+    size_t                  jf_varkwds;      /* [const] Index for `jf_args', to the varkwds argument, or (size_t)-1 if the function doesn't take a keyword arguments. */
     uint16_t                jf_argc_min;     /* [const] Minimum amount of required positional arguments. */
     uint16_t                jf_argc_max;     /* [const] Maximum amount of required positional arguments. */
     uint16_t                jf_flags;        /* [const] Function flags (Set of `JIT_FUNCTION_F*'). */
@@ -952,9 +952,22 @@ JITFunction_New(/*utf-8*/char const *name_start,
                 DeeObject *globals,
                 uint16_t flags);
 
+/* Add a new symbol entry for an argument to `self->jf_args'
+ * This is similar to using `JITObjectTable_Create()', however
+ * when re-hashing, this function will also update indices contained
+ * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
+ * `self->jf_varargs' and `self->jf_varkwds' fields. */
+INTDEF struct jit_object_entry *DCALL
+JITFunction_CreateArgument(JITFunctionObject *__restrict self,
+                           /*utf-8*/char const *namestr,
+                           size_t namelen);
+
 
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
+INTDEF ATTR_COLD int DCALL err_unknown_global(DeeObject *__restrict key);
+INTDEF ATTR_COLD int DCALL err_unknown_global_str_len(char const *__restrict key, size_t keylen);
+
 
 DECL_END
 

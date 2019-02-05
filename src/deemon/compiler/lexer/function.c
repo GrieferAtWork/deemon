@@ -62,7 +62,7 @@ PRIVATE struct symbol *DCALL parse_argument_name(void) {
  } else {
   if (tok == KWD_none) {
    /* Special case: Allow `none' to be used for placeholder/pending arguments. */
- create_anon_argument:
+create_anon_argument:
    /* Create a new symbol for the argument. */
    result = new_unnamed_symbol();
    if unlikely(!result) goto err;

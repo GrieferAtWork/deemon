@@ -44,6 +44,20 @@ INTERN ATTR_COLD int DCALL err_no_active_exception(void) {
  return DeeError_Throwf(&DeeError_RuntimeError,"No active exception");
 }
 
+INTERN ATTR_COLD int DCALL
+err_unknown_global(DeeObject *__restrict key) {
+ ASSERT_OBJECT(key);
+ return DeeError_Throwf(&DeeError_KeyError,
+                        "Unknown global `%k'",
+                        key);
+}
+INTERN ATTR_COLD int DCALL
+err_unknown_global_str_len(char const *__restrict key, size_t keylen) {
+ return DeeError_Throwf(&DeeError_KeyError,
+                        "Unknown global `%$s'",
+                        keylen,key);
+}
+
 
 DECL_END
 

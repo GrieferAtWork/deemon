@@ -28,11 +28,193 @@
 #include <deemon/error.h>
 #include <deemon/callable.h>
 #include <deemon/string.h>
+#include <deemon/tuple.h>
 #include <deemon/thread.h>
 
 DECL_BEGIN
 
 typedef JITFunctionObject JITFunction;
+
+INTERN bool DCALL
+JITFunction_TryRehashArguments(JITFunction *__restrict self,
+                               size_t new_mask) {
+ size_t i,j,perturb;
+ struct jit_object_entry *new_table;
+ ASSERT(new_mask >= self->jf_args.ot_used);
+ ASSERT(new_mask != 0);
+ new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
+                                                       sizeof(struct jit_object_entry));
+ if unlikely(!new_table) return false;
+ if (self->jf_args.ot_list != jit_empty_object_list) {
+  struct jit_object_entry *old_table;
+  old_table = self->jf_args.ot_list;
+  for (i = 0; i <= self->jf_args.ot_mask; ++i) {
+   uint16_t argi;
+   struct jit_object_entry *old_entry,*new_entry;
+   old_entry = &old_table[i];
+   if (!ITER_ISOK(old_entry->oe_namestr))
+        continue; /* Unused or deleted. */
+   perturb = j = old_entry->oe_namehsh & new_mask;
+   for (;; JITObjectTable_NEXT(j,perturb)) {
+    new_entry = &new_table[j & new_mask];
+    if (!new_entry->oe_namestr)
+         break;
+   }
+   j &= new_mask;
+   /* Re-hash argument indices. */
+   if (self->jf_selfarg == i)
+    self->jf_selfarg = j;
+   else if (self->jf_varargs == i)
+    self->jf_varargs = j;
+   else if (self->jf_varkwds == i)
+    self->jf_varkwds = j;
+   else for (argi = 0; argi < self->jf_argc_max; ++argi) {
+    if (self->jf_argv[argi] != i)
+        continue;
+    self->jf_argv[argi] = j;
+    break;
+   }
+   /* Copy into the new entry. */
+   memcpy(new_entry,old_entry,sizeof(struct jit_object_entry));
+  }
+  Dee_Free(old_table);
+  /* Indicate that all deleted entries have been removed. */
+  self->jf_args.ot_used = self->jf_args.ot_size;
+ } else {
+  ASSERT(self->jf_args.ot_used == 0);
+  ASSERT(self->jf_args.ot_size == 0);
+  ASSERT(self->jf_args.ot_mask == 0);
+ }
+ self->jf_args.ot_list = new_table;
+ self->jf_args.ot_mask = new_mask;
+ return true;
+}
+
+
+/* Add a new symbol entry for an argument to `self->jf_args'
+ * This is similar to using `JITObjectTable_Create()', however
+ * when re-hashing, this function will also update indices contained
+ * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
+ * `self->jf_varargs' and `self->jf_varkwds' fields. */
+INTERN struct jit_object_entry *DCALL
+JITFunction_CreateArgument(JITFunction *__restrict self,
+                           /*utf-8*/char const *namestr,
+                           size_t namelen) {
+ dhash_t i,perturb;
+ struct jit_object_entry *result_entry;
+ dhash_t namehsh = Dee_HashUtf8(namestr,namelen);
+again:
+ result_entry = NULL;
+ perturb = i = namehsh & self->jf_args.ot_mask;
+ for (;; JITObjectTable_NEXT(i,perturb)) {
+  struct jit_object_entry *entry;
+  entry = &self->jf_args.ot_list[i & self->jf_args.ot_mask];
+  if (entry->oe_namestr == (char *)ITER_DONE) {
+   /* Re-use deleted entries. */
+   if (!result_entry)
+        result_entry = entry;
+   continue;
+  }
+  if (!entry->oe_namestr) {
+   if (!result_entry) {
+    /* Check if we must re-hash the table. */
+    if (self->jf_args.ot_size + 1 >= (self->jf_args.ot_mask*2)/3) {
+     size_t new_mask;
+     new_mask = (self->jf_args.ot_mask << 1) | 1;
+     if (self->jf_args.ot_used < self->jf_args.ot_size)
+         new_mask = self->jf_args.ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
+     if (new_mask < 7) new_mask = 7;
+     if likely(JITFunction_TryRehashArguments(self,new_mask))
+        goto again;
+     if (self->jf_args.ot_size == self->jf_args.ot_mask) {
+      new_mask = (self->jf_args.ot_mask << 1) | 1;
+      if (self->jf_args.ot_used < self->jf_args.ot_size)
+          new_mask = self->jf_args.ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
+      for (;;) {
+       if likely(JITFunction_TryRehashArguments(self,new_mask))
+          goto again;
+       if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+          return NULL;
+      }
+     }
+    }
+    ++self->jf_args.ot_size;
+    result_entry = entry;
+   }
+   break;
+  }
+  if (entry->oe_namehsh != namehsh) continue;
+  if (entry->oe_namelen != namelen) continue;
+  if (memcmp(entry->oe_namestr,namestr,namelen * sizeof(char)) != 0) continue;
+  /* Existing entry! */
+  return entry;
+ }
+ ++self->jf_args.ot_used;
+ result_entry->oe_namestr = namestr;
+ result_entry->oe_namelen = namelen;
+ result_entry->oe_namehsh = namehsh;
+ result_entry->oe_value   = NULL;
+ return result_entry;
+}
+
+PRIVATE DREF DeeObject *DCALL
+JITLexer_ParseDefaultValue(JITLexer *__restrict self,
+                           DeeModuleObject *impbase,
+                           DeeObject *globals) {
+ JITContext ctx = JITCONTEXT_INIT;
+ DeeThreadObject *ts = DeeThread_Self();
+ DREF DeeObject *result;
+ self->jl_context        = &ctx;
+ self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+ ctx.jc_impbase          = impbase;
+ ctx.jc_locals.otp_tab   = NULL;
+ ctx.jc_locals.otp_ind   = 0;
+ ctx.jc_globals          = globals;
+ ctx.jc_retval           = NULL;
+ ctx.jc_except           = ts->t_exceptsz;
+ ctx.jc_flags            = 0;
+ result = JITLexer_EvalExpression(self,JITLEXER_EVAL_FALLOWISBOUND);
+ if (result == JIT_LVALUE) {
+  result = JITLValue_GetValue(&self->jl_lvalue,&ctx);
+  JITLValue_Fini(&self->jl_lvalue);
+  self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+ }
+ ASSERT(ts->t_exceptsz >= ctx.jc_except);
+ if (!result)
+      result = ctx.jc_retval;
+ /* Check for non-propagated exceptions. */
+ if (ts->t_exceptsz > ctx.jc_except) {
+  if (ctx.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+   if (JITCONTEXT_RETVAL_ISSET(ctx.jc_retval))
+       Dee_Decref(ctx.jc_retval);
+   ctx.jc_retval = JITCONTEXT_RETVAL_UNSET;
+  }
+  Dee_XClear(result);
+  while (ts->t_exceptsz > ctx.jc_except + 1) {
+   DeeError_Print("Discarding secondary error\n",
+                  ERROR_PRINT_DOHANDLE);
+  }
+ }
+ if (!result) {
+  if (ctx.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+   if (JITCONTEXT_RETVAL_ISSET(ctx.jc_retval)) {
+    result = ctx.jc_retval;
+   } else {
+    /* Exited code via unconventional means, such as `break' or `continue' */
+    DeeError_Throwf(&DeeError_SyntaxError,
+                    "Attempted to use `break' or `continue' used outside of a loop");
+    JITLValue_Fini(&self->jl_lvalue);
+    self->jl_errpos = self->jl_tokstart;
+    /*result = NULL;*/
+   }
+  }
+ }
+ if (ctx.jc_globals != globals) {
+  ASSERT(ctx.jc_globals);
+  Dee_Decref(ctx.jc_globals);
+ }
+ return result;
+}
 
 
 INTERN DREF DeeObject *DCALL
@@ -47,6 +229,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
                 DeeModuleObject *impbase,
                 DeeObject *globals,
                 uint16_t flags) {
+ JITLexer lex;
  DREF JITFunction *result;
  result = DeeObject_MALLOC(JITFunction);
  if unlikely(!result) goto done;
@@ -64,7 +247,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
  result->jf_argv     = NULL;
  result->jf_selfarg  = (size_t)-1;
  result->jf_varargs  = (size_t)-1;
- result->jf_kwargs   = (size_t)-1;
+ result->jf_varkwds  = (size_t)-1;
  result->jf_argc_min = 0;
  result->jf_argc_max = 0;
  result->jf_flags    = flags;
@@ -73,28 +256,200 @@ JITFunction_New(/*utf-8*/char const *name_start,
  Dee_XIncref(globals);
  DeeObject_Init(result,&JITFunction_Type);
 
- /* TODO: Analyze & parse the parameter list. */
- (void)params_start;
- (void)params_end;
+ if (params_end > params_start) {
+  uint16_t arga = 0;
+  /* Analyze & parse the parameter list. */
+  JITLexer_Start(&lex,
+                (unsigned char *)params_start,
+                (unsigned char *)params_end);
+  while (lex.jl_tok) {
+   /* Special case: unnamed varargs. */
+   struct jit_object_entry *argent;
+   if (lex.jl_tok == TOK_DOTS) {
+    if (result->jf_varargs != (size_t)-1) {
+err_varargs_already_defined:
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Variable arguments have already been defined");
+     goto err_r;
+    }
+    argent = JITFunction_CreateArgument(result,
+                                       (char const *)lex.jl_tokstart,
+                                       (size_t)(lex.jl_tokend - lex.jl_tokstart));
+    if unlikely(!argent)
+       goto err_r;
+    result->jf_varargs = (size_t)(argent - result->jf_args.ot_list);
+    JITLexer_Yield(&lex);
+   } else {
+    while (lex.jl_tok == JIT_KEYWORD &&
+          (JITLexer_ISTOK(&lex,"local") ||
+           JITLexer_ISTOK(&lex,"final") ||
+           JITLexer_ISTOK(&lex,"varying")))
+        JITLexer_Yield(&lex);
+    /* Check for keyword arguments parameter. */
+    if (lex.jl_tok == TOK_POW) {
+     if (result->jf_varkwds != (size_t)-1) {
+      DeeError_Throwf(&DeeError_SyntaxError,
+                      "Variable keywords have already been defined");
+      goto err_r;
+     }
+     JITLexer_Yield(&lex);
+     if (lex.jl_tok != JIT_KEYWORD) {
+err_no_keyword_for_argument:
+      DeeError_Throwf(&DeeError_SyntaxError,
+                      "Expected a keyword as argument name, but got `%$s'",
+                     (size_t)(lex.jl_tokend - lex.jl_tokstart),lex.jl_tokstart);
+      goto err_r;
+     }
+     argent = JITFunction_CreateArgument(result,
+                                        (char const *)lex.jl_tokstart,
+                                        (size_t)(lex.jl_tokend - lex.jl_tokstart));
+     if unlikely(!argent)
+        goto err_r;
+     JITLexer_Yield(&lex);
+     result->jf_varkwds = (size_t)(argent - result->jf_args.ot_list);
+    } else {
+     if (lex.jl_tok != JIT_KEYWORD) 
+         goto err_no_keyword_for_argument;
+     argent = JITFunction_CreateArgument(result,
+                                        (char const *)lex.jl_tokstart,
+                                        (size_t)(lex.jl_tokend - lex.jl_tokstart));
+     if unlikely(!argent)
+        goto err_r;
+     JITLexer_Yield(&lex);
+     if (lex.jl_tok == TOK_DOTS) {
+      /* Varargs... */
+      if (result->jf_varargs != (size_t)-1)
+          goto err_varargs_already_defined;
+      result->jf_varargs = (size_t)(argent - result->jf_args.ot_list);
+      JITLexer_Yield(&lex);
+     } else {
+      if (result->jf_varargs != (size_t)-1 ||
+          result->jf_varkwds != (size_t)-1) {
+       DeeError_Throwf(&DeeError_SyntaxError,
+                       "Positional argument `%$s' encountered after varargs or varkwds",
+                       argent->oe_namelen,argent->oe_namestr);
+       goto err_r;
+      }
+      if (lex.jl_tok == '?') {
+       /* Optional argument */
+       JITLexer_Yield(&lex);
+      } else if (lex.jl_tok == '=') {
+       DREF DeeObject *default_value;
+       JITLexer_Yield(&lex);
+       lex.jl_text = source;
+       /* Parse the default value. */
+       default_value = JITLexer_ParseDefaultValue(&lex,impbase,globals);
+       if unlikely(!default_value)
+          goto err_r;
+       if unlikely(argent->oe_value)
+          Dee_Clear(argent->oe_value);
+       argent->oe_value = default_value; /* Inherit reference. */
+      } else {
+       if (result->jf_argc_min != result->jf_argc_max) {
+        DeeError_Throwf(&DeeError_SyntaxError,
+                        "Mandatory positional argument `%$s' encountered after optional or default argument",
+                        argent->oe_namelen,argent->oe_namestr);
+        goto err_r;
+       }
+       ++result->jf_argc_min;
+      }
+      /* Resize `jf_argv' if necessary. */
+      ASSERT(result->jf_argc_max <= arga);
+      if (result->jf_argc_max >= arga) {
+       uint16_t new_arga; size_t *new_argv;
+       new_arga = arga * 2;
+       if unlikely(!new_arga)
+          new_arga = 2;
+       if unlikely(new_arga < arga) {
+        new_arga = result->jf_argc_max + 1;
+        if unlikely(new_arga < arga) {
+         DeeError_Throwf(&DeeError_SyntaxError,
+                         "Too many arguments");
+         goto err_r;
+        }
+       }
+       new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
+                                           new_arga * sizeof(size_t));
+       if unlikely(!new_argv) {
+        new_arga = result->jf_argc_max + 1;
+        new_argv = (size_t *)Dee_Realloc(result->jf_argv,
+                                         new_arga * sizeof(size_t));
+        if unlikely(!new_argv)
+           goto err_r;
+       }
+       result->jf_argv = new_argv;
+       arga = new_arga;
+      }
+      result->jf_argv[result->jf_argc_max] = (size_t)(argent - result->jf_args.ot_list);
+      ++result->jf_argc_max;
+     }
+    }
+   }
+   if (!lex.jl_tok)
+        break;
+   if (lex.jl_tok != ',') {
+    DeeError_Throwf(&DeeError_SyntaxError,
+                    "Expected `,' after argument, but got `%$s'",
+                   (size_t)(lex.jl_tokend - lex.jl_tokstart),lex.jl_tokstart);
+    break;
+   }
+   JITLexer_Yield(&lex);
+   /* ... */
+  }
+  ASSERT(result->jf_argc_max <= arga);
+  if (result->jf_argc_max < arga) {
+   /* Release unused memory */
+   size_t *new_argv;
+   new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
+                                       result->jf_argc_max * sizeof(size_t));
+   if likely(new_argv)
+      result->jf_argv = new_argv;
+  }
+ }
 
  if (name_start < name_end) {
   struct jit_object_entry *ent;
   size_t len = (size_t)(name_end - name_start);
-  ent = JITObjectTable_Create(&result->jf_args,
-                              name_start,
-                              len,
-                              Dee_HashUtf8(name_start,len));
+  ent = JITFunction_CreateArgument(result,
+                                   name_start,
+                                   len);
   if unlikely(!ent)
      goto err_r;
   result->jf_selfarg = (size_t)(ent - result->jf_args.ot_list);
  }
 
- /* TODO: Scan the function body for keywords and search the chain of
-  *       object tables provided by the parent for those keywords when
-  *       interpreted as identifiers. - Any matching identifier should
-  *       then be copied into our function's reference table. */
- (void)parent_object_table;
-
+ /* Scan the function body for keywords and search the chain of
+  * object tables provided by the parent for those keywords when
+  * interpreted as identifiers. - Any matching identifier should
+  * then be copied into our function's reference table. */
+ JITLexer_Start(&lex,
+               (unsigned char *)source_start,
+               (unsigned char *)source_end);
+ for (; lex.jl_tok; JITLexer_Yield(&lex)) {
+  JITObjectTable *iter;
+  dhash_t hash; size_t size;
+  if (lex.jl_tok != JIT_KEYWORD)
+      continue;
+  size = (size_t)(lex.jl_tokend - lex.jl_tokstart);
+  hash = Dee_HashUtf8((char const *)lex.jl_tokstart,size);
+  if (JITObjectTable_Lookup(&result->jf_args,(char const *)lex.jl_tokstart,size,hash) ||
+      JITObjectTable_Lookup(&result->jf_refs,(char const *)lex.jl_tokstart,size,hash))
+      continue; /* Keyword is an argument, or has already been referenced. */
+  iter = parent_object_table;
+  for (; iter; iter = iter->ot_prev.otp_tab) {
+   struct jit_object_entry *ent,*destent;
+   ent = JITObjectTable_Lookup(iter,(char const *)lex.jl_tokstart,size,hash);
+   if (!ent || !ent->oe_value)
+        continue;
+   /* Create a new reference for this keyword. */
+   destent = JITObjectTable_Create(&result->jf_refs,(char const *)lex.jl_tokstart,size,hash);
+   if unlikely(!destent)
+      goto err_r;
+   destent->oe_value = ent->oe_value;
+   Dee_XIncref(ent->oe_value);
+   break;
+  }
+ }
 
 done:
  return (DREF DeeObject *)result;
@@ -109,6 +464,7 @@ jf_fini(JITFunction *__restrict self) {
  Dee_Decref(self->jf_source);
  Dee_XDecref(self->jf_impbase);
  Dee_XDecref(self->jc_globals);
+ JITObjectTable_Fini(&self->jf_args);
  JITObjectTable_Fini(&self->jf_refs);
  Dee_Free(self->jf_argv);
 }
@@ -192,11 +548,11 @@ jf_repr(JITFunction *__restrict self) {
   if unlikely(UNICODE_PRINTER_PRINT(&printer,"...") < 0)
      goto err;
  }
- if (self->jf_kwargs != (size_t)-1) {
+ if (self->jf_varkwds != (size_t)-1) {
   if ((self->jf_argc_max != 0 || self->jf_varargs != (size_t)-1) &&
        unicode_printer_putascii(&printer,','))
        goto err;
-  ent = &self->jf_args.ot_list[self->jf_kwargs];
+  ent = &self->jf_args.ot_list[self->jf_varkwds];
   if unlikely(UNICODE_PRINTER_PRINT(&printer,"**") < 0)
      goto err;
   if unlikely(unicode_printer_print(&printer,
@@ -239,33 +595,50 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
      goto err;
  ASSERT(self->jf_args.ot_prev.otp_ind >= 2);
  ASSERT(self->jf_args.ot_prev.otp_tab == &self->jf_refs);
- if (argc < self->jf_argc_min)
-     goto err_argc;
- if (argc > self->jf_argc_max && self->jf_varargs == (size_t)-1)
-     goto err_argc;
  memcpy(&base_locals,&self->jf_args,sizeof(JITObjectTable));
+ ASSERT(base_locals.ot_prev.otp_tab != NULL);
  base_locals.ot_list = (struct jit_object_entry *)Dee_Malloc((base_locals.ot_mask + 1) *
                                                               sizeof(struct jit_object_entry));
  if unlikely(!base_locals.ot_list) goto err;
  memcpy(base_locals.ot_list,self->jf_args.ot_list,
        (base_locals.ot_mask + 1) * sizeof(struct jit_object_entry));
 
- /* TODO: Load arguments! */
- (void)argc;
- (void)argv;
- (void)kw;
-
- /* Define the self-argument. */
+ /* Define the self-argument.
+  * NOTE: Do this before loading arguments, in case one of the arguments
+  *       uses the same name as the function, in which case that argument
+  *       must be loaded, rather than the function loading itself! */
  if (self->jf_selfarg != (size_t)-1) {
   ASSERT(base_locals.ot_list[self->jf_selfarg].oe_value == NULL);
   base_locals.ot_list[self->jf_selfarg].oe_value = (DREF DeeObject *)self;
  }
 
- /* Assign references to all objects from base-locals */
- for (i = 0; i <= base_locals.ot_mask; ++i) {
-  if (!ITER_ISOK(base_locals.ot_list[i].oe_namestr))
-       continue;
-  Dee_XIncref(base_locals.ot_list[i].oe_value);
+ if (kw) {
+  /* TODO: Load arguments! */
+  (void)argc;
+  (void)argv;
+  (void)kw;
+  /* Assign references to all objects from base-locals */
+  for (i = 0; i <= base_locals.ot_mask; ++i) {
+   if (!ITER_ISOK(base_locals.ot_list[i].oe_namestr))
+        continue;
+   Dee_XIncref(base_locals.ot_list[i].oe_value);
+  }
+ } else {
+  size_t i;
+  /* Load arguments! */
+  if (argc < self->jf_argc_min)
+      goto err_argc;
+  if (argc > self->jf_argc_max && self->jf_varargs == (size_t)-1)
+      goto err_argc;
+  /* Load positional arguments. */
+  for (i = 0; i < argc; ++i)
+      base_locals.ot_list[self->jf_argv[i]].oe_value = argv[i];
+  /* Assign references to all objects from base-locals */
+  for (i = 0; i <= base_locals.ot_mask; ++i) {
+   if (!ITER_ISOK(base_locals.ot_list[i].oe_namestr))
+        continue;
+   Dee_XIncref(base_locals.ot_list[i].oe_value);
+  }
  }
 
  /* Initialize the lexer and context control structures. */
@@ -352,9 +725,8 @@ handle_error:
  ASSERT(context.jc_globals == self->jc_globals);
  JITObjectTable_Fini(&base_locals);
  return result;
-/*
 err_base_locals:
- JITObjectTable_Fini(&base_locals);*/
+ Dee_Free(base_locals.ot_list);
 err:
  return NULL;
 err_argc:
@@ -373,17 +745,103 @@ err_argc:
                         self->jf_argc_min,
                         self->jf_argc_max);
  }
- goto err;
+ goto err_base_locals;
 }
 
 
+PRIVATE int DCALL
+compare_objtabs(JITObjectTable *__restrict a,
+                JITObjectTable *__restrict b) {
+ size_t i; int temp;
+ for (i = 0; i <= a->ot_mask; ++i) {
+  if (!ITER_ISOK(a->ot_list[i].oe_namestr)) {
+   if (b->ot_list[i].oe_namestr != a->ot_list[i].oe_namestr)
+       goto nope;
+  } else {
+   if (!ITER_ISOK(b->ot_list[i].oe_namestr))
+       goto nope;
+   if (a->ot_list[i].oe_namehsh != b->ot_list[i].oe_namehsh)
+       goto nope;
+   if (a->ot_list[i].oe_namelen != b->ot_list[i].oe_namelen)
+       goto nope;
+   if (memcmp(a->ot_list[i].oe_namestr,
+              b->ot_list[i].oe_namestr,
+              a->ot_list[i].oe_namelen * sizeof(char)) != 0)
+       goto nope;
+   if (a->ot_list[i].oe_value) {
+    if (!b->ot_list[i].oe_value)
+         goto nope;
+    if (a->ot_list[i].oe_value != b->ot_list[i].oe_value) {
+     temp = DeeObject_CompareEq(a->ot_list[i].oe_value,
+                                b->ot_list[i].oe_value);
+     if unlikely(temp <= 0)
+        goto err_temp;
+    }
+   } else {
+    if (b->ot_list[i].oe_value)
+        goto nope;
+   }
+  }
+ }
+ return 1;
+nope:
+ return 0;
+err_temp:
+ return temp;
+}
 
-PRIVATE bool DCALL
+PRIVATE int DCALL
 jf_equal(JITFunction *__restrict a,
          JITFunction *__restrict b) {
- if (a == b) return true;
- /* TODO */
- return false;
+ int temp;
+ if (a == b) goto yes;
+ if (a->jf_selfarg != b->jf_selfarg) goto nope;
+ if (a->jf_varargs != b->jf_varargs) goto nope;
+ if (a->jf_varkwds != b->jf_varkwds) goto nope;
+ if (a->jf_argc_min != b->jf_argc_min) goto nope;
+ if (a->jf_argc_max != b->jf_argc_max) goto nope;
+ if ((a->jf_source_end - a->jf_source_start) !=
+     (b->jf_source_end - b->jf_source_start))
+     goto nope;
+ if (memcmp(a->jf_source_start,b->jf_source_start,
+           (size_t)(a->jf_source_end - a->jf_source_start)) != 0)
+     goto nope;
+ if (a->jf_flags != b->jf_flags) goto nope;
+ if (memcmp(a->jf_argv,b->jf_argv,a->jf_argc_max * sizeof(size_t)) != 0) goto nope;
+ if (a->jf_args.ot_mask != b->jf_args.ot_mask) goto nope;
+ if (a->jf_args.ot_size != b->jf_args.ot_size) goto nope;
+ if (a->jf_args.ot_used != b->jf_args.ot_used) goto nope;
+ if (a->jf_refs.ot_mask != b->jf_refs.ot_mask) goto nope;
+ if (a->jf_refs.ot_size != b->jf_refs.ot_size) goto nope;
+ if (a->jf_refs.ot_used != b->jf_refs.ot_used) goto nope;
+ if (a->jc_globals != b->jc_globals) {
+  if (!a->jc_globals || !b->jc_globals)
+      goto nope;
+  temp = DeeObject_CompareEq(a->jc_globals,
+                             b->jc_globals);
+  if (temp <= 0)
+      goto err_temp;
+ }
+ if (a->jf_impbase != b->jf_impbase) {
+  if (!a->jf_impbase || !b->jf_impbase)
+      goto nope;
+  temp = DeeObject_CompareEq((DeeObject *)a->jf_impbase,
+                             (DeeObject *)b->jf_impbase);
+  if (temp <= 0)
+      goto err_temp;
+ }
+ temp = compare_objtabs(&a->jf_args,&b->jf_args);
+ if (temp <= 0)
+     goto err_temp;
+ temp = compare_objtabs(&a->jf_refs,&b->jf_refs);
+ if (temp <= 0)
+     goto err_temp;
+yes:
+ return 1;
+nope:
+ return 0;
+err_temp:
+ return temp;
 }
 
 PRIVATE dhash_t DCALL
@@ -396,9 +854,13 @@ jf_hash(JITFunction *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 jf_eq(JITFunction *__restrict self,
       JITFunction *__restrict other) {
+ int result;
  if (DeeObject_AssertTypeExact(other,&JITFunction_Type))
      goto err;
- return_bool(jf_equal(self,other));
+ result = jf_equal(self,other);
+ if unlikely(result < 0)
+    goto err;
+ return_bool_(result);
 err:
  return NULL;
 }
@@ -406,9 +868,13 @@ err:
 PRIVATE DREF DeeObject *DCALL
 jf_ne(JITFunction *__restrict self,
       JITFunction *__restrict other) {
+ int result;
  if (DeeObject_AssertTypeExact(other,&JITFunction_Type))
      goto err;
- return_bool(!jf_equal(self,other));
+ result = jf_equal(self,other);
+ if unlikely(result < 0)
+    goto err;
+ return_bool_(!result);
 err:
  return NULL;
 }
@@ -421,19 +887,122 @@ PRIVATE struct type_cmp jf_cmp = {
 };
 
 
+
+
+PRIVATE DREF DeeObject *DCALL
+jf_hasvarargs(JITFunction *__restrict self) {
+ return_bool_(self->jf_varargs != (size_t)-1);
+}
+PRIVATE DREF DeeObject *DCALL
+jf_hasvarkwds(JITFunction *__restrict self) {
+ return_bool_(self->jf_varkwds != (size_t)-1);
+}
+PRIVATE DREF DeeObject *DCALL
+jf_getname(JITFunction *__restrict self) {
+ struct jit_object_entry *ent;
+ if (self->jf_selfarg == (size_t)-1)
+     return_none;
+ ent = &self->jf_args.ot_list[self->jf_selfarg];
+ return DeeString_NewUtf8(ent->oe_namestr,
+                          ent->oe_namelen,
+                          STRING_ERROR_FIGNORE);
+}
+PRIVATE DREF DeeObject *DCALL
+jf_getdoc(JITFunction *__restrict UNUSED(self)) {
+ return_none;
+}
+PRIVATE DREF DeeObject *DCALL
+jf_getkwds(JITFunction *__restrict self) {
+ /* XXX: Add a generic sequence proxy type for this! */
+ DREF DeeObject *result; uint16_t i;
+ result = DeeTuple_NewUninitialized(self->jf_argc_max);
+ if unlikely(!result)
+    goto done;
+ for (i = 0; i < self->jf_argc_max; ++i) {
+  DREF DeeObject *name;
+  struct jit_object_entry *ent;
+  ent = &self->jf_args.ot_list[self->jf_argv[i]];
+  name = DeeString_NewUtf8(ent->oe_namestr,
+                           ent->oe_namelen,
+                           STRING_ERROR_FIGNORE);
+  if unlikely(!name)
+     goto err_r_i;
+  DeeTuple_SET(result,i,name); /* Inherit reference. */
+ }
+done:
+ return result;
+err_r_i:
+ while (i--)
+     Dee_Decref_likely(DeeTuple_GET(result,i));
+ DeeTuple_FreeUninitialized(result);
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+jf_gettext(JITFunction *__restrict self) {
+ return DeeString_NewUtf8(self->jf_source_start,
+                         (size_t)(self->jf_source_end - self->jf_source_start),
+                          STRING_ERROR_FIGNORE);
+}
+PRIVATE DREF DeeObject *DCALL
+jf_getisretexpr(JITFunction *__restrict self) {
+ return_bool(self->jf_flags & JIT_FUNCTION_FRETEXPR);
+}
+
+
 PRIVATE struct type_getset jf_getsets[] = {
-    /* TODO: __name__ */
+    { "__name__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getname, NULL, NULL,
+      DOC("->?X2?Dstring?N") },
+    { "__doc__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getdoc, NULL, NULL,
+      DOC("->?N\nAlways returns :none (doc strings aren't processed in JIT code)") },
+    { "__kwds__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getkwds, NULL, NULL,
+      DOC("->?S?Dstring") },
+    { "__text__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_gettext, NULL, NULL,
+      DOC("->?Dstring\n"
+          "Returns the source text executed by @this function") },
+    { "isretexpr",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getisretexpr, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Evaluates to :true if @this function was defined like ${[] -> 42}, meaning "
+          "that #__text__ is merely the expression that should be returned by the function\n"
+          "When :false, the function was defined like ${[] { return 42; }}") },
     /* TODO: __default__ */
-    /* TODO: __args__ */
     /* TODO: __refs__ */
+    /* TODO: __type__ */
+    /* TODO: __operator__ */
+    /* TODO: __operatorname__ */
+    /* TODO: __property__ */
     /* etc... */
+    { "hasvarargs",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_hasvarargs, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Check if @this function accepts variable arguments as overflow") },
+    { "hasvarkwds",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_hasvarkwds, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Check if @this function accepts variable keyword arguments as overflow") },
     { NULL }
 };
 
 PRIVATE struct type_member jf_members[] = {
-    TYPE_MEMBER_FIELD("__impbase__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase)),
+    TYPE_MEMBER_FIELD_DOC("__impbase__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase),
+                          "->?X2?Dmodule?N\n"
+                          "Returns the module used for relative module imports"),
     TYPE_MEMBER_FIELD_DOC("__globals__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jc_globals),
                           "->?X2?S?T2?Dstring?O?N"),
+    TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase),
+                          "->?X2?Dmodule?N\n"
+                          "Alias for #__impbase__"),
+    TYPE_MEMBER_FIELD_DOC("__source__",STRUCT_OBJECT,offsetof(JITFunction,jf_source),
+                          "->?X3?Dstring?Dbytes?O\n"
+                          "Returns the object that owns the source code executed by @this function (s.a. #__text__)"),
+    TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(JITFunction,jf_argc_min),
+                          "Min amount of arguments required to execute @this function"),
+    TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(JITFunction,jf_argc_max),
+                          "Max amount of arguments accepted by @this function (excluding a varargs or varkwds argument)"),
     TYPE_MEMBER_END
 };
 
