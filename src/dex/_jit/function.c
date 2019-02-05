@@ -510,15 +510,19 @@ jf_repr(JITFunction *__restrict self) {
  struct jit_object_entry *ent;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  if (self->jf_selfarg == (size_t)-1) {
-  if unlikely(UNICODE_PRINTER_PRINT(&printer,"[](") < 0)
+  if unlikely(UNICODE_PRINTER_PRINT(&printer,"[]") < 0)
      goto err;
+  if (!self->jf_argc_max)
+       goto do_print_code;
  } else {
   ent = &self->jf_args.ot_list[self->jf_selfarg];
-  if unlikely(unicode_printer_printf(&printer,"function %$s(",
-                                      ent->oe_namelen,
-                                      ent->oe_namestr) < 0)
+  if unlikely(UNICODE_PRINTER_PRINT(&printer,"function ") < 0)
+     goto err;
+  if unlikely(unicode_printer_print(&printer,ent->oe_namestr,ent->oe_namelen) < 0)
      goto err;
  }
+ if unlikely(unicode_printer_putc(&printer,'(') < 0)
+    goto err;
  for (i = 0; i < self->jf_argc_max; ++i) {
   if (i != 0 && unicode_printer_putascii(&printer,','))
       goto err;
@@ -527,7 +531,7 @@ jf_repr(JITFunction *__restrict self) {
                                    (char const *)ent->oe_namestr,
                                     ent->oe_namelen) < 0)
      goto err;
-  if (i > self->jf_argc_min) {
+  if (i >= self->jf_argc_min) {
    if (!ent->oe_value) {
     if (unicode_printer_putascii(&printer,'?'))
         goto err;
@@ -560,14 +564,17 @@ jf_repr(JITFunction *__restrict self) {
                                     ent->oe_namelen) < 0)
      goto err;
  }
+ if unlikely(unicode_printer_putc(&printer,')') < 0)
+    goto err;
+do_print_code:
  if (self->jf_flags & JIT_FUNCTION_FRETEXPR) {
-  if unlikely(UNICODE_PRINTER_PRINT(&printer,") -> ") < 0)
+  if unlikely(UNICODE_PRINTER_PRINT(&printer," -> ") < 0)
      goto err;
   if unlikely(unicode_printer_print(&printer,self->jf_source_start,
                                    (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
      goto err;
  } else {
-  if unlikely(UNICODE_PRINTER_PRINT(&printer,") {\n\t") < 0)
+  if unlikely(UNICODE_PRINTER_PRINT(&printer," {\n\t") < 0)
      goto err;
   if unlikely(unicode_printer_print(&printer,self->jf_source_start,
                                    (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
