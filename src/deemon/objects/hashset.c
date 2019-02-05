@@ -1265,7 +1265,8 @@ again:
  }
  DeeHashSet_LockEndRead(self);
  if ((is_first ? unicode_printer_putascii(&p,'}')
-               : UNICODE_PRINTER_PRINT(&p," }")) < 0) goto err;
+               : UNICODE_PRINTER_PRINT(&p," }")) < 0)
+     goto err;
  return unicode_printer_pack(&p);
 restart:
  DeeHashSet_LockEndRead(self);
@@ -1308,7 +1309,7 @@ PRIVATE DREF DeeObject *DCALL
 set_pop(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  size_t i; DREF DeeObject *result;
  if (DeeArg_Unpack(argc,argv,":pop"))
-     return NULL;
+     goto err;
  DeeHashSet_LockWrite(self);
  for (i = 0; i <= self->s_mask; ++i) {
   struct hashset_item *item = &self->s_elem[i];
@@ -1325,33 +1326,41 @@ set_pop(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeHashSet_LockEndWrite(self);
  /* Set is already empty. */
  err_empty_sequence((DeeObject *)self);
+err:
  return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 set_doclear(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":clear"))
-     return NULL;
+     goto err;
  set_clear(self);
  return_none;
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 set_insert(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item; int result;
  if (DeeArg_Unpack(argc,argv,"o:insert",&item))
-     return NULL;
+     goto err;
  result = DeeHashSet_Insert((DeeObject *)self,item);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 set_unify(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item;
  if (DeeArg_Unpack(argc,argv,"o:unify",&item))
-     return NULL;
+     goto err;
  return DeeHashSet_Unify((DeeObject *)self,item);
+err:
+ return NULL;
 }
 
 #if __SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
@@ -1368,21 +1377,42 @@ PRIVATE DREF DeeObject *DCALL
 set_update(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *items; dssize_t result;
  if (DeeArg_Unpack(argc,argv,"o:update",&items))
-     return NULL;
+     goto err;
  result = DeeObject_Foreach(items,(dforeach_t)&insert_callback,self);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return DeeInt_NewSize((size_t)result);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 set_remove(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item; int result;
  if (DeeArg_Unpack(argc,argv,"o:remove",&item))
-     return NULL;
+     goto err;
  result = DeeHashSet_Remove((DeeObject *)self,item);
- if unlikely(result < 0) return NULL;
+ if unlikely(result < 0)
+    goto err;
  return_bool_(result);
+err:
+ return NULL;
 }
+
+
+PRIVATE DREF DeeObject *DCALL
+hashset_sizeof(Set *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ return DeeInt_NewSize(sizeof(Set) +
+                     ((self->s_mask + 1) *
+                       sizeof(struct hashset_item)));
+err:
+ return NULL;
+}
+
+
 
 PRIVATE struct type_method set_methods[] = {
     { DeeString_STR(&str_pop),
@@ -1425,6 +1455,9 @@ PRIVATE struct type_method set_methods[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&set_remove,
       DOC("(ob)->?Dbool\n"
           "Deprecated alias for #remove") },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&hashset_sizeof,
+      DOC("->?Dint") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
     { "insert_all",

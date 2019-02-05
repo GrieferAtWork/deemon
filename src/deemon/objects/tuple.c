@@ -1398,8 +1398,7 @@ tuple_sizeof(Tuple *__restrict self,
  if (DeeArg_Unpack(argc,argv,":__sizeof__"))
      goto err;
  return DeeInt_NewSize(offsetof(Tuple,t_elem)+
-                       self->t_size *
-                       sizeof(DeeObject *));
+                      (self->t_size * sizeof(DeeObject *)));
 err:
  return NULL;
 }

@@ -2250,9 +2250,8 @@ list_sizeof(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,":__sizeof__"))
      return NULL;
- return DeeInt_NewSize(sizeof(List)+
-                       WEAK_READSIZE(self)*
-                       sizeof(DeeObject *));
+ return DeeInt_NewSize(sizeof(List) +
+                      (WEAK_READSIZE(self) * sizeof(DeeObject *)));
 }
 
 PRIVATE DREF DeeObject *DCALL

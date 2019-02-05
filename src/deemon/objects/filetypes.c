@@ -1004,15 +1004,17 @@ writer_sizeof(Writer *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  size_t result;
  if (DeeArg_Unpack(argc,argv,":__sizeof__"))
-     return NULL;
+     goto err;
  DeeFile_LockRead(self);
- result = sizeof(Writer)+(
+ result = sizeof(Writer) + (
           self->w_printer.up_buffer
         ? ((WSTR_LENGTH(self->w_printer.up_buffer)+1)*
             STRING_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH))
         : 0);
  DeeFile_LockEndRead(self);
  return DeeInt_NewSize(result);
+err:
+ return NULL;
 }
 
 PRIVATE struct type_method writer_methods[] = {

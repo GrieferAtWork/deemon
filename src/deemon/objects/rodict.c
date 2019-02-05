@@ -794,8 +794,22 @@ rodict_get(Dict *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*def = Dee_None;
  if (DeeArg_Unpack(argc,argv,"o|o:get",&key,&def))
-     return NULL;
+     goto err;
  return DeeRoDict_GetItemDef((DeeObject *)self,key,def);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+rodict_sizeof(Dict *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ return DeeInt_NewSize(offsetof(Dict,rd_elem) +
+                     ((self->rd_mask + 1) *
+                       sizeof(struct rodict_item)));
+err:
+ return NULL;
 }
 
 PRIVATE struct type_method rodict_methods[] = {
@@ -803,12 +817,26 @@ PRIVATE struct type_method rodict_methods[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&rodict_get,
       DOC("(key,def=!N)\n"
           "@return The value associated with @key or @def when @key has no value associated") },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&rodict_sizeof,
+      DOC("->?Dint") },
     { NULL }
 };
 
+PRIVATE struct type_getset rodict_getsets[] = {
+    { "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") }
+};
+
+PRIVATE struct type_member rodict_members[] = {
+    TYPE_MEMBER_FIELD("__mask__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Dict,rd_mask)),
+    TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Dict,rd_size)),
+    TYPE_MEMBER_END
+};
+
+
 PRIVATE struct type_member rodict_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&RoDictIterator_Type),
-    /* TODO: frozen */
+    TYPE_MEMBER_CONST("frozen",&DeeRoDict_Type),
     TYPE_MEMBER_END
 };
 
@@ -898,8 +926,8 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */rodict_methods,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_getsets       = */rodict_getsets,
+    /* .tp_members       = */rodict_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */rodict_class_members

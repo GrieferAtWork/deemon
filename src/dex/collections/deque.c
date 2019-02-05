@@ -1341,6 +1341,29 @@ deq_rrrot(Deque *__restrict self,
  return_none;
 }
 
+PRIVATE DREF DeeObject *DCALL
+deq_sizeof(Deque *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ size_t result;
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ result = sizeof(Deque);
+ Deque_LockRead(self);
+ ASSERT((self->d_head != NULL) == (self->d_tail != NULL));
+ if (self->d_head) {
+  size_t count = 1;
+  DequeBucket *iter = self->d_head;
+  for (; iter != self->d_tail; iter = iter->db_next)
+      ++count;
+  result += count * SIZEOF_BUCKET(self->d_bucket_sz);
+ }
+ Deque_LockEndRead(self);
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+
 PRIVATE struct type_method deq_methods[] = {
     { "insert", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_insert,
       DOC("(index:?Dint,ob)\n"
@@ -1376,7 +1399,7 @@ PRIVATE struct type_method deq_methods[] = {
     { "llrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_llrot,
       DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
-          "Rotate the first num_items items left by 1:\n"
+          "Rotate the first @num_items items left by 1:\n"
           ">import deque from collections;\n"
           ">local x = deque({ 10, 20, 30, 40, 50 });\n"
           ">x.llrot(3);\n"
@@ -1384,7 +1407,7 @@ PRIVATE struct type_method deq_methods[] = {
     { "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_lrrot,
       DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
-          "Rotate the first num_items items right by 1:\n"
+          "Rotate the first @num_items items right by 1:\n"
           ">import deque from collections;\n"
           ">local x = deque({ 10, 20, 30, 40, 50 });\n"
           ">x.lrrot(3);\n"
@@ -1392,7 +1415,7 @@ PRIVATE struct type_method deq_methods[] = {
     { "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_rlrot,
       DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
-          "Rotate the last num_items items left by 1:\n"
+          "Rotate the last @num_items items left by 1:\n"
           ">import deque from collections;\n"
           ">local x = deque({ 10, 20, 30, 40, 50 });\n"
           ">x.rlrot(3);\n"
@@ -1400,11 +1423,14 @@ PRIVATE struct type_method deq_methods[] = {
     { "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_rrrot,
       DOC("(num_items:?Dint)\n"
           "@throw IndexError @this deque contain less than @num_items items\n"
-          "Rotate the last num_items items right by 1:\n"
+          "Rotate the last @num_items items right by 1:\n"
           ">import deque from collections;\n"
           ">local x = deque({ 10, 20, 30, 40, 50 });\n"
           ">x.rrrot(3);\n"
           ">print repr x; /* { 10, 20, 50, 30, 40 } */") },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&deq_sizeof,
+      DOC("->?Dint") },
     { NULL }
 };
 

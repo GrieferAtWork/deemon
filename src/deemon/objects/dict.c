@@ -1677,6 +1677,18 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+dict_sizeof(Dict *__restrict self,
+            size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ return DeeInt_NewSize(sizeof(Dict) +
+                     ((self->d_mask + 1) *
+                       sizeof(struct dict_item)));
+err:
+ return NULL;
+}
+
 
 /* TODO: Introduce a function `__missing__(key)->object' that is called
  *       when a key can't be found (won't be called by GetItemDef()).
@@ -1701,33 +1713,43 @@ PRIVATE struct type_method dict_methods[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
       DOC("()\n"
           "Clear all values from @this :dict") },
-    { "popitem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
+    { "popitem",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
       DOC("->?T2?O?O\n"
           "@return A random pair key-value pair that has been removed\n"
           "@throw ValueError @this :dict was empty") },
-    { "setdefault", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setdefault,
+    { "setdefault",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setdefault,
       DOC("(key,def=!N)->\n"
           "@return The object currently assigned to @key\n"
           "Lookup @key in @this dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
-    { "setold", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold,
+    { "setold",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold,
       DOC("(key,value)->?Dbool\n"
           "@return Indicative of @value having been assigned to @key\n"
           "Assign @value to @key, only succeeding when @key already existed to begin with") },
-    { "setnew", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setnew,
+    { "setnew",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setnew,
       DOC("(key,value)->?Dbool\n"
           "@return Indicative of @value having been assigned to @key\n"
           "Assign @value to @key, only succeeding when @key didn't exist before") },
-    { "setold_ex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold_ex,
+    { "setold_ex",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold_ex,
       DOC("(key,value)->?T2?Dbool?O\n"
            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
            "Same as #setold but also return the previously assigned object") },
-    { "setnew_ex", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setnew_ex,
+    { "setnew_ex",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setnew_ex,
       DOC("(key,value)->?T2?Dbool?O\n"
            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
            "Same as #setnew but return the previously assigned object on failure") },
-    { "update", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
+    { "update",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
       DOC("(items:?S?T2?O?O)\n"
           "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict") },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_sizeof,
+      DOC("->?Dint") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     /* Old function names. */
     { "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,

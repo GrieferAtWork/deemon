@@ -669,11 +669,24 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+fl_sizeof(FixedList *__restrict self,
+          size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ return DeeInt_NewSize(offsetof(FixedList,fl_elem) +
+                      (self->fl_size * sizeof(DREF DeeObject *)));
+err:
+ return NULL;
+}
 
 PRIVATE struct type_method fl_methods[] = {
     { "clear",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&fl_clear_meth,
       DOC("()") },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&fl_sizeof,
+      DOC("->?Dint") },
     { NULL }
 };
 

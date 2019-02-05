@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_FRAME_C 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/code.h>
@@ -638,7 +639,7 @@ PRIVATE struct type_getset frame_getsets[] = {
      *                    provide access to symbols visible within user-code via their
      *                    individual names.
      *                    Resolution name order here is:
-     *                    LOCALS/STACK (DDI) -> ARGUMENTS -> `return' + `this'
+     *                    LOCALS/STACK (DDI) -> ARGUMENTS -> STATIC/CONST -> REF -> `return' + `this'
      */
     { NULL }
 };

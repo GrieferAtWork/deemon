@@ -120,6 +120,31 @@ err:
 }
 
 PRIVATE int DCALL
+ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
+                   DeeObject **__restrict argv, DeeObject *kw) {
+ DeeObject *obj;
+ PRIVATE DEFINE_KWLIST(kwlist,{ K(obj), K(callback), KEND });
+ self->wr_del = NULL;
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:weakref",&obj,&self->wr_del))
+     goto err;
+ if (self->wr_del) {
+  Dee_Incref(self->wr_del);
+  if (!Dee_weakref_init(&self->wr_ref,obj,&ob_weakref_invoke_callback))
+       goto err_nosupport_del;
+ } else {
+  if (!Dee_weakref_init(&self->wr_ref,obj,NULL))
+       goto err_nosupport;
+ }
+ return 0;
+err_nosupport_del:
+ Dee_Decref(self->wr_del);
+err_nosupport:
+ err_cannot_weak_reference(obj);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 ob_weakref_assign(WeakRef *__restrict self,
                   DeeObject *__restrict other) {
  if (DeeWeakRef_Check(other)) {
@@ -349,31 +374,29 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                             "Note however that the bound callback does not influence anything "
                             "else, such as comparison operators, which only compare the ids of "
                             "bound objects, even after those objects have died\n"
+                            "Also note that at the time that @callback is invoked, @this weak reference "
+                            "will have already been unbound and no longer point to the object that is "
+                            "being destroyed, so-as to prevent a possible infinite loop caused by the "
+                            "object being revived when accessed (@callback is only invoked once the bound "
+                            "object has passed the point of no return and can no longer be revived)\n"
                             "\n"
                             "bool->\n"
                             "Returns true if the weak reference is currently bound. Note however that this "
                             "information is volatile and may not longer be up-to-date by the time the operator returns\n"
                             "\n"
-                            "==(other:?N)->\n"
-                            "!=(other:?N)->\n"
-                            "<(other:?N)->\n"
-                            "<=(other:?N)->\n"
-                            ">(other:?N)->\n"
-                            ">=(other:?N)->\n"
-                            "Test for the pointed-to object being bound\n"
+                            "==(other:?X2?.?N)->\n"
+                            "!=(other:?X2?.?N)->\n"
+                            "<(other:?X2?.?N)->\n"
+                            "<=(other:?X2?.?N)->\n"
+                            ">(other:?X2?.?N)->\n"
+                            ">=(other:?X2?.?N)->\n"
+                            "When compared with :none, test for the pointed-to object being bound. "
+                            "Otherwise, compare the pointed-to object of @this weak reference to "
+                            "that of @other\n"
                             "\n"
-                            "==->\n"
-                            "!=->\n"
-                            "<->\n"
-                            "<=->\n"
-                            ">->\n"
-                            ">=->\n"
-                            "Compare the pointed-to object of @this weak reference to that of @other\n"
-                            "\n"
-                            ":=->\n"
-                            ":=(obj)->\n"
-                            "@throw TypeError The given @obj does not implement weak referencing support\n"
-                            "Assign the value of @other, or @obj to @this weakref object\n"
+                            ":=(other:?X2?.?O)->\n"
+                            "@throw TypeError The given @other does not implement weak referencing support\n"
+                            "Assign the value of @other to @this weakref object\n"
                             "\n"
                             "move:=->\n"
                             "Override @this weak reference with the value referenced by @other, "
@@ -390,7 +413,8 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                 /* .tp_copy_ctor = */(void *)&ob_weakref_copy,
                 /* .tp_deep_ctor = */(void *)&ob_weakref_deep,
                 /* .tp_any_ctor  = */(void *)&ob_weakref_init,
-                TYPE_FIXED_ALLOCATOR(WeakRef)
+                TYPE_FIXED_ALLOCATOR(WeakRef),
+                /* .tp_any_ctor_kw = */(void *)&ob_weakref_init_kw
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&ob_weakref_fini,

@@ -2601,6 +2601,23 @@ PRIVATE struct type_method int_class_methods[] = {
     { NULL }
 };
 
+
+PRIVATE DREF DeeObject *DCALL
+int_sizeof(DeeIntObject *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ size_t int_size;
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ int_size = (size_t)self->ob_size;
+ if ((dssize_t)int_size < 0)
+      int_size = (size_t)-(dssize_t)int_size;
+ return DeeInt_NewSize(offsetof(DeeIntObject,ob_digit) +
+                      (int_size * sizeof(digit)));
+err:
+ return NULL;
+}
+
+
 PRIVATE struct type_method int_methods[] = {
     { "tostr",
      (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_tostr,
@@ -2641,6 +2658,9 @@ PRIVATE struct type_method int_methods[] = {
           "integer is negative. Otherwise use two's complement to encode "
           "negative integers"),
       TYPE_METHOD_FKWDS },
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_sizeof,
+      DOC("->?Dint") },
     { NULL }
 };
 

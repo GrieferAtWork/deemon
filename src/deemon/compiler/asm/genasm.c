@@ -645,7 +645,7 @@ done_push_none:
    *       The only thing we're responsible for, is to prevent
    *       generation of trailing code still associated with
    *       instructions that are known to never return.
-   *       As is the case now, when we only fake pushing a when
+   *       As is the case now, we only fake pushing something when
    *       a `return' expression is supposed to yield something. */
 done_fake_none:
   if (PUSH_RESULT) asm_incsp();

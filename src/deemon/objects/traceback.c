@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_OBJECTS_TRACEBACK_C 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/code.h>
@@ -228,8 +229,7 @@ traceiter_next(TraceIterator *__restrict self) {
 }
 
 PRIVATE struct type_member traceiter_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,
-                       offsetof(TraceIterator,ti_trace)),
+    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(TraceIterator,ti_trace)),
     TYPE_MEMBER_END
 };
 
@@ -515,6 +515,36 @@ PRIVATE struct type_gc traceback_gc = {
     /* .tp_clear = */(void(DCALL *)(DeeObject *__restrict))&traceback_clear
 };
 
+
+PRIVATE DREF DeeObject *DCALL
+traceback_sizeof(DeeTracebackObject *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ size_t result; uint16_t i;
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ result = offsetof(DeeTracebackObject,tb_frames) +
+         (self->tb_numframes * sizeof(struct code_frame));
+ for (i = 0; i < self->tb_numframes; ++i) {
+  if (self->tb_frames[i].cf_frame)
+      result += self->tb_frames[i].cf_func->fo_code->co_framesize;
+  if (self->tb_frames[i].cf_argv)
+      result += self->tb_frames[i].cf_argc * sizeof(DREF DeeObject *);
+  if (self->tb_frames[i].cf_stack)
+      result += self->tb_frames[i].cf_stacksz * sizeof(DREF DeeObject *);
+ }
+ return DeeInt_NewSize(result);
+err:
+ return NULL;
+}
+
+PRIVATE struct type_method traceback_methods[] = {
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&traceback_sizeof,
+      DOC("->?Dint") },
+    { NULL }
+};
+
+
 PUBLIC DeeTypeObject DeeTraceback_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_traceback),
@@ -551,7 +581,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
+    /* .tp_methods       = */traceback_methods,
     /* .tp_getsets       = */NULL,
     /* .tp_members       = */NULL,
     /* .tp_class_methods = */NULL,

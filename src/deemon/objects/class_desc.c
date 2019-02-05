@@ -1239,6 +1239,26 @@ err:
 }
 
 
+PRIVATE DREF DeeObject *DCALL
+cd_sizeof(ClassDescriptor *__restrict self,
+          size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ return DeeInt_NewSize(offsetof(ClassDescriptor,cd_iattr_list) +
+                     ((self->cd_iattr_mask + 1) * sizeof(struct class_attribute)) +
+                      (self->cd_cattr_list == empty_class_attributes ? 0 : (self->cd_cattr_mask + 1) * sizeof(struct class_attribute)) +
+                      (self->cd_clsop_list == empty_class_operators ? 0 : (self->cd_clsop_mask + 1) * sizeof(struct class_operator)));
+err:
+ return NULL;
+}
+
+PRIVATE struct type_method cd_methods[] = {
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cd_sizeof,
+      DOC("->?Dint") },
+    { NULL }
+};
+
 PRIVATE struct type_getset cd_getsets[] = {
     { "isfinal", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL, DOC("->?Dbool") },
     { "isinterrupt", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL,
@@ -1961,7 +1981,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
+    /* .tp_methods       = */cd_methods,
     /* .tp_getsets       = */cd_getsets,
     /* .tp_members       = */cd_members,
     /* .tp_class_methods = */NULL,

@@ -82,15 +82,15 @@ err:
  return -1;
 }
 PRIVATE int DCALL
-property_init(Property *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
- PRIVATE struct keyword kwlist[] = { K(getter), K(delete), K(setter), KEND };
+property_init_kw(Property *__restrict self, size_t argc,
+                 DeeObject **__restrict argv, DeeObject *kw) {
+ PRIVATE DEFINE_KWLIST(kwlist,{ K(getter), K(delete), K(setter), KEND });
  self->p_get = NULL;
  self->p_del = NULL;
  self->p_set = NULL;
  if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|ooo:property",
                     &self->p_get,&self->p_del,&self->p_set))
-     return -1;
+     goto err;
  if (DeeNone_Check(self->p_get)) self->p_get = NULL;
  if (DeeNone_Check(self->p_del)) self->p_del = NULL;
  if (DeeNone_Check(self->p_set)) self->p_set = NULL;
@@ -98,6 +98,8 @@ property_init(Property *__restrict self, size_t argc,
  Dee_XIncref(self->p_del);
  Dee_XIncref(self->p_set);
  return 0;
+err:
+ return -1;
 }
 PRIVATE void DCALL
 property_fini(Property *__restrict self) {
@@ -350,12 +352,12 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor        = */&property_ctor,
-                /* .tp_copy_ctor   = */&property_copy,
-                /* .tp_deep_ctor   = */&property_deep,
-                /* .tp_any_ctor    = */NULL,
+                /* .tp_ctor        = */(void *)&property_ctor,
+                /* .tp_copy_ctor   = */(void *)&property_copy,
+                /* .tp_deep_ctor   = */(void *)&property_deep,
+                /* .tp_any_ctor    = */(void *)NULL,
                 TYPE_FIXED_ALLOCATOR(Property),
-                /* .tp_any_ctor_kw = */&property_init,
+                /* .tp_any_ctor_kw = */(void *)&property_init_kw,
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&property_fini,

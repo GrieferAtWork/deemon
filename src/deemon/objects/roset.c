@@ -237,13 +237,15 @@ DeeRoSet_FromSequence(DeeObject *__restrict self) {
  /* TODO: if (DeeHashSet_CheckExact(self)) ... */
  /* Construct a read-only set from an iterator. */
  self = DeeObject_IterSelf(self);
- if unlikely(!self) return NULL;
+ if unlikely(!self) goto err;
  length_hint = DeeFastSeq_GetSize(self);
  result = likely(length_hint != DEE_FASTSEQ_NOTFAST)
         ? DeeRoSet_FromIteratorWithHint(self,length_hint)
         : DeeRoSet_FromIterator(self);
  Dee_Decref(self);
  return result;
+err:
+ return NULL;
 }
 
 #define ROSET_ALLOC(mask)         ((DREF Set *)DeeObject_Calloc(SIZEOF_ROSET(mask)))
@@ -539,9 +541,38 @@ PRIVATE struct type_seq roset_seq = {
     /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&roset_contains
 };
 
+PRIVATE DREF DeeObject *DCALL
+roset_sizeof(Set *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+     goto err;
+ return DeeInt_NewSize(offsetof(Set,rs_elem) +
+                     ((self->rs_mask + 1) *
+                       sizeof(struct roset_item)));
+err:
+ return NULL;
+}
+
+PRIVATE struct type_method roset_methods[] = {
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&roset_sizeof,
+      DOC("->?Dint") },
+    { NULL }
+};
+
+PRIVATE struct type_getset roset_getsets[] = {
+    { "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") }
+};
+
+PRIVATE struct type_member roset_members[] = {
+    TYPE_MEMBER_FIELD("__mask__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Set,rs_mask)),
+    TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Set,rs_size)),
+    TYPE_MEMBER_END
+};
+
 PRIVATE struct type_member roset_class_members[] = {
     TYPE_MEMBER_CONST("iterator",&RoSetIterator_Type),
-    /* TODO: frozen */
+    TYPE_MEMBER_CONST("frozen",&DeeRoSet_Type),
     TYPE_MEMBER_END
 };
 
@@ -626,9 +657,9 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
     /* .tp_attr          = */NULL,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_methods       = */roset_methods,
+    /* .tp_getsets       = */roset_getsets,
+    /* .tp_members       = */roset_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */roset_class_members
