@@ -107,6 +107,33 @@ assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
 }
 
 
+{
+	local glob = dict();
+	/* Execute a piece of code to define some globals,
+	 * as well as create and return a JIT function. */
+	local x = exec(r'
+		bar = "foobar";
+		function foo(x?,y = 3) {
+			if (x !is bound)
+				return bar;
+			return x + y;
+		}
+	', globals: glob);
+
+	/* Ensure that globals were created correctly */
+	assert glob["bar"] == "foobar";
+	assert glob["foo"] === x;
+
+	/* Ensure that invocations of the function behave properly */
+	assert x() === glob["bar"];
+	assert x(10) == 13;
+	assert x(10,20) == 30;
+
+	/* Ensure that the correct meta-data is available for the function */
+	assert x.__name__ == "foo";
+	assert x.__kwds__ == { "x", "y" };
+}
+
 
 
 
