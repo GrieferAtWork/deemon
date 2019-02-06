@@ -224,7 +224,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
                 /*utf-8*/char const *params_end,
                 /*utf-8*/char const *__restrict source_start,
                 /*utf-8*/char const *__restrict source_end,
-                JITObjectTable *__restrict parent_object_table,
+                JITObjectTable *parent_object_table,
                 DeeObject *__restrict source,
                 DeeModuleObject *impbase,
                 DeeObject *globals,
@@ -425,32 +425,35 @@ err_no_keyword_for_argument:
  JITLexer_Start(&lex,
                (unsigned char *)source_start,
                (unsigned char *)source_end);
- for (; lex.jl_tok; JITLexer_Yield(&lex)) {
-  JITObjectTable *iter;
-  dhash_t hash; size_t size;
-  if (lex.jl_tok != JIT_KEYWORD)
-      continue;
-  size = (size_t)(lex.jl_tokend - lex.jl_tokstart);
-  hash = Dee_HashUtf8((char const *)lex.jl_tokstart,size);
-  if (JITObjectTable_Lookup(&result->jf_args,(char const *)lex.jl_tokstart,size,hash) ||
-      JITObjectTable_Lookup(&result->jf_refs,(char const *)lex.jl_tokstart,size,hash))
-      continue; /* Keyword is an argument, or has already been referenced. */
-  iter = parent_object_table;
-  for (; iter; iter = iter->ot_prev.otp_tab) {
-   struct jit_object_entry *ent,*destent;
-   ent = JITObjectTable_Lookup(iter,(char const *)lex.jl_tokstart,size,hash);
-   if (!ent || !ent->oe_value)
-        continue;
-   /* Create a new reference for this keyword. */
-   destent = JITObjectTable_Create(&result->jf_refs,(char const *)lex.jl_tokstart,size,hash);
-   if unlikely(!destent)
+ lex.jl_scandata.jl_function = result;
+ lex.jl_scandata.jl_parobtab = parent_object_table;
+ lex.jl_scandata.jl_flags    = JIT_SCANDATA_FNORMAL;
+ /* Scan the source code of the function for yield statements, as
+  * well as references to symbols found outside of the function. */
+ while (lex.jl_tok) {
+  unsigned char *stmt_start;
+  stmt_start = lex.jl_tokstart;
+  if (result->jf_flags & JIT_FUNCTION_FRETEXPR) {
+   JITLexer_ScanExpression(&lex,true);
+  } else {
+   JITLexer_ScanStatement(&lex);
+  }
+  /* Check for scanning errors. */
+  if (lex.jl_scandata.jl_flags & JIT_SCANDATA_FERROR)
       goto err_r;
-   destent->oe_value = ent->oe_value;
-   Dee_XIncref(ent->oe_value);
-   break;
+  /* Force-advance to the next token if we're hung up on the current one. */
+  if (stmt_start == lex.jl_tokstart) {
+#if 0
+   DeeError_Throwf(&DeeError_SyntaxError,
+                   "Failed to scan token `%$s'",
+                  (size_t)(lex.jl_tokend - lex.jl_tokstart),
+                   lex.jl_tokstart);
+   goto err_r;
+#else
+   JITLexer_Yield(&lex);;
+#endif
   }
  }
-
 done:
  return (DREF DeeObject *)result;
 err_r:
@@ -596,8 +599,15 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
  JITLexer lexer;
  JITContext context;
  JITObjectTable base_locals;
- DeeThreadObject *ts = DeeThread_Self();
+ DeeThreadObject *ts;
  size_t i;
+ if (self->jf_flags & JIT_FUNCTION_FYIELDING) {
+  /* TODO: Yield function support (or at least some rudimentry form of it) */
+  DERROR_NOTIMPLEMENTED();
+  goto err;
+ }
+
+ ts = DeeThread_Self();
  if (DeeThread_CheckInterrupt())
      goto err;
  ASSERT(self->jf_args.ot_prev.otp_ind >= 2);

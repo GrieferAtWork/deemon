@@ -283,16 +283,16 @@ FUNC(Statement)(JITLexer *__restrict self) {
   switch (tok_length) {
 
   case 2:
-   if (self->jl_tokstart[0] == 'i' &&
-       self->jl_tokstart[1] == 'f') {
+   if (tok_begin[0] == 'i' &&
+       tok_begin[1] == 'f') {
     IF_EVAL(JITContext_PushScope(self->jl_context));
     result = FUNC(If)(self,true);
     LOAD_LVALUE(result,err_popscope);
     IF_EVAL(JITContext_PopScope(self->jl_context));
     goto done;
    }
-   if (self->jl_tokstart[0] == 'd' &&
-       self->jl_tokstart[1] == 'o') {
+   if (tok_begin[0] == 'd' &&
+       tok_begin[1] == 'o') {
     IF_EVAL(JITContext_PushScope(self->jl_context));
     result = FUNC(Do)(self,true);
     LOAD_LVALUE(result,err_popscope);
@@ -302,24 +302,24 @@ FUNC(Statement)(JITLexer *__restrict self) {
    break;
 
   case 3:
-   if (self->jl_tokstart[0] == 't' &&
-       self->jl_tokstart[1] == 'r' &&
-       self->jl_tokstart[2] == 'y') {
+   if (tok_begin[0] == 't' &&
+       tok_begin[1] == 'r' &&
+       tok_begin[2] == 'y') {
     result = FUNC(Try)(self,true);
     goto done;
    }
-   if (self->jl_tokstart[0] == 'f' &&
-       self->jl_tokstart[1] == 'o' &&
-       self->jl_tokstart[2] == 'r') {
+   if (tok_begin[0] == 'f' &&
+       tok_begin[1] == 'o' &&
+       tok_begin[2] == 'r') {
     IF_EVAL(JITContext_PushScope(self->jl_context));
     result = FUNC(For)(self,true);
     LOAD_LVALUE(result,err_popscope);
     IF_EVAL(JITContext_PopScope(self->jl_context));
     goto done;
    }
-   if (self->jl_tokstart[0] == 'd' &&
-       self->jl_tokstart[1] == 'e' &&
-       self->jl_tokstart[2] == 'l') {
+   if (tok_begin[0] == 'd' &&
+       tok_begin[1] == 'e' &&
+       tok_begin[2] == 'l') {
     result = FUNC(Del)(self,true);
     goto done;
    }

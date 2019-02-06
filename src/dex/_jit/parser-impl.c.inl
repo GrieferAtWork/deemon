@@ -289,7 +289,7 @@ DEFINE_SECONDARY(CastOperand) {
 
  case '+': /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
  case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
- case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
+//case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
  case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
 not_a_cast:
   /* Not a cast expression. */
@@ -1335,10 +1335,12 @@ skip_rbrck_and_done:
 #endif /* !JIT_EVAL */
     goto done_y1;
    }
-#if 0
+#if 1
    if (name == ENCODE4('a','s','s','e') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r','t')) {
     /* TODO: Assert expressions */
+    DERROR_NOTIMPLEMENTED();
+    goto err;
    }
 #endif
    break;
@@ -1370,6 +1372,21 @@ skip_rbrck_and_done:
      Dee_Decref(result);
      result = new_result;
     }
+#endif
+    goto done;
+   }
+   if (name == ENCODE4('o','p','e','r') &&
+       UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE4('a','t','o','r')) {
+    /* Operator function access. */
+    int32_t opno;
+    JITLexer_Yield(self);
+    opno = JITLexer_ParseOperatorName(self,P_OPERATOR_FNORMAL);
+    if unlikely(opno < 0)
+       goto err;
+#ifdef JIT_EVAL
+    result = JIT_GetOperatorFunction((uint16_t)opno);
+#else
+    result = 0;
 #endif
     goto done;
    }

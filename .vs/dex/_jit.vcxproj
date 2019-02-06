@@ -69,6 +69,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\dex\_jit\context.c" />
     <ClCompile Include="..\..\src\dex\_jit\error.c" />
+    <ClCompile Include="..\..\src\dex\_jit\function-scanner.c" />
     <ClCompile Include="..\..\src\dex\_jit\function.c" />
     <ClCompile Include="..\..\src\dex\_jit\lexer.c" />
     <ClCompile Include="..\..\src\dex\_jit\libjit.c" />

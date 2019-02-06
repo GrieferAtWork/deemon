@@ -38,9 +38,9 @@ enum {
     TOK_STRING    = '\"', /* "foobar". (also includes `r"foobar"' when `TPP_CONFIG_RAW_STRING_LITERALS' is enabled) */
     TOK_INT       = '0',  /* 42 */
     TOK_FLOAT     = 'f',  /* 42.0 */
-    TOK_LF        = '\n',
-    TOK_SPACE     = ' ',
-    TOK_COMMENT   = 'c',  /* like this one! */
+/*  TOK_LF        = '\n', */
+/*  TOK_SPACE     = ' ', */
+/*  TOK_COMMENT   = 'c',  /* like this one! */
 
     /* Single-character tokens (always equal to that character's ordinal). */
     TOK_ADD       = '+',
@@ -348,11 +348,24 @@ struct jit_lexer {
     /*utf-8*/unsigned char *jl_tokend;    /* [1..1] Token end pointer. */
     /*utf-8*/unsigned char *jl_end;       /* [1..1] Input end pointer. */
     /*utf-8*/unsigned char *jl_errpos;    /* [0..1] Lexer error position. */
-    DeeObject              *jl_text;      /* [1..1] The object that owns input text (Usually a string or bytes object)
+    union {
+        struct {
+            JITFunctionObject
+                           *jl_function;  /* [1..1] The function who's text is being scanned. */
+            JITObjectTable *jl_parobtab;  /* [0..1] Pointer to the parent scope's object table. */
+#define JIT_SCANDATA_FNORMAL  0x0000      /* Normal scan data flags. */
+#define JIT_SCANDATA_FINCHILD 0x0001      /* The scanner is currently processing text of a recursively defined child function. */
+#define JIT_SCANDATA_FERROR   0x0002      /* An error occurred. */
+            unsigned int    jl_flags;     /* Set of `JIT_SCANDATA_F*' */
+        }                   jl_scandata;  /* Data fields used by `JITLexer_Scan*' functions. */
+        struct {
+            DeeObject      *jl_text;      /* [1..1] The object that owns input text (Usually a string or bytes object)
                                            * For expressions such as ones used to create lambda functions, a reference
                                            * to this object is stored to ensure that child code will not be deallocated. */
-    JITContext             *jl_context;   /* [1..1][const] The associated JIT context. */
-    JITLValue               jl_lvalue;    /* L-value expression. */
+            JITContext     *jl_context;   /* [1..1][const] The associated JIT context. */
+            JITLValue       jl_lvalue;    /* L-value expression. */
+        };
+    };
 };
 
 
@@ -906,8 +919,9 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 
 
 
-#define JIT_FUNCTION_FNORMAL  0x0000 /* Normal function flags. */
-#define JIT_FUNCTION_FRETEXPR 0x0001 /* The function's source text describes an arrow-like return expression */
+#define JIT_FUNCTION_FNORMAL   0x0000 /* Normal function flags. */
+#define JIT_FUNCTION_FRETEXPR  0x0001 /* The function's source text describes an arrow-like return expression */
+#define JIT_FUNCTION_FYIELDING 0x0002 /* The function's contains a yield statement. */
 struct jit_function_object {
     OBJECT_HEAD
     /*utf-8*/char const    *jf_source_start; /* [1..1][const] Source start pointer. */
@@ -944,7 +958,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
                 /*utf-8*/char const *params_end,
                 /*utf-8*/char const *__restrict source_start,
                 /*utf-8*/char const *__restrict source_end,
-                JITObjectTable *__restrict parent_object_table,
+                JITObjectTable *parent_object_table,
                 DeeObject *__restrict source,
                 DeeModuleObject *impbase,
                 DeeObject *globals,
@@ -959,6 +973,12 @@ INTDEF struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunctionObject *__restrict self,
                            /*utf-8*/char const *namestr,
                            size_t namelen);
+
+/* Analyze the contents of an expression/statement for possible references
+ * to symbols from surrounding scopes, or the use of `yield'. */
+INTDEF void FCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
+INTDEF void FCALL JITLexer_ScanStatement(JITLexer *__restrict self);
+INTDEF void DCALL JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size);
 
 
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
