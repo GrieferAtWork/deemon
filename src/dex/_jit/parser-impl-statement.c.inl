@@ -63,6 +63,193 @@ err:
 }
 
 
+#ifndef IS_COL_DEFINED
+#define IS_COL_DEFINED 1
+LOCAL WUNUSED bool FCALL
+JITLexer_IsColumn(JITLexer *__restrict self) {
+ switch (self->jl_tok) {
+ case ':': break;
+ case TOK_COLLON_EQUAL:
+  self->jl_tok = ':';
+  --self->jl_tokend;
+  break;
+ default:
+  return false;
+ }
+ return true;
+}
+#endif
+
+#ifndef SKIP_ASSEMBLY_OPERAND_NAME_DEFINED
+#define SKIP_ASSEMBLY_OPERAND_NAME_DEFINED 1
+LOCAL WUNUSED int FCALL
+JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
+ if (self->jl_tok == '[') {
+  JITLexer_Yield(self);
+  if likely(self->jl_tok == JIT_KEYWORD) {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected a keyword as operand name after `[', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  if likely(self->jl_tok == ']') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `]' after `[' followed by an operand name, but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+ }
+ return 0;
+err:
+ return -1;
+}
+#endif /* !SKIP_ASSEMBLY_OPERAND_NAME_DEFINED */
+
+
+LOCAL WUNUSED int FCALL
+FUNC(AssemblyOperands)(JITLexer *__restrict self
+#ifdef JIT_EVAL
+                       , bool is_input
+#endif
+                       ) {
+#ifdef JIT_EVAL
+ DREF DeeObject *temp;
+#endif
+ while (self->jl_tok == '[' ||
+        self->jl_tok == JIT_STRING ||
+        self->jl_tok == JIT_RAWSTRING) {
+  if unlikely(JITLexer_SkipAssemblyOperandName(self))
+     goto err;
+  if (self->jl_tok == JIT_STRING ||
+      self->jl_tok == JIT_RAWSTRING) {
+   do JITLexer_Yield(self);
+   while (self->jl_tok == JIT_STRING ||
+          self->jl_tok == JIT_RAWSTRING);
+  } else {
+   SYNTAXERROR("Expected a string before the operand value, but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  if (self->jl_tok == '(') {
+   /* Parse the assembly operand. */
+do_parse_lparen:
+   JITLexer_Yield(self);
+#ifdef JIT_EVAL
+   temp = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+   if unlikely(!temp)
+      goto err;
+#else
+   if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+       goto err;
+#endif
+   if (self->jl_tok == ')') {
+    JITLexer_Yield(self);
+   } else {
+#ifdef JIT_EVAL
+    if (temp == JIT_LVALUE) {
+     JITLValue_Fini(&self->jl_lvalue);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+    } else {
+     Dee_Decref(temp);
+    }
+#endif /* JIT_EVAL */
+    SYNTAXERROR("Expected `)' after an assembly operand value, but got `%$s'",
+               (size_t)(self->jl_tokend - self->jl_tokstart),
+                self->jl_tokstart);
+    goto err;
+   }
+  } else if (JITLexer_ISKWD(self,"pack")) {
+   JITLexer_Yield(self);
+   if (self->jl_tok == '(')
+       goto do_parse_lparen;
+#ifdef JIT_EVAL
+   temp = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+   if unlikely(!temp)
+      goto err;
+#else
+   if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+       goto err;
+#endif
+  } else {
+   SYNTAXERROR("Expected `(' before an assembly operand value, but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+#ifdef JIT_EVAL
+  if (temp == JIT_LVALUE) {
+   if (is_input) {
+    /* Input operands are dereferenced. */
+    temp = JITLexer_PackLValue(self);
+    if unlikely(!temp)
+       goto err;
+    goto do_decref_temp_rvalue;
+   }
+   JITLValue_Fini(&self->jl_lvalue);
+   self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+  } else {
+do_decref_temp_rvalue:
+   Dee_Decref(temp);
+  }
+#endif /* JIT_EVAL */
+  /* Operand parsed. - Check for a `,', followed by another one. */
+  if (self->jl_tok != ',')
+      break;
+  JITLexer_Yield(self);
+  /* continue; */
+ }
+ return 0;
+err:
+ return -1;
+}
+
+#ifndef SKIP_ASSEMBLY_CLOBBER_DEFINED
+#define SKIP_ASSEMBLY_CLOBBER_DEFINED 1
+LOCAL void FCALL
+JITLexer_SkipAssemblyClobber(JITLexer *__restrict self) {
+ while (self->jl_tok == JIT_STRING ||
+        self->jl_tok == JIT_RAWSTRING) {
+  do JITLexer_Yield(self);
+  while (self->jl_tok == JIT_STRING ||
+         self->jl_tok == JIT_RAWSTRING);
+  if (self->jl_tok != ',')
+      break;
+  JITLexer_Yield(self);
+ }
+}
+#endif /* !SKIP_ASSEMBLY_CLOBBER_DEFINED */
+
+#ifndef SKIP_ASSEMBLY_LABELS_DEFINED
+#define SKIP_ASSEMBLY_LABELS_DEFINED 1
+LOCAL WUNUSED int FCALL
+JITLexer_SkipAssemblyLabels(JITLexer *__restrict self) {
+ while (self->jl_tok == JIT_KEYWORD || self->jl_tok == '[') {
+  if unlikely(JITLexer_SkipAssemblyOperandName(self))
+     goto err;
+  if (self->jl_tok != JIT_KEYWORD) {
+   SYNTAXERROR("Expected a keyword as label operand, but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  JITLexer_Yield(self);
+  if (self->jl_tok != ',')
+      break;
+  JITLexer_Yield(self);
+ }
+ return 0;
+err:
+ return -1;
+}
+#endif /* !SKIP_ASSEMBLY_LABELS_DEFINED */
+
+
+
 INTERN RETURN_TYPE FCALL
 FUNC(Statement)(JITLexer *__restrict self) {
  RETURN_TYPE result;
@@ -305,10 +492,170 @@ FUNC(Statement)(JITLexer *__restrict self) {
    if (name == ENCODE4('_','_','a','s') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('m','_') &&
        *(uint8_t *)(tok_begin + 6) == '_') {
+    bool is_asm_goto;
+    bool need_trailing_rparen;
 do_asm:
-    /* TODO */
-    DERROR_NOTIMPLEMENTED();
-    goto err;
+    JITLexer_Yield(self);
+    /* Skip assembly modifiers. */
+    is_asm_goto = false;
+    while (self->jl_tok == JIT_KEYWORD) {
+     unsigned char *kwd_start = self->jl_tokstart;
+     unsigned char *kwd_end   = self->jl_tokend;
+     while (kwd_start < kwd_end && *kwd_start == '_') ++kwd_start;
+     while (kwd_end > kwd_start && kwd_end[-1] == '_') --kwd_end;
+#define IS_MOD(x) ((size_t)(kwd_end - kwd_start) == COMPILER_STRLEN(x) && \
+                    memcmp(kwd_start,x,COMPILER_STRLEN(x) * sizeof(char)) == 0)
+     if (IS_MOD("volatile")) { JITLexer_Yield(self); continue; }
+     if (IS_MOD("goto")) { is_asm_goto = true; JITLexer_Yield(self); continue; }
+     break;
+#undef IS_MOD
+    }
+    need_trailing_rparen = true;
+    if (self->jl_tok == '(') {
+do_parse_asm_leading_lparen:
+     JITLexer_Yield(self);
+#ifndef JIT_EVAL
+     if (JITLexer_SkipPair(self,'(',')'))
+         goto err;
+     goto check_trailing_asm_semicollon;
+#endif
+    } else if (JITLexer_ISKWD(self,"pack")) {
+     need_trailing_rparen = false;
+     JITLexer_Yield(self);
+     if (self->jl_tok == '(')
+         goto do_parse_asm_leading_lparen;
+    } else {
+     SYNTAXERROR("Expected `(' after `__asm__', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err;
+    }
+    /* Parse the assembly string (which must be empty!). */
+    if (self->jl_tok == JIT_STRING) {
+again_eval_asm_string:
+#ifdef JIT_EVAL
+     {
+      size_t str_len;
+      str_len = (size_t)(self->jl_tokend - self->jl_tokstart) - 2;
+      if (str_len != 0) {
+       size_t i,len;
+       DREF DeeObject *str;
+       str = DeeString_FromBackslashEscaped((char const *)self->jl_tokstart + 1,
+                                             str_len,STRING_ERROR_FSTRICT);
+       if unlikely(!str)
+          goto err;
+       len = DeeString_WLEN(str);
+       /* Make sure that the string only contains space characters! */
+       for (i = 0; i < len; ++i) {
+        if (!DeeUni_IsSpace(DeeString_GetChar(str,i))) {
+         Dee_Decref(str);
+         goto err_unsupported_assembly;
+        }
+       }
+       Dee_Decref(str);
+      }
+     }
+#endif
+     JITLexer_Yield(self);
+     /* Check for further strings that would have to be concatenated. */
+     if (self->jl_tok == JIT_STRING)
+         goto again_eval_asm_string;
+     if (self->jl_tok == JIT_RAWSTRING)
+         goto again_eval_asm_rawstring;
+    } else if (self->jl_tok == JIT_RAWSTRING) {
+     unsigned char *str_start;
+     unsigned char *str_end;
+again_eval_asm_rawstring:
+     str_start = self->jl_tokstart + 2;
+     str_end   = self->jl_tokend - 1;
+     /* Make sure that the string only contains space characters! */
+     while (str_start < str_end) {
+      uint32_t ch;
+      ch = utf8_readchar((char const **)&str_start,(char const *)str_end);
+      if unlikely(!DeeUni_IsSpace(ch))
+         goto err_unsupported_assembly;
+     }
+     JITLexer_Yield(self);
+     /* Check for further strings that would have to be concatenated. */
+     if (self->jl_tok == JIT_STRING)
+         goto again_eval_asm_string;
+     if (self->jl_tok == JIT_RAWSTRING)
+         goto again_eval_asm_rawstring;
+    } else if (self->jl_tok == '{') {
+     JITLexer_Yield(self);
+     /* We mustn't encounter anything before the closing brace! (JIT doesn't support
+      * inline assembly, as it literally doesn't have an intermediate bytecode, or
+      * assembler layer) */
+     if (self->jl_tok == '}') {
+      JITLexer_Yield(self);
+     } else {
+err_unsupported_assembly:
+      SYNTAXERROR("User-assembly statements with non-empty assembly text are not supported");
+      goto err;
+     }
+    } else {
+     SYNTAXERROR("Expected a string after `__asm__', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err;
+    }
+    /* Check for assembly I/O operands. */
+    if (JITLexer_IsColumn(self)) {
+     JITLexer_Yield(self);
+#ifdef JIT_EVAL
+     if unlikely(FUNC(AssemblyOperands)(self,false)) /* OUTPUT */
+        goto err;
+#else
+     if unlikely(FUNC(AssemblyOperands)(self)) /* OUTPUT */
+        goto err;
+#endif
+     if (JITLexer_IsColumn(self)) {
+      JITLexer_Yield(self);
+#ifdef JIT_EVAL
+      if unlikely(FUNC(AssemblyOperands)(self,false)) /* INPUT */
+         goto err;
+#else
+      if unlikely(FUNC(AssemblyOperands)(self)) /* INPUT */
+         goto err;
+#endif
+      if (JITLexer_IsColumn(self)) {
+       JITLexer_Yield(self);
+       JITLexer_SkipAssemblyClobber(self); /* CLOBBER */
+       if (is_asm_goto && JITLexer_IsColumn(self)) {
+        JITLexer_Yield(self);
+        if unlikely(JITLexer_SkipAssemblyLabels(self)) /* LABELS */
+           goto err;
+       }
+      }
+     }
+    }
+    if (need_trailing_rparen) {
+     if (self->jl_tok == ')') {
+      JITLexer_Yield(self);
+     } else {
+      SYNTAXERROR("Expected `)' after `__asm__(...', but got `%$s'",
+                 (size_t)(self->jl_tokend - self->jl_tokstart),
+                  self->jl_tokstart);
+      goto err;
+     }
+    }
+#ifndef JIT_EVAL
+check_trailing_asm_semicollon:
+#endif
+    if (self->jl_tok == ';') {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected `;' after `__asm__(...)', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+    }
+#ifdef JIT_EVAL
+    result = Dee_None;
+    Dee_Incref(Dee_None);
+#else
+    result = 0;
+#endif
+    goto done;
    }
    break;
 

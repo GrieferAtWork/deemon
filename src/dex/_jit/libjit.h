@@ -91,26 +91,26 @@ enum {
     TOK_OR_EQUAL,      /* "|=". */
     TOK_XOR_EQUAL,     /* "^=". */
     TOK_POW_EQUAL,     /* "**=". */
-    TOK_AT_EQUAL,      /* "@=". */
-    TOK_GLUE,          /* "##". */
+/*  TOK_AT_EQUAL,      /* "@=". */
+/*  TOK_GLUE,          /* "##". */
     TOK_LAND,          /* "&&". */
     TOK_LOR,           /* "||". */
-    TOK_LXOR,          /* "^^". */
+/*  TOK_LXOR,          /* "^^". */
     TOK_INC,           /* "++". */
     TOK_DEC,           /* "--". */
     TOK_POW,           /* "**". */
-    TOK_TILDE_TILDE,   /* "~~". */
+/*  TOK_TILDE_TILDE,   /* "~~". */
     TOK_ARROW,         /* "->". */
     TOK_COLLON_EQUAL,  /* ":=". */
-    TOK_NAMESPACE,     /* "::". */
-    TOK_ARROW_STAR,    /* "->*". */
-    TOK_DOT_STAR,      /* ".*". */
-    TOK_DOTDOT,        /* "..". */
-    TOK_LOGT,          /* "<>". */
-    TOK_LANGLE3,       /* "<<<". */
-    TOK_RANGLE3,       /* ">>>". */
-    TOK_LANGLE3_EQUAL, /* "<<<=". */
-    TOK_RANGLE3_EQUAL, /* ">>>=". */
+/*  TOK_NAMESPACE,     /* "::". */
+/*  TOK_ARROW_STAR,    /* "->*". */
+/*  TOK_DOT_STAR,      /* ".*". */
+/*  TOK_DOTDOT,        /* "..". */
+/*  TOK_LOGT,          /* "<>". */
+/*  TOK_LANGLE3,       /* "<<<". */
+/*  TOK_RANGLE3,       /* ">>>". */
+/*  TOK_LANGLE3_EQUAL, /* "<<<=". */
+/*  TOK_RANGLE3_EQUAL, /* ">>>=". */
     TOK_EQUAL3,        /* "===". */
     TOK_NOT_EQUAL3,    /* "!==". */
     TOK_KEYWORD_BEGIN, /* KEEP THIS THE LAST TOKEN! */
@@ -122,9 +122,9 @@ enum {
     TOK_NEG           = TOK_SUB,
     TOK_LOWER         = TOK_LANGLE,
     TOK_GREATER       = TOK_RANGLE,
-    TOK_COLLON_COLLON = TOK_NAMESPACE,
-    TOK_LOWER_GREATER = TOK_LOGT,
-    TOK_LANGLE_RANGLE = TOK_LOGT,
+/*  TOK_COLLON_COLLON = TOK_NAMESPACE, */
+/*  TOK_LOWER_GREATER = TOK_LOGT, */
+/*  TOK_LANGLE_RANGLE = TOK_LOGT, */
     TOK_LANGLE1       = TOK_LANGLE,
     TOK_LANGLE2       = TOK_SHL,
     TOK_LANGLE_EQUAL  = TOK_LOWER_EQUAL,

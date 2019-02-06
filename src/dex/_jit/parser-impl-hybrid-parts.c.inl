@@ -1181,7 +1181,7 @@ H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
   return result;
  }
 #endif
-
+ /* TODO: Import statements */
  (void)is_from_import;
 #ifdef JIT_HYBRID
  (void)pwas_expression;

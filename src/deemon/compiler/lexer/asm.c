@@ -531,9 +531,9 @@ with_paren:
    *    >>    : "P" (42));
    * A DDI directive is automatically inserted at the start, as
    * well as after every linefeed or `;' character, excluding
-   * multiple consecutive line-feeds or `;', as well some that
+   * multiple consecutive line-feeds or `;', as well as some that
    * may be trailing. - In other words: before every actual
-   * directive.
+   * directive or instruction.
    * Additionally, no DDI directives are inserted before instructions
    * that start with a `.' token (i.e. pseudo instructions; aka.
    * assembler directives). That way, the user may override DDI
