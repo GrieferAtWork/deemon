@@ -841,15 +841,15 @@ PRIVATE struct type_getset code_getsets[] = {
     { "isyielding",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isyielding, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the code object is for a yield-function") },
+          "Check if @this code object is for a yield-function") },
     { "iscopyable",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_iscopyable, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if execution frames of the code object can be copied") },
+          "Check if execution frames of @this code object can be copied") },
     { "hasassembly",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasassembly, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if assembly of the code object is executed in safe-mode") },
+          "Check if assembly of @this code object is executed in safe-mode") },
     { "islenient",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_islenient, NULL, NULL,
       DOC("->?Dbool\n"
@@ -857,15 +857,15 @@ PRIVATE struct type_getset code_getsets[] = {
     { "hasvarargs",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarargs, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the code object accepts variable arguments as overflow") },
+          "Check if @this code object accepts variable arguments as overflow") },
     { "hasvarkwds",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarkwds, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the code object accepts variable keyword arguments as overflow") },
+          "Check if @this code object accepts variable keyword arguments as overflow") },
     { "isthiscall",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isthiscall, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the code object requires a hidden leading this-argument") },
+          "Check if @this code object requires a hidden leading this-argument") },
     { "hasheapframe",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasheapframe, NULL, NULL,
       DOC("->?Dbool\n"

@@ -75,6 +75,7 @@
     <ClCompile Include="..\..\src\dex\_jit\libjit.c" />
     <ClCompile Include="..\..\src\dex\_jit\object-table.c" />
     <ClCompile Include="..\..\src\dex\_jit\parser.c" />
+    <ClCompile Include="..\..\src\dex\_jit\yieldfunction.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\dex\_jit\libjit.h" />

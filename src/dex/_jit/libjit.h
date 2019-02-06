@@ -23,6 +23,10 @@
 #include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/util/cache.h>
+#include <hybrid/typecore.h>
+#ifndef CONFIG_NO_THREADS
+#include <deemon/util/recursive-rwlock.h>
+#endif
 
 DECL_BEGIN
 
@@ -146,6 +150,8 @@ typedef struct jit_lexer JITLexer;
 typedef struct jit_context JITContext;
 typedef struct jit_object_table JITObjectTable;
 typedef struct jit_function_object JITFunctionObject;
+typedef struct jit_yield_function_object JITYieldFunctionObject;
+typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject;
 
 
 /* Check if the given token qualifies for the associated operation parser function. */
@@ -293,6 +299,7 @@ struct jit_lvalue {
 
 /* Finalize a given L-Value object. */
 INTDEF void FCALL JITLValue_Fini(JITLValue *__restrict self);
+INTDEF void FCALL JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg);
 
 /* Interact with an L-Value
  * NOTE: For all of these, the caller must ensure that `self->lv_kind != JIT_LVALUE_NONE' */
@@ -446,6 +453,7 @@ INTDEF struct jit_object_entry jit_empty_object_list[1];
 #define JITObjectTable_CInit(self)  (ASSERT((self)->ot_mask == 0),ASSERT((self)->ot_size == 0),ASSERT((self)->ot_used == 0),(self)->ot_list = jit_empty_object_list)
 #define JITObjectTable_Init(self)   ((self)->ot_mask = (self)->ot_size = (self)->ot_used = 0,(self)->ot_list = jit_empty_object_list)
 INTDEF void DCALL JITObjectTable_Fini(JITObjectTable *__restrict self);
+INTDEF void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg);
 
 /* Allocate/free a JIT object table from cache. */
 DECLARE_STRUCT_CACHE(jit_object_table,struct jit_object_table);
@@ -929,7 +937,7 @@ struct jit_function_object {
     DREF DeeObject         *jf_source;       /* [1..1][const] The object that owns input text. */
     DREF DeeModuleObject   *jf_impbase;      /* [0..1][const] Base module used for relative, static imports (such as `foo from .baz.bar')
                                               * When `NULL', code isn't allowed to perform relative imports. */
-    DREF DeeObject         *jc_globals;      /* [0..1] Mapping-like object for global variables. */
+    DREF DeeObject         *jf_globals;      /* [0..1] Mapping-like object for global variables. */
     JITObjectTable          jf_args;         /* [const] A template for the arguments accepted by this function.
                                               *  - NULL-values identify optional arguments
                                               * NOTE: The back-pointer of this object table is pointed
@@ -979,6 +987,101 @@ JITFunction_CreateArgument(JITFunctionObject *__restrict self,
 INTDEF void FCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
 INTDEF void FCALL JITLexer_ScanStatement(JITLexer *__restrict self);
 INTDEF void DCALL JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size);
+
+
+
+/* Yield-function support */
+struct jit_yield_function_object {
+    OBJECT_HEAD
+    DREF JITFunctionObject *jy_func;       /* [1..1][const] The underlying regular function object. */
+    DREF DeeObject         *jy_kw;         /* [0..1][const] Keyword arguments. */
+    size_t                  jy_argc;       /* [const] Number of positional arguments passed. */
+    DREF DeeObject         *jy_argv[1024]; /* [1..1][const][jy_argc] Vector of positional arguments. */
+};
+
+
+
+
+#define JIT_STATE_KIND_SCOPE    0x0000 /* Simple scope */
+#define JIT_STATE_KIND_SCOPE2   0x0001 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
+#define JIT_STATE_KIND_FOR      0x0002 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
+#define JIT_STATE_KIND_FOREACH  0x0003 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
+#define JIT_STATE_KIND_FOREACH2 0x0004 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
+#define JIT_STATE_KIND_SKIPELSE 0x0005 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
+                                        *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
+                                        *            in which case the false-branch must be skipped (should it exist) */
+/* TODO: States for: `try', `with', `switch', `while', `do...while' */
+
+
+
+#define JIT_STATE_FLAG_BLOCK  0x0000 /* Block-state (popped when the block is terminated by a `}') */
+#define JIT_STATE_FLAG_SINGLE 0x0001 /* Single-statement block (popped once the next statement has completed) */
+
+struct jit_state {
+    struct jit_state *js_prev; /* [0..1] Previous state. */
+    uint16_t          js_kind; /* The state kind (One of `JIT_STATE_KIND_*') */
+    uint16_t          js_flag; /* State flags (Set of `JIT_STATE_FLAG_*') */
+#if __SIZEOF_POINTER__ > 4
+    uint8_t           js_pad[sizeof(void *) - 4]; /* ... */
+#endif
+    union {
+        struct {
+            unsigned char *f_cond;  /* [0..1] Pointer to the for statement's cond-expression. */
+            unsigned char *f_next;  /* [0..1] Pointer to the for statement's next-expression. */
+            unsigned char *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
+        }             js_for;       /* JIT_STATE_KIND_FOR */
+        struct {
+            DREF DeeObject *f_iter; /* [1..1] The iterator object. */
+            JITLValue       f_elem; /* The iterator target expression lvalue (this is
+                                     * where the elements enumerated from `f_iter' go). */
+            unsigned char  *f_loop; /* [1..1] Pointer to the foreach statement's loop-statement. */
+        }             js_foreach;   /* JIT_STATE_KIND_FOREACH */
+        struct {
+            DREF DeeObject *f_iter; /* [1..1] The iterator object. */
+            JITLValueList   f_elem; /* The iterator target expression lvalues (this is
+                                     * where the elements enumerated from `f_iter' go). */
+            unsigned char  *f_loop; /* [1..1] Pointer to the foreach statement's loop-statement. */
+        }             js_foreach2;  /* JIT_STATE_KIND_FOREACH */
+    };
+};
+
+INTDEF void DCALL jit_state_fini(struct jit_state *__restrict self);
+#define jit_state_alloc()        DeeSlab_MALLOC(struct jit_state)
+#define jit_state_free(self)     DeeSlab_FREE(self)
+#define jit_state_destroy(self) (jit_state_fini(self),jit_state_free(self))
+
+
+
+struct jit_yield_function_iterator_object {
+    OBJECT_HEAD  /* GC OBJECT */
+#ifndef CONFIG_NO_THREADS
+    recursive_rwlock_t           ji_lock;  /* Lock held while executing code of this iterator. */
+#endif
+    DREF JITYieldFunctionObject *ji_func;  /* [1..1][const] The underlying yield-function. */
+    JITLexer                     ji_lex;   /* [OVERRIDE(.jl_text,[const][== ji_func->jy_func->jf_source])]
+                                            * [OVERRIDE(.jl_context,[const][== &ji_ctx])]
+                                            * [lock(ji_lock)] The associated lexer. */
+    JITContext                   ji_ctx;   /* [OVERRIDE(.jc_impbase,[const][== ji_func->jy_func->jf_impbase])]
+                                            * [OVERRIDE(.jc_locals.otp_ind,[>= 1])]
+                                            * [OVERRIDE(.jc_locals.otp_tab,[owned_if(!= &ji_loc)])]
+                                            * [OVERRIDE(.jc_globals,[lock(WRITE_ONCE)]
+                                            *                       [if(ji_func->jy_func->jf_globals),[== ji_func->jy_func->jf_globals])]
+                                            *           )]
+                                            * [lock(ji_lock)] The associated JIT context. */
+    JITObjectTable               ji_loc;   /* [OVERRIDE(.ot_prev.otp_ind,[>= 2])]
+                                            * [OVERRIDE(.ot_prev.otp_tab,[const][== &ji_func->jy_func->jf_refs])]
+                                            * [lock(ji_lock)] The base-level local variable table. */
+    struct jit_state            *ji_state; /* [lock(ji_lock)][1..1][owned_if(!= &ji_bstat)]
+                                            * The current execution/syntax state. */
+    struct jit_state             ji_bstat; /* [const][.js_kind == JIT_STATE_KIND_SCOPE] The base-level execution state. */
+};
+
+
+INTDEF DeeTypeObject JITYieldFunction_Type;
+INTDEF DeeTypeObject JITYieldFunctionIterator_Type;
+
+
+
 
 
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);

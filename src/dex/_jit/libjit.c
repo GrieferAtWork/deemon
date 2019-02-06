@@ -153,7 +153,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   } else {
    /* Exited code via unconventional means, such as `break' or `continue' */
    DeeError_Throwf(&DeeError_SyntaxError,
-                   "Attempted to use `break' or `continue' used outside of a loop");
+                   "Attempted to use `break' or `continue' outside of a loop");
    lexer.jl_errpos = lexer.jl_tokstart;
    goto handle_error;
   }
@@ -387,6 +387,8 @@ PRIVATE struct dex_symbol symbols[] = {
      *          memory allocation
      */
     { "Function", (DeeObject *)&JITFunction_Type },
+    { "YieldFunction", (DeeObject *)&JITYieldFunction_Type },
+    { "YieldFunctionIterator", (DeeObject *)&JITYieldFunctionIterator_Type },
     { NULL }
 };
 

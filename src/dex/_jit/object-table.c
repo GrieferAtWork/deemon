@@ -103,6 +103,18 @@ JITObjectTable_Fini(JITObjectTable *__restrict self) {
  }
  Dee_Free(self->ot_list);
 }
+INTERN void DCALL
+JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) {
+ size_t i;
+ if (self->ot_list == jit_empty_object_list)
+     return;
+ for (i = 0; i <= self->ot_mask; ++i) {
+  if (!ITER_ISOK(self->ot_list[i].oe_namestr))
+       continue;
+  Dee_XVisit(self->ot_list[i].oe_value);
+ }
+}
+
 
 INTERN bool DCALL
 JITObjectTable_TryRehash(JITObjectTable *__restrict self,

@@ -55,6 +55,26 @@ JITLValue_Fini(JITLValue *__restrict self) {
  }
 }
 
+INTERN void FCALL
+JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
+ switch (self->lv_kind) {
+ case JIT_LVALUE_RANGE:
+  Dee_Visit(self->lv_range.lr_end);
+  ATTR_FALLTHROUGH
+ case JIT_LVALUE_ATTR:
+ case JIT_LVALUE_ITEM:
+  Dee_Visit(self->lv_item.li_index);
+  ATTR_FALLTHROUGH
+ case JIT_LVALUE_EXTERN:
+ case JIT_LVALUE_GLOBAL:
+ case JIT_LVALUE_ATTRSTR:
+ case JIT_LVALUE_RVALUE:
+  Dee_Visit(self->lv_global);
+  break;
+ default: break;
+ }
+}
+
 
 PRIVATE bool FCALL
 update_symbol_objent(JITSymbol *__restrict self) {

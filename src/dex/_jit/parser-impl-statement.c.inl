@@ -387,9 +387,24 @@ FUNC(Statement)(JITLexer *__restrict self) {
    }
    if (name == ENCODE4('y','i','e','l') &&
        *(uint8_t *)(tok_begin + 4) == 'd') {
-    /* TODO */
-    DERROR_NOTIMPLEMENTED();
+#ifdef JIT_EVAL
+    SYNTAXERROR("Yield statements are not supported at this location");
     goto err;
+#else
+    JITLexer_Yield(self);
+    if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+        goto err;
+    if likely(self->jl_tok == ';') {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected `;' after `throw', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err_r;
+    }
+    result = 0;
+    goto done;
+#endif
    }
    if (name == ENCODE4('p','r','i','n') &&
        *(uint8_t *)(tok_begin + 4) == 't') {

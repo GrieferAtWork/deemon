@@ -202,7 +202,7 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
    } else {
     /* Exited code via unconventional means, such as `break' or `continue' */
     DeeError_Throwf(&DeeError_SyntaxError,
-                    "Attempted to use `break' or `continue' used outside of a loop");
+                    "Attempted to use `break' or `continue' outside of a loop");
     JITLValue_Fini(&self->jl_lvalue);
     self->jl_errpos = self->jl_tokstart;
     /*result = NULL;*/
@@ -237,7 +237,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
  result->jf_source_end   = source_end;
  result->jf_source       = source;
  result->jf_impbase      = impbase;
- result->jc_globals      = globals;
+ result->jf_globals      = globals;
  JITObjectTable_Init(&result->jf_args);
  JITObjectTable_Init(&result->jf_refs);
  result->jf_args.ot_prev.otp_ind = 2;
@@ -466,7 +466,7 @@ PRIVATE void DCALL
 jf_fini(JITFunction *__restrict self) {
  Dee_Decref(self->jf_source);
  Dee_XDecref(self->jf_impbase);
- Dee_XDecref(self->jc_globals);
+ Dee_XDecref(self->jf_globals);
  JITObjectTable_Fini(&self->jf_args);
  JITObjectTable_Fini(&self->jf_refs);
  Dee_Free(self->jf_argv);
@@ -477,7 +477,7 @@ jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
  size_t i;
  Dee_Visit(self->jf_source);
  Dee_XVisit(self->jf_impbase);
- Dee_XVisit(self->jc_globals);
+ Dee_XVisit(self->jf_globals);
  if (self->jf_args.ot_list != jit_empty_object_list) {
   for (i = 0; i <= self->jf_args.ot_mask; ++i) {
    if (!ITER_ISOK(self->jf_args.ot_list[i].oe_namestr))
@@ -601,12 +601,26 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
  JITObjectTable base_locals;
  DeeThreadObject *ts;
  size_t i;
- if (self->jf_flags & JIT_FUNCTION_FYIELDING) {
-  /* TODO: Yield function support (or at least some rudimentry form of it) */
-  DERROR_NOTIMPLEMENTED();
-  goto err;
+ if ((self->jf_flags & (JIT_FUNCTION_FYIELDING | JIT_FUNCTION_FRETEXPR)) ==
+                        JIT_FUNCTION_FYIELDING) {
+  DREF JITYieldFunctionObject *result;
+  /* Yield function support */
+  result = (DREF JITYieldFunctionObject *)DeeObject_Malloc(offsetof(JITYieldFunctionObject,jy_argv) +
+                                                          (argc * sizeof(DREF DeeObject *)));
+  if unlikely(!result)
+     goto err;
+  result->jy_func = self;
+  result->jy_kw   = kw;
+  result->jy_argc = argc;
+  Dee_Incref(self);
+  Dee_XIncref(kw);
+  for (i = 0; i < argc; ++i) {
+   result->jy_argv[i] = argv[i];
+   Dee_Incref(argv[i]);
+  }
+  DeeObject_Init(result,&JITYieldFunction_Type);
+  return (DREF DeeObject *)result;
  }
-
  ts = DeeThread_Self();
  if (DeeThread_CheckInterrupt())
      goto err;
@@ -663,7 +677,7 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
  lexer.jl_context = &context;
  JITLValue_Init(&lexer.jl_lvalue);
  context.jc_impbase        = self->jf_impbase;
- context.jc_globals        = self->jc_globals;
+ context.jc_globals        = self->jf_globals;
  context.jc_retval         = JITCONTEXT_RETVAL_UNSET;
  context.jc_locals.otp_ind = 1;
  context.jc_locals.otp_tab = &base_locals;
@@ -672,7 +686,6 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
  JITLexer_Start(&lexer,
                (unsigned char *)self->jf_source_start,
                (unsigned char *)self->jf_source_end);
-
  if (self->jf_flags & JIT_FUNCTION_FRETEXPR) {
   result = JITLexer_EvalExpression(&lexer,JITLEXER_EVAL_FNORMAL);
   if (result == JIT_LVALUE) {
@@ -698,7 +711,7 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
    } else {
     /* Exited code via unconventional means, such as `break' or `continue' */
     DeeError_Throwf(&DeeError_SyntaxError,
-                    "Attempted to use `break' or `continue' used outside of a loop");
+                    "Attempted to use `break' or `continue' outside of a loop");
     lexer.jl_errpos = lexer.jl_tokstart;
     goto handle_error;
    }
@@ -712,8 +725,7 @@ handle_error:
    ;
   }
  } else if unlikely(lexer.jl_tok == TOK_EOF) {
-  result = Dee_None;
-  Dee_Incref(Dee_None);
+  goto do_return_none;
  } else {
   do {
    result = JITLexer_EvalStatement(&lexer);
@@ -726,6 +738,9 @@ handle_error:
    /* Error, or return encountered. */
    goto load_return_value;
   } while (lexer.jl_tok != TOK_EOF);
+do_return_none:
+  result = Dee_None;
+  Dee_Incref(Dee_None);
  }
  if (ts->t_exceptsz > context.jc_except) {
   if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
@@ -739,7 +754,9 @@ handle_error:
                   ERROR_PRINT_DOHANDLE);
   }
  }
- ASSERT(context.jc_globals == self->jc_globals);
+ ASSERT(!self->jf_globals || context.jc_globals == self->jf_globals);
+ if (context.jc_globals != self->jf_globals)
+     Dee_Decref(context.jc_globals);
  JITObjectTable_Fini(&base_locals);
  return result;
 err_base_locals:
@@ -831,11 +848,11 @@ jf_equal(JITFunction *__restrict a,
  if (a->jf_refs.ot_mask != b->jf_refs.ot_mask) goto nope;
  if (a->jf_refs.ot_size != b->jf_refs.ot_size) goto nope;
  if (a->jf_refs.ot_used != b->jf_refs.ot_used) goto nope;
- if (a->jc_globals != b->jc_globals) {
-  if (!a->jc_globals || !b->jc_globals)
+ if (a->jf_globals != b->jf_globals) {
+  if (!a->jf_globals || !b->jf_globals)
       goto nope;
-  temp = DeeObject_CompareEq(a->jc_globals,
-                             b->jc_globals);
+  temp = DeeObject_CompareEq(a->jf_globals,
+                             b->jf_globals);
   if (temp <= 0)
       goto err_temp;
  }
@@ -961,6 +978,10 @@ jf_gettext(JITFunction *__restrict self) {
                           STRING_ERROR_FIGNORE);
 }
 PRIVATE DREF DeeObject *DCALL
+jf_isyielding(JITFunction *__restrict self) {
+ return_bool(self->jf_flags & JIT_FUNCTION_FYIELDING);
+}
+PRIVATE DREF DeeObject *DCALL
 jf_getisretexpr(JITFunction *__restrict self) {
  return_bool(self->jf_flags & JIT_FUNCTION_FRETEXPR);
 }
@@ -980,6 +1001,11 @@ PRIVATE struct type_getset jf_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_gettext, NULL, NULL,
       DOC("->?Dstring\n"
           "Returns the source text executed by @this function") },
+    { "isyielding",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_isyielding, NULL, NULL,
+      DOC("->?Dbool\n"
+          "Check if @this function behaves as yielding (i.e. contains a yield statment "
+          "that doesn't appear as part of a recursively defined inner function)") },
     { "isretexpr",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getisretexpr, NULL, NULL,
       DOC("->?Dbool\n"
@@ -1008,7 +1034,7 @@ PRIVATE struct type_member jf_members[] = {
     TYPE_MEMBER_FIELD_DOC("__impbase__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase),
                           "->?X2?Dmodule?N\n"
                           "Returns the module used for relative module imports"),
-    TYPE_MEMBER_FIELD_DOC("__globals__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jc_globals),
+    TYPE_MEMBER_FIELD_DOC("__globals__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_globals),
                           "->?X2?S?T2?Dstring?O?N"),
     TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase),
                           "->?X2?Dmodule?N\n"
@@ -1034,12 +1060,12 @@ INTERN DeeTypeObject JITFunction_Type = {
     /* .tp_base     = */&DeeCallable_Type,
     /* .tp_init = */{
         {
-            /* .tp_var = */{
+            /* .tp_alloc = */{
                 /* .tp_ctor      = */NULL,
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL
+                TYPE_FIXED_ALLOCATOR(JITFunction)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&jf_fini,
