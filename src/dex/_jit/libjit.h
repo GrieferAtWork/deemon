@@ -742,7 +742,7 @@ INTDEF int FCALL JITLexer_SkipAs(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipLand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipLor(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCond(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handled inplace operators. */
+INTDEF int FCALL JITLexer_SkipAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handles inplace operators. */
 INTDEF int FCALL JITLexer_SkipProdOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipSumOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipShiftOperand(JITLexer *__restrict self, unsigned int flags);
@@ -770,8 +770,9 @@ JITLexer_SkipPair(JITLexer *__restrict self,
 
 /* Parse, evaluate & execute an expression using JIT
  * @param: flags: Set of `JITLEXER_EVAL_F*' */
-#define JITLexer_EvalExpression JITLexer_EvalAssign
-#define JITLexer_SkipExpression JITLexer_SkipAssign
+#define JITLexer_EvalExpression          JITLexer_EvalAssign
+#define JITLexer_SkipExpression          JITLexer_SkipAssign
+#define JITLexer_SkipGeneratorExpression JITLexer_SkipAssign
 
 
 /* Parse a whole statement. */

@@ -18,7 +18,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "parser-impl-hybrid.c.inl"
-#define JIT_HYBRID 1
+//#define JIT_HYBRID 1
 #endif
 
 #include <deemon/alloc.h>
@@ -48,7 +48,7 @@
 #else
 #define EVAL_PRIMARY(self,pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
 #define EVAL_SECONDARY(self,pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
-#define H_FUNC(x) JITLexer_Skip##x
+#define H_FUNC(x)                             JITLexer_Skip##x
 #endif
 #define SKIP_PRIMARY(self,pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
 #define SKIP_SECONDARY(self,pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
@@ -265,7 +265,7 @@ err_handle_catch_except:
   } else break;
  }
 #endif
- IF_HYBRID(if (*pwas_expression) *pwas_expression = was_expression;)
+ IF_HYBRID(if (pwas_expression) *pwas_expression = was_expression;)
  return result;
 #ifdef JIT_EVAL
 err_popscope:
@@ -296,12 +296,13 @@ do_if_statement:
   goto err;
  }
 #ifdef JIT_EVAL
+ JITContext_PushScope(self->jl_context);
  result = JITLexer_EvalComma(self,
                              AST_COMMA_NORMAL|
                              AST_COMMA_ALLOWVARDECLS,
                              NULL,
                              NULL);
- if (ISERR(result)) goto err;
+ if (ISERR(result)) goto err_scope;
  LOAD_LVALUE(result,err);
  if likely(self->jl_tok == ')') {
   JITLexer_Yield(self);
@@ -309,7 +310,7 @@ do_if_statement:
   SYNTAXERROR("Expected `)' after `if', but got `%$s'",
              (size_t)(self->jl_tokend - self->jl_tokstart),
               self->jl_tokstart);
-  goto err_r;
+  goto err_scope_r;
  }
 #else
  if (JITLexer_SkipPair(self,'(',')'))
@@ -319,11 +320,11 @@ do_if_statement:
  {
 #ifdef JIT_EVAL
   int b = DeeObject_Bool(result);
-  if unlikely(b < 0) goto err_r;
+  if unlikely(b < 0) goto err_scope_r;
   Dee_Decref(result);
   if (b) {
    result = EVAL_PRIMARY(self,pwas_expression);
-   if unlikely(!result) goto err;
+   if unlikely(!result) goto err_scope;
    if (self->jl_tok == JIT_KEYWORD) {
     if (JITLexer_ISTOK(self,"elif")) {
      self->jl_tokstart += 2;
@@ -333,14 +334,14 @@ do_if_statement:
      JITLexer_Yield(self);
 do_else_branch:
      if (SKIP_SECONDARY(self,pwas_expression))
-         goto err_r;
+         goto err_scope_r;
     }
    }
   } else
 #endif
   {
    if (SKIP_SECONDARY(self,pwas_expression))
-       goto err;
+       goto err_scope;
    if (self->jl_tok == JIT_KEYWORD) {
     if (JITLexer_ISTOK(self,"elif"))
         goto do_if_statement;
@@ -350,12 +351,23 @@ do_else_branch:
      /*if (ISERR(result)) goto err;*/
     }
    }
+#ifdef JIT_EVAL
+   result = Dee_None;
+   Dee_Incref(Dee_None);
+#endif
   }
  }
+#ifdef JIT_EVAL
+ JITContext_PopScope(self->jl_context);
+#endif
  return result;
 #ifdef JIT_EVAL
-err_r:
+err_scope_r:
  DECREF(result);
+#endif /* JIT_EVAL */
+err_scope:
+#ifdef JIT_EVAL
+ JITContext_PopScope(self->jl_context);
 #endif /* JIT_EVAL */
 err:
  return ERROR;
@@ -369,56 +381,757 @@ H_FUNC(Del)(JITLexer *__restrict self, JIT_ARGS) {
 #else
  (void)is_statement;
 #endif
+ /* TODO */
  DERROR_NOTIMPLEMENTED();
  return ERROR;
 }
 
 INTERN RETURN_TYPE FCALL
 H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
+ RETURN_TYPE result;
  ASSERT(JITLexer_ISKWD(self,"for"));
 #ifdef JIT_HYBRID
- (void)pwas_expression;
+ if (pwas_expression)
+    *pwas_expression = AST_PARSE_WASEXPR_NO;
+ /* XXX: Differentiate between expressions and statements */
+ result = FUNC(For)(self,true);
 #else
- (void)is_statement;
+ JITLexer_Yield(self);
+ if likely(self->jl_tok == '(') {
+  JITLexer_Yield(self);
+ } else {
+  SYNTAXERROR("Expected `(' after `for', but got `%$s'",
+             (size_t)(self->jl_tokend - self->jl_tokstart),
+              self->jl_tokstart);
+  goto err;
+ }
+ if (is_statement) {
+#ifdef JIT_EVAL
+  DREF DeeObject *init;
+  JITContext_PushScope(self->jl_context);
+  if (self->jl_tok == ';')
+      goto do_normal_for_noinit;
+  init = JITLexer_EvalComma(self,
+                            AST_COMMA_NORMAL |
+                            AST_COMMA_ALLOWVARDECLS,
+                            NULL,
+                            NULL);
+  if unlikely(!init)
+     goto err_scope;
+  if (self->jl_tok == ':') {
+   /* TODO: Multiple targets (`for (local x,y,z: triples)') */
+   JITLValue iterator_storage;
+   DREF DeeObject *seq,*iterator,*elem;
+   unsigned char *block_start;
+   bool is_first_loop = true;
+   /* For-each loop. */
+   if (init == JIT_LVALUE) {
+    iterator_storage        = self->jl_lvalue;
+    self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+   } else {
+    iterator_storage.lv_kind   = JIT_LVALUE_RVALUE;
+    iterator_storage.lv_rvalue = init; /* Inherit reference. */
+   }
+   JITLexer_Yield(self);
+   seq = JITLexer_EvalRValue(self);
+   if unlikely(!seq)
+      goto err_scope;
+   if likely(self->jl_tok == ')') {
+    JITLexer_Yield(self);
+   } else {
+    SYNTAXERROR("Expected `)' after `for(...: ...', but got `%$s'",
+               (size_t)(self->jl_tokend - self->jl_tokstart),
+                self->jl_tokstart);
+    goto err_seq;
+   }
+   iterator = DeeObject_IterSelf(seq);
+   if unlikely(!iterator) {
+    goto err_seq;
+err_iter:
+    Dee_Decref(iterator);
+err_seq:
+    Dee_Decref(seq);
+    JITLValue_Fini(&iterator_storage);
+    goto err_scope;
+   }
+   block_start = self->jl_tokstart;
+  
+   while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+    int error;
+    error = JITLValue_SetValue(&iterator_storage,
+                                self->jl_context,
+                                elem);
+    Dee_Decref(elem);
+    if unlikely(error)
+       goto err_iter;
+    if (!is_first_loop) {
+     /* Check for interrupts before jumping back. */
+     if (DeeThread_CheckInterrupt())
+         goto err_iter;
+     self->jl_tokend = block_start;
+     JITLexer_Yield(self);
+    }
+    is_first_loop = false;
+    result = JITLexer_EvalStatement(self);
+    if unlikely(!result) {
+     /* Handle special loop signal codes. */
+     if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
+      self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+      self->jl_tokend = block_start;
+      JITLexer_Yield(self);
+      if (JITLexer_SkipStatement(self))
+          goto err_iter;
+      break;
+     }
+     if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
+      self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+      continue;
+     }
+     goto err_iter;
+    }
+    /* Discard the loop block value */
+    if (result == JIT_LVALUE) {
+     JITLValue_Fini(&self->jl_lvalue);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+    } else {
+     Dee_Decref(result);
+    }
+   }
+   JITLValue_Fini(&iterator_storage);
+   Dee_Decref(iterator);
+   Dee_Decref(seq);
+   if unlikely(!elem)
+      goto err_scope;
+   if (is_first_loop) {
+    if (JITLexer_SkipStatement(self))
+        goto err_scope;
+   }
+  } else {
+   unsigned char *cond_start;
+   unsigned char *next_start;
+   unsigned char *block_start;
+   /* Regular for-loop */
+   if (init == JIT_LVALUE) {
+    JITLValue_Fini(&self->jl_lvalue);
+    self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+   } else {
+    Dee_Decref(init);
+   }
+   if (self->jl_tok == ';') {
+do_normal_for_noinit:
+    JITLexer_Yield(self);
+   } else {
+    SYNTAXERROR("Expected `;' after `for', but got `%$s'",
+               (size_t)(self->jl_tokend - self->jl_tokstart),
+                self->jl_tokstart);
+    goto err_scope;
+   }
+   cond_start = next_start = NULL;
+   if (self->jl_tok == ';') {
+    JITLexer_Yield(self);
+   } else {
+    int temp;
+    cond_start = self->jl_tokstart;
+    result = JITLexer_EvalRValue(self);
+    if unlikely(!result)
+       goto err_scope;/* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+    /* Perform the initial condition check. */
+    temp = DeeObject_Bool(result);
+    Dee_Decref(result);
+    if unlikely(temp < 0)
+       goto err;
+    if (self->jl_tok == ';') {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected a second `;' after `for', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err_scope;
+    }
+    if (!temp) {
+     /* The loop- or next-expression never get executed. */
+     if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+         goto err_scope;
+     if likely(self->jl_tok == ')') {
+      JITLexer_Yield(self);
+     } else {
+err_missing_rparen_after_for:
+      SYNTAXERROR("Expected `)' after `for(...;...;...', but got `%$s'",
+                 (size_t)(self->jl_tokend - self->jl_tokstart),
+                  self->jl_tokstart);
+      goto err_scope;
+     }
+     if (JITLexer_SkipStatement(self))
+         goto err_scope;
+     goto done_for;
+    }
+    /* The initial condition check was successful. */
+   }
+   if (self->jl_tok == ')') {
+    JITLexer_Yield(self);
+   } else {
+    next_start = self->jl_tokstart;
+    if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+        goto err_scope;
+    if likely(self->jl_tok == ')') {
+     JITLexer_Yield(self);
+    } else {
+     goto err_missing_rparen_after_for;
+    }
+   }
+   block_start = self->jl_tokstart;
+   /* The actual for-loop */
+   for (;;) {
+    unsigned char *block_end;
+    result = JITLexer_EvalStatement(self);
+    if unlikely(!result) {
+     /* Handle special loop signal codes. */
+     if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
+      self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+      self->jl_tokend = block_start;
+      JITLexer_Yield(self);
+      if (JITLexer_SkipStatement(self))
+          goto err_scope;
+      break;
+     }
+     if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
+      self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+      goto do_continue_normal_forloop;
+     }
+     goto err_scope;
+    }
+do_continue_normal_forloop:
+    if (result == JIT_LVALUE) {
+     JITLValue_Fini(&self->jl_lvalue);
+     self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+    } else {
+     Dee_Decref(result);
+    }
+    block_end = self->jl_tokstart;
+    /* Execute the next-expression. */
+    if (next_start) {
+     self->jl_tokend = next_start;
+     JITLexer_Yield(self);
+     result = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+     if unlikely(!result)
+        goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the next-expression? */
+     if (result == JIT_LVALUE) {
+      JITLValue_Fini(&self->jl_lvalue);
+      self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+     } else {
+      Dee_Decref(result);
+     }
+    }
+    /* Re-check the condition */
+    if (cond_start) {
+     int temp;
+     self->jl_tokend = cond_start;
+     JITLexer_Yield(self);
+     result = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+     if unlikely(!result)
+        goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+     temp = DeeObject_Bool(result);
+     Dee_Decref(result);
+     if unlikely(temp < 0)
+        goto err_scope;
+     if (!temp) {
+      /* Stop iteration (jump to the end of the for-block). */
+      self->jl_tokend = block_end;
+      JITLexer_Yield(self);
+      break;
+     }
+    }
+    /* Check for interrupts before looping back */
+    if (DeeThread_CheckInterrupt())
+        goto err_scope;
+    /* Jump back to the start of the for-block */
+    self->jl_tokend = block_start;
+    JITLexer_Yield(self);
+   }
+  }
+done_for:
+  JITContext_PopScope(self->jl_context);
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+#else
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  result = JITLexer_SkipStatement(self);
 #endif
- DERROR_NOTIMPLEMENTED();
+ } else {
+#ifdef JIT_EVAL
+  /* TODO */
+  DERROR_NOTIMPLEMENTED();
+  result = ERROR;
+#else
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  result = JITLexer_SkipGeneratorExpression(self,JITLEXER_EVAL_FNORMAL);
+#endif
+ }
+#endif
+ return result;
+#ifndef JIT_HYBRID
+#ifdef JIT_EVAL
+err_scope:
+ JITContext_PopScope(self->jl_context);
+#endif
+err:
  return ERROR;
+#endif
 }
 
 INTERN RETURN_TYPE FCALL
 H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
+ RETURN_TYPE result;
  ASSERT(JITLexer_ISKWD(self,"foreach"));
 #ifdef JIT_HYBRID
- (void)pwas_expression;
+ if (pwas_expression)
+    *pwas_expression = AST_PARSE_WASEXPR_NO;
+ /* XXX: Differentiate between expressions and statements */
+ result = FUNC(Foreach)(self,true);
 #else
- (void)is_statement;
+ JITLexer_Yield(self);
+ if likely(self->jl_tok == '(') {
+  JITLexer_Yield(self);
+ } else {
+  SYNTAXERROR("Expected `(' after `foreach', but got `%$s'",
+             (size_t)(self->jl_tokend - self->jl_tokstart),
+              self->jl_tokstart);
+  goto err;
+ }
+ if (is_statement) {
+#ifdef JIT_EVAL
+  DREF DeeObject *init;
+  JITContext_PushScope(self->jl_context);
+  init = JITLexer_EvalComma(self,
+                            AST_COMMA_NORMAL |
+                            AST_COMMA_ALLOWVARDECLS,
+                            NULL,
+                            NULL);
+  if unlikely(!init)
+     goto err_scope;
+  if (self->jl_tok == ':') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `:' after `foreach(...', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+  }
+  /* TODO: Multiple targets (`foreach (local x,y,z: triples)') */
+  JITLValue iterator_storage;
+  DREF DeeObject *iterator,*elem;
+  unsigned char *block_start;
+  bool is_first_loop = true;
+  /* For-each loop. */
+  if (init == JIT_LVALUE) {
+   iterator_storage        = self->jl_lvalue;
+   self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+  } else {
+   iterator_storage.lv_kind   = JIT_LVALUE_RVALUE;
+   iterator_storage.lv_rvalue = init; /* Inherit reference. */
+  }
+  iterator = JITLexer_EvalRValue(self);
+  if unlikely(!iterator)
+     goto err_scope;
+  if likely(self->jl_tok == ')') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `)' after `foreach(...: ...', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+err_iter:
+   Dee_Decref(iterator);
+   goto err_scope;
+  }
+  block_start = self->jl_tokstart;
+  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+   int error;
+   error = JITLValue_SetValue(&iterator_storage,
+                               self->jl_context,
+                               elem);
+   Dee_Decref(elem);
+   if unlikely(error)
+      goto err_iter;
+   if (!is_first_loop) {
+    /* Check for interrupts before jumping back. */
+    if (DeeThread_CheckInterrupt())
+        goto err_iter;
+    self->jl_tokend = block_start;
+    JITLexer_Yield(self);
+   }
+   is_first_loop = false;
+   result = JITLexer_EvalStatement(self);
+   if unlikely(!result) {
+    /* Handle special loop signal codes. */
+    if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
+     self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+     self->jl_tokend = block_start;
+     JITLexer_Yield(self);
+     if (JITLexer_SkipStatement(self))
+         goto err_iter;
+     break;
+    }
+    if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
+     self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+     continue;
+    }
+    goto err_iter;
+   }
+   /* Discard the loop block value */
+   if (result == JIT_LVALUE) {
+    JITLValue_Fini(&self->jl_lvalue);
+    self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+   } else {
+    Dee_Decref(result);
+   }
+  }
+  JITLValue_Fini(&iterator_storage);
+  Dee_Decref(iterator);
+  if unlikely(!elem)
+     goto err_scope;
+  if (is_first_loop) {
+   if (JITLexer_SkipStatement(self))
+       goto err_scope;
+  }
+  JITContext_PopScope(self->jl_context);
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+#else
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  result = JITLexer_SkipStatement(self);
 #endif
- DERROR_NOTIMPLEMENTED();
+ } else {
+#ifdef JIT_EVAL
+  /* TODO */
+  DERROR_NOTIMPLEMENTED();
+  result = ERROR;
+#else
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  result = JITLexer_SkipGeneratorExpression(self,JITLEXER_EVAL_FNORMAL);
+#endif
+ }
+#endif
+ return result;
+#ifndef JIT_HYBRID
+#ifdef JIT_EVAL
+err_scope:
+ JITContext_PopScope(self->jl_context);
+#endif
+err:
  return ERROR;
+#endif
 }
 
 INTERN RETURN_TYPE FCALL
 H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
+ RETURN_TYPE result;
  ASSERT(JITLexer_ISKWD(self,"while"));
 #ifdef JIT_HYBRID
- (void)pwas_expression;
+ if (pwas_expression)
+    *pwas_expression = AST_PARSE_WASEXPR_NO;
+ /* XXX: Differentiate between expressions and statements */
+ result = FUNC(While)(self,true);
 #else
- (void)is_statement;
+ JITLexer_Yield(self);
+ if likely(self->jl_tok == '(') {
+  JITLexer_Yield(self);
+ } else {
+  SYNTAXERROR("Expected `(' after `while', but got `%$s'",
+             (size_t)(self->jl_tokend - self->jl_tokstart),
+              self->jl_tokstart);
+  goto err;
+ }
+ if (is_statement) {
+#ifdef JIT_EVAL
+  int temp;
+  unsigned char *cond_start;
+  unsigned char *block_start;
+  unsigned char *block_end;
+  JITContext_PushScope(self->jl_context);
+  /* Parse the loop condition for the first time. */
+  cond_start = self->jl_tokstart;
+  result = JITLexer_EvalRValue(self);
+  if unlikely(!result)
+     goto err_scope;
+  if (self->jl_tok == ')') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `)' after `while(...', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   Dee_Decref(result);
+   goto err_scope;
+  }
+  temp = DeeObject_Bool(result);
+  Dee_Decref(result);
+  if unlikely(temp < 0)
+     goto err_scope;
+  if (!temp) {
+   /* The loop doesn't actually get executed. */
+do_skip_loop:
+   if (JITLexer_SkipStatement(self))
+       goto err_scope;
+   goto done_loop;
+  }
+  block_start = self->jl_tokstart;
+  /* Evaluate the loop block. */
+do_eval_while_loop:
+  result = JITLexer_EvalStatement(self);
+  if (!result) {
+   /* Check for special signal conditions. */
+   if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
+    self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+    self->jl_tokend = block_start;
+    JITLexer_Yield(self);
+    goto do_skip_loop;
+   }
+   if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
+    self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+    block_end = NULL;
+    goto do_check_while_condition;
+   }
+   goto err_scope;
+  }
+  if (result == JIT_LVALUE) {
+   JITLValue_Fini(&self->jl_lvalue);
+   self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+  } else {
+   Dee_Decref(result);
+  }
+  block_end = self->jl_tokstart;
+do_check_while_condition:
+  /* Check the loop condition once again. */
+  self->jl_tokend = cond_start;
+  JITLexer_Yield(self);
+  result = JITLexer_EvalRValue(self);
+  if unlikely(!result)
+     goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+  temp = DeeObject_Bool(result);
+  Dee_Decref(result);
+  if unlikely(temp < 0)
+     goto err_scope;
+  if (temp) {
+   /* Loop back around, but check for interrupts first. */
+   if (DeeThread_CheckInterrupt())
+       goto err_scope;
+   self->jl_tokend = block_start;
+   JITLexer_Yield(self);
+   goto do_eval_while_loop;
+  }
+  /* Stop looping and jump to the end of the while-block. */
+  if likely(block_end) {
+   self->jl_tokend = block_end;
+   JITLexer_Yield(self);
+  } else {
+   self->jl_tokend = block_start;
+   JITLexer_Yield(self);
+   if (JITLexer_SkipStatement(self))
+       goto err_scope;
+  }
+done_loop:
+  JITContext_PopScope(self->jl_context);
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+#else /* JIT_EVAL */
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  result = JITLexer_SkipStatement(self);
+#endif /* !JIT_EVAL */
+ } else {
+#ifdef JIT_EVAL
+  /* TODO */
+  DERROR_NOTIMPLEMENTED();
+  result = ERROR;
+#else
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  result = JITLexer_SkipGeneratorExpression(self,JITLEXER_EVAL_FNORMAL);
 #endif
- DERROR_NOTIMPLEMENTED();
+ }
+#endif
+ return result;
+#ifndef JIT_HYBRID
+#ifdef JIT_EVAL
+err_scope:
+ JITContext_PopScope(self->jl_context);
+#endif
+err:
  return ERROR;
+#endif
 }
 
 INTERN RETURN_TYPE FCALL
 H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
+ RETURN_TYPE result;
  ASSERT(JITLexer_ISKWD(self,"do"));
 #ifdef JIT_HYBRID
- (void)pwas_expression;
+ if (pwas_expression)
+    *pwas_expression = AST_PARSE_WASEXPR_NO;
+ /* XXX: Differentiate between expressions and statements */
+ result = FUNC(Do)(self,true);
 #else
- (void)is_statement;
+ JITLexer_Yield(self);
+ if (is_statement) {
+#ifdef JIT_EVAL
+  int temp;
+  unsigned char *block_start;
+  JITContext_PushScope(self->jl_context);
+  block_start = self->jl_tokstart;
+  /* Parse the block for the first time. */
+do_parse_block:
+  result = JITLexer_EvalStatement(self);
+  if unlikely(!result) {
+   /* Check for special signal codes. */
+   if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
+    /* `break' */
+    self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+    self->jl_tokend = block_start;
+    JITLexer_Yield(self);
+    if (JITLexer_SkipStatement(self))
+        goto err_scope;
+    if (JITLexer_ISKWD(self,"while")) {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected `while' after `do ...', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err_scope;
+    }
+    if (self->jl_tok == '(') {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err_scope;
+    }
+    goto done_loop_rparen;
+   }
+   if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
+    self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+    self->jl_tokend = block_start;
+    JITLexer_Yield(self);
+    if (JITLexer_SkipStatement(self))
+        goto err_scope;
+    goto continue_with_loop_cond;
+   }
+  }
+  if (result == JIT_LVALUE) {
+   JITLValue_Fini(&self->jl_lvalue);
+   self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+  } else {
+   Dee_Decref(result);
+  }
+continue_with_loop_cond:
+  if (JITLexer_ISKWD(self,"while")) {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `while' after `do ...', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err_scope;
+  }
+  if (self->jl_tok == '(') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err_scope;
+  }
+
+  /* Parse the condition code. */
+  result = JITLexer_EvalRValue(self);
+  if unlikely(!result)
+     goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+  temp = DeeObject_Bool(result);
+  Dee_Decref(result);
+  if unlikely(temp < 0)
+     goto err_scope;
+  if (temp) {
+   /* Loop back to the start of the loop-block */
+   if (DeeThread_CheckInterrupt())
+       goto err_scope;
+   self->jl_tokend = block_start;
+   JITLexer_Yield(self);
+   goto do_parse_block;
+  }
+done_loop_rparen:
+  if (self->jl_tok == ')') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err_scope;
+  }
+  JITContext_PopScope(self->jl_context);
+  if (self->jl_tok == ';') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `;' after `do ... while (...)', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  result = Dee_None;
+  Dee_Incref(Dee_None);
+#else /* JIT_EVAL */
+  if (JITLexer_SkipStatement(self))
+      goto err;
+do_skip_while_suffix:
+  if (JITLexer_ISKWD(self,"while")) {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `while' after `do ...', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  if (self->jl_tok == '(') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  if (JITLexer_SkipPair(self,'(',')'))
+      goto err;
+  if (self->jl_tok == ';') {
+   JITLexer_Yield(self);
+  } else {
+   SYNTAXERROR("Expected `;' after `do ... while (...)', but got `%$s'",
+              (size_t)(self->jl_tokend - self->jl_tokstart),
+               self->jl_tokstart);
+   goto err;
+  }
+  result = 0;
+#endif /* !JIT_EVAL */
+ } else {
+#ifdef JIT_EVAL
+  /* TODO */
+  DERROR_NOTIMPLEMENTED();
+  result = ERROR;
+#else
+  if (JITLexer_SkipGeneratorExpression(self,JITLEXER_EVAL_FNORMAL))
+      goto err;
+  goto do_skip_while_suffix;
 #endif
- DERROR_NOTIMPLEMENTED();
+ }
+#endif
+ return result;
+#ifndef JIT_HYBRID
+#ifdef JIT_EVAL
+err_scope:
+ JITContext_PopScope(self->jl_context);
+#endif
+err:
  return ERROR;
+#endif
 }
 
 INTERN RETURN_TYPE FCALL

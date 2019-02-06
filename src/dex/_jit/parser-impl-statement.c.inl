@@ -42,7 +42,7 @@ FUNC(StatementBlock)(JITLexer *__restrict self) {
   result = JITLexer_SkipStatement(self);
 #endif
   if (ISERR(result)) goto err;
-   if (self->jl_tok == '}') break;
+  if (self->jl_tok == '}') break;
 #ifdef JIT_EVAL
   /* Discard the intermediate statement result. */
   if (result == JIT_LVALUE) {
@@ -148,7 +148,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
     goto done;
    }
    if (name == ENCODE4('f','r','o','m')) {
-    /* TODO */
+    result = FUNC(Import)(self,true);
+    goto done;
    }
    break;
 
@@ -161,7 +162,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
      JITLexer_Yield(self);
 #ifdef JIT_EVAL
      /* Rethrow the last active exception. */
-     Dee_XClear(self->jl_context->jc_retval);
+     ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
      if (DeeThread_Self()->t_exceptsz <= self->jl_context->jc_except)
          err_no_active_exception();
      result = NULL;
@@ -181,7 +182,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
       goto err_r;
      }
 #ifdef JIT_EVAL
-     Dee_XClear(self->jl_context->jc_retval);
+     ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
      /* Throw the given object. */
      DeeError_Throw(result);
      Dee_Clear(result);
@@ -200,14 +201,34 @@ FUNC(Statement)(JITLexer *__restrict self) {
    if (name == ENCODE4('y','i','e','l') &&
        *(uint8_t *)(tok_begin + 4) == 'd') {
     /* TODO */
+    DERROR_NOTIMPLEMENTED();
+    goto err;
    }
    if (name == ENCODE4('p','r','i','n') &&
        *(uint8_t *)(tok_begin + 4) == 't') {
     /* TODO */
+    DERROR_NOTIMPLEMENTED();
+    goto err;
    }
    if (name == ENCODE4('b','r','e','a') &&
        *(uint8_t *)(tok_begin + 4) == 'k') {
-    /* TODO */
+    JITLexer_Yield(self);
+    if likely(self->jl_tok == ';') {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected `;' after `break', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err;
+    }
+#ifdef JIT_EVAL
+    result = NULL;
+    ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
+    self->jl_context->jc_retval = JITCONTEXT_RETVAL_BREAK;
+#else
+    result = 0;
+#endif
+    goto done;
    }
    if (name == ENCODE4('_','_','a','s') &&
        *(uint8_t *)(tok_begin + 4) == 'm')
@@ -222,7 +243,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
     if (self->jl_tok == ';') {
      JITLexer_Yield(self);
 #ifdef JIT_EVAL
-     Dee_XDecref(self->jl_context->jc_retval);
+     ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
      self->jl_context->jc_retval = Dee_None;
      Dee_Incref(Dee_None);
      result = NULL;
@@ -242,7 +263,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
       goto err_r;
      }
 #ifdef JIT_EVAL
-     Dee_XDecref(self->jl_context->jc_retval);
+     ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
      self->jl_context->jc_retval = result; /* Inherit reference. */
      result = NULL; /* Propagate the return value. */
 #endif
@@ -265,6 +286,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
    if (name == ENCODE4('s','w','i','t') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c','h')) {
     /* TODO */
+    DERROR_NOTIMPLEMENTED();
+    goto err;
    }
    break;
 
@@ -284,7 +307,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
        *(uint8_t *)(tok_begin + 6) == '_') {
 do_asm:
     /* TODO */
-    ;
+    DERROR_NOTIMPLEMENTED();
+    goto err;
    }
    break;
 
@@ -295,7 +319,23 @@ do_asm:
    nam2 = UNALIGNED_GET32((uint32_t *)(tok_begin + 4));
    if (name == ENCODE4('c','o','n','t') &&
        nam2 == ENCODE4('i','n','u','e')) {
-    /* TODO */
+    JITLexer_Yield(self);
+    if likely(self->jl_tok == ';') {
+     JITLexer_Yield(self);
+    } else {
+     SYNTAXERROR("Expected `;' after `continue', but got `%$s'",
+                (size_t)(self->jl_tokend - self->jl_tokstart),
+                 self->jl_tokstart);
+     goto err;
+    }
+#ifdef JIT_EVAL
+    result = NULL;
+    ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
+    self->jl_context->jc_retval = JITCONTEXT_RETVAL_CONTINUE;
+#else
+    result = 0;
+#endif
+    goto done;
    }
   } break;
 
