@@ -1435,7 +1435,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             ">print \"bar\"[1:];       /* \"ar\" */\n"
                             ">print \"foobar\"[3:123]; /* \"bar\" */\n"
                             ">print \"bizbuz\"[5:4];   /* \"\" */"),
-    /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FNAMEOBJECT,
+    /* .tp_flags    = */TP_FNORMAL | TP_FVARIABLE | TP_FNAMEOBJECT | TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
     /* .tp_base     = */&DeeSeq_Type,
