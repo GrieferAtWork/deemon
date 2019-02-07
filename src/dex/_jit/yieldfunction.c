@@ -329,9 +329,8 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
  ASSERT(st != &self->ji_bstat);
  switch (st->js_kind) {
 
- case JIT_STATE_KIND_SCOPE2:
-  JITContext_PopScope(&self->ji_ctx);
-  break;
+ case JIT_STATE_KIND_SCOPE:
+  goto do_pop_state;
 
  case JIT_STATE_KIND_FOR:
   old_pos = self->ji_lex.jl_tokstart;
@@ -366,7 +365,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
     /* Restore the old position (which is presumably just after the loop block) */
     JITLexer_YieldAt(&self->ji_lex,old_pos);
     /* Don't jump back, but break out of the loop. */
-    goto do_pop_state;
+    goto do_pop_state_scope;
    }
   }
   /* Check for interrupts before jumping backwards */
@@ -399,7 +398,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
   if (!elem)
        goto err;
   /* ITER_DONE... */
-  goto do_pop_state;
+  goto do_pop_state_scope;
  } break;
 
  {
@@ -425,7 +424,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
   if (!elem)
        goto err;
   /* ITER_DONE... */
-  goto do_pop_state;
+  goto do_pop_state_scope;
  } break;
 
  case JIT_STATE_KIND_SKIPELSE:
@@ -445,10 +444,13 @@ do_skip_else:
     goto do_skip_else;
    }
   }
-  break;
+  goto do_pop_state_scope;
 
+ /*case JIT_STATE_KIND_SCOPE2:*/
  default: break;
  }
+do_pop_state_scope:
+  JITContext_PopScope(&self->ji_ctx);
 do_pop_state:
  /* Default: Remove the state. */
  self->ji_state = st->js_prev;
@@ -766,9 +768,13 @@ parse_again_same_statement:
      } else if (name == ENCODE4('e','l','i','f')) {
       self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
 parse_else_after_if:
+#if 1 /* Optimization: No need to push a scope if no declaration was made
+       *               within the condition expression of the if-statement. */
       if (self->ji_ctx.jc_locals.otp_ind >= 2) {
        --self->ji_ctx.jc_locals.otp_ind;
-      } else {
+      } else
+#endif
+      {
        /* Must push a simple scope state to keep alive a declaration made within
         * the condition of the if-branch. */
        struct jit_state *st;
@@ -787,6 +793,11 @@ parse_else_after_if:
     /* No live branch existed within the if-statement (move on to execute the next statement) */
     goto parse_again;
    }
+#if 0 /* TODO */
+   if (tok_begin[0] == 'd' &&
+       tok_begin[1] == 'o') {
+   }
+#endif
    break;
 
   case 3:
@@ -1010,11 +1021,11 @@ err_missing_rparen_after_for:
     }
     goto got_yield_value;
    }
-#if 0 /* TODO */
    if (name == ENCODE4('w','h','i','l') &&
        *(uint8_t *)(tok_begin + 4) == 'e') {
     struct jit_state *st;
     unsigned char *cond_start;
+    DREF DeeObject *value; int temp;
     JITLexer_Yield(&self->ji_lex);
     if likely(self->ji_lex.jl_tok == '(') {
      JITLexer_Yield(&self->ji_lex);
@@ -1027,9 +1038,46 @@ err_missing_rparen_after_for:
     }
     /* Evaluate the while-condition for the first time. */
     JITContext_PushScope(&self->ji_ctx);
-
+    cond_start = self->ji_lex.jl_tokstart;
+    value = JITLexer_EvalRValueDecl(&self->ji_lex);
+    if unlikely(!value)
+       goto err_scope;
+    if likely(self->ji_lex.jl_tok == ')') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     Dee_Decref(value);
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `)' after `while(...', but got `%$s'",
+                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                      self->ji_lex.jl_tokstart);
+     goto err_scope;
+    }
+    temp = DeeObject_Bool(value);
+    Dee_Decref(value);
+    if unlikely(temp < 0)
+       goto err_scope;
+    if (!temp) {
+     /* The while-statement's body is never reached. */
+     JITContext_PopScope(&self->ji_ctx);
+     if (JITLexer_SkipStatement(&self->ji_lex))
+         goto err;
+     goto parse_again;
+    }
+    /* Push a state that can be used to describe the behavior of the while-loop
+     * NOTE: We re-use the FOR-state, since `while(COND) ...' can be expressed
+     *       as `for (; COND; ) ...' */
+    st = jit_state_alloc();
+    if unlikely(!st) goto err_scope;
+    st->js_kind = JIT_STATE_KIND_FOR;
+    st->js_flag = JIT_STATE_FLAG_SINGLE;
+    st->js_for.f_cond = cond_start;
+    st->js_for.f_next = NULL;
+    st->js_for.f_loop = self->ji_lex.jl_tokstart;
+    /* Push the new state. */
+    st->js_prev = self->ji_state;
+    self->ji_state = st;
+    goto parse_again_same_statement;
    }
-#endif
    break;
 
   case 6:
