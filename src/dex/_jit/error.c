@@ -24,6 +24,7 @@
 
 DECL_BEGIN
 
+/* RT Exception handlers. */
 INTERN ATTR_COLD int DCALL
 err_invalid_argc_len(char const *function_name, size_t function_size,
                      size_t argc_cur, size_t argc_min, size_t argc_max) {
@@ -81,6 +82,164 @@ err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
                         need_size,need_size > 1 ? "s" : "",need_size+1,
                         need_size == 0 ? "as" : "ere");
 }
+
+
+
+
+
+
+
+
+/* Syntax Exception handlers. */
+LOCAL void DCALL syn_trace_here(JITLexer *__restrict self) {
+ JITLexer_ErrorTrace(self,self->jl_tokstart);
+ self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
+}
+
+INTERN ATTR_COLD int DCALL
+syn_if_expected_lparen_after_if(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `(' after `if', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_if_expected_rparen_after_if(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `if (...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+INTERN ATTR_COLD int DCALL
+syn_for_expected_lparen_after_for(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `(' after `for', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_for_expected_rparen_after_for(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `for (...;...;...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_for_expected_rparen_after_foreach(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `for (...: ...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_for_expected_semi1_after_for(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `;' after `for', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_for_expected_semi2_after_for(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected a second `;' after `for', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+INTERN ATTR_COLD int DCALL
+syn_yield_expected_semi_after_yield(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `;' after `yield', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+INTERN ATTR_COLD int DCALL
+syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `(' after `foreach', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_foreach_expected_collon_after_foreach(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `:' after `foreach (...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `foreach (...: ...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+INTERN ATTR_COLD int DCALL
+syn_while_expected_lparen_after_while(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `(' after `while', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_while_expected_rparen_after_while(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `while (...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+
+
+INTERN ATTR_COLD int DCALL
+syn_dowhile_expected_while_after_do(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `while' after `do ...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `(' after `do ... while', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `do ... while (...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int DCALL
+syn_dowhile_expected_semi_after_while(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `;' after `do ... while (...)', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
 
 
 DECL_END

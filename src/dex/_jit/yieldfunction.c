@@ -316,6 +316,35 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 };
 
 
+PRIVATE int DCALL
+JITLexer_JumpToDoWhileCondition(JITLexer *__restrict self,
+                                struct jit_state *__restrict st) {
+ if (st->js_dowhile.f_cond) {
+  JITLexer_YieldAt(self,st->js_dowhile.f_cond);
+ } else {
+  JITLexer_YieldAt(self,st->js_dowhile.f_loop);
+  if (JITLexer_SkipStatement(self))
+      goto err;
+  if (JITLexer_ISKWD(self,"while")) {
+   JITLexer_Yield(self);
+  } else {
+   syn_dowhile_expected_while_after_do(self);
+   goto err;
+  }
+  if (self->jl_tok == '(') {
+   JITLexer_Yield(self);
+  } else {
+   syn_dowhile_expected_lparen_after_while(self);
+   goto err;
+  }
+  st->js_dowhile.f_cond = self->jl_tokstart;
+ }
+ return 0;
+err:
+ return -1;
+}
+
+
 /* @return:  1: The state wasn't removed, but the lexer position was updated
  *              such that execution should resume normally (this is used to
  *              implement loop statements)
@@ -331,6 +360,58 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 
  case JIT_STATE_KIND_SCOPE:
   goto do_pop_state;
+
+ case JIT_STATE_KIND_DOWHILE:
+  if (st->js_dowhile.f_cond) {
+   JITLexer_YieldAt(&self->ji_lex,st->js_dowhile.f_cond);
+  } else {
+   if (JITLexer_ISKWD(&self->ji_lex,"while")) {
+    JITLexer_Yield(&self->ji_lex);
+   } else {
+    syn_dowhile_expected_while_after_do(&self->ji_lex);
+    goto err;
+   }
+   if (self->ji_lex.jl_tok == '(') {
+    JITLexer_Yield(&self->ji_lex);
+   } else {
+    syn_dowhile_expected_lparen_after_while(&self->ji_lex);
+    goto err;
+   }
+   st->js_dowhile.f_cond = self->ji_lex.jl_tokstart;
+  }
+  /* Evaluate the expression value. */
+  {
+   DREF DeeObject *value; int temp;
+   value = JITLexer_EvalRValue(&self->ji_lex);
+   if unlikely(!value)
+      goto err;
+   temp = DeeObject_Bool(value);
+   Dee_Decref(value);
+   if unlikely(temp < 0)
+      goto err;
+   if (!temp) {
+    if (self->ji_lex.jl_tok == ')') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     syn_dowhile_expected_rparen_after_while(&self->ji_lex);
+     goto err;
+    }
+    if (self->ji_lex.jl_tok == ';') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     syn_dowhile_expected_semi_after_while(&self->ji_lex);
+     goto err;
+    }
+    goto do_pop_state;
+   }
+  }
+  /* Check for interrupts before jumping backwards. */
+  if (DeeThread_CheckInterrupt())
+      goto err;
+  /* Jump back to the start of the do-while block. */
+  JITLexer_YieldAt(&self->ji_lex,st->js_dowhile.f_loop);
+  /* Execute the loop block once again */
+  return 1;
 
  case JIT_STATE_KIND_FOR:
   old_pos = self->ji_lex.jl_tokstart;
@@ -450,7 +531,7 @@ do_skip_else:
  default: break;
  }
 do_pop_state_scope:
-  JITContext_PopScope(&self->ji_ctx);
+ JITContext_PopScope(&self->ji_ctx);
 do_pop_state:
  /* Default: Remove the state. */
  self->ji_state = st->js_prev;
@@ -485,6 +566,7 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
   case JIT_STATE_KIND_FOR:
   case JIT_STATE_KIND_FOREACH:
   case JIT_STATE_KIND_FOREACH2:
+  case JIT_STATE_KIND_DOWHILE:
    /* Unwind up until the target state. */
    while (self->ji_state != st) {
     struct jit_state *curr;
@@ -506,9 +588,54 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
     st->js_flag |= JIT_STATE_FLAG_SINGLE;
    }
    switch (st->js_kind) {
+
+   case JIT_STATE_KIND_DOWHILE:
+    if unlikely(JITLexer_JumpToDoWhileCondition(&self->ji_lex,st))
+       goto err;
+    if (ctl_is_break) {
+     /* Skip over the condition expression and break out of the loop */
+     if (JITLexer_SkipExpression(&self->ji_lex,JITLEXER_EVAL_FNORMAL))
+         goto err;
+do_break_dowhile_loop:
+     if (self->ji_lex.jl_tok == ')') {
+      JITLexer_Yield(&self->ji_lex);
+     } else {
+      syn_dowhile_expected_rparen_after_while(&self->ji_lex);
+      goto err;
+     }
+     if (self->ji_lex.jl_tok == ';') {
+      JITLexer_Yield(&self->ji_lex);
+     } else {
+      syn_dowhile_expected_semi_after_while(&self->ji_lex);
+      goto err;
+     }
+     self->ji_state = st->js_prev;
+     jit_state_destroy(st);
+     return 1;
+    }
+    /* Evaluate the condition expression. */
+    {
+     DREF DeeObject *value; int temp;
+     value = JITLexer_EvalRValue(&self->ji_lex);
+     if unlikely(!value)
+        goto err;
+     temp = DeeObject_Bool(value);
+     Dee_Decref(value);
+     if unlikely(temp < 0)
+        goto err;
+     if (!temp)
+         goto do_break_dowhile_loop;
+    }
+    /* Check for interrupts before jumping backwards. */
+    if (DeeThread_CheckInterrupt())
+        goto err;
+    /* Jump back to the start of the do-while block. */
+    JITLexer_YieldAt(&self->ji_lex,st->js_dowhile.f_loop);
+    /* Execute the loop block once again */
+    return 1;
+
    case JIT_STATE_KIND_FOR:
     if (ctl_is_break) {
-     /*  */
      JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
     } else {
      DREF DeeObject *value;
@@ -680,12 +807,14 @@ parse_again_same_statement:
    DeeError_Throwf(&DeeError_SyntaxError,
                    "Expected statement before `}' within `yield'-function");
    self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
+   self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;;
    goto err;
   }
   if (st == &self->ji_bstat) {
    DeeError_Throwf(&DeeError_SyntaxError,
                    "Unmatched `}' encountered within `yield'-function");
    self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
+   self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;;
    goto err;
   }
   /* Pop the additional block scope. */
@@ -720,10 +849,7 @@ parse_again_same_statement:
     if likely(self->ji_lex.jl_tok == '(') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `(' after `if', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+     syn_if_expected_lparen_after_if(&self->ji_lex);
      goto err;
     }
     JITContext_PushScope(&self->ji_ctx);
@@ -737,10 +863,7 @@ parse_again_same_statement:
     if likely(self->ji_lex.jl_tok == ')') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `)' after `if', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+     syn_if_expected_rparen_after_if(&self->ji_lex);
      goto err_scope;
     }
     if (temp) {
@@ -793,11 +916,22 @@ parse_else_after_if:
     /* No live branch existed within the if-statement (move on to execute the next statement) */
     goto parse_again;
    }
-#if 0 /* TODO */
    if (tok_begin[0] == 'd' &&
        tok_begin[1] == 'o') {
+    struct jit_state *st;
+    /* Push a state for the do-while loop. */
+    st = jit_state_alloc();
+    if unlikely(!st)
+       goto err;
+    JITLexer_Yield(&self->ji_lex);
+    st->js_kind = JIT_STATE_KIND_DOWHILE;
+    st->js_flag = JIT_STATE_FLAG_SINGLE;
+    st->js_dowhile.f_loop = self->ji_lex.jl_tokstart;
+    st->js_dowhile.f_cond = NULL;
+    st->js_prev = self->ji_state;
+    self->ji_state = st;
+    goto parse_again_same_statement;
    }
-#endif
    break;
 
   case 3:
@@ -816,10 +950,7 @@ parse_else_after_if:
     if likely(self->ji_lex.jl_tok == '(') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `(' after `for', but got `%$s'",
-                    (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                     self->ji_lex.jl_tokstart);
+     syn_for_expected_lparen_after_for(&self->ji_lex);
      goto err;
     }
     JITContext_PushScope(&self->ji_ctx);
@@ -857,10 +988,7 @@ err_elem_lvalue_scope:
      if likely(self->ji_lex.jl_tok == ')') {
       JITLexer_Yield(&self->ji_lex);
      } else {
-      DeeError_Throwf(&DeeError_SyntaxError,
-                      "Expected `)' after `for(...: ...', but got `%$s'",
-                      (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                       self->ji_lex.jl_tokstart);
+      syn_for_expected_rparen_after_foreach(&self->ji_lex);
       Dee_Decref(result);
       goto err_elem_lvalue_scope;
      }
@@ -918,10 +1046,7 @@ err_iter_scope_lvalue:
 do_normal_for_noinit:
       JITLexer_Yield(&self->ji_lex);
      } else {
-      DeeError_Throwf(&DeeError_SyntaxError,
-                      "Expected `;' after `for', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+      syn_for_expected_semi1_after_for(&self->ji_lex);
       goto err_scope;
      }
      cond_start = next_start = NULL;
@@ -942,10 +1067,7 @@ do_normal_for_noinit:
       if (self->ji_lex.jl_tok == ';') {
        JITLexer_Yield(&self->ji_lex);
       } else {
-       DeeError_Throwf(&DeeError_SyntaxError,
-                       "Expected a second `;' after `for', but got `%$s'",
-                       (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                        self->ji_lex.jl_tokstart);
+       syn_for_expected_semi2_after_for(&self->ji_lex);
        goto err_scope;
       }
       if (!temp) {
@@ -958,10 +1080,7 @@ do_normal_for_noinit:
         JITLexer_Yield(&self->ji_lex);
        } else {
 err_missing_rparen_after_for:
-        DeeError_Throwf(&DeeError_SyntaxError,
-                        "Expected `)' after `for(...;...;...', but got `%$s'",
-                        (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                         self->ji_lex.jl_tokstart);
+        syn_for_expected_rparen_after_for(&self->ji_lex);
         goto err_scope;
        }
        /* Skip the body of the for-statement */
@@ -1013,10 +1132,7 @@ err_missing_rparen_after_for:
     if likely(self->ji_lex.jl_tok == ';') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `;' after `throw', but got `%$s'",
-                    (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                     self->ji_lex.jl_tokstart);
+     syn_yield_expected_semi_after_yield(&self->ji_lex);
      goto err_r;
     }
     goto got_yield_value;
@@ -1030,10 +1146,7 @@ err_missing_rparen_after_for:
     if likely(self->ji_lex.jl_tok == '(') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `(' after `while', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+     syn_while_expected_lparen_after_while(&self->ji_lex);
      goto err;
     }
     /* Evaluate the while-condition for the first time. */
@@ -1046,10 +1159,7 @@ err_missing_rparen_after_for:
      JITLexer_Yield(&self->ji_lex);
     } else {
      Dee_Decref(value);
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `)' after `while(...', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+     syn_while_expected_rparen_after_while(&self->ji_lex);
      goto err_scope;
     }
     temp = DeeObject_Bool(value);
@@ -1066,6 +1176,10 @@ err_missing_rparen_after_for:
     /* Push a state that can be used to describe the behavior of the while-loop
      * NOTE: We re-use the FOR-state, since `while(COND) ...' can be expressed
      *       as `for (; COND; ) ...' */
+    /* TODO: What about `while (local item = getitem()) { ... }'?
+     *       Something like that can't be expressed using for(), since for doesn't
+     *       allow declaring expressions within the condition branch!
+     *       -> We _do_ still need a dedicated state kind for while-loops! */
     st = jit_state_alloc();
     if unlikely(!st) goto err_scope;
     st->js_kind = JIT_STATE_KIND_FOR;
@@ -1103,10 +1217,7 @@ err_missing_rparen_after_for:
     if likely(self->ji_lex.jl_tok == '(') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `(' after `foreach', but got `%$s'",
-                    (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                     self->ji_lex.jl_tokstart);
+     syn_foreach_expected_lparen_after_foreach(&self->ji_lex);
      goto err;
     }
     JITContext_PushScope(&self->ji_ctx);
@@ -1120,10 +1231,14 @@ err_missing_rparen_after_for:
     if (self->ji_lex.jl_tok == ':') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `:' after `foreach(...', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+     if (result == JIT_LVALUE) {
+      JITLValue_Fini(&self->ji_lex.jl_lvalue);
+      JITLValue_Init(&self->ji_lex.jl_lvalue);
+     } else {
+      Dee_Decref(result);
+     }
+     syn_foreach_expected_collon_after_foreach(&self->ji_lex);
+     goto err_scope;
     }
     /* TODO: Multiple targets (`for (local x,y,z: triples)') */
     /* Initialize the foreach element target. */
@@ -1145,10 +1260,7 @@ err_elem_lvalue_scope_2:
     if likely(self->ji_lex.jl_tok == ')') {
      JITLexer_Yield(&self->ji_lex);
     } else {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `)' after `foreach(...: ...', but got `%$s'",
-                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
-                      self->ji_lex.jl_tokstart);
+     syn_foreach_expected_rparen_after_foreach(&self->ji_lex);
      Dee_Decref(result);
      goto err_elem_lvalue_scope_2;
     }

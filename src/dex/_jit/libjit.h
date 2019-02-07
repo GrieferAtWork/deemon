@@ -1026,16 +1026,17 @@ struct jit_yield_function_object {
 
 
 
-#define JIT_STATE_KIND_HASSCOPE(x) ((x) != JIT_STATE_KIND_SCOPE) /* Check if the given state kind has created a locals-scope */
+#define JIT_STATE_KIND_HASSCOPE(x) ((x) >= JIT_STATE_KIND_SCOPE2) /* Check if the given state kind has created a locals-scope */
 #define JIT_STATE_KIND_SCOPE    0x0000 /* Simple scope */
-#define JIT_STATE_KIND_SCOPE2   0x0001 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
-#define JIT_STATE_KIND_FOR      0x0002 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
-#define JIT_STATE_KIND_FOREACH  0x0003 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
-#define JIT_STATE_KIND_FOREACH2 0x0004 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
-#define JIT_STATE_KIND_SKIPELSE 0x0005 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
+#define JIT_STATE_KIND_DOWHILE  0x0001 /* Do-while loop (`do ... while (cond);') */
+#define JIT_STATE_KIND_SCOPE2   0x0002 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
+#define JIT_STATE_KIND_FOR      0x0003 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
+#define JIT_STATE_KIND_FOREACH  0x0004 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
+#define JIT_STATE_KIND_FOREACH2 0x0005 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
+#define JIT_STATE_KIND_SKIPELSE 0x0006 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
                                         *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
                                         *            in which case the false-branch must be skipped (should it exist) */
-/* TODO: States for: `try', `with', `switch', `while', `do...while' */
+/* TODO: States for: `try', `with', `switch', `do...while' */
 
 
 
@@ -1050,6 +1051,11 @@ struct jit_state {
     uint8_t           js_pad[sizeof(void *) - 4]; /* ... */
 #endif
     union {
+        struct {
+            unsigned char *f_loop;  /* [1..1] Pointer to the statement's loop-statement. */
+            unsigned char *f_cond;  /* [0..1] Pointer to the statement's cond-expression.
+                                     * NOTE: This pointer is lazily initialized! */
+        }             js_dowhile;   /* JIT_STATE_KIND_DOWHILE */
         struct {
             unsigned char *f_cond;  /* [0..1] Pointer to the for statement's cond-expression. */
             unsigned char *f_next;  /* [0..1] Pointer to the for statement's next-expression. */
@@ -1107,14 +1113,33 @@ INTDEF DeeTypeObject JITYieldFunctionIterator_Type;
 
 
 
-
-
+/* RT Exception handlers. */
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD int DCALL err_unknown_global(DeeObject *__restrict key);
 INTDEF ATTR_COLD int DCALL err_unknown_global_str_len(char const *__restrict key, size_t keylen);
 INTDEF ATTR_COLD int DCALL err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
 INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object, DeeObject *__restrict unpack_iterator, size_t need_size);
+
+/* Syntax Exception handlers. */
+INTDEF ATTR_COLD int DCALL syn_if_expected_lparen_after_if(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_if_expected_rparen_after_if(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_for_expected_lparen_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_for_expected_rparen_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_for_expected_semi1_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_for_expected_semi2_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_for_expected_rparen_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_yield_expected_semi_after_yield(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_foreach_expected_collon_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_while_expected_lparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_while_expected_rparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_dowhile_expected_while_after_do(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD int DCALL syn_dowhile_expected_semi_after_while(JITLexer *__restrict self);
+
 
 DECL_END
 

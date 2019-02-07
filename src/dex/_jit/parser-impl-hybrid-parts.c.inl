@@ -979,7 +979,6 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 #ifdef JIT_EVAL
   int temp;
   unsigned char *block_start;
-  JITContext_PushScope(self->jl_context);
   block_start = self->jl_tokstart;
   /* Parse the block for the first time. */
 do_parse_block:
@@ -992,23 +991,21 @@ do_parse_block:
     self->jl_tokend = block_start;
     JITLexer_Yield(self);
     if (JITLexer_SkipStatement(self))
-        goto err_scope;
+        goto err;
     if (JITLexer_ISKWD(self,"while")) {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `while' after `do ...', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
-     goto err_scope;
+     syn_dowhile_expected_while_after_do(self);
+     goto err;
     }
     if (self->jl_tok == '(') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
-     goto err_scope;
+     syn_dowhile_expected_lparen_after_while(self);
+     goto err;
     }
+    if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+        goto err;
     goto done_loop_rparen;
    }
    if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
@@ -1016,7 +1013,7 @@ do_parse_block:
     self->jl_tokend = block_start;
     JITLexer_Yield(self);
     if (JITLexer_SkipStatement(self))
-        goto err_scope;
+        goto err;
     goto continue_with_loop_cond;
    }
   }
@@ -1030,32 +1027,28 @@ continue_with_loop_cond:
   if (JITLexer_ISKWD(self,"while")) {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `while' after `do ...', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
-   goto err_scope;
+   syn_dowhile_expected_while_after_do(self);
+   goto err;
   }
   if (self->jl_tok == '(') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
-   goto err_scope;
+   syn_dowhile_expected_lparen_after_while(self);
+   goto err;
   }
 
   /* Parse the condition code. */
   result = JITLexer_EvalRValue(self);
   if unlikely(!result)
-     goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+     goto err; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
   temp = DeeObject_Bool(result);
   Dee_Decref(result);
   if unlikely(temp < 0)
-     goto err_scope;
+     goto err;
   if (temp) {
    /* Loop back to the start of the loop-block */
    if (DeeThread_CheckInterrupt())
-       goto err_scope;
+       goto err;
    self->jl_tokend = block_start;
    JITLexer_Yield(self);
    goto do_parse_block;
@@ -1064,18 +1057,13 @@ done_loop_rparen:
   if (self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
-   goto err_scope;
+   syn_dowhile_expected_rparen_after_while(self);
+   goto err;
   }
-  JITContext_PopScope(self->jl_context);
   if (self->jl_tok == ';') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `;' after `do ... while (...)', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_dowhile_expected_semi_after_while(self);
    goto err;
   }
   result = Dee_None;
@@ -1087,17 +1075,13 @@ do_skip_while_suffix:
   if (JITLexer_ISKWD(self,"while")) {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `while' after `do ...', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_dowhile_expected_while_after_do(self);
    goto err;
   }
   if (self->jl_tok == '(') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `(' after `do ... while', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_dowhile_expected_lparen_after_while(self);
    goto err;
   }
   if (JITLexer_SkipPair(self,'(',')'))
@@ -1105,9 +1089,7 @@ do_skip_while_suffix:
   if (self->jl_tok == ';') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `;' after `do ... while (...)', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_dowhile_expected_semi_after_while(self);
    goto err;
   }
   result = 0;
@@ -1126,10 +1108,6 @@ do_skip_while_suffix:
 #endif
  return result;
 #ifndef JIT_HYBRID
-#ifdef JIT_EVAL
-err_scope:
- JITContext_PopScope(self->jl_context);
-#endif
 err:
  return ERROR;
 #endif
