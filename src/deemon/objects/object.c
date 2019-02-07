@@ -2202,6 +2202,10 @@ PRIVATE struct type_method object_methods[] = {
 
 
 PRIVATE DREF DeeObject *DCALL
+object_type_get(DeeObject *__restrict self) {
+ return_reference((DeeObject *)Dee_TYPE(self));
+}
+PRIVATE DREF DeeObject *DCALL
 object_class_get(DeeObject *__restrict self) {
  return_reference((DeeObject *)DeeObject_Class(self));
 }
@@ -2227,6 +2231,7 @@ PRIVATE struct type_getset object_getsets[] = {
 #else
     { "this", &DeeObject_NewRef, NULL, NULL },
 #endif
+    { DeeString_STR(&str_type), &object_type_get, NULL, NULL },
     { DeeString_STR(&str_class), &object_class_get, NULL, NULL },
     { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL },
     { "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
