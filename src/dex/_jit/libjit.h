@@ -1031,9 +1031,10 @@ struct jit_yield_function_object {
 #define JIT_STATE_KIND_DOWHILE  0x0001 /* Do-while loop (`do ... while (cond);') */
 #define JIT_STATE_KIND_SCOPE2   0x0002 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
 #define JIT_STATE_KIND_FOR      0x0003 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
-#define JIT_STATE_KIND_FOREACH  0x0004 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
-#define JIT_STATE_KIND_FOREACH2 0x0005 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
-#define JIT_STATE_KIND_SKIPELSE 0x0006 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
+#define JIT_STATE_KIND_WHILE    0x0004 /* [SCOPE] While-statement (`while (local item = getitem()) { ... }') */
+#define JIT_STATE_KIND_FOREACH  0x0005 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
+#define JIT_STATE_KIND_FOREACH2 0x0006 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
+#define JIT_STATE_KIND_SKIPELSE 0x0007 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
                                         *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
                                         *            in which case the false-branch must be skipped (should it exist) */
 /* TODO: States for: `try', `with', `switch', `do...while' */
@@ -1061,6 +1062,10 @@ struct jit_state {
             unsigned char *f_next;  /* [0..1] Pointer to the for statement's next-expression. */
             unsigned char *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
         }             js_for;       /* JIT_STATE_KIND_FOR */
+        struct {
+            unsigned char *f_cond;  /* [1..1] Pointer to the for statement's cond-expression. */
+            unsigned char *f_loop;  /* [1..1] Pointer to the for statement's loop-statement. */
+        }             js_while;     /* JIT_STATE_KIND_WHILE */
         struct {
             DREF DeeObject *f_iter; /* [1..1] The iterator object. */
             JITLValue       f_elem; /* The iterator target expression lvalue (this is

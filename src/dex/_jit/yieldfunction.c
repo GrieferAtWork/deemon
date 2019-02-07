@@ -413,6 +413,34 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
   /* Execute the loop block once again */
   return 1;
 
+ {
+  DREF DeeObject *value; int temp;
+ case JIT_STATE_KIND_WHILE:
+  old_pos = self->ji_lex.jl_tokstart;
+  JITLexer_YieldAt(&self->ji_lex,st->js_while.f_cond);
+  /* Invoke the cond-expression. */
+  value = JITLexer_EvalRValueDecl(&self->ji_lex);
+  if unlikely(!value)
+     goto err;
+  /* Check if loop iteration should continue. */
+  temp = DeeObject_Bool(value);
+  Dee_Decref(value);
+  if unlikely(temp < 0)
+     goto err;
+  if (!temp) {
+   /* Restore the old position (which is presumably just after the loop block) */
+   JITLexer_YieldAt(&self->ji_lex,old_pos);
+   /* Don't jump back, but break out of the loop. */
+   goto do_pop_state_scope;
+  }
+  /* Check for interrupts before jumping backwards */
+  if (DeeThread_CheckInterrupt())
+      goto err;
+  /* Resume execution of the loop. */
+  JITLexer_YieldAt(&self->ji_lex,st->js_while.f_loop);
+  return 1;
+ }
+
  case JIT_STATE_KIND_FOR:
   old_pos = self->ji_lex.jl_tokstart;
   if (st->js_for.f_next) {
@@ -563,10 +591,11 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
   ASSERT(st);
   switch (st->js_kind) {
 
+  case JIT_STATE_KIND_DOWHILE:
+  case JIT_STATE_KIND_WHILE:
   case JIT_STATE_KIND_FOR:
   case JIT_STATE_KIND_FOREACH:
   case JIT_STATE_KIND_FOREACH2:
-  case JIT_STATE_KIND_DOWHILE:
    /* Unwind up until the target state. */
    while (self->ji_state != st) {
     struct jit_state *curr;
@@ -634,6 +663,32 @@ do_break_dowhile_loop:
     /* Execute the loop block once again */
     return 1;
 
+   case JIT_STATE_KIND_WHILE:
+    if (ctl_is_break) {
+     JITLexer_YieldAt(&self->ji_lex,st->js_while.f_loop);
+    } else {
+     DREF DeeObject *value; int temp;
+     /* Evaluate the cond-expression */
+     JITLexer_YieldAt(&self->ji_lex,st->js_while.f_cond);
+     value = JITLexer_EvalRValueDecl(&self->ji_lex);
+     if unlikely(!value)
+        goto err;
+     temp = DeeObject_Bool(value);
+     Dee_Decref(value);
+     if unlikely(temp < 0)
+        goto err;
+     if (!temp) {
+      JITLexer_YieldAt(&self->ji_lex,st->js_while.f_loop);
+      goto do_break_loop; /* Break out of the loop */
+     }
+     /* Check for interrupts before jumping back. */
+     if (DeeThread_CheckInterrupt())
+         goto err;
+     /* Jump to the start of the loop block. */
+     JITLexer_YieldAt(&self->ji_lex,st->js_while.f_loop);
+    }
+    break;
+
    case JIT_STATE_KIND_FOR:
     if (ctl_is_break) {
      JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
@@ -675,6 +730,7 @@ do_break_dowhile_loop:
      JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
     }
     break;
+
    case JIT_STATE_KIND_FOREACH:
     JITLexer_YieldAt(&self->ji_lex,st->js_foreach.f_loop);
     if (!ctl_is_break) {
@@ -700,6 +756,7 @@ do_break_dowhile_loop:
          goto err;
     }
     break;
+
    case JIT_STATE_KIND_FOREACH2:
     JITLexer_YieldAt(&self->ji_lex,st->js_foreach2.f_loop);
     if (!ctl_is_break) {
@@ -725,6 +782,7 @@ do_break_dowhile_loop:
          goto err;
     }
     break;
+
    default: __builtin_unreachable();
    }
    if (ctl_is_break) {
@@ -1182,11 +1240,10 @@ err_missing_rparen_after_for:
      *       -> We _do_ still need a dedicated state kind for while-loops! */
     st = jit_state_alloc();
     if unlikely(!st) goto err_scope;
-    st->js_kind = JIT_STATE_KIND_FOR;
+    st->js_kind = JIT_STATE_KIND_WHILE;
     st->js_flag = JIT_STATE_FLAG_SINGLE;
-    st->js_for.f_cond = cond_start;
-    st->js_for.f_next = NULL;
-    st->js_for.f_loop = self->ji_lex.jl_tokstart;
+    st->js_while.f_cond = cond_start;
+    st->js_while.f_loop = self->ji_lex.jl_tokstart;
     /* Push the new state. */
     st->js_prev = self->ji_state;
     self->ji_state = st;
