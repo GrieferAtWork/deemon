@@ -114,6 +114,23 @@ syn_if_expected_rparen_after_if(JITLexer *__restrict self) {
 }
 
 INTERN ATTR_COLD int FCALL
+syn_with_expected_lparen_after_with(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `(' after `with', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+INTERN ATTR_COLD int FCALL
+syn_with_expected_rparen_after_with(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `with (...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+INTERN ATTR_COLD int FCALL
 syn_for_expected_lparen_after_for(JITLexer *__restrict self) {
  syn_trace_here(self);
  return DeeError_Throwf(&DeeError_SyntaxError,

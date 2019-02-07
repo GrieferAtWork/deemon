@@ -62,6 +62,10 @@ jit_state_fini(struct jit_state *__restrict self) {
   Dee_Decref(self->js_foreach2.f_iter);
   JITLValueList_Fini(&self->js_foreach2.f_elem);
   break;
+ case JIT_STATE_KIND_WITH:
+  /* Drop our held reference. */
+  Dee_Decref(self->js_with.w_obj);
+  break;
  default:
   break;
  }
@@ -555,6 +559,15 @@ do_skip_else:
   }
   goto do_pop_state_scope;
 
+ case JIT_STATE_KIND_WITH:
+  if unlikely(DeeObject_Leave(st->js_with.w_obj)) {
+   /* Still pop the state upon error! */
+   self->ji_state = st->js_prev;
+   jit_state_destroy(st);
+   goto err;
+  }
+  goto do_pop_state_scope;
+
  /*case JIT_STATE_KIND_SCOPE2:*/
  default: break;
  }
@@ -607,6 +620,13 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
     if (!(curr->js_flag & JIT_STATE_FLAG_SINGLE))
         JITContext_PopScope(&self->ji_ctx);
     prev = curr->js_prev;
+    if (curr->js_kind == JIT_STATE_KIND_WITH &&
+        unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
+     /* Still pop the state upon error. */
+     jit_state_destroy(curr);
+     self->ji_state = prev;
+     goto err;
+    }
     jit_state_destroy(curr);
     self->ji_state = prev;
    }
@@ -791,6 +811,7 @@ do_break_loop:
     if unlikely(JITLexer_SkipStatement(&self->ji_lex))
        goto err;
     ASSERT(JIT_STATE_KIND_HASSCOPE(st->js_kind));
+    ASSERT(st->js_kind != JIT_STATE_KIND_WITH);
     JITContext_PopScope(&self->ji_ctx);
     self->ji_state = st->js_prev;
     jit_state_destroy(st);
@@ -1179,6 +1200,46 @@ err_missing_rparen_after_for:
    }
    break;
 
+  case 4:
+   name = UNALIGNED_GET32((uint32_t *)tok_begin);
+   if (name == ENCODE4('w','i','t','h')) {
+    struct jit_state *st; DREF DeeObject *obj;
+    JITLexer_Yield(&self->ji_lex);
+    if likely(self->ji_lex.jl_tok == '(') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     syn_with_expected_lparen_after_with(&self->ji_lex);
+     goto err;
+    }
+    JITContext_PushScope(&self->ji_ctx);
+    obj = JITLexer_EvalRValueDecl(&self->ji_lex);
+    if unlikely(!obj)
+       goto err_scope;
+    if likely(self->ji_lex.jl_tok == ')') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     syn_with_expected_rparen_after_with(&self->ji_lex);
+err_obj_scope:
+     Dee_Decref(obj);
+     goto err_scope;
+    }
+    st = jit_state_alloc();
+    if unlikely(!st)
+       goto err_obj_scope;
+    /* Invoke `operator enter()' on the with-object */
+    if unlikely(DeeObject_Enter(obj)) {
+     jit_state_free(st);
+     goto err_obj_scope;
+    }
+    st->js_kind = JIT_STATE_KIND_WITH;
+    st->js_flag = JIT_STATE_FLAG_SINGLE;
+    st->js_with.w_obj = obj; /* Inherit reference */
+    st->js_prev = self->ji_state;
+    self->ji_state = st;
+    goto parse_again_same_statement;
+   }
+   break;
+
   case 5:
    name = UNALIGNED_GET32((uint32_t *)tok_begin);
    if (name == ENCODE4('y','i','e','l') &&
@@ -1473,9 +1534,16 @@ ji_fini(JITYieldFunctionIterator *__restrict self) {
  JITFunctionObject *jf = self->ji_func->jy_func;
  ASSERT(!jf->jf_globals || self->ji_ctx.jc_globals == jf->jf_globals);
  while (self->ji_state != &self->ji_bstat) {
-  struct jit_state *prev;
-  prev = self->ji_state->js_prev;
-  jit_state_destroy(self->ji_state);
+  struct jit_state *prev,*curr;
+  curr = self->ji_state;
+  prev = curr->js_prev;
+  if (curr->js_kind == JIT_STATE_KIND_WITH &&
+      unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
+   /* Dump the unhandled exception! */
+   DeeError_Print("Unhandled exception in `operator leave'",
+                   ERROR_PRINT_DOHANDLE);
+  }
+  jit_state_destroy(curr);
   self->ji_state = prev;
  }
  /* Destroy any remaining L-value expressions. */

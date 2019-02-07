@@ -1094,13 +1094,55 @@ err:
 
 INTERN RETURN_TYPE FCALL
 H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
- ASSERT(JITLexer_ISKWD(self,"with"));
-#ifdef JIT_HYBRID
- (void)pwas_expression;
-#else
- (void)is_statement;
+ RETURN_TYPE result;
+#ifdef JIT_EVAL
+ DREF DeeObject *with_obj;
 #endif
- DERROR_NOTIMPLEMENTED();
+ ASSERT(JITLexer_ISKWD(self,"with"));
+ JITLexer_Yield(self);
+ if likely(self->jl_tok == '(') {
+  JITLexer_Yield(self);
+ } else {
+  syn_with_expected_lparen_after_with(self);
+  goto err;
+ }
+#ifdef JIT_EVAL
+ with_obj = JITLexer_EvalRValue(self);
+ if unlikely(!with_obj)
+    goto err;
+#else
+ result = JITLexer_SkipRValue(self);
+ if unlikely(result)
+    goto err;
+#endif
+ if likely(self->jl_tok == ')') {
+  JITLexer_Yield(self);
+ } else {
+  syn_with_expected_rparen_after_with(self);
+  goto err_with_obj;
+ }
+#ifdef JIT_EVAL
+ if (DeeObject_Enter(with_obj))
+     goto err_with_obj;
+#endif
+ result = EVAL_PRIMARY(self,pwas_expression);
+#ifdef JIT_EVAL
+ /* Always leave the with-object.
+  * WARNING: This operation may cause a secondary exception to
+  *          be thrown. - If this happens, that exception will
+  *          be dumped by exec() before returning to user-code. */
+ if (DeeObject_Leave(with_obj)) {
+  DECREF_MAYBE_LVALUE(result);
+  result = ERROR;
+ }
+ Dee_Decref(with_obj);
+#endif
+ return result;
+err_with_obj:
+#ifdef JIT_EVAL
+ Dee_Decref(with_obj);
+#endif
+err:
  return ERROR;
 }
 

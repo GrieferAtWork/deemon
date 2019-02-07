@@ -919,6 +919,7 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
 
 /* Wrapper for `JITLexer_EvalExpression()' which
  * automatically unwinds L-value expressions. */
+#define JITLexer_SkipRValue(self) JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL)
 LOCAL DREF DeeObject *FCALL
 JITLexer_EvalRValue(JITLexer *__restrict self) {
  DREF DeeObject *result;
@@ -931,6 +932,8 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 }
 
 
+#define JITLexer_SkipRValueDecl(self) \
+        JITLexer_SkipComma(self,AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,NULL)
 LOCAL DREF DeeObject *FCALL
 JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
  DREF DeeObject *result;
@@ -1034,10 +1037,11 @@ struct jit_yield_function_object {
 #define JIT_STATE_KIND_WHILE    0x0004 /* [SCOPE] While-statement (`while (local item = getitem()) { ... }') */
 #define JIT_STATE_KIND_FOREACH  0x0005 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
 #define JIT_STATE_KIND_FOREACH2 0x0006 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
-#define JIT_STATE_KIND_SKIPELSE 0x0007 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
+#define JIT_STATE_KIND_WITH     0x0007 /* [SCOPE] with-statement (`with (local x = get_value()) { ... }') */
+#define JIT_STATE_KIND_SKIPELSE 0x0008 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
                                         *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
                                         *            in which case the false-branch must be skipped (should it exist) */
-/* TODO: States for: `try', `with', `switch', `do...while' */
+/* TODO: States for: `try', `with', `switch' */
 
 
 
@@ -1078,6 +1082,9 @@ struct jit_state {
                                      * where the elements enumerated from `f_iter' go). */
             unsigned char  *f_loop; /* [1..1] Pointer to the foreach statement's loop-statement. */
         }             js_foreach2;  /* JIT_STATE_KIND_FOREACH */
+        struct {
+            DREF DeeObject *w_obj;  /* [1..1] The with-object on which `operator leave()' is invoked when the scope is left. */
+        }             js_with;      /* JIT_STATE_KIND_WITH */
     };
 };
 
@@ -1129,6 +1136,8 @@ INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size(DeeObject *__restrict un
 /* Syntax Exception handlers. */
 INTDEF ATTR_COLD int FCALL syn_if_expected_lparen_after_if(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_if_expected_rparen_after_if(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_with_expected_lparen_after_with(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_with_expected_rparen_after_with(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_for_expected_lparen_after_for(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_for_expected_rparen_after_for(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_for_expected_semi1_after_for(JITLexer *__restrict self);
