@@ -276,10 +276,10 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&repeatiter_ctor,
-                /* .tp_copy_ctor = */&repeatiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&repeatiter_init,
+                /* .tp_ctor      = */(void *)&repeatiter_ctor,
+                /* .tp_copy_ctor = */(void *)&repeatiter_copy,
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&repeatiter_init,
                 TYPE_FIXED_ALLOCATOR(RepeatIterator)
             }
         },
@@ -535,10 +535,10 @@ INTERN DeeTypeObject SeqRepeat_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&repeat_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&repeat_init,
+                /* .tp_ctor      = */(void *)&repeat_ctor,
+                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&repeat_init,
                 TYPE_FIXED_ALLOCATOR(Repeat)
             }
         },
@@ -734,10 +734,10 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&repeatitemiter_ctor,
-                /* .tp_copy_ctor = */&repeatitemiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&repeatitemiter_init,
+                /* .tp_ctor      = */(void *)&repeatitemiter_ctor,
+                /* .tp_copy_ctor = */(void *)&repeatitemiter_copy,
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&repeatitemiter_init,
                 TYPE_FIXED_ALLOCATOR(RepeatItemIterator)
             }
         },
@@ -1010,10 +1010,10 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&repeatitem_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&repeatitem_init,
+                /* .tp_ctor      = */(void *)&repeatitem_ctor,
+                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&repeatitem_init,
                 TYPE_FIXED_ALLOCATOR(RepeatItem)
             }
         },

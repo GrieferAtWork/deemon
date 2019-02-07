@@ -342,6 +342,9 @@
     <ClInclude Include="..\src\deemon\objects\seq\each.h">
       <Filter>src\deemon\objects\seq</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -828,6 +831,9 @@
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\seq\each.c">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
   </ItemGroup>

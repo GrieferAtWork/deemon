@@ -169,10 +169,10 @@ INTERN DeeTypeObject SeqTransformationIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&transiter_ctor,
-                /* .tp_copy_ctor = */&transiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&transiter_init,
+                /* .tp_ctor      = */(void *)&transiter_ctor,
+                /* .tp_copy_ctor = */(void *)&transiter_copy,
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&transiter_init,
                 TYPE_FIXED_ALLOCATOR(TransformationIterator)
             }
         },
@@ -307,8 +307,8 @@ PRIVATE struct type_nsi trans_nsi = {
             /* .nsi_delitem      = */(void *)NULL,
             /* .nsi_setitem      = */(void *)NULL,
             /* .nsi_getitem_fast = */(void *)NULL,
-            /* .nsi_getrange     = */(void *)NULL,
-            /* .nsi_getrange_n   = */(void *)NULL,
+            /* .nsi_getrange     = */(void *)NULL, /* TODO */
+            /* .nsi_getrange_n   = */(void *)NULL, /* TODO */
             /* .nsi_setrange     = */(void *)NULL,
             /* .nsi_setrange_n   = */(void *)NULL,
             /* .nsi_find         = */(void *)NULL,
@@ -362,10 +362,10 @@ INTERN DeeTypeObject SeqTransformation_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&trans_init,
+                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_any_ctor  = */(void *)&trans_init,
                 TYPE_FIXED_ALLOCATOR(Transformation)
             }
         },

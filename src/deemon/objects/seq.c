@@ -40,6 +40,7 @@
 
 #include "seq/svec.h"
 #include "seq/each.h"
+#include "seq/simpleproxy.h"
 #include "seq_functions.h"
 
 #include "../runtime/strings.h"
@@ -3417,6 +3418,19 @@ PRIVATE struct type_getset seq_getsets[] = {
           ">lists.each[0] = 8;         /* No need for expand in this case */\n"
           ">del lists.each[0];         /* No need for expand in this case */\n"
           ) },
+    { "ids", &SeqIds_New, NULL, NULL,
+      DOC("->?S?Dint\n"
+          "Returns a special proxy object for accessing the ids of sequence elements\n"
+          "This is equivalent to ${this.transform([](x) -> object.id(x))}") },
+    { "types", &SeqTypes_New, NULL, NULL,
+      DOC("->?S?Dtype\n"
+          "Returns a special proxy object for accessing the types of sequence elements\n"
+          "This is equivalent to ${this.transform([](x) -> type(x))}") },
+    { "classes", &SeqClasses_New, NULL, NULL,
+      DOC("->?S?Dtype\n"
+          "Returns a special proxy object for accessing the classes of sequence elements\n"
+          "This is equivalent to ${this.transform([](x) -> x.class)}") },
+
     /* TODO: Override this attribute as pass-though in sequence-proxy types. */
     { "isfrozen", &seq_get_isfrozen, NULL, NULL,
       DOC("->?Dbool\n"

@@ -150,6 +150,7 @@
     <ClInclude Include="..\src\deemon\objects\seq\range.h" />
     <ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
     <ClInclude Include="..\src\deemon\objects\seq\set.h" />
+    <ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h" />
     <ClInclude Include="..\src\deemon\objects\seq\smap.h" />
     <ClInclude Include="..\src\deemon\objects\seq\subrange.h" />
     <ClInclude Include="..\src\deemon\objects\seq\svec.h" />
@@ -286,6 +287,7 @@
     <ClCompile Include="..\src\deemon\objects\seq\repeat.c" />
     <ClCompile Include="..\src\deemon\objects\seq\segments.c" />
     <ClCompile Include="..\src\deemon\objects\seq\set.c" />
+    <ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c" />
     <ClCompile Include="..\src\deemon\objects\seq\smap.c" />
     <ClCompile Include="..\src\deemon\objects\seq\sort.c" />
     <ClCompile Include="..\src\deemon\objects\seq\subrange.c" />
