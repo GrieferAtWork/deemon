@@ -7999,6 +7999,27 @@ string_rematch(String *__restrict self,
 err:
  return NULL;
 }
+PRIVATE DREF DeeObject *DCALL
+string_rematches(String *__restrict self,
+                 size_t argc, DeeObject **__restrict argv) {
+ struct re_args args; size_t result;
+ char const *data_endptr;
+ if (regex_getargs_generic(self,"rematches",argc,argv,&args))
+     goto err;
+ result = DeeRegex_MatchesPtr(args.re_dataptr,
+                              args.re_datalen,
+                              args.re_patternptr,
+                              args.re_patternlen,
+                             &data_endptr,
+                              args.re_flags);
+ if unlikely(result == (size_t)-1) goto err;
+ return_bool(args.re_dataptr +
+             args.re_datalen ==
+             data_endptr);
+err:
+ return NULL;
+}
+
 
 PRIVATE DREF DeeObject *DCALL
 regex_pack_range(size_t offset,
@@ -9484,6 +9505,7 @@ INTERN struct type_method string_methods[] = {
           "The builtin regular expression API for strings spans across the following functions:\n"
           "%{table Function|Non-regex Variant|Description\n"
           "#rematch|#common|Count how many character at the start of a sub-string match a regex pattern\n"
+          "#rematches|#equal|Check that a given sub-string match the regex pattern exactly\n"
           "#refind|#find|Find the first sub-range matched by a regex pattern\n"
           "#rerfind|#rfind|Find the last sub-range matched by a regex pattern\n"
           "#reindex|#index|Same as #refind, but throws an error if not found\n"
@@ -9585,7 +9607,9 @@ INTERN struct type_method string_methods[] = {
           "%{table Example pattern|Description\n"
           "${text.relocateall(r\"\\[0]\\[1]*\")}|Locate all unicode-compliant symbol names\n"
           "${text.relocateall(r\"(?<!\\[1])\\[d]\\[1]*\")}|Locate all c-compliant integer literal ($\"12\", $\"0x12\" or $\"0x12ul\")\n"
-          "${text.relocateall(r\"(?<!\\[1])\\[u]\\[l]*(?!\\[0])\")}|Locate all words starting with an uppcase letter}\n"
+          "${text.relocateall(r\"(?<!\\[1])\\[u]\\[l]*(?!\\[0])\")}|Locate all words starting with an uppcase letter\n"
+          "${text.relocateall(r\'\"(\\.|.)*\"\')}|Locate all c-compliant string constants\n"
+          "${text.relocateall(r\"(?s)/\\*.*\\*/\")}|Locate all c-like comments}\n"
           "In order to improve performance for repetitious data, deemon's regex implementation "
           "has a minor quirk when it comes to groups containing $\"|\" to indicate multiple variants "
           "in situations where that group is repeated more than once.\n"
@@ -9650,6 +9674,14 @@ INTERN struct type_method string_methods[] = {
           "> *    is always the primary one, and checked as a whole when being\n"
           "> *    repeated */\n"
           ">print repr data.relocateall(r\"((,| f| ))+\"); /* { \",  f\" } */") },
+    { "rematches", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_rematches,
+      DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+          "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
+          "@param pattern The regular expression patterm (s.a. #rematch)\n"
+          "@param rules The regular expression rules (s.a. #rematch)\n"
+          "@throw ValueError The given @pattern is malformed\n"
+          "Check if @pattern matches the entirety of the specified range of @this string\n"
+          "This function behaves identical to ${this.rematch(...) == #this}") },
     { "refind", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_refind,
       DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
           "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
