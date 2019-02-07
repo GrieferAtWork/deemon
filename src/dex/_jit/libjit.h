@@ -340,6 +340,14 @@ JITLValueList_CopyObjects(JITLValueList *__restrict self,
                           struct objectlist *__restrict dst,
                           JITContext *__restrict context);
 
+/* Unpack `values' and assign each of the unpacked values to
+ * the proper LValue of at the same position within `self'
+ * @return:  0: Success.
+ * @return: -1: An error occurred. */
+INTDEF int DCALL
+JITLValueList_UnpackAssign(JITLValueList *__restrict self,
+                           JITContext *__restrict context,
+                           DeeObject *__restrict values);
 
 
 struct jit_small_lexer {
@@ -923,6 +931,22 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 }
 
 
+LOCAL DREF DeeObject *FCALL
+JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
+ DREF DeeObject *result;
+ result = JITLexer_EvalComma(self,
+                             AST_COMMA_NORMAL |
+                             AST_COMMA_ALLOWVARDECLS,
+                             NULL,
+                             NULL);
+ ASSERT((result == JIT_LVALUE) ==
+        (self->jl_lvalue.lv_kind != JIT_LVALUE_NONE));
+ if (result == JIT_LVALUE)
+     result = JITLexer_PackLValue(self);
+ return result;
+}
+
+
 
 
 
@@ -1002,6 +1026,7 @@ struct jit_yield_function_object {
 
 
 
+#define JIT_STATE_KIND_HASSCOPE(x) ((x) != JIT_STATE_KIND_SCOPE) /* Check if the given state kind has created a locals-scope */
 #define JIT_STATE_KIND_SCOPE    0x0000 /* Simple scope */
 #define JIT_STATE_KIND_SCOPE2   0x0001 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
 #define JIT_STATE_KIND_FOR      0x0002 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
@@ -1088,7 +1113,8 @@ INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD int DCALL err_unknown_global(DeeObject *__restrict key);
 INTDEF ATTR_COLD int DCALL err_unknown_global_str_len(char const *__restrict key, size_t keylen);
-
+INTDEF ATTR_COLD int DCALL err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
+INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object, DeeObject *__restrict unpack_iterator, size_t need_size);
 
 DECL_END
 

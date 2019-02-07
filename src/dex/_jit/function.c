@@ -931,7 +931,7 @@ PRIVATE DREF DeeObject *DCALL
 jf_hasvarkwds(JITFunction *__restrict self) {
  return_bool_(self->jf_varkwds != (size_t)-1);
 }
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 jf_getname(JITFunction *__restrict self) {
  struct jit_object_entry *ent;
  if (self->jf_selfarg == (size_t)-1)
@@ -941,11 +941,11 @@ jf_getname(JITFunction *__restrict self) {
                           ent->oe_namelen,
                           STRING_ERROR_FIGNORE);
 }
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 jf_getdoc(JITFunction *__restrict UNUSED(self)) {
  return_none;
 }
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 jf_getkwds(JITFunction *__restrict self) {
  /* XXX: Add a generic sequence proxy type for this! */
  DREF DeeObject *result; uint16_t i;
@@ -971,7 +971,7 @@ err_r_i:
  DeeTuple_FreeUninitialized(result);
  return NULL;
 }
-PRIVATE DREF DeeObject *DCALL
+INTERN DREF DeeObject *DCALL
 jf_gettext(JITFunction *__restrict self) {
  return DeeString_NewUtf8(self->jf_source_start,
                          (size_t)(self->jf_source_end - self->jf_source_start),

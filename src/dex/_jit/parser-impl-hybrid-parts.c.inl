@@ -550,7 +550,8 @@ do_normal_for_noinit:
     }
     if (!temp) {
      /* The loop- or next-expression never get executed. */
-     if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+     if (self->jl_tok != ')' &&
+         JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
          goto err_scope;
      if likely(self->jl_tok == ')') {
       JITLexer_Yield(self);

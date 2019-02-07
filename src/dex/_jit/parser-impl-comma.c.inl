@@ -695,6 +695,7 @@ done_expression:
     if unlikely(error) goto err_current;
    }
    /* Append the remaining expression to the batch. */
+   LOAD_LVALUE(current,err);
    error = objectlist_append(&expr_batch,current);
    if unlikely(error) goto err_current;
    Dee_Decref(current);
@@ -718,6 +719,7 @@ done_expression:
    /* If the caller wants to force us to package
     * everything in a multi-branch, grant that wish. */
    DREF DeeObject *merge;
+   LOAD_LVALUE(current,err);
    if (seq_type == &DeeTuple_Type) {
     merge = DeeTuple_PackSymbolic(1,current);
     if unlikely(!merge) goto err_current;

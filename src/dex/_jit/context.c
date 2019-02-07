@@ -585,6 +585,78 @@ err:
  return -1;
 }
 
+/* Unpack `values' and assign each of the unpacked values to
+ * the proper LValue of at the same position within `self'
+ * @return:  0: Success.
+ * @return: -1: An error occurred. */
+INTERN int DCALL
+JITLValueList_UnpackAssign(JITLValueList *__restrict self,
+                           JITContext *__restrict context,
+                           DeeObject *__restrict values) {
+ DREF DeeObject *iterator,*elem;
+ size_t fast_size,i = 0; int temp;
+ /* Try to make use of the fast-sequence API. */
+ fast_size = DeeFastSeq_GetSize(values);
+ if (fast_size != DEE_FASTSEQ_NOTFAST) {
+  if (self->ll_size != fast_size)
+      return err_invalid_unpack_size(values,self->ll_size,fast_size);
+  for (; i < fast_size; ++i) {
+   elem = DeeFastSeq_GetItem(values,i);
+   if unlikely(!elem) goto err;
+   temp = JITLValue_SetValue(&self->ll_list[i],
+                              context,
+                              elem);
+   Dee_Decref(elem);
+   if unlikely(temp)
+      goto err;
+  }
+  goto done;
+ }
+ if (DeeNone_Check(values)) {
+  /* Special case: `none' can be unpacked into anything. */
+  for (; i < fast_size; ++i) {
+   if unlikely(JITLValue_SetValue(&self->ll_list[i],
+                                   context,
+                                   Dee_None))
+      goto err;
+  }
+  goto done;
+ }
+ /* Fallback: Use an iterator. */
+ if ((iterator = DeeObject_IterSelf(values)) == NULL)
+      goto err;
+ for (; i < self->ll_size; ++i) {
+  elem = DeeObject_IterNext(iterator);
+  if unlikely(!ITER_ISOK(elem)) {
+   if (elem)
+       err_invalid_unpack_size(values,self->ll_size,i);
+   goto err_iter;
+  }
+  temp = JITLValue_SetValue(&self->ll_list[i],
+                             context,
+                             elem);
+  Dee_Decref(elem);
+  if unlikely(temp)
+     goto err_iter;
+ }
+ /* Check to make sure that the iterator actually ends here. */
+ elem = DeeObject_IterNext(iterator);
+ if unlikely(elem != ITER_DONE) {
+  if (elem)
+      err_invalid_unpack_iter_size(values,iterator,self->ll_size);
+  goto err_iter;
+ }
+ Dee_Decref(iterator);
+ return 0;
+done:
+ return 0;
+err_iter:
+ Dee_Decref(iterator);
+err:
+ return -1;
+}
+
+
 
 
 

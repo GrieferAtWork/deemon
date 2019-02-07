@@ -1481,7 +1481,7 @@ nomem:
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE DREF YFunction *DCALL
-yfi_get_yfunc(YFIterator *__restrict self) {
+yfi_getyfunc(YFIterator *__restrict self) {
  DREF YFunction *result;
  recursive_rwlock_read(&self->yi_lock);
  result = self->yi_func;
@@ -1494,7 +1494,7 @@ yfi_get_yfunc(YFIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DREF DeeObject *DCALL
-yfi_get_this(YFIterator *__restrict self) {
+yfi_getthis(YFIterator *__restrict self) {
  DREF DeeObject *result;
  recursive_rwlock_read(&self->yi_lock);
  result = self->yi_frame.cf_this;
@@ -1508,7 +1508,7 @@ yfi_get_this(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_get_frame(YFIterator *__restrict self) {
+yfi_getframe(YFIterator *__restrict self) {
  return DeeFrame_NewReferenceWithLock((DeeObject *)self,
                                       &self->yi_frame,
                                        DEEFRAME_FREADONLY|
@@ -1518,7 +1518,7 @@ yfi_get_frame(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF Function *DCALL
-yfi_get_func(YFIterator *__restrict self) {
+yfi_getfunc(YFIterator *__restrict self) {
  DREF Function *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
@@ -1533,7 +1533,7 @@ yfi_get_func(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeCodeObject *DCALL
-yfi_get_code(YFIterator *__restrict self) {
+yfi_getcode(YFIterator *__restrict self) {
  DREF DeeCodeObject *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
@@ -1548,7 +1548,7 @@ yfi_get_code(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_get_refs(YFIterator *__restrict self) {
+yfi_getrefs(YFIterator *__restrict self) {
  DREF DeeObject *result;
  DREF Function *func;
  recursive_rwlock_write(&self->yi_lock);
@@ -1566,7 +1566,7 @@ yfi_get_refs(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_get_kwds(YFIterator *__restrict self) {
+yfi_getkwds(YFIterator *__restrict self) {
  DREF DeeObject *result;
  DREF Function *func;
  recursive_rwlock_write(&self->yi_lock);
@@ -1585,7 +1585,7 @@ yfi_get_kwds(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_get_args(YFIterator *__restrict self) {
+yfi_getargs(YFIterator *__restrict self) {
  DREF DeeObject *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
@@ -1600,8 +1600,8 @@ yfi_get_args(YFIterator *__restrict self) {
 }
 
 PRIVATE DREF YFunction *DCALL
-yfi_getfunc(YFIterator *__restrict self,
-            char const *__restrict attr_name) {
+yfi_get_func_reference(YFIterator *__restrict self,
+                       char const *__restrict attr_name) {
  DREF YFunction *result;
  recursive_rwlock_write(&self->yi_lock);
  if unlikely(!self->yi_func) {
@@ -1616,9 +1616,9 @@ yfi_getfunc(YFIterator *__restrict self,
 }
 
 PRIVATE DREF DeeObject *DCALL
-yfi_get_name(YFIterator *__restrict self) {
+yfi_getname(YFIterator *__restrict self) {
  DREF DeeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,DeeString_STR(&str___name__));
+ func = yfi_get_func_reference(self,DeeString_STR(&str___name__));
  if unlikely(!func) goto err;
  result = yf_get_name(func);
  Dee_Decref(func);
@@ -1627,9 +1627,9 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-yfi_get_doc(YFIterator *__restrict self) {
+yfi_getdoc(YFIterator *__restrict self) {
  DREF DeeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,DeeString_STR(&str___doc__));
+ func = yfi_get_func_reference(self,DeeString_STR(&str___doc__));
  if unlikely(!func) goto err;
  result = yf_get_doc(func);
  Dee_Decref(func);
@@ -1638,9 +1638,9 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeTypeObject *DCALL
-yfi_get_type(YFIterator *__restrict self) {
+yfi_gettype(YFIterator *__restrict self) {
  DREF DeeTypeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,DeeString_STR(&str___type__));
+ func = yfi_get_func_reference(self,DeeString_STR(&str___type__));
  if unlikely(!func) goto err;
  result = yf_get_type(func);
  Dee_Decref(func);
@@ -1649,9 +1649,9 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-yfi_get_module(YFIterator *__restrict self) {
+yfi_getmodule(YFIterator *__restrict self) {
  DREF DeeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,DeeString_STR(&str___module__));
+ func = yfi_get_func_reference(self,DeeString_STR(&str___module__));
  if unlikely(!func) goto err;
  result = yf_get_module(func);
  Dee_Decref(func);
@@ -1660,9 +1660,9 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-yfi_get_operator(YFIterator *__restrict self) {
+yfi_getoperator(YFIterator *__restrict self) {
  DREF DeeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,"__operator__");
+ func = yfi_get_func_reference(self,"__operator__");
  if unlikely(!func) goto err;
  result = yf_get_operator(func);
  Dee_Decref(func);
@@ -1671,9 +1671,9 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-yfi_get_operatorname(YFIterator *__restrict self) {
+yfi_getoperatorname(YFIterator *__restrict self) {
  DREF DeeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,"__operatorname__");
+ func = yfi_get_func_reference(self,"__operatorname__");
  if unlikely(!func) goto err;
  result = yf_get_operatorname(func);
  Dee_Decref(func);
@@ -1682,9 +1682,9 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
-yfi_get_property(YFIterator *__restrict self) {
+yfi_getproperty(YFIterator *__restrict self) {
  DREF DeeObject *result; DREF YFunction *func;
- func = yfi_getfunc(self,"__property__");
+ func = yfi_get_func_reference(self,"__property__");
  if unlikely(!func) goto err;
  result = yf_get_property(func);
  Dee_Decref(func);
@@ -1697,67 +1697,68 @@ err:
 PRIVATE struct type_getset yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
     { DeeString_STR(&str_seq),
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_yfunc, NULL, NULL,
-      DOC("->?S?O\nAlias for #__yfunc__") },
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL,
+      DOC("->?S?O\n"
+          "Alias for #__yfunc__") },
 #endif /* !CONFIG_NO_THREADS */
     { "__frame__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_frame, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getframe, NULL, NULL,
       DOC("->?Dframe\n"
          "The execution stack-frame representing the current state of the iterator") },
     { "__this__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_this, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getthis, NULL, NULL,
       DOC("@throw UnboundAttribute No $this-argument available\n"
           "The $this-argument used during execution") },
     { "__yfunc__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_yfunc, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL,
       DOC("->?Ert:YieldFunction\n"
           "The underlying yield-function, describing the :function and arguments that are being executed") },
     { "__func__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_func, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getfunc, NULL, NULL,
       DOC("->?Dfunction\n"
           "The function that is being executed") },
     { "__code__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_code, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getcode, NULL, NULL,
       DOC("->?Ert:Code\n"
           "The code object that is being executed") },
     { "__refs__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_refs, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getrefs, NULL, NULL,
       DOC("->?S?O\n"
           "Returns a sequence of all of the references used by the function") },
     { "__args__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_args, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getargs, NULL, NULL,
       DOC("->?S?O\n"
-          "Returns a sequence representing the arguments passed to the function") },
+          "Returns a sequence representing the positional arguments passed to the function") },
     { DeeString_STR(&str___name__),
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_name, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getname, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
           "Alias for :function.__name__ though #__func__") },
     { DeeString_STR(&str___doc__),
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_doc, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getdoc, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
           "Alias for :function.__doc__ though #__func__") },
     { DeeString_STR(&str___kwds__),
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_kwds, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getkwds, NULL, NULL,
       DOC("->?S?Dstring\n"
           "Alias for :function.__kwds__ though #__func__") },
     { DeeString_STR(&str___type__),
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_type, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_gettype, NULL, NULL,
       DOC("->?X2?Dtype?N\n"
           "Alias for :function.__type__ though #__func__") },
     { DeeString_STR(&str___module__),
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_module, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getmodule, NULL, NULL,
       DOC("->?Dmodule\n"
           "Alias for :function.__module__ though #__func__") },
     { "__operator__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_operator, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getoperator, NULL, NULL,
       DOC("->?X2?Dint?N\n"
           "Alias for :function.__operator__ though #__func__") },
     { "__operatorname__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_operatorname, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getoperatorname, NULL, NULL,
       DOC("->?X3?Dstring?Dint?N\n"
           "Alias for :function.__operatorname__ though #__func__") },
     { "__property__",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_get_property, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getproperty, NULL, NULL,
       DOC("->?X2?Dint?N\n"
           "Alias for :function.__property__ though #__func__") },
     { NULL }

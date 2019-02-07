@@ -58,6 +58,30 @@ err_unknown_global_str_len(char const *__restrict key, size_t keylen) {
                         keylen,key);
 }
 
+INTERN ATTR_COLD int DCALL
+err_invalid_unpack_size(DeeObject *__restrict unpack_object,
+                        size_t need_size, size_t real_size) {
+ ASSERT_OBJECT(unpack_object);
+ (void)unpack_object;
+ return DeeError_Throwf(&DeeError_UnpackError,
+                        "Expected %Iu object%s when %Iu w%s given",
+                        need_size,need_size > 1 ? "s" : "",real_size,
+                        real_size == 1 ? "as" : "ere");
+}
+INTERN ATTR_COLD int DCALL
+err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
+                             DeeObject *__restrict unpack_iterator,
+                             size_t need_size) {
+ ASSERT_OBJECT(unpack_object);
+ ASSERT_OBJECT(unpack_iterator);
+ (void)unpack_object;
+ (void)unpack_iterator;
+ return DeeError_Throwf(&DeeError_UnpackError,
+                        "Expected %Iu object%s when at least %Iu w%s given",
+                        need_size,need_size > 1 ? "s" : "",need_size+1,
+                        need_size == 0 ? "as" : "ere");
+}
+
 
 DECL_END
 

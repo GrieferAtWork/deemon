@@ -36,6 +36,12 @@ typedef JITFunctionObject JITFunction;
 typedef JITYieldFunctionObject JITYieldFunction;
 typedef JITYieldFunctionIteratorObject JITYieldFunctionIterator;
 
+INTDEF DREF DeeObject *DCALL jf_getname(JITFunction *__restrict self);
+INTDEF DREF DeeObject *DCALL jf_getdoc(JITFunction *__restrict self);
+INTDEF DREF DeeObject *DCALL jf_getkwds(JITFunction *__restrict self);
+INTDEF DREF DeeObject *DCALL jf_gettext(JITFunction *__restrict self);
+
+
 #ifdef CONFIG_LITTLE_ENDIAN
 #define ENCODE2(a,b)     ((b)<<8|(a))
 #define ENCODE4(a,b,c,d) ((d)<<24|(c)<<16|(b)<<8|(a))
@@ -196,13 +202,64 @@ PRIVATE struct type_seq jy_seq = {
     /* .tp_range_set = */NULL
 };
 
+PRIVATE DREF DeeObject *DCALL
+jy_getargs(JITYieldFunction *__restrict self) {
+ size_t arg_offset = 0;
+ /* Adjust for shared arguments. */
+ if (self->jy_kw && DeeKwds_Check(self->jy_kw))
+     arg_offset = DeeKwds_SIZE(self->jy_kw);
+ if (arg_offset > self->jy_argc)
+     arg_offset = self->jy_argc;
+ return DeeRefVector_NewReadonly((DeeObject *)self,
+                                  self->jy_argc - arg_offset,
+                                  self->jy_argv + arg_offset);
+}
+
+PRIVATE DREF DeeObject *DCALL
+jy_getname(JITYieldFunction *__restrict self) {
+ return jf_getname(self->jy_func);
+}
+PRIVATE DREF DeeObject *DCALL
+jy_getdoc(JITYieldFunction *__restrict self) {
+ return jf_getdoc(self->jy_func);
+}
+PRIVATE DREF DeeObject *DCALL
+jy_getkwds(JITYieldFunction *__restrict self) {
+ return jf_getkwds(self->jy_func);
+}
+PRIVATE DREF DeeObject *DCALL
+jy_gettext(JITYieldFunction *__restrict self) {
+ return jf_gettext(self->jy_func);
+}
 
 PRIVATE struct type_getset jy_getsets[] = {
+    { "__name__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getname, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
+          "Alias for :Function.__name__ though #__func__") },
+    { "__doc__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getdoc, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
+          "Alias for :Function.__doc__ though #__func__") },
+    { "__kwds__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getkwds, NULL, NULL,
+      DOC("->?S?Dstring\n"
+          "Alias for :Function.__kwds__ though #__func__") },
+    { "__text__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_gettext, NULL, NULL,
+      DOC("->?Dstring\n"
+          "Alias for :Function.__text__ though #__func__") },
+    { "__args__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getargs, NULL, NULL,
+      DOC("->?S?O\n"
+          "Returns a sequence representing the positional arguments passed to the function") },
+    /* TODO: __refs__ */
     { NULL }
 };
 
 PRIVATE struct type_member jy_members[] = {
     TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(JITYieldFunction,jy_func),"->?GFunction"),
+    TYPE_MEMBER_FIELD_DOC("__kw__",STRUCT_OBJECT_OPT,offsetof(JITYieldFunction,jy_kw),"->?S?T2?Dstring?X2?Dint?O"),
     TYPE_MEMBER_END
 };
 
@@ -268,8 +325,8 @@ PRIVATE int DCALL
 JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
  struct jit_state *st = self->ji_state;
  unsigned char *old_pos;
- assert(st);
- assert(st != &self->ji_bstat);
+ ASSERT(st);
+ ASSERT(st != &self->ji_bstat);
  switch (st->js_kind) {
 
  case JIT_STATE_KIND_SCOPE2:
@@ -319,15 +376,57 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
   JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
   return 1;
 
+ {
+  DREF DeeObject *elem;
  case JIT_STATE_KIND_FOREACH:
-  /* TODO */
-  DERROR_NOTIMPLEMENTED();
-  goto err;
+  elem = DeeObject_IterNext(st->js_foreach.f_iter);
+  if (ITER_ISOK(elem)) {
+   /* Loop back to the start of the foreach loop. */
+   int temp;
+   temp = JITLValue_SetValue(&st->js_foreach.f_elem,
+                             &self->ji_ctx,
+                              elem);
+   Dee_Decref(elem);
+   if unlikely(temp)
+      goto err;
+   /* Check for interrupts before looping. */
+   if (DeeThread_CheckInterrupt())
+       goto err;
+   JITLexer_YieldAt(&self->ji_lex,
+                     st->js_foreach.f_loop);
+   return 1;
+  }
+  if (!elem)
+       goto err;
+  /* ITER_DONE... */
+  goto do_pop_state;
+ } break;
 
+ {
+  DREF DeeObject *elem;
  case JIT_STATE_KIND_FOREACH2:
-  /* TODO */
-  DERROR_NOTIMPLEMENTED();
-  goto err;
+  elem = DeeObject_IterNext(st->js_foreach2.f_iter);
+  if (ITER_ISOK(elem)) {
+   /* Loop back to the start of the foreach loop. */
+   int temp;
+   temp = JITLValueList_UnpackAssign(&st->js_foreach2.f_elem,
+                                     &self->ji_ctx,
+                                      elem);
+   Dee_Decref(elem);
+   if unlikely(temp)
+      goto err;
+   /* Check for interrupts before looping. */
+   if (DeeThread_CheckInterrupt())
+       goto err;
+   JITLexer_YieldAt(&self->ji_lex,
+                     st->js_foreach2.f_loop);
+   return 1;
+  }
+  if (!elem)
+       goto err;
+  /* ITER_DONE... */
+  goto do_pop_state;
+ } break;
 
  case JIT_STATE_KIND_SKIPELSE:
   /* Check for `else' and `elif' */
@@ -369,17 +468,153 @@ err:
 PRIVATE int DCALL
 JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self,
                                        bool ctl_is_break) {
- /* TODO: Search for the nearest state that can handle the loop control command,
-  *       then proceed to unwind the state stack up to that state and load the
-  *       lexer position to which the jump should be performed.
-  *       Once this is done, return `1' (but remember that in the case of `break',
-  *       the loop state entry itself must also be removed, as the target location
-  *       exists after the loop itself, meaning that the loop context will have
-  *       ended at that point)
-  */
- (void)self;
- (void)ctl_is_break;
- DERROR_NOTIMPLEMENTED();
+ /* Search for the nearest state that can handle the loop control command,
+  * then proceed to unwind the state stack up to that state and load the
+  * lexer position to which the jump should be performed.
+  * Once this is done, return `1' (but remember that in the case of `break',
+  * the loop state entry itself must also be removed, as the target location
+  * exists after the loop itself, meaning that the loop context will have
+  * ended at that point) */
+ struct jit_state *st = self->ji_state;
+ for (; st != &self->ji_bstat; st = st->js_prev) {
+  ASSERT(st);
+  switch (st->js_kind) {
+
+  case JIT_STATE_KIND_FOR:
+  case JIT_STATE_KIND_FOREACH:
+  case JIT_STATE_KIND_FOREACH2:
+   /* Unwind up until the target state. */
+   while (self->ji_state != st) {
+    struct jit_state *curr;
+    struct jit_state *prev;
+    curr = self->ji_state;
+    /* Adjust for the scopes that are lost by this jump. */
+    if (JIT_STATE_KIND_HASSCOPE(curr->js_kind))
+        JITContext_PopScope(&self->ji_ctx);
+    if (!(curr->js_flag & JIT_STATE_FLAG_SINGLE))
+        JITContext_PopScope(&self->ji_ctx);
+    prev = curr->js_prev;
+    jit_state_destroy(curr);
+    self->ji_state = prev;
+   }
+   /* Leave the scope of the loop body (the scope will
+    * be re-entered when the loop body is entered again) */
+   if (!(st->js_flag & JIT_STATE_FLAG_SINGLE)) {
+    JITContext_PopScope(&self->ji_ctx);
+    st->js_flag |= JIT_STATE_FLAG_SINGLE;
+   }
+   switch (st->js_kind) {
+   case JIT_STATE_KIND_FOR:
+    if (ctl_is_break) {
+     /*  */
+     JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
+    } else {
+     DREF DeeObject *value;
+     if (st->js_for.f_next) {
+      /* Evaluate the next-expression */
+      JITLexer_YieldAt(&self->ji_lex,st->js_for.f_next);
+      value = JITLexer_EvalExpression(&self->ji_lex,JITLEXER_EVAL_FNORMAL);
+      if unlikely(!value)
+         goto err;
+      if (value == JIT_LVALUE) {
+       JITLValue_Fini(&self->ji_lex.jl_lvalue);
+       JITLValue_Init(&self->ji_lex.jl_lvalue);
+      } else {
+       Dee_Decref(value);
+      }
+     }
+     if (st->js_for.f_cond) {
+      int temp;
+      /* Evaluate the cond-expression */
+      JITLexer_YieldAt(&self->ji_lex,st->js_for.f_cond);
+      value = JITLexer_EvalRValue(&self->ji_lex);
+      if unlikely(!value)
+         goto err;
+      temp = DeeObject_Bool(value);
+      Dee_Decref(value);
+      if unlikely(temp < 0)
+         goto err;
+      if (!temp) {
+       JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
+       goto do_break_loop; /* Break out of the loop */
+      }
+     }
+     /* Check for interrupts before jumping back. */
+     if (DeeThread_CheckInterrupt())
+         goto err;
+     /* Jump to the start of the loop block. */
+     JITLexer_YieldAt(&self->ji_lex,st->js_for.f_loop);
+    }
+    break;
+   case JIT_STATE_KIND_FOREACH:
+    JITLexer_YieldAt(&self->ji_lex,st->js_foreach.f_loop);
+    if (!ctl_is_break) {
+     DREF DeeObject *elem;
+     int temp;
+     /* Load the next item */
+     elem = DeeObject_IterNext(st->js_foreach.f_iter);
+     if (!ITER_ISOK(elem)) {
+      if unlikely(!elem)
+         goto err;
+      /* The iterator has been exhausted. */
+      goto do_break_loop;
+     }
+     /* Store the new iterator element. */
+     temp = JITLValue_SetValue(&st->js_foreach.f_elem,
+                               &self->ji_ctx,
+                                elem);
+     Dee_Decref(elem);
+     if unlikely(temp)
+        goto err;
+     /* Check for interrupts before jumping back. */
+     if (DeeThread_CheckInterrupt())
+         goto err;
+    }
+    break;
+   case JIT_STATE_KIND_FOREACH2:
+    JITLexer_YieldAt(&self->ji_lex,st->js_foreach2.f_loop);
+    if (!ctl_is_break) {
+     DREF DeeObject *elem;
+     int temp;
+     /* Load the next item */
+     elem = DeeObject_IterNext(st->js_foreach2.f_iter);
+     if (!ITER_ISOK(elem)) {
+      if unlikely(!elem)
+         goto err;
+      /* The iterator has been exhausted. */
+      goto do_break_loop;
+     }
+     /* Unpack + store the new iterator element. */
+     temp = JITLValueList_UnpackAssign(&st->js_foreach2.f_elem,
+                                       &self->ji_ctx,
+                                        elem);
+     Dee_Decref(elem);
+     if unlikely(temp)
+        goto err;
+     /* Check for interrupts before jumping back. */
+     if (DeeThread_CheckInterrupt())
+         goto err;
+    }
+    break;
+   default: __builtin_unreachable();
+   }
+   if (ctl_is_break) {
+do_break_loop:
+    /* Jump to the end of the loop block, and pop the loop itself. */
+    if unlikely(JITLexer_SkipStatement(&self->ji_lex))
+       goto err;
+    ASSERT(JIT_STATE_KIND_HASSCOPE(st->js_kind));
+    JITContext_PopScope(&self->ji_ctx);
+    self->ji_state = st->js_prev;
+    jit_state_destroy(st);
+   }
+   return 1;
+
+  default: break;
+  }
+ }
+ return 0;
+err:
  return -1;
 }
 
@@ -393,9 +628,6 @@ ji_next(JITYieldFunctionIterator *__restrict self) {
  self->ji_ctx.jc_except = ts->t_exceptsz;
  self->ji_ctx.jc_flags  = JITCONTEXT_FNORMAL;
 
- /* TODO: Just parser and context stack for yield function invocation.
-  *    -> The context stack here must be allocated on the heap and be
-  *       representative of how and when scopes need to be torn down. */
 parse_again:
  /* Pop all single-statement states, allowing for loop blocks to re-evaluate
   * their context and potentially jump back to continue execution at a prior
@@ -438,14 +670,17 @@ parse_again_same_statement:
   goto parse_again_same_statement;
  }
 
+ {
+  struct jit_state *st;
  case '}':
-  if (self->ji_state->js_flag & JIT_STATE_FLAG_SINGLE) {
+  st = self->ji_state;
+  if (st->js_flag & JIT_STATE_FLAG_SINGLE) {
    DeeError_Throwf(&DeeError_SyntaxError,
                    "Expected statement before `}' within `yield'-function");
    self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
    goto err;
   }
-  if (self->ji_state == &self->ji_bstat) {
+  if (st == &self->ji_bstat) {
    DeeError_Throwf(&DeeError_SyntaxError,
                    "Unmatched `}' encountered within `yield'-function");
    self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
@@ -453,13 +688,18 @@ parse_again_same_statement:
   }
   /* Pop the additional block scope. */
   JITContext_PopScope(&self->ji_ctx);
-  error = JITYieldFunctionIterator_PopState(self);
-  if unlikely(error < 0)
-     goto err;
-  if (error)
-      goto parse_again_same_statement;
+  if (st->js_kind != JIT_STATE_KIND_SCOPE) {
+   st->js_flag |= JIT_STATE_FLAG_SINGLE;
+  } else {
+   error = JITYieldFunctionIterator_PopState(self);
+   if unlikely(error < 0)
+      goto err;
+   if (error)
+       goto parse_again_same_statement;
+  }
   JITLexer_Yield(&self->ji_lex);
   goto parse_again;
+ }
 
  {
   char const *tok_begin;
@@ -484,13 +724,14 @@ parse_again_same_statement:
                       self->ji_lex.jl_tokstart);
      goto err;
     }
-    value = JITLexer_EvalRValue(&self->ji_lex);
+    JITContext_PushScope(&self->ji_ctx);
+    value = JITLexer_EvalRValueDecl(&self->ji_lex);
     if unlikely(!value)
-       goto err;
+       goto err_scope;
     temp = DeeObject_Bool(value);
     Dee_Decref(value);
     if unlikely(temp < 0)
-       goto err;
+       goto err_scope;
     if likely(self->ji_lex.jl_tok == ')') {
      JITLexer_Yield(&self->ji_lex);
     } else {
@@ -498,14 +739,14 @@ parse_again_same_statement:
                      "Expected `)' after `if', but got `%$s'",
                      (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
                       self->ji_lex.jl_tokstart);
-     goto err;
+     goto err_scope;
     }
     if (temp) {
      /* Choose the true-branch (push a skip-else state). */
      struct jit_state *st;
      st = jit_state_alloc();
      if unlikely(!st)
-        goto err;
+        goto err_scope;
      st->js_kind = JIT_STATE_KIND_SKIPELSE;
      st->js_flag = JIT_STATE_FLAG_SINGLE;
      st->js_prev = self->ji_state;
@@ -514,21 +755,239 @@ parse_again_same_statement:
     }
     /* Choose the false-branch (should it exist) */
     if unlikely(JITLexer_SkipStatement(&self->ji_lex))
-       goto err;
+       goto err_scope;
     if (self->ji_lex.jl_tok == JIT_KEYWORD &&
         self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
      uint32_t name;
      name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
      if (name == ENCODE4('e','l','s','e')) {
       JITLexer_Yield(&self->ji_lex);
-      goto parse_again_same_statement;
+      goto parse_else_after_if;
      } else if (name == ENCODE4('e','l','i','f')) {
       self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
+parse_else_after_if:
+      if (self->ji_ctx.jc_locals.otp_ind >= 2) {
+       --self->ji_ctx.jc_locals.otp_ind;
+      } else {
+       /* Must push a simple scope state to keep alive a declaration made within
+        * the condition of the if-branch. */
+       struct jit_state *st;
+       st = jit_state_alloc();
+       if unlikely(!st)
+          goto err_scope;
+       st->js_kind = JIT_STATE_KIND_SCOPE2;
+       st->js_flag = JIT_STATE_FLAG_SINGLE;
+       st->js_prev = self->ji_state;
+       self->ji_state = st;
+      }
       goto parse_again_same_statement;
      }
     }
+    JITContext_PopScope(&self->ji_ctx);
     /* No live branch existed within the if-statement (move on to execute the next statement) */
     goto parse_again;
+   }
+   break;
+
+  case 3:
+#if 0
+   if (tok_begin[0] == 't' &&
+       tok_begin[1] == 'r' &&
+       tok_begin[2] == 'y') {
+    /* TODO */
+   }
+#endif
+   if (tok_begin[0] == 'f' &&
+       tok_begin[1] == 'o' &&
+       tok_begin[2] == 'r') {
+    struct jit_state *st;
+    JITLexer_Yield(&self->ji_lex);
+    if likely(self->ji_lex.jl_tok == '(') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `(' after `for', but got `%$s'",
+                    (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                     self->ji_lex.jl_tokstart);
+     goto err;
+    }
+    JITContext_PushScope(&self->ji_ctx);
+    /* Check for special case: there is no initializer! */
+    if (self->ji_lex.jl_tok == ';')
+        goto do_normal_for_noinit;
+    result = JITLexer_EvalComma(&self->ji_lex,
+                                AST_COMMA_NORMAL |
+                                AST_COMMA_ALLOWVARDECLS,
+                                NULL,
+                                NULL);
+    if unlikely(!result)
+       goto err_scope;
+    if (self->ji_lex.jl_tok == ':') {
+     JITLValue elem_lvalue;
+     DREF DeeObject *iter;
+     int temp;
+     /* TODO: Multiple targets (`for (local x,y,z: triples)') */
+     /* Initialize the foreach element target. */
+     if (result == JIT_LVALUE) {
+      elem_lvalue = self->ji_lex.jl_lvalue;
+      JITLValue_Init(&self->ji_lex.jl_lvalue);
+     } else {
+      elem_lvalue.lv_kind   = JIT_LVALUE_RVALUE;
+      elem_lvalue.lv_rvalue = result; /* Inherit reference */
+     }
+     JITLexer_Yield(&self->ji_lex);
+     /* Parse the sequence expression. */
+     result = JITLexer_EvalRValue(&self->ji_lex);
+     if unlikely(!result) {
+err_elem_lvalue_scope:
+      JITLValue_Fini(&elem_lvalue);
+      goto err_scope;
+     }
+     if likely(self->ji_lex.jl_tok == ')') {
+      JITLexer_Yield(&self->ji_lex);
+     } else {
+      DeeError_Throwf(&DeeError_SyntaxError,
+                      "Expected `)' after `for(...: ...', but got `%$s'",
+                      (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                       self->ji_lex.jl_tokstart);
+      Dee_Decref(result);
+      goto err_elem_lvalue_scope;
+     }
+     iter = DeeObject_IterSelf(result);
+     Dee_Decref(result);
+     if unlikely(!iter)
+        goto err_elem_lvalue_scope;
+     /* We're now where the loop starts. */
+     /* -> Load the first iterator element. */
+     result = DeeObject_IterNext(iter);
+     if (!ITER_ISOK(result)) {
+      /* Iterator exhausted, or error. */
+      Dee_Decref(iter);
+      JITLValue_Fini(&elem_lvalue);
+      JITContext_PopScope(&self->ji_ctx);
+      if unlikely(!result)
+         goto err;
+      /* Skip the body of the for-statement */
+      if (JITLexer_SkipStatement(&self->ji_lex))
+          goto err;
+      /* Parse the next statement. */
+      goto parse_again;
+     }
+     /* Assign the first loop element to the iterator element. */
+     temp = JITLValue_SetValue(&elem_lvalue,
+                               &self->ji_ctx,
+                                result);
+     Dee_Decref(result);
+     if unlikely(temp) {
+err_iter_scope_lvalue:
+      Dee_Decref(iter);
+      goto err_elem_lvalue_scope;
+     }
+     /* Allocate the state used to track this foreach loop. */
+     st = jit_state_alloc();
+     if unlikely(!st)
+        goto err_iter_scope_lvalue;
+     st->js_flag = JIT_STATE_FLAG_SINGLE;
+     st->js_kind = JIT_STATE_KIND_FOREACH;
+     st->js_foreach.f_elem = elem_lvalue; /* Inherit reference */
+     st->js_foreach.f_iter = iter;        /* Inherit reference */
+     st->js_foreach.f_loop = self->ji_lex.jl_tokstart;
+    } else {
+     unsigned char *cond_start;
+     unsigned char *next_start;
+     /* Regular for statement. */
+     /* Start by getting rid of the initializer value (we no longer need that one). */
+     if (result == JIT_LVALUE) {
+      JITLValue_Fini(&self->ji_lex.jl_lvalue);
+      JITLValue_Init(&self->ji_lex.jl_lvalue);
+     } else {
+      Dee_Decref(result);
+     }
+     if (self->ji_lex.jl_tok == ';') {
+do_normal_for_noinit:
+      JITLexer_Yield(&self->ji_lex);
+     } else {
+      DeeError_Throwf(&DeeError_SyntaxError,
+                      "Expected `;' after `for', but got `%$s'",
+                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                      self->ji_lex.jl_tokstart);
+      goto err_scope;
+     }
+     cond_start = next_start = NULL;
+     if (self->ji_lex.jl_tok == ';') {
+      JITLexer_Yield(&self->ji_lex);
+     } else {
+      DREF DeeObject *value; int temp;
+      /* Parse the initial condition expression,
+       * and check if the loop is even entered. */
+      cond_start = self->ji_lex.jl_tokstart;
+      value = JITLexer_EvalRValue(&self->ji_lex);
+      if unlikely(!value)
+         goto err_scope;
+      temp = DeeObject_Bool(value);
+      Dee_Decref(value);
+      if unlikely(temp < 0)
+         goto err_scope;
+      if (self->ji_lex.jl_tok == ';') {
+       JITLexer_Yield(&self->ji_lex);
+      } else {
+       DeeError_Throwf(&DeeError_SyntaxError,
+                       "Expected a second `;' after `for', but got `%$s'",
+                       (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                        self->ji_lex.jl_tokstart);
+       goto err_scope;
+      }
+      if (!temp) {
+       /* The loop is never entered! (skip the entire statement) */
+       JITContext_PopScope(&self->ji_ctx);
+       if (self->ji_lex.jl_tok != ')' &&
+           JITLexer_SkipExpression(&self->ji_lex,JITLEXER_EVAL_FNORMAL))
+           goto err;
+       if likely(self->ji_lex.jl_tok == ')') {
+        JITLexer_Yield(&self->ji_lex);
+       } else {
+err_missing_rparen_after_for:
+        DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `)' after `for(...;...;...', but got `%$s'",
+                        (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                         self->ji_lex.jl_tokstart);
+        goto err_scope;
+       }
+       /* Skip the body of the for-statement */
+       if (JITLexer_SkipStatement(&self->ji_lex))
+           goto err;
+       /* Parse the next statement. */
+       goto parse_again;
+      }
+     }
+     /* Check if there is a next-expression, and parse it if there is one. */
+     if (self->ji_lex.jl_tok == ')') {
+      JITLexer_Yield(&self->ji_lex);
+     } else {
+      next_start = self->ji_lex.jl_tokstart;
+      if (JITLexer_SkipExpression(&self->ji_lex,JITLEXER_EVAL_FNORMAL))
+          goto err_scope;
+      if likely(self->ji_lex.jl_tok == ')') {
+       JITLexer_Yield(&self->ji_lex);
+      } else {
+       goto err_missing_rparen_after_for;
+      }
+     }
+
+     /* Allocate the state used to track this for-loop. */
+     st = jit_state_alloc();
+     if unlikely(!st)
+        goto err_scope;
+     st->js_flag = JIT_STATE_FLAG_SINGLE;
+     st->js_kind = JIT_STATE_KIND_FOR;
+     st->js_for.f_cond = cond_start;
+     st->js_for.f_next = next_start;
+     st->js_for.f_loop = self->ji_lex.jl_tokstart;
+    }
+    /* Push the newly created state, and continue parsing the current statement. */
+    st->js_prev = self->ji_state;
+    self->ji_state = st;
+    goto parse_again_same_statement;
    }
    break;
 
@@ -551,12 +1010,146 @@ parse_again_same_statement:
     }
     goto got_yield_value;
    }
+#if 0 /* TODO */
+   if (name == ENCODE4('w','h','i','l') &&
+       *(uint8_t *)(tok_begin + 4) == 'e') {
+    struct jit_state *st;
+    unsigned char *cond_start;
+    JITLexer_Yield(&self->ji_lex);
+    if likely(self->ji_lex.jl_tok == '(') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `(' after `while', but got `%$s'",
+                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                      self->ji_lex.jl_tokstart);
+     goto err;
+    }
+    /* Evaluate the while-condition for the first time. */
+    JITContext_PushScope(&self->ji_ctx);
+
+   }
+#endif
+   break;
+
+  case 6:
+   name = UNALIGNED_GET32((uint32_t *)tok_begin);
+#if 0 /* TODO */
+   if (name == ENCODE4('s','w','i','t') &&
+       UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c','h')) {
+    DERROR_NOTIMPLEMENTED();
+    goto err;
+   }
+#endif
+   break;
+
+  case 7:
+   name = UNALIGNED_GET32((uint32_t *)tok_begin);
+   if (name == ENCODE4('f','o','r','e') &&
+       UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a','c') &&
+       *(uint8_t *)(tok_begin + 6) == 'h') {
+    struct jit_state *st; int temp;
+    JITLValue elem_lvalue;
+    DREF DeeObject *iter;
+    JITLexer_Yield(&self->ji_lex);
+    if likely(self->ji_lex.jl_tok == '(') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `(' after `foreach', but got `%$s'",
+                    (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                     self->ji_lex.jl_tokstart);
+     goto err;
+    }
+    JITContext_PushScope(&self->ji_ctx);
+    result = JITLexer_EvalComma(&self->ji_lex,
+                                AST_COMMA_NORMAL |
+                                AST_COMMA_ALLOWVARDECLS,
+                                NULL,
+                                NULL);
+    if unlikely(!result)
+       goto err_scope;
+    if (self->ji_lex.jl_tok == ':') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `:' after `foreach(...', but got `%$s'",
+                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                      self->ji_lex.jl_tokstart);
+    }
+    /* TODO: Multiple targets (`for (local x,y,z: triples)') */
+    /* Initialize the foreach element target. */
+    if (result == JIT_LVALUE) {
+     elem_lvalue = self->ji_lex.jl_lvalue;
+     JITLValue_Init(&self->ji_lex.jl_lvalue);
+    } else {
+     elem_lvalue.lv_kind   = JIT_LVALUE_RVALUE;
+     elem_lvalue.lv_rvalue = result; /* Inherit reference */
+    }
+    JITLexer_Yield(&self->ji_lex);
+    /* Parse the sequence expression. */
+    iter = JITLexer_EvalRValue(&self->ji_lex);
+    if unlikely(!iter) {
+err_elem_lvalue_scope_2:
+     JITLValue_Fini(&elem_lvalue);
+     goto err_scope;
+    }
+    if likely(self->ji_lex.jl_tok == ')') {
+     JITLexer_Yield(&self->ji_lex);
+    } else {
+     DeeError_Throwf(&DeeError_SyntaxError,
+                     "Expected `)' after `foreach(...: ...', but got `%$s'",
+                     (size_t)(self->ji_lex.jl_tokend - self->ji_lex.jl_tokstart),
+                      self->ji_lex.jl_tokstart);
+     Dee_Decref(result);
+     goto err_elem_lvalue_scope_2;
+    }
+    /* We're now where the loop starts. */
+    /* -> Load the first iterator element. */
+    result = DeeObject_IterNext(iter);
+    if (!ITER_ISOK(result)) {
+     /* Iterator exhausted, or error. */
+     Dee_Decref(iter);
+     JITLValue_Fini(&elem_lvalue);
+     JITContext_PopScope(&self->ji_ctx);
+     if unlikely(!result)
+        goto err;
+     /* Skip the body of the for-statement */
+     if (JITLexer_SkipStatement(&self->ji_lex))
+         goto err;
+     /* Parse the next statement. */
+     goto parse_again;
+    }
+    /* Assign the first loop element to the iterator element. */
+    temp = JITLValue_SetValue(&elem_lvalue,
+                              &self->ji_ctx,
+                               result);
+    Dee_Decref(result);
+    if unlikely(temp) {
+err_iter_scope_lvalue_2:
+     Dee_Decref(iter);
+     goto err_elem_lvalue_scope_2;
+    }
+    /* Allocate the state used to track this foreach loop. */
+    st = jit_state_alloc();
+    if unlikely(!st)
+       goto err_iter_scope_lvalue_2;
+    st->js_flag = JIT_STATE_FLAG_SINGLE;
+    st->js_kind = JIT_STATE_KIND_FOREACH;
+    st->js_foreach.f_elem = elem_lvalue; /* Inherit reference */
+    st->js_foreach.f_iter = iter;        /* Inherit reference */
+    st->js_foreach.f_loop = self->ji_lex.jl_tokstart;
+    /* Push the newly created state, and continue parsing the current statement. */
+    st->js_prev = self->ji_state;
+    self->ji_state = st;
+    goto parse_again_same_statement;
+   }
    break;
 
   default: break;
   }
   goto parse_generic_statement;
- }
+ } break;
 
  default:
 parse_generic_statement:
@@ -643,8 +1236,16 @@ handle_error:
 done:
  recursive_rwlock_endwrite(&self->ji_lock);
  return result;
+err_scope:
+ JITContext_PopScope(&self->ji_ctx);
+ goto err;
 err_r:
- Dee_Decref(result);
+ if (result == JIT_LVALUE) {
+  JITLValue_Fini(&self->ji_lex.jl_lvalue);
+  JITLValue_Init(&self->ji_lex.jl_lvalue);
+ } else {
+  Dee_Decref(result);
+ }
  goto err;
 }
 
@@ -654,8 +1255,12 @@ PRIVATE void DCALL
 ji_fini(JITYieldFunctionIterator *__restrict self) {
  JITFunctionObject *jf = self->ji_func->jy_func;
  ASSERT(!jf->jf_globals || self->ji_ctx.jc_globals == jf->jf_globals);
- while (self->ji_state != &self->ji_bstat)
-     jit_state_destroy(self->ji_state);
+ while (self->ji_state != &self->ji_bstat) {
+  struct jit_state *prev;
+  prev = self->ji_state->js_prev;
+  jit_state_destroy(self->ji_state);
+  self->ji_state = prev;
+ }
  /* Destroy any remaining L-value expressions. */
  JITLValue_Fini(&self->ji_lex.jl_lvalue);
  /* Pop remaining scopes. */
@@ -677,6 +1282,7 @@ PRIVATE void DCALL
 ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
  JITFunctionObject *jf = self->ji_func->jy_func;
  JITObjectTable *tab;
+ recursive_rwlock_read(&self->ji_lock);
  ASSERT(!jf->jf_globals || self->ji_ctx.jc_globals == jf->jf_globals);
  /* Destroy any remaining L-value expressions. */
  JITLValue_Visit(&self->ji_lex.jl_lvalue,proc,arg);
@@ -692,14 +1298,73 @@ ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
  if (self->ji_ctx.jc_globals != jf->jf_globals)
      Dee_Visit(self->ji_ctx.jc_globals);
  Dee_Visit(self->ji_func);
+ recursive_rwlock_endread(&self->ji_lock);
 }
 
+PRIVATE DREF JITFunction *DCALL
+ji_getfunc(JITYieldFunctionIterator *__restrict self) {
+ return_reference_(self->ji_func->jy_func);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ji_getargs(JITYieldFunctionIterator *__restrict self) {
+ return jy_getargs(self->ji_func);
+}
+
+PRIVATE DREF DeeObject *DCALL
+ji_getname(JITYieldFunctionIterator *__restrict self) {
+ return jf_getname(self->ji_func->jy_func);
+}
+PRIVATE DREF DeeObject *DCALL
+ji_getdoc(JITYieldFunctionIterator *__restrict self) {
+ return jf_getdoc(self->ji_func->jy_func);
+}
+PRIVATE DREF DeeObject *DCALL
+ji_getkwds(JITYieldFunctionIterator *__restrict self) {
+ return jf_getkwds(self->ji_func->jy_func);
+}
+PRIVATE DREF DeeObject *DCALL
+ji_gettext(JITYieldFunctionIterator *__restrict self) {
+ return jf_gettext(self->ji_func->jy_func);
+}
+
+
 PRIVATE struct type_getset ji_getsets[] = {
+    { "__func__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getfunc, NULL, NULL,
+      DOC("->?GFunction\n"
+          "The JIT function that is being executed") },
+    { "__args__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getargs, NULL, NULL,
+      DOC("->?S?O\n"
+          "Returns a sequence representing the positional arguments passed to the function") },
+    { "__name__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getname, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
+          "Alias for :Function.__name__ though #__func__") },
+    { "__doc__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getdoc, NULL, NULL,
+      DOC("->?X2?Dstring?N\n"
+          "Alias for :Function.__doc__ though #__func__") },
+    { "__kwds__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getkwds, NULL, NULL,
+      DOC("->?S?Dstring\n"
+          "Alias for :Function.__kwds__ though #__func__") },
+    { "__text__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_gettext, NULL, NULL,
+      DOC("->?Dstring\n"
+          "Alias for :Function.__text__ though #__func__") },
+    /* TODO: __refs__ */
     { NULL }
 };
 
 PRIVATE struct type_member ji_members[] = {
-    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(JITYieldFunctionIterator,ji_func),"->?GYieldFunction"),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(JITYieldFunctionIterator,ji_func),
+                          "->?GYieldFunction\n"
+                          "Alias for #__yfunc__"),
+    TYPE_MEMBER_FIELD_DOC("__yfunc__",STRUCT_OBJECT,offsetof(JITYieldFunctionIterator,ji_func),
+                          "->?GYieldFunction\n"
+                          "The underlying yield-function"),
     TYPE_MEMBER_END
 };
 

@@ -4836,21 +4836,23 @@ PUBLIC int
  for (; i < objc; ++i) {
   elem = DeeObject_IterNext(iterator);
   if unlikely(!ITER_ISOK(elem)) {
-   if (elem) err_invalid_unpack_size(self,objc,i);
-   Dee_Decref(iterator);
-   goto err;
+   if (elem)
+       err_invalid_unpack_size(self,objc,i);
+   goto err_iter;
   }
   objv[i] = elem; /* Inherit reference. */
  }
  /* Check to make sure that the iterator actually ends here. */
  elem = DeeObject_IterNext(iterator);
  if unlikely(elem != ITER_DONE) {
-  if (elem) err_invalid_unpack_iter_size(self,iterator,objc);
-  Dee_Decref(iterator);
-  goto err;
+  if (elem)
+      err_invalid_unpack_iter_size(self,iterator,objc);
+  goto err_iter;
  }
  Dee_Decref(iterator);
  return 0;
+err_iter:
+ Dee_Decref(iterator);
 err:
  while (i--) Dee_Decref(objv[i]);
  return -1;
