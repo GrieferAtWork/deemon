@@ -501,6 +501,30 @@ err:
  return -1;
 }
 
+
+LOCAL uniflag_t DCALL
+get_regex_trait(/*utf-32*/uint32_t name) {
+ uniflag_t result;
+ switch (name) {
+#define REGEX_TRAIT_NAMES  "pasnlutcdD01"
+ case 'p': result = UNICODE_FPRINT; break;   /* The character is printable, or SPC (` '). */
+ case 'a': result = UNICODE_FALPHA; break;   /* The character is alphabetic. */
+ case 's': result = UNICODE_FSPACE; break;   /* The character is a space-character. */
+ case 'n': result = UNICODE_FLF; break;      /* Line-feed/line-break character. */
+ case 'l': result = UNICODE_FLOWER; break;   /* Lower-case. */
+ case 'u': result = UNICODE_FUPPER; break;   /* Upper-case. */
+ case 't': result = UNICODE_FTITLE; break;   /* Title-case. */
+ case 'c': result = UNICODE_FCNTRL; break;   /* Control character. */
+ case 'D': result = UNICODE_FDIGIT; break;   /* The character is a digit. e.g.: `²' (sqare; `ut_digit' is `2') */
+ case 'd': result = UNICODE_FDECIMAL; break; /* The character is a decimal. e.g: `5' (ascii; `ut_digit' is `5') */
+ case '0': result = UNICODE_FSYMSTRT; break; /* The character can be used as the start of an identifier. */
+ case '1': result = UNICODE_FSYMCONT; break; /* The character can be used to continue an identifier. */
+ default: result = 0; break; /* Unrecognized. */
+ }
+ return result;
+}
+
+
 /* @param: pditer: [IN]  A pointer to the starting address of input data
  *                 [OUT][ON_SUCCESS] Updated to point to the end of matched data.
  *                 [OUT][ON_FAILURE] Undefined
@@ -974,6 +998,83 @@ has_infinite_submatch:
   switch (ch) {
    uniflag_t mask;
    uniflag_t flag;
+
+  {
+   bool negate;
+   uniflag_t temp;
+  case '[':
+   /* USAGE: r"\[TRAITS]"          Match characters implementing all of TRAITS
+    * USAGE: r"\[^TRAITS]"         Match characters implementing none of TRAITS
+    * USAGE: r"\[+TRAITS]"         Match characters implementing any of TRAITS
+    * USAGE: r"\[TRAITS1-TRAITS2]" Match characters implementing all of TRAITS1, but none of TRAITS2 */
+
+   /* Trait-based matching rules. */
+   ch = utf8_readchar((char const **)&piter,pend);
+   if (ch == '+') {
+    /*  */
+    flag = 0;
+next_anyflag_ch:
+    temp = get_regex_trait(ch);
+    if (!temp)
+        goto err_unknown_trait_char;
+    flag |= temp;
+    ch = utf8_readchar((char const **)&piter,pend);
+    if (!ch) goto err_missing_rbracket;
+    if (ch != ']') goto next_anyflag_ch;
+    piter = parse_match_count(piter,pend,&match);
+    if unlikely(!piter) goto err;
+    /* Match any. */
+    while (match_count < match.mc_max) {
+     char *prev_diter;
+     CHECK_NONGREEDY_SUFFIX();
+     if (diter >= dend) break;
+     prev_diter = diter;
+     data_ch = utf8_readchar((char const **)&diter,dend);
+     if ((DeeUni_Flags(data_ch) & flag) == 0) { diter = prev_diter; break; }
+     ++match_count;
+     ++match_length;
+    }
+    goto check_match;
+   }
+   negate = ch == '^';
+   if (negate)
+       ch = utf8_readchar((char const **)&piter,pend);
+   mask = flag = 0;
+next_flag_ch:
+   temp = get_regex_trait(ch);
+   if (!temp) {
+err_unknown_trait_char:
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Unknown character trait character `%I32c' "
+                    "(Must be one of \"" REGEX_TRAIT_NAMES "\")");
+    goto err;
+   }
+   flag |= temp;
+   ch = utf8_readchar((char const **)&piter,pend);
+   if (ch && ch != '-' && ch != ']')
+       goto next_flag_ch;
+   if (negate)
+       flag = ~flag;
+   mask = flag;
+   if (ch == '-') {
+next_mask_ch:
+    ch = utf8_readchar((char const **)&piter,pend);
+    temp = get_regex_trait(ch);
+    if (!temp)
+         goto err_unknown_trait_char;
+    flag &= ~temp; /* Disallow in flags. */
+    mask |=  temp; /* Include in mask. */
+    if (ch && ch != ']')
+        goto next_mask_ch;
+   }
+   if (ch != ']') {
+err_missing_rbracket:
+    DeeError_Throwf(&DeeError_ValueError,
+                    "Missing `]' after `\\[' in regular expression");
+    goto err;
+   }
+   goto match_unicode_trait;
+  }
 
   case 'd':
    mask = UNICODE_FDIGIT;
