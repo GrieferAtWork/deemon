@@ -30,6 +30,8 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
+#include "../../runtime/strings.h"
+
 DECL_BEGIN
 
 
@@ -1407,7 +1409,7 @@ delete_bool_before_jft:
                     (code_size_t)(iiter - iter));
     *iter = ASM_BOOL ^ (must_invert ? 1 : 0);
     SET_RESULTF(iter,"Flatten boolean logic repetition to a single `%s'",
-                must_invert ? "not" : "bool");
+                must_invert ? "not" : DeeString_STR(&str_bool));
    }
 done_opt_bool:
    iter = iiter;
@@ -2548,7 +2550,8 @@ delete_symbol_store:
     ASSERT(next_stacksz == stacksz-1);
     iter[0] = ASM_POP;
     SET_RESULTF(iter,"Remove unused store to %s %I16X",
-               (opcode & 0xff) == ASM_POP_LOCAL ? "local" : "static",
+               (opcode & 0xff) == ASM_POP_LOCAL ? DeeString_STR(&str_local)
+                                                : DeeString_STR(&str_static),
                 pop_imma);
     validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin),stacksz);
     validate_stack_depth((code_addr_t)((iter + 1) - sc_main.sec_begin),stacksz - 1);

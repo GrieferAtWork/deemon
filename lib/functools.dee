@@ -60,7 +60,7 @@ function identity(key) {
 }
 
 @@@return A key function that is the combination of all given @keys
-@@Construct and return a key function which, when executed, transforms the given object using all of the given @keys functions in reverse order, meaning that the last function is executed first,  and the return value of the first function then propagated as key value
+@@Construct and return a key function which, when executed, transforms the given object using all of the given @keys functions in reverse order, meaning that the last function is executed first, while the return value of the first function is eventually propagated as the actual key value
 function keycombine(keys...: callable): callable {
 	if (#keys == 1)
 		return keys[0];

@@ -41,6 +41,7 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/util/cache.h>
 
+#include "../../runtime/strings.h"
 #include "../../runtime/runtime_error.h"
 
 #include <string.h>
@@ -225,7 +226,7 @@ INTERN struct type_getset compiler_getsets[] = {
       DOC("->?ARootScope?Ert:Compiler\n"
           "Get the root-scope active within @this compiler\n"
           "Note that this scope is fixed and cannot be changed") },
-    { "module",
+    { DeeString_STR(&str_module),
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_module, NULL, NULL,
       DOC("->?Dmodule\n"
           "Returns the module being constructed by @this compiler\n"
@@ -941,8 +942,9 @@ parse_conditional_flags(char const *__restrict flags,
    ++next_flag;
   }
   if (flag_length) {
-#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags,x,COMPILER_STRLEN(x)) == 0)
-   /**/ if (IS_FLAG("bool"))     *presult |= AST_FCOND_BOOL;
+#define IS_FLAG(x)       (flag_length == COMPILER_STRLEN(x) && memcmp(flags,x,sizeof(x)-sizeof(char)) == 0)
+#define IS_FLAG_S(len,s) (flag_length == (len) && memcmp(flags,s,(len)*sizeof(char)) == 0)
+   /**/ if (IS_FLAG_S(4,DeeString_STR(&str_bool))) *presult |= AST_FCOND_BOOL;
    else if (IS_FLAG("likely"))   *presult |= AST_FCOND_LIKELY;
    else if (IS_FLAG("unlikely")) *presult |= AST_FCOND_UNLIKELY;
    else {
@@ -951,6 +953,7 @@ parse_conditional_flags(char const *__restrict flags,
                            flag_length,
                            flags);
    }
+#undef IS_FLAG_S
 #undef IS_FLAG
   }
   flags = next_flag;

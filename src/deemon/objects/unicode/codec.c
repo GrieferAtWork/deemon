@@ -703,9 +703,9 @@ struct codec_error {
 };
 
 PRIVATE struct codec_error const codec_error_db[] = {
-    { "strict", STRING_ERROR_FSTRICT },
+    { "strict",  STRING_ERROR_FSTRICT },
     { "replace", STRING_ERROR_FREPLAC },
-    { "ignore", STRING_ERROR_FIGNORE }
+    { "ignore",  STRING_ERROR_FIGNORE }
 };
 
 INTERN unsigned int DCALL

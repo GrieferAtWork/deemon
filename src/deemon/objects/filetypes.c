@@ -958,9 +958,10 @@ do_del_string:
 }
 
 PRIVATE struct type_getset writer_getsets[] = {
-    { "string", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeFileWriter_GetString,
-                (int(DCALL *)(DeeObject *__restrict))&writer_delstring,
-                (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&writer_setstring,
+    { DeeString_STR(&str_string),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeFileWriter_GetString,
+     (int(DCALL *)(DeeObject *__restrict))&writer_delstring,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&writer_setstring,
       DOC("->?Dstring\n"
           "Get/set the currently written text string") },
     { NULL }
@@ -1018,19 +1019,24 @@ err:
 }
 
 PRIVATE struct type_method writer_methods[] = {
-    { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_get,
+    { DeeString_STR(&str_get),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_get,
       DOC("->?Dstring\n"
           "Synchronize and retrieve all data that has already been written") },
-    { "pack", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_get,
+    { "pack",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_get,
       DOC("->?Dstring\n"
           "Deprecated alias for reading from #string") },
-    { "size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_size,
+    { DeeString_STR(&str_size),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_size,
       DOC("->?Dint\n"
           "Return the total amount of written bytes") },
-    { "allocated", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_allocated,
+    { "allocated",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_allocated,
       DOC("->?Dint\n"
           "Returns the currently allocated buffer size (in bytes)") },
-    { "__sizeof__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_sizeof,
+    { "__sizeof__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&writer_sizeof,
       DOC("->?Dint") },
     { NULL }
 };

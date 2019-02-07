@@ -1064,7 +1064,9 @@ err:
 #ifndef ERR_CLSPROPERTY_DEFINED
 #define ERR_CLSPROPERTY_DEFINED 1
 PRIVATE ATTR_COLD int DCALL err_cant_access_clsproperty_get(void) {
- return err_cant_access_attribute(&DeeClsProperty_Type,"get",ATTR_ACCESS_GET);
+ return err_cant_access_attribute(&DeeClsProperty_Type,
+                                   DeeString_STR(&str_get),
+                                   ATTR_ACCESS_GET);
 }
 #endif /* !ERR_CLSPROPERTY_DEFINED */
 

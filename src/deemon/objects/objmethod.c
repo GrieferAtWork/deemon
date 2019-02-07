@@ -1243,7 +1243,9 @@ clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
                      size_t argc, DREF DeeObject **__restrict argv) {
  DeeObject *thisarg;
  if (!self->cp_get) {
-  err_cant_access_attribute(&DeeClsProperty_Type,"get",ATTR_ACCESS_GET);
+  err_cant_access_attribute(&DeeClsProperty_Type,
+                            DeeString_STR(&str_get),
+                            ATTR_ACCESS_GET);
   goto err;
  }
  if (DeeArg_Unpack(argc,argv,"o:get",&thisarg))
@@ -1262,7 +1264,9 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
                 DeeObject *kw) {
  DeeObject *thisarg;
  if (!self->cp_get) {
-  err_cant_access_attribute(&DeeClsProperty_Type,"get",ATTR_ACCESS_GET);
+  err_cant_access_attribute(&DeeClsProperty_Type,
+                             DeeString_STR(&str_get),
+                             ATTR_ACCESS_GET);
   goto err;
  }
  if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg))
@@ -1301,7 +1305,9 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
                 DeeObject *kw) {
  DeeObject *thisarg,*value;
  if (!self->cp_set) {
-  err_cant_access_attribute(&DeeClsProperty_Type,"set",ATTR_ACCESS_GET);
+  err_cant_access_attribute(&DeeClsProperty_Type,
+                             DeeString_STR(&str_set),
+                             ATTR_ACCESS_GET);
   return NULL;
  }
  if (DeeArg_UnpackKw(argc,argv,kw,setter_kwlist,"oo:set",&thisarg,&value) ||
@@ -1315,18 +1321,28 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 }
 
 PRIVATE struct type_method clsproperty_methods[] = {
-    { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
-       DOC("(thisarg)->"), TYPE_METHOD_FKWDS },
-    { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_delete,
-       DOC("(thisarg)"), TYPE_METHOD_FKWDS },
-    { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
-       DOC("(thisarg,value)"), TYPE_METHOD_FKWDS },
-    { "getter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
-       DOC("(thisarg)->\n"
-           "Alias for #get"), TYPE_METHOD_FKWDS },
-    { "setter", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
-       DOC("(thisarg,value)\n"
-           "Alias for #set"), TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_get),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
+      DOC("(thisarg)->"),
+      TYPE_METHOD_FKWDS },
+    { "delete",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_delete,
+      DOC("(thisarg)"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_set),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
+      DOC("(thisarg,value)"),
+      TYPE_METHOD_FKWDS },
+    { "getter",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_get,
+      DOC("(thisarg)->\n"
+          "Alias for #get"),
+      TYPE_METHOD_FKWDS },
+    { "setter",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsproperty_set,
+      DOC("(thisarg,value)\n"
+          "Alias for #set"),
+      TYPE_METHOD_FKWDS },
     { NULL }
 };
 
@@ -1546,12 +1562,18 @@ clsmember_set(DeeClsMemberObject *__restrict self,
 }
 
 PRIVATE struct type_method clsmember_methods[] = {
-    { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_get,
-       DOC("(thisarg)->"), TYPE_METHOD_FKWDS },
-    { "delete", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_delete,
-       DOC("(thisarg)"), TYPE_METHOD_FKWDS },
-    { "set", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_set,
-       DOC("(thisarg,value)"), TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_get),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_get,
+      DOC("(thisarg)->"),
+      TYPE_METHOD_FKWDS },
+    { "delete",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_delete,
+      DOC("(thisarg)"),
+      TYPE_METHOD_FKWDS },
+    { DeeString_STR(&str_set),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&clsmember_set,
+      DOC("(thisarg,value)"),
+      TYPE_METHOD_FKWDS },
     { NULL }
 };
 

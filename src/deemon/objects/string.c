@@ -1315,20 +1315,22 @@ string_getlast(String *__restrict self) {
 
 
 PRIVATE struct type_getset string_getsets[] = {
-    { "ordinals", &DeeString_Ordinals, NULL, NULL,
+    { "ordinals",
+     &DeeString_Ordinals, NULL, NULL,
       DOC("->?S?Dint\n"
           "Returns a proxy view for the characters of @this string as a sequence of "
           "integers referring to the ordinal values of each character (s.a. #ord)") },
-    { "__hashed__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
+    { "__hashed__",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this string has been hashed") },
-    { "first",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
+    { DeeString_STR(&str_first),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
       DOC("->?.\n"
           "@throw ValueError @this string is empty\n"
           "Returns the first character of @this string") },
-    { "last",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
+    { DeeString_STR(&str_last),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
       DOC("->?.\n"
           "@throw ValueError @this string is empty\n"
           "Returns the last character of @this string") },

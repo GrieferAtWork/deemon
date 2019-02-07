@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/map.h>
 #include <deemon/arg.h>
+#include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/none.h>
 #include <deemon/int.h>
@@ -34,6 +35,7 @@
 
 #include "svec.h"
 #include "smap.h"
+#include "../../runtime/strings.h"
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
@@ -558,9 +560,10 @@ PRIVATE struct type_member smap_class_members[] = {
 };
 
 PRIVATE struct type_method smap_methods[] = {
-    { "get", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&smap_get,
-       DOC("(key,def=!N)\n"
-           "@return The value associated with @key or @def when @key has no value associated") },
+    { DeeString_STR(&str_get),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&smap_get,
+      DOC("(key,def=!N)\n"
+          "@return The value associated with @key or @def when @key has no value associated") },
     { NULL }
 };
 

@@ -26,6 +26,8 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 
+#include "../../runtime/strings.h"
+
 DECL_BEGIN
 
 #define OPERAND_TYPE_OUTPUT 0
@@ -485,8 +487,7 @@ INTERN DREF struct ast *DCALL ast_parse_asm(void) {
   if (size == COMPILER_STRLEN("volatile") &&
       memcmp(name,"volatile",size*sizeof(char)) == 0)
   { ast_flags |= AST_FASSEMBLY_VOLATILE; goto yield_prefix; }
-  if (size == COMPILER_STRLEN("goto") &&
-      memcmp(name,"goto",size*sizeof(char)) == 0)
+  if (size == 4 && memcmp(name,DeeString_STR(&str_goto),size*sizeof(char)) == 0)
   { is_asm_goto = true; goto yield_prefix; }
   break;
 yield_prefix:

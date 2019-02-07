@@ -1835,7 +1835,8 @@ err:
 
 
 INTERN struct type_method seq_methods[] = {
-    { "empty", &seq_empty,
+    { "empty",
+     &seq_empty,
       DOC("->?Dbool\n"
           "Returns :true if @this sequence is empty\n"
           "Implemented as (s.a. #op:bool):\n"
@@ -1843,7 +1844,8 @@ INTERN struct type_method seq_methods[] = {
           "> import sequence from deemon;\n"
           "> return !(this as sequence).operator bool();\n"
           ">}") },
-    { "nonempty", &seq_nonempty,
+    { DeeString_STR(&str_nonempty),
+     &seq_nonempty,
       DOC("->?Dbool\n"
           "Returns :true if @this sequence is non-empty\n"
           "Implemented as (s.a. #op:bool):\n"
@@ -1851,7 +1853,8 @@ INTERN struct type_method seq_methods[] = {
           "> import sequence from deemon;\n"
           "> return (this as sequence).operator bool();\n"
           ">}") },
-    { "reduce", &seq_reduce,
+    { "reduce",
+     &seq_reduce,
       DOC("(merger:?Dcallable)->\n"
           "(merger:?Dcallable,init)->\n"
           "Combines consecutive elements of @this sequence by passing them as pairs of 2 to @merger, "
@@ -1872,7 +1875,8 @@ INTERN struct type_method seq_methods[] = {
           ">  return init;\n"
           "> return none;\n"
           ">}") },
-    { "filter", &seq_filter,
+    { "filter",
+     &seq_filter,
       DOC("(keep:?Dcallable)->?Dsequence\n"
           "@param keep A key function which is called for each element of @this sequence"
           "Returns a sub-sequence of all elements for which ${keep(elem)} evaluates to :true\n"
@@ -1882,7 +1886,8 @@ INTERN struct type_method seq_methods[] = {
           ">  if (keep(x))\n"
           ">   yield x;\n"
           ">}") },
-    { "sum", &seq_sum,
+    { "sum",
+     &seq_sum,
       DOC("->\nReturns the sum of all elements, or :none if the sequence is empty\n"
           "This, alongside :string.join is the preferred way of merging lists of strings "
           "into a single string\n"
@@ -1897,7 +1902,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return result is bound ? result : none;\n"
           ">}") },
-    { "any", &seq_any,
+    { "any",
+     &seq_any,
       DOC("->?Dbool\n"
           "Returns :true if any element of @this sequence evaluates to :{true}\n"
           "If @this sequence is empty, :false is returned\n"
@@ -1908,7 +1914,8 @@ INTERN struct type_method seq_methods[] = {
           ">   return true;\n"
           "> return false;\n"
           ">}") },
-    { "all", &seq_all,
+    { "all",
+     &seq_all,
       DOC("->?Dbool\n"
           "Returns :true if all elements of @this sequence evaluate to :{true}\n"
           "If @this sequence is empty, :true is returned\n"
@@ -1919,7 +1926,8 @@ INTERN struct type_method seq_methods[] = {
           ">   return false;\n"
           "> return true;\n"
           ">}") },
-    { "parity", &seq_parity,
+    { "parity",
+     &seq_parity,
       DOC("->?Dbool\n"
           "Returns :true or :false indicative of the parity of sequence elements that are :true\n"
           "If @this sequence is empty, :false is returned\n"
@@ -1931,7 +1939,8 @@ INTERN struct type_method seq_methods[] = {
           ">   result = !result;\n"
           "> return result;\n"
           ">}") },
-    { "min", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_min,
+    { "min",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_min,
       DOC("(key:?Dcallable=!N)->\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the smallest element of @this sequence\n"
@@ -1960,7 +1969,8 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}"),
       TYPE_METHOD_FKWDS },
-    { "max", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_max,
+    { "max",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&seq_max,
       DOC("(key:?Dcallable=!N)->\n"
           "@param key A key function for transforming sequence elements\n"
           "Returns the greatest element of @this sequence\n"
@@ -1988,7 +1998,8 @@ INTERN struct type_method seq_methods[] = {
           "> return result;\n"
           ">}"),
       TYPE_METHOD_FKWDS },
-    { "count", &seq_count,
+    { "count",
+     &seq_count,
       DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2006,7 +2017,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return result;\n"
           ">}") },
-    { "locate", &seq_locate,
+    { "locate",
+     &seq_locate,
       DOC("(elem,key:?Dcallable=!N)->\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2027,7 +2039,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> throw Error.ValueError(\"Item not found...\")\n"
           ">}") },
-    { "rlocate", &seq_rlocate,
+    { "rlocate",
+     &seq_rlocate,
       DOC("(elem,key:?Dcallable=!N)->\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2052,7 +2065,8 @@ INTERN struct type_method seq_methods[] = {
           "> throw Error.ValueError(\"Item not found...\")\n"
           ">}") },
     /* TODO: findall(elem,key:?Dcallable=!N)->?S?Dint */
-    { "locateall", &seq_locateall,
+    { "locateall",
+     &seq_locateall,
       DOC("(elem,key:?Dcallable=!N)->?Dsequence\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2071,7 +2085,8 @@ INTERN struct type_method seq_methods[] = {
           ">  }\n"
           "> }\n"
           ">}") },
-    { "transform", &seq_transform,
+    { "transform",
+     &seq_transform,
       DOC("(transformation:?Dcallable)->?Dsequence\n"
           "@param transformation A key function invoked to transform members of @this sequence\n"
           "Returns a sequence that is a transformation of @this, with each element passed "
@@ -2081,7 +2096,8 @@ INTERN struct type_method seq_methods[] = {
           ">  yield transformation(x);\n"
           ">}\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/functions.html#map map}") },
-    { "contains", &seq_contains,
+    { "contains",
+     &seq_contains,
       DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "@param elem The element to search for\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2096,7 +2112,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return false;\n"
           ">}") },
-    { "startswith", &seq_startswith,
+    { "startswith",
+     &seq_startswith,
       DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "@param elem The element to compare against\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2104,7 +2121,8 @@ INTERN struct type_method seq_methods[] = {
           "The implementation of this is derived from #first, where the found is then compared "
           "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
           "however instead of throwing a :ValueError when the sequence is empty, :false is returned") },
-    { "endswith", &seq_endswith,
+    { "endswith",
+     &seq_endswith,
       DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "@param elem The element to compare against\n"
           "@param key A key function for transforming sequence elements\n"
@@ -2112,7 +2130,8 @@ INTERN struct type_method seq_methods[] = {
           "The implementation of this is derived from #last, where the found is then compared "
           "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
           "however instead of throwing a :ValueError when the sequence is empty, :false is returned") },
-    { "find", &seq_find,
+    { "find",
+     &seq_find,
       DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
@@ -2186,7 +2205,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return -1;\n"
           ">}") },
-    { "rfind", &seq_rfind,
+    { "rfind",
+     &seq_rfind,
       DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
@@ -2267,7 +2287,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return result;\n"
           ">}") },
-    { "index", &seq_index,
+    { "index",
+     &seq_index,
       DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
@@ -2285,7 +2306,8 @@ INTERN struct type_method seq_methods[] = {
           ">  throw Error.ValueError(\"...\");\n"
           "> return result;\n"
           ">}") },
-    { "rindex", &seq_rindex,
+    { "rindex",
+     &seq_rindex,
       DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
@@ -2303,7 +2325,8 @@ INTERN struct type_method seq_methods[] = {
           ">  throw Error.ValueError(\"...\");\n"
           "> return result;\n"
           ">}") },
-    { "reversed", &seq_reversed,
+    { "reversed",
+     &seq_reversed,
       DOC("->?Dsequence\n"
           "Return a sequence that contains the elements of @this sequence in reverse order\n"
           "The point at which @this sequence is enumerated is implementation-defined") },
@@ -2314,14 +2337,16 @@ INTERN struct type_method seq_methods[] = {
           "but sorted in ascending order, or in accordance to @key\n"
           "The point at which @this sequence is enumerated is implementation-defined"),
       TYPE_METHOD_FKWDS },
-    { "segments", &seq_segments,
+    { "segments",
+     &seq_segments,
       DOC("(segment_size:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
           "Return a sequence of sequences contains all elements from @this sequence, "
           "with the first n sequences all consisting of @segment_size elements, before "
           "the last one contains the remainder of up to @segment_size elements") },
-    { "distribute", &seq_distribute,
+    { "distribute",
+     &seq_distribute,
       DOC("(bucket_count:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @segment_size is negative, or too large\n"
           "@throw ValueError The given @segment_size is zero\n"
@@ -2330,7 +2355,8 @@ INTERN struct type_method seq_methods[] = {
           "its length a little bit shorter than the other buckets\n"
           "This is similar to #segments, however rather than having the caller specify the "
           "size of the a bucket, the number of buckets is specified instead.") },
-    { "combinations", &seq_combinations,
+    { "combinations",
+     &seq_combinations,
       DOC("(r:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Returns a sequence of r-long sequences representing all possible (ordered) "
@@ -2346,7 +2372,8 @@ INTERN struct type_method seq_methods[] = {
           "are loaded at once when #combinations is called first.\n"
           "When @r is greater than ${#this}, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations itertools.combinations}") },
-    { "repeatcombinations", &seq_repeatcombinations,
+    { "repeatcombinations",
+     &seq_repeatcombinations,
       DOC("(r:?Dint)->?S?Dsequence\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Same as #combinations, however elements of @this sequence may be repeated (though element order is still enforced)\n"
@@ -2360,7 +2387,8 @@ INTERN struct type_method seq_methods[] = {
           "When @r is $0, a sequence containing a single, empty sequence is returned (${{{}}})\n"
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement itertools.combinations_with_replacement}") },
-    { "permutations", &seq_permutations,
+    { "permutations",
+     &seq_permutations,
       DOC("(r:?Dint=!N)->?S?Dsequence\n"
           "@throw IntegerOverflow @r is negative, or too large\n"
           "Same as #combinations, however the order of elements must "
@@ -2376,6 +2404,16 @@ INTERN struct type_method seq_methods[] = {
           "When @r is $0, a sequence containing a single, empty sequence is returned (${{{}}})\n"
           "When ${#this} is zero, an empty sequence is returned (${{}})\n"
           "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
+
+    /* TODO: unique(key:?Dcallable=!N)->?Dsequence
+     * Returns a generic sequence proxy that contains all of the elements from @this sequence,
+     * however will only enumerate the first of n consecutive objects for which ${key(first) == key(nth)}
+     * evaluates to true (essentially removing all duplicate, neighboring items)
+     * When @key is none, the behavior is the same as though @key was `identity from functools'
+     * >> local items = collect_items();
+     * >> local unique_items = items.sorted(object.id).unique(object.id);
+     * >> // `unique_items' now contains no object more than once
+     */
 
     /* TODO: join(?S?Dsequence items) -> sequence */
     /* TODO: strip(object item, callable key = none) -> sequence */
@@ -2491,7 +2529,8 @@ INTERN struct type_method seq_methods[] = {
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
           ">}"),
       TYPE_METHOD_FKWDS },
-    { DeeString_STR(&str_append), &seq_append,
+    { DeeString_STR(&str_append),
+     &seq_append,
       DOC("(item)\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2525,7 +2564,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
           ">}") },
-    { DeeString_STR(&str_extend), &seq_extend,
+    { DeeString_STR(&str_extend),
+     &seq_extend,
       DOC("(items:?Dsequence)\n"
           "@throw SequenceError @this sequence cannot be resized\n"
           "For mutable sequences only: Append all elements from @items at the end of @this sequence\n"
@@ -2678,7 +2718,8 @@ INTERN struct type_method seq_methods[] = {
           ">  throw Error.ValueError(\"Empty sequence...\");\n"
           "> }\n"
           ">}") },
-    { DeeString_STR(&str_popback), &seq_popback,
+    { DeeString_STR(&str_popback),
+     &seq_popback,
       DOC("->\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2691,7 +2732,8 @@ INTERN struct type_method seq_methods[] = {
           ">  throw Error.ValueError(\"Empty sequence...\");\n"
           "> }\n"
           ">}") },
-    { DeeString_STR(&str_pushfront), &seq_pushfront,
+    { DeeString_STR(&str_pushfront),
+     &seq_pushfront,
       DOC("(item)\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2699,7 +2741,8 @@ INTERN struct type_method seq_methods[] = {
           ">function pushfront(item) {\n"
           "> return this.insert(0,item);\n"
           ">}") },
-    { DeeString_STR(&str_pushback), &seq_pushback,
+    { DeeString_STR(&str_pushback),
+     &seq_pushback,
       DOC("(item)\n"
           "@throw IndexError The given @index is out of bounds\n"
           "@throw SequenceError @this sequence cannot be resized\n"
@@ -2707,7 +2750,8 @@ INTERN struct type_method seq_methods[] = {
           ">function pushback(item) {\n"
           "> return this.append(item);\n"
           ">}") },
-    { DeeString_STR(&str_remove), &seq_remove,
+    { DeeString_STR(&str_remove),
+     &seq_remove,
       DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dbool\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dbool\n"
@@ -2789,7 +2833,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return false;\n"
           ">}") },
-    { DeeString_STR(&str_rremove), &seq_rremove,
+    { DeeString_STR(&str_rremove),
+     &seq_rremove,
       DOC("(elem,key:?Dcallable=!N)->?Dbool\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dbool\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dbool\n"
@@ -2877,7 +2922,8 @@ INTERN struct type_method seq_methods[] = {
           "> }\n"
           "> return false;\n"
           ">}") },
-    { DeeString_STR(&str_removeall), &seq_removeall,
+    { DeeString_STR(&str_removeall),
+     &seq_removeall,
       DOC("(elem,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,key:?Dcallable=!N)->?Dint\n"
           "(elem,start:?Dint,end:?Dint,key:?Dcallable=!N)->?Dint\n"
@@ -3170,7 +3216,8 @@ INTERN struct type_method seq_methods[] = {
           "> return end - start;\n"
           ">}"),
       TYPE_METHOD_FKWDS },
-    { "reverse", &seq_reverse,
+    { "reverse",
+     &seq_reverse,
       DOC("()\n"
           "@throw SequenceError @this sequence is immutable\n"
           "For mutable sequences only: Reverse the order of all elements\n"
@@ -3194,22 +3241,30 @@ INTERN struct type_method seq_methods[] = {
 
 
     /* Old function names/deprecated functions. */
-    { "front", &seq_front,
-      DOC("->\nDeprecated alias for #first") },
-    { "back", &seq_back,
-      DOC("->\nDeprecated alias for #last") },
-    { "non_empty", &seq_nonempty_deprecated,
-       DOC("->?Dbool\nDeprecated alias for #nonempty") },
-    { "at", &seq_at,
-       DOC("(index:?Dint)->\n"
-           "Deprecated alias for ${this[index]}") },
-    { "get", &seq_at,
-       DOC("(index:?Dint)->\n"
-           "Deprecated alias for ${this[index]}\n"
-           "In older versions of deemon, this function (as well as ${operator []}) "
-           "would modulate the given @index by the length of the sequence. Starting "
-           "with deemon 200, this behavior no longer exists, and neither is it still "
-           "supported") },
+    { "front",
+     &seq_front,
+      DOC("->\n"
+          "Deprecated alias for #first") },
+    { "back",
+     &seq_back,
+      DOC("->\n"
+          "Deprecated alias for #last") },
+    { "non_empty",
+     &seq_nonempty_deprecated,
+      DOC("->?Dbool\n"
+          "Deprecated alias for #nonempty") },
+    { "at",
+     &seq_at,
+      DOC("(index:?Dint)->\n"
+          "Deprecated alias for ${this[index]}") },
+    { DeeString_STR(&str_get),
+     &seq_at,
+      DOC("(index:?Dint)->\n"
+          "Deprecated alias for ${this[index]}\n"
+          "In older versions of deemon, this function (as well as ${operator []}) "
+          "would modulate the given @index by the length of the sequence. Starting "
+          "with deemon 200, this behavior no longer exists, and neither is it still "
+          "supported") },
     { NULL }
 };
 

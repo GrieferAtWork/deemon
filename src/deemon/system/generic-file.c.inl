@@ -154,7 +154,9 @@ sysfile_fileno(DeeObject *__restrict UNUSED(self),
 }
 
 PRIVATE struct type_method sysfile_methods[] = {
-    { "fileno", &sysfile_fileno },
+    { STR_FILENO,
+     &sysfile_fileno,
+      DOC("->?Dint") },
     { NULL }
 };
 

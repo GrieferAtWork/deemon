@@ -1430,11 +1430,11 @@ PRIVATE struct type_method tuple_methods[] = {
     { NULL }
 };
 PRIVATE struct type_getset tuple_getsets[] = {
-    { "first",
+    { DeeString_STR(&str_first),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first,
       NULL,
       NULL },
-    { "last",
+    { DeeString_STR(&str_last),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last,
       NULL,
       NULL },

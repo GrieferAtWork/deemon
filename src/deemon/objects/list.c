@@ -2766,17 +2766,18 @@ PRIVATE struct type_getset list_getsets[] = {
           ">mylist.shrink();\n"
           ">/* And same as an atomic variant of: */\n"
           ">mylist.allocated = #mylist;") },
-    /* TODO: del/set support for `first' & `last' */
-    { "first",
+    { DeeString_STR(&str_first),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_first,
      (int(DCALL *)(DeeObject *__restrict))&list_del_first,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_set_first,
-      DOC("->\n@return The first item from @this list") },
-    { "last",
+      DOC("->\n"
+          "@return The first item from @this list") },
+    { DeeString_STR(&str_last),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_last,
      (int(DCALL *)(DeeObject *__restrict))&list_del_last,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_set_last,
-      DOC("->\n@return The last item from @this list") },
+      DOC("->\n"
+          "@return The last item from @this list") },
     { "frozen",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_frozen,
       NULL,

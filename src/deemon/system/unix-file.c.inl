@@ -599,15 +599,21 @@ err:
 }
 
 PRIVATE struct type_method sysfile_methods[] = {
-    { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_fileno },
-    { "isatty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_isatty },
+    { STR_FILENO,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_fileno,
+      DOC("->?Dint") },
+    { DeeString_STR(&str_isatty),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_isatty,
+      DOC("->?Dbool") },
     /* TODO: dup_np() */
     /* TODO: dup2_np() */
     { NULL }
 };
 
 PRIVATE struct type_getset sysfile_getsets[] = {
-    { "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
+    { "filename",
+     &DeeSystemFile_Filename, NULL, NULL,
+      DOC("->?Dstring") },
     { NULL }
 };
 

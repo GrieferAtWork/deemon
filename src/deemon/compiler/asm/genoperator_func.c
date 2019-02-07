@@ -119,7 +119,10 @@ generic_operator:
    *           operator ID.
    *        -> If that function doesn't exist either, that's a
    *           compiler error. */
-  temp = bind_module_symbol(operators_module,&opmod_id,&opsym_id,"operator");
+  temp = bind_module_symbol(operators_module,
+                           &opmod_id,
+                           &opsym_id,
+                            DeeString_STR(&str_operator));
   if unlikely(temp != 0) {
    if (temp < 0) goto err;
    if (WARNAST(ddi_ast,W_NO_OPERATOR_FALLBACK_FUNCTION))

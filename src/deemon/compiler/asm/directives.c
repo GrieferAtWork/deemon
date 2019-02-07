@@ -194,6 +194,9 @@ uasm_parse_directive(void) {
 #define NAMEISKWD(x) \
   (name->k_size == COMPILER_STRLEN(x) && \
    MEMCASEEQ(name->k_name,x,sizeof(x)-sizeof(char)))
+#define NAMEISKWD_S(len,s) \
+  (name->k_size == (len) && \
+   MEMCASEEQ(name->k_name,s,(len)*sizeof(char)))
  struct TPPKeyword *name;
  name = uasm_parse_symnam();
  if unlikely(!name) goto err;
@@ -231,7 +234,7 @@ uasm_parse_directive(void) {
  if (NAMEISKWD("ddi")) goto do_handle_ddi;
 
  /* Exception handler control opcodes. */
- if (NAMEISKWD("except")) goto do_handle_except;
+ if (NAMEISKWD_S(6,DeeString_STR(&str_except))) goto do_handle_except;
 
  /* Manual relocation opcodes. */
  if (NAMEISKWD("reloc")) goto do_handle_reloc;
@@ -242,7 +245,7 @@ uasm_parse_directive(void) {
  if (NAMEISKWD("word")) goto do_handle_word;
  if (NAMEISKWD("short")) goto do_handle_word;
  if (NAMEISKWD("2byte")) goto do_handle_word;
- if (NAMEISKWD("int")) goto do_handle_dword;
+ if (NAMEISKWD_S(3,DeeString_STR(&str_int))) goto do_handle_dword;
  if (NAMEISKWD("long")) goto do_handle_dword;
  if (NAMEISKWD("4byte")) goto do_handle_dword;
  if (NAMEISKWD("dword")) goto do_handle_dword;
@@ -271,7 +274,7 @@ do_handle_code:
    if unlikely(!name) goto err;
    /* */if (NAMEISKWD("yielding")) current_basescope->bs_flags |= CODE_FYIELDING;
    else if (NAMEISKWD("copyable")) current_basescope->bs_flags |= CODE_FCOPYABLE;
-   else if (NAMEISKWD("assembly")) current_basescope->bs_flags |= CODE_FASSEMBLY;
+   else if (NAMEISKWD_S(8,DeeString_STR(&str_assembly))) current_basescope->bs_flags |= CODE_FASSEMBLY;
    else if (NAMEISKWD("lenient")) current_basescope->bs_flags |= CODE_FLENIENT;
    else if (NAMEISKWD("varargs")) current_basescope->bs_flags |= CODE_FVARARGS;
    else if (NAMEISKWD("varkwds")) current_basescope->bs_flags |= CODE_FVARKWDS;
@@ -712,6 +715,7 @@ do_handle_adjstack:
   current_userasm.ua_mode &= ~(USER_ASM_FSTKINV);
   goto done;
  }
+#undef NAMEISKWD_S
 #undef NAMEISKWD
 }
 

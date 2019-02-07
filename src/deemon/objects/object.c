@@ -2202,10 +2202,6 @@ PRIVATE struct type_method object_methods[] = {
 
 
 PRIVATE DREF DeeObject *DCALL
-object_type_get(DeeObject *__restrict self) {
- return_reference((DeeObject *)Dee_TYPE(self));
-}
-PRIVATE DREF DeeObject *DCALL
 object_class_get(DeeObject *__restrict self) {
  return_reference((DeeObject *)DeeObject_Class(self));
 }
@@ -2227,13 +2223,23 @@ INTDEF DREF DeeObject *DCALL instance_get_itable(DeeObject *__restrict self);
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset object_getsets[] = {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-    { DeeString_STR(&str_this), &DeeObject_NewRef, NULL, NULL },
+    { DeeString_STR(&str_this),
+     &DeeObject_NewRef, NULL, NULL,
+      DOC("Always re-return @this object") },
 #else
-    { "this", &DeeObject_NewRef, NULL, NULL },
+    { "this",
+     &DeeObject_NewRef, NULL, NULL,
+      DOC("Always re-return @this object") },
 #endif
-    { DeeString_STR(&str_type), &object_type_get, NULL, NULL },
-    { DeeString_STR(&str_class), &object_class_get, NULL, NULL },
-    { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL },
+    { DeeString_STR(&str_class),
+     &object_class_get, NULL, NULL,
+      DOC("->?Dtype\n"
+          "Returns the class of @this type, which is usually identical to "
+          "#type, however in the case of a super-proxy, the viewed type is "
+          "returned, rather than the actual type") },
+    { DeeString_STR(&str_super), &DeeSuper_Of, NULL, NULL,
+      DOC("->?Dsuper\n"
+          "Returns a view for the super-instance of @this object") },
     { "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
       DOC("->?AObjectTable?Ert:ClassDescriptor\n"
           "Returns an indexable sequence describing the instance object "
@@ -2248,10 +2254,12 @@ PRIVATE struct type_getset object_getsets[] = {
 };
 
 PRIVATE struct type_member object_members[] = {
+    TYPE_MEMBER_FIELD_DOC("type",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_type),
+                          "->?Dtype\nThe type of @this object (same as ${type this})"),
     TYPE_MEMBER_FIELD_DOC("__refcnt__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_refcnt),
                           "->?Dint\nThe number of references currently existing for this object"),
     TYPE_MEMBER_FIELD_DOC("__type__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(DeeObject,ob_type),
-                          "->?Dtype\nThe type of @this object (same as ${type this})"),
+                          "->?Dtype\nAlias for #type"),
     TYPE_MEMBER_END
 };
 
@@ -3870,6 +3878,16 @@ PRIVATE struct type_getset type_getsets[] = {
       DOC("->?Dbool\n"
           "Returns :true if @this type implements the buffer interface\n"
           "The most prominent type to which this applies is :bytes, however other types also support this") },
+    /* TODO: __mro__->?S?Dtype
+     *    - Returns a sequence proxy detailing the method
+     *     (attribute) resolution order used for @this type:
+     *    >> property __mro__: {type_...} = {
+     *    >>     get(): {type_...} {
+     *    >>         for (local tp = this; tp !is none; tp = tp.__base__)
+     *    >>             yield tp;
+     *    >>     }
+     *    >> }
+     */
     { "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
       DOC("->?Ert:ClassDescriptor\n"
           "@throw AttributeError @this type is a user-defined class (s.a. #__isclass__)\n"

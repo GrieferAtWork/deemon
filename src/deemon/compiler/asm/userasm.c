@@ -83,7 +83,7 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
   result += temp;
  }
  switch (self->io_class & OPERAND_CLASS_FMASK) {
- case OPERAND_CLASS_POP: raw_operand_string = "pop"; goto do_raw_string;
+ case OPERAND_CLASS_POP: raw_operand_string = DeeString_STR(&str_pop); goto do_raw_string;
  case OPERAND_CLASS_TOP: raw_operand_string = "top"; goto do_raw_string;
  case OPERAND_CLASS_POP_OR_TOP: raw_operand_string = "~pop_or_top~"; goto do_raw_string;
  case OPERAND_CLASS_REF: temp = ascii_printer_printf(printer,"ref %u",(unsigned int)self->io_symid); break;
@@ -138,22 +138,22 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
   }
   break;
 
- case OPERAND_CLASS_NONE         : raw_operand_string = "none"; goto do_raw_string;
+ case OPERAND_CLASS_NONE         : raw_operand_string = DeeString_STR(&str_none); goto do_raw_string;
  case OPERAND_CLASS_FOREACH      : raw_operand_string = "foreach"; goto do_raw_string;
- case OPERAND_CLASS_EXCEPT       : raw_operand_string = "except"; goto do_raw_string;
+ case OPERAND_CLASS_EXCEPT       : raw_operand_string = DeeString_STR(&str_except); goto do_raw_string;
  case OPERAND_CLASS_CATCH        : raw_operand_string = "catch"; goto do_raw_string;
  case OPERAND_CLASS_FINALLY      : raw_operand_string = "finally"; goto do_raw_string;
- case OPERAND_CLASS_THIS         : raw_operand_string = "this"; goto do_raw_string;
- case OPERAND_CLASS_THIS_MODULE  : raw_operand_string = "this_module"; goto do_raw_string;
- case OPERAND_CLASS_THIS_FUNCTION: raw_operand_string = "this_function"; goto do_raw_string;
- case OPERAND_CLASS_TRUE         : raw_operand_string = "true"; goto do_raw_string;
- case OPERAND_CLASS_FALSE        : raw_operand_string = "false"; goto do_raw_string;
- case OPERAND_CLASS_LIST         : raw_operand_string = "list"; goto do_raw_string;
- case OPERAND_CLASS_TUPLE        : raw_operand_string = "tuple"; goto do_raw_string;
- case OPERAND_CLASS_HASHSET      : raw_operand_string = "hashset"; goto do_raw_string;
- case OPERAND_CLASS_DICT         : raw_operand_string = "dict"; goto do_raw_string;
- case OPERAND_CLASS_INT          : raw_operand_string = "int"; goto do_raw_string;
- case OPERAND_CLASS_BOOL         : raw_operand_string = "bool"; goto do_raw_string;
+ case OPERAND_CLASS_THIS         : raw_operand_string = DeeString_STR(&str_this); goto do_raw_string;
+ case OPERAND_CLASS_THIS_MODULE  : raw_operand_string = DeeString_STR(&str_this_module); goto do_raw_string;
+ case OPERAND_CLASS_THIS_FUNCTION: raw_operand_string = DeeString_STR(&str_this_function); goto do_raw_string;
+ case OPERAND_CLASS_TRUE         : raw_operand_string = DeeString_STR(&str_true); goto do_raw_string;
+ case OPERAND_CLASS_FALSE        : raw_operand_string = DeeString_STR(&str_false); goto do_raw_string;
+ case OPERAND_CLASS_LIST         : raw_operand_string = DeeString_STR(&str_list); goto do_raw_string;
+ case OPERAND_CLASS_TUPLE        : raw_operand_string = DeeString_STR(&str_tuple); goto do_raw_string;
+ case OPERAND_CLASS_HASHSET      : raw_operand_string = DeeString_STR(&str_hashset); goto do_raw_string;
+ case OPERAND_CLASS_DICT         : raw_operand_string = DeeString_STR(&str_dict); goto do_raw_string;
+ case OPERAND_CLASS_INT          : raw_operand_string = DeeString_STR(&str_int); goto do_raw_string;
+ case OPERAND_CLASS_BOOL         : raw_operand_string = DeeString_STR(&str_bool); goto do_raw_string;
  case OPERAND_CLASS_EQ           : raw_operand_string = "eq"; goto do_raw_string;
  case OPERAND_CLASS_NE           : raw_operand_string = "ne"; goto do_raw_string;
  case OPERAND_CLASS_LO           : raw_operand_string = "lo"; goto do_raw_string;

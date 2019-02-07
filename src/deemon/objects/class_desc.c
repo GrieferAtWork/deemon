@@ -1260,8 +1260,11 @@ PRIVATE struct type_method cd_methods[] = {
 };
 
 PRIVATE struct type_getset cd_getsets[] = {
-    { "isfinal", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL, DOC("->?Dbool") },
-    { "isinterrupt", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL,
+    { "isfinal",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL,
+      DOC("->?Dbool") },
+    { "isinterrupt",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class behaves as an interrupt exception when thrown\n"
           "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
@@ -1272,23 +1275,31 @@ PRIVATE struct type_getset cd_getsets[] = {
           "by the user pressing CTRL+C to terminate the running script, and (normally) not "
           "expecting it to continue running because the error was silently swallowed by an "
           "unrelated catch-all block") },
-    { "hassuperconstructor", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperconstructor, NULL, NULL,
+    { "hassuperconstructor",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperconstructor, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class inherits its constructor from its base-type\n"
           "In user-defined classes, this behavior is encoded as ${this = super;}") },
-    { "__hassuperkwds__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperkwds, NULL, NULL,
+    { "__hassuperkwds__",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperkwds, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if the super-args operator of @this class returns a tuple (args,kwds) "
           "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
           "Otherwise, the super-args operator simply returns args and the super-constructor "
           "is called as ${super(args...)}") },
-    { "__hasautoinit__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hasautoinit, NULL, NULL,
+    { "__hasautoinit__",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hasautoinit, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class provides an automatic initializer and ${operator repr}\n"
           "This is used to implement the user-code ${this = default;} constructor definition") },
-    { "__isinttruncated__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL, DOC("->?Dbool") },
-    { "__hasmoveany__", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL, DOC("->?Dbool") },
-    { "flags", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
+    { "__isinttruncated__",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL,
+      DOC("->?Dbool") },
+    { "__hasmoveany__",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL,
+      DOC("->?Dbool") },
+    { "flags",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
       DOC("->?Dstring\n"
           "Return a comma-seperated string of flags used to describe the combination of properties described by "
           "#isfinal, #isinterrupt, #hassuperconstructor, #__hassuperkwds__, #__isinttruncated__, and #__hasmoveany__\n"
@@ -1300,16 +1311,19 @@ PRIVATE struct type_getset cd_getsets[] = {
           "$\"autoinit\"|#__hasautoinit__\n"
           "$\"inttrunc\"|#__isinttruncated__\n"
           "$\"moveany\"|#__hasmoveany__\n}") },
-    { "operators", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
+    { DeeString_STR(&str_operators),
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
       DOC("->?#OperatorTable\n"
           "Enumerate operators implemented by @this class, as well as their associated "
           "class object table indices which are holding the respective implementations\n"
           "Note that the class object table entry may be left unbound to explicitly "
           "define an operator as having been deleted") },
-    { "iattr", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_iattr, NULL, NULL,
+    { "iattr",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_iattr, NULL, NULL,
       DOC("->?#AttributeTable\n"
           "Enumerate user-defined instance attributes as a mapping-like :deemon:string-#Attribute sequence") },
-    { "cattr", (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_cattr, NULL, NULL,
+    { "cattr",
+     (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_cattr, NULL, NULL,
       DOC("->?#AttributeTable\n"
           "Enumerate user-defined class ($static) attributes as a mapping-like :deemon:string-#Attribute sequence") },
     { NULL }
@@ -2492,7 +2506,7 @@ instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, vo
 
 
 PRIVATE struct type_method instancemember_methods[] = {
-    { "get",
+    { DeeString_STR(&str_get),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&instancemember_get,
       DOC("(thisarg)->\n"
           "Return the @thisarg's value of @this member"),
@@ -2502,7 +2516,7 @@ PRIVATE struct type_method instancemember_methods[] = {
       DOC("(thisarg)\n"
           "Delete @thisarg's value of @this member"),
       TYPE_METHOD_FKWDS },
-    { "set",
+    { DeeString_STR(&str_set),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&instancemember_set,
       DOC("(thisarg,value)\n"
           "Set @thisarg's value of @this member to @value"),

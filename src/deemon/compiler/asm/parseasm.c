@@ -87,6 +87,8 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 #define IS_KWD_NOCASE(str) \
  (COMPILER_STRLEN(str) == token.t_kwd->k_size && \
   MEMCASEEQ(token.t_kwd->k_name,str,sizeof(str)-sizeof(char)))
+#define IS_KWD_NOCASE_S(len,s) \
+ ((len) == token.t_kwd->k_size && MEMCASEEQ(token.t_kwd->k_name,s,(len) * sizeof(char)))
 
 
 
@@ -1434,33 +1436,33 @@ parse_local_operand:
 
  default:
   if (TPP_ISKEYWORD(tok)) {
-   if (IS_KWD_NOCASE("pop")) { result->io_class = OPERAND_CLASS_POP; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(3,DeeString_STR(&str_pop))) { result->io_class = OPERAND_CLASS_POP; goto done_yield_1; }
    if (IS_KWD_NOCASE("top")) { result->io_class = OPERAND_CLASS_TOP; goto done_yield_1; }
    if (IS_KWD_NOCASE("ref")) goto parse_ref_operand;
-   if (IS_KWD_NOCASE("arg")) goto parse_arg_operand;
-   if (IS_KWD_NOCASE("const")) goto parse_const_operand;
-   if (IS_KWD_NOCASE("static")) goto parse_static_operand;
-   if (IS_KWD_NOCASE("module")) goto parse_module_operand;
-   if (IS_KWD_NOCASE("extern")) goto parse_extern_operand;
-   if (IS_KWD_NOCASE("global")) goto parse_global_operand;
-   if (IS_KWD_NOCASE("local")) goto parse_local_operand;
-   if (IS_KWD_NOCASE("stack")) goto parse_stack_operand;
-   if (IS_KWD_NOCASE("none")) { case KWD_none: result->io_class = OPERAND_CLASS_NONE; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(3,DeeString_STR(&str_arg))) goto parse_arg_operand;
+   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_const))) goto parse_const_operand;
+   if (IS_KWD_NOCASE_S(6,DeeString_STR(&str_static))) goto parse_static_operand;
+   if (IS_KWD_NOCASE_S(6,DeeString_STR(&str_module))) goto parse_module_operand;
+   if (IS_KWD_NOCASE_S(6,DeeString_STR(&str_extern))) goto parse_extern_operand;
+   if (IS_KWD_NOCASE_S(6,DeeString_STR(&str_global))) goto parse_global_operand;
+   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_local))) goto parse_local_operand;
+   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_stack))) goto parse_stack_operand;
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_none))) { case KWD_none: result->io_class = OPERAND_CLASS_NONE; goto done_yield_1; }
    if (IS_KWD_NOCASE("foreach")) { result->io_class = OPERAND_CLASS_FOREACH; goto done_yield_1; }
-   if (IS_KWD_NOCASE("except")) { result->io_class = OPERAND_CLASS_EXCEPT; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(6,DeeString_STR(&str_except))) { result->io_class = OPERAND_CLASS_EXCEPT; goto done_yield_1; }
    if (IS_KWD_NOCASE("catch")) { case KWD_catch: result->io_class = OPERAND_CLASS_CATCH; goto done_yield_1; }
    if (IS_KWD_NOCASE("finally")) { case KWD_finally: result->io_class = OPERAND_CLASS_FINALLY; goto done_yield_1; }
-   if (IS_KWD_NOCASE("this")) { case KWD_this: result->io_class = OPERAND_CLASS_THIS; goto done_yield_1; }
-   if (IS_KWD_NOCASE("this_module")) { result->io_class = OPERAND_CLASS_THIS_MODULE; goto done_yield_1; }
-   if (IS_KWD_NOCASE("this_function")) { result->io_class = OPERAND_CLASS_THIS_FUNCTION; goto done_yield_1; }
-   if (IS_KWD_NOCASE("true")) { case KWD_true: result->io_class = OPERAND_CLASS_TRUE; goto done_yield_1; }
-   if (IS_KWD_NOCASE("false")) { case KWD_false: result->io_class = OPERAND_CLASS_FALSE; goto done_yield_1; }
-   if (IS_KWD_NOCASE("list")) { result->io_class = OPERAND_CLASS_LIST; goto done_yield_1; }
-   if (IS_KWD_NOCASE("tuple")) { result->io_class = OPERAND_CLASS_TUPLE; goto done_yield_1; }
-   if (IS_KWD_NOCASE("hashset")) { result->io_class = OPERAND_CLASS_HASHSET; goto done_yield_1; }
-   if (IS_KWD_NOCASE("dict")) { result->io_class = OPERAND_CLASS_DICT; goto done_yield_1; }
-   if (IS_KWD_NOCASE("int")) { result->io_class = OPERAND_CLASS_INT; goto done_yield_1; }
-   if (IS_KWD_NOCASE("bool")) { result->io_class = OPERAND_CLASS_BOOL; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_this))) { case KWD_this: result->io_class = OPERAND_CLASS_THIS; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(11,DeeString_STR(&str_this_module))) { result->io_class = OPERAND_CLASS_THIS_MODULE; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(13,DeeString_STR(&str_this_function))) { result->io_class = OPERAND_CLASS_THIS_FUNCTION; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_true))) { case KWD_true: result->io_class = OPERAND_CLASS_TRUE; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_false))) { case KWD_false: result->io_class = OPERAND_CLASS_FALSE; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_list))) { result->io_class = OPERAND_CLASS_LIST; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_tuple))) { result->io_class = OPERAND_CLASS_TUPLE; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(7,DeeString_STR(&str_hashset))) { result->io_class = OPERAND_CLASS_HASHSET; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_dict))) { result->io_class = OPERAND_CLASS_DICT; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(3,DeeString_STR(&str_int))) { result->io_class = OPERAND_CLASS_INT; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_bool))) { result->io_class = OPERAND_CLASS_BOOL; goto done_yield_1; }
    if (IS_KWD_NOCASE("eq")) { result->io_class = OPERAND_CLASS_EQ; goto done_yield_1; }
    if (IS_KWD_NOCASE("ne")) { result->io_class = OPERAND_CLASS_NE; goto done_yield_1; }
    if (IS_KWD_NOCASE("lo")) { result->io_class = OPERAND_CLASS_LO; goto done_yield_1; }
@@ -1655,16 +1657,20 @@ do_stack_prefix:
 #define NAMEISKWD(x) \
   (name->k_size == COMPILER_STRLEN(x) && \
    MEMCASEEQ(name->k_name,x,sizeof(x)-sizeof(char)))
+#define NAMEISKWD_S(len,s) \
+  (name->k_size == (len) && \
+   MEMCASEEQ(name->k_name,s,(len)*sizeof(char)))
  default:
-  if (NAMEISKWD("push"))   goto do_push_prefix;
-  if (NAMEISKWD("stack"))  goto do_stack_prefix;
-  if (NAMEISKWD("extern")) goto do_extern_prefix;
+  if (NAMEISKWD("push")) goto do_push_prefix;
+  if (NAMEISKWD_S(5,DeeString_STR(&str_stack)))  goto do_stack_prefix;
+  if (NAMEISKWD_S(6,DeeString_STR(&str_extern))) goto do_extern_prefix;
   /* NOTE: Since we must remain case-insensitive, we must re-check all prefixes. */
-  if (NAMEISKWD("static")) goto do_static_prefix;
-  if (NAMEISKWD("global")) goto do_global_prefix;
-  if (NAMEISKWD("local"))  goto do_local_prefix;
-  if (NAMEISKWD("const")) { invoc.ai_flags |= INVOKE_FPREFIX_RO; goto do_static_prefix; }
+  if (NAMEISKWD_S(6,DeeString_STR(&str_static))) goto do_static_prefix;
+  if (NAMEISKWD_S(6,DeeString_STR(&str_global))) goto do_global_prefix;
+  if (NAMEISKWD_S(5,DeeString_STR(&str_local)))  goto do_local_prefix;
+  if (NAMEISKWD_S(5,DeeString_STR(&str_const))) { invoc.ai_flags |= INVOKE_FPREFIX_RO; goto do_static_prefix; }
   break;
+#undef NAMEISKWD_S
 #undef NAMEISKWD
  }
 

@@ -119,7 +119,9 @@ debugfile_isatty(DeeObject *__restrict UNUSED(self),
 }
 
 PRIVATE struct type_method debug_file_methods[] = {
-    { "isatty", &debugfile_isatty },
+    { DeeString_STR(&str_isatty),
+     &debugfile_isatty,
+      DOC("->?Dbool") },
     { NULL }
 };
 
@@ -732,12 +734,19 @@ err:
 }
 
 PRIVATE struct type_method sysfile_methods[] = {
-    { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_fileno },
-    { "isatty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_isatty },
-    { "flush", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_flush,
-      DOC("()->none\nAn alias for #sync used for compatibility with :file.buffer") },
-    { "setbuf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_setbuf,
-      DOC("(string mode,size=!0)->none\n"
+    { STR_FILENO,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_fileno,
+      DOC("->?Dint") },
+    { DeeString_STR(&str_isatty),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_isatty,
+      DOC("->?Dbool") },
+    { "flush",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_flush,
+      DOC("()\n"
+          "An alias for #sync used for compatibility with :file.buffer") },
+    { "setbuf",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_setbuf,
+      DOC("(string mode,size=!0)\n"
           "Set the buffering mode in a manner that is compatible with :file.buffer.setbuf") },
     { NULL }
 };
@@ -748,9 +757,11 @@ sysfile_getfile(SystemFile *__restrict self) {
 }
 
 PRIVATE struct type_getset sysfile_getsets[] = {
-    { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sysfile_getfile, NULL, NULL,
-       DOC("->file\nReturns @this file, indicating the self-buffering "
-                   "behavior of system files on this host") },
+    { DeeString_STR(&str_file),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sysfile_getfile, NULL, NULL,
+      DOC("->file\n"
+          "Returns @this file, indicating the self-buffering "
+          "behavior of system files on this host") },
 };
 PRIVATE struct type_member sysfile_members[] = {
     TYPE_MEMBER_FIELD("filename",STRUCT_OBJECT,offsetof(SystemFile,sf_filename)),

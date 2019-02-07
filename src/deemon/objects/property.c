@@ -332,7 +332,7 @@ property_call(Property *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  if likely(self->p_get)
     return DeeObject_Call(self->p_get,argc,argv);
- err_unbound_attribute(&DeeProperty_Type,"get");
+ err_unbound_attribute(&DeeProperty_Type,DeeString_STR(&str_get));
  return NULL;
 }
 

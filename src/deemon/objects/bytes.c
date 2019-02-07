@@ -648,7 +648,10 @@ bytes_init(size_t argc, DeeObject **__restrict argv) {
   }
  } else if (!argc) {
 err_args:
-  err_invalid_argc("bytes",argc,1,4);
+  err_invalid_argc(DeeString_STR(&str_bytes),
+                   argc,
+                   1,
+                   4);
   goto err;
  } else {
   DeeTypeObject *tp_iter;
@@ -1453,27 +1456,30 @@ bytes_dellast(Bytes *__restrict self) {
 
 
 PRIVATE struct type_getset bytes_getsets[] = {
-    { "isreadonly", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
+    { "isreadonly",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this bytes object cannot be written to") },
-    { "iswritable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
+    { "iswritable",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this bytes object not be written to (the inverse of #isreadonly)") },
-    { "ismutable", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
+    { "ismutable",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
       DOC("->?Dbool\n"
           "Alias for #iswritable, overriding :sequence.ismutable") },
-    { "first",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getfirst,
-      (int(DCALL *)(DeeObject *__restrict))&bytes_delfirst,
-      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_setfirst,
+    { DeeString_STR(&str_first),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getfirst,
+     (int(DCALL *)(DeeObject *__restrict))&bytes_delfirst,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_setfirst,
       DOC("->?Dint\n"
           "@throw ValueError @this bytes object is empty\n"
           "@throw BufferError Attempted to modify the byte when @this bytes object is not writable\n"
           "Access the first byte of @this bytes object") },
-    { "last",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getlast,
-      (int(DCALL *)(DeeObject *__restrict))&bytes_dellast,
-      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_setlast,
+    { DeeString_STR(&str_last),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getlast,
+     (int(DCALL *)(DeeObject *__restrict))&bytes_dellast,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&bytes_setlast,
       DOC("->?Dint\n"
           "@throw ValueError @this bytes object is empty\n"
           "@throw BufferError Attempted to modify the byte when @this bytes object is not writable\n"

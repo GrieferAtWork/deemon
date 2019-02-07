@@ -192,24 +192,30 @@ sema_fileno(Semaphore *__restrict self, size_t argc,
 
 
 PRIVATE struct type_method sema_methods[] = {
-    { "post", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_post,
+    { "post",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_post,
       DOC("(count=!1)\n"
           "Post @count tickets to the semaphore") },
-    { "wait", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_wait,
-      DOC("()\nWait for the semaphore to become ready and acquire a ticket") },
-    { "trywait", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_trywait,
-      DOC("()->?Dbool\n"
+    { "wait",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_wait,
+      DOC("()\n"
+          "Wait for the semaphore to become ready and acquire a ticket") },
+    { "trywait",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_trywait,
+      DOC("->?Dbool\n"
           "@interrupt\n"
           "@return true: A ticket was acquired\n"
           "@return false: No ticket was available\n"
           "Check if unused tickets are available and acquire one") },
-    { "timedwait", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_timedwait,
+    { "timedwait",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_timedwait,
       DOC("(timeout_microseconds:?Dint)->?Dbool\n"
           "@interrupt\n"
           "@return true: A ticket was acquired\n"
           "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
           "Wait for up to @timeout_microseconds for a ticket to become ready and try to acquire it") },
-    { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_fileno,
+    { "fileno",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sema_fileno,
       DOC("->?Dint\n"
           "Non-portable windows extension to retrive the file descriptor number (HANDLE) of the semaphore") },
     { NULL }

@@ -319,7 +319,9 @@ debugfile_isatty(DeeObject *__restrict UNUSED(self),
 }
 
 PRIVATE struct type_method debug_file_methods[] = {
-    { "isatty", &debugfile_isatty },
+    { DeeString_STR(&str_isatty),
+      &debugfile_isatty,
+      DOC("->?Dbool") },
     { NULL }
 };
 
@@ -1275,8 +1277,12 @@ err:
 }
 
 PRIVATE struct type_method sysfile_methods[] = {
-    { "fileno", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_fileno },
-    { "isatty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_isatty },
+    { STR_FILENO,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_fileno,
+      DOC("->?Dint") },
+    { DeeString_STR(&str_isatty),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_isatty,
+      DOC("->?Dbool") },
     { NULL }
 };
 

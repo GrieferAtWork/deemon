@@ -565,7 +565,8 @@ err:
 }
 
 PRIVATE struct type_getset frame_getsets[] = {
-    { "location", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
+    { "location",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
       DOC("->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
           "Returns a sequence of tuples describing the frame location, "
           "the first of which is identical to (#file,#line,#col,#name)\n"
@@ -574,19 +575,24 @@ PRIVATE struct type_getset frame_getsets[] = {
           "as a call from another location, the compiler will generate DDI "
           "instrumentation to ensure consistent debug information for both "
           "the inlined function, as well as the call-site") },
-    { "file", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
+    { DeeString_STR(&str_file),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
           "The filename of this frame's source file, or :none when indeterminate") },
-    { "line", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
+    { "line",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
       DOC("->?X2?Dint?N\n"
           "The line number within this frame's source file, or :none when indeterminate") },
-    { "col", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
+    { "col",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
       DOC("->?X2?Dint?N\n"
           "The column offset within this frame's source file, or :none when indeterminate") },
-    { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
+    { "name",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
           "The name of this frame's function, or :none when indeterminate") },
-    { "func", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
+    { "func",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
       DOC("->?X2?Dfunction?N\n"
           "Returns the function that is referenced by @this frame, or :none if not available") },
     { "__iswritable__",

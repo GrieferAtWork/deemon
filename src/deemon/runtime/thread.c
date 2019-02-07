@@ -2969,7 +2969,8 @@ PRIVATE struct type_method thread_class_methods[] = {
       DOC("()\n"
           "@interrupt\n"
           "Checks for interrupts in the calling thread") },
-    { "yield", &thread_yield,
+    { DeeString_STR(&str_yield),
+     &thread_yield,
       /* TODO: Must make this one deprecated, and add a new one with a different name!
        *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
        *       causes a compiler warning! */
@@ -3265,9 +3266,9 @@ err:
 
 PRIVATE struct type_getset thread_getsets[] = {
     { "callback",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
-      (int(DCALL *)(DeeObject *__restrict))&thread_callback_del,
-      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callback_set,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
+     (int(DCALL *)(DeeObject *__restrict))&thread_callback_del,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callback_set,
       DOC("->?Dcallable\n"
           "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
                                 "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3279,9 +3280,9 @@ PRIVATE struct type_getset thread_getsets[] = {
           "the getter will attempt to return the instance attribute $run which can be "
           "overwritten by sub-classes to provide an automatic and implicit thread-callback") },
     { "callargs",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callargs_get,
-      (int(DCALL *)(DeeObject *__restrict))&thread_callargs_del,
-      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callargs_set,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callargs_get,
+     (int(DCALL *)(DeeObject *__restrict))&thread_callargs_del,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callargs_set,
       DOC("->?Dtuple\n"
           "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
                                 "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3291,13 +3292,14 @@ PRIVATE struct type_getset thread_getsets[] = {
           "The callback arguments that are passed to #callback when the thread is started\n"
           "Deleting this member or setting :none is the same as setting an empty tuple") },
     { "result",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_result_get, NULL, NULL,
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_result_get, NULL, NULL,
       DOC("@throw ValueError @this thread has not terminated yet\n"
           "Return the result value of @this thread once it has terminated\n"
           "This is similar to what is returned by #join, but in the event that "
           "the thread terminated because it crashed, :none is returned rather "
           "than all the errors that caused the thread to crash being encapsulated and propagated") },
-    { "crashinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
+    { "crashinfo",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
       DOC("->?S?T2?O?Dtraceback\n"
           "@throw ValueEror @this thread hasn't terminated yet\n"
           "Returns a sequence of 2-element tuples describing the errors that were "
@@ -3309,30 +3311,38 @@ PRIVATE struct type_getset thread_getsets[] = {
           "functions that did something similar prior to deemon 200\n"
           "When iterated, elements of the returned sequence identify errors that "
           "caused the crash from most to least recently thrown") },
-    { "traceback", &DeeThread_Trace, NULL, NULL,
+    { DeeString_STR(&str_traceback),
+     &DeeThread_Trace, NULL, NULL,
       DOC("->?Dtraceback\n"
           "Generate a traceback for the thread's current execution position") },
-    { "id", &thread_id, NULL, NULL,
+    { "id",
+     &thread_id, NULL, NULL,
       DOC("->?Dint\n"
           "@throw ValueError The thread hasn't been started yet\n"
           "@throw SystemError The system does not provide a way to query thread ids\n"
           "Returns an operating-system specific id of @this thread") },
-    { "isrunning", &thread_isrunning, NULL, NULL,
+    { "isrunning",
+     &thread_isrunning, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this thread is current running (i.e. #wasstarted, but hasn't #hasterminated)") },
-    { "hasstarted", &thread_hasstarted, NULL, NULL,
+    { "hasstarted",
+     &thread_hasstarted, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this thread has been started") },
-    { "wasdetached", &thread_wasdetached, NULL, NULL,
+    { "wasdetached",
+     &thread_wasdetached, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this thread has been detached") },
-    { "hasterminated", &thread_hasterminated, NULL, NULL,
+    { "hasterminated",
+     &thread_hasterminated, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this thread has terminated") },
-    { "wasinterrupted", &thread_wasinterrupted, NULL, NULL,
+    { "wasinterrupted",
+     &thread_wasinterrupted, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if interrupts are pending for @this thread") },
-    { "hascrashed", &thread_hascrashed, NULL, NULL,
+    { "hascrashed",
+     &thread_hascrashed, NULL, NULL,
       DOC("->?Dbool\n"
           "Returns :true if @this thread has crashed, that "
           "is having #hasterminated while errors were still active\n"
@@ -3343,7 +3353,9 @@ PRIVATE struct type_getset thread_getsets[] = {
 
 PRIVATE struct type_member thread_members[] = {
 #ifndef CONFIG_NO_THREADS
-    TYPE_MEMBER_FIELD_DOC("name",STRUCT_OBJECT_OPT,offsetof(DeeThreadObject,t_threadname),
+    TYPE_MEMBER_FIELD_DOC("name",
+                          STRUCT_OBJECT_OPT,
+                          offsetof(DeeThreadObject,t_threadname),
                           "->?Dstring\n"
                           "The name of the thread, or :none when none was assigned"),
 #else
@@ -3436,10 +3448,10 @@ PUBLIC DeeTypeObject DeeThread_Type = {
                             "\n"
                             "()\n"
                             "(name:?Dstring)\n"
-                            "(thread_main:?Dcallable,thread_args:?Dtuple=!N)\n"
-                            "(name:?Dstring,thread_main:?Dcallable,thread_args:?Dtuple=!N)\n"
+                            "(main:?Dcallable,args:?Dtuple=!N)\n"
+                            "(name:?Dstring,main:?Dcallable,args:?Dtuple=!N)\n"
                             "Construct a new thread that that has yet to be started.\n"
-                            "When no @thread_main callable has been provided, invoke a $run "
+                            "When no @main callable has been provided, invoke a $run "
                             "member which must be implemented by a sub-class:\n"
                             ">import thread from deemon;\n"
                             ">class MyWorker: thread {\n"

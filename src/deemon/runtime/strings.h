@@ -106,7 +106,11 @@ STRING(first)
 STRING(last)
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 STRING(fileno)
+#define STR_FILENO  DeeString_STR(&str_fileno)
+#else
+#define STR_FILENO  "fileno"
 #endif
+
 STRING(size)
 STRING(filename)
 #ifndef CONFIG_NO_THREADS

@@ -37,6 +37,8 @@
 #include <deemon/list.h>
 #include <deemon/tuple.h>
 
+#include "../../runtime/strings.h"
+
 DECL_BEGIN
 
 #define IS_SYMBOL_NAME(tok)  \
@@ -144,7 +146,8 @@ next_modifier:
       WARN(W_VARIABLE_MODIFIER_DUPLICATED))
       goto err;
   if (*pmode & LOOKUP_SYM_VGLOBAL) {
-   if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE,"global"))
+   if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE,
+            DeeString_STR(&str_global)))
        goto err;
    *pmode &= ~LOOKUP_SYM_VGLOBAL;
   }
@@ -163,7 +166,8 @@ continue_modifier:
       WARN(W_VARIABLE_MODIFIER_DUPLICATED))
       goto err;
   if (*pmode & LOOKUP_SYM_VLOCAL) {
-   if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE,"local"))
+   if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE,
+            DeeString_STR(&str_local)))
        goto err;
    *pmode &= ~LOOKUP_SYM_VLOCAL;
   }
@@ -187,7 +191,8 @@ continue_modifier:
       WARN(W_VARIABLE_MODIFIER_DUPLICATED))
       goto err;
   if (*pmode & LOOKUP_SYM_STATIC) {
-   if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE,"static"))
+   if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE,
+            DeeString_STR(&str_static)))
        goto err;
    *pmode &= ~LOOKUP_SYM_STATIC;
   }
