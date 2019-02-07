@@ -133,9 +133,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
    if likely(self->jl_tok == '(') {
     JITLexer_Yield(self);
    } else {
-    SYNTAXERROR("Expected `(' after `catch', but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                self->jl_tokstart);
+    syn_try_expected_lparen_after_catch(self);
     goto err_r;
    }
    if (!result &&
@@ -253,9 +251,7 @@ err_handle_catch_except:
    if likely(self->jl_tok == '(') {
     JITLexer_Yield(self);
    } else {
-    SYNTAXERROR("Expected `(' after `catch', but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                self->jl_tokstart);
+    syn_try_expected_lparen_after_catch(self);
     goto err;
    }
    if (JITLexer_SkipPair(self,'(',')'))
@@ -290,9 +286,7 @@ do_if_statement:
  if likely(self->jl_tok == '(') {
   JITLexer_Yield(self);
  } else {
-  SYNTAXERROR("Expected `(' after `if', but got `%$s'",
-             (size_t)(self->jl_tokend - self->jl_tokstart),
-              self->jl_tokstart);
+  syn_if_expected_lparen_after_if(self);
   goto err;
  }
 #ifdef JIT_EVAL
@@ -307,9 +301,7 @@ do_if_statement:
  if likely(self->jl_tok == ')') {
   JITLexer_Yield(self);
  } else {
-  SYNTAXERROR("Expected `)' after `if', but got `%$s'",
-             (size_t)(self->jl_tokend - self->jl_tokstart),
-              self->jl_tokstart);
+  syn_if_expected_rparen_after_if(self);
   goto err_scope_r;
  }
 #else
@@ -400,9 +392,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
  if likely(self->jl_tok == '(') {
   JITLexer_Yield(self);
  } else {
-  SYNTAXERROR("Expected `(' after `for', but got `%$s'",
-             (size_t)(self->jl_tokend - self->jl_tokstart),
-              self->jl_tokstart);
+  syn_for_expected_lparen_after_for(self);
   goto err;
  }
  if (is_statement) {
@@ -439,9 +429,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
    if likely(self->jl_tok == ')') {
     JITLexer_Yield(self);
    } else {
-    SYNTAXERROR("Expected `)' after `for(...: ...', but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                self->jl_tokstart);
+    syn_for_expected_rparen_after_foreach(self);
     goto err_seq;
    }
    iterator = DeeObject_IterSelf(seq);
@@ -521,9 +509,7 @@ err_seq:
 do_normal_for_noinit:
     JITLexer_Yield(self);
    } else {
-    SYNTAXERROR("Expected `;' after `for', but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                self->jl_tokstart);
+    syn_for_expected_semi1_after_for(self);
     goto err_scope;
    }
    cond_start = next_start = NULL;
@@ -543,9 +529,7 @@ do_normal_for_noinit:
     if (self->jl_tok == ';') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected a second `;' after `for', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_for_expected_semi2_after_for(self);
      goto err_scope;
     }
     if (!temp) {
@@ -557,9 +541,7 @@ do_normal_for_noinit:
       JITLexer_Yield(self);
      } else {
 err_missing_rparen_after_for:
-      SYNTAXERROR("Expected `)' after `for(...;...;...', but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                  self->jl_tokstart);
+      syn_for_expected_rparen_after_for(self);
       goto err_scope;
      }
      if (JITLexer_SkipStatement(self))
@@ -696,9 +678,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
  if likely(self->jl_tok == '(') {
   JITLexer_Yield(self);
  } else {
-  SYNTAXERROR("Expected `(' after `foreach', but got `%$s'",
-             (size_t)(self->jl_tokend - self->jl_tokstart),
-              self->jl_tokstart);
+  syn_foreach_expected_lparen_after_foreach(self);
   goto err;
  }
  if (is_statement) {
@@ -715,9 +695,14 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
   if (self->jl_tok == ':') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `:' after `foreach(...', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   if (init == JIT_LVALUE) {
+    JITLValue_Fini(&self->jl_lvalue);
+    JITLValue_Init(&self->jl_lvalue);
+   } else {
+    Dee_Decref(init);
+   }
+   syn_foreach_expected_collon_after_foreach(self);
+   goto err_scope;
   }
   /* TODO: Multiple targets (`foreach (local x,y,z: triples)') */
   JITLValue iterator_storage;
@@ -738,9 +723,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
   if likely(self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `)' after `foreach(...: ...', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_foreach_expected_rparen_after_foreach(self);
 err_iter:
    Dee_Decref(iterator);
    goto err_scope;
@@ -840,9 +823,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
  if likely(self->jl_tok == '(') {
   JITLexer_Yield(self);
  } else {
-  SYNTAXERROR("Expected `(' after `while', but got `%$s'",
-             (size_t)(self->jl_tokend - self->jl_tokstart),
-              self->jl_tokstart);
+  syn_while_expected_lparen_after_while(self);
   goto err;
  }
  if (is_statement) {
@@ -860,9 +841,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
   if (self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `)' after `while(...', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_while_expected_rparen_after_while(self);
    Dee_Decref(result);
    goto err_scope;
   }

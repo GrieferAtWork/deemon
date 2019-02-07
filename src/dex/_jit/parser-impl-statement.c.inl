@@ -89,17 +89,13 @@ JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
   if likely(self->jl_tok == JIT_KEYWORD) {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected a keyword as operand name after `[', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_asm_expected_keyword_after_lbracket(self);
    goto err;
   }
   if likely(self->jl_tok == ']') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `]' after `[' followed by an operand name, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_asm_expected_rbracket_after_lbracket(self);
    goto err;
   }
  }
@@ -130,9 +126,7 @@ FUNC(AssemblyOperands)(JITLexer *__restrict self
    while (self->jl_tok == JIT_STRING ||
           self->jl_tok == JIT_RAWSTRING);
   } else {
-   SYNTAXERROR("Expected a string before the operand value, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_asm_expected_string_before_operand(self);
    goto err;
   }
   if (self->jl_tok == '(') {
@@ -158,9 +152,7 @@ do_parse_lparen:
      Dee_Decref(temp);
     }
 #endif /* JIT_EVAL */
-    SYNTAXERROR("Expected `)' after an assembly operand value, but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                self->jl_tokstart);
+    syn_asm_expected_rparen_after_operand(self);
     goto err;
    }
   } else if (JITLexer_ISKWD(self,"pack")) {
@@ -176,9 +168,7 @@ do_parse_lparen:
        goto err;
 #endif
   } else {
-   SYNTAXERROR("Expected `(' before an assembly operand value, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_asm_expected_lparen_before_operand(self);
    goto err;
   }
 #ifdef JIT_EVAL
@@ -232,9 +222,7 @@ JITLexer_SkipAssemblyLabels(JITLexer *__restrict self) {
   if unlikely(JITLexer_SkipAssemblyOperandName(self))
      goto err;
   if (self->jl_tok != JIT_KEYWORD) {
-   SYNTAXERROR("Expected a keyword as label operand, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_asm_expected_keyword_for_label_operand(self);
    goto err;
   }
   JITLexer_Yield(self);
@@ -363,9 +351,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
      if likely(self->jl_tok == ';') {
       JITLexer_Yield(self);
      } else {
-      SYNTAXERROR("Expected `;' after `throw', but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                  self->jl_tokstart);
+      syn_throw_expected_semi_after_throw(self);
       goto err_r;
      }
 #ifdef JIT_EVAL
@@ -397,9 +383,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
     if likely(self->jl_tok == ';') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `;' after `throw', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_yield_expected_semi_after_yield(self);
      goto err_r;
     }
     result = 0;
@@ -418,9 +402,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
     if likely(self->jl_tok == ';') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `;' after `break', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_break_expected_semi_after_break(self);
      goto err;
     }
 #ifdef JIT_EVAL
@@ -459,9 +441,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
      if likely(self->jl_tok == ';') {
       JITLexer_Yield(self);
      } else {
-      SYNTAXERROR("Expected `;' after `return', but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                  self->jl_tokstart);
+      syn_return_expected_semi_after_return(self);
       goto err_r;
      }
 #ifdef JIT_EVAL
@@ -540,9 +520,7 @@ do_parse_asm_leading_lparen:
      if (self->jl_tok == '(')
          goto do_parse_asm_leading_lparen;
     } else {
-     SYNTAXERROR("Expected `(' after `__asm__', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_asm_expected_lparen_after_asm(self);
      goto err;
     }
     /* Parse the assembly string (which must be empty!). */
@@ -605,13 +583,11 @@ again_eval_asm_rawstring:
       JITLexer_Yield(self);
      } else {
 err_unsupported_assembly:
-      SYNTAXERROR("User-assembly statements with non-empty assembly text are not supported");
+      syn_asm_nonempty_string(self);
       goto err;
      }
     } else {
-     SYNTAXERROR("Expected a string after `__asm__', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_asm_expected_string_after_asm(self);
      goto err;
     }
     /* Check for assembly I/O operands. */
@@ -648,9 +624,7 @@ err_unsupported_assembly:
      if (self->jl_tok == ')') {
       JITLexer_Yield(self);
      } else {
-      SYNTAXERROR("Expected `)' after `__asm__(...', but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                  self->jl_tokstart);
+      syn_asm_expected_rparen_after_asm(self);
       goto err;
      }
     }
@@ -660,9 +634,7 @@ check_trailing_asm_semicollon:
     if (self->jl_tok == ';') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `;' after `__asm__(...)', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_asm_expected_semi_after_asm(self);
     }
 #ifdef JIT_EVAL
     result = Dee_None;
@@ -685,9 +657,7 @@ check_trailing_asm_semicollon:
     if likely(self->jl_tok == ';') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `;' after `continue', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                 self->jl_tokstart);
+     syn_continue_expected_semi_after_continue(self);
      goto err;
     }
 #ifdef JIT_EVAL

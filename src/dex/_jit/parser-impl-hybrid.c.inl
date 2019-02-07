@@ -46,9 +46,8 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
   if likely(self->jl_tok == '}') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `}' to end a brace initializer, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+err_rbrace_missing:
+   syn_brace_expected_rbrace(self);
    goto err_r;
   }
   if (pwas_expression)
@@ -82,11 +81,7 @@ parse_remainder_after_comma_popscope:
     if likely(self->jl_tok == '}') {
      JITLexer_Yield(self);
     } else {
-err_rbrace_missing:
-     SYNTAXERROR("Expected `}' to end a brace initializer, but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                         self->jl_tokstart);
-     goto err_r;
+     goto err_rbrace_missing;
     }
     if (pwas_expression)
        *pwas_expression = AST_PARSE_WASEXPR_YES;
@@ -369,9 +364,7 @@ parse_remainder_after_colon_popscope:
    if likely(self->jl_tok == ';') {
     JITLexer_Yield(self);
    } else {
-    SYNTAXERROR("Expected `;' after expression, but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                        self->jl_tokstart);
+    syn_expr_expected_semi_after_expr(self);
     goto err_r;
    }
   }
@@ -600,9 +593,7 @@ default_case:
   } else if (old_tab != JITContext_GetROLocals(self->jl_context) ||
             (old_tab && old_varc != old_tab->ot_size)) {
    if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
-    SYNTAXERROR("Expected `;' after expression, but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                        self->jl_tokstart);
+    syn_expr_expected_semi_after_expr(self);
     goto err;
    }
    if (pwas_expression)

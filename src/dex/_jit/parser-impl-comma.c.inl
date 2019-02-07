@@ -169,9 +169,7 @@ next_expr:
        goto err;
 #endif
   } else {
-   SYNTAXERROR("Expected `(' after `function', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_function_expected_lparen_after_function(self);
 err_var_symbol:
 #ifdef JIT_EVAL
    JITSymbol_Fini(&var_symbol);
@@ -254,9 +252,7 @@ err_var_symbol:
 #endif
    need_semi = false;
   } else {
-   SYNTAXERROR("Expected `->' or `{' after `function(...)', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_function_expected_arrow_or_lbrace_after_function(self);
    goto err_var_symbol;
   }
   if (ISERR(current))
@@ -373,9 +369,7 @@ err_currrent_var_symbol:
      if likely(self->jl_tok == ')') {
       JITLexer_Yield(self);
      } else {
-      SYNTAXERROR("Expected `)' to end call operation, but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                          self->jl_tokstart);
+      syn_call_expected_rparen_after_call(self);
       DECREF(args);
       goto err_currrent_var_symbol;
      }
@@ -622,6 +616,8 @@ continue_expression_after_dots:
     *              flushing everything from the comma-list. */
 #ifdef JIT_EVAL
    if (current != JIT_LVALUE) {
+    JITLexer_ErrorTrace(self,self->jl_tokstart);
+    self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
     DeeError_Throwf(&DeeError_SyntaxError,
                     "Cannot store to R-value");
     goto err_store_source_current_lvalue;
@@ -742,9 +738,7 @@ done_expression_nomerge:
   if likely(self->jl_tok == ';') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `;' after expression, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_expr_expected_semi_after_expr(self);
 /*err_clear_current_only:*/
    DECREF(current);
    current = ERROR;

@@ -118,11 +118,6 @@ DECL_BEGIN
 
 #ifndef ERROR_CANNOT_TEST_BINDING_DEFINED
 #define ERROR_CANNOT_TEST_BINDING_DEFINED 1
-INTERN ATTR_COLD int DCALL err_cannot_test_binding(JITLexer *__restrict self) {
- SYNTAXERROR("Cannot test binding of expression. "
-             "Expected a symbol, or attribute expression");
- return -1;
-}
 PRIVATE ATTR_COLD int DCALL
 err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
  DeeTypeObject *typetype;
@@ -333,9 +328,7 @@ not_a_cast:
   if likely(self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `)' after `(', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-               self->jl_tokstart);
+   syn_paren_expected_rparen_after_lparen(self);
    goto err_merge;
   }
   if (!second_paren && !(out_mode & AST_COMMA_OUT_FMULTIPLE)) {
@@ -416,24 +409,6 @@ err:
 
 
 
-#ifndef DOT_KEY_ERRORS_DEFINED
-#define DOT_KEY_ERRORS_DEFINED 1
-PRIVATE ATTR_COLD int DCALL
-err_expected_keyword_after_dot(JITLexer *__restrict self) {
- SYNTAXERROR("Expected keyword after `.' in brace initializer, but got `%$s'",
-            (size_t)(self->jl_tokend - self->jl_tokstart),
-             self->jl_tokstart);
- return -1;
-}
-PRIVATE ATTR_COLD int DCALL
-err_expected_eq_after_dot(JITLexer *__restrict self) {
- SYNTAXERROR("Expected `=' after `.' in mapping-like brace initializer, but got `%$s'",
-            (size_t)(self->jl_tokend - self->jl_tokstart),
-                     self->jl_tokstart);
- return -1;
-}
-#endif
-
 
 
 
@@ -461,7 +436,7 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
   IF_EVAL(DREF DeeObject *first_key;)
   JITLexer_Yield(self);
   if (self->jl_tok != JIT_KEYWORD) {
-   err_expected_keyword_after_dot(self);
+   syn_brace_expected_keyword_after_dot(self);
    goto err;
   }
 #ifdef JIT_EVAL
@@ -471,7 +446,7 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
   if unlikely(!first_key) goto err;
 #endif
   if (self->jl_tok != '=') {
-   err_expected_eq_after_dot(self);
+   syn_brace_expected_equals_after_dot(self);
    goto err;
   }
   result = CALL_SECONDARY(CommaDictOperand,first_key);
@@ -758,9 +733,7 @@ done_y1:
   if likely(self->jl_tok == ')') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `)' after `(', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_paren_expected_rparen_after_lparen(self);
    goto err_r;
   }
   if (allow_cast) {
@@ -875,9 +848,7 @@ done_y1:
      goto skip_brace_lambda;
 #endif
     } else {
-     SYNTAXERROR("Expected `{' or `->' after `function' or `[](...)', but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                         self->jl_tokstart);
+     syn_function_expected_arrow_or_lbrace_after_function(self);
      goto err;
     }
    }
@@ -1080,9 +1051,7 @@ skip_rbrck_and_done:
   if likely(self->jl_tok == ']') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `]' after `[', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_bracket_expected_rbracket_after_lbracket(self);
    goto err_r;
   }
 #endif /* JIT_EVAL */
@@ -1098,9 +1067,7 @@ skip_rbrck_and_done:
   if likely(self->jl_tok == '}') {
    JITLexer_Yield(self);
   } else {
-   SYNTAXERROR("Expected `}' to end a brace initializer, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_brace_expected_rbrace(self);
    goto err_r;
   }
 #endif /* JIT_EVAL */
@@ -1267,9 +1234,7 @@ skip_rbrck_and_done:
      if likely(self->jl_tok == ')') {
       JITLexer_Yield(self);
      } else {
-      SYNTAXERROR("Expected `)' after `pack(', but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                          self->jl_tokstart);
+      syn_pack_expected_rparen_after_lparen(self);
       goto err_r;
      }
     }
@@ -1300,7 +1265,7 @@ skip_rbrck_and_done:
 #ifdef JIT_EVAL
     if (ISERR(result)) goto done;
     if (result != JIT_LVALUE) {
-     err_cannot_test_binding(self);
+     syn_bound_cannot_test(self);
      goto err_r;
     }
     /* Test the lvalue expression for being bound. */
@@ -1442,9 +1407,7 @@ skip_rbrck_and_done:
  } break;
 
  default:
-  SYNTAXERROR("Unexpected token `%$s' in expression",
-             (size_t)(self->jl_tokend - self->jl_tokstart),
-              self->jl_tokstart);
+  syn_expr_unexpected_token(self);
   result = ERROR;
   break;
  }
@@ -1523,9 +1486,7 @@ err_result_copy:
    /* Attribute lookup. */
    JITLexer_Yield(self);
    if (self->jl_tok != JIT_KEYWORD) {
-    SYNTAXERROR("Expected a keyword after `.', but got `%$s'",
-               (size_t)(self->jl_tokend - self->jl_tokstart),
-                        self->jl_tokstart);
+    syn_attr_expected_keyword(self);
     goto err_r;
    }
    if (JITLexer_ISTOK(self,"operator")) {
@@ -1596,9 +1557,7 @@ err_result_copy:
       if (self->jl_tok == ')') {
        JITLexer_Yield(self);
       } else {
-       SYNTAXERROR("Expected `)' to end call operation, but got `%$s'",
-                  (size_t)(self->jl_tokend - self->jl_tokstart),
-                           self->jl_tokstart);
+       syn_call_expected_rparen_after_call(self);
        Dee_Decref(args);
        goto err_r;
       }
@@ -1656,9 +1615,7 @@ err_result_copy:
      } else {
 err_r_temp_expected_rbrck:
       DECREF(temp);
-      SYNTAXERROR("Expected `]' to end `getitem' operator, but got `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                          self->jl_tokstart);
+      syn_item_expected_rbracket_after_lbracket(self);
       goto err_r;
      }
 #ifdef JIT_EVAL
@@ -1772,9 +1729,7 @@ err_r_temp_expected_rbrck:
     if (self->jl_tok == ')') {
      JITLexer_Yield(self);
     } else {
-     SYNTAXERROR("Expected `)' to end call operation, but got `%$s'",
-                (size_t)(self->jl_tokend - self->jl_tokstart),
-                         self->jl_tokstart);
+     syn_call_expected_rparen_after_call(self);
      DECREF(rhs);
      goto err_r;
     }
@@ -2237,7 +2192,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 #ifdef JIT_EVAL
      int error;
      if (lhs != JIT_LVALUE) {
-      err_cannot_test_binding(self);
+      syn_bound_cannot_test(self);
       goto err_r;
      }
      error = JITLValue_IsBound(&self->jl_lvalue,self->jl_context);
@@ -2298,9 +2253,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 #endif
     goto continue_expr;
    }
-   SYNTAXERROR("Expected `is' or `in' after `!', but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_isin_expected_is_or_in_after_exclaim(self);
    goto err_r;
   }
   if (JITLexer_ISKWD(self,"is")) {
@@ -2311,7 +2264,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
     {
      int error;
      if (lhs != JIT_LVALUE) {
-      err_cannot_test_binding(self);
+      syn_bound_cannot_test(self);
       goto err_r;
      }
      error = JITLValue_IsBound(&self->jl_lvalue,self->jl_context);
@@ -3080,7 +3033,7 @@ again:
  if (self->jl_tok == '.') {
   JITLexer_Yield(self);
   if (self->jl_tok != JIT_KEYWORD) {
-   err_expected_keyword_after_dot(self);
+   syn_brace_expected_keyword_after_dot(self);
    goto err_r;
   }
 #ifdef JIT_EVAL
@@ -3090,7 +3043,7 @@ again:
   if unlikely(!lhs) goto err_r;
 #endif
   if (self->jl_tok != '=') {
-   err_expected_eq_after_dot(self);
+   syn_brace_expected_equals_after_dot(self);
    goto err_lhs;
   }
  } else {
@@ -3098,9 +3051,7 @@ again:
   if (ISERR(lhs)) goto err_r;
   LOAD_LVALUE(lhs,err_r);
   if (self->jl_tok != ':') {
-   SYNTAXERROR("Expected `:' after key in mapping-like brace initializer, but got `%$s'",
-              (size_t)(self->jl_tokend - self->jl_tokstart),
-                       self->jl_tokstart);
+   syn_brace_expected_collon_after_key(self);
    goto err_lhs;
   }
  }

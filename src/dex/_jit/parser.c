@@ -196,10 +196,7 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
   result = JITLexer_ParseOperatorName(self,features);
   if unlikely(result < 0) goto err;
   if unlikely(self->jl_tok != ')') {
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Expected `)' after `(', but got `%$s'",
-                  (size_t)(self->jl_tokend - self->jl_tokstart),
-                   self->jl_tokstart);
+   syn_paren_expected_rparen_after_lparen(self);
    goto err_trace;
   }
   goto done_y1;
@@ -212,8 +209,7 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
  case JIT_STRING:
   if (self->jl_tokend != self->jl_tokstart + 2) {
 err_empty_string:
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Expected an empty string for `operator str'");
+   syn_operator_expected_empty_string(self);
    goto err_trace;
   }
   result = OPERATOR_STR;
@@ -230,10 +226,7 @@ err_empty_string:
    JITLexer_Yield(self);
   } else {
 err_rbrck_after_lbrck:
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Expected `]' after `[', but got `%$s'",
-                  (size_t)(self->jl_tokend - self->jl_tokstart),
-                   self->jl_tokstart);
+   syn_bracket_expected_rbracket_after_lbracket(self);
    goto err_trace;
   }
   if (self->jl_tok == '=') {
@@ -290,10 +283,7 @@ err_rbrck_after_lbrck:
     }
     result = OPERATOR_DELATTR;
     if unlikely(self->jl_tok != '.') {
-     DeeError_Throwf(&DeeError_SyntaxError,
-                     "Expected `[' or `.' after `del' in operator name, but got `%$s'",
-                    (size_t)(self->jl_tokend - self->jl_tokstart),
-                     self->jl_tokstart);
+     syn_operator_expected_lbracket_or_dot_after_del(self);
      goto err_trace;
     }
     goto done_y1;
@@ -419,10 +409,7 @@ err_rbrck_after_lbrck:
     { result = OPERATOR_INT; goto done_y1; }
   }
 unknown:
-  DeeError_Throwf(&DeeError_SyntaxError,
-                  "Unknown operator name `%$s'",
-                 (size_t)(self->jl_tokend - self->jl_tokstart),
-                  self->jl_tokstart);
+  syn_operator_unknown_name(self);
   goto err_trace;
  } break;
  }
@@ -488,10 +475,7 @@ print_module_name(JITLexer *__restrict self,
        self->jl_tok != JIT_RAWSTRING)
        break;
   } else {
-   DeeError_Throwf(&DeeError_SyntaxError,
-                   "Expected `.', a keyword or a string in a module- or symbol-import list, but got `%$s'",
-                  (size_t)(self->jl_tokend - self->jl_tokstart),
-                   self->jl_tokstart);
+   syn_module_expected_dot_keyword_or_string(self);
    goto err_trace;
   }
  }
@@ -697,7 +681,8 @@ err_eof:
  JITLexer_ErrorTrace(self,start);
  self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
  return DeeError_Throwf(&DeeError_SyntaxError,
-                        "Missing `%c' after `%c'",pair_close,pair_open);
+                        "Missing `%c' after `%c'",
+                        pair_close,pair_open);
 }
 
 
