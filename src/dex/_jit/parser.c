@@ -687,6 +687,31 @@ err_eof:
 
 
 
+/* Parse the mask portion of a catch statement:
+ * >> try {
+ * >>     throw "Foo";
+ * >> } catch (string as s) {
+ *             ^            ^
+ * >> }
+ */
+INTERN int FCALL
+JITLexer_ParseCatchMask(JITLexer *__restrict self,
+                        DREF DeeTypeObject **__restrict ptypemask,
+                        char const **__restrict psymbol_name,
+                        size_t *__restrict psymbol_size) {
+ /* TODO */
+ *ptypemask    = NULL;
+ *psymbol_name = NULL;
+ *psymbol_size = 0;
+ if (JITLexer_SkipPair(self,'(',')'))
+     goto err;
+ return 0;
+err:
+ return -1;
+}
+
+
+
 DECL_END
 
 #ifndef __INTELLISENSE__

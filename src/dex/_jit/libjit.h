@@ -812,6 +812,19 @@ INTDEF DREF DeeObject *FCALL JITLexer_EvalStatementBlock(JITLexer *__restrict se
 INTDEF int FCALL JITLexer_SkipStatementBlock(JITLexer *__restrict self);
 
 
+/* Parse the mask portion of a catch statement:
+ * >> try {
+ * >>     throw "Foo";
+ * >> } catch (string as s) {
+ *             ^            ^
+ * >> }
+ */
+INTDEF int FCALL
+JITLexer_ParseCatchMask(JITLexer *__restrict self,
+                        DREF DeeTypeObject **__restrict ptypemask,
+                        char const **__restrict psymbol_name,
+                        size_t *__restrict psymbol_size);
+
 /* Hybrid parsing functions. */
 INTDEF DREF DeeObject *FCALL JITLexer_EvalStatementOrBraces(JITLexer *__restrict self, unsigned int *pwas_expression);
 INTDEF int FCALL JITLexer_SkipStatementOrBraces(JITLexer *__restrict self, unsigned int *pwas_expression);
@@ -1032,16 +1045,17 @@ struct jit_yield_function_object {
 #define JIT_STATE_KIND_HASSCOPE(x) ((x) >= JIT_STATE_KIND_SCOPE2) /* Check if the given state kind has created a locals-scope */
 #define JIT_STATE_KIND_SCOPE    0x0000 /* Simple scope */
 #define JIT_STATE_KIND_DOWHILE  0x0001 /* Do-while loop (`do ... while (cond);') */
-#define JIT_STATE_KIND_SCOPE2   0x0002 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
-#define JIT_STATE_KIND_FOR      0x0003 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
-#define JIT_STATE_KIND_WHILE    0x0004 /* [SCOPE] While-statement (`while (local item = getitem()) { ... }') */
-#define JIT_STATE_KIND_FOREACH  0x0005 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
-#define JIT_STATE_KIND_FOREACH2 0x0006 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
-#define JIT_STATE_KIND_WITH     0x0007 /* [SCOPE] with-statement (`with (local x = get_value()) { ... }') */
-#define JIT_STATE_KIND_SKIPELSE 0x0008 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
+#define JIT_STATE_KIND_TRY      0x0002 /* try-statement (`try { ... } finally { ... } catch (...) { ... }') */
+#define JIT_STATE_KIND_SCOPE2   0x0003 /* [SCOPE] Simple scope (including an associated `JITContext_PopScope()') */
+#define JIT_STATE_KIND_FOR      0x0004 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
+#define JIT_STATE_KIND_WHILE    0x0005 /* [SCOPE] While-statement (`while (local item = getitem()) { ... }') */
+#define JIT_STATE_KIND_FOREACH  0x0006 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
+#define JIT_STATE_KIND_FOREACH2 0x0007 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
+#define JIT_STATE_KIND_WITH     0x0008 /* [SCOPE] with-statement (`with (local x = get_value()) { ... }') */
+#define JIT_STATE_KIND_SKIPELSE 0x0009 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
                                         *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
                                         *            in which case the false-branch must be skipped (should it exist) */
-/* TODO: States for: `try', `with', `switch' */
+/* TODO: States for: `try', `switch' */
 
 
 
@@ -1085,6 +1099,9 @@ struct jit_state {
         struct {
             DREF DeeObject *w_obj;  /* [1..1] The with-object on which `operator leave()' is invoked when the scope is left. */
         }             js_with;      /* JIT_STATE_KIND_WITH */
+        struct {
+            unsigned char *t_guard; /* [1..1] Pointer to the start of the guarded statement block. */
+        }             js_try;       /* JIT_STATE_KIND_TRY */
     };
 };
 

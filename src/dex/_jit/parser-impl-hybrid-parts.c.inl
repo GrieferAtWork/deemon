@@ -107,12 +107,12 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
     }
    }
    if (ISERR(finally_value)) {
+    if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
+        goto err_r_popscope;
     JITLexer_YieldAt(self,start);
     if (SKIP_SECONDARY(self,&was_expression))
         goto err_r_popscope;
     Dee_XClear(result);
-    if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
-        goto err_popscope;
     continue;
    }
    /* Restore the old special return branch, if it was set. */
@@ -138,9 +138,8 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
    }
    if (!result &&
         self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET) {
-    DREF DeeTypeObject *mask = NULL;
-    char const *symbol_name = NULL;
-    size_t symbol_size = 0;
+    DREF DeeTypeObject *mask;
+    char const *symbol_name; size_t symbol_size;
     uint16_t old_except; DeeObject *current;
     DeeThreadObject *ts = DeeThread_Self();
     unsigned char *start;
@@ -148,16 +147,8 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
     current = DeeError_Current();
     ASSERT(current != NULL);
     JITContext_PushScope(self->jl_context);
-#if 0
-    /* TODO: Parse and initialize:
-     *   - mask
-     *   - symbol_name
-     *   - symbol_size
-     */
-#else
-    if (JITLexer_SkipPair(self,'(',')'))
+    if (JITLexer_ParseCatchMask(self,&mask,&symbol_name,&symbol_size))
         goto err_r;
-#endif
     /* Check if we're allowed to handle this exception! */
     if ((!mask || DeeObject_InstanceOf(current,mask)) &&
         (allow_interrupts || !DeeObject_IsInterrupt(current))) {
@@ -224,7 +215,7 @@ err_handle_catch_except:
     } else {
      /* Don't execute this handler. */
      JITContext_PopScope(self->jl_context);
-     Dee_Decref(mask);
+     Dee_XDecref(mask);
      if (SKIP_SECONDARY(self,&was_expression))
          goto err_r;
     }
@@ -242,6 +233,14 @@ err_handle_catch_except:
  result = SKIP_PRIMARY(self,&was_expression);
  if (ISERR(result)) goto err;
  while (self->jl_tok == JIT_KEYWORD) {
+  if (self->jl_tok == '@') {
+   JITLexer_Yield(self);
+   if (self->jl_tok == ':') {
+    JITLexer_Yield(self);
+    if (JITLexer_ISKWD(self,"interrupt"))
+        JITLexer_Yield(self);
+   }
+  }
   if (JITLexer_ISTOK(self,"finally")) {
    JITLexer_Yield(self);
    result = SKIP_SECONDARY(self,&was_expression);

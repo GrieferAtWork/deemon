@@ -349,6 +349,54 @@ err:
 }
 
 
+PRIVATE int DCALL
+JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
+ for (;;) {
+  bool allow_interrupts = false;
+  /* XXX: Full tagging support? */
+  if (self->jl_tok == '@') {
+   JITLexer_Yield(self);
+   if (self->jl_tok == ':') {
+    JITLexer_Yield(self);
+    if (JITLexer_ISKWD(self,"interrupt")) {
+     JITLexer_Yield(self);
+     allow_interrupts = true;
+    }
+   }
+  }
+  if (JITLexer_ISKWD(self,"finally")) {
+   DREF DeeObject *value;
+   JITLexer_Yield(self);
+   /* Evaluate the finally-statement (NOTE: JIT doesn't allow yield-in-finally) */
+   value = JITLexer_EvalStatement(self);
+   if unlikely(!value)
+      goto err;
+   if (value == JIT_LVALUE) {
+    JITLValue_Fini(&self->jl_lvalue);
+    JITLValue_Init(&self->jl_lvalue);
+   } else {
+    Dee_Decref(value);
+   }
+  } else if (JITLexer_ISKWD(self,"catch")) {
+   /* Simply skip catch statements. */
+   JITLexer_Yield(self);
+   if likely(self->jl_tok == '(') {
+    JITLexer_Yield(self);
+   } else {
+    syn_try_expected_lparen_after_catch(self);
+    goto err;
+   }
+   if (JITLexer_SkipPair(self,'(',')'))
+       goto err;
+   if (JITLexer_SkipStatement(self))
+       goto err;
+  } else break;
+ }
+ return 0;
+err:
+ return -1;
+}
+
 /* @return:  1: The state wasn't removed, but the lexer position was updated
  *              such that execution should resume normally (this is used to
  *              implement loop statements)
@@ -363,6 +411,12 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
  switch (st->js_kind) {
 
  case JIT_STATE_KIND_SCOPE:
+  goto do_pop_state;
+
+ case JIT_STATE_KIND_TRY:
+  /* Search for, and execute finally-blocks. */
+  if unlikely(JITLexer_EvalFinallyStatements(&self->ji_lex))
+     goto err;
   goto do_pop_state;
 
  case JIT_STATE_KIND_DOWHILE:
@@ -583,6 +637,38 @@ err:
 }
 
 
+/* Unwind the active state-stack until `new_curr_state', such that upon
+ * successfuly return, `new_curr_state' will be the currently active state. */
+PRIVATE int DCALL
+JITYieldFunctionIterator_UnwindUntil(JITYieldFunctionIterator *__restrict self,
+                                     struct jit_state *__restrict new_curr_state) {
+ while (self->ji_state != new_curr_state) {
+  struct jit_state *curr;
+  struct jit_state *prev;
+  curr = self->ji_state;
+  ASSERT(curr);
+  ASSERT(curr != &self->ji_bstat);
+  /* Adjust for the scopes that are lost by this jump. */
+  if (JIT_STATE_KIND_HASSCOPE(curr->js_kind))
+      JITContext_PopScope(&self->ji_ctx);
+  if (!(curr->js_flag & JIT_STATE_FLAG_SINGLE))
+      JITContext_PopScope(&self->ji_ctx);
+  prev = curr->js_prev;
+  if (curr->js_kind == JIT_STATE_KIND_WITH &&
+      unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
+   /* Still pop the state upon error. */
+   jit_state_destroy(curr);
+   self->ji_state = prev;
+   goto err;
+  }
+  jit_state_destroy(curr);
+  self->ji_state = prev;
+ }
+ return 0;
+err:
+ return -1;
+}
+
 /* Handle a break/continue loop control command by searching for
  * the nearest JIT state that behaves as a loop controller.
  * @return:  1: The lexer state was updated, the state was unwound,
@@ -610,26 +696,8 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
   case JIT_STATE_KIND_FOREACH:
   case JIT_STATE_KIND_FOREACH2:
    /* Unwind up until the target state. */
-   while (self->ji_state != st) {
-    struct jit_state *curr;
-    struct jit_state *prev;
-    curr = self->ji_state;
-    /* Adjust for the scopes that are lost by this jump. */
-    if (JIT_STATE_KIND_HASSCOPE(curr->js_kind))
-        JITContext_PopScope(&self->ji_ctx);
-    if (!(curr->js_flag & JIT_STATE_FLAG_SINGLE))
-        JITContext_PopScope(&self->ji_ctx);
-    prev = curr->js_prev;
-    if (curr->js_kind == JIT_STATE_KIND_WITH &&
-        unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
-     /* Still pop the state upon error. */
-     jit_state_destroy(curr);
-     self->ji_state = prev;
-     goto err;
-    }
-    jit_state_destroy(curr);
-    self->ji_state = prev;
-   }
+   if unlikely(JITYieldFunctionIterator_UnwindUntil(self,st))
+      goto err;
    /* Leave the scope of the loop body (the scope will
     * be re-entered when the loop body is entered again) */
    if (!(st->js_flag & JIT_STATE_FLAG_SINGLE)) {
@@ -1014,13 +1082,21 @@ parse_else_after_if:
    break;
 
   case 3:
-#if 0
    if (tok_begin[0] == 't' &&
        tok_begin[1] == 'r' &&
        tok_begin[2] == 'y') {
-    /* TODO */
+    struct jit_state *st;
+    JITLexer_Yield(&self->ji_lex);
+    st = jit_state_alloc();
+    if unlikely(!st)
+       goto err;
+    st->js_kind = JIT_STATE_KIND_TRY;
+    st->js_flag = JIT_STATE_FLAG_SINGLE;
+    st->js_try.t_guard = self->ji_lex.jl_tokstart;
+    st->js_prev = self->ji_state;
+    self->ji_state = st;
+    goto parse_again_same_statement;
    }
-#endif
    if (tok_begin[0] == 'f' &&
        tok_begin[1] == 'o' &&
        tok_begin[2] == 'r') {
@@ -1292,13 +1368,7 @@ err_obj_scope:
          goto err;
      goto parse_again;
     }
-    /* Push a state that can be used to describe the behavior of the while-loop
-     * NOTE: We re-use the FOR-state, since `while(COND) ...' can be expressed
-     *       as `for (; COND; ) ...' */
-    /* TODO: What about `while (local item = getitem()) { ... }'?
-     *       Something like that can't be expressed using for(), since for doesn't
-     *       allow declaring expressions within the condition branch!
-     *       -> We _do_ still need a dedicated state kind for while-loops! */
+    /* Push a state that can be used to describe the behavior of the while-loop */
     st = jit_state_alloc();
     if unlikely(!st) goto err_scope;
     st->js_kind = JIT_STATE_KIND_WHILE;
@@ -1486,6 +1556,161 @@ err:
     goto handle_error;
    }
   } else {
+   /* Only service try-handlers if it wasn't a syntax
+    * error that caused the currently active exception. */
+   if (!(self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)) {
+    /* Not a syntax-error. - Check for catch/finally blocks and handle
+     * catch expressions, as well as execute finally-statements! */
+    struct jit_state *st;
+again_check_try_statements:
+    st = self->ji_state;
+    for (; st != &self->ji_bstat; st = st->js_prev) {
+     if (st->js_kind != JIT_STATE_KIND_TRY)
+         continue;
+     /* Found a try-state (unwind to it) */
+     if unlikely(JITYieldFunctionIterator_UnwindUntil(self,st))
+        goto err;
+     /* If the try was followed by a block, we must unwind that block as well */
+     if (!(st->js_flag & JIT_STATE_FLAG_SINGLE))
+         JITContext_PopScope(&self->ji_ctx);
+     /* Jump to the start of handlers of this try-statement. */
+     JITLexer_YieldAt(&self->ji_lex,st->js_try.t_guard);
+     if (JITLexer_SkipStatement(&self->ji_lex))
+         goto err;
+     /* Pop the state of the try-block (so that its handlers aren't guarding themself!) */
+     self->ji_state = st->js_prev;
+     jit_state_free(st);
+     /* Service handlers. */
+service_exception_handlers:
+     for (;;) {
+      bool allow_interrupts = false;
+      /* XXX: Full tagging support? */
+      if (self->ji_lex.jl_tok == '@') {
+       JITLexer_Yield(&self->ji_lex);
+       if (self->ji_lex.jl_tok == ':') {
+        JITLexer_Yield(&self->ji_lex);
+        if (JITLexer_ISKWD(&self->ji_lex,"interrupt")) {
+         JITLexer_Yield(&self->ji_lex);
+         allow_interrupts = true;
+        }
+       }
+      }
+      if (JITLexer_ISKWD(&self->ji_lex,"finally")) {
+       DREF DeeObject *value;
+       JITLexer_Yield(&self->ji_lex);
+       /* Evaluate the finally-statement (NOTE: JIT doesn't allow yield-in-finally) */
+       value = JITLexer_EvalStatement(&self->ji_lex);
+       if unlikely(!value)
+          goto err;
+       if (value == JIT_LVALUE) {
+        JITLValue_Fini(&self->ji_lex.jl_lvalue);
+        JITLValue_Init(&self->ji_lex.jl_lvalue);
+       } else {
+        Dee_Decref(value);
+       }
+      } else if (JITLexer_ISKWD(&self->ji_lex,"catch")) {
+       DREF DeeTypeObject *typemask; DeeObject *current;
+       char const *symbol_name; size_t symbol_size;
+       /* Simply skip catch statements. */
+       JITLexer_Yield(&self->ji_lex);
+       if likely(self->ji_lex.jl_tok == '(') {
+        JITLexer_Yield(&self->ji_lex);
+       } else {
+        syn_try_expected_lparen_after_catch(&self->ji_lex);
+        goto err;
+       }
+       JITContext_PushScope(&self->ji_ctx);
+       /* Parse the mask of this catch statement! */
+       if unlikely(JITLexer_ParseCatchMask(&self->ji_lex,
+                                           &typemask,
+                                           &symbol_name,
+                                           &symbol_size))
+          goto err_scope;
+       current = DeeError_Current();
+       ASSERT(current != NULL);
+
+       /* Check if we're allowed to handle this exception! */
+       if ((!typemask || DeeObject_InstanceOf(current,typemask)) &&
+           (allow_interrupts || !DeeObject_IsInterrupt(current))) {
+        uint16_t old_except_sz;
+        unsigned char *handler_start;
+        Dee_XDecref(typemask);
+        /* Save the current exception as a local variable. */
+        if (symbol_size) {
+         JITObjectTable *tab;
+         tab = JITContext_GetRWLocals(&self->ji_ctx);
+         if unlikely(!tab) goto err_scope;
+         if (JITObjectTable_Update(tab,
+                                   symbol_name,
+                                   symbol_size,
+                                   Dee_HashUtf8(symbol_name,symbol_size),
+                                   current,
+                                   true) < 0)
+             goto err_scope;
+        }
+        /* Evaluate the catch-statement */
+        old_except_sz = ts->t_exceptsz;
+        handler_start = self->ji_lex.jl_tokstart;
+        result = JITLexer_EvalStatement(&self->ji_lex);
+        if unlikely(!result) {
+         if (self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)
+             goto err_scope;
+         JITContext_PopScope(&self->ji_ctx);
+         JITLexer_YieldAt(&self->ji_lex,handler_start);
+         if (JITLexer_SkipStatement(&self->ji_lex))
+             goto err;
+         /* Must still handle the original exception. */
+         ASSERT(ts->t_exceptsz >= old_except_sz);
+         if (ts->t_exceptsz == old_except_sz) {
+          ASSERT(ts->t_except);
+          ASSERT(ts->t_except->ef_error == current);
+          goto service_exception_handlers; /* The previous exception was simply re-thrown */
+         }
+         /* A new exception was thrown on-top of ours. (we must still handle our old one) */
+         {
+          uint16_t ind = ts->t_exceptsz - old_except_sz;
+          struct except_frame *exc,**pexc;
+          exc = *(pexc = &ts->t_except);
+          while (ind--) {
+           ASSERT(exc);
+           ASSERT(exc->ef_prev);
+           exc = *(pexc = &exc->ef_prev);
+          }
+          *pexc = exc->ef_prev;
+          --ts->t_exceptsz;
+          /* Destroy the frame in question. */
+          if (ITER_ISOK(exc->ef_trace))
+              Dee_Decref((DeeObject *)exc->ef_trace);
+          Dee_Decref(exc->ef_error);
+          except_frame_free(exc);
+         }
+         goto service_exception_handlers;
+        }
+        /* The exception was handled normally. */
+        DeeError_Handled(ERROR_HANDLED_INTERRUPT);
+        JITContext_PopScope(&self->ji_ctx);
+        /* Discard the value returned by the catch-statement */
+        if (result == JIT_LVALUE) {
+         JITLValue_Fini(&self->ji_lex.jl_lvalue);
+         JITLValue_Init(&self->ji_lex.jl_lvalue);
+        } else {
+         Dee_Decref(result);
+        }
+        /* Execute all additional finally-blocks, but skip any other catch-blocks! */
+        if unlikely(JITLexer_EvalFinallyStatements(&self->ji_lex))
+           goto err;
+        /* Continue parsing, now that the exception has been handled. */
+        goto parse_again;
+       }
+       Dee_XDecref(typemask);
+       JITContext_PopScope(&self->ji_ctx);
+       if (JITLexer_SkipStatement(&self->ji_lex))
+           goto err;
+      } else break;
+     }
+     goto again_check_try_statements;
+    }
+   }
    if (!self->ji_lex.jl_errpos)
         self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
 handle_error:
@@ -1497,6 +1722,7 @@ handle_error:
   }
   self->ji_lex.jl_tok = TOK_EOF; /* Don't iterate again. */
  }
+ assert(ts->t_exceptsz >= self->ji_ctx.jc_except);
  if (ts->t_exceptsz > self->ji_ctx.jc_except) {
   if (self->ji_ctx.jc_retval != JITCONTEXT_RETVAL_UNSET) {
    if (JITCONTEXT_RETVAL_ISSET(self->ji_ctx.jc_retval))
@@ -1513,6 +1739,12 @@ handle_error:
  }
 done:
  recursive_rwlock_endwrite(&self->ji_lock);
+ ASSERTF(result ? ts->t_exceptsz == self->ji_ctx.jc_except + 0
+                : ts->t_exceptsz == self->ji_ctx.jc_except + 1,
+         "ts->t_exceptsz         = %I16u\n"
+         "self->ji_ctx.jc_except = %I16u\n"
+         ,ts->t_exceptsz
+         ,self->ji_ctx.jc_except);
  return result;
 err_scope:
  JITContext_PopScope(&self->ji_ctx);
@@ -1537,11 +1769,37 @@ ji_fini(JITYieldFunctionIterator *__restrict self) {
   struct jit_state *prev,*curr;
   curr = self->ji_state;
   prev = curr->js_prev;
-  if (curr->js_kind == JIT_STATE_KIND_WITH &&
-      unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
-   /* Dump the unhandled exception! */
-   DeeError_Print("Unhandled exception in `operator leave'",
-                   ERROR_PRINT_DOHANDLE);
+  switch (curr->js_kind) {
+
+  {
+   DeeThreadObject *ts;
+  case JIT_STATE_KIND_TRY:
+   /* Service finally-blocks. */
+   if (self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)
+       break; /* Don't service if a syntax-error occurred. */
+   JITLexer_YieldAt(&self->ji_lex,curr->js_try.t_guard);
+   ts = DeeThread_Self();
+   self->ji_ctx.jc_except = ts->t_exceptsz;
+   /* Skip the guarded statement block. */
+   if (JITLexer_SkipStatement(&self->ji_lex))
+       goto err_try;
+   /* Service all finally statements that were used to guard this block. */
+   JITLexer_EvalFinallyStatements(&self->ji_lex);
+err_try:
+   /* Dump all unhandled exceptions caused by */
+   while (ts->t_exceptsz > self->ji_ctx.jc_except)
+       DeeError_Print(NULL,ERROR_PRINT_DOHANDLE);
+  } break;
+
+  case JIT_STATE_KIND_WITH:
+   if (unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
+    /* Dump the unhandled exception! */
+    DeeError_Print("Unhandled exception in `operator leave'",
+                    ERROR_PRINT_DOHANDLE);
+   }
+   break;
+
+  default: break;
   }
   jit_state_destroy(curr);
   self->ji_state = prev;
