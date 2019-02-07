@@ -620,7 +620,7 @@ next:
                              REGEX_CONTEXT_FEMPTYOK);
      if (error != 0) { /* Match or error. */
       if unlikely(error < 0) goto err;
-      if (content_start[2] == '!')
+      if (content_start[-1] == '!')
           goto nope;
       goto next; /* It was able to match an empty string! */
      }
@@ -634,14 +634,14 @@ next:
                               REGEX_CONTEXT_FEMPTYOK);
       if (error != 0) { /* Match or error. */
        if unlikely(error < 0) goto err;
-       if unlikely((variant_diter != diter) ^ (content_start[2] == '!'))
+       if unlikely((variant_diter != diter) ^ (content_start[-1] == '!'))
           goto nope; /* The match doesn't end where our datastring begins. */
        goto next;
       }
       --variant_diter;
      }
     }
-    if (content_start[2] == '!')
+    if (content_start[-1] == '!')
         goto next;
     goto nope;
 

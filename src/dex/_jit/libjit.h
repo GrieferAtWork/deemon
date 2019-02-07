@@ -75,7 +75,7 @@ enum {
     TOK_TILDE     = '~',
     TOK_XOR       = '^',
 
-    /* Double(or more-character tokens. */
+    /* Double (or longer) tokens. */
     TOK_TWOCHAR_BEGIN = 256,
     TOK_SHL = TOK_TWOCHAR_BEGIN, /* "<<". */
     TOK_SHR,           /* ">>". */
@@ -715,7 +715,6 @@ INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, ui
 #define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
 #define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
                                         * NOTE: When this flag is set, trailing `,' are not parsed, but remain as the active token upon exit. */
-#define AST_COMMA_ALLOWNONBLOCK 0x0040 /* Allow non-blocking yields for a trailing `;'. */
 #define AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
                                         * This is required for `else', `catch', `finally', etc.
                                         * >> `try foo catch (...)' (don't interpret as `local catch = foo(...)' when starting with `foo') */
@@ -932,7 +931,8 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
 
 /* Wrapper for `JITLexer_EvalExpression()' which
  * automatically unwinds L-value expressions. */
-#define JITLexer_SkipRValue(self) JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL)
+#define JITLexer_SkipRValue(self) \
+        JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL)
 LOCAL DREF DeeObject *FCALL
 JITLexer_EvalRValue(JITLexer *__restrict self) {
  DREF DeeObject *result;
@@ -1055,7 +1055,7 @@ struct jit_yield_function_object {
 #define JIT_STATE_KIND_SKIPELSE 0x0009 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
                                         *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
                                         *            in which case the false-branch must be skipped (should it exist) */
-/* TODO: States for: `try', `switch' */
+/* TODO: States for: `switch' */
 
 
 
