@@ -597,18 +597,24 @@ INSTR("deepcopy",(
 
 /* CONSTRAINTS: `cmp ..., <s>, <s>' */
 INSTR("cmp",(
-    O3(ASM_CMP_EQ,FNORMAL,(EQ)(TOP)(POP))                          /* `cmp eq, top, pop' */
-    O3(ASM_CMP_NE,FNORMAL,(NE)(TOP)(POP))                          /* `cmp ne, top, pop' */
-    O3(ASM_CMP_LO,FNORMAL,(LO)(TOP)(POP))                          /* `cmp lo, top, pop' */
-    O3(ASM_CMP_LE,FNORMAL,(LE)(TOP)(POP))                          /* `cmp le, top, pop' */
-    O3(ASM_CMP_GR,FNORMAL,(GR)(TOP)(POP))                          /* `cmp gr, top, pop' */
-    O3(ASM_CMP_GE,FNORMAL,(GE)(TOP)(POP))                          /* `cmp ge, top, pop' */
-    O3(ASM_CMP_SO,FNORMAL,(SO)(TOP)(POP))                          /* `cmp so, top, pop' */
-    O3(ASM_CMP_DO,FNORMAL,(DO)(TOP)(POP))                          /* `cmp do, top, pop' */
-    O3(ASM_VARARGS_CMP_EQ_SZ,FPUSH,(EQ)(FSTACKFLAG|VARARGS)(IMM8)) /* `push cmp eq, #varargs, <imm8>' */
-    O3(ASM_VARARGS_CMP_EQ_SZ,FPUSH,(EQ)(IMM8)(FSTACKFLAG|VARARGS)) /* `push cmp eq, <imm8>, #varargs' */
-    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,(EQ)(FSTACKFLAG|VARARGS)(IMM8)) /* `push cmp gr, #varargs, <imm8>' */
-    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,(LO)(IMM8)(FSTACKFLAG|VARARGS)) /* `push cmp lo, <imm8>, #varargs' */
+    O3(ASM_CMP_EQ,           FNORMAL,(EQ)(TOP)(POP))                     /* `cmp eq, top, pop' */
+    O3(ASM_CMP_NE,           FNORMAL,(NE)(TOP)(POP))                     /* `cmp ne, top, pop' */
+    O3(ASM_CMP_LO,           FNORMAL,(LO)(TOP)(POP))                     /* `cmp lo, top, pop' */
+    O3(ASM_CMP_LE,           FNORMAL,(LE)(TOP)(POP))                     /* `cmp le, top, pop' */
+    O3(ASM_CMP_GR,           FNORMAL,(GR)(TOP)(POP))                     /* `cmp gr, top, pop' */
+    O3(ASM_CMP_GE,           FNORMAL,(GE)(TOP)(POP))                     /* `cmp ge, top, pop' */
+    O3(ASM_CMP_SO,           FNORMAL,(SO)(TOP)(POP))                     /* `cmp so, top, pop' */
+    O3(ASM_CMP_DO,           FNORMAL,(DO)(TOP)(POP))                     /* `cmp do, top, pop' */
+    O3(ASM_VARARGS_CMP_EQ_SZ,FPUSH,  (EQ)(FSTACKFLAG|VARARGS)(IMM8))     /* `push cmp eq, #varargs, $<imm8>' */
+    O3(ASM_VARARGS_CMP_EQ_SZ,FPUSH,  (EQ)(IMM8)(FSTACKFLAG|VARARGS))     /* `push cmp eq, $<imm8>, #varargs' */
+    O3(ASM_PUSH_FALSE,       FPUSH,  (LO)(FSTACKFLAG|VARARGS)(IMM_EQ_0)) /* `push cmp lo, #varargs, $0' */
+    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,  (LO)(IMM8)(FSTACKFLAG|VARARGS))     /* `push cmp lo, $<imm8>, #varargs' */
+    O3(ASM_PUSH_TRUE,        FPUSH,  (LE)(IMM_EQ_0)(FSTACKFLAG|VARARGS)) /* `push cmp le, $0, #varargs' */
+    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,  (LE)(IMM8,-1)(FSTACKFLAG|VARARGS))  /* `push cmp le, $<imm8> + 1, #varargs' */
+    O3(ASM_PUSH_FALSE,       FPUSH,  (GR)(FSTACKFLAG|VARARGS)(IMM_EQ_0)) /* `push cmp gr, $0, #varargs' */
+    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,  (GR)(FSTACKFLAG|VARARGS)(IMM8))     /* `push cmp gr, #varargs, $<imm8>' */
+    O3(ASM_PUSH_TRUE,        FPUSH,  (GE)(FSTACKFLAG|VARARGS)(IMM_EQ_0)) /* `push cmp ge, #varargs, $0' */
+    O3(ASM_VARARGS_CMP_GR_SZ,FPUSH,  (GE)(FSTACKFLAG|VARARGS)(IMM8,-1))  /* `push cmp ge, #varargs, $<imm8> + 1' */
 ))
 
 /* CONSTRAINTS: `class <s>, <cs>' */
