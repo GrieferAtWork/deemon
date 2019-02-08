@@ -1,0 +1,196 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import rt, deemon, util, functools;
+import * from deemon;
+import * from errors;
+
+@@Return the binary representation of @x
+final global function bin(x: int): string {
+	return x.bin();
+}
+
+@@Return the octal representation of @x
+final global function oct(x: int): string {
+	return x.oct();
+}
+
+@@Return the hexadecimal representation of @x
+final global function hex(x: int): string {
+	return x.hex();
+}
+
+@@Compare the 2 given objects @a and @b
+final global function cmp(a,b): int {
+	if (a < b)
+		return -1;
+	if (a == b)
+		return 0;
+	return 1;
+}
+
+final global function divmod(a,b): (object,object) {
+	return (a / b, a % b);
+}
+
+final global function filter(func: callable, iter: sequence): sequence {
+	return (iter as sequence).filter(func);
+}
+
+final global function format(value, format_spec = ""): sequence {
+	return value.__format__(format_spec);
+}
+
+final global frozenset = rt.RoSet;
+final global id = deemon.object.id;
+final global open = deemon.file.open;
+final global chr = deemon.string.chr;
+final global function range(args...,**kwds) {
+	return list(sequence.range(args...,**kwds));
+}
+final global function apply(func,args,kwds?) {
+	if (kwds is bound)
+		return func(args...,**kwds);
+	return func(args...);
+}
+final global function coerce(a,b) {
+	/* TODO: Support for complex numbers. */
+	if (a is float || b is float)
+		return (float(a),float(b));
+	return (int(a),int(b));
+}
+final global xrange = deemon.sequence.range;
+final global reversed = deemon.sequence.reversed;
+final global intern = functools.identity;
+
+final global function ord(s: string): int {
+	return s.ord();
+}
+
+final global function reduce(func: callable, iterable: sequence, ...) {
+	return (iterable as sequence).reduce(func,...);
+}
+
+final global function super_(typ,ob) {
+	return deemon.super_(ob,deemon.type_.__base__(typ));
+}
+
+final global function pow(x,y,z?) {
+	if (z is bound)
+		return (x ** y) % z;
+	return x ** y;
+}
+
+final global function isinstance(ob,typ): bool {
+	return ob is typ;
+}
+final global function issubclass(cls,typ): bool {
+	return deemon.type_.derivedfrom(cls,typ);
+}
+final global function map(func,iterable,more...): bool {
+	if (!more) {
+		for (local x: iterable)
+			yield func(x);
+	} else {
+		local its = tuple((iterable,more...).each.operator iter());
+		for (;;) {
+			local elems = [none] * #its;
+			local has_elems = false;
+			for (local i,it: util.enumerate(its)) {
+				local elem;
+				try {
+					elem = it.operator next();
+				} catch (deemon.Signal.StopIteration) {
+					continue;
+				}
+				elems[i] = elem;
+				has_elems = true;
+			}
+			if (!has_elems)
+				break;
+			yield func(elems...);
+		}
+	}
+}
+final global function print_(objects...,**kwds) {
+	local sep = kwds.get("sep"," ");
+	local end = kwds.get("end","\n");
+	local file = kwds.get("file");
+	if (file is none)
+		file = deemon.file.stdout;
+	local is_first = true;
+	for (local x: objects) {
+		if (!is_first)
+			file << sep;
+		is_first = false;
+		file << x;
+	}
+	file << end;
+}
+
+
+global class slice {
+	public member start: object;
+	public member stop: object;
+	public member step: object;
+
+	this(args...) {
+		switch (#args) {
+		case 1:
+			this.step = none;
+			this.stop = args[0];
+			this.start = type(this.stop)();
+			break;
+		case 2:
+			this.start = args[0];
+			this.stop = args[1];
+			this.step = none;
+			break;
+		case 3:
+			this.start = args[0];
+			this.stop = args[1];
+			this.step = args[2];
+			break;
+		default:
+			throw TypeError("slice() expects 1-3 arguments when {} were given"
+				.format({ #args }));
+		}
+	}
+}
+
+final global function sorted(
+		iterable: sequence,
+		cmp?: callable,
+		key?: callable,
+		reversed: bool = false) {
+	if (cmp is bound) {
+		if (key is bound)
+			throw TypeError("with `cmp' and `key' passed to `sorted'");
+		key = functools.predcmp2key(cmp);
+	} else if (key !is bound) {
+		key = none;
+	}
+	local result = (iterable as sequence).sorted(key);
+	if (reversed)
+		result = result.reversed();
+	return result;
+}
+
+
+
+

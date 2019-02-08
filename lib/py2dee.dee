@@ -1,0 +1,1449 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* A module for converting python source code into deemon.
+ * Note that this doesn't have a 100% success rate, and that certain
+ * features can't be converted seamlessly (such as classes which
+ * aren't being converted at all at the moment)
+ * Even though python and deemon have fairly comparable ABIs when it
+ * comes to who one can interact with language-level components, there
+ * are a couple of situations in which converting code requires more
+ * than a couple of syntax changes and the addition of braces:
+ *   - Deemon is designed to use static symbol resolution/binding,
+ *     whereas python does all symbol binding/resolving at runtime.
+ *     This applies to everything from module exports to local variables.
+ *     This decision was made intentionally in deemon, as static symbol
+ *     resolution allows for guarantied O(1) lookup of symbols at runtime,
+ *     which is something that python can't guarantie
+ *   - Deemon is strongly scoped, where-as python isn't
+ *     For this purpose, this converter will declare all used local variables
+ *     at the start of the associated function, thus allowing the deemon
+ *     compiler to correctly bind them.
+ *     However, this easily clobbers the symbol namespace of functions
+ *     when viewed within a debugger or IDE, not only preventing symbol
+ *     scoping from having any effect, nor allowing the compiler to re-use
+ *     memory locations for local variables.
+ *   - Since v200, deemon classes follow a static-member-model wherein
+ *     class members must be declared as such, where-as in python the
+ *     general rule-of-thumb is to simply store an attribute value, at
+ *     which point missing members are automatically created.
+ *     For classes without base this can easily be emulated by extending
+ *     the compatibility class `OldUserClass from d200', however if a base
+ *     class is present, this becomes impossible.
+ *   - Deemon does not allow for multiple-inheritance, where-as python does.
+ *   - Deemon has support for private/public symbols in classes.
+ *     In python, this is usually expressed by member names starting
+ *     with a leading underscore.
+ *   - Deemon uses a dedicated syntax for declaring properties and static
+ *     class members, where-as python does all of this at runtime by using
+ *     tags.
+ */
+
+
+
+import * from deemon;
+import * from errors;
+
+class GenConfig {
+	@@When false, don't generate line-directives
+	final member emitline: bool = true;
+	final member isbasescope: bool = true;
+	final member indent: int = 0;
+	final member last_file: string;
+	@@The current line number according to the latest #line directive
+	final member out_line: int = 0;
+	this = default;
+}
+
+class PyAst {
+	@@The location of @this AST
+	public member location: (string,int,int);
+	this = default;
+
+	@@Enumerate the names of all of the symbols used by this AST
+	public property used_symbols: {string...} = {
+		get(): {string...} {
+			return {};
+		}
+	}
+
+	@@Enumerate all child branches recursively
+	public property child_branches_r: {PyAst...} = {
+		get(): {PyAst...} {
+			for (local b: child_branches) {
+				yield b;
+				yield b.child_branches_r...;
+			}
+		}
+	}
+	@@Enumerate all child branches recursively
+	public property child_branches_samefunc_r: {PyAst...} = {
+		get(): {PyAst...} {
+			for (local b: child_branches_samefunc) {
+				yield b;
+				yield b.child_branches_samefunc_r...;
+			}
+		}
+	}
+	@@Enumerate all child branches within the same function
+	public property child_branches_samefunc: {PyAst...} = {
+		get(): {PyAst...} {
+			return child_branches;
+		}
+	}
+	@@Enumerate all child branches
+	public property child_branches: {PyAst...} = {
+		get(): {PyAst...} {
+			return {};
+		}
+	}
+	public function generate_line_directive(out: file, config: GenConfig) {
+		if (location !is bound)
+			return;
+		if (!config.emitline)
+			return;
+		local file_changed;
+		file_changed = config.last_file !is bound ||
+		               config.last_file != location[0];
+		if (!file_changed && config.out_line == location[1])
+			return;
+		if (!file_changed && config.out_line + 1 == location[1]) {
+			/* Simply emit a regular line-feed to adjust the line-offset */
+		} else {
+			out << "# " << location[1];
+			if (file_changed) {
+				config.last_file = location[0];
+				out << " " << repr location[0];
+			}
+		}
+		config.out_line = location[1];
+		out << "\n";
+	}
+}
+class PyAstComment: PyAst {
+	final public member text: string;
+	this = default;
+
+	function generate(out: file, config: GenConfig, as_expression: bool) {
+		if (as_expression) {
+			++config.indent;
+			out << "\n";
+			++config.out_line;
+		}
+		local ind = "\t" * config.indent;
+		if ("*/" in text) {
+			for (local l: text.splitlines()) {
+				out << ind << "// " << l << "\n";
+				++config.out_line;
+			}
+		} else {
+			out << "\t" * config.indent << "/* ";
+			local is_first = true;
+			local n_lines = 0;
+			for (local l: text.splitlines()) {
+				++n_lines;
+				if (!is_first) {
+					out << "\n" << ind << " * ";
+					++config.out_line;
+				}
+				is_first = false;
+				out << l;
+			}
+			if (n_lines > 5) {
+				out << "\n" << ind;
+				++config.out_line;
+			}
+			out << " */\n";
+			++config.out_line;
+		}
+		if (as_expression)
+			--config.indent;
+	}
+}
+class PyAstMultiple: PyAst {
+	@@The content branches of @this ast
+	final public member branches: {PyAst...};
+	this = default;
+	public property child_branches: {PyAst...} = {
+		get(): {PyAst...} {
+			return branches;
+		}
+	}
+	final function merge() {
+		local b = list(branches);
+		local n = #b - 1;
+		for (local i = 0; i < n;) {
+			local first = b[i];
+			if (first !is PyAstComment) {
+				if (first is PyAstMultiple && !first.branches) {
+					b.pop(i);
+					--n;
+					continue;
+				}
+				++i;
+				continue;
+			}
+			while (i < n) {
+				local second = b[i + 1];
+				if (second !is PyAstComment) {
+					++i;
+					break;
+				}
+				first.text += "\n";
+				first.text += second.text;
+				b.pop(i + 1);
+				--n;
+			}
+		}
+		if (#b == 1)
+			return b.first;
+		branches = b;
+		return this;
+	}
+	function generate(out: file, config: GenConfig, as_expression: bool) {
+		if (as_expression) {
+			out << "({\n";
+			++config.out_line;
+			++config.indent;
+			for (local b: branches)
+				b.generate(out,config,false);
+			--config.indent;
+			out << "})";
+		} else {
+			local old_isbasescope;
+			if (!branches || branches.first.location !is bound)
+				this.generate_line_directive(out,config);
+			old_isbasescope = config.isbasescope;
+			if (!old_isbasescope) {
+				out << "\t" * config.indent << "{\n";
+				++config.indent;
+				++config.out_line;
+			}
+			config.isbasescope = false;
+			for (local b: branches)
+				b.generate(out,config,false);
+			config.isbasescope = old_isbasescope;
+			if (!old_isbasescope) {
+				--config.indent;
+				out << "\t" * config.indent << "}\n";
+				++config.out_line;
+			}
+		}
+	}
+}
+
+
+function need_space(a,b) {
+	final local singletok = { "(", ")", "[", "]", "{", "}", "\"", "\'" };
+	final local reqspace = { "=" };
+	if (a in singletok || b in singletok)
+		return false;
+	if (a in reqspace || b in reqspace)
+		return true;
+	if (a in [":",","])
+		return true;
+	return a.issymcont() == b.issymcont();
+}
+
+class PyAstExpression: PyAst {
+	@@Expression parts
+	final public member parts: {string | PyAst...};
+	@@Names of all of the used symbols
+	final public member used_symbols: {string...} = [];
+
+	public function generate(out: file, config: GenConfig, as_expression: bool) {
+		if (!as_expression) {
+			this.generate_line_directive(out,config);
+			out << "\t" * config.indent;
+		}
+		local last_string = "";
+		for (local x: parts) {
+			if (x !is string) {
+				file.writer tempfp;
+				x.generate(tempfp,config,true);
+				x = tempfp.string;
+			}
+			if (!x)
+				continue;
+			if (last_string &&
+			    need_space(last_string.last,x.first))
+				out << " ";
+			last_string = x;
+			out << x;
+		}
+		if (!as_expression) {
+			out << ";\n";
+			++config.out_line;
+		}
+	}
+}
+
+class PyAstFor: PyAst {
+	this = default;
+	@@The for-elements of @this AST
+	final public member used_symbols: {string...} = [];
+	final public member iter: PyAst;
+	@@May be unbound
+	final public member loop: PyAst;
+
+	public property child_branches: {PyAst...} = {
+		get(): {PyAst...} {
+			yield iter;
+			if (loop is bound)
+				yield loop;
+		}
+	}
+
+	function generate(out: file, config: GenConfig, as_expression: bool) {
+		this.generate_line_directive(out,config);
+		local ind = "\t" * config.indent;
+		out << ind << "for (";
+		if (as_expression)
+			out << "local ";
+		out << ",".join(used_symbols);
+		out << ": ";
+		iter.generate(out,config,true);
+		out << ") ";
+		local o;
+		if (!as_expression) {
+			out << "{\n";
+			++config.out_line;
+			++config.indent;
+			o = config.isbasescope;
+			config.isbasescope = true;
+		}
+		if (loop is bound)
+			loop.generate(out,config,as_expression);
+		else if (as_expression)
+			out << "none";
+		if (!as_expression) {
+			--config.indent;
+			out << "\t" * config.indent << "}\n";
+			++config.out_line;
+			config.isbasescope = o;
+		}
+	}
+}
+
+class PyAstWhile: PyAst {
+	this = default;
+	final public member cond: PyAst;
+	@@May be unbound
+	final public member loop: PyAst;
+
+	public property child_branches: {PyAst...} = {
+		get(): {PyAst...} {
+			yield cond;
+			if (loop is bound)
+				yield loop;
+		}
+	}
+
+	function generate(out: file, config: GenConfig, as_expression: bool) {
+		if (as_expression) {
+			out << "({\n";
+			++config.out_line;
+			++config.indent;
+		}
+		this.generate_line_directive(out,config);
+		local ind = "\t" * config.indent;
+		out << ind << "while (";
+		cond.generate(out,config,true);
+		out << ") {\n";
+		++config.out_line;
+		++config.indent;
+		local o = config.isbasescope;
+		config.isbasescope = true;
+		if (loop is bound)
+			loop.generate(out,config,false);
+		--config.indent;
+		out << "\t" * config.indent << "}\n";
+		++config.out_line;
+		config.isbasescope = o;
+		if (as_expression) {
+			--config.indent;
+			out << "})";
+		}
+	}
+}
+
+class PyAstIf: PyAst {
+	this = default;
+	final public member cond: PyAst;
+	@@May be unbound
+	final public member tt: PyAst;
+	@@May be unbound
+	final public member ff: PyAst;
+
+	public property child_branches: {PyAst...} = {
+		get(): {PyAst...} {
+			yield cond;
+			if (tt is bound)
+				yield tt;
+			if (ff is bound)
+				yield ff;
+		}
+	}
+
+	function generate(out: file, config: GenConfig, as_expression: bool) {
+		if (as_expression) {
+			cond.generate(out,config,true);
+			out << " ? ";
+			if (tt is bound)
+				tt.generate(out,config,true);
+			else {
+				out << "none";
+			}
+			if (ff is bound) {
+				out << " : ";
+				ff.generate(out,config,true);
+			}
+		} else {
+			this.generate_line_directive(out,config);
+			local ind = "\t" * config.indent;
+			out << ind << "if (";
+			cond.generate(out,config,true);
+			out << ") {\n";
+			++config.out_line;
+			++config.indent;
+			local o = config.isbasescope;
+			config.isbasescope = true;
+			if (tt is bound)
+				tt.generate(out,config,false);
+			if (ff is bound) {
+				out << "\t" * (config.indent - 1) << "} else {\n";
+				++config.out_line;
+				ff.generate(out,config,false);
+			}
+			--config.indent;
+			out << "\t" * config.indent << "}\n";
+			++config.out_line;
+			config.isbasescope = o;
+		}
+	}
+}
+
+class PyAstDef: PyAst {
+	this = default;
+	@@Name of the function
+	final public member name: string;
+	@@Name of the varargs argument, or unbound if undefined
+	final public member argname_varargs: string;
+	@@Name of the varargs argument, or unbound if undefined
+	final public member argname_varkwds: string;
+	@@List of arguments as tuples (name,default-value-or-none)
+	final public member arguments: {(string,PyAst | none)...};
+	@@The body of the function
+	final public member body: PyAst;
+
+	public property used_symbols: {string...} = {
+		get(): {string...} {
+			yield name;
+		}
+	}
+
+	public property child_branches: {PyAst...} = {
+		get(): {PyAst...} {
+			for (local none,d: arguments) {
+				if (d !is none)
+					yield d;
+			}
+			yield body;
+		}
+	}
+	public property child_branches_samefunc: {PyAst...} = {
+		get(): {PyAst...} {
+			for (local none,d: arguments) {
+				if (d !is none)
+					yield d;
+			}
+		}
+	}
+
+	function enum_local_vars(): {string...} {
+		for (local x: body.child_branches_samefunc_r)
+			yield x.used_symbols...;
+	}
+
+	function generate(out: file, config: GenConfig, as_expression: bool) {
+		local need_semi = false;
+		if (!as_expression) {
+			this.generate_line_directive(out,config);
+			out << "\t" * config.indent;
+		}
+		if (name is bound && !as_expression) {
+			out << "function " << name << "(";
+		} else {
+			if (name is bound)
+				out << name << " = ";
+			need_semi = true;
+			out << "[]";
+			if (argname_varargs !is bound &&
+			    argname_varkwds !is bound && !arguments)
+				goto skip_arguments;
+			out << "(";
+		}
+		local is_first = true;
+		for (local name,defl: arguments) {
+			if (!is_first) {
+				out << ", ";
+			}
+			is_first = false;
+			out << name;
+			if (defl !is none) {
+				out << " = ";
+				defl.generate(out,config,true);
+			}
+		}
+		if (argname_varargs is bound) {
+			if (!is_first)
+				out << ", ";
+			is_first = false;
+			out << argname_varargs << "...";
+		}
+		if (argname_varkwds is bound) {
+			if (!is_first)
+				out << ", ";
+			is_first = false;
+			out << "**" << argname_varkwds;
+		}
+		out << ")";
+skip_arguments:
+		out << " {\n";
+		local o = config.isbasescope;
+		config.isbasescope = true;
+		++config.out_line;
+		++config.indent;
+		local is_first = true;
+		local local_vars = list(hashset(enum_local_vars()));
+		local_vars.sort();
+		for (local s: local_vars) {
+			if (is_first) {
+				out << "\t" * config.indent;
+				out << "local ";
+			} else {
+				out << ",";
+			}
+			out << s;
+			is_first = false;
+		}
+		if (!is_first) {
+			out << ";\n";
+			++config.out_line;
+		}
+		body.generate(out,config,false);
+		--config.indent;
+		if (!as_expression)
+			out << "\t" * config.indent;
+		out << "}";
+		config.isbasescope = o;
+		if (!as_expression && need_semi)
+			out << ";";
+		if (!as_expression) {
+			out << "\n";
+			++config.out_line;
+		}
+	}
+}
+
+
+final global TOK_SINGLE  = ".";
+final global TOK_LF      = "\n";
+final global TOK_INDENT  = "\t";
+final global TOK_DEDENT  = "\b";
+final global TOK_KEYWORD = "K";
+final global TOK_STRING  = "S";
+final global TOK_COMMENT = "C";
+final global TOK_NUMBER  = "0";
+
+class Tokenizer {
+
+	@@Name of the this-symbol in class member functions
+	private final member this_symbol_name: string;
+
+
+	final function err(message: string) {
+		throw SyntaxError("{}({},{}) : Error : {}".format({
+			location...,
+			message
+		}));
+	}
+
+	final function skip(t: string) {
+		if (tok == t) {
+			next();
+		} else {
+			err("Expected {!r}, but got {!r}"
+				.format({ t, tok }));
+		}
+	}
+
+	final function parse_expression(inargs: bool = false, allowcomma: bool = false): PyAst {
+		local result = PyAstExpression();
+		result.location = location;
+		local parts = [];
+		local is_multiple = false;
+		local symbols = [];
+again_primary:
+		switch (kind) {
+		case TOK_SINGLE:
+			final local paren_map = {
+				"(" : ")",
+				"{" : "}",
+				"[" : "]"
+			};
+			/* Parenthesis */
+			if (tok in paren_map) {
+				local e = paren_map[tok];
+				parts.append(tok);
+				next();
+				while (tok != e) {
+					local x = parse_expression();
+					if (x is PyAstFor) {
+						parts.append("(");
+						parts.append(x);
+						parts.append(")");
+						parts.append("...");
+					} else {
+						parts.append(x);
+					}
+					if (tok == e)
+						break;
+					skip(",");
+					parts.append(",");
+				}
+				next();
+				parts.append(e);
+				break;
+			}
+			switch (tok) {
+			case "*":
+				/* Varargs */
+				next();
+				parts.append(parse_expression());
+				parts.append("...");
+				goto done;
+			case "**":
+				/* Varkwds */
+				next();
+				parts.append("**");
+				parts.append(parse_expression());
+				goto done;
+			default:
+				break;
+			}
+			/* fallthru */
+		case TOK_NUMBER:
+		case TOK_STRING:
+			parts.append(tok);
+			next();
+			break;
+		case TOK_KEYWORD: {
+			local kwd = tok;
+			/* Map for translating references to builtin functions */
+			local builtins_map = {
+				"True" : "true",
+				"False" : "false",
+				"None" : "none",
+				"abs" : "(abs from util)",
+				"all" : "(all from util)",
+				"any" : "(any from util)",
+				"basestring" : "(string from deemon)",
+				"bin" : "(bin from python.builtins)",
+				"bool" : "(bool from deemon)",
+				/* TODO: bytearray() */
+				"callable" : "(callable from deemon)",
+				"chr" : "(chr from python.builtins)",
+				/* TODO: classmethod() */
+				"cmp" : "(cmp from python.builtins)",
+				/* TODO: compile() */
+				/* TODO: complex() */
+				"delattr" : "(delattr from operators)",
+				"dict" : "(dict from deemon)",
+				"divmod" : "(divmod from python.builtins)",
+				/* TODO: dir() */
+				"enumerate" : "(enumerate from util)",
+				/* TODO: eval() */
+				/* TODO: execfile() */
+				"file" : "(file from deemon)",
+				"filter" : "(filter from python.builtins)",
+				"float" : "(float from deemon)",
+				"format" : "(format from python.builtins)",
+				"frozenset" : "(frozenset from python.builtins)",
+				"getattr" : "(getattr from operators)",
+				"globals" : "([]{ import __me = .; return (module from deemon).__exports__(__me); })",
+				"hash" : "(hash from operators)",
+				"hasattr" : "(hasattr from operators)",
+				"help" : "(Doc from doc)", /* Kind-of... */
+				"hex" : "(hex from python.builtins)",
+				"id" : "(id from python.builtins)",
+				/* TODO: input() */
+				"int" : "(int from deemon)",
+				"isinstance" : "(isinstance from python.builtins)",
+				"issubclass" : "(issubclass from python.builtins)",
+				"iter" : "(iter from operators)",
+				"len" : "(size from operators)",
+				"list" : "(list from deemon)",
+				/* TODO: locals() */
+				"long" : "(int from deemon)",
+				"map" : "(map from python.builtins)",
+				"max" : "(max from util)",
+				"memoryview" : "(bytes from deemon)",
+				"min" : "(min from util)",
+				"next" : "(next from operators)",
+				"object" : "(object from deemon)",
+				"oct" : "(oct from python.builtins)",
+				"open" : "(open from python.builtins)",
+				"ord" : "(ord from python.builtins)",
+				"pow" : "(pow from python.builtins)",
+				"print" : "(print_ from python.builtins)",
+				/* TODO: property() */
+				"range" : "(range from python.builtins)",
+				/* TODO: raw_input() */
+				/* TODO: reload() */
+				"reversed" : "(reversed from python.builtins)",
+				"round" : "(round from util)",
+				"set" : "(hashset from deemon)",
+				"setattr" : "(setattr from operators)",
+				"slice" : "(slice from python.builtins)",
+				"sorted" : "(sorted from python.builtins)",
+				/* TODO: staticmethod() */
+				"sum" : "(sum from util)",
+				"super" : "(super_ from python.builtins)",
+				"tuple" : "(tuple from deemon)",
+				"unichr" : "(chr from python.builtins)",
+				"unicode" : "(string from deemon)",
+				/* TODO: vars() */
+				"xrange" : "(xrange from python.builtins)",
+				"zip" : "(zip from util)",
+				"__import__" : "import",
+				"apply" : "(apply from python.builtins)",
+				"buffer" : "(bytes from deemon)",
+				"coerce" : "(coerce from python.builtins)",
+				"intern" : "(intern from python.builtins)",
+			};
+			if (this_symbol_name is bound &&
+			    this_symbol_name == kwd) {
+				kwd = "this";
+			} else {
+				kwd = builtins_map.get(kwd,kwd);
+			}
+			parts.append(kwd);
+			next();
+			if (kwd !in ["str","repr","type"]) {
+				if (tok == "=" && inargs) {
+					/* Keyword label */
+					parts.append(":");
+					next();
+					goto again_primary;
+				}
+				symbols.append(kwd);
+			}
+		}	break;
+		default:
+			err("Unexpected token {!r} in expression"
+				.format({ tok }));
+			break;
+		}
+do_suffix:
+		switch (kind) {
+		case TOK_SINGLE:
+		case TOK_KEYWORD:
+			if (tok in ["+","-","*","/","<<",">>","<=",">=",
+			            "==","!=","<",">","===","!===","in",
+			            "is","%","&","^","|","&&","||","**",
+			            "+=","-=","*=","/=","%=","&=","|=",
+			            "^=","<<=",">>=","**="]) {
+				parts.append(tok);
+				next();
+				goto again_primary;
+			}
+			switch (tok) {
+			case ",":
+				if (!allowcomma)
+					break;
+				parts.append(tok);
+				is_multiple = true;
+				next();
+				goto again_primary;
+			case "=":
+				parts.append(tok);
+				next();
+				result.used_symbols.extend(symbols);
+				symbols = [];
+				parts.append(parse_expression());
+				if (is_multiple)
+					parts.append("...");
+				break;
+			case "(":
+				/* Call */
+				parts.append("(");
+				next();
+				while (tok != ")") {
+					parts.append(parse_expression(inargs: true));
+					if (tok != ",")
+						break;
+					parts.append(",");
+					next();
+				}
+				skip(")");
+				parts.append(")");
+				goto do_suffix;
+			case ".":
+				/* Getattr */
+				parts.append(".");
+				next();
+				if (kind != TOK_KEYWORD) {
+					err("Expected keyword after `.', but got {!r}"
+						.format({ tok }));
+				}
+				parts.append(tok);
+				next();
+				goto do_suffix;
+			case "[":
+				/* Getitem/getrange */
+				parts.append("[");
+				next();
+				if (tok != ":")
+					parts.append(parse_expression());
+				if (tok == ":") {
+					parts.append(":");
+					next();
+					if (tok != "]")
+						parts.append(parse_expression());
+				}
+				parts.append("]");
+				skip("]");
+				goto do_suffix;
+			case "if": {
+				/* if-else expressions are written as `tt if cond [else ff]' */
+				next();
+				local new_result = PyAstExpression();
+				new_result.location = result.location;
+				result.parts = parts;
+				local if_branch = PyAstIf(
+					cond: parse_expression(),
+					tt: result);
+				result = new_result;
+				if (tok == "else") {
+					next();
+					if_branch.ff = parse_expression();
+				}
+				parts = [if_branch];
+			}	goto do_suffix;
+			case "for": {
+				/* Generater expression:
+				 * python: x.strip() for x in items()
+				 * deemon: for(local x: items()) x.strip() */
+				next();
+				local new_result = PyAstExpression();
+				new_result.location = result.location;
+				result.parts = parts;
+				local for_branch = PyAstFor(loop: result);
+				result = new_result;
+				for (;;) {
+					if (kind != TOK_KEYWORD)
+						err("Expected keyword after `for' in expression, but got ");
+					for_branch.used_symbols.append(tok);
+					next();
+					if (tok != ",")
+						break;
+					next();
+				}
+				skip("in");
+				for_branch.iter = parse_expression();
+				parts = [for_branch];
+			}	break;
+			default:
+				break;
+			}
+			break;
+		}
+done:
+		result.parts = parts;
+		return result;
+	}
+	final function parse_def_arguments(): {(string,PyAst | none)...} {
+		while (tok != ")") {
+			if (kind != TOK_KEYWORD)
+				break;
+			local name = tok;
+			local defl = none;
+			next();
+			if (tok == "=") {
+				next();
+				defl = parse_expression();
+			}
+			yield (name,defl);
+			if (tok != ",")
+				break;
+			next();
+		}
+	}
+
+	final function parse_root_statements(): PyAst {
+		local asts = [];
+		while (tok) {
+			while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+				next();
+			if (!tok)
+				break;
+			local st = parse_statement();
+			if (st is none) {
+				if (tok !is none)
+					continue;
+				break;
+			}
+			if (st is PyAstMultiple)
+				asts.extend(st.branches);
+			else {
+				asts.append(st);
+			}
+		}
+		return PyAstMultiple(branches: asts).merge();
+	}
+	final function parse_statement_block_after_colon(): PyAst {
+		if (kind == TOK_LF) {
+			next();
+			return parse_statement_block();
+		}
+		return parse_statement();
+	}
+	final function parse_statement_block(): PyAst {
+		local loc = location;
+		local escape_indent = indent;
+		while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+			next();
+		local asts = [];
+		if (tok == "pass") {
+			next();
+			if (tok == ";") {
+				next();
+			} else {
+				skip("\n");
+				while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+					next();
+				if (indent > escape_indent)
+					err("Indentation too large after `pass'");
+			}
+		} else {
+			if (indent <= escape_indent)
+				err("Missing `pass' in empty block");
+			while (indent > escape_indent) {
+				local st = parse_statement();
+				if (st is none) {
+					if (!asts)
+						err("Missing `pass' in empty block")
+					break;
+				}
+				if (st is PyAstMultiple)
+					asts.extend(st.branches);
+				else {
+					asts.append(st);
+				}
+				while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+					next();
+			}
+		}
+		if (#asts == 1)
+			return asts[0];
+		local result = PyAstMultiple(branches: asts);
+		result.location = loc;
+		return result.merge();
+	}
+	final function parse_statement(): PyAst | none {
+again:
+		switch (kind) {
+		case none:
+			return none;
+		case TOK_COMMENT: {
+			local result = PyAstComment(text: tok[2:-1]);
+			result.location = location;
+			next();
+			return result;
+		}
+		default:
+			break;
+		}
+		switch (tok) {
+		case "pass":
+			next();
+			return none;
+		case "\n":
+		case ";":
+			next();
+			goto again;
+		case "for": {
+			next();
+			local result = PyAstFor();
+			for (;;) {
+				if (kind != TOK_KEYWORD)
+					err("Expected keyword after `for', but got ");
+				result.used_symbols.append(tok);
+				next();
+				if (tok != ",")
+					break;
+				next();
+			}
+			skip("in");
+			result.iter = parse_expression();
+			skip(":");
+			local loop;
+			loop = parse_statement_block_after_colon();
+			if (loop is PyAstMultiple && !loop.branches)
+				loop = none;
+			if (loop !is none)
+				result.loop = loop;
+			return result;
+		}	break;
+		case "while": {
+			next();
+			local result = PyAstWhile(cond: parse_expression());
+			skip(":");
+			local loop;
+			loop = parse_statement_block_after_colon();
+			if (loop is PyAstMultiple && !loop.branches)
+				loop = none;
+			if (loop !is none)
+				result.loop = loop;
+			return result;
+		}	break;
+		case "for": {
+			next();
+			local result = PyAstWhile(cond: parse_expression());
+			skip(":");
+			local loop;
+			loop = parse_statement_block_after_colon();
+			if (loop is PyAstMultiple && !loop.branches)
+				loop = none;
+			if (loop !is none)
+				result.loop = loop;
+			return result;
+		}	break;
+		case "if": {
+			next();
+			local result = PyAstIf(cond: parse_expression());
+			skip(":");
+			local tt = parse_statement_block_after_colon();
+			if (tt is PyAstMultiple && !tt.branches)
+				tt = none;
+			local ff = none;
+			if (tok == "else") {
+				next();
+				skip(":");
+				ff = parse_statement_block_after_colon();
+			} else if (tok == "elif") {
+				tok = "if";
+				ff = parse_statement();
+			}
+			if (tt !is none)
+				result.tt = tt;
+			if (ff !is none)
+				result.ff = ff;
+			return result;
+		}	break;
+		case "def": {
+			local loc = location;
+			next();
+			if (kind != TOK_KEYWORD) {
+				err("Expected function name after `def', but got {!r}"
+					.format({ tok }));
+			}
+			local name = tok;
+			next();
+			skip("(");
+			local args = tuple(parse_def_arguments());
+			local varargs_name = none;
+			local varkwds_name = none;
+			while (tok != ")") {
+				if (tok == "*") {
+					next();
+					if (kind != TOK_KEYWORD) {
+						err("Expected keyword after `*' in def, but got {!r}"
+							.format({ tok }));
+					}
+					varargs_name = tok;
+					next();
+				} else if (tok == "**") {
+					next();
+					if (kind != TOK_KEYWORD) {
+						err("Expected keyword after `**' in def, but got {!r}"
+							.format({ tok }));
+					}
+					varkwds_name = tok;
+					next();
+				} else break;
+				if (tok != ",")
+					break;
+				next();
+			}
+			skip(")");
+			skip(":");
+			local body;
+			if (kind == TOK_LF) {
+				next();
+				body = parse_statement_block();
+			} else {
+				body = parse_statement();
+				if (body is none)
+					err("Missing budy for {!r}".format({ name }));
+			}
+			local result = PyAstDef(name: name, arguments: args, body: body);
+			if (varargs_name !is none)
+				result.argname_varargs = varargs_name;
+			if (varkwds_name !is none)
+				result.argname_varkwds = varkwds_name;
+			result.location = loc;
+			return result;
+		}	break;
+		default:
+			break;
+		}
+		local result = parse_expression(allowcomma: true);
+		if (tok == ";")
+			next();
+		else {
+			skip("\n");
+		}
+		return result;
+	}
+
+	@@Return a triple (filename,line,column) (1-based)
+	public final property location: (string,int,int) = {
+		get(): (string,int,int) {
+			local line_start = text.rfind("\n",0,tokstart);
+			if (line_start < 0)
+				line_start = 0;
+			local lineno = text.count("\n",0,tokstart);
+			return (filename,lineno + 1,(tokstart - line_start) + 1);
+		}
+	}
+
+
+	@@The name of the input file
+	public final member filename: string;
+
+	@@Offset into @text to the start of the current token
+	public final member tokstart: int;
+
+	@@Offset into @text to the end of the current token
+	public final member tokend: int = 0;
+
+	@@The input text to tokenize
+	public final member text: string;
+
+	@@The length of the input text (${#this.text})
+	public final member len: int;
+
+	@@Real intentation of the current line
+	public final member real_indent: int = 0;
+
+	@@Current indentation
+	public final member indent: int;
+
+	@@The current token text
+	public final member tok: string;
+
+	@@The current token text kind (One of )
+	public final member kind: string;
+
+	this(text: string) {
+		this.text = text.unifylines().expandtabs(4);
+		this.len = #this.text;
+		while (tokend < len && this.text.isspace(tokend)) {
+			++real_indent;
+			if (this.text.islf(tokend))
+				real_indent = 0;
+			++tokend;
+		}
+		indent = real_indent;
+	}
+	final function next_nocomment(): string | none {
+		do next();
+		while (kind == TOK_COMMENT);
+	}
+	final function skip_comments() {
+		while (kind == TOK_COMMENT)
+			next();
+	}
+	final function next(): string | none {
+again:
+		if (tokend >= len) {
+			tok = kind = none;
+			indent = real_indent = -1;
+			goto done;
+		}
+		local ch = text[tokend];
+		if (real_indent != indent) {
+			if (real_indent > indent) {
+				++indent;
+				tok = kind = TOK_INDENT;
+				goto done;
+			}
+			--indent;
+			tok = kind = TOK_DEDENT;
+			goto done;
+		}
+		tokstart = tokend;
+		if (ch.islf()) {
+			/* Linefeed */
+			indent = real_indent;
+again_scan_newline:
+			++tokend;
+			real_indent = 0;
+			while (tokend < len && text.isspace(tokend) && !text.islf(tokend)) {
+				++real_indent;
+				++tokend;
+			}
+			if (tokend >= len)
+				real_indent = indent;
+			else if (text.islf(tokend)) {
+				real_indent = indent;
+				goto again_scan_newline;
+			}
+			tok = kind = TOK_LF;
+			goto done;
+		}
+		/* Skip whitespace. */
+		if (ch.isspace()) {
+			++tokend;
+			goto again;
+		}
+		switch (ch) {
+		case "*":
+			local sub = text.substr(tokend + 1,tokend + 2);
+			if (sub in ["*","="]) {
+				tok = "*" + sub;
+				kind = TOK_SINGLE;
+				tokend += 2;
+				goto done;
+			}
+			break;
+		case ">":
+			local sub = text.substr(tokend + 1,tokend + 2);
+			if (sub in [">","="]) {
+				tok = ">" + sub;
+				if (sub == ">") {
+					local sub2 = text.substr(tokend + 2,tokend + 3);
+					if (sub2 in ["="]) {
+						tok += sub2;
+						++tokend;
+					}
+				}
+				kind = TOK_SINGLE;
+				tokend += 2;
+				goto done;
+			}
+			break;
+		case "<":
+			local sub = text.substr(tokend + 1,tokend + 2);
+			if (sub in ["<","="]) {
+				tok = "<" + sub;
+				if (sub == "<") {
+					local sub2 = text.substr(tokend + 2,tokend + 3);
+					if (sub2 in ["="]) {
+						tok += sub2;
+						++tokend;
+					}
+				}
+				kind = TOK_SINGLE;
+				tokend += 2;
+				goto done;
+			}
+			break;
+		case "=":
+			local sub = text.substr(tokend + 1,tokend + 2);
+			if (sub in ["="]) {
+				tok = "<" + sub;
+				kind = TOK_SINGLE;
+				tokend += 2;
+				goto done;
+			}
+			break;
+		case "!":
+			local sub = text.substr(tokend + 1,tokend + 2);
+			if (sub in ["="]) {
+				tok = "<" + sub;
+				kind = TOK_SINGLE;
+				tokend += 2;
+				goto done;
+			}
+			break;
+		case "\\":
+			if (tokend + 1 < len && text.islf(tokend + 1)) {
+				tokend += 2;
+				goto again;
+			}
+			break;
+		case "#": {
+			local line_end;
+			++tokend;
+			line_end = text.find("\n",tokend);
+			tokend = line_end + 1;
+			if (tokend == 0)
+				tokend = len;
+			tok = "//{}\n".format({
+				text[tokstart + 1:line_end].replace("\\\n","")
+			});
+			kind = TOK_COMMENT;
+			goto done;
+		}	break;
+		case "\"":
+		case "\'":
+			++tokend;
+			while (tokend < len) {
+				local endch = text[tokend];
+				if (endch == ch) {
+					++tokend;
+					break;
+				}
+				if (endch == "\\")
+					++tokend;
+				++tokend;
+			}
+			tok = text[tokstart:tokend].replace("\\\n","");
+			kind = TOK_STRING;
+			goto done;
+		default:
+			break;
+		}
+		if (ch.issymstrt()) {
+again_symbol:
+			do ++tokend;
+			while (tokend < len && text.issymcont(tokend));
+			if (tokend + 1 < len && text[tokend] == "\\" &&
+			    text.islf(tokend + 1)) {
+				++tokend;
+				goto again_symbol;
+			}
+			tok = text[tokstart:tokend].replace("\\\n","");
+			kind = TOK_KEYWORD;
+			goto done;
+		}
+		if (ch.isnumeric()) {
+again_numeric:
+			do ++tokend;
+			while (tokend < len && text.issymcont(tokend));
+			if (tokend + 1 < len && text[tokend] == "\\" &&
+			    text.islf(tokend + 1)) {
+				++tokend;
+				goto again_numeric;
+			}
+			if (tokend < len && text[tokend] == ".") {
+				++tokend;
+				goto again_numeric;
+			}
+			tok = text[tokstart:tokend].replace("\\\n","");
+			kind = TOK_NUMBER;
+			goto done;
+		}
+		++tokend;
+		tok = ch; /* Single-character token. */
+		kind = TOK_SINGLE;
+done:
+		return tok;
+	}
+	final operator iter(): Tokenizer {
+		return this;
+	}
+	final operator next(): string {
+		local result = next();
+		if (result is none)
+			throw Signal.StopIteration();
+		return result;
+	}
+}
+
+
+
+function convert(input?: file | string, output?: file, filename?: string): file | string {
+	if (input !is bound)
+		input = file.open(filename,"r");
+	local t = Tokenizer(text: input.read().decode("utf-8"));
+	t.filename = filename is bound ? filename :
+		try input.filename catch (...) "<input>";
+	t.next();
+	local ast = t.parse_root_statements();
+	local conf = GenConfig();
+	if (output is bound) {
+		ast.generate(output,conf,false);
+		return output;
+	}
+	file.writer tempfp;
+	ast.generate(tempfp,conf,false);
+	return tempfp.string;
+}
+
+
+#ifdef __MAIN__
+local args = [...][1:];
+if (!args) {
+	convert(
+		input: file.stdin,
+		output: file.stdout,
+		filename: "<stdin>");
+	return 0;
+}
+if (args[0] == "--help") {
+	print "Usage:",[...][0];
+	print "      ",[...][0],"INPUT";
+	print "      ",[...][0],"-o","OUTPUT","INPUT";
+	print "Example: deemon lib/py2dee.dee test.py > test.dee && deemon test.dee";
+	print "         Convert a python script to deemon and execute it";
+	return 1;
+}
+local outfilename = none;
+if (args[0] == "-o") {
+	outfilename = args[1];
+	args = args[2:];
+}
+local infile = file.stdin;
+local infilename = "<stdin>";
+if (args) {
+	if (#args > 1) {
+		print "Invalid arguments";
+		return 1;
+	}
+	infilename = args[0];
+	infile = file.open(infilename,"r");
+}
+local outfile = file.stdout;
+if (outfilename)
+	outfile = file.open(outfilename,"w");
+convert(
+	input: infile,
+	output: outfile,
+	filename: infilename);
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
