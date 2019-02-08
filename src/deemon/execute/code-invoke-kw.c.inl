@@ -117,19 +117,22 @@ PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
 #endif
 
  if unlikely(frame.cf_argc > code->co_argc_max) {
-  /* ERROR: Too many positional arguments. */
-  err_invalid_argc(DeeCode_NAME(code),
-                   frame.cf_argc,
-                   code->co_argc_min,
-                   code->co_argc_max);
-  goto err;
+  if (!(code->co_flags & CODE_FVARARGS)) {
+   /* ERROR: Too many positional arguments. */
+   err_invalid_argc(DeeCode_NAME(code),
+                    frame.cf_argc,
+                    code->co_argc_min,
+                    code->co_argc_max);
+   goto err;
+  }
+  ex_argc = 0;
+ } else {
+  ex_argc = code->co_argc_max - frame.cf_argc;
  }
-
  /* Allocate the frame extension for storing keyword arguments.
   * This needs to be done before we check if all required arguments
   * have been given, since keyword arguments are allowed to substitute
   * ones that are positional. */
- ex_argc = code->co_argc_max - frame.cf_argc;
 
 #if CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)
 #if defined(Dee_Alloca) && !(CODE_FLAGS & CODE_FYIELDING)
@@ -375,6 +378,17 @@ UNIQUE(err_kargv):
  frame.cf_sp     = frame.cf_stack;
  frame.cf_ip     = code->co_code;
  frame.cf_vargs  = NULL;
+#ifdef CALL_TUPLE
+#ifdef KW_IS_MAPPING
+ if (!code->co_argc_max)
+#else
+ if (!code->co_argc_max && !kw_argc)
+#endif
+ {
+  /* Can directly forward varargs passed by the caller! */
+  frame.cf_vargs = (DREF struct tuple_object *)args;
+ }
+#endif /* CALL_TUPLE */
  frame.cf_result = NULL;
  frame.cf_func   = self;
  frame.cf_argv   = GET_ARGV();
@@ -412,7 +426,7 @@ UNIQUE(err_kargv):
   Dee_Free(frame.cf_frame);
  }
 #ifdef CALL_TUPLE
- if (code->co_argc_max != 0)
+ if (frame.cf_vargs != (DREF struct tuple_object *)args)
 #endif /* CALL_TUPLE */
  {
   Dee_XDecref(frame.cf_vargs);
