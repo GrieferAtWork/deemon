@@ -1858,6 +1858,8 @@ print_global_const:
  case ASM_GETMEMBER_THIS:
  case ASM_BOUNDMEMBER:
  case ASM_BOUNDMEMBER_THIS:
+ case ASM_VARARGS_CMP_EQ_SZ:
+ case ASM_VARARGS_CMP_GR_SZ:
   imm = READ_imm8(iter);
 print_imm:
   printf("%I16u",imm);
