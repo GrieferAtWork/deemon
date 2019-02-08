@@ -228,6 +228,8 @@ INTERN bool DCALL maybe_expression_begin(void) {
  case TOK_CHAR:
  case TOK_FLOAT:
  case TOK_STRING:
+ case TOK_DOTS:
+ case TOK_COLLON_COLLON: /* Deprecated global-accessor syntax. */
   result = true;
   break;
 
