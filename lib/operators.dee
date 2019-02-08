@@ -31,11 +31,11 @@ import * from deemon;
 @@>local sequence_add = bind(sequence,operator +);
 @@>local foo = [10,20,30];
 @@>local bar = [40,50,60];
-@@>// Invokes `(foo as list).operator + (bar)'
+@@>// Invokes `(foo as sequence).operator + (bar)'
 @@>print repr sequence_add(foo,bar);
 @@>// Invokes `foo.operator + (bar)'
 @@>print repr operator + (foo,bar);
-function bind(tp: type object,operator_function: callable): callable {
+function bind(tp: type object, operator_function: callable): callable {
 	return [](x,args...) {
 		import Error from deemon;
 		if (x !is tp && !tp.isgeneric) {
@@ -116,22 +116,22 @@ function enter(self): none -> self.operator enter();
 function leave(self): none -> self.operator leave();
 @"(self:?Dfile,max_bytes=!-1)->?Dstring"
 function read(self,...) -> self.operator read(...);
-@"(data:?Dbytes,start=!0,end=!-1)->?Dint"
-@"(data:?Dstring,start=!0,end=!-1)->?Dint"
+@"(self:?Dfile,data:?Dbytes,start=!0,end=!-1)->?Dint"
+@"(self:?Dfile,data:?Dstring,start=!0,end=!-1)->?Dint"
 function write(self,...) -> self.operator write(...);
 function seek(self: file, off: int from deemon, whence: int from deemon): int from deemon -> self.operator seek(off,whence);
 function sync(self: file): none -> self.operator sync();
 function trunc(self: file, pos: int from deemon): none -> self.operator trunc(pos);
 function close(self: file): none -> self.operator close();
-@"(pos:?Dint)->?Dstring"
-@"(max_bytes:?Dint,pos:?Dint)->?Dstring"
+@"(self:?Dfile,pos:?Dint)->?Dstring"
+@"(self:?Dfile,max_bytes:?Dint,pos:?Dint)->?Dstring"
 function pread(self,...) -> self.operator pread(...);
-@"(data:?Dbytes,pos:?Dint)->?Dint"
-@"(data:?Dbytes,max_bytes:?Dint,pos:?Dint)->?Dint"
-@"(data:?Dbytes,start:?Dint,end:?Dint,pos:?Dint)->?Dint"
-@"(data:?Dstring,pos:?Dint)->?Dint"
-@"(data:?Dstring,max_bytes:?Dint,pos:?Dint)->?Dint"
-@"(data:?Dstring,start:?Dint,end:?Dint,pos:?Dint)->?Dint"
+@"(self:?Dfile,data:?Dbytes,pos:?Dint)->?Dint"
+@"(self:?Dfile,data:?Dbytes,max_bytes:?Dint,pos:?Dint)->?Dint"
+@"(self:?Dfile,data:?Dbytes,start:?Dint,end:?Dint,pos:?Dint)->?Dint"
+@"(self:?Dfile,data:?Dstring,pos:?Dint)->?Dint"
+@"(self:?Dfile,data:?Dstring,max_bytes:?Dint,pos:?Dint)->?Dint"
+@"(self:?Dfile,data:?Dstring,start:?Dint,end:?Dint,pos:?Dint)->?Dint"
 function pwrite(self,...) -> self.operator pwrite(...);
 function getc(self: file): int from deemon -> self.operator getc();
 function ungetc(self: file, c: int from deemon): int from deemon -> self.operator ungetc(c);
