@@ -3610,10 +3610,27 @@ instance_xxx(DeeObject *__restrict self) { \
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tinv,instance_inv,OPERATOR_INV)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tpos,instance_pos,OPERATOR_POS)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tneg,instance_neg,OPERATOR_NEG)
-DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tnext,instance_next,OPERATOR_ITERNEXT)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_titer,instance_iter,OPERATOR_ITERSELF)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tsize,instance_size,OPERATOR_SIZE)
 #undef DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION
+
+INTERN DREF DeeObject *DCALL
+instance_tnext(DeeTypeObject *__restrict tp_self,
+               DeeObject *__restrict self) {
+ DREF DeeObject *func,*result;
+ func = DeeClass_GetOperator(tp_self,OPERATOR_ITERNEXT);
+ if unlikely(!func) return NULL;
+ result = DeeObject_ThisCall(func,self,0,NULL);
+ Dee_Decref(func);
+ if (!result && DeeError_Catch(&DeeError_StopIteration))
+      result = ITER_DONE;
+ return result;
+}
+INTERN DREF DeeObject *DCALL
+instance_next(DeeObject *__restrict self) {
+ return instance_tnext(Dee_TYPE(self),self);
+}
+
 
 #define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,op) \
 INTERN DREF DeeObject *DCALL \
