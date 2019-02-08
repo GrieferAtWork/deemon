@@ -31,6 +31,7 @@ DECL_BEGIN
 INTERN DREF struct ast *FCALL
 ast_parse_cast(struct ast *__restrict typeexpr) {
  uint32_t old_flags;
+ DREF struct ast *kw_labels;
  DREF struct ast *result,*merge,**exprv;
  ASSERT_AST(typeexpr);
  switch (tok) {
@@ -92,8 +93,10 @@ not_a_cast:
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    merge = ast_setddi(ast_constexpr(Dee_EmptyTuple),&loc);
    if unlikely(!merge) goto err;
-   result = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
-                                     typeexpr,merge),
+   result = ast_setddi(ast_operator2(OPERATOR_CALL,
+                                     AST_OPERATOR_FNORMAL,
+                                     typeexpr,
+                                     merge),
                       &typeexpr->a_ddi);
    ast_decref(merge);
    if unlikely(!result) goto err;
@@ -102,54 +105,63 @@ not_a_cast:
   }
   second_paren = tok == '(';
   /* Parse the cast-expression / argument list. */
-  merge = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
-                          AST_FMULTIPLE_TUPLE,
-                          NULL);
+  merge = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE,&kw_labels);
   if unlikely(!merge) goto err_flags;
   ASSERT(merge->a_type == AST_MULTIPLE);
   ASSERT(merge->a_flag == AST_FMULTIPLE_TUPLE);
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == ')') ? (yield() < 0) :
               WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
-     goto err_merge;
-  if (!second_paren &&
-       merge->a_multiple.m_astc == 1) {
-   /* Recursively parse cast suffix expressions:
-    * >> (int)(float)get_value(); 
-    * Parse as:
-    * >> int(float(get_value()));
-    * Without this, it would be parsed as:
-    * >> int(float)(get_value());
-    */
-   result = merge->a_multiple.m_astv[0];
-   result = ast_parse_cast(result);
-   if unlikely(!result) goto err_merge;
-   if (result == merge->a_multiple.m_astv[0]) {
-    /* Same argument expression. */
-    ast_decref(result);
-   } else {
-    /* New argument expression. */
-    if likely(!ast_shared(merge)) {
-     ast_decref(merge->a_multiple.m_astv[0]);
-     merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
+     goto err_merge_kwlabels;
+  if (kw_labels) {
+   result = ast_setddi(ast_action3(AST_FACTION_CALL_KW,
+                                   typeexpr,
+                                   merge,
+                                   kw_labels),
+                       &typeexpr->a_ddi);
+   ast_decref(kw_labels);
+  } else {
+   if (!second_paren &&
+        merge->a_multiple.m_astc == 1) {
+    /* Recursively parse cast suffix expressions:
+     * >> (int)(float)get_value(); 
+     * Parse as:
+     * >> int(float(get_value()));
+     * Without this, it would be parsed as:
+     * >> int(float)(get_value());
+     */
+    result = merge->a_multiple.m_astv[0];
+    result = ast_parse_cast(result);
+    if unlikely(!result) goto err_merge;
+    if (result == merge->a_multiple.m_astv[0]) {
+     /* Same argument expression. */
+     ast_decref(result);
     } else {
-     DREF struct ast *other;
-     exprv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
-     if unlikely(!exprv) goto err_merge_r;
-     exprv[0] = result; /* Inherit */
-     other = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
-     if unlikely(!other) { Dee_Free(exprv); goto err_merge_r; }
-     ast_decref(merge);
-     merge = other; /* Inherit */
+     /* New argument expression. */
+     if likely(!ast_shared(merge)) {
+      ast_decref(merge->a_multiple.m_astv[0]);
+      merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
+     } else {
+      DREF struct ast *other;
+      exprv = (DREF struct ast **)Dee_Malloc(1*sizeof(DREF struct ast *));
+      if unlikely(!exprv) goto err_merge_r;
+      exprv[0] = result; /* Inherit */
+      other = ast_multiple(AST_FMULTIPLE_TUPLE,1,exprv);
+      if unlikely(!other) { Dee_Free(exprv); goto err_merge_r; }
+      ast_decref(merge);
+      merge = other; /* Inherit */
+     }
     }
    }
+   result = ast_setddi(ast_operator2(OPERATOR_CALL,
+                                     AST_OPERATOR_FNORMAL,
+                                     typeexpr,
+                                     merge),
+                      &typeexpr->a_ddi);
   }
-
-  result = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
-                                    typeexpr,merge),
-                     &typeexpr->a_ddi);
   ast_decref(merge);
-  if unlikely(!result) goto err;
+  if unlikely(!result)
+     goto err;
  } break;
 #endif
 
@@ -172,8 +184,10 @@ do_a_cast:
                     &typeexpr->a_ddi);
   if unlikely(!merge) goto err_r_exprv;
   /* Create the call expression branch. */
-  result = ast_setddi(ast_operator2(OPERATOR_CALL,AST_OPERATOR_FNORMAL,
-                                    typeexpr,merge),
+  result = ast_setddi(ast_operator2(OPERATOR_CALL,
+                                    AST_OPERATOR_FNORMAL,
+                                    typeexpr,
+                                    merge),
                      &typeexpr->a_ddi);
   ast_decref(merge);
   break;
@@ -183,6 +197,9 @@ done:
 err_flags:   
  TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
  goto err;
+err_merge_kwlabels:
+ ast_xdecref(kw_labels);
+ goto err_merge;
 err_merge_r: ast_decref(result);
 err_merge:   ast_decref(merge); goto err;
 err_r_exprv: Dee_Free(exprv);
