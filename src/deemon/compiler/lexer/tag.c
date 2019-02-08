@@ -260,18 +260,7 @@ err:
 }
 
 INTERN int (DCALL parse_tags)(void) {
- if (tok == TOK_STRING ||
-    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
-  /* TODO: Writing custom declaration strings shouldn't be this simple.
-   *       Instead, it should be required to do something like this:
-   * >> @__asm__("(x,y,z)")
-   * >> function foo(args...) {
-   * >>     local x,y,z = args...;
-   * >> }
-   */
-  if unlikely(append_decl_string())
-     goto err;
- } else if (tok == '@') {
+ if (tok == '@') {
   /* Line-style documentation string (terminated by a line-feed) */
   char *doc_start = token.t_end;
   char *doc_end = doc_start;
@@ -311,21 +300,108 @@ INTERN int (DCALL parse_tags)(void) {
 #define IS_TAG(x) \
        (tag_name_len == COMPILER_STRLEN(x) && !memcmp(tag_name_str,x,COMPILER_STRLEN(x)))
   if unlikely(yield() < 0) goto err;
+again_compiler_tag:
   if (!TPP_ISKEYWORD(tok)) {
    if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD))
        goto err;
   } else {
    tag_name_str = token.t_kwd->k_name;
    tag_name_len = token.t_kwd->k_size;
-   /* Trim leading/trailing underscores from tag names (prevent ambiguity when macros are used). */
+   /* Trim leading/trailing underscores from tag names (prevent ambiguity when macros are used).
+    * NOTE: Doing this is an extension implemented by the GATW implementation */
    while (tag_name_len && *tag_name_str == '_') ++tag_name_str,--tag_name_len;
    while (tag_name_len && tag_name_str[tag_name_len-1] == '_') --tag_name_len;
-   /**/ if (IS_TAG("truncate"))  current_tags.at_class_flags |= TP_FTRUNCATE;
-   else if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
+   /**/ if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
    else if (IS_TAG("likely"))    current_tags.at_expect      |= AST_FCOND_LIKELY;
    else if (IS_TAG("unlikely"))  current_tags.at_expect      |= AST_FCOND_UNLIKELY;
-   else if (WARN(W_COMPILER_TAG_UNKNOWN,tag_name_len,tag_name_str)) goto err;
-   if unlikely(yield() < 0) goto err;
+   else if (IS_TAG("gatw")) {
+    if unlikely(yield() < 0)
+       goto err;
+    if (tok != '.')
+        goto warn_unknown_tag;
+    if unlikely(yield() < 0)
+       goto err;
+    if (!TPP_ISKEYWORD(tok))
+        goto err_no_keyword_after_dot;
+    tag_name_str = token.t_kwd->k_name;
+    tag_name_len = token.t_kwd->k_size;
+    while (tag_name_len && *tag_name_str == '_') ++tag_name_str,--tag_name_len;
+    while (tag_name_len && tag_name_str[tag_name_len-1] == '_') --tag_name_len;
+    /**/ if (IS_TAG("truncate"))  current_tags.at_class_flags |= TP_FTRUNCATE;
+    else if (IS_TAG("moveany"))   current_tags.at_class_flags |= TP_FMOVEANY;
+    else if (IS_TAG("final"))     current_tags.at_class_flags |= TP_FFINAL;
+    else if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
+    else if (IS_TAG("doc")) {
+     if unlikely(yield() < 0)
+        goto err;
+     if unlikely(likely(tok == '(') ? (yield() < 0) : 
+                 WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
+        goto err;
+     if likely(tok == TOK_STRING ||
+              (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+      if unlikely(append_decl_string())
+         goto err;
+     } else {
+      if unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
+         goto err;
+     }
+     if unlikely(likely(tok == ')') ? (yield() < 0) : 
+                 WARN(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
+        goto err;
+    } else goto warn_unknown_tag;
+   } else {
+    if unlikely(yield() < 0)
+       goto err;
+warn_unknown_tag:
+    if (WARN(W_COMPILER_TAG_UNKNOWN,tag_name_len,tag_name_str))
+        goto err;
+again_check_tag_namespace:
+    if (tok == '.') {
+     if unlikely(yield() < 0)
+        goto err;
+     if (!TPP_ISKEYWORD(tok)) {
+err_no_keyword_after_dot:
+      if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT,tag_name_len,tag_name_str))
+          goto err;
+     } else {
+      tag_name_str = token.t_kwd->k_name;
+      tag_name_len = token.t_kwd->k_size;
+      if unlikely(yield() < 0)
+         goto err;
+     }
+     goto again_check_tag_namespace;
+    }
+    if (tok == '(') {
+     /* Skip tag argument list. */
+     unsigned int recursion = 1;
+     while (tok) {
+      if unlikely(yield() < 0)
+         goto err;
+      if (tok == '(')
+          ++recursion;
+      else if (tok == ')') {
+       if (recursion == 1) {
+        if unlikely(yield() < 0)
+           goto err;
+        break;
+       }
+       --recursion;
+      }
+     }
+    }
+    goto do_next_compiler_tag;
+   }
+   if unlikely(yield() < 0)
+      goto err;
+   if unlikely(tok == '.')
+      goto warn_unknown_tag;
+  }
+do_next_compiler_tag:
+  if (tok == ',') {
+   if unlikely(yield() < 0)
+      goto err;
+   if (tok != ']')
+       goto again_compiler_tag;
   }
   if unlikely(likely(tok == ']') ? (yield() < 0) : 
               WARN(W_COMPILER_TAG_EXPECTED_RBRACKET))

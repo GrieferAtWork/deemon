@@ -18,8 +18,8 @@
  */
 import * from deemon;
 
-@"(items:?S?O)->"
-@"(items!)->"
+@[gatw.doc("(items:?S?O)->")]
+@[gatw.doc("(items!)->")]
 @@Returns the lowers element of @items or :none when empty
 @@Objects are always compared with the current winner as left operand
 function min(items...) {
@@ -28,8 +28,8 @@ function min(items...) {
 	return items < ...;
 }
 
-@"(items:?S?O)->"
-@"(items!)->"
+@[gatw.doc("(items:?S?O)->")]
+@[gatw.doc("(items!)->")]
 @@Returns the greatest element of @items or :none when empty
 @@Objects are always compared with the current winner as left operand
 function max(items...) {
@@ -38,8 +38,8 @@ function max(items...) {
 	return items > ...;
 }
 
-@"(items:{?Dfloat})->?Dfloat"
-@"(items!)->?Dfloat"
+@[gatw.doc("(items:{?Dfloat})->?Dfloat")]
+@[gatw.doc("(items!)->?Dfloat")]
 @@Returns the average of all elements in @items
 @@All elements are casted to float, added and devided by ${#items}
 function avg(items...) {
@@ -54,8 +54,8 @@ function avg(items...) {
 	return result / count;
 }
 
-@"(items:?S?O)->?Dbool"
-@"(items!)->?Dbool"
+@[gatw.doc("(items:?S?O)->?Dbool")]
+@[gatw.doc("(items!)->?Dbool")]
 @@Returns :true if all elements in @items evaluate to :true
 function all(items...) {
 	if (#items == 1)
@@ -63,8 +63,8 @@ function all(items...) {
 	return items && ...;
 }
 
-@"(items:?S?O)->?Dbool"
-@"(items!)->?Dbool"
+@[gatw.doc("(items:?S?O)->?Dbool")]
+@[gatw.doc("(items!)->?Dbool")]
 @@Returns :true if any element in @items evaluates to :true
 function any(items...) {
 	if (#items == 1)
@@ -72,8 +72,8 @@ function any(items...) {
 	return items || ...;
 }
 
-@"(items:?S?O)->"
-@"(items!)->"
+@[gatw.doc("(items:?S?O)->")]
+@[gatw.doc("(items!)->")]
 @@Returns the sum of all arguments by adding them together
 @@The result is always replaced with the addition of ${result+next}
 @@Returns :none if no arguments are given
@@ -169,9 +169,9 @@ function enumerate(seq: sequence, start: int = 0): sequence {
 	}
 }
 
-@"(x:?Dint)->?Dint"
-@"(x:?Dfloat)->?Dfloat"
-@"(x)->?O"
+@[gatw.doc("(x:?Dint)->?Dint")]
+@[gatw.doc("(x:?Dfloat)->?Dfloat")]
+@[gatw.doc("(x)->?O")]
 @@Return the absolute value of a given expression.
 @@>import abs from util;
 @@>print abs(10);  /* 10 */

@@ -114,24 +114,24 @@ function setattr(self, name: string, value): none -> self.operator .= (name,valu
 function enumattr(self): {attribute...} -> self.operator enumattr();
 function enter(self): none -> self.operator enter();
 function leave(self): none -> self.operator leave();
-@"(self:?Dfile,max_bytes=!-1)->?Dstring"
+@[gatw.doc("(self:?Dfile,max_bytes=!-1)->?Dstring")]
 function read(self,...) -> self.operator read(...);
-@"(self:?Dfile,data:?Dbytes,start=!0,end=!-1)->?Dint"
-@"(self:?Dfile,data:?Dstring,start=!0,end=!-1)->?Dint"
+@[gatw.doc("(self:?Dfile,data:?Dbytes,start=!0,end=!-1)->?Dint")]
+@[gatw.doc("(self:?Dfile,data:?Dstring,start=!0,end=!-1)->?Dint")]
 function write(self,...) -> self.operator write(...);
 function seek(self: file, off: int from deemon, whence: int from deemon): int from deemon -> self.operator seek(off,whence);
 function sync(self: file): none -> self.operator sync();
 function trunc(self: file, pos: int from deemon): none -> self.operator trunc(pos);
 function close(self: file): none -> self.operator close();
-@"(self:?Dfile,pos:?Dint)->?Dstring"
-@"(self:?Dfile,max_bytes:?Dint,pos:?Dint)->?Dstring"
+@[gatw.doc("(self:?Dfile,pos:?Dint)->?Dstring")]
+@[gatw.doc("(self:?Dfile,max_bytes:?Dint,pos:?Dint)->?Dstring")]
 function pread(self,...) -> self.operator pread(...);
-@"(self:?Dfile,data:?Dbytes,pos:?Dint)->?Dint"
-@"(self:?Dfile,data:?Dbytes,max_bytes:?Dint,pos:?Dint)->?Dint"
-@"(self:?Dfile,data:?Dbytes,start:?Dint,end:?Dint,pos:?Dint)->?Dint"
-@"(self:?Dfile,data:?Dstring,pos:?Dint)->?Dint"
-@"(self:?Dfile,data:?Dstring,max_bytes:?Dint,pos:?Dint)->?Dint"
-@"(self:?Dfile,data:?Dstring,start:?Dint,end:?Dint,pos:?Dint)->?Dint"
+@[gatw.doc("(self:?Dfile,data:?Dbytes,pos:?Dint)->?Dint")]
+@[gatw.doc("(self:?Dfile,data:?Dbytes,max_bytes:?Dint,pos:?Dint)->?Dint")]
+@[gatw.doc("(self:?Dfile,data:?Dbytes,start:?Dint,end:?Dint,pos:?Dint)->?Dint")]
+@[gatw.doc("(self:?Dfile,data:?Dstring,pos:?Dint)->?Dint")]
+@[gatw.doc("(self:?Dfile,data:?Dstring,max_bytes:?Dint,pos:?Dint)->?Dint")]
+@[gatw.doc("(self:?Dfile,data:?Dstring,start:?Dint,end:?Dint,pos:?Dint)->?Dint")]
 function pwrite(self,...) -> self.operator pwrite(...);
 function getc(self: file): int from deemon -> self.operator getc();
 function ungetc(self: file, c: int from deemon): int from deemon -> self.operator ungetc(c);
@@ -145,8 +145,8 @@ function putc(self: file, c: int from deemon): int from deemon -> self.operator 
 #if __DEEMON_VARIANT__ == "gatw" && \
 	__has_feature(deemon_inline_assembly)
 
-@"(a,b?)->"
-@"pos(a) or add(a,b)"
+@[gatw.doc("(a,b?)->")]
+@[gatw.doc("pos(a) or add(a,b)")]
 function __pooad(a,b...) {
 	__asm__({
 		push   arg @a
@@ -165,8 +165,8 @@ function __pooad(a,b...) {
 	);
 }
 
-@"(a,b?)->"
-@"neg(a) or sub(a,b)"
+@[gatw.doc("(a,b?)->")]
+@[gatw.doc("neg(a) or sub(a,b)")]
 function __neosb(a,b...) {
 	__asm__({
 		push   arg @a
@@ -185,8 +185,8 @@ function __neosb(a,b...) {
 	);
 }
 
-@"(seq,index,opt?)->"
-@"getitem(seq,index) or setitem(seq,index,opt)"
+@[gatw.doc("(seq,index,opt?)->")]
+@[gatw.doc("getitem(seq,index) or setitem(seq,index,opt)")]
 function __giosi(seq,index,opt...) {
 	__asm__({
 		push   arg @seq
@@ -207,8 +207,8 @@ function __giosi(seq,index,opt...) {
 	);
 }
 
-@"(seq,start,end,opt?)->"
-@"getrange(seq,start,end) or setrange(seq,start,end,opt)"
+@[gatw.doc("(seq,start,end,opt?)->")]
+@[gatw.doc("getrange(seq,start,end) or setrange(seq,start,end,opt)")]
 function __grosr(seq,start,end,opt...) {
 	__asm__({
 		push   arg @seq
@@ -231,8 +231,8 @@ function __grosr(seq,start,end,opt...) {
 	);
 }
 
-@"(obj,attr,opt?)->"
-@"getattr(obj,attr) or setattr(obj,attr,opt)"
+@[gatw.doc("(obj,attr,opt?)->")]
+@[gatw.doc("getattr(obj,attr) or setattr(obj,attr,opt)")]
 function __gaosa(obj,attr,opt...) {
 	__asm__({
 		push   arg @obj
@@ -254,27 +254,27 @@ function __gaosa(obj,attr,opt...) {
 }
 #else
 
-@"pos(a) or add(a,b)"
+@@pos(a) or add(a,b)
 function __pooad(a,b?) {
 	return b !is bound ? pos(a) : add(a,b);
 }
 
-@"neg(a) or sub(a,b)"
+@@neg(a) or sub(a,b)
 function __neosb(a,b?) {
 	return b !is bound ? neg(a) : sub(a,b);
 }
 
-@"getitem(seq,index) or setitem(seq,index,opt)"
+@@getitem(seq,index) or setitem(seq,index,opt)
 function __giosi(seq,index,opt?) {
 	return opt !is bound ? getitem(seq,index) : setitem(seq,index,opt);
 }
 
-@"getrange(seq,begin,end) or setrange(seq,begin,end,opt)"
+@@getrange(seq,begin,end) or setrange(seq,begin,end,opt)
 function __grosr(seq,begin,end,opt?) {
 	return opt !is bound ? getrange(seq,begin,end) : setrange(seq,begin,end,opt);
 }
 
-@"getattr(obj,attr) or setattr(obj,attr,opt)"
+@@getattr(obj,attr) or setattr(obj,attr,opt)
 function __gaosa(obj,attr,opt?) {
 	return opt !is bound ? getattr(obj,attr) : setattr(obj,attr,opt);
 }

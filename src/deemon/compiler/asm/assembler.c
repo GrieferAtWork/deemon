@@ -1448,8 +1448,8 @@ err_ddi:
  sc_main.sec_code               = NULL; /* Prevent cleanup code from trying to free this. */
  sc_main.sec_begin              = NULL; /* *ditto* */
  sc_main.sec_iter               = NULL; /* ... */
- sc_main.sec_end                = NULL; 
- current_basescope->bs_default  = NULL; 
+ sc_main.sec_end                = NULL;
+ current_basescope->bs_default  = NULL;
  current_basescope->bs_argc_max = current_basescope->bs_argc_min;
  current_assembler.a_consta     = 0;
  current_assembler.a_constc     = 0;

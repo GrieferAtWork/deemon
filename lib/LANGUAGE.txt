@@ -840,24 +840,20 @@ ast_parse_statement_or_braces ::= (
 	 * >> print repr ({ import("deemon"); });                // STMT: import("deemon")
 	 * >> print repr ({ import deemon; });                   // STMT: none
 	 * >> print repr ({ import deemon; deemon; });           // STMT: import("deemon")
-	 * Using these rules, all possible cases can be dealt with.
-	 * NOTE: Although also allowed in expression, `del' is always
-	 *       interpreted as a statement, as there is no syntactical
-	 *       different between their statement and expression variants.
-	 *       Additionally `assert()' with parenthesis is always recognized
-	 *       as its expression variant, despite the fact that the statement
-	 *       variant allows something like `assert (foo), "message"'
-	 *       Simply write code like this as `assert((foo), "message")'
-	 */
+	 * Using these rules, all possible cases can be dealt with. */
 	[ast_parse_statement...] |
 	ast_parse_brace_items
 );
 
-parse_unaryhead ::= (
+ast_parse_unaryhead ::= (
 	/* Constant expressions. */
 	DDI(<TOK_INT>) |       /* int */
-	DDI(<TOK_CHAR>) |      /* int TODO: This should become deprecated */
+	DDI(<TOK_CHAR>) |      /* string (including raw-strings)
+	                        * GATW: When #pragma extension("-fcharacter-literals")
+	                        *       is enabled (disabled by default), this is compiled
+	                        *       as an ordinal */
 	DDI(<TOK_STRING>...) | /* string (including raw-strings) */
+	DDI(<TOK_FLOAT>) |     /* float */
 
 	/* builtin constants */
 	DDI('none') |
@@ -865,28 +861,34 @@ parse_unaryhead ::= (
 	DDI('false') |
 
 	/* Unary keyword-operators.
-	 * NOTE: When `parse_unary' starts with parenthesis, the associated
-	 *       expression is only parsed as `parse_unaryhead'.
+	 * NOTE: When `ast_parse_unary' starts with parenthesis, the associated
+	 *       expression is only parsed as `ast_parse_unaryhead'.
 	 *       This means that `str(foo).bar' is parsed as `(str foo).bar',
 	 *       rather than `str(foo.bar)', which would be done without this
 	 *       special rule.
 	 *       However, this is only done when parenthesis is found, meaning
 	 *       that `str foo.bar' is still parsed as `str(foo.bar)'
+	 * NOTE: Special case for cast-expressions:
+	 *       >>   str(foo)bar;  // Compiler error!
+	 *       If casts were allows as they usually would, such a statement
+	 *       would be compiled as:
+	 *       >>   str(foo(bar)); // or `str foo(bar)'
+	 *       This goes for all of the following keyword expressions
 	 */
-	(DDI('str') parse_unary) |      /* __str__ */
-	(DDI('repr') parse_unary) |     /* __repr__ */
-	(DDI('copy') parse_unary) |     /* __copy__ */
-	(DDI('deepcopy') parse_unary) | /* __deepcopy__ */
-	(DDI('type') parse_unary) |     /* ACTION: typeof */
+	(DDI('str') ast_parse_unary) |      /* __str__ */
+	(DDI('repr') ast_parse_unary) |     /* __repr__ */
+	(DDI('copy') ast_parse_unary) |     /* __copy__ */
+	(DDI('deepcopy') ast_parse_unary) | /* __deepcopy__ */
+	(DDI('type') ast_parse_unary) |     /* ACTION: typeof */
 
 	/* Unary operators. */
-	(DDI('!') parse_unary) |  /* ACTION: not */
-	(DDI('#') parse_unary) |  /* __size__ */
-	(DDI('~') parse_unary) |  /* __inv__ */
-	(DDI('+') parse_unary) |  /* __pos__ */
-	(DDI('-') parse_unary) |  /* __neg__ */
-	(DDI('++') parse_unary) | /* __inc__ */
-	(DDI('--') parse_unary) | /* __dec__ */
+	(DDI('!') ast_parse_unary) |  /* ACTION: not */
+	(DDI('#') ast_parse_unary) |  /* __size__ */
+	(DDI('~') ast_parse_unary) |  /* __inv__ */
+	(DDI('+') ast_parse_unary) |  /* __pos__ */
+	(DDI('-') ast_parse_unary) |  /* __neg__ */
+	(DDI('++') ast_parse_unary) | /* __inc__ */
+	(DDI('--') ast_parse_unary) | /* __dec__ */
 
 #if BACKWARDS_COMPATIBILITY_DEEMON_100
 	/* NOTE: An implementation is not required to support
@@ -901,7 +903,7 @@ parse_unaryhead ::= (
 	 * If backwards-compatibility is required, user-code may choose to do this:
 	 * >>
 	 */
-	(DDI('<') [parse_unary] '>') | /* ACTION: cell/cell0 */
+	(DDI('<') [ast_parse_unary] '>') | /* ACTION: cell/cell0 */
 #endif
 
 	(DDI('if') '(' ast_parse_expression ')' (
@@ -920,7 +922,7 @@ parse_unaryhead ::= (
 	 *          An implementation is also allowed to replace this
 	 *          kind of use with a call to said function.
 	 */
-	(DDI('bound') (('(' ast_parse_expression ')') | parse_unary)) |
+	(DDI('bound') (('(' ast_parse_expression ')') | ast_parse_unary)) |
 
 	/* Operator function access (see detailed explaination in `x.operator ...' below) */
 	('operator' DDI(ast_parse_operator_name(false))) |
@@ -934,8 +936,13 @@ parse_unaryhead ::= (
 	/* Try-expressions. */
 	ast_parse_try(false) |
 
-	/* Function-expressions. */
+#if BACKWARDS_COMPATIBILITY_DEEMON_100
+	/* Function-expressions.
+	 * NOTE: This is a deprecated feature!
+	 *       New code should always use the lambda syntax
+	 *       within expressions: `[](a,b,c) { ... }' */
 	(DDI('function') [_keyword] ast_parse_function(false)) |
+#endif
 
 	/* Note the `final' prefix behaves identical to the @final tag. */
 	(((['final'] DDI('class')) | (DDI('class') 'final')) [_keyword] ast_parse_class) |
@@ -955,6 +962,8 @@ parse_unaryhead ::= (
 	/* Allow assert in expressions. */
 	ast_parse_assert(true) |
 
+	(DDI('del') '(' ast_parse_del ')') |
+
 	/* Import a module, given its name.
 	 * >> local x = import(".foo.bar"); // Same as `import x = .foo.bar;'
 	 * Using this, modules can be imported at runtime, allowing names only
@@ -970,8 +979,12 @@ parse_unaryhead ::= (
 		ast_parse_comma(false,false)
 	)] ')') |
 
-	(DDI('{') ast_parse_brace_items '}')
+	(DDI('{') ast_parse_brace_items '}') |
 
+	/* This/super expressions (only allowed within instance-level members of
+	 * classes, or in other words: within class->function and class->property) */
+	(DDI('this')) |
+	(DDI('super')) |
 
 	(DDI('[') (
 		/* Lambda function.
@@ -997,7 +1010,8 @@ parse_unaryhead ::= (
 		([ast_parse_comma(false,false)] ']') |
 	)) |
 
-	/* Package the varargs portion of the argument list in an expand expression. */
+	/* Package the varargs portion of the argument list in an expand expression.
+	 * NOTE: Only allowed within functions that take a variable number of arguments. */
 	DDI('...') |
 
 	/* <symbol> from <module> style referencing of external variables.
@@ -1059,7 +1073,7 @@ parse_unaryhead ::= (
 	)
 );
 
-parse_unarytail ::= (
+ast_parse_unary_operand ::= (
 	[(
 
 		(DDI(
@@ -1166,9 +1180,9 @@ parse_unarytail ::= (
 	)...]
 );
 
-parse_unary ::= (
-	parse_unaryhead
-	parse_unarytail
+ast_parse_unary ::= (
+	ast_parse_unaryhead
+	ast_parse_unary_operand
 );
 
 
@@ -1188,10 +1202,10 @@ ast_parse_argument_list ::= (
 
 
 ast_parse_prod ::= (
-	parse_unary
+	ast_parse_unary
 	[(
 		DDI('*' | '/' | '%' | '**')
-		parse_unary
+		ast_parse_unary
 	)...]
 );
 
@@ -1695,9 +1709,9 @@ ast_parse_asm ::= (
 			/* A different way of writing assembly is by writing the text
 			 * that would otherwise go into a string inside of braces.
 			 * If this spelling is used, the compiler is allowed to attempt
-			 * to automatically insert alignment & debug directives/instructions
-			 * in order to encode the exact source locations of written instructions.
-			 * While the standard does not specify an exact format for assembly,
+			 * to automatically insert debug directives/instructions in order
+			 * to encode the exact source locations of written instructions.
+			 * While this standard does not specify an exact format for assembly,
 			 * when written, the ending `}' token is the one matching the opening
 			 * `{' token, not accounting for `{' and `}' characters found inside of
 			 * strings or comments (in case the implementation uses strings, or allows
@@ -1745,7 +1759,10 @@ assembly_format ::= (
 );
 
 /* `get_unique_number()' returns an integer that is
- * guarantied to remain unique within the current module. */
+ * guarantied to remain unique within the current module.
+ * Note that this number differs for each expansion of the
+ * assembly statement, should the associated function have
+ * been inlined. */
 assembly_format_arg ::= (
 	'%' | /* EMIT("%"); */
 	'=' | /* EMIT("%Iu" % get_unique_number()); */
@@ -1834,6 +1851,9 @@ ast_parse_statement ::= (
 	(DDI('break') ';') |
 	(DDI('continue') ';') |
 
+	/* Symbol deletion */
+	(DDI('del') (('(' ast_parse_del ')') | ast_parse_del) ';') |
+
 	/* Exception handling using try...catch/finally */
 	ast_parse_try(true) |
 
@@ -1862,6 +1882,19 @@ ast_parse_statement ::= (
 ;
 
 
+
+ast_parse_del_single ::= (
+	/* Only symbol, getattr, getitem and getrange expressions
+	 * are allowed. - All other expressions cause a compiler
+	 * error */
+	ast_parse_unary
+);
+
+ast_parse_del ::= (
+	',' ~~ ast_parse_del_single...
+);
+
+
 ast_parse_catchmask ::= (
 	/* NOTE: Multiple masks can be enumerated when separated by '|' tokens.
 	 *       An error is then caught if any of the masks match the
@@ -1872,7 +1905,7 @@ ast_parse_catchmask ::= (
 	 *    >> catch (int | string as foo)
 	 *    >> catch ((int, string) as foo)
 	 */
-	'|' ~~ parse_unary...
+	'|' ~~ ast_parse_unary...
 );
 
 ast_parse_try(is_statement) ::= (
@@ -1900,7 +1933,7 @@ ast_parse_try(is_statement) ::= (
 					 * Additionally, a symbol name that can be used to address
 					 * the generated exception may be specified after 'as' or '->',
 					 * where the arrow is deprecated and a reminant from the old deemon. */
-					('|' ~~ parse_unary... [('->' | 'as') _keyword])
+					('|' ~~ ast_parse_unary... [('->' | 'as') _keyword])
 				) ')'
 #if is_statement
 					ast_parse_statement
@@ -1914,7 +1947,7 @@ ast_parse_try(is_statement) ::= (
 
 ast_parse_class ::= (
 	/* Optional base expression. */
-	[	((':' | 'extends') parse_unaryhead) |
+	[	((':' | 'extends') ast_parse_unaryhead) |
 		('(' ast_parse_expression ')')
 	]
 
@@ -2489,45 +2522,106 @@ ast_parse_module_name ::= (
 );
 
 
-parse_tags ::= ',' ~~ (
-	/* Raw documentation string.
-	 * NOTE: This expects the string token itself, rather than a constant
-	 *       expression evaluating to a string. The later can be done using
-	 *       the `doc' tag described below. */
-	(<TOK_STRING>...) |
+parse_tags ::= (
 
-	/* Append each constant expression string found in `ast_parse_comma'
-	 * to the active documentation string, inserting new-lines inbetween.
-	 * When `doc(auto)' is encountered, an empty line is appended, ensuing
-	 * that the documentation string is non-empty, allowing the compiler
-	 * to auto-generate anything that is missing. */
-	(WITHOUT_UNDERSCORE('doc') '(' ['auto' | ast_parse_comma(false,false)] ')') |
+	('[' ',' ~~ (
+		/* Mandatory compiler annotations: */
+		'interrupt' | /* For `class': When thrown, instances behave as interrupts
+		               * For `catch': The guard is allowed to handle interrupts */
 
-	/* Define the class/super symbols used by a function definition to
-	 * resolve access to member symbols and the `super' expression. */
-	(WITHOUT_UNDERSCORE('class') '(' ast_parse_comma(false,false) ')') |
-	(WITHOUT_UNDERSCORE('super') '(' ast_parse_comma(false,false) ')') |
+		/* Optional compiler annotations (don't warn if not implemented): */
+		'likely'    | /* For `if': The tt-branch is likely to be executed
+		               * For `while', `do...while', `for(;;)': The condition is likely to succeed
+		               * For `for(...: ...)', `foreach': The sequence is likely to be non-empty */
+		'unlikely'  | /* For `if': The ff-branch is likely to be executed
+		               * For `while', `do...while', `for(;;)': The condition is likely to fail
+		               * For `for(...: ...)', `foreach': The sequence is likely to be empty */
 
-	/* Various flag-style tags (simply grep the named flag to learn its meaning). */
-	(WITHOUT_UNDERSCORE('copyable')) |    /* CODE_FCOPYABLE */
-	(WITHOUT_UNDERSCORE('thiscall')) |    /* CODE_FTHISCALL */
-	(WITHOUT_UNDERSCORE('assembly')) |    /* CODE_FASSEMBLY */
-	(WITHOUT_UNDERSCORE('nobase')) |      /* AST_TAG_FNOBASE */
-	(WITHOUT_UNDERSCORE('lenient')) |     /* CODE_FLENIENT */
-	(WITHOUT_UNDERSCORE('heapframe')) |   /* CODE_FHEAPFRAME */
-	(WITHOUT_UNDERSCORE('constructor')) | /* CODE_FCONSTRUCTOR */
-	(WITHOUT_UNDERSCORE('final')) |       /* TP_FFINAL */
-	(WITHOUT_UNDERSCORE('truncate')) |    /* TP_FTRUNCATE */
-	(WITHOUT_UNDERSCORE('interrupt')) |   /* TP_FINTERRUPT */
-	(WITHOUT_UNDERSCORE('private')) |     /* CLASS_MEMBER_FPRIVATE */
-	(WITHOUT_UNDERSCORE('readonly')) |    /* CLASS_MEMBER_FREADONLY */
-	(WITHOUT_UNDERSCORE('method')) |      /* CLASS_MEMBER_FMETHOD */
-	(WITHOUT_UNDERSCORE('likely')) |      /* AST_FCOND_LIKELY */
-	(WITHOUT_UNDERSCORE('unlikely')) |    /* AST_FCOND_UNLIKELY */
+		/* Compiler-specific annotations (maybe warn
+		 * (but _not_ error out) if not supported):
+		 * NOTE: The argument list is skipped with while accounting
+		 *       for recursive parenthesis. For this purpose, all of
+		 *       the following examples are valid annotation constructs
+		 *       that may only produce a warning, but not cause a compiler
+		 *       error:
+		 * >> @[mycompiler.unknown_annotation]
+		 * >> @[mycompiler.unknown_annotation()]
+		 * >> @[mycompiler.unknown_annotation(foobar)]
+		 * >> @[mycompiler.unknown_annotation(foo(bar))]
+		 * >> @[mycompiler.unknown_annotation((((()))))]
+		 * NOTE: The idea for annotation namespacing is that every implementation
+		 *       should choose its own prefix for compiler-specific annotations.
+		 *       An example are the GATW-specific annotations:
+		 * >> @[gatw.truncate]
+		 *    For class: The return value of `operator int()' may be truncated
+		 *               to fit the type through which the class is being viewed.
+		 *               -> With a 32-bit size_t type, `operator int()' returning
+		 *                  a 40-bit unsigned integer to a caller who intends to
+		 *                  use its value as a `size_t' object, the most significant
+		 *                  8 bits of data are truncated, leaving the value to have
+		 *                  the same meaning as though `operator int()' had masked
+		 *                  its return value with 0xffffffff
+		 *                  Something similar happens for negative integers, which
+		 *                  are converted to become positive. - On on 2-complement host,
+		 *                  this is done identical to `deemon.numberic.unsigned32'
+		 *               -> When not set, an IntegerOverflow exception is thrown when
+		 *                  more bits of data are present than can be represented by
+		 *                  the target type.
+		 * >> @[gatw.moveany]
+		 *    For class: The `operator move := (other)' is capable of accepting an object
+		 *               of arbitrary typing as argument for `other', overriding the default
+		 *               of causing a TypeError when anything other than an object for which
+		 *               the expression `other is <MY_CLASS>' isn't true.
+		 */
+		(
+			/* Annotation name */
+			'.' ~~ _keyword...
 
-	/* Any unkown tag is parsed as follows for forward compatibility */
-	(WITHOUT_UNDERSCORE(_tag_name) ['(' [ast_parse_comma(false,false)] ')' ])
-)...;
+			/* Optional annotation argument */
+			['(' [*...] ')']
+		)
+	)... ']') |
+
+	(',' ~~ (
+		/* Raw documentation string.
+		 * NOTE: This expects the string token itself, rather than a constant
+		 *       expression evaluating to a string. The later can be done using
+		 *       the `doc' tag described below. */
+		(<TOK_STRING>...) |
+
+		/* Append each constant expression string found in `ast_parse_comma'
+		 * to the active documentation string, inserting new-lines inbetween.
+		 * When `doc(auto)' is encountered, an empty line is appended, ensuing
+		 * that the documentation string is non-empty, allowing the compiler
+		 * to auto-generate anything that is missing. */
+		(WITHOUT_UNDERSCORE('doc') '(' ['auto' | ast_parse_comma(false,false)] ')') |
+
+		/* Define the class/super symbols used by a function definition to
+		 * resolve access to member symbols and the `super' expression. */
+		(WITHOUT_UNDERSCORE('class') '(' ast_parse_comma(false,false) ')') |
+		(WITHOUT_UNDERSCORE('super') '(' ast_parse_comma(false,false) ')') |
+
+		/* Various flag-style tags (simply grep the named flag to learn its meaning). */
+		(WITHOUT_UNDERSCORE('copyable')) |    /* CODE_FCOPYABLE */
+		(WITHOUT_UNDERSCORE('thiscall')) |    /* CODE_FTHISCALL */
+		(WITHOUT_UNDERSCORE('assembly')) |    /* CODE_FASSEMBLY */
+		(WITHOUT_UNDERSCORE('nobase')) |      /* AST_TAG_FNOBASE */
+		(WITHOUT_UNDERSCORE('lenient')) |     /* CODE_FLENIENT */
+		(WITHOUT_UNDERSCORE('heapframe')) |   /* CODE_FHEAPFRAME */
+		(WITHOUT_UNDERSCORE('constructor')) | /* CODE_FCONSTRUCTOR */
+		(WITHOUT_UNDERSCORE('final')) |       /* TP_FFINAL */
+		(WITHOUT_UNDERSCORE('truncate')) |    /* TP_FTRUNCATE */
+		(WITHOUT_UNDERSCORE('interrupt')) |   /* TP_FINTERRUPT */
+		(WITHOUT_UNDERSCORE('private')) |     /* CLASS_MEMBER_FPRIVATE */
+		(WITHOUT_UNDERSCORE('readonly')) |    /* CLASS_MEMBER_FREADONLY */
+		(WITHOUT_UNDERSCORE('method')) |      /* CLASS_MEMBER_FMETHOD */
+		(WITHOUT_UNDERSCORE('likely')) |      /* AST_FCOND_LIKELY */
+		(WITHOUT_UNDERSCORE('unlikely')) |    /* AST_FCOND_UNLIKELY */
+
+		/* Any unkown tag is parsed as follows for forward compatibility */
+		(WITHOUT_UNDERSCORE(_tag_name) ['(' [ast_parse_comma(false,false)] ')' ])
+	)...)
+);
 
 parse_tags_block ::= [('@' parse_tags)...];
 

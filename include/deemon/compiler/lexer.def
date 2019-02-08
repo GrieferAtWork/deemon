@@ -410,6 +410,10 @@ WARNING_NAMESPACE(WN_ANNOTATIONS,2600)
 DEF_WARNING(W_COMPILER_TAG_UNKNOWN,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Unknown compiler annotation `%$s'",len,ARG(char *)); })
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected a keyword after `@[', but got " TOK_S,TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_RBRACKET,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected `]' after `@[...', but got " TOK_S,TOK_A))
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Expected a keyword after `@[...%$s.', but got " TOK_S,len,ARG(char *),TOK_A); })
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected `(' after `@[gatw.doc', but got " TOK_S,TOK_A))
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected a string after `@[gatw.doc(', but got " TOK_S,TOK_A))
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected `)' after `@[gatw.doc(\"...\"', but got " TOK_S,TOK_A))
 DEF_WARNING(W_UNUSED_ANNOTATION,(WG_SYNTAX),WSTATE_WARN,WARNF("Unused annotation"))
 
 /* Symbols */

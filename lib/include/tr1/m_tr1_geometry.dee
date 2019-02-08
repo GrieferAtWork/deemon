@@ -78,9 +78,9 @@ global class rect {
 	public member xmax: numeric;
 	public member ymax: numeric;
 
-	@"()"
-	@"(min:?Gpoint,max:?Gpoint)"
-	@"(xmin:?Dnumeric,xmax:?Dnumeric,ymin:?Dnumeric,ymax:?Dnumeric)"
+	@[gatw.doc("()")]
+	@[gatw.doc("(min:?Gpoint,max:?Gpoint)")]
+	@[gatw.doc("(xmin:?Dnumeric,xmax:?Dnumeric,ymin:?Dnumeric,ymax:?Dnumeric)")]
 	this(args...) {
 		switch (#args) {
 		case 0:

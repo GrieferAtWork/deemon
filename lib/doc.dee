@@ -2895,26 +2895,26 @@ class Doc: weakrefable {
 	@@If no documentation string could be located, this is an empty string
 	public final member docstring: string;
 
-	@"(path:?Dstring)"
-	@"Lookup a given @path in the form \"/<module>/<x>/<y>/<z>\""
-	@""
-	@"(mod:?Dmodule)"
-	@"Lookup the Doc node for a given module"
-	@""
-	@"(tp:?Dtype)"
-	@"Lookup the Doc node for a given type"
-	@""
-	@"(attr:?Dattribute)"
-	@"Lookup the Doc node for a given attribute"
-	@""
-	@"(wrapper)"
-	@"Lookup the Doc node for a wrapper, as produced by expressions such as ${string.lower}"
-	@""
-	@"(base:?Dmodule,attrname:?Dstring)"
-	@"(base:?Dtype,attrname:?Dstring)"
-	@"(base:?GDoc,attrname:?Dstring)"
-	@"(base,attrname:?Dstring)"
-	@"Lookup a given @attrname as a child of a given @base"
+	@[gatw.doc("(path:?Dstring)")]
+	@[gatw.doc("Lookup a given @path in the form \"/<module>/<x>/<y>/<z>\"")]
+	@[gatw.doc("")]
+	@[gatw.doc("(mod:?Dmodule)")]
+	@[gatw.doc("Lookup the Doc node for a given module")]
+	@[gatw.doc("")]
+	@[gatw.doc("(tp:?Dtype)")]
+	@[gatw.doc("Lookup the Doc node for a given type")]
+	@[gatw.doc("")]
+	@[gatw.doc("(attr:?Dattribute)")]
+	@[gatw.doc("Lookup the Doc node for a given attribute")]
+	@[gatw.doc("")]
+	@[gatw.doc("(wrapper)")]
+	@[gatw.doc("Lookup the Doc node for a wrapper, as produced by expressions such as ${string.lower}")]
+	@[gatw.doc("")]
+	@[gatw.doc("(base:?Dmodule,attrname:?Dstring)")]
+	@[gatw.doc("(base:?Dtype,attrname:?Dstring)")]
+	@[gatw.doc("(base:?GDoc,attrname:?Dstring)")]
+	@[gatw.doc("(base,attrname:?Dstring)")]
+	@[gatw.doc("Lookup a given @attrname as a child of a given @base")]
 	this(doc_parent_or_path, attribute_name?: deemon.attribute | string, operator_doc?: {DocSection...}) {
 		if (attribute_name !is bound) {
 			if (doc_parent_or_path is deemon.module) {
