@@ -710,13 +710,34 @@ class_maker_pack(struct class_maker *__restrict self) {
  if (self->cm_initc || self->cm_ctor) {
   DREF struct ast *constructor_text;
   DREF struct ast *constructor_function = NULL;
+  DREF struct ast *constructor_anno = NULL;
+  DREF struct ast **constructor_anno_ptr = NULL;
   /* Add the actual constructor when it was defined. */
   if (self->cm_ctor) {
    if unlikely(priv_reserve_instance_init(self)) goto err;
-   ASSERT(self->cm_ctor->a_type == AST_FUNCTION);
-   self->cm_initv[self->cm_initc++] = self->cm_ctor->a_function.f_code;
-   ast_incref(self->cm_ctor->a_function.f_code);
    constructor_function = self->cm_ctor;
+   if (constructor_function->a_type != AST_FUNCTION) {
+    /* This can happen when annotations were used on the constructor.
+     * If this was the case, we must move all of those annotations to
+     * instead be applied to the constructor as a whole, rather than
+     * just to the portion used to represent the user's callback. */
+    constructor_anno = constructor_function;
+    do {
+     ASSERT(constructor_function->a_type == AST_OPERATOR);
+     ASSERT(constructor_function->a_flag == OPERATOR_CALL);
+     ASSERT(constructor_function->a_operator.o_op0);
+     ASSERT(constructor_function->a_operator.o_op1);
+     ASSERT(!(constructor_function->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS)));
+     constructor_function = constructor_function->a_operator.o_op1;
+     ASSERT(constructor_function->a_type == AST_MULTIPLE);
+     ASSERT(constructor_function->a_flag == AST_FMULTIPLE_TUPLE);
+     ASSERT(constructor_function->a_multiple.m_astc >= 1);
+     constructor_anno_ptr = &constructor_function->a_multiple.m_astv[0];
+     constructor_function = *constructor_anno_ptr;
+    } while (constructor_function->a_type != AST_FUNCTION);
+   }
+   self->cm_initv[self->cm_initc++] = constructor_function->a_function.f_code;
+   ast_incref(constructor_function->a_function.f_code);
   }
   if (self->cm_initc != self->cm_inita) {
    DREF struct ast **new_vector;
@@ -737,7 +758,6 @@ class_maker_pack(struct class_maker *__restrict self) {
   Dee_Decref(constructor_text->a_scope);
   constructor_text->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
   if (constructor_function) {
-   ASSERT(constructor_function == self->cm_ctor);
    ASSERT(constructor_function->a_type             == AST_FUNCTION);
    ASSERT(constructor_function->a_function.f_scope == self->cm_ctor_scope);
    ast_decref(constructor_function->a_function.f_code);
@@ -747,12 +767,18 @@ class_maker_pack(struct class_maker *__restrict self) {
    constructor_function = ast_function(constructor_text,
                                        self->cm_ctor_scope);
    ast_decref(constructor_text);
-   if unlikely(!constructor_function) goto err;
+   if unlikely(!constructor_function)
+      goto err;
   }
   /* The constructor has inherited this vector. */
   self->cm_inita = 0;
   self->cm_initc = 0;
   self->cm_initv = NULL;
+  if (constructor_anno) {
+   /* Re-apply constructor annotations. */
+   *constructor_anno_ptr = constructor_function; /* Inherit reference. */
+   constructor_function  = constructor_anno;     /* Inherit reference. */
+  }
   /* Add the constructor as an operator to the class initializer list. */
   if unlikely(class_maker_addoperator(self,
                                       OPERATOR_CONSTRUCTOR,
