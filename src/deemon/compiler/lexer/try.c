@@ -141,7 +141,7 @@ do_realloc_catchv:
   handler->ce_mask  = NULL;
   handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
   handler->ce_mode  = CATCH_EXPR_FNORMAL;
-  /* Set the interrupt-flag when an @:interrupt tag was used. */
+  /* Set the interrupt-flag when an @[interrupt] tag was used. */
   if (current_tags.at_class_flags&TP_FINTERRUPT)
       handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
   if (mode == KWD_finally) {
@@ -306,7 +306,7 @@ do_realloc_catchv:
   handler->ce_mask  = NULL;
   handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
   handler->ce_mode  = CATCH_EXPR_FNORMAL;
-  /* Set the interrupt-flag when an @:interrupt tag was used. */
+  /* Set the interrupt-flag when an @[interrupt] tag was used. */
   if (current_tags.at_class_flags&TP_FINTERRUPT)
       handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
   if (mode == KWD_finally) {

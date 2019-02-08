@@ -81,12 +81,18 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
   /* XXX: Full tagging support? */
   if (self->jl_tok == '@') {
    JITLexer_Yield(self);
-   if (self->jl_tok == ':') {
+   if (self->jl_tok == '[') {
     JITLexer_Yield(self);
     if (JITLexer_ISKWD(self,"interrupt")) {
      JITLexer_Yield(self);
      allow_interrupts = true;
     }
+   }
+   if (self->jl_tok == ']') {
+    JITLexer_Yield(self);
+   } else {
+    syn_anno_expected_rbracket(self);
+    goto err;
    }
   }
   if (JITLexer_ISTOK(self,"finally")) {
@@ -108,10 +114,10 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
    }
    if (ISERR(finally_value)) {
     if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
-        goto err_r_popscope;
+        goto err_r;
     JITLexer_YieldAt(self,start);
     if (SKIP_SECONDARY(self,&was_expression))
-        goto err_r_popscope;
+        goto err_r;
     Dee_XClear(result);
     continue;
    }
@@ -148,7 +154,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
     ASSERT(current != NULL);
     JITContext_PushScope(self->jl_context);
     if (JITLexer_ParseCatchMask(self,&mask,&symbol_name,&symbol_size))
-        goto err_r;
+        goto err_r_popscope;
     /* Check if we're allowed to handle this exception! */
     if ((!mask || DeeObject_InstanceOf(current,mask)) &&
         (allow_interrupts || !DeeObject_IsInterrupt(current))) {
@@ -235,10 +241,10 @@ err_handle_catch_except:
  while (self->jl_tok == JIT_KEYWORD) {
   if (self->jl_tok == '@') {
    JITLexer_Yield(self);
-   if (self->jl_tok == ':') {
+   if (self->jl_tok == '[') {
     JITLexer_Yield(self);
-    if (JITLexer_ISKWD(self,"interrupt"))
-        JITLexer_Yield(self);
+    if (JITLexer_SkipPair(self,'[',']'))
+        goto err;
    }
   }
   if (JITLexer_ISTOK(self,"finally")) {

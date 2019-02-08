@@ -1492,7 +1492,7 @@ struct type_object {
                                           * Instances of this type have special behavior when thrown as errors,
                                           * or when delivered to threads through use of `thread.interrupt()'
                                           * In such situations, the error can only be caught by exception handlers
-                                          * specifically marked as `@:interrupt' (or rather `EXCEPTION_HANDLER_FINTERPT')
+                                          * specifically marked as `@[interrupt]' (or rather `EXCEPTION_HANDLER_FINTERPT')
                                           * Additionally (but only when `CONFIG_NO_THREADS' is disabled), such errors are
                                           * re-scheduled in the pending-interrupt system of the calling thread when they
                                           * are thrown in a context where errors are normally discarded (such as destructions

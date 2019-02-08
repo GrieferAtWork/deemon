@@ -579,6 +579,17 @@ syn_module_expected_dot_keyword_or_string(JITLexer *__restrict self) {
 }
 
 
+INTERN ATTR_COLD int FCALL
+syn_anno_expected_rbracket(JITLexer *__restrict self) {
+ syn_trace_here(self);
+ return DeeError_Throwf(&DeeError_SyntaxError,
+                        "Expected `]' after `@[...', but got `%$s'",
+                        (size_t)(self->jl_tokend - self->jl_tokstart),
+                         self->jl_tokstart);
+}
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEX_JIT_ERROR_C */

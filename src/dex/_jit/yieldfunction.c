@@ -352,16 +352,13 @@ err:
 PRIVATE int DCALL
 JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
  for (;;) {
-  bool allow_interrupts = false;
   /* XXX: Full tagging support? */
   if (self->jl_tok == '@') {
    JITLexer_Yield(self);
-   if (self->jl_tok == ':') {
+   if (self->jl_tok == '[') {
     JITLexer_Yield(self);
-    if (JITLexer_ISKWD(self,"interrupt")) {
-     JITLexer_Yield(self);
-     allow_interrupts = true;
-    }
+    if (JITLexer_SkipPair(self,'[',']'))
+        goto err;
    }
   }
   if (JITLexer_ISKWD(self,"finally")) {
@@ -1587,12 +1584,18 @@ service_exception_handlers:
       /* XXX: Full tagging support? */
       if (self->ji_lex.jl_tok == '@') {
        JITLexer_Yield(&self->ji_lex);
-       if (self->ji_lex.jl_tok == ':') {
+       if (self->ji_lex.jl_tok == '[') {
         JITLexer_Yield(&self->ji_lex);
         if (JITLexer_ISKWD(&self->ji_lex,"interrupt")) {
          JITLexer_Yield(&self->ji_lex);
          allow_interrupts = true;
         }
+       }
+       if (self->ji_lex.jl_tok == ']') {
+        JITLexer_Yield(&self->ji_lex);
+       } else {
+        syn_anno_expected_rbracket(&self->ji_lex);
+        goto err;
        }
       }
       if (JITLexer_ISKWD(&self->ji_lex,"finally")) {

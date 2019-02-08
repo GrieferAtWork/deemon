@@ -1268,7 +1268,7 @@ PRIVATE struct type_getset cd_getsets[] = {
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class behaves as an interrupt exception when thrown\n"
           "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
-          "statements, but only by statements marked as ${@:interrupt catch(...)}\n"
+          "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
           "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
           "optional function calls such as invocations of :fs:unlink from accidentally handling "
           "unwanted types of exceptions such as :Signal.Interrupt.KeyboardInterrupt, as caused "

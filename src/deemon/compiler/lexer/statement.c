@@ -638,7 +638,7 @@ err_foreach_elem:
    * yet another catch/finally block that never came:
    * >> try {
    * >>     print "Hello";
-   * >> } @:interrupt catch (...) {
+   * >> } @[interrupt] catch (...) {
    * >>     print "Error";
    * >> }
    * >> 

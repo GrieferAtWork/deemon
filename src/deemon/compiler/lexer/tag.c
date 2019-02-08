@@ -304,7 +304,7 @@ INTERN int (DCALL parse_tags)(void) {
   if unlikely(unicode_printer_putascii(&current_tags.at_doc,'\n'))
      goto err;
   if (yield() < 0) goto err;
- } else if (tok == ':') {
+ } else if (tok == '[') {
   /* Implementation-specific / compile-time tags */
   char const *tag_name_str;
   size_t tag_name_len;
@@ -327,6 +327,9 @@ INTERN int (DCALL parse_tags)(void) {
    else if (WARN(W_COMPILER_TAG_UNKNOWN,tag_name_len,tag_name_str)) goto err;
    if unlikely(yield() < 0) goto err;
   }
+  if unlikely(likely(tok == ']') ? (yield() < 0) : 
+              WARN(W_COMPILER_TAG_EXPECTED_RBRACKET))
+     goto err;
 #undef IS_TAG
  } else {
   uint16_t flags; int error;

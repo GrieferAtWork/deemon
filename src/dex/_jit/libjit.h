@@ -1207,6 +1207,7 @@ INTDEF ATTR_COLD int FCALL syn_operator_expected_empty_string(JITLexer *__restri
 INTDEF ATTR_COLD int FCALL syn_operator_expected_lbracket_or_dot_after_del(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_operator_unknown_name(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_module_expected_dot_keyword_or_string(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_anno_expected_rbracket(JITLexer *__restrict self);
 
 
 DECL_END
