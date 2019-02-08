@@ -19,6 +19,24 @@
 
 import * from deemon;
 
+@@Convert an old-style compare predicate to a new-style key function
+@@Wehn called as ${cmp(lhs,rhs)}, the given @cmp function should
+@@return ${< 0} when ${lhs < rhs}, return ${== 0} when ${lhs == rhs}
+@@and return ${> 0} when ${lhs > rhs}
+function predcmp2key(cmp: callable) {
+	class KeyClass {
+		private member m_self;
+		this(self) { m_self = self; }
+		operator <  (other) -> cmp(this.m_self,other.m_self) <  0;
+		operator <= (other) -> cmp(this.m_self,other.m_self) <= 0;
+		operator == (other) -> cmp(this.m_self,other.m_self) == 0;
+		operator != (other) -> cmp(this.m_self,other.m_self) != 0;
+		operator >  (other) -> cmp(this.m_self,other.m_self) >  0;
+		operator >= (other) -> cmp(this.m_self,other.m_self) >= 0;
+	}
+	return KeyClass;
+}
+
 @@Convert an old-style compare-lo predicate to a new-style key function
 @@>import string from deemon;
 @@>import predlo2key from functools;
