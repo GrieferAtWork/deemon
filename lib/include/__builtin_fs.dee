@@ -56,64 +56,64 @@ from fs import
 #endif
 ;
 
-function __builtin_fs_gethome() -> (user from fs).operator . ("home");
+final function __builtin_fs_gethome() -> (user from fs).operator . ("home");
 #define __builtin_fs_wgethome __builtin_fs_gethome
 #define __builtin_fs_wgettmp __builtin_fs_gettmp
 //const __builtin_fs_gettmpname = __builtin_object(0x0168); /* TODO */
 //#define __builtin_fs_wgettmpname __builtin_fs_gettmpname
-function __builtin_fs_listenv() -> environ from fs;
+final function __builtin_fs_listenv() -> environ from fs;
 #define __builtin_fs_wlistenv  __builtin_fs_listenv
-function __builtin_fs_getenv(__name) -> (environ from fs)[__name];
-function __builtin_fs_delenv(__name) -> (environ from fs).operator del[](__name);
-function __builtin_fs_setenv(__name,__val) -> (environ from fs).operator[](__name,__val);
-function __builtin_fs_path_expanduser(__path) -> (expand from fs)(__path,"h");
-function __builtin_fs_path_expandvars(__path) -> (expand from fs)(__path,"vV");
-function __builtin_fs_getatime(__path) -> (stat from fs)(__path).operator . ("st_atime");
-function __builtin_fs_getctime(__path) -> (stat from fs)(__path).operator . ("st_mtime");
-function __builtin_fs_getmtime(__path) -> (stat from fs)(__path).operator . ("st_ctime");
-function __builtin_fs_gettimes(__path) {
+final function __builtin_fs_getenv(__name) -> (environ from fs)[__name];
+final function __builtin_fs_delenv(__name) -> (environ from fs).operator del[](__name);
+final function __builtin_fs_setenv(__name,__val) -> (environ from fs).operator[](__name,__val);
+final function __builtin_fs_path_expanduser(__path) -> (expand from fs)(__path,"h");
+final function __builtin_fs_path_expandvars(__path) -> (expand from fs)(__path,"vV");
+final function __builtin_fs_getatime(__path) -> (stat from fs)(__path).operator . ("st_atime");
+final function __builtin_fs_getctime(__path) -> (stat from fs)(__path).operator . ("st_mtime");
+final function __builtin_fs_getmtime(__path) -> (stat from fs)(__path).operator . ("st_ctime");
+final function __builtin_fs_gettimes(__path) {
 	local __st = (stat from fs)(__path);
 	return (
 		__st.operator . ("st_atime"),
 		__st.operator . ("st_ctime"),
 		__st.operator . ("st_mtime"));
 }
-function __builtin_fs_setatime(__path,val) -> (chtime from fs)(__path,val,none,none);
-function __builtin_fs_setctime(__path,val) -> (chtime from fs)(__path,none,val,none);
-function __builtin_fs_setmtime(__path,val) -> (chtime from fs)(__path,none,none,val);
-function __builtin_fs_settimes(__path,at = none,ct = none,mt = none)
+final function __builtin_fs_setatime(__path,val) -> (chtime from fs)(__path,val,none,none);
+final function __builtin_fs_setctime(__path,val) -> (chtime from fs)(__path,none,val,none);
+final function __builtin_fs_setmtime(__path,val) -> (chtime from fs)(__path,none,none,val);
+final function __builtin_fs_settimes(__path,at = none,ct = none,mt = none)
 	-> (chtime from fs)(__path,at,mt,ct);
-function __builtin_fs_isfile(__path) -> (stat from fs).operator . ("isreg")(__path);
-function __builtin_fs_isdir(__path) -> (stat from fs).operator . ("isdir")(__path);
-function __builtin_fs_islink(__path) -> (stat from fs).operator . ("islnk")(__path);
-function __builtin_fs_isdrive(__path) {
+final function __builtin_fs_isfile(__path) -> (stat from fs).operator . ("isreg")(__path);
+final function __builtin_fs_isdir(__path) -> (stat from fs).operator . ("isdir")(__path);
+final function __builtin_fs_islink(__path) -> (stat from fs).operator . ("islnk")(__path);
+final function __builtin_fs_isdrive(__path) {
 	import fs;
 	__path = fs.operator . ("inctrail")(fs.expand(__path,"pc"));
 	return fs.operator . ("driveof")(__path) == __path;
 }
 #define __builtin_fs_ismount  __builtin_fs_isdrive
-function __builtin_fs_ishidden(__path) -> (stat from fs).operator . ("ishidden")(__path);
-function __builtin_fs_isxfile(__path) -> (stat from fs).operator . ("isexe")(__path);
-function __builtin_fs_ischrdev(__path) -> (stat from fs).operator . ("ischr")(__path);
-function __builtin_fs_isblkdev(__path) -> (stat from fs).operator . ("isblk")(__path);
-function __builtin_fs_isfifo(__path) -> (stat from fs).operator . ("isfifo")(__path);
-function __builtin_fs_issocket(__path) -> (stat from fs).operator . ("issock")(__path);
-function __builtin_fs_exists(__path) -> (stat from fs).operator . ("exists")(__path);
-function __builtin_fs_getmod(__path) -> (stat from fs)(__path).operator . ("st_mode");
-function __builtin_fs_getown(__path) {
+final function __builtin_fs_ishidden(__path) -> (stat from fs).operator . ("ishidden")(__path);
+final function __builtin_fs_isxfile(__path) -> (stat from fs).operator . ("isexe")(__path);
+final function __builtin_fs_ischrdev(__path) -> (stat from fs).operator . ("ischr")(__path);
+final function __builtin_fs_isblkdev(__path) -> (stat from fs).operator . ("isblk")(__path);
+final function __builtin_fs_isfifo(__path) -> (stat from fs).operator . ("isfifo")(__path);
+final function __builtin_fs_issocket(__path) -> (stat from fs).operator . ("issock")(__path);
+final function __builtin_fs_exists(__path) -> (stat from fs).operator . ("exists")(__path);
+final function __builtin_fs_getmod(__path) -> (stat from fs)(__path).operator . ("st_mode");
+final function __builtin_fs_getown(__path) {
 	local st = (stat from fs)(__path);
 	return (st.operator . ("st_uid"),st.operator . ("st_gid"));
 }
 
 #define __builtin_fs_wuidname __builtin_fs_uidname
-function __builtin_fs_uidname(__uid) {
+final function __builtin_fs_uidname(__uid) {
 	if (__uid !is user from fs)
 		__uid = (user from fs)(__uid);
 	return __uid.operator . ("name");
 }
 
 #define __builtin_fs_wgidname __builtin_fs_gidname
-function __builtin_fs_gidname(__gid) {
+final function __builtin_fs_gidname(__gid) {
 	if (__gid !is group from fs)
 		__gid = (group from fs)(__gid);
 	return __gid.operator . ("name");
@@ -121,25 +121,32 @@ function __builtin_fs_gidname(__gid) {
 
 #ifdef __WINDOWS__
 /* TODO: Implement these using the `win32' module. */
-//const __builtin_fs_win32modulename = __builtin_object(0x00EE); /* TODO */
-//#define __builtin_fs_win32wmodulename __builtin_fs_win32modulename
-//const __builtin_fs_win32dlldirectory = __builtin_object(0x0162); /* TODO */
-//#define __builtin_fs_win32wdlldirectory __builtin_fs_win32dlldirectory
-//const __builtin_fs_win32systemdirectory = __builtin_object(0x0163); /* TODO */
-//#define __builtin_fs_win32wsystemdirectory __builtin_fs_win32systemdirectory
-//const __builtin_fs_win32windowsdirectory = __builtin_object(0x0165); /* TODO */
-//#define __builtin_fs_win32wwindowsdirectory __builtin_fs_win32windowsdirectory
-//const __builtin_fs_win32systemwindowsdirectory = __builtin_object(0x0166); /* TODO */
-//#define __builtin_fs_win32wsystemwindowsdirectory __builtin_fs_win32systemwindowsdirectory
-//const __builtin_fs_win32syswow64directory = __builtin_object(0x0167); /* TODO */
-//#define __builtin_fs_win32wsyswow64directory __builtin_fs_win32syswow64directory
-//const __builtin_fs_win32drives = __builtin_object(0x01CF); /* TODO */
-//#define __builtin_fs_win32wdrives __builtin_fs_win32drives
+#pragma push_macro(undef,"win32","GetLogicalDriveStrings")
+from win32 import
+	__builtin_fs_win32modulename = "GetModuleFileName",
+	__builtin_fs_win32wmodulename = "GetModuleFileName",
+	__builtin_fs_win32dlldirectory = "GetDllDirectory",
+	__builtin_fs_win32wdlldirectory = "GetDllDirectory",
+	__builtin_fs_win32systemdirectory = "GetSystemDirectory",
+	__builtin_fs_win32wsystemdirectory = "GetSystemDirectory",
+	__builtin_fs_win32windowsdirectory = "GetWindowsDirectory",
+	__builtin_fs_win32wwindowsdirectory = "GetWindowsDirectory",
+	__builtin_fs_win32systemwindowsdirectory = "GetSystemWindowsDirectory",
+	__builtin_fs_win32wsystemwindowsdirectory = "GetSystemWindowsDirectory",
+	__builtin_fs_win32syswow64directory = "GetSystemWow64Directory",
+	__builtin_fs_win32wsyswow64directory = "GetSystemWow64Directory"
+;
+final function __builtin_fs_win32drives() {
+	return (GetLogicalDriveStrings from win32)().rstrip("\0").split("\0");
+}
+#define __builtin_fs_win32wdrives  __builtin_fs_win32drives
+#pragma pop_macro("win32","GetLogicalDriveStrings","rstrip","split")
 #endif
 
 function __builtin_fs_user() -> (user from fs).operator . ("name");
 #define __builtin_fs_wuser __builtin_fs_user
 
+#pragma pop_macro("from","fs","import","user","environ","function","return","if","expand","chtime","stat","local","group")
 
 
 

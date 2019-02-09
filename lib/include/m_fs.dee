@@ -91,3 +91,8 @@ final function gidname(gid) {
 final global dir = fs.dir;
 final global query = fs.query;
 final global env = fs.environ;
+
+final global win32 = import(".m_fs_win32");
+final global posix = import(".m_fs_posix");
+
+
