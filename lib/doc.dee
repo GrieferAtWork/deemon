@@ -92,7 +92,7 @@ local function encode_type(tp: deemon.type_): string {
 		return "?U" + encode_name(tp.__name__);
 	local name = lookup_object_in_module(mod,tp);
 	if (name is none)
-		name = tp.__name__;
+		name = deemon.type_.__name__(tp);
 	if (mod === deemon)
 		return "?D" + encode_name(name);
 	return "?E{}:{}".format({
