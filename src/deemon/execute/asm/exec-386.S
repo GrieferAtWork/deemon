@@ -4416,6 +4416,7 @@ target16_function_c_16:
 target16_function_c:
 	lodsw
 	movl    %eax, %ecx
+	xorl    %eax, %eax
 	lodsb
 	jmp    .do_function_c
 target_function_c_16:
@@ -6558,11 +6559,11 @@ target_pack_dict:
 1:	leal   (,%eax,8), %ecx
 	movl   SP, %edx
 	subl   %ecx, %edx
-	pushl  %edx /* backup */
+	pushl  %edx /* BACKUP(NEW_SP) */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
+	pushl  %edx /* DeeDict_NewKeyItemsInherited:key_items */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax
+	pushl  %eax /* DeeDict_NewKeyItemsInherited:num_keyitems */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeDict_NewKeyItemsInherited,8)
 	ADJUST_CFA_OFFSET(-8)
@@ -6797,22 +6798,23 @@ prefix_target_extended1:
 /* Prefixed creation of function objects. */
 prefix_target16_function_c_16:
 	lodsw
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsw
 	jmp    .prefix_do_function_c
 prefix_target16_function_c:
 	lodsw
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
+	xorl    %eax, %eax
 	lodsb
 	jmp    .prefix_do_function_c
 prefix_target_function_c_16:
 	lodsb
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsw
 	jmp    .prefix_do_function_c
 prefix_target_function_c:
 	lodsb
-	movzbl  %al, %ecx
+	movl    %eax, %ecx
 	lodsb
 .prefix_do_function_c:
 	LOAD_CODE(%edx)
@@ -6830,6 +6832,10 @@ prefix_target_function_c:
 	subl    %ecx, %edx      /* EDX = SP - refc */
 	movl    %edx, 8(%esp)   /* DeeFunction_NewInherited:refv */
 	movl    %edx, 12(%esp)  /* BACKUP(SP - refc) */
+#if 1
+	movl 0(%esp), %eax
+	WASSERT_EQUAL(l,ob_type(%eax),$SYM(DeeCode_Type))
+#endif
 	call    fSYM(DeeFunction_NewInherited,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl   %eax, %eax
