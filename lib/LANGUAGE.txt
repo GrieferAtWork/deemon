@@ -906,9 +906,9 @@ ast_parse_unaryhead ::= (
 	(DDI('<') [ast_parse_unary] '>') | /* ACTION: cell/cell0 */
 #endif
 
-	(DDI('if') '(' ast_parse_expression ')' (
-		('else' ast_parse_expression) | /* Same as `none else ast_parse_expression' */
-		(ast_parse_expression ['else' ast_parse_expression])
+	(DDI('if') '(' ast_parse_expr ')' (
+		('else' ast_parse_expr) | /* Same as `none else ast_parse_expr' */
+		(ast_parse_expr ['else' ast_parse_expr])
 	)) |
 
 	/* Bound-expressions.
@@ -922,16 +922,16 @@ ast_parse_unaryhead ::= (
 	 *          An implementation is also allowed to replace this
 	 *          kind of use with a call to said function.
 	 */
-	(DDI('bound') (('(' ast_parse_expression ')') | ast_parse_unary)) |
+	(DDI('bound') (('(' ast_parse_expr ')') | ast_parse_unary)) |
 
 	/* Operator function access (see detailed explaination in `x.operator ...' below) */
 	('operator' DDI(ast_parse_operator_name(false))) |
 
 	/* Assert-expressions. */
-	('assert' '(' DDI(ast_parse_expression) [',' ast_parse_expression] ')') |
+	('assert' '(' DDI(ast_parse_expr) [',' ast_parse_expr] ')') |
 
 	/* With-expressions. */
-	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_expression) |
+	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_expr) |
 
 	/* Try-expressions. */
 	ast_parse_try(false) |
@@ -969,8 +969,8 @@ ast_parse_unaryhead ::= (
 	 * Using this, modules can be imported at runtime, allowing names only
 	 * available at runtime to be used, thus enabling dynamic dependencies. */
 	(DDI('import') (
-		(['pack'] '(' ast_parse_expression ')') |
-		('pack' ast_parse_expression)
+		(['pack'] '(' ast_parse_expr ')') |
+		('pack' ast_parse_expr)
 	) |
 
 	/* Parenthesis / [empty] tuple expression. */
@@ -1002,7 +1002,7 @@ ast_parse_unaryhead ::= (
 		 * having to #include <util> as one had to before deemon 200, I've
 		 * decided to add a dedicated syntax just for creating ranges.
 		 */
-		([ast_parse_expression] ':' [ast_parse_expression] [',' ast_parse_expression] ']') |
+		([ast_parse_expr] ':' [ast_parse_expr] [',' ast_parse_expr] ']') |
 		/* List expression.
 		 * NOTE: Ambiguity with lambda for `[]' is resolved by looking at the
 		 *       token following. When it's a '(', '{' or '->', it's a lambda.
@@ -1042,7 +1042,7 @@ ast_parse_unaryhead ::= (
 			/* N'th variable lookup modifier.
 			 * When searching for symbols matching the _keyword following
 			 * this prefix, don't bind to the first match found, but rather
-			 * the ast_parse_expression'th.
+			 * the ast_parse_expr'th.
 			 * >> {
 			 * >>     local x = 10;
 			 * >>     {
@@ -1052,18 +1052,18 @@ ast_parse_unaryhead ::= (
 			 * >>     }
 			 * >> }
 			 * The constant expression is converted to an integer as though
-			 * it was the result of an expression `(int)ast_parse_expression',
+			 * it was the result of an expression `(int)ast_parse_expr',
 			 * meaning that boolean, and other integer-like object, including
 			 * `none' are accepted just as well.
 			 *
 			 * It is an error to pass a negative value, or a value equal to ZERO(0)
 			 *
-			 * The given `ast_parse_expression' must be a constant expression.
+			 * The given `ast_parse_expr' must be a constant expression.
 			 * An implementation is allowed and encouraged to perform
 			 * constant propagation when an expression is given, however
 			 * it is allowed allowed to choose to emit an error in this case.
 			 */
-			('__nth' '(' ast_parse_expression ')')
+			('__nth' '(' ast_parse_expr ')')
 		]
 
 		/* Default case: Symbol lookup
@@ -1137,11 +1137,11 @@ ast_parse_unary_operand ::= (
 			/* Ranged item access.
 			 * NOTE: When used as the target in a store expression,
 			 *       this will be encoded as a __setrange__ operation. */
-			([ast_parse_expression] ':' [ast_parse_expression]) |
+			([ast_parse_expr] ':' [ast_parse_expr]) |
 			/* Indexed item access.
 			 * NOTE: When used as the target in a store expression,
 			 *       this will be encoded as a __setitem__ operation. */
-			(ast_parse_expression)
+			(ast_parse_expr)
 		) ']') |
 
 		/* Brace initializer-suffix:
@@ -1158,7 +1158,7 @@ ast_parse_unary_operand ::= (
 		 *       accessible with the `iterator' attribute of the type.
 		 *
 		 */
-		ast_parse_expression |
+		ast_parse_expr |
 
 		/* Encode a call-expression with optional parenthesis.
 		 * >> foo pack 10,20,30; // Same as foo(10,20,30); */
@@ -1195,7 +1195,7 @@ ast_parse_argument_list ::= (
 		 * May optionally be pre-fixed with positional arguments. */
 		[ast_parse_comma(false,false) ',']
 		[',' ~~ (
-			keyword ':' ast_parse_expression
+			keyword ':' ast_parse_expr
 		)...]
 	)
 );
@@ -1397,16 +1397,16 @@ ast_parse_assign := (
 
 ast_parse_brace_items ::= ([
 	/* Brace initializer for lists-style sequences. */
-	(',' ~~ ast_parse_expression...) |
+	(',' ~~ ast_parse_expr...) |
 	/* Brace initializer for dict-style sequences. */
 	(',' ~~ ((
-		(ast_parse_expression (':' | '=')) |
+		(ast_parse_expr (':' | '=')) |
 		/* Initializer for string-keys: Same as `"_keyword" : ' */
 		('.' _keyword '=')
-	) ast_parse_expression)...) |
+	) ast_parse_expr)...) |
 ]);
 
-ast_parse_expression ::= (
+ast_parse_expr ::= (
 	ast_parse_assign
 );
 
@@ -1420,7 +1420,7 @@ _inner_comma_expression ::= (
 	 * a global variable and have it then use that global variable. */
 	(DDI(((['final'] 'class') | ('class' ['final']))) [_keyword] ast_parse_class) |
 	(DDI('function') [_keyword] ast_parse_function(?MAYBE?))
-	ast_parse_expression
+	ast_parse_expr
 );
 
 ast_parse_comma(strict_comma,allow_vardecl) ::= (
@@ -1513,7 +1513,7 @@ ast_parse_comma(strict_comma,allow_vardecl) ::= (
 ast_parse_for_head ::= (
 	(	/* foreach-style loop. */
 		ast_parse_comma(false,true) ':'
-		ast_parse_expression
+		ast_parse_expr
 	) |
 	(	/* c-style for loop. */
 		[ast_parse_comma(false,true)] ';'
@@ -1589,7 +1589,7 @@ asm_parse_operands(kind) ::= (
 		 */
 		(<TOK_STRING>...)
 		/* The actual operand expression. */
-		'(' ast_parse_expression ')'
+		'(' ast_parse_expr ')'
 #endif
 	)...]
 );
@@ -1827,7 +1827,7 @@ ast_parse_statement ::= (
 	 */
 	(DDI('foreach') '('
 		ast_parse_comma(false,true) ':'
-		ast_parse_expression
+		ast_parse_expr
 	')' ast_parse_statement) |
 
 	/* The `assert' statement */
@@ -1841,7 +1841,7 @@ ast_parse_statement ::= (
 		ast_parse_statement
 #		INTERNAL(clear_current_tags())
 		parse_tags_block
-		'while' '(' ast_parse_expression ')' ';'
+		'while' '(' ast_parse_expr ')' ';'
 	) |
 
 	/* A while... loop */
@@ -1870,7 +1870,7 @@ ast_parse_statement ::= (
 	 *       make use of a hidden constant tuple/dict for mapping
 	 *       switch expressions to IP/SP pairs that are then loaded
 	 *       using the `jmp pop' or `jmp pop, #pop' instructions. */
-	(DDI('case') ast_parse_expression ':' ast_parse_statement) |
+	(DDI('case') ast_parse_expr ':' ast_parse_statement) |
 	(DDI('default') ':' ast_parse_statement) |
 	(DDI('switch') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
 
@@ -1913,7 +1913,7 @@ ast_parse_try(is_statement) ::= (
 #if is_statement
 		ast_parse_statement
 #else
-		ast_parse_expression
+		ast_parse_expr
 #endif
 		(
 #			INTERNAL(clear_current_tags())
@@ -1923,7 +1923,7 @@ ast_parse_try(is_statement) ::= (
 #if is_statement
 					ast_parse_statement
 #else
-					ast_parse_expression
+					ast_parse_expr
 #endif
 				) |
 				('catch' '(' (
@@ -1938,7 +1938,7 @@ ast_parse_try(is_statement) ::= (
 #if is_statement
 					ast_parse_statement
 #else
-					ast_parse_expression
+					ast_parse_expr
 #endif
 				)
 			)
@@ -1948,7 +1948,7 @@ ast_parse_try(is_statement) ::= (
 ast_parse_class ::= (
 	/* Optional base expression. */
 	[	((':' | 'extends') ast_parse_unaryhead) |
-		('(' ast_parse_expression ')')
+		('(' ast_parse_expr ')')
 	]
 
 	/* Class block */
@@ -2002,7 +2002,7 @@ ast_parse_class ::= (
 			/* Member definition. */
 			(DDI(_keyword) ['=' (
 				('{' parse_property '}') | /* Property */
-				ast_parse_expression            /* Member with initializer. */
+				ast_parse_expr            /* Member with initializer. */
 			)] ';') |
 
 			/* Member function function */
@@ -2023,9 +2023,9 @@ parse_constructor_initializers ::= (
 		(DDI(_keyword) (
 			/* Value to assign to member `_keyword'
 			 * When empty parenthesis are given, assign `none' */
-			('(' [ast_parse_expression] ')') |
+			('(' [ast_parse_expr] ')') |
 			/* Assign the given expression to the member. */
-			('=' ast_parse_expression)
+			('=' ast_parse_expr)
 		))
 	)...
 );
@@ -2131,7 +2131,7 @@ parse_arglist ::= (
 					 *       Such optimization _must_ at least include basic constant
 					 *       propagation, such that `10+20' or `tuple { 1, 2, 3 }'
 					 *       can be used (those were just examples...). */
-					('=' ast_parse_expression)
+					('=' ast_parse_expr)
 				)]
 			)
 		)
@@ -2141,7 +2141,7 @@ parse_arglist ::= (
 ast_parse_function_noargs(parse_semicollon) ::= (
 	(	/* Arrow-return function (same as `{ return <expr>; }') */
 		'->'
-		ast_parse_expression
+		ast_parse_expr
 #if parse_semicollon
 		';'
 #endif
@@ -2274,14 +2274,14 @@ parse_generator_loop ::= (
 		parse_generator_loop
 		['else' parse_generator_loop]
 	) |
-	(DDI('do') parse_generator_loop 'while' '(' ast_parse_expression ')') |
+	(DDI('do') parse_generator_loop 'while' '(' ast_parse_expr ')') |
 	(DDI('while') '(' ast_parse_comma(false,true) ')' parse_generator_loop) |
 	(DDI('for') '(' ast_parse_for_head ')' parse_generator_loop) |
 	(DDI('foreach') '('
 		ast_parse_comma(false,true) ':'
-		ast_parse_expression
+		ast_parse_expr
 	')' parse_generator_loop) |
-	ast_parse_expression /* This expression is wrapped in a yield-branch */
+	ast_parse_expr /* This expression is wrapped in a yield-branch */
 );
 ast_parse_loopexpr ::= (
 	/* The following expression is wrapped as follows:
@@ -2294,9 +2294,9 @@ ast_parse_loopexpr ::= (
 ast_parse_assert(need_parenthesis) ::= (
 	'assert' (
 		(
-			'(' ast_parse_expression /* Assert expression */
+			'(' ast_parse_expr /* Assert expression */
 #if !need_parenthesis
-			[',' ast_parse_expression] /* Assert message. */
+			[',' ast_parse_expr] /* Assert message. */
 #endif
 			/* NOTE: When no message has been given,
 			 *       the assertion expression is found
@@ -2316,8 +2316,8 @@ ast_parse_assert(need_parenthesis) ::= (
 #if !need_parenthesis
 		| (
 			/* Assert without parenthesis. */
-			ast_parse_expression /* Assert expression */
-			[',' ast_parse_expression] /* Assert message */
+			ast_parse_expr /* Assert expression */
+			[',' ast_parse_expr] /* Assert message */
 		)
 #endif
 	)
@@ -2440,8 +2440,8 @@ ast_parse_import ::= (
 	) | (
 		/* Expression-like imports are also allowed where statements are expected. */
 		DDI('import')
-		(['pack'] '(' ast_parse_expression ')') |
-		('pack' ast_parse_expression)
+		(['pack'] '(' ast_parse_expr ')') |
+		('pack' ast_parse_expr)
 	)
 );
 
@@ -2524,6 +2524,10 @@ ast_parse_module_name ::= (
 
 parse_tags ::= (
 
+	/* Documentation string of human-readable text (terminated by a line-feed) */
+	('@' [*...] '\n') |
+	/* TODO: Document type annotations */
+
 	('[' ',' ~~ (
 		/* Mandatory compiler annotations: */
 		'interrupt' | /* For `class': When thrown, instances behave as interrupts
@@ -2582,44 +2586,151 @@ parse_tags ::= (
 		)
 	)... ']') |
 
+	/* User-defined object annotations
+	 * These can be applied in numerous locations, where they can
+	 * be used to modify the source object of some sort of assignment.
+	 * Annotations can be written in one of 2 ways (see below)
+	 * NOTE: It is an error to place an annotation somewhere it can't
+	 *       naturally appear, or 
+	 *
+	 * - Function declarations:
+	 *   >> @MyTag
+	 *   >> function foo() {
+	 *   >> 	...
+	 *   >> }
+	 *   Compiled as:
+	 *   >> foo = MyTag([]() {
+	 *   >> 	...
+	 *   >> });
+	 *
+	 * - Variant assignments:
+	 *   >> @MyTag
+	 *   >> global foo = 42;
+	 *   >> @MyTag
+	 *   >> if (local x = get_value()) {
+	 *   >> 	// Same goes for `with' and `while'
+	 *   >> 	// Also note that in the case of `with',
+	 *   >> 	// `MyTab(obj).operator enter()' will be invoked.
+	 *   >> 	...
+	 *   >> }
+	 *   >> @MyTag
+	 *   >> for (local x = 0; x < 10; ++x) {
+	 *   >> 	...
+	 *   >> }
+	 *   >> @MyTag
+	 *   >> for (local x: get_items()) {
+	 *   >> 	...
+	 *   >> }
+	 *   >> @MyTag
+	 *   >> for (local x,y,z: get_triples()) {
+	 *   >> 	...
+	 *   >> }
+	 *   >> try {
+	 *   >> 	...
+	 *   >> } @MyTag catch (e...) {
+	 *   >> 	...
+	 *   >> }
+	 *   Compiled as:
+	 *   >> global foo = MyTag(42);
+	 *   >> if (local x = MyTag(get_value())) {
+	 *   >> 	...
+	 *   >> }
+	 *   >> for (local x = MyTag(0); x < 10; ++x) {
+	 *   >> 	...
+	 *   >> }
+	 *   >> for (local x: get_items()) {
+	 *   >> 	x = MyTag(x);
+	 *   >> 	...
+	 *   >> }
+	 *   >> for (local x,y,z: get_triples()) {
+	 *   >> 	x = MyTag(x);
+	 *   >> 	y = MyTag(y);
+	 *   >> 	z = MyTag(z);
+	 *   >> 	...
+	 *   >> }
+	 *   >> try {
+	 *   >> 	...
+	 *   >> } catch (e...) {
+	 *   >> 	e = MyTag(e); // Does not affect `throw;' (rethrow)
+	 *   >> 	...
+	 *   >> }
+	 *
+	 * - Class declaration:
+	 *   >> @MyTag
+	 *   >> class Foo {
+	 *   >> 	...
+	 *   >> }
+	 *   Compiled as:
+	 *   >> Foo = MyTag(class Foo {
+	 *   >> 	...
+	 *   >> });
+	 *
+	 * - Class members/properties/functions:
+	 *   >> class Foo {
+	 *   >>
+	 *   >> 	@MyTag
+	 *   >> 	public member foo = 42;
+	 *   >>
+	 *   >> 	public property bar = {
+	 *   >> 		@MyTag
+	 *   >> 		get() {
+	 *   >> 			...
+	 *   >> 		}
+	 *   >> 	}
+	 *   >>
+	 *   >> 	@MyTag
+	 *   >> 	public function foobar() {
+	 *   >> 		...
+	 *   >> 	}
+	 *   >>
+	 *   >> }
+	 *   Compiled as:
+	 *   >> class Foo {
+	 *   >>
+	 *   >> 	public member foo = MyTag(42);
+	 *   >>
+	 *   >> 	public property bar = {
+	 *   >> 		get = MyTag([]() {
+	 *   >> 			// NOTE: This function still behaves as a normal
+	 *   >> 			//       class method (access to this, super, etc.)
+	 *   >> 			...
+	 *   >> 		});
+	 *   >> 	}
+	 *   >>
+	 *   >> 	public function foobar = MyTag([]() {
+	 *   >> 		// NOTE: This function still behaves as a normal
+	 *   >> 		//       class method (access to this, super, etc.)
+	 *   >> 		...
+	 *   >> 	});
+	 *   >>
+	 *   >> }
+	 *
+	 */
 	(',' ~~ (
-		/* Raw documentation string.
-		 * NOTE: This expects the string token itself, rather than a constant
-		 *       expression evaluating to a string. The later can be done using
-		 *       the `doc' tag described below. */
-		(<TOK_STRING>...) |
+		/* Automatic expression
+		 * Transform declarations:
+		 * >> @foo("bar")
+		 * >> local x = get_value();
+		 * >> @bar
+		 * >> local y = get_value();
+		 * Into this:
+		 * >> local x = foo(get_value(),"bar");
+		 * >> local y = bar(get_value());
+		 */
+		ast_parse_expr |
 
-		/* Append each constant expression string found in `ast_parse_comma'
-		 * to the active documentation string, inserting new-lines inbetween.
-		 * When `doc(auto)' is encountered, an empty line is appended, ensuing
-		 * that the documentation string is non-empty, allowing the compiler
-		 * to auto-generate anything that is missing. */
-		(WITHOUT_UNDERSCORE('doc') '(' ['auto' | ast_parse_comma(false,false)] ')') |
+		/* Call-disabled expression
+		 * Transform declarations:
+		 * >> @(foo("bar"))
+		 * >> local x = get_value();
+		 * >> @(bar)
+		 * >> local y = get_value();
+		 * Into this:
+		 * >> local x = foo("bar")(get_value());
+		 * >> local y = bar(get_value());
+		 */
+		('(' ast_parse_expr ')')
 
-		/* Define the class/super symbols used by a function definition to
-		 * resolve access to member symbols and the `super' expression. */
-		(WITHOUT_UNDERSCORE('class') '(' ast_parse_comma(false,false) ')') |
-		(WITHOUT_UNDERSCORE('super') '(' ast_parse_comma(false,false) ')') |
-
-		/* Various flag-style tags (simply grep the named flag to learn its meaning). */
-		(WITHOUT_UNDERSCORE('copyable')) |    /* CODE_FCOPYABLE */
-		(WITHOUT_UNDERSCORE('thiscall')) |    /* CODE_FTHISCALL */
-		(WITHOUT_UNDERSCORE('assembly')) |    /* CODE_FASSEMBLY */
-		(WITHOUT_UNDERSCORE('nobase')) |      /* AST_TAG_FNOBASE */
-		(WITHOUT_UNDERSCORE('lenient')) |     /* CODE_FLENIENT */
-		(WITHOUT_UNDERSCORE('heapframe')) |   /* CODE_FHEAPFRAME */
-		(WITHOUT_UNDERSCORE('constructor')) | /* CODE_FCONSTRUCTOR */
-		(WITHOUT_UNDERSCORE('final')) |       /* TP_FFINAL */
-		(WITHOUT_UNDERSCORE('truncate')) |    /* TP_FTRUNCATE */
-		(WITHOUT_UNDERSCORE('interrupt')) |   /* TP_FINTERRUPT */
-		(WITHOUT_UNDERSCORE('private')) |     /* CLASS_MEMBER_FPRIVATE */
-		(WITHOUT_UNDERSCORE('readonly')) |    /* CLASS_MEMBER_FREADONLY */
-		(WITHOUT_UNDERSCORE('method')) |      /* CLASS_MEMBER_FMETHOD */
-		(WITHOUT_UNDERSCORE('likely')) |      /* AST_FCOND_LIKELY */
-		(WITHOUT_UNDERSCORE('unlikely')) |    /* AST_FCOND_UNLIKELY */
-
-		/* Any unkown tag is parsed as follows for forward compatibility */
-		(WITHOUT_UNDERSCORE(_tag_name) ['(' [ast_parse_comma(false,false)] ')' ])
 	)...)
 );
 
