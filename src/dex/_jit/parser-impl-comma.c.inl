@@ -293,17 +293,20 @@ err_var_symbol:
    RETURN_TYPE args;
 #ifdef JIT_EVAL
    RETURN_TYPE merge;
-   unsigned int used_lookup_mode = lookup_mode;
-   LOAD_LVALUE(current,err);
-   if (!(lookup_mode & LOOKUP_SYM_VMASK) &&
-         JITContext_IsGlobalScope(self->jl_context))
-         used_lookup_mode |= LOOKUP_SYM_VGLOBAL;
-   if (JITContext_Lookup(self->jl_context,
-                        &var_symbol,
-                        (char const *)self->jl_tokstart,
-                        (size_t)(self->jl_tokend - self->jl_tokstart),
-                         used_lookup_mode) < 0)
-       goto err_current;
+   {
+    unsigned int used_lookup_mode;
+    used_lookup_mode = lookup_mode;
+    LOAD_LVALUE(current,err);
+    if (!(lookup_mode & LOOKUP_SYM_VMASK) &&
+          JITContext_IsGlobalScope(self->jl_context))
+          used_lookup_mode |= LOOKUP_SYM_VGLOBAL;
+    if (JITContext_Lookup(self->jl_context,
+                         &var_symbol,
+                         (char const *)self->jl_tokstart,
+                         (size_t)(self->jl_tokend - self->jl_tokstart),
+                          used_lookup_mode) < 0)
+        goto err_current;
+   }
 #endif /* JIT_EVAL */
    JITLexer_Yield(self);
 

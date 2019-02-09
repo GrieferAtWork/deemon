@@ -348,6 +348,7 @@ again_compiler_tag:
      if unlikely(likely(tok == ')') ? (yield() < 0) : 
                  WARN(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
         goto err;
+     goto do_next_compiler_tag;
     } else goto warn_unknown_tag;
    } else {
     if unlikely(yield() < 0)

@@ -24,6 +24,7 @@
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/gc.h>
+#include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/attribute.h>
 #include <deemon/seq.h>
@@ -4444,13 +4445,27 @@ assert_badtype_impl(char const *check_name, char const *file,
                    "with a reference counter of 0 when%sinstance of %s was needed",
                    ob,ob->ob_type->tp_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
  } else {
+  bool include_obj_repr = false;
   char const *type_name = "?";
-  if (DeeObject_Check(ob->ob_type))
-      type_name = ob->ob_type->tp_name;
-  _DeeAssert_Failf(check_name,file,line,
-                   "Bad object at %p (instance of %s, %Iu references) "
-                   "when%sinstance of %s was needed",
-                   ob,type_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
+  if (DeeObject_Check(ob->ob_type)) {
+   type_name = ob->ob_type->tp_name;
+   if (ob->ob_type == &DeeString_Type || ob->ob_type == &DeeInt_Type ||
+       ob->ob_type == &DeeBool_Type || ob->ob_type == &DeeFloat_Type)
+       include_obj_repr = true;
+  }
+  if (include_obj_repr) {
+   _DeeAssert_Failf(check_name,file,line,
+                    "Bad object at %p (instance of %s, %Iu references) "
+                    "when%sinstance of %s was needed\n"
+                    "repr: %r",
+                    ob,type_name,ob->ob_refcnt,is_exact,
+                    wanted_type->tp_name,ob);
+  } else {
+   _DeeAssert_Failf(check_name,file,line,
+                    "Bad object at %p (instance of %s, %Iu references) "
+                    "when%sinstance of %s was needed",
+                    ob,type_name,ob->ob_refcnt,is_exact,wanted_type->tp_name);
+  }
  }
 }
 

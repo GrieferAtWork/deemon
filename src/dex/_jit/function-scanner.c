@@ -536,7 +536,7 @@ do_handle_for:
 
   case 7:
    name = UNALIGNED_GET32((uint32_t *)tok_begin);
-   if (name == ENCODE4('f','i','n','a') ||
+   if (name == ENCODE4('f','i','n','a') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('l','l') &&
        *(uint8_t *)(tok_begin + 6) == 'y')
        goto do_yield_again_docast;
@@ -863,7 +863,7 @@ do_yield_semi:
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a','c') &&
        *(uint8_t *)(tok_begin + 6) == 'h')
        goto do_scan_for_statement;
-   if (name == ENCODE4('f','i','n','a') ||
+   if (name == ENCODE4('f','i','n','a') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('l','l') &&
        *(uint8_t *)(tok_begin + 6) == 'y')
        goto do_yield_again;

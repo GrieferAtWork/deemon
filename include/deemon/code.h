@@ -141,9 +141,6 @@ struct except_handler {
                                               * then point back into regular text, after the empty handler. */
 #define EXCEPTION_HANDLER_FMASK    0x0007    /* Mask of known exception handler flags. */
     uint16_t                       eh_flags; /* Exception handler flags (Set of `EXCEPTION_HANDLER_F*') */
-#if __SIZEOF_POINTER__ > 4
-    uint32_t                       eh_pad;   /* Padding... */
-#endif
 };
 
 
