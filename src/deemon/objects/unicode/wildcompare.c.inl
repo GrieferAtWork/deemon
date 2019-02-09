@@ -71,7 +71,7 @@ wildcompare(unicode_foldreader(T) *string,
     }
    }
   }
-  ch = unicode_foldreader_getc(*string);;
+  ch = unicode_foldreader_getc(*string);
   if (pattern_ch == ch ||
       pattern_ch == '?')
       continue; /* single character match */

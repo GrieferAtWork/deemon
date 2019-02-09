@@ -599,9 +599,12 @@ default_case:
    if (pwas_expression)
       *pwas_expression = AST_PARSE_WASEXPR_NO;
 #endif
-  } else {
+  } else if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
    if (pwas_expression)
       *pwas_expression = AST_PARSE_WASEXPR_YES;
+  } else {
+   if (pwas_expression)
+      *pwas_expression = AST_PARSE_WASEXPR_MAYBE;
   }
  } break;
  }

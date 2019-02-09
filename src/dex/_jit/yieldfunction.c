@@ -951,14 +951,14 @@ parse_again_same_statement:
    DeeError_Throwf(&DeeError_SyntaxError,
                    "Expected statement before `}' within `yield'-function");
    self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
-   self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;;
+   self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;
    goto err;
   }
   if (st == &self->ji_bstat) {
    DeeError_Throwf(&DeeError_SyntaxError,
                    "Unmatched `}' encountered within `yield'-function");
    self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
-   self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;;
+   self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;
    goto err;
   }
   /* Pop the additional block scope. */

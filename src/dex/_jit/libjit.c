@@ -91,16 +91,36 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  {
   unsigned int was;
   result = JITLexer_EvalHybrid(&lexer,&was);
-  while (lexer.jl_tok) {
-   if unlikely(!result)
-      break;
-   if (result == JIT_LVALUE) {
-    JITLValue_Fini(&lexer.jl_lvalue);
-    lexer.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
-   } else {
-    Dee_Decref(result);
-   }
-   result = JITLexer_EvalHybridSecondary(&lexer,&was);
+  if (lexer.jl_tok && likely(result)) {
+   if (was == AST_PARSE_WASEXPR_YES) {
+    /* Dangling code after expression. */
+    if (result == JIT_LVALUE) {
+     JITLValue_Fini(&lexer.jl_lvalue);
+     JITLValue_Init(&lexer.jl_lvalue);
+    } else {
+     Dee_Decref(result);
+    }
+    result = NULL;
+    DeeError_Throwf(&DeeError_SyntaxError,
+                    "Unexpected token `%$s' after expression",
+                    (size_t)(lexer.jl_tokend - lexer.jl_tokstart),
+                     lexer.jl_tokstart);
+   } else do {
+    /* Multi-statement. */
+    if (result == JIT_LVALUE) {
+     JITLValue_Fini(&lexer.jl_lvalue);
+     JITLValue_Init(&lexer.jl_lvalue);
+    } else {
+     Dee_Decref(result);
+    }
+#if 1
+    result = JITLexer_EvalStatement(&lexer);
+#else
+    result = JITLexer_EvalHybridSecondary(&lexer,&was);
+#endif
+    if unlikely(!result)
+       break;
+   } while (lexer.jl_tok);
   }
  }
 #else

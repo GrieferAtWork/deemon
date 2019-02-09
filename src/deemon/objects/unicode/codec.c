@@ -494,7 +494,7 @@ encode_utf32(DeeObject *__restrict self) {
   result = DeeBytes_NewBufferUninitialized(size * 4);
   if unlikely(!result) goto err;
   dst = (uint32_t *)DeeBytes_DATA(result);
-  while (size--) UNALIGNED_SET32(dst++,(uint32_t)*data++);;
+  while (size--) UNALIGNED_SET32(dst++,(uint32_t)*data++);
   return result;
  }
  if (DeeString_Check(self)) {
