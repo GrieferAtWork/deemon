@@ -36,6 +36,8 @@
 #define CODE_IS_REGISTER 1
 #endif
 
+
+
 /*
 
 CODE_PC = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
@@ -2913,9 +2915,11 @@ target_push_varargs:
 	sp_push %eax, 1
 	jmp    .disp
 1:	LOAD_CODE(%ecx)
+	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
+	movzwl  co_argc_max(CODE_OR_ECX), %eax
 	movl    FRAME_ARGC, %edx
 	/* if (frame->cf_argc <= code->co_argc_max) */
-	cmpl    co_argc_max(CODE_OR_ECX), %edx
+	cmpl    %eax, %edx
 	jnbe    1f
 	/* { */
 	leal    SYM(DeeTuple_Empty), %eax
@@ -2925,14 +2929,13 @@ target_push_varargs:
 	jmp    .disp
 	/* } */
 1:	/* Must construct the varargs tuple. */
-	movl    co_argc_max(CODE_OR_ECX), %ecx
-	movl    FRAME_ARGV, %eax
-	leal    (%eax,%ecx,4), %edx /* EDX = frame->cf_argv + code->co_argc_max */
-	movl    FRAME_ARGC, %eax
-	subl    %ecx, %eax          /* EAX = frame->cf_argc - code->co_argc_max */
+	movl    FRAME_ARGV, %edx
+	leal    (%edx,%eax,4), %edx /* EDX = frame->cf_argv + code->co_argc_max */
+	movl    FRAME_ARGC, %ecx
+	subl    %eax, %ecx          /* ECX = frame->cf_argc - code->co_argc_max */
 	pushl   %edx
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax
+	pushl   %ecx
 	ADJUST_CFA_OFFSET(4)
 	call    fSYM(DeeTuple_NewVector,8)
 	ADJUST_CFA_OFFSET(-8)

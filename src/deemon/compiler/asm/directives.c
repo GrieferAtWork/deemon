@@ -282,6 +282,9 @@ do_handle_code:
    else if (NAMEISKWD("heapframe")) current_basescope->bs_flags |= CODE_FHEAPFRAME;
    else if (NAMEISKWD("finally")) current_basescope->bs_flags |= CODE_FFINALLY;
    else if (NAMEISKWD("constructor")) current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
+#if 0
+   else if (NAMEISKWD("no_assembly")) current_basescope->bs_flags &= ~CODE_FASSEMBLY;
+#endif
    else if (WARN(W_UASM_CODE_UNKNOWN_FLAG,name->k_name)) goto err;
    if (tok != ',') break;
    if unlikely(yield() < 0) goto err;
