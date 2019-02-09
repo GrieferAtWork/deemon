@@ -42,9 +42,9 @@ CODE_PC = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
 CODE_SIZE = (*(unsigned int *)((*(unsigned int *)(EBP - 16)) + 28))
 CODE = (*(unsigned int *)(EBP - 16))
 CODE_DDI = (*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)))
-CODE_DDI_STRTAB = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (4 * 8))) + (4 * 5))
-CODE_DDI_SYMBOL_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (4 * 8))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[0]
-CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (4 * 8))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[(*(unsigned short *)(*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)) + (4 * 16)))]
+CODE_DDI_STRTAB = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5))
+CODE_DDI_SYMBOL_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[0]
+CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[(*(unsigned short *)(*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)) + (4 * 16)))]
 
 */
 
@@ -1124,6 +1124,8 @@ run_finally_after_return:
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	movl   SP_OFFSET(4) L_THIS_THREAD, %eax
+	movl   t_except(%eax), %eax /* eax = this_thread->t_except->ef_error */
+	ASSERT_NONZERO(%eax)
 	movl   ef_error(%eax), %eax /* eax = this_thread->t_except->ef_error */
 	ASSERT_NONZERO(%eax)
 	/* Check if the error is an interrupt and if so, make
