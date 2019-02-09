@@ -413,6 +413,7 @@ FUNC(Hybrid)(JITLexer *__restrict self,
  case '{':
   result = FUNC(StatementOrBraces)(self,&was_expression);
   if (ISERR(result)) goto err;
+parse_unary_suffix_if_notexpr:
   if (was_expression != AST_PARSE_WASEXPR_NO) {
    /* Try to parse a suffix expression.
     * If there was one, then we know that it actually was an expression. */
@@ -451,7 +452,7 @@ is_a_statement:
    if (self->jl_tokstart[0] == 'd' &&
        self->jl_tokstart[1] == 'o') {
     result = FUNC(DoHybrid)(self,&was_expression);
-    goto done;
+    goto parse_unary_suffix_if_notexpr;
    }
    break;
 
@@ -465,14 +466,14 @@ is_a_statement:
    if (self->jl_tokstart[0] == 'f' &&
        self->jl_tokstart[1] == 'o' &&
        self->jl_tokstart[2] == 'r') {
-    result = FUNC(ForHybrid)(self,&was_expression);
+    result = FUNC(ForHybrid)(self,pwas_expression);
     goto done;
    }
    if (self->jl_tokstart[0] == 'd' &&
        self->jl_tokstart[1] == 'e' &&
        self->jl_tokstart[2] == 'l') {
     result = FUNC(DelHybrid)(self,&was_expression);
-    goto done;
+    goto parse_unary_suffix_if_notexpr;
    }
    break;
 
@@ -493,7 +494,7 @@ is_a_statement:
    name = UNALIGNED_GET32((uint32_t *)tok_begin);
    if (name == ENCODE4('w','h','i','l') &&
        *(uint8_t *)(tok_begin + 4) == 'e') {
-    result = FUNC(WhileHybrid)(self,&was_expression);
+    result = FUNC(WhileHybrid)(self,pwas_expression);
     goto done;
    }
    if (name == ENCODE4('y','i','e','l') &&
@@ -525,8 +526,8 @@ is_a_statement:
    }
    if (name == ENCODE4('i','m','p','o') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r','t')) {
-    result = FUNC(ImportHybrid)(self,false,pwas_expression);
-    goto done;
+    result = FUNC(ImportHybrid)(self,false,&was_expression);
+    goto parse_unary_suffix_if_notexpr;
    }
    if (name == ENCODE4('s','w','i','t') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c','h'))
@@ -538,7 +539,7 @@ is_a_statement:
    if (name == ENCODE4('f','o','r','e') &&
        UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a','c') &&
        *(uint8_t *)(tok_begin + 6) == 'h') {
-    result = FUNC(ForeachHybrid)(self,&was_expression);
+    result = FUNC(ForeachHybrid)(self,pwas_expression);
     goto done;
    }
    if (name == ENCODE4('_','_','a','s') &&

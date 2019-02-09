@@ -155,25 +155,31 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 
 
 /* Check if the given token qualifies for the associated operation parser function. */
-#define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
-#define TOKEN_IS_SUM(tok)    ((tok) == '+' || (tok) == '-')
-#define TOKEN_IS_SHIFT(tok)  ((tok) == TOK_SHL || (tok) == TOK_SHR)
-#define TOKEN_IS_CMP(tok)    ((tok) == TOK_LOWER || (tok) == TOK_LOWER_EQUAL || (tok) == TOK_GREATER || (tok) == TOK_GREATER_EQUAL)
+#define TOKEN_IS_UNARY(self)  \
+      ((self)->jl_tok == '.' || (self)->jl_tok == '(' || \
+       (self)->jl_tok == '[' || (self)->jl_tok == '{' || \
+       (self)->jl_tok == TOK_INC || (self)->jl_tok == TOK_DEC || \
+        JITLexer_ISKWD(self,"pack"))
+#define TOKEN_IS_PROD(self)   ((self)->jl_tok == '*' || (self)->jl_tok == '/' || (self)->jl_tok == '%' || (self)->jl_tok == TOK_POW)
+#define TOKEN_IS_SUM(self)    ((self)->jl_tok == '+' || (self)->jl_tok == '-')
+#define TOKEN_IS_SHIFT(self)  ((self)->jl_tok == TOK_SHL || (self)->jl_tok == TOK_SHR)
+#define TOKEN_IS_CMP(self)    ((self)->jl_tok == TOK_LOWER || (self)->jl_tok == TOK_LOWER_EQUAL || (self)->jl_tok == TOK_GREATER || (self)->jl_tok == TOK_GREATER_EQUAL)
 #define TOKEN_IS_CMPEQ(self)  \
       ((self)->jl_tok == TOK_EQUAL || (self)->jl_tok == TOK_NOT_EQUAL || \
        (self)->jl_tok == TOK_EQUAL3 || (self)->jl_tok == TOK_NOT_EQUAL3 || \
        (self)->jl_tok == '!' || \
       ((self)->jl_tok == JIT_KEYWORD && \
        (JITLexer_ISTOK(self,"is") || JITLexer_ISTOK(self,"in"))))
-#define TOKEN_IS_AND(tok)    ((tok) == '&')
-#define TOKEN_IS_XOR(tok)    ((tok) == '^')
-#define TOKEN_IS_OR(tok)     ((tok) == '|')
-#define TOKEN_IS_AS(self)    ((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self,"as"))
-#define TOKEN_IS_LAND(tok)   ((tok) == TOK_LAND)
-#define TOKEN_IS_LOR(tok)    ((tok) == TOK_LOR)
-#define TOKEN_IS_COND(tok)   ((tok) == '?')
-#define TOKEN_IS_ASSIGN(tok) ((tok) == TOK_COLLON_EQUAL || ((tok) >= TOK_ADD_EQUAL && (tok) <= TOK_POW_EQUAL))
+#define TOKEN_IS_AND(self)    ((self)->jl_tok == '&')
+#define TOKEN_IS_XOR(self)    ((self)->jl_tok == '^')
+#define TOKEN_IS_OR(self)     ((self)->jl_tok == '|')
+#define TOKEN_IS_AS(self)     ((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self,"as"))
+#define TOKEN_IS_LAND(self)   ((self)->jl_tok == TOK_LAND)
+#define TOKEN_IS_LOR(self)    ((self)->jl_tok == TOK_LOR)
+#define TOKEN_IS_COND(self)   ((self)->jl_tok == '?')
+#define TOKEN_IS_ASSIGN(self) ((self)->jl_tok == TOK_COLLON_EQUAL || ((self)->jl_tok >= TOK_ADD_EQUAL && (self)->jl_tok <= TOK_POW_EQUAL))
 
+#define CASE_TOKEN_IS_UNARY  case '.': case '(': case '[': case '{': case TOK_INC: case TOK_DEC
 #define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TOK_POW
 #define CASE_TOKEN_IS_SUM    case '+': case '-'
 #define CASE_TOKEN_IS_SHIFT  case TOK_SHL: case TOK_SHR
@@ -670,6 +676,7 @@ INTDEF DREF DeeObject *FCALL JITLexer_EvalAssign(JITLexer *__restrict self, unsi
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
+INTDEF DREF DeeObject *FCALL JITLexer_EvalUnaryOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF DREF DeeObject *FCALL JITLexer_EvalProdOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF DREF DeeObject *FCALL JITLexer_EvalSumOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF DREF DeeObject *FCALL JITLexer_EvalShiftOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
@@ -771,6 +778,7 @@ INTDEF int FCALL JITLexer_SkipLand(JITLexer *__restrict self, unsigned int flags
 INTDEF int FCALL JITLexer_SkipLor(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCond(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handles inplace operators. */
+INTDEF int FCALL JITLexer_SkipUnaryOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipProdOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipSumOperand(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipShiftOperand(JITLexer *__restrict self, unsigned int flags);

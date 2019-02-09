@@ -1425,17 +1425,14 @@ err:
 
 
 
-
-
-
-
-
-DEFINE_PRIMARY(Unary) {
- RETURN_TYPE result;
+DEFINE_SECONDARY(UnaryOperand) {
  RETURN_TYPE rhs;
  IF_EVAL(unsigned char *pos;)
- result = CALL_PRIMARY(UnaryHead);
- if (ISOK(result)) for (;;) {
+ ASSERT(TOKEN_IS_UNARY(self));
+ LOAD_LVALUE(lhs,err);
+ (void)flags;
+ for (;;) {
+  IF_EVAL(pos = self->jl_tokstart;)
   switch (self->jl_tok) {
 
   case TOK_INC:
@@ -1448,21 +1445,21 @@ DEFINE_PRIMARY(Unary) {
    /* Need a custom parser protocol! */
    JITLexer_Yield(self);
 #ifdef JIT_EVAL
-   if (result != JIT_LVALUE) {
+   if (lhs != JIT_LVALUE) {
     err_cannot_invoke_inplace(NULL,
                               cmd == TOK_INC
                             ? OPERATOR_INC
                             : OPERATOR_DEC);
     goto err;
    }
-   result = JITLValue_GetValue(&self->jl_lvalue,
-                                self->jl_context);
-   if unlikely(!result) goto err;
-   result_copy = DeeObject_Copy(result);
+   lhs = JITLValue_GetValue(&self->jl_lvalue,
+                             self->jl_context);
+   if unlikely(!lhs) goto err;
+   result_copy = DeeObject_Copy(lhs);
    if unlikely(!result_copy) goto err_r;
    error = cmd == TOK_INC
-         ? DeeObject_Inc(&result)
-         : DeeObject_Dec(&result)
+         ? DeeObject_Inc(&lhs)
+         : DeeObject_Dec(&lhs)
          ;
    if unlikely(error) {
 err_result_copy:
@@ -1471,12 +1468,12 @@ err_result_copy:
    }
    error = JITLValue_SetValue(&self->jl_lvalue,
                                self->jl_context,
-                               result);
+                               lhs);
    if unlikely(error) goto err_result_copy;
    JITLValue_Fini(&self->jl_lvalue);
    JITLValue_Init(&self->jl_lvalue);
-   Dee_Decref(result);
-   result = result_copy; /* Inherit reference. */
+   Dee_Decref(lhs);
+   lhs = result_copy; /* Inherit reference. */
 #endif /* JIT_EVAL */
   } break;
 
@@ -1497,14 +1494,14 @@ err_result_copy:
 #ifdef JIT_EVAL
     {
      DREF DeeObject *opfun;
-     LOAD_LVALUE(result,err);
+     LOAD_LVALUE(lhs,err);
      opfun = JIT_GetOperatorFunction((uint16_t)opno);
      if unlikely(!opfun) goto err_r;
-     rhs = DeeInstanceMethod_New(opfun,result);
+     rhs = DeeInstanceMethod_New(opfun,lhs);
      Dee_Decref(opfun);
      if unlikely(!rhs) goto err_r_invoke;
-     Dee_Decref(result);
-     result = rhs;
+     Dee_Decref(lhs);
+     lhs = rhs;
     }
 #endif
    } else if (JITLexer_ISTOK(self,"this")) {
@@ -1512,26 +1509,26 @@ err_result_copy:
    } else if (JITLexer_ISTOK(self,"class")) {
     JITLexer_Yield(self);
 #ifdef JIT_EVAL
-    LOAD_LVALUE(result,err);
-    rhs = (DeeObject *)DeeObject_Class(result);
+    LOAD_LVALUE(lhs,err);
+    rhs = (DeeObject *)DeeObject_Class(lhs);
     Dee_Incref(rhs);
-    Dee_Decref(result);
-    result = rhs;
+    Dee_Decref(lhs);
+    lhs = rhs;
 #endif /* JIT_EVAL */
    } else if (JITLexer_ISTOK(self,"super")) {
     JITLexer_Yield(self);
 #ifdef JIT_EVAL
-    LOAD_LVALUE(result,err);
-    rhs = DeeSuper_Of(result);
+    LOAD_LVALUE(lhs,err);
+    rhs = DeeSuper_Of(lhs);
     if unlikely(!rhs) goto err_r_invoke;
-    Dee_Decref(result);
-    result = rhs;
+    Dee_Decref(lhs);
+    lhs = rhs;
 #endif /* JIT_EVAL */
    } else {
 #ifdef JIT_EVAL
     char const *attr_name;
     size_t attr_size;
-    LOAD_LVALUE(result,err);
+    LOAD_LVALUE(lhs,err);
     /* Generic attribute lookup. */
     attr_name = (char const *)self->jl_tokstart;
     attr_size = (size_t)(self->jl_tokend - self->jl_tokstart);
@@ -1562,26 +1559,26 @@ err_result_copy:
        goto err_r;
       }
      }
-     rhs = DeeObject_CallAttrStringLenTuple(result,
+     rhs = DeeObject_CallAttrStringLenTuple(lhs,
                                             attr_name,
                                             attr_size,
                                             args);
      Dee_Decref(args);
      if unlikely(!rhs)
         goto err_r_invoke;
-     Dee_Decref(result);
-     result = rhs;
+     Dee_Decref(lhs);
+     lhs = rhs;
     } else
 #endif
     {
      /* Generic attribute lookup */
      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
      self->jl_lvalue.lv_kind = JIT_LVALUE_ATTRSTR;
-     self->jl_lvalue.lv_attrstr.la_base = result; /* Inherit reference. */
+     self->jl_lvalue.lv_attrstr.la_base = lhs; /* Inherit reference. */
      self->jl_lvalue.lv_attrstr.la_name = attr_name;
      self->jl_lvalue.lv_attrstr.la_size = attr_size;
      self->jl_lvalue.lv_attrstr.la_hash = Dee_HashUtf8(attr_name,attr_size);
-     result = JIT_LVALUE;
+     lhs = JIT_LVALUE;
     }
 #endif /* JIT_EVAL */
    }
@@ -1591,7 +1588,7 @@ err_result_copy:
    RETURN_TYPE temp;
   case '[': /* sequence operator */
    IF_EVAL(pos = self->jl_tokstart;)
-   LOAD_LVALUE(result,err);
+   LOAD_LVALUE(lhs,err);
    JITLexer_Yield(self);
    if (self->jl_tok == ':') {
     JITLexer_Yield(self);
@@ -1600,11 +1597,11 @@ err_result_copy:
 #ifdef JIT_EVAL
      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
      self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
-     self->jl_lvalue.lv_range.lr_base  = result; /* Inherit reference. */
+     self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
      self->jl_lvalue.lv_range.lr_start = Dee_None;
      self->jl_lvalue.lv_range.lr_end   = Dee_None;
      Dee_Incref_n(Dee_None,2);
-     result = JIT_LVALUE;
+     lhs = JIT_LVALUE;
 #endif
     } else {
      temp = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
@@ -1621,11 +1618,11 @@ err_r_temp_expected_rbrck:
 #ifdef JIT_EVAL
      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
      self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
-     self->jl_lvalue.lv_range.lr_base  = result; /* Inherit reference. */
+     self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
      self->jl_lvalue.lv_range.lr_start = Dee_None;
      self->jl_lvalue.lv_range.lr_end   = temp;   /* Inherit reference. */
      Dee_Incref(Dee_None);
-     result = JIT_LVALUE;
+     lhs = JIT_LVALUE;
 #endif
     }
    } else {
@@ -1639,11 +1636,11 @@ err_r_temp_expected_rbrck:
 #ifdef JIT_EVAL
       ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
       self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
-      self->jl_lvalue.lv_range.lr_base  = result; /* Inherit reference. */
+      self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
       self->jl_lvalue.lv_range.lr_start = temp;   /* Inherit reference. */
       self->jl_lvalue.lv_range.lr_end   = Dee_None;
       Dee_Incref(Dee_None);
-      result = JIT_LVALUE;
+      lhs = JIT_LVALUE;
 #endif
      } else {
 #ifdef JIT_EVAL
@@ -1664,10 +1661,10 @@ err_r_temp_expected_rbrck:
       LOAD_LVALUE(temp,err_start_expr);
       ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
       self->jl_lvalue.lv_kind = JIT_LVALUE_RANGE;
-      self->jl_lvalue.lv_range.lr_base  = result;     /* Inherit reference. */
+      self->jl_lvalue.lv_range.lr_base  = lhs;     /* Inherit reference. */
       self->jl_lvalue.lv_range.lr_start = start_expr; /* Inherit reference. */
       self->jl_lvalue.lv_range.lr_end   = temp;       /* Inherit reference. */
-      result = JIT_LVALUE;
+      lhs = JIT_LVALUE;
 #endif
      }
     } else {
@@ -1679,40 +1676,36 @@ err_r_temp_expected_rbrck:
 #ifdef JIT_EVAL
      ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
      self->jl_lvalue.lv_kind = JIT_LVALUE_ITEM;
-     self->jl_lvalue.lv_item.li_base  = result; /* Inherit reference. */
+     self->jl_lvalue.lv_item.li_base  = lhs; /* Inherit reference. */
      self->jl_lvalue.lv_item.li_index = temp;   /* Inherit reference. */
-     result = JIT_LVALUE;
+     lhs = JIT_LVALUE;
 #endif
     }
    }
   } break;
 
-  /* TODO: pack */
-
-
   case '{':
    /* Brace initializer expressions. */
-   LOAD_LVALUE(result,err);
+   LOAD_LVALUE(lhs,err);
    rhs = CALL_PRIMARYF(UnaryHead,JITLEXER_EVAL_FSECONDARY);
    if (ISERR(rhs)) goto err_r;
 #ifdef JIT_EVAL
    LOAD_LVALUE(rhs,err_r);
    {
     DREF DeeObject *merge;
-    merge = DeeObject_Call(result,1,&rhs);
+    merge = DeeObject_Call(lhs,1,&rhs);
     Dee_Decref(rhs);
     if unlikely(!merge) goto err_r;
-    Dee_Decref(result);
-    result = merge;
+    Dee_Decref(lhs);
+    lhs = merge;
    }
 #endif
    break;
 
-
   case '(': /* Call operator */
    IF_EVAL(pos = self->jl_tokstart;)
    JITLexer_Yield(self);
-   LOAD_LVALUE(result,err);
+   LOAD_LVALUE(lhs,err);
    if (self->jl_tok == ')') {
     JITLexer_Yield(self);
 #ifdef JIT_EVAL
@@ -1737,56 +1730,75 @@ err_r_temp_expected_rbrck:
 #ifdef JIT_EVAL
    {
     DREF DeeObject *call_result;
-    call_result = DeeObject_CallTuple(result,rhs);
+    call_result = DeeObject_CallTuple(lhs,rhs);
     Dee_Decref(rhs);
     if unlikely(!call_result)
        goto err_r_invoke;
-    Dee_Decref(result);
-    result = call_result;
+    Dee_Decref(lhs);
+    lhs = call_result;
    }
 #endif
    break;
+
+  case JIT_KEYWORD:
+   if (JITLexer_ISTOK(self,"pack")) {
+    DERROR_NOTIMPLEMENTED();
+    goto err_r;
+   }
+   goto done;
 
   default:
    goto done;
   }
  }
 done:
- return result;
+ return LHS_OR_OK;
 #ifdef JIT_EVAL
 err_r_invoke:
  JITLexer_ErrorTrace(self,pos);
 #endif
 err_r:
- DECREF_MAYBE_LVALUE(result);
-IF_EVAL(err:)
+ DECREF(lhs);
+#ifdef JIT_EVAL
+err:
+#endif
  return ERROR;
+}
+
+
+
+
+DEFINE_PRIMARY(Unary) {
+ RETURN_TYPE result = CALL_PRIMARY(UnaryHead);
+ if (ISOK(result) && TOKEN_IS_UNARY(self))
+     result = CALL_SECONDARY(UnaryOperand,result);
+ return result;
 }
 
 DEFINE_PRIMARY(Prod) {
  RETURN_TYPE result = CALL_PRIMARY(Unary);
- if (ISOK(result) && TOKEN_IS_PROD(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_PROD(self))
      result = CALL_SECONDARY(ProdOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Sum) {
  RETURN_TYPE result = CALL_PRIMARY(Prod);
- if (ISOK(result) && TOKEN_IS_SUM(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_SUM(self))
      result = CALL_SECONDARY(SumOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Shift) {
  RETURN_TYPE result = CALL_PRIMARY(Sum);
- if (ISOK(result) && TOKEN_IS_SHIFT(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_SHIFT(self))
      result = CALL_SECONDARY(ShiftOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Cmp) {
  RETURN_TYPE result = CALL_PRIMARY(Shift);
- if (ISOK(result) && TOKEN_IS_CMP(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_CMP(self))
      result = CALL_SECONDARY(CmpOperand,result);
  return result;
 }
@@ -1800,21 +1812,21 @@ DEFINE_PRIMARY(CmpEQ) {
 
 DEFINE_PRIMARY(And) {
  RETURN_TYPE result = CALL_PRIMARY(CmpEQ);
- if (ISOK(result) && TOKEN_IS_AND(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_AND(self))
      result = CALL_SECONDARY(AndOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Xor) {
  RETURN_TYPE result = CALL_PRIMARY(And);
- if (ISOK(result) && TOKEN_IS_XOR(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_XOR(self))
      result = CALL_SECONDARY(XorOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Or) {
  RETURN_TYPE result = CALL_PRIMARY(Xor);
- if (ISOK(result) && TOKEN_IS_OR(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_OR(self))
      result = CALL_SECONDARY(OrOperand,result);
  return result;
 }
@@ -1828,21 +1840,21 @@ DEFINE_PRIMARY(As) {
 
 DEFINE_PRIMARY(Land) {
  RETURN_TYPE result = CALL_PRIMARY(As);
- if (ISOK(result) && TOKEN_IS_LAND(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_LAND(self))
      result = CALL_SECONDARY(LandOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Lor) {
  RETURN_TYPE result = CALL_PRIMARY(Land);
- if (ISOK(result) && TOKEN_IS_LOR(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_LOR(self))
      result = CALL_SECONDARY(LorOperand,result);
  return result;
 }
 
 DEFINE_PRIMARY(Cond) {
  RETURN_TYPE result = CALL_PRIMARY(Lor);
- if (ISOK(result) && TOKEN_IS_COND(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_COND(self))
      result = CALL_SECONDARY(CondOperand,result);
  return result;
 }
@@ -1851,12 +1863,12 @@ DEFINE_PRIMARY(Assign) {
 #ifdef __OPTIMIZE_SIZE__
  RETURN_TYPE result;
  result = CALL_PRIMARYF(Cond,flags | JITLEXER_EVAL_FALLOWINPLACE);
- if (ISOK(result) && TOKEN_IS_ASSIGN(self->jl_tok))
+ if (ISOK(result) && TOKEN_IS_ASSIGN(self))
      result = CALL_SECONDARY(AssignOperand,result);
  return result;
 #elif 1
  RETURN_TYPE result;
- result = CALL_PRIMARYF(Unary,flags |
+ result = CALL_PRIMARYF(UnaryHead,flags |
                         JITLEXER_EVAL_FALLOWINPLACE |
                         JITLEXER_EVAL_FALLOWISBOUND);
  if (ISERR(result)) goto done;
@@ -1869,22 +1881,30 @@ DEFINE_PRIMARY(Assign) {
       goto case_cmpeq;
   if (JITLexer_ISTOK(self,"as"))
       goto case_as;
+  if (JITLexer_ISTOK(self,"pack"))
+      goto case_unary;
   break;
 
- CASE_TOKEN_IS_PROD:
-  result = CALL_SECONDARY(ProdOperand,result);
+ CASE_TOKEN_IS_UNARY:
+case_unary:
+  result = CALL_SECONDARY(UnaryOperand,result);
   if (ISERR(result)) goto done;
-  if (TOKEN_IS_SUM(self->jl_tok)) {
+  if (TOKEN_IS_SUM(self)) {
+ CASE_TOKEN_IS_PROD:
+   result = CALL_SECONDARY(ProdOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_SUM(self)) {
  CASE_TOKEN_IS_SUM:
    result = CALL_SECONDARY(SumOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_SHIFT(self->jl_tok)) {
+  if (TOKEN_IS_SHIFT(self)) {
  CASE_TOKEN_IS_SHIFT:
    result = CALL_SECONDARY(ShiftOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_CMP(self->jl_tok)) {
+  if (TOKEN_IS_CMP(self)) {
  CASE_TOKEN_IS_CMP:
    result = CALL_SECONDARY(CmpOperand,result);
    if (ISERR(result)) goto done;
@@ -1895,17 +1915,17 @@ case_cmpeq:
    result = CALL_SECONDARY(CmpEQOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_AND(self->jl_tok)) {
+  if (TOKEN_IS_AND(self)) {
  CASE_TOKEN_IS_AND:
    result = CALL_SECONDARY(AndOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_XOR(self->jl_tok)) {
+  if (TOKEN_IS_XOR(self)) {
  CASE_TOKEN_IS_XOR:
    result = CALL_SECONDARY(XorOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_OR(self->jl_tok)) {
+  if (TOKEN_IS_OR(self)) {
  CASE_TOKEN_IS_OR:
    result = CALL_SECONDARY(OrOperand,result);
    if (ISERR(result)) goto done;
@@ -1916,22 +1936,22 @@ case_as:
    result = CALL_SECONDARY(AsOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_LAND(self->jl_tok)) {
+  if (TOKEN_IS_LAND(self)) {
  CASE_TOKEN_IS_LAND:
    result = CALL_SECONDARY(LandOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_LOR(self->jl_tok)) {
+  if (TOKEN_IS_LOR(self)) {
  CASE_TOKEN_IS_LOR:
    result = CALL_SECONDARY(LorOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_COND(self->jl_tok)) {
+  if (TOKEN_IS_COND(self)) {
  CASE_TOKEN_IS_COND:
    result = CALL_SECONDARY(CondOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_ASSIGN(self->jl_tok)) {
+  if (TOKEN_IS_ASSIGN(self)) {
  CASE_TOKEN_IS_ASSIGN:
    result = CALL_SECONDARY(AssignOperand,result);
    if (ISERR(result)) goto done;
@@ -1951,7 +1971,7 @@ DEFINE_SECONDARY(ProdOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
- ASSERT(TOKEN_IS_PROD(self->jl_tok));
+ ASSERT(TOKEN_IS_PROD(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -1981,7 +2001,7 @@ DEFINE_SECONDARY(ProdOperand) {
   Dee_Decref(lhs);
   lhs = merge;
 #endif
-  if (!TOKEN_IS_PROD(self->jl_tok))
+  if (!TOKEN_IS_PROD(self))
       break;
   IF_EVAL(cmd = self->jl_tok;)
  }
@@ -2004,7 +2024,7 @@ DEFINE_SECONDARY(SumOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  unsigned int cmd = self->jl_tok;
- ASSERT(TOKEN_IS_SUM(cmd));
+ ASSERT(TOKEN_IS_SUM(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2040,7 +2060,7 @@ DEFINE_SECONDARY(SumOperand) {
 #endif
   }
   cmd = self->jl_tok;
-  if (!TOKEN_IS_SUM(cmd))
+  if (!TOKEN_IS_SUM(self))
       break;
  }
  return LHS_OR_OK;
@@ -2063,7 +2083,7 @@ DEFINE_SECONDARY(ShiftOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
- ASSERT(TOKEN_IS_SHIFT(self->jl_tok));
+ ASSERT(TOKEN_IS_SHIFT(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2087,7 +2107,7 @@ DEFINE_SECONDARY(ShiftOperand) {
   Dee_Decref(lhs);
   lhs = merge;
 #endif
-  if (!TOKEN_IS_SHIFT(self->jl_tok))
+  if (!TOKEN_IS_SHIFT(self))
       break;
   IF_EVAL(cmd = self->jl_tok;)
  }
@@ -2110,7 +2130,7 @@ DEFINE_SECONDARY(CmpOperand) {
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
  unsigned int cmd = self->jl_tok;
- ASSERT(TOKEN_IS_CMP(cmd));
+ ASSERT(TOKEN_IS_CMP(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2154,7 +2174,7 @@ DEFINE_SECONDARY(CmpOperand) {
 #endif
   }
   cmd = self->jl_tok;
-  if (!TOKEN_IS_CMP(cmd))
+  if (!TOKEN_IS_CMP(self))
       break;
  }
  return LHS_OR_OK;
@@ -2354,7 +2374,7 @@ DEFINE_SECONDARY(AndOperand) {
  RETURN_TYPE rhs;
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
- ASSERT(TOKEN_IS_AND(self->jl_tok));
+ ASSERT(TOKEN_IS_AND(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2370,7 +2390,7 @@ DEFINE_SECONDARY(AndOperand) {
   Dee_Decref(lhs);
   lhs = merge;
 #endif
-  if (!TOKEN_IS_AND(self->jl_tok))
+  if (!TOKEN_IS_AND(self))
       break;
  }
  return LHS_OR_OK;
@@ -2391,7 +2411,7 @@ DEFINE_SECONDARY(XorOperand) {
  RETURN_TYPE rhs;
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
- ASSERT(TOKEN_IS_XOR(self->jl_tok));
+ ASSERT(TOKEN_IS_XOR(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2407,7 +2427,7 @@ DEFINE_SECONDARY(XorOperand) {
   Dee_Decref(lhs);
   lhs = merge;
 #endif
-  if (!TOKEN_IS_XOR(self->jl_tok))
+  if (!TOKEN_IS_XOR(self))
       break;
  }
  return LHS_OR_OK;
@@ -2428,7 +2448,7 @@ DEFINE_SECONDARY(OrOperand) {
  RETURN_TYPE rhs;
  IF_EVAL(DREF DeeObject *merge;)
  IF_EVAL(unsigned char *pos;)
- ASSERT(TOKEN_IS_OR(self->jl_tok));
+ ASSERT(TOKEN_IS_OR(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2444,7 +2464,7 @@ DEFINE_SECONDARY(OrOperand) {
   Dee_Decref(lhs);
   lhs = merge;
 #endif
-  if (!TOKEN_IS_OR(self->jl_tok))
+  if (!TOKEN_IS_OR(self))
       break;
  }
  return LHS_OR_OK;
@@ -2503,7 +2523,7 @@ DEFINE_SECONDARY(LandOperand) {
  RETURN_TYPE rhs;
 #endif
  IF_EVAL(unsigned char *pos;)
- ASSERT(TOKEN_IS_LAND(self->jl_tok));
+ ASSERT(TOKEN_IS_LAND(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2547,7 +2567,7 @@ DEFINE_SECONDARY(LandOperand) {
   if (ISERR(rhs)) goto err_r;
 #endif
 continue_expr:
-  if (!TOKEN_IS_LAND(self->jl_tok))
+  if (!TOKEN_IS_LAND(self))
       break;
  }
  return LHS_OR_OK;
@@ -2571,7 +2591,7 @@ DEFINE_SECONDARY(LorOperand) {
  RETURN_TYPE rhs;
 #endif
  IF_EVAL(unsigned char *pos;)
- ASSERT(TOKEN_IS_LOR(self->jl_tok));
+ ASSERT(TOKEN_IS_LOR(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2615,7 +2635,7 @@ DEFINE_SECONDARY(LorOperand) {
   if (ISERR(rhs)) goto err_r;
 #endif
 continue_expr:
-  if (!TOKEN_IS_LOR(self->jl_tok))
+  if (!TOKEN_IS_LOR(self))
       break;
  }
  return LHS_OR_OK;
@@ -2641,7 +2661,7 @@ DEFINE_SECONDARY(CondOperand) {
   * >> (x ? y : ) // >> x ? y : x
   * >> (x ? y)    // >> x ? y : none
   */
- ASSERT(TOKEN_IS_COND(self->jl_tok));
+ ASSERT(TOKEN_IS_COND(self));
  LOAD_LVALUE(lhs,err);
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
@@ -2724,7 +2744,7 @@ DEFINE_SECONDARY(CondOperand) {
   }
 #endif
 continue_expr:
-  if (!TOKEN_IS_COND(self->jl_tok))
+  if (!TOKEN_IS_COND(self))
        break;
  }
  return LHS_OR_OK;
@@ -2777,7 +2797,7 @@ DEFINE_SECONDARY(AssignOperand) {
  IF_EVAL(int error;)
  IF_EVAL(unsigned char *pos;)
  IF_EVAL(unsigned int cmd = self->jl_tok;)
- ASSERT(TOKEN_IS_ASSIGN(self->jl_tok));
+ ASSERT(TOKEN_IS_ASSIGN(self));
  for (;;) {
   IF_EVAL(pos = self->jl_tokstart;)
   if (self->jl_tok == TOK_COLLON_EQUAL) {
@@ -2839,7 +2859,7 @@ DEFINE_SECONDARY(AssignOperand) {
    if (ISERR(rhs)) goto err_r;
 #endif
   }
-  if (!TOKEN_IS_ASSIGN(self->jl_tok))
+  if (!TOKEN_IS_ASSIGN(self))
       break;
   IF_EVAL(cmd = self->jl_tok;)
  }
@@ -3082,22 +3102,30 @@ FUNC(Operand)(JITLexer *__restrict self,
       goto case_cmpeq;
   if (JITLexer_ISTOK(self,"as"))
       goto case_as;
+  if (JITLexer_ISTOK(self,"pack"))
+      goto case_unary;
   break;
 
- CASE_TOKEN_IS_PROD:
-  result = CALL_SECONDARY(ProdOperand,result);
+ CASE_TOKEN_IS_UNARY:
+case_unary:
+  result = CALL_SECONDARY(UnaryOperand,result);
   if (ISERR(result)) goto done;
-  if (TOKEN_IS_SUM(self->jl_tok)) {
+  if (TOKEN_IS_PROD(self)) {
+ CASE_TOKEN_IS_PROD:
+   result = CALL_SECONDARY(ProdOperand,result);
+   if (ISERR(result)) goto done;
+  }
+  if (TOKEN_IS_SUM(self)) {
  CASE_TOKEN_IS_SUM:
    result = CALL_SECONDARY(SumOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_SHIFT(self->jl_tok)) {
+  if (TOKEN_IS_SHIFT(self)) {
  CASE_TOKEN_IS_SHIFT:
    result = CALL_SECONDARY(ShiftOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_CMP(self->jl_tok)) {
+  if (TOKEN_IS_CMP(self)) {
  CASE_TOKEN_IS_CMP:
    result = CALL_SECONDARY(CmpOperand,result);
    if (ISERR(result)) goto done;
@@ -3108,17 +3136,17 @@ case_cmpeq:
    result = CALL_SECONDARY(CmpEQOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_AND(self->jl_tok)) {
+  if (TOKEN_IS_AND(self)) {
  CASE_TOKEN_IS_AND:
    result = CALL_SECONDARY(AndOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_XOR(self->jl_tok)) {
+  if (TOKEN_IS_XOR(self)) {
  CASE_TOKEN_IS_XOR:
    result = CALL_SECONDARY(XorOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_OR(self->jl_tok)) {
+  if (TOKEN_IS_OR(self)) {
  CASE_TOKEN_IS_OR:
    result = CALL_SECONDARY(OrOperand,result);
    if (ISERR(result)) goto done;
@@ -3129,22 +3157,22 @@ case_as:
    result = CALL_SECONDARY(AsOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_LAND(self->jl_tok)) {
+  if (TOKEN_IS_LAND(self)) {
  CASE_TOKEN_IS_LAND:
    result = CALL_SECONDARY(LandOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_LOR(self->jl_tok)) {
+  if (TOKEN_IS_LOR(self)) {
  CASE_TOKEN_IS_LOR:
    result = CALL_SECONDARY(LorOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_COND(self->jl_tok)) {
+  if (TOKEN_IS_COND(self)) {
  CASE_TOKEN_IS_COND:
    result = CALL_SECONDARY(CondOperand,result);
    if (ISERR(result)) goto done;
   }
-  if (TOKEN_IS_ASSIGN(self->jl_tok)) {
+  if (TOKEN_IS_ASSIGN(self)) {
  CASE_TOKEN_IS_ASSIGN:
    result = CALL_SECONDARY(AssignOperand,result);
    if (ISERR(result)) goto done;

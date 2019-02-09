@@ -1177,6 +1177,7 @@ H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
       : JITLexer_ISKWD(self,"import"));
 #ifdef JIT_HYBRID
  if (!is_from_import) {
+  JITLexer_Yield(self);
   *pwas_expression = AST_PARSE_WASEXPR_YES;
 #ifdef JIT_EVAL
   result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(),"import");
