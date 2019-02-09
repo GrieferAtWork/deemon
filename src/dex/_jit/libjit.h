@@ -698,6 +698,24 @@ INTDEF int FCALL JITLexer_SkipCommaListOperand(JITLexer *__restrict self, unsign
 INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaDictOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaDictOperand(JITLexer *__restrict self, unsigned int flags);
 
+/* Evaluate/skip an argument list, including keyword labels */
+INTDEF DREF DeeObject *FCALL JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict pkwds);
+INTDEF int FCALL JITLexer_SkipArgumentList(JITLexer *__restrict self);
+
+/* Evaluate a keyword label list and return a valid mapping for keywords to values.
+ * >> foo(10,20,x: 30, y: 40);
+ *                 ^        ^
+ *              ^
+ *              +--- first_label_name == "x: 30, y...."
+ *                   first_label_size == 1 */
+INTDEF DREF DeeObject *FCALL
+JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
+                              char const *__restrict first_label_name,
+                              size_t first_label_size);
+INTDEF int FCALL
+JITLexer_SkipKeywordLabelList(JITLexer *__restrict self);
+
+
 INTDEF DREF /*Module*/DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict self);
 #define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self,NULL,NULL,NULL) < 0 ? -1 : 0)
 

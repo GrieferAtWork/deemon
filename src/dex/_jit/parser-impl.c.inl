@@ -239,6 +239,148 @@ done_zero:
 }
 #endif
 
+
+INTDEF RETURN_TYPE FCALL
+#ifdef JIT_EVAL
+JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
+                              char const *__restrict first_label_name,
+                              size_t first_label_size)
+#else
+JITLexer_SkipKeywordLabelList(JITLexer *__restrict self)
+#endif
+{
+ RETURN_TYPE result;
+#ifdef JIT_EVAL
+ DREF DeeObject *value; int error;
+ result = DeeDict_New();
+ if unlikely(!result)
+    goto err;
+again_eval_expression:
+ value = JITLexer_EvalRValue(self);
+ if unlikely(!value)
+    goto err_r;
+ error = DeeDict_SetItemStringLen(result,
+                                  first_label_name,
+                                  first_label_size,
+                                  Dee_HashUtf8(first_label_name,
+                                               first_label_size),
+                                  value);
+ Dee_Decref(value);
+ if unlikely(error)
+    goto err_r;
+ if (self->jl_tok == ',') {
+  JITLexer_Yield(self);
+  if (self->jl_tok == JIT_KEYWORD) {
+   first_label_name = (char const *)self->jl_tokstart;
+   first_label_size = (size_t)(self->jl_tokend - (unsigned char *)first_label_name);
+   JITLexer_Yield(self);
+   if (self->jl_tok == ':') {
+    JITLexer_Yield(self);
+    goto again_eval_expression;
+   }
+   JITLexer_YieldAt(self,(unsigned char *)first_label_name);
+  }
+ }
+#else
+again_skip_expression:
+ if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+     goto err;
+ if (self->jl_tok == ',') {
+  JITLexer_Yield(self);
+  if (self->jl_tok == JIT_KEYWORD) {
+   unsigned char *start = self->jl_tokstart;
+   JITLexer_Yield(self);
+   if (self->jl_tok == ':') {
+    JITLexer_Yield(self);
+    goto again_skip_expression;
+   }
+   JITLexer_YieldAt(self,start);
+  }
+ }
+ result = 0;
+#endif
+ return result;
+#ifdef JIT_EVAL
+err_r:
+ Dee_Decref(result);
+#endif
+err:
+ return ERROR;
+}
+
+
+INTDEF RETURN_TYPE FCALL
+#ifdef JIT_EVAL
+JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict pkwds)
+#else
+JITLexer_SkipArgumentList(JITLexer *__restrict self)
+#endif
+{
+ RETURN_TYPE result;
+#ifdef JIT_EVAL
+ *pkwds = NULL;
+ result = JITLexer_EvalComma(self,
+                             AST_COMMA_FORCEMULTIPLE |
+                             AST_COMMA_ALLOWKWDLIST,
+                            &DeeTuple_Type,
+                             NULL);
+ LOAD_LVALUE(result,err);
+ if (self->jl_tok == TOK_POW) {
+  JITLexer_Yield(self);
+  /* Parse the keyword invocation AST. */
+  *pkwds = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+  if unlikely(!*pkwds)
+     goto err_r;
+ } else if (self->jl_tok == JIT_KEYWORD) {
+  unsigned char *name = self->jl_tokstart;
+  size_t size = (size_t)(self->jl_tokend - name);
+  JITLexer_Yield(self);
+  if unlikely(self->jl_tok != ':') {
+   JITLexer_YieldAt(self,name);
+   goto done;
+  }
+  JITLexer_Yield(self);
+  *pkwds = JITLexer_EvalKeywordLabelList(self,(char const *)name,size);
+  if unlikely(!*pkwds)
+     goto err_r;
+ }
+#else
+ result = JITLexer_SkipComma(self,
+                             AST_COMMA_FORCEMULTIPLE |
+                             AST_COMMA_ALLOWKWDLIST,
+                             NULL);
+ if (ISERR(result))
+     goto err;
+ if (self->jl_tok == TOK_POW) {
+  JITLexer_Yield(self);
+  if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+      goto err_r;
+ } else skip_keyword_label: if (self->jl_tok == JIT_KEYWORD) {
+  unsigned char *start = self->jl_tokstart;
+  JITLexer_Yield(self);
+  if unlikely(self->jl_tok != ':') {
+   JITLexer_YieldAt(self,start);
+   goto done;
+  }
+  JITLexer_Yield(self);
+  if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+      goto err_r;
+  if (self->jl_tok == ',') {
+   JITLexer_Yield(self);
+   goto skip_keyword_label;
+  }
+ }
+#endif
+done:
+ return result;
+err_r:
+ DECREF(result);
+err:
+ return ERROR;
+}
+
+
+
 DEFINE_PRIMARY(YieldAndParseUnaryKeywordOperand) {
  RETURN_TYPE result;
  (void)flags;
@@ -321,13 +463,74 @@ not_a_cast:
   }
   second_paren = self->jl_tok == '(';
   /* Parse the cast-expression / argument list. */
-  merge = FUNC(Comma)(self,AST_COMMA_FORCEMULTIPLE,IF_EVAL(&DeeTuple_Type,)&out_mode);
+  merge = FUNC(Comma)(self,
+                      AST_COMMA_FORCEMULTIPLE |
+                      AST_COMMA_ALLOWKWDLIST,
+                      IF_EVAL(&DeeTuple_Type,)
+                      &out_mode);
   if (ISERR(merge)) goto err_lhs;
   LOAD_LVALUE(merge,err_lhs);
   IF_EVAL(ASSERT(DeeTuple_Check(merge));)
   if likely(self->jl_tok == ')') {
    JITLexer_Yield(self);
+  } else if (self->jl_tok == TOK_POW) {
+   JITLexer_Yield(self);
+#ifdef JIT_EVAL
+   {
+    DREF DeeObject *kwds;
+    /* Parse the keyword invocation AST. */
+    kwds = JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL);
+    if unlikely(!kwds)
+       goto err_merge;
+    result = DeeObject_CallTupleKw(lhs,merge,kwds);
+    Dee_Decref(kwds);
+    Dee_Decref(merge);
+    Dee_Decref(lhs);
+   }
+#else
+   if (JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+       goto err_merge;
+   result = 0;
+#endif
+   break;
+  } else if (self->jl_tok == JIT_KEYWORD) {
+   unsigned char *label_name = self->jl_tokstart;
+#ifdef JIT_EVAL
+   size_t label_size = (size_t)(self->jl_tokend - label_name);
+#endif
+   JITLexer_Yield(self);
+   if unlikely(self->jl_tok != ':') {
+    JITLexer_YieldAt(self,label_name);
+    goto err_missing_rparen;
+   }
+   JITLexer_Yield(self);
+#ifdef JIT_EVAL
+   {
+    DREF DeeObject *kwds;
+    /* Parse the keyword invocation AST. */
+    kwds = JITLexer_EvalKeywordLabelList(self,
+                                        (char const *)label_name,
+                                         label_size);
+    if unlikely(!kwds)
+       goto err_merge;
+    result = DeeObject_CallTupleKw(lhs,merge,kwds);
+    Dee_Decref(kwds);
+    Dee_Decref(merge);
+    Dee_Decref(lhs);
+   }
+#else
+#if 1
+   if (JITLexer_SkipPair(self,'(',')'))
+       goto err_merge;
+#else
+   if (JITLexer_SkipKeywordLabelList(self))
+       goto err_merge;
+#endif
+   result = 0;
+#endif
+   break;
   } else {
+err_missing_rparen:
    syn_paren_expected_rparen_after_lparen(self);
    goto err_merge;
   }
@@ -1458,8 +1661,8 @@ DEFINE_SECONDARY(UnaryOperand) {
    result_copy = DeeObject_Copy(lhs);
    if unlikely(!result_copy) goto err_r;
    error = cmd == TOK_INC
-         ? DeeObject_Inc(&lhs)
-         : DeeObject_Dec(&lhs)
+         ? DeeObject_Inc((DeeObject **)&lhs)
+         : DeeObject_Dec((DeeObject **)&lhs)
          ;
    if unlikely(error) {
 err_result_copy:
@@ -1539,30 +1742,32 @@ err_result_copy:
     /* Optimization for callattr expressions. */
     if (self->jl_tok == '(') {
      DREF DeeObject *args;
+     DREF DeeObject *kwds;
      JITLexer_Yield(self);
      if (self->jl_tok == ')') {
       JITLexer_Yield(self);
       args = Dee_EmptyTuple;
       Dee_Incref(Dee_EmptyTuple);
+      kwds = NULL;
      } else {
-      /* TODO: Keyword arguments! */
-      args = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
-      if (ISERR(args)) goto err_r;
-      args = CALL_SECONDARY(CommaTupleOperand,args); /* TODO */
+      args = JITLexer_EvalArgumentList(self,&kwds);
       if (ISERR(args)) goto err_r;
       LOAD_LVALUE(args,err_r);
       if (self->jl_tok == ')') {
        JITLexer_Yield(self);
       } else {
        syn_call_expected_rparen_after_call(self);
+       Dee_XDecref(kwds);
        Dee_Decref(args);
        goto err_r;
       }
      }
-     rhs = DeeObject_CallAttrStringLenTuple(lhs,
-                                            attr_name,
-                                            attr_size,
-                                            args);
+     rhs = DeeObject_CallAttrStringLenTupleKw(lhs,
+                                              attr_name,
+                                              attr_size,
+                                              args,
+                                              kwds);
+     Dee_XDecref(kwds);
      Dee_Decref(args);
      if unlikely(!rhs)
         goto err_r_invoke;
@@ -1702,6 +1907,10 @@ err_r_temp_expected_rbrck:
 #endif
    break;
 
+  {
+#ifdef JIT_EVAL
+   DREF DeeObject *kwds;
+#endif
   case '(': /* Call operator */
    IF_EVAL(pos = self->jl_tokstart;)
    JITLexer_Yield(self);
@@ -1711,26 +1920,31 @@ err_r_temp_expected_rbrck:
 #ifdef JIT_EVAL
     rhs = Dee_EmptyTuple;
     Dee_Incref(Dee_EmptyTuple);
+    kwds = NULL;
 #endif
    } else {
-    /* TODO: Keyword arguments! */
-    rhs = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
+#ifdef JIT_EVAL
+    rhs = JITLexer_EvalArgumentList(self,&kwds);
     if (ISERR(rhs)) goto err_r;
-    rhs = CALL_SECONDARY(CommaTupleOperand,rhs); /* TODO */
-    if (ISERR(rhs)) goto err_r;
-    LOAD_LVALUE(rhs,err_r);
+    ASSERT(rhs != JIT_LVALUE);
     if (self->jl_tok == ')') {
      JITLexer_Yield(self);
     } else {
      syn_call_expected_rparen_after_call(self);
+     Dee_XDecref(kwds);
      DECREF(rhs);
      goto err_r;
     }
+#else
+    if (JITLexer_SkipPair(self,'(',')'))
+        goto err_r;
+#endif
    }
 #ifdef JIT_EVAL
    {
     DREF DeeObject *call_result;
-    call_result = DeeObject_CallTuple(lhs,rhs);
+    call_result = DeeObject_CallTupleKw(lhs,rhs,kwds);
+    Dee_XDecref(kwds);
     Dee_Decref(rhs);
     if unlikely(!call_result)
        goto err_r_invoke;
@@ -1738,7 +1952,7 @@ err_r_temp_expected_rbrck:
     lhs = call_result;
    }
 #endif
-   break;
+  } break;
 
   case JIT_KEYWORD:
    if (JITLexer_ISTOK(self,"pack")) {

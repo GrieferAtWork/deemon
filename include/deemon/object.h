@@ -2274,9 +2274,11 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #define DeeObject_DelItem(self,index)                          __builtin_expect(DeeObject_DelItem(self,index),0)
 #define DeeObject_DelItemIndex(self,index)                     __builtin_expect(DeeObject_DelItemIndex(self,index),0)
 #define DeeObject_DelItemString(self,key,hash)                 __builtin_expect(DeeObject_DelItemString(self,key,hash),0)
+#define DeeObject_DelItemStringLen(self,key,keylen,hash)       __builtin_expect(DeeObject_DelItemStringLen(self,key,keylen,hash),0)
 #define DeeObject_SetItem(self,index,value)                    __builtin_expect(DeeObject_SetItem(self,index,value),0)
 #define DeeObject_SetItemIndex(self,index,value)               __builtin_expect(DeeObject_SetItemIndex(self,index,value),0)
 #define DeeObject_SetItemString(self,key,hash,value)           __builtin_expect(DeeObject_SetItemString(self,key,hash,value),0)
+#define DeeObject_SetItemStringLen(self,key,keylen,hash,value) __builtin_expect(DeeObject_SetItemStringLen(self,key,keylen,hash,value),0)
 #define DeeObject_DelRange(self,begin,end)                     __builtin_expect(DeeObject_DelRange(self,begin,end),0)
 #define DeeObject_SetRange(self,begin,end,value)               __builtin_expect(DeeObject_SetRange(self,begin,end,value),0)
 #define DeeObject_SetRangeBeginIndex(self,begin,end,value)     __builtin_expect(DeeObject_SetRangeBeginIndex(self,begin,end,value),0)
@@ -2288,11 +2290,27 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #ifndef DeeObject_DelAttrString
 #define DeeObject_DelAttrString(self,attr_name)                __builtin_expect(DeeObject_DelAttrString(self,attr_name),0)
 #endif /* !DeeObject_DelAttrString */
+#ifndef DeeObject_DelAttrStringLen
+#define DeeObject_DelAttrStringLen(self,attr_name,attrlen)     __builtin_expect(DeeObject_DelAttrStringLen(self,attr_name,attrlen),0)
+#endif /* !DeeObject_DelAttrStringLen */
 #ifndef DeeObject_SetAttrString
-#define DeeObject_SetAttrString(self,attr_name,value)          __builtin_expect(DeeObject_DelAttrString(self,attr_name,value),0)
+#define DeeObject_SetAttrString(self,attr_name,value)          __builtin_expect(DeeObject_SetAttrString(self,attr_name,value),0)
 #endif /* !DeeObject_SetAttrString */
+#ifndef DeeObject_SetAttrStringLen
+#define DeeObject_SetAttrStringLen(self,attr_name,attrlen,value) __builtin_expect(DeeObject_SetAttrStringLen(self,attr_name,attrlen,value),0)
+#endif /* !DeeObject_SetAttrStringLen */
+#ifndef DeeObject_DelAttrStringHash
 #define DeeObject_DelAttrStringHash(self,attr_name,hash)       __builtin_expect(DeeObject_DelAttrStringHash(self,attr_name,hash),0)
+#endif /* !DeeObject_DelAttrStringHash */
+#ifndef DeeObject_DelAttrStringLenHash
+#define DeeObject_DelAttrStringLenHash(self,attr_name,attrlen,hash) __builtin_expect(DeeObject_DelAttrStringLenHash(self,attr_name,attrlen,hash),0)
+#endif /* !DeeObject_DelAttrStringLenHash */
+#ifndef DeeObject_SetAttrStringHash
 #define DeeObject_SetAttrStringHash(self,attr_name,hash,value) __builtin_expect(DeeObject_SetAttrStringHash(self,attr_name,hash,value),0)
+#endif /* !DeeObject_SetAttrStringHash */
+#ifndef DeeObject_SetAttrStringLenHash
+#define DeeObject_SetAttrStringLenHash(self,attr_name,attrlen,hash,value) __builtin_expect(DeeObject_SetAttrStringLenHash(self,attr_name,attrlen,hash,value),0)
+#endif /* !DeeObject_SetAttrStringLenHash */
 #define DeeObject_Enter(self)                                  __builtin_expect(DeeObject_Enter(self),0)
 #define DeeObject_Leave(self)                                  __builtin_expect(DeeObject_Leave(self),0)
 #endif /* !__NO_builtin_expect */

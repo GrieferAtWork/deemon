@@ -93,7 +93,17 @@ INTDEF int DCALL DeeDict_SetItemString(DeeObject *__restrict self, char const *_
 INTDEF int DCALL DeeDict_SetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict value);
 INTDEF bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
 INTDEF bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
-#endif /* CONFIG_BUILDING_DEEMON */
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeDict_GetItemDef(self,key,def)                      DeeObject_GetItemDef(self,key,def)
+#define DeeDict_GetItemString(self,key,hash)                  DeeObject_GetItemString(self,key,hash)
+#define DeeDict_GetItemStringDef(self,key,hash,def)           DeeObject_GetItemStringDef(self,key,hash,def)
+#define DeeDict_GetItemStringLen(self,key,keylen,hash)        DeeObject_GetItemStringLen(self,key,keylen,hash)
+#define DeeDict_GetItemStringLenDef(self,key,keylen,hash,def) DeeObject_GetItemStringLenDef(self,key,keylen,hash,def)
+#define DeeDict_DelItemString(self,key,hash)                  DeeObject_DelItemString(self,key,hash)
+#define DeeDict_DelItemStringLen(self,key,keylen,hash)        DeeObject_DelItemStringLen(self,key,keylen,hash)
+#define DeeDict_SetItemString(self,key,hash,value)            DeeObject_SetItemString(self,key,hash,value)
+#define DeeDict_SetItemStringLen(self,key,keylen,hash,value)  DeeObject_SetItemStringLen(self,key,keylen,hash,value)
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 /* Create a new dict by inheriting a set of passed key-item pairs.
  * @param: key_items:    A vector containing `num_keyitems*2' elements,
