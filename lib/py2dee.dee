@@ -657,6 +657,22 @@ again_primary:
 			break;
 		case TOK_KEYWORD: {
 			local kwd = tok;
+			local exceptions_list = {
+				"BaseException", "SystemExit", "KeyboardInterrupt", "GeneratorExit",
+				"Exception", "StopIteration", "StandardError", "BufferError",
+				"ArithmeticError", "FloatingPointError", "OverflowError",
+				"ZeroDivisionError", "AssertionError", "AttributeError",
+				"EnvironmentError", "IOError", "OSError", "WindowsError",
+				"VMSError", "EOFError", "ImportError", "LookupError", "IndexError",
+				"KeyError", "MemoryError", "NameError", "UnboundLocalError",
+				"ReferenceError", "RuntimeError", "NotImplementedError",
+				"SyntaxError", "IndentationError", "TabError", "SystemError",
+				"TypeError", "ValueError", "UnicodeError", "UnicodeDecodeError",
+				"UnicodeEncodeError", "UnicodeTranslateError", "Warning",
+				"DeprecationWarning", "PendingDeprecationWarning", "RuntimeWarning",
+				"SyntaxWarning", "UserWarning", "FutureWarning", "ImportWarning",
+				"UnicodeWarning", "BytesWarning"
+			};
 			/* Map for translating references to builtin functions */
 			local builtins_map = {
 				"True" : "true",
@@ -742,6 +758,8 @@ again_primary:
 			if (this_symbol_name is bound &&
 			    this_symbol_name == kwd) {
 				kwd = "this";
+			} else if (kwd in exceptions_list) {
+				kwd = "({} from python.exceptions)".format({ kwd });
 			} else {
 				kwd = builtins_map.get(kwd,kwd);
 			}

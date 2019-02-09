@@ -1,0 +1,109 @@
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import Error, Signal from deemon;
+
+/* NOTE: Deemon has its own exception hirarchy, meaning that
+ *       even though most python exceptions can be mirrored
+ *       by ones also provided by deemon, the different types
+ *       aren't related to each other the same way they are
+ *       in deemon.
+ * Also: Some exceptions are bound more than once, since deemon
+ *       re-uses exceptions multiple times where python relies
+ *       more in their hirarchy.
+ * Also: Deemon allows any arbitrary object to be `throw'n, while
+ *       python only allows classes derived from BaseException.
+ *       -> Because of this, `except BaseException as e:' is
+ *          translated to `catch (e...)', and `except Exception as e:' is
+ *          translated to `catch (Signal from deemon | Error from deemon as e)'
+ *          by the py2dee converter module.
+ * NOTE: Indentation here indicates the python hirarchy which we're trying
+ *       to emulate as closely as possible. */
+
+final global BaseException = Error;
+final global	SystemExit = Error.AppExit;
+final global	KeyboardInterrupt = Signal.Interrupt.KeyboardInterrupt;
+final global	GeneratorExit = Signal.Interrupt.StopIteration;
+final global	Exception = Error;
+final global		StopIteration = Signal.Interrupt.StopIteration;
+final global		StandardError = Error;
+final global			BufferError = Error.ValueError.BufferError;
+final global			ArithmeticError = Error.ValueError.ArithmeticError;
+final global				FloatingPointError = Error.ValueError.ArithmeticError;
+final global				OverflowError = Error.ValueError.ArithmeticError.IntegerOverflow;
+final global				ZeroDivisionError = Error.ValueError.ArithmeticError.DivideByZero;
+final global			AssertionError = Error.RuntimeError.AssertionError;
+final global			AttributeError = Error.AttributeError;
+final global			EnvironmentError = Error.SystemError;
+final global				IOError = Error.SystemError.FSError;
+final global				OSError = Error.SystemError;
+final global					WindowsError = Error.SystemError;
+final global					VMSError = Error.SystemError;
+final global			EOFError = Error.SystemError;
+final global			ImportError = Error.SystemError.FSError.FileNotFound;
+final global			LookupError = Error.ValueError;
+final global				IndexError = Error.ValueError.IndexError;
+final global				KeyError = Error.ValueError.KeyError;
+final global			MemoryError = Error.NoMemory;
+final global			NameError = Error.RuntimeError;
+final global				UnboundLocalError = Error.RuntimeError.UnboundLocal;
+final global			ReferenceError = Error.ValueError.ReferenceError;
+final global			RuntimeError = Error.RuntimeError;
+final global				NotImplementedError = Error.RuntimeError.NotImplemented;
+final global			SyntaxError = Error.CompilerError.SyntaxError;
+final global				IndentationError = Error.CompilerError.SyntaxError;
+final global					TabError = Error.CompilerError.SyntaxError;
+final global			SystemError = Error.SystemError;
+final global			TypeError = Error.TypeError;
+final global			ValueError = Error.ValueError;
+final global				UnicodeError = Error.ValueError.UnicodeError;
+final global					UnicodeDecodeError = Error.ValueError.UnicodeError.UnicodeDecodeError;
+final global					UnicodeEncodeError = Error.ValueError.UnicodeError.UnicodeEncodeError;
+final global					UnicodeTranslateError = Error.ValueError.UnicodeError;
+/* ??? Warnings? */
+final global		Warning = none;
+final global			DeprecationWarning = none;
+final global			PendingDeprecationWarning = none;
+final global			RuntimeWarning = none;
+final global			SyntaxWarning = none;
+final global			UserWarning = none;
+final global			FutureWarning = none;
+final global			ImportWarning = none;
+final global			UnicodeWarning = none;
+final global			BytesWarning = none;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
