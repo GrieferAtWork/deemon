@@ -43,14 +43,6 @@
  *    Also note that most builtin functions don't actually support named
  *    arguments, and will throw a TypeError when being invoked while named
  *    arguments are passed.
- *    TODO: Remove me: At the time of this being written, user-defined functions
- *          have yet to begun supporting keyword-arguments. - Only select builtin
- *          functions already offer support.
- *    TODO: Add some kind of syntax that allows user-functions to access
- *          named arguments as a {(string,object)...}-like object, similar
- *          to what `def foo(*args,**kwds):' does in python, then translated
- *          to deemon `function foo(args...,???kwds???)' (??? -- something...)
- *          Maybe `function foo(args...,{kwds})'?
  *
  *  - Added an as-expression that add a syntactically more
  *    fluid way of constructor super-view proxy objects:
@@ -534,12 +526,14 @@
  *    HINT: The largest percentage of these can (and is)
  *          emulated once any legacy header is #include-ed.
  *      - __builtin_object
- *          - All builtin objects are now accessed as `... from deemon'
+ *          - All builtin objects are now accessed as `... from deemon',
+ *            with others being spread throughout the shipped standard,
+ *            as well as extension libraries (fs, ctypes, ipc, math, etc.)
  *          - When a legacy header is #include-ed, it will define a macro
  *            that will attempt to emulate this builtin's behavior.
  *            The emulated behavior translates to a call to `get_builtin from __builtins'
  *      - __builtin_dex
- *          - Instead, `import(...)' can now be used as a builtin function
+ *          - Instead, `import(...)' can now be used like a pre-defined, builtin function
  *      - __builtin_noop / __noop
  *      - __builtin_noexcept
  *      - __builtin_noreturn
@@ -550,19 +544,22 @@
  *      - __builtin_unreachable()
  *          - Replace with `__asm__("" : : : "noreturn")'
  *      - __builtin_types_compatible_p(x,y)
- *          - Replace with `x == y'
+ *          - Replace with `x == y' / `x === y'
  *      - __builtin_breakpoint()
  *          - Replace with user-assembly `__asm__("debug break");'
+ *            Note however that doing this is non-portable
  *      - __builtin_typeof(x)
  *          - Replace with `type(x)'
  *      - __builtin_help(x)
- *          - Replace with `(doc from deemon)(x)' or preferrably make use of `import doc'
+ *          - Make use of the doc meta-data library `import Doc from doc;'
+ *            Alternatively, any objects implement a `__doc__' attribute
+ *            though which documentation meta-data can be accessed.
  *      - __builtin_offsetof(s,t)
- *          - Replace with
+ *          - Replace with `s.offsetof("t")' (assuming use of `ctypes')
  *      - __builtin_exists
  *      - __builtin_expect
  *          - May get re-added in a different way, but can also be expressed
- *            using branch-prediction tags `@likely' and `@unlikely'
+ *            using branch-prediction tags `@[likely]' and `@[unlikely]'
  *      - __builtin_predictable
  *      - __builtin_exprast
  *      - __builtin_alloca
@@ -573,13 +570,13 @@
  *      - The move-assign operator still remains and is automatically preferred
  *        over the regular assign operator when the right-hand-side operand is
  *        the result of a `copy' or `deepcopy' unary expression, can however be
- *        invoked manually using `x.operator move:= (y)'.
+ *        invoked manually using `x.operator move := (y)'.
  *
  *  - Removed the builtin keyword `weak'.
  *      - Weak references still exist but have been changed immensely, most
- *        notably in the fact that not any object can be used to point to
- *        a weak reference any longer, but rather only objects that have
- *        explicit support, as well as tracing for weak references.
+ *        notably in the fact that not all objects can be used as weak
+ *        references any more, but rather only objects that have explicit
+ *        support, as well as tracing for weak references.
  *      - To create a weak reference wrapper object, you must now use the
  *        builtin type accessible as `weakref from deemon', which implements
  *        a single-argument constructor to which the object that should be
@@ -634,7 +631,7 @@
  *
  *  - Minor syntactical additions to arrow-functions:
  *      - Defining an arrow-function that returns an expand-expression
- *        now truns the surrounding function into a yield-function,
+ *        now turns the surrounding function into a yield-function,
  *        yielding all the elements of the sequence being forwarded.
  *     >> function get_value() -> 42;
  *     Same as:
@@ -688,11 +685,11 @@
  *           >>     return [10,20,30];
  *           >> }
  *
- *
  *  - Added the `@attribute_name' spelling for attributes
- *  - Removed the `__super(<expr>,<type>)' builtin function
- *    its behavior has been replaced with the much more intuitive
- *    syntax of `<expr> as <type>'
+ *
+ *  - Removed the `__super(<expr>,<type>)' builtin function.
+ *    Its behavior has been replaced with the much more intuitive
+ *    syntax `<expr> as <type>'
  *    Backwards-compatibility can easily be achieved with:
  *    >> #if __DEEMON__ >= 200
  *    >> #define __super(expr,type) ((expr) as (type))
@@ -714,9 +711,8 @@
  *    >>         __hidden_symbol.operator leave();
  *    >>     }
  *    >> }
- *    NOTE: The `get_lock()' expression is allowed to declare
- *          new variables which are then only available within
- *          the associated with-block
+ *    NOTE: The `get_lock()' expression is allowed to declare new
+ *          variables which will be scoped to the associated with-block
  *          >> with (local fp = file.open("foo.txt")) {
  *          >>     print fp.read();
  *          >> }  // `fp' is automatically closed here!
@@ -725,10 +721,13 @@
  *    custom cleanup code to be run when some object goes out-of-scope,
  *    regardless of what the reference state of the scoped variable
  *    may be, and regardless of how the compiler chose to distribute
- *    local variable indices, and without relying on stack-variable.
+ *    local variable indices, and without relying on stack-variables.
  *
  *  - Using `yield' within a `finally' can no longer be used to delay
  *    exception delivery. Instead, doing this causes weak undefined behavior.
+ *    Note however that the common deemon specifications allow a compiler to
+ *    generally disallow yield from finally- or catch-statements, meaning that
+ *    this weak undefined behavior should be considered an extension.
  *
  *  - Trailing commata without a following expression in a comma-expression
  *    will now force-create a 1-element sequence:
@@ -780,34 +779,34 @@
 
 /* How to read (I know that a doc needing a doc is bad, but it's really not that complicated...):
  *  x ::= y;     - Define rule x as y
- *  x            - Reference to another rule (imagine it being replaced with the other rule's content)
- *  'x'          - x is a character / character sequence
+ *  x            - Reference to another rule (imagine it being replaced with the other rule's content, similar to how a macro would)
+ *  'x'          - x is a character / character-keyword-sequence
  *  ?x?          - `x' should be interpreted as a human-readable exception to other rules.
  *  <x>          - `x' describes a wildcard-enabled expression describing a token as named by TPP (e.g.: `<TOK_STRING>' or `<TPP_ISKEYWORD(*)>').
  *  (x)          - Parenthesis to prevent ambiguity
- *  [x]          - x is optional
- *  a b          - Characters or tokens a and b are whitespace separated
- *  a ## b       - a and b follow each other directly (not whitespace separated)
- *  x ~~ y...    - Only starting at the second occurance of y, y must always be preceided by x
- *  x ~~ y##...  - Only starting at the second occurance of y, y must always be preceided by x. Instances are not whitespace separated
- *  x...         - x can be repeated an unlimited about of times (at least once)
- *  x##...       - x can be repeated an unlimited about of times (at least once). Instances are not whitespace separated
+ *  [x]          - `x' is optional
+ *  a b          - `a' and `b' follow each other, but are whitespace separated
+ *  a ## b       - `a' and `b' follow each other directly (not whitespace between)
+ *  x ~~ y...    - Only starting at the second occurance of y, y must always be preceided by x  (e.g. "',' ~~ _keyword..." could match `foo, bar ,  foobar')
+ *  x ~~ y##...  - Only starting at the second occurance of y, y must always be preceided by x. Instances are not whitespace separated  (e.g. "',' ~~ _keyword##..." could match `foo,bar,foobar')
+ *  x...         - x can be repeated an unlimited about of times (but at least once)
+ *  x##...       - x can be repeated an unlimited about of times (but at least once). Instances are not whitespace separated
  *  a ## b...    - same as "a ## ('' ~~ b...)"
  *  a... ## b... - same as "('' ~~ a...) ## ('' ~~ b...)"
  *  a... ## b    - same as "('' ~~ a...) ## b"
- *  'a'...'b'    - Range of characters between a and b (including a and b) (same as a|a+1|a+2|a+3|...|b)
+ *  'a'...'b'    - Range of characters between a and b (including a and b) (same as "a|a+1|a+2|a+3|...|b")
  *  x | y        - Either x or y
  *  @file        - Special rule name: Rule describing how a file is parsed
  */
 
 
-/* HINT: Rule names with a leading underscore mirror the names of the C-functions */
+/* HINT: Rule names mirror the names of the parser
+ *       functions seen in the GATW implementation */
 
 #define WITHOUT_UNDERSCORE(x) (['_'...] ## x ## ['_'...])
 #define DDI(x)  x /* HINT: DDI information for this expression points to the start of `x' */
 
-_keyword  ::= <TPP_ISKEYWORD(*)>;
-_tag_name ::= _keyword;
+_keyword ::= <TPP_ISKEYWORD(*)>;
 
 
 ast_parse_statement_or_braces ::= (
@@ -2521,6 +2520,68 @@ ast_parse_module_name ::= (
 	)...
 );
 
+compiler_annotation ::= (
+	/* Mandatory compiler annotations: */
+	'interrupt' | /* For `class': When thrown, instances behave as interrupts
+	               * For `catch': The guard is allowed to handle interrupts */
+
+	/* Optional compiler annotations (don't warn if not implemented): */
+	'likely'    | /* For `if': The tt-branch is likely to be executed
+	               * For `while', `do...while', `for(;;)': The condition is likely to succeed
+	               * For `for(...: ...)', `foreach': The sequence is likely to be non-empty */
+	'unlikely'  | /* For `if': The ff-branch is likely to be executed
+	               * For `while', `do...while', `for(;;)': The condition is likely to fail
+	               * For `for(...: ...)', `foreach': The sequence is likely to be empty */
+
+	/* Optional annotation
+	 * Any annotation may be prefixed by `optional.' to suppress
+	 * warnings about unsupported/unknown/miss-placed annotations. */
+	('optional' '.' compiler_annotation) |
+
+	/* Compiler-specific annotations (maybe warn
+	 * (but _not_ error out) if not supported):
+	 * NOTE: The argument list is skipped with while accounting
+	 *       for recursive parenthesis. For this purpose, all of
+	 *       the following examples are valid annotation constructs
+	 *       that may only produce a warning, but not cause a compiler
+	 *       error:
+	 * >> @[mycompiler.unknown_annotation]
+	 * >> @[mycompiler.unknown_annotation()]
+	 * >> @[mycompiler.unknown_annotation(foobar)]
+	 * >> @[mycompiler.unknown_annotation(foo(bar))]
+	 * >> @[mycompiler.unknown_annotation((((()))))]
+	 * NOTE: The idea for annotation namespacing is that every implementation
+	 *       should choose its own prefix for compiler-specific annotations.
+	 *       An example are the GATW-specific annotations:
+	 * >> @[gatw.truncate]
+	 *    For class: The return value of `operator int()' may be truncated
+	 *               to fit the type through which the class is being viewed.
+	 *               -> With a 32-bit size_t type, `operator int()' returning
+	 *                  a 40-bit unsigned integer to a caller who intends to
+	 *                  use its value as a `size_t' object, the most significant
+	 *                  8 bits of data are truncated, leaving the value to have
+	 *                  the same meaning as though `operator int()' had masked
+	 *                  its return value with 0xffffffff
+	 *                  Something similar happens for negative integers, which
+	 *                  are converted to become positive. - On on 2-complement host,
+	 *                  this is done identical to `deemon.numberic.unsigned32'
+	 *               -> When not set, an IntegerOverflow exception is thrown when
+	 *                  more bits of data are present than can be represented by
+	 *                  the target type.
+	 * >> @[gatw.moveany]
+	 *    For class: The `operator move := (other)' is capable of accepting an object
+	 *               of arbitrary typing as argument for `other', overriding the default
+	 *               of causing a TypeError when anything other than an object for which
+	 *               the expression `other is <MY_CLASS>' isn't true.
+	 */
+	(
+		/* Annotation name */
+		'.' ~~ _keyword...
+
+		/* Optional annotation argument */
+		['(' [*...] ')']
+	)
+);
 
 parse_tags ::= (
 
@@ -2528,70 +2589,15 @@ parse_tags ::= (
 	('@' [*...] '\n') |
 	/* TODO: Document type annotations */
 
-	('[' ',' ~~ (
-		/* Mandatory compiler annotations: */
-		'interrupt' | /* For `class': When thrown, instances behave as interrupts
-		               * For `catch': The guard is allowed to handle interrupts */
-
-		/* Optional compiler annotations (don't warn if not implemented): */
-		'likely'    | /* For `if': The tt-branch is likely to be executed
-		               * For `while', `do...while', `for(;;)': The condition is likely to succeed
-		               * For `for(...: ...)', `foreach': The sequence is likely to be non-empty */
-		'unlikely'  | /* For `if': The ff-branch is likely to be executed
-		               * For `while', `do...while', `for(;;)': The condition is likely to fail
-		               * For `for(...: ...)', `foreach': The sequence is likely to be empty */
-
-		/* Compiler-specific annotations (maybe warn
-		 * (but _not_ error out) if not supported):
-		 * NOTE: The argument list is skipped with while accounting
-		 *       for recursive parenthesis. For this purpose, all of
-		 *       the following examples are valid annotation constructs
-		 *       that may only produce a warning, but not cause a compiler
-		 *       error:
-		 * >> @[mycompiler.unknown_annotation]
-		 * >> @[mycompiler.unknown_annotation()]
-		 * >> @[mycompiler.unknown_annotation(foobar)]
-		 * >> @[mycompiler.unknown_annotation(foo(bar))]
-		 * >> @[mycompiler.unknown_annotation((((()))))]
-		 * NOTE: The idea for annotation namespacing is that every implementation
-		 *       should choose its own prefix for compiler-specific annotations.
-		 *       An example are the GATW-specific annotations:
-		 * >> @[gatw.truncate]
-		 *    For class: The return value of `operator int()' may be truncated
-		 *               to fit the type through which the class is being viewed.
-		 *               -> With a 32-bit size_t type, `operator int()' returning
-		 *                  a 40-bit unsigned integer to a caller who intends to
-		 *                  use its value as a `size_t' object, the most significant
-		 *                  8 bits of data are truncated, leaving the value to have
-		 *                  the same meaning as though `operator int()' had masked
-		 *                  its return value with 0xffffffff
-		 *                  Something similar happens for negative integers, which
-		 *                  are converted to become positive. - On on 2-complement host,
-		 *                  this is done identical to `deemon.numberic.unsigned32'
-		 *               -> When not set, an IntegerOverflow exception is thrown when
-		 *                  more bits of data are present than can be represented by
-		 *                  the target type.
-		 * >> @[gatw.moveany]
-		 *    For class: The `operator move := (other)' is capable of accepting an object
-		 *               of arbitrary typing as argument for `other', overriding the default
-		 *               of causing a TypeError when anything other than an object for which
-		 *               the expression `other is <MY_CLASS>' isn't true.
-		 */
-		(
-			/* Annotation name */
-			'.' ~~ _keyword...
-
-			/* Optional annotation argument */
-			['(' [*...] ')']
-		)
-	)... ']') |
+	/* Compiler annotations */
+	('[' ',' ~~ compiler_annotation... ']') |
 
 	/* User-defined object annotations
 	 * These can be applied in numerous locations, where they can
 	 * be used to modify the source object of some sort of assignment.
 	 * Annotations can be written in one of 2 ways (see below)
 	 * NOTE: It is an error to place an annotation somewhere it can't
-	 *       naturally appear, or 
+	 *       naturally appear, or
 	 *
 	 * - Function declarations:
 	 *   >> @MyTag

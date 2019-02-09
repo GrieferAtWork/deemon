@@ -298,6 +298,9 @@ do_else_branch:
   break;
 
  case KWD_yield:
+  /* TODO: Warn about use of non-portable extension if this yield
+   *       statement appears inside of a statement-expression, or
+   *       a finally/catch block. */
   loc_here(&loc);
   if unlikely(yield() < 0) goto err;
   result = ast_parse_comma(AST_COMMA_NORMAL|

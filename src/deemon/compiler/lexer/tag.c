@@ -259,6 +259,19 @@ err:
  return -1;
 }
 
+LOCAL int DCALL
+convert_dot_tag_namespace(size_t tag_name_len,
+                          char const *__restrict tag_name_str) {
+ if unlikely(tok == ':' || tok == TOK_COLLON_COLLON) {
+  if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,tag_name_len,tag_name_str))
+      goto err;
+  tok = '.';
+ }
+ return 0;
+err:
+ return -1;
+}
+
 INTERN int (DCALL parse_tags)(void) {
  if (tok == '@') {
   /* Line-style documentation string (terminated by a line-feed) */
@@ -297,10 +310,13 @@ INTERN int (DCALL parse_tags)(void) {
   /* Implementation-specific / compile-time tags */
   char const *tag_name_str;
   size_t tag_name_len;
+  bool is_optional;
 #define IS_TAG(x) \
        (tag_name_len == COMPILER_STRLEN(x) && !memcmp(tag_name_str,x,COMPILER_STRLEN(x)))
   if unlikely(yield() < 0) goto err;
 again_compiler_tag:
+  is_optional = false;
+again_compiler_subtag:
   if (!TPP_ISKEYWORD(tok)) {
    if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD))
        goto err;
@@ -314,8 +330,20 @@ again_compiler_tag:
    /**/ if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
    else if (IS_TAG("likely"))    current_tags.at_expect      |= AST_FCOND_LIKELY;
    else if (IS_TAG("unlikely"))  current_tags.at_expect      |= AST_FCOND_UNLIKELY;
-   else if (IS_TAG("gatw")) {
+   else if (IS_TAG("optional")) {
     if unlikely(yield() < 0)
+       goto err;
+    if unlikely(convert_dot_tag_namespace(tag_name_len,tag_name_str))
+       goto err;
+    if unlikely(likely(tok == '.') ? (yield() < 0) : 
+                WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
+       goto err;
+    is_optional = true;
+    goto again_compiler_subtag;
+   } else if (IS_TAG("gatw")) {
+    if unlikely(yield() < 0)
+       goto err;
+    if unlikely(convert_dot_tag_namespace(tag_name_len,tag_name_str))
        goto err;
     if (tok != '.')
         goto warn_unknown_tag;
@@ -334,9 +362,17 @@ again_compiler_tag:
     else if (IS_TAG("doc")) {
      if unlikely(yield() < 0)
         goto err;
-     if unlikely(likely(tok == '(') ? (yield() < 0) : 
-                 WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
-        goto err;
+     if likely(tok == '(') {
+      if unlikely(yield() < 0)
+         goto err;
+     } else {
+      if (is_optional)
+          goto do_next_compiler_tag;
+      if unlikely(WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
+         goto err;
+      if (tok == ',' || tok == ']')
+          goto do_next_compiler_tag;
+     }
      if likely(tok == TOK_STRING ||
               (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
       if unlikely(append_decl_string())
@@ -349,12 +385,18 @@ again_compiler_tag:
                  WARN(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
         goto err;
      goto do_next_compiler_tag;
-    } else goto warn_unknown_tag;
+    } else goto warn_unknown_tag_yield;
    } else {
+warn_unknown_tag_yield:
     if unlikely(yield() < 0)
        goto err;
 warn_unknown_tag:
-    if (WARN(W_COMPILER_TAG_UNKNOWN,tag_name_len,tag_name_str))
+    if unlikely(convert_dot_tag_namespace(tag_name_len,tag_name_str))
+       goto err;
+    if (!is_optional &&
+        WARN(tok == '.' ? W_COMPILER_TAG_UNKNOWN_NS
+                        : W_COMPILER_TAG_UNKNOWN,
+             tag_name_len,tag_name_str))
         goto err;
 again_check_tag_namespace:
     if (tok == '.') {
@@ -370,6 +412,8 @@ err_no_keyword_after_dot:
       if unlikely(yield() < 0)
          goto err;
      }
+     if unlikely(convert_dot_tag_namespace(tag_name_len,tag_name_str))
+        goto err;
      goto again_check_tag_namespace;
     }
     if (tok == '(') {
@@ -393,6 +437,8 @@ err_no_keyword_after_dot:
     goto do_next_compiler_tag;
    }
    if unlikely(yield() < 0)
+      goto err;
+   if unlikely(convert_dot_tag_namespace(tag_name_len,tag_name_str))
       goto err;
    if unlikely(tok == '.')
       goto warn_unknown_tag;

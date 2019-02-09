@@ -408,8 +408,11 @@ DEF_WARNING(W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED,(WG_SYNTAX),WS
 /* Annotations */
 WARNING_NAMESPACE(WN_ANNOTATIONS,2600)
 DEF_WARNING(W_COMPILER_TAG_UNKNOWN,(WG_VALUE),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Unknown compiler annotation `%$s'",len,ARG(char *)); })
-DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a keyword after `@[', but got " TOK_S,TOK_A))
+DEF_WARNING(W_COMPILER_TAG_UNKNOWN_NS,(WG_VALUE),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Unknown compiler annotation namespace `%$s'",len,ARG(char *)); })
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD,(WG_SYNTAX),WSTATE_WARN,WARNF("Expected a keyword after `@[', but got " TOK_S,TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_RBRACKET,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `]' after `@[...', but got " TOK_S,TOK_A))
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `.' after `@[optional', but got " TOK_S,TOK_A))
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,(WG_SYNTAX),WSTATE_WARN,{ size_t len = ARG(size_t); WARNF("Expected `.' or `(' after `@[%$s', but got " TOK_S,len,ARG(char *),TOK_A); })
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT,(WG_SYNTAX),WSTATE_ERROR,{ size_t len = ARG(size_t); WARNF("Expected a keyword after `@[...%$s.', but got " TOK_S,len,ARG(char *),TOK_A); })
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `(' after `@[gatw.doc', but got " TOK_S,TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected a string after `@[gatw.doc(', but got " TOK_S,TOK_A))

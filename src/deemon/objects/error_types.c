@@ -223,7 +223,10 @@ error_init(DeeErrorObject *__restrict self,
  size_t instance_size;
  ASSERT(!(Dee_TYPE(self)->tp_flags&TP_FVARIABLE));
  instance_size = GET_INSTANCE_SIZE(self);
- ASSERT(instance_size >= sizeof(DeeErrorObject));
+ ASSERTF(instance_size >= sizeof(DeeErrorObject),
+         "instance_size = %Iu\n"
+         "name = %q\n",instance_size,
+         Dee_TYPE(self)->tp_name);
  self->e_message = NULL;
  self->e_inner   = NULL;
  if (DeeArg_Unpack(argc,argv,error_init_fmt,&self->e_message,&self->e_inner))
