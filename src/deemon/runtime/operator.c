@@ -4386,7 +4386,7 @@ DEFINE_OPERATOR(DREF DeeObject *,GetAttr,
    if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL) {
     struct class_desc *desc;
     /* Check if we're allowed to access this attr. */
-    if (!member_mayaccess(iter,attr)) {
+    if (!class_attribute_mayaccess(attr,iter)) {
      err_class_protected_member(iter,attr);
      return NULL;
     }
@@ -4440,7 +4440,7 @@ DEFINE_OPERATOR(int,DelAttr,
    if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL) {
     struct class_desc *desc;
     /* Check if we're allowed to access this attr. */
-    if (!member_mayaccess(iter,attr)) {
+    if (!class_attribute_mayaccess(attr,iter)) {
      err_class_protected_member(iter,attr);
      goto err;
     }
@@ -4503,7 +4503,7 @@ DEFINE_OPERATOR(int,SetAttr,
    if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL) {
     struct class_desc *desc;
     /* Check if we're allowed to access this attr. */
-    if (!member_mayaccess(iter,attr)) {
+    if (!class_attribute_mayaccess(attr,iter)) {
      err_class_protected_member(iter,attr);
      goto err;
     }
@@ -4574,7 +4574,7 @@ DEFINE_OPERATOR(DREF DeeObject *,CallAttr,
    if ((attr = DeeType_QueryAttributeWithHash(tp_self,iter,attr_name,hash)) != NULL) {
     struct class_desc *desc;
     /* Check if we're allowed to access this attr. */
-    if (!member_mayaccess(iter,attr)) {
+    if (!class_attribute_mayaccess(attr,iter)) {
      err_class_protected_member(iter,attr);
      goto err;
     }

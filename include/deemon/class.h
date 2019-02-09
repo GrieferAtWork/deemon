@@ -201,9 +201,6 @@
 
 
 
-/* DEPRECATED NAMES */
-#define member_mayaccess(class_type,member) class_attribute_mayaccess(member,class_type)
-
 DECL_BEGIN
 
 typedef struct class_descriptor_object DeeClassDescriptorObject;
@@ -250,11 +247,14 @@ struct class_attribute {
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Check if the current execution context allows access to `member',
- * which is either an instance or class member of `class_type' */
+/* Check if the current execution context allows access to `self',
+ * which is either an instance or class method of `impl_class' */
 INTDEF WUNUSED bool DCALL
-class_attribute_mayaccess(struct class_attribute *__restrict self,
-                          DeeTypeObject *__restrict impl_class);
+class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
+                               DeeTypeObject *__restrict impl_class);
+#define class_attribute_mayaccess(self,impl_class) \
+    (!((self)->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) || \
+        class_attribute_mayaccess_impl(self,impl_class))
 #endif
 
 

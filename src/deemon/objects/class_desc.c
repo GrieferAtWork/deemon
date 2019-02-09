@@ -4038,23 +4038,21 @@ illegal:
 
 
 INTERN WUNUSED bool DCALL
-class_attribute_mayaccess(struct class_attribute *__restrict self,
-                          DeeTypeObject *__restrict impl_class) {
+class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
+                               DeeTypeObject *__restrict impl_class) {
+ struct code_frame *caller_frame;
  ASSERT_OBJECT_TYPE(impl_class,&DeeType_Type);
  ASSERT(DeeType_IsClass(impl_class));
  ASSERT(self);
- if (self->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) {
-  struct code_frame *caller_frame;
-  /* Only allow access if the calling code-frame originates from
-   * a this-call who's this-argument derives from `class_type'. */
-  caller_frame = DeeThread_Self()->t_exec;
-  if (!caller_frame ||
-     !(caller_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))
-       return false;
-  return DeeType_IsInherited(DeeObject_Class(caller_frame->cf_this),
-                             impl_class);
- }
- return true;
+ ASSERT(self->ca_flag & CLASS_ATTRIBUTE_FPRIVATE);
+ /* Only allow access if the calling code-frame originates from
+  * a this-call who's this-argument derives from `class_type'. */
+ caller_frame = DeeThread_Self()->t_exec;
+ if (!caller_frame ||
+    !(caller_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))
+      return false;
+ return DeeType_IsInherited(DeeObject_Class(caller_frame->cf_this),
+                            impl_class);
 }
 
 
