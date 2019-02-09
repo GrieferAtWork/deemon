@@ -67,4 +67,5 @@ final global				ReadOnlyFile = FileAccessError.ReadOnlyFile;
 final global			FileNotFound = FSError.FileNotFound;
 final global			FileExists = FSError.FileExists;
 final global			FileClosed = FSError.FileClosed;
+final global	AppExit = deemon.Error.AppExit;
 
