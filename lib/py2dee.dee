@@ -1390,16 +1390,32 @@ done:
 }
 
 
-
-function convert(input?: file | string, output?: file, filename?: string): file | string {
+@@@param input The input source of python code
+@@@param output An optional output stream for deemon code (when undefined, return the deemon code as a string)
+@@@param filename The filename used in syntax error messages for @input (optional)
+@@@param emitline When true, include line-directives such that the deemon compiler will point to the original python source for errors/ddi information. Note however that :deemon.exec doesn't use a preprocessor and thus cannot handle these directives
+@@@return Re-returns @output if given, otherwise return the deemon code as a string
+@@Convert python source code into deemon
+function convert(input?: file | string, output?: file, filename?: string, emitline: bool = false): file | string {
 	if (input !is bound)
 		input = file.open(filename,"r");
-	local t = Tokenizer(text: input.read().decode("utf-8"));
-	t.filename = filename is bound ? filename :
-		try input.filename catch (...) "<input>";
+	local t;
+	if (input is string) {
+do_load_string_input:
+		t = Tokenizer(
+			text: input);
+		t.filename = filename is bound ? filename : "<input>";
+	} else if (input is bytes) {
+		input = input.encode("utf-8");
+		goto do_load_string_input;
+	} else {
+		t = Tokenizer(text: input.read().decode("utf-8"));
+		t.filename = filename is bound ? filename :
+			try input.filename catch (...) "<input>";
+	}
 	t.next();
 	local ast = t.parse_root_statements();
-	local conf = GenConfig();
+	local conf = GenConfig(emitline: emitline);
 	if (output is bound) {
 		ast.generate(output,conf,false);
 		return output;
@@ -1409,6 +1425,48 @@ function convert(input?: file | string, output?: file, filename?: string): file 
 	return tempfp.string;
 }
 
+@@Convert a given piece of python input into deemon,
+@@then execute that deemon code using :deemon.exec
+@@>import dict from deemon;
+@@>import exec from py2dee;
+@@>
+@@>local glob = dict();
+@@>exec(r'
+@@>def foo(x,y):
+@@>	print(x + y)
+@@>def bar():
+@@>	foo(10,20)
+@@>',globals: glob);
+@@>
+@@>glob["foo"](7,8);  /* prints `15' */
+@@>glob["bar"]();     /* prints `30' */
+function exec(input?: file | string | bytes, filename?: string, args..., **kwds) {
+	if (input !is bound)
+		input = file.open(filename,"r");
+	local t;
+	if (input is string) {
+do_load_string_input:
+		t = Tokenizer(
+			text: input);
+		t.filename = filename is bound ? filename : "<input>";
+	} else if (input is bytes) {
+		input = input.encode("utf-8");
+		goto do_load_string_input;
+	} else {
+		t = Tokenizer(text: input.read().decode("utf-8"));
+		t.filename = filename is bound ? filename :
+			try input.filename catch (...) "<input>";
+	}
+	t.next();
+	local ast = t.parse_root_statements();
+	local conf = GenConfig(emitline: false);
+	file.writer tempfp;
+	ast.generate(tempfp,conf,false);
+	import deemon;
+	/* Execute the converted code as deemon */
+	return deemon.exec(tempfp.string,args...,**kwds);
+}
+
 
 #ifdef __MAIN__
 local args = [...][1:];
@@ -1416,7 +1474,8 @@ if (!args) {
 	convert(
 		input: file.stdin,
 		output: file.stdout,
-		filename: "<stdin>");
+		filename: "<stdin>",
+		emitline: true);
 	return 0;
 }
 if (args[0] == "--help") {
@@ -1448,7 +1507,8 @@ if (outfilename)
 convert(
 	input: infile,
 	output: outfile,
-	filename: infilename);
+	filename: infilename,
+	emitline: true);
 #endif
 
 
