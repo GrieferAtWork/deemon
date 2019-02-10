@@ -315,7 +315,7 @@ class_maker_bindoperator(struct class_maker *__restrict self,
      (self->cm_clsop_size > (desc->cd_clsop_mask/3)*2)) &&
       unlikely(rehash_operator_bindings(desc)))
       goto err;
- i = perturb = name & desc->cd_iattr_mask;
+ i = perturb = name & desc->cd_clsop_mask;
  /* Search for a pre-existing matching attribute, or create a new one. */
  for (;; DeeClassDescriptor_CLSOPNEXT(i,perturb)) {
   result = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
