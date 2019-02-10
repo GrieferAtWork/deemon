@@ -242,8 +242,8 @@ err_ni:
  return NULL;
 }
 
-PRIVATE int DCALL
-ri_bool(RangeIterator *__restrict self) {
+PRIVATE DREF DeeObject *DCALL
+ri_get_next_index(RangeIterator *__restrict self) {
  DREF DeeObject *new_index;
  DREF DeeObject *old_index;
  int temp;
@@ -275,17 +275,24 @@ again:
  } else {
   rwlock_endread(&self->ri_lock);
  }
-
- /* Check if the end has been reached */
- temp = likely(!self->ri_range->r_rev)
-      ? DeeObject_CompareLo(new_index,self->ri_end)
-      : DeeObject_CompareGr(new_index,self->ri_end)
-      ;
- Dee_Decref(new_index);
- return temp;
+ return new_index;
 err_r:
  Dee_Decref(new_index);
- return -1;
+ return NULL;
+}
+
+PRIVATE int DCALL
+ri_bool(RangeIterator *__restrict self) {
+ int result;
+ DREF DeeObject *ni;
+ ni = ri_get_next_index(self);
+ /* Check if the end has been reached */
+ result = likely(!self->ri_range->r_rev)
+      ? DeeObject_CompareLo(ni,self->ri_end)
+      : DeeObject_CompareGr(ni,self->ri_end)
+      ;
+ Dee_Decref(ni);
+ return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -353,26 +360,54 @@ name(RangeIterator *__restrict self, \
      RangeIterator *__restrict other) { \
  DREF DeeObject *my_index,*ot_index,*result; \
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqRangeIterator_Type)) \
-     return NULL; \
- rwlock_read(&self->ri_lock); \
- my_index = self->ri_index; \
- Dee_Incref(my_index); \
- rwlock_endread(&self->ri_lock); \
- rwlock_read(&other->ri_lock); \
- ot_index = other->ri_index; \
- Dee_Incref(ot_index); \
- rwlock_endread(&other->ri_lock); \
+     goto err; \
+ my_index = ri_get_next_index(self); \
+ if unlikely(!my_index) \
+    goto err; \
+ ot_index = ri_get_next_index(other); \
+ if unlikely(!my_index) \
+    goto err_myi; \
  result = compare_object(my_index,ot_index); \
  Dee_Decref(ot_index); \
  Dee_Decref(my_index); \
  return result; \
+err_myi: \
+ Dee_Decref(my_index); \
+err: \
+ return NULL; \
+}
+#define DEFINE_RANGEITERATOR_COMPARE_R(name,compare_object) \
+PRIVATE DREF DeeObject *DCALL \
+name(RangeIterator *__restrict self, \
+     RangeIterator *__restrict other) { \
+ DREF DeeObject *my_index,*ot_index,*result; \
+ if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqRangeIterator_Type)) \
+     goto err; \
+ my_index = ri_get_next_index(self); \
+ if unlikely(!my_index) \
+    goto err; \
+ ot_index = ri_get_next_index(other); \
+ if unlikely(!my_index) \
+    goto err_myi; \
+ result = unlikely(self->ri_range->r_rev) \
+        ? compare_object(my_index,ot_index) \
+        : compare_object(ot_index,my_index) \
+        ; \
+ Dee_Decref(ot_index); \
+ Dee_Decref(my_index); \
+ return result; \
+err_myi: \
+ Dee_Decref(my_index); \
+err: \
+ return NULL; \
 }
 DEFINE_RANGEITERATOR_COMPARE(ri_eq,DeeObject_CompareEqObject)
 DEFINE_RANGEITERATOR_COMPARE(ri_ne,DeeObject_CompareNeObject)
-DEFINE_RANGEITERATOR_COMPARE(ri_lo,DeeObject_CompareLoObject)
-DEFINE_RANGEITERATOR_COMPARE(ri_le,DeeObject_CompareLeObject)
-DEFINE_RANGEITERATOR_COMPARE(ri_gr,DeeObject_CompareGrObject)
-DEFINE_RANGEITERATOR_COMPARE(ri_ge,DeeObject_CompareGeObject)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_lo,DeeObject_CompareLoObject)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_le,DeeObject_CompareLeObject)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_gr,DeeObject_CompareGrObject)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_ge,DeeObject_CompareGeObject)
+#undef DEFINE_RANGEITERATOR_COMPARE_R
 #undef DEFINE_RANGEITERATOR_COMPARE
 
 PRIVATE struct type_cmp ri_cmp = {
@@ -826,6 +861,11 @@ INTERN DeeTypeObject SeqRange_Type = {
 
 
 
+#ifdef CONFIG_NO_THREADS
+#define READ_INDEX(x)             (x)->iri_index
+#else
+#define READ_INDEX(x) ATOMIC_READ((x)->iri_index)
+#endif
 
 
 PRIVATE int DCALL
@@ -847,11 +887,7 @@ err:
 PRIVATE int DCALL
 iri_copy(IntRangeIterator *__restrict self,
          IntRangeIterator *__restrict other) {
-#ifdef CONFIG_NO_THREADS
- self->iri_index = other->iri_index;
-#else
- self->iri_index = ATOMIC_READ(other->iri_index);
-#endif
+ self->iri_index = READ_INDEX(other);
  self->iri_end   = other->iri_end;
  self->iri_step  = other->iri_step;
  self->iri_range = other->iri_range;
@@ -877,11 +913,7 @@ err:
 PRIVATE int DCALL
 iri_bool(IntRangeIterator *__restrict self) {
  dssize_t new_index;
-#ifdef CONFIG_NO_THREADS
- dssize_t index = self->iri_index;
-#else
- dssize_t index = ATOMIC_READ(self->iri_index);
-#endif
+ dssize_t index = READ_INDEX(self);
  return !(OVERFLOW_SADD(index,self->iri_step,&new_index) ||
          (likely(self->iri_step >= 0) ? index >= self->iri_end
                                       : index <= self->iri_end));
@@ -899,12 +931,11 @@ iri_visit(IntRangeIterator *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 iri_next(IntRangeIterator *__restrict self) {
  dssize_t result_index,new_index;
- do {
-#ifdef CONFIG_NO_THREADS
-  result_index = self->iri_index;
-#else
-  result_index = ATOMIC_READ(self->iri_index);
+#ifndef CONFIG_NO_THREADS
+ do
 #endif
+ {
+  result_index = READ_INDEX(self);
   /* Test for overflow/iteration done. */
   if (OVERFLOW_SADD(result_index,self->iri_step,&new_index) ||
      (likely(self->iri_step >= 0) ? result_index >= self->iri_end
@@ -914,9 +945,7 @@ iri_next(IntRangeIterator *__restrict self) {
   self->iri_index = new_index;
 #endif
  }
-#ifdef CONFIG_NO_THREADS
- __WHILE0;
-#else
+#ifndef CONFIG_NO_THREADS
  while (!ATOMIC_CMPXCH(self->iri_index,result_index,new_index));
 #endif
  /* Return a new integer for the resulting index. */
@@ -933,6 +962,49 @@ PRIVATE struct type_member iri_members[] = {
     TYPE_MEMBER_FIELD("__step__",STRUCT_ATOMIC|STRUCT_SSIZE_T,offsetof(IntRangeIterator,iri_step)),
     TYPE_MEMBER_END
 };
+
+#define DEFINE_IRI_COMPARE(name,op) \
+PRIVATE DREF DeeObject *DCALL \
+name(IntRangeIterator *__restrict self, \
+     IntRangeIterator *__restrict other) { \
+ if (DeeObject_AssertTypeExact(other,&SeqIntRangeIterator_Type)) \
+     goto err; \
+ return_bool(READ_INDEX(self) op READ_INDEX(other)); \
+err: \
+ return NULL; \
+}
+#define DEFINE_IRI_COMPARE_R(name,op) \
+PRIVATE DREF DeeObject *DCALL \
+name(IntRangeIterator *__restrict self, \
+     IntRangeIterator *__restrict other) { \
+ if (DeeObject_AssertTypeExact(other,&SeqIntRangeIterator_Type)) \
+     goto err; \
+ return_bool(self->iri_step >= 0 \
+           ? READ_INDEX(self) op READ_INDEX(other) \
+           : READ_INDEX(other) op READ_INDEX(self)); \
+err: \
+ return NULL; \
+}
+DEFINE_IRI_COMPARE(iri_eq,==)
+DEFINE_IRI_COMPARE(iri_ne,!=)
+DEFINE_IRI_COMPARE_R(iri_lo,<)
+DEFINE_IRI_COMPARE_R(iri_le,<=)
+DEFINE_IRI_COMPARE_R(iri_gr,>)
+DEFINE_IRI_COMPARE_R(iri_ge,>=)
+#undef DEFINE_IRI_COMPARE_R
+#undef DEFINE_IRI_COMPARE
+
+PRIVATE struct type_cmp iri_cmp = {
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&iri_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&iri_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&iri_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&iri_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&iri_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&iri_ge
+};
+
+
 
 INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
@@ -966,7 +1038,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&iri_visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL, /* TODO */
+    /* .tp_cmp           = */&iri_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&iri_next,
     /* .tp_attr          = */NULL,
