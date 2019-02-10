@@ -1085,6 +1085,19 @@ PRIVATE struct type_method iterator_methods[] = {
           "Same as ${this.operator next()}\n"
           "When given, @defl is returned when the iterator has been "
           "exhaused, rather than throwing a :StopIteration error") },
+    /* TODO: `function peek(defl?)'
+     * @throw StopIteration @this iterator has been exhausted, and no @decl was given
+     * Return the next upcoming sequence element, but don't actually advance to it.
+     * >> function peek(defl?) {
+     * >>  for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {
+     * >>   // TODO: Emulate using `operator next()' + `prev'
+     * >>   // TODO: Emulate using `operator next()' + `index'
+     * >>   // TODO: Emulate using `operator next()' + `rewind' + `operator <=>'
+     * >>   // TODO: Emulate using `operator next()' + `seq' + `operator <=>' + `operator :='
+     * >>  }
+     * >>  throw NotImplemented("...");
+     * >> }
+     */
     { DeeString_STR(&str_prev),
      &iterator_prev,
       DOC("->?Dbool\n"

@@ -46,12 +46,12 @@ typedef struct {
     OBJECT_HEAD
     DeeDictObject    *di_dict; /* [1..1][const] The dict being iterated. */
     struct dict_item *di_next; /* [?..1][MAYBE(in(di_dict->d_elem))][atomic]
-                                *   The first candidate for the next item.
-                                *   NOTE: Before being dereferenced, this pointer is checked
-                                *         for being located inside the dict's element vector.
-                                *         In the event that it is located at its end, `ITER_DONE'
-                                *         is returned, though in the event that it is located
-                                *         outside, an error is thrown (`err_changed_sequence()'). */
+                                * The first candidate for the next item.
+                                * NOTE: Before being dereferenced, this pointer is checked
+                                *       for being located inside the dict's element vector.
+                                *       In the event that it is located at its end, `ITER_DONE'
+                                *       is returned, though in the event that it is located
+                                *       outside, an error is thrown (`err_changed_sequence()'). */
 } DictIterator;
 
 #ifdef CONFIG_NO_THREADS
@@ -352,7 +352,7 @@ INTERN DeeTypeObject DictIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&dictiterator_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
+    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
     /* .tp_cmp           = */&dictiterator_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dictiterator_next_item,

@@ -339,7 +339,7 @@ ri_index_set(RangeIterator *__restrict self,
 }
 
 PRIVATE struct type_getset ri_getsets[] = {
-    { "__index__",
+    { "index",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ri_index_get,
      (int(DCALL *)(DeeObject *__restrict))&ri_index_del,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ri_index_set },
@@ -451,7 +451,7 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&ri_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
+    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
     /* .tp_cmp           = */&ri_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ri_next,
@@ -1256,7 +1256,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&iri_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
+    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
     /* .tp_cmp           = */&iri_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&iri_next,

@@ -85,7 +85,7 @@ typedef struct PACKED {
                                   * time when this compiled source file was generated.
                                   * Since DEC files are meant to be used as a shallow
                                   * cache file that is automatically discarded if the
-                                  * actual source file has changed since, this is the
+                                  * actual source file has since changed, this is the
                                   * time against which everything must be compared. */
     uint32_t e_timestamp_hi;     /* High 32-bits of the timestamp. */
 } Dec_Ehdr;

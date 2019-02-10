@@ -974,7 +974,7 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 
 PRIVATE struct type_member tuple_iterator_members[] = {
     TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(TupleIterator,ti_tuple)),
-    TYPE_MEMBER_FIELD("__index__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(TupleIterator,ti_index)),
+    TYPE_MEMBER_FIELD("index",STRUCT_ATOMIC|STRUCT_SIZE_T,offsetof(TupleIterator,ti_index)),
     TYPE_MEMBER_END
 };
 
@@ -1041,7 +1041,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
+    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
     /* .tp_cmp           = */&tuple_iterator_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iterator_next,

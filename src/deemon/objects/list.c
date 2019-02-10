@@ -3694,8 +3694,8 @@ li_copy(ListIterator *__restrict self,
 }
 
 PRIVATE int DCALL
-li_deepcopy(ListIterator *__restrict self,
-            ListIterator *__restrict other) {
+li_deep(ListIterator *__restrict self,
+        ListIterator *__restrict other) {
  self->li_list = (DREF List *)DeeObject_DeepCopy((DeeObject *)other->li_list);
  if unlikely(!self->li_list)
     goto err;
@@ -3860,7 +3860,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&li_ctor,
                 /* .tp_copy_ctor = */(void *)&li_copy,
-                /* .tp_deep_ctor = */(void *)&li_deepcopy,
+                /* .tp_deep_ctor = */(void *)&li_deep,
                 /* .tp_any_ctor  = */(void *)&li_init,
                 TYPE_FIXED_ALLOCATOR(ListIterator)
             }
@@ -3878,7 +3878,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&li_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
+    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
     /* .tp_cmp           = */&li_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&li_next,

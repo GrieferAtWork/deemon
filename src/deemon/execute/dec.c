@@ -113,27 +113,31 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 /* NOTE: Now all error types are present here.
  *       This selection only mirrors what can reasonably be expected to
  *       be arguably commonly used in user-defined exception handlers.
- *       Builtin exceptions that do not appear in this list must cannot
- *       use a hard-coded exception mask, but must generate wrapper code:
- *    >> .begin except_1
+ *       Builtin exceptions that do not appear in this list cannot use
+ *       a hard-coded exception mask, but must generate wrapper code:
+ *    >> .Lexcept_1_start:
  *    >> ...
- *    >> .end except_1
+ *    >> .Lexcept_1_end:
  *    >> 
- *    >> .entry except_1, @except // Assembly for a catch-guard for `Error.FSError.UnsupportedAPI'
+ *    >> // Assembly for a catch-guard for `Error.FSError.UnsupportedAPI'
+ *    >> .except .Lexcept_1_start, .Lexcept_1_end, .Lexcept_1_entry
+ *    >> .Lexcept_1_entry:
  *    >>     push       except
  *    >>     push       const @FSError  // `FSError' can be encoded as a DEC constant (see `DEC_BUILTIN_SET0_FSError')
- *    >>     callattr   top, @"UnsupportedAPI"
+ *    >>     getattr    top, @"UnsupportedAPI"
  *    >>     instanceof top, pop
  *    >>     jt         1f
  *    >>     throw      except  // Rethrow the eror if the runtime mask didn't match
  *    >> 1:
  *       However if the mask can be encoded as a DEC constant,
- *       no masking code at all needs to be generated:
- *    >> .begin except_2
+ *       no masking code needs to be generated at all:
+ *    >> .Lexcept_1_start:
  *    >> ...
- *    >> .end except_2
+ *    >> .Lexcept_1_end:
  *    >> 
- *    >> .entry except_2, @except, @Error // Handler for `Error'
+ *    >> // Handler for `Error'
+ *    >> .except .Lexcept_2_start, .Lexcept_2_end, .Lexcept_2_entry, @mask(Error)
+ *    >> .Lexcept_2_entry:
  */
 
 
@@ -159,7 +163,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define DEC_BUILTIN_SET0_StackOverflow         0x21 /* DeeError_StackOverflow  */
 #define DEC_BUILTIN_SET0_TypeError             0x22 /* DeeError_TypeError      */
 #define DEC_BUILTIN_SET0_ValueError            0x23 /* DeeError_ValueError     */
-#define DEC_BUILTIN_SET0_Arithmetic            0x24 /* DeeError_ArithmeticError     */
+#define DEC_BUILTIN_SET0_ArithmeticError       0x24 /* DeeError_ArithmeticError */
 #define DEC_BUILTIN_SET0_DivideByZero          0x25 /* DeeError_DivideByZero   */
 #define DEC_BUILTIN_SET0_KeyError              0x26 /* DeeError_KeyError       */
 #define DEC_BUILTIN_SET0_IndexError            0x27 /* DeeError_IndexError     */
@@ -170,10 +174,10 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define DEC_BUILTIN_SET0_UnpackError           0x2c /* DeeError_UnpackError    */
 #define DEC_BUILTIN_SET0_SystemError           0x2d /* DeeError_SystemError    */
 #define DEC_BUILTIN_SET0_FSError               0x2e /* DeeError_FSError        */
-#define DEC_BUILTIN_SET0_AccessError           0x2f /* DeeError_FileAccessError    */
+#define DEC_BUILTIN_SET0_FileAccessError       0x2f /* DeeError_FileAccessError */
 #define DEC_BUILTIN_SET0_FileNotFound          0x30 /* DeeError_FileNotFound   */
 #define DEC_BUILTIN_SET0_FileExists            0x31 /* DeeError_FileExists     */
-#define DEC_BUILTIN_SET0_HandleClosed          0x32 /* DeeError_FileClosed   */
+#define DEC_BUILTIN_SET0_FileClosed            0x32 /* DeeError_FileClosed     */
 /*      DEC_BUILTIN_SET0_                      0x33 /* ... */
 /*      DEC_BUILTIN_SET0_                      0x34 /* ... */
 /*      DEC_BUILTIN_SET0_                      0x35 /* ... */
@@ -188,8 +192,8 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 /*      DEC_BUILTIN_SET0_                      0x3e /* ... */
 /*      DEC_BUILTIN_SET0_                      0x3f /* ... */
 
-/* Other builtin object types that are arguably useful for base-classes in
- * user-defined classes (to-be used as the `b:' operand of the `class' instruction) */
+/* Other builtin object types that are arguably useful
+ * for base-classes in user-defined classes */
 
 /* Highly useful (unless `@nobase' is used, this one's always the default base) */
 #define DEC_BUILTIN_SET0_Object                0x40 /* DeeObject_Type */
@@ -248,6 +252,10 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define DEC_BUILTIN_SET0_Tuple                 0xd0 /* DeeTuple_Type */
 #define DEC_BUILTIN_SET0_Bool                  0xd1 /* DeeBool_Type */
 #define DEC_BUILTIN_SET0_WeakRef               0xd2 /* DeeWeakRef_Type */
+
+/*      DEC_BUILTIN_SET0_                      0xd3 /* ... */
+/*      DEC_BUILTIN_SET0_                      ...  /* ... */
+/*      DEC_BUILTIN_SET0_                      0xef /* ... */
 
 
 
@@ -330,7 +338,7 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
     { (DeeObject *)&DeeError_StackOverflow, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_StackOverflow) },
     { (DeeObject *)&DeeError_TypeError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_TypeError) },
     { (DeeObject *)&DeeError_ValueError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_ValueError) },
-    { (DeeObject *)&DeeError_ArithmeticError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Arithmetic) },
+    { (DeeObject *)&DeeError_ArithmeticError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_ArithmeticError) },
     { (DeeObject *)&DeeError_DivideByZero, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_DivideByZero) },
     { (DeeObject *)&DeeError_KeyError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_KeyError) },
     { (DeeObject *)&DeeError_IndexError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_IndexError) },
@@ -341,10 +349,10 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
     { (DeeObject *)&DeeError_UnpackError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_UnpackError) },
     { (DeeObject *)&DeeError_SystemError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_SystemError) },
     { (DeeObject *)&DeeError_FSError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FSError) },
-    { (DeeObject *)&DeeError_FileAccessError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_AccessError) },
+    { (DeeObject *)&DeeError_FileAccessError, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FileAccessError) },
     { (DeeObject *)&DeeError_FileNotFound, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FileNotFound) },
     { (DeeObject *)&DeeError_FileExists, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FileExists) },
-    { (DeeObject *)&DeeError_FileClosed, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_HandleClosed) },
+    { (DeeObject *)&DeeError_FileClosed, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_FileClosed) },
     { (DeeObject *)&DeeObject_Type, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Object) },
     { (DeeObject *)&DeeSeq_Type, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Sequence) },
     { (DeeObject *)&DeeMapping_Type, DEC_BUILTINID_MAKE(0,DEC_BUILTIN_SET0_Mapping) },
