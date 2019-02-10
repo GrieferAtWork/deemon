@@ -146,39 +146,28 @@ DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
      return DeeTuple_SIZE(self);
  if (tp_self == &SharedVector_Type)
      return ((SharedVector *)self)->sv_length;
- if (tp_self == &SeqSubRange_Type) {
-  if (DeeFastSeq_GetSizeNB(((SubRange *)self)->sr_seq) == DEE_FASTSEQ_NOTFAST)
-      return DEE_FASTSEQ_NOTFAST;
-  return ((SubRange *)self)->sr_size;
- }
  return DEE_FASTSEQ_NOTFAST;
 }
 PUBLIC ATTR_RETNONNULL DREF DeeObject *DCALL
 DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
  DeeTypeObject *tp_self;
  DREF DeeObject *result;
-again:
  ASSERT_OBJECT(self);
  tp_self = Dee_TYPE(self);
  if (tp_self == &DeeTuple_Type) {
   result = DeeTuple_GET(self,index);
   return_reference_(result);
  }
- if (tp_self == &SharedVector_Type) {
-  rwlock_read(&((SharedVector *)self)->sv_lock);
-  if unlikely(index >= ((SharedVector *)self)->sv_length) {
-   rwlock_endread(&((SharedVector *)self)->sv_lock);
-   return_none;
-  }
-  result = ((SharedVector *)self)->sv_vector[index];
-  Dee_Incref(result);
+ ASSERT(tp_self == &SharedVector_Type);
+ rwlock_read(&((SharedVector *)self)->sv_lock);
+ if unlikely(index >= ((SharedVector *)self)->sv_length) {
   rwlock_endread(&((SharedVector *)self)->sv_lock);
-  return result;
+  return_none;
  }
- ASSERT(tp_self == &SeqSubRange_Type);
- index += ((SubRange *)self)->sr_begin;
- self   = ((SubRange *)self)->sr_seq;
- goto again;
+ result = ((SharedVector *)self)->sv_vector[index];
+ Dee_Incref(result);
+ rwlock_endread(&((SharedVector *)self)->sv_lock);
+ return result;
 }
 
 

@@ -34,11 +34,10 @@ typedef struct {
      *       This is feasible because of our infinite-precision integer library,
      *       meaning that user-code shouldn't need to worry about overflows in
      *       standard arithmetical operations. */
-    DREF DeeObject *r_begin; /* [1..1][const] Starting index. */
+    DREF DeeObject *r_start; /* [1..1][const] Starting index. */
     DREF DeeObject *r_end;   /* [1..1][const] Ending index. */
     DREF DeeObject *r_step;  /* [0..1][const] Step size (or NULL when `tp_inc()' should be used). */
-    bool            r_rev;   /* [const] True if iteration should happen in reverse (use `tp_dec' when `r_step' is
-                              *         NULL, but still use `tp_inplace_add' if not. - Used to handle negative steps). */
+    bool            r_rev;   /* [const] True if `r_step' is non-NULL and negative. */
 } Range;
 
 typedef struct {
@@ -62,11 +61,10 @@ INTDEF DeeTypeObject SeqRange_Type;
 typedef struct {
     OBJECT_HEAD
     /* NOTE: Iteration stops when `index >= ir_end' (ir_step > 0) / `index <= ir_end' (ir_step < 0) or
-     *      `index += ir_step' would roll over. (returning `ITER_DONE' immediately)
-     *       The case of `ir_step' being ZERO(0) intentionally creates an infinite loop. */
-    dssize_t ir_begin; /* [const] Starting index. */
+     *      `index += ir_step' would roll over. (returning `ITER_DONE' immediately) */
+    dssize_t ir_start; /* [const] Starting index. */
     dssize_t ir_end;   /* [const] Ending index. */
-    dssize_t ir_step;  /* [const] Step size (may be negative). */
+    dssize_t ir_step;  /* [const][!0] Step size (may be negative). */
 } IntRange;
 
 typedef struct {
