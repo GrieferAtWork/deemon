@@ -20,10 +20,12 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_SEGMENTS_C 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
+#include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
@@ -48,6 +50,35 @@ typedef struct {
 
 
 PRIVATE int DCALL
+segiter_init(SegmentsIterator *__restrict self,
+             size_t argc, DeeObject **__restrict argv) {
+ self->si_len = 1;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:_SeqSegmentsIterator",
+                  &self->si_iter,&self->si_len))
+     goto err;
+ if unlikely(!self->si_len) {
+  DeeError_Throwf(&DeeError_ValueError,
+                  "Invalid length passed to `_SeqSegmentsIterator'");
+  goto err;
+ }
+ Dee_Incref(self->si_iter);
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+segiter_ctor(SegmentsIterator *__restrict self) {
+ self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
+ if unlikely(!self->si_iter)
+    goto err;
+ self->si_len = 1;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 segiter_copy(SegmentsIterator *__restrict self,
              SegmentsIterator *__restrict other) {
  self->si_iter = DeeObject_Copy(other->si_iter);
@@ -59,8 +90,8 @@ err:
 }
 
 PRIVATE int DCALL
-segiter_deepcopy(SegmentsIterator *__restrict self,
-                 SegmentsIterator *__restrict other) {
+segiter_deep(SegmentsIterator *__restrict self,
+             SegmentsIterator *__restrict other) {
  self->si_iter = DeeObject_DeepCopy(other->si_iter);
  if unlikely(!self->si_iter) goto err;
  self->si_len = other->si_len;
@@ -173,7 +204,7 @@ PRIVATE struct type_cmp segiter_cmp = {
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSegmentsIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(iter:?Diterator,len=!1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -181,10 +212,10 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_ctor      = */(void *)&segiter_ctor,
                 /* .tp_copy_ctor = */(void *)&segiter_copy,
-                /* .tp_deep_ctor = */(void *)&segiter_deepcopy,
-                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&segiter_deep,
+                /* .tp_any_ctor  = */(void *)&segiter_init,
                 TYPE_FIXED_ALLOCATOR(SegmentsIterator)
             }
         },
@@ -228,10 +259,36 @@ STATIC_ASSERT(COMPILER_OFFSETOF(Segments,s_seq) ==
 STATIC_ASSERT(COMPILER_OFFSETOF(Segments,s_len) ==
               COMPILER_OFFSETOF(SegmentsIterator,si_len));
 #define seg_copy     segiter_copy
-#define seg_deepcopy segiter_deepcopy
+#define seg_deep     segiter_deep
 #define seg_fini     segiter_fini
 #define seg_visit    segiter_visit
 #define seg_bool     segiter_bool
+
+PRIVATE int DCALL
+seg_ctor(Segments *__restrict self) {
+ self->s_seq = Dee_EmptySeq;
+ self->s_len = 1;
+ Dee_Incref(Dee_EmptySeq);
+ return 0;
+}
+
+PRIVATE int DCALL
+seg_init(Segments *__restrict self,
+         size_t argc, DeeObject **__restrict argv) {
+ self->s_len = 1;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:_SeqSegments",
+                  &self->s_seq,&self->s_len))
+     goto err;
+ if unlikely(!self->s_len) {
+  DeeError_Throwf(&DeeError_ValueError,
+                  "Invalid length passed to `_SeqSegments'");
+  goto err;
+ }
+ Dee_Incref(self->s_seq);
+ return 0;
+err:
+ return -1;
+}
 
 
 PRIVATE DREF SegmentsIterator *DCALL
@@ -250,14 +307,126 @@ err_r:
  return NULL;
 }
 
+PRIVATE size_t DCALL
+seg_nsi_getsize(Segments *__restrict self) {
+ size_t result;
+ result = DeeObject_Size(self->s_seq);
+ if likely(result != (size_t)-1)
+    result = (result + (self->s_len - 1)) / self->s_len;
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+seg_getsize(Segments *__restrict self) {
+ size_t result;
+ result = DeeObject_Size(self->s_seq);
+ if unlikely(result == (size_t)-1)
+    goto err;
+ return DeeInt_NewSize((result + (self->s_len - 1)) / self->s_len);
+err:
+ return NULL;
+}
+
+PRIVATE size_t DCALL
+seg_nsi_fast_getsize(Segments *__restrict self) {
+ size_t result;
+ result = DeeFastSeq_GetSize(self->s_seq);
+ if likely(result != (size_t)-1)
+    result = (result + (self->s_len - 1)) / self->s_len;
+ return result;
+}
+
+PRIVATE DREF DeeObject *DCALL
+seg_nsi_getitem(Segments *__restrict self, size_t index) {
+ size_t i; DREF DeeObject *result;
+ size_t start = index * self->s_len;
+ size_t len = DeeObject_Size(self->s_seq);
+ if (len == (size_t)-1)
+     goto err;
+ if (start + self->s_len > len) {
+  if (start >= len) {
+   err_index_out_of_bounds((DeeObject *)self,
+                            index,
+                           (len + (self->s_len - 1)) / self->s_len);
+   goto err;
+  }
+  len -= start;
+ } else {
+  len = self->s_len;
+ }
+ result = DeeTuple_NewUninitialized(len);
+ for (i = 0; i < len; ++i) {
+  DREF DeeObject *temp;
+  temp = DeeObject_GetItemIndex(self->s_seq,start + i);
+  if unlikely(!temp) {
+   if (DeeError_Catch(&DeeError_IndexError))
+       return DeeTuple_TruncateUninitialized(result,i);
+   goto err_r;
+  }
+  DeeTuple_SET(result,i,temp); /* Inherit reference */
+ }
+ return result;
+err_r:
+ while (i--)
+     Dee_Decref(DeeTuple_GET(result,i));
+ DeeTuple_FreeUninitialized(result);
+err:
+ return NULL;
+}
+
+PRIVATE DREF DeeObject *DCALL
+seg_getitem(Segments *__restrict self, DeeObject *__restrict index_ob) {
+ size_t index;
+ if (DeeObject_AsSize(index_ob,&index))
+     goto err;
+ return seg_nsi_getitem(self,index);
+err:
+ return NULL;
+}
+
+
+PRIVATE struct type_nsi seg_nsi = {
+    /* .nsi_class   = */TYPE_SEQX_CLASS_SEQ,
+    /* .nsi_flags   = */TYPE_SEQX_FNORMAL,
+    {
+        /* .nsi_seqlike = */{
+            /* .nsi_getsize      = */(void *)&seg_nsi_getsize,
+            /* .nsi_getsize_fast = */(void *)&seg_nsi_fast_getsize,
+            /* .nsi_getitem      = */(void *)&seg_nsi_getitem,
+            /* .nsi_delitem      = */(void *)NULL,
+            /* .nsi_setitem      = */(void *)NULL,
+            /* .nsi_getitem_fast = */(void *)NULL,
+            /* .nsi_getrange     = */(void *)NULL,
+            /* .nsi_getrange_n   = */(void *)NULL,
+            /* .nsi_setrange     = */(void *)NULL,
+            /* .nsi_setrange_n   = */(void *)NULL,
+            /* .nsi_find         = */(void *)NULL,
+            /* .nsi_rfind        = */(void *)NULL,
+            /* .nsi_xch          = */(void *)NULL,
+            /* .nsi_insert       = */(void *)NULL,
+            /* .nsi_insertall    = */(void *)NULL,
+            /* .nsi_insertvec    = */(void *)NULL,
+            /* .nsi_pop          = */(void *)NULL,
+            /* .nsi_erase        = */(void *)NULL,
+            /* .nsi_remove       = */(void *)NULL,
+            /* .nsi_rremove      = */(void *)NULL,
+            /* .nsi_removeall    = */(void *)NULL,
+            /* .nsi_removeif     = */(void *)NULL
+        }
+    }
+};
 
 PRIVATE struct type_seq seg_seq = {
     /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_iter,
-    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL, /* TODO: `(#s_seq + s_len - 1) / s_len' */
-    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL,
-    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL,
-    /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))NULL,
-    /* .tp_set       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))NULL,
+    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_getsize,
+    /* .tp_contains  = */NULL, /* TODO */
+    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&seg_getitem,
+    /* .tp_del       = */NULL,
+    /* .tp_set       = */NULL,
+    /* .tp_range_get = */NULL,
+    /* .tp_range_del = */NULL,
+    /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&seg_nsi,
 };
 
 PRIVATE struct type_member seg_members[] = {
@@ -277,10 +446,10 @@ PRIVATE DeeTypeObject SeqSegments_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */(void *)NULL, /* TODO */
+                /* .tp_ctor      = */(void *)&seg_ctor,
                 /* .tp_copy_ctor = */(void *)&seg_copy,
-                /* .tp_deep_ctor = */(void *)&seg_deepcopy,
-                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&seg_deep,
+                /* .tp_any_ctor  = */(void *)&seg_init,
                 TYPE_FIXED_ALLOCATOR(Segments)
             }
         },

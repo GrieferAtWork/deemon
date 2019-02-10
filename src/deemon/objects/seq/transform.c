@@ -76,14 +76,19 @@ transiter_seq_get(TransformationIterator *__restrict self) {
  /* Forward access to this attribute to the pointed-to iterator. */
  DREF DeeObject *orig,*result;
  orig = DeeObject_GetAttr(self->ti_iter,&str_seq);
- if unlikely(!orig) return NULL;
+ if unlikely(!orig)
+    goto err;
  result = DeeSeq_Transform(orig,self->ti_func);
  Dee_Decref(orig);
  return result;
+err:
+ return NULL;
 }
 
 PRIVATE struct type_getset transiter_getsets[] = {
-    { DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL },
+    { DeeString_STR(&str_seq),
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL,
+      DOC("->?Ert:SeqTransformation") },
     { NULL }
 };
 
@@ -97,17 +102,19 @@ PRIVATE struct type_member transiter_members[] = {
 PRIVATE DREF DeeObject *DCALL \
 name(TransformationIterator *__restrict self, \
      TransformationIterator *__restrict other) { \
- if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqTransformationIterator_Type)) \
-     return NULL; \
- if (self->ti_func != other->ti_func) { \
-     int temp = DeeObject_CompareEq(self->ti_func,other->ti_func); \
-     if (temp <= 0) { \
-         if (temp == 0) \
-             err_unimplemented_operator(&SeqTransformationIterator_Type,opname); \
-         return NULL; \
-     } \
- } \
- return base((DeeObject *)self,(DeeObject *)other); \
+    if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqTransformationIterator_Type)) \
+        goto err; \
+    if (self->ti_func != other->ti_func) { \
+        int temp = DeeObject_CompareEq(self->ti_func,other->ti_func); \
+        if (temp <= 0) { \
+            if (temp == 0) \
+                err_unimplemented_operator(&SeqTransformationIterator_Type,opname); \
+            goto err; \
+        } \
+    } \
+    return base((DeeObject *)self,(DeeObject *)other); \
+err: \
+    return NULL; \
 }
 DEFINE_COMPARE(transiter_eq,DeeObject_CompareEqObject,OPERATOR_EQ)
 DEFINE_COMPARE(transiter_ne,DeeObject_CompareNeObject,OPERATOR_NE)
@@ -131,31 +138,56 @@ PRIVATE int DCALL
 transiter_copy(TransformationIterator *__restrict self,
                TransformationIterator *__restrict other) {
  self->ti_iter = DeeObject_Copy(other->ti_iter);
- if unlikely(!self->ti_iter) return -1;
+ if unlikely(!self->ti_iter)
+    goto err;
  self->ti_func = other->ti_func;
  Dee_Incref(self->ti_func);
  return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+transiter_deep(TransformationIterator *__restrict self,
+               TransformationIterator *__restrict other) {
+ self->ti_iter = DeeObject_Copy(other->ti_iter);
+ if unlikely(!self->ti_iter)
+    goto err;
+ self->ti_func = DeeObject_Copy(other->ti_func);
+ if unlikely(!self->ti_func)
+    goto err_iter;
+ return 0;
+err_iter:
+ Dee_Decref(self->ti_iter);
+err:
+ return -1;
 }
 PRIVATE int DCALL
 transiter_ctor(TransformationIterator *__restrict self) {
  self->ti_iter = DeeObject_IterSelf(Dee_EmptySeq);
- if unlikely(!self->ti_iter) return -1;
+ if unlikely(!self->ti_iter)
+    goto err;
  self->ti_func = Dee_None;
  Dee_Incref(Dee_None);
  return 0;
+err:
+ return -1;
 }
 PRIVATE int DCALL
 transiter_init(TransformationIterator *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  Transformation *trans;
- if (DeeArg_Unpack(argc,argv,"o:_SeqTransformationIterator",&trans) ||
-     DeeObject_AssertTypeExact((DeeObject *)trans,&SeqTransformation_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_SeqTransformationIterator",&trans))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)trans,&SeqTransformation_Type))
+     goto err;
  self->ti_iter = DeeObject_IterSelf(trans->t_seq);
- if unlikely(!self->ti_iter) return -1;
+ if unlikely(!self->ti_iter)
+    goto err;
  self->ti_func = trans->t_fun;
  Dee_Incref(self->ti_func);
  return 0;
+err:
+ return -1;
 }
 
 INTERN DeeTypeObject SeqTransformationIterator_Type = {
@@ -171,7 +203,7 @@ INTERN DeeTypeObject SeqTransformationIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&transiter_ctor,
                 /* .tp_copy_ctor = */(void *)&transiter_copy,
-                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&transiter_deep,
                 /* .tp_any_ctor  = */(void *)&transiter_init,
                 TYPE_FIXED_ALLOCATOR(TransformationIterator)
             }
@@ -341,14 +373,50 @@ PRIVATE struct type_seq trans_seq = {
 };
 
 PRIVATE int DCALL
-trans_init(Transformation *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_SeqTransformation",
-                  &self->t_seq,&self->t_fun))
-     return -1;
+trans_ctor(Transformation *__restrict self) {
+ self->t_seq = Dee_EmptySeq;
+ self->t_fun = Dee_None;
+ Dee_Incref(Dee_EmptySeq);
+ Dee_Incref(Dee_None);
+ return 0;
+}
+
+PRIVATE int DCALL
+trans_copy(Transformation *__restrict self,
+           Transformation *__restrict other) {
+ self->t_seq = other->t_seq;
+ self->t_fun = other->t_fun;
  Dee_Incref(self->t_seq);
  Dee_Incref(self->t_fun);
  return 0;
+}
+
+PRIVATE int DCALL
+trans_deep(Transformation *__restrict self,
+           Transformation *__restrict other) {
+ self->t_seq = DeeObject_DeepCopy(other->t_seq);
+ if unlikely(!self->t_seq)
+    goto err;
+ self->t_fun = DeeObject_DeepCopy(other->t_fun);
+ if unlikely(!self->t_fun)
+    goto err_seq;
+ return 0;
+err_seq:
+ Dee_Decref(self->t_seq);
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+trans_init(Transformation *__restrict self,
+           size_t argc, DeeObject **__restrict argv) {
+ if (DeeArg_Unpack(argc,argv,"oo:_SeqTransformation",&self->t_seq,&self->t_fun))
+     goto err;
+ Dee_Incref(self->t_seq);
+ Dee_Incref(self->t_fun);
+ return 0;
+err:
+ return -1;
 }
 
 INTERN DeeTypeObject SeqTransformation_Type = {
@@ -362,9 +430,9 @@ INTERN DeeTypeObject SeqTransformation_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */(void *)NULL, /* TODO */
-                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
-                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_ctor      = */(void *)&trans_ctor,
+                /* .tp_copy_ctor = */(void *)&trans_copy,
+                /* .tp_deep_ctor = */(void *)&trans_deep,
                 /* .tp_any_ctor  = */(void *)&trans_init,
                 TYPE_FIXED_ALLOCATOR(Transformation)
             }

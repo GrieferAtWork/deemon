@@ -26,8 +26,9 @@ DECL_BEGIN
 
 typedef struct {
     OBJECT_HEAD
-    DREF DeeObject *sr_iter; /* [1..1][const] Underlying iterator. */
-    size_t          sr_size; /* Max remaining number of items to-be yielded. */
+    DREF DeeObject *sr_iter;  /* [1..1][const] Underlying iterator. */
+    size_t          sr_size;  /* Max remaining number of items to-be yielded. */
+    size_t          sr_start; /* Starting index of the original sub-range. */
 } SubRangeIterator;
 
 #ifdef CONFIG_NO_THREADS
@@ -40,14 +41,14 @@ typedef struct {
 typedef struct {
     OBJECT_HEAD
     DREF DeeObject *sr_seq;   /* [1..1][const] Underlying sequence. */
-    size_t          sr_begin; /* [const] Amount of items discarded at the beginning. */
+    size_t          sr_start; /* [const] Amount of items discarded at the beginning. */
     size_t          sr_size;  /* [const] Max amount of items yielded. */
 } SubRange;
 
 typedef struct {
     OBJECT_HEAD
     DREF DeeObject *sr_seq;   /* [1..1][const] Underlying sequence. */
-    size_t          sr_begin; /* [const] Amount of items discarded at the beginning. */
+    size_t          sr_start; /* [const] Amount of items discarded at the beginning. */
 } SubRangeN;
 
 INTDEF DeeTypeObject SeqSubRangeIterator_Type;

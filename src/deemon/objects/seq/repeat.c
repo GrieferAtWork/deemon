@@ -67,12 +67,40 @@ repeatiter_copy(RepeatIterator *__restrict self,
  rwlock_endread(&other->ri_lock);
  copy = DeeObject_Copy(self->ri_iter);
  Dee_Decref(self->ri_iter);
- if unlikely(!copy) return -1;
+ if unlikely(!copy)
+    goto err;
  self->ri_iter = copy;
  self->ri_rep = other->ri_rep;
  Dee_Incref(self->ri_rep);
  rwlock_init(&self->ri_lock);
  return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+repeatiter_deep(RepeatIterator *__restrict self,
+                RepeatIterator *__restrict other) {
+ DREF DeeObject *copy;
+ rwlock_read(&other->ri_lock);
+ self->ri_num = other->ri_num;
+ self->ri_iter = other->ri_iter;
+ Dee_Incref(self->ri_iter);
+ rwlock_endread(&other->ri_lock);
+ copy = DeeObject_DeepCopy(self->ri_iter);
+ Dee_Decref(self->ri_iter);
+ if unlikely(!copy)
+    goto err;
+ self->ri_iter = copy;
+ self->ri_rep = (DREF Repeat *)DeeObject_DeepCopy((DeeObject *)other->ri_rep);
+ if unlikely(!self->ri_rep)
+    goto err_iter;
+ rwlock_init(&self->ri_lock);
+ return 0;
+err_iter:
+ Dee_Decref(self->ri_iter);
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -278,7 +306,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&repeatiter_ctor,
                 /* .tp_copy_ctor = */(void *)&repeatiter_copy,
-                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&repeatiter_deep,
                 /* .tp_any_ctor  = */(void *)&repeatiter_init,
                 TYPE_FIXED_ALLOCATOR(RepeatIterator)
             }
@@ -317,6 +345,26 @@ repeat_ctor(Repeat *__restrict self) {
  self->r_seq = Dee_EmptySeq;
  Dee_Incref(Dee_EmptySeq);
  return 0;
+}
+
+PRIVATE int DCALL
+repeat_copy(Repeat *__restrict self,
+            Repeat *__restrict other) {
+ self->r_num = other->r_num;
+ self->r_seq = other->r_seq;
+ Dee_Incref(self->r_seq);
+ return 0;
+}
+PRIVATE int DCALL
+repeat_deep(Repeat *__restrict self,
+            Repeat *__restrict other) {
+ self->r_seq = DeeObject_DeepCopy(other->r_seq);
+ if unlikely(!self->r_seq)
+    goto err;
+ self->r_num = other->r_num;
+ return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
@@ -536,8 +584,8 @@ INTERN DeeTypeObject SeqRepeat_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&repeat_ctor,
-                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
-                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&repeat_copy,
+                /* .tp_deep_ctor = */(void *)&repeat_deep,
                 /* .tp_any_ctor  = */(void *)&repeat_init,
                 TYPE_FIXED_ALLOCATOR(Repeat)
             }
@@ -607,15 +655,31 @@ repeatitemiter_copy(RepeatItemIterator *__restrict self,
 }
 
 PRIVATE int DCALL
+repeatitemiter_deep(RepeatItemIterator *__restrict self,
+                    RepeatItemIterator *__restrict other) {
+ self->rii_num = REPEATITEMPITER_READ_NUM(other);
+ self->rii_rep = (DREF RepeatItem *)DeeObject_DeepCopy((DeeObject *)other->rii_rep);
+ if unlikely(!self->rii_rep)
+    goto err;
+ self->rii_obj = self->rii_rep->ri_obj;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqItemRepeatIterator",&self->rii_rep) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->rii_rep,&SeqItemRepeat_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_SeqItemRepeatIterator",&self->rii_rep))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)self->rii_rep,&SeqItemRepeat_Type))
+     goto err;
  self->rii_obj = self->rii_rep->ri_obj;
  self->rii_num = self->rii_rep->ri_num;
  Dee_Incref(self->rii_rep);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -632,63 +696,75 @@ PRIVATE DREF DeeObject *DCALL
 repeatitemiter_eq(RepeatItemIterator *__restrict self,
                   RepeatItemIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqItemRepeatIterator_Type))
-     return NULL;
+     goto err;
  if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
      return_false;
  return DeeObject_CompareEqObject(self->rii_obj,other->rii_obj);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 repeatitemiter_ne(RepeatItemIterator *__restrict self,
                   RepeatItemIterator *__restrict other) {
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqItemRepeatIterator_Type))
-     return NULL;
+     goto err;
  if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
      return_true;
  return DeeObject_CompareNeObject(self->rii_obj,other->rii_obj);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 repeatitemiter_lo(RepeatItemIterator *__restrict self,
                   RepeatItemIterator *__restrict other) {
  size_t my_num,ot_num;
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqItemRepeatIterator_Type))
-     return NULL;
+     goto err;
  my_num = REPEATITEMPITER_READ_NUM(self);
  ot_num = REPEATITEMPITER_READ_NUM(other);
  if (my_num != ot_num) return_bool_(my_num < ot_num);
  return DeeObject_CompareLoObject(self->rii_obj,other->rii_obj);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 repeatitemiter_le(RepeatItemIterator *__restrict self,
                   RepeatItemIterator *__restrict other) {
  size_t my_num,ot_num;
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqItemRepeatIterator_Type))
-     return NULL;
+     goto err;
  my_num = REPEATITEMPITER_READ_NUM(self);
  ot_num = REPEATITEMPITER_READ_NUM(other);
  if (my_num != ot_num) return_bool_(my_num < ot_num);
  return DeeObject_CompareLeObject(self->rii_obj,other->rii_obj);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 repeatitemiter_gr(RepeatItemIterator *__restrict self,
                   RepeatItemIterator *__restrict other) {
  size_t my_num,ot_num;
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqItemRepeatIterator_Type))
-     return NULL;
+     goto err;
  my_num = REPEATITEMPITER_READ_NUM(self);
  ot_num = REPEATITEMPITER_READ_NUM(other);
  if (my_num != ot_num) return_bool_(my_num > ot_num);
  return DeeObject_CompareGrObject(self->rii_obj,other->rii_obj);
+err:
+ return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
 repeatitemiter_ge(RepeatItemIterator *__restrict self,
                   RepeatItemIterator *__restrict other) {
  size_t my_num,ot_num;
  if (DeeObject_AssertTypeExact((DeeObject *)other,&SeqItemRepeatIterator_Type))
-     return NULL;
+     goto err;
  my_num = REPEATITEMPITER_READ_NUM(self);
  ot_num = REPEATITEMPITER_READ_NUM(other);
  if (my_num != ot_num) return_bool_(my_num > ot_num);
  return DeeObject_CompareGeObject(self->rii_obj,other->rii_obj);
+err:
+ return NULL;
 }
 
 
@@ -736,7 +812,7 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&repeatitemiter_ctor,
                 /* .tp_copy_ctor = */(void *)&repeatitemiter_copy,
-                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_deep_ctor = */(void *)&repeatitemiter_deep,
                 /* .tp_any_ctor  = */(void *)&repeatitemiter_init,
                 TYPE_FIXED_ALLOCATOR(RepeatItemIterator)
             }
@@ -772,22 +848,43 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 PRIVATE int DCALL
 repeatitem_ctor(RepeatItem *__restrict self) {
  self->ri_num = 1;
- self->ri_obj = Dee_EmptySeq;
- Dee_Incref(Dee_EmptySeq);
+ self->ri_obj = Dee_None;
+ Dee_Incref(Dee_None);
  return 0;
+}
+
+PRIVATE int DCALL
+repeatitem_copy(RepeatItem *__restrict self,
+                RepeatItem *__restrict other) {
+ self->ri_num = other->ri_num;
+ self->ri_obj = other->ri_obj;
+ Dee_Incref(self->ri_obj);
+ return 0;
+}
+
+PRIVATE int DCALL
+repeatitem_deep(RepeatItem *__restrict self,
+                RepeatItem *__restrict other) {
+ self->ri_num = other->ri_num;
+ self->ri_obj = DeeObject_DeepCopy(other->ri_obj);
+ if unlikely(!self->ri_obj)
+    goto err;
+ return 0;
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"oIu:_SeqItemRepeat",&self->ri_obj,&self->ri_num))
-     return -1;
- if unlikely(!self->ri_num) {
-  self->ri_obj = Dee_EmptySeq;
-  self->ri_num = 1;
- }
+     goto err;
+ if unlikely(!self->ri_num)
+    self->ri_obj = Dee_None;
  Dee_Incref(self->ri_obj);
  return 0;
+err:
+ return -1;
 }
 
 STATIC_ASSERT(COMPILER_OFFSETOF(Repeat,r_seq) == COMPILER_OFFSETOF(RepeatItem,ri_obj));
@@ -1002,7 +1099,7 @@ PRIVATE struct type_member repeatitem_class_members[] = {
 INTERN DeeTypeObject SeqItemRepeat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqItemRepeat",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(obj,num:?Dint)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1011,8 +1108,8 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
         {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&repeatitem_ctor,
-                /* .tp_copy_ctor = */(void *)NULL, /* TODO */
-                /* .tp_deep_ctor = */(void *)NULL, /* TODO */
+                /* .tp_copy_ctor = */(void *)&repeatitem_copy,
+                /* .tp_deep_ctor = */(void *)&repeatitem_deep,
                 /* .tp_any_ctor  = */(void *)&repeatitem_init,
                 TYPE_FIXED_ALLOCATOR(RepeatItem)
             }

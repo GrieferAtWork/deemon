@@ -984,7 +984,7 @@ INTERN DeeTypeObject RefVector_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */&rvec_init,
                 /* .tp_copy_ctor = */&rvec_copy,
-                /* .tp_deep_ctor = */NULL, /* TODO */
+                /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
                 TYPE_FIXED_ALLOCATOR(RefVector)
             }
@@ -1132,7 +1132,7 @@ sveciter_copy(SharedVectorIterator *__restrict self,
  return 0;
 }
 INTERN int DCALL
-sveciter_deepcopy(SharedVectorIterator *__restrict self,
+sveciter_deep(SharedVectorIterator *__restrict self,
                   SharedVectorIterator *__restrict other) {
  self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);
  if unlikely(self->si_seq)
@@ -1248,7 +1248,7 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&sveciter_ctor,
                 /* .tp_copy_ctor = */(void *)&sveciter_copy,
-                /* .tp_deep_ctor = */(void *)&sveciter_deepcopy,
+                /* .tp_deep_ctor = */(void *)&sveciter_deep,
                 /* .tp_any_ctor  = */(void *)&sveciter_init,
                 TYPE_FIXED_ALLOCATOR(SharedVectorIterator)
             }
@@ -1543,7 +1543,7 @@ err:
 }
 
 PRIVATE int DCALL
-svec_deepcopy(SharedVector *__restrict self,
+svec_deep(SharedVector *__restrict self,
               SharedVector *__restrict other) {
  size_t i;
  if unlikely(svec_copy(self,other))
@@ -1583,7 +1583,7 @@ INTERN DeeTypeObject SharedVector_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&svec_ctor,
                 /* .tp_copy_ctor = */(void *)&svec_copy,
-                /* .tp_deep_ctor = */(void *)&svec_deepcopy,
+                /* .tp_deep_ctor = */(void *)&svec_deep,
                 /* .tp_any_ctor  = */(void *)NULL,
                 TYPE_FIXED_ALLOCATOR(SharedVector)
             }
