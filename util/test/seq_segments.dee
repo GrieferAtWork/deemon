@@ -1,0 +1,49 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+local x = { 10, 20, 30, 40, 50, 60, 70, 80 };
+
+function assert_seg3(x) {
+	assert x == { {10,20,30}, {40,50,60}, {70,80} };
+	assert #x == 3;
+	assert x[0] == { 10, 20, 30 };
+	assert x[1] == { 40, 50, 60 };
+	assert x[2] == { 70, 80 };
+}
+
+assert x.segments(1) == { {10}, {20}, {30}, {40}, {50}, {60}, {70}, {80} };
+assert x.segments(2) == { {10,20}, {30,40}, {50,60}, {70,80} };
+assert_seg3(x.segments(3));
+assert_seg3(copy x.segments(3));
+assert_seg3(deepcopy x.segments(3));
+
+assert (try x.segments(0) catch (...) "ERROR") == "ERROR";
+
+
+
+
+
+
+
+
+
+
+
