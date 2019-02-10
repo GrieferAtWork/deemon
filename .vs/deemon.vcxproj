@@ -266,6 +266,7 @@
     <ClCompile Include="..\src\deemon\objects\instancemethod.c" />
     <ClCompile Include="..\src\deemon\objects\int.c" />
     <ClCompile Include="..\src\deemon\objects\int_logic.c" />
+    <ClCompile Include="..\src\deemon\objects\iterator.c" />
     <ClCompile Include="..\src\deemon\objects\list.c" />
     <ClCompile Include="..\src\deemon\objects\map.c" />
     <ClCompile Include="..\src\deemon\objects\none.c" />

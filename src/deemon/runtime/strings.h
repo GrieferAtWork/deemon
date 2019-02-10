@@ -96,6 +96,16 @@ STRING(pushfront)
 STRING(pushback)
 STRING(popfront)
 STRING(popback)
+
+STRING(revert)
+STRING(advance)
+STRING(index)
+STRING(prev)
+STRING(hasprev)
+STRING(hasnext)
+STRING(rewind)
+
+
 STRING(__format__)
 STRING(__name__)
 STRING(__doc__)

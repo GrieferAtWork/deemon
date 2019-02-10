@@ -3841,6 +3841,12 @@ PRIVATE struct type_cmp li_cmp = {
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&li_ge,
 };
 
+PRIVATE struct type_member li_members[] = {
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(ListIterator,li_list),"->?Dlist"),
+    TYPE_MEMBER_FIELD("index",STRUCT_ATOMIC|STRUCT_SIZE_T,offsetof(ListIterator,li_index)),
+    TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject DeeListIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_ListIterator",
@@ -3881,7 +3887,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
+    /* .tp_members       = */li_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL

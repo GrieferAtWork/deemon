@@ -49,7 +49,7 @@
 DECL_BEGIN
 
 
-PRIVATE int DCALL
+INTERN int DCALL
 has_generic_attribute(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict self,
                       DeeObject *__restrict attr) {

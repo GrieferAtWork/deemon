@@ -178,6 +178,62 @@ typedef struct {
 #define DequeIterator_PREVITEM(self,deq) (*DequeIterator_PrevItemPointer(self,deq))
 #define DequeIterator_NEXTITEM(self,deq) (*DequeIterator_NextItemPointer(self,deq))
 
+LOCAL size_t DCALL
+DequeIterator_GetIndex(DequeIterator *__restrict self,
+                       Deque *__restrict deq) {
+ size_t result;
+ if (self->di_bucket == deq->d_tail) {
+  result = DEQUE_TAILSTART(deq) + self->di_index;
+ } else {
+  DequeBucket *iter = deq->d_head;
+  result = self->di_index - DEQUE_HEADFREE(deq);
+  for (; iter != self->di_bucket; iter = iter->db_next)
+      result += deq->d_bucket_sz;
+ }
+ return result;
+}
+LOCAL void DCALL
+DequeIterator_InitAt(DequeIterator *__restrict self,
+                     Deque *__restrict deq, size_t index) {
+ DequeBucket *iter = deq->d_head;
+ ASSERT(index < deq->d_size);
+ if (index < DEQUE_HEADUSED(deq)) {
+  self->di_bucket = iter;
+  self->di_index = DEQUE_HEADFREE(deq) + index;
+  return;
+ }
+ if (index >= deq->d_size/2) {
+  size_t rindex;
+  /* Search for the right. */
+  iter   = deq->d_tail;
+  rindex = deq->d_size - index;
+  if (rindex <= DEQUE_TAILUSED(deq)) {
+   self->di_bucket = iter;
+   self->di_index  = DEQUE_TAILUSED(deq) - rindex;
+   return;
+  }
+  rindex -= DEQUE_TAILUSED(deq);
+  for (;;) {
+   iter = DEQUEBUCKET_PREV(iter);
+   if (rindex <= DEQUE_BUCKETSZ(deq))
+       break;
+   rindex -= DEQUE_BUCKETSZ(deq);
+  }
+  self->di_bucket = iter;
+  self->di_index  = DEQUE_BUCKETSZ(deq) - rindex;
+  return;
+ }
+ /* Search for the left. */
+ index -= DEQUE_HEADUSED(deq);
+ for (;;) {
+  iter = DEQUEBUCKET_NEXT(iter);
+  if (index < DEQUE_BUCKETSZ(deq))
+      break;
+  index -= DEQUE_BUCKETSZ(deq);
+ }
+ self->di_bucket = iter;
+ self->di_index  = index;
+}
 LOCAL void DCALL
 DequeIterator_InitBegin(DequeIterator *__restrict self,
                         Deque *__restrict deq) {

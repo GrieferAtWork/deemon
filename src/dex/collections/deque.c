@@ -972,11 +972,10 @@ deq_iter(Deque *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->di_lock);
 #endif
- Deque_LockRead(self);
- DequeIterator_InitBegin(&result->di_iter,self);
  result->di_ver = self->d_version;
+ COMPILER_READ_BARRIER();
+ DequeIterator_InitBegin(&result->di_iter,self);
  if (!self->d_size) --result->di_ver;
- Deque_LockEndRead(self);
  result->di_deq = self;
  Dee_Incref(self);
  DeeObject_Init(result,&DequeIterator_Type);
@@ -1560,9 +1559,7 @@ deqiter_ctor(DequeIteratorObject *__restrict self) {
 PRIVATE int DCALL
 deqiter_copy(DequeIteratorObject *__restrict self,
              DequeIteratorObject *__restrict other) {
-#ifndef CONFIG_NO_THREADS
  rwlock_init(&self->di_lock);
-#endif
  self->di_deq = other->di_deq;
  Dee_Incref(self->di_deq);
  rwlock_read(&other->di_lock);
@@ -1572,22 +1569,84 @@ deqiter_copy(DequeIteratorObject *__restrict self,
  return 0;
 }
 
+PRIVATE size_t DCALL
+deqiter_getindex(DequeIteratorObject *__restrict self) {
+ size_t result;
+ rwlock_read(&self->di_lock);
+ Deque_LockRead(self->di_deq);
+ result = unlikely(self->di_ver != self->di_deq->d_version)
+        ? (size_t)-1
+        : DequeIterator_GetIndex(&self->di_iter,self->di_deq)
+        ;
+ Deque_LockEndRead(self->di_deq);
+ rwlock_endread(&self->di_lock);
+ return result;
+}
+
+PRIVATE void DCALL
+deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
+ rwlock_write(&self->di_lock);
+ Deque_LockRead(self->di_deq);
+ self->di_ver = self->di_deq->d_version;
+ if unlikely(index >= self->di_deq->d_size)
+    --self->di_ver;
+ else {
+  DequeIterator_InitAt(&self->di_iter,
+                        self->di_deq,
+                        index);
+ }
+ Deque_LockEndRead(self->di_deq);
+ rwlock_endwrite(&self->di_lock);
+}
+
+PRIVATE int DCALL
+deqiter_deep(DequeIteratorObject *__restrict self,
+             DequeIteratorObject *__restrict other) {
+ size_t index;
+ self->di_deq = (DREF Deque *)DeeObject_DeepCopy((DeeObject *)other->di_deq);
+ if unlikely(!self->di_deq)
+    goto err;
+ index = deqiter_getindex(other);
+ Deque_LockRead(self->di_deq);
+ self->di_ver = self->di_deq->d_version;
+ if unlikely(index >= self->di_deq->d_size) {
+  --self->di_ver;
+ } else {
+  DequeIterator_InitAt(&self->di_iter,
+                        self->di_deq,
+                        index);
+ }
+ Deque_LockEndRead(self->di_deq);
+ rwlock_init(&self->di_lock);
+ return 0;
+err:
+ return -1;
+}
+
 PRIVATE int DCALL
 deqiter_init(DequeIteratorObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:DequeIterator",&self->di_deq) ||
-     DeeObject_AssertType((DeeObject *)self->di_deq,&Deque_Type))
-     return -1;
+ size_t index = 0;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:DequeIterator",&self->di_deq,&index))
+     goto err;
+ if (DeeObject_AssertType((DeeObject *)self->di_deq,&Deque_Type))
+     goto err;
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&self->di_lock);
 #endif
  Dee_Incref(self->di_deq);
  Deque_LockRead(self->di_deq);
- DequeIterator_InitBegin(&self->di_iter,self->di_deq);
  self->di_ver = self->di_deq->d_version;
- if (!self->di_deq->d_size) --self->di_ver;
+ COMPILER_READ_BARRIER();
+ if unlikely(index >= self->di_deq->d_size)
+  --self->di_ver;
+ else {
+  DequeIterator_InitAt(&self->di_iter,self->di_deq,index);
+ }
  Deque_LockEndRead(self->di_deq);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -1611,6 +1670,7 @@ PRIVATE DREF DeeObject *DCALL
 deqiter_next(DequeIteratorObject *__restrict self) {
  DREF DeeObject *result;
  rwlock_read(&self->di_lock);
+ Deque_LockRead(self->di_deq);
  if (self->di_ver != self->di_deq->d_version)
   result = ITER_DONE;
  else {
@@ -1620,9 +1680,43 @@ deqiter_next(DequeIteratorObject *__restrict self) {
       DequeIterator_Next(&self->di_iter,self->di_deq);
   else --self->di_ver; /* Invalidate the version number. */
  }
+ Deque_LockEndRead(self->di_deq);
  rwlock_endread(&self->di_lock);
  return result;
 }
+
+PRIVATE DREF DeeObject *DCALL
+deqiter_getindex_ob(DequeIteratorObject *__restrict self) {
+ size_t result;
+ result = deqiter_getindex(self);
+ if (result == (size_t)-1)
+     return_none;
+ return DeeInt_NewSize(result);
+}
+PRIVATE int DCALL
+deqiter_setindex_ob(DequeIteratorObject *__restrict self,
+                    DeeObject *__restrict value) {
+ size_t newindex = (size_t)-1;
+ if (!DeeNone_Check(value) &&
+      DeeObject_AsSize(value,&newindex))
+      goto err;
+ deqiter_setindex(self,newindex);
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE struct type_getset deqiter_getsets[] = {
+    { "index",
+     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deqiter_getindex_ob,
+      NULL,
+     (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&deqiter_setindex_ob,
+      DOC("->?X2?Dint?N\n"
+          "Get/set the index of @this iterator within its associated :Deque\n"
+          "When :none, the iterator has been invalidated, possibly due to the "
+          "deque having changed") },
+    { NULL }
+};
 
 PRIVATE struct type_member deqiter_members[] = {
     TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(DequeIteratorObject,di_deq)),
@@ -1632,7 +1726,7 @@ PRIVATE struct type_member deqiter_members[] = {
 INTERN DeeTypeObject DequeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"DequeIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?GDeque)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1642,7 +1736,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&deqiter_ctor,
                 /* .tp_copy_ctor = */(void *)&deqiter_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */(void *)&deqiter_deep,
                 /* .tp_any_ctor  = */(void *)&deqiter_init,
                 TYPE_FIXED_ALLOCATOR(DequeIteratorObject)
             }
@@ -1668,7 +1762,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
+    /* .tp_getsets       = */deqiter_getsets,
     /* .tp_members       = */deqiter_members,
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,

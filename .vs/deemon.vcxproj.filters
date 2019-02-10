@@ -836,6 +836,9 @@
     <ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\iterator.c">
+      <Filter>src\deemon\objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
