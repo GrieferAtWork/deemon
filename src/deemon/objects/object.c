@@ -3936,14 +3936,12 @@ PRIVATE struct type_getset type_getsets[] = {
           "This is the same as #__operators__, but the runtime will not attempt to translate known "
           "operator ids to their user-friendly name, as described in #hasoperator") },
     { "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
-      DOC("->?Dint\n"
-          "->?N\n"
+      DOC("->?X2?Dint?N\n"
           "Returns the heap allocation size of instances of @this type, or :none when @this type cannot "
           "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
-      DOC("->?Dint\n"
-          "->?N\n"
+      DOC("->?X2?Dint?N\n"
           "Deprecated alias for #__instancesize__") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
     { NULL }

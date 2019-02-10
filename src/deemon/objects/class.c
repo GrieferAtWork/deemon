@@ -3639,10 +3639,12 @@ instance_txxx(DeeTypeObject *__restrict tp_self, \
               DeeObject *__restrict other) { \
  DREF DeeObject *func,*result; \
  func = DeeClass_GetOperator(tp_self,op); \
- if unlikely(!func) return NULL; \
+ if unlikely(!func) goto err; \
  result = DeeObject_ThisCall(func,self,1,(DeeObject **)&other); \
  Dee_Decref(func); \
  return result; \
+err: \
+ return NULL; \
 } \
 INTERN DREF DeeObject *DCALL \
 instance_xxx(DeeObject *__restrict self, DeeObject *__restrict other) { \
@@ -4291,24 +4293,28 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
   if (LAZY_ALLOCATE(class_type->tp_cmp))
       goto err;
   /* compare operator. */
+  ASSERT(operator_name >= OPERATOR_CMPMIN);
   wrapper = cmp_wrappers[operator_name - OPERATOR_CMPMIN].wrapper;
   target  = (void **)((uintptr_t)class_type->tp_cmp+cmp_wrappers[operator_name - OPERATOR_CMPMIN].offset);
  } else if (operator_name <= OPERATOR_SEQMAX) {
   if (LAZY_ALLOCATE(class_type->tp_seq))
       goto err;
   /* compare operator. */
+  ASSERT(operator_name >= OPERATOR_SEQMIN);
   wrapper = seq_wrappers[operator_name - OPERATOR_SEQMIN].wrapper;
   target  = (void **)((uintptr_t)class_type->tp_seq+seq_wrappers[operator_name - OPERATOR_SEQMIN].offset);
  } else if (operator_name <= OPERATOR_ATTRMAX) {
   if (LAZY_ALLOCATE(class_type->tp_attr))
       goto err;
   /* attribute operator. */
+  ASSERT(operator_name >= OPERATOR_ATTRMIN);
   wrapper = attr_wrappers[operator_name - OPERATOR_ATTRMIN].wrapper;
   target  = (void **)((uintptr_t)class_type->tp_attr+attr_wrappers[operator_name - OPERATOR_ATTRMIN].offset);
  } else if (operator_name <= OPERATOR_WITHMAX) {
   if (LAZY_ALLOCATE(class_type->tp_with))
       goto err;
   /* with operators. */
+  ASSERT(operator_name >= OPERATOR_WITHMIN);
   wrapper = with_wrappers[operator_name - OPERATOR_WITHMIN].wrapper;
   target  = (void **)((uintptr_t)class_type->tp_with+with_wrappers[operator_name - OPERATOR_WITHMIN].offset);
  } else {
