@@ -240,7 +240,7 @@ struct type_nsi {
              *       either `nsi_getitem_fast()' or `nsi_getitem()' then being used
              *       to implement the item lookup itself.
              * WARNING: When implementing this operator, you must also implement at
-             *          least one of `nsi_getitem' ro `nsi_getitem_fast' */
+             *          least one of `nsi_getitem' or `nsi_getitem_fast' */
             size_t          (DCALL *nsi_getsize_fast)(DeeObject *__restrict self);
             DREF DeeObject *(DCALL *nsi_getitem)(DeeObject *__restrict self, size_t index);
             int             (DCALL *nsi_delitem)(DeeObject *__restrict self, size_t index);
@@ -425,6 +425,7 @@ INTDEF DREF DeeObject *DCALL DeeSeq_Concat(DeeObject *__restrict self, DeeObject
 /* Construct new repetition-proxy-sequence objects. */
 INTDEF DREF DeeObject *DCALL DeeSeq_Repeat(DeeObject *__restrict self, size_t count);
 INTDEF DREF DeeObject *DCALL DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count);
+INTDEF DREF DeeObject *DCALL DeeSeq_RepeatItemForever(DeeObject *__restrict item);
 
 INTDEF int DCALL DeeSeq_NonEmpty(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSeq_Front(DeeObject *__restrict self);

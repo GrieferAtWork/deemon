@@ -1075,6 +1075,11 @@ DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 done:
  return (DREF DeeObject *)result;
 }
+INTERN DREF DeeObject *DCALL
+DeeSeq_RepeatItemForever(DeeObject *__restrict item) {
+ /* TODO: Dedicated sequence-proxy type */
+ return DeeSeq_RepeatItem(item,(size_t)-1);
+}
 
 
 

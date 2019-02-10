@@ -1130,7 +1130,7 @@ tuple_size(Tuple *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 tuple_contains(Tuple *__restrict self, DeeObject *__restrict item) {
  DeeObject **iter,**end; int error;
- end = (iter = DeeTuple_ELEM(self))+DeeTuple_SIZE(self);
+ end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
  for (; iter != end; ++iter) {
   error = DeeObject_CompareEq(item,*iter);
   if unlikely(error < 0) return NULL;
