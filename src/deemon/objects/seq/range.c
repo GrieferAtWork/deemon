@@ -696,6 +696,227 @@ err:
 
 
 
+PRIVATE DREF DeeObject *DCALL
+range_getrange(Range *__restrict self,
+               DeeObject *__restrict start,
+               DeeObject *__restrict end) {
+ int error; DREF Range *result;
+ DREF DeeObject *new_start,*new_end,*temp;
+ DREF DeeObject *mylen;
+ if (DeeNone_Check(start)) {
+  if (DeeNone_Check(end))
+      return_reference_((DeeObject *)self);
+  /* if (end < 0) {
+   *     if (self->r_step) {
+   *         new_end = self->r_step * end;
+   *         new_end = self->r_end + new_end;
+   *     } else {
+   *         new_end = self->r_end + end;
+   *     }
+   *     if (self->r_start >= new_end)
+   *         return_reference_(Dee_EmptySeq);
+   * } else {
+   *     mylen = range_size(self);
+   *     if (mylen >= end)
+   *         return_reference_((DeeObject *)self);
+   *     if (self->r_step) {
+   *         new_end = self->r_step * end;
+   *         new_end = self->r_start + new_end;
+   *     } else {
+   *         new_end = self->r_start + end;
+   *     }
+   * }
+   * new_start = self->r_start;
+   * goto got_ns_ne;
+   */
+  error = DeeObject_CompareLo(end,&DeeInt_Zero);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   if (self->r_step) {
+    temp = DeeObject_Mul(self->r_step,end);
+    if unlikely(!temp)
+       goto err;
+    new_end = DeeObject_Add(self->r_end,temp);
+    Dee_Decref(temp);
+   } else {
+    new_end = DeeObject_Add(self->r_end,end);
+   }
+  } else {
+   mylen = range_size(self);
+   if unlikely(!mylen)
+      goto err;
+   error = DeeObject_CompareGe(mylen,end);
+   if (error != 0) {
+    if unlikely(error < 0)
+       goto err;
+    return_reference_((DeeObject *)self);
+   }
+   if (self->r_step) {
+    temp = DeeObject_Mul(self->r_step,end);
+    if unlikely(!temp)
+       goto err;
+    new_end = DeeObject_Add(self->r_start,temp);
+    Dee_Decref(temp);
+   } else {
+    new_end = DeeObject_Add(self->r_start,end);
+   }
+  }
+  if unlikely(!new_end)
+     goto err;
+  new_start = self->r_start;
+  Dee_Incref(new_start);
+  goto got_ns_ne;
+ }
+ mylen = range_size(self);
+ if unlikely(!mylen)
+    goto err;
+ /* if (start < 0)
+  *     new_start = mylen + start;
+  * else
+  *     new_start = start;
+  */
+ error = DeeObject_CompareLo(start,&DeeInt_Zero);
+ if (error != 0) {
+  if unlikely(error < 0)
+     goto err_mylen;
+  new_start = DeeObject_Add(mylen,start);
+  if unlikely(!new_start)
+     goto err_mylen;
+ } else {
+  new_start = start;
+  Dee_Incref(start);
+ }
+ if (DeeNone_Check(end)) {
+reuse_old_end:
+  /* if (mylen <= new_start)
+   *     return_reference_(Dee_EmptySeq);
+   */
+  error = DeeObject_CompareLe(mylen,new_start);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err_mylen_ns;
+return_empty_seq_mylen_ns:
+   Dee_Decref(new_start);
+   Dee_Decref(mylen);
+   return_reference_(Dee_EmptySeq);
+  }
+  /* Re-use the old end pointer. */
+  new_end = self->r_end;
+  Dee_Incref(new_end);
+ } else {
+  /* if (end < 0)
+   *     new_end = mylen + end;
+   * else
+   *     new_end = end;
+   */
+  error = DeeObject_CompareLo(end,&DeeInt_Zero);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err_mylen_ns;
+   new_end = DeeObject_Add(mylen,end);
+   if unlikely(!new_end)
+      goto err_mylen_ns;
+  } else {
+   /* if (mylen <= new_end)
+    *     goto reuse_old_end;
+    */
+   error = DeeObject_CompareLe(mylen,end);
+   if (error != 0) {
+    if unlikely(error < 0)
+       goto err_mylen_ns;
+    goto reuse_old_end;
+   }
+   new_end = end;
+   Dee_Incref(end);
+  }
+  /* if (new_start >= new_end)
+   *     return_reference_(Dee_EmptySeq);
+   * new_end = mylen - new_end;
+   * if (self->r_step)
+   *     new_end = new_end * self->r_step;
+   * new_end = self->r_end - new_end;
+   */
+  error = new_end == end
+        ? DeeObject_CompareGe(new_start,new_end)
+        : DeeObject_CompareLe(new_end,new_start)
+        ;
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err_mylen_ns_ne;
+   Dee_Decref(new_end);
+   goto return_empty_seq_mylen_ns;
+  }
+  /* new_end = mylen - new_end; */
+  temp = DeeObject_Sub(mylen,new_end);
+  if unlikely(!temp)
+     goto err_mylen_ns_ne;
+  Dee_Decref(new_end);
+  new_end = temp;
+  /* if (self->r_step)
+   *     new_end = new_end * self->r_step;
+   */
+  if (self->r_step) {
+   temp = DeeObject_Mul(new_end,self->r_step);
+   if unlikely(!temp)
+      goto err_mylen_ns_ne;
+   Dee_Decref(new_end);
+   new_end = temp;
+  }
+  /* new_end = self->r_end - new_end; */
+  temp = DeeObject_Sub(self->r_end,new_end);
+  if unlikely(!temp)
+     goto err_mylen_ns_ne;
+  Dee_Decref(new_end);
+  new_end = temp;
+ }
+ Dee_Decref(mylen);
+ /* if (self->r_step)
+  *     new_start = self->r_step * new_start;
+  * new_start = self->r_start + new_start;
+  */
+ if (self->r_step) {
+  temp = DeeObject_Mul(self->r_step,new_start);
+  if unlikely(!temp)
+     goto err_ns_ne;
+  Dee_Decref(new_start);
+  new_start = temp;
+ }
+ /* new_start = self->r_start + new_start; */
+ temp = DeeObject_Add(self->r_start,new_start);
+ if unlikely(!temp)
+    goto err_ns_ne;
+ Dee_Decref(new_start);
+ new_start = temp;
+
+got_ns_ne:
+ /* Pack together the new range object. */
+ result = DeeObject_MALLOC(Range);
+ if unlikely(!result)
+    goto err_ns_ne;
+ result->r_start = new_start; /* Inherit reference */
+ result->r_end   = new_end;   /* Inherit reference */
+ result->r_rev   = self->r_rev;
+ result->r_step  = self->r_step;
+ Dee_XIncref(result->r_step);
+ DeeObject_Init(result,&SeqRange_Type);
+ return (DREF DeeObject *)result;
+err_ns_ne:
+ Dee_Decref(new_end);
+ Dee_Decref(new_start);
+ goto err;
+err_mylen_ns_ne:
+ Dee_Decref(new_end);
+err_mylen_ns:
+ Dee_Decref(new_start);
+err_mylen:
+ Dee_Decref(mylen);
+err:
+ return NULL;
+}
+
+
+
 PRIVATE struct type_seq range_seq = {
     /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_iter,
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_size,
@@ -703,7 +924,7 @@ PRIVATE struct type_seq range_seq = {
     /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&range_getitem,
     /* .tp_del       = */NULL,
     /* .tp_set       = */NULL,
-    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))NULL, /* TODO (return another `range' as sub-range type) */
+    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&range_getrange,
     /* .tp_range_del = */NULL,
     /* .tp_range_set = */NULL,
     /* .tp_nsi       = */NULL /* TODO */
@@ -1137,6 +1358,47 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+intrange_nsi_getrange(IntRange *__restrict self,
+                      dssize_t start, dssize_t end) {
+ size_t mylen = intrange_nsi_getsize(self);
+ if (start < 0) start += mylen;
+ if (end < 0) end += mylen;
+ if ((size_t)end > mylen) end = (dssize_t)mylen;
+ if ((size_t)start >= (size_t)end)
+      return_reference_(Dee_EmptySeq);
+ return DeeRange_NewInt(self->ir_start + ((size_t)start * self->ir_step),
+                        self->ir_end - ((mylen - (size_t)end) * self->ir_step),
+                        self->ir_step);
+}
+PRIVATE DREF DeeObject *DCALL
+intrange_nsi_getrange_n(IntRange *__restrict self,
+                        dssize_t start) {
+ size_t mylen = intrange_nsi_getsize(self);
+ if (start < 0) start += mylen;
+ if ((size_t)start >= mylen)
+      return_reference_(Dee_EmptySeq);
+ return DeeRange_NewInt(self->ir_start + ((size_t)start * self->ir_step),
+                        self->ir_end,
+                        self->ir_step);
+}
+
+PRIVATE DREF DeeObject *DCALL
+intrange_getrange(IntRange *__restrict self,
+                  DeeObject *__restrict start_ob,
+                  DeeObject *__restrict end_ob) {
+ dssize_t start_index,end_index;
+ if (DeeObject_AsSSize(start_ob,&start_index))
+     goto err;
+ if (DeeNone_Check(end_ob))
+     return intrange_nsi_getrange_n(self,start_index);
+ if (DeeObject_AsSSize(end_ob,&end_index))
+     goto err;
+ return intrange_nsi_getrange(self,start_index,end_index);
+err:
+ return NULL;
+}
+
 
 
 PRIVATE struct type_nsi intrange_nsi = {
@@ -1150,8 +1412,8 @@ PRIVATE struct type_nsi intrange_nsi = {
             /* .nsi_delitem      = */(void *)NULL,
             /* .nsi_setitem      = */(void *)NULL,
             /* .nsi_getitem_fast = */(void *)NULL,
-            /* .nsi_getrange     = */(void *)NULL, // &intrange_nsi_getrange,
-            /* .nsi_getrange_n   = */(void *)NULL, // &intrange_nsi_getrange_n,
+            /* .nsi_getrange     = */(void *)&intrange_nsi_getrange,
+            /* .nsi_getrange_n   = */(void *)&intrange_nsi_getrange_n,
             /* .nsi_setrange     = */(void *)NULL,
             /* .nsi_setrange_n   = */(void *)NULL,
             /* .nsi_find         = */(void *)NULL,
@@ -1177,7 +1439,7 @@ PRIVATE struct type_seq intrange_seq = {
     /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&intrange_getitem,
     /* .tp_del       = */NULL,
     /* .tp_set       = */NULL,
-    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))NULL, // &intrange_getrange,
+    /* .tp_range_get = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict,DeeObject *__restrict))&intrange_getrange,
     /* .tp_range_del = */NULL,
     /* .tp_range_set = */NULL,
     /* .tp_nsi       = */&intrange_nsi
