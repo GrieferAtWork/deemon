@@ -78,6 +78,8 @@ kwdsiter_copy(KwdsIterator *__restrict self,
  return 0;
 }
 
+#define kwdsiter_deep kwdsiter_copy /* Only uses Immutable types, so deepcopy == copy */
+
 PRIVATE int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
  if (DeeArg_Unpack(argc,argv,"o:_KwdsIterator",&self->ki_map) ||
@@ -246,10 +248,10 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&kwdsiter_ctor,
-                /* .tp_copy_ctor = */&kwdsiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&kwdsiter_init,
+                /* .tp_ctor      = */(void *)&kwdsiter_ctor,
+                /* .tp_copy_ctor = */(void *)&kwdsiter_copy,
+                /* .tp_deep_ctor = */(void *)&kwdsiter_deep,
+                /* .tp_any_ctor  = */(void *)&kwdsiter_init,
                 TYPE_FIXED_ALLOCATOR(KwdsIterator)
             }
         },
@@ -554,11 +556,11 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&kwds_ctor,
-                /* .tp_copy_ctor = */&DeeObject_NewRef,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&kwds_init,
-                /* .tp_free      = */NULL
+                /* .tp_ctor      = */(void *)&kwds_ctor,
+                /* .tp_copy_ctor = */(void *)&DeeObject_NewRef,
+                /* .tp_deep_ctor = */(void *)&DeeObject_NewRef,
+                /* .tp_any_ctor  = */(void *)&kwds_init,
+                /* .tp_free      = */(void *)NULL
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&kwds_fini,
@@ -616,22 +618,29 @@ STATIC_ASSERT(COMPILER_OFFSETOF(KwdsIterator,ki_map) ==
 PRIVATE int DCALL
 kmapiter_ctor(KmapIterator *__restrict self) {
  self->ki_map = (DREF KwdsMapping *)DeeObject_NewDefault(&DeeKwdsMapping_Type);
- if unlikely(!self->ki_map) return -1;
+ if unlikely(!self->ki_map)
+    goto err;
  self->ki_iter = self->ki_map->kmo_kwds->kw_map;
  self->ki_end  = self->ki_map->kmo_kwds->kw_map + self->ki_map->kmo_kwds->kw_mask + 1;
  return 0;
+err:
+ return -1;
 }
 
 #define kmapiter_copy kwdsiter_copy
+#define kmapiter_deep kwdsiter_deep
 PRIVATE int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_KwdsMappingIterator",&self->ki_map) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->ki_map,&DeeKwdsMapping_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_KwdsMappingIterator",&self->ki_map))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)self->ki_map,&DeeKwdsMapping_Type))
+     goto err;
  Dee_Incref(self->ki_map);
  self->ki_iter = self->ki_map->kmo_kwds->kw_map;
  self->ki_end  = self->ki_map->kmo_kwds->kw_map + self->ki_map->kmo_kwds->kw_mask + 1;
  return 0;
+err:
+ return -1;
 }
 
 #define kmapiter_fini kwdsiter_fini
@@ -778,10 +787,10 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&kmapiter_ctor,
-                /* .tp_copy_ctor = */&kmapiter_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&kmapiter_init,
+                /* .tp_ctor      = */(void *)&kmapiter_ctor,
+                /* .tp_copy_ctor = */(void *)&kmapiter_copy,
+                /* .tp_deep_ctor = */(void *)&kmapiter_deep,
+                /* .tp_any_ctor  = */(void *)&kmapiter_init,
                 TYPE_FIXED_ALLOCATOR(KmapIterator)
             }
         },
@@ -819,27 +828,89 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 PRIVATE int DCALL
 kmap_ctor(KwdsMapping *__restrict self) {
  self->kmo_kwds = kwds_ctor();
- if unlikely(!self->kmo_kwds) return -1;
+ if unlikely(!self->kmo_kwds)
+    goto err;
  self->kmo_argv = NULL;
  rwlock_init(&self->kmo_lock);
  return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+kmap_copy(KwdsMapping *__restrict self,
+          KwdsMapping *__restrict other) {
+ size_t i,count;
+ count = other->kmo_kwds->kw_size;
+ self->kmo_argv = (DREF DeeObject **)Dee_Malloc(count *
+                                                sizeof(DREF DeeObject *));
+ if unlikely(!self->kmo_argv)
+    goto err;
+ rwlock_read(&other->kmo_lock);
+ for (i = 0; i < count; ++i) {
+  self->kmo_argv[i] = other->kmo_argv[i];
+  Dee_Incref(self->kmo_argv[i]);
+ }
+ rwlock_endread(&other->kmo_lock);
+ rwlock_init(&self->kmo_lock);
+ self->kmo_kwds = other->kmo_kwds;
+ Dee_Incref(self->kmo_kwds);
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
+kmap_deep(KwdsMapping *__restrict self,
+          KwdsMapping *__restrict other) {
+ size_t i,count;
+ count = other->kmo_kwds->kw_size;
+ self->kmo_argv = (DREF DeeObject **)Dee_Malloc(count *
+                                                sizeof(DREF DeeObject *));
+ if unlikely(!self->kmo_argv)
+    goto err;
+ rwlock_read(&other->kmo_lock);
+ for (i = 0; i < count; ++i) {
+  self->kmo_argv[i] = other->kmo_argv[i];
+  Dee_Incref(self->kmo_argv[i]);
+ }
+ rwlock_endread(&other->kmo_lock);
+ /* Construct deep copies of all of the arguments. */
+ for (i = 0; i < count; ++i) {
+  if (DeeObject_InplaceDeepCopy(&self->kmo_argv[i]))
+      goto err_r_argv;
+ }
+ rwlock_init(&self->kmo_lock);
+ self->kmo_kwds = other->kmo_kwds;
+ Dee_Incref(self->kmo_kwds);
+ return 0;
+err_r_argv:
+ i = count;
+ while (i--)
+     Dee_Decref(self->kmo_argv[i]);
+ Dee_Free(self->kmo_argv);
+err:
+ return -1;
 }
 
 PRIVATE int DCALL
 kmap_init(KwdsMapping *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *args; size_t i;
- if (DeeArg_Unpack(argc,argv,"oo:_KwdsMapping",&self->kmo_kwds,&args) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->kmo_kwds,&DeeKwds_Type) ||
-     DeeObject_AssertTypeExact(args,&DeeTuple_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"oo:_KwdsMapping",&self->kmo_kwds,&args))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)self->kmo_kwds,&DeeKwds_Type))
+     goto err;
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err;
  if (DeeTuple_SIZE(args) != self->kmo_kwds->kw_size) {
   return err_keywords_bad_for_argc(DeeTuple_SIZE(args),
                                    self->kmo_kwds->kw_size);
  }
  self->kmo_argv = (DREF DeeObject **)Dee_Malloc(DeeTuple_SIZE(args)*
                                                 sizeof(DREF DeeObject *));
- if unlikely(!self->kmo_argv) return -1;
+ if unlikely(!self->kmo_argv)
+    goto err;
  for (i = 0; i < DeeTuple_SIZE(args); ++i) {
   self->kmo_argv[i] = DeeTuple_GET(args,i);
   Dee_Incref(self->kmo_argv[i]);
@@ -847,6 +918,8 @@ kmap_init(KwdsMapping *__restrict self,
  Dee_Incref(self->kmo_kwds);
  rwlock_init(&self->kmo_lock);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE void DCALL
@@ -1028,10 +1101,10 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&kmap_ctor,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */&kmap_init,
+                /* .tp_ctor      = */(void *)&kmap_ctor,
+                /* .tp_copy_ctor = */(void *)&kmap_copy,
+                /* .tp_deep_ctor = */(void *)&kmap_deep,
+                /* .tp_any_ctor  = */(void *)&kmap_init,
                 TYPE_FIXED_ALLOCATOR(KwdsMapping)
             }
         },

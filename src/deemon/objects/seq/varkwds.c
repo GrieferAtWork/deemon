@@ -55,6 +55,18 @@ blvi_copy(BlackListVarkwdsIterator *__restrict self,
  Dee_Incref(self->ki_map);
  return 0;
 }
+PRIVATE int DCALL
+blvi_deep(BlackListVarkwdsIterator *__restrict self,
+          BlackListVarkwdsIterator *__restrict other) {
+ self->ki_iter = BLVI_GETITER(other);
+ self->ki_end  = other->ki_end;
+ self->ki_map  = (DREF BlackListVarkwds *)DeeObject_DeepCopy((DeeObject *)other->ki_map);
+ if unlikely(!self->ki_map)
+    goto err;
+ return 0;
+err:
+ return -1;
+}
 PRIVATE void DCALL
 blvi_fini(BlackListVarkwdsIterator *__restrict self) {
  Dee_Decref(self->ki_map);
@@ -181,10 +193,10 @@ INTERN DeeTypeObject BlackListVarkwdsIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */&blvi_copy,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL, /* TODO */
+                /* .tp_ctor      = */(void *)NULL,
+                /* .tp_copy_ctor = */(void *)&blvi_copy,
+                /* .tp_deep_ctor = */(void *)&blvi_deep,
+                /* .tp_any_ctor  = */(void *)NULL, /* TODO */
                 TYPE_FIXED_ALLOCATOR(BlackListVarkwdsIterator)
             }
         },
@@ -738,6 +750,95 @@ PRIVATE struct type_member blv_class_members[] = {
     TYPE_MEMBER_END
 };
 
+PRIVATE DREF BlackListVarkwds *DCALL
+blv_copy(BlackListVarkwds *__restrict self) {
+ DREF BlackListVarkwds *result; size_t i,count;
+ result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds,vk_blck) +
+                                                   (self->vk_mask + 1) *
+                                                    sizeof(BlackListVarkwdsEntry));
+ if unlikely(!result)
+    goto done;
+ count = self->vk_kwds->kw_size;
+ result->vk_argv = (DREF DeeObject **)Dee_Malloc(count *
+                                                 sizeof(DREF DeeObject *));
+ if unlikely(!result->vk_argv)
+    goto err_r;
+ rwlock_read(&self->vk_lock);
+ for (i = 0; i < count; ++i) {
+  result->vk_argv[i] = self->vk_argv[i];
+  Dee_Incref(result->vk_argv[i]);
+ }
+ result->vk_load = self->vk_load;
+ memcpy(result->vk_blck,self->vk_blck,
+       (self->vk_mask + 1) *
+        sizeof(BlackListVarkwdsEntry));
+ rwlock_endread(&self->vk_lock);
+ rwlock_init(&result->vk_lock);
+ result->vk_code = self->vk_code;
+ Dee_Incref(result->vk_code);
+ result->vk_ckwc = self->vk_ckwc;
+ result->vk_ckwv = self->vk_ckwv;
+ result->vk_kwds = self->vk_kwds;
+ Dee_Incref(result->vk_kwds);
+ result->vk_mask = self->vk_mask;
+ DeeObject_Init(result,&BlackListVarkwds_Type);
+done:
+ return result;
+err_r:
+ DeeObject_Free(result);
+ return NULL;
+}
+
+PRIVATE DREF BlackListVarkwds *DCALL
+blv_deep(BlackListVarkwds *__restrict self) {
+ DREF BlackListVarkwds *result; size_t i,count;
+ result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds,vk_blck) +
+                                                   (self->vk_mask + 1) *
+                                                    sizeof(BlackListVarkwdsEntry));
+ if unlikely(!result)
+    goto done;
+ count = self->vk_kwds->kw_size;
+ result->vk_argv = (DREF DeeObject **)Dee_Malloc(count *
+                                                 sizeof(DREF DeeObject *));
+ if unlikely(!result->vk_argv)
+    goto err_r;
+ rwlock_read(&self->vk_lock);
+ for (i = 0; i < count; ++i) {
+  result->vk_argv[i] = self->vk_argv[i];
+  Dee_Incref(result->vk_argv[i]);
+ }
+ result->vk_load = self->vk_load;
+ memcpy(result->vk_blck,self->vk_blck,
+       (self->vk_mask + 1) *
+        sizeof(BlackListVarkwdsEntry));
+ rwlock_endread(&self->vk_lock);
+ /* Construct deep copies of all of the arguments. */
+ for (i = 0; i < count; ++i) {
+  if (DeeObject_InplaceDeepCopy(&result->vk_argv[i]))
+      goto err_r_argv;
+ }
+ rwlock_init(&result->vk_lock);
+ result->vk_code = self->vk_code;
+ Dee_Incref(result->vk_code);
+ result->vk_ckwc = self->vk_ckwc;
+ result->vk_ckwv = self->vk_ckwv;
+ result->vk_kwds = self->vk_kwds;
+ Dee_Incref(result->vk_kwds);
+ result->vk_mask = self->vk_mask;
+ DeeObject_Init(result,&BlackListVarkwds_Type);
+done:
+ return result;
+err_r_argv:
+ i = count;
+ while (i--)
+     Dee_Decref(result->vk_argv[i]);
+ Dee_Free(result->vk_argv);
+err_r:
+ DeeObject_Free(result);
+ return NULL;
+}
+
+
 INTERN DeeTypeObject BlackListVarkwds_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_BlackListVarkwds",
@@ -749,11 +850,11 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL
+                /* .tp_ctor      = */(void *)NULL,
+                /* .tp_copy_ctor = */(void *)&blv_copy,
+                /* .tp_deep_ctor = */(void *)&blv_deep,
+                /* .tp_any_ctor  = */(void *)NULL,
+                /* .tp_free      = */(void *)NULL
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&blv_fini,
@@ -1487,6 +1588,71 @@ PRIVATE struct type_member blm_class_members[] = {
     TYPE_MEMBER_END
 };
 
+
+PRIVATE DREF BlackListMapping *DCALL
+blm_copy(BlackListMapping *__restrict self) {
+ DREF BlackListMapping *result;
+ result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping,bm_blck) +
+                                                   (self->bm_mask + 1) *
+                                                    sizeof(BlackListVarkwdsEntry));
+ if unlikely(!result)
+    goto done;
+ /* Create a copy of the original keywords, since we're acting as a proxy. */
+ result->bm_kw = DeeObject_Copy(self->bm_kw);
+ if unlikely(!result->bm_kw)
+    goto err_r;
+ rwlock_init(&result->bm_lock);
+ result->bm_code = self->bm_code;
+ Dee_Incref(result->bm_code);
+ result->bm_ckwc = self->bm_ckwc;
+ result->bm_ckwv = self->bm_ckwv;
+ result->bm_mask = self->bm_mask;
+ rwlock_read(&self->bm_lock);
+ result->bm_load = self->bm_load;
+ memcpy(result->bm_blck,self->bm_blck,
+       (result->bm_mask + 1) *
+        sizeof(BlackListVarkwdsEntry));
+ rwlock_endread(&self->bm_lock);
+ DeeObject_Init(result,&BlackListMapping_Type);
+done:
+ return result;
+err_r:
+ DeeObject_Free(result);
+ return NULL;
+}
+
+PRIVATE DREF BlackListMapping *DCALL
+blm_deep(BlackListMapping *__restrict self) {
+ DREF BlackListMapping *result;
+ result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping,bm_blck) +
+                                                   (self->bm_mask + 1) *
+                                                    sizeof(BlackListVarkwdsEntry));
+ if unlikely(!result)
+    goto done;
+ result->bm_kw = DeeObject_DeepCopy(self->bm_kw);
+ if unlikely(!result->bm_kw)
+    goto err_r;
+ rwlock_init(&result->bm_lock);
+ result->bm_code = self->bm_code; /* Immutable, so no copy required */
+ Dee_Incref(result->bm_code);
+ result->bm_ckwc = self->bm_ckwc;
+ result->bm_ckwv = self->bm_ckwv;
+ result->bm_mask = self->bm_mask;
+ rwlock_read(&self->bm_lock);
+ result->bm_load = self->bm_load;
+ memcpy(result->bm_blck,self->bm_blck,
+       (result->bm_mask + 1) *
+        sizeof(BlackListVarkwdsEntry));
+ rwlock_endread(&self->bm_lock);
+ DeeObject_Init(result,&BlackListMapping_Type);
+done:
+ return result;
+err_r:
+ DeeObject_Free(result);
+ return NULL;
+}
+
+
 INTERN DeeTypeObject BlackListMapping_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_BlackListMapping",
@@ -1498,11 +1664,11 @@ INTERN DeeTypeObject BlackListMapping_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL, /* TODO */
-                /* .tp_deep_ctor = */NULL, /* TODO */
-                /* .tp_any_ctor  = */NULL,
-                /* .tp_free      = */NULL
+                /* .tp_ctor      = */(void *)NULL,
+                /* .tp_copy_ctor = */(void *)&blm_copy,
+                /* .tp_deep_ctor = */(void *)&blm_deep,
+                /* .tp_any_ctor  = */(void *)NULL,
+                /* .tp_free      = */(void *)NULL
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&blm_fini,
