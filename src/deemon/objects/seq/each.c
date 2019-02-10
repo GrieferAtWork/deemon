@@ -103,8 +103,8 @@ se_copy(SeqEachBase *__restrict self,
  return 0;
 }
 PRIVATE int DCALL
-se_deepcopy(SeqEachBase *__restrict self,
-            SeqEachBase *__restrict other) {
+se_deep(SeqEachBase *__restrict self,
+        SeqEachBase *__restrict other) {
  self->se_seq = DeeObject_DeepCopy(other->se_seq);
  if unlikely(!self->se_seq)
     goto err;
@@ -551,7 +551,7 @@ INTERN DeeTypeObject SeqEach_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&se_ctor,
                 /* .tp_copy_ctor = */(void *)&se_copy,
-                /* .tp_deep_ctor = */(void *)&se_deepcopy,
+                /* .tp_deep_ctor = */(void *)&se_deep,
                 /* .tp_any_ctor  = */(void *)&se_init,
                 TYPE_FIXED_ALLOCATOR(SeqEachBase)
             }
@@ -634,8 +634,8 @@ seo_copy(SeqEachOperator *__restrict self,
  return 0;
 }
 PRIVATE int DCALL
-seo_deepcopy(SeqEachOperator *__restrict self,
-             SeqEachOperator *__restrict other) {
+seo_deep(SeqEachOperator *__restrict self,
+         SeqEachOperator *__restrict other) {
  size_t i;
  self->se_seq = DeeObject_DeepCopy(other->se_seq);
  if unlikely(!self->se_seq)
@@ -1209,7 +1209,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&seo_ctor,
                 /* .tp_copy_ctor = */(void *)&seo_copy,
-                /* .tp_deep_ctor = */(void *)&seo_deepcopy,
+                /* .tp_deep_ctor = */(void *)&seo_deep,
                 /* .tp_any_ctor  = */(void *)&seo_init,
                 TYPE_SIZED_ALLOCATOR_R(COMPILER_OFFSETOF(SeqEachOperator,so_opargv),
                                        sizeof(SeqEachOperator))
@@ -1288,8 +1288,8 @@ err:
  return -1;
 }
 PRIVATE int DCALL
-sewi_deepcopy(SeqEachIterator *__restrict self,
-              SeqEachIterator *__restrict other) {
+sewi_deep(SeqEachIterator *__restrict self,
+          SeqEachIterator *__restrict other) {
  self->ei_iter = DeeObject_DeepCopy(other->ei_iter);
  if unlikely(!self->ei_iter)
     goto err;
@@ -1379,8 +1379,7 @@ seoi_next(SeqEachIterator *__restrict self) {
 INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqEachOperatorIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqEachOperator)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqEachOperator)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1390,7 +1389,7 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&seoi_ctor,
                 /* .tp_copy_ctor = */(void *)&sewi_copy,
-                /* .tp_deep_ctor = */(void *)&sewi_deepcopy,
+                /* .tp_deep_ctor = */(void *)&sewi_deep,
                 /* .tp_any_ctor  = */(void *)&seoi_init,
                 TYPE_FIXED_ALLOCATOR(SeqEachIterator)
             }

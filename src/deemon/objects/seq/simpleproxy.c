@@ -543,7 +543,7 @@ PRIVATE struct type_member classes_class_members[] = {
 INTERN DeeTypeObject SeqIds_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqIds",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Dsequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -587,7 +587,7 @@ INTERN DeeTypeObject SeqIds_Type = {
 INTERN DeeTypeObject SeqTypes_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqTypes",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Dsequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -631,7 +631,7 @@ INTERN DeeTypeObject SeqTypes_Type = {
 INTERN DeeTypeObject SeqClasses_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqClasses",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Dsequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -858,7 +858,7 @@ PRIVATE struct type_getset classesiter_getsets[] = {
 INTERN DeeTypeObject SeqIdsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqIdsIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqIds)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -903,7 +903,7 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 INTERN DeeTypeObject SeqTypesIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqTypesIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqTypes)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -948,7 +948,7 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 INTERN DeeTypeObject SeqClassesIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqClassesIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqClasses)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

@@ -165,8 +165,8 @@ err:
 }
 
 PRIVATE int DCALL
-comiter_deepcopy(CombinationsIterator *__restrict self,
-                 CombinationsIterator *__restrict other) {
+comiter_deep(CombinationsIterator *__restrict self,
+             CombinationsIterator *__restrict other) {
  self->ci_indices = (size_t *)Dee_Malloc(other->ci_combi->c_comlen *
                                          sizeof(size_t));
  if unlikely(!self->ci_indices) goto err;
@@ -314,8 +314,7 @@ PRIVATE struct type_cmp comiter_cmp = {
 INTERN DeeTypeObject SeqCombinationsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqCombinationsIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqCombinations)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqCombinations)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -325,7 +324,7 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&comiter_ctor,
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
-                /* .tp_deep_ctor = */(void *)&comiter_deepcopy,
+                /* .tp_deep_ctor = */(void *)&comiter_deep,
                 /* .tp_any_ctor  = */(void *)&comiter_init,
                 TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
@@ -703,8 +702,7 @@ err:
 INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRepeatCombinationsIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqRepeatCombinations)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqRepeatCombinations)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -714,7 +712,7 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&rcomiter_ctor,
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
-                /* .tp_deep_ctor = */(void *)&comiter_deepcopy,
+                /* .tp_deep_ctor = */(void *)&comiter_deep,
                 /* .tp_any_ctor  = */(void *)&rcomiter_init,
                 TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }
@@ -934,8 +932,7 @@ err:
 INTERN DeeTypeObject SeqPermutationsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqPermutationsIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqPermutations)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqPermutations)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -945,7 +942,7 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&pmutiter_ctor,
                 /* .tp_copy_ctor = */(void *)&comiter_copy,
-                /* .tp_deep_ctor = */(void *)&comiter_deepcopy,
+                /* .tp_deep_ctor = */(void *)&comiter_deep,
                 /* .tp_any_ctor  = */(void *)&pmutiter_init,
                 TYPE_FIXED_ALLOCATOR(CombinationsIterator)
             }

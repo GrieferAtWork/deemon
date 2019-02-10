@@ -296,7 +296,7 @@ PRIVATE struct type_member repeatiter_members[] = {
 INTERN DeeTypeObject SeqRepeatIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRepeatIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqRepeat)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -575,7 +575,8 @@ PRIVATE struct type_member repeat_class_members[] = {
 INTERN DeeTypeObject SeqRepeat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRepeat",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("()\n"
+                            "(seq:?Dsequence,num:?Dint)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -802,7 +803,7 @@ PRIVATE struct type_member repeatitemiter_members[] = {
 INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqItemRepeatIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqItemRepeat)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1099,7 +1100,8 @@ PRIVATE struct type_member repeatitem_class_members[] = {
 INTERN DeeTypeObject SeqItemRepeat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqItemRepeat",
-    /* .tp_doc      = */DOC("(obj,num:?Dint)"),
+    /* .tp_doc      = */DOC("()\n"
+                            "(obj,num:?Dint)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

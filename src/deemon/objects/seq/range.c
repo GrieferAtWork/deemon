@@ -424,8 +424,7 @@ PRIVATE struct type_cmp ri_cmp = {
 INTERN DeeTypeObject SeqRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRangeIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqRange)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqRange)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1035,7 +1034,7 @@ INTERN DeeTypeObject SeqRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRange",
     /* .tp_doc      = */DOC("()\n"
-                            "(begin,end,step?)"),
+                            "(start,end,step?)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1230,8 +1229,7 @@ PRIVATE struct type_cmp iri_cmp = {
 INTERN DeeTypeObject SeqIntRangeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqIntRangeIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqIntRange)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqIntRange)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1398,6 +1396,7 @@ intrange_getrange(IntRange *__restrict self,
 err:
  return NULL;
 }
+
 
 
 

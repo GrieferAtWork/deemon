@@ -86,8 +86,8 @@ err:
  return -1;
 }
 PRIVATE int DCALL
-locatoriter_deepcopy(LocatorIterator *__restrict self,
-                     LocatorIterator *__restrict other) {
+locatoriter_deep(LocatorIterator *__restrict self,
+                 LocatorIterator *__restrict other) {
  self->li_iter = DeeObject_DeepCopy(other->li_iter);
  if unlikely(!self->li_iter)
     goto err;
@@ -226,8 +226,7 @@ PRIVATE struct type_member locatoriter_members[] = {
 INTERN DeeTypeObject SeqLocatorIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqLocatorIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqLocator)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqLocator)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -237,7 +236,7 @@ INTERN DeeTypeObject SeqLocatorIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&locatoriter_ctor,
                 /* .tp_copy_ctor = */(void *)&locatoriter_copy,
-                /* .tp_deep_ctor = */(void *)&locatoriter_deepcopy,
+                /* .tp_deep_ctor = */(void *)&locatoriter_deep,
                 /* .tp_any_ctor  = */(void *)&locatoriter_init,
                 TYPE_FIXED_ALLOCATOR(LocatorIterator)
             }
@@ -290,8 +289,8 @@ locator_copy(Locator *__restrict self,
  return 0;
 }
 PRIVATE int DCALL
-locator_deepcopy(Locator *__restrict self,
-                 Locator *__restrict other) {
+locator_deep(Locator *__restrict self,
+             Locator *__restrict other) {
  self->l_seq = DeeObject_DeepCopy(other->l_seq);
  if unlikely(!self->l_seq)
     goto err;
@@ -402,7 +401,7 @@ INTERN DeeTypeObject SeqLocator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&locator_ctor,
                 /* .tp_copy_ctor = */(void *)&locator_copy,
-                /* .tp_deep_ctor = */(void *)&locator_deepcopy,
+                /* .tp_deep_ctor = */(void *)&locator_deep,
                 /* .tp_any_ctor  = */(void *)&locator_init,
                 TYPE_FIXED_ALLOCATOR(Locator)
             }

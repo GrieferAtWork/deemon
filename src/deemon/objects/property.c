@@ -340,8 +340,7 @@ property_call(Property *__restrict self,
 PUBLIC DeeTypeObject DeeProperty_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_property),
-    /* .tp_doc      = */DOC("()\n"
-                            "(getter:?Dcallable=!N,delete:?Dcallable=!N,setter:?Dcallable=!N)\n"
+    /* .tp_doc      = */DOC("(getter:?Dcallable=!N,delete:?Dcallable=!N,setter:?Dcallable=!N)\n"
                             "\n"
                             "call(args!)->\n"
                             "Same as ${this.get(args...)}"),

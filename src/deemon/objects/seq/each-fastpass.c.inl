@@ -405,8 +405,8 @@ F(copy)(STRUCT_TYPE *__restrict self,
 }
 
 PRIVATE int DCALL
-F(deepcopy)(STRUCT_TYPE *__restrict self,
-            STRUCT_TYPE *__restrict other) {
+F(deep)(STRUCT_TYPE *__restrict self,
+        STRUCT_TYPE *__restrict other) {
  self->se_seq = DeeObject_DeepCopy(other->se_seq);
  if unlikely(!self->se_seq)
     goto err;
@@ -478,7 +478,7 @@ done:
 }
 
 PRIVATE DREF STRUCT_TYPE *DCALL
-F(deepcopy)(STRUCT_TYPE *__restrict other) {
+F(deep)(STRUCT_TYPE *__restrict other) {
  DREF STRUCT_TYPE *result; size_t i;
  result = (DREF STRUCT_TYPE *)DeeObject_Malloc(COMPILER_OFFSETOF(STRUCT_TYPE,sg_argv) +
                                               (other->sg_argc * sizeof(DREF DeeObject *)));
@@ -611,7 +611,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&F(ctor),
                 /* .tp_copy_ctor = */(void *)&F(copy),
-                /* .tp_deep_ctor = */(void *)&F(deepcopy),
+                /* .tp_deep_ctor = */(void *)&F(deep),
                 /* .tp_any_ctor  = */(void *)&F(init),
                 TYPE_FIXED_ALLOCATOR(STRUCT_TYPE)
             }
@@ -619,7 +619,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
             /* .tp_var = */{
                 /* .tp_ctor      = */(void *)&F(ctor),
                 /* .tp_copy_ctor = */(void *)&F(copy),
-                /* .tp_deep_ctor = */(void *)&F(deepcopy),
+                /* .tp_deep_ctor = */(void *)&F(deep),
                 /* .tp_any_ctor  = */(void *)&F(init),
                 /* .tp_free      = */(void *)NULL
             }
@@ -736,16 +736,13 @@ INTERN DeeTypeObject ITERATOR_TYPE_OBJECT = {
     OBJECT_HEAD_INIT(&DeeType_Type),
 #ifdef DEFINE_GETATTR
     /* .tp_name     = */"_SeqEachGetAttrIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqEachGetAttr)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqEachGetAttr)"),
 #elif defined(DEFINE_CALLATTR)
     /* .tp_name     = */"_SeqEachCallAttrIterator",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqEachCallAttr)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqEachCallAttr)"),
 #elif defined(DEFINE_CALLATTRKW)
     /* .tp_name     = */"_SeqEachCallAttrIteratorKw",
-    /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Ert:SeqEachCallAttrKw)"),
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqEachCallAttrKw)"),
 #else
 #error "Unsupported mode"
 #endif
@@ -758,7 +755,7 @@ INTERN DeeTypeObject ITERATOR_TYPE_OBJECT = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&Fi(ctor),
                 /* .tp_copy_ctor = */(void *)&sewi_copy,
-                /* .tp_deep_ctor = */(void *)&sewi_deepcopy,
+                /* .tp_deep_ctor = */(void *)&sewi_deep,
                 /* .tp_any_ctor  = */(void *)&Fi(init),
                 TYPE_FIXED_ALLOCATOR(SeqEachIterator)
             }

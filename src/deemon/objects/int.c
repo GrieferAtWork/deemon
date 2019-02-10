@@ -2739,9 +2739,9 @@ PRIVATE struct type_getset int_getsets[] = {
  * because negative values are reserved to indicate error
  * states. */
 #if SSIZE_MAX > UINT32_MAX
-DEFINE_UINT64(int_size_max,SSIZE_MAX);
+INTERN DEFINE_UINT64(int_size_max,SSIZE_MAX);
 #else
-DEFINE_UINT32(int_size_max,SSIZE_MAX);
+INTERN DEFINE_UINT32(int_size_max,SSIZE_MAX);
 #endif
 
 PRIVATE struct type_member int_class_members[] = {

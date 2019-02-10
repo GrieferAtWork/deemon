@@ -63,15 +63,18 @@ typedef struct {
 PRIVATE int DCALL
 catiterator_ctor(CatIterator *__restrict self) {
  self->c_cat = (DREF Cat *)DeeSeq_Concat(Dee_EmptySeq,Dee_EmptySeq);
- if unlikely(!self->c_cat) return -1;
+ if unlikely(!self->c_cat)
+    goto err;
  self->c_curr = DeeObject_IterSelf(Dee_EmptySeq);
- if unlikely(!self->c_curr) {
-  Dee_Decref(self->c_cat);
-  return -1;
- }
+ if unlikely(!self->c_curr)
+    goto err_cat;
  self->c_pseq = DeeTuple_ELEM(self->c_cat);
  rwlock_init(&self->c_lock);
  return 0;
+err_cat:
+ Dee_Decref(self->c_cat);
+err:
+ return -1;
 }
 PRIVATE int DCALL
 catiterator_copy(CatIterator *__restrict self,
@@ -94,8 +97,8 @@ err:
  return -1;
 }
 PRIVATE int DCALL
-catiterator_deepcopy(CatIterator *__restrict self,
-                     CatIterator *__restrict other) {
+catiterator_deep(CatIterator *__restrict self,
+                 CatIterator *__restrict other) {
  DREF DeeObject *iterator;
  size_t sequence_index;
  rwlock_read(&other->c_lock);
@@ -121,15 +124,19 @@ err:
 PRIVATE int DCALL
 catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqConcatIterator",&self->c_cat) ||
-     DeeObject_AssertTypeExact((DeeObject *)self->c_cat,&SeqConcat_Type))
-     return -1;
+ if (DeeArg_Unpack(argc,argv,"o:_SeqConcatIterator",&self->c_cat))
+     goto err;
+ if (DeeObject_AssertTypeExact((DeeObject *)self->c_cat,&SeqConcat_Type))
+     goto err;
  self->c_pseq = DeeTuple_ELEM(self->c_cat);
  self->c_curr = DeeObject_IterSelf(self->c_pseq[0]);
- if unlikely(!self->c_curr) return -1;
+ if unlikely(!self->c_curr)
+    goto err;
  Dee_Incref(self->c_cat);
  rwlock_init(&self->c_lock);
  return 0;
+err:
+ return -1;
 }
 PRIVATE void DCALL
 catiterator_fini(CatIterator *__restrict self) {
@@ -335,7 +342,7 @@ PRIVATE struct type_member catiterator_members[] = {
 INTERN DeeTypeObject SeqConcatIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqConcatIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SeqConcat)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -345,7 +352,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&catiterator_ctor,
                 /* .tp_copy_ctor = */(void *)&catiterator_copy,
-                /* .tp_deep_ctor = */(void *)&catiterator_deepcopy,
+                /* .tp_deep_ctor = */(void *)&catiterator_deep,
                 /* .tp_any_ctor  = */(void *)&catiterator_init,
                 TYPE_FIXED_ALLOCATOR(CatIterator)
             }

@@ -818,6 +818,18 @@ fli_copy(FixedListIterator *__restrict self,
 }
 
 PRIVATE int DCALL
+fli_deep(FixedListIterator *__restrict self,
+         FixedListIterator *__restrict other) {
+ self->li_iter = FLI_GETITER(other);
+ self->li_list = (DREF FixedList *)DeeObject_DeepCopy((DeeObject *)other->li_list);
+ if unlikely(!self->li_list)
+    goto err;
+ return 0;
+err:
+ return -1;
+}
+
+PRIVATE int DCALL
 fli_init(FixedListIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->li_iter = 0;
@@ -913,7 +925,7 @@ again:
 INTERN DeeTypeObject FixedListIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"FixedListIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?GFixedList)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -923,7 +935,7 @@ INTERN DeeTypeObject FixedListIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&fli_ctor,
                 /* .tp_copy_ctor = */(void *)&fli_copy,
-                /* .tp_deep_ctor = */NULL,
+                /* .tp_deep_ctor = */(void *)&fli_deep,
                 /* .tp_any_ctor  = */(void *)&fli_init,
                 TYPE_FIXED_ALLOCATOR(FixedListIterator)
             }

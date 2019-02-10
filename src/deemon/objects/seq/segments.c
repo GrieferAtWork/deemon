@@ -204,7 +204,7 @@ PRIVATE struct type_cmp segiter_cmp = {
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSegmentsIterator",
-    /* .tp_doc      = */DOC("(iter:?Diterator,len=!1)"),
+    /* .tp_doc      = */DOC("(iter?:?Diterator,len=!1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -438,7 +438,7 @@ PRIVATE struct type_member seg_members[] = {
 PRIVATE DeeTypeObject SeqSegments_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSegments",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Dsequence,len=!1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

@@ -83,8 +83,8 @@ err:
  return -1;
 }
 PRIVATE int DCALL
-filteriterator_deepcopy(FilterIterator *__restrict self,
-                        FilterIterator *__restrict other) {
+filteriterator_deep(FilterIterator *__restrict self,
+                    FilterIterator *__restrict other) {
  self->fi_iter = DeeObject_DeepCopy(other->fi_iter);
  if unlikely(!self->fi_iter)
     goto err;
@@ -213,7 +213,7 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&filteriterator_ctor,
                 /* .tp_copy_ctor = */(void *)&filteriterator_copy,
-                /* .tp_deep_ctor = */(void *)&filteriterator_deepcopy,
+                /* .tp_deep_ctor = */(void *)&filteriterator_deep,
                 /* .tp_any_ctor  = */(void *)&filteriterator_init,
                 TYPE_FIXED_ALLOCATOR(FilterIterator)
             }
@@ -306,8 +306,8 @@ filter_copy(Filter *__restrict self,
 }
 
 PRIVATE int DCALL
-filter_deepcopy(Filter *__restrict self,
-                Filter *__restrict other) {
+filter_deep(Filter *__restrict self,
+            Filter *__restrict other) {
  self->f_seq = DeeObject_DeepCopy(other->f_seq);
  if unlikely(!self->f_seq)
     goto err;
@@ -339,7 +339,8 @@ err:
 INTERN DeeTypeObject SeqFilter_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqFilter",
-    /* .tp_doc      = */DOC("(seq:?Dsequence,fun:?Dcallable)"),
+    /* .tp_doc      = */DOC("()\n"
+                            "(seq:?Dsequence,fun:?Dcallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -349,7 +350,7 @@ INTERN DeeTypeObject SeqFilter_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&filter_ctor,
                 /* .tp_copy_ctor = */(void *)&filter_copy,
-                /* .tp_deep_ctor = */(void *)&filter_deepcopy,
+                /* .tp_deep_ctor = */(void *)&filter_deep,
                 /* .tp_any_ctor  = */(void *)&filter_init,
                 TYPE_FIXED_ALLOCATOR(Filter)
             }

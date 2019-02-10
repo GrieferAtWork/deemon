@@ -461,7 +461,7 @@ PRIVATE struct type_getset suiter_getsets[] = {
 INTERN DeeTypeObject SetUnionIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetUnionIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SetUnion)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -595,7 +595,7 @@ PRIVATE struct type_member su_class_members[] = {
 INTERN DeeTypeObject SetUnion_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetUnion",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -725,7 +725,7 @@ PRIVATE struct type_member ssditer_members[] = {
 INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetSymmetricDifferenceIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SetSymmetricDifference)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -826,7 +826,7 @@ PRIVATE struct type_member ssd_class_members[] = {
 INTERN DeeTypeObject SetSymmetricDifference_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetSymmetricDifference",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1011,7 +1011,7 @@ PRIVATE struct type_member siiter_members[] = {
 INTERN DeeTypeObject SetIntersectionIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetIntersectionIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SetIntersection)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1117,7 +1117,7 @@ PRIVATE struct type_member si_class_members[] = {
 INTERN DeeTypeObject SetIntersection_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetIntersection",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1202,7 +1202,7 @@ PRIVATE struct type_member sditer_members[] = {
 INTERN DeeTypeObject SetDifferenceIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetDifferenceIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Ert:SetDifference)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1309,7 +1309,7 @@ PRIVATE struct type_member sd_class_members[] = {
 INTERN DeeTypeObject SetDifference_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SetDifference",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
