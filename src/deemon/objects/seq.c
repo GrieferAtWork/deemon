@@ -865,7 +865,12 @@ seq_repr(DeeObject *__restrict self) {
  if (sequence_should_use_getitem(Dee_TYPE(self))) {
   size_t i,size;
   size = DeeObject_Size(self);
-  if unlikely(size == (size_t)-1) goto err;
+  if unlikely(size == (size_t)-1) {
+   /* If the size operator isn't actually implemented, try to use iterators instead! */
+   if (DeeError_Catch(&DeeError_NotImplemented))
+       goto do_try_iterators;
+   goto err;
+  }
   if (!size) {
    if unlikely(UNICODE_PRINTER_PRINT(&p,"{ }") < 0) goto err;
   } else {
@@ -898,6 +903,7 @@ seq_repr(DeeObject *__restrict self) {
       goto err;
   }
  } else {
+do_try_iterators:
   iterator = DeeObject_IterSelf(self);
   if unlikely(!iterator) goto err;
   if unlikely(UNICODE_PRINTER_PRINT(&p,"{ ") < 0) goto err1;
