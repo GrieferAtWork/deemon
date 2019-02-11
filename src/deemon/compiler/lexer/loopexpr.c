@@ -298,6 +298,7 @@ INTERN DREF struct ast *FCALL ast_parse_loopexpr(void) {
  if (basescope_push()) goto err;
  /* Generate expressions always create yield-functions. */
  current_basescope->bs_flags |= CODE_FYIELDING;
+ current_basescope->bs_flags |= current_tags.at_code_flags;
  /* Parse the generator loop. */
  result = parse_generator_loop(&loc);
  if unlikely(!result) goto err_scope;

@@ -355,10 +355,17 @@ again_compiler_subtag:
     tag_name_len = token.t_kwd->k_size;
     while (tag_name_len && *tag_name_str == '_') ++tag_name_str,--tag_name_len;
     while (tag_name_len && tag_name_str[tag_name_len-1] == '_') --tag_name_len;
-    /**/ if (IS_TAG("truncate"))  current_tags.at_class_flags |= TP_FTRUNCATE;
-    else if (IS_TAG("moveany"))   current_tags.at_class_flags |= TP_FMOVEANY;
-    else if (IS_TAG("final"))     current_tags.at_class_flags |= TP_FFINAL;
-    else if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
+    /**/ if (IS_TAG("truncate"))    current_tags.at_class_flags |= TP_FTRUNCATE;
+    else if (IS_TAG("moveany"))     current_tags.at_class_flags |= TP_FMOVEANY;
+    else if (IS_TAG("final"))       current_tags.at_class_flags |= TP_FFINAL;
+    else if (IS_TAG("interrupt"))   current_tags.at_class_flags |= TP_FINTERRUPT;
+    else if (IS_TAG("copyable"))    current_tags.at_code_flags  |= CODE_FCOPYABLE;
+    else if (IS_TAG("assembly"))    current_tags.at_code_flags  |= CODE_FASSEMBLY;
+    else if (IS_TAG("lenient"))     current_tags.at_code_flags  |= CODE_FLENIENT;
+    else if (IS_TAG("thiscall"))    current_tags.at_code_flags  |= CODE_FTHISCALL;
+    else if (IS_TAG("heapframe"))   current_tags.at_code_flags  |= CODE_FHEAPFRAME;
+    else if (IS_TAG("finally"))     current_tags.at_code_flags  |= CODE_FFINALLY;
+    else if (IS_TAG("constructor")) current_tags.at_code_flags  |= CODE_FCONSTRUCTOR;
     else if (IS_TAG("doc")) {
      if unlikely(yield() < 0)
         goto err;

@@ -503,6 +503,7 @@ struct ast_tags {
     struct ast_annotations at_anno;         /* AST Annotations. */
     uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
     uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
+    uint16_t               at_code_flags;   /* Set of `CODE_F*' or'd to flags during creation of a new function. */
 };
 
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION

@@ -437,6 +437,7 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
  struct ast_annotations annotations;
  ast_annotations_get(&annotations);
  if unlikely(basescope_push()) goto err_anno;
+ current_basescope->bs_flags |= current_tags.at_code_flags;
  result = ast_parse_function_noscope(name,pneed_semi,allow_missing_params,name_loc
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
                                      ,decl

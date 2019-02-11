@@ -349,6 +349,7 @@ class_maker_push_methscope(struct class_maker *__restrict self) {
  if (basescope_push()) goto err;
  /* Set the appropriate flags to turn this one into a class-scope. */
  current_basescope->bs_flags |= CODE_FTHISCALL;
+ current_basescope->bs_flags |= current_tags.at_code_flags;
  current_basescope->bs_this   = self->cm_thissym;
  return 0;
 err:
