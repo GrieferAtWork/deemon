@@ -1061,6 +1061,12 @@ struct type_cmp {
     DREF DeeObject *(DCALL *tp_le)(DeeObject *__restrict self, DeeObject *__restrict some_object);
     DREF DeeObject *(DCALL *tp_gr)(DeeObject *__restrict self, DeeObject *__restrict some_object);
     DREF DeeObject *(DCALL *tp_ge)(DeeObject *__restrict self, DeeObject *__restrict some_object);
+    /* Optional iterator-extensions for providing optimized (but
+     * less generic) variants for various iterator operations.
+     * NOTE: The compare sub-structure was chosen for this, as native
+     *       iterators usually implement compare operators to allow
+     *       them to be ordered with other operators. */
+    struct type_nii        *tp_nii;
 }; 
 
 

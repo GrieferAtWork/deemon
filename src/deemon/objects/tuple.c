@@ -911,8 +911,8 @@ tuple_iterator_copy(TupleIterator *__restrict self,
  return 0;
 }
 PRIVATE int DCALL
-tuple_iterator_deepcopy(TupleIterator *__restrict self,
-                        TupleIterator *__restrict other) {
+tuple_iterator_deep(TupleIterator *__restrict self,
+                    TupleIterator *__restrict other) {
  self->ti_tuple = (DREF DeeTupleObject *)DeeObject_DeepCopy((DeeObject *)other->ti_tuple);
  if unlikely(!self->ti_tuple)
     goto err;
@@ -928,7 +928,7 @@ tuple_iterator_init(TupleIterator *__restrict self,
  self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
  self->ti_index = 0;
  if (DeeArg_Unpack(argc,argv,"|oIu:_TupleIterator",
-                    &self->ti_tuple,&self->ti_index))
+                  &self->ti_tuple,&self->ti_index))
      goto err;
  if (DeeObject_AssertTypeExact(self->ti_tuple,&DeeTuple_Type))
      goto err;
@@ -996,6 +996,25 @@ DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_gr,>)
 DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ge,>=)
 #undef DEFINE_TUPLE_ITERATOR_COMPARE
 
+PRIVATE struct type_nii tuple_iterator_nii = {
+    /* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
+    /* .nii_flags = */TYPE_ITERX_FNORMAL,
+    {
+        /* .nii_common = */{
+            //TODO:DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
+            //TODO:size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
+            //TODO:int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
+            //TODO:int             (DCALL *nii_rewind)(DeeObject *__restrict self);
+            //TODO:int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
+            //TODO:int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
+            //TODO:int             (DCALL *nii_prev)(DeeObject *__restrict self);
+            //TODO:int             (DCALL *nii_next)(DeeObject *__restrict self);
+            //TODO:int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
+            /* TODO: bi-directional iterator support */
+        }
+    }
+};
+
 PRIVATE struct type_cmp tuple_iterator_cmp = {
     /* .tp_hash = */NULL,
     /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_eq,
@@ -1003,7 +1022,8 @@ PRIVATE struct type_cmp tuple_iterator_cmp = {
     /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_lo,
     /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_le,
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_ge
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&tuple_iterator_ge,
+    /* .tp_nii  = */&tuple_iterator_nii
 };
 
 PRIVATE int DCALL
@@ -1014,7 +1034,7 @@ tuple_iterator_bool(TupleIterator *__restrict self) {
 INTERN DeeTypeObject DeeTupleIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_TupleIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq=!T0,index=!0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1024,7 +1044,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&tuple_iterator_ctor,
                 /* .tp_copy_ctor = */(void *)&tuple_iterator_copy,
-                /* .tp_deep_ctor = */(void *)&tuple_iterator_deepcopy,
+                /* .tp_deep_ctor = */(void *)&tuple_iterator_deep,
                 /* .tp_any_ctor  = */(void *)&tuple_iterator_init,
                 TYPE_FIXED_ALLOCATOR(TupleIterator)
             }
@@ -1041,7 +1061,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
+    /* .tp_math          = */NULL,
     /* .tp_cmp           = */&tuple_iterator_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iterator_next,

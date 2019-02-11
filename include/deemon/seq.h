@@ -202,6 +202,79 @@ DDATDEF DeeObject      DeeSeq_EmptyInstance;
 
 
 
+
+/* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
+struct type_nii {
+    /* Native Iterator Interface for types. */
+#define TYPE_ITERX_CLASS_UNIDIRECTIONAL 0x0000 /* uni-directional iterator */
+#define TYPE_ITERX_CLASS_BIDIRECTIONAL  0x0001 /* bi-directional iterator */
+#define TYPE_ITERX_FNORMAL              0x0000 /* Normal iterator flags. */
+#if __SIZEOF_POINTER__ == 4
+    uint16_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
+    uint16_t                nii_flags; /* Iterator flags (Set of `TYPE_ITERX_F*') */
+#elif __SIZEOF_POINTER__ == 8
+    uint32_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
+    uint32_t                nii_flags; /* Iterator class (Set of `TYPE_ITERX_F*') */
+#else
+#error "Unsupported __SIZEOF_POINTER__"
+#endif
+    union {
+        void              *_nii_class_functions[9];
+        struct {
+            /* Return the sequence associated with the iterator, or NULL on error.
+             * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
+            DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
+            /* Get the iterator's position
+             * @return: * :         The iterator's current position, where the a starting position is 0
+             * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
+             *                      from its sequence, as can happen in linked lists when the iterator's
+             *                      link entry gets removed)
+             * @return: (size_t)-1: Error */
+            size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
+            /* Set the iterator's position
+             * @return:  0: Success
+             * @return: -1: Error */
+            int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
+            /* Rewind the iterator to its starting position
+             * @return:  0: Success
+             * @return: -1: Error */
+            int             (DCALL *nii_rewind)(DeeObject *__restrict self);
+            /* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+             * @return:  0: Success (new relative position wasn't determined)
+             * @return:  1: Success (the iterator has reached its starting position)
+             * @return:  2: Success (the iterator hasn't reached its starting position)
+             * @return: -1: Error */
+            int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
+            /* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+             * @return:  0: Success (new relative position wasn't determined)
+             * @return:  1: Success (the iterator has become exhausted)
+             * @return:  2: Success (the iterator hasn't become exhausted)
+             * @return: -1: Error */
+            int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
+            /* Decrement the iterator by 1.
+             * @return:  0: Success
+             * @return:  1: The iterator was already at its starting location
+             * @return: -1: Error */
+            int             (DCALL *nii_prev)(DeeObject *__restrict self);
+            /* Increment the iterator, but don't generate a value
+             * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
+             *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
+             *       only ever be incremented by 1.
+             * @return:  0: Success
+             * @return:  1: The iterator had already been exhausted
+             * @return: -1: Error */
+            int             (DCALL *nii_next)(DeeObject *__restrict self);
+            /* Check if the iterator is at its starting location
+             * @return:  0: No, it isn't
+             * @return:  1: Yes, it is
+             * @return: -1: Error */
+            int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
+            /* `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
+        }                   nii_common;
+    };
+};
+
+
 /* ==== NATIVE SEQUENCE INTERFACE EXTENSIONS FOR TYPES ==== */
 
 struct type_nsi {
