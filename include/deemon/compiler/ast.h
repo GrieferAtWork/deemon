@@ -432,7 +432,7 @@ struct ast {
 #   define AST_FSWITCH_NORMAL   0x0000 /* Normal switch flags (automatically determine mode) */
 #   define AST_FSWITCH_NOJMPTAB 0x0001 /* Never generate a jump table to perform the actual switch.
                                         * Normally, all cases that could be expressed as constant
-                                        * key-expressions of a dict, (or even more preferred, indexes of a list)
+                                        * key-expressions of a dict, (or even more preferred, indices of a list)
                                         * are packaged together within a compile-time generated jump table
                                         * that is stored as a constant/static variable and used using
                                         * one of the 2 following code patterns (depending on whether or

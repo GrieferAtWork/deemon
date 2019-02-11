@@ -2524,6 +2524,17 @@ compiler_annotation ::= (
 	/* Mandatory compiler annotations: */
 	'interrupt' | /* For `class': When thrown, instances behave as interrupts
 	               * For `catch': The guard is allowed to handle interrupts */
+	'copyable' |  /* For yield-functions: Allow iterators of the function to be copied,
+	               * making it possible to perform a varienty of iterator-based operations
+	               * on iterators. - Note however that in allowing this, the actual execution
+	               * frame must be copied, meaning that it becomes unclear to the interpreter
+	               * if local variables should be copied by-value or by-ref (the actual behavior
+	               * used then being implementation-defined), as well as the fact that an active
+	               * with-block would be left twice, despite being entered only once, as well as
+	               * an open finally-block also being executed multiple times.
+	               * Due to these dangers, copyability of yield-functions can only be provided
+	               * as opt-in, relying on the user to be aware of the problems that may arise
+	               * before allowing them to make use of the feature. */
 
 	/* Optional compiler annotations (don't warn if not implemented): */
 	'likely'    | /* For `if': The tt-branch is likely to be executed

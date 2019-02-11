@@ -327,9 +327,11 @@ again_compiler_subtag:
     * NOTE: Doing this is an extension implemented by the GATW implementation */
    while (tag_name_len && *tag_name_str == '_') ++tag_name_str,--tag_name_len;
    while (tag_name_len && tag_name_str[tag_name_len-1] == '_') --tag_name_len;
+   /* Compiler annotation required by the standard. */
    /**/ if (IS_TAG("interrupt")) current_tags.at_class_flags |= TP_FINTERRUPT;
    else if (IS_TAG("likely"))    current_tags.at_expect      |= AST_FCOND_LIKELY;
    else if (IS_TAG("unlikely"))  current_tags.at_expect      |= AST_FCOND_UNLIKELY;
+   else if (IS_TAG("copyable"))  current_tags.at_code_flags  |= CODE_FCOPYABLE;
    else if (IS_TAG("optional")) {
     if unlikely(yield() < 0)
        goto err;
@@ -341,6 +343,7 @@ again_compiler_subtag:
     is_optional = true;
     goto again_compiler_subtag;
    } else if (IS_TAG("gatw")) {
+    /* The annotation namespace used by our implementation (GATW). */
     if unlikely(yield() < 0)
        goto err;
     if unlikely(convert_dot_tag_namespace(tag_name_len,tag_name_str))
@@ -359,6 +362,8 @@ again_compiler_subtag:
     else if (IS_TAG("moveany"))     current_tags.at_class_flags |= TP_FMOVEANY;
     else if (IS_TAG("final"))       current_tags.at_class_flags |= TP_FFINAL;
     else if (IS_TAG("interrupt"))   current_tags.at_class_flags |= TP_FINTERRUPT;
+    else if (IS_TAG("likely"))      current_tags.at_expect      |= AST_FCOND_LIKELY;
+    else if (IS_TAG("unlikely"))    current_tags.at_expect      |= AST_FCOND_UNLIKELY;
     else if (IS_TAG("copyable"))    current_tags.at_code_flags  |= CODE_FCOPYABLE;
     else if (IS_TAG("assembly"))    current_tags.at_code_flags  |= CODE_FASSEMBLY;
     else if (IS_TAG("lenient"))     current_tags.at_code_flags  |= CODE_FLENIENT;
