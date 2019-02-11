@@ -1251,8 +1251,7 @@ err:
 PRIVATE struct type_method iterator_methods[] = {
     { "next",
      &iterator_next,
-      DOC("->\n"
-          "(object defl)->\n"
+      DOC("(defl?)->\n"
           "@throw StopIteration @this iterator has been exhausted, and no @decl was given\n"
           "Same as ${this.operator next()}\n"
           "When given, @defl is returned when the iterator has been "
@@ -1715,6 +1714,8 @@ iterator_get_index(DeeObject *__restrict self) {
       goto err;
    copy = DeeObject_IterSelf(temp);
    Dee_Decref(temp);
+   if unlikely(!copy)
+      goto err;
    goto got_rewound_iter;
   }
   if ((tp_self = DeeType_Base(tp_self)) == NULL)
@@ -1728,7 +1729,7 @@ got_rewound_iter:
   error = DeeObject_CompareLo(copy,self);
   if (error <= 0) {
    if unlikely(error < 0)
-      goto err;
+      goto err_copy;
    break;
   }
   temp = DeeObject_IterNext(copy);
@@ -1998,15 +1999,6 @@ err_r:
 err:
  return NULL;
 }
-PRIVATE DREF DeeObject *DCALL
-iterator_call(DeeObject *__restrict self, size_t argc,
-              DeeObject **__restrict UNUSED(argv)) {
- if (argc != 0) {
-  err_invalid_argc(Dee_TYPE(self)->tp_name,argc,0,0);
-  return NULL;
- }
- return DeeObject_IterNext(self);
-}
 
 PRIVATE struct type_math iterator_math = {
     /* .tp_int32       = */NULL,
@@ -2129,12 +2121,29 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             "repr->\n"
                             "Copies @this iterator and enumerate all remaining elements, constructing "
                             "a representation of all of them using abstract sequence syntax\n"
+                            ">operator repr() {\n"
+                            "> file.writer tempfp;\n"
+                            "> tempfp << \"{ [...]\";\n"
+                            "> local c = copy this;\n"
+                            "> foreach (local x: c)\n"
+                            ">  tempfp << \", \" << repr(x);\n"
+                            "> tempfp << \" }\";\n"
+                            "> return tempfp.string;\n"
+                            ">}\n"
                             "\n"
                             "bool->\n"
-                            "Copies @this iterator and tries to yield an item. If the iterator "
-                            "has been exhausted, return :{false}. Otherwise return :true\n"
+                            "Returns :false if @this iterator has been exhausted, or :true otherwise.\n"
+                            ">operator bool() {\n"
+                            "> local c = copy this;\n"
+                            "> return try ({\n"
+                            ">  c.operator next();\n"
+                            ">  true;\n"
+                            "> }) catch (StopIteration)\n"
+                            ">  false\n"
+                            "> ;\n"
+                            ">}\n"
                             "\n"
-                            "+(int step)->\n"
+                            "+(step:?Dint)->\n"
                             "@throw NotImplemented @step is negative, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
                             "@throw IntegerOverflow @step is too large\n"
                             "Copies @this iterator and advance it by yielding @step items from it before returning it\n"
@@ -2148,15 +2157,23 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             "\n"
                             "++->\n"
                             "Advance @this iterator by one. No-op if the iterator has been exhausted\n"
+                            "Note this is very similar to #op:next, however in the case of generator-like "
+                            "iterators, doing this may be faster since no generator value has to be created\n"
                             "\n"
-                            "call()->\n"
+                            "call(defl?)->\n"
                             "Calling an operator as a function will invoke ${operator next}, and return "
                             "that value, allowing iterators to be used as function-like producers\n"
-                            ">operator call() {\n"
-                            "> return this.operator next();\n"
+                            ">operator call(defl?) {\n"
+                            "> try {\n"
+                            ">  return this.operator next();\n"
+                            "> } catch (StopIteration) {\n"
+                            ">  if (defl is bound)\n"
+                            ">   return defl;\n"
+                            ">  throw;\n"
+                            "> }\n"
                             ">}\n"
                             "\n"
-                            "-(int step)->\n"
+                            "-(step:?Dint)->\n"
                             "@throw NotImplemented @step is positive, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
                             "@throw IntegerOverflow @step is too large\n"
                             "Copies @this iterator and reverts it by @step before returning it\n"
@@ -2209,7 +2226,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
         /* .tp_repr = */&iterator_repr,
         /* .tp_bool = */&iterator_bool
     },
-    /* .tp_call          = */&iterator_call,
+    /* .tp_call          = */&iterator_next,
     /* .tp_visit         = */NULL,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */&iterator_math,
