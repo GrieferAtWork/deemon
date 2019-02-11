@@ -19,18 +19,19 @@
 #ifndef GUARD_DEEMON_OBJECTS_TRACEBACK_C
 #define GUARD_DEEMON_OBJECTS_TRACEBACK_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/alloc.h>
-#include <deemon/object.h>
+#include <deemon/bool.h>
 #include <deemon/code.h>
-#include <deemon/traceback.h>
-#include <deemon/seq.h>
-#include <deemon/none.h>
-#include <deemon/int.h>
 #include <deemon/gc.h>
+#include <deemon/int.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <deemon/traceback.h>
 #include <deemon/tuple.h>
 
 #include "../runtime/strings.h"
@@ -198,6 +199,61 @@ typedef struct {
 } TraceIterator;
 INTDEF DeeTypeObject DeeTracebackIterator_Type;
 
+#ifdef CONFIG_NO_THREADS
+#define READ_NEXT(x)     ((x)->ti_next)
+#define WRITE_NEXT(x,y)  ((x)->ti_next = (y))
+#else
+#define READ_NEXT(x)    ATOMIC_READ((x)->ti_next)
+#define WRITE_NEXT(x,y) ATOMIC_WRITE((x)->ti_next,y)
+#endif
+
+PRIVATE int DCALL
+traceiter_ctor(TraceIterator *__restrict self) {
+ self->ti_trace = (DREF DeeTracebackObject *)&empty_traceback;
+ self->ti_next  = self->ti_trace->tb_frames;
+ Dee_Incref(&empty_traceback);
+ return 0;
+}
+PRIVATE int DCALL
+traceiter_copy(TraceIterator *__restrict self,
+               TraceIterator *__restrict other) {
+ self->ti_trace = other->ti_trace;
+ self->ti_next  = READ_NEXT(other);
+ Dee_Incref(self->ti_trace);
+ return 0;
+}
+PRIVATE int DCALL
+traceiter_deep(TraceIterator *__restrict self,
+               TraceIterator *__restrict other) {
+ size_t index;
+ self->ti_trace = (DREF DeeTracebackObject *)DeeObject_DeepCopy((DeeObject *)other->ti_trace);
+ if unlikely(!self->ti_trace)
+    goto err;
+ index = (size_t)(READ_NEXT(other) - other->ti_trace->tb_frames);
+ self->ti_next = self->ti_trace->tb_frames + index;
+ Dee_Incref(self->ti_trace);
+ return 0;
+err:
+ return -1;
+}
+PRIVATE int DCALL
+traceiter_init(TraceIterator *__restrict self,
+               size_t argc, DeeObject **__restrict argv) {
+ size_t index = 0;
+ if (DeeArg_Unpack(argc,argv,"o|Iu:_TracebackIterator",
+                  &self->ti_trace,&index))
+     goto err;
+ if (DeeObject_AssertTypeExact(self->ti_trace,&DeeTraceback_Type))
+     goto err;
+ if (index > self->ti_trace->tb_numframes)
+     index = self->ti_trace->tb_numframes;
+ self->ti_next = self->ti_trace->tb_frames +
+                (self->ti_trace->tb_numframes - (index + 1));
+ Dee_Incref(self->ti_trace);
+ return 0;
+err:
+ return -1;
+}
 PRIVATE void DCALL
 traceiter_fini(TraceIterator *__restrict self) {
  Dee_Decref(self->ti_trace);
@@ -206,6 +262,10 @@ PRIVATE void DCALL
 traceiter_visit(TraceIterator *__restrict self, dvisit_t proc, void *arg) {
  Dee_Visit(self->ti_trace);
 }
+PRIVATE int DCALL
+traceiter_bool(TraceIterator *__restrict self) {
+ return READ_NEXT(self) >= self->ti_trace->tb_frames;
+}
 PRIVATE DREF DeeObject *DCALL
 traceiter_next(TraceIterator *__restrict self) {
  struct code_frame *result_frame;
@@ -213,13 +273,13 @@ traceiter_next(TraceIterator *__restrict self) {
  result_frame = self->ti_next;
  if unlikely(result_frame < self->ti_trace->tb_frames)
     return ITER_DONE;
- self->ti_next = result_frame-1;
+ self->ti_next = result_frame - 1;
 #else
  do {
   result_frame = ATOMIC_READ(self->ti_next);
   if unlikely(result_frame < self->ti_trace->tb_frames)
      return ITER_DONE;
- } while (!ATOMIC_CMPXCH(self->ti_next,result_frame,result_frame-1));
+ } while (!ATOMIC_CMPXCH(self->ti_next,result_frame,result_frame - 1));
 #endif
  /* Create a new frame wrapper for this entry. */
  return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
@@ -233,10 +293,125 @@ PRIVATE struct type_member traceiter_members[] = {
     TYPE_MEMBER_END
 };
 
+PRIVATE DREF DeeTracebackObject *DCALL
+traceiter_nii_getseq(TraceIterator *__restrict self) {
+ return_reference_(self->ti_trace);
+}
+PRIVATE size_t DCALL
+traceiter_nii_getindex(TraceIterator *__restrict self) {
+ return (size_t)((self->ti_trace->tb_frames + (self->ti_trace->tb_numframes - 1)) -
+                  READ_NEXT(self));
+}
+PRIVATE int DCALL
+traceiter_nii_setindex(TraceIterator *__restrict self, size_t index) {
+ if (index > self->ti_trace->tb_numframes)
+     index = self->ti_trace->tb_numframes;
+ WRITE_NEXT(self,
+            self->ti_trace->tb_frames +
+          ((self->ti_trace->tb_numframes - 1) - index));
+ return 0;
+}
+PRIVATE int DCALL
+traceiter_nii_rewind(TraceIterator *__restrict self) {
+ WRITE_NEXT(self,
+            self->ti_trace->tb_frames +
+           (self->ti_trace->tb_numframes - 1));
+ return 0;
+}
+
+PRIVATE DREF DeeObject *DCALL
+traceiter_nii_peek(TraceIterator *__restrict self) {
+ struct code_frame *result_frame;
+ result_frame = READ_NEXT(self);
+ if unlikely(result_frame < self->ti_trace->tb_frames)
+    return ITER_DONE;
+ /* Create a new frame wrapper for this entry. */
+ return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
+                                       result_frame,
+                                       DEEFRAME_FREADONLY,
+                                      &self->ti_trace->tb_lock);
+}
+
+PRIVATE int DCALL
+traceiter_nii_hasprev(TraceIterator *__restrict self) {
+ return (READ_NEXT(self) <
+        (self->ti_trace->tb_frames +
+        (self->ti_trace->tb_numframes - 1)));
+}
+
+PRIVATE int DCALL
+traceiter_nii_next(TraceIterator *__restrict self) {
+ struct code_frame *result_frame;
+#ifdef CONFIG_NO_THREADS
+ result_frame = self->ti_next;
+ if unlikely(result_frame < self->ti_trace->tb_frames)
+    return 1;
+ self->ti_next = result_frame - 1;
+#else
+ do {
+  result_frame = ATOMIC_READ(self->ti_next);
+  if unlikely(result_frame < self->ti_trace->tb_frames)
+     return 1;
+ } while (!ATOMIC_CMPXCH(self->ti_next,result_frame,result_frame - 1));
+#endif
+ /* Create a new frame wrapper for this entry. */
+ return 0;
+}
+
+
+PRIVATE struct type_nii traceiter_nii = {
+    /* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
+    /* .nii_flags = */TYPE_ITERX_FNORMAL,
+    {
+        /* .nii_common = */{
+            /* .nii_getseq   = */(void *)&traceiter_nii_getseq,
+            /* .nii_getindex = */(void *)&traceiter_nii_getindex,
+            /* .nii_setindex = */(void *)&traceiter_nii_setindex,
+            /* .nii_rewind   = */(void *)&traceiter_nii_rewind,
+            /* .nii_revert   = */(void *)NULL, //TODO:&traceiter_nii_revert,
+            /* .nii_advance  = */(void *)NULL, //TODO:&traceiter_nii_advance,
+            /* .nii_prev     = */(void *)NULL, //TODO:&traceiter_nii_prev,
+            /* .nii_next     = */(void *)&traceiter_nii_next,
+            /* .nii_hasprev  = */(void *)&traceiter_nii_hasprev,
+            /* .nii_peek     = */(void *)&traceiter_nii_peek
+        }
+    }
+};
+
+#define DEFINE_TRACEITER_COMPARE(name,op) \
+PRIVATE DREF DeeObject *DCALL \
+name(TraceIterator *__restrict self, \
+     TraceIterator *__restrict other) { \
+ if (DeeObject_AssertTypeExact(other,&DeeTracebackIterator_Type)) \
+     goto err; \
+ return_bool(READ_NEXT(other) op READ_NEXT(self)); \
+err: \
+ return NULL; \
+}
+DEFINE_TRACEITER_COMPARE(traceiter_eq,==)
+DEFINE_TRACEITER_COMPARE(traceiter_ne,!=)
+DEFINE_TRACEITER_COMPARE(traceiter_lo,<)
+DEFINE_TRACEITER_COMPARE(traceiter_le,<=)
+DEFINE_TRACEITER_COMPARE(traceiter_gr,>)
+DEFINE_TRACEITER_COMPARE(traceiter_ge,>=)
+#undef DEFINE_TRACEITER_COMPARE
+
+PRIVATE struct type_cmp traceiter_cmp = {
+    /* .tp_hash = */NULL,
+    /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&traceiter_eq,
+    /* .tp_ne   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&traceiter_ne,
+    /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&traceiter_lo,
+    /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&traceiter_le,
+    /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&traceiter_gr,
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&traceiter_ge,
+    /* .tp_nii  = */&traceiter_nii
+};
+
+
 INTERN DeeTypeObject DeeTracebackIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_TracebackIterator",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(seq?:?Dtraceback,index=!0)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -244,10 +419,10 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
+                /* .tp_ctor      = */(void *)&traceiter_ctor,
+                /* .tp_copy_ctor = */(void *)&traceiter_copy,
+                /* .tp_deep_ctor = */(void *)&traceiter_deep,
+                /* .tp_any_ctor  = */(void *)&traceiter_init,
                 TYPE_FIXED_ALLOCATOR(TraceIterator)
             }
         },
@@ -258,13 +433,13 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
     /* .tp_cast = */{
         /* .tp_str  = */NULL,
         /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL
+        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&traceiter_bool
     },
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&traceiter_visit,
     /* .tp_gc            = */NULL,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
+    /* .tp_cmp           = */&traceiter_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&traceiter_next,
     /* .tp_attr          = */NULL,

@@ -1885,6 +1885,10 @@ PRIVATE struct type_getset iterator_getsets[] = {
       DOC("->?Dint\n"
           "@throw NotImplemented @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
           "Get/set the current sequence index of @this iterator\n"
+          "Note however that depending on the type of sequence, certain indices "
+          "may not have values bound to them. When invoked, #op:next usually skips "
+          "ahead to the first bound index, meaning that #op:next does not necessarily "
+          "increment the index counter linearly\n"
           ">property index: int = {\n"
           "> get(): int {\n"
           ">  local result = 0;\n"
@@ -2197,7 +2201,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
             }
         },
         /* .tp_dtor        = */NULL,
-        /* .tp_assign      = */NULL,
+        /* .tp_assign      = */NULL, /* TODO: Implement via `this.index = other.index' */
         /* .tp_move_assign = */NULL
     },
     /* .tp_cast = */{
@@ -2262,8 +2266,8 @@ err:
 }
 
 PRIVATE int DCALL
-if_deepcopy(IteratorFuture *__restrict self,
-            IteratorFuture *__restrict other) {
+if_deep(IteratorFuture *__restrict self,
+        IteratorFuture *__restrict other) {
  self->if_iter = DeeObject_DeepCopy(other->if_iter);
  if unlikely(!self->if_iter)
     goto err;
@@ -2324,7 +2328,7 @@ PRIVATE struct type_member if_class_members[] = {
 INTERN DeeTypeObject IteratorFuture_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_IteratorFuture",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(iter?:?Diterator)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -2334,7 +2338,7 @@ INTERN DeeTypeObject IteratorFuture_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&if_ctor,
                 /* .tp_copy_ctor = */(void *)&if_copy,
-                /* .tp_deep_ctor = */(void *)&if_deepcopy,
+                /* .tp_deep_ctor = */(void *)&if_deep,
                 /* .tp_any_ctor  = */(void *)&if_init,
                 TYPE_FIXED_ALLOCATOR(IteratorFuture)
             }
@@ -2389,6 +2393,7 @@ done:
 STATIC_ASSERT(COMPILER_OFFSETOF(IteratorFuture,if_iter) ==
               COMPILER_OFFSETOF(IteratorPending,ip_iter));
 #define ip_ctor  if_ctor
+#define ip_deep  if_deep
 
 PRIVATE int DCALL
 ip_copy(IteratorPending *__restrict self,
@@ -2396,17 +2401,6 @@ ip_copy(IteratorPending *__restrict self,
  self->ip_iter = other->ip_iter;
  Dee_Incref(self->ip_iter);
  return 0;
-}
-
-PRIVATE int DCALL
-ip_deepcopy(IteratorPending *__restrict self,
-            IteratorPending *__restrict other) {
- self->ip_iter = DeeObject_DeepCopy(other->ip_iter);
- if unlikely(!self->ip_iter)
-    goto err;
- return 0;
-err:
- return -1;
 }
 
 PRIVATE int DCALL
@@ -2438,7 +2432,7 @@ PRIVATE struct type_seq ip_seq = {
 INTERN DeeTypeObject IteratorPending_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_IteratorPending",
-    /* .tp_doc      = */NULL,
+    /* .tp_doc      = */DOC("(iter?:?Diterator)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -2448,7 +2442,7 @@ INTERN DeeTypeObject IteratorPending_Type = {
             /* .tp_alloc = */{
                 /* .tp_ctor      = */(void *)&ip_ctor,
                 /* .tp_copy_ctor = */(void *)&ip_copy,
-                /* .tp_deep_ctor = */(void *)&ip_deepcopy,
+                /* .tp_deep_ctor = */(void *)&ip_deep,
                 /* .tp_any_ctor  = */(void *)&ip_init,
                 TYPE_FIXED_ALLOCATOR(IteratorPending)
             }

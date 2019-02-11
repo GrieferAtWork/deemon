@@ -996,21 +996,124 @@ DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_gr,>)
 DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ge,>=)
 #undef DEFINE_TUPLE_ITERATOR_COMPARE
 
+PRIVATE DREF DeeTupleObject *DCALL
+tuple_iterator_nii_getseq(TupleIterator *__restrict self) {
+ return_reference_(self->ti_tuple);
+}
+PRIVATE size_t DCALL
+tuple_iterator_nii_getindex(TupleIterator *__restrict self) {
+ return READ_INDEX(self);
+}
+PRIVATE int DCALL
+tuple_iterator_nii_setindex(TupleIterator *__restrict self, size_t new_index) {
+#ifdef CONFIG_NO_THREADS
+ self->ti_index = new_index;
+#else
+ ATOMIC_WRITE(self->ti_index,new_index);
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+tuple_iterator_nii_rewind(TupleIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ self->ti_index = 0;
+#else
+ ATOMIC_WRITE(self->ti_index,0);
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+tuple_iterator_nii_revert(TupleIterator *__restrict self, size_t step) {
+#ifdef CONFIG_NO_THREADS
+ if (OVERFLOW_USUB(self->ti_index,step,&self->ti_index))
+     self->ti_index = 0;
+#else
+ size_t old_index,new_index;
+ do {
+  old_index = ATOMIC_READ(self->ti_index);
+  if (OVERFLOW_USUB(old_index,step,&new_index))
+      new_index = 0;
+ } while (!ATOMIC_CMPXCH_WEAK(self->ti_index,old_index,new_index));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+tuple_iterator_nii_advance(TupleIterator *__restrict self, size_t step) {
+#ifdef CONFIG_NO_THREADS
+ if (OVERFLOW_UADD(self->ti_index,step,&self->ti_index))
+     self->ti_index = (size_t)-1;
+#else
+ size_t old_index,new_index;
+ do {
+  old_index = ATOMIC_READ(self->ti_index);
+  if (OVERFLOW_UADD(old_index,step,&new_index))
+      new_index = (size_t)-1;
+ } while (!ATOMIC_CMPXCH_WEAK(self->ti_index,old_index,new_index));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+tuple_iterator_nii_prev(TupleIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ if (!self->ti_index)
+     return 1;
+ --self->ti_index;
+#else
+ size_t old_index;
+ do {
+  old_index = ATOMIC_READ(self->ti_index);
+  if (!old_index)
+      return 1;
+ } while (!ATOMIC_CMPXCH_WEAK(self->ti_index,old_index,old_index - 1));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+tuple_iterator_nii_next(TupleIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple))
+     return 1;
+ ++self->ti_index;
+#else
+ size_t old_index;
+ do {
+  old_index = ATOMIC_READ(self->ti_index);
+  if (old_index >= DeeTuple_SIZE(self->ti_tuple))
+      return 1;
+ } while (!ATOMIC_CMPXCH_WEAK(self->ti_index,old_index,old_index + 1));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+tuple_iterator_nii_hasprev(TupleIterator *__restrict self) {
+ return READ_INDEX(self) != 0;
+}
+PRIVATE DREF DeeObject *DCALL
+tuple_iterator_nii_peek(TupleIterator *__restrict self) {
+ DREF DeeObject *result;
+ size_t index = READ_INDEX(self);
+ result = DeeTuple_GET(self->ti_tuple,index);
+ ASSERT_OBJECT(result);
+ Dee_Incref(result);
+ return result;
+}
+
+
 PRIVATE struct type_nii tuple_iterator_nii = {
     /* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
     /* .nii_flags = */TYPE_ITERX_FNORMAL,
     {
         /* .nii_common = */{
-            //TODO:DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
-            //TODO:size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
-            //TODO:int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
-            //TODO:int             (DCALL *nii_rewind)(DeeObject *__restrict self);
-            //TODO:int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
-            //TODO:int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
-            //TODO:int             (DCALL *nii_prev)(DeeObject *__restrict self);
-            //TODO:int             (DCALL *nii_next)(DeeObject *__restrict self);
-            //TODO:int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
-            /* TODO: bi-directional iterator support */
+            /* .nii_getseq   = */(void *)&tuple_iterator_nii_getseq,
+            /* .nii_getindex = */(void *)&tuple_iterator_nii_getindex,
+            /* .nii_setindex = */(void *)&tuple_iterator_nii_setindex,
+            /* .nii_rewind   = */(void *)&tuple_iterator_nii_rewind,
+            /* .nii_revert   = */(void *)&tuple_iterator_nii_revert,
+            /* .nii_advance  = */(void *)&tuple_iterator_nii_advance,
+            /* .nii_prev     = */(void *)&tuple_iterator_nii_prev,
+            /* .nii_next     = */(void *)&tuple_iterator_nii_next,
+            /* .nii_hasprev  = */(void *)&tuple_iterator_nii_hasprev,
+            /* .nii_peek     = */(void *)&tuple_iterator_nii_peek
         }
     }
 };

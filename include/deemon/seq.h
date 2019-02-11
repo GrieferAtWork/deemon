@@ -219,7 +219,7 @@ struct type_nii {
 #error "Unsupported __SIZEOF_POINTER__"
 #endif
     union {
-        void              *_nii_class_functions[9];
+        void              *_nii_class_functions[10];
         struct {
             /* Return the sequence associated with the iterator, or NULL on error.
              * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
@@ -269,7 +269,10 @@ struct type_nii {
              * @return:  1: Yes, it is
              * @return: -1: Error */
             int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
-            /* `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
+            /* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
+            /* Peek the next iterator value, but don't actually advance the iterator.
+             * @return: ITER_DONE: The iterator has already been exhausted. */
+            DREF DeeObject *(DCALL *nii_peek)(DeeObject *__restrict self);
         }                   nii_common;
     };
 };

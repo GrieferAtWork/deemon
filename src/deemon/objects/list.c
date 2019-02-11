@@ -3830,6 +3830,142 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeListObject *DCALL
+list_iterator_nii_getseq(ListIterator *__restrict self) {
+ return_reference_(self->li_list);
+}
+PRIVATE size_t DCALL
+list_iterator_nii_getindex(ListIterator *__restrict self) {
+ return LI_GETINDEX(self);
+}
+PRIVATE int DCALL
+list_iterator_nii_setindex(ListIterator *__restrict self, size_t new_index) {
+#ifdef CONFIG_NO_THREADS
+ self->li_index = new_index;
+#else
+ ATOMIC_WRITE(self->li_index,new_index);
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+list_iterator_nii_rewind(ListIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ self->li_index = 0;
+#else
+ ATOMIC_WRITE(self->li_index,0);
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+list_iterator_nii_revert(ListIterator *__restrict self, size_t step) {
+#ifdef CONFIG_NO_THREADS
+ if (OVERFLOW_USUB(self->li_index,step,&self->li_index))
+     self->li_index = 0;
+#else
+ size_t old_index,new_index;
+ do {
+  old_index = ATOMIC_READ(self->li_index);
+  if (OVERFLOW_USUB(old_index,step,&new_index))
+      new_index = 0;
+ } while (!ATOMIC_CMPXCH_WEAK(self->li_index,old_index,new_index));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+list_iterator_nii_advance(ListIterator *__restrict self, size_t step) {
+#ifdef CONFIG_NO_THREADS
+ if (OVERFLOW_UADD(self->li_index,step,&self->li_index))
+     self->li_index = (size_t)-1;
+#else
+ size_t old_index,new_index;
+ do {
+  old_index = ATOMIC_READ(self->li_index);
+  if (OVERFLOW_UADD(old_index,step,&new_index))
+      new_index = (size_t)-1;
+ } while (!ATOMIC_CMPXCH_WEAK(self->li_index,old_index,new_index));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+list_iterator_nii_prev(ListIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ if (!self->li_index)
+     return 1;
+ --self->li_index;
+#else
+ size_t old_index;
+ do {
+  old_index = ATOMIC_READ(self->li_index);
+  if (!old_index)
+      return 1;
+ } while (!ATOMIC_CMPXCH_WEAK(self->li_index,old_index,old_index - 1));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+list_iterator_nii_next(ListIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ if (self->li_index >= DeeList_SIZE(self->li_list))
+     return 1;
+ ++self->li_index;
+#else
+ size_t old_index;
+ do {
+  old_index = ATOMIC_READ(self->li_index);
+  if (old_index >= DeeList_SIZE(self->li_list))
+      return 1;
+ } while (!ATOMIC_CMPXCH_WEAK(self->li_index,old_index,old_index + 1));
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+list_iterator_nii_hasprev(ListIterator *__restrict self) {
+ return LI_GETINDEX(self) != 0;
+}
+PRIVATE DREF DeeObject *DCALL
+list_iterator_nii_peek(ListIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ DREF DeeObject *result;
+ if (self->li_index >= self->li_list->l_size)
+     return ITER_DONE;
+ result = self->li_list->l_elem[self->li_index];
+ Dee_Incref(result);
+ return result;
+#else
+ size_t list_index;
+ DREF DeeObject *result;
+ list_index = ATOMIC_READ(self->li_index);
+ DeeList_LockRead(self->li_list);
+ if (list_index >= self->li_list->l_size) {
+  DeeList_LockEndRead(self->li_list);
+  return ITER_DONE;
+ }
+ result = self->li_list->l_elem[list_index];
+ Dee_Incref(result);
+ DeeList_LockEndRead(self->li_list);
+ return result;
+#endif
+}
+
+PRIVATE struct type_nii list_iterator_nii = {
+    /* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
+    /* .nii_flags = */TYPE_ITERX_FNORMAL,
+    {
+        /* .nii_common = */{
+            /* .nii_getseq   = */(void *)&list_iterator_nii_getseq,
+            /* .nii_getindex = */(void *)&list_iterator_nii_getindex,
+            /* .nii_setindex = */(void *)&list_iterator_nii_setindex,
+            /* .nii_rewind   = */(void *)&list_iterator_nii_rewind,
+            /* .nii_revert   = */(void *)&list_iterator_nii_revert,
+            /* .nii_advance  = */(void *)&list_iterator_nii_advance,
+            /* .nii_prev     = */(void *)&list_iterator_nii_prev,
+            /* .nii_next     = */(void *)&list_iterator_nii_next,
+            /* .nii_hasprev  = */(void *)&list_iterator_nii_hasprev,
+            /* .nii_peek     = */(void *)&list_iterator_nii_peek
+        }
+    }
+};
+
 
 PRIVATE struct type_cmp li_cmp = {
     /* .tp_hash = */NULL,
@@ -3839,6 +3975,7 @@ PRIVATE struct type_cmp li_cmp = {
     /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&li_le,
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&li_gr,
     /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&li_ge,
+    /* .tp_nii  = */&list_iterator_nii
 };
 
 PRIVATE struct type_member li_members[] = {
@@ -3878,7 +4015,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
     /* .tp_call          = */NULL,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&li_visit,
     /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL, /* TODO: bi-directional iterator support */
+    /* .tp_math          = */NULL,
     /* .tp_cmp           = */&li_cmp,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&li_next,

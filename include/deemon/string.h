@@ -1533,9 +1533,10 @@ struct unitraits {
 };
 
 /* Unicode character traits database access. */
-DFUNDEF ATTR_RETNONNULL ATTR_CONST struct unitraits *(DCALL DeeUni_Descriptor)(uint32_t ch);
+DFUNDEF ATTR_RETNONNULL ATTR_CONST struct unitraits *
+(DCALL DeeUni_Descriptor)(uint32_t ch);
 
-/* May number of characters which may be generated
+/* Max number of characters which may be generated
  * by case folding a single unicode character. */
 #define UNICODE_FOLDED_MAX 3
 
@@ -1547,23 +1548,31 @@ DFUNDEF ATTR_PURE size_t (DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[UNICO
 
 #if 0
 #define DeeUni_Flags(ch)        (DeeUni_Descriptor(ch)->ut_flags)
+#elif !defined(__NO_builtin_choose_expr)
+#define DeeUni_Flags(ch)        __builtin_choose_expr(sizeof(ch) == 1,DeeAscii_Flags[(uint8_t)(ch)],DeeUni_Descriptor(ch)->ut_flags)
 #else
 #define DeeUni_Flags(ch)        (sizeof(ch) == 1 ? DeeAscii_Flags[(uint8_t)(ch)] : DeeUni_Descriptor(ch)->ut_flags)
 #endif
 
 /* ctype-style character conversion. */
+#ifndef __NO_builtin_choose_expr
+#define DeeUni_ToLower(ch)      __builtin_choose_expr(sizeof(ch) == 1,(uint32_t)DeeAscii_ToLower(ch),(uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_lower))
+#define DeeUni_ToUpper(ch)      __builtin_choose_expr(sizeof(ch) == 1,(uint32_t)DeeAscii_ToUpper(ch),(uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_upper))
+#define DeeUni_ToTitle(ch)      __builtin_choose_expr(sizeof(ch) == 1,(uint32_t)DeeAscii_ToTitle(ch),(uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_title))
+#define DeeUni_AsDigit(ch)      __builtin_choose_expr(sizeof(ch) == 1,DeeAscii_AsDigit(ch),DeeUni_Descriptor(ch)->ut_digit)
+#define DeeUni_SwapCase(ch)     __builtin_choose_expr(sizeof(ch) == 1,(uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)),_DeeUni_SwapCase(ch))
+#else /* !__NO_builtin_choose_expr */
 #define DeeUni_ToLower(ch)      (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToLower(ch) : (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_lower))
 #define DeeUni_ToUpper(ch)      (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToUpper(ch) : (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_upper))
 #define DeeUni_ToTitle(ch)      (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToTitle(ch) : (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_title))
 #define DeeUni_AsDigit(ch)      (sizeof(ch) == 1 ? DeeAscii_AsDigit(ch) : DeeUni_Descriptor(ch)->ut_digit)
+#define DeeUni_SwapCase(ch)     (sizeof(ch) == 1 ? (uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)) : _DeeUni_SwapCase(ch))
+#endif /* __NO_builtin_choose_expr */
 #define DeeUni_Convert(ch,kind) ((uint32_t)((ch)+*(int32_t *)((uintptr_t)DeeUni_Descriptor(ch)+(kind))))
 #define UNICODE_CONVERT_LOWER     offsetof(struct unitraits,ut_lower)
 #define UNICODE_CONVERT_UPPER     offsetof(struct unitraits,ut_upper)
 #define UNICODE_CONVERT_TITLE     offsetof(struct unitraits,ut_title)
 
-#define DeeUni_SwapCase(ch) \
-       (sizeof(ch) == 1 ? (uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)) \
-                        : _DeeUni_SwapCase(ch))
 FORCELOCAL uint32_t DCALL _DeeUni_SwapCase(uint32_t ch) {
  struct unitraits *record = DeeUni_Descriptor(ch);
  return (uint32_t)(ch+((record->ut_flags&UNICODE_FUPPER) ? record->ut_lower : record->ut_upper));
