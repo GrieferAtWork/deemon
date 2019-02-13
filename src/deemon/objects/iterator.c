@@ -214,274 +214,13 @@ err:
 PRIVATE DREF DeeObject *DCALL
 iterator_prev(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- DeeTypeObject *tp_self;
+ int error;
  if (DeeArg_Unpack(argc,argv,":prev"))
      goto err;
- tp_self = Dee_TYPE(self);
- while (tp_self != &DeeIterator_Type) {
-  DREF DeeObject *temp,*temp2;
-  DREF DeeObject *new_self; int error;
-  struct type_math *m;
-  struct type_nii *nii;
-  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
-   if (nii->nii_common.nii_prev) {
-    error = (*nii->nii_common.nii_prev)(self);
-    if unlikely(error < 0)
-       goto err;
-    return_bool_(!error);
-   }
-   if (nii->nii_common.nii_revert) {
-    error = iterator_do_hasprev(self,nii);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err;
-     return_false;
-    }
-    if unlikely((*nii->nii_common.nii_revert)(self,1) < 0)
-       goto err;
-    return_true;
-   }
-   if (nii->nii_common.nii_getindex &&
-       nii->nii_common.nii_setindex) {
-    size_t index;
-    index = (*nii->nii_common.nii_getindex)(self);
-    if (index == 0 || index == (size_t)-2)
-       return_false;
-    if unlikely(index == (size_t)-1)
-       goto err;
-    if unlikely((*nii->nii_common.nii_setindex)(self,index - 1))
-       goto err;
-    return_true;
-   }
-   break;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_index);
-  if (temp != ITER_DONE) {
-   /* >> local i = this.index;
-    * >> if (!i)
-    * >>     return false;
-    * >> this.index = i - 1;
-    * >> return true; */
-   if unlikely(!temp)
-      goto err;
-   error = DeeObject_Bool(temp);
-   if (error <= 0) {
-    Dee_Decref(temp);
-    if unlikely(error < 0)
-       goto err;
-    return_false;
-   }
-   temp2 = DeeObject_Sub(temp,&DeeInt_One);
-   Dee_Decref(temp);
-   if unlikely(!temp2)
-      goto err;
-   error = DeeObject_SetAttr(self,&str_index,temp2);
-   Dee_Decref(temp2);
-   if unlikely(error)
-      goto err;
-   return_true;
-  }
-  if ((m = tp_self->tp_math) != NULL) {
-   if ((m->tp_dec && m->tp_dec != &iterator_dec) ||
-       (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) ||
-       (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)) {
-    /* >> if (tp.hasprivateoperator("dec") {
-     * >>     if (!this.hasprev)
-     * >>         return false;
-     * >>     --this;
-     * >>     return true;
-     * >> }
-     */
-    temp = DeeObject_GetAttr(self,&str_hasprev);
-    if unlikely(!temp)
-       goto err;
-    error = DeeObject_Bool(temp);
-    Dee_Decref(temp);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err;
-     return_false;
-    }
-    new_self = self;
-    Dee_Incref(new_self);
-    if (m->tp_dec && m->tp_dec != &iterator_dec) {
-     error = (*m->tp_dec)(&new_self);
-    } else if (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) {
-     error = (*m->tp_inplace_sub)(&new_self,&DeeInt_One);
-    } else {
-     ASSERT(m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add);
-     error = (*m->tp_inplace_add)(&new_self,&DeeInt_MinusOne);
-    }
-    if unlikely(error) { err_new_self: Dee_Decref(new_self); goto err; }
-    if (new_self != self &&
-        DeeObject_MoveAssign(self,new_self))
-        goto err_new_self;
-    Dee_Decref(new_self);
-    return_true;
-   } else if ((m->tp_sub && m->tp_sub != &iterator_sub) ||
-              (m->tp_add && m->tp_add != &iterator_add)) {
-    /* >> if (tp.hasprivateoperator("sub") {
-     * >>     if (!this.hasprev)
-     * >>         return false;
-     * >>     this.operator move := (this - 1);
-     * >>     return true;
-     * >> }
-     */
-    temp = DeeObject_GetAttr(self,&str_hasprev);
-    if unlikely(!temp)
-       goto err;
-    error = DeeObject_Bool(temp);
-    Dee_Decref(temp);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err;
-     return_false;
-    }
-    if (m->tp_sub && m->tp_sub != &iterator_sub) {
-     temp = (*m->tp_sub)(self,&DeeInt_One);
-    } else {
-     ASSERT(m->tp_add && m->tp_add != &iterator_add);
-     temp = (*m->tp_add)(self,&DeeInt_MinusOne);
-    }
-    if unlikely(!temp)
-       goto err;
-    error = DeeObject_MoveAssign(self,temp);
-    Dee_Decref(temp);
-    if (error)
-        goto err;
-    return_true;
-   }
-  }
-  error = has_generic_attribute(tp_self,self,&str_revert);
-  if (error != 0) {
-   /* >> if (!this.hasprev)
-    * >>     return false;
-    * >> this.revert(1);
-    * >> return true;
-    */
-   if unlikely(error < 0)
-      goto err;
-   temp = DeeObject_GetAttr(self,&str_hasprev);
-   if unlikely(!temp)
-      goto err;
-   error = DeeObject_Bool(temp);
-   Dee_Decref(temp);
-   if (error <= 0) {
-    if unlikely(error < 0)
-       goto err;
-    return_false;
-   }
-   new_self = &DeeInt_One;
-   temp = DeeObject_CallAttr(self,&str_revert,1,&new_self);
-   if unlikely(!temp)
-      goto err;
-   Dee_Decref(temp);
-   return_true;
-  }
-  error = has_generic_attribute(tp_self,self,&str_advance);
-  if (error != 0) {
-   /* >> if (!this.hasprev)
-    * >>     return false;
-    * >> this.advance(-1);
-    * >> return true;
-    */
-   if unlikely(error < 0)
-      goto err;
-   temp = DeeObject_GetAttr(self,&str_hasprev);
-   if unlikely(!temp)
-      goto err;
-   error = DeeObject_Bool(temp);
-   Dee_Decref(temp);
-   if (error <= 0) {
-    if unlikely(error < 0)
-       goto err;
-    return_false;
-   }
-   new_self = &DeeInt_MinusOne;
-   temp = DeeObject_CallAttr(self,&str_advance,1,&new_self);
-   if unlikely(!temp)
-      goto err;
-   Dee_Decref(temp);
-   return_true;
-  }
-  error = has_generic_attribute(tp_self,self,&str_rewind);
-  if (error != 0) {
-   if unlikely(error < 0)
-      goto err;
-   new_self = DeeObject_Copy(self);
-   if unlikely(!new_self)
-      goto err;
-   temp = DeeObject_CallAttr(new_self,&str_rewind,0,NULL);
-   if unlikely(!temp)
-      goto err_new_self;
-   Dee_Decref(temp);
-do_prev_with_rewind_iterator:
-   /* >> if (c == this)
-    * >>     return false;
-    * >> for (;;) {
-    * >>     local d = copy c;
-    * >>     try d.operator next();
-    * >>     catch (StopIteration) {
-    * >>         return false;
-    * >>     }
-    * >>     if (d >= this)
-    * >>         break;
-    * >>     c = d;
-    * >> }
-    * >> this.operator move := (c);
-    * >> return true; */
-   error = DeeObject_CompareEq(new_self,self);
-   if (error != 0) {
-    if unlikely(error < 0)
-       goto err_new_self;
-    Dee_Decref(new_self);
-    return_false;
-   }
-   for (;;) {
-    DREF DeeObject *new_copy;
-    if (DeeThread_CheckInterrupt())
-        goto err_new_self;
-    new_copy = DeeObject_Copy(new_self);
-    if unlikely(!new_copy)
-       goto err_new_self;
-    temp = DeeObject_IterNext(new_copy);
-    if unlikely(!ITER_ISOK(temp)) {
-     Dee_Decref(new_copy);
-     Dee_Decref(new_self);
-     if unlikely(!temp)
-        goto err;
-     return_false;
-    }
-    error = DeeObject_CompareGe(new_copy,self);
-    if (error != 0) {
-     Dee_Decref(new_copy);
-     if unlikely(error < 0)
-        goto err_new_self;
-     break;
-    }
-    Dee_Decref(new_self);
-    new_self = new_copy;
-   }
-   error = DeeObject_MoveAssign(self,new_self);
-   Dee_Decref(new_self);
-   if (error)
-       goto err;
-   return_true;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_seq);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   new_self = DeeObject_IterSelf(temp);
-   Dee_Decref(temp);
-   if unlikely(!new_self)
-      goto err;
-   goto do_prev_with_rewind_iterator;
-  }
-  if ((tp_self = DeeType_Base(tp_self)) == NULL)
-       break;
- }
- err_not_bidirectional(self);
+ error = DeeIterator_Prev(self);
+ if unlikely(error < 0)
+    goto err;
+ return_bool_(!error);
 err:
  return NULL;
 }
@@ -497,224 +236,13 @@ INTERN DEFINE_INT32(int_size_min,SSIZE_MIN);
 PRIVATE DREF DeeObject *DCALL
 iterator_rewind(DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- DeeTypeObject *tp_self;
- DREF DeeObject *temp,*temp2,*temp3; int error;
  if (DeeArg_Unpack(argc,argv,":rewind"))
      goto err;
- tp_self = Dee_TYPE(self);
- while (tp_self != &DeeIterator_Type) {
-  struct type_math *m;
-  struct type_nii *nii;
-  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
-   if (nii->nii_common.nii_rewind) {
-    if unlikely((*nii->nii_common.nii_rewind)(self))
-       goto err;
-    goto done;
-   }
-   if (nii->nii_common.nii_setindex) {
-    if unlikely((*nii->nii_common.nii_setindex)(self,0))
-       goto err;
-    goto done;
-   }
-   if (nii->nii_common.nii_revert) {
-    for (;;) {
-     error = (*nii->nii_common.nii_revert)(self,(size_t)-1);
-     if unlikely(error < 0)
-        goto err;
-     if (error == 1)
-         break;
-     if (error == 2)
-         continue;
-     error = iterator_do_hasprev(self,nii);
-     if unlikely(error < 0)
-        goto err;
-     if (!error)
-         break;
-    }
-    goto done;
-   }
-   if (nii->nii_common.nii_prev) {
-    for (;;) {
-     error = (*nii->nii_common.nii_prev)(self);
-     if unlikely(error < 0)
-        goto err;
-     if (error)
-         break;
-    }
-    goto done;
-   }
-   break;
-  }
-  error = has_generic_attribute(tp_self,self,&str_index);
-  if (error != 0) {
-   if unlikely(error < 0)
-      goto err;
-   error = DeeObject_SetAttr(self,&str_index,&DeeInt_Zero);
-   if unlikely(error < 0)
-      goto err;
-   goto done;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_seq);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   temp2 = DeeObject_IterSelf(temp);
-   Dee_Decref(temp);
-   if unlikely(!temp2)
-      goto err;
-   error = DeeObject_MoveAssign(self,temp2);
-   Dee_Decref(temp2);
-   if unlikely(error)
-      goto err;
-   goto done;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_prev);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   for (;;) {
-    if (DeeThread_CheckInterrupt())
-        goto err_temp;
-    temp2 = DeeObject_Call(temp,0,NULL);
-    if unlikely(!temp2)
-       goto err_temp;
-    error = DeeObject_Bool(temp2);
-    Dee_Decref(temp2);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err_temp;
-     break;
-    }
-   }
-   Dee_Decref(temp);
-   goto done;
-  }
-  m = tp_self->tp_math;
-  if (m &&
-    ((m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) ||
-     (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add) ||
-     (m->tp_dec && m->tp_dec != &iterator_dec))) {
-   temp = self;
-   Dee_Incref(temp);
-   for (;;) {
-    error = (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub)
-          ? (*m->tp_inplace_sub)(&temp,(DeeObject *)&int_size_max)
-          : (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)
-          ? (*m->tp_inplace_add)(&temp,(DeeObject *)&int_size_min)
-          : (*m->tp_dec)(&temp)
-          ;
-    if unlikely(error)
-       goto err_temp;
-    temp2 = DeeObject_GetAttr(temp,&str_hasprev);
-    if unlikely(!temp2)
-       goto err_temp;
-    error = DeeObject_Bool(temp2);
-    Dee_Decref(temp2);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err_temp;
-     break;
-    }
-   }
-   if (temp != self &&
-       DeeObject_MoveAssign(self,temp))
-       goto err_temp;
-   Dee_Decref(temp);
-   goto done;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_revert);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   for (;;) {
-    if (DeeThread_CheckInterrupt())
-        goto err_temp;
-    temp3 = (DREF DeeObject *)&int_size_max;
-    temp2 = DeeObject_Call(temp,1,&temp3);
-    if unlikely(!temp2)
-       goto err_temp;
-    Dee_Decref(temp2);
-    temp2 = DeeObject_GetAttr(self,&str_hasprev);
-    if unlikely(!temp2)
-       goto err_temp;
-    error = DeeObject_Bool(temp2);
-    Dee_Decref(temp2);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err_temp;
-     break;
-    }
-   }
-   Dee_Decref(temp);
-   goto done;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_advance);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   for (;;) {
-    if (DeeThread_CheckInterrupt())
-        goto err_temp;
-    temp3 = (DREF DeeObject *)&int_size_min;
-    temp2 = DeeObject_Call(temp,1,&temp3);
-    if unlikely(!temp2)
-       goto err_temp;
-    Dee_Decref(temp2);
-    temp2 = DeeObject_GetAttr(self,&str_hasprev);
-    if unlikely(!temp2)
-       goto err_temp;
-    error = DeeObject_Bool(temp2);
-    Dee_Decref(temp2);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err_temp;
-     break;
-    }
-   }
-   Dee_Decref(temp);
-   goto done;
-  }
-  if (m &&
-    ((m->tp_sub && m->tp_sub != &iterator_sub) ||
-     (m->tp_add && m->tp_add != &iterator_add))) {
-   temp = self;
-   Dee_Incref(temp);
-   for (;;) {
-    temp2 = (m->tp_sub && m->tp_sub != &iterator_sub)
-          ? (*m->tp_sub)(temp,(DeeObject *)&int_size_max)
-          : (*m->tp_add)(temp,(DeeObject *)&int_size_min)
-          ;
-    if unlikely(error)
-       goto err_temp;
-    Dee_Decref(temp);
-    temp = temp2;
-    temp2 = DeeObject_GetAttr(temp,&str_hasprev);
-    if unlikely(!temp2)
-       goto err_temp;
-    error = DeeObject_Bool(temp2);
-    Dee_Decref(temp2);
-    if (error <= 0) {
-     if unlikely(error < 0)
-        goto err_temp;
-     break;
-    }
-   }
-   if (DeeObject_MoveAssign(self,temp))
-       goto err_temp;
-   Dee_Decref(temp);
-   goto done;
-  }
-  if ((tp_self = DeeType_Base(tp_self)) == NULL)
-       break;
- }
- err_not_bidirectional(self);
+ if (DeeIterator_Rewind(self))
+     goto err;
+ return_none;
 err:
  return NULL;
-err_temp:
- Dee_Decref(temp);
- goto err;
-done:
- return_none;
 }
 
 PRIVATE int DCALL
@@ -728,12 +256,8 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
   struct type_math *m;
   struct type_nii *nii;
   if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
-   if (nii->nii_common.nii_revert) {
-    error = (*nii->nii_common.nii_revert)(self,count);
-    if unlikely(error < 0)
-       goto err;
-    goto done;
-   }
+   if (nii->nii_common.nii_revert)
+       return (*nii->nii_common.nii_revert)(self,count);
    if (nii->nii_common.nii_getindex &&
        nii->nii_common.nii_setindex) {
     size_t index;
@@ -752,7 +276,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
     }
     if unlikely(error)
        goto err;
-    goto done;
+    return index <= count ? 2 : 1;
    }
    if (nii->nii_common.nii_prev) {
     for (;;) {
@@ -760,7 +284,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
      if unlikely(error < 0)
         goto err;
      if (error)
-         break;
+         return 1;
      if (!--count)
          break;
     }
@@ -859,14 +383,20 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
    if (DeeObject_AsSize(temp,&old_index))
        goto err_temp;
    Dee_Decref(temp);
-   temp = DeeInt_NewSize(old_index + count);
-   if unlikely(!temp)
-      goto err;
-   error = DeeObject_SetAttr(self,&str_index,temp);
-   Dee_Decref(temp);
+   if (old_index <= count) {
+    if unlikely(DeeObject_SetAttr(self,&str_index,&DeeInt_Zero))
+       goto err;
+    return 1;
+   } else {
+    temp = DeeInt_NewSize(old_index - count);
+    if unlikely(!temp)
+       goto err;
+    error = DeeObject_SetAttr(self,&str_index,temp);
+    Dee_Decref(temp);
+   }
    if unlikely(error)
       goto err;
-   goto done;
+   return 2;
   }
   if (m) {
    if (m->tp_add && m->tp_add != &iterator_add) {
@@ -905,17 +435,17 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
     Dee_Decref(temp);
     goto done;
    }
-   if (m->tp_inc && m->tp_inc != &iterator_inc) {
+   if (m->tp_dec && m->tp_dec != &iterator_dec) {
     temp = self;
     Dee_Incref(temp);
     for (;;) {
      if (DeeThread_CheckInterrupt())
          goto err_temp;
-     if unlikely((*m->tp_inc)(&temp))
+     if unlikely((*m->tp_dec)(&temp))
         goto err_temp;
      if (!--count)
          break;
-     temp2 = DeeObject_GetAttr(self,&str_hasnext);
+     temp2 = DeeObject_GetAttr(self,&str_hasprev);
      if unlikely(!temp2)
         goto err_temp;
      error = DeeObject_Bool(temp2);
@@ -923,7 +453,10 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
      if (error <= 0) {
       if unlikely(error < 0)
          goto err;
-      break;
+      if (temp != self && DeeObject_MoveAssign(self,temp))
+          goto err_temp;
+      Dee_Decref(temp);
+      return 1;
      }
     }
     if (temp != self && DeeObject_MoveAssign(self,temp))
@@ -948,7 +481,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
      if (error <= 0) {
       if unlikely(error < 0)
          goto err;
-      break;
+      return 1;
      }
      if (!--count)
          break;
@@ -979,12 +512,8 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
   struct type_math *m;
   struct type_nii *nii;
   if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
-   if (nii->nii_common.nii_advance) {
-    error = (*nii->nii_common.nii_advance)(self,count);
-    if unlikely(error < 0)
-       goto err;
-    goto done;
-   }
+   if (nii->nii_common.nii_advance)
+       return (*nii->nii_common.nii_advance)(self,count);
    if (nii->nii_common.nii_getindex &&
        nii->nii_common.nii_setindex) {
     size_t index;
@@ -1006,7 +535,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
      if unlikely(error < 0)
         goto err;
      if (error)
-         break;
+         return 1;
      if (!--count)
          break;
     }
@@ -1169,7 +698,10 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
      if (error <= 0) {
       if unlikely(error < 0)
          goto err;
-      break;
+      if (temp != self && DeeObject_MoveAssign(self,temp))
+          goto err_temp;
+      Dee_Decref(temp);
+      return 1;
      }
     }
     if (temp != self && DeeObject_MoveAssign(self,temp))
@@ -1186,7 +718,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
     if (!ITER_ISOK(temp)) {
      if unlikely(!temp)
         goto err;
-     break;
+     return 1;
     }
     Dee_Decref(temp);
     if (!--count)
@@ -1247,6 +779,27 @@ err:
  return NULL;
 }
 
+PRIVATE DREF DeeObject *DCALL
+iterator_peek(DeeObject *__restrict self,
+              size_t argc, DeeObject **__restrict argv) {
+ DREF DeeObject *result;
+ DeeObject *defl = NULL;
+ if (DeeArg_Unpack(argc,argv,"|o:peek",&defl))
+     goto err;
+ result = DeeIterator_Peek(self);
+ if (result == ITER_DONE) {
+  if (!defl)
+     goto err_stop;
+  result = defl;
+  Dee_Incref(defl);
+ }
+ return result;
+err_stop:
+ DeeError_Throw(&DeeError_StopIteration_instance);
+err:
+ return NULL;
+}
+
 
 PRIVATE struct type_method iterator_methods[] = {
     { "next",
@@ -1256,19 +809,21 @@ PRIVATE struct type_method iterator_methods[] = {
           "Same as ${this.operator next()}\n"
           "When given, @defl is returned when the iterator has been "
           "exhaused, rather than throwing a :StopIteration error") },
-    /* TODO: `function peek(defl?)'
-     * @throw StopIteration @this iterator has been exhausted, and no @decl was given
-     * Return the next upcoming sequence element, but don't actually advance to it.
-     * >> function peek(defl?) {
-     * >>  for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {
-     * >>   // TODO: Emulate using `operator next()' + `prev'
-     * >>   // TODO: Emulate using `operator next()' + `index'
-     * >>   // TODO: Emulate using `operator next()' + `rewind' + `operator <=>'
-     * >>   // TODO: Emulate using `operator next()' + `seq' + `operator <=>' + `operator :='
-     * >>  }
-     * >>  throw NotImplemented("...");
-     * >> }
-     */
+    { DeeString_STR(&str_peek),
+     &iterator_peek,
+      DOC("(defl?)->\n"
+          "@throw StopIteration @this iterator has been exhausted, and no @decl was given\n"
+          "Peek the next upcoming object, but don't advance to it\n"
+          ">function peek(defl?) {\n"
+          "> local c = copy this;\n"
+          "> try return c.operator next();\n"
+          "> catch (StopIteration) {\n"
+          ">  if (defl is bound)\n"
+          ">   return defl;\n"
+          ">  throw;\n"
+          "> }\n"
+          ">}\n"
+          ) },
     { DeeString_STR(&str_prev),
      &iterator_prev,
       DOC("->?Dbool\n"
@@ -1532,6 +1087,776 @@ PRIVATE struct type_method iterator_methods[] = {
     { NULL }
 };
 
+
+/* Get the iterator's position
+ * @return: * :         The iterator's current position, where the a starting position is 0
+ * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
+ *                      from its sequence, as can happen in linked lists when the iterator's
+ *                      link entry gets removed)
+ * @return: (size_t)-1: Error */
+INTERN size_t DCALL
+DeeIterator_GetIndex(DeeObject *__restrict self) {
+ DREF DeeObject *copy,*temp; size_t index; int error;
+ DeeTypeObject *tp_self = Dee_TYPE(self);
+ while (tp_self != &DeeIterator_Type) {
+  struct type_nii *nii;
+  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_getindex)
+       return (*nii->nii_common.nii_getindex)(self);
+   break;
+  }
+  error = has_generic_attribute(tp_self,self,&str_rewind);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   copy = DeeObject_Copy(self);
+   if unlikely(!copy)
+      goto err;
+   temp = DeeObject_CallAttr(copy,&str_rewind,0,NULL);
+   if unlikely(!temp)
+      goto err_copy;
+   Dee_Decref(temp);
+   goto got_rewound_iter;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_seq);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   copy = DeeObject_IterSelf(temp);
+   Dee_Decref(temp);
+   if unlikely(!copy)
+      goto err;
+   goto got_rewound_iter;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL)
+       break;
+ }
+ err_not_bidirectional(self);
+ goto err;
+got_rewound_iter:
+ index = 0;
+ for (;;) {
+  if (DeeThread_CheckInterrupt())
+      goto err;
+  error = DeeObject_CompareLo(copy,self);
+  if (error <= 0) {
+   if unlikely(error < 0)
+      goto err_copy;
+   break;
+  }
+  temp = DeeObject_IterNext(copy);
+  if (!ITER_ISOK(temp)) {
+   if unlikely(!temp)
+      goto err_copy;
+   return (size_t)-2;
+  }
+  Dee_Decref(temp);
+  if unlikely(index >= (size_t)-2)
+     goto err_overflow;
+  ++index;
+ }
+ Dee_Decref(copy);
+ return index;
+err_overflow:
+ err_integer_overflow_i(sizeof(size_t) * 8,true);
+ goto err;
+err_copy:
+ Dee_Decref(copy);
+err:
+ return (size_t)-1;
+}
+
+/* Set the iterator's position
+ * @return:  0: Success
+ * @return: -1: Error */
+INTERN int DCALL
+DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
+ DeeTypeObject *tp_self;
+ DREF DeeObject *temp;
+ tp_self = Dee_TYPE(self);
+ while (tp_self != &DeeIterator_Type) {
+  struct type_nii *nii;
+  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_setindex)
+       return (*nii->nii_common.nii_setindex)(self,new_index);
+   if (nii->nii_common.nii_rewind) {
+    if unlikely((*nii->nii_common.nii_rewind)(self))
+       goto err;
+    goto after_rewind;
+   }
+   break;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL)
+       break;
+ }
+ temp = DeeObject_CallAttr(self,&str_rewind,0,NULL);
+ if unlikely(!temp)
+    goto err;
+ Dee_Decref(temp);
+after_rewind:
+ return !new_index ? 0 : iterator_do_advance(self,new_index,NULL,NULL);
+err:
+ return -1;
+}
+
+/* Rewind the iterator to its starting position
+ * @return:  0: Success
+ * @return: -1: Error */
+INTERN int DCALL
+DeeIterator_Rewind(DeeObject *__restrict self) {
+ DeeTypeObject *tp_self;
+ DREF DeeObject *temp,*temp2,*temp3; int error;
+ tp_self = Dee_TYPE(self);
+ while (tp_self != &DeeIterator_Type) {
+  struct type_math *m;
+  struct type_nii *nii;
+  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_rewind) {
+    if unlikely((*nii->nii_common.nii_rewind)(self))
+       goto err;
+    goto done;
+   }
+   if (nii->nii_common.nii_setindex) {
+    if unlikely((*nii->nii_common.nii_setindex)(self,0))
+       goto err;
+    goto done;
+   }
+   if (nii->nii_common.nii_revert) {
+    for (;;) {
+     error = (*nii->nii_common.nii_revert)(self,(size_t)-1);
+     if unlikely(error < 0)
+        goto err;
+     if (error == 1)
+         break;
+     if (error == 2)
+         continue;
+     error = iterator_do_hasprev(self,nii);
+     if unlikely(error < 0)
+        goto err;
+     if (!error)
+         break;
+    }
+    goto done;
+   }
+   if (nii->nii_common.nii_prev) {
+    for (;;) {
+     error = (*nii->nii_common.nii_prev)(self);
+     if unlikely(error < 0)
+        goto err;
+     if (error)
+         break;
+    }
+    goto done;
+   }
+   break;
+  }
+  error = has_generic_attribute(tp_self,self,&str_index);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   error = DeeObject_SetAttr(self,&str_index,&DeeInt_Zero);
+   if unlikely(error < 0)
+      goto err;
+   goto done;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_seq);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   temp2 = DeeObject_IterSelf(temp);
+   Dee_Decref(temp);
+   if unlikely(!temp2)
+      goto err;
+   error = DeeObject_MoveAssign(self,temp2);
+   Dee_Decref(temp2);
+   if unlikely(error)
+      goto err;
+   goto done;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_prev);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   for (;;) {
+    if (DeeThread_CheckInterrupt())
+        goto err_temp;
+    temp2 = DeeObject_Call(temp,0,NULL);
+    if unlikely(!temp2)
+       goto err_temp;
+    error = DeeObject_Bool(temp2);
+    Dee_Decref(temp2);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err_temp;
+     break;
+    }
+   }
+   Dee_Decref(temp);
+   goto done;
+  }
+  m = tp_self->tp_math;
+  if (m &&
+    ((m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) ||
+     (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add) ||
+     (m->tp_dec && m->tp_dec != &iterator_dec))) {
+   temp = self;
+   Dee_Incref(temp);
+   for (;;) {
+    error = (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub)
+          ? (*m->tp_inplace_sub)(&temp,(DeeObject *)&int_size_max)
+          : (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)
+          ? (*m->tp_inplace_add)(&temp,(DeeObject *)&int_size_min)
+          : (*m->tp_dec)(&temp)
+          ;
+    if unlikely(error)
+       goto err_temp;
+    temp2 = DeeObject_GetAttr(temp,&str_hasprev);
+    if unlikely(!temp2)
+       goto err_temp;
+    error = DeeObject_Bool(temp2);
+    Dee_Decref(temp2);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err_temp;
+     break;
+    }
+   }
+   if (temp != self &&
+       DeeObject_MoveAssign(self,temp))
+       goto err_temp;
+   Dee_Decref(temp);
+   goto done;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_revert);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   for (;;) {
+    if (DeeThread_CheckInterrupt())
+        goto err_temp;
+    temp3 = (DREF DeeObject *)&int_size_max;
+    temp2 = DeeObject_Call(temp,1,&temp3);
+    if unlikely(!temp2)
+       goto err_temp;
+    Dee_Decref(temp2);
+    temp2 = DeeObject_GetAttr(self,&str_hasprev);
+    if unlikely(!temp2)
+       goto err_temp;
+    error = DeeObject_Bool(temp2);
+    Dee_Decref(temp2);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err_temp;
+     break;
+    }
+   }
+   Dee_Decref(temp);
+   goto done;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_advance);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   for (;;) {
+    if (DeeThread_CheckInterrupt())
+        goto err_temp;
+    temp3 = (DREF DeeObject *)&int_size_min;
+    temp2 = DeeObject_Call(temp,1,&temp3);
+    if unlikely(!temp2)
+       goto err_temp;
+    Dee_Decref(temp2);
+    temp2 = DeeObject_GetAttr(self,&str_hasprev);
+    if unlikely(!temp2)
+       goto err_temp;
+    error = DeeObject_Bool(temp2);
+    Dee_Decref(temp2);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err_temp;
+     break;
+    }
+   }
+   Dee_Decref(temp);
+   goto done;
+  }
+  if (m &&
+    ((m->tp_sub && m->tp_sub != &iterator_sub) ||
+     (m->tp_add && m->tp_add != &iterator_add))) {
+   temp = self;
+   Dee_Incref(temp);
+   for (;;) {
+    temp2 = (m->tp_sub && m->tp_sub != &iterator_sub)
+          ? (*m->tp_sub)(temp,(DeeObject *)&int_size_max)
+          : (*m->tp_add)(temp,(DeeObject *)&int_size_min)
+          ;
+    if unlikely(error)
+       goto err_temp;
+    Dee_Decref(temp);
+    temp = temp2;
+    temp2 = DeeObject_GetAttr(temp,&str_hasprev);
+    if unlikely(!temp2)
+       goto err_temp;
+    error = DeeObject_Bool(temp2);
+    Dee_Decref(temp2);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err_temp;
+     break;
+    }
+   }
+   if (DeeObject_MoveAssign(self,temp))
+       goto err_temp;
+   Dee_Decref(temp);
+   goto done;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL)
+       break;
+ }
+ err_not_bidirectional(self);
+err:
+ return -1;
+err_temp:
+ Dee_Decref(temp);
+ goto err;
+done:
+ return 0;
+}
+
+/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+ * @return:  0: Success (new relative position wasn't determined)
+ * @return:  1: Success (the iterator has reached its starting position)
+ * @return:  2: Success (the iterator hasn't reached its starting position)
+ * @return: -1: Error */
+INTERN int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
+ return iterator_do_revert(self,step,NULL,NULL);
+}
+
+/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+ * @return:  0: Success (new relative position wasn't determined)
+ * @return:  1: Success (the iterator has become exhausted)
+ * @return:  2: Success (the iterator hasn't become exhausted)
+ * @return: -1: Error */
+INTERN int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
+ return iterator_do_advance(self,step,NULL,NULL);
+}
+
+/* Decrement the iterator by 1.
+ * @return:  0: Success
+ * @return:  1: The iterator was already at its starting location
+ * @return: -1: Error */
+INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
+ DeeTypeObject *tp_self;
+ tp_self = Dee_TYPE(self);
+ while (tp_self != &DeeIterator_Type) {
+  DREF DeeObject *temp,*temp2;
+  DREF DeeObject *new_self; int error;
+  struct type_math *m;
+  struct type_nii *nii;
+  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_prev)
+       return (*nii->nii_common.nii_prev)(self);
+   if (nii->nii_common.nii_revert) {
+    error = iterator_do_hasprev(self,nii);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err;
+     return 1;
+    }
+    if unlikely((*nii->nii_common.nii_revert)(self,1) < 0)
+       goto err;
+    return 0;
+   }
+   if (nii->nii_common.nii_getindex &&
+       nii->nii_common.nii_setindex) {
+    size_t index;
+    index = (*nii->nii_common.nii_getindex)(self);
+    if (index == 0 || index == (size_t)-2)
+        return 1;
+    if unlikely(index == (size_t)-1)
+       goto err;
+    if unlikely((*nii->nii_common.nii_setindex)(self,index - 1))
+       goto err;
+    return 0;
+   }
+   break;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_index);
+  if (temp != ITER_DONE) {
+   /* >> local i = this.index;
+    * >> if (!i)
+    * >>     return false;
+    * >> this.index = i - 1;
+    * >> return true; */
+   if unlikely(!temp)
+      goto err;
+   error = DeeObject_Bool(temp);
+   if (error <= 0) {
+    Dee_Decref(temp);
+    if unlikely(error < 0)
+       goto err;
+    return 1;
+   }
+   temp2 = DeeObject_Sub(temp,&DeeInt_One);
+   Dee_Decref(temp);
+   if unlikely(!temp2)
+      goto err;
+   error = DeeObject_SetAttr(self,&str_index,temp2);
+   Dee_Decref(temp2);
+   return error;
+  }
+  if ((m = tp_self->tp_math) != NULL) {
+   if ((m->tp_dec && m->tp_dec != &iterator_dec) ||
+       (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) ||
+       (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)) {
+    /* >> if (tp.hasprivateoperator("dec") {
+     * >>     if (!this.hasprev)
+     * >>         return false;
+     * >>     --this;
+     * >>     return true;
+     * >> }
+     */
+    temp = DeeObject_GetAttr(self,&str_hasprev);
+    if unlikely(!temp)
+       goto err;
+    error = DeeObject_Bool(temp);
+    Dee_Decref(temp);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err;
+     return 1;
+    }
+    new_self = self;
+    Dee_Incref(new_self);
+    if (m->tp_dec && m->tp_dec != &iterator_dec) {
+     error = (*m->tp_dec)(&new_self);
+    } else if (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) {
+     error = (*m->tp_inplace_sub)(&new_self,&DeeInt_One);
+    } else {
+     ASSERT(m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add);
+     error = (*m->tp_inplace_add)(&new_self,&DeeInt_MinusOne);
+    }
+    if unlikely(error) { err_new_self: Dee_Decref(new_self); goto err; }
+    if (new_self != self &&
+        DeeObject_MoveAssign(self,new_self))
+        goto err_new_self;
+    Dee_Decref(new_self);
+    return 0;
+   } else if ((m->tp_sub && m->tp_sub != &iterator_sub) ||
+              (m->tp_add && m->tp_add != &iterator_add)) {
+    /* >> if (tp.hasprivateoperator("sub") {
+     * >>     if (!this.hasprev)
+     * >>         return false;
+     * >>     this.operator move := (this - 1);
+     * >>     return true;
+     * >> }
+     */
+    temp = DeeObject_GetAttr(self,&str_hasprev);
+    if unlikely(!temp)
+       goto err;
+    error = DeeObject_Bool(temp);
+    Dee_Decref(temp);
+    if (error <= 0) {
+     if unlikely(error < 0)
+        goto err;
+     return 1;
+    }
+    if (m->tp_sub && m->tp_sub != &iterator_sub) {
+     temp = (*m->tp_sub)(self,&DeeInt_One);
+    } else {
+     ASSERT(m->tp_add && m->tp_add != &iterator_add);
+     temp = (*m->tp_add)(self,&DeeInt_MinusOne);
+    }
+    if unlikely(!temp)
+       goto err;
+    error = DeeObject_MoveAssign(self,temp);
+    Dee_Decref(temp);
+    return error;
+   }
+  }
+  error = has_generic_attribute(tp_self,self,&str_revert);
+  if (error != 0) {
+   /* >> if (!this.hasprev)
+    * >>     return false;
+    * >> this.revert(1);
+    * >> return true;
+    */
+   if unlikely(error < 0)
+      goto err;
+   temp = DeeObject_GetAttr(self,&str_hasprev);
+   if unlikely(!temp)
+      goto err;
+   error = DeeObject_Bool(temp);
+   Dee_Decref(temp);
+   if (error <= 0) {
+    if unlikely(error < 0)
+       goto err;
+    return 1;
+   }
+   new_self = &DeeInt_One;
+   temp = DeeObject_CallAttr(self,&str_revert,1,&new_self);
+   if unlikely(!temp)
+      goto err;
+   Dee_Decref(temp);
+   return 0;
+  }
+  error = has_generic_attribute(tp_self,self,&str_advance);
+  if (error != 0) {
+   /* >> if (!this.hasprev)
+    * >>     return false;
+    * >> this.advance(-1);
+    * >> return true;
+    */
+   if unlikely(error < 0)
+      goto err;
+   temp = DeeObject_GetAttr(self,&str_hasprev);
+   if unlikely(!temp)
+      goto err;
+   error = DeeObject_Bool(temp);
+   Dee_Decref(temp);
+   if (error <= 0) {
+    if unlikely(error < 0)
+       goto err;
+    return 1;
+   }
+   new_self = &DeeInt_MinusOne;
+   temp = DeeObject_CallAttr(self,&str_advance,1,&new_self);
+   if unlikely(!temp)
+      goto err;
+   Dee_Decref(temp);
+   return 0;
+  }
+  error = has_generic_attribute(tp_self,self,&str_rewind);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   new_self = DeeObject_Copy(self);
+   if unlikely(!new_self)
+      goto err;
+   temp = DeeObject_CallAttr(new_self,&str_rewind,0,NULL);
+   if unlikely(!temp)
+      goto err_new_self;
+   Dee_Decref(temp);
+do_prev_with_rewind_iterator:
+   /* >> if (c == this)
+    * >>     return false;
+    * >> for (;;) {
+    * >>     local d = copy c;
+    * >>     try d.operator next();
+    * >>     catch (StopIteration) {
+    * >>         return false;
+    * >>     }
+    * >>     if (d >= this)
+    * >>         break;
+    * >>     c = d;
+    * >> }
+    * >> this.operator move := (c);
+    * >> return true; */
+   error = DeeObject_CompareEq(new_self,self);
+   if (error != 0) {
+    if unlikely(error < 0)
+       goto err_new_self;
+    Dee_Decref(new_self);
+    return 1;
+   }
+   for (;;) {
+    DREF DeeObject *new_copy;
+    if (DeeThread_CheckInterrupt())
+        goto err_new_self;
+    new_copy = DeeObject_Copy(new_self);
+    if unlikely(!new_copy)
+       goto err_new_self;
+    temp = DeeObject_IterNext(new_copy);
+    if unlikely(!ITER_ISOK(temp)) {
+     Dee_Decref(new_copy);
+     Dee_Decref(new_self);
+     if unlikely(!temp)
+        goto err;
+     return 1;
+    }
+    error = DeeObject_CompareGe(new_copy,self);
+    if (error != 0) {
+     Dee_Decref(new_copy);
+     if unlikely(error < 0)
+        goto err_new_self;
+     break;
+    }
+    Dee_Decref(new_self);
+    new_self = new_copy;
+   }
+   error = DeeObject_MoveAssign(self,new_self);
+   Dee_Decref(new_self);
+   return error;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_seq);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   new_self = DeeObject_IterSelf(temp);
+   Dee_Decref(temp);
+   if unlikely(!new_self)
+      goto err;
+   goto do_prev_with_rewind_iterator;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL)
+       break;
+ }
+ err_not_bidirectional(self);
+err:
+ return -1;
+}
+
+/* Increment the iterator, but don't generate a value
+ * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
+ *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
+ *       only ever be incremented by 1.
+ * @return:  0: Success
+ * @return:  1: The iterator had already been exhausted
+ * @return: -1: Error */
+INTERN int DCALL DeeIterator_Next(DeeObject *__restrict self) {
+ return iterator_do_advance(self,1,&DeeInt_One,&DeeInt_MinusOne);
+}
+
+/* Check if the iterator is at its starting location
+ * @return:  0: No, it isn't
+ * @return:  1: Yes, it is
+ * @return: -1: Error */
+INTERN int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
+ DeeTypeObject *tp_self = Dee_TYPE(self);
+ while (tp_self != &DeeIterator_Type) {
+  DREF DeeObject *temp,*temp2; int error;
+  struct type_nii *nii;
+  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_hasprev)
+       return (*nii->nii_common.nii_hasprev)(self);
+   if (nii->nii_common.nii_getindex) {
+    size_t index;
+    index = (*nii->nii_common.nii_getindex)(self);
+    if unlikely(index == (size_t)-1)
+       goto err;
+    return index != 0;
+   }
+   break;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_index);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   error = DeeObject_CompareNe(temp,&DeeInt_Zero);
+   Dee_Decref(temp);
+   return error;
+  }
+  error = has_generic_attribute(tp_self,self,&str_prev);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   temp = DeeObject_Copy(self);
+   if unlikely(!temp)
+      goto err;
+   temp2 = DeeObject_CallAttr(temp,&str_prev,0,NULL);
+   Dee_Decref(temp);
+   if unlikely(!temp2)
+      goto err;
+   error = DeeObject_Bool(temp2);
+   Dee_Decref(temp2);
+   return error;
+  }
+  error = has_generic_attribute(tp_self,self,&str_rewind);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   temp = DeeObject_Copy(self);
+   if unlikely(!temp)
+      goto err;
+   temp2 = DeeObject_CallAttr(temp,&str_rewind,0,NULL);
+   if unlikely(!temp2) { Dee_Decref(temp); goto err; }
+   Dee_Decref(temp2);
+   error = DeeObject_CompareNe(self,temp);
+   Dee_Decref(temp);
+   return error;
+  }
+  temp = get_generic_attribute(tp_self,self,&str_seq);
+  if (temp != ITER_DONE) {
+   if unlikely(!temp)
+      goto err;
+   temp2 = DeeObject_IterSelf(temp);
+   Dee_Decref(temp);
+   if unlikely(!temp2)
+      goto err;
+   error = DeeObject_CompareNe(self,temp2);
+   Dee_Decref(temp2);
+   return error;
+  }
+  if ((tp_self = DeeType_Base(tp_self)) == NULL)
+       break;
+ }
+ err_not_bidirectional(self);
+err:
+ return -1;
+}
+
+/* Peek the next iterator value, but don't actually advance the iterator.
+ * @return: ITER_DONE: The iterator has already been exhausted. */
+INTERN DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
+ DREF DeeObject *result;
+ DREF DeeObject *temp; int error;
+ DeeTypeObject *tp_self = Dee_TYPE(self);
+ while (tp_self != &DeeIterator_Type) {
+  struct type_nii *nii;
+  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_peek)
+       return (*nii->nii_common.nii_peek)(self);
+   if (nii->nii_common.nii_prev) {
+    result = DeeObject_IterNext(self);
+    if (ITER_ISOK(result) &&
+        unlikely((*nii->nii_common.nii_prev)(self)))
+        goto err_r;
+    return result;
+   }
+   if (nii->nii_common.nii_revert) {
+    result = DeeObject_IterNext(self);
+    if (ITER_ISOK(result) &&
+        unlikely((*nii->nii_common.nii_revert)(self,1)))
+        goto err_r;
+    return result;
+   }
+   if (nii->nii_common.nii_getindex &&
+       nii->nii_common.nii_setindex) {
+    size_t index = (*nii->nii_common.nii_getindex)(self);
+    if unlikely(index == (size_t)-1)
+       goto err;
+    if unlikely(index == (size_t)-2)
+       return ITER_DONE;
+    result = DeeObject_IterNext(self);
+    if (ITER_ISOK(result) &&
+        unlikely((*nii->nii_common.nii_setindex)(self,index)))
+        goto err_r;
+    return result;
+   }
+   break;
+  }
+  error = has_generic_attribute(tp_self,self,&str_peek);
+  if (error != 0) {
+   if unlikely(error < 0)
+      goto err;
+   result = DeeObject_CallAttr(self,&str_peek,0,NULL);
+   if (!result && DeeError_Catch(&DeeError_StopIteration))
+        result = ITER_DONE;
+   return result;
+  }
+ }
+ temp = DeeObject_Copy(self);
+ if unlikely(!temp)
+    goto err;
+ result = DeeObject_IterNext(temp);
+ Dee_Decref(temp);
+ return result;
+err_r:
+ Dee_Decref(result);
+err:
+ return NULL;
+}
+
+
 INTDEF DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
@@ -1543,13 +1868,30 @@ PRIVATE DeeObject *bidirectional_iterator_attributes[] = {
     &str_rewind,
 };
 
-PRIVATE DREF DeeObject *DCALL
-iterator_get_seq(DeeObject *__restrict self) {
- if unlikely(Dee_TYPE(self) != &DeeIterator_Type)
-    goto err_noseq;
- return_empty_seq;
-err_noseq:
- err_unknown_attribute(Dee_TYPE(self),DeeString_STR(&str_seq),ATTR_ACCESS_GET);
+
+/* Return the sequence associated with the iterator, or NULL on error.
+ * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
+INTERN DREF DeeObject *DCALL
+DeeIterator_GetSeq(DeeObject *__restrict self) {
+ DREF DeeObject *result;
+ DeeTypeObject *tp_self = Dee_TYPE(self);
+ if unlikely(tp_self == &DeeIterator_Type)
+    return_empty_seq;
+ while (tp_self != &DeeIterator_Type) {
+  struct type_nii *nii;
+  if (tp_self->tp_cmp &&
+     (nii = tp_self->tp_cmp->tp_nii) != NULL) {
+   if (nii->nii_common.nii_getseq)
+       return (*nii->nii_common.nii_getseq)(self);
+  }
+  result = get_generic_attribute(tp_self,self,&str_seq);
+  if (result != ITER_DONE)
+      return result;
+ }
+/*err_noseq:*/
+ err_unknown_attribute(Dee_TYPE(self),
+                       DeeString_STR(&str_seq),
+                       ATTR_ACCESS_GET);
  return NULL;
 }
 
@@ -1603,147 +1945,22 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 iterator_get_hasprev(DeeObject *__restrict self) {
- DREF DeeObject *result;
- DeeTypeObject *tp_self = Dee_TYPE(self);
- while (tp_self != &DeeIterator_Type) {
-  DREF DeeObject *temp,*temp2; int error;
-  struct type_nii *nii;
-  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
-   if (nii->nii_common.nii_hasprev) {
-    error = (*nii->nii_common.nii_hasprev)(self);
-    if unlikely(error < 0)
-       goto err;
-    return_bool_(error);
-   }
-   if (nii->nii_common.nii_getindex) {
-    size_t index;
-    index = (*nii->nii_common.nii_getindex)(self);
-    if unlikely(index == (size_t)-1)
-       goto err;
-    return_bool_(index == 0);
-   }
-   break;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_index);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   result = DeeObject_CompareNeObject(temp,&DeeInt_Zero);
-   Dee_Decref(temp);
-   return result;
-  }
-  error = has_generic_attribute(tp_self,self,&str_prev);
-  if (error != 0) {
-   if unlikely(error < 0)
-      goto err;
-   temp = DeeObject_Copy(self);
-   if unlikely(!temp)
-      goto err;
-   temp2 = DeeObject_CallAttr(temp,&str_prev,0,NULL);
-   Dee_Decref(temp);
-   return temp2;
-  }
-  error = has_generic_attribute(tp_self,self,&str_rewind);
-  if (error != 0) {
-   if unlikely(error < 0)
-      goto err;
-   temp = DeeObject_Copy(self);
-   if unlikely(!temp)
-      goto err;
-   temp2 = DeeObject_CallAttr(temp,&str_rewind,0,NULL);
-   if unlikely(!temp2) { Dee_Decref(temp); goto err; }
-   Dee_Decref(temp2);
-   temp2 = DeeObject_CompareNeObject(self,temp);
-   Dee_Decref(temp);
-   return temp2;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_seq);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   temp2 = DeeObject_IterSelf(temp);
-   Dee_Decref(temp);
-   if unlikely(!temp2)
-      goto err;
-   result = DeeObject_CompareNeObject(self,temp2);
-   Dee_Decref(temp2);
-   return result;
-  }
-  if ((tp_self = DeeType_Base(tp_self)) == NULL)
-       break;
- }
- err_not_bidirectional(self);
+ int error = DeeIterator_HasPrev(self);
+ if unlikely(error < 0)
+    goto err;
+ return_bool_(error);
 err:
  return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 iterator_get_index(DeeObject *__restrict self) {
- DREF DeeObject *copy,*temp; size_t index; int error;
- DeeTypeObject *tp_self = Dee_TYPE(self);
- while (tp_self != &DeeIterator_Type) {
-  struct type_nii *nii;
-  if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
-   if (nii->nii_common.nii_getindex) {
-    size_t index;
-    index = (*nii->nii_common.nii_getindex)(self);
-    if unlikely(index == (size_t)-1)
-       goto err;
-    if unlikely(index == (size_t)-2)
-       return_none;
-    return DeeInt_NewSize(index);
-   }
-   break;
-  }
-  error = has_generic_attribute(tp_self,self,&str_rewind);
-  if (error != 0) {
-   if unlikely(error < 0)
-      goto err;
-   copy = DeeObject_Copy(self);
-   if unlikely(!copy)
-      goto err;
-   temp = DeeObject_CallAttr(copy,&str_rewind,0,NULL);
-   if unlikely(!temp)
-      goto err_copy;
-   Dee_Decref(temp);
-   goto got_rewound_iter;
-  }
-  temp = get_generic_attribute(tp_self,self,&str_seq);
-  if (temp != ITER_DONE) {
-   if unlikely(!temp)
-      goto err;
-   copy = DeeObject_IterSelf(temp);
-   Dee_Decref(temp);
-   if unlikely(!copy)
-      goto err;
-   goto got_rewound_iter;
-  }
-  if ((tp_self = DeeType_Base(tp_self)) == NULL)
-       break;
- }
- err_not_bidirectional(self);
- goto err;
-got_rewound_iter:
- index = 0;
- for (;; ++index) {
-  error = DeeObject_CompareLo(copy,self);
-  if (error <= 0) {
-   if unlikely(error < 0)
-      goto err_copy;
-   break;
-  }
-  temp = DeeObject_IterNext(copy);
-  if (!ITER_ISOK(temp)) {
-   if unlikely(!temp)
-      goto err_copy;
-   return_none;
-  }
-  Dee_Decref(temp);
- }
- Dee_Decref(copy);
- return DeeInt_NewSize(index);
-err_copy:
- Dee_Decref(copy);
+ size_t result = DeeIterator_GetIndex(self);
+ if unlikely(result == (size_t)-1)
+    goto err;
+ if unlikely(result == (size_t)-2)
+    return_none;
+ return DeeInt_NewSize(result);
 err:
  return NULL;
 }
@@ -1786,7 +2003,7 @@ err:
 
 PRIVATE struct type_getset iterator_getsets[] = {
     { DeeString_STR(&str_seq),
-     &iterator_get_seq, NULL, NULL,
+     &DeeIterator_GetSeq, NULL, NULL,
       DOC("->?Dsequence\n"
           "Returns the underlying sequence that is being iterated\n"
           "Since use of this member isn't all too common, sub-classes are allowed "
@@ -1940,8 +2157,8 @@ iterator_inplace_add(DeeObject **__restrict pself,
  /* Increment the iterator by `(int)count' */
  if (DeeObject_AsSSize(countob,&count))
      goto err;
- if unlikely(unlikely(count < 0) ? iterator_do_revert(*pself,(size_t)-count,NULL,countob)
-                   : (count > 0) ? iterator_do_advance(*pself,(size_t)count,countob,NULL) : 0)
+ if unlikely((unlikely(count < 0) ? iterator_do_revert(*pself,(size_t)-count,NULL,countob)
+                    : (count > 0) ? iterator_do_advance(*pself,(size_t)count,countob,NULL) : 0) < 0)
     goto err;
  return 0;
 err:
@@ -1954,8 +2171,8 @@ iterator_inplace_sub(DeeObject **__restrict pself,
  /* Increment the iterator by `(int)count' */
  if (DeeObject_AsSSize(countob,&count))
      goto err;
- if unlikely(unlikely(count < 0) ? iterator_do_advance(*pself,(size_t)-count,NULL,countob)
-                   : (count > 0) ? iterator_do_revert(*pself,(size_t)count,countob,NULL) : 0)
+ if unlikely((unlikely(count < 0) ? iterator_do_advance(*pself,(size_t)-count,NULL,countob)
+                    : (count > 0) ? iterator_do_revert(*pself,(size_t)count,countob,NULL) : 0) < 0)
     goto err;
  return 0;
 err:
@@ -1971,8 +2188,8 @@ iterator_add(DeeObject *__restrict self,
  result = DeeObject_Copy(self);
  if unlikely(!result)
     goto err;
- if unlikely(unlikely(count < 0) ? iterator_do_revert(result,(size_t)-count,NULL,countob)
-                   : (count > 0) ? iterator_do_advance(result,(size_t)count,countob,NULL) : 0)
+ if unlikely((unlikely(count < 0) ? iterator_do_revert(result,(size_t)-count,NULL,countob)
+                    : (count > 0) ? iterator_do_advance(result,(size_t)count,countob,NULL) : 0) < 0)
     goto err_r;
  return result;
 err_r:
@@ -1990,8 +2207,8 @@ iterator_sub(DeeObject *__restrict self,
  result = DeeObject_Copy(self);
  if unlikely(!result)
     goto err;
- if unlikely(unlikely(count < 0) ? iterator_do_advance(result,(size_t)-count,NULL,countob)
-                   : (count > 0) ? iterator_do_revert(result,(size_t)count,countob,NULL) : 0)
+ if unlikely((unlikely(count < 0) ? iterator_do_advance(result,(size_t)-count,NULL,countob)
+                    : (count > 0) ? iterator_do_revert(result,(size_t)count,countob,NULL) : 0) < 0)
     goto err_r;
  return result;
 err_r:
@@ -2092,6 +2309,25 @@ PRIVATE struct type_math iterator_math = {
  * Note that tee() should not be used when @this source iterator is copyable,
  * with reading from a copied iterators not having any unwanted side-effects. */
 
+
+PRIVATE int DCALL
+iterator_assign(DeeObject *__restrict self,
+                DeeObject *__restrict other) {
+ size_t index;
+ if (DeeObject_AssertType(other,Dee_TYPE(self)))
+     goto err;
+ /* XXX: What about:
+  * >> this.rewind();
+  * >> while (this < other)
+  * >>     ++this; // or `operator next()', `operator ++ ()', `operator += ()' or `advance()'
+  */
+ index = DeeIterator_GetIndex(other);
+ if unlikely(index == (size_t)-1)
+    goto err;
+ return DeeIterator_SetIndex(self,index);
+err:
+ return -1;
+}
 
 
 INTDEF int DCALL none_i1(void *UNUSED(a));
@@ -2218,7 +2454,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
             }
         },
         /* .tp_dtor        = */NULL,
-        /* .tp_assign      = */NULL, /* TODO: Implement via `this.index = other.index' */
+        /* .tp_assign      = */&iterator_assign,
         /* .tp_move_assign = */NULL
     },
     /* .tp_cast = */{

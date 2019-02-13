@@ -497,13 +497,14 @@ INTERN int DCALL
 dictproxyiterator_init(DictProxyIterator *__restrict self,
                        size_t argc, DeeObject **__restrict argv) {
  DictProxy *proxy;
- if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&proxy) ||
-     DeeObject_AssertType((DeeObject *)proxy,
+ if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&proxy))
+     goto err;
+ if (DeeObject_AssertType((DeeObject *)proxy,
                            DeeObject_InstanceOf((DeeObject *)self,&DictKeysIterator_Type)  ? &DeeDictKeys_Type :
                            DeeObject_InstanceOf((DeeObject *)self,&DictItemsIterator_Type) ? &DeeDictItems_Type :
                                                                                              &DeeDictValues_Type
                            ))
-     return -1;
+     goto err;
  self->dpi_proxy = proxy;
  self->dpi_base.di_dict = proxy->dp_dict;
  Dee_Incref(proxy);
@@ -514,6 +515,8 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
  self->dpi_base.di_next = ATOMIC_READ(proxy->dp_dict->d_elem);
 #endif
  return 0;
+err:
+ return -1;
 }
 
 #define INIT_PROXY_ITERATOR_TYPE(tp_name,tp_iter_next) \

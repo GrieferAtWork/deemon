@@ -1350,6 +1350,65 @@ DEFINE_SEWI_COMPARE(sewi_gr,DeeObject_CompareGrObject)
 DEFINE_SEWI_COMPARE(sewi_ge,DeeObject_CompareGeObject)
 #undef DEFINE_SEWI_COMPARE
 
+PRIVATE DREF SeqEachBase *DCALL
+sewi_nii_getseq(SeqEachIterator *__restrict self) {
+ return_reference_(self->ei_each);
+}
+PRIVATE size_t DCALL
+sewi_nii_getindex(SeqEachIterator *__restrict self) {
+ return DeeIterator_GetIndex(self->ei_iter);
+}
+PRIVATE int DCALL
+sewi_nii_setindex(SeqEachIterator *__restrict self, size_t index) {
+ return DeeIterator_SetIndex(self->ei_iter,index);
+}
+PRIVATE int DCALL
+sewi_nii_rewind(SeqEachIterator *__restrict self) {
+ return DeeIterator_Rewind(self->ei_iter);
+}
+PRIVATE int DCALL
+sewi_nii_revert(SeqEachIterator *__restrict self, size_t skip) {
+ return DeeIterator_Revert(self->ei_iter,skip);
+}
+PRIVATE int DCALL
+sewi_nii_advance(SeqEachIterator *__restrict self, size_t skip) {
+ return DeeIterator_Advance(self->ei_iter,skip);
+}
+PRIVATE int DCALL
+sewi_nii_prev(SeqEachIterator *__restrict self) {
+ return DeeIterator_Prev(self->ei_iter);
+}
+PRIVATE int DCALL
+sewi_nii_next(SeqEachIterator *__restrict self) {
+ return DeeIterator_Next(self->ei_iter);
+}
+PRIVATE int DCALL
+sewi_nii_hasprev(SeqEachIterator *__restrict self) {
+ return DeeIterator_HasPrev(self->ei_iter);
+}
+PRIVATE DREF DeeObject *DCALL
+sewi_nii_peek(SeqEachIterator *__restrict self) {
+ return DeeIterator_Peek(self->ei_iter);
+}
+
+PRIVATE struct type_nii sewi_nii = {
+    /* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
+    /* .nii_flags = */TYPE_ITERX_FNORMAL,
+    {
+        /* .nii_common = */{
+            /* .nii_getseq   = */(void *)&sewi_nii_getseq,
+            /* .nii_getindex = */(void *)&sewi_nii_getindex,
+            /* .nii_setindex = */(void *)&sewi_nii_setindex,
+            /* .nii_rewind   = */(void *)&sewi_nii_rewind,
+            /* .nii_revert   = */(void *)&sewi_nii_revert,
+            /* .nii_advance  = */(void *)&sewi_nii_advance,
+            /* .nii_prev     = */(void *)&sewi_nii_prev,
+            /* .nii_next     = */(void *)&sewi_nii_next,
+            /* .nii_hasprev  = */(void *)&sewi_nii_hasprev,
+            /* .nii_peek     = */(void *)&sewi_nii_peek
+        }
+    }
+};
 
 PRIVATE struct type_cmp sewi_cmp = {
     /* .tp_hash = */NULL,
@@ -1358,7 +1417,8 @@ PRIVATE struct type_cmp sewi_cmp = {
     /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sewi_lo,
     /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sewi_le,
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sewi_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sewi_ge
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&sewi_ge,
+    /* .tp_nii  = */&sewi_nii
 };
 
 PRIVATE struct type_member seoi_members[] = {

@@ -1380,6 +1380,9 @@ next_modifier:
    goto next_modifier;
 
   case '}':
+   if (modifiers_encountered &&
+       WARN(W_CLASS_NO_MEMBER_DEFINED))
+       goto err;
    TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
    TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
    if unlikely(yield() < 0) goto err;
@@ -1390,7 +1393,7 @@ next_modifier:
    goto next_modifier;
 
   case ';':
-   if (modifiers_encountered && 
+   if (modifiers_encountered &&
        WARN(W_CLASS_NO_MEMBER_DEFINED))
        goto err;
    if unlikely(yield() < 0) goto err;

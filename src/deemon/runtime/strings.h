@@ -104,6 +104,7 @@ STRING(prev)
 STRING(hasprev)
 STRING(hasnext)
 STRING(rewind)
+STRING(peek)
 
 
 STRING(__format__)

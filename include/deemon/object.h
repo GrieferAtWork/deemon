@@ -1021,7 +1021,7 @@ struct type_math {
     int (DCALL *tp_int32)(DeeObject *__restrict self, int32_t *__restrict result);
     int (DCALL *tp_int64)(DeeObject *__restrict self, int64_t *__restrict result);
     int (DCALL *tp_double)(DeeObject *__restrict self, double *__restrict result);
-    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self); /* Cast to `int' */
+    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self); /* Cast to `int' (Must return an `DeeInt_Type' object) */
     DREF DeeObject *(DCALL *tp_inv)(DeeObject *__restrict self);
     DREF DeeObject *(DCALL *tp_pos)(DeeObject *__restrict self);
     DREF DeeObject *(DCALL *tp_neg)(DeeObject *__restrict self);

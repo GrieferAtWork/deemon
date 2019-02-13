@@ -107,7 +107,7 @@ INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF s
 #define CASE_TOKEN_IS_COND   case '?'
 #define CASE_TOKEN_IS_ASSIGN case TOK_COLLON_EQUAL: case TOK_ADD_EQUAL: case TOK_SUB_EQUAL: case TOK_MUL_EQUAL: case TOK_DIV_EQUAL: case TOK_MOD_EQUAL: \
                              case TOK_SHL_EQUAL: case TOK_SHR_EQUAL: case TOK_AND_EQUAL: case TOK_OR_EQUAL: case TOK_XOR_EQUAL: case TOK_POW_EQUAL
-                             
+
 
 /* Parse a top-level expression. */
 #define ast_parse_expr(lookup_mode) ast_parse_assign(lookup_mode)
@@ -504,6 +504,7 @@ struct ast_tags {
     uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
     uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
     uint16_t               at_code_flags;   /* Set of `CODE_F*' or'd to flags during creation of a new function. */
+    uint16_t               at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*' or'd to flags during creation of a new class attribute. */
 };
 
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
@@ -546,6 +547,7 @@ INTDEF int (DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t fla
 /* Capture all currently saved annotations. */
 INTDEF void (DCALL ast_annotations_get)(struct ast_annotations *__restrict result);
 INTDEF void (DCALL ast_annotations_free)(struct ast_annotations *__restrict self);
+/* Clear annotations, and warn if some were given. */
 INTDEF int (DCALL ast_annotations_clear)(struct ast_annotations *__restrict self);
 
 /* Apply & free annotations to the given `input' ast. */
@@ -567,6 +569,7 @@ INTDEF int DCALL parse_tags(void);
 /* Same as `parse_tags()', but also parses the leading `@'
  * token and doesn't do anything if that token wasn't found. */
 INTDEF int DCALL parse_tags_block(void);
+
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

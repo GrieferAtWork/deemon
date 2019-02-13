@@ -573,6 +573,59 @@ INTDEF int DCALL DeeSet_Remove(DeeObject *__restrict self, DeeObject *__restrict
 INTDEF size_t DCALL DeeSet_InsertAll(DeeObject *__restrict self, DeeObject *__restrict items);
 INTDEF size_t DCALL DeeSet_RemoveAll(DeeObject *__restrict self, DeeObject *__restrict items);
 
+
+/* Return the sequence associated with the iterator, or NULL on error.
+ * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
+INTDEF DREF DeeObject *DCALL DeeIterator_GetSeq(DeeObject *__restrict self);
+/* Get the iterator's position
+ * @return: * :         The iterator's current position, where the a starting position is 0
+ * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
+ *                      from its sequence, as can happen in linked lists when the iterator's
+ *                      link entry gets removed)
+ * @return: (size_t)-1: Error */
+INTDEF size_t DCALL DeeIterator_GetIndex(DeeObject *__restrict self);
+/* Set the iterator's position
+ * @return:  0: Success
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index);
+/* Rewind the iterator to its starting position
+ * @return:  0: Success
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_Rewind(DeeObject *__restrict self);
+/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+ * @return:  0: Success (new relative position wasn't determined)
+ * @return:  1: Success (the iterator has reached its starting position)
+ * @return:  2: Success (the iterator hasn't reached its starting position)
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step);
+/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+ * @return:  0: Success (new relative position wasn't determined)
+ * @return:  1: Success (the iterator has become exhausted)
+ * @return:  2: Success (the iterator hasn't become exhausted)
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step);
+/* Decrement the iterator by 1.
+ * @return:  0: Success
+ * @return:  1: The iterator was already at its starting location
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_Prev(DeeObject *__restrict self);
+/* Increment the iterator, but don't generate a value
+ * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
+ *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
+ *       only ever be incremented by 1.
+ * @return:  0: Success
+ * @return:  1: The iterator had already been exhausted
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_Next(DeeObject *__restrict self);
+/* Check if the iterator is at its starting location
+ * @return:  0: No, it isn't
+ * @return:  1: Yes, it is
+ * @return: -1: Error */
+INTDEF int DCALL DeeIterator_HasPrev(DeeObject *__restrict self);
+/* Peek the next iterator value, but don't actually advance the iterator.
+ * @return: ITER_DONE: The iterator has already been exhausted. */
+INTDEF DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self);
+
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

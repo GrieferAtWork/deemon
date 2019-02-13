@@ -707,6 +707,7 @@ err:
  return -1;
 }
 
+#ifndef CONFIG_NO_DOC
 PRIVATE struct type_member Fi(members)[] = {
 #ifdef DEFINE_GETATTR
     TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_each),"->?Ert:SeqEachGetAttr"),
@@ -720,6 +721,7 @@ PRIVATE struct type_member Fi(members)[] = {
     TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_iter),"->?Diterator"),
     TYPE_MEMBER_END
 };
+#endif /* !CONFIG_NO_DOC */
 
 PRIVATE DREF DeeObject *DCALL
 Fi(next)(SeqEachIterator *__restrict self) {
@@ -781,7 +783,11 @@ INTERN DeeTypeObject ITERATOR_TYPE_OBJECT = {
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */NULL,
     /* .tp_getsets       = */NULL,
+#ifndef CONFIG_NO_DOC
     /* .tp_members       = */Fi(members),
+#else /* !CONFIG_NO_DOC */
+    /* .tp_members       = */seoi_members,
+#endif /* CONFIG_NO_DOC */
     /* .tp_class_methods = */NULL,
     /* .tp_class_getsets = */NULL,
     /* .tp_class_members = */NULL
