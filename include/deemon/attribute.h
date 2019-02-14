@@ -64,12 +64,20 @@
 
 DECL_BEGIN
 
-struct string_object;
-typedef struct attribute_object DeeAttributeObject;
-typedef struct enumattr_object DeeEnumAttrObject;
-typedef struct enumattr_iterator_object DeeEnumAttrIteratorObject;
+#ifdef DEE_SOURCE
+#define Dee_attribute_object         attribute_object
+#define Dee_enumattr_object          enumattr_object
+#define Dee_enumattr_iterator_object enumattr_iterator_object
+#define Dee_attribute_info           attribute_info
+#define Dee_attribute_lookup_rules   attribute_lookup_rules
+#define attribute_info_fini          Dee_attribute_info_fini
+#endif
 
-struct attribute_info {
+typedef struct Dee_attribute_object DeeAttributeObject;
+typedef struct Dee_enumattr_object DeeEnumAttrObject;
+typedef struct Dee_enumattr_iterator_object DeeEnumAttrIteratorObject;
+
+struct Dee_attribute_info {
     DREF DeeObject            *a_decl;     /* [1..1] The type defining the attribute. */
     char const                *a_doc;      /* [0..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
                                             * The documentation string of the attribute (when known).
@@ -81,7 +89,7 @@ struct attribute_info {
     uint16_t                   a_perm;     /* Set of `ATTR_*' flags, describing the attribute's behavior. */
     DREF DeeTypeObject        *a_attrtype; /* [0..1] The typing of this attribute. */
 };
-#define attribute_info_fini(self) \
+#define Dee_attribute_info_fini(self) \
     (Dee_Decref((self)->a_decl), \
      Dee_XDecref((self)->a_attrtype), \
    ((self)->a_perm & ATTR_DOCOBJ) ? \
@@ -89,16 +97,16 @@ struct attribute_info {
     (void)0)
 
 
-struct attribute_object {
+struct Dee_attribute_object {
     /* Wrapper object for attribute information provided to `denum_t' */
-    OBJECT_HEAD
-    char const           *a_name; /* [1..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
-                                   * The name of the attribute. */
-    struct attribute_info a_info; /* [const] Attribute information. */
+    Dee_OBJECT_HEAD
+    char const               *a_name; /* [1..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
+                                       * The name of the attribute. */
+    struct Dee_attribute_info a_info; /* [const] Attribute information. */
 };
 
-struct enumattr_object {
-    OBJECT_HEAD
+struct Dee_enumattr_object {
+    Dee_OBJECT_HEAD
     DREF DeeTypeObject        *ea_type;    /* [1..1][const] The starting type level from which attributes should be enumerated. */
     DREF DeeObject            *ea_obj;     /* [0..1][const] The object in association of which attributes are enumerated. */
 #ifndef CONFIG_LONGJMP_ENUMATTR
@@ -107,11 +115,11 @@ struct enumattr_object {
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 };
 
-struct enumattr_iterator_object {
-    OBJECT_HEAD
+struct Dee_enumattr_iterator_object {
+    Dee_OBJECT_HEAD
     DREF DeeEnumAttrObject   *ei_seq;            /* [1..1] The enumattr object that is being iterated. */
 #ifdef CONFIG_LONGJMP_ENUMATTR
-    rwlock_t                  ei_lock;           /* Lock for accessing the iterator. */
+    Dee_rwlock_t              ei_lock;           /* Lock for accessing the iterator. */
     DREF DeeAttributeObject  *ei_buffer[CONFIG_LONGJMP_ENUMATTR_CLUSTER]; /* [?..1][*][lock(ei_lock)] Attribute cluster buffer. */
     DREF DeeAttributeObject **ei_bufpos;         /* [0..1][in(ei_buffer)][lock(ei_lock)] Pointer to the next unused (in-enum) or full (outside-enum) item.
                                                   *  NOTE: Initially, this pointer is set to NULL.
@@ -135,9 +143,9 @@ DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).itera
 #define DeeEnumAttr_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeEnumAttr_Type)
 
 
-struct attribute_lookup_rules {
+struct Dee_attribute_lookup_rules {
     char const *alr_name;       /* [1..1] The name of the attribute to look up. */
-    dhash_t     alr_hash;       /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
+    Dee_hash_t  alr_hash;       /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
     DeeObject  *alr_decl;       /* [0..1] When non-NULL, only consider attributes declared by this object. */
     uint16_t    alr_perm_mask;  /* Only consider attributes who's permissions
                                  * match `(perm & perm_mask) == perm_value' */
@@ -153,8 +161,8 @@ struct attribute_lookup_rules {
  * @return: -1: An error occurred. */
 DFUNDEF int DCALL
 DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self,
-                    struct attribute_info *__restrict result,
-                    struct attribute_lookup_rules const *__restrict rules);
+                    struct Dee_attribute_info *__restrict result,
+                    struct Dee_attribute_lookup_rules const *__restrict rules);
 
 
 

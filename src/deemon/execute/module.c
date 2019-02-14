@@ -1529,7 +1529,7 @@ module_pclear(DeeModuleObject *__restrict self,
 INTERN struct type_gc module_gc = {
     /* .tp_clear  = */(void(DCALL *)(DeeObject *__restrict))&module_clear,
     /* .tp_pclear = */(void(DCALL *)(DeeObject *__restrict,unsigned int))&module_pclear,
-    /* .tp_gcprio = */GC_PRIORITY_MODULE
+    /* .tp_gcprio = */Dee_GC_PRIORITY_MODULE
 };
 
 

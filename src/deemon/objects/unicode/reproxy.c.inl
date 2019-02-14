@@ -78,7 +78,7 @@ refaiter_ctor(ReSequenceIterator *__restrict self) {
  self->re_args.re_datalen    = 0;
  self->re_args.re_patternlen = 0;
  self->re_args.re_offset     = 0;
- self->re_args.re_flags      = DEE_REGEX_FNORMAL;
+ self->re_args.re_flags      = Dee_REGEX_FNORMAL;
  rwlock_init(&self->re_lock);
  return 0;
 }
@@ -598,7 +598,7 @@ refa_ctor(ReSequence *__restrict self) {
  self->re_args.re_datalen    = 0;
  self->re_args.re_patternlen = 0;
  self->re_args.re_offset     = 0;
- self->re_args.re_flags      = DEE_REGEX_FNORMAL;
+ self->re_args.re_flags      = Dee_REGEX_FNORMAL;
  return 0;
 }
 
@@ -611,7 +611,7 @@ refa_init(ReSequence *__restrict self,
      DeeObject_AssertTypeExact((DeeObject *)self->re_data,&DeeString_Type) ||
      DeeObject_AssertTypeExact((DeeObject *)self->re_pattern,&DeeString_Type))
      goto err;
- self->re_args.re_flags = DEE_REGEX_FNORMAL;
+ self->re_args.re_flags = Dee_REGEX_FNORMAL;
  if (rules) {
   if (DeeObject_AssertTypeExact((DeeObject *)rules,&DeeString_Type))
       goto err;

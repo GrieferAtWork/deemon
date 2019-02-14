@@ -4155,7 +4155,7 @@ instance_pclear(DeeObject *__restrict self,
 INTERN struct type_gc instance_gc = {
     /* .tp_clear  = */&instance_clear,
     /* .tp_pclear = */&instance_pclear,
-    /* .tp_gcprio = */GC_PRIORITY_INSTANCE
+    /* .tp_gcprio = */Dee_GC_PRIORITY_INSTANCE
 };
 
 
@@ -4394,20 +4394,20 @@ err_custom_allocator:
    tp_free = base->tp_init.tp_alloc.tp_free;
    /* Figure out the slab size used by the base-class. */
    if (base->tp_flags & TP_FGC) {
-#define CHECK_ALLOCATOR(x) \
-    if (tp_free == &DeeGCObject_SlabFree##x) base_size = x * sizeof(void *); \
+#define CHECK_ALLOCATOR(index,size) \
+    if (tp_free == &DeeGCObject_SlabFree##size) base_size = size * sizeof(void *); \
     else
-    DEE_ENUMERATE_SLAB_SIZES(CHECK_ALLOCATOR)
+    DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
 #undef CHECK_ALLOCATOR
     {
      DeeGCObject_Free(result);
      goto err_custom_allocator;
     }
    } else {
-#define CHECK_ALLOCATOR(x) \
-    if (tp_free == &DeeObject_SlabFree##x) base_size = x * sizeof(void *); \
+#define CHECK_ALLOCATOR(index,size) \
+    if (tp_free == &DeeObject_SlabFree##size) base_size = size * sizeof(void *); \
     else
-    DEE_ENUMERATE_SLAB_SIZES(CHECK_ALLOCATOR)
+    DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
 #undef CHECK_ALLOCATOR
     {
      DeeGCObject_Free(result);

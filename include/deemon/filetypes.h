@@ -29,11 +29,42 @@
 
 DECL_BEGIN
 
-typedef struct system_file_object DeeSystemFileObject;
-typedef struct file_buffer_object DeeFileBufferObject;
+#ifdef DEE_SOURCE
+#define Dee_system_file_object         system_file_object
+#define Dee_file_buffer_object         file_buffer_object
+#define Dee_file_buffer_link           file_buffer_link
+#define Dee_memory_file_object         memory_file_object
+#define Dee_file_reader_object         file_reader_object
+#define Dee_file_writer_object         file_writer_object
+#define FILE_BUFFER_FNORMAL            Dee_FILE_BUFFER_FNORMAL
+#define FILE_BUFFER_FREADONLY          Dee_FILE_BUFFER_FREADONLY
+#define FILE_BUFFER_FNODYNSCALE        Dee_FILE_BUFFER_FNODYNSCALE
+#define FILE_BUFFER_FLNBUF             Dee_FILE_BUFFER_FLNBUF
+#define FILE_BUFFER_FSYNC              Dee_FILE_BUFFER_FSYNC
+#define FILE_BUFFER_FCLOFILE           Dee_FILE_BUFFER_FCLOFILE
+#define FILE_BUFFER_FREADING           Dee_FILE_BUFFER_FREADING
+#define FILE_BUFFER_FNOTATTY           Dee_FILE_BUFFER_FNOTATTY
+#define FILE_BUFFER_FISATTY            Dee_FILE_BUFFER_FISATTY
+#define FILE_BUFFER_FSTATICBUF         Dee_FILE_BUFFER_FSTATICBUF
+#define FILE_BUFFER_FLNIFTTY           Dee_FILE_BUFFER_FLNIFTTY
+#define FILE_BUFSIZ_MAX                Dee_FILE_BUFSIZ_MAX
+#define FILE_BUFSIZ_MIN                Dee_FILE_BUFSIZ_MIN
+#define FILE_BUFSIZ_RELOCATE_THRESHOLD Dee_FILE_BUFSIZ_RELOCATE_THRESHOLD
+#define FILE_BUFFER_MODE_NONE          Dee_FILE_BUFFER_MODE_NONE
+#define FILE_BUFFER_MODE_FULL          Dee_FILE_BUFFER_MODE_FULL
+#define FILE_BUFFER_MODE_LINE          Dee_FILE_BUFFER_MODE_LINE
+#define FILE_BUFFER_MODE_AUTO          Dee_FILE_BUFFER_MODE_AUTO
+#define FILE_BUFFER_MODE_KEEP          Dee_FILE_BUFFER_MODE_KEEP
+#endif /* DEE_SOURCE */
 
-struct system_file_object {
-    LFILE_OBJECT_HEAD
+typedef struct Dee_system_file_object DeeSystemFileObject;
+typedef struct Dee_file_buffer_object DeeFileBufferObject;
+typedef struct Dee_memory_file_object DeeMemoryFileObject;
+typedef struct Dee_file_reader_object DeeFileReaderObject;
+typedef struct Dee_file_writer_object DeeFileWriterObject;
+
+struct Dee_system_file_object {
+    Dee_LFILE_OBJECT_HEAD
 #ifdef CONFIG_HOST_WINDOWS
     DREF DeeObject *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
     /*HANDLE*/void *sf_handle;     /* [0..1] Underlying file handle.
@@ -55,15 +86,15 @@ struct system_file_object {
 };
 
 
-struct file_buffer_link {
+struct Dee_file_buffer_link {
     DeeFileBufferObject **fbl_pself; /* [1..1,==self][0..1][lock(INTERN(:buffer_ttys_lock))] Self-pointer. */
     DeeFileBufferObject  *fbl_next;  /* [0..1][valid_if(fbl_pself != NULL)][lock(INTERN(:buffer_ttys_lock))] Next-pointer. */
 };
 
-struct file_buffer_object {
-    FILE_OBJECT_HEAD
+struct Dee_file_buffer_object {
+    Dee_FILE_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-    recursive_rwlock_t          fb_lock;  /* Lock for synchronizing access to the buffer. */
+    Dee_recursive_rwlock_t      fb_lock;  /* Lock for synchronizing access to the buffer. */
 #endif
     DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.
                                            * NOTE: Set to `NULL' when the buffer is closed. */
@@ -80,62 +111,64 @@ struct file_buffer_object {
                                            * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
     size_t                      fb_size;  /* [lock(fb_lock)] Total allocated / available buffer size.
                                            * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
-    struct file_buffer_link     fb_ttych; /* Chain of changed TTY file buffers (buffers that are used with an interactive file).
+    struct Dee_file_buffer_link fb_ttych; /* Chain of changed TTY file buffers (buffers that are used with an interactive file).
                                            * Any buffer that is connected to an interactive device is flushed before
                                            * data is read from any other interactive device.
                                            * This chain is weakly linked in that buffer objects remove themself
                                            * before destruction, also meaning that any buffer contained in this
                                            * chain may have a reference counter to ZERO(0). */
-    dpos_t                      fb_fblk;  /* The starting address of the data block currently stored in `fb_base'. */
-    dpos_t                      fb_fpos;  /* The current (assumed) position within `fb_file'. */
-#define FILE_BUFFER_FNORMAL     0x0000    /* Normal buffer flags. */
-#define FILE_BUFFER_FREADONLY   0x0001    /* The buffer can only be used for reading. */
-#define FILE_BUFFER_FNODYNSCALE 0x0002    /* The buffer is allowed to dynamically change its buffer size. */
-#define FILE_BUFFER_FLNBUF      0x0004    /* The buffer is line-buffered, meaning that it will
-                                           * flush its data whenever a line-feed is printed.
-                                           * Additionally if the `FILE_BUFFER_FISATTY' flag is set,
-                                           * attempting to read from a line-buffered file will cause
-                                           * all other existing line-buffered files to be synchronized
-                                           * first. This is done to ensure that interactive files are
-                                           * always up-to-date before data is read from one of them. */
-#define FILE_BUFFER_FSYNC       0x0008    /* Also synchronize the underlying file after flushing the buffer. */
-#define FILE_BUFFER_FCLOFILE    0x0010    /* When the buffer is closed through use of `operator close',
-                                           * also invoke `operator close' on the associated file.
-                                           * However, when `close()' is never invoked on the buffer, its
-                                           * destructor will _NOT_ invoke close on the underlying file. */
-#define FILE_BUFFER_FREADING    0x0800    /* The buffer is currently being read into and must not be changed or resized. */
-#define FILE_BUFFER_FNOTATTY    0x1000    /* This buffer does not refer to a TTY device. */
-#define FILE_BUFFER_FISATTY     0x2000    /* This buffer refers to a TTY device. */
-#define FILE_BUFFER_FSTATICBUF  0x4000    /* Must be used with `FILE_BUFFER_FNODYNSCALE': When set,
-                                           * the buffer doesn't actually own its buffer and must not
-                                           * attempt to free() it during destruction.
-                                           * The `FILE_BUFFER_FNODYNSCALE' must be set to prevent the
-                                           * buffer from attempting to resize (realloc) it dynamically. */
-#define FILE_BUFFER_FLNIFTTY    0x8000    /* Automatically set/delete the `FILE_BUFFER_FLNBUF' and
-                                           * `FILE_BUFFER_FISATTY' flags, and add/remove the file from
-                                           * `fb_ttys' the next time this comes into question. To determine
-                                           * this, the pointed-to file is tested for being a TTY device
-                                           * using `DeeFile_IsAtty(fb_file)'.
-                                           * HINT: This flag is set for all newly created buffers by default. */
-    uint16_t                    fb_flag;  /* [lock(fb_lock)] The current state of the buffer. */
+    Dee_pos_t                   fb_fblk;  /* The starting address of the data block currently stored in `fb_base'. */
+    Dee_pos_t                   fb_fpos;  /* The current (assumed) position within `fb_file'. */
+    uint16_t                    fb_flag;  /* [lock(fb_lock)] The current state of the buffer (Set of `FILE_BUFFER_F*'). */
 };
+
+#define Dee_FILE_BUFFER_FNORMAL     0x0000 /* Normal buffer flags. */
+#define Dee_FILE_BUFFER_FREADONLY   0x0001 /* The buffer can only be used for reading. */
+#define Dee_FILE_BUFFER_FNODYNSCALE 0x0002 /* The buffer is allowed to dynamically change its buffer size. */
+#define Dee_FILE_BUFFER_FLNBUF      0x0004 /* The buffer is line-buffered, meaning that it will
+                                            * flush its data whenever a line-feed is printed.
+                                            * Additionally if the `FILE_BUFFER_FISATTY' flag is set,
+                                            * attempting to read from a line-buffered file will cause
+                                            * all other existing line-buffered files to be synchronized
+                                            * first. This is done to ensure that interactive files are
+                                            * always up-to-date before data is read from one of them. */
+#define Dee_FILE_BUFFER_FSYNC       0x0008 /* Also synchronize the underlying file after flushing the buffer. */
+#define Dee_FILE_BUFFER_FCLOFILE    0x0010 /* When the buffer is closed through use of `operator close',
+                                            * also invoke `operator close' on the associated file.
+                                            * However, when `close()' is never invoked on the buffer, its
+                                            * destructor will _NOT_ invoke close on the underlying file. */
+#define Dee_FILE_BUFFER_FREADING    0x0800 /* The buffer is currently being read into and must not be changed or resized. */
+#define Dee_FILE_BUFFER_FNOTATTY    0x1000 /* This buffer does not refer to a TTY device. */
+#define Dee_FILE_BUFFER_FISATTY     0x2000 /* This buffer refers to a TTY device. */
+#define Dee_FILE_BUFFER_FSTATICBUF  0x4000 /* Must be used with `FILE_BUFFER_FNODYNSCALE': When set,
+                                            * the buffer doesn't actually own its buffer and must not
+                                            * attempt to free() it during destruction.
+                                            * The `FILE_BUFFER_FNODYNSCALE' must be set to prevent the
+                                            * buffer from attempting to resize (realloc) it dynamically. */
+#define Dee_FILE_BUFFER_FLNIFTTY    0x8000 /* Automatically set/delete the `FILE_BUFFER_FLNBUF' and
+                                            * `FILE_BUFFER_FISATTY' flags, and add/remove the file from
+                                            * `fb_ttys' the next time this comes into question. To determine
+                                            * this, the pointed-to file is tested for being a TTY device
+                                            * using `DeeFile_IsAtty(fb_file)'.
+                                            * HINT: This flag is set for all newly created buffers by default. */
+
 
 
 /* Automatic scaling configuration when `FILE_BUFFER_FNODYNSCALE' is disabled. */
-#define FILE_BUFSIZ_MAX                8192 /* The max size to which the buffer may grow. */
-#define FILE_BUFSIZ_MIN                512  /* The default size when no dynamic buffer was allocated before. */
-#define FILE_BUFSIZ_RELOCATE_THRESHOLD 2048 /* When >= this amount of bytes are unused in the buffer, shrink the buffer. */
+#define Dee_FILE_BUFSIZ_MAX                8192 /* The max size to which the buffer may grow. */
+#define Dee_FILE_BUFSIZ_MIN                512  /* The default size when no dynamic buffer was allocated before. */
+#define Dee_FILE_BUFSIZ_RELOCATE_THRESHOLD 2048 /* When >= this amount of bytes are unused in the buffer, shrink the buffer. */
 
 
 
 /* File buffer mode flags. */
-#define FILE_BUFFER_MODE_NONE (FILE_BUFFER_FNODYNSCALE) /* Do not perform any buffering (causes a zero-length buffer to be used internally)
-                                                         * NOTE: When set, `ZERO(0)' must be passed for `size' */
-#define FILE_BUFFER_MODE_FULL (FILE_BUFFER_FNORMAL)     /* Do full buffering. (Data is only synced when the buffer becomes full, or when sync() is called) */
-#define FILE_BUFFER_MODE_LINE (FILE_BUFFER_FLNBUF)      /* Do line-buffering. (Same as `FILE_BUFFER_MODE_FULL', but also flush whenever data was written that contained a line-feed) */
-#define FILE_BUFFER_MODE_AUTO (FILE_BUFFER_FLNIFTTY)    /* Automatically determine the buffer mode based on calling `isatty()' on the
-                                                         * underlying file. When true, use line-buffering. Otherwise, use full buffering. */
-#define FILE_BUFFER_MODE_KEEP (0xffff) /* Only accepted by `DeeFileBuffer_SetMode()': Keep on using the previous buffering configuration. */
+#define Dee_FILE_BUFFER_MODE_NONE (Dee_FILE_BUFFER_FNODYNSCALE) /* Do not perform any buffering (causes a zero-length buffer to be used internally)
+                                                                 * NOTE: When set, `ZERO(0)' must be passed for `size' */
+#define Dee_FILE_BUFFER_MODE_FULL (Dee_FILE_BUFFER_FNORMAL)     /* Do full buffering. (Data is only synced when the buffer becomes full, or when sync() is called) */
+#define Dee_FILE_BUFFER_MODE_LINE (Dee_FILE_BUFFER_FLNBUF)      /* Do line-buffering. (Same as `FILE_BUFFER_MODE_FULL', but also flush whenever data was written that contained a line-feed) */
+#define Dee_FILE_BUFFER_MODE_AUTO (Dee_FILE_BUFFER_FLNIFTTY)    /* Automatically determine the buffer mode based on calling `isatty()' on the
+                                                                 * underlying file. When true, use line-buffering. Otherwise, use full buffering. */
+#define Dee_FILE_BUFFER_MODE_KEEP (0xffff) /* Only accepted by `DeeFileBuffer_SetMode()': Keep on using the previous buffering configuration. */
 
 
 /* Construct a new file-buffer.
@@ -166,9 +199,8 @@ DFUNDEF int DCALL DeeFileBuffer_SyncTTYs(void);
 
 
 
-typedef struct memory_file_object DeeMemoryFileObject;
-struct memory_file_object {
-    LFILE_OBJECT_HEAD
+struct Dee_memory_file_object {
+    Dee_LFILE_OBJECT_HEAD
     char   *mf_begin; /* [0..1][<= mf_end][lock(fo_lock)] The effective start position. */
     char   *mf_ptr;   /* [0..1][>= mf_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
     char   *mf_end;   /* [0..1][>= mf_begin][lock(fo_lock)] The effective end position. */
@@ -196,16 +228,15 @@ DeeFile_ReleaseMemory(DREF /*File*/DeeObject *__restrict self);
 
 
 
-typedef struct file_reader_object DeeFileReaderObject;
-struct file_reader_object {
-    LFILE_OBJECT_HEAD
+struct Dee_file_reader_object {
+    Dee_LFILE_OBJECT_HEAD
     char           *r_begin;  /* [0..1][in(r_string->s_str)][<= r_end][lock(fo_lock)] The effective start position within `r_string'. */
     char           *r_ptr;    /* [0..1][>= r_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
     char           *r_end;    /* [0..1][in(r_string->s_str)][>= r_begin][lock(fo_lock)] The effective end position within `r_string'. */
     DREF DeeObject *r_owner;  /* [0..1][lock(fo_lock)] The owner for the data.
                                * NOTE: Set to NULL when the file is closed. */
     DeeBuffer       r_buffer; /* [valid_if(r_owner)][lock(fo_lock)]
-                               * The data buffer view for `r_owner' (using `DEE_BUFFER_FREADONLY') */
+                               * The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
 };
 
 DDATDEF DeeFileTypeObject DeeFileReader_Type; /* file.reader */
@@ -228,15 +259,14 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
  * to open a generic object using the buffer-interface. */
 DFUNDEF DREF /*File*/DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
-                         dssize_t begin, dssize_t end);
+                         Dee_ssize_t begin, Dee_ssize_t end);
 
 
-typedef struct file_writer_object DeeFileWriterObject;
-struct file_writer_object {
-    LFILE_OBJECT_HEAD
-    struct unicode_printer w_printer; /* [lock(fo_lock)][owned_if(!w_string)] The printer used to generate the string. */
-    DREF DeeStringObject  *w_string;  /* [lock(fo_lock)][0..1][valid_if((w_printer.up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
-                                       * Cached variant of the last-accessed, generated multi-byte string. */
+struct Dee_file_writer_object {
+    Dee_LFILE_OBJECT_HEAD
+    struct Dee_unicode_printer w_printer; /* [lock(fo_lock)][owned_if(!w_string)] The printer used to generate the string. */
+    DREF DeeStringObject      *w_string;  /* [lock(fo_lock)][0..1][valid_if((w_printer.up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
+                                           * Cached variant of the last-accessed, generated multi-byte string. */
 };
 
 DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* file.writer */

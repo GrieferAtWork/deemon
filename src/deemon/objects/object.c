@@ -62,7 +62,7 @@
 DECL_BEGIN
 
 #ifdef CONFIG_TRACE_REFCHANGES
-PRIVATE void DCALL free_reftracker(struct reftracker *__restrict self);
+PRIVATE void DCALL free_reftracker(struct Dee_reftracker *__restrict self);
 #endif /* CONFIG_TRACE_REFCHANGES */
 
 
@@ -1022,8 +1022,8 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref,12),
 
 
 /* Finalize weakref support */
-PUBLIC void DCALL
-Dee_weakref_support_fini(struct weakref_list *__restrict list) {
+PUBLIC void
+(DCALL Dee_weakref_support_fini)(struct weakref_list *__restrict list) {
  struct weakref *iter,*next;
 restart_clear_weakrefs:
  LOCK_POINTER(list->wl_nodes);
@@ -1385,12 +1385,12 @@ object_sizeof(DeeObject *__restrict self,
   size_t slab_size;
   void (DCALL *tp_free)(void *__restrict ob);
   tp_free = type->tp_init.tp_alloc.tp_free;
-#define CHECK_SIZE(x) \
-  if (tp_free == &DeeObject_SlabFree##x || \
-      tp_free == &DeeGCObject_SlabFree##x) \
-      slab_size = x * __SIZEOF_POINTER__; \
+#define CHECK_SIZE(index,size) \
+  if (tp_free == &DeeObject_SlabFree##size || \
+      tp_free == &DeeGCObject_SlabFree##size) \
+      slab_size = size * __SIZEOF_POINTER__; \
   else
-  DEE_ENUMERATE_SLAB_SIZES(CHECK_SIZE)
+  DeeSlab_ENUMERATE(CHECK_SIZE)
 #undef CHECK_SIZE
   {
    goto err_iscustom;
@@ -4015,23 +4015,23 @@ type_ne(DeeObject *__restrict self,
 }
 
 
-PRIVATE struct type_cmp type_cmp = {
+PRIVATE struct type_cmp type_cmp_data = {
     /* .tp_hash = */&type_hash,
     /* .tp_eq   = */&type_eq,
     /* .tp_ne   = */&type_ne
 };
 
-PRIVATE struct type_attr type_attr = {
+PRIVATE struct type_attr type_attr_data = {
     /* .tp_getattr  = */&type_getattr,
     /* .tp_delattr  = */&type_delattr,
     /* .tp_setattr  = */&type_setattr,
     /* .tp_enumattr = */&type_enumattr
 };
 
-PRIVATE struct type_gc type_gc = {
+PRIVATE struct type_gc type_gc_data = {
     /* .tp_clear  = */(void(DCALL *)(DeeObject *__restrict))&type_clear,
     /* .tp_pclear = */(void(DCALL *)(DeeObject *__restrict,unsigned int))&type_pclear,
-    /* .tp_gcprio = */GC_PRIORITY_CLASS
+    /* .tp_gcprio = */Dee_GC_PRIORITY_CLASS
 };
 
 PUBLIC DeeTypeObject DeeType_Type = {
@@ -4064,12 +4064,12 @@ PUBLIC DeeTypeObject DeeType_Type = {
     },
     /* .tp_call          = */(DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&DeeObject_New,
     /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void *))&type_visit,
-    /* .tp_gc            = */&type_gc,
+    /* .tp_gc            = */&type_gc_data,
     /* .tp_math          = */NULL,
-    /* .tp_cmp           = */&type_cmp,
+    /* .tp_cmp           = */&type_cmp_data,
     /* .tp_seq           = */NULL,
     /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */&type_attr,
+    /* .tp_attr          = */&type_attr_data,
     /* .tp_with          = */NULL,
     /* .tp_buffer        = */NULL,
     /* .tp_methods       = */type_methods,
@@ -4087,10 +4087,10 @@ PUBLIC DeeTypeObject DeeType_Type = {
 #ifndef CONFIG_NO_THREADS
 PRIVATE DEFINE_RWLOCK(reftracker_lock);
 #endif /* !CONFIG_NO_THREADS */
-PRIVATE struct reftracker *reftracker_list = NULL;
+PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
 PRIVATE dref_t DCALL
-print_refchange(struct refchange *__restrict item,
+print_refchange(struct Dee_refchange *__restrict item,
                 dref_t prev_total) {
  char mode[2] = { '+', 0 }; dref_t count;
  if (item->rc_line < 0) --prev_total,mode[0] = '-';
@@ -4105,7 +4105,7 @@ print_refchange(struct refchange *__restrict item,
  return prev_total;
 }
 PRIVATE dref_t DCALL
-print_refchanges(struct refchanges *__restrict item,
+print_refchanges(struct Dee_refchanges *__restrict item,
                  dref_t prev_total) {
  unsigned int i;
  if (item->rc_prev)
@@ -4126,7 +4126,7 @@ dump_reference_history(DeeObject *__restrict obj) {
 }
 
 PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
- struct reftracker *iter;
+ struct Dee_reftracker *iter;
  rwlock_read(&reftracker_lock);
  for (iter = reftracker_list; iter; iter = iter->rt_next) {
   DEE_DPRINTF("Object at %p of instance %s leaked %Iu references:\n",
@@ -4140,7 +4140,7 @@ PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 
 
 PRIVATE void DCALL
-add_reftracker(struct reftracker *__restrict self) {
+add_reftracker(struct Dee_reftracker *__restrict self) {
  rwlock_write(&reftracker_lock);
  self->rt_pself = &reftracker_list;
  if ((self->rt_next = reftracker_list) != NULL)
@@ -4149,7 +4149,7 @@ add_reftracker(struct reftracker *__restrict self) {
  rwlock_endwrite(&reftracker_lock);
 }
 PRIVATE void DCALL
-del_reftracker(struct reftracker *__restrict self) {
+del_reftracker(struct Dee_reftracker *__restrict self) {
  rwlock_write(&reftracker_lock);
  if ((*self->rt_pself = self->rt_next) != NULL)
        self->rt_next->rt_pself = self->rt_pself;
@@ -4158,9 +4158,9 @@ del_reftracker(struct reftracker *__restrict self) {
 
 /* Reference count tracing. */
 PRIVATE void DCALL
-free_reftracker(struct reftracker *__restrict self) {
+free_reftracker(struct Dee_reftracker *__restrict self) {
  if (self) {
-  struct refchanges *iter,*next;
+  struct Dee_refchanges *iter,*next;
   del_reftracker(self);
   iter = self->rt_last;
   while (iter) {
@@ -4181,14 +4181,14 @@ DeeObject_FreeTracker(DeeObject *__restrict self) {
 #endif
 
 
-PRIVATE struct reftracker *DCALL
+PRIVATE struct Dee_reftracker *DCALL
 get_reftracker(DeeObject *__restrict self) {
- struct reftracker *result,*new_result;
+ struct Dee_reftracker *result,*new_result;
  result = self->ob_trace;
  if likely(result) goto done;
 
  /* Allocate a new reference tracker. */
- result = (struct reftracker *)Dee_TryCalloc(sizeof(struct reftracker));
+ result = (struct Dee_reftracker *)Dee_TryCalloc(sizeof(struct Dee_reftracker));
  if (!result) goto done;
  COMPILER_READ_BARRIER();
  result->rt_obj  = self;
@@ -4212,9 +4212,9 @@ PRIVATE void DCALL
 reftracker_addchange(DeeObject *__restrict ob,
                      char const *file, int line) {
  unsigned int i;
- struct reftracker *self;
- struct refchanges *new_changes;
- struct refchanges *last;
+ struct Dee_reftracker *self;
+ struct Dee_refchanges *new_changes;
+ struct Dee_refchanges *last;
  self = get_reftracker(ob);
  if unlikely(!self || self == DEE_REFTRACKER_UNTRACKED)
     return;
@@ -4227,7 +4227,7 @@ again:
   return; /* Got it! */
  }
  /* Must allocate a new set of changes. */
- new_changes = (struct refchanges *)Dee_TryCalloc(sizeof(struct refchanges));
+ new_changes = (struct Dee_refchanges *)Dee_TryCalloc(sizeof(struct Dee_refchanges));
  if unlikely(!new_changes) return;
  new_changes->rc_chng[0].rc_file = file;
  new_changes->rc_chng[0].rc_line = line;

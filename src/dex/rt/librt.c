@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_RT_LIBRT_C
 #define GUARD_DEX_RT_LIBRT_C 1
+#define DEE_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -1018,7 +1019,7 @@ librt_get_ModuleGlobalsIterator_f(size_t UNUSED(argc), DeeObject **__restrict UN
 
 
 
-PRIVATE DEFINE_BYTES(small_bytes,DEE_BUFFER_FREADONLY,1,{ 0 });
+PRIVATE DEFINE_BYTES(small_bytes,Dee_BUFFER_FREADONLY,1,{ 0 });
 LOCAL DREF DeeObject *DCALL
 librt_get_BytesFind_impl_f(void) {
  DeeObject *argv[] = { &DeeInt_Zero };

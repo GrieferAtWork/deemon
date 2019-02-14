@@ -1373,7 +1373,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
      goto err;
  if (DeeNone_Check(flags))
      flags = Dee_EmptyString;
- if (DeeObject_GetBuf(text,&text_buf,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(text,&text_buf,Dee_BUFFER_FREADONLY))
      goto err;
 #if __SIZEOF_SIZE_T__ > 4
  if unlikely(text_buf.bb_size > (code_size_t)-1) {
@@ -1388,7 +1388,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  result->co_codebytes = (code_size_t)text_buf.bb_size;
  memcpy(result->co_code,text_buf.bb_base,text_buf.bb_size);
  memset(result->co_code + text_buf.bb_size,ASM_RET_NONE,INSTRLEN_MAX);
- DeeObject_PutBuf(text,&text_buf,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(text,&text_buf,Dee_BUFFER_FREADONLY);
  /* Load keyword arguments */
  result->co_keywords = NULL;
  if (!DeeNone_Check(keywords)) {
@@ -1655,7 +1655,7 @@ err_r:
  DeeGCObject_Free(result);
  goto err;
 err_buf:
- DeeObject_PutBuf(text,&text_buf,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(text,&text_buf,Dee_BUFFER_FREADONLY);
 err:
  return NULL;
 }

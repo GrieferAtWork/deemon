@@ -189,16 +189,16 @@ parser_throw(struct compiler_error_object *__restrict error) {
    /* Special handling for ignoring certain errors. */
    switch (mode) {
    case 3:
-    if (error->ce_mode != COMPILER_ERROR_FATALITY_FORCEFATAL)
+    if (error->ce_mode != Dee_COMPILER_ERROR_FATALITY_FORCEFATAL)
         goto done;
     break;
    case 2:
-    if (error->ce_mode == COMPILER_ERROR_FATALITY_FATAL)
-        error->ce_mode = COMPILER_ERROR_FATALITY_WARNING;
+    if (error->ce_mode == Dee_COMPILER_ERROR_FATALITY_FATAL)
+        error->ce_mode = Dee_COMPILER_ERROR_FATALITY_WARNING;
     ATTR_FALLTHROUGH
    case 1:
-    if (error->ce_mode == COMPILER_ERROR_FATALITY_ERROR)
-        error->ce_mode = COMPILER_ERROR_FATALITY_WARNING;
+    if (error->ce_mode == Dee_COMPILER_ERROR_FATALITY_ERROR)
+        error->ce_mode = Dee_COMPILER_ERROR_FATALITY_WARNING;
     break;
    
    default: break;
@@ -217,14 +217,14 @@ parser_throw(struct compiler_error_object *__restrict error) {
  current_parser_errors.pe_errorv[current_parser_errors.pe_errorc++] = error;
 
  /* Set the error as master if it overrules the old. */
- if (error->ce_mode >= COMPILER_ERROR_FATALITY_ERROR) {
+ if (error->ce_mode >= Dee_COMPILER_ERROR_FATALITY_ERROR) {
   if (!current_parser_errors.pe_master ||
        current_parser_errors.pe_master->ce_mode <
        error->ce_mode)
        current_parser_errors.pe_master = error;
  }
  /* Check if the parser should errors-out as fatal. */
- if (error->ce_mode >= COMPILER_ERROR_FATALITY_FATAL)
+ if (error->ce_mode >= Dee_COMPILER_ERROR_FATALITY_FATAL)
      return 1;
 done:
  return 0;
@@ -416,9 +416,9 @@ INTERN void DCALL parser_start(void) {
 
 
 PRIVATE int const tpp_warning_mode_matrix[3] = {
-    /* [TPP_WARNINGMODE_FATAL] = */COMPILER_ERROR_FATALITY_FATAL,
-    /* [TPP_WARNINGMODE_ERROR] = */COMPILER_ERROR_FATALITY_ERROR,
-    /* [TPP_WARNINGMODE_WARN]  = */COMPILER_ERROR_FATALITY_WARNING
+    /* [TPP_WARNINGMODE_FATAL] = */Dee_COMPILER_ERROR_FATALITY_FATAL,
+    /* [TPP_WARNINGMODE_ERROR] = */Dee_COMPILER_ERROR_FATALITY_ERROR,
+    /* [TPP_WARNINGMODE_WARN]  = */Dee_COMPILER_ERROR_FATALITY_WARNING
 };
 
 
@@ -557,7 +557,7 @@ handle_compiler_warning(struct ast_loc *loc,
  DREF DeeCompilerErrorObject *error; int mode;
  ++TPPLexer_Current->l_warncount;
  if (force_fatal)
-  mode = COMPILER_ERROR_FATALITY_FORCEFATAL;
+  mode = Dee_COMPILER_ERROR_FATALITY_FORCEFATAL;
  else {
   /* Invoke the warning using current TPP behavior. */
   mode = TPPLexer_InvokeWarning(wnum);

@@ -1722,6 +1722,7 @@ INTERN bool DCALL type_inherit_hash(DeeTypeObject *__restrict self) {
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 
+WUNUSED ATTR_PURE
 DEFINE_OPERATOR(dhash_t,Hash,(DeeObject *__restrict self)) {
  LOAD_TP_SELF;
  do {
@@ -1778,7 +1779,7 @@ DeeObject_PClear(DeeObject *__restrict self,
                  unsigned int gc_priority) {
  DeeTypeObject *tp_self;
  ASSERT_OBJECT(self);
- if unlikely(gc_priority == GC_PRIORITY_LATE) {
+ if unlikely(gc_priority == Dee_GC_PRIORITY_LATE) {
   DeeObject_Clear(self);
   return;
  }
@@ -4743,14 +4744,14 @@ DEFINE_OPERATOR(int,GetBuf,
                (DeeObject *__restrict self,
                 DeeBuffer *__restrict info,
                 unsigned int flags)) {
- ASSERTF(!(flags & ~(DEE_BUFFER_FWRITABLE)),
+ ASSERTF(!(flags & ~(Dee_BUFFER_FWRITABLE)),
           "Unknown buffers flags in %x",flags);
  LOAD_TP_SELF;
  do {
   struct type_buffer *buf = tp_self->tp_buffer;
   if (buf && buf->tp_getbuf) {
-   if unlikely((flags & DEE_BUFFER_FWRITABLE) &&
-               (buf->tp_buffer_flags & DEE_BUFFER_TYPE_FREADONLY)) {
+   if unlikely((flags & Dee_BUFFER_FWRITABLE) &&
+               (buf->tp_buffer_flags & Dee_BUFFER_TYPE_FREADONLY)) {
     DeeError_Throwf(&DeeError_BufferError,
                     "Cannot write to read-only buffer of type %k",
                     tp_self);
@@ -4771,7 +4772,7 @@ DEFINE_OPERATOR(void,PutBuf,
                (DeeObject *__restrict self,
                 DeeBuffer *__restrict info,
                 unsigned int flags)) {
- ASSERTF(!(flags & ~(DEE_BUFFER_FWRITABLE)),
+ ASSERTF(!(flags & ~(Dee_BUFFER_FWRITABLE)),
           "Unknown buffers flags in %x",flags);
 #ifdef __INTELLISENSE__
  (void)self;

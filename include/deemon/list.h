@@ -29,33 +29,37 @@
 
 DECL_BEGIN
 
-typedef struct list_object DeeListObject;
+#ifdef DEE_SOURCE
+#define Dee_list_object list_object
+#endif /* DEE_SOURCE */
 
-struct list_object {
+typedef struct Dee_list_object DeeListObject;
+
+struct Dee_list_object {
     /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    OBJECT_HEAD /* GC Object */
+    Dee_OBJECT_HEAD /* GC Object */
     size_t           l_alloc; /* [lock(l_lock)][>= l_size] Allocated list size. */
     size_t           l_size;  /* [lock(l_lock)] List size. */
     DREF DeeObject **l_elem;  /* [1..1][0..l_size|ALLOC(l_alloc)][owned][lock(l_lock)] List elements. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t         l_lock;  /* Lock used for accessing this list. */
+    Dee_rwlock_t     l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
-    WEAKREF_SUPPORT
+    Dee_WEAKREF_SUPPORT
 };
 
 #ifndef CONFIG_NO_THREADS
-#define DeeList_LockReading(x)    rwlock_reading(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockWriting(x)    rwlock_writing(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockTryread(x)    rwlock_tryread(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockTrywrite(x)   rwlock_trywrite(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockRead(x)       rwlock_read(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockWrite(x)      rwlock_write(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockUpgrade(x)    rwlock_upgrade(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockDowngrade(x)  rwlock_downgrade(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockEndWrite(x)   rwlock_endwrite(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockEndRead(x)    rwlock_endread(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockEnd(x)        rwlock_end(&((DeeListObject *)REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockReading(x)    Dee_rwlock_reading(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockWriting(x)    Dee_rwlock_writing(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockTryread(x)    Dee_rwlock_tryread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockTrywrite(x)   Dee_rwlock_trywrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockRead(x)       Dee_rwlock_read(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockWrite(x)      Dee_rwlock_write(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockTryUpgrade(x) Dee_rwlock_tryupgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockUpgrade(x)    Dee_rwlock_upgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockDowngrade(x)  Dee_rwlock_downgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockEndWrite(x)   Dee_rwlock_endwrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockEndRead(x)    Dee_rwlock_endread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockEnd(x)        Dee_rwlock_end(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
 #else
 #define DeeList_LockReading(x)          1
 #define DeeList_LockWriting(x)          1
@@ -72,11 +76,11 @@ struct list_object {
 #endif
 
 #define DeeList_IsEmpty(ob)                (!DeeList_SIZE(ob))
-#define DeeList_CAPACITY(ob)               ((DeeListObject *)REQUIRES_OBJECT(ob))->l_alloc
-#define DeeList_SIZE(ob)                   ((DeeListObject *)REQUIRES_OBJECT(ob))->l_size
-#define DeeList_ELEM(ob)                   ((DeeListObject *)REQUIRES_OBJECT(ob))->l_elem
-#define DeeList_GET(ob,i)                  ((DeeListObject *)REQUIRES_OBJECT(ob))->l_elem[i]
-#define DeeList_SET(ob,i,v)                ((DeeListObject *)REQUIRES_OBJECT(ob))->l_elem[i]=(v)
+#define DeeList_CAPACITY(ob)               ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_alloc
+#define DeeList_SIZE(ob)                   ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_size
+#define DeeList_ELEM(ob)                   ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem
+#define DeeList_GET(ob,i)                  ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem[i]
+#define DeeList_SET(ob,i,v)                ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem[i]=(v)
 
 #define DeeList_Check(x)       DeeObject_InstanceOf(x,&DeeList_Type)
 #define DeeList_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeList_Type)
@@ -117,7 +121,7 @@ DeeList_Erase(DeeObject *__restrict self,
 
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
-DFUNDEF DREF DeeObject *DCALL DeeList_Pop(DeeObject *__restrict self, dssize_t index);
+DFUNDEF DREF DeeObject *DCALL DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index);
 
 /* Clear the given list.
  * Returns `true' if the list wasn't empty before. */

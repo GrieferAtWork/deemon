@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_IPC_LIBIPC_C
 #define GUARD_DEX_IPC_LIBIPC_C 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
 #include "libipc.h"

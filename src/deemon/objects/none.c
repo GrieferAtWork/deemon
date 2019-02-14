@@ -130,7 +130,7 @@ none_getbuf(DeeObject *__restrict UNUSED(self),
 PRIVATE struct type_buffer none_buffer = {
     /* .tp_getbuf       = */&none_getbuf,
     /* .tp_putbuf       = */NULL,
-    /* .tp_buffer_flags = */DEE_BUFFER_TYPE_FNORMAL
+    /* .tp_buffer_flags = */Dee_BUFFER_TYPE_FNORMAL
 };
 
 PUBLIC DeeTypeObject DeeNone_Type = {

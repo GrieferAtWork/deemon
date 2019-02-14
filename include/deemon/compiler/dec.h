@@ -216,7 +216,7 @@ INTDEF struct dec_sym *DCALL dec_newsym(void);
 /* Define the given symbol at the current text position. */
 LOCAL void DCALL
 dec_defsym(struct dec_sym *__restrict sym) {
- ASSERT(!DEC_SYM_DEFINED(sym));
+ Dee_ASSERT(!DEC_SYM_DEFINED(sym));
  /* Simply set the section and address to what is currently active. */
  sym->ds_sect = dec_curr;
  sym->ds_addr = dec_addr;
@@ -225,7 +225,7 @@ dec_defsym(struct dec_sym *__restrict sym) {
 /* Define the given symbol at the given address within the current section. */
 LOCAL void DCALL
 dec_defsymat(struct dec_sym *__restrict sym, uint32_t addr) {
- ASSERT(!DEC_SYM_DEFINED(sym));
+ Dee_ASSERT(!DEC_SYM_DEFINED(sym));
  /* Simply set the section and address. */
  sym->ds_sect = dec_curr;
  sym->ds_addr = addr;

@@ -129,9 +129,9 @@ struct asm_operand {
 
 struct ast {
 #ifdef CONFIG_AST_IS_STRUCT
-    dref_t               a_refcnt; /* [lock(DeeCompiler_Lock)] Reference counter. */
+    Dee_ref_t            a_refcnt; /* [lock(DeeCompiler_Lock)] Reference counter. */
 #else /* CONFIG_AST_IS_STRUCT */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
 #endif /* !CONFIG_AST_IS_STRUCT */
     /* XXX: Maybe not use an object for this, but rather a raw struct? */
     DREF DeeScopeObject *a_scope; /* [1..1] The scope in which this AST exists. */
@@ -560,19 +560,19 @@ struct ast {
 
 #ifdef CONFIG_AST_IS_STRUCT
 INTDEF void DCALL ast_destroy(struct ast *__restrict self);
-INTDEF void DCALL ast_visit_impl(struct ast *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL ast_visit_impl(struct ast *__restrict self, Dee_visit_t proc, void *arg);
 #define ast_visit(x)            ast_visit_impl(x,proc,arg)
 #define ast_shared(x)          ((x)->a_refcnt > 1)
-#define ast_incref(x)          (ASSERT((x)->a_refcnt),++(x)->a_refcnt)
-#define ast_decref(x)          (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x))
-#define ast_decref_likely(x)   (ASSERT((x)->a_refcnt),unlikely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
-#define ast_decref_unlikely(x) (ASSERT((x)->a_refcnt),likely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
-#define ast_decref_nokill(x)   (ASSERT((x)->a_refcnt >= 2),--(x)->a_refcnt)
-#define ast_xincref(x)         ((x) ? (void)(ASSERT((x)->a_refcnt),++(x)->a_refcnt) : (void)0)
-#define ast_xdecref(x)         ((x) ? (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
-#define ast_xdecref_unlikely(x)((x) ? (ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
-#define ASSERT_AST(ob)          ASSERT((ob) && ((ob)->a_refcnt >= 1))
-#define ASSERT_AST_OPT(ob)      ASSERT(!(ob) || ((ob)->a_refcnt >= 1))
+#define ast_incref(x)          (Dee_ASSERT((x)->a_refcnt),++(x)->a_refcnt)
+#define ast_decref(x)          (Dee_ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x))
+#define ast_decref_likely(x)   (Dee_ASSERT((x)->a_refcnt),unlikely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
+#define ast_decref_unlikely(x) (Dee_ASSERT((x)->a_refcnt),likely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
+#define ast_decref_nokill(x)   (Dee_ASSERT((x)->a_refcnt >= 2),--(x)->a_refcnt)
+#define ast_xincref(x)         ((x) ? (void)(Dee_ASSERT((x)->a_refcnt),++(x)->a_refcnt) : (void)0)
+#define ast_xdecref(x)         ((x) ? (Dee_ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
+#define ast_xdecref_unlikely(x)((x) ? (Dee_ASSERT((x)->a_refcnt),--(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
+#define ASSERT_AST(ob)          Dee_ASSERT((ob) && ((ob)->a_refcnt >= 1))
+#define ASSERT_AST_OPT(ob)      Dee_ASSERT(!(ob) || ((ob)->a_refcnt >= 1))
 #else /* CONFIG_AST_IS_STRUCT */
 #define ast_visit(x)           Dee_Visit(x)
 #define ast_shared(x)          DeeObject_IsShared(x)

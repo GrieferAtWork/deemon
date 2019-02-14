@@ -33,7 +33,7 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOf(ob,&DeeSeq_Type); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeObject_InstanceOfExact(ob,&DeeSeq_Type); }
 public:
-    DEFINE_OBJECT_CONSTRUCTORS(sequence_base,object)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(sequence_base,object)
     operator obj_sequence() const { return obj_sequence(this->ptr()); }
     bool ismutable() const { return object(inherit(DeeObject_GetAttrString(*this,"ismutable"))).bool_(); }
     bool isresizable() const { return object(inherit(DeeObject_GetAttrString(*this,"isresizable"))).bool_(); }
@@ -189,17 +189,17 @@ public:
     void sort() const { decref_unlikely(throw_if_null(DeeObject_CallAttrString(*this,"sort",0,NULL))); }
     void sort(DeeObject *__restrict key) const { decref_unlikely(throw_if_null(DeeObject_CallAttrStringf(*this,"sort","o",key))); }
 public: /* Static functions. */
-    static sequence<deemon::int_> makerange(dssize_t end);
-    static sequence<deemon::int_> makerange(dssize_t start, dssize_t end);
-    static sequence<deemon::int_> makerange(dssize_t start, dssize_t end, dssize_t step);
-    static sequence<deemon::int_> makerange(dssize_t start, dssize_t end, DeeObject *__restrict step);
-    static sequence<deemon::int_> makerange(dssize_t start, DeeObject *__restrict end);
-    static sequence<deemon::int_> makerange(dssize_t start, DeeObject *__restrict end, dssize_t step);
-    static sequence<deemon::int_> makerange(dssize_t start, DeeObject *__restrict end, DeeObject *__restrict step);
-    static sequence<deemon::int_> makerange(DeeObject *__restrict start, dssize_t end);
-    static sequence<deemon::int_> makerange(DeeObject *__restrict start, dssize_t end, dssize_t step);
-    static sequence<deemon::int_> makerange(DeeObject *__restrict start, dssize_t end, DeeObject *__restrict step);
-    static sequence<deemon::int_> makerange(DeeObject *__restrict start, DeeObject *__restrict end, dssize_t step);
+    static sequence<deemon::int_> makerange(Dee_ssize_t end);
+    static sequence<deemon::int_> makerange(Dee_ssize_t start, Dee_ssize_t end);
+    static sequence<deemon::int_> makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step);
+    static sequence<deemon::int_> makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict step);
+    static sequence<deemon::int_> makerange(Dee_ssize_t start, DeeObject *__restrict end);
+    static sequence<deemon::int_> makerange(Dee_ssize_t start, DeeObject *__restrict end, Dee_ssize_t step);
+    static sequence<deemon::int_> makerange(Dee_ssize_t start, DeeObject *__restrict end, DeeObject *__restrict step);
+    static sequence<deemon::int_> makerange(DeeObject *__restrict start, Dee_ssize_t end);
+    static sequence<deemon::int_> makerange(DeeObject *__restrict start, Dee_ssize_t end, Dee_ssize_t step);
+    static sequence<deemon::int_> makerange(DeeObject *__restrict start, Dee_ssize_t end, DeeObject *__restrict step);
+    static sequence<deemon::int_> makerange(DeeObject *__restrict start, DeeObject *__restrict end, Dee_ssize_t step);
     static sequence<object> makerange(DeeObject *__restrict end);
     static sequence<object> makerange(DeeObject *__restrict start, DeeObject *__restrict end);
     static sequence<object> makerange(DeeObject *__restrict start, DeeObject *__restrict end, DeeObject *__restrict step);
@@ -218,7 +218,7 @@ public: /* Static functions. */
 template<class T>
 class iterator: public object {
 public: /* iterator from deemon */
-    DEFINE_OBJECT_CONSTRUCTORS(iterator,object)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(iterator,object)
     T next() const {
         DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this));
         if (result == ITER_DONE)
@@ -282,10 +282,10 @@ class sequence: public detail::sequence_base {
     private:
         DeeObject  *m_ptr;
         char const *m_str;
-        dhash_t     m_hsh;
+        Dee_hash_t  m_hsh;
     public:
         item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(Dee_HashStr(str)) {}
-        item_proxy_sth(DeeObject *ptr, char const *str, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hsh) {}
+        item_proxy_sth(DeeObject *ptr, char const *str, Dee_hash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_hsh(hsh) {}
         item_proxy_sth(item_proxy_sth const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_hsh(right.m_hsh) {}
         bool has() const { int result = DeeObject_HasItemString(m_ptr,m_str,m_hsh); if (result < 0) throw_last_deemon_exception(); return result != 0; }
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemString(m_ptr,m_str,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
@@ -300,9 +300,9 @@ class sequence: public detail::sequence_base {
         DeeObject  *m_ptr;
         char const *m_str;
         size_t      m_len;
-        dhash_t     m_hsh;
+        Dee_hash_t  m_hsh;
     public:
-        item_proxy_shn(DeeObject *ptr, char const *str, size_t len, dhash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_len(len), m_hsh(hsh) {}
+        item_proxy_shn(DeeObject *ptr, char const *str, size_t len, Dee_hash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr), m_str(str), m_len(len), m_hsh(hsh) {}
         item_proxy_shn(item_proxy_shn const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr), m_str(right.m_str), m_len(right.m_len), m_hsh(right.m_hsh) {}
         bool has() const { int result = DeeObject_HasItemStringLen(m_ptr,m_str,m_len,m_hsh); if (result < 0) throw_last_deemon_exception(); return result != 0; }
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemStringLen(m_ptr,m_str,m_len,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
@@ -383,7 +383,7 @@ class sequence: public detail::sequence_base {
         last_proxy const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetAttrString(m_ptr,"last",value)); return *this; }
     };
 public: /* sequence from deemon */
-    DEFINE_OBJECT_CONSTRUCTORS(sequence,sequence_base)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(sequence,sequence_base)
     typedef detail::cxx_iterator<T> iterator;
     iterator begin() const { return inherit(DeeObject_IterSelf(*this)); }
     iterator end() const { return iterator(); }
@@ -392,18 +392,18 @@ public: /* sequence from deemon */
     WUNUSED item_proxy_obj item(DeeObject *__restrict index) const { return item_proxy_obj(*this,index); }
     WUNUSED item_proxy_idx item(size_t index) const { return item_proxy_idx(*this,index); }
     WUNUSED item_proxy_sth item(char const *__restrict name) const { return item_proxy_sth(*this,name); }
-    WUNUSED item_proxy_sth item(char const *__restrict name, dhash_t hash) const { return item_proxy_sth(*this,name,hash); }
-    WUNUSED item_proxy_shn item(char const *__restrict name, size_t len, dhash_t hash) const { return item_proxy_shn(*this,name,len,hash); }
+    WUNUSED item_proxy_sth item(char const *__restrict name, Dee_hash_t hash) const { return item_proxy_sth(*this,name,hash); }
+    WUNUSED item_proxy_shn item(char const *__restrict name, size_t len, Dee_hash_t hash) const { return item_proxy_shn(*this,name,len,hash); }
     WUNUSED T getitem(DeeObject *__restrict index) const { return inherit(DeeObject_GetItem(*this,index)); }
     WUNUSED T getitem(size_t index) const { return inherit(DeeObject_GetItemIndex(*this,index)); }
     WUNUSED T getitem(char const *__restrict name) const { return inherit(DeeObject_GetItemString(*this,name,Dee_HashStr(name))); }
-    WUNUSED T getitem(char const *__restrict name, dhash_t hash) const { return inherit(DeeObject_GetItemString(*this,name,hash)); }
-    WUNUSED T getitem(char const *__restrict name, size_t len, dhash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,name,len,hash)); }
+    WUNUSED T getitem(char const *__restrict name, Dee_hash_t hash) const { return inherit(DeeObject_GetItemString(*this,name,hash)); }
+    WUNUSED T getitem(char const *__restrict name, size_t len, Dee_hash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,name,len,hash)); }
     WUNUSED T getitem_def(DeeObject *__restrict index, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,index,def)); }
     WUNUSED T getitem_def(size_t index, DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(index)); result = DeeObject_GetItemDef(*this,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
     WUNUSED T getitem_def(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,Dee_HashStr(name),def)); }
-    WUNUSED T getitem_def(char const *__restrict name, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
-    WUNUSED T getitem_def(char const *__restrict name, size_t len, dhash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,name,len,hash,def)); }
+    WUNUSED T getitem_def(char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
+    WUNUSED T getitem_def(char const *__restrict name, size_t len, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,name,len,hash,def)); }
     WUNUSED item_proxy_obj operator [](DeeObject *__restrict index) const { return item_proxy_obj(*this,index); }
     WUNUSED item_proxy_idx operator [](size_t index) const { return item_proxy_idx(*this,index); }
     WUNUSED item_proxy_sth operator [](char const *__restrict name) const { return item_proxy_sth(*this,name); }
@@ -452,7 +452,7 @@ public: /* sequence from deemon */
     WUNUSED T xch(size_t index, DeeObject *__restrict value) const { return inherit(DeeObject_CallAttrStringf(*this,"xch","Iuo",index,value)); }
     WUNUSED T xch(DeeObject *__restrict index, DeeObject *__restrict value) const { return inherit(DeeObject_CallAttrStringf(*this,"xch","oo",index,value)); }
     WUNUSED T pop() const { return inherit(DeeObject_CallAttrString(*this,"pop",0,NULL)); }
-    WUNUSED T pop(dssize_t index) const { return inherit(DeeObject_CallAttrStringf(*this,"pop","Id",index)); }
+    WUNUSED T pop(Dee_ssize_t index) const { return inherit(DeeObject_CallAttrStringf(*this,"pop","Id",index)); }
     WUNUSED T pop(DeeObject *__restrict index) const { return inherit(DeeObject_CallAttrStringf(*this,"pop","o",index)); }
     WUNUSED T popfront() const { return inherit(DeeObject_CallAttrString(*this,"popfront",0,NULL)); }
     WUNUSED T popback() const { return inherit(DeeObject_CallAttrString(*this,"popback",0,NULL)); }
@@ -564,17 +564,17 @@ deemon::int_ detail::sequence_base::erase(size_t index, size_t count) const { re
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","o",index)); }
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index, size_t count) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","oIu",index,count)); }
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index, DeeObject *__restrict count) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","oo",index,count)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Id",end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, dssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdId",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, dssize_t end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, dssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, DeeObject *__restrict end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Ido",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, DeeObject *__restrict end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdoId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, DeeObject *__restrict end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Idoo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, dssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oId",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, dssize_t end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, dssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, DeeObject *__restrict end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","ooId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Id",end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdId",start,end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdo",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Ido",start,end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdoId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Idoo",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oId",start,end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdo",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","ooId",start,end,step)); }
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn,name) \
 Treturn (detail::sequence_base::name)(DeeObject *__restrict elem) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",elem)); } \
 Treturn (detail::sequence_base::name)(DeeObject *__restrict elem, DeeObject *__restrict key) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"oo",elem,key)); } \

@@ -36,10 +36,10 @@ typedef struct compiler_keyword_object DeeCompilerKeywordObject;
 typedef struct compiler_symbol_object DeeCompilerSymbolObject;
 typedef struct compiler_ast_object DeeCompilerAstObject;
 typedef struct compiler_scope_object DeeCompilerScopeObject;
-struct compiler_keyword_object { COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword) };
-struct compiler_symbol_object { COMPILER_ITEM_OBJECT_HEAD(struct symbol) };
-struct compiler_ast_object { COMPILER_ITEM_OBJECT_HEAD(DREF struct ast) };
-struct compiler_scope_object { COMPILER_ITEM_OBJECT_HEAD(DREF struct scope_object) };
+struct compiler_keyword_object { Dee_COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword) };
+struct compiler_symbol_object { Dee_COMPILER_ITEM_OBJECT_HEAD(struct symbol) };
+struct compiler_ast_object { Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct ast) };
+struct compiler_scope_object { Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct scope_object) };
 
 INTDEF DeeTypeObject DeeCompilerKeyword_Type;         /* item */
 INTDEF DeeTypeObject DeeCompilerSymbol_Type;          /* item */
@@ -90,9 +90,9 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
 INTDEF struct type_member DeeCompilerItem_Members[];
 INTDEF void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
-INTDEF void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
-INTDEF void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
 
 INTDEF void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict self);
 #define DeeCompilerWrapper_Visit    DeeCompilerItem_Visit

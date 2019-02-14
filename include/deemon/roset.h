@@ -29,6 +29,16 @@
 
 DECL_BEGIN
 
+
+#ifdef DEE_SOURCE
+#define Dee_roset_item   roset_item
+#define Dee_roset_object roset_object
+#define ROSET_HASHST     Dee_ROSET_HASHST
+#define ROSET_HASHNX     Dee_ROSET_HASHNX
+#define ROSET_HASHPT     Dee_ROSET_HASHPT
+#define ROSET_HASHIT     Dee_ROSET_HASHIT
+#endif /* DEE_SOURCE */
+
 /* A read-only variant of a set object, who's main purpose is to be used
  * by compiler optimizations in order to optimize generic set expressions
  * in various locations, when sequence arguments are constant.
@@ -53,23 +63,23 @@ DECL_BEGIN
  *        programming interface.
  *        However GriferAtWork's implementation uses it to solve the problem
  *        caused by having hashset objects appear as constant variables. */
-typedef struct roset_object DeeRoSetObject;
+typedef struct Dee_roset_object DeeRoSetObject;
 
-struct roset_item {
+struct Dee_roset_item {
 #ifdef __INTELLISENSE__
     DeeObject      *si_key;   /* [0..1][const] Set item key. */
 #else
     DREF DeeObject *si_key;   /* [0..1][const] Set item key. */
 #endif
-    dhash_t         si_hash;  /* [valis_if(si_key)][const]
+    Dee_hash_t      si_hash;  /* [valis_if(si_key)][const]
                                * Hash of `si_key' (with a starting value of `0'). */
 };
 
-struct roset_object {
-    OBJECT_HEAD
-    size_t            rs_mask;    /* [> rs_size] Allocated set size. */
-    size_t            rs_size;    /* [< rs_mask] Amount of non-NULL keys. */
-    struct roset_item rs_elem[1]; /* [1..rs_mask+1] Set key hash-vector. */
+struct Dee_roset_object {
+    Dee_OBJECT_HEAD
+    size_t                rs_mask;    /* [> rs_size] Allocated set size. */
+    size_t                rs_size;    /* [< rs_mask] Amount of non-NULL keys. */
+    struct Dee_roset_item rs_elem[1]; /* [1..rs_mask+1] Set key hash-vector. */
 };
 
 /* The main `_roset' container class. */
@@ -93,10 +103,10 @@ DFUNDEF int DCALL DeeRoSet_Contains(DeeObject *__restrict self, DeeObject *__res
 DFUNDEF bool DCALL DeeRoSet_ContainsString(DeeObject *__restrict self, char const *__restrict key, size_t key_length);
 
 /* Hash-iteration control. */
-#define ROSET_HASHST(self,ro)      ((ro) & ((DeeRoSetObject *)REQUIRES_OBJECT(self))->rs_mask)
-#define ROSET_HASHNX(hs,perturb)  (((hs) << 2) + (hs) + (perturb) + 1)
-#define ROSET_HASHPT(perturb)      ((perturb) >>= 5) /* This `5' is tunable. */
-#define ROSET_HASHIT(self,i)      (((DeeRoSetObject *)REQUIRES_OBJECT(self))->rs_elem+((i) & ((DeeRoSetObject *)REQUIRES_OBJECT(self))->rs_mask))
+#define Dee_ROSET_HASHST(self,ro)      ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
+#define Dee_ROSET_HASHNX(hs,perturb)  (((hs) << 2) + (hs) + (perturb) + 1)
+#define Dee_ROSET_HASHPT(perturb)      ((perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_ROSET_HASHIT(self,i)      (((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem+((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
 
 DECL_END
 

@@ -393,7 +393,7 @@ done:
  result->b_base  = result->b_data;
  result->b_size  = i;
  result->b_orig  = (DREF DeeObject *)result;
- result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_flags = Dee_BUFFER_FWRITABLE;
  result->b_buffer.bb_base  = result->b_data;
  result->b_buffer.bb_size  = i;
 #ifndef __INTELLISENSE__
@@ -419,7 +419,7 @@ DeeObject_Bytes(DeeObject *__restrict self,
                 unsigned int flags,
                 size_t start, size_t end) {
  DREF Bytes *result;
- ASSERTF(!(flags & ~(DEE_BUFFER_FREADONLY|DEE_BUFFER_FWRITABLE)),
+ ASSERTF(!(flags & ~(Dee_BUFFER_FREADONLY|Dee_BUFFER_FWRITABLE)),
          "Invalid flags %x",flags);
  ASSERT_OBJECT(self);
  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data));
@@ -454,7 +454,7 @@ DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
  result->b_base  = result->b_data;
  result->b_size  = num_bytes;
  result->b_orig  = (DREF DeeObject *)result;
- result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_flags = Dee_BUFFER_FWRITABLE;
  result->b_buffer.bb_base = result->b_data;
  result->b_buffer.bb_size = num_bytes;
 #ifndef __INTELLISENSE__
@@ -474,7 +474,7 @@ DeeBytes_NewBufferUninitialized(size_t num_bytes) {
  result->b_base  = result->b_data;
  result->b_size  = num_bytes;
  result->b_orig  = (DREF DeeObject *)result;
- result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_flags = Dee_BUFFER_FWRITABLE;
  result->b_buffer.bb_base  = result->b_data;
  result->b_buffer.bb_size  = num_bytes;
 #ifndef __INTELLISENSE__
@@ -493,7 +493,7 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
  result->b_base  = (uint8_t *)memcpy(result->b_data,data,num_bytes);
  result->b_size  = num_bytes;
  result->b_orig  = (DREF DeeObject *)result;
- result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_flags = Dee_BUFFER_FWRITABLE;
  result->b_buffer.bb_base  = result->b_data;
  result->b_buffer.bb_size  = num_bytes;
 #ifndef __INTELLISENSE__
@@ -512,7 +512,7 @@ DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self,
  result = (DREF Bytes *)self;
  ASSERT(result->b_base  == result->b_data);
  ASSERT(result->b_orig  == (DREF DeeObject *)result);
- ASSERT(result->b_flags == DEE_BUFFER_FWRITABLE);
+ ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
  ASSERT(result->b_buffer.bb_base  == result->b_data);
  ASSERT(result->b_buffer.bb_size  == result->b_size);
 again:
@@ -542,7 +542,7 @@ DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
  result = (DREF Bytes *)self;
  ASSERT(result->b_base  == result->b_data);
  ASSERT(result->b_orig  == (DREF DeeObject *)result);
- ASSERT(result->b_flags == DEE_BUFFER_FWRITABLE);
+ ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
  ASSERT(result->b_buffer.bb_base  == result->b_data);
  ASSERT(result->b_buffer.bb_size  == result->b_size);
  ASSERT(num_bytes <= result->b_size);
@@ -565,7 +565,7 @@ PUBLIC DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
                  size_t num_bytes, unsigned int flags) {
  DREF Bytes *result;
- ASSERTF(!(flags & ~(DEE_BUFFER_FREADONLY|DEE_BUFFER_FWRITABLE)),
+ ASSERTF(!(flags & ~(Dee_BUFFER_FREADONLY|Dee_BUFFER_FWRITABLE)),
          "Invalid flags %x",flags);
  ASSERT_OBJECT(owner);
  result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes,b_data));
@@ -615,7 +615,7 @@ bytes_copy(Bytes *__restrict other) {
 
 PRIVATE DREF Bytes *DCALL
 bytes_init(size_t argc, DeeObject **__restrict argv) {
- DeeObject *ob; unsigned int flags = DEE_BUFFER_FREADONLY;
+ DeeObject *ob; unsigned int flags = Dee_BUFFER_FREADONLY;
  size_t start = 0,end = (size_t)-1;
  if (argc >= 2) {
   ob = argv[0];
@@ -630,7 +630,7 @@ bytes_init(size_t argc, DeeObject **__restrict argv) {
    if (WSTR_LENGTH(str) != 1) goto err_invalid_mode;
    /* */if (str[0] == 'r');
    else if (str[0] == 'w')
-      flags = DEE_BUFFER_FWRITABLE;
+      flags = Dee_BUFFER_FWRITABLE;
    else goto err_invalid_mode;
    if (argc >= 3) {
     if (DeeObject_AsSSize(argv[2],(dssize_t *)&start)) goto err;
@@ -675,7 +675,7 @@ err_args:
 #ifndef __INTELLISENSE__
     result->b_buffer.bb_put = buf->tp_putbuf;
 #endif
-    if unlikely((*buf->tp_getbuf)(ob,&result->b_buffer,DEE_BUFFER_FREADONLY))
+    if unlikely((*buf->tp_getbuf)(ob,&result->b_buffer,Dee_BUFFER_FREADONLY))
        goto err_r;
     if (start > result->b_buffer.bb_size)
         start = result->b_buffer.bb_size;
@@ -684,7 +684,7 @@ err_args:
     result->b_base  = (uint8_t *)result->b_buffer.bb_base + start;
     result->b_size  = (size_t)(end - start);
     result->b_orig  = ob;
-    result->b_flags = DEE_BUFFER_FREADONLY;
+    result->b_flags = Dee_BUFFER_FREADONLY;
     Dee_Incref(ob);
     DeeObject_Init(result,&DeeBytes_Type);
     return result;
@@ -1021,7 +1021,7 @@ PRIVATE DREF Bytes *DCALL
 bytes_add(Bytes *__restrict self,
           DeeObject *__restrict other) {
  DREF Bytes *result; DeeBuffer buffer;
- if (DeeObject_GetBuf(other,&buffer,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(other,&buffer,Dee_BUFFER_FREADONLY))
      goto err;
  result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self)+
                                                         buffer.bb_size);
@@ -1029,7 +1029,7 @@ bytes_add(Bytes *__restrict self,
   memcpy(result->b_data,DeeBytes_DATA(self),DeeBytes_SIZE(self));
   memcpy(result->b_data+DeeBytes_SIZE(self),buffer.bb_base,buffer.bb_size);
  }
- DeeObject_PutBuf(other,&buffer,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(other,&buffer,Dee_BUFFER_FREADONLY);
  return result;
 err:
  return NULL;
@@ -1382,11 +1382,11 @@ PRIVATE struct type_seq bytes_seq = {
 
 PRIVATE DREF DeeObject *DCALL
 bytes_isreadonly(Bytes *__restrict self) {
- return_bool_(!(self->b_flags & DEE_BUFFER_FWRITABLE));
+ return_bool_(!(self->b_flags & Dee_BUFFER_FWRITABLE));
 }
 PRIVATE DREF DeeObject *DCALL
 bytes_iswritable(Bytes *__restrict self) {
- return_bool_(self->b_flags & DEE_BUFFER_FWRITABLE);
+ return_bool_(self->b_flags & Dee_BUFFER_FWRITABLE);
 }
 
 
@@ -1497,8 +1497,8 @@ PRIVATE int DCALL
 bytes_getbuf(Bytes *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {
- if ((flags & DEE_BUFFER_FWRITABLE) &&
-    !(self->b_flags & DEE_BUFFER_FWRITABLE))
+ if ((flags & Dee_BUFFER_FWRITABLE) &&
+    !(self->b_flags & Dee_BUFFER_FWRITABLE))
       goto err_readonly;
  info->bb_base = DeeBytes_DATA(self);
  info->bb_size = DeeBytes_SIZE(self);
@@ -1510,7 +1510,7 @@ err_readonly:
 PRIVATE struct type_buffer bytes_buffer = {
     /* .tp_getbuf       = */(int(DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict,unsigned int))&bytes_getbuf,
     /* .tp_putbuf       = */NULL,
-    /* .tp_buffer_flags = */DEE_BUFFER_TYPE_FNORMAL
+    /* .tp_buffer_flags = */Dee_BUFFER_TYPE_FNORMAL
 };
 
 
@@ -1753,7 +1753,7 @@ PUBLIC DeeBytesObject DeeBytes_Empty = {
         /* .bb_base = */NULL,
         /* .bb_size = */0,
     },
-    /* .b_flags  = */DEE_BUFFER_FWRITABLE,
+    /* .b_flags  = */Dee_BUFFER_FWRITABLE,
     /* .b_data   = */{ 0 }
 };
 
@@ -1966,7 +1966,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
  * @return: * :   A reference to the packed bytes object.
  * @return: NULL: An error occurred. */
 PUBLIC DREF DeeObject *DCALL
-bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
+Dee_bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
  DREF Bytes *result = self->bp_bytes;
  if unlikely(!result)
     return_empty_bytes;
@@ -1982,7 +1982,7 @@ bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
  /* Do final object initialization. */
  result->b_base  = result->b_data;
  result->b_orig  = (DREF DeeObject *)result;
- result->b_flags = DEE_BUFFER_FWRITABLE;
+ result->b_flags = Dee_BUFFER_FWRITABLE;
  result->b_buffer.bb_base  = result->b_data;
  result->b_buffer.bb_size  = self->bp_length;
 #ifndef __INTELLISENSE__
@@ -1999,8 +1999,8 @@ bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
  *    data into the buffer of the resulting bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
 PUBLIC dssize_t DCALL
-bytes_printer_append(struct bytes_printer *__restrict self,
-                     uint8_t const *__restrict data, size_t datalen) {
+Dee_bytes_printer_append(struct bytes_printer *__restrict self,
+                         uint8_t const *__restrict data, size_t datalen) {
  Bytes *bytes;
  size_t alloc_size;
  ASSERT(self);
@@ -2051,7 +2051,7 @@ done:
 }
 
 PUBLIC int
-(DCALL bytes_printer_putb)(struct bytes_printer *__restrict self, uint8_t ch) {
+(DCALL Dee_bytes_printer_putb)(struct bytes_printer *__restrict self, uint8_t ch) {
  ASSERT(self);
  /* Quick check: Can we print to an existing buffer. */
  if (self->bp_bytes &&
@@ -2069,8 +2069,8 @@ err:
 }
 
 PUBLIC dssize_t
-(DCALL bytes_printer_repeat)(struct bytes_printer *__restrict self,
-                             uint8_t ch, size_t count) {
+(DCALL Dee_bytes_printer_repeat)(struct bytes_printer *__restrict self,
+                                 uint8_t ch, size_t count) {
  uint8_t *buffer;
  ASSERT(self);
  buffer = bytes_printer_alloc(self,count);
@@ -2083,8 +2083,8 @@ err:
 }
 
 PUBLIC void
-(DCALL bytes_printer_release)(struct bytes_printer *__restrict self,
-                              size_t datalen) {
+(DCALL Dee_bytes_printer_release)(struct bytes_printer *__restrict self,
+                                  size_t datalen) {
  ASSERT(self);
  ASSERT(self->bp_length >= datalen);
  /* This's actually all that needs to be
@@ -2092,7 +2092,7 @@ PUBLIC void
  self->bp_length -= datalen;
 }
 PUBLIC uint8_t *
-(DCALL bytes_printer_alloc)(struct bytes_printer *__restrict self, size_t datalen) {
+(DCALL Dee_bytes_printer_alloc)(struct bytes_printer *__restrict self, size_t datalen) {
  Bytes *bytes; size_t alloc_size; uint8_t *result;
  ASSERT(self);
  if ((bytes = self->bp_bytes) == NULL) {

@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_SOCKET_SOCKADDR_C
 #define GUARD_DEX_SOCKET_SOCKADDR_C 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
 #include "libnet.h"

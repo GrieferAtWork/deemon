@@ -73,7 +73,7 @@ INTERN alloc_type *(DCALL name##_tryalloc)(void) \
 { \
     alloc_type *result; \
     rwlock_write(&structcache_##name##_lock); \
-    ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
+    Dee_ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
     result = (alloc_type *)structcache_##name##_list; \
     if (result) { \
         structcache_##name##_list = ((struct cache_struct *)result)->cs_next; \
@@ -96,7 +96,7 @@ INTERN size_t DCALL name##_clear(size_t max_clear) \
     while (result < max_clear && structcache_##name##_list) \
     { \
         struct cache_struct *iter; \
-        ASSERT(structcache_##name##_size != 0); \
+        Dee_ASSERT(structcache_##name##_size != 0); \
         iter = structcache_##name##_list; \
         structcache_##name##_list = iter->cs_next; \
         --structcache_##name##_size; \
@@ -123,7 +123,7 @@ INTERN alloc_type *(DCALL name##_alloc)(void) \
 { \
     alloc_type *result; \
     rwlock_write(&structcache_##name##_lock); \
-    ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
+    Dee_ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
     result = (alloc_type *)structcache_##name##_list; \
     if (result) { \
         structcache_##name##_list = ((struct cache_struct *)result)->cs_next; \
@@ -140,7 +140,7 @@ INTERN alloc_type *DCALL name##_dbgalloc(char const *file, int line) \
 { \
     alloc_type *result; \
     /*rwlock_write(&structcache_##name##_lock); \
-    ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
+    Dee_ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
     result = (alloc_type *)structcache_##name##_list; \
     if (result) { \
         structcache_##name##_list = ((struct cache_struct *)result)->cs_next; \
@@ -163,7 +163,7 @@ INTERN size_t DCALL name##_clear(size_t max_clear) \
     while (result < max_clear && obcache_##name##_list) \
     { \
         struct cache_object *iter; \
-        ASSERT(obcache_##name##_size != 0); \
+        Dee_ASSERT(obcache_##name##_size != 0); \
         iter = obcache_##name##_list; \
         obcache_##name##_list = iter->co_next; \
         --obcache_##name##_size; \
@@ -190,7 +190,7 @@ INTERN alloc_type *(DCALL name##_alloc)(void) \
 { \
     alloc_type *result; \
     rwlock_write(&obcache_##name##_lock); \
-    ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
+    Dee_ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
     result = (alloc_type *)obcache_##name##_list; \
     if (result) { \
         obcache_##name##_list = ((struct cache_object *)result)->co_next; \
@@ -207,7 +207,7 @@ INTERN alloc_type *DCALL name##_dbgalloc(char const *file, int line) \
 { \
     alloc_type *result; \
     /*rwlock_write(&obcache_##name##_lock); \
-    ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
+    Dee_ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
     result = (alloc_type *)obcache_##name##_list; \
     if (result) { \
         obcache_##name##_list = ((struct cache_object *)result)->co_next; \
@@ -255,7 +255,7 @@ INTERN size_t DCALL name##_clear(size_t max_clear) \
     while (result < max_clear && structcache_##name##_list) \
     { \
         struct cache_struct *iter; \
-        ASSERT(structcache_##name##_size != 0); \
+        Dee_ASSERT(structcache_##name##_size != 0); \
         iter = structcache_##name##_list; \
         structcache_##name##_list = iter->cs_next; \
         --structcache_##name##_size; \
@@ -277,7 +277,7 @@ INTERN void DCALL name##_free(alloc_type *__restrict ob) \
 INTERN alloc_type *(DCALL name##_alloc)(void) \
 { \
     alloc_type *result; \
-    ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
+    Dee_ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
     result = (alloc_type *)structcache_##name##_list; \
     if (result) { \
         structcache_##name##_list = ((struct cache_struct *)result)->cs_next; \
@@ -292,7 +292,7 @@ OBJECT_CACHE_IFDBG( \
 INTERN alloc_type *DCALL name##_dbgalloc(char const *file, int line) \
 { \
     alloc_type *result; \
-    /*ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
+    /*Dee_ASSERT((structcache_##name##_size != 0) == (structcache_##name##_list != NULL)); \
     result = (alloc_type *)structcache_##name##_list; \
     if (result) { \
         structcache_##name##_list = ((struct cache_struct *)result)->cs_next; \
@@ -312,7 +312,7 @@ INTERN size_t DCALL name##_clear(size_t max_clear) \
     while (result < max_clear && obcache_##name##_list) \
     { \
         struct cache_object *iter; \
-        ASSERT(obcache_##name##_size != 0); \
+        Dee_ASSERT(obcache_##name##_size != 0); \
         iter = obcache_##name##_list; \
         obcache_##name##_list = iter->co_next; \
         --obcache_##name##_size; \
@@ -334,7 +334,7 @@ INTERN void DCALL name##_free(alloc_type *__restrict ob) \
 INTERN alloc_type *(DCALL name##_alloc)(void) \
 { \
     alloc_type *result; \
-    ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
+    Dee_ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
     result = (alloc_type *)obcache_##name##_list; \
     if (result) { \
         obcache_##name##_list = ((struct cache_object *)result)->co_next; \
@@ -349,7 +349,7 @@ OBJECT_CACHE_IFDBG( \
 INTERN alloc_type *DCALL name##_dbgalloc(char const *file, int line) \
 { \
     alloc_type *result; \
-    /*ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
+    /*Dee_ASSERT((obcache_##name##_size != 0) == (obcache_##name##_list != NULL)); \
     result = (alloc_type *)obcache_##name##_list; \
     if (result) { \
         obcache_##name##_list = ((struct cache_object *)result)->co_next; \

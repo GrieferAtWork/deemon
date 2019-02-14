@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_JIT_PARSER_C
 #define GUARD_DEX_JIT_PARSER_C 1
+#define DEE_SOURCE 1
 
 #include "libjit.h"
 #include <deemon/int.h>

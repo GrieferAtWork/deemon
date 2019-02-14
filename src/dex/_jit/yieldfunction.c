@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_JIT_YIELDFUNCTION_C
 #define GUARD_DEX_JIT_YIELDFUNCTION_C 1
+#define DEE_SOURCE 1
 
 #include "libjit.h"
 #include <deemon/arg.h>
@@ -1725,7 +1726,7 @@ handle_error:
   }
   self->ji_lex.jl_tok = TOK_EOF; /* Don't iterate again. */
  }
- assert(ts->t_exceptsz >= self->ji_ctx.jc_except);
+ ASSERT(ts->t_exceptsz >= self->ji_ctx.jc_except);
  if (ts->t_exceptsz > self->ji_ctx.jc_except) {
   if (self->ji_ctx.jc_retval != JITCONTEXT_RETVAL_UNSET) {
    if (JITCONTEXT_RETVAL_ISSET(self->ji_ctx.jc_retval))

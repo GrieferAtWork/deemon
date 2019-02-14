@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_JIT_LIBJIT_C
 #define GUARD_DEX_JIT_LIBJIT_C 1
+#define DEE_SOURCE 1
 
 #include "libjit.h"
 #include <deemon/arg.h>

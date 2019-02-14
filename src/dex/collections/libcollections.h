@@ -49,9 +49,9 @@ typedef struct deque_bucket {
 
 
 typedef struct deque {
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-    rwlock_t     d_lock;      /* Lock for this deque. */
+    Dee_rwlock_t d_lock;      /* Lock for this deque. */
 #endif
     DequeBucket *d_head;      /* [lock(d_lock)][0..1] Head bucket. */
     DequeBucket *d_tail;      /* [lock(d_lock)][0..1] Tail bucket. */
@@ -65,7 +65,7 @@ typedef struct deque {
                                * Number of items in use by the tail-bucket (only when there are more than 2 buckets). */
     size_t       d_bucket_sz; /* [lock(d_lock)][!0] Size of a bucket (in objects) */
     size_t       d_version;   /* [lock(d_lock)] Incremented every time the deque changes. */
-    WEAKREF_SUPPORT
+    Dee_WEAKREF_SUPPORT
 } Deque;
 
 #define Deque_LockRead(self)      rwlock_read(&(self)->d_lock)
@@ -98,7 +98,7 @@ typedef struct deque {
 LOCAL DeeObject **DCALL
 Deque_ItemPointer(Deque *__restrict self, size_t index) {
  DequeBucket *iter = self->d_head;
- ASSERT(index < self->d_size);
+ Dee_ASSERT(index < self->d_size);
  if (index < DEQUE_HEADUSED(self))
      return &iter->db_items[DEQUE_HEADFREE(self) + index];
  if (index >= self->d_size/2) {
@@ -166,7 +166,7 @@ INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_Pop_unlocked(Deque *__restric
 INTDEF int DCALL Deque_Insert(Deque *__restrict self, size_t index, DeeObject *__restrict item);
 INTDEF size_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
 INTDEF DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
-INTDEF DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, dssize_t index);
+INTDEF DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, Dee_ssize_t index);
 
 typedef struct {
     DequeBucket *di_bucket;
@@ -196,7 +196,7 @@ LOCAL void DCALL
 DequeIterator_InitAt(DequeIterator *__restrict self,
                      Deque *__restrict deq, size_t index) {
  DequeBucket *iter = deq->d_head;
- ASSERT(index < deq->d_size);
+ Dee_ASSERT(index < deq->d_size);
  if (index < DEQUE_HEADUSED(deq)) {
   self->di_bucket = iter;
   self->di_index = DEQUE_HEADFREE(deq) + index;
@@ -245,10 +245,10 @@ DequeIterator_InitRBegin(DequeIterator *__restrict self,
                          Deque *__restrict deq) {
  self->di_bucket = deq->d_tail;
  if (deq->d_tail == deq->d_head) {
-  ASSERT(deq->d_head_use != 0);
+  Dee_ASSERT(deq->d_head_use != 0);
   self->di_index = deq->d_head_idx+deq->d_head_use-1;
  } else {
-  ASSERT(deq->d_tail_sz != 0);
+  Dee_ASSERT(deq->d_tail_sz != 0);
   self->di_index = deq->d_tail_sz-1;
  }
 }
@@ -257,10 +257,10 @@ DequeIterator_InitEnd(DequeIterator *__restrict self,
                       Deque *__restrict deq) {
  self->di_bucket = deq->d_tail;
  if (deq->d_tail == deq->d_head) {
-  ASSERT(deq->d_head_use != 0);
+  Dee_ASSERT(deq->d_head_use != 0);
   self->di_index = deq->d_head_idx+deq->d_head_use;
  } else {
-  ASSERT(deq->d_tail_sz != 0);
+  Dee_ASSERT(deq->d_tail_sz != 0);
   self->di_index = deq->d_tail_sz;
  }
 }
@@ -296,7 +296,7 @@ DequeIterator_Next(DequeIterator *__restrict self,
 LOCAL DREF DeeObject **DCALL
 DequeIterator_PrevItemPointer(DequeIterator *__restrict self,
                               Deque *__restrict deq) {
- ASSERT(DequeIterator_HasPrev(self,deq));
+ Dee_ASSERT(DequeIterator_HasPrev(self,deq));
  if (self->di_index != 0)
      return &self->di_bucket->db_items[self->di_index-1];
  return &DEQUEBUCKET_PREV(self->di_bucket)->db_items[deq->d_bucket_sz-1];
@@ -304,7 +304,7 @@ DequeIterator_PrevItemPointer(DequeIterator *__restrict self,
 LOCAL DREF DeeObject **DCALL
 DequeIterator_NextItemPointer(DequeIterator *__restrict self,
                               Deque *__restrict deq) {
- ASSERT(DequeIterator_HasNext(self,deq));
+ Dee_ASSERT(DequeIterator_HasNext(self,deq));
  if (self->di_index+1 < deq->d_bucket_sz)
      return &self->di_bucket->db_items[self->di_index+1];
  return &DEQUEBUCKET_NEXT(self->di_bucket)->db_items[0];
@@ -312,9 +312,9 @@ DequeIterator_NextItemPointer(DequeIterator *__restrict self,
 
 
 typedef struct {
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-    rwlock_t      di_lock; /* Lock for this iterator. */
+    Dee_rwlock_t  di_lock; /* Lock for this iterator. */
 #endif
     DequeIterator di_iter; /* [lock(di_lock)] The C-level iterator used to implement this one. */
     DREF Deque   *di_deq;  /* [1..1][const] The deque in question. */
@@ -335,17 +335,17 @@ typedef struct {
      * Basically a tuple, but its elements can change.
      * Additionally, elements may either be bound or unbound,
      * with `del this[x]' causing the x'th item to become unbound. */
-    OBJECT_HEAD /* GC object */
-    WEAKREF_SUPPORT
+    Dee_OBJECT_HEAD /* GC object */
+    Dee_WEAKREF_SUPPORT
 #ifndef CONFIG_NO_THREADS
-    rwlock_t        fl_lock;       /* Lock for this list. */
+    Dee_rwlock_t    fl_lock;       /* Lock for this list. */
 #endif
     size_t          fl_size;       /* [const] Length of the list. */
     DREF DeeObject *fl_elem[1024]; /* [0..1][fl_size] List items. */
 } FixedList;
 
 typedef struct {
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF FixedList    *li_list; /* [1..1][const] The list being iterated. */
     ATOMIC_DATA size_t li_iter; /* Iterator position. */
 } FixedListIterator;

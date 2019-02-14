@@ -28,6 +28,21 @@
 DECL_BEGIN
 
 
+#ifdef DEE_SOURCE
+#define dee_kwds_entry           kwds_entry
+#define Dee_string_object        string_object
+#define dee_kwds_object          kwds_object
+#define dee_kwds_mapping_object  kwds_mapping_object
+#define dee_keyword              keyword
+#define DEFINE_KWDS              Dee_DEFINE_KWDS
+#define K                        Dee_KEYWORD
+#define KS                       Dee_KEYWORD_STR
+#define KEND                     Dee_KEYWORD_END
+#define DEFINE_KWLIST            Dee_DEFINE_KWLIST
+#endif /* DEE_SOURCE */
+
+
+
 /* An extension to `Dee_Unpackf', explicitly for unpacking elements from function arguments.
  * Format language syntax:
  *     using Dee_Unpackf::object;
@@ -60,20 +75,19 @@ DFUNDEF int DCALL DeeArg_VUnpack(size_t argc, DeeObject **__restrict argv, char 
 
 
 
-
-
-struct kwds_entry {
-    DREF struct string_object *ke_name;  /* [1..1][SENTINAL(NULL)] Keyword name. */
-    dhash_t                    ke_hash;  /* [== Dee_HashStr(ke_name)][valid_if(ke_name)] Hash of this keyword. */
-    size_t                     ke_index; /* [< kw_size:][valid_if(ke_name)]
-                                          * Argument vector index of this keyword.
-                                          * NOTE: This index is applied as an offset _after_ positional
-                                          *       arguments, meaning that `0' is the first non-positional
-                                          *       argument, aka. `(argc - :kw_size) + 0' */
+struct Dee_string_object;
+struct dee_kwds_entry {
+    DREF struct Dee_string_object *ke_name;  /* [1..1][SENTINAL(NULL)] Keyword name. */
+    Dee_hash_t                        ke_hash;  /* [== Dee_HashStr(ke_name)][valid_if(ke_name)] Hash of this keyword. */
+    size_t                         ke_index; /* [< kw_size:][valid_if(ke_name)]
+                                              * Argument vector index of this keyword.
+                                              * NOTE: This index is applied as an offset _after_ positional
+                                              *       arguments, meaning that `0' is the first non-positional
+                                              *       argument, aka. `(argc - :kw_size) + 0' */
 };
 
-typedef struct kwds_object DeeKwdsObject;
-struct kwds_object {
+typedef struct dee_kwds_object DeeKwdsObject;
+struct dee_kwds_object {
     /* This type of object is used by user-code to
      * re-map the designation of optional arguments.
      * When given, unpacking the an argument list will
@@ -90,7 +104,7 @@ struct kwds_object {
      * >> PRIVATE DREF DeeObject *DCALL
      * >> foo(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
      * >>     DeeObject *x,*y,*func = Dee_None;
-     * >>     PRIVATE struct keyword kwlist[] = { K(x), K(y), K(func), KEND };
+     * >>     PRIVATE struct dee_keyword kwlist[] = { K(x), K(y), K(func), KEND };
      * >>     if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|o:foo",&x,&y,&func))
      * >>         return -1;
      * >>     return DeeObject_CallPack(func,2,x,y);
@@ -107,20 +121,21 @@ struct kwds_object {
      *          those keywords. - It's actually {(string,int)...}-like
      *          However, you can easily construct a {(string,object)...}-like
      *          mapping by calling `DeeKwdsMapping_New()' (see below) */
-    OBJECT_HEAD
-    size_t            kw_size;      /* [const] The number of valid entries in `kw_map'. */
-    size_t            kw_mask;      /* [const] Mask for keyword names. */
-    struct kwds_entry kw_map[1024]; /* [const] Keyword name->index map. */
+    Dee_OBJECT_HEAD
+    size_t                kw_size;      /* [const] The number of valid entries in `kw_map'. */
+    size_t                kw_mask;      /* [const] Mask for keyword names. */
+    struct dee_kwds_entry kw_map[1024]; /* [const] Keyword name->index map. */
 };
 #define DeeKwds_MAPNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
-#define DEFINE_KWDS(name,kw_size_,kw_mask_,...) \
+
+#define Dee_DEFINE_KWDS(name,kw_size_,kw_mask_,...) \
 struct { \
-    OBJECT_HEAD \
-    size_t            kw_size; \
-    size_t            kw_mask; \
-    struct kwds_entry kw_map[(kw_mask_)+1]; \
+    Dee_OBJECT_HEAD \
+    size_t                kw_size; \
+    size_t                kw_mask; \
+    struct dee_kwds_entry kw_map[(kw_mask_)+1]; \
 } name = { \
-    OBJECT_HEAD_INIT(&DeeKwds_Type), \
+    Dee_OBJECT_HEAD_INIT(&DeeKwds_Type), \
     kw_size_, \
     kw_mask_, \
     __VA_ARGS__ \
@@ -128,7 +143,7 @@ struct { \
 
 
 DDATDEF DeeTypeObject DeeKwds_Type;
-#define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)REQUIRES_OBJECT(ob))->kw_size
+#define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)Dee_REQUIRES_OBJECT(ob))->kw_size
 #define DeeKwds_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeKwds_Type) /* _kwds is final */
 #define DeeKwds_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeKwds_Type)
 
@@ -140,7 +155,7 @@ INTDEF DREF DeeObject *DCALL DeeKwds_NewWithHint(size_t num_items);
  *       keywords that had already been defined previously. */
 INTDEF int (DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
                                   char const *__restrict name,
-                                  size_t name_len, dhash_t hash);
+                                  size_t name_len, Dee_hash_t hash);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
@@ -150,8 +165,8 @@ INTDEF int (DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
 #endif
 
 
-typedef struct kwds_mapping_object DeeKwdsMappingObject;
-struct kwds_mapping_object {
+typedef struct dee_kwds_mapping_object DeeKwdsMappingObject;
+struct dee_kwds_mapping_object {
     /* A SharedMapping-like proxy object that can be used to wrap
      * an argument list vector alongside a KwdsObject in order to
      * construct a mapping-like wrapper for keyword arguments:
@@ -203,7 +218,7 @@ struct kwds_mapping_object {
      * >>     return result;
      * >> }
      */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF DeeKwdsObject *kmo_kwds; /* [1..1][const] The Keyword arguments.
                                    * NOTE: If revived during unsharing, the object in this field
                                    *       gets incref'd, meaning that before that point, this
@@ -213,7 +228,7 @@ struct kwds_mapping_object {
                                    * NOTE: May be NULL, even when `kmo_kwds->kw_size' is non-zero, in which
                                    *       case code should operate as though `kmo_kwds->kw_size' was zero. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t            kmo_lock; /* Lock for unsharing the argument vector. */
+    Dee_rwlock_t        kmo_lock; /* Lock for unsharing the argument vector. */
 #endif
 };
 
@@ -237,12 +252,12 @@ DeeKwdsMapping_New(/*Kwds*/DeeObject *__restrict kwds,
 DFUNDEF void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF bool DCALL DeeKwdsMapping_HasItemString(DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF bool DCALL DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemString(DeeObject *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+INTDEF bool DCALL DeeKwdsMapping_HasItemString(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
+INTDEF bool DCALL DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemString(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *__restrict def);
 #endif
 
 
@@ -259,7 +274,7 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
                    char const *__restrict name);
 DFUNDEF DREF DeeObject *DCALL
 DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
-                      char const *__restrict name, size_t namelen, dhash_t hash);
+                      char const *__restrict name, size_t namelen, Dee_hash_t hash);
 DFUNDEF DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject **__restrict argv,
                       DeeObject *kw, char const *__restrict name,
@@ -267,22 +282,22 @@ DeeArg_GetKwStringDef(size_t argc, DeeObject **__restrict argv,
 DFUNDEF DREF DeeObject *DCALL
 DeeArg_GetKwStringLenDef(size_t argc, DeeObject **__restrict argv,
                          DeeObject *kw, char const *__restrict name,
-                         size_t namelen, dhash_t hash,
+                         size_t namelen, Dee_hash_t hash,
                          DeeObject *__restrict def);
 
 
 
-struct keyword {
+struct dee_keyword {
     char const *k_name; /* [1..1][SENTINAL(NULL)] Keyword name. */
-    dhash_t     k_hash; /* [== Dee_HashStr(ke_name)]
-                         * Hash of this keyword (or (dhash_t)-1 when not yet calculated).
+    Dee_hash_t  k_hash; /* [== Dee_HashStr(ke_name)]
+                         * Hash of this keyword (or (Dee_hash_t)-1 when not yet calculated).
                          * Filled in the first time the keyword is used. */
 };
-#define K(x)  { #x, (dhash_t)-1 }
-#define KS(s) { s, (dhash_t)-1 }
-#define KEND  { NULL }
-#define DEFINE_KWLIST(name,...) struct keyword name[] = __VA_ARGS__
 
+#define Dee_KEYWORD(x)                  { #x, (Dee_hash_t)-1 }
+#define Dee_KEYWORD_STR(s)              { s, (Dee_hash_t)-1 }
+#define Dee_KEYWORD_END                 { NULL }
+#define Dee_DEFINE_KWLIST(name,...) struct dee_keyword name[] = __VA_ARGS__
 
 /* Same as the regular unpack functions above, however these are enabled to
  * support keyword lists in the event that the calling function has been
@@ -299,10 +314,10 @@ struct keyword {
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used. */
 DFUNDEF int DeeArg_UnpackKw(size_t argc, DeeObject **__restrict argv,
-                            DeeObject *kw, struct keyword *__restrict kwlist,
+                            DeeObject *kw, struct dee_keyword *__restrict kwlist,
                             char const *__restrict format, ...);
 DFUNDEF int DCALL DeeArg_VUnpackKw(size_t argc, DeeObject **__restrict argv,
-                                   DeeObject *kw, struct keyword *__restrict kwlist,
+                                   DeeObject *kw, struct dee_keyword *__restrict kwlist,
                                    char const *__restrict format, va_list args);
 
 /* Same as `DeeArg_UnpackKw', but don't throw errors if argument types,
@@ -312,10 +327,10 @@ DFUNDEF int DCALL DeeArg_VUnpackKw(size_t argc, DeeObject **__restrict argv,
  * @return:  0: Unpacking was successful.
  * @return: -1: An error occurred. */
 DFUNDEF int DeeArg_TryUnpackKw(size_t argc, DeeObject **__restrict argv,
-                               DeeObject *kw, struct keyword *__restrict kwlist,
+                               DeeObject *kw, struct dee_keyword *__restrict kwlist,
                                char const *__restrict format, ...);
 DFUNDEF int DCALL DeeArg_VTryUnpackKw(size_t argc, DeeObject **__restrict argv,
-                                      DeeObject *kw, struct keyword *__restrict kwlist,
+                                      DeeObject *kw, struct dee_keyword *__restrict kwlist,
                                       char const *__restrict format, va_list args);
 
 

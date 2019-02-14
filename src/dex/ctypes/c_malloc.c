@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_CTYPES_C_MALLOC_C
 #define GUARD_DEX_CTYPES_C_MALLOC_C 1
+#define DEE_SOURCE 1
 #define _GNU_SOURCE 1 /* strnlen() */
 
 #include "libctypes.h"

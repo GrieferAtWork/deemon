@@ -19,6 +19,7 @@
 #ifndef GUARD_DEX_FS_HOST_C
 #define GUARD_DEX_FS_HOST_C 1
 /* Pre-define macros for features required by some hosts. */
+#define DEE_SOURCE 1
 #define _KOS_SOURCE     1
 #define _BSD_SOURCE     1
 #define _GNU_SOURCE     1

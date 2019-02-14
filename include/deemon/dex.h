@@ -31,10 +31,19 @@
 
 DECL_BEGIN
 
-typedef struct dex_object DeeDexObject;
+#ifdef DEE_SOURCE
+#define Dee_dex_object       dex_object
+#define Dee_dex_symbol       dex_symbol
+#define Dee_dex              dex
+#ifndef CONFIG_NO_NOTIFICATIONS
+#define Dee_string_object    string_object
+#define Dee_dex_notification dex_notification
+#endif
+#endif /* DEE_SOURCE */
 
+typedef struct Dee_dex_object DeeDexObject;
 
-struct dex_symbol {
+struct Dee_dex_symbol {
     char const          *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
     DeeObject           *ds_obj;   /* [0..1] The initial value of this symbol. */
     uintptr_t            ds_flags; /* Set of `MODSYM_F*'. */
@@ -42,8 +51,9 @@ struct dex_symbol {
 };
 
 #ifndef CONFIG_NO_NOTIFICATIONS
-struct dex_notification {
-#define DEX_NOTIFICATION_FNORMAL 0x0000 /* Normal notification flags. */
+struct Dee_string_object;
+struct Dee_dex_notification {
+#define Dee_DEX_NOTIFICATION_FNORMAL 0x0000 /* Normal notification flags. */
 #if __SIZEOF_POINTER__ >= 8
     uint32_t              dn_class;    /* [valid_if(dn_name)] Notification class (One of `NOTIFICATION_CLASS_*') */
     uint32_t              dn_flag;     /* [valid_if(dn_name)] Notification flags (Set of `DEX_NOTIFICATION_F*') */
@@ -53,17 +63,18 @@ struct dex_notification {
 #else
 #error FIXME
 #endif
-    struct string_object *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinal). */
-    dnotify_t             dn_callback; /* [1..1][valid_if(dn_name)] Notification callback. */
+    struct Dee_string_object
+                         *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinal). */
+    Dee_notify_t          dn_callback; /* [1..1][valid_if(dn_name)] Notification callback. */
     DeeObject            *dn_arg;      /* [0..1][valid_if(dn_name)] Notification argument. */
 };
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 
-struct dex {
+struct Dee_dex {
     /* The extension descriptor structure that must be
      * exported by the extension module under the name `DEX'. */
-    struct dex_symbol *d_symbols; /* [0..1] The vector of exported symbols.
-                                   * NOTE: Indices in this vector are re-used as global variable numbers. */
+    struct Dee_dex_symbol *d_symbols; /* [0..1] The vector of exported symbols.
+                                       * NOTE: Indices in this vector are re-used as global variable numbers. */
     /* Optional initializer/finalizer callbacks.
      * When non-NULL, `d_init()' is invoked after globals have been.
      * Extension modules are only unloaded before deemon itself terminates.
@@ -89,13 +100,13 @@ struct dex {
      * @return: false: Nothing was cleared. (Same as not implementing this callback) */
     bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
 #ifndef CONFIG_NO_NOTIFICATIONS
-    struct dex_notification *d_notify;     /* [0..1] Dex notification hooks. */
+    struct Dee_dex_notification *d_notify;     /* [0..1] Dex notification hooks. */
 #endif
 };
 
-struct dex_object {
+struct Dee_dex_object {
     DeeModuleObject    d_module; /* The underlying module. */
-    struct dex        *d_dex;    /* [1..1][const_if(MODULE_FDIDLOAD)] The dex definition table exported by this extension.
+    struct Dee_dex    *d_dex;    /* [1..1][const_if(MODULE_FDIDLOAD)] The dex definition table exported by this extension.
                                   * NOTE: This pointer is apart of the extension's static address space. */
     void              *d_handle; /* [?..?][const_if(MODULE_FDIDLOAD)] System-specific library handle. */
     DeeDexObject     **d_pself;  /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
@@ -109,8 +120,8 @@ DDATDEF DeeTypeObject DeeDex_Type;
 
 #ifdef CONFIG_BUILDING_DEX
 /* Implemented by the extension:
- * >> PUBLIC struct dex DEX = { ... }; */
-EXPDEF struct dex DEX;
+ * >> PUBLIC struct Dee_dex DEX = { ... }; */
+EXPDEF struct Dee_dex DEX;
 #endif
 
 #ifdef CONFIG_BUILDING_DEEMON

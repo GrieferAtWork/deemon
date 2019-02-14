@@ -18,6 +18,9 @@
  */
 #ifndef GUARD_DEX_FS_ENVIRON_C_INL
 #define GUARD_DEX_FS_ENVIRON_C_INL 1
+#ifndef DEE_SOURCE
+#define DEE_SOURCE 1
+#endif
 #ifndef _KOS_SOURCE
 #define _KOS_SOURCE     1
 #endif
@@ -402,7 +405,7 @@ fs_delenv(DeeObject *__restrict name) {
  /* TODO: putenv() */
  (void)name;
  DERROR_NOTIMPLEMENTED();
- return DeeNotify_Broadcast(NOTIFICATION_CLASS_ENVIRON,name);
+ return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON,name);
 }
 
 INTERN int DCALL
@@ -412,7 +415,7 @@ fs_setenv(DeeObject *__restrict name,
  /* TODO: putenv() */
  (void)name;
  DERROR_NOTIMPLEMENTED();
- return DeeNotify_Broadcast(NOTIFICATION_CLASS_ENVIRON,name);
+ return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON,name);
 }
 
 DECL_END

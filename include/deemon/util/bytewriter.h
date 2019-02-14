@@ -33,14 +33,14 @@ struct bytewriter {
 };
 #define BYTEWRITER_INIT     { NULL, 0, 0 }
 #define bytewriter_init(x)  (void)((x)->bw_base = NULL,(x)->bw_size = (x)->bw_alloc = 0)
-#define bytewriter_cinit(x) (void)(ASSERT((x)->bw_base == NULL),ASSERT((x)->bw_size == 0),ASSERT((x)->bw_alloc == 0))
+#define bytewriter_cinit(x) (void)(Dee_ASSERT((x)->bw_base == NULL),Dee_ASSERT((x)->bw_size == 0),Dee_ASSERT((x)->bw_alloc == 0))
 #define bytewriter_fini(x)   Dee_Free((x)->bw_base)
 
 /* Reserve memory for at least `n_bytes'  */
 LOCAL uint8_t *DCALL
 bytewriter_alloc(struct bytewriter *__restrict self, size_t n_bytes) {
  uint8_t *result;
- ASSERT(self->bw_size <= self->bw_alloc);
+ Dee_ASSERT(self->bw_size <= self->bw_alloc);
  result = self->bw_base;
  if (n_bytes > (self->bw_alloc - self->bw_size)) {
   size_t new_alloc = self->bw_alloc * 2;
@@ -96,7 +96,7 @@ DEFINE_BYTEWRITER_PUTX(bytewriter_putq,uint64_t,qword)
  * as this function will never throw any. */
 LOCAL uint8_t *DCALL
 bytewriter_flush(struct bytewriter *__restrict self) {
- ASSERT(self->bw_alloc >= self->bw_size);
+ Dee_ASSERT(self->bw_alloc >= self->bw_size);
  if (self->bw_alloc > self->bw_size) {
   uint8_t *newbase;
   newbase = (uint8_t *)Dee_TryRealloc(self->bw_base,

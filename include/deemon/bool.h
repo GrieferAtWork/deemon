@@ -26,7 +26,15 @@
 
 DECL_BEGIN
 
-typedef struct bool_object DeeBoolObject;
+#ifdef DEE_SOURCE
+#define Dee_bool_object bool_object
+#define return_bool   Dee_return_bool
+#define return_bool_  Dee_return_bool_
+#define return_true   Dee_return_true
+#define return_false  Dee_return_false
+#endif
+
+typedef struct Dee_bool_object DeeBoolObject;
 
 /* HINT: In i386 assembly, `bool' is 8 bytes, so if you want to
  *       convert an integer 0/1 into a boolean, you can use the
@@ -35,16 +43,16 @@ typedef struct bool_object DeeBoolObject;
  *       The fact that this can be done is the reason why a boolean
  *       doesn't store its value in its structure, but rather in its
  *       self-address. */
-struct bool_object { OBJECT_HEAD };
+struct Dee_bool_object { Dee_OBJECT_HEAD };
 
 #define DeeBool_Check(x)      DeeObject_InstanceOfExact(x,&DeeBool_Type) /* `bool' is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeBool_Type)
-#define DeeBool_IsTrue(x)   ((DeeBoolObject *)REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
+#define DeeBool_IsTrue(x)   ((DeeBoolObject *)Dee_REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
 #define DeeBool_For(val)    ((DeeObject *)&Dee_FalseTrue[!!(val)])
-#define return_bool(val)      return_reference(DeeBool_For(val))
-#define return_bool_(val)     return_reference_(DeeBool_For(val))
-#define return_true           return_bool_(true)
-#define return_false          return_bool_(false)
+#define Dee_return_bool(val)  Dee_return_reference(DeeBool_For(val))
+#define Dee_return_bool_(val) Dee_return_reference_(DeeBool_For(val))
+#define Dee_return_true       Dee_return_reference_(Dee_True)
+#define Dee_return_false      Dee_return_reference_(Dee_False)
 
 DDATDEF DeeTypeObject DeeBool_Type;
 DDATDEF DeeBoolObject Dee_FalseTrue[2];

@@ -722,7 +722,7 @@ sysfile_read(SystemFile *__restrict self,
     bufsize = UINT32_MAX;
 #endif
 again:
- if (flags & DEE_FILEIO_FNONBLOCKING) {
+ if (flags & Dee_FILEIO_FNONBLOCKING) {
   DWORD result,file_type;
 #if __SIZEOF_SIZE_T__ > 4
   if unlikely(bufsize > UINT32_MAX)

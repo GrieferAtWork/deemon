@@ -203,54 +203,84 @@
 
 DECL_BEGIN
 
-typedef struct class_descriptor_object DeeClassDescriptorObject;
-struct string_object;
 
-#define CLASS_GETSET_GET 0 /* Offset to the getter of a user-defined getset in a class. */
-#define CLASS_GETSET_DEL 1 /* Offset to the delete of a user-defined getset in a class. */
-#define CLASS_GETSET_SET 2 /* Offset to the setter of a user-defined getset in a class. */
+#ifdef DEE_SOURCE
+#define Dee_string_object           string_object
+#define Dee_class_descriptor_object class_descriptor_object
+#define Dee_class_optable           class_optable
+#define Dee_class_desc              class_desc
+#define Dee_instance_desc           instance_desc
+#define Dee_class_operator          class_operator
+#define Dee_class_attribute         class_attribute
+#define Dee_instancemember_object   instancemember_object
+#define class_desc_as_instance      Dee_class_desc_as_instance
+#define CLASS_HEADER_OPC1           Dee_CLASS_HEADER_OPC1
+#define CLASS_HEADER_OPC2           Dee_CLASS_HEADER_OPC2
+#define CLASS_GETSET_GET            Dee_CLASS_GETSET_GET
+#define CLASS_GETSET_DEL            Dee_CLASS_GETSET_DEL
+#define CLASS_GETSET_SET            Dee_CLASS_GETSET_SET
+#define CLASS_ATTRIBUTE_FNORMAL     Dee_CLASS_ATTRIBUTE_FNORMAL
+#define CLASS_ATTRIBUTE_FPUBLIC     Dee_CLASS_ATTRIBUTE_FPUBLIC
+#define CLASS_ATTRIBUTE_FPRIVATE    Dee_CLASS_ATTRIBUTE_FPRIVATE
+#define CLASS_ATTRIBUTE_FVISIBILITY Dee_CLASS_ATTRIBUTE_FVISIBILITY
+#define CLASS_ATTRIBUTE_FFINAL      Dee_CLASS_ATTRIBUTE_FFINAL
+#define CLASS_ATTRIBUTE_FREADONLY   Dee_CLASS_ATTRIBUTE_FREADONLY
+#define CLASS_ATTRIBUTE_FMETHOD     Dee_CLASS_ATTRIBUTE_FMETHOD
+#define CLASS_ATTRIBUTE_FGETSET     Dee_CLASS_ATTRIBUTE_FGETSET
+#define CLASS_ATTRIBUTE_FCLASSMEM   Dee_CLASS_ATTRIBUTE_FCLASSMEM
+#define CLASS_ATTRIBUTE_FMASK       Dee_CLASS_ATTRIBUTE_FMASK
+#define CLASS_ATTRIBUTE_ALLOW_AUTOINIT Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT
+#endif /* DEE_SOURCE */
 
-#define CLASS_ATTRIBUTE_FNORMAL   0x0000 /* Normal class attribute flags. */
-#define CLASS_ATTRIBUTE_FPUBLIC   0x0000 /* The attribute is publicly available. */
-#define CLASS_ATTRIBUTE_FPRIVATE  0x0001 /* The attribute is only accessible from this-call functions with an instance of the class as this-argument. */
-#define CLASS_ATTRIBUTE_FVISIBILITY (CLASS_ATTRIBUTE_FPRIVATE) /* Mask of flags affecting symbol visibility. */
-#define CLASS_ATTRIBUTE_FFINAL    0x0002 /* The attribute is accessed directly, and cannot be overwritten by sub-classes. */
-#define CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
-/*      CLASS_ATTRIBUTE_F         0x0008  * ... */
-#define CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `instancemethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
-#define CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
-                                          * When `CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
-                                          * When `CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,
-                                          * and all other callbacks behave as though they were unbound. */
-/*      CLASS_ATTRIBUTE_F         0x0040  * ... */
-#define CLASS_ATTRIBUTE_FCLASSMEM 0x0080 /* An instance-attribute is stored in class memory (usually set for instance member functions).
-                                          * NOTE: Ignored when used by attributes in `cd_cattr_list', where
-                                          *       operation is always done like it would be when it was set. */
-/*      CLASS_ATTRIBUTE_F         0x0100  * ... */
-/*      CLASS_ATTRIBUTE_F         0x8000  * ... */
-#define CLASS_ATTRIBUTE_FMASK     0x00b7 /* Mask of known flag bits. */
 
-struct class_attribute {
-    DREF struct string_object *ca_name; /* [0..1][const] Name of this member.
-                                         * NOTE: NULL indicates a sentinel/unused entry. */
-    dhash_t                    ca_hash; /* [== cme_name->s_hash][const] */
-    DREF struct string_object *ca_doc;  /* [0..1][const] A Documentation string for this member. */
-    uint16_t                   ca_addr; /* [const] Attribute address within the instance / class table. */
-    uint16_t                   ca_flag; /* Class member flags (Set of `CLASS_ATTRIBUTE_F*') */
+struct Dee_string_object;
+typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
+
+#define Dee_CLASS_GETSET_GET 0 /* Offset to the getter of a user-defined getset in a class. */
+#define Dee_CLASS_GETSET_DEL 1 /* Offset to the delete of a user-defined getset in a class. */
+#define Dee_CLASS_GETSET_SET 2 /* Offset to the setter of a user-defined getset in a class. */
+
+#define Dee_CLASS_ATTRIBUTE_FNORMAL   0x0000 /* Normal class attribute flags. */
+#define Dee_CLASS_ATTRIBUTE_FPUBLIC   0x0000 /* The attribute is publicly available. */
+#define Dee_CLASS_ATTRIBUTE_FPRIVATE  0x0001 /* The attribute is only accessible from this-call functions with an instance of the class as this-argument. */
+#define Dee_CLASS_ATTRIBUTE_FVISIBILITY (Dee_CLASS_ATTRIBUTE_FPRIVATE) /* Mask of flags affecting symbol visibility. */
+#define Dee_CLASS_ATTRIBUTE_FFINAL    0x0002 /* The attribute is accessed directly, and cannot be overwritten by sub-classes. */
+#define Dee_CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
+/*      Dee_CLASS_ATTRIBUTE_F         0x0008  * ... */
+#define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `instancemethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
+#define Dee_CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
+                                              * When `Dee_CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
+                                              * When `Dee_CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,
+                                              * and all other callbacks behave as though they were unbound. */
+/*      Dee_CLASS_ATTRIBUTE_F         0x0040  * ... */
+#define Dee_CLASS_ATTRIBUTE_FCLASSMEM 0x0080 /* An instance-attribute is stored in class memory (usually set for instance member functions).
+                                              * NOTE: Ignored when used by attributes in `cd_cattr_list', where
+                                              *       operation is always done like it would be when it was set. */
+/*      Dee_CLASS_ATTRIBUTE_F         0x0100  * ... */
+/*      Dee_CLASS_ATTRIBUTE_F         0x8000  * ... */
+#define Dee_CLASS_ATTRIBUTE_FMASK     0x00b7 /* Mask of known flag bits. */
+
+struct Dee_class_attribute {
+    DREF struct Dee_string_object *ca_name; /* [0..1][const] Name of this member.
+                                             * NOTE: NULL indicates a sentinel/unused entry. */
+    Dee_hash_t                     ca_hash; /* [== cme_name->s_hash][const] */
+    DREF struct Dee_string_object *ca_doc;  /* [0..1][const] A Documentation string for this member. */
+    uint16_t                       ca_addr; /* [const] Attribute address within the instance / class table. */
+    uint16_t                       ca_flag; /* Class member flags (Set of `Dee_CLASS_ATTRIBUTE_F*') */
 #if __SIZEOF_POINTER__ > 4
-    uint16_t                   ca_pad[(sizeof(void *)/2)-2];
+    uint16_t                       ca_pad[(sizeof(void *)/2)-2];
 #endif
 };
-#define CLASS_ATTRIBUTE_ALLOW_AUTOINIT(x) \
-    (!((x)->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FGETSET | \
-                       CLASS_ATTRIBUTE_FMETHOD | CLASS_ATTRIBUTE_FCLASSMEM)))
+#define Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT(x) \
+    (!((x)->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FGETSET | \
+                       Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FCLASSMEM)))
 
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Check if the current execution context allows access to `self',
  * which is either an instance or class method of `impl_class' */
 INTDEF WUNUSED bool DCALL
-class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
+class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
                                DeeTypeObject *__restrict impl_class);
 #define class_attribute_mayaccess(self,impl_class) \
     (!((self)->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) || \
@@ -271,15 +301,18 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
  * NOTE: When this operator isn't set, super-classes are
  *       always initialized using their default-constructor,
  *       essentially passing an empty argument list. */
-#define CLASS_OPERATOR_SUPERARGS   OPERATOR_USERCOUNT
-#define CLASS_OPERATOR_USERCOUNT  (OPERATOR_USERCOUNT+1)
+#ifdef DEE_SOURCE
+#define CLASS_OPERATOR_SUPERARGS       Dee_OPERATOR_USERCOUNT
+#define CLASS_OPERATOR_USERCOUNT      (Dee_OPERATOR_USERCOUNT+1)
+#endif /* DEE_SOURCE */
+#define Dee_CLASS_OPERATOR_USERCOUNT  (Dee_OPERATOR_USERCOUNT+1)
 
 
-struct class_operator {
+struct Dee_class_operator {
     uint16_t co_name; /* [const] Operator name (`(uint16_t)-1' for end-of-chain) */
     uint16_t co_addr; /* [const] Operator address (within the class member table `cd_members').
                        * Operators are invoked like attributes with the following flags:
-                       * `CLASS_ATTRIBUTE_FMETHOD|CLASS_ATTRIBUTE_FCLASSMEM', meaning
+                       * `Dee_CLASS_ATTRIBUTE_FMETHOD|Dee_CLASS_ATTRIBUTE_FCLASSMEM', meaning
                        * they are invoked as this-calls, with the callback itself stored
                        * in class memory.
                        * WARNING: When overwriting the value of a class operator after the previous
@@ -293,21 +326,21 @@ struct class_operator {
 };
 
 
-struct class_descriptor_object {
+struct Dee_class_descriptor_object {
     /* The descriptor for the configuration of a user-defined class object:
      * >> class MyClass {
-     * >>     class function cfunc() {
-     * >>         print "class function";
+     * >>     static function cfunc() {
+     * >>         print "static function";
      * >>     }
      * >>     function ifunc() {
      * >>         print "instance function";
      * >>     }
-     * >>     class member cmember = "class member";
+     * >>     static member cmember = "static member";
      * >>     member imember = "instance member";
-     * >>     class property cprop = {
-     * >>         get()  { return "class member"; }
-     * >>         del()  { print "class member"; }
-     * >>         set(v) { print "class member"; }
+     * >>     static property cprop = {
+     * >>         get()  { return "static member"; }
+     * >>         del()  { print "static member"; }
+     * >>         set(v) { print "static member"; }
      * >>     }
      * >>     property iprop = {
      * >>         get()  { return "instance member"; }
@@ -337,11 +370,11 @@ struct class_descriptor_object {
      * INSTANCE (class):
      * >> {
      * >>     .cd_members = {
-     * >>         [0] = <function cfunc() { print "class function"; }>,
-     * >>         [1] = <cmember = "class member">,
-     * >>         [2 + CLASS_GETSET_GET] = <cprop:get: get()  { return "class member"; }>,
-     * >>         [2 + CLASS_GETSET_DEL] = <cprop:del: del()  { print "class member"; }>,
-     * >>         [2 + CLASS_GETSET_SET] = <cprop:set: set(v) { print "class member"; }>,
+     * >>         [0] = <function cfunc() { print "static function"; }>,
+     * >>         [1] = <cmember = "static member">,
+     * >>         [2 + CLASS_GETSET_GET] = <cprop:get: get()  { return "static member"; }>,
+     * >>         [2 + CLASS_GETSET_DEL] = <cprop:del: del()  { print "static member"; }>,
+     * >>         [2 + CLASS_GETSET_SET] = <cprop:set: set(v) { print "static member"; }>,
      * >>         [5] = <function ifunc() { print "instance function"; }>,
      * >>         [6 + CLASS_GETSET_GET] = <iprop:get: get()  { return "instance member"; }>,
      * >>         [6 + CLASS_GETSET_DEL] = <iprop:del: del()  { print "instance member"; }>,
@@ -355,41 +388,43 @@ struct class_descriptor_object {
      * >>     }
      * >> }
      */
-    OBJECT_HEAD
-    DREF struct string_object *cd_name;          /* [0..1][const] Name of the class. */
-    DREF struct string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
-#define CLASS_TP_FAUTOINIT     TP_FGC            /* FLAG: When set, the construction operator is implemented to automatically initialize
-                                                  *       class members in compliance to the `this = default;' constructor definition.
-                                                  *       Additionally, if not already defined by the caller, this flag also causes
-                                                  *      `operator repr' to be implemented (see above).
-                                                  * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
-#define CLASS_TP_FSUPERKWDS    TP_FHEAP          /* FLAG: When set, the superargs operator actually returns a tuple `(args,kwds)' which
-                                                  *       should then be used to invoke the super-constructor as `super(args...,**kwds)'
-                                                  *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
-    uint16_t                   cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
-                                                  * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
-                                                  *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
-                                                  *       to be implemented such that it forwards all arguments
-                                                  *       to the underlying base-type, while also implementing
-                                                  *      `OPERATOR_CONSTRUCTOR' as a no-op for any number of
-                                                  *       arguments.
-                                                  *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
-                                                  *       the `TP_FINHERITCTOR' flag is simply ignored.
-                                                  *       If the user overrides `OPERATOR_CONSTRUCTOR',
-                                                  *       the user's constructor will be invoked, though
-                                                  *       no arguments will be passed to it (this is done to
-                                                  *       allow for class member initialization to still take
-                                                  *       place when no constructor has actually been defined). */
-    uint16_t                   cd_cmemb_size;    /* [const] The allocation size of the class member table. */
-    uint16_t                   cd_imemb_size;    /* [const] The allocation size of the instance member table. */
-    uint16_t                   cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */
-    size_t                     cd_cattr_mask;    /* [const] Mask for the `cd_cattr_list' hash-vector. */
-    size_t                     cd_iattr_mask;    /* [const] Mask for the `cd_cattr_list' hash-vector. */
-    struct class_operator     *cd_clsop_list;    /* [1..cd_clsop_mask+1][owned_if(!= INTERNAL(empty-class-operator-table))]
-                                                  * [const] The class operator address hash-vector. */
-    struct class_attribute    *cd_cattr_list;    /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
-                                                  * [const] The class attribute hash-vector. */
-    struct class_attribute     cd_iattr_list[1]; /* [cd_iattr_mask+1] The instance attribute hash-vector. */
+    Dee_OBJECT_HEAD
+    DREF struct Dee_string_object *cd_name;          /* [0..1][const] Name of the class. */
+    DREF struct Dee_string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
+#ifdef DEE_SOURCE
+#define CLASS_TP_FAUTOINIT         Dee_TP_FGC        /* FLAG: When set, the construction operator is implemented to automatically initialize
+                                                      *       class members in compliance to the `this = default;' constructor definition.
+                                                      *       Additionally, if not already defined by the caller, this flag also causes
+                                                      *      `operator repr' to be implemented (see above).
+                                                      * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
+#define CLASS_TP_FSUPERKWDS        Dee_TP_FHEAP      /* FLAG: When set, the superargs operator actually returns a tuple `(args,kwds)' which
+                                                      *       should then be used to invoke the super-constructor as `super(args...,**kwds)'
+                                                      *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
+#endif /* DEE_SOURCE */
+    uint16_t                       cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
+                                                      * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
+                                                      *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
+                                                      *       to be implemented such that it forwards all arguments
+                                                      *       to the underlying base-type, while also implementing
+                                                      *      `OPERATOR_CONSTRUCTOR' as a no-op for any number of
+                                                      *       arguments.
+                                                      *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
+                                                      *       the `TP_FINHERITCTOR' flag is simply ignored.
+                                                      *       If the user overrides `OPERATOR_CONSTRUCTOR',
+                                                      *       the user's constructor will be invoked, though
+                                                      *       no arguments will be passed to it (this is done to
+                                                      *       allow for class member initialization to still take
+                                                      *       place when no constructor has actually been defined). */
+    uint16_t                       cd_cmemb_size;    /* [const] The allocation size of the class member table. */
+    uint16_t                       cd_imemb_size;    /* [const] The allocation size of the instance member table. */
+    uint16_t                       cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */
+    size_t                         cd_cattr_mask;    /* [const] Mask for the `cd_cattr_list' hash-vector. */
+    size_t                         cd_iattr_mask;    /* [const] Mask for the `cd_cattr_list' hash-vector. */
+    struct Dee_class_operator     *cd_clsop_list;    /* [1..cd_clsop_mask+1][owned_if(!= INTERNAL(empty-class-operator-table))]
+                                                      * [const] The class operator address hash-vector. */
+    struct Dee_class_attribute    *cd_cattr_list;    /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
+                                                      * [const] The class attribute hash-vector. */
+    struct Dee_class_attribute     cd_iattr_list[1]; /* [cd_iattr_mask+1] The instance attribute hash-vector. */
 };
 #define DeeClassDescriptor_CLSOPNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
 #define DeeClassDescriptor_CATTRNEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
@@ -404,19 +439,19 @@ DDATDEF DeeTypeObject DeeClassDescriptor_Type;
 /* Lookup class / instance attributes within the given class descriptor.
  * @return: * :   A pointer to attribute that was found.
  * @return: NULL: Attribute could not be found (no error is thrown) */
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, dhash_t hash);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, dhash_t hash);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr, Dee_hash_t hash);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr, Dee_hash_t hash);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #ifdef __INTELLISENSE__
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
-DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/DeeObject *__restrict attr);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
+DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
 #else
 #define DeeClassDescriptor_QueryClassAttribute(self,attr) \
         DeeClassDescriptor_QueryClassAttributeWithHash(self,attr,DeeString_Hash(attr))
@@ -434,33 +469,33 @@ DFUNDEF struct class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute
 
 
 
-#define CLASS_HEADER_OPC1    8
-#define CLASS_HEADER_OPC2  ((CLASS_OPERATOR_USERCOUNT+7)/8)
+#define Dee_CLASS_HEADER_OPC1    8
+#define Dee_CLASS_HEADER_OPC2  ((Dee_CLASS_OPERATOR_USERCOUNT+7)/8)
 
-#if (CLASS_HEADER_OPC1*CLASS_HEADER_OPC2) < CLASS_OPERATOR_USERCOUNT
+#if (Dee_CLASS_HEADER_OPC1*Dee_CLASS_HEADER_OPC2) < Dee_CLASS_OPERATOR_USERCOUNT
 #error "FIXME: Not enough space for all available operators"
 #endif
 
-struct class_optable {
+struct Dee_class_optable {
     /* [0..1][lock(READ(:cd_lock),SET_TO_NULL(:cd_lock),WRITE_ONCE)][*] Table of operators.
      * NOTE: Individual callback objects may be `ITER_DONE',
      *       indicative of that operator having been deleted
      *       explicitly. */
-    DREF DeeObject *co_operators[CLASS_HEADER_OPC2];
+    DREF DeeObject *co_operators[Dee_CLASS_HEADER_OPC2];
 };
 
-struct class_desc {
+struct Dee_class_desc {
     /* The class description tail embedded into type-objects
      * which have been initialized as custom user-classes. */
     DREF DeeClassDescriptorObject *cd_desc;   /* [1..1][const] The associated class descriptor.
                                                * This in turn contains all the relevant fields
                                                * required to accessing user-defined attributes. */
-    uintptr_t                      cd_offset; /* [const] Offset to the `struct instance_desc' of instances. */
-    struct class_optable          *cd_ops[CLASS_HEADER_OPC1];
+    uintptr_t                      cd_offset; /* [const] Offset to the `struct Dee_instance_desc' of instances. */
+    struct Dee_class_optable      *cd_ops[Dee_CLASS_HEADER_OPC1];
                                               /* [0..1][owned][lock(WRITE_ONCE)][*]
                                                * Table of cached operator callbacks. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t                       cd_lock;   /* Lock for accessing the class member table. */
+    Dee_rwlock_t                   cd_lock;   /* Lock for accessing the class member table. */
 #endif
     DREF DeeObject                *cd_members[1024]; /* [0..1][lock(cd_lock)][cd_desc->cd_cmemb_size]
                                                       * The class member table (also contains
@@ -468,9 +503,9 @@ struct class_desc {
 };
 
 #ifndef CONFIG_NO_THREADS
-#define class_desc_as_instance(x) ((struct instance_desc *)&(x)->cd_lock)
+#define Dee_class_desc_as_instance(x) ((struct Dee_instance_desc *)&(x)->cd_lock)
 #else
-#define class_desc_as_instance(x) ((struct instance_desc *)&(x)->cd_members[0])
+#define Dee_class_desc_as_instance(x) ((struct Dee_instance_desc *)&(x)->cd_members[0])
 #endif
 
 #define DeeClass_Check(self)    (DeeType_Check(self) && DeeType_IsClass(self))
@@ -478,8 +513,8 @@ struct class_desc {
 
 /* Returns the descriptor for a given class. */
 #define DeeClass_DESC(self) \
-     (ASSERT_OBJECT_TYPE(self,&DeeType_Type),ASSERT(DeeType_IsClass(self)), \
-    ((DeeTypeObject *)REQUIRES_OBJECT(self))->tp_class)
+     (ASSERT_OBJECT_TYPE(self,&DeeType_Type),Dee_ASSERT(DeeType_IsClass(self)), \
+    ((DeeTypeObject *)Dee_REQUIRES_OBJECT(self))->tp_class)
 
 
 #define DeeClassDesc_QueryClassAttribute(self,attr)                                  DeeClassDescriptor_QueryClassAttribute((self)->cd_desc,attr)
@@ -509,9 +544,9 @@ struct class_desc {
 #define DeeClass_QueryInstanceAttributeStringLenWithHash(self,attr,attrlen,hash) DeeClassDesc_QueryInstanceAttributeStringLenWithHash(DeeClass_DESC(self),attr,attrlen,hash)
 
 
-struct instance_desc {
+struct Dee_instance_desc {
 #ifndef CONFIG_NO_THREADS
-    rwlock_t        id_lock;       /* Lock that must be held when accessing  */
+    Dee_rwlock_t    id_lock;       /* Lock that must be held when accessing  */
 #endif
     DREF DeeObject *id_vtab[1024]; /* [0..1][lock(id_lock)]
                                     * [DeeClass_DESC(:ob_type)->cd_desc->cd_imemb_size]
@@ -519,7 +554,7 @@ struct instance_desc {
 };
 
 #define DeeInstance_DESC(class_descriptor,self) \
-      ((struct instance_desc *)((uintptr_t)REQUIRES_OBJECT(self)+(class_descriptor)->cd_offset))
+      ((struct Dee_instance_desc *)((uintptr_t)Dee_REQUIRES_OBJECT(self)+(class_descriptor)->cd_offset))
 
 #ifdef CONFIG_BUILDING_DEEMON
 struct attribute_info;
@@ -561,41 +596,41 @@ INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict t
 
 /* Get/Call/Del/Set an instance attribute, as acquired
  * through `DeeClassDescriptor_QueryInstanceAttribute()'. */
-INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeInstance_BoundAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeInstance_VCallAttributef(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, char const *__restrict format, va_list args);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr);
+INTDEF int DCALL DeeInstance_BoundAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeInstance_VCallAttributef(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF int DCALL DeeInstance_DelAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeInstance_SetAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF int DCALL DeeInstance_DelAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr);
+INTDEF int DCALL DeeInstance_SetAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
 /* @return:  2: Attribute isn't a basic one
  * @return:  0: Basic attribute successfully set
  * @return: -1: An error occurred. */
 #ifdef __INTELLISENSE__
-INTDEF int DCALL DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc, struct instance_desc *__restrict self, DeeObject *__restrict this_arg, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF int DCALL DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
 #else
 #define DeeInstance_SetBasicAttribute(desc,self,this_arg,attr,value) \
         DeeInstance_SetBasicAttribute_(desc,self,attr,value)
-INTDEF int (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc, struct instance_desc *__restrict self, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF int (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
 #endif
 
 /* Get/Call/Del/Set a class attribute, as acquired
  * through `DeeClassDescriptor_QueryClassAttribute()'. */
 #ifdef __INTELLISENSE__
-INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
 #else
 #define DeeClass_GetClassAttribute(class_type,attr)                 DeeInstance_GetAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
 #define DeeClass_BoundClassAttribute(class_type,attr)               DeeInstance_BoundAttribute(DeeClass_DESC(class_type),class_desc_as_instance(DeeClass_DESC(class_type)),(DeeObject *)(class_type),attr)
@@ -627,17 +662,17 @@ INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type
  * >> print MyClass.class_field;     // DeeClass_GetClassAttribute("class_field")
  * >> myclass_field = MyClass.field; // DeeClass_GetInstanceAttribute("field")
  */
-INTDEF DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args);
+INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, char const *__restrict format, va_list args);
-INTDEF int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
-INTDEF int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr, DeeObject *__restrict value);
-INTDEF int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict attr);
+INTDEF DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
+INTDEF int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
 #define DeeClass_SetBasicInstanceAttribute DeeClass_SetInstanceAttribute
 
 #endif
@@ -826,8 +861,8 @@ INTDEF int DCALL instance_tmoveassign(DeeTypeObject *__restrict tp_self, DeeObje
 INTDEF int DCALL instance_moveassign(DeeObject *__restrict self, DeeObject *__restrict other);
 
 /* GC support for class objects. */
-INTDEF void DCALL instance_tvisit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, dvisit_t proc, void *arg);
-INTDEF void DCALL instance_visit(DeeObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF void DCALL instance_tvisit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+INTDEF void DCALL instance_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF void DCALL instance_tclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF void DCALL instance_clear(DeeObject *__restrict self);
 INTDEF void DCALL instance_tpclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, unsigned int gc_priority);
@@ -835,8 +870,8 @@ INTDEF void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_pr
 INTDEF struct type_gc instance_gc;
 
 /* Builtin (standard) operators for hashing and comparing class objects. */
-INTDEF dhash_t DCALL instance_builtin_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF dhash_t DCALL instance_builtin_hash(DeeObject *__restrict self);
+INTDEF Dee_hash_t DCALL instance_builtin_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF Dee_hash_t DCALL instance_builtin_hash(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_builtin_teq(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF DREF DeeObject *DCALL instance_builtin_eq(DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF DREF DeeObject *DCALL instance_builtin_tne(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
@@ -926,8 +961,8 @@ INTDEF int DCALL instance_tixor(DeeTypeObject *__restrict tp_self, DeeObject **_
 INTDEF int DCALL instance_ixor(DeeObject **__restrict pself, DeeObject *__restrict other);
 INTDEF int DCALL instance_tipow(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
 INTDEF int DCALL instance_ipow(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF dhash_t DCALL instance_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF dhash_t DCALL instance_hash(DeeObject *__restrict self);
+INTDEF Dee_hash_t DCALL instance_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF Dee_hash_t DCALL instance_hash(DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL instance_teq(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF DREF DeeObject *DCALL instance_eq(DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF DREF DeeObject *DCALL instance_tne(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
@@ -980,12 +1015,12 @@ INTDEF dssize_t DCALL instance_enumattr(DeeTypeObject *__restrict tp_self, DeeOb
  * >> }
  * >> print type MyClass.foo; // DeeInstanceMember_Type
  */
-typedef struct instancemember_object DeeInstanceMemberObject;
-struct instancemember_object {
-    OBJECT_HEAD
-    DREF DeeTypeObject     *im_type;      /* [1..1][const] The user-class type, instances of which implement this member. */
-    struct class_attribute *im_attribute; /* [1..1][const] The instance attribute (`CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
-                                           * be set, though this isn't asserted) that should be accessed. */
+typedef struct Dee_instancemember_object DeeInstanceMemberObject;
+struct Dee_instancemember_object {
+    Dee_OBJECT_HEAD
+    DREF DeeTypeObject         *im_type;      /* [1..1][const] The user-class type, instances of which implement this member. */
+    struct Dee_class_attribute *im_attribute; /* [1..1][const] The instance attribute (`CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
+                                               * be set, though this isn't asserted) that should be accessed. */
 };
 
 DDATDEF DeeTypeObject DeeInstanceMember_Type;
@@ -995,7 +1030,7 @@ DDATDEF DeeTypeObject DeeInstanceMember_Type;
 /* Construct a new instance member for the given `attribute' */
 DFUNDEF DREF DeeObject *DCALL
 DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
-                      struct class_attribute *__restrict attribute);
+                      struct Dee_class_attribute *__restrict attribute);
 
 DECL_END
 

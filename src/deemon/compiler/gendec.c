@@ -768,13 +768,13 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   uint8_t *buffer;
   if (DeeInt_IsNeg(self)) {
    /* Encode as signed. */
-   buffer = dec_alloc(1+DEEINT_SLEB_MAXSIZE(self));
+   buffer = dec_alloc(1+DeeInt_GetSlebMaxSize(self));
    if unlikely(!buffer) goto err;
    *buffer++ = DTYPE_SLEB; /* Type byte */
    buffer = DeeInt_GetSleb(self,buffer);
   } else {
    /* Encode as unsigned. */
-   buffer = dec_alloc(1+DEEINT_ULEB_MAXSIZE(self));
+   buffer = dec_alloc(1+DeeInt_GetUlebMaxSize(self));
    if unlikely(!buffer) goto err;
    *buffer++ = DTYPE_ULEB; /* Type byte */
    buffer = DeeInt_GetUleb(self,buffer);
@@ -1166,7 +1166,7 @@ err:
 
 PRIVATE int DCALL
 dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
-                    struct ddi_exdat const *self,
+                    struct Dee_ddi_exdat const *self,
                     bool use_16bit) {
  if (self && self->dx_size != 0) {
   uint8_t *buf,*iter,*end; size_t size;

@@ -83,7 +83,7 @@ tpp_userstream_fread_nonblock(DeeFileObject *__restrict self,
                               void *__restrict buffer, size_t bufsize) {
  dssize_t result;
  result = DeeFile_Readf((DeeObject *)self,buffer,bufsize,
-                         DEE_FILEIO_FNONBLOCKING);
+                         Dee_FILEIO_FNONBLOCKING);
  if unlikely(result < 0) { TPPLexer_SetErr(); result = 0; } /* Set the error flag. */
  return (size_t)result;
 }
@@ -385,7 +385,7 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
  }
  /* Print information about the warning number. */
  printf("%c%.4d(",
-       (self->ce_mode == COMPILER_ERROR_FATALITY_WARNING) ? 'W' : 'E',
+       (self->ce_mode == Dee_COMPILER_ERROR_FATALITY_WARNING) ? 'W' : 'E',
         self->ce_wnum);
  {
   unsigned int wid = wnum2id(self->ce_wnum);
@@ -546,7 +546,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
    /* This file has been included before! (it's still cached) */
    if (buffer && buffer->s_data) {
     string_utf_fini(buffer->s_data,buffer);
-    string_utf_free(buffer->s_data);
+    Dee_string_utf_free(buffer->s_data);
    }
    DeeObject_Free(buffer);
    return result;
@@ -612,7 +612,7 @@ done_notfound:
  /* Free the temporary filename-buffer. */
  if (buffer && buffer->s_data) {
   string_utf_fini(buffer->s_data,buffer);
-  string_utf_free(buffer->s_data);
+  Dee_string_utf_free(buffer->s_data);
  }
  DeeObject_Free(buffer);
 done_result:

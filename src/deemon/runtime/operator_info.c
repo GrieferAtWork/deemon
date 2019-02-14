@@ -972,8 +972,8 @@ invoke_operator(DeeObject *__restrict self,
   if (DeeArg_Unpack(argc,argv,"|bIuIu:__getbuf__",&writable,&start,&end))
       goto err;
   return DeeObject_Bytes(self,
-                         writable ? DEE_BUFFER_FWRITABLE
-                                  : DEE_BUFFER_FREADONLY,
+                         writable ? Dee_BUFFER_FWRITABLE
+                                  : Dee_BUFFER_FREADONLY,
                          start,
                          end);
  } break;

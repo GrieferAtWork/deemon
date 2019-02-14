@@ -27,6 +27,24 @@
 
 DECL_BEGIN
 
+#ifdef DEE_SOURCE
+#define return_empty_seq                Dee_return_empty_seq
+#define Dee_type_nii                    type_nii
+#define Dee_type_nsi                    type_nsi
+#define TYPE_ITERX_CLASS_UNIDIRECTIONAL Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL
+#define TYPE_ITERX_CLASS_BIDIRECTIONAL  Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL
+#define TYPE_ITERX_FNORMAL              Dee_TYPE_ITERX_FNORMAL
+#define TYPE_SEQX_CLASS_SEQ             Dee_TYPE_SEQX_CLASS_SEQ
+#define TYPE_SEQX_CLASS_MAP             Dee_TYPE_SEQX_CLASS_MAP
+#define TYPE_SEQX_CLASS_SET             Dee_TYPE_SEQX_CLASS_SET
+#define TYPE_SEQX_FNORMAL               Dee_TYPE_SEQX_FNORMAL
+#define TYPE_SEQX_FMUTABLE              Dee_TYPE_SEQX_FMUTABLE
+#define TYPE_SEQX_FRESIZABLE            Dee_TYPE_SEQX_FRESIZABLE
+#endif /* DEE_SOURCE */
+
+
+
+
 /* NOTE: These are no `DeeSeq_Check()' macros because they wouldn't make sense.
  *       Being derived from `DeeSeq_Type' is _NOT_ mandatory when writing a
  *       sequence class. The only thing that it does do is allow userspace
@@ -197,18 +215,15 @@ DDATDEF DeeTypeObject DeeIterator_Type; /* `iterator from deemon' */
  */
 DDATDEF DeeObject      DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
-#define return_empty_seq  return_reference_(Dee_EmptySeq)
-
-
-
+#define Dee_return_empty_seq  Dee_return_reference_(Dee_EmptySeq)
 
 
 /* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
-struct type_nii {
+struct Dee_type_nii {
     /* Native Iterator Interface for types. */
-#define TYPE_ITERX_CLASS_UNIDIRECTIONAL 0x0000 /* uni-directional iterator */
-#define TYPE_ITERX_CLASS_BIDIRECTIONAL  0x0001 /* bi-directional iterator */
-#define TYPE_ITERX_FNORMAL              0x0000 /* Normal iterator flags. */
+#define Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL 0x0000 /* uni-directional iterator */
+#define Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL  0x0001 /* bi-directional iterator */
+#define Dee_TYPE_ITERX_FNORMAL              0x0000 /* Normal iterator flags. */
 #if __SIZEOF_POINTER__ == 4
     uint16_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
     uint16_t                nii_flags; /* Iterator flags (Set of `TYPE_ITERX_F*') */
@@ -280,14 +295,14 @@ struct type_nii {
 
 /* ==== NATIVE SEQUENCE INTERFACE EXTENSIONS FOR TYPES ==== */
 
-struct type_nsi {
+struct Dee_type_nsi {
     /* Native Sequence Interface for types. */
-#define TYPE_SEQX_CLASS_SEQ  0x0000 /* Sequence-like */
-#define TYPE_SEQX_CLASS_MAP  0x0001 /* Mapping-like */
-#define TYPE_SEQX_CLASS_SET  0x0002 /* Set-like */
-#define TYPE_SEQX_FNORMAL    0x0000 /* Normal sequence flags. */
-#define TYPE_SEQX_FMUTABLE   0x0001 /* The sequence is mutable. */
-#define TYPE_SEQX_FRESIZABLE 0x0002 /* The sequence is resizable. */
+#define Dee_TYPE_SEQX_CLASS_SEQ  0x0000 /* Sequence-like */
+#define Dee_TYPE_SEQX_CLASS_MAP  0x0001 /* Mapping-like */
+#define Dee_TYPE_SEQX_CLASS_SET  0x0002 /* Set-like */
+#define Dee_TYPE_SEQX_FNORMAL    0x0000 /* Normal sequence flags. */
+#define Dee_TYPE_SEQX_FMUTABLE   0x0001 /* The sequence is mutable. */
+#define Dee_TYPE_SEQX_FRESIZABLE 0x0002 /* The sequence is resizable. */
 #if __SIZEOF_POINTER__ == 4
     uint16_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
     uint16_t                nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
@@ -323,10 +338,10 @@ struct type_nsi {
             int             (DCALL *nsi_setitem)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
             /* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound. */
             DREF DeeObject *(DCALL *nsi_getitem_fast)(DeeObject *__restrict self, size_t index);
-            DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, dssize_t start, dssize_t end);
-            DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, dssize_t start); /* end: Dee_None */
-            int             (DCALL *nsi_setrange)(DeeObject *__restrict self, dssize_t start, dssize_t end, DeeObject *__restrict values);
-            int             (DCALL *nsi_setrange_n)(DeeObject *__restrict self, dssize_t start, DeeObject *__restrict values); /* end: Dee_None */
+            DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
+            DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, Dee_ssize_t start); /* end: Dee_None */
+            int             (DCALL *nsi_setrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict values);
+            int             (DCALL *nsi_setrange_n)(DeeObject *__restrict self, Dee_ssize_t start, DeeObject *__restrict values); /* end: Dee_None */
             /* NOTE: start/end in here operate differently (and simpler) than in ranges:
              *       If either value is `>= nsi_getsize()', truncate it to that length.
              * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
@@ -341,7 +356,7 @@ struct type_nsi {
             int             (DCALL *nsi_insertvec)(DeeObject *__restrict self, size_t index, size_t insertc, DeeObject **__restrict insertv);
             /* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
              *       first, such that `nsi_pop(self,-1)' is equivalent to a `popback()' function call. */
-            DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, dssize_t index);
+            DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
             /* NOTE: erase differs from delrange, in that erase _always_ removes the indices,
              *       while delrange is allowed to leave the index range as unbound.
              * @return: * : Number or erased items.
@@ -407,11 +422,11 @@ struct type_nsi {
 /* Lookup the closes NSI descriptor for `tp', or return `NULL'
  * if the top-most type implementing any sequence operator doesn't
  * expose NSI functionality. */
-DFUNDEF struct type_nsi *DCALL DeeType_NSI(DeeTypeObject *__restrict tp);
+DFUNDEF struct Dee_type_nsi *DCALL DeeType_NSI(DeeTypeObject *__restrict tp);
 
 /* Create new range sequence objects. */
 DFUNDEF DREF DeeObject *DCALL DeeRange_New(DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *step);
-DFUNDEF DREF DeeObject *DCALL DeeRange_NewInt(dssize_t begin, dssize_t end, dssize_t step);
+DFUNDEF DREF DeeObject *DCALL DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
 
 /* Functions used to implement special sequence expressions,
  * such as `x + ...' (as `DeeSeq_Sum'), etc. */
@@ -437,7 +452,7 @@ INTDEF int DCALL DeeSeq_Extend(DeeObject *__restrict self, DeeObject *__restrict
 INTDEF int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObject *__restrict values);
 INTDEF int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *__restrict count);
 INTDEF size_t DCALL DeeSeq_Erase(DeeObject *__restrict self, size_t index, size_t count);
-INTDEF DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index);
+INTDEF DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, Dee_ssize_t index);
 INTDEF int DCALL DeeSeq_Remove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
 INTDEF int DCALL DeeSeq_RRemove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
 INTDEF size_t DCALL DeeSeq_RemoveAll(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
@@ -638,7 +653,7 @@ DFUNDEF DREF DeeObject *DCALL
 DeeRefVector_New(DeeObject *__restrict owner, size_t length,
                  DeeObject **__restrict vector,
 #ifndef CONFIG_NO_THREADS
-                 rwlock_t *plock
+                 Dee_rwlock_t *plock
 #else
                  bool writable
 #endif

@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_FS_PRINTCODE_C
 #define GUARD_DEX_FS_PRINTCODE_C 1
+#define DEE_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/alloc.h>
@@ -623,7 +624,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
  memset(&last_print_ddi,0xff,sizeof(last_print_ddi));
  if (code) {
   uint16_t stack_max;
-  if ((ddi_ip = ddi_state_init(&ddi,(DeeObject *)code,DDI_STATE_FNORMAL)) == DDI_NEXT_ERR)
+  if ((ddi_ip = Dee_ddi_state_init(&ddi,(DeeObject *)code,DDI_STATE_FNORMAL)) == DDI_NEXT_ERR)
        goto err_n1;
   stack_max = (uint16_t)DeeCode_StackDepth(code);
   /* */if (stack_max >= 10000) sp_width = 5;
@@ -670,7 +671,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
       iter = next,stacksz = new_stacksz) {
   code_addr_t code_ip = (code_addr_t)(iter - start_addr);
   while ((ddi_ip != DDI_NEXT_DONE) && ddi.rs_regs.dr_uip < code_ip) {
-   ddi_ip = ddi_next_state(ddi_ip,&ddi,DDI_STATE_FNORMAL);
+   ddi_ip = Dee_ddi_next_state(ddi_ip,&ddi,DDI_STATE_FNORMAL);
    if unlikely(ddi_ip == DDI_NEXT_ERR)
       goto err_n1;
   }
@@ -1024,7 +1025,7 @@ prefix_except_prefix:
   rwlock_endread(&code->co_static_lock);
  }
 done:
- if (code) ddi_state_fini(&ddi);
+ if (code) Dee_ddi_state_fini(&ddi);
  Dee_Free(jumps.tj_vec);
  DBG_ALIGNMENT_DISABLE();
  return result;

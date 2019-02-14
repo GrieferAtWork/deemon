@@ -1990,7 +1990,7 @@ string_bytes(String *__restrict self, size_t argc,
  return DeeBytes_NewView((DeeObject *)self,
                           my_bytes + start,
                           end - start,
-                          DEE_BUFFER_FREADONLY);
+                          Dee_BUFFER_FREADONLY);
 err:
  return NULL;
 }
@@ -7665,9 +7665,9 @@ struct regex_rule_name {
 };
 
 PRIVATE struct regex_rule_name const regex_rule_names[] = {
-    { "dotall",    DEE_REGEX_FDOTALL },
-    { "multiline", DEE_REGEX_FMULTILINE },
-    { "nocase",    DEE_REGEX_FNOCASE }
+    { "dotall",    Dee_REGEX_FDOTALL },
+    { "multiline", Dee_REGEX_FMULTILINE },
+    { "nocase",    Dee_REGEX_FNOCASE }
 };
 
 
@@ -7680,9 +7680,9 @@ PRIVATE int
   for (;;) {
    char ch = *rules_str++;
    if (!ch) break;
-   /* */if (ch == '.')  *result |= DEE_REGEX_FDOTALL;
-   else if (ch == '\n') *result |= DEE_REGEX_FMULTILINE;
-   else if (ch == 'c')  *result |= DEE_REGEX_FNOCASE;
+   /* */if (ch == '.')  *result |= Dee_REGEX_FDOTALL;
+   else if (ch == '\n') *result |= Dee_REGEX_FMULTILINE;
+   else if (ch == 'c')  *result |= Dee_REGEX_FNOCASE;
    else {
     DeeError_Throwf(&DeeError_ValueError,
                     "Invalid regex rules string flag %:1q",
@@ -7727,7 +7727,7 @@ PRIVATE int
                               size_t argc, DeeObject **__restrict argv,
                               struct re_args *__restrict result) {
  DeeObject *pattern;
- result->re_flags  = DEE_REGEX_FNORMAL;
+ result->re_flags  = Dee_REGEX_FNORMAL;
  result->re_offset = 0;
  switch (argc) {
  case 1:
@@ -7857,7 +7857,7 @@ PRIVATE int
                                  size_t argc, DeeObject **__restrict argv,
                                  struct re_args_ex *__restrict result) {
  DeeObject *pattern;
- result->re_flags    = DEE_REGEX_FNORMAL;
+ result->re_flags    = Dee_REGEX_FNORMAL;
  result->re_offset   = 0;
  result->re_endindex = DeeString_WLEN(self);
  switch (argc) {
@@ -8269,7 +8269,7 @@ string_rereplace(String *__restrict self,
  String *find_pattern,*replace;
  DeeObject *opt1 = NULL,*opt2 = NULL;
  size_t max_count = (size_t)-1;
- uint16_t re_flags = DEE_REGEX_FNORMAL;
+ uint16_t re_flags = Dee_REGEX_FNORMAL;
  char *pattern_ptr; size_t pattern_len;
  char *data_ptr; size_t data_len;
  if (DeeArg_Unpack(argc,argv,"oo|oo:rereplace",&find_pattern,&replace,&opt1,&opt2) ||
@@ -10077,7 +10077,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
    result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String,s_str)+
                                            (total_length + 1)*sizeof(char));
    if unlikely(!result) goto err;
-   result_utf = string_utf_alloc();
+   result_utf = Dee_string_utf_alloc();
    if unlikely(!result_utf) goto err_r_2_4;
    memset(result_utf,0,sizeof(struct string_utf));
 
@@ -10164,7 +10164,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
    DeeObject_Init(result,&DeeString_Type);
    return result;
 err_r_2_4_utf:
-   string_utf_free(result_utf);
+   Dee_string_utf_free(result_utf);
 err_r_2_4:
    DeeObject_Free(result);
    return NULL;
@@ -10444,8 +10444,8 @@ err:
 
 
 PUBLIC dssize_t DCALL
-unicode_printer_memchr(struct unicode_printer *__restrict self,
-                       uint32_t chr, size_t start, size_t length) {
+Dee_unicode_printer_memchr(struct unicode_printer *__restrict self,
+                           uint32_t chr, size_t start, size_t length) {
  union dcharptr ptr,str; size_t result;
  str.ptr = self->up_buffer;
  ASSERT(start+length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
@@ -10474,8 +10474,8 @@ not_found:
  return -1;
 }
 PUBLIC dssize_t DCALL
-unicode_printer_memrchr(struct unicode_printer *__restrict self,
-                        uint32_t chr, size_t start, size_t length) {
+Dee_unicode_printer_memrchr(struct unicode_printer *__restrict self,
+                            uint32_t chr, size_t start, size_t length) {
  union dcharptr ptr,str; size_t result;
  str.ptr = self->up_buffer;
  ASSERT(start+length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));
@@ -10505,8 +10505,8 @@ not_found:
 }
 
 PUBLIC void
-(DCALL unicode_printer_memmove)(struct unicode_printer *__restrict self,
-                                size_t dst, size_t src, size_t length) {
+(DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restrict self,
+                                    size_t dst, size_t src, size_t length) {
  union dcharptr str;
  str.ptr = self->up_buffer;
  ASSERT(dst+length <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0));

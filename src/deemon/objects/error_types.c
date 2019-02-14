@@ -96,11 +96,11 @@ DECL_BEGIN
 
 #ifndef CONFIG_NO_OBJECT_SLABS
 LOCAL size_t DCALL get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
-#define CHECK_SIZE(x) \
- if (tp_free == &DeeObject_SlabFree##x || \
-     tp_free == &DeeGCObject_SlabFree##x) \
-     return x * __SIZEOF_POINTER__;
- DEE_ENUMERATE_SLAB_SIZES(CHECK_SIZE)
+#define CHECK_SIZE(index,size) \
+ if (tp_free == &DeeObject_SlabFree##size || \
+     tp_free == &DeeGCObject_SlabFree##size) \
+     return size * __SIZEOF_POINTER__;
+ DeeSlab_ENUMERATE(CHECK_SIZE)
 #undef CHECK_SIZE
  return 0;
 }

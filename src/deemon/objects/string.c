@@ -57,24 +57,24 @@ DEFINE_STRUCT_CACHE(utf,struct string_utf,256)
 typedef DeeStringObject String;
 
 PUBLIC struct string_utf *
-(DCALL string_utf_alloc)(void) {
+(DCALL Dee_string_utf_alloc)(void) {
  return utf_alloc();
 }
 #ifndef NDEBUG
 PUBLIC struct string_utf *
-(DCALL string_utf_alloc_d)(char const *file,
-                           int line) {
+(DCALL Dee_string_utf_alloc_d)(char const *file,
+                               int line) {
  return utf_dbgalloc(file,line);
 }
 #else
 PUBLIC struct string_utf *
-(DCALL string_utf_alloc_d)(char const *UNUSED(file),
-                           int UNUSED(line)) {
+(DCALL Dee_string_utf_alloc_d)(char const *UNUSED(file),
+                               int UNUSED(line)) {
  return utf_alloc();
 }
 #endif
 PUBLIC void
-(DCALL string_utf_free)(struct string_utf *__restrict self) {
+(DCALL Dee_string_utf_free)(struct string_utf *__restrict self) {
  utf_free(self);
 }
 
@@ -102,7 +102,7 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
 #endif /* !__KOS__ || !__USE_GNU */
 
 PUBLIC void
-(DCALL ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {
+(DCALL Dee_ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {
  ASSERT(self);
  ASSERT(self->ap_length >= datalen);
  /* This's actually all that needs to be
@@ -110,7 +110,7 @@ PUBLIC void
  self->ap_length -= datalen;
 }
 PUBLIC char *
-(DCALL ascii_printer_alloc)(struct ascii_printer *__restrict self, size_t datalen) {
+(DCALL Dee_ascii_printer_alloc)(struct ascii_printer *__restrict self, size_t datalen) {
  String *string;
  size_t alloc_size;
  char *result;
@@ -162,7 +162,7 @@ realloc_again:
  return result;
 }
 PUBLIC int
-(DCALL ascii_printer_putc)(struct ascii_printer *__restrict self, char ch) {
+(DCALL Dee_ascii_printer_putc)(struct ascii_printer *__restrict self, char ch) {
  ASSERT(self);
  /* Quick check: Can we print to an existing buffer. */
  if (self->ap_string &&
@@ -179,9 +179,9 @@ err:
  return -1;
 }
 PUBLIC dssize_t
-(DCALL ascii_printer_print)(void *__restrict self,
-                            char const *__restrict data,
-                            size_t datalen) {
+(DCALL Dee_ascii_printer_print)(void *__restrict self,
+                                char const *__restrict data,
+                                size_t datalen) {
  struct ascii_printer *me;
  String *string;
  size_t alloc_size;
@@ -240,7 +240,7 @@ done:
 }
 
 PUBLIC DREF DeeObject *
-(DCALL ascii_printer_pack)(struct ascii_printer *__restrict self) {
+(DCALL Dee_ascii_printer_pack)(struct ascii_printer *__restrict self) {
  DREF String *result = self->ap_string;
  if unlikely(!result) return_reference_(Dee_EmptyString);
  /* Deallocate unused memory. */
@@ -264,8 +264,8 @@ PUBLIC DREF DeeObject *
 }
 
 PUBLIC char *
-(DCALL ascii_printer_allocstr)(struct ascii_printer *__restrict self,
-                               char const *__restrict str, size_t length) {
+(DCALL Dee_ascii_printer_allocstr)(struct ascii_printer *__restrict self,
+                                   char const *__restrict str, size_t length) {
  char *result; dssize_t error;
  if (self->ap_string) {
   result = (char *)memmem(self->ap_string->s_str,
@@ -363,7 +363,7 @@ DeeString_FreeWidth(DeeObject *__restrict self) {
  ASSERTF(utf->u_width == STRING_WIDTH_1BYTE,"This isn't a 1-byte string");
  string_utf_fini(utf,self);
  ((DeeStringObject *)self)->s_data = NULL;
- string_utf_free(utf);
+ Dee_string_utf_free(utf);
 }
 
 PUBLIC DREF DeeObject *DCALL
@@ -426,7 +426,7 @@ string_bool(String *__restrict self) {
  return !DeeString_IsEmpty(self);
 }
 
-INTERN dhash_t DCALL
+INTERN WUNUSED ATTR_PURE dhash_t DCALL
 DeeString_Hash(DeeObject *__restrict self) {
  dhash_t result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
@@ -455,7 +455,7 @@ DeeString_Hash(DeeObject *__restrict self) {
  return result;
 }
 
-PUBLIC dhash_t DCALL
+PUBLIC WUNUSED ATTR_PURE dhash_t DCALL
 DeeString_HashCase(DeeObject *__restrict self) {
  dhash_t result;
  ASSERT_OBJECT_TYPE_EXACT(self,&DeeString_Type);
@@ -517,7 +517,7 @@ string_fini(String *__restrict self) {
  /* Clean up UTF data. */
  if ((utf = self->s_data) != NULL) {
   string_utf_fini(utf,self);
-  string_utf_free(utf);
+  Dee_string_utf_free(utf);
  }
 }
 
@@ -1444,7 +1444,7 @@ string_getbuf(String *__restrict self,
 PRIVATE struct type_buffer string_buffer = {
     /* .tp_getbuf       = */(int(DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict,unsigned int))&string_getbuf,
     /* .tp_putbuf       = */NULL,
-    /* .tp_buffer_flags = */DEE_BUFFER_TYPE_FREADONLY
+    /* .tp_buffer_flags = */Dee_BUFFER_TYPE_FREADONLY
 };
 
 
@@ -1582,8 +1582,7 @@ PRIVATE struct string_utf empty_string_utf = {
     /* .u_utf8  = */&DeeString_Empty.s_zero
 };
 
-PUBLIC struct empty_string
-DeeString_Empty = {
+PUBLIC struct empty_string_struct DeeString_Empty = {
     OBJECT_HEAD_INIT(&DeeString_Type),
     /* .s_data = */&empty_string_utf,
     /* .s_hash = */0,

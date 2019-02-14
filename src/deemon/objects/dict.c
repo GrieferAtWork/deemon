@@ -91,7 +91,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
    DREF DeeObject *value = *key_items++;
    dhash_t i,perturb,hash = DeeObject_Hash(key);
    perturb = i = hash & mask;
-   for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+   for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
     struct dict_item *item = &result->d_elem[i & mask];
     if (item->di_key) continue; /* Already in use */
     item->di_hash  = hash;
@@ -366,7 +366,7 @@ dict_deepload(Dict *__restrict self) {
   dhash_t j,perturb,hash;
   hash = DeeObject_Hash(items[i].e_key);
   perturb = j = hash & new_mask;
-  for (;; j = DICT_HASHNX(j,perturb),DICT_HASHPT(perturb)) {
+  for (;; j = DeeDict_HashNx(j,perturb),DeeDict_HashPt(perturb)) {
    struct dict_item *item = &new_map[j & new_mask];
    if (item->di_key) continue; /* Already in use */
    item->di_hash  = hash;
@@ -521,7 +521,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
    /* Skip dummy keys. */
    if (!iter->di_key || iter->di_key == dummy) continue;
    perturb = i = iter->di_hash & new_mask;
-   for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+   for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
     item = &new_vector[i & new_mask];
     if (!item->di_key) break; /* Empty slot found. */
    }
@@ -549,9 +549,9 @@ DeeDict_GetItemString(DeeObject *__restrict self,
  DREF DeeObject *result;
  dhash_t i,perturb;
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; /* Not found */
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -575,9 +575,9 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
  DREF DeeObject *result;
  dhash_t i,perturb;
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; /* Not found */
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -603,9 +603,9 @@ DeeDict_GetItemStringDef(DeeObject *__restrict self,
  dhash_t i,perturb;
  ASSERT_OBJECT(def);
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; /* Not found */
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -632,9 +632,9 @@ DeeDict_GetItemStringLenDef(DeeObject *__restrict self,
  dhash_t i,perturb;
  ASSERT_OBJECT(def);
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; /* Not found */
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -658,9 +658,9 @@ DeeDict_HasItemString(DeeObject *__restrict self,
                       dhash_t hash) {
  dhash_t i,perturb;
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; /* Not found */
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -680,9 +680,9 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
                          dhash_t hash) {
  dhash_t i,perturb;
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; /* Not found */
   if (item->di_hash != hash) continue; /* Non-matching hash */
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -707,9 +707,9 @@ DeeDict_DelItemString(DeeObject *__restrict self,
 again_lock:
 #endif
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; // Not found
   if (item->di_hash != hash) continue; // Non-matching hash
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -752,9 +752,9 @@ DeeDict_DelItemStringLen(DeeObject *__restrict self,
 again_lock:
 #endif
  DeeDict_LockRead(self);
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) break; // Not found
   if (item->di_hash != hash) continue; // Non-matching hash
   if (!DeeString_Check(item->di_key)) continue; /* NOTE: This also captures `dummy' */
@@ -799,9 +799,9 @@ again_lock:
  DeeDict_LockRead(self);
 again:
  first_dummy = NULL;
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) { if (!first_dummy) first_dummy = item; break; /* Not found */ }
   if (item->di_key == dummy) { first_dummy = item; continue; }
   if (item->di_hash != hash) continue; /* Non-matching hash */
@@ -884,9 +884,9 @@ again_lock:
  DeeDict_LockRead(self);
 again:
  first_dummy = NULL;
- perturb = i = DICT_HASHST(self,hash);
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
-  struct dict_item *item = DICT_HASHIT(self,i);
+ perturb = i = DeeDict_HashSt(self,hash);
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+  struct dict_item *item = DeeDict_HashIt(self,i);
   if (!item->di_key) { if (!first_dummy) first_dummy = item; break; /* Not found */ }
   if (item->di_key == dummy) { first_dummy = item; continue; }
   if (item->di_hash != hash) continue; /* Non-matching hash */
@@ -975,7 +975,7 @@ restart:
  vector = self->d_elem;
  mask   = self->d_mask;
  perturb = i = hash & mask;
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
   DREF DeeObject *item_key;
   struct dict_item *item = &vector[i & mask];
   if (!item->di_key) break; /* Not found */
@@ -1014,7 +1014,7 @@ restart:
  vector = self->d_elem;
  mask   = self->d_mask;
  perturb = i = hash & mask;
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
   DREF DeeObject *item_key,*item_value;
   struct dict_item *item = &vector[i & mask];
   if (!item->di_key) break; /* Not found */
@@ -1057,7 +1057,7 @@ restart:
  vector = ((Dict *)self)->d_elem;
  mask   = ((Dict *)self)->d_mask;
  perturb = i = hash & mask;
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
   DREF DeeObject *item_key,*item_value;
   struct dict_item *item = &vector[i & mask];
   if (!item->di_key) break; /* Not found */
@@ -1099,7 +1099,7 @@ restart:
  vector = self->d_elem;
  mask   = self->d_mask;
  perturb = i = hash & mask;
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
   DREF DeeObject *item_key;
   struct dict_item *item = &vector[i & mask];
   if (!item->di_key) break; /* Not found */
@@ -1169,7 +1169,7 @@ again:
  vector = self->d_elem;
  mask   = self->d_mask;
  perturb = i = hash & mask;
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
   DREF DeeObject *item_key;
   struct dict_item *item = &vector[i & mask];
   if (!item->di_key) { if (!first_dummy) first_dummy = item; break; /* Not found */ }
@@ -1269,7 +1269,7 @@ again:
  vector = self->d_elem;
  mask   = self->d_mask;
  perturb = i = hash & mask;
- for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
+ for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
   DREF DeeObject *item_key;
   struct dict_item *item = &vector[i & mask];
   if (!item->di_key) { if (!first_dummy) first_dummy = item; break; /* Not found */ }

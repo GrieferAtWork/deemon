@@ -35,11 +35,14 @@ DECL_BEGIN
  * as well as cache the attributes of types/classes, both builtin, and
  * user-defined. */
 
+#ifdef DEE_SOURCE
+#define Dee_class_attribute  class_attribute
+#define Dee_class_desc       class_desc
+#define Dee_membercache_slot membercache_slot
+#endif /* DEE_SOURCE */
 
-struct class_attribute;
-struct class_desc;
-struct membercache_slot {
-    /* A slot inside of a `struct membercache' table. */
+
+#ifdef DEE_SOURCE
 #define MEMBERCACHE_UNUSED          0  /* Unused slot. */
 #define MEMBERCACHE_METHOD          1  /* Method slot. */
 #define MEMBERCACHE_GETSET          2  /* Getset slot. */
@@ -50,31 +53,37 @@ struct membercache_slot {
 #define MEMBERCACHE_INSTANCE_MEMBER 7  /* Same as `MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
 #define MEMBERCACHE_INSTANCE_ATTRIB 8  /* Same as `MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
 #define MEMBERCACHE_COUNT           9  /* Amount of different cache types. */
+#endif /* DEE_SOURCE */
+
+struct Dee_class_attribute;
+struct Dee_class_desc;
+struct Dee_membercache_slot {
+    /* A slot inside of a `struct membercache' table. */
     uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
     uint16_t               mcs_pad[(sizeof(void *)-2)/2];
-    dhash_t                mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== Dee_HashStr(mcs_name)] */
+    Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== Dee_HashStr(mcs_name)] */
     DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][1..1][const]
                                         * The type that is providing this attribute, which must be
                                         * the associated type itself, or one of its base-classes. */
     union {
-        char const        *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)] */
-        struct type_method mcs_method; /* [valid_if(mcs_type == MEMBERCACHE_METHOD || mcs_type == MEMBERCACHE_INSTANCE_METHOD)] */
-        struct type_getset mcs_getset; /* [valid_if(mcs_type == MEMBERCACHE_GETSET || mcs_type == MEMBERCACHE_INSTANCE_GETSET)] */
-        struct type_member mcs_member; /* [valid_if(mcs_type == MEMBERCACHE_MEMBER || mcs_type == MEMBERCACHE_INSTANCE_MEMBER)] */
+        char const            *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)] */
+        struct Dee_type_method mcs_method; /* [valid_if(mcs_type == MEMBERCACHE_METHOD || mcs_type == MEMBERCACHE_INSTANCE_METHOD)] */
+        struct Dee_type_getset mcs_getset; /* [valid_if(mcs_type == MEMBERCACHE_GETSET || mcs_type == MEMBERCACHE_INSTANCE_GETSET)] */
+        struct Dee_type_member mcs_member; /* [valid_if(mcs_type == MEMBERCACHE_MEMBER || mcs_type == MEMBERCACHE_INSTANCE_MEMBER)] */
         struct {
-            char const             *a_name; /* [1..1][const][== DeeString_STR(a_attr->ca_name)] The attribute attr. */
-            struct class_attribute *a_attr; /* [1..1][const] The class attribute. */
-            struct class_desc      *a_desc; /* [1..1][const][== DeeClass_DESC(mcs_decl)] The class implementing the attribute. */
+            char const                 *a_name; /* [1..1][const][== DeeString_STR(a_attr->ca_name)] The attribute attr. */
+            struct Dee_class_attribute *a_attr; /* [1..1][const] The class attribute. */
+            struct Dee_class_desc      *a_desc; /* [1..1][const][== DeeClass_DESC(mcs_decl)] The class implementing the attribute. */
         }                  mcs_attrib; /* [valid_if(mcs_type == MEMBERCACHE_ATTRIB || mcs_type == MEMBERCACHE_INSTANCE_ATTRIB)] */
     };
 };
 
-
+#ifdef DEE_SOURCE
 #ifndef CONFIG_NO_THREADS
-#define MEMBERCACHE_READ(self)     rwlock_read(&(self)->mc_lock)
-#define MEMBERCACHE_WRITE(self)    rwlock_write(&(self)->mc_lock)
-#define MEMBERCACHE_ENDREAD(self)  rwlock_endread(&(self)->mc_lock)
-#define MEMBERCACHE_ENDWRITE(self) rwlock_endwrite(&(self)->mc_lock)
+#define MEMBERCACHE_READ(self)     Dee_rwlock_read(&(self)->mc_lock)
+#define MEMBERCACHE_WRITE(self)    Dee_rwlock_write(&(self)->mc_lock)
+#define MEMBERCACHE_ENDREAD(self)  Dee_rwlock_endread(&(self)->mc_lock)
+#define MEMBERCACHE_ENDWRITE(self) Dee_rwlock_endwrite(&(self)->mc_lock)
 #else /* !CONFIG_NO_THREADS */
 #define MEMBERCACHE_READ(self)     (void)0
 #define MEMBERCACHE_WRITE(self)    (void)0
@@ -85,6 +94,7 @@ struct membercache_slot {
 #define MEMBERCACHE_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define MEMBERCACHE_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
 #define MEMBERCACHE_HASHIT(self,i)     ((self)->mc_table+((i) & (self)->mc_mask))
+#endif /* DEE_SOURCE */
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -97,28 +107,28 @@ INTDEF void DCALL membercache_fini(struct membercache *__restrict self);
 INTDEF void DCALL membercache_addmethod(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct type_method const *__restrict method);
 INTDEF void DCALL membercache_addgetset(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct type_getset const *__restrict getset);
 INTDEF void DCALL membercache_addmember(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct type_member const *__restrict member);
-INTDEF void DCALL membercache_addattrib(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct class_attribute *__restrict attrib);
+INTDEF void DCALL membercache_addattrib(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct Dee_class_attribute *__restrict attrib);
 INTDEF void DCALL membercache_addinstancemethod(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct type_method const *__restrict method);
 INTDEF void DCALL membercache_addinstancegetset(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct type_getset const *__restrict getset);
 INTDEF void DCALL membercache_addinstancemember(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct type_member const *__restrict member);
-INTDEF void DCALL membercache_addinstanceattrib(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct class_attribute *__restrict attrib);
+INTDEF void DCALL membercache_addinstanceattrib(struct membercache *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash, struct Dee_class_attribute *__restrict attrib);
 
 #ifdef __INTELLISENSE__
 /* Cache an instance member (e.g. `tp_methods') in `tp_cache'. */
 INTDEF void DCALL DeeType_CacheMethod(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_method const *__restrict method);
 INTDEF void DCALL DeeType_CacheGetSet(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_getset const *__restrict getset);
 INTDEF void DCALL DeeType_CacheMember(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_member const *__restrict member);
-INTDEF void DCALL DeeType_CacheAttrib(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct class_attribute const *__restrict attrib);
+INTDEF void DCALL DeeType_CacheAttrib(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct Dee_class_attribute const *__restrict attrib);
 /* Cache a class member (e.g. `tp_class_methods') in `tp_class_cache'. */
 INTDEF void DCALL DeeType_CacheClassMethod(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_method const *__restrict method);
 INTDEF void DCALL DeeType_CacheClassGetSet(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_getset const *__restrict getset);
 INTDEF void DCALL DeeType_CacheClassMember(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_member const *__restrict member);
-INTDEF void DCALL DeeType_CacheClassAttrib(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct class_attribute const *__restrict attrib);
+INTDEF void DCALL DeeType_CacheClassAttrib(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct Dee_class_attribute const *__restrict attrib);
 /* Cache an instance member (e.g. `tp_methods') in `tp_class_cache'. */
 INTDEF void DCALL DeeType_CacheInstanceMethod(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_method const *__restrict method);
 INTDEF void DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_getset const *__restrict getset);
 INTDEF void DCALL DeeType_CacheInstanceMember(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct type_member const *__restrict member);
-INTDEF void DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct class_attribute const *__restrict attrib);
+INTDEF void DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *__restrict self, DeeTypeObject *__restrict decl, dhash_t hash,  struct Dee_class_attribute const *__restrict attrib);
 #else
 #define DeeType_CacheMethod(self,decl,hash,method)         membercache_addmethod(&(self)->tp_cache,decl,hash,method)
 #define DeeType_CacheGetSet(self,decl,hash,getset)         membercache_addgetset(&(self)->tp_cache,decl,hash,getset)
@@ -268,40 +278,40 @@ INTDEF int (DCALL DeeType_FindCachedClassAttr)(DeeTypeObject *__restrict tp_self
  * @return: * :   The attribute of the user-defined class.
  * @return: NULL: The attribute could not be found. */
 #ifdef __INTELLISENSE__
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryIInstanceAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryIInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryIInstanceAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
-INTDEF struct class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
-INTDEF struct class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttribute)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeString)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLen)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
 #else
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryClassAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF struct class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, /*String*/DeeObject *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
+INTDEF struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenWithHash)(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
 #define DeeType_QueryIInstanceAttributeWithHash(tp_invoker,tp_self,attr,hash)                  DeeType_QueryInstanceAttributeWithHash(tp_invoker,tp_self,attr,hash)
 #define DeeType_QueryIInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,hash)            DeeType_QueryInstanceAttributeStringWithHash(tp_invoker,tp_self,attr,hash)
 #define DeeType_QueryIInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash) DeeType_QueryInstanceAttributeStringLenWithHash(tp_invoker,tp_self,attr,namelen,hash)

@@ -66,7 +66,7 @@ get_uleb(uint8_t **__restrict pip) {
 }
 
 PUBLIC uint8_t *DCALL
-ddi_next_simple(uint8_t *__restrict ip,
+Dee_ddi_next_simple(uint8_t *__restrict ip,
                 code_addr_t *__restrict puip) {
  code_addr_t uip = *puip;
  for (;;) {
@@ -112,7 +112,7 @@ ddi_next_simple(uint8_t *__restrict ip,
 }
 
 PUBLIC uint8_t *DCALL
-ddi_next_regs(uint8_t *__restrict ip,
+Dee_ddi_next_regs(uint8_t *__restrict ip,
               struct ddi_regs *__restrict regs) {
  /* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
  for (;;) {
@@ -245,7 +245,7 @@ ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
 }
 
 PUBLIC uint8_t *DCALL
-ddi_next_state(uint8_t *__restrict ip,
+Dee_ddi_next_state(uint8_t *__restrict ip,
                struct ddi_state *__restrict self,
                unsigned int flags) {
  /* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
@@ -466,7 +466,7 @@ err:
 }
 
 PUBLIC uint8_t *DCALL
-ddi_state_init(struct ddi_state *__restrict self,
+Dee_ddi_state_init(struct ddi_state *__restrict self,
                DeeObject *__restrict code,
                unsigned int flags) {
  DeeDDIObject *ddi; uint16_t i;
@@ -518,14 +518,14 @@ ddi_state_init(struct ddi_state *__restrict self,
   uint8_t *result,*end;
   end = ddi->d_ddi + ddi->d_ddiinit;
   result = ddi->d_ddi;
-  do result = ddi_next_state(result,self,flags);
+  do result = Dee_ddi_next_state(result,self,flags);
   while (DDI_ISOK(result) && result < end);
   return result;
  }
  return ddi->d_ddi;
 }
 PUBLIC void DCALL
-ddi_state_fini(struct ddi_state *__restrict self) {
+Dee_ddi_state_fini(struct ddi_state *__restrict self) {
  struct ddi_saved *iter,*next;
  iter = self->rs_save;
  while (iter) {
@@ -547,19 +547,19 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 code_addr_t *opt_endip, code_addr_t uip,
                 unsigned int flags) {
  uint8_t *ip,*end_ip;
- ip = ddi_state_init(start_state,self,flags);
+ ip = Dee_ddi_state_init(start_state,self,flags);
  while (DDI_ISOK(ip)) {
   code_addr_t end_uip;
   end_uip = start_state->rs_regs.dr_uip;
-  end_ip = ddi_next_simple(ip,&end_uip);
+  end_ip = Dee_ddi_next_simple(ip,&end_uip);
   if (!DDI_ISOK(end_ip)) { ip = end_ip; break; }
   if (uip >= start_state->rs_regs.dr_uip && uip < end_uip) {
    if (opt_endip) *opt_endip = end_uip;
    return ip; /* Found it! */
   }
-  ip = ddi_next_state(ip,start_state,flags);
+  ip = Dee_ddi_next_state(ip,start_state,flags);
  }
- ddi_state_fini(start_state);
+ Dee_ddi_state_fini(start_state);
  return ip;
 }
 

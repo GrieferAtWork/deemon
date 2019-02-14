@@ -24,17 +24,22 @@
 
 DECL_BEGIN
 
-typedef struct float_object DeeFloatObject;
+#ifdef DEE_SOURCE
+#define Dee_float_object float_object
+#define DEFINE_FLOAT     Dee_DEFINE_FLOAT
+#endif /* DEE_SOURCE */
 
-struct float_object {
-    OBJECT_HEAD
+typedef struct Dee_float_object DeeFloatObject;
+
+struct Dee_float_object {
+    Dee_OBJECT_HEAD
     double      f_value; /* [const] The value of this float as a C-double. */
 };
-#define DEFINE_FLOAT(name,value) \
-  DeeFloatObject name = { OBJECT_HEAD_INIT(&DeeFloat_Type), value }
+#define Dee_DEFINE_FLOAT(name,value) \
+  DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
 
 
-#define DeeFloat_VALUE(x) ((DeeFloatObject *)REQUIRES_OBJECT(x))->f_value
+#define DeeFloat_VALUE(x) ((DeeFloatObject *)Dee_REQUIRES_OBJECT(x))->f_value
 
 #define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x,&DeeFloat_Type) /* `float' is final */
 #define DeeFloat_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeFloat_Type)
@@ -47,12 +52,12 @@ DFUNDEF DREF DeeObject *DCALL DeeFloat_New(double value);
 
 /* Print a string representation of the given floating point value.
  * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
-DFUNDEF dssize_t DCALL DeeFloat_Print(double value, dformatprinter printer, void *arg,
-                                      size_t width, size_t precision, unsigned int flags);
+DFUNDEF Dee_ssize_t DCALL DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
+                                         size_t width, size_t precision, unsigned int flags);
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-DFUNDEF dssize_t DCALL DeeFloat_LPrint(long double value, dformatprinter printer, void *arg,
-                                       size_t width, size_t precision, unsigned int flags);
-#endif
+DFUNDEF Dee_ssize_t DCALL DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
+                                          size_t width, size_t precision, unsigned int flags);
+#endif /* __COMPILER_HAVE_LONGDOUBLE */
 #define DEEFLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
 #define DEEFLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */
 #define DEEFLOAT_PRINT_FSIGN      0x0004 /* Always print a sign. */

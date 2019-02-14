@@ -24,6 +24,10 @@
 
 DECL_BEGIN
 
+#ifdef DEE_SOURCE
+#define Dee_compiler_options compiler_options
+#endif
+
 
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.
@@ -156,7 +160,7 @@ DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv)
 #define DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS 0x4000 /* FLAG: Default symbols are declared as read/write globals (otherwise, they are read-only constants) */
 #define DEE_EXEC_RUNMODE_FHASPP                0x8000 /* FLAG: Enable the preprocessor.
                                                        *  - When not set, preprocessor directives, macros and escaped line-feeds are disabled. */
-struct compiler_options;
+struct Dee_compiler_options;
 
 /* Execute source code from `source_stream' and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
@@ -183,12 +187,12 @@ struct compiler_options;
 DFUNDEF DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *__restrict source_stream, unsigned int mode,
                   size_t argc, DeeObject **argv, int start_line, int start_col,
-                  struct compiler_options *options, DeeObject *default_symbols,
+                  struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF DREF DeeObject *DCALL
 DeeExec_RunStreamString(DeeObject *__restrict source_stream, unsigned int mode,
                         size_t argc, DeeObject **argv, int start_line, int start_col,
-                        struct compiler_options *options, DeeObject *default_symbols,
+                        struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/char const *source_pathname, size_t source_pathsize,
                         /*utf-8*/char const *module_name, size_t module_namesize);
 
@@ -204,23 +208,23 @@ DeeExec_RunStreamString(DeeObject *__restrict source_stream, unsigned int mode,
 DFUNDEF /*Module*/DREF DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
                             unsigned int mode, int start_line, int start_col,
-                            struct compiler_options *options, DeeObject *default_symbols,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF /*Callable*/DREF DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
                               unsigned int mode, int start_line, int start_col,
-                              struct compiler_options *options, DeeObject *default_symbols,
+                              struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF /*Module*/DREF DeeObject *DCALL
 DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
                                   unsigned int mode, int start_line, int start_col,
-                                  struct compiler_options *options, DeeObject *default_symbols,
+                                  struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/char const *module_name, size_t module_namesize);
 DFUNDEF /*Callable*/DREF DeeObject *DCALL
 DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
                                     unsigned int mode, int start_line, int start_col,
-                                    struct compiler_options *options, DeeObject *default_symbols,
+                                    struct Dee_compiler_options *options, DeeObject *default_symbols,
                                     /*utf-8*/char const *source_pathname, size_t source_pathsize,
                                     /*utf-8*/char const *module_name, size_t module_namesize);
 
@@ -230,35 +234,35 @@ DFUNDEF DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/char const *__restrict data, size_t data_size,
                   unsigned int mode, size_t argc, DeeObject **argv,
                   int start_line, int start_col,
-                  struct compiler_options *options, DeeObject *default_symbols,
+                  struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF DREF DeeObject *DCALL
 DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
                         unsigned int mode, size_t argc, DeeObject **argv,
                         int start_line, int start_col,
-                        struct compiler_options *options, DeeObject *default_symbols,
+                        struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/char const *source_pathname, size_t source_pathsize,
                         /*utf-8*/char const *module_name, size_t module_namesize);
 DFUNDEF /*Module*/DREF DeeObject *DCALL
 DeeExec_CompileModuleMemory(/*utf-8*/char const *__restrict data, size_t data_size,
                             unsigned int mode, int start_line, int start_col,
-                            struct compiler_options *options, DeeObject *default_symbols,
+                            struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF /*Callable*/DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemory(/*utf-8*/char const *__restrict data, size_t data_size,
                               unsigned int mode, int start_line, int start_col,
-                              struct compiler_options *options, DeeObject *default_symbols,
+                              struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF /*Module*/DREF DeeObject *DCALL
 DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
                                   unsigned int mode, int start_line, int start_col,
-                                  struct compiler_options *options, DeeObject *default_symbols,
+                                  struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/char const *module_name, size_t module_namesize);
 DFUNDEF /*Callable*/DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
                                     unsigned int mode, int start_line, int start_col,
-                                    struct compiler_options *options, DeeObject *default_symbols,
+                                    struct Dee_compiler_options *options, DeeObject *default_symbols,
                                     /*utf-8*/char const *source_pathname, size_t source_pathsize,
                                     /*utf-8*/char const *module_name, size_t module_namesize);
 

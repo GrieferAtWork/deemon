@@ -24,13 +24,18 @@
 
 DECL_BEGIN
 
-typedef struct weakref_object DeeWeakRefObject;
-typedef struct weakrefable_object DeeWeakRefAbleObject;
+#ifdef DEE_SOURCE
+#define Dee_weakref_object     weakref_object
+#define Dee_weakrefable_object weakrefable_object
+#endif /* DEE_SOURCE */
 
-struct weakref_object {
-    OBJECT_HEAD
-    struct weakref  wr_ref; /* The weak reference pointer. */
-    DREF DeeObject *wr_del; /* [0..1][const] Deletion callback. */
+typedef struct Dee_weakref_object DeeWeakRefObject;
+typedef struct Dee_weakrefable_object DeeWeakRefAbleObject;
+
+struct Dee_weakref_object {
+    Dee_OBJECT_HEAD
+    struct Dee_weakref wr_ref; /* The weak reference pointer. */
+    DREF DeeObject    *wr_del; /* [0..1][const] Deletion callback. */
 };
 
 #define DeeWeakRef_Check(self)      DeeObject_InstanceOfExact(self,&DeeWeakRef_Type) /* `weakref' is final */
@@ -40,7 +45,7 @@ DDATDEF DeeTypeObject DeeWeakRef_Type;
 
 /* Base class that should be used for user-defined classes
  * that are supposed to support being weakly referenced. */
-struct weakrefable_object { OBJECT_HEAD WEAKREF_SUPPORT };
+struct Dee_weakrefable_object { Dee_OBJECT_HEAD Dee_WEAKREF_SUPPORT };
 DDATDEF DeeTypeObject DeeWeakRefAble_Type;
 
 DECL_END

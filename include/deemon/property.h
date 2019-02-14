@@ -24,9 +24,13 @@
 
 DECL_BEGIN
 
-typedef struct property_object DeePropertyObject;
+#ifdef DEE_SOURCE
+#define Dee_property_object property_object
+#endif /* DEE_SOURCE */
 
-struct property_object {
+typedef struct Dee_property_object DeePropertyObject;
+
+struct Dee_property_object {
     /* A wrapper object describing an instance
      * property when accessed through the class:
      * >> class MyClass {
@@ -44,7 +48,7 @@ struct property_object {
      * >>     }
      * >> }
      * >>
-     * >> local prop = MyClass.foo; // This is a `struct property_object'
+     * >> local prop = MyClass.foo; // This is a `struct Dee_property_object'
      * >> print repr prop;          // `property { get = @thiscall function(), set = @thiscall function(v) }'
      * >> local inst = MyClass();
      * >> print inst.foo;           // `In getter' `42'
@@ -55,7 +59,7 @@ struct property_object {
      * public instance properties when only given the class that
      * implements that property.
      */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF DeeObject *p_get; /* [0..1][const] Getter callback. */
     DREF DeeObject *p_del; /* [0..1][const] Delete callback. */
     DREF DeeObject *p_set; /* [0..1][const] Setter callback. */

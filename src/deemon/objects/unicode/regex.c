@@ -196,7 +196,7 @@ LOCAL bool DCALL
 is_in_range(char *range_start, char *range_end,
             uint32_t data_ch, struct regex_data *__restrict data) {
  char *iter = range_start;
- if (data->flags & DEE_REGEX_FNOCASE) {
+ if (data->flags & Dee_REGEX_FNOCASE) {
   data_ch = DeeUni_ToLower(data_ch);
   while (iter < range_end) {
    uint32_t ch = utf8_readchar((char const **)&iter,range_end);
@@ -739,9 +739,9 @@ err_lookahead_must_be_nonzero:
       flag = *content_start++;
      }
      switch (flag) {
-     case 'i': flag_value = DEE_REGEX_FNOCASE; break;
-     case 'm': flag_value = DEE_REGEX_FMULTILINE; break;
-     case 's': flag_value = DEE_REGEX_FDOTALL; break;
+     case 'i': flag_value = Dee_REGEX_FNOCASE; break;
+     case 'm': flag_value = Dee_REGEX_FMULTILINE; break;
+     case 's': flag_value = Dee_REGEX_FDOTALL; break;
      default:
       DeeError_Throwf(&DeeError_ValueError,
                       "Unknown regex flag `%c'",
@@ -1243,7 +1243,7 @@ match_unicode_trait:
  case '.':
   piter = parse_match_count(piter,pend,&match);
   if unlikely(!piter) goto err;
-  if (data->flags & DEE_REGEX_FDOTALL) {
+  if (data->flags & Dee_REGEX_FDOTALL) {
    /* Match anything (must still use a regular iteration
     * because we must match by character, which can have
     * different lengths in UTF-8). */
@@ -1265,7 +1265,7 @@ match_unicode_trait:
  case '^':
   if (diter <= data->data_start)
       goto next; /* Input data start. */
-  if (!(data->flags & DEE_REGEX_FMULTILINE))
+  if (!(data->flags & Dee_REGEX_FMULTILINE))
       goto nope; /* Only accept line-feeds in multi-line mode. */
   /* Check if we're at the start of a line (i.e. the previous data-character was a line-feed) */
   temp_diter = diter;
@@ -1281,7 +1281,7 @@ match_unicode_trait:
  case '$':
   if (diter >= dend)
       goto next; /* Input data end. */
-  if (!(data->flags & DEE_REGEX_FMULTILINE))
+  if (!(data->flags & Dee_REGEX_FMULTILINE))
       goto nope; /* Only accept line-feeds in multi-line mode. */
   /* Check if we're at the end of a line (i.e. the next data-character is a line-feed) */
   temp_diter = diter;
@@ -1296,7 +1296,7 @@ match_unicode_trait:
 match_raw_character:
   piter = parse_match_count(piter,pend,&match);
   if unlikely(!piter) goto err;
-  if (data->flags & DEE_REGEX_FNOCASE) {
+  if (data->flags & Dee_REGEX_FNOCASE) {
    ch = DeeUni_ToLower(ch);
    DO_CHARACTERWISE_MATCH(DeeUni_ToLower(data_ch) == ch);
   } else {

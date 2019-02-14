@@ -25,8 +25,13 @@
 
 DECL_BEGIN
 
-typedef struct none_object DeeNoneObject;
-struct none_object { OBJECT_HEAD WEAKREF_SUPPORT };
+#ifdef DEE_SOURCE
+#define Dee_none_object none_object
+#define return_none     Dee_return_none
+#endif
+
+typedef struct Dee_none_object DeeNoneObject;
+struct Dee_none_object { Dee_OBJECT_HEAD Dee_WEAKREF_SUPPORT };
 
 DDATDEF DeeTypeObject DeeNone_Type;
 #ifdef GUARD_DEEMON_OBJECTS_NONE_C
@@ -36,14 +41,13 @@ DDATDEF DeeNoneObject DeeNone_Singleton;
 DDATDEF DeeObject     DeeNone_Singleton;
 #define Dee_None    (&DeeNone_Singleton)
 #endif
-
-#define return_none             return_reference_(Dee_None)
+#define Dee_return_none  Dee_return_reference_(Dee_None)
 
 /* WARNING: If these two macros are ever changed, make sure to allow
  *         `NULL' to be passed for `x', as code exists that assumes
  *          this being possible (btw: `NULL' should evaluate to `false') */
-#define DeeNone_Check(x)      ((DeeObject *)REQUIRES_OBJECT(x) == Dee_None) /* `none' is a singleton. */
-#define DeeNone_CheckExact(x) ((DeeObject *)REQUIRES_OBJECT(x) == Dee_None)
+#define DeeNone_Check(x)      ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None) /* `none' is a singleton. */
+#define DeeNone_CheckExact(x) ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None)
 
 
 DECL_END

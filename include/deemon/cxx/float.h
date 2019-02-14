@@ -31,7 +31,7 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFloat_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFloat_CheckExact(ob); }
 public:
-    DEFINE_OBJECT_CONSTRUCTORS(float_,object)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(float_,object)
     float_(): object(inherit(DeeFloat_New(0.0))) {}
     float_(float value): object(inherit(DeeFloat_New((double)value))) {}
     float_(double value): object(inherit(DeeFloat_New(value))) {}

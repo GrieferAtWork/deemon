@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_RT_SLAB_C
 #define GUARD_DEX_RT_SLAB_C 1
+#define DEE_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/alloc.h>
@@ -32,8 +33,8 @@
 
 DECL_BEGIN
 
-#ifndef DEEMON_SLAB_COUNT
-#define DEEMON_SLAB_COUNT 0
+#ifndef Dee_SLAB_COUNT
+#define Dee_SLAB_COUNT 0
 #endif
 
 
@@ -42,14 +43,14 @@ PRIVATE DREF SlabStatObject *DCALL ss_ctor(void) {
  DREF SlabStatObject *result;
  DREF SlabStatObject *new_result;
  result = (DREF SlabStatObject *)DeeObject_Malloc(COMPILER_OFFSETOF(SlabStatObject,st_stat.st_slabs) +
-                                                  DEEMON_SLAB_COUNT * sizeof(DeeSlabInfo));
+                                                  Dee_SLAB_COUNT * sizeof(DeeSlabInfo));
  if unlikely(!result) goto done;
  reqsize = DeeSlab_Stat(&result->st_stat,
                         COMPILER_OFFSETOF(DeeSlabStat,st_slabs) +
-                       (DEEMON_SLAB_COUNT * sizeof(DeeSlabInfo)));
+                       (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)));
  if unlikely(reqsize >
              COMPILER_OFFSETOF(DeeSlabStat,st_slabs) +
-                              (DEEMON_SLAB_COUNT * sizeof(DeeSlabInfo))) {
+                              (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
   size_t oldsize;
 do_realloc_result:
   oldsize = reqsize;
@@ -63,7 +64,7 @@ do_realloc_result:
      goto do_realloc_result;
  } else if unlikely(reqsize <
                     COMPILER_OFFSETOF(DeeSlabStat,st_slabs) +
-                                     (DEEMON_SLAB_COUNT * sizeof(DeeSlabInfo))) {
+                                     (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
   new_result = (DREF SlabStatObject *)DeeObject_TryRealloc(result,
                                                            COMPILER_OFFSETOF(SlabStatObject,st_stat) +
                                                            reqsize);

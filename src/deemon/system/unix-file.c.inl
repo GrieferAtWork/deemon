@@ -447,7 +447,7 @@ PRIVATE dssize_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer, size_t bufsize,
              dioflag_t flags) {
- /* TODO: Use `select()' to check if reading will block for `DEE_FILEIO_FNONBLOCKING' */
+ /* TODO: Use `select()' to check if reading will block for `Dee_FILEIO_FNONBLOCKING' */
  ssize_t result;
  DBG_ALIGNMENT_DISABLE();
  result = read((int)self->sf_handle,buffer,bufsize);
@@ -459,7 +459,7 @@ PRIVATE dssize_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer, size_t bufsize,
               dioflag_t flags) {
- /* TODO: Use `select()' to check if writing will block for `DEE_FILEIO_FNONBLOCKING' */
+ /* TODO: Use `select()' to check if writing will block for `Dee_FILEIO_FNONBLOCKING' */
  ssize_t result;
  DBG_ALIGNMENT_DISABLE();
  result = write((int)self->sf_handle,buffer,bufsize);

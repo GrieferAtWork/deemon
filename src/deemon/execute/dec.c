@@ -1981,12 +1981,12 @@ DecFile_LoadDDI(DecFile *__restrict self,
   if unlikely(xsiz == (uint16_t)-1)
      xsiz = UNALIGNED_GETLE32((uint32_t *)xdat),xdat += 4;
   if likely(xsiz != 0) {
-   struct ddi_exdat *xres;
+   struct Dee_ddi_exdat *xres;
    if (xdat        <  self->df_base ||
        xdat + xsiz <  xdat ||
        xdat + xsiz >= self->df_base + self->df_size)
        GOTO_CORRUPTED(xdat,err_currupted_r_maps);
-   xres = (struct ddi_exdat *)Dee_Malloc(offsetof(struct ddi_exdat,dx_data) +
+   xres = (struct Dee_ddi_exdat *)Dee_Malloc(offsetof(struct Dee_ddi_exdat,dx_data) +
                                          xsiz + DDI_EXDAT_MAXSIZE);
    if unlikely(!xres)
       goto err_r_maps;

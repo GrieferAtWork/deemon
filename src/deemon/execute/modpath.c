@@ -1512,9 +1512,9 @@ DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
       (ch) == '}' || (ch) == '<' || (ch) == '>' || (ch) == '+'))
 #endif
 
-#define MODULE_OPENINPATH_FNORMAL      0x0000 /* Normal flags */
-#define MODULE_OPENINPATH_FRELMODULE   0x0001 /* The module name is relative */
-#define MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if  */
+#define Dee_MODULE_OPENINPATH_FNORMAL      0x0000 /* Normal flags */
+#define Dee_MODULE_OPENINPATH_FRELMODULE   0x0001 /* The module name is relative */
+#define Dee_MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if  */
 
 LOCAL DREF DeeModuleObject *DCALL
 DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
@@ -2101,7 +2101,7 @@ load_module_after_dex_failure:
    Dee_Decref(module_name_ob);
    if (source_stream == ITER_DONE) {
     /* The source file doesn't exist! */
-    if (!(mode & MODULE_OPENINPATH_FTHROWERROR)) {
+    if (!(mode & Dee_MODULE_OPENINPATH_FTHROWERROR)) {
      Dee_Decref_likely(module_path_ob);
      result = (DREF DeeModuleObject *)ITER_DONE;
      goto got_result;
@@ -2267,9 +2267,9 @@ err:
  * >> DeeModule_OpenInPath(path,strlen(path),
  * >>                      name,strlen(name),
  * >>                      NULL,NULL,
- * >>                      MODULE_OPENINPATH_FTHROWERROR);
+ * >>                      Dee_MODULE_OPENINPATH_FTHROWERROR);
  * @return: * :        The module that was imported.
- * @return: ITER_DONE: The module could not be found (only when `MODULE_OPENINPATH_FTHROWERROR' isn't set)
+ * @return: ITER_DONE: The module could not be found (only when `Dee_MODULE_OPENINPATH_FTHROWERROR' isn't set)
  * @return: NULL:      An error occurred. */
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
@@ -2302,7 +2302,7 @@ DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_
   if (additional_count) {
    --additional_count;
   } else {
-   if (!(mode & MODULE_OPENINPATH_FRELMODULE)) break;
+   if (!(mode & Dee_MODULE_OPENINPATH_FRELMODULE)) break;
    ++module_name;
    --module_namesize;
    if (!module_namesize || *module_name != '.')
@@ -2407,7 +2407,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
                                                          module_namelen,
                                                          module_name,
                                                          options,
-                                                         MODULE_OPENINPATH_FNORMAL);
+                                                         Dee_MODULE_OPENINPATH_FNORMAL);
    if (result != (DREF DeeModuleObject *)ITER_DONE)
        goto done_path;
   } else {
@@ -2467,8 +2467,8 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
                              WSTR_LENGTH(module_name_str),
                              NULL,
                              options,
-                             throw_error ? (MODULE_OPENINPATH_FRELMODULE|MODULE_OPENINPATH_FTHROWERROR)
-                                         : (MODULE_OPENINPATH_FRELMODULE));
+                             throw_error ? (Dee_MODULE_OPENINPATH_FRELMODULE|Dee_MODULE_OPENINPATH_FTHROWERROR)
+                                         : (Dee_MODULE_OPENINPATH_FRELMODULE));
 err:
  return NULL;
 }
@@ -2485,8 +2485,8 @@ DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t
                                                module_namesize,
                                                NULL,
                                                options,
-                                               throw_error ? (MODULE_OPENINPATH_FRELMODULE|MODULE_OPENINPATH_FTHROWERROR)
-                                                           : (MODULE_OPENINPATH_FRELMODULE));
+                                               throw_error ? (Dee_MODULE_OPENINPATH_FRELMODULE|Dee_MODULE_OPENINPATH_FTHROWERROR)
+                                                           : (Dee_MODULE_OPENINPATH_FRELMODULE));
 }
 
 INTERN DREF DeeObject *DCALL

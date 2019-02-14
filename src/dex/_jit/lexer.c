@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_JIT_LEXER_C
 #define GUARD_DEX_JIT_LEXER_C 1
+#define DEE_SOURCE 1
 
 #include "libjit.h"
 #include <deemon/object.h>

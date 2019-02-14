@@ -26,11 +26,17 @@
 
 DECL_BEGIN
 
-typedef struct tuple_object DeeTupleObject;
+#ifdef DEE_SOURCE
+#define Dee_tuple_object   tuple_object
+#define DEFINE_TUPLE       Dee_DEFINE_TUPLE
+#define return_empty_tuple Dee_return_empty_tuple
+#endif
 
-struct tuple_object {
+typedef struct Dee_tuple_object DeeTupleObject;
+
+struct Dee_tuple_object {
     /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
 #ifdef __INTELLISENSE__
     size_t          t_size;       /* [const] Tuple size. */
     DeeObject      *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
@@ -41,35 +47,35 @@ struct tuple_object {
 };
 
 #define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject,t_elem) + (n_items) * sizeof(DREF DeeObject *))
-#define DeeTuple_IsEmpty(ob)     ((DeeObject *)REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
-#define DeeTuple_SIZE(ob)        ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_size
-#define DeeTuple_ELEM(ob)        ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem
-#define DeeTuple_GET(ob,i)       ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]
-#define DeeTuple_SET(ob,i,v)     ((DeeTupleObject *)REQUIRES_OBJECT(ob))->t_elem[i]=(v)
+#define DeeTuple_IsEmpty(ob)     ((DeeObject *)Dee_REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
+#define DeeTuple_SIZE(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_size
+#define DeeTuple_ELEM(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem
+#define DeeTuple_GET(ob,i)       ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
+#define DeeTuple_SET(ob,i,v)     ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]=(v)
 
 /* Define a statically allocated tuple:
  * >> PRIVATE DEFINE_TUPLE(my_tuple,2,{ Dee_EmptyString, Dee_EmptyString }); */
-#define DEFINE_TUPLE(name,elemc,...) \
+#define Dee_DEFINE_TUPLE(name,elemc,...) \
 struct { \
-    OBJECT_HEAD \
+    Dee_OBJECT_HEAD \
     size_t     t_size; \
     DeeObject *t_elem[elemc]; \
 } name = { \
-    OBJECT_HEAD_INIT(&DeeTuple_Type), \
+    Dee_OBJECT_HEAD_INIT(&DeeTuple_Type), \
     elemc, \
     __VA_ARGS__ \
 }
 
 
 #ifdef GUARD_DEEMON_OBJECTS_TUPLE_C
-struct empty_tuple_object { OBJECT_HEAD size_t t_size; };
+struct empty_tuple_object { Dee_OBJECT_HEAD size_t t_size; };
 DDATDEF struct empty_tuple_object DeeTuple_Empty;
 #define Dee_EmptyTuple ((DeeObject *)&DeeTuple_Empty)
 #else
 DDATDEF DeeObject        DeeTuple_Empty;
 #define Dee_EmptyTuple (&DeeTuple_Empty)
 #endif
-#define return_empty_tuple  return_reference_(Dee_EmptyTuple)
+#define Dee_return_empty_tuple  Dee_return_reference_(Dee_EmptyTuple)
 
 DDATDEF DeeTypeObject DeeTuple_Type;
 #define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x,&DeeTuple_Type) /* `tuple' is final */

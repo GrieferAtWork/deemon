@@ -500,7 +500,7 @@ reader_close(Reader *__restrict self) {
  if unlikely(!owner)
     return err_file_closed();
  /* Decref() the string. */
- DeeObject_PutBuf(owner,&self->r_buffer,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(owner,&self->r_buffer,Dee_BUFFER_FREADONLY);
  Dee_Decref(owner);
  return 0;
 }
@@ -521,7 +521,7 @@ reader_setowner(Reader *__restrict self,
  DeeBuffer new_buffer,old_buffer;
  if (DeeGC_IsReachable((DeeObject *)self,value))
      return err_reference_loop((DeeObject *)self,value);
- if (DeeObject_GetBuf(value,&new_buffer,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(value,&new_buffer,Dee_BUFFER_FREADONLY))
      return -1;
  Dee_Incref(value);
  DeeFile_LockRead(self);
@@ -535,7 +535,7 @@ reader_setowner(Reader *__restrict self,
  memcpy(&self->r_buffer,&new_buffer,sizeof(DeeBuffer));
  DeeFile_LockEndRead(self);
  if (old_value) {
-  DeeObject_PutBuf(old_value,&old_buffer,DEE_BUFFER_FREADONLY);
+  DeeObject_PutBuf(old_value,&old_buffer,Dee_BUFFER_FREADONLY);
   Dee_Decref(old_value);
  }
  return 0;
@@ -596,7 +596,7 @@ reader_fini(Reader *__restrict self) {
  if (self->r_owner) {
   DeeObject_PutBuf(self->r_owner,
                   &self->r_buffer,
-                   DEE_BUFFER_FREADONLY);
+                   Dee_BUFFER_FREADONLY);
   Dee_Decref(self->r_owner);
  }
 }
@@ -616,7 +616,7 @@ reader_init(Reader *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  size_t begin = 0,end = (size_t)-1;
  if (DeeArg_Unpack(argc,argv,"o|IdId:reader",&self->r_owner,&begin,&end) ||
-     DeeObject_GetBuf(self->r_owner,&self->r_buffer,DEE_BUFFER_FREADONLY))
+     DeeObject_GetBuf(self->r_owner,&self->r_buffer,Dee_BUFFER_FREADONLY))
      return -1;
  /* Truncate the end-pointer. */
  if (end > self->r_buffer.bb_size)
@@ -744,7 +744,7 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
  DREF Reader *result;
  result = DeeObject_MALLOC(Reader);
  if unlikely(!result) goto done;
- if (DeeObject_GetBuf(data,&result->r_buffer,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(data,&result->r_buffer,Dee_BUFFER_FREADONLY))
      goto err_r;
  /* Truncate the end-pointer. */
  if ((size_t)end > result->r_buffer.bb_size)
@@ -840,7 +840,7 @@ again:
     /* Flush the string buffer and deallocated unused memory. */
     if (result->s_data) {
      string_utf_fini(result->s_data,result);
-     string_utf_free(result->s_data);
+     Dee_string_utf_free(result->s_data);
      result->s_data = NULL;
     }
     result->s_hash = DEE_STRING_HASH_UNSET;
@@ -1467,7 +1467,7 @@ again:
    }
    if (utf->u_utf8 && utf->u_utf8 != wstr->s_str)
        Dee_Free((size_t *)utf->u_utf8 - 1);
-   string_utf_free(utf);
+   Dee_string_utf_free(utf);
    DeeObject_Free(wstr);
    Dee_DecrefNokill(&DeeString_Type);
   }

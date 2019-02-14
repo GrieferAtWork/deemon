@@ -1375,7 +1375,7 @@ PRIVATE char const int_digits[2][18] = {
 
 
 PUBLIC dssize_t DCALL
-DeeInt_Print(DREF DeeObject *__restrict self, uint32_t radix_and_flags,
+DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
              dformatprinter printer, void *arg) {
  ASSERT_OBJECT_TYPE(self,&DeeInt_Type);
  switch (radix_and_flags >> DEEINT_PRINT_RSHIFT) {
@@ -2576,13 +2576,13 @@ int_frombytes(DeeObject *__restrict UNUSED(self),
    goto err;
   }
  }
- if (DeeObject_GetBuf(bytes,&buf,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(bytes,&buf,Dee_BUFFER_FREADONLY))
      goto err;
  result = DeeInt_FromBytes(buf.bb_base,
                            buf.bb_size,
                            encode_little,
                            is_signed);
- DeeObject_PutBuf(bytes,&buf,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(bytes,&buf,Dee_BUFFER_FREADONLY);
  return result;
 err:
  return NULL;

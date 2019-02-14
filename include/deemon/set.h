@@ -131,18 +131,22 @@ INTDEF int DCALL DeeSet_IsDisjoint(DeeObject *__restrict lhs, DeeObject *__restr
 #endif
 
 
-typedef struct inverse_set_object DeeInverseSetObject;
-struct inverse_set_object {
+#ifdef DEE_SOURCE
+#define Dee_inverse_set_object inverse_set_object
+#endif /* DEE_SOURCE */
+
+typedef struct Dee_inverse_set_object DeeInverseSetObject;
+struct Dee_inverse_set_object {
     /* An inverse set, that is the symbolic set containing all
      * object, excluding those already contained within `is_set'
      * Since such a set cannot be iterated, working with it
      * requires some special operations, as well as special
      * support in some places, which is why it is exposed here.
      * In user-code, such a set is created through use of `operator ~()' */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF DeeObject *is_set; /* [1..1][const] The underlying set. */
 };
-#define DeeInverseSet_SET(ob) (((DeeInverseSetObject *)REQUIRES_OBJECT(ob))->is_set)
+#define DeeInverseSet_SET(ob) (((DeeInverseSetObject *)Dee_REQUIRES_OBJECT(ob))->is_set)
 
 DDATDEF DeeTypeObject DeeInverseSet_Type;
 #define DeeInverseSet_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeInverseSet_Type) /* _inverseset is final */

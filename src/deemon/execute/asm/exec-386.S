@@ -330,7 +330,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 /* }; */
 
 /* struct code_object { */
-#define ob_refcnt       0                            /* dref_t ob_refcnt; */
+#define ob_refcnt       0                            /* Dee_ref_t ob_refcnt; */
 #define ob_type         DEE_OBJECT_OFFSETOF_TYPE     /* DeeTypeObject *ob_type; */
 #define co_flags        DEE_OBJECT_OFFSETOF_DATA     /* uint16_t co_flags; */
 #define co_localc      (DEE_OBJECT_OFFSETOF_DATA+2)  /* uint16_t co_localc; */
@@ -1468,9 +1468,9 @@ target_endcatch_n:
 	/* except_frame_free() */
 #ifndef CONFIG_NO_OBJECT_SLABS
     /* WARNING: This assumes that sizeof(struct except_frame) >= 12 */
-#if DEEMON_SLAB_HASSIZE(3)
+#if DeeSlab_HasSize(3)
 	call   fSYM(DeeSlab_Free3,4) /* Free the frame */
-#elif DEEMON_SLAB_HASSIZE(4)
+#elif DeeSlab_HasSize(4)
 	call   fSYM(DeeSlab_Free4,4) /* Free the frame */
 #else
 	call   fSYM(DeeSlab_Free,4)  /* Free the frame */

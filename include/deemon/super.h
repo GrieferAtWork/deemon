@@ -25,11 +25,15 @@
 
 DECL_BEGIN
 
-typedef struct super_object DeeSuperObject;
+#ifdef DEE_SOURCE
+#define Dee_super_object  super_object
+#endif /* DEE_SOURCE */
 
-struct super_object {
+typedef struct Dee_super_object DeeSuperObject;
+
+struct Dee_super_object {
     /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF DeeTypeObject *s_type; /* [1..1][const] Super-type.
                                  *   NOTE: This is never `&DeeSuper_Type' itself and the
                                  *         check `DeeObject_InstanceOf(s_self,s_type)'
@@ -37,8 +41,8 @@ struct super_object {
     DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
 };
 
-#define DeeSuper_TYPE(x) ((DeeSuperObject *)REQUIRES_OBJECT(x))->s_type
-#define DeeSuper_SELF(x) ((DeeSuperObject *)REQUIRES_OBJECT(x))->s_self
+#define DeeSuper_TYPE(x) ((DeeSuperObject *)Dee_REQUIRES_OBJECT(x))->s_type
+#define DeeSuper_SELF(x) ((DeeSuperObject *)Dee_REQUIRES_OBJECT(x))->s_self
 
 DDATDEF DeeTypeObject DeeSuper_Type;
 #define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is final */

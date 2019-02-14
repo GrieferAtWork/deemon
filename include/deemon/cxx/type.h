@@ -32,7 +32,7 @@ public:
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeType_CheckExact(ob); }
 public:
     type_base(DeeTypeObject *obj): object((DeeObject *)obj) {}
-    DEFINE_OBJECT_CONSTRUCTORS(type_base,object)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(type_base,object)
     WUNUSED operator DeeTypeObject *() const DEE_CXX_NOTHROW { return (DeeTypeObject *)this->m_ptr; }
     WUNUSED bool baseof(DeeTypeObject *__restrict other) const DEE_CXX_NOTHROW { return DeeType_IsInherited(other,*this); }
     WUNUSED bool derivedfrom(DeeTypeObject *__restrict other) const DEE_CXX_NOTHROW { return DeeType_IsInherited(*this,other); }
@@ -45,7 +45,7 @@ template<class T>
 class type: public detail::type_base {
 public: /* type_ from deemon */
     type(DeeTypeObject *obj): type_base(obj) {}
-    DEFINE_OBJECT_CONSTRUCTORS(type,type_base)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(type,type_base)
     T new_() { return inherit(DeeObject_NewDefault(*this)); }
     T new_(size_t argc, DeeObject **__restrict argv) { return inherit(DeeObject_New(*this,argc,argv)); }
     T new_(size_t argc, DeeObject *const *__restrict argv) { return inherit(DeeObject_New(*this,argc,(DeeObject **)argv)); }

@@ -37,12 +37,18 @@
 
 DECL_BEGIN
 
-typedef struct compiler_object DeeCompilerObject;
-struct compiler_options;
+#ifdef DEE_SOURCE
+#define Dee_compiler_object  compiler_object
+#define Dee_compiler_options compiler_options
+#define Dee_compiler_items   compiler_items
+#endif /* DEE_SOURCE */
+
+typedef struct Dee_compiler_object DeeCompilerObject;
+struct Dee_compiler_options;
 
 #ifdef CONFIG_BUILDING_DEEMON
-#define COMPILER_ITEM_OBJECT_HEAD(T) \
-        OBJECT_HEAD \
+#define Dee_COMPILER_ITEM_OBJECT_HEAD(T) \
+        Dee_OBJECT_HEAD \
         DREF DeeCompilerObject *ci_compiler; /* [1..1][const] The associated compiler. */ \
         DeeCompilerItemObject **ci_pself;    /* [1..1][== self][1..1][lock(co_compiler->cp_item_lock)] Compiler item self-pointer. */ \
         DeeCompilerItemObject  *ci_next;     /* [0..1][lock(co_compiler->cp_item_lock)] Next compiler item. */ \
@@ -53,12 +59,12 @@ struct compiler_options;
 
 typedef struct compiler_item_object DeeCompilerItemObject;
 typedef struct compiler_wrapper_object DeeCompilerWrapperObject;
-struct compiler_item_object { COMPILER_ITEM_OBJECT_HEAD(void) };
+struct compiler_item_object { Dee_COMPILER_ITEM_OBJECT_HEAD(void) };
 struct compiler_wrapper_object {
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF DeeCompilerObject *cw_compiler; /* [1..1][const] The compiler being wrapped. */
 };
-#define COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
+#define Dee_COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
 INTDEF DeeTypeObject DeeCompilerItem_Type;
 INTDEF DeeTypeObject DeeCompilerObjItem_Type;
 INTDEF DeeTypeObject DeeCompilerWrapper_Type;
@@ -84,20 +90,20 @@ INTDEF size_t DCALL DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
  * @return: NULL: The item got deleted (a ReferenceError was thrown) */
 INTDEF void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict self);
 #define DeeCompilerItem_VALUE(self,T) \
-   ((T *)DeeCompilerItem_GetValue((DeeObject *)REQUIRES_OBJECT(self)))
+  ((T *)DeeCompilerItem_GetValue((DeeObject *)Dee_REQUIRES_OBJECT(self)))
 
 
-struct compiler_items {
+struct Dee_compiler_items {
     size_t                  ci_size; /* [lock(ci_lock)] Amount of existing compiler items. */
     size_t                  ci_mask; /* [lock(ci_lock)] Hash-map mask. */
     DeeCompilerItemObject **ci_list; /* [0..1][0..ci_mask+1][owned] Hash-map of compiler items. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t                ci_lock; /* Lock for compiler items. */
+    Dee_rwlock_t            ci_lock; /* Lock for compiler items. */
 #endif
 };
 #endif
 
-struct compiler_object {
+struct Dee_compiler_object {
     /* >> Since the compiler is a fairly large system, divided into _a_ _lot_ of
      *    different functions all operating on the same objects, it proves to
      *    be quite efficient not to pass contexts and descriptors around through
@@ -113,27 +119,29 @@ struct compiler_object {
      * >> do_the_operation();
      * >> COMPILER_END();
      */
-    OBJECT_HEAD
+    Dee_OBJECT_HEAD
     DREF DeeCompilerObject *cp_prev;      /* [0..1][lock(DeeCompiler_Lock)]
                                            * The compiler that was active before this one and
                                            * will be restored when `DeeCompiler_End()' is called. */
     size_t                  cp_recursion; /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()' was invoked for this compiler. */
+#ifdef DEE_SOURCE
 #define COMPILER_FNORMAL    0x0000        /* Normal compiler flags. */
 #define COMPILER_FKEEPLEXER 0x0001        /* Do not save/restore the active TPP lexer. */
 #define COMPILER_FKEEPERROR 0x0002        /* Do not save/restore the active parser error state. */
 #define COMPILER_FMASK      0x0003        /* Mask of known flags. */
+#endif /* DEE_SOURCE */
     uint16_t                cp_flags;     /* [const] Compiler flags (Set of `COMPILER_F*'). */
     uint16_t               _cp_pad[(sizeof(void *)/2)-1]; /* ... */
-    WEAKREF_SUPPORT
+    Dee_WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
     /* [OVERRIDE(*,[valid_if(self != DeeCompiler_Active.wr_obj)])] */
-    struct compiler_items    cp_items;           /* Hash-map of user-code compiler item wrappers. */
-    DREF DeeScopeObject     *cp_scope;           /* [1..1] == ::current_scope */
-    struct compiler_options *cp_inner_options;   /* [0..1] == ::inner_compiler_options */
-    struct ast_tags          cp_tags;            /* == ::current_tags */
-    struct TPPLexer          cp_lexer;           /* [valid_if(!COMPILER_FKEEPLEXER)] == ::TPPLexer_Global */
-    struct parser_errors     cp_errors;          /* [valid_if(!COMPILER_FKEEPERROR)] == ::current_parser_errors */
-    struct compiler_options *cp_options;         /* [0..1] User-defined compiler options. */
+    struct Dee_compiler_items    cp_items;         /* Hash-map of user-code compiler item wrappers. */
+    DREF DeeScopeObject         *cp_scope;         /* [1..1] == ::current_scope */
+    struct Dee_compiler_options *cp_inner_options; /* [0..1] == ::inner_compiler_options */
+    struct ast_tags              cp_tags;          /* == ::current_tags */
+    struct TPPLexer              cp_lexer;         /* [valid_if(!COMPILER_FKEEPLEXER)] == ::TPPLexer_Global */
+    struct parser_errors         cp_errors;        /* [valid_if(!COMPILER_FKEEPERROR)] == ::current_parser_errors */
+    struct Dee_compiler_options *cp_options;       /* [0..1] User-defined compiler options. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
     size_t                   cp_uasm_unique;     /* Unique user-assembly ID. */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -167,16 +175,16 @@ DeeCompiler_New(DeeObject *__restrict module,
 #ifndef CONFIG_NO_THREADS
 /* Lock held whenever the compiler is being used.
  * TODO: Use some blocking lock for this. - Don't use a spinlock. */
-DDATDEF recursive_rwlock_t DeeCompiler_Lock;
+DDATDEF Dee_recursive_rwlock_t DeeCompiler_Lock;
 #endif
 
 /* A weak reference to the compiler associated with
  * the currently active global compiler context.
  * WARNING: Do _NOT_ attempt to write to this weak reference! _EVER_! */
 #ifdef GUARD_DEEMON_COMPILER_COMPILER_C
-DDATDEF struct weakref DeeCompiler_Active;
+DDATDEF struct Dee_weakref DeeCompiler_Active;
 #else
-DDATDEF struct weakref const DeeCompiler_Active;
+DDATDEF struct Dee_weakref const DeeCompiler_Active;
 #endif
 
 /* [0..1][lock(DeeCompiler_Lock)] The currently active compiler.

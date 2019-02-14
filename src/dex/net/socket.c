@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_SOCKET_SOCKET_C
 #define GUARD_DEX_SOCKET_SOCKET_C 1
+#define DEE_SOURCE 1
 
 #include "libnet.h"
 
@@ -1994,14 +1995,14 @@ socket_recvinto(Socket *__restrict self, size_t argc,
   if (sock_getmsgflagsof(arg2,&flags))
       goto err;
  }
- if (DeeObject_GetBuf(data,&buffer,DEE_BUFFER_FWRITABLE))
+ if (DeeObject_GetBuf(data,&buffer,Dee_BUFFER_FWRITABLE))
      goto err;
  result = DeeSocket_Recv(self,
                          timeout,
                          buffer.bb_base,
                          buffer.bb_size,
                          flags);
- DeeObject_PutBuf(data,&buffer,DEE_BUFFER_FWRITABLE);
+ DeeObject_PutBuf(data,&buffer,Dee_BUFFER_FWRITABLE);
  if unlikely(result < 0) goto err;
  return DeeInt_NewSize((size_t)result);
 err:
@@ -2126,7 +2127,7 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
  /* Create the socket address object that's going to be returned. */
  result_addr = DeeObject_MALLOC(DeeSockAddrObject);
  if unlikely(!result_addr) goto err;
- if (DeeObject_GetBuf(data,&buffer,DEE_BUFFER_FWRITABLE))
+ if (DeeObject_GetBuf(data,&buffer,Dee_BUFFER_FWRITABLE))
      goto err_addr;
  result_size = DeeSocket_RecvFrom(self,
                                   timeout,
@@ -2134,7 +2135,7 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
                                   buffer.bb_size,
                                   flags,
                                  &result_addr->sa_addr);
- DeeObject_PutBuf(data,&buffer,DEE_BUFFER_FWRITABLE);
+ DeeObject_PutBuf(data,&buffer,Dee_BUFFER_FWRITABLE);
  if unlikely(result_size < 0) goto err_addr;
  /* Create a new tuple to package the 2 objects. */
  result = DeeTuple_NewUninitialized(2);
@@ -2197,14 +2198,14 @@ socket_send(Socket *__restrict self, size_t argc,
       sock_getmsgflagsof(arg_1,&flags))
       goto err;
  }
- if (DeeObject_GetBuf(data,&buffer,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(data,&buffer,Dee_BUFFER_FREADONLY))
      goto err;
  result = DeeSocket_Send(self,
                          timeout,
                          buffer.bb_base,
                          buffer.bb_size,
                          flags);
- DeeObject_PutBuf(data,&buffer,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(data,&buffer,Dee_BUFFER_FREADONLY);
  if unlikely(result < 0) {
   if (result != -2)
       goto err;
@@ -2263,7 +2264,7 @@ socket_sendto(Socket *__restrict self, size_t argc,
       sock_getmsgflagsof(arg_1,&flags))
       goto err;
  }
- if (DeeObject_GetBuf(data,&buffer,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(data,&buffer,Dee_BUFFER_FREADONLY))
      goto err;
  result = DeeSocket_SendTo(self,
                            timeout,
@@ -2271,7 +2272,7 @@ socket_sendto(Socket *__restrict self, size_t argc,
                            buffer.bb_size,
                            flags,
                           &target_addr);
- DeeObject_PutBuf(data,&buffer,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(data,&buffer,Dee_BUFFER_FREADONLY);
  if unlikely(result < 0) {
   if (result != -2)
       goto err;

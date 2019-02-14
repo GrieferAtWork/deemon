@@ -26,15 +26,35 @@
 
 DECL_BEGIN
 
+#ifdef DEE_SOURCE
+#ifdef __INTELLISENSE__
+#define Dee_utf8_sequence_len  utf8_sequence_len
+#define Dee_utf8_readchar      utf8_readchar
+#define Dee_utf8_readchar_u    utf8_readchar_u
+#define Dee_utf8_readchar_rev  utf8_readchar_rev
+#define Dee_utf8_writechar     utf8_writechar
+#define Dee_utf8_skipspace     utf8_skipspace
+#define Dee_utf8_skipspace_rev utf8_skipspace_rev
+#else
+#define utf8_sequence_len  Dee_utf8_sequence_len
+#define utf8_readchar      Dee_utf8_readchar
+#define utf8_readchar_u    Dee_utf8_readchar_u
+#define utf8_readchar_rev  Dee_utf8_readchar_rev
+#define utf8_writechar     Dee_utf8_writechar
+#define utf8_skipspace     Dee_utf8_skipspace
+#define utf8_skipspace_rev Dee_utf8_skipspace_rev
+#endif
+#define UTF8_MAX_MBLEN     Dee_UTF8_MAX_MBLEN
+#endif
 
 /* UTF-8 helper API */
-DDATDEF uint8_t const utf8_sequence_len[256];
-DFUNDEF uint32_t (DCALL utf8_readchar)(char const **__restrict piter, char const *__restrict end);
-DFUNDEF uint32_t (DCALL utf8_readchar_u)(char const **__restrict piter);
-DFUNDEF uint32_t (DCALL utf8_readchar_rev)(char const **__restrict pend, char const *__restrict begin);
-DFUNDEF char *(DCALL utf8_writechar)(char *__restrict buffer, uint32_t ch); /* Up to `UTF8_MAX_MBLEN' bytes may be used in `buffer' */
-#define UTF8_MAX_MBLEN  8 /* The max length of a UTF-8 multi-byte sequence (100% future-proof,
-                           * as this is the theoretical limit. - The actual limit would be `4') */
+DDATDEF uint8_t const Dee_utf8_sequence_len[256];
+DFUNDEF uint32_t (DCALL Dee_utf8_readchar)(char const **__restrict piter, char const *__restrict end);
+DFUNDEF uint32_t (DCALL Dee_utf8_readchar_u)(char const **__restrict piter);
+DFUNDEF uint32_t (DCALL Dee_utf8_readchar_rev)(char const **__restrict pend, char const *__restrict begin);
+DFUNDEF char *(DCALL Dee_utf8_writechar)(char *__restrict buffer, uint32_t ch); /* Up to `UTF8_MAX_MBLEN' bytes may be used in `buffer' */
+#define Dee_UTF8_MAX_MBLEN  8 /* The max length of a UTF-8 multi-byte sequence (100% future-proof,
+                               * as this is the theoretical limit. - The actual limit would be `4') */
 
 
 #ifdef __INTELLISENSE__
@@ -51,7 +71,7 @@ size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__restrict text, size_t lengt
 LOCAL size_t
 (DCALL _DeeUni_FoldedLength_b)(uint8_t *__restrict text, size_t length) {
  size_t i,result = 0;
- uint32_t buf[UNICODE_FOLDED_MAX];
+ uint32_t buf[Dee_UNICODE_FOLDED_MAX];
  for (i = 0; i < length; ++i)
      result += DeeUni_ToFolded(text[i],buf);
  return result;
@@ -59,7 +79,7 @@ LOCAL size_t
 LOCAL size_t
 (DCALL _DeeUni_FoldedLength_w)(uint16_t *__restrict text, size_t length) {
  size_t i,result = 0;
- uint32_t buf[UNICODE_FOLDED_MAX];
+ uint32_t buf[Dee_UNICODE_FOLDED_MAX];
  for (i = 0; i < length; ++i)
      result += DeeUni_ToFolded(text[i],buf);
  return result;
@@ -67,7 +87,7 @@ LOCAL size_t
 LOCAL size_t
 (DCALL _DeeUni_FoldedLength_l)(uint32_t *__restrict text, size_t length) {
  size_t i,result = 0;
- uint32_t buf[UNICODE_FOLDED_MAX];
+ uint32_t buf[Dee_UNICODE_FOLDED_MAX];
  for (i = 0; i < length; ++i)
      result += DeeUni_ToFolded(text[i],buf);
  return result;
@@ -76,26 +96,26 @@ LOCAL size_t
 
 
 LOCAL char *
-(DCALL utf8_skipspace)(char const *__restrict str,
-                       char const *__restrict end) {
+(DCALL Dee_utf8_skipspace)(char const *__restrict str,
+                           char const *__restrict end) {
  char *result;
  for (;;) {
   uint32_t chr;
   result = (char *)str;
-  chr = utf8_readchar((char const **)&str,end);
+  chr = Dee_utf8_readchar((char const **)&str,end);
   if (!DeeUni_IsSpace(chr)) break;
  }
  return result;
 }
 
 LOCAL char *
-(DCALL utf8_skipspace_rev)(char const *__restrict end,
-                           char const *__restrict begin) {
+(DCALL Dee_utf8_skipspace_rev)(char const *__restrict end,
+                               char const *__restrict begin) {
  char *result;
  for (;;) {
   uint32_t chr;
   result = (char *)end;
-  chr = utf8_readchar_rev((char const **)&end,begin);
+  chr = Dee_utf8_readchar_rev((char const **)&end,begin);
   if (!DeeUni_IsSpace(chr)) break;
  }
  return result;
@@ -103,21 +123,21 @@ LOCAL char *
 
 
 /* Get/Set a character, given its index within the string. */
-#define DeeString_GetChar(self,index)       DeeString_GetChar((DeeStringObject *)REQUIRES_OBJECT(self),index)
-#define DeeString_SetChar(self,index,value) DeeString_SetChar((DeeStringObject *)REQUIRES_OBJECT(self),index,value)
+#define DeeString_GetChar(self,index)       DeeString_GetChar((DeeStringObject *)Dee_REQUIRES_OBJECT(self),index)
+#define DeeString_SetChar(self,index,value) DeeString_SetChar((DeeStringObject *)Dee_REQUIRES_OBJECT(self),index,value)
 DFUNDEF uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index);
 DFUNDEF void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self, size_t index, uint32_t value);
 
 
 /* Move `num_chars' characters from `src' to `dst' */
 #define DeeString_Memmove(self,dst,src,num_chars) \
-        DeeString_Memmove((DeeStringObject *)REQUIRES_OBJECT(self),dst,src,num_chars)
+        DeeString_Memmove((DeeStringObject *)Dee_REQUIRES_OBJECT(self),dst,src,num_chars)
 DFUNDEF void (DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
                                        size_t dst, size_t src, size_t num_chars);
 
 /* Pop the last character of a string, which must be an ASCII character. */
 #define DeeString_PopbackAscii(self) \
-        DeeString_PopbackAscii((DeeStringObject *)REQUIRES_OBJECT(self))
+        DeeString_PopbackAscii((DeeStringObject *)Dee_REQUIRES_OBJECT(self))
 DFUNDEF void (DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self);
 
 
@@ -128,24 +148,24 @@ do{ void *_str_ = DeeString_WSTR(self); \
     if (_len_ > (iend)) \
         _len_ = (iend); \
     if ((ibegin) < _len_) { \
-        switch (DeeString_WIDTH(self)) { \
+        Dee_SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) { \
         { \
             char *iter,*end; \
-        CASE_WIDTH_1BYTE: \
+        Dee_CASE_WIDTH_1BYTE: \
             iter = (char *)_str_; \
             end = (char *)_str_ + _len_; \
             for (; iter != end; ++iter) do __VA_ARGS__ __WHILE0; \
         } break; \
         { \
             uint16_t *iter,*end; \
-        CASE_WIDTH_2BYTE: \
+        Dee_CASE_WIDTH_2BYTE: \
             iter = (uint16_t *)_str_; \
             end = (uint16_t *)_str_ + _len_; \
             for (; iter != end; ++iter) do __VA_ARGS__ __WHILE0; \
         } break; \
         { \
             uint32_t *iter,*end; \
-        CASE_WIDTH_4BYTE: \
+        Dee_CASE_WIDTH_4BYTE: \
             iter = (uint32_t *)_str_; \
             end = (uint32_t *)_str_ + _len_; \
             for (; iter != end; ++iter) do __VA_ARGS__ __WHILE0; \

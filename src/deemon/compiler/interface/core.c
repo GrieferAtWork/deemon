@@ -112,7 +112,7 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(compiler_item_tp_alloc,compiler_item_tp_free)
+                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
@@ -157,7 +157,7 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(compiler_item_tp_alloc,compiler_item_tp_free)
+                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
             }
         },
         /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
@@ -321,7 +321,7 @@ again:
     iter = self->cp_items.ci_list[i];
     while (iter) {
      next = iter->ci_next;
-     iter->ci_pself = &new_map[COMPILER_ITEM_HASH(iter) & new_mask];
+     iter->ci_pself = &new_map[Dee_COMPILER_ITEM_HASH(iter) & new_mask];
      if ((iter->ci_next = *iter->ci_pself) != NULL)
           iter->ci_next->ci_pself = &iter->ci_next;
      *iter->ci_pself = iter;

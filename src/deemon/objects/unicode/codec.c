@@ -477,7 +477,7 @@ encode_utf16(DeeObject *__restrict self,
   return DeeBytes_NewView(self,
                           data,
                           WSTR_LENGTH(data) * 2,
-                          DEE_BUFFER_FREADONLY);
+                          Dee_BUFFER_FREADONLY);
  }
  err_expected_string_or_bytes(self);
 err:
@@ -504,7 +504,7 @@ encode_utf32(DeeObject *__restrict self) {
   return DeeBytes_NewView(self,
                           data,
                           WSTR_LENGTH(data) * 8,
-                          DEE_BUFFER_FREADONLY);
+                          Dee_BUFFER_FREADONLY);
  }
  err_expected_string_or_bytes(self);
 err:
@@ -627,7 +627,7 @@ encode_utf8(DeeObject *__restrict self) {
   return DeeBytes_NewView(self,
                           data,
                           WSTR_LENGTH(data),
-                          DEE_BUFFER_FREADONLY);
+                          Dee_BUFFER_FREADONLY);
  }
  err_expected_string_or_bytes(self);
 err:

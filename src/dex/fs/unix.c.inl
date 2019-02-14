@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_FS_UNIX_C_INL
 #define GUARD_DEX_FS_UNIX_C_INL 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE     1
 #define _BSD_SOURCE     1
 #define _GNU_SOURCE     1

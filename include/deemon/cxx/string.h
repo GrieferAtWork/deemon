@@ -41,7 +41,7 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_CheckExact(ob); }
 public: /* string from deemon */
-    DEFINE_OBJECT_CONSTRUCTORS(string,sequence<string>)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(string,sequence<string>)
     string() DEE_CXX_NOTHROW: sequence<string>(nonnull(Dee_EmptyString)) { }
     string(/*utf-8*/char const *__restrict utf8_str): sequence<string>(inherit(DeeString_NewUtf8(utf8_str,strlen(utf8_str),STRING_ERROR_FSTRICT))) { }
     string(/*utf-8*/char const *__restrict utf8_str, size_t utf8_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf8(utf8_str,utf8_len,error_mode))) { }
@@ -69,9 +69,9 @@ public: /* string from deemon */
     WUNUSED size_t size() const DEE_CXX_NOTHROW { return DeeString_WLEN(this->ptr()); }
     WUNUSED uint32_t getchar(size_t index) const DEE_CXX_NOTHROW { return DeeString_GetChar(this->ptr(),index); }
 #ifdef CONFIG_BUILDING_DEEMON
-    WUNUSED dhash_t hash() const DEE_CXX_NOTHROW { return DeeString_Hash(*this); }
+    WUNUSED Dee_hash_t hash() const DEE_CXX_NOTHROW { return DeeString_Hash(*this); }
 #endif
-    WUNUSED dhash_t hashcase() const DEE_CXX_NOTHROW { return DeeString_HashCase(*this); }
+    WUNUSED Dee_hash_t hashcase() const DEE_CXX_NOTHROW { return DeeString_HashCase(*this); }
     WUNUSED ATTR_RETNONNULL uint8_t *bytes(bool allow_invalid = false) const { return (uint8_t *)throw_if_null(DeeString_AsBytes(*this,allow_invalid)); }
     WUNUSED ATTR_RETNONNULL char *asutf8() const { return (char *)throw_if_null((void *)DeeString_AsUtf8(*this)); }
     WUNUSED ATTR_RETNONNULL uint16_t *asutf16(unsigned int error_mode = STRING_ERROR_FSTRICT) const { return (uint16_t *)throw_if_null((void *)DeeString_AsUtf16(*this,error_mode)); }

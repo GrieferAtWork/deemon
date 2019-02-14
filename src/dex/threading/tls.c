@@ -19,6 +19,7 @@
 #ifndef GUARD_DEX_THREADING_TLS_C
 #define GUARD_DEX_THREADING_TLS_C 1
 #define CONFIG_BUILDING_LIBTHREADING 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
 #include "libthreading.h"

@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_IPC_WINDOWS_C_INL
 #define GUARD_DEX_IPC_WINDOWS_C_INL 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
 #include "libipc.h"
@@ -316,7 +317,7 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
     if (result->s_data->u_data[STRING_WIDTH_2BYTE] == (size_t *)buffer)
         result->s_data->u_data[STRING_WIDTH_2BYTE] = NULL;
     string_utf_fini(result->s_data,result);
-    string_utf_free(result->s_data);
+    Dee_string_utf_free(result->s_data);
    }
    DeeObject_FreeTracker((DeeObject *)result);
    DeeObject_Free((DeeObject *)result);

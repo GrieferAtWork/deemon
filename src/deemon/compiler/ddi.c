@@ -613,8 +613,8 @@ do_realloc:
        goto err_xwriter;
    }
   }
-  ((struct ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
-  result->d_exdat = (struct ddi_exdat *)bytewriter_flush(&writer);
+  ((struct Dee_ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
+  result->d_exdat = (struct Dee_ddi_exdat *)bytewriter_flush(&writer);
   __IF0 {
 err_xwriter:
    bytewriter_fini(&writer);

@@ -77,10 +77,10 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
  me = COMPILER_CONTAINER_OF(self,WeakRef,wr_ref);
  if (!Dee_IncrefIfNotZero(me)) {
   /* Controller has already died. */
-  WEAKREF_CALLBACK_UNLOCK(self);
+  DeeWeakref_UnlockCallback(self);
  } else {
   DREF DeeObject *result;
-  WEAKREF_CALLBACK_UNLOCK(self);
+  DeeWeakref_UnlockCallback(self);
   /* Invoke the controller deletion callback. */
   ASSERT(me->wr_del);
   result = DeeObject_Call(me->wr_del,1,(DeeObject **)&me);

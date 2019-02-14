@@ -151,8 +151,8 @@ struct asm_rel {
 LOCAL void DCALL
 asm_reldel(struct asm_rel *__restrict self) {
  if (REL_HASSYM(self->ar_type)) {
-  ASSERT(self->ar_sym);
-  ASSERT(self->ar_sym->as_used);
+  Dee_ASSERT(self->ar_sym);
+  Dee_ASSERT(self->ar_sym->as_used);
   --self->ar_sym->as_used;
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
@@ -921,20 +921,20 @@ INTDEF struct except_handler *(DCALL asm_pack_exceptv)(void);
 /* Adjust the current stack depth. */
 #define asm_addsp(n)  ((current_assembler.a_stackmax >= (current_assembler.a_stackcur += (n))) || \
                        (current_assembler.a_stackmax =   current_assembler.a_stackcur,1))
-#define asm_subsp(n)   (ASSERT(current_assembler.a_stackcur >= (n)),current_assembler.a_stackcur -= (n))
+#define asm_subsp(n)   (Dee_ASSERT(current_assembler.a_stackcur >= (n)),current_assembler.a_stackcur -= (n))
 #define asm_incsp()   ((current_assembler.a_stackmax >= ++current_assembler.a_stackcur) || \
                        (current_assembler.a_stackmax =    current_assembler.a_stackcur,1))
-#define asm_decsp()    (ASSERT(current_assembler.a_stackcur),--current_assembler.a_stackcur)
-#define asm_dicsp()    (ASSERT(current_assembler.a_stackcur >= 1)) /* asm_decsp(), asm_incsp() */
-#define asm_ddcsp()    (ASSERT(current_assembler.a_stackcur >= 2),current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp() */
-#define asm_dddcsp()   (ASSERT(current_assembler.a_stackcur >= 3),current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp() */
-#define asm_ddddcsp()  (ASSERT(current_assembler.a_stackcur >= 4),current_assembler.a_stackcur -= 4) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp() */
-#define asm_ddicsp()   (ASSERT(current_assembler.a_stackcur >= 2),--current_assembler.a_stackcur) /* asm_decsp(), asm_decsp(), asm_incsp() */
-#define asm_dddicsp()  (ASSERT(current_assembler.a_stackcur >= 3),current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
-#define asm_ddddicsp() (ASSERT(current_assembler.a_stackcur >= 4),current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
-#define asm_ddiicsp()  (ASSERT(current_assembler.a_stackcur >= 2)) /* asm_decsp(), asm_decsp(), asm_incsp(), asm_incsp() */
-#define asm_dNiNcsp(n) (ASSERT(current_assembler.a_stackcur >= (n))) /* [asm_decsp()]*n, [asm_incsp()]*n */
-#define asm_diicsp()   (ASSERT(current_assembler.a_stackcur >= 1),asm_incsp()) /* asm_decsp(), asm_incsp(), asm_incsp() */
+#define asm_decsp()    (Dee_ASSERT(current_assembler.a_stackcur),--current_assembler.a_stackcur)
+#define asm_dicsp()    (Dee_ASSERT(current_assembler.a_stackcur >= 1)) /* asm_decsp(), asm_incsp() */
+#define asm_ddcsp()    (Dee_ASSERT(current_assembler.a_stackcur >= 2),current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp() */
+#define asm_dddcsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 3),current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp() */
+#define asm_ddddcsp()  (Dee_ASSERT(current_assembler.a_stackcur >= 4),current_assembler.a_stackcur -= 4) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp() */
+#define asm_ddicsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 2),--current_assembler.a_stackcur) /* asm_decsp(), asm_decsp(), asm_incsp() */
+#define asm_dddicsp()  (Dee_ASSERT(current_assembler.a_stackcur >= 3),current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
+#define asm_ddddicsp() (Dee_ASSERT(current_assembler.a_stackcur >= 4),current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
+#define asm_ddiicsp()  (Dee_ASSERT(current_assembler.a_stackcur >= 2)) /* asm_decsp(), asm_decsp(), asm_incsp(), asm_incsp() */
+#define asm_dNiNcsp(n) (Dee_ASSERT(current_assembler.a_stackcur >= (n))) /* [asm_decsp()]*n, [asm_incsp()]*n */
+#define asm_diicsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 1),asm_incsp()) /* asm_decsp(), asm_incsp(), asm_incsp() */
 
 /* Allocate a new, uninitialized relocation within the current text section. */
 INTDEF struct asm_rel *FCALL asm_allocrel(void);
@@ -1141,9 +1141,9 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gthrow_p()                (asm_put(ASM_THROW))
 #define asm_grethrow()                (asm_put(ASM_RETHROW))
 #define asm_gendcatch()               (asm_put(ASM_ENDCATCH))
-#define asm_gendcatch_n(n)            (ASSERT((n) <= UINT8_MAX+1),(n) ? (asm_put((ASM_ENDCATCH_N&0xff00) >> 8) || asm_putimm8(ASM_ENDCATCH_N&0xff,(uint8_t)((n)-1))) : asm_gendcatch())
+#define asm_gendcatch_n(n)            (Dee_ASSERT((n) <= UINT8_MAX+1),(n) ? (asm_put((ASM_ENDCATCH_N&0xff00) >> 8) || asm_putimm8(ASM_ENDCATCH_N&0xff,(uint8_t)((n)-1))) : asm_gendcatch())
 #define asm_gendfinally()             (asm_put(ASM_ENDFINALLY))
-#define asm_gendfinally_n(n)          (ASSERT((n) <= UINT8_MAX+1),(n) ? (asm_put((ASM_ENDFINALLY_N&0xff00) >> 8) || asm_putimm8(ASM_ENDFINALLY_N&0xff,(uint8_t)((n)-1))) : asm_gendfinally())
+#define asm_gendfinally_n(n)          (Dee_ASSERT((n) <= UINT8_MAX+1),(n) ? (asm_put((ASM_ENDFINALLY_N&0xff00) >> 8) || asm_putimm8(ASM_ENDFINALLY_N&0xff,(uint8_t)((n)-1))) : asm_gendfinally())
 #define asm_gpush_bnd_arg(aid)        (asm_incsp(),asm_put816(ASM_PUSH_BND_ARG,aid))
 #define asm_gpush_bnd_extern(mid,gid) (asm_incsp(),asm_put881616(ASM_PUSH_BND_EXTERN,mid,gid))
 #define asm_gpush_bnd_global(gid)     (asm_incsp(),asm_put816(ASM_PUSH_BND_GLOBAL,gid))
@@ -1151,11 +1151,11 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gjf(target)               (asm_gjmp(ASM_JF,target))
 #define asm_gjt(target)               (asm_gjmp(ASM_JT,target))
 #define asm_gforeach(target)          (asm_diicsp(),asm_gjmp(ASM_FOREACH,target))
-#define asm_gcall(n)                  (ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),asm_putimm8(ASM_CALL,(uint8_t)(n)))
-#define asm_gcall_seq(n)              (ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),(asm_put((ASM_CALL_SEQ & 0xff00) >> 8) || asm_putimm8(ASM_CALL_SEQ & 0xff,(uint8_t)(n))))
-#define asm_gcall_map(n)              (ASSERT((n) <= UINT8_MAX),asm_subsp(((n)*2)+1),asm_incsp(),(asm_put((ASM_CALL_MAP & 0xff00) >> 8) || asm_putimm8(ASM_CALL_MAP & 0xff,(uint8_t)(n))))
-#define asm_gcallattr_const_seq(cid,n) (ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_SEQ,cid,n))
-#define asm_gcallattr_const_map(cid,n) (ASSERT((n) <= UINT8_MAX),asm_subsp(((n)*2)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_MAP,cid,n))
+#define asm_gcall(n)                  (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),asm_putimm8(ASM_CALL,(uint8_t)(n)))
+#define asm_gcall_seq(n)              (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),(asm_put((ASM_CALL_SEQ & 0xff00) >> 8) || asm_putimm8(ASM_CALL_SEQ & 0xff,(uint8_t)(n))))
+#define asm_gcall_map(n)              (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp(((n)*2)+1),asm_incsp(),(asm_put((ASM_CALL_MAP & 0xff00) >> 8) || asm_putimm8(ASM_CALL_MAP & 0xff,(uint8_t)(n))))
+#define asm_gcallattr_const_seq(cid,n) (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_SEQ,cid,n))
+#define asm_gcallattr_const_map(cid,n) (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp(((n)*2)+1),asm_incsp(),asm_put816_8(ASM_CALLATTR_C_MAP,cid,n))
 #define asm_gcall_tuple()             (asm_ddicsp(),asm_put(ASM_CALL_TUPLE))
 #define asm_gthiscall_tuple()         (asm_dddicsp(),asm_put16(ASM_THISCALL_TUPLE))
 #define asm_gjmp_pop()                (asm_decsp(),asm_put(ASM_JMP_POP))
@@ -1238,7 +1238,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gpush_module(mid)         (asm_incsp(),asm_put816(ASM_PUSH_MODULE,mid))
 #define asm_gpush_module_p(mid)       (asm_put816(ASM_PUSH_MODULE,mid))
 #define asm_gconcat()                 (asm_ddicsp(),asm_put(ASM_CONCAT))
-#define asm_gextend(n)                (ASSERT((n) <= UINT16_MAX),asm_subsp((n)+1),asm_incsp(),\
+#define asm_gextend(n)                (Dee_ASSERT((n) <= UINT16_MAX),asm_subsp((n)+1),asm_incsp(),\
                                       (n) <= UINT8_MAX ? asm_putimm8(ASM_EXTEND,(uint8_t)(n)) : \
                                       (asm_put((ASM16_PACK_TUPLE & 0xff00) >> 8) || \
                                        asm_putimm16((ASM16_PACK_TUPLE & 0xff),n) || asm_put(ASM_CONCAT)))
@@ -1356,15 +1356,15 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gbreakpoint()             (asm_put(ASM_BREAKPOINT))
 #define asm_giterself()               (asm_dicsp(),asm_put(ASM_ITERSELF))
 #define asm_giternext()               (asm_dicsp(),asm_put((ASM_ITERNEXT & 0xff00) >> 8) || asm_put(ASM_ITERNEXT & 0xff))
-#define asm_gcallattr(n)              (asm_subsp((n)+2),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_putimm8(ASM_CALLATTR,(uint8_t)(n)))
+#define asm_gcallattr(n)              (asm_subsp((n)+2),asm_incsp(),Dee_ASSERT((n) <= UINT8_MAX),asm_putimm8(ASM_CALLATTR,(uint8_t)(n)))
 #define asm_gcallattr_tuple()         (asm_dddicsp(),asm_put(ASM_CALLATTR_TUPLE))
-#define asm_gcallattr_const(cid,n)    (asm_subsp((n)+1),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALLATTR_C,cid,n))
+#define asm_gcallattr_const(cid,n)    (asm_subsp((n)+1),asm_incsp(),Dee_ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALLATTR_C,cid,n))
 #define asm_gcallattr_const_tuple(cid)(asm_ddicsp(),asm_put816(ASM_CALLATTR_C_TUPLE,cid))
-#define asm_gcallattr_this_const(cid,n)    (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALLATTR_THIS_C,cid,n))
+#define asm_gcallattr_this_const(cid,n)    (asm_subsp(n),asm_incsp(),Dee_ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALLATTR_THIS_C,cid,n))
 #define asm_gcallattr_this_const_tuple(cid)(asm_dicsp(),asm_put816(ASM_CALLATTR_THIS_C_TUPLE,cid))
-#define asm_gcall_extern(mid,gid,n)   (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put881616_8(ASM_CALL_EXTERN,mid,gid,n))
-#define asm_gcall_global(gid,n)       (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALL_GLOBAL,gid,n))
-#define asm_gcall_local(lid,n)        (asm_subsp(n),asm_incsp(),ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALL_LOCAL,lid,n))
+#define asm_gcall_extern(mid,gid,n)   (asm_subsp(n),asm_incsp(),Dee_ASSERT((n) <= UINT8_MAX),asm_put881616_8(ASM_CALL_EXTERN,mid,gid,n))
+#define asm_gcall_global(gid,n)       (asm_subsp(n),asm_incsp(),Dee_ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALL_GLOBAL,gid,n))
+#define asm_gcall_local(lid,n)        (asm_subsp(n),asm_incsp(),Dee_ASSERT((n) <= UINT8_MAX),asm_put816_8(ASM_CALL_LOCAL,lid,n))
 #define asm_ggetattr()                (asm_ddicsp(),asm_put(ASM_GETATTR))
 #define asm_gdelattr()                (asm_ddcsp(),asm_put(ASM_DELATTR))
 #define asm_gsetattr()                (asm_dddcsp(),asm_put(ASM_SETATTR))
@@ -1390,7 +1390,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gdelmember_this_r(rid,iid)   (asm_put881616(ASM_DELMEMBER_THIS_R,rid,iid))
 #define asm_gsetmember_this_r(rid,iid)   (asm_decsp(),asm_put881616(ASM_SETMEMBER_THIS_R,rid,iid))
 #define asm_gboundmember_this_r(rid,iid) (asm_incsp(),asm_put881616(ASM_BOUNDMEMBER_THIS_R,rid,iid))
-#define asm_goperator(oid,n)          (ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),(oid) <= UINT8_MAX ? asm_putimm8_8(ASM_OPERATOR,(uint8_t)(oid),(uint8_t)(n)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16_8((ASM16_OPERATOR & 0xff),(uint16_t)(oid),(uint8_t)(n))))
+#define asm_goperator(oid,n)          (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp((n)+1),asm_incsp(),(oid) <= UINT8_MAX ? asm_putimm8_8(ASM_OPERATOR,(uint8_t)(oid),(uint8_t)(n)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16_8((ASM16_OPERATOR & 0xff),(uint16_t)(oid),(uint8_t)(n))))
 #define asm_goperator_tuple(oid)      (asm_ddicsp(),(oid) <= UINT8_MAX ? asm_putimm8(ASM_OPERATOR_TUPLE,(uint8_t)(oid)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16((ASM16_OPERATOR & 0xff),(uint16_t)(oid))))
 #define asm_genter()                  (asm_dicsp(),asm_put(ASM_ENTER))
 #define asm_gleave()                  (asm_decsp(),asm_put(ASM_LEAVE))
@@ -1418,12 +1418,12 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gsupercallattr_this_rc(rid,cid,n) (asm_subsp(n),asm_incsp(),asm_put16161616_8(ASM_SUPERCALLATTR_THIS_RC,ASM16_SUPERCALLATTR_THIS_RC,rid,cid,n))
 
 /* Call with keyword list instructions. */
-#define asm_gcall_kw(n,kwd_cid)                       (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put8_816(ASM_CALL_KW,n,kwd_cid))
+#define asm_gcall_kw(n,kwd_cid)                       (asm_subsp((n)+1),asm_incsp(),Dee_ASSERT((n)<=UINT8_MAX),asm_put8_816(ASM_CALL_KW,n,kwd_cid))
 #define asm_gcall_tuple_kw(kwd_cid)                   (asm_ddicsp(),asm_put816(ASM_CALL_TUPLE_KW,kwd_cid))
-#define asm_gcallattr_const_kw(att_cid,n,kwd_cid)     (asm_subsp((n)+1),asm_incsp(),ASSERT((n)<=UINT8_MAX),asm_put816_8_816(ASM_CALLATTR_C_KW,att_cid,n,kwd_cid))
+#define asm_gcallattr_const_kw(att_cid,n,kwd_cid)     (asm_subsp((n)+1),asm_incsp(),Dee_ASSERT((n)<=UINT8_MAX),asm_put816_8_816(ASM_CALLATTR_C_KW,att_cid,n,kwd_cid))
 #define asm_gcallattr_const_tuple_kw(att_cid,kwd_cid) (asm_ddicsp(),asm_put881616(ASM_CALLATTR_C_TUPLE_KW,att_cid,kwd_cid))
 #define asm_gcall_tuple_kwds()                        (asm_dddicsp(),asm_put16(ASM_CALL_TUPLE_KWDS))
-#define asm_gcallattr_kwds(n)                         (asm_subsp((n)+3),asm_incsp(),ASSERT((n)<=UINT8_MAX),(asm_put(ASM_EXTENDED1) || asm_putimm8(ASM_CALLATTR_KWDS & 0xff,(uint8_t)(n))))
+#define asm_gcallattr_kwds(n)                         (asm_subsp((n)+3),asm_incsp(),Dee_ASSERT((n)<=UINT8_MAX),(asm_put(ASM_EXTENDED1) || asm_putimm8(ASM_CALLATTR_KWDS & 0xff,(uint8_t)(n))))
 #define asm_gcallattr_tuple_kwds()                    (asm_ddddicsp(),asm_put16(ASM_CALLATTR_TUPLE_KWDS))
 
 /* Prefix instructions. */
@@ -1446,7 +1446,7 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_ginplace_or()             (asm_decsp(),asm_put(ASM_OR))
 #define asm_ginplace_xor()            (asm_decsp(),asm_put(ASM_XOR))
 #define asm_ginplace_pow()            (asm_decsp(),asm_put(ASM_POW))
-#define asm_ginplace_operator(oid,n)  (ASSERT((n) <= UINT8_MAX),asm_subsp(n),asm_incsp(),(oid) <= UINT8_MAX ? asm_putimm8_8(ASM_OPERATOR,(uint8_t)(oid),(uint8_t)(n)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16_8((ASM16_OPERATOR & 0xff),(uint16_t)(oid),(uint8_t)(n))))
+#define asm_ginplace_operator(oid,n)  (Dee_ASSERT((n) <= UINT8_MAX),asm_subsp(n),asm_incsp(),(oid) <= UINT8_MAX ? asm_putimm8_8(ASM_OPERATOR,(uint8_t)(oid),(uint8_t)(n)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16_8((ASM16_OPERATOR & 0xff),(uint16_t)(oid),(uint8_t)(n))))
 #define asm_ginplace_operator_tuple(oid) (asm_dicsp(),(oid) <= UINT8_MAX ? asm_putimm8(ASM_OPERATOR_TUPLE,(uint8_t)(oid)) : (asm_put((ASM16_OPERATOR & 0xff00) >> 8) || asm_putimm16((ASM16_OPERATOR & 0xff),(uint16_t)(oid))))
 
 /* Instructions only available after a Prefix instruction. */

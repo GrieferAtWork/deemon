@@ -775,7 +775,7 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(compiler_item_tp_alloc,compiler_item_tp_free)
+                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
             }
         },
         /* .tp_dtor        = */NULL,
@@ -4518,7 +4518,7 @@ INTERN DeeTypeObject DeeCompilerFile_Type = {
                 /* .tp_copy_ctor = */NULL,
                 /* .tp_deep_ctor = */NULL,
                 /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(compiler_item_tp_alloc,compiler_item_tp_free)
+                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
             }
         },
         /* .tp_dtor        = */NULL,

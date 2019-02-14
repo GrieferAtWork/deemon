@@ -59,15 +59,15 @@ STATIC_ASSERT(ERROR_PRINT_HANDLEINTR == ERROR_HANDLED_INTERRUPT);
 PUBLIC bool DCALL
 DeeError_Print(char const *reason, unsigned int handle_errors) {
  DeeThreadObject *thread_self = DeeThread_Self();
- DeeObject *error_object;
+ DeeObject *error_ob;
  if unlikely(!thread_self->t_except) return false;
- error_object = thread_self->t_except->ef_error;
+ error_ob = thread_self->t_except->ef_error;
 #ifndef CONFIG_NO_THREADS
  if (handle_errors != ERROR_PRINT_DOHANDLE ||
-    !DeeType_IsInterrupt(Dee_TYPE(error_object)))
+    !DeeType_IsInterrupt(Dee_TYPE(error_ob)))
 #endif
  {
-  DeeError_Display(reason,error_object,
+  DeeError_Display(reason,error_ob,
                   (DeeObject *)except_frame_gettb(thread_self->t_except));
  }
  /* If we're not supposed to handle any errors, then don't */
@@ -178,13 +178,13 @@ DeeError_Throwf(DeeTypeObject *__restrict tp,
  return result;
 }
 PUBLIC int DCALL
-DeeError_VSysThrowf(DeeTypeObject *__restrict tp, syserrno_t error,
+DeeError_VSysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
                     char const *__restrict format, va_list args) {
  (void)error; /* TODO */
  return DeeError_VThrowf(tp,format,args);
 }
 PUBLIC int
-DeeError_SysThrowf(DeeTypeObject *__restrict tp, syserrno_t error,
+DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
                    char const *__restrict format, ...) {
  va_list args; int result;
  va_start(args,format);

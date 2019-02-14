@@ -31,7 +31,7 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeInt_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeInt_CheckExact(ob); }
 public:
-    DEFINE_OBJECT_CONSTRUCTORS(int_,object)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(int_,object)
     int_() DEE_CXX_NOTHROW: object(nonnull((DeeObject *)&DeeInt_Zero)) { }
     int_(char value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewChar(value))) { }
     int_(signed char value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewSChar(value))) { }
@@ -46,8 +46,8 @@ public:
     int_(long long value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewLLong(value))) { }
     int_(unsigned long long value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewULLong(value))) { }
 #endif /* __COMPILER_HAVE_LONGLONG */
-    int_(dint128_t value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewS128(value))) { }
-    int_(duint128_t value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewU128(value))) { }
+    int_(Dee_int128_t value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewS128(value))) { }
+    int_(Dee_uint128_t value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewU128(value))) { }
 
 #ifndef __OPTIMIZE_SIZE__
     /* Optimized conversion operators (based on `DeeInt_AsS32()' and friends) */
@@ -68,21 +68,21 @@ public:
     int_ const &getval(long long &value) const { throw_if_nonzero(DeeInt_Check(this->ptr()) ? DeeInt_AsS(__SIZEOF_LONG_LONG__,*this,&value) : DeeObject_AsLLong(*this,&value)); return *this; }
     int_ const &getval(unsigned long long &value) const { throw_if_nonzero(DeeInt_Check(this->ptr()) ? DeeInt_AsU(__SIZEOF_LONG_LONG__,*this,&value) : DeeObject_AsULLong(*this,&value)); return *this; }
 #endif
-    int_ const &getval(dint128_t &value) const { throw_if_nonzero(DeeInt_Check(this->ptr()) ? DeeInt_AsS128(*this,&value) : DeeObject_AsInt128(*this,&value)); return *this; }
-    int_ const &getval(duint128_t &value) const { throw_if_nonzero(DeeInt_Check(this->ptr()) ? DeeInt_AsU128(*this,&value) : DeeObject_AsUInt128(*this,&value)); return *this; }
+    int_ const &getval(Dee_int128_t &value) const { throw_if_nonzero(DeeInt_Check(this->ptr()) ? DeeInt_AsS128(*this,&value) : DeeObject_AsInt128(*this,&value)); return *this; }
+    int_ const &getval(Dee_uint128_t &value) const { throw_if_nonzero(DeeInt_Check(this->ptr()) ? DeeInt_AsU128(*this,&value) : DeeObject_AsUInt128(*this,&value)); return *this; }
 
     WUNUSED int8_t ass8() const { int8_t result; getval(result); return result; }
     WUNUSED int16_t ass16() const { int16_t result; getval(result); return result; }
     WUNUSED int32_t ass32() const { int32_t result; getval(result); return result; }
     WUNUSED int64_t ass64() const { int64_t result; getval(result); return result; }
-    WUNUSED dint128_t ass128() const { dint128_t result; getval(result); return result; }
+    WUNUSED Dee_int128_t ass128() const { Dee_int128_t result; getval(result); return result; }
     WUNUSED uint8_t asu8() const { uint8_t result; getval(result); return result; }
     WUNUSED uint16_t asu16() const { uint16_t result; getval(result); return result; }
     WUNUSED uint32_t asu32() const { uint32_t result; getval(result); return result; }
     WUNUSED uint64_t asu64() const { uint64_t result; getval(result); return result; }
-    WUNUSED duint128_t asu128() const { duint128_t result; getval(result); return result; }
+    WUNUSED Dee_uint128_t asu128() const { Dee_uint128_t result; getval(result); return result; }
     WUNUSED size_t assize() const { size_t result; getval(result); return result; }
-    WUNUSED dssize_t asssize() const { dssize_t result; getval(result); return result; }
+    WUNUSED Dee_ssize_t asssize() const { Dee_ssize_t result; getval(result); return result; }
 
     /* Integer conversion operators */
     explicit WUNUSED operator char() const { char result; getval(result); return result; }
@@ -98,8 +98,8 @@ public:
     explicit WUNUSED operator long long() const { long long result; getval(result); return result; }
     explicit WUNUSED operator unsigned long long() const { unsigned long long result; getval(result); return result; }
 #endif
-    explicit WUNUSED operator dint128_t() const { dint128_t result; getval(result); return result; }
-    explicit WUNUSED operator duint128_t() const { duint128_t result; getval(result); return result; }
+    explicit WUNUSED operator Dee_int128_t() const { Dee_int128_t result; getval(result); return result; }
+    explicit WUNUSED operator Dee_uint128_t() const { Dee_uint128_t result; getval(result); return result; }
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
@@ -112,17 +112,17 @@ deemon::int_ detail::sequence_base::erase(size_t index, size_t count) const { re
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","o",index)); }
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index, size_t count) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","oIu",index,count)); }
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index, DeeObject *__restrict count) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","oo",index,count)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Id",end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, dssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdId",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, dssize_t end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, dssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, DeeObject *__restrict end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Ido",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, DeeObject *__restrict end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdoId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(dssize_t start, DeeObject *__restrict end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Idoo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, dssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oId",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, dssize_t end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, dssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, DeeObject *__restrict end, dssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","ooId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Id",end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdId",start,end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdo",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Ido",start,end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdoId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Idoo",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oId",start,end)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdId",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdo",start,end,step)); }
+sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","ooId",start,end,step)); }
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn,name) \
 Treturn (detail::sequence_base::name)(DeeObject *__restrict elem) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",elem)); } \
 Treturn (detail::sequence_base::name)(DeeObject *__restrict elem, DeeObject *__restrict key) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"oo",elem,key)); } \

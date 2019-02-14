@@ -30,27 +30,32 @@
 
 DECL_BEGIN
 
-typedef struct dict_object DeeDictObject;
+#ifdef DEE_SOURCE
+#define Dee_dict_item   dict_item
+#define Dee_dict_object dict_object
+#endif /* DEE_SOURCE */
 
-struct dict_item {
+typedef struct Dee_dict_object DeeDictObject;
+
+struct Dee_dict_item {
     DREF DeeObject *di_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
     DREF DeeObject *di_value; /* [1..1|if(di_key == dummy,0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
-    dhash_t         di_hash;  /* [valid_if(di_key)][lock(:d_lock)] Hash of `di_key' (with a starting value of `0').
+    Dee_hash_t      di_hash;  /* [valid_if(di_key)][lock(:d_lock)] Hash of `di_key' (with a starting value of `0').
                                *   NOTE: Some random value when `di_key' is the dummy key. */
 };
 
-struct dict_object {
-    OBJECT_HEAD /* GC Object */
-    size_t            d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
-    size_t            d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
-    size_t            d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
-                               *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
-    struct dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
-                               * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
+struct Dee_dict_object {
+    Dee_OBJECT_HEAD /* GC Object */
+    size_t                d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
+    size_t                d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
+    size_t                d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
+                                   *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
+    struct Dee_dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
+                                   * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t          d_lock; /* Lock used for accessing this dict. */
+    Dee_rwlock_t          d_lock; /* Lock used for accessing this dict. */
 #endif /* !CONFIG_NO_THREADS */
-    WEAKREF_SUPPORT
+    Dee_WEAKREF_SUPPORT
 };
 
 /* The main `dict' container class (and all related types):
@@ -83,16 +88,16 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_FromIterator(DeeObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF DREF DeeObject *DCALL DeeDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL DeeDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict def);
-INTDEF int DCALL DeeDict_DelItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-INTDEF int DCALL DeeDict_DelItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
-INTDEF int DCALL DeeDict_SetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict value);
-INTDEF int DCALL DeeDict_SetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict value);
-INTDEF bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-INTDEF bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF int DCALL DeeDict_DelItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF int DCALL DeeDict_DelItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF int DCALL DeeDict_SetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict value);
+INTDEF int DCALL DeeDict_SetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *__restrict value);
+INTDEF bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeDict_GetItemDef(self,key,def)                      DeeObject_GetItemDef(self,key,def)
 #define DeeDict_GetItemString(self,key,hash)                  DeeObject_GetItemString(self,key,hash)
@@ -114,11 +119,11 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_NewKeyItemsInherited(size_t num_keyitems, 
 
 /* The basic dictionary item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
- * >>     dhash_t i,perturb;
- * >>     dhash_t hash = DeeObject_Hash(0,key);
- * >>     perturb = i = DICT_HASHST(self,hash);
- * >>     for (;; i = DICT_HASHNX(i,perturb),DICT_HASHPT(perturb)) {
- * >>          struct dict_item *item = DICT_HASHIT(self,i);
+ * >>     Dee_hash_t i,perturb;
+ * >>     Dee_hash_t hash = DeeObject_Hash(0,key);
+ * >>     perturb = i = DeeDict_HashSt(self,hash);
+ * >>     for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
+ * >>          struct Dee_dict_item *item = DeeDict_HashIt(self,i);
  * >>          if (!item->di_key) break; // Not found
  * >>          if (item->di_hash != hash) continue; // Non-matching hash
  * >>          if (DeeObject_CompareEq(key,item->di_key))
@@ -127,7 +132,7 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_NewKeyItemsInherited(size_t num_keyitems, 
  * >>     return NULL;
  * >> }
  * Requirements to prevent an infinite loop:
- *   - `DICT_HASHNX()' must be able to eventually enumerate all integers `<= d_mask'
+ *   - `DeeDict_HashNx()' must be able to eventually enumerate all integers `<= d_mask'
  *   - `d_size' must always be lower than `d_mask', ensuring that at least one(1)
  *      entry exists that no value has been assigned to (Acting as a sentinel to
  *      terminate a search for an existing element).
@@ -138,26 +143,26 @@ DFUNDEF DREF DeeObject *DCALL DeeDict_NewKeyItemsInherited(size_t num_keyitems, 
  *       Yet the point here is, that this is similar to what python
  *       does for its dictionary lookup.
  */
-#define DICT_HASHST(self,hash)  ((hash) & ((DeeDictObject *)REQUIRES_OBJECT(self))->d_mask)
-#define DICT_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define DICT_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define DICT_HASHIT(self,i)     (((DeeDictObject *)REQUIRES_OBJECT(self))->d_elem+((i) & ((DeeDictObject *)REQUIRES_OBJECT(self))->d_mask))
+#define DeeDict_HashSt(self,hash)  ((hash) & ((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_mask)
+#define DeeDict_HashNx(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
+#define DeeDict_HashPt(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
+#define DeeDict_HashIt(self,i)     (((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_elem + ((i) & ((DeeDictObject *)(self))->d_mask))
 
 
 
 #ifndef CONFIG_NO_THREADS
-#define DeeDict_LockReading(x)    rwlock_reading(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockWriting(x)    rwlock_writing(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockTryread(x)    rwlock_tryread(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockTrywrite(x)   rwlock_trywrite(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockRead(x)       rwlock_read(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockWrite(x)      rwlock_write(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockUpgrade(x)    rwlock_upgrade(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockDowngrade(x)  rwlock_downgrade(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockEndWrite(x)   rwlock_endwrite(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockEndRead(x)    rwlock_endread(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
-#define DeeDict_LockEnd(x)        rwlock_end(&((DeeDictObject *)REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockReading(x)    Dee_rwlock_reading(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockWriting(x)    Dee_rwlock_writing(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockTryread(x)    Dee_rwlock_tryread(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockTrywrite(x)   Dee_rwlock_trywrite(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockRead(x)       Dee_rwlock_read(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockWrite(x)      Dee_rwlock_write(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockTryUpgrade(x) Dee_rwlock_tryupgrade(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockUpgrade(x)    Dee_rwlock_upgrade(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockDowngrade(x)  Dee_rwlock_downgrade(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockEndWrite(x)   Dee_rwlock_endwrite(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockEndRead(x)    Dee_rwlock_endread(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define DeeDict_LockEnd(x)        Dee_rwlock_end(&((DeeDictObject *)Dee_REQUIRES_OBJECT(x))->d_lock)
 #else
 #define DeeDict_LockReading(x)          1
 #define DeeDict_LockWriting(x)          1

@@ -102,7 +102,7 @@ struct xml_node_children {
  */
 
 struct xml_node {
-    ATOMIC_DATA dref_t      xn_refcnt;     /* Reference counter. */
+    ATOMIC_DATA Dee_ref_t   xn_refcnt;     /* Reference counter. */
 #ifndef CONFIG_NO_THREADS
     rwlock_t                xn_lock;       /* Lock for modifications made to this node. */
 #endif

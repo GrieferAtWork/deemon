@@ -18,7 +18,8 @@
  */
 #ifndef GUARD_DEX_XML_LIBXML_C
 #define GUARD_DEX_XML_LIBXML_C 1
-#define CONFIG_BUILDING_LIBXML
+#define CONFIG_BUILDING_LIBXML 1
+#define DEE_SOURCE 1
 
 #include "libxml.h"
 

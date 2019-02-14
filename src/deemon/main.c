@@ -1041,8 +1041,8 @@ int main(int argc, char *argv[]) {
        (interactive_output = DeeFile_GetStd(DEE_STDERR)) == NULL)
         goto err;
    interactive_module = DeeModule_OpenInteractiveString(interactive_input,
-                                                        MODULE_INTERACTIVE_MODE_FONLYBASEFILE|
-                                                        MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR,
+                                                        Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE|
+                                                        Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR,
                                                         0,
                                                         0,
                                                        &script_options,

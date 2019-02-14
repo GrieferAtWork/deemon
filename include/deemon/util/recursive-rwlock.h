@@ -22,43 +22,63 @@
 #include "../api.h"
 
 #ifdef CONFIG_NO_THREADS
-typedef int recursive_rwlock_t;
-#define RECURSIVE_RWLOCK_INIT                   0
-#define recursive_rwlock_cinit(self)      (void)0
-#define recursive_rwlock_init(self)       (void)0
-#define DEFINE_RECURSIVE_RWLOCK(name)      recursive_rwlock_t name = 0
-#define recursive_rwlock_reading(x)             1
-#define recursive_rwlock_writing(x)             1
-#define recursive_rwlock_tryread(self)          1
-#define recursive_rwlock_trywrite(self)         1
-#define recursive_rwlock_read(self)       (void)0
-#define recursive_rwlock_write(self)      (void)0
-#define recursive_rwlock_tryupgrade(self)       1
-#define recursive_rwlock_upgrade(self)          1
-#define recursive_rwlock_downgrade(self)  (void)0
-#define recursive_rwlock_endwrite(self)   (void)0
-#define recursive_rwlock_endread(self)    (void)0
-#define recursive_rwlock_end(self)        (void)0
+typedef int Dee_recursive_rwlock_t;
+#define Dee_RECURSIVE_RWLOCK_INIT                   0
+#define Dee_recursive_rwlock_cinit(self)      (void)0
+#define Dee_recursive_rwlock_init(self)       (void)0
+#define Dee_DEFINE_RECURSIVE_RWLOCK(name)      Dee_recursive_rwlock_t name = 0
+#define Dee_recursive_rwlock_reading(x)             1
+#define Dee_recursive_rwlock_writing(x)             1
+#define Dee_recursive_rwlock_tryread(self)          1
+#define Dee_recursive_rwlock_trywrite(self)         1
+#define Dee_recursive_rwlock_read(self)       (void)0
+#define Dee_recursive_rwlock_write(self)      (void)0
+#define Dee_recursive_rwlock_tryupgrade(self)       1
+#define Dee_recursive_rwlock_upgrade(self)          1
+#define Dee_recursive_rwlock_downgrade(self)  (void)0
+#define Dee_recursive_rwlock_endwrite(self)   (void)0
+#define Dee_recursive_rwlock_endread(self)    (void)0
+#define Dee_recursive_rwlock_end(self)        (void)0
 #else
 #include <hybrid/sync/atomic-owner-rwlock.h>
 
-typedef atomic_owner_rwlock_t recursive_rwlock_t;
-#define RECURSIVE_RWLOCK_INIT             ATOMIC_OWNER_RWLOCK_INIT
-#define recursive_rwlock_cinit(self)      atomic_owner_rwlock_cinit(self)
-#define recursive_rwlock_init(self)       atomic_owner_rwlock_init(self)
-#define DEFINE_RECURSIVE_RWLOCK(name)     DEFINE_ATOMIC_OWNER_RWLOCK(name)
-#define recursive_rwlock_reading(x)       atomic_owner_rwlock_reading(x)
-#define recursive_rwlock_writing(x)       atomic_owner_rwlock_writing(x)
-#define recursive_rwlock_tryread(self)    atomic_owner_rwlock_tryread(self)
-#define recursive_rwlock_trywrite(self)   atomic_owner_rwlock_trywrite(self)
-#define recursive_rwlock_read(self)       atomic_owner_rwlock_read(self)
-#define recursive_rwlock_write(self)      atomic_owner_rwlock_write(self)
-#define recursive_rwlock_tryupgrade(self) atomic_owner_rwlock_tryupgrade(self)
-#define recursive_rwlock_upgrade(self)    atomic_owner_rwlock_upgrade(self)
-#define recursive_rwlock_downgrade(self)  atomic_owner_rwlock_downgrade(self)
-#define recursive_rwlock_endwrite(self)   atomic_owner_rwlock_endwrite(self)
-#define recursive_rwlock_endread(self)    atomic_owner_rwlock_endread(self)
-#define recursive_rwlock_end(self)        atomic_owner_rwlock_end(self)
+typedef atomic_owner_rwlock_t Dee_recursive_rwlock_t;
+#define Dee_RECURSIVE_RWLOCK_INIT             ATOMIC_OWNER_RWLOCK_INIT
+#define Dee_recursive_rwlock_cinit(self)      atomic_owner_rwlock_cinit(self)
+#define Dee_recursive_rwlock_init(self)       atomic_owner_rwlock_init(self)
+#define Dee_DEFINE_RECURSIVE_RWLOCK(name)     DEFINE_ATOMIC_OWNER_RWLOCK(name)
+#define Dee_recursive_rwlock_reading(x)       atomic_owner_rwlock_reading(x)
+#define Dee_recursive_rwlock_writing(x)       atomic_owner_rwlock_writing(x)
+#define Dee_recursive_rwlock_tryread(self)    atomic_owner_rwlock_tryread(self)
+#define Dee_recursive_rwlock_trywrite(self)   atomic_owner_rwlock_trywrite(self)
+#define Dee_recursive_rwlock_read(self)       atomic_owner_rwlock_read(self)
+#define Dee_recursive_rwlock_write(self)      atomic_owner_rwlock_write(self)
+#define Dee_recursive_rwlock_tryupgrade(self) atomic_owner_rwlock_tryupgrade(self)
+#define Dee_recursive_rwlock_upgrade(self)    atomic_owner_rwlock_upgrade(self)
+#define Dee_recursive_rwlock_downgrade(self)  atomic_owner_rwlock_downgrade(self)
+#define Dee_recursive_rwlock_endwrite(self)   atomic_owner_rwlock_endwrite(self)
+#define Dee_recursive_rwlock_endread(self)    atomic_owner_rwlock_endread(self)
+#define Dee_recursive_rwlock_end(self)        atomic_owner_rwlock_end(self)
 #endif
+
+#ifdef DEE_SOURCE
+typedef Dee_recursive_rwlock_t recursive_rwlock_t;
+#define RECURSIVE_RWLOCK_INIT       Dee_RECURSIVE_RWLOCK_INIT
+#define recursive_rwlock_cinit      Dee_recursive_rwlock_cinit
+#define recursive_rwlock_init       Dee_recursive_rwlock_init
+#define DEFINE_RECURSIVE_RWLOCK     Dee_DEFINE_RECURSIVE_RWLOCK
+#define recursive_rwlock_reading    Dee_recursive_rwlock_reading
+#define recursive_rwlock_writing    Dee_recursive_rwlock_writing
+#define recursive_rwlock_tryread    Dee_recursive_rwlock_tryread
+#define recursive_rwlock_trywrite   Dee_recursive_rwlock_trywrite
+#define recursive_rwlock_read       Dee_recursive_rwlock_read
+#define recursive_rwlock_write      Dee_recursive_rwlock_write
+#define recursive_rwlock_tryupgrade Dee_recursive_rwlock_tryupgrade
+#define recursive_rwlock_upgrade    Dee_recursive_rwlock_upgrade
+#define recursive_rwlock_downgrade  Dee_recursive_rwlock_downgrade
+#define recursive_rwlock_endwrite   Dee_recursive_rwlock_endwrite
+#define recursive_rwlock_endread    Dee_recursive_rwlock_endread
+#define recursive_rwlock_end        Dee_recursive_rwlock_end
+#endif /* DEE_SOURCE */
 
 #endif /* !GUARD_DEEMON_UTIL_RECURSIVE_RWLOCK_H */

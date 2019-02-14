@@ -42,12 +42,12 @@ DECL_BEGIN
  * for custom notification callbacks, in addition to its name, a
  * notification class must be specified (which is not restricted
  * to those listed below). */
-#define NOTIFICATION_CLASS_FNOCASE     0x8000 /* FLAG: Callback names are case-insensitive. */
-#define NOTIFICATION_CLASS_FIDMASK     0x7fff /* MASK: The actual notification class ID. */
+#define Dee_NOTIFICATION_CLASS_FNOCASE     0x8000 /* FLAG: Callback names are case-insensitive. */
+#define Dee_NOTIFICATION_CLASS_FIDMASK     0x7fff /* MASK: The actual notification class ID. */
 #ifdef CONFIG_HOST_WINDOWS
-#define NOTIFICATION_CLASS_ENVIRON     0x8000 /* Environment variable. (The callback name is the variable name) */
+#define Dee_NOTIFICATION_CLASS_ENVIRON     0x8000 /* Environment variable. (The callback name is the variable name) */
 #else
-#define NOTIFICATION_CLASS_ENVIRON     0x0000 /* Environment variable. (The callback name is the variable name) */
+#define Dee_NOTIFICATION_CLASS_ENVIRON     0x0000 /* Environment variable. (The callback name is the variable name) */
 #endif
 
 
@@ -59,6 +59,15 @@ DECL_BEGIN
 DFUNDEF DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restrict name);
 
 
+#ifndef CONFIG_NO_DEX
+#define DEX_NOTIFICATION_ENVIRON(name)  { Dee_NOTIFICATION_CLASS_ENVIRON, \
+                                          Dee_DEX_NOTIFICATION_FNORMAL, \
+                                         (struct string_object *)&name##_envname, \
+                                         &name##_notify, NULL }
+#define DEX_NOTIFICATION_END            { 0, 0, NULL, NULL, NULL }
+#endif /* !CONFIG_NO_DEX */
+
+
 #define DECLARE_NOTIFY_ENVIRON_INTEGER(T,name) \
 INTDEF T name##_value; \
 INTDEF bool name##_loaded; \
@@ -67,15 +76,20 @@ INTDEF int DCALL name##_notify(DeeObject *UNUSED(arg)); \
 INTDEF int DCALL name##_get(T *__restrict result);
 
 
-#ifndef CONFIG_NO_DEX
-#define DEX_NOTIFICATION_ENVIRON(name)  { NOTIFICATION_CLASS_ENVIRON, \
-                                          DEX_NOTIFICATION_FNORMAL, \
-                                         (struct string_object *)&name##_envname, \
-                                         &name##_notify, NULL }
-#define DEX_NOTIFICATION_END            { 0, 0, NULL, NULL, NULL }
-#endif /* !CONFIG_NO_DEX */
 
-
+/* >> DEFINE_NOTIFY_ENVIRON_INTEGER(int,my_envint,7,"MY_ENVINT");
+ * >> DREF DeeObject *DCALL
+ * >> get_my_envint(size_t argc, DeeObject **__restrict argv) {
+ * >>     int result;
+ * >>     if (DeeArg_Unpack(argc,argv,":get_my_envint"))
+ * >>         goto err;
+ * >>     if (my_envint_get(&result))
+ * >>         goto err;
+ * >>     return DeeInt_NewInt(result);
+ * >> err:
+ * >>     return NULL;
+ * >> }
+ */
 #define DEFINE_NOTIFY_ENVIRON_INTEGER(T,name,default,environ_name) \
 INTERN T name##_value = (default); \
 INTERN bool name##_loaded = false; \
@@ -124,7 +138,7 @@ err: \
 
 /* @return:  0: Successfully handled the notification.
  * @return: -1: An error occurred and should be propagated. */
-typedef int (DCALL *dnotify_t)(DeeObject *arg);
+typedef int (DCALL *Dee_notify_t)(DeeObject *arg);
 
 /* Add/remove a notification listener for a given class and name.
  * @param:  arg: When non-NULL, an object to which the internal
@@ -138,8 +152,8 @@ typedef int (DCALL *dnotify_t)(DeeObject *arg);
  *               and `name' with the same `arg' and was not registered again / removed.
  * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen').
  * WARNING: Notifications may be invoked more than once if added from a notification callback. */
-DFUNDEF int (DCALL DeeNotify_BeginListen)(uint16_t cls, DeeObject *__restrict name, dnotify_t callback, DeeObject *arg);
-DFUNDEF int (DCALL DeeNotify_EndListen)(uint16_t cls, DeeObject *__restrict name, dnotify_t callback, DeeObject *arg);
+DFUNDEF int (DCALL DeeNotify_BeginListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
+DFUNDEF int (DCALL DeeNotify_EndListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
 
 /* Broadcast a change notification for the given class `cls' and `name'
  * NOTE: The caller is responsible for passing a string for `name'

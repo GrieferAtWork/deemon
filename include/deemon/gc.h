@@ -29,21 +29,28 @@
 
 DECL_BEGIN
 
-struct gc_head_raw {
+#ifdef DEE_SOURCE
+#define Dee_gc_head_raw gc_head_raw
+#define Dee_gc_head     gc_head
+#endif /* DEE_SOURCE */
+
+
+struct Dee_gc_head;
+struct Dee_gc_head_raw {
     /* The structure that is prefixed before every GC-allocated object. */
-    struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
-    struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+    struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+    struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
 };
-struct gc_head {
-    struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
-    struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-    DeeObject        gc_object; /* The object that is being controlled by the GC. */
+struct Dee_gc_head {
+    struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+    struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+    DeeObject            gc_object; /* The object that is being controlled by the GC. */
 };
-#define GC_OBJECT_OFFSET  COMPILER_OFFSETOF(struct gc_head,gc_object)
-#define GC_HEAD_SIZE      COMPILER_OFFSETOF(struct gc_head,gc_object)
-#define DeeGC_Head(ob)   ((struct gc_head *)((uintptr_t)REQUIRES_OBJECT(ob)-GC_OBJECT_OFFSET))
+#define DEE_GC_OBJECT_OFFSET  COMPILER_OFFSETOF(struct gc_head,gc_object)
+#define DEE_GC_HEAD_SIZE      COMPILER_OFFSETOF(struct gc_head,gc_object)
+#define DeeGC_Head(ob)   ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_OBJECT(ob) - DEE_GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob) (&(ob)->gc_object)
-#define DeeGC_Check(ob)  (Dee_TYPE(ob)->tp_flags&TP_FGC && (!DeeType_Check(ob) || (((DeeTypeObject *)REQUIRES_OBJECT(ob))->tp_flags&TP_FHEAP)))
+#define DeeGC_Check(ob)  ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (((DeeTypeObject *)Dee_REQUIRES_OBJECT(ob))->tp_flags & TP_FHEAP)))
 
 /* Begin/end tracking a given GC-allocated object.
  * `DeeGC_Track()' must be called explicitly when the object
@@ -102,15 +109,15 @@ DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 #define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
 #define DeeGCObject_FFree(ptr,size) (DeeGCObject_Free(ptr),(void)(size))
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DEFINE_SLAB_FUNCTIONS(size) \
+#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabMalloc##size)(void); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
 DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr); \
 /**/
-DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_FUNCTIONS)
-#undef DEFINE_SLAB_FUNCTIONS
+DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
+#undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
 #define DeeGCObject_FMalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabMalloc,size,(),DeeGCObject_Malloc(size))
 #define DeeGCObject_FCalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabCalloc,size,(),DeeGCObject_Calloc(size))
 #define DeeGCObject_FTryMalloc(size) DeeSlab_Invoke(DeeGCObject_SlabTryMalloc,size,(),DeeGCObject_TryMalloc(size))

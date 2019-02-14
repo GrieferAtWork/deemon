@@ -31,7 +31,7 @@ public:
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeSuper_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeSuper_CheckExact(ob); }
 public:
-    DEFINE_OBJECT_CONSTRUCTORS(super,object)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(super,object)
     super(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self)
         : object(inherit(DeeSuper_New(tp_self,self))) {}
     deemon::type<object> supertype() const;

@@ -461,7 +461,7 @@ PRIVATE struct type_seq bcs_seq = {
 PRIVATE DREF DeeObject *DCALL
 bs_getsep(BytesSplit *__restrict self) {
  return DeeBytes_NewView(self->bs_sep_owner ? self->bs_sep_owner : (DeeObject *)self,
-                         self->bs_sep_ptr,self->bs_sep_len,DEE_BUFFER_FREADONLY);
+                         self->bs_sep_ptr,self->bs_sep_len,Dee_BUFFER_FREADONLY);
 }
 
 PRIVATE struct type_getset bs_getsets[] = {

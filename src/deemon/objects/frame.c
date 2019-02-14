@@ -169,7 +169,7 @@ print_ddi(struct ascii_printer *__restrict printer,
    if unlikely(print_error < 0) break;
   }
   DDI_STATE_WHILE(iter,&state);
-  ddi_state_fini(&state);
+  Dee_ddi_state_fini(&state);
  }
  return print_error;
 }
@@ -306,7 +306,7 @@ frame_getlocation(Frame *__restrict self) {
  }
  DDI_STATE_WHILE(iter,&state);
  ASSERT(i == count);
- ddi_state_fini(&state);
+ Dee_ddi_state_fini(&state);
  Dee_Decref(code);
  return result;
 err_state_r_fileob:
@@ -316,7 +316,7 @@ err_state_r:
      Dee_Decref(DeeTuple_GET(result,i));
  DeeTuple_FreeUninitialized(result);
 err_state:
- ddi_state_fini(&state);
+ Dee_ddi_state_fini(&state);
  Dee_Decref(code);
 err:
  return NULL;
@@ -341,7 +341,7 @@ frame_getfile(Frame *__restrict self) {
    result = DeeString_Newf("%s" TRACEBACK_SLASH "%s",temp,file);
   }
  }
- ddi_state_fini(&state);
+ Dee_ddi_state_fini(&state);
  Dee_Decref(code);
  return result;
 err:
@@ -358,7 +358,7 @@ frame_getline(Frame *__restrict self) {
  if (code == (DREF DeeCodeObject *)ITER_DONE)
      return_none;
  result = DeeInt_NewInt(state.rs_regs.dr_lno);
- ddi_state_fini(&state);
+ Dee_ddi_state_fini(&state);
  Dee_Decref(code);
  return result;
 err:
@@ -375,7 +375,7 @@ frame_getcol(Frame *__restrict self) {
  if (code == (DREF DeeCodeObject *)ITER_DONE)
      return_none;
  result = DeeInt_NewInt(state.rs_regs.dr_col);
- ddi_state_fini(&state);
+ Dee_ddi_state_fini(&state);
  Dee_Decref(code);
  return result;
 err:
@@ -393,7 +393,7 @@ frame_getname(Frame *__restrict self) {
     (name = DeeCode_GetDDIString((DeeObject *)code,state.rs_regs.dr_name)) == NULL)
      return_none;
  result = DeeString_New(name);
- ddi_state_fini(&state);
+ Dee_ddi_state_fini(&state);
  Dee_Decref(code);
  return result;
 err:

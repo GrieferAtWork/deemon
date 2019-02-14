@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_JIT_ERROR_C
 #define GUARD_DEX_JIT_ERROR_C 1
+#define DEE_SOURCE 1
 
 #include "libjit.h"
 #include <deemon/error.h>

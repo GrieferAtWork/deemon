@@ -59,6 +59,7 @@ PUBLIC ATTR_PURE size_t
 #endif
 
 
+#ifndef UNICODE_FPRINT
 #define UNICODE_FPRINT   0x0001
 #define UNICODE_FALPHA   0x0002
 #define UNICODE_FSPACE   0x0004
@@ -71,6 +72,7 @@ PUBLIC ATTR_PURE size_t
 #define UNICODE_FDECIMAL 0x0200
 #define UNICODE_FSYMSTRT 0x0400
 #define UNICODE_FSYMCONT 0x0800
+#endif /* !UNICODE_FPRINT */
 
 PUBLIC uniflag_t const DeeAscii_Flags[256] = {
 /*[[[deemon

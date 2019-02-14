@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_FS_WINDOWS_C_INL
 #define GUARD_DEX_FS_WINDOWS_C_INL 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
 #include "libfs.h"
@@ -1008,7 +1009,7 @@ fs_delenv(DeeObject *__restrict name) {
   goto err;
  }
  DBG_ALIGNMENT_ENABLE();
- return DeeNotify_Broadcast(NOTIFICATION_CLASS_ENVIRON,name);
+ return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON,name);
 err:
  return -1;
 }
@@ -1039,7 +1040,7 @@ again_setenv:
  }
  DBG_ALIGNMENT_ENABLE();
  /* Broadcast an environ-changed notification. */
- return DeeNotify_Broadcast(NOTIFICATION_CLASS_ENVIRON,name);
+ return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON,name);
 err:
  return -1;
 }

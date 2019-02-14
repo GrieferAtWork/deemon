@@ -44,78 +44,102 @@
 
 DECL_BEGIN
 
-typedef struct file_object DeeFileObject;
-typedef struct filetype_object DeeFileTypeObject;
+#ifdef DEE_SOURCE
+#define Dee_file_object        file_object
+#define Dee_filetype_object    filetype_object
+#define FILE_OBJECT_HEAD       Dee_FILE_OBJECT_HEAD
+#define FILE_OBJECT_HEAD_INIT  Dee_FILE_OBJECT_HEAD_INIT
+#define LFILE_OBJECT_HEAD      Dee_LFILE_OBJECT_HEAD
+#define LFILE_OBJECT_HEAD_INIT Dee_LFILE_OBJECT_HEAD_INIT
+#endif /* DEE_SOURCE */
 
-#define DEE_FILEIO_FNORMAL      0x0000 /* Normal I/O flags. */
-#define DEE_FILEIO_FNONBLOCKING 0x0001 /* Do not block when reading/writing data. */
-typedef unsigned int dioflag_t; /* Set of `DEE_FILEIO_F*' */
+
+typedef struct Dee_file_object DeeFileObject;
+typedef struct Dee_filetype_object DeeFileTypeObject;
+
+#define Dee_FILEIO_FNORMAL      0x0000 /* Normal I/O flags. */
+#define Dee_FILEIO_FNONBLOCKING 0x0001 /* Do not block when reading/writing data. */
+typedef unsigned int Dee_ioflag_t; /* Set of `Dee_FILEIO_F*' */
+#ifdef DEE_SOURCE
+typedef Dee_ioflag_t dioflag_t;
+#endif /* DEE_SOURCE */
 
 
-struct file_object {
-    OBJECT_HEAD_EX(DeeFileTypeObject)
-#define FILE_OBJECT_HEAD                OBJECT_HEAD_EX(DeeFileTypeObject)
-#define FILE_OBJECT_HEAD_INIT(type)     OBJECT_HEAD_INIT(type)
-#define DeeFileObject_Init(self,type)  (DeeObject_Init(self,type))
+struct Dee_file_object {
+    Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
+#define Dee_FILE_OBJECT_HEAD             Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
+#define Dee_FILE_OBJECT_HEAD_INIT(type)  Dee_OBJECT_HEAD_INIT(type)
+#define DeeFileObject_Init(self,type)   (DeeObject_Init(self,type))
 #ifdef CONFIG_NO_THREADS
-#define FILE_OBJECT_HEADL               OBJECT_HEAD_EX(DeeFileTypeObject)
-#define FILE_OBJECT_HEADL_INIT(type)    OBJECT_HEAD_INIT(type)
-#define DeeFileObject_InitL(self,type) (DeeObject_Init(self,type))
-#define DeeFile_LockRead(self)         (void)0
-#define DeeFile_LockWrite(self)        (void)0
-#define DeeFile_LockEndRead(self)      (void)0
-#define DeeFile_LockEndWrite(self)     (void)0
-#define DeeFile_TryLockRead(self)            1
-#define DeeFile_TryLockWrite(self)           1
+#define Dee_FILE_OBJECT_HEADL            Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
+#define Dee_FILE_OBJECT_HEADL_INIT(type) Dee_OBJECT_HEAD_INIT(type)
+#define DeeFileObject_InitL(self,type)  (DeeObject_Init(self,type))
+#define DeeFile_LockRead(self)          (void)0
+#define DeeFile_LockWrite(self)         (void)0
+#define DeeFile_LockEndRead(self)       (void)0
+#define DeeFile_LockEndWrite(self)      (void)0
+#define DeeFile_TryLockRead(self)             1
+#define DeeFile_TryLockWrite(self)            1
 #else
-#define LFILE_OBJECT_HEAD               OBJECT_HEAD_EX(DeeFileTypeObject) rwlock_t fo_lock;
-#define LFILE_OBJECT_HEAD_INIT(type)    OBJECT_HEAD_INIT(type),RWLOCK_INIT
-#define DeeLFileObject_Init(self,type) (DeeObject_Init(self,type),rwlock_init(&(self)->fo_lock))
-#define DeeFile_LockRead(self)          rwlock_read(&(self)->fo_lock)
-#define DeeFile_LockWrite(self)         rwlock_write(&(self)->fo_lock)
-#define DeeFile_LockEndRead(self)       rwlock_endread(&(self)->fo_lock)
-#define DeeFile_LockEndWrite(self)      rwlock_endwrite(&(self)->fo_lock)
-#define DeeFile_TryLockRead(self)       rwlock_tryread(&(self)->fo_lock)
-#define DeeFile_TryLockWrite(self)      rwlock_trywrite(&(self)->fo_lock)
+#define Dee_LFILE_OBJECT_HEAD            Dee_OBJECT_HEAD_EX(DeeFileTypeObject) Dee_rwlock_t fo_lock;
+#define Dee_LFILE_OBJECT_HEAD_INIT(type) Dee_OBJECT_HEAD_INIT(type),RWLOCK_INIT
+#define DeeLFileObject_Init(self,type)  (DeeObject_Init(self,type),rwlock_init(&(self)->fo_lock))
+#define DeeFile_LockRead(self)           Dee_rwlock_read(&(self)->fo_lock)
+#define DeeFile_LockWrite(self)          Dee_rwlock_write(&(self)->fo_lock)
+#define DeeFile_LockEndRead(self)        Dee_rwlock_endread(&(self)->fo_lock)
+#define DeeFile_LockEndWrite(self)       Dee_rwlock_endwrite(&(self)->fo_lock)
+#define DeeFile_TryLockRead(self)        Dee_rwlock_tryread(&(self)->fo_lock)
+#define DeeFile_TryLockWrite(self)       Dee_rwlock_trywrite(&(self)->fo_lock)
 #endif
 };
 
 /* The underlying system file descriptor type. */
 #ifdef CONFIG_HOST_WINDOWS
-#define DSYSFD_SIZEOF    __SIZEOF_POINTER__
-#define DSYSFD_CLOSE(x) CloseHandle(x)
+#define Dee_SYSFD_SIZEOF    __SIZEOF_POINTER__
+#define Dee_SYSFD_CLOSE(x) CloseHandle(x)
 #ifdef INVALID_HANDLE_VALUE
-#define DSYSFD_INVALID  INVALID_HANDLE_VALUE
+#define Dee_SYSFD_INVALID  INVALID_HANDLE_VALUE
 #else
-#define DSYSFD_INVALID  ((dsysfd_t)-1)
+#define Dee_SYSFD_INVALID  ((Dee_sysfd_t)-1)
 #endif
 #if defined(_WINNT_) || defined(__wtypes_h__) || defined(__wtypesbase_h__)
-typedef HANDLE dsysfd_t;
+typedef HANDLE Dee_sysfd_t;
 #else
-typedef void  *dsysfd_t;
+typedef void  *Dee_sysfd_t;
 #endif
 #elif defined(CONFIG_HOST_UNIX)
-#define DSYSFD_SIZEOF    __SIZEOF_INT__
-#define DSYSFD_SIGNED    1
-#define DSYSFD_INVALID  (-1)
-typedef int    dsysfd_t; /* File descriptor number. */
-#define DSYSFD_CLOSE(x) close(x)
+#define Dee_SYSFD_SIZEOF    __SIZEOF_INT__
+#define Dee_SYSFD_SIGNED    1
+#define Dee_SYSFD_INVALID  (-1)
+typedef int    Dee_sysfd_t; /* File descriptor number. */
+#define Dee_SYSFD_CLOSE(x) close(x)
 #elif !defined(CONFIG_NO_STDIO)
 #define CONFIG_NATIVE_STD_FILES_ARE_BUFFERED  1 /* Config: The native STD streams are already buffered */
 #define CONFIG_FILENO_DENY_ARBITRARY_INTEGERS 1
-#define DSYSFD_SIZEOF    __SIZEOF_POINTER__
-#define DSYSFD_INVALID  (NULL)
-typedef FILE  *dsysfd_t;
-#define DSYSFD_CLOSE(x) fclose(x)
+#define Dee_SYSFD_SIZEOF    __SIZEOF_POINTER__
+#define Dee_SYSFD_INVALID  (NULL)
+typedef FILE  *Dee_sysfd_t;
+#define Dee_SYSFD_CLOSE(x) fclose(x)
 #else
 #define CONFIG_NATIVE_STD_FILES_ARE_BUFFERED  1 /* They're not, but this option prevents the creation
                                                  * of additional buffers that wouldn't do anything. */
-#define DSYSFD_CLOSE(x) (void)0
-#define DSYSFD_SIGNED    1
-#define DSYSFD_INVALID  (-1)
-#define DSYSFD_SIZEOF    __SIZEOF_INT__
-typedef int    dsysfd_t; /* placeholder. - Always -1 */
+#define Dee_SYSFD_CLOSE(x) (void)0
+#define Dee_SYSFD_SIGNED    1
+#define Dee_SYSFD_INVALID  (-1)
+#define Dee_SYSFD_SIZEOF    __SIZEOF_INT__
+typedef int    Dee_sysfd_t; /* placeholder. - Always -1 */
 #endif
+
+#ifdef DEE_SOURCE
+#define DSYSFD_SIZEOF  Dee_SYSFD_SIZEOF
+#define DSYSFD_CLOSE   Dee_SYSFD_CLOSE
+#define DSYSFD_INVALID Dee_SYSFD_INVALID
+#ifdef Dee_SYSFD_SIGNED
+#define DSYSFD_SIGNED    1
+#endif
+typedef Dee_sysfd_t dsysfd_t;
+#endif /* DEE_SOURCE */
+
 
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 #ifdef DSYSFD_SIGNED
@@ -126,6 +150,7 @@ typedef int    dsysfd_t; /* placeholder. - Always -1 */
 #endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 
 
+#ifdef DEE_SOURCE
 /* The object passed to the `write' operator is an implementation-specific
  * buffer object that must implement at least `operator str', allowing it
  * to be converted to a byte (UTF-8) encoded string.
@@ -146,29 +171,30 @@ typedef int    dsysfd_t; /* placeholder. - Always -1 */
 #define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009)
 #define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a)
 #define FILE_OPERATOR_COUNT                    0x000b
+#endif /* DEE_SOURCE */
 
-struct filetype_object {
-    DeeTypeObject    ft_base; /* Underlying type. */
+struct Dee_filetype_object {
+    DeeTypeObject       ft_base; /* Underlying type. */
     /* File operators. (Ignored unless the `TF_HASFILEOPS' feature bit is set) */
-    dssize_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, dioflag_t flags);
-    dssize_t (DCALL *ft_write)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, dioflag_t flags);
+    Dee_ssize_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+    Dee_ssize_t (DCALL *ft_write)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
     /* @param: whence: One of `SEEK_*' from `<stdio.h>' */
-    doff_t   (DCALL *ft_seek)(DeeFileObject *__restrict self, doff_t off, int whence);
-    int      (DCALL *ft_sync)(DeeFileObject *__restrict self);
-    int      (DCALL *ft_trunc)(DeeFileObject *__restrict self, dpos_t size);
-    int      (DCALL *ft_close)(DeeFileObject *__restrict self);
-    dssize_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, dpos_t pos, dioflag_t flags);
-    dssize_t (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, dpos_t pos, dioflag_t flags);
+    Dee_off_t   (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
+    int         (DCALL *ft_sync)(DeeFileObject *__restrict self);
+    int         (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
+    int         (DCALL *ft_close)(DeeFileObject *__restrict self);
+    Dee_ssize_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+    Dee_ssize_t (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 #define GETC_EOF (-1)
 #define GETC_ERR (-2)
     /* Read and return one byte, or `GETC_EOF' for EOF and `GETC_ERR' if an error occurred. */
-    int      (DCALL *ft_getc)(DeeFileObject *__restrict self, dioflag_t flags);
+    int         (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
     /* Return a previous read byte. (Required for implementing scanf())
      * NOTE: The return value of this function is `GETC_EOF' for EOF, `GETC_ERR' for errors, and `0' for success. */
-    int      (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
+    int         (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
     /* Write a single byte to the file.
      * NOTE: The return value of this function is `GETC_EOF' for EOF, `GETC_ERR' for errors, and `0' for success. */
-    int      (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, dioflag_t flags);
+    int         (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 };
 
 /* The type object for file types.
@@ -219,33 +245,33 @@ DDATDEF DeeFileTypeObject DeeFileBuffer_Type;
 
 
 /* File operator invocation. */
-DFUNDEF dssize_t DCALL DeeFile_Read(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
-DFUNDEF dssize_t DCALL DeeFile_Readf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, dioflag_t flags);
-DFUNDEF dssize_t DCALL DeeFile_Write(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
-DFUNDEF dssize_t DCALL DeeFile_Writef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, dioflag_t flags);
-DFUNDEF dssize_t DCALL DeeFile_PRead(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, dpos_t pos);
-DFUNDEF dssize_t DCALL DeeFile_PReadf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, dpos_t pos, dioflag_t flags);
-DFUNDEF dssize_t DCALL DeeFile_PWrite(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, dpos_t pos);
-DFUNDEF dssize_t DCALL DeeFile_PWritef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, dpos_t pos, dioflag_t flags);
+DFUNDEF Dee_ssize_t DCALL DeeFile_Read(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
+DFUNDEF Dee_ssize_t DCALL DeeFile_Readf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+DFUNDEF Dee_ssize_t DCALL DeeFile_Write(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
+DFUNDEF Dee_ssize_t DCALL DeeFile_Writef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+DFUNDEF Dee_ssize_t DCALL DeeFile_PRead(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF Dee_ssize_t DCALL DeeFile_PReadf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+DFUNDEF Dee_ssize_t DCALL DeeFile_PWrite(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF Dee_ssize_t DCALL DeeFile_PWritef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 /* Similar to functions above, but re-attempt to read/write until an error, or EOF.
  * >> Useful for unbuffered input/output streams that can only process data at a specific rate. */
-DFUNDEF dssize_t DCALL DeeFile_ReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
-DFUNDEF dssize_t DCALL DeeFile_WriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
-DFUNDEF dssize_t DCALL DeeFile_PReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, dpos_t pos);
-DFUNDEF dssize_t DCALL DeeFile_PWriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, dpos_t pos);
+DFUNDEF Dee_ssize_t DCALL DeeFile_ReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
+DFUNDEF Dee_ssize_t DCALL DeeFile_WriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
+DFUNDEF Dee_ssize_t DCALL DeeFile_PReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF Dee_ssize_t DCALL DeeFile_PWriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
 /* @throw NotImplemented: The file does not support seeking. */
-DFUNDEF doff_t DCALL DeeFile_Seek(DeeObject *__restrict self, doff_t off, int whence);
+DFUNDEF Dee_off_t DCALL DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence);
 #define DeeFile_Tell(self) DeeFile_Seek(self,0,SEEK_CUR)
 #define DeeFile_Rewind(self) DeeFile_Seek(self,0,SEEK_SET)
 DFUNDEF int DCALL DeeFile_Sync(DeeObject *__restrict self);
-DFUNDEF int DCALL DeeFile_Trunc(DeeObject *__restrict self, dpos_t size);
-DFUNDEF int DCALL DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize);
+DFUNDEF int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
+DFUNDEF int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *psize);
 DFUNDEF int DCALL DeeFile_Close(DeeObject *__restrict self);
 DFUNDEF int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: GETC_ERR: Error */
-DFUNDEF int DCALL DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags); /* @return: GETC_ERR: Error */
+DFUNDEF int DCALL DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: GETC_ERR: Error */
 DFUNDEF int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch); /* @return: GETC_ERR: Error */
 DFUNDEF int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch); /* @return: GETC_ERR: Error */
-DFUNDEF int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags); /* @return: GETC_ERR: Error */
+DFUNDEF int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: GETC_ERR: Error */
 
 /* Returns the total size of a given file stream.
  * If the file doesn't support retrieval of its
@@ -254,8 +280,8 @@ DFUNDEF int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t fl
  *       which file objects default-implement by temporarily seeking to the
  *       end of the file and determining where that position is located at.
  * @return: * : The size of the given file `self' in bytes.
- * @return: -1: An error occurred. */
-DFUNDEF dpos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
+ * @return: (Dee_pos_t)-1: An error occurred. */
+DFUNDEF Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
 
 /* Check if the given file is an interactive device.
  * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
@@ -281,7 +307,7 @@ DFUNDEF int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
  *       without throwing an error, and always returns that
  *       value when an error was thrown.
  * #endif */
-DFUNDEF dsysfd_t DCALL DeeFile_Fileno(DeeObject *__restrict self);
+DFUNDEF Dee_sysfd_t DCALL DeeFile_Fileno(DeeObject *__restrict self);
 
 /* Retrieve and return the filename used to open the given file.
  * NOTE: This function automatically asserts that `self'
@@ -311,12 +337,12 @@ DFUNDEF DREF /*String*/DeeObject *DCALL DeeFile_Filename(DeeObject *__restrict s
  * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
 DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_ReadLine(DeeObject *__restrict self, size_t max_length, bool keep_lf);
 DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_ReadText(DeeObject *__restrict self, size_t max_length, bool readall);
-DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, dpos_t pos, bool readall);
+DFUNDEF DREF /*Bytes*/DeeObject *DCALL DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
 
 
 /* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll,self,format,...)' */
-DFUNDEF dssize_t DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);
-DFUNDEF dssize_t DCALL DeeFile_VPrintf(DeeObject *__restrict self, char const *__restrict format, va_list args);
+DFUNDEF Dee_ssize_t DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);
+DFUNDEF Dee_ssize_t DCALL DeeFile_VPrintf(DeeObject *__restrict self, char const *__restrict format, va_list args);
 
 
 /* Print text to a given file, implementing behavior of the print statement. */
@@ -341,25 +367,46 @@ DFUNDEF int DCALL DeeFile_PrintAllNl(DeeObject *__restrict self, DeeObject *__re
  * @return: ITER_DONE: `OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
 DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode);
 DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_OpenString(char const *__restrict filename, int oflags, int mode);
-#define OPEN_FRDONLY   0x00000000 /* Open only for reading. */
-#define OPEN_FWRONLY   0x00000001 /* Open only for writing. */
-#define OPEN_FRDWR     0x00000002 /* Open for reading + writing. */
-#define OPEN_FACCMODE  0x00000003 /* Mask for read/write access. */
-#define OPEN_FCREAT    0x00000040 /* Create the file if it was missing. */
-#define OPEN_FEXCL     0x00000080 /* Used with `OPEN_FCREAT': Fail if file already exists. */
-#define OPEN_FTRUNC    0x00000200 /* Truncate existing files. */
-#define OPEN_FAPPEND   0x00000400 /* Append to the end of files. */
-#define OPEN_FNONBLOCK 0x00000800 /* Don't block when attempting to read/write (Ignored if the host doesn't support this) */
-#define OPEN_FSYNC     0x00001000 /* Write operations block until all data has been written to disk (Ignored if the host doesn't support this) */
-#define OPEN_FDIRECT   0x00004000 /* Bypass system buffers and directly pass data to the kernel when writing (Ignored if the host doesn't support this) */
-#define OPEN_FNOFOLLOW 0x00020000 /* Do not follow symbolic links (Ignored if the host doesn't support this) */
-#define OPEN_FNOATIME  0x00040000 /* Do not update access times (Ignored if the host doesn't support this) */
-#define OPEN_FCLOEXEC  0x00080000 /* Do not inherit the file in child processes (Ignored if the host doesn't support this) */
-#define OPEN_FXREAD    0x10000000 /* Request exclusive read access (Ignored if the host doesn't support this) */
-#define OPEN_FXWRITE   0x20000000 /* Request exclusive write access (Ignored if the host doesn't support this)
-                                   * HINT: This flag is used for opening files for `deemon -F' to prevent
-                                   *       other processes from modifying the file at the same time. */
-#define OPEN_FHIDDEN   0x80000000 /* If the host's file system implements a hidden-file attribute, set it when creating a new file. */
+
+#define Dee_OPEN_FRDONLY   0x00000000 /* Open only for reading. */
+#define Dee_OPEN_FWRONLY   0x00000001 /* Open only for writing. */
+#define Dee_OPEN_FRDWR     0x00000002 /* Open for reading + writing. */
+#define Dee_OPEN_FACCMODE  0x00000003 /* Mask for read/write access. */
+#define Dee_OPEN_FCREAT    0x00000040 /* Create the file if it was missing. */
+#define Dee_OPEN_FEXCL     0x00000080 /* Used with `OPEN_FCREAT': Fail if file already exists. */
+#define Dee_OPEN_FTRUNC    0x00000200 /* Truncate existing files. */
+#define Dee_OPEN_FAPPEND   0x00000400 /* Append to the end of files. */
+#define Dee_OPEN_FNONBLOCK 0x00000800 /* Don't block when attempting to read/write (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FSYNC     0x00001000 /* Write operations block until all data has been written to disk (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FDIRECT   0x00004000 /* Bypass system buffers and directly pass data to the kernel when writing (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FNOFOLLOW 0x00020000 /* Do not follow symbolic links (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FNOATIME  0x00040000 /* Do not update access times (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FCLOEXEC  0x00080000 /* Do not inherit the file in child processes (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FXREAD    0x10000000 /* Request exclusive read access (Ignored if the host doesn't support this) */
+#define Dee_OPEN_FXWRITE   0x20000000 /* Request exclusive write access (Ignored if the host doesn't support this)
+                                       * HINT: This flag is used for opening files for `deemon -F' to prevent
+                                       *       other processes from modifying the file at the same time. */
+#define Dee_OPEN_FHIDDEN   0x80000000 /* If the host's file system implements a hidden-file attribute, set it when creating a new file. */
+
+#ifdef DEE_SOURCE
+#define OPEN_FRDONLY   Dee_OPEN_FRDONLY
+#define OPEN_FWRONLY   Dee_OPEN_FWRONLY
+#define OPEN_FRDWR     Dee_OPEN_FRDWR
+#define OPEN_FACCMODE  Dee_OPEN_FACCMODE
+#define OPEN_FCREAT    Dee_OPEN_FCREAT
+#define OPEN_FEXCL     Dee_OPEN_FEXCL
+#define OPEN_FTRUNC    Dee_OPEN_FTRUNC
+#define OPEN_FAPPEND   Dee_OPEN_FAPPEND
+#define OPEN_FNONBLOCK Dee_OPEN_FNONBLOCK
+#define OPEN_FSYNC     Dee_OPEN_FSYNC
+#define OPEN_FDIRECT   Dee_OPEN_FDIRECT
+#define OPEN_FNOFOLLOW Dee_OPEN_FNOFOLLOW
+#define OPEN_FNOATIME  Dee_OPEN_FNOATIME
+#define OPEN_FCLOEXEC  Dee_OPEN_FCLOEXEC
+#define OPEN_FXREAD    Dee_OPEN_FXREAD
+#define OPEN_FXWRITE   Dee_OPEN_FXWRITE
+#define OPEN_FHIDDEN   Dee_OPEN_FHIDDEN
+#endif /* DEE_SOURCE */
 
 
 
@@ -417,7 +464,7 @@ extern DREF DeeObject *const DeeFile_DefaultStddbg;
 /* Return the underlying file descriptor for `self', that must be
  * an instance of `DeeSystemFile_Type' (or one of its sub-classes)
  * WARNING: The caller is required not to pass objects nothing matching `DeeSystemFile_Check' */
-INTDEF dsysfd_t DCALL DeeSystemFile_Fileno(/*SystemFile*/DeeObject *__restrict self);
+INTDEF Dee_sysfd_t DCALL DeeSystemFile_Fileno(/*SystemFile*/DeeObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeSystemFile_Filename(/*SystemFile*/DeeObject *__restrict self);
 #endif
 
@@ -458,7 +505,7 @@ INTDEF DREF DeeObject *DCALL DeeSystemFile_Filename(/*SystemFile*/DeeObject *__r
  *       when either `close()' is invoked, or when the file is destroyed.
  *       Otherwise, the function will inherit the given `fd' upon success.  */
 DFUNDEF DREF /*File*/DeeObject *DCALL
-DeeFile_OpenFd(dsysfd_t fd, /*String*/DeeObject *filename,
+DeeFile_OpenFd(Dee_sysfd_t fd, /*String*/DeeObject *filename,
                int oflags, bool inherit_fd);
 
 

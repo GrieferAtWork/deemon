@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_FS_PRINTINSTR_C
 #define GUARD_DEX_FS_PRINTINSTR_C 1
+#define DEE_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/dex.h>

@@ -538,13 +538,13 @@ err_unbound_local(struct code_object *__restrict code,
                      local_name,
                      code_name ? "in function " : "",
                      code_name ? code_name : "");
-     ddi_state_fini(&state);
+     Dee_ddi_state_fini(&state);
      return -1;
     }
    }
   }
   DDI_STATE_WHILE(iter,&state);
-  ddi_state_fini(&state);
+  Dee_ddi_state_fini(&state);
  }
  if (!code_name)
       code_name = DeeCode_NAME(code);
@@ -605,13 +605,13 @@ err_readonly_local(struct code_object *__restrict code,
                      local_name,
                      code_name ? "in function " : "",
                      code_name ? code_name : "");
-     ddi_state_fini(&state);
+     Dee_ddi_state_fini(&state);
      return -1;
     }
    }
   }
   DDI_STATE_WHILE(iter,&state);
-  ddi_state_fini(&state);
+  Dee_ddi_state_fini(&state);
  }
  if (!code_name)
       code_name = DeeCode_NAME(code);

@@ -23,6 +23,12 @@
 #define _ATFILE_SOURCE 1
 #endif
 
+/* Expose definitions that don't comply with the deemon C symbol namespace.
+ * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */
+#if !defined(DEE_SOURCE) && defined(CONFIG_BUILDING_DEEMON)
+#define DEE_SOURCE 1
+#endif
+
 /* Disable garbage */
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define _CRT_SECURE_NO_WARNINGS 1
@@ -261,9 +267,9 @@ extern int (ATTR_CDECL _CrtCheckMemory)(void);
 
 #ifdef __INTELLISENSE__
 extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
-#define REQUIRES_TYPE(T,x)  ____INTELLISENSE_req_type< T >(x)
+#define DEE_REQUIRES_TYPE(T,x)  ____INTELLISENSE_req_type< T >(x)
 #else
-#define REQUIRES_TYPE(T,x) (x)
+#define DEE_REQUIRES_TYPE(T,x) (x)
 #endif
 
 #ifndef NDEBUG
@@ -277,20 +283,30 @@ DFUNDEF void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
 #endif
 
 
-#ifndef NO_ASSERT
+#ifndef Dee_ASSERT
 #ifndef NDEBUG
 DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
-#define ASSERT(expr)      ((expr) || (_DeeAssert_Fail(#expr,__FILE__,__LINE__),BREAKPOINT(),0))
-#define ASSERTF(expr,...) ((expr) || (_DeeAssert_Failf(#expr,__FILE__,__LINE__,__VA_ARGS__),BREAKPOINT(),0))
+#define Dee_ASSERT(expr)      ((expr) || (_DeeAssert_Fail(#expr,__FILE__,__LINE__),BREAKPOINT(),0))
+#define Dee_ASSERTF(expr,...) ((expr) || (_DeeAssert_Failf(#expr,__FILE__,__LINE__,__VA_ARGS__),BREAKPOINT(),0))
 #elif !defined(__NO_builtin_assume)
-#define ASSERT(expr)       __builtin_assume(expr)
-#define ASSERTF(expr,...)  __builtin_assume(expr)
+#define Dee_ASSERT(expr)       __builtin_assume(expr)
+#define Dee_ASSERTF(expr,...)  __builtin_assume(expr)
 #else
-#define ASSERT(expr)      (void)0
-#define ASSERTF(expr,...) (void)0
+#define Dee_ASSERT(expr)      (void)0
+#define Dee_ASSERTF(expr,...) (void)0
 #endif
-#endif /* !NO_ASSERT */
+#endif /* !Dee_ASSERT */
+#ifndef Dee_ASSERTF
+#define Dee_ASSERTF(expr,...)  Dee_ASSERT(expr)
+#endif
+
+#ifdef DEE_SOURCE
+#undef ASSERT
+#undef ASSERTF
+#define ASSERT     Dee_ASSERT
+#define ASSERTF    Dee_ASSERTF
+#endif /* DEE_SOURCE */
 
 
 #ifndef DEE_DPRINT

@@ -38,9 +38,9 @@ struct objectlist {
 
 #define OBJECTLIST_INIT       { 0, 0, NULL }
 #define objectlist_init(self) ((self)->ol_size = (self)->ol_alloc = 0,(self)->ol_list = NULL)
-#define objectlist_cinit(self) (ASSERT((self)->ol_size == 0), \
-                                ASSERT((self)->ol_alloc == 0), \
-                                ASSERT((self)->ol_list == NULL))
+#define objectlist_cinit(self) (Dee_ASSERT((self)->ol_size == 0), \
+                                Dee_ASSERT((self)->ol_alloc == 0), \
+                                Dee_ASSERT((self)->ol_list == NULL))
 
 /* Finalize the given object list. */
 LOCAL void DCALL
@@ -59,14 +59,14 @@ LOCAL DREF DeeObject **DCALL
 objectlist_alloc(struct objectlist *__restrict self, size_t num_objects) {
  DREF DeeObject **result;
  size_t min_alloc = self->ol_size + num_objects;
- ASSERT(num_objects != 0);
- ASSERT(self->ol_size <= self->ol_alloc);
+ Dee_ASSERT(num_objects != 0);
+ Dee_ASSERT(self->ol_size <= self->ol_alloc);
  if (min_alloc > self->ol_alloc) {
   DREF DeeObject **new_list;
   size_t new_alloc = self->ol_alloc * 2;
   if (!new_alloc) new_alloc = 2;
   while (new_alloc < min_alloc) new_alloc *= 2;
-  ASSERT(new_alloc > self->ol_size);
+  Dee_ASSERT(new_alloc > self->ol_size);
   new_list = (DREF DeeObject **)Dee_TryRealloc(self->ol_list,
                                                new_alloc *
                                                sizeof(DREF DeeObject *));
@@ -91,12 +91,12 @@ err:
 LOCAL int DCALL
 objectlist_append(struct objectlist *__restrict self,
                   DeeObject *__restrict ob) {
- ASSERT(self->ol_size <= self->ol_alloc);
+ Dee_ASSERT(self->ol_size <= self->ol_alloc);
  if (self->ol_size >= self->ol_alloc) {
   DREF DeeObject **new_list;
   size_t new_alloc = self->ol_alloc * 2;
   if (!new_alloc) new_alloc = 2;
-  ASSERT(new_alloc > self->ol_size);
+  Dee_ASSERT(new_alloc > self->ol_size);
   new_list = (DREF DeeObject **)Dee_TryRealloc(self->ol_list,
                                                new_alloc *
                                                sizeof(DREF DeeObject *));
@@ -131,7 +131,7 @@ objectlist_extendseq(struct objectlist *__restrict self,
                                                 self->ol_size);
  if likely(more != (size_t)-1)
     self->ol_size += more;
- ASSERT(self->ol_alloc >= self->ol_size);
+ Dee_ASSERT(self->ol_alloc >= self->ol_size);
  return more;
 }
 

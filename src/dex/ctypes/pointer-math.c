@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_CTYPES_POINTER_MATH_C
 #define GUARD_DEX_CTYPES_POINTER_MATH_C 1
+#define DEE_SOURCE 1
 
 #ifndef __INTELLISENSE__
 #define N 0

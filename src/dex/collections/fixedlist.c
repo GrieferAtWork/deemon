@@ -18,6 +18,7 @@
  */
 #ifndef GUARD_DEX_COLLECTIONS_FIXEDLIST_C
 #define GUARD_DEX_COLLECTIONS_FIXEDLIST_C 1
+#define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
 #include "libcollections.h"
@@ -35,6 +36,54 @@
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/util/string.h>
+
+/*
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/arg.h>
+#include <deemon/asm.h>
+#include <deemon/attribute.h>
+#include <deemon/bool.h>
+#include <deemon/bytes.h>
+#include <deemon/callable.h>
+#include <deemon/cell.h>
+#include <deemon/class.h>
+#include <deemon/code.h>
+#include <deemon/dec.h>
+#include <deemon/dex.h>
+#include <deemon/dict.h>
+#include <deemon/error.h>
+#include <deemon/error_types.h>
+#include <deemon/exec.h>
+#include <deemon/file.h>
+#include <deemon/filetypes.h>
+#include <deemon/float.h>
+#include <deemon/format.h>
+#include <deemon/gc.h>
+#include <deemon/hashset.h>
+#include <deemon/instancemethod.h>
+#include <deemon/int.h>
+#include <deemon/list.h>
+#include <deemon/map.h>
+#include <deemon/module.h>
+#include <deemon/mro.h>
+#include <deemon/none.h>
+#include <deemon/notify.h>
+#include <deemon/numeric.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/property.h>
+#include <deemon/rodict.h>
+#include <deemon/seq.h>
+#include <deemon/set.h>
+#include <deemon/string.h>
+#include <deemon/stringutils.h>
+#include <deemon/super.h>
+#include <deemon/thread.h>
+#include <deemon/traceback.h>
+#include <deemon/tuple.h>
+#include <deemon/weakref.h>
+*/
 
 DECL_BEGIN
 

@@ -43,7 +43,7 @@ public:
     list(size_t objc, DeeObject *const *__restrict objv): sequence<T>(inherit(DeeList_NewVector(objc,objv))) { }
     list(size_t objc, T **__restrict objv): sequence<T>(inherit(DeeList_NewVector(objc,(DeeObject **)objv))) { }
     list(size_t objc, T *const *__restrict objv): sequence<T>(inherit(DeeList_NewVector(objc,(DeeObject **)objv))) { }
-    DEFINE_OBJECT_CONSTRUCTORS(list,sequence<T>)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(list,sequence<T>)
 #ifndef __OPTIMIZE_SIZE__
     void append(T const &ob) const { if likely(DeeList_CheckExact(this->ptr())) throw_if_nonzero(DeeList_Append(*this,ob)); else sequence<T>::append(ob); }
     void append(DeeObject *__restrict ob) const { if likely(DeeList_CheckExact(this->ptr())) throw_if_nonzero(DeeList_Append(*this,ob)); else sequence<T>::append(ob); }
@@ -68,7 +68,7 @@ public:
     }
     using sequence<T>::pop;
     WUNUSED T pop() const { return inherit(likely(DeeList_CheckExact(this->ptr())) ? DeeList_Pop(*this,-1) : DeeObject_CallAttrString(*this,"pop",0,NULL)); }
-    WUNUSED T pop(dssize_t index) const { return inherit(likely(DeeList_CheckExact(this->ptr())) ? DeeList_Pop(*this,index) : DeeObject_CallAttrStringf(*this,"pop","Id",index)); }
+    WUNUSED T pop(Dee_ssize_t index) const { return inherit(likely(DeeList_CheckExact(this->ptr())) ? DeeList_Pop(*this,index) : DeeObject_CallAttrStringf(*this,"pop","Id",index)); }
     void clear() const { if likely(DeeList_CheckExact(this->ptr())) DeeList_Clear(*this); else sequence<T>::clear(); }
     void reverse() const { if likely(DeeList_CheckExact(this->ptr())) DeeList_Reverse(*this); else sequence<T>::reverse(); }
     void sort() const { if likely(DeeList_CheckExact(this->ptr())) throw_if_nonzero(DeeList_Sort(*this,NULL)); else sequence<T>::sort(); }

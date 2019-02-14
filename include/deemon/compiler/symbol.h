@@ -393,9 +393,9 @@ struct decl_ast {
         }                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length tuple containing known types. */
         struct decl_ast    *da_seq;    /* [1..1][owned][DAST_SEQ] The sequence element */
         struct {
-            struct decl_ast            *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
-            WEAKREF(DeeBaseScopeObject) f_scope; /* [1..1] The scope containing function argument info, as well as associated
-                                                  * type declaration information (through `struct symbol::s_decltype') */
+            struct decl_ast                *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
+            Dee_WEAKREF(DeeBaseScopeObject) f_scope; /* [1..1] The scope containing function argument info, as well as associated
+                                                      * type declaration information (through `struct symbol::s_decltype') */
         }                   da_func;   /* [DAST_FUNC] The representation is a function. */
         struct {
             struct decl_ast           *a_base; /* [1..1][owned] Attribute base expression. */
@@ -508,11 +508,11 @@ struct text_label {
 
 struct symbol {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
-    ATOMIC_DATA dref_t   s_refcnt; /* Reference counter */
+    ATOMIC_DATA Dee_ref_t s_refcnt;/* Reference counter */
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-    DREF struct symbol  *s_next;   /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
-    struct TPPKeyword   *s_name;   /* [1..1][const] Name of this symbol. */
-    DeeScopeObject      *s_scope;  /* [1..1][const] The scope declaring this symbol. */
+    DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
+    struct TPPKeyword    *s_name;  /* [1..1][const] Name of this symbol. */
+    DeeScopeObject       *s_scope; /* [1..1][const] The scope declaring this symbol. */
 #define SYMBOL_TYPE_NONE   0x0000  /* Undefined symbol type. */
 #define SYMBOL_TYPE_GLOBAL 0x0001  /* A global symbol. */
 #define SYMBOL_TYPE_EXTERN 0x0002  /* An external symbol. */
@@ -606,7 +606,7 @@ struct symbol {
 FORCELOCAL struct symbol *DCALL
 SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
  while (x->s_type == SYMBOL_TYPE_ALIAS) {
-  ASSERT(x != x->s_alias);
+  Dee_ASSERT(x != x->s_alias);
   x = x->s_alias;
  }
  return x;
@@ -622,7 +622,7 @@ do{ \
 FORCELOCAL struct symbol *DCALL
 _priv_symbol_dounwind_alias(struct symbol *__restrict x) {
  do {
-  ASSERT(x != x->s_alias);
+  Dee_ASSERT(x != x->s_alias);
   x = x->s_alias;
  } while (x->s_type == SYMBOL_TYPE_ALIAS);
  return x;
@@ -630,15 +630,15 @@ _priv_symbol_dounwind_alias(struct symbol *__restrict x) {
 FORCELOCAL void DCALL _priv_symbol_incread(struct symbol *__restrict x) { for (;;) { ++x->s_nread; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
 FORCELOCAL void DCALL _priv_symbol_incwrite(struct symbol *__restrict x) { for (;;) { ++x->s_nwrite; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
 FORCELOCAL void DCALL _priv_symbol_incbound(struct symbol *__restrict x) { for (;;) { ++x->s_nbound; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
-FORCELOCAL void DCALL _priv_symbol_decread(struct symbol *__restrict x) { for (;;) { ASSERT(x->s_nread); --x->s_nread; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
-FORCELOCAL void DCALL _priv_symbol_decwrite(struct symbol *__restrict x) { for (;;) { ASSERT(x->s_nwrite); --x->s_nwrite; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
-FORCELOCAL void DCALL _priv_symbol_decbound(struct symbol *__restrict x) { for (;;) { ASSERT(x->s_nbound); --x->s_nbound; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_decread(struct symbol *__restrict x) { for (;;) { Dee_ASSERT(x->s_nread); --x->s_nread; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_decwrite(struct symbol *__restrict x) { for (;;) { Dee_ASSERT(x->s_nwrite); --x->s_nwrite; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_decbound(struct symbol *__restrict x) { for (;;) { Dee_ASSERT(x->s_nbound); --x->s_nbound; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
 FORCELOCAL void DCALL _priv_symbol_addread(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { x->s_nread += n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
 FORCELOCAL void DCALL _priv_symbol_addwrite(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { x->s_nwrite += n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
 FORCELOCAL void DCALL _priv_symbol_addbound(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { x->s_nbound += n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
-FORCELOCAL void DCALL _priv_symbol_subread(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { ASSERT(x->s_nread >= n); x->s_nread -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
-FORCELOCAL void DCALL _priv_symbol_subwrite(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { ASSERT(x->s_nwrite >= n); x->s_nwrite -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
-FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { ASSERT(x->s_nbound >= n); x->s_nbound -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_subread(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { Dee_ASSERT(x->s_nread >= n); x->s_nread -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_subwrite(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { Dee_ASSERT(x->s_nwrite >= n); x->s_nwrite -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
+FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) { if (n) for (;;) { Dee_ASSERT(x->s_nbound >= n); x->s_nbound -= n; if (x->s_type != SYMBOL_TYPE_ALIAS) break; x = x->s_alias; } }
 
 
 /* Return the name of a given symbol `x' as a `char *' pointer. */
@@ -683,19 +683,19 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
     (x)->s_scope->s_base != current_basescope))
 
 #define SYMBOL_MUST_REFERENCE_THIS(x) \
-   (ASSERT((x)->s_type == SYMBOL_TYPE_THIS), \
+   (Dee_ASSERT((x)->s_type == SYMBOL_TYPE_THIS), \
     (x) != current_basescope->bs_this)
 
 /* Same as `SYMBOL_MUST_REFERENCE()', but the caller already knows
  * that the symbol's type may be referenced (`SYMBOL_TYPE_MAYREF(x->s_type) == true') */
 #define SYMBOL_MUST_REFERENCE_TYPEMAY(x) \
-   (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)), \
+   (Dee_ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)), \
    (x)->s_type == SYMBOL_TYPE_THIS ? \
    (x) != current_basescope->bs_this : \
    (x)->s_scope->s_base != current_basescope)
 
 #define SYMBOL_MUST_REFERENCE_NOTTHIS(x) \
-   (ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_type != SYMBOL_TYPE_THIS), \
+   (Dee_ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_type != SYMBOL_TYPE_THIS), \
    (x)->s_scope->s_base != current_basescope)
 
 /* Check if a given symbol `x' can be addressed as a reference */
@@ -764,8 +764,8 @@ INTDEF char const symclass_names[0x1f + 1][8];
 
 
 struct scope_object {
-    OBJECT_HEAD
-    WEAKREF_SUPPORT
+    Dee_OBJECT_HEAD
+    Dee_WEAKREF_SUPPORT
 #ifdef __INTELLISENSE__
     DeeScopeObject          *s_prev;  /* [0..1][const] Previous scope. */
 #else                                 
@@ -1069,7 +1069,7 @@ decl_ast_initfunc(struct decl_ast *__restrict self,
 }
 FORCELOCAL WUNUSED DREF DeeBaseScopeObject *DCALL
 decl_ast_func_getscope(struct decl_ast const *__restrict self) {
- ASSERT(self->da_type == DAST_FUNC);
+ Dee_ASSERT(self->da_type == DAST_FUNC);
  return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);
 }
 

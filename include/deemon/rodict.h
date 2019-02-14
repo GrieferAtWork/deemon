@@ -30,6 +30,15 @@
 
 DECL_BEGIN
 
+#ifdef DEE_SOURCE
+#define Dee_rodict_item   rodict_item
+#define Dee_rodict_object rodict_object
+#define RODICT_HASHST     Dee_RODICT_HASHST
+#define RODICT_HASHNX     Dee_RODICT_HASHNX
+#define RODICT_HASHPT     Dee_RODICT_HASHPT
+#define RODICT_HASHIT     Dee_RODICT_HASHIT
+#endif /* DEE_SOURCE */
+
 /* A read-only variant of a dict object, who's main purpose is to be used
  * by compiler optimizations in order to optimize generic mapping expressions
  * in various locations, when mapping arguments are constant.
@@ -45,9 +54,9 @@ DECL_BEGIN
  *        programming interface.
  *        However GriferAtWork's implementation uses it to solve the problem
  *        caused by having dict objects appear as constant variables. */
-typedef struct rodict_object DeeRoDictObject;
+typedef struct Dee_rodict_object DeeRoDictObject;
 
-struct rodict_item {
+struct Dee_rodict_item {
 #ifdef __INTELLISENSE__
     DeeObject      *di_key;   /* [0..1][const] Dictionary item key. */
     DeeObject      *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
@@ -55,14 +64,14 @@ struct rodict_item {
     DREF DeeObject *di_key;   /* [0..1][const] Dictionary item key. */
     DREF DeeObject *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
 #endif
-    dhash_t         di_hash;  /* [valid_if(di_key)][const] Hash of `di_key' (with a starting value of `0'). */
+    Dee_hash_t      di_hash;  /* [valid_if(di_key)][const] Hash of `di_key' (with a starting value of `0'). */
 };
 
-struct rodict_object {
-    OBJECT_HEAD
-    size_t             rd_mask;    /* [const][!0] Allocated dictionary mask. */
-    size_t             rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
-    struct rodict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
+struct Dee_rodict_object {
+    Dee_OBJECT_HEAD
+    size_t                 rd_mask;    /* [const][!0] Allocated dictionary mask. */
+    size_t                 rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
+    struct Dee_rodict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
 };
 
 DDATDEF DeeTypeObject DeeRoDict_Type;
@@ -81,19 +90,19 @@ DFUNDEF int DCALL DeeRoDict_Insert(DREF DeeObject **__restrict pself, DeeObject 
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
-INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, dhash_t hash, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *__restrict def);
-INTDEF bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, dhash_t hash);
-INTDEF bool DCALL DeeRoDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, dhash_t hash);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF DREF DeeObject *DCALL DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF bool DCALL DeeRoDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */
-#define RODICT_HASHST(self,hash)  ((hash) & ((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_mask)
-#define RODICT_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define RODICT_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define RODICT_HASHIT(self,i)     (((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)REQUIRES_OBJECT(self))->rd_mask))
+#define Dee_RODICT_HASHST(self,hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
+#define Dee_RODICT_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
+#define Dee_RODICT_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_RODICT_HASHIT(self,i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
 
 
 DECL_END

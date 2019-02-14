@@ -104,7 +104,7 @@ typedef struct {
     /* The slab configuration is written to once during program
      * initialization, at which point slab caches get allocated. */
     union {
-        SlabRegionDef sc_regions[DEEMON_SLAB_COUNT]; /* Slab region definitions.
+        SlabRegionDef sc_regions[Dee_SLAB_COUNT]; /* Slab region definitions.
                                                       * NOTE: The starting addresses of these are ordered ascendingly! */
         uintptr_t     sc_heap_start;                 /* [const] Starting address of the slab heap.
                                                       * NOTE: This pointer is aligned by `PAGESIZE' */
@@ -116,8 +116,8 @@ typedef struct {
 PRIVATE SlabConfig slab_config = {
     {
          {
-#define INIT_REGION(x)  { (uintptr_t)-1 },
-              DEE_ENUMERATE_SLAB_SIZES(INIT_REGION)
+#define INIT_REGION(index,size)  { (uintptr_t)-1 },
+              DeeSlab_ENUMERATE(INIT_REGION)
 #undef INIT_REGION
          }
     },
@@ -137,109 +137,109 @@ DECL_END
 #ifndef __INTELLISENSE__
 /*[[[deemon
 for (local x = 20; x >= 2; x = x - 1) {
-    print "#if DEEMON_SLAB_HASSIZE(" + x + ")";
+    print "#if DeeSlab_HasSize(" + x + ")";
     print "#define SIZE",x;
     print "#include \"slab-impl.c.inl\"";
     print "#define NEXT_LARGER",x;
-    print "#endif /" "* DEEMON_SLAB_HASSIZE(" + x + ") *" "/";
+    print "#endif /" "* DeeSlab_HasSize(" + x + ") *" "/";
 }
 print "#undef NEXT_LARGER";
 ]]]*/
-#if DEEMON_SLAB_HASSIZE(20)
+#if DeeSlab_HasSize(20)
 #define SIZE 20
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 20
-#endif /* DEEMON_SLAB_HASSIZE(20) */
-#if DEEMON_SLAB_HASSIZE(19)
+#endif /* DeeSlab_HasSize(20) */
+#if DeeSlab_HasSize(19)
 #define SIZE 19
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 19
-#endif /* DEEMON_SLAB_HASSIZE(19) */
-#if DEEMON_SLAB_HASSIZE(18)
+#endif /* DeeSlab_HasSize(19) */
+#if DeeSlab_HasSize(18)
 #define SIZE 18
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 18
-#endif /* DEEMON_SLAB_HASSIZE(18) */
-#if DEEMON_SLAB_HASSIZE(17)
+#endif /* DeeSlab_HasSize(18) */
+#if DeeSlab_HasSize(17)
 #define SIZE 17
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 17
-#endif /* DEEMON_SLAB_HASSIZE(17) */
-#if DEEMON_SLAB_HASSIZE(16)
+#endif /* DeeSlab_HasSize(17) */
+#if DeeSlab_HasSize(16)
 #define SIZE 16
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 16
-#endif /* DEEMON_SLAB_HASSIZE(16) */
-#if DEEMON_SLAB_HASSIZE(15)
+#endif /* DeeSlab_HasSize(16) */
+#if DeeSlab_HasSize(15)
 #define SIZE 15
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 15
-#endif /* DEEMON_SLAB_HASSIZE(15) */
-#if DEEMON_SLAB_HASSIZE(14)
+#endif /* DeeSlab_HasSize(15) */
+#if DeeSlab_HasSize(14)
 #define SIZE 14
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 14
-#endif /* DEEMON_SLAB_HASSIZE(14) */
-#if DEEMON_SLAB_HASSIZE(13)
+#endif /* DeeSlab_HasSize(14) */
+#if DeeSlab_HasSize(13)
 #define SIZE 13
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 13
-#endif /* DEEMON_SLAB_HASSIZE(13) */
-#if DEEMON_SLAB_HASSIZE(12)
+#endif /* DeeSlab_HasSize(13) */
+#if DeeSlab_HasSize(12)
 #define SIZE 12
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 12
-#endif /* DEEMON_SLAB_HASSIZE(12) */
-#if DEEMON_SLAB_HASSIZE(11)
+#endif /* DeeSlab_HasSize(12) */
+#if DeeSlab_HasSize(11)
 #define SIZE 11
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 11
-#endif /* DEEMON_SLAB_HASSIZE(11) */
-#if DEEMON_SLAB_HASSIZE(10)
+#endif /* DeeSlab_HasSize(11) */
+#if DeeSlab_HasSize(10)
 #define SIZE 10
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 10
-#endif /* DEEMON_SLAB_HASSIZE(10) */
-#if DEEMON_SLAB_HASSIZE(9)
+#endif /* DeeSlab_HasSize(10) */
+#if DeeSlab_HasSize(9)
 #define SIZE 9
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 9
-#endif /* DEEMON_SLAB_HASSIZE(9) */
-#if DEEMON_SLAB_HASSIZE(8)
+#endif /* DeeSlab_HasSize(9) */
+#if DeeSlab_HasSize(8)
 #define SIZE 8
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 8
-#endif /* DEEMON_SLAB_HASSIZE(8) */
-#if DEEMON_SLAB_HASSIZE(7)
+#endif /* DeeSlab_HasSize(8) */
+#if DeeSlab_HasSize(7)
 #define SIZE 7
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 7
-#endif /* DEEMON_SLAB_HASSIZE(7) */
-#if DEEMON_SLAB_HASSIZE(6)
+#endif /* DeeSlab_HasSize(7) */
+#if DeeSlab_HasSize(6)
 #define SIZE 6
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 6
-#endif /* DEEMON_SLAB_HASSIZE(6) */
-#if DEEMON_SLAB_HASSIZE(5)
+#endif /* DeeSlab_HasSize(6) */
+#if DeeSlab_HasSize(5)
 #define SIZE 5
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 5
-#endif /* DEEMON_SLAB_HASSIZE(5) */
-#if DEEMON_SLAB_HASSIZE(4)
+#endif /* DeeSlab_HasSize(5) */
+#if DeeSlab_HasSize(4)
 #define SIZE 4
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 4
-#endif /* DEEMON_SLAB_HASSIZE(4) */
-#if DEEMON_SLAB_HASSIZE(3)
+#endif /* DeeSlab_HasSize(4) */
+#if DeeSlab_HasSize(3)
 #define SIZE 3
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 3
-#endif /* DEEMON_SLAB_HASSIZE(3) */
-#if DEEMON_SLAB_HASSIZE(2)
+#endif /* DeeSlab_HasSize(3) */
+#if DeeSlab_HasSize(2)
 #define SIZE 2
 #include "slab-impl.c.inl"
 #define NEXT_LARGER 2
-#endif /* DEEMON_SLAB_HASSIZE(2) */
+#endif /* DeeSlab_HasSize(2) */
 #undef NEXT_LARGER
 //[[[end]]]
 #endif
@@ -279,8 +279,8 @@ struct {
     ATOMIC_DATA size_t s_max_freepages; /* Max number of pages containing unused items to ever exist. */
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 }
-#define DEFINE_SLAB_VAR(x) slab ## x,
-    DEE_ENUMERATE_SLAB_SIZES(DEFINE_SLAB_VAR)
+#define DEFINE_SLAB_VAR(index,size) slab ## size,
+    DeeSlab_ENUMERATE(DEFINE_SLAB_VAR)
 #undef DEFINE_SLAB_VAR
     _slab_intellisense_trailing
 ;
@@ -288,7 +288,7 @@ struct {
 #endif
 
 /* Default sizes for slabs (in whole pages) */
-PRIVATE size_t const default_slab_sizes[DEEMON_SLAB_COUNT] = {
+PRIVATE size_t const default_slab_sizes[Dee_SLAB_COUNT] = {
     /* XXX: Tweak these numbers according to statistics. */
     16,  /* 4  -- 16 / 32 */
     8,   /* 5  -- 20 / 40 */
@@ -310,10 +310,10 @@ PRIVATE size_t const default_slab_sizes[DEEMON_SLAB_COUNT] = {
 PUBLIC size_t DCALL
 DeeSlab_Stat(DeeSlabStat *info, size_t bufsize) {
  if (bufsize >= sizeof(DeeSlabStat)) {
-  info->st_slabcount = DEEMON_SLAB_COUNT;
-#define GATHER_INFO(x) \
-  DeeSlab_StatSlab ## x(&info->st_slabs[DEEMON_SLAB_INDEXOF(x * __SIZEOF_POINTER__)]);
-  DEE_ENUMERATE_SLAB_SIZES(GATHER_INFO)
+  info->st_slabcount = Dee_SLAB_COUNT;
+#define GATHER_INFO(index,size) \
+  DeeSlab_StatSlab ## size(&info->st_slabs[index]);
+  DeeSlab_ENUMERATE(GATHER_INFO)
 #undef GATHER_INFO
  }
  return sizeof(DeeSlabStat);
@@ -322,9 +322,9 @@ DeeSlab_Stat(DeeSlabStat *info, size_t bufsize) {
 /* Reset the slab max-statistics to the cur-values. */
 PUBLIC void DCALL DeeSlab_ResetStat(void) {
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
-#define RESET_INFO(x) \
- DeeSlab_ResetStatSlab ## x();
- DEE_ENUMERATE_SLAB_SIZES(RESET_INFO)
+#define RESET_INFO(index,size) \
+ DeeSlab_ResetStatSlab ## size();
+ DeeSlab_ENUMERATE(RESET_INFO)
 #undef RESET_INFO
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 }
@@ -348,14 +348,14 @@ INTERN void DCALL DeeSlab_Finalize(void) {
 
 INTERN void DCALL DeeSlab_Initialize(void) {
  size_t total; unsigned int i;
- size_t sizes[DEEMON_SLAB_COUNT]; char *config;
+ size_t sizes[Dee_SLAB_COUNT]; char *config;
  memcpy(sizes,default_slab_sizes,sizeof(default_slab_sizes));
  config = getenv("DEEMON_SLABS");
  if (config && *config) {
   /* Load slab sizes from the configuration string, which is
    * a comma-separated list of the slab sizes that should be
    * used. */
-#if DEEMON_SLAB_COUNT == 5
+#if Dee_SLAB_COUNT == 5
   memset(sizes,0,sizeof(sizes));
   sscanf(config,
          "%u,%u,%u,%u,%u",
@@ -368,7 +368,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 #error FIXME
 #endif
  }
- for (i = 0,total = 0; i < DEEMON_SLAB_COUNT; ++i) {
+ for (i = 0,total = 0; i < Dee_SLAB_COUNT; ++i) {
   if (OVERFLOW_UADD(total,sizes[i],&total))
       goto disable_slabs;
   total += sizes[i];
@@ -428,28 +428,28 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 #error "Invalid SLAB configuration"
 #endif
   slab_config.sc_heap_end = (uintptr_t)slab_memory + total;
-  for (i = 0,total = 0; i < DEEMON_SLAB_COUNT; ++i) {
+  for (i = 0,total = 0; i < Dee_SLAB_COUNT; ++i) {
    slab_config.sc_regions[i].sr_start = (uintptr_t)slab_memory;
    if (OVERFLOW_UADD(total,sizes[i],&total))
        goto disable_slabs;
    slab_memory = (void *)((uintptr_t)slab_memory + sizes[i] * PAGESIZE);
   }
-#define SET_SLAB_STARTING_PAGE(x) \
-  *(void **)&slab ## x.s_free = (void *)(uintptr_t)-1l; \
-  *(void **)&slab ## x.s_full = (void *)(uintptr_t)-1l; \
-  *(void **)&slab ## x.s_tail = (void *)slab_config.sc_regions[DEEMON_SLAB_INDEXOF(x * __SIZEOF_POINTER__)].sr_start;
-  DEE_ENUMERATE_SLAB_SIZES(SET_SLAB_STARTING_PAGE)
+#define SET_SLAB_STARTING_PAGE(index,size) \
+  *(void **)&slab ## size.s_free = (void *)(uintptr_t)-1l; \
+  *(void **)&slab ## size.s_full = (void *)(uintptr_t)-1l; \
+  *(void **)&slab ## size.s_tail = (void *)slab_config.sc_regions[index].sr_start;
+  DeeSlab_ENUMERATE(SET_SLAB_STARTING_PAGE)
 #undef SET_SLAB_STARTING_PAGE
  }
  return;
 disable_slabs:
  memset(&slab_config,0xff,offsetof(SlabConfig,sc_heap_end));
  slab_config.sc_heap_end = 0;
-#define SET_SLAB_STARTING_PAGE(x) \
- *(void **)&slab ## x.s_free = (void *)(uintptr_t)-1l; \
- *(void **)&slab ## x.s_full = (void *)(uintptr_t)-1l; \
- *(void **)&slab ## x.s_tail = (void *)(uintptr_t)-1l;
- DEE_ENUMERATE_SLAB_SIZES(SET_SLAB_STARTING_PAGE)
+#define SET_SLAB_STARTING_PAGE(index,size) \
+ *(void **)&slab ## size.s_free = (void *)(uintptr_t)-1l; \
+ *(void **)&slab ## size.s_full = (void *)(uintptr_t)-1l; \
+ *(void **)&slab ## size.s_tail = (void *)(uintptr_t)-1l;
+ DeeSlab_ENUMERATE(SET_SLAB_STARTING_PAGE)
 #undef SET_SLAB_STARTING_PAGE
 }
 

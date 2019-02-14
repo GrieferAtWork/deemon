@@ -30,7 +30,7 @@
 #define FUNC(x) FUNC2(x,SIZE)
 
 #define ITEMSIZE (SIZE * __SIZEOF_POINTER__)
-#define INDEX     DEEMON_SLAB_INDEXOF(ITEMSIZE)
+#define INDEX     DeeSlab_IndexOf(ITEMSIZE)
 
 #if 0
 #define LOG_SLAB(...)  DEE_DPRINTF(__VA_ARGS__)
@@ -583,7 +583,7 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file
 #endif /* CONFIG_NO_OBJECT_SLABS */
 
 
-#if SIZE == DEEMON_SLAB_MINSIZE
+#if SIZE == Dee_SLAB_MINSIZE
 #ifndef MY_SLAB_IS_DISABLED
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free,4),
@@ -605,7 +605,7 @@ PUBLIC void (DCALL DeeObject_Free)(void *ptr) { Dee_Free(ptr); }
 PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) { DeeDbg_Free(ptr,file,line); }
 #endif
 #endif /* MY_SLAB_IS_DISABLED */
-#endif /* SIZE == DEEMON_SLAB_MINSIZE */
+#endif /* SIZE == Dee_SLAB_MINSIZE */
 
 DECL_END
 

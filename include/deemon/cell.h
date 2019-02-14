@@ -27,31 +27,35 @@
 
 DECL_BEGIN
 
-typedef struct cell_object DeeCellObject;
+#ifdef DEE_SOURCE
+#define Dee_cell_object  cell_object
+#endif /* DEE_SOURCE */
 
-struct cell_object {
-    OBJECT_HEAD /* GC Object. */
+typedef struct Dee_cell_object DeeCellObject;
+
+struct Dee_cell_object {
+    Dee_OBJECT_HEAD /* GC Object. */
     DREF DeeObject *c_item;  /* [0..1] The object contained within this cell. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t        c_lock; /* Lock used for accessing this cell. */
+    Dee_rwlock_t    c_lock; /* Lock used for accessing this cell. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
-#define DeeCell_Item(x) ((DeeCellObject *)REQUIRES_OBJECT(x))->c_item
+#define DeeCell_Item(x) ((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_item
 
 #ifndef CONFIG_NO_THREADS
-#define DeeCell_LockReading(x)    rwlock_reading(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockWriting(x)    rwlock_writing(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockTryread(x)    rwlock_tryread(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockTrywrite(x)   rwlock_trywrite(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockRead(x)       rwlock_read(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockWrite(x)      rwlock_write(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockUpgrade(x)    rwlock_upgrade(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockDowngrade(x)  rwlock_downgrade(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockEndWrite(x)   rwlock_endwrite(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockEndRead(x)    rwlock_endread(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
-#define DeeCell_LockEnd(x)        rwlock_end(&((DeeCellObject *)REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockReading(x)    Dee_rwlock_reading(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockWriting(x)    Dee_rwlock_writing(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockTryread(x)    Dee_rwlock_tryread(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockTrywrite(x)   Dee_rwlock_trywrite(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockRead(x)       Dee_rwlock_read(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockWrite(x)      Dee_rwlock_write(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockTryUpgrade(x) Dee_rwlock_tryupgrade(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockUpgrade(x)    Dee_rwlock_upgrade(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockDowngrade(x)  Dee_rwlock_downgrade(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockEndWrite(x)   Dee_rwlock_endwrite(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockEndRead(x)    Dee_rwlock_endread(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
+#define DeeCell_LockEnd(x)        Dee_rwlock_end(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
 #else
 #define DeeCell_LockReading(x)          1
 #define DeeCell_LockWriting(x)          1

@@ -19,6 +19,7 @@
 #ifndef GUARD_DEX_WIN32_LIBWIN32_C
 #define GUARD_DEX_WIN32_LIBWIN32_C 1
 #define CONFIG_BUILDING_LIBWIN32 1
+#define DEE_SOURCE 1
 
 #include "libwin32.h"
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
@@ -424,7 +425,7 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_WriteFile_f_impl(HANDLE hFile, DeeObje
  DREF DeeObject *result;
  DeeBuffer buffer;
  DWORD dwNumberOfBytesWritten;
- if (DeeObject_GetBuf(lpBuffer,&buffer,DEE_BUFFER_FREADONLY))
+ if (DeeObject_GetBuf(lpBuffer,&buffer,Dee_BUFFER_FREADONLY))
      goto err;
 again:
  if (DeeThread_CheckInterrupt())
@@ -447,7 +448,7 @@ again:
   DBG_ALIGNMENT_ENABLE();
   result = DeeInt_NewU32((uint32_t)dwNumberOfBytesWritten);
  }
- DeeObject_PutBuf(lpBuffer,&buffer,DEE_BUFFER_FREADONLY);
+ DeeObject_PutBuf(lpBuffer,&buffer,Dee_BUFFER_FREADONLY);
  return result;
 err:
  return NULL;
@@ -486,7 +487,7 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_ReadFile_f_impl(HANDLE hFile, DeeObjec
  DREF DeeObject *result;
  DeeBuffer buffer;
  DWORD dwNumberOfBytesRead;
- if (DeeObject_GetBuf(lpBuffer,&buffer,DEE_BUFFER_FWRITABLE))
+ if (DeeObject_GetBuf(lpBuffer,&buffer,Dee_BUFFER_FWRITABLE))
      goto err;
 again:
  if (DeeThread_CheckInterrupt())
@@ -509,7 +510,7 @@ again:
   DBG_ALIGNMENT_ENABLE();
   result = DeeInt_NewU32((uint32_t)dwNumberOfBytesRead);
  }
- DeeObject_PutBuf(lpBuffer,&buffer,DEE_BUFFER_FWRITABLE);
+ DeeObject_PutBuf(lpBuffer,&buffer,Dee_BUFFER_FWRITABLE);
  return result;
 err:
  return NULL;

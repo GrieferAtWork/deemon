@@ -16,6 +16,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+#define DEE_SOURCE 1
 #ifdef __INTELLISENSE__
 #define N 0
 #endif

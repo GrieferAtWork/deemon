@@ -251,16 +251,16 @@ imod_parse_statement(InteractiveModule *__restrict self,
                      unsigned int mode) {
  DREF struct ast *result,*merge;
  bool should_yield = false;
- if ((mode & MODULE_INTERACTIVE_MODE_FONLYBASEFILE) &&
+ if ((mode & Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE) &&
       token.t_file != self->im_basefile);
- else if ((mode & (MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR|
-                   MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) ==
-                  (MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR|
-                   MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) {
+ else if ((mode & (Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR|
+                   Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) ==
+                  (Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR|
+                   Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) {
   should_yield = true;
- } else if (mode & MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR) {
+ } else if (mode & Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR) {
   should_yield = !is_statement();
- } else if (mode & MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT) {
+ } else if (mode & Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT) {
   should_yield = is_statement();
  }
 
@@ -1446,8 +1446,8 @@ imod_ctor(InteractiveModule *__restrict self,
  }
  return imod_init(self,
                   argv[0],
-                  MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
-                  MODULE_INTERACTIVE_MODE_FONLYBASEFILE,
+                  Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
+                  Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE,
                   0,
                   0,
                   NULL,
