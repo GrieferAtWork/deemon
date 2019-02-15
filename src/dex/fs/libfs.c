@@ -595,11 +595,33 @@ err:
  return NULL;
 }
 PRIVATE DREF DeeObject *DCALL
+f_libfs_lchmod(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *path,*mode;
+ if (DeeArg_Unpack(argc,argv,"oo:lchmod",&path,&mode))
+     goto err;
+ if (fs_lchmod(path,mode))
+     goto err;
+ return_none;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
 f_libfs_chown(size_t argc, DeeObject **__restrict argv) {
  DeeObject *path,*user,*group;
  if (DeeArg_Unpack(argc,argv,"ooo:chown",&path,&user,&group))
      goto err;
  if (fs_chown(path,user,group))
+     goto err;
+ return_none;
+err:
+ return NULL;
+}
+PRIVATE DREF DeeObject *DCALL
+f_libfs_lchown(size_t argc, DeeObject **__restrict argv) {
+ DeeObject *path,*user,*group;
+ if (DeeArg_Unpack(argc,argv,"ooo:lchown",&path,&user,&group))
+     goto err;
+ if (fs_lchown(path,user,group))
      goto err;
  return_none;
 err:
@@ -705,7 +727,9 @@ err:
 
 PRIVATE DEFINE_KWCMETHOD(libfs_chtime,&f_libfs_chtime);
 PRIVATE DEFINE_CMETHOD(libfs_chmod,&f_libfs_chmod);
+PRIVATE DEFINE_CMETHOD(libfs_lchmod,&f_libfs_lchmod);
 PRIVATE DEFINE_CMETHOD(libfs_chown,&f_libfs_chown);
+PRIVATE DEFINE_CMETHOD(libfs_lchown,&f_libfs_lchown);
 PRIVATE DEFINE_CMETHOD(libfs_mkdir,&f_libfs_mkdir);
 PRIVATE DEFINE_CMETHOD(libfs_rmdir,&f_libfs_rmdir);
 PRIVATE DEFINE_CMETHOD(libfs_unlink,&f_libfs_unlink);
@@ -972,12 +996,9 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to change time for some reason\n"
           "Change the timestamps associated with the given @path") },
     { "chmod", (DeeObject *)&libfs_chmod, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,mode:?Dstring)\n"
-          "(path:?Dstring,mode:?Dint)\n"
-          "(fp:?Dfile,mode:?Dstring)\n"
-          "(fp:?Dfile,mode:?Dint)\n"
-          "(fd:?Dint,mode:?Dstring)\n"
-          "(fd:?Dint,mode:?Dint)\n"
+      DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n"
+          "(fp:?Dfile,mode:?X2?Dstring?Dint)\n"
+          "(fd:?Dint,mode:?X2?Dstring?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -990,10 +1011,25 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to change permission for some reason\n"
           "@throw ValueError The given @mode is malformed or not recognized\n"
           "Change the permissions associated with a given @path") },
+    { "lchmod", (DeeObject *)&libfs_lchmod, MODSYM_FNORMAL,
+      DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n"
+          "@interrupt\n"
+          "@throw FileNotFound The given @path could not be found\n"
+          "@throw NoDirectory A part of the given @path is not a directory\n"
+          "@throw FileAccessError The current user does not have permissions "
+                             "to change the mode of the given file @path\n"
+          "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+                          "@path is in read-only operations mode, preventing the "
+                          "file's mode from being changed\n"
+          "@throw SystemError Failed to change permission for some reason\n"
+          "@throw ValueError The given @mode is malformed or not recognized\n"
+          "Change the permissions associated with a given @path\n"
+          "If @path referrs to a symbolic link, change the permissions "
+          "of that link, rather than those of the pointed-to file") },
     { "chown", (DeeObject *)&libfs_chown, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,user:?X3?Guper?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
-          "(fp:?Dfile,user:?X3?Guper?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
-          "(fd:?Dint,user:?X3?Guper?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+      DOC("(path:?Dstring,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+          "(fp:?Dfile,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+          "(fd:?Dint,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
           "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1006,6 +1042,21 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw ValueError The given @user or @group could not be found\n"
           "@throw SystemError Failed to change ownership for some reason\n"
           "Change the ownership of a given @path") },
+    { "lchown", (DeeObject *)&libfs_lchown, MODSYM_FNORMAL,
+      DOC("(path:?Dstring,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+          "@interrupt\n"
+          "@throw FileNotFound The given @path could not be found\n"
+          "@throw NoDirectory A part of the given @path is not a directory\n"
+          "@throw FileAccessError The current user does not have permissions "
+                             "to change the ownership of the given file @path\n"
+          "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+                          "@path is in read-only operations mode, preventing the "
+                          "file's ownership from being changed\n"
+          "@throw ValueError The given @user or @group could not be found\n"
+          "@throw SystemError Failed to change ownership for some reason\n"
+          "Change the ownership of a given @path\n"
+          "If @path referrs to a symbolic link, change the ownership "
+          "of that link, rather than those of the pointed-to file") },
     { "mkdir", (DeeObject *)&libfs_mkdir, MODSYM_FNORMAL,
       DOC("(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n"
           "@interrupt\n"

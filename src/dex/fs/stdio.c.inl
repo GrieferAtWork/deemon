@@ -366,9 +366,20 @@ fs_chmod(DeeObject *__restrict UNUSED(path),
  return fs_unsupported();
 }
 INTERN int DCALL
+fs_lchmod(DeeObject *__restrict UNUSED(path),
+          DeeObject *__restrict UNUSED(mode)) {
+ return fs_unsupported();
+}
+INTERN int DCALL
 fs_chown(DeeObject *__restrict UNUSED(path),
          DeeObject *__restrict UNUSED(user),
          DeeObject *__restrict UNUSED(group)) {
+ return fs_unsupported();
+}
+INTERN int DCALL
+fs_lchown(DeeObject *__restrict UNUSED(path),
+          DeeObject *__restrict UNUSED(user),
+          DeeObject *__restrict UNUSED(group)) {
  return fs_unsupported();
 }
 INTERN int DCALL

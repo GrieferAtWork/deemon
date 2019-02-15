@@ -3135,6 +3135,11 @@ err:
  return -1;
 }
 INTERN int DCALL
+fs_lchmod(DeeObject *__restrict path,
+          DeeObject *__restrict mode) {
+ return fs_chmod(path,mode);
+}
+INTERN int DCALL
 fs_chattr_np(DeeObject *__restrict path,
              DeeObject *__restrict new_attr) {
  DWORD attr; int error;
@@ -3189,6 +3194,12 @@ fs_chown(DeeObject *__restrict path,
  DERROR_NOTIMPLEMENTED();
 err:
  return -1;
+}
+INTERN int DCALL
+fs_lchown(DeeObject *__restrict path,
+          DeeObject *__restrict user,
+          DeeObject *__restrict group) {
+ return fs_chown(path,user,group);
 }
 
 INTERN int DCALL

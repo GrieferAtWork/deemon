@@ -129,7 +129,7 @@ function include(filename) {
 
 
 @@Define an integer constant (gi -- GenerateInteger)
-function gi(name: string, value: string | int = none, libname: string = none, visi: string = "PRIVATE", isconstant: bool = true) {
+function gi(name: string, value: string | int = none, libname: string = none, visi: string = "PRIVATE", isconstant: bool = true, doc: string = none) {
 	if (libname is none)
 		libname = fs.fileof(traceback()[1].file);
 	if (libname)
@@ -145,9 +145,14 @@ function gi(name: string, value: string | int = none, libname: string = none, vi
 			value
 		});
 	}
-	print "#define {}{}_DEF \\\n\t".format({ libname.upper(), name.upper() }),
+	local macro_name = "{}{}_DEF".format({ libname.upper(), name.upper() });
+	print file.stderr: macro_name;
+	print "#define",macro_name,"\\\n\t",
 		"{",(repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) +
-		",",isconstant ? "MODSYM_FREADONLY|MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL","},";
+		",",isconstant ? "MODSYM_FREADONLY|MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL",;
+	if (doc !is none)
+		print ",",repr doc,;
+	print " },";
 	local valid_bits = [15,30,45,60];
 	if (value is int) {
 		/* The constant is given directly. */
@@ -199,13 +204,13 @@ function gi(name: string, value: string | int = none, libname: string = none, vi
 }
 
 @@Same as #gi, but surround the definition with an #ifdef for @value
-function gii(name: string, value: string = none, libname: string = none, visi: string = "PRIVATE", isconstant: bool = true) {
+function gii(name: string, value: string = none, libname: string = none, visi: string = "PRIVATE", isconstant: bool = true, doc: string = none) {
 	if (libname is none)
 		libname = fs.fileof(traceback()[1].file);
 	if (value is none)
 		value = name;
 	print "#ifdef",value;
-	gi(name,value,libname,visi,isconstant);
+	gi(name,value,libname,visi,isconstant,doc);
 	print "#else /*",value,"*/";
 	if (libname)
 		libname = libname + "_";
@@ -338,6 +343,8 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 					"Dee_None" : "!N",
 					"Dee_True" : "!t",
 					"Dee_False" : "!f",
+					"Dee_EmptyString" : "!P{}",
+					"Dee_EmptyTuple" : "!T0",
 					"true" : "!t",
 					"false" : "!f",
 				};

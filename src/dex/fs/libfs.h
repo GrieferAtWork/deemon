@@ -232,10 +232,12 @@ INTDEF DeeTypeObject DeeLStat_Type;
 INTDEF int DCALL fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
                            DeeObject *__restrict mtime, DeeObject *__restrict ctime);
 INTDEF int DCALL fs_chmod(DeeObject *__restrict path, DeeObject *__restrict mode);
+INTDEF int DCALL fs_lchmod(DeeObject *__restrict path, DeeObject *__restrict mode);
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF int DCALL fs_chattr_np(DeeObject *__restrict path, DeeObject *__restrict new_attr);
 #endif /* CONFIG_HOST_WINDOWS */
 INTDEF int DCALL fs_chown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
+INTDEF int DCALL fs_lchown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
 INTDEF int DCALL fs_mkdir(DeeObject *__restrict path, DeeObject *__restrict perm);
 INTDEF int DCALL fs_rmdir(DeeObject *__restrict path);
 INTDEF int DCALL fs_unlink(DeeObject *__restrict path);

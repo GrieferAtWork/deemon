@@ -177,6 +177,7 @@ BEGIN
 		BEGIN DEX("collections")  SOURCE("collections/*.c")  END
 		BEGIN DEX("disassembler") SOURCE("disassembler/*.c") END
 		BEGIN DEX("xml")          SOURCE("xml/*.c")          END
+		BEGIN DEX("posix")        SOURCE("posix/*.c")        END
 		IF(TARGET_WINDOWS)
 			BEGIN
 				DEX("win32")

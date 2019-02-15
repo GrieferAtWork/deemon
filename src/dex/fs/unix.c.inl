@@ -1214,12 +1214,36 @@ err:
  return -1;
 }
 INTERN int DCALL
+fs_lchmod(DeeObject *__restrict path,
+          DeeObject *__restrict mode) {
+ uint16_t mask,flags;
+ if (DeeThread_CheckInterrupt()) goto err;
+ if (fs_getchmod_mask(mode,&mask,&flags))
+     goto err;
+ /* TODO: lchmod() */
+ DERROR_NOTIMPLEMENTED();
+ return -1;
+err:
+ return -1;
+}
+INTERN int DCALL
 fs_chown(DeeObject *__restrict path,
          DeeObject *__restrict user,
          DeeObject *__restrict group) {
  if (DeeThread_CheckInterrupt()) goto err;
  (void)path,(void)user,(void)group;
  /* TODO: chown() */
+ DERROR_NOTIMPLEMENTED();
+err:
+ return -1;
+}
+INTERN int DCALL
+fs_lchown(DeeObject *__restrict path,
+          DeeObject *__restrict user,
+          DeeObject *__restrict group) {
+ if (DeeThread_CheckInterrupt()) goto err;
+ (void)path,(void)user,(void)group;
+ /* TODO: lchown() */
  DERROR_NOTIMPLEMENTED();
 err:
  return -1;

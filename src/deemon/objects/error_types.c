@@ -766,11 +766,15 @@ PRIVATE DREF DeeObject *DCALL
 appexit_class_atexit(DeeObject *__restrict UNUSED(self),
                      size_t argc, DeeObject **__restrict argv) {
  DeeObject *callback,*args = Dee_EmptyTuple;
- if (DeeArg_Unpack(argc,argv,"o|o:atexit",&callback,&args) ||
-     DeeObject_AssertTypeExact(args,&DeeTuple_Type) ||
-     Dee_AtExit(callback,args))
-     return NULL;
+ if (DeeArg_Unpack(argc,argv,"o|o:atexit",&callback,&args))
+     goto err;
+ if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
+     goto err;
+ if (Dee_AtExit(callback,args))
+     goto err;
  return_none;
+err:
+ return NULL;
 }
 
 PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {

@@ -223,12 +223,18 @@ DFUNDEF void DCALL DeeCompiler_End(void);
 DFUNDEF void DCALL DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler);
 
 #ifdef CONFIG_NO_THREADS
-#define COMPILER_BEGIN(c) DeeCompiler_Begin(c)
-#define COMPILER_END()    DeeCompiler_End()
+#define Dee_COMPILER_BEGIN(c) DeeCompiler_Begin(c)
+#define Dee_COMPILER_END()    DeeCompiler_End()
 #else
-#define COMPILER_BEGIN(c) (recursive_rwlock_write(&DeeCompiler_Lock),DeeCompiler_Begin(c))
-#define COMPILER_END()    (DeeCompiler_End(),recursive_rwlock_endwrite(&DeeCompiler_Lock))
+#define Dee_COMPILER_BEGIN(c) (recursive_rwlock_write(&DeeCompiler_Lock),DeeCompiler_Begin(c))
+#define Dee_COMPILER_END()    (DeeCompiler_End(),recursive_rwlock_endwrite(&DeeCompiler_Lock))
 #endif
+
+
+#ifdef DEE_SOURCE
+#define COMPILER_BEGIN Dee_COMPILER_BEGIN
+#define COMPILER_END   Dee_COMPILER_END
+#endif /* DEE_SOURCE */
 
 
 DECL_END
