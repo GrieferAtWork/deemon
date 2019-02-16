@@ -1678,7 +1678,17 @@ yield_semi_after_operator:
    }
    operator_name = OPERATOR_DESTRUCTOR;
    goto define_operator;
+  case KWD_copy:
+   if unlikely(yield() < 0) goto err;
+   operator_name = OPERATOR_COPY;
+   goto define_operator;
+  case KWD_deepcopy:
+   if unlikely(yield() < 0) goto err;
+   operator_name = OPERATOR_DEEPCOPY;
+   goto define_operator;
   } break;
+
+
 
 
   {

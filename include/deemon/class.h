@@ -133,7 +133,7 @@
  *  - assign, moveassign                   >>         if ((other as MyClass).foobar is bound) foobar = (other as MyClass).foobar;
  *  - hash, eq, ne, lo, le, gr, ge         >>     }
  * Also note that when providing a `copy'  >>     operator deepcopy(other) {
- * operator, is will also be invoke when   >>         // super.deepcopy(other);
+ * operator, it will also be invoke when   >>         // super.deepcopy(other);
  * `deepcopy' is called, after with each   >>         if (other !is MyClass)
  * of the instance's bound members will be >>             throw Error.TypeError("...");
  * replace with a deep copy of itself.     >>         if ((other as MyClass).foo    is bound) foo    = deepcopy((other as MyClass).foo);
