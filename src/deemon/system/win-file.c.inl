@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -1052,13 +1052,14 @@ sysfile_write(SystemFile *__restrict self,
    * called with converted UTF-8 data will fail with an error.
    * This, as well as the fact that I've seen the default console CP
    * having been changed to `CP_UTF8' in some environments is why in
-   * out main(), we call `SetConsoleOutputCP(GetOEMCP())' to make sure
+   * our main(), we call `SetConsoleOutputCP(GetOEMCP())' to make sure
    * that the default OEM code page is set (which can be used for the
    * purposes of converting UTF-8 to Wide-chars, before printing with
    * full unicode support enabled)
    * XXX: What about console input? Shouldn't that have the same problem? */
   if unlikely(write_to_console(self,buffer,bufsize))
      return -1;
+  /* TODO: Support for-, and emulation of `ENABLE_VIRTUAL_TERMINAL_PROCESSING' */
   return (dssize_t)bufsize;
  }
 again:

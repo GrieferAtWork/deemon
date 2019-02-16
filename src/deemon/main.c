@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -162,11 +162,11 @@ PP_STR(CONFIG_HOST_ENDIAN) "-endian"
 PP_STR(DEE_VERSION_API) "/"
 PP_STR(DEE_VERSION_COMPILER) ":"
 PP_STR(DEE_VERSION_REVISION)           " -  Deemon Compiler  - "
-"Copyright (C) 2016-2018 Griefer@Work\n"
+"Copyright (C) 2016-2019 Griefer@Work\n"
 "tpp       version "
 PP_STR(TPP_API_VERSION) "/"
 PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
-"Copyright (C) 2015-2018 Griefer@Work\n"
+"Copyright (C) 2015-2019 Griefer@Work\n"
 "\tGitub: https://github.com/GrieferAtWork/deemon\n"
 "\n\n"
 ;

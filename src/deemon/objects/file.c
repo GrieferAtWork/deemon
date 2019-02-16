@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -1126,10 +1126,10 @@ found_option:
   }
   goto err;
  }
- if (flags&OPEN_EXFLAG_FTEXT) {
+ if (flags & OPEN_EXFLAG_FTEXT) {
   /* TODO: Wrap the file in a text-decoder. */
  }
- if (!(flags&OPEN_EXFLAG_FNOBUF)) {
+ if (!(flags & OPEN_EXFLAG_FNOBUF)) {
   /* Wrap the file in a buffer. */
   new_result = DeeFileBuffer_New(result,(oflags&OPEN_FACCMODE) == OPEN_FRDONLY
                                  ? (FILE_BUFFER_MODE_AUTO|FILE_BUFFER_FREADONLY)

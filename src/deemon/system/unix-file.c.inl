@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -397,13 +397,45 @@ DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode) {
  if (fd < 0) {
   int error = errno;
   /* Handle file-already-exists. */
-  if (error == EEXIST && (oflags&OPEN_FEXCL))
+  if (error == EEXIST && (oflags & OPEN_FEXCL))
       return ITER_DONE;
   /* Handle file-not-found. */
-  if (error == ENOENT && !(oflags&OPEN_FCREAT))
+  if (error == ENOENT && !(oflags & OPEN_FCREAT))
       return ITER_DONE;
-  DeeError_SysThrowf(&DeeError_FSError,error,
-                     "Failed to open %r",filename);
+#ifdef ENOTDIR
+  if (error == ENOTDIR)
+      return ITER_DONE;
+#endif
+#ifdef EACCES
+  if (error == EACCES) {
+   DeeError_SysThrowf(&DeeError_FileAccessError,error,
+                      "Failed to access %r",filename);
+  } else
+#endif
+#if defined(ENXIO) || defined(EROFS) || defined(EISDIR) || defined(ETXTBSY)
+  if (0
+#ifdef ENXIO
+      || error == ENXIO
+#endif
+#ifdef EROFS
+      || error == EROFS
+#endif
+#ifdef EISDIR
+      || error == EISDIR
+#endif
+#ifdef ETXTBSY
+      || error == ETXTBSY
+#endif
+      )
+  {
+   DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,
+                      "Cannot open directory %r for writing",filename);
+  } else
+#endif
+  {
+   DeeError_SysThrowf(&DeeError_FSError,error,
+                      "Failed to open %r",filename);
+  }
   goto err;
  }
  result = DeeObject_MALLOC(SystemFile);
@@ -426,10 +458,13 @@ DeeFile_OpenString(char const *__restrict filename,
  /* Due to the whole wide-string mess on windows, this is
   * just a thin wrapper around the string-object version. */
  nameob = DeeString_New(filename);
- if unlikely(!nameob) return NULL;
+ if unlikely(!nameob)
+    goto err;
  result = DeeFile_Open(nameob,oflags,mode);
  Dee_Decref(nameob);
  return result;
+err:
+ return NULL;
 }
 
 

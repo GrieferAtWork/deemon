@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -1941,6 +1941,11 @@ PRIVATE struct dex_symbol symbols[] = {
     LIBWIN32_SETFILEATTRIBUTES_DEF_DOC("Set attributes for @lpFileName to @dwFileAttributes (set of `FILE_ATTRIBUTE_*')")
     LIBWIN32_GETCOMPRESSEDFILESIZE_DEF
     LIBWIN32_FLUSHFILEBUFFERS_DEF
+    /* TODO: GetStdHandle */
+    /* TODO: SetStdHandle */
+    /* TODO: STD_INPUT_HANDLE */
+    /* TODO: STD_OUTPUT_HANDLE */
+    /* TODO: STD_ERROR_HANDLE */
 
     /* Filesystem functions */
     LIBWIN32_REMOVEDIRECTORY_DEF

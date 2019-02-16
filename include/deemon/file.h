@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -366,7 +366,7 @@ DFUNDEF int DCALL DeeFile_PrintAllNl(DeeObject *__restrict self, DeeObject *__re
  * @return: ITER_DONE: `OPEN_FCREAT' has not been given and file could not be found (no error was thrown)
  * @return: ITER_DONE: `OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
 DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_Open(/*String*/DeeObject *__restrict filename, int oflags, int mode);
-DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_OpenString(char const *__restrict filename, int oflags, int mode);
+DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_OpenString(/*utf-8*/char const *__restrict filename, int oflags, int mode);
 
 #define Dee_OPEN_FRDONLY   0x00000000 /* Open only for reading. */
 #define Dee_OPEN_FWRONLY   0x00000001 /* Open only for writing. */

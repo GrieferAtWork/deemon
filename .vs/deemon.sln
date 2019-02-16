@@ -88,8 +88,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{2360741E-FB4
 		..\lib\codecs.dee = ..\lib\codecs.dee
 		..\lib\d200.dee = ..\lib\d200.dee
 		..\lib\doc.dee = ..\lib\doc.dee
+		..\lib\errors.dee = ..\lib\errors.dee
 		..\lib\functools.dee = ..\lib\functools.dee
 		..\lib\operators.dee = ..\lib\operators.dee
+		..\lib\py2dee.dee = ..\lib\py2dee.dee
 		..\lib\random.dee = ..\lib\random.dee
 		..\lib\thread_util.dee = ..\lib\thread_util.dee
 		..\lib\util.dee = ..\lib\util.dee
@@ -101,6 +103,178 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net", "net", "{AEC1B98C-EA2
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "posix", "dex\posix.vcxproj", "{A09058C8-D00B-45BE-A6FC-467B05B65890}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "python", "python", "{9D042239-9D4D-464F-8A1F-A0F834C003D0}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\python\builtins.dee = ..\lib\python\builtins.dee
+		..\lib\python\exceptions.dee = ..\lib\python\exceptions.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rt", "rt", "{E57BB1FF-CF31-4B75-8C2D-0227314048BB}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\rt\bytecode.dee = ..\lib\rt\bytecode.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "include", "include", "{BB688EBB-D2A7-47A1-8304-B97665CA724A}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\include\__builtin_bswap.dee = ..\lib\include\__builtin_bswap.dee
+		..\lib\include\__builtin_class.dee = ..\lib\include\__builtin_class.dee
+		..\lib\include\__builtin_code.dee = ..\lib\include\__builtin_code.dee
+		..\lib\include\__builtin_enumattr.dee = ..\lib\include\__builtin_enumattr.dee
+		..\lib\include\__builtin_exit.dee = ..\lib\include\__builtin_exit.dee
+		..\lib\include\__builtin_extern.dee = ..\lib\include\__builtin_extern.dee
+		..\lib\include\__builtin_fs.dee = ..\lib\include\__builtin_fs.dee
+		..\lib\include\__builtin_gcc.dee = ..\lib\include\__builtin_gcc.dee
+		..\lib\include\__builtin_help.dee = ..\lib\include\__builtin_help.dee
+		..\lib\include\__builtin_malloc.dee = ..\lib\include\__builtin_malloc.dee
+		..\lib\include\__builtin_math.dee = ..\lib\include\__builtin_math.dee
+		..\lib\include\__builtin_mem.dee = ..\lib\include\__builtin_mem.dee
+		..\lib\include\__builtin_pointer.dee = ..\lib\include\__builtin_pointer.dee
+		..\lib\include\__builtin_runtime.dee = ..\lib\include\__builtin_runtime.dee
+		..\lib\include\__builtin_util.dee = ..\lib\include\__builtin_util.dee
+		..\lib\include\__cdefault.dee = ..\lib\include\__cdefault.dee
+		..\lib\include\__cxxdefault.dee = ..\lib\include\__cxxdefault.dee
+		..\lib\include\__deemon_chartraits.dee = ..\lib\include\__deemon_chartraits.dee
+		..\lib\include\__ffs.dee = ..\lib\include\__ffs.dee
+		..\lib\include\__intrin.dee = ..\lib\include\__intrin.dee
+		..\lib\include\__stddef.dee = ..\lib\include\__stddef.dee
+		..\lib\include\__TPP_STDINC.h = ..\lib\include\__TPP_STDINC.h
+		..\lib\include\atomic = ..\lib\include\atomic
+		..\lib\include\attrutil = ..\lib\include\attrutil
+		..\lib\include\cell = ..\lib\include\cell
+		..\lib\include\dexmodule = ..\lib\include\dexmodule
+		..\lib\include\endian = ..\lib\include\endian
+		..\lib\include\error = ..\lib\include\error
+		..\lib\include\file = ..\lib\include\file
+		..\lib\include\fs = ..\lib\include\fs
+		..\lib\include\fs.env = ..\lib\include\fs.env
+		..\lib\include\function = ..\lib\include\function
+		..\lib\include\gc = ..\lib\include\gc
+		..\lib\include\intrin = ..\lib\include\intrin
+		..\lib\include\m_fs.dee = ..\lib\include\m_fs.dee
+		..\lib\include\m_fs_path.dee = ..\lib\include\m_fs_path.dee
+		..\lib\include\m_fs_posix.dee = ..\lib\include\m_fs_posix.dee
+		..\lib\include\m_fs_win32.dee = ..\lib\include\m_fs_win32.dee
+		..\lib\include\m_math.dee = ..\lib\include\m_math.dee
+		..\lib\include\m_sys.dee = ..\lib\include\m_sys.dee
+		..\lib\include\m_util.dee = ..\lib\include\m_util.dee
+		..\lib\include\m_util_attr.dee = ..\lib\include\m_util_attr.dee
+		..\lib\include\math = ..\lib\include\math
+		..\lib\include\mem = ..\lib\include\mem
+		..\lib\include\pipe = ..\lib\include\pipe
+		..\lib\include\process = ..\lib\include\process
+		..\lib\include\random = ..\lib\include\random
+		..\lib\include\README.txt = ..\lib\include\README.txt
+		..\lib\include\shared_lib = ..\lib\include\shared_lib
+		..\lib\include\stddef.h = ..\lib\include\stddef.h
+		..\lib\include\stdnoreturn.h = ..\lib\include\stdnoreturn.h
+		..\lib\include\sys = ..\lib\include\sys
+		..\lib\include\thread = ..\lib\include\thread
+		..\lib\include\time = ..\lib\include\time
+		..\lib\include\TODO.txt = ..\lib\include\TODO.txt
+		..\lib\include\TPP_ASSERT.h = ..\lib\include\TPP_ASSERT.h
+		..\lib\include\TPP_CAT.h = ..\lib\include\TPP_CAT.h
+		..\lib\include\TPP_CTYPE.h = ..\lib\include\TPP_CTYPE.h
+		..\lib\include\TPP_FOR.h = ..\lib\include\TPP_FOR.h
+		..\lib\include\TPP_FOREACH.h = ..\lib\include\TPP_FOREACH.h
+		..\lib\include\TPP_IF.h = ..\lib\include\TPP_IF.h
+		..\lib\include\TPP_OVERLOAD.h = ..\lib\include\TPP_OVERLOAD.h
+		..\lib\include\TPP_REPEAT.h = ..\lib\include\TPP_REPEAT.h
+		..\lib\include\TPP_STR.h = ..\lib\include\TPP_STR.h
+		..\lib\include\TPP_TUPLE_AT.h = ..\lib\include\TPP_TUPLE_AT.h
+		..\lib\include\TPP_VA_NARGS.h = ..\lib\include\TPP_VA_NARGS.h
+		..\lib\include\TPP_WHILE.h = ..\lib\include\TPP_WHILE.h
+		..\lib\include\util = ..\lib\include\util
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tr1", "tr1", "{968BEC86-526B-489B-B7E1-465C9C8B93EF}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\include\tr1\m_tr1.dee = ..\lib\include\tr1\m_tr1.dee
+		..\lib\include\tr1\m_tr1_geometry.dee = ..\lib\include\tr1\m_tr1_geometry.dee
+		..\lib\include\tr1\unique_iterator = ..\lib\include\tr1\unique_iterator
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "geometry", "geometry", "{C0DAC242-86F2-4987-AC45-732E25349DFE}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\include\tr1\geometry\point = ..\lib\include\tr1\geometry\point
+		..\lib\include\tr1\geometry\rect = ..\lib\include\tr1\geometry\rect
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gcode", "gcode", "{7C0A765A-D1C5-45CE-8377-62D4B935AFBB}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\include\gcode\__gc_default.dee = ..\lib\include\gcode\__gc_default.dee
+		..\lib\include\gcode\fs.dee = ..\lib\include\gcode\fs.dee
+		..\lib\include\gcode\m_gcode_fs.dee = ..\lib\include\gcode\m_gcode_fs.dee
+		..\lib\include\gcode\m_gcode_sys.dee = ..\lib\include\gcode\m_gcode_sys.dee
+		..\lib\include\gcode\m_gcode_timing.dee = ..\lib\include\gcode\m_gcode_timing.dee
+		..\lib\include\gcode\m_gcode_types.dee = ..\lib\include\gcode\m_gcode_types.dee
+		..\lib\include\gcode\sys.dee = ..\lib\include\gcode\sys.dee
+		..\lib\include\gcode\timing.dee = ..\lib\include\gcode\timing.dee
+		..\lib\include\gcode\types.dee = ..\lib\include\gcode\types.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net", "net", "{4DD29BBB-B719-4E48-8504-28FFE3E54B7E}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\include\net\endian = ..\lib\include\net\endian
+		..\lib\include\net\socket = ..\lib\include\net\socket
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_codecs", "_codecs", "{A1CA9A57-C6E5-4D80-B9A8-2BEBBE3AF1AA}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\_codecs\.gitignore = ..\lib\_codecs\.gitignore
+		..\lib\_codecs\_gencodecs.dee = ..\lib\_codecs\_gencodecs.dee
+		..\lib\_codecs\cp037.dee = ..\lib\_codecs\cp037.dee
+		..\lib\_codecs\cp10000.dee = ..\lib\_codecs\cp10000.dee
+		..\lib\_codecs\cp10006.dee = ..\lib\_codecs\cp10006.dee
+		..\lib\_codecs\cp10007.dee = ..\lib\_codecs\cp10007.dee
+		..\lib\_codecs\cp10029.dee = ..\lib\_codecs\cp10029.dee
+		..\lib\_codecs\cp10079.dee = ..\lib\_codecs\cp10079.dee
+		..\lib\_codecs\cp10081.dee = ..\lib\_codecs\cp10081.dee
+		..\lib\_codecs\cp1026.dee = ..\lib\_codecs\cp1026.dee
+		..\lib\_codecs\cp1250.dee = ..\lib\_codecs\cp1250.dee
+		..\lib\_codecs\cp1251.dee = ..\lib\_codecs\cp1251.dee
+		..\lib\_codecs\cp1252.dee = ..\lib\_codecs\cp1252.dee
+		..\lib\_codecs\cp1253.dee = ..\lib\_codecs\cp1253.dee
+		..\lib\_codecs\cp1254.dee = ..\lib\_codecs\cp1254.dee
+		..\lib\_codecs\cp1255.dee = ..\lib\_codecs\cp1255.dee
+		..\lib\_codecs\cp1256.dee = ..\lib\_codecs\cp1256.dee
+		..\lib\_codecs\cp1257.dee = ..\lib\_codecs\cp1257.dee
+		..\lib\_codecs\cp1258.dee = ..\lib\_codecs\cp1258.dee
+		..\lib\_codecs\cp437.dee = ..\lib\_codecs\cp437.dee
+		..\lib\_codecs\cp500.dee = ..\lib\_codecs\cp500.dee
+		..\lib\_codecs\cp737.dee = ..\lib\_codecs\cp737.dee
+		..\lib\_codecs\cp775.dee = ..\lib\_codecs\cp775.dee
+		..\lib\_codecs\cp850.dee = ..\lib\_codecs\cp850.dee
+		..\lib\_codecs\cp852.dee = ..\lib\_codecs\cp852.dee
+		..\lib\_codecs\cp855.dee = ..\lib\_codecs\cp855.dee
+		..\lib\_codecs\cp857.dee = ..\lib\_codecs\cp857.dee
+		..\lib\_codecs\cp860.dee = ..\lib\_codecs\cp860.dee
+		..\lib\_codecs\cp861.dee = ..\lib\_codecs\cp861.dee
+		..\lib\_codecs\cp862.dee = ..\lib\_codecs\cp862.dee
+		..\lib\_codecs\cp863.dee = ..\lib\_codecs\cp863.dee
+		..\lib\_codecs\cp864.dee = ..\lib\_codecs\cp864.dee
+		..\lib\_codecs\cp865.dee = ..\lib\_codecs\cp865.dee
+		..\lib\_codecs\cp866.dee = ..\lib\_codecs\cp866.dee
+		..\lib\_codecs\cp869.dee = ..\lib\_codecs\cp869.dee
+		..\lib\_codecs\cp874.dee = ..\lib\_codecs\cp874.dee
+		..\lib\_codecs\cp875.dee = ..\lib\_codecs\cp875.dee
+		..\lib\_codecs\iso8859-1.dee = ..\lib\_codecs\iso8859-1.dee
+		..\lib\_codecs\iso8859-10.dee = ..\lib\_codecs\iso8859-10.dee
+		..\lib\_codecs\iso8859-11.dee = ..\lib\_codecs\iso8859-11.dee
+		..\lib\_codecs\iso8859-13.dee = ..\lib\_codecs\iso8859-13.dee
+		..\lib\_codecs\iso8859-14.dee = ..\lib\_codecs\iso8859-14.dee
+		..\lib\_codecs\iso8859-15.dee = ..\lib\_codecs\iso8859-15.dee
+		..\lib\_codecs\iso8859-16.dee = ..\lib\_codecs\iso8859-16.dee
+		..\lib\_codecs\iso8859-2.dee = ..\lib\_codecs\iso8859-2.dee
+		..\lib\_codecs\iso8859-3.dee = ..\lib\_codecs\iso8859-3.dee
+		..\lib\_codecs\iso8859-4.dee = ..\lib\_codecs\iso8859-4.dee
+		..\lib\_codecs\iso8859-5.dee = ..\lib\_codecs\iso8859-5.dee
+		..\lib\_codecs\iso8859-6.dee = ..\lib\_codecs\iso8859-6.dee
+		..\lib\_codecs\iso8859-7.dee = ..\lib\_codecs\iso8859-7.dee
+		..\lib\_codecs\iso8859-8.dee = ..\lib\_codecs\iso8859-8.dee
+		..\lib\_codecs\iso8859-9.dee = ..\lib\_codecs\iso8859-9.dee
+		..\lib\_codecs\nextstep.dee = ..\lib\_codecs\nextstep.dee
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -655,5 +829,13 @@ Global
 		{C0532153-C48E-43FE-9F74-00C5160207B5} = {D0CDCDF8-71E9-4F21-8231-EAF86D441513}
 		{AEC1B98C-EA2C-42FE-8E56-04C1D51149C6} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
 		{A09058C8-D00B-45BE-A6FC-467B05B65890} = {D0CDCDF8-71E9-4F21-8231-EAF86D441513}
+		{9D042239-9D4D-464F-8A1F-A0F834C003D0} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
+		{E57BB1FF-CF31-4B75-8C2D-0227314048BB} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
+		{BB688EBB-D2A7-47A1-8304-B97665CA724A} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
+		{968BEC86-526B-489B-B7E1-465C9C8B93EF} = {BB688EBB-D2A7-47A1-8304-B97665CA724A}
+		{C0DAC242-86F2-4987-AC45-732E25349DFE} = {968BEC86-526B-489B-B7E1-465C9C8B93EF}
+		{7C0A765A-D1C5-45CE-8377-62D4B935AFBB} = {BB688EBB-D2A7-47A1-8304-B97665CA724A}
+		{4DD29BBB-B719-4E48-8504-28FFE3E54B7E} = {BB688EBB-D2A7-47A1-8304-B97665CA724A}
+		{A1CA9A57-C6E5-4D80-B9A8-2BEBBE3AF1AA} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
 	EndGlobalSection
 EndGlobal
