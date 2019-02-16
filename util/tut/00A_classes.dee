@@ -18,8 +18,420 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import * from deemon;
 
-/* TODO */
+@@Classes in deemon are written in a syntax similar to that of C++
+class MyList: list {
+
+	@@Member variables must be declared as such before they can be used
+	@@Note that the visiblity of members can be specified for only a single
+	@@member/function by prefixing that declaration with `public' or `private',
+	@@overriding a visibility-label modifier, or for all following members
+	@@using a visibility-label modifier:
+	public member my_public_member;
+public:
+	@@Note that by default a class starts out with `public:' visibility being used
+	member my_public_member2;
+
+	@@Member variables may optionally be initialized to be constructed
+	@@with a default value. The following declaration is then identical
+	@@to a line `this.my_private_member = "Initializer for my_private_member";'
+	@@written at the start of a user-supplied constructor callback (see below).
+	private member my_private_member = "Initializer for my_private_member";
+
+	@@Members may be declared as final, indicating that a sub-class should not
+	@@attempt to override the member, as the base-class may still continue to
+	@@make use of its own member variable, rather than the overwritten one.
+	@@By default, all members/function/properties declared as `private', as
+	@@well as everything inside of a class marked as final all-together will
+	@@automatically be marked as final.
+	@@When a variable is final the compiler may choose to address that variable
+	@@directly (which is faster) instead of addressing it as an attribute
+	final member my_final_member;
+
+	@@Lastly, member variables can also be declared as `static', in which case
+	@@instead of existing once for each instance of the class, they exist as
+	@@part of the class declaration itself, being constructed and assigned
+	@@alongside the containing class type
+	static member my_class_member = "Class member";
+
+	@@With modifiers out of the way, let's move on to member function declaration.
+	@@Note that `function' simply replaces the `member' keyword, whilst all of the
+	@@other modifiers can still be used as they also can for members:
+	@@>final function myMemberFunction() { ... } // Declare as final
+	@@>static function myMemberFunction() { ... } // Declare as class-attribute
+	@@>private function myMemberFunction() { ... } // Declare as private
+	@@>... // etc
+	function myMemberFunction() {
+
+		/* Other class members can be accessed directly like any other
+		 * kind of variable. For this purpose, you can think of the class
+		 * declaration as behaving like a sort-of scope exposing all of
+		 * the class's fields as variables
+		 * Also note that unlike in other scopes, declaration order doesn't
+		 * matter, in that members can be used before they are declared.
+		 * Here, `my_future_member' is such a member, as it is declared
+		 * further below. */
+		print "my_private_member      =",repr my_private_member;
+		print "my_final_member        =",repr my_final_member;
+		print "my_class_member        =",repr my_class_member;
+		print "my_future_member       =",repr my_future_member;
+
+		/* Seperately, inside of non-static class member functions, 2 new
+		 * builtin keywords becomes available, one of them being `this',
+		 * and the other being `super' (see below)
+		 * `this' simply referrs to the instance on which an member is being
+		 * addressed, where that instance then provides its members as regular
+		 * attributes. - For this purpose, the compiler will interpret the
+		 * expressions `my_private_member' and `this.my_private_member' as
+		 * being identical.
+		 * Furthermore, note that the compiler will only perform a dynamic
+		 * attribute lookup for a certain member if that member is allowed
+		 * to be overwritten by a sub-class, meaning that `final' members
+		 * are accessed directly, while other members are accessed more
+		 * along the lines of `this.operator . ("<NAME_OF_MEMBER>")' */
+		print "this.my_private_member =",repr this.my_private_member;
+
+		/* The following causes an AttributeError, since `my_class_member'
+		 * is declared as part of the class itself, meaning that the instance
+		 * addressible as `this' doesn't actually have such an attribute. */
+//		print "this.my_class_member   =",repr this.my_class_member;
+
+		/* This is the correct way of explicitly accessing class members,
+		 * since the object owning the member in this case is the declaring
+		 * class */
+		print "MyList.my_class_member =",repr MyList.my_class_member;
+	}
+
+	public member my_future_member = "Declared after first use";
+
+
+	@@This function overrides a function from the base-class `list'
+	function append(item) {
+		print "MyList.append(" + repr(item) + ")";
+		/* Using `super', we can access members of the base-class without
+		 * referring to our own overrides once again. */
+		super.append(item);
+		/* For this purpose, `super' behaves similar to either one of the
+		 * following 2 expressions. */
+		(this as list).append(item);
+		(this as MyList.__base__).append(item);
+	}
+
+
+	@@Lastly, fields of a class can also be declared as properties, the `property'
+	@@keyword here simply replacing the `member' or `function' keyword seen before.
+	property myInstanceProperty = {
+		/* Property fields are declared to contain up to 3 different callback
+		 * functions that are invoked when the properties name is accessed as
+		 * an attribute */
+		get() {
+			/* The getter callback. - Meant to return the attribute's value */
+			print "myInstanceProperty.get()";
+			return my_private_member;
+		}
+		del() {
+			/* The delete callback. - Called when the attribute appears in del-expressions */
+			print "myInstanceProperty.del()";
+			del my_private_member;
+		}
+		set(value) {
+			/* The setter callback. - Called to assign a new value to the attribute */
+			print "myInstanceProperty.set(" + repr(value) + ")";
+			my_private_member = value;
+		}
+	}
+
+
+	@@With all of the different of field that may be declared for classes out of
+	@@the way, next up are user-supplied constructor and destructor callbacks.
+	@@Note however that a constructor can also be omitted entirely, in which case
+	@@it behaves identical to `this(): super() { }', or be written by one of the
+	@@following:
+	@@>// Same as `this(args...,**kwds): super(args...,**kwds) { }'
+	@@>this = super;
+	@@>
+	@@>// Same as `this(args...,**kwds): super(({ throw TypeError("..."); })) { }'
+	@@>this = del;
+	@@>
+	@@>// Automatically generated constructor for data-classes (see below)
+	@@>this = default;
+	this(args...)
+		/* The super-construction callback.
+		 * Following C++-like syntax, the arguments that should be passed
+		 * to the constructor of the class's base-type can be supplied
+		 * When not defined, the super-constructor is always invoked with
+		 * no arguments, the same way it would if `this(): super()' was
+		 * written. */
+		: super([args...])
+		/* Also following C++ syntax, instance members can also be initialized
+		 * as part of the initializer list supplied following a `:' */
+		, my_final_member("Value for my_final_member")
+	{
+		/* The actual body of the constructor.
+		 * This portion once again behaves like a regular function who's arguments
+		 * have previously been specified by the `this' above.
+		 * Note that the initializer-list portion of the declaration is entirely
+		 * optional. - The only situation when it is actually mandatory is in order
+		 * to invoke a super-constructor with non-empty arguments. */
+		print "In constructor for MyList",repr args;
+	}
+
+	@@Secondly, a destructor of a class can be declared by writing `~this()'
+	@@Note that any exception thrown by a destructor is discarded upon return
+	@@from its callback.
+	~this() {
+		print "In destructor for MyList";
+	}
+
+	@@Lastly, the copy- and deepcopy operators.
+	@@When omitted, the copy-operator is default-implemented
+	@@to create a duplicate of the original classes instance
+	@@member members, using by-ref duplicates:
+	@@>class MyClass {
+	@@>	member foo;
+	@@>	copy(other) {
+	@@>		if (other.foo is bound)
+	@@>			this.foo = other.foo;
+	@@>	}
+	@@>}
+	@@Note that prior to invocation, the runtime will always
+	@@call start out by invoking the copy- or deep-copy operators
+	@@of the type's base class, forwarding the same origin object.
+	copy(other) {
+		print "MyList.copy()";
+	}
+	@@When omitted, the deepcopy-operator is default-implemented
+	@@to first invoke the regular copy-operator, before replacing
+	@@every bound instance member with a deep copy of itself:
+	@@>class MyClass {
+	@@>	member foo;
+	@@>	copy(other) {
+	@@>		if (other.foo is bound)
+	@@>			this.foo = other.foo;
+	@@>	}
+	@@>	deepcopy(other) {
+	@@>		this.CALL_COPY_OPERATOR(other);
+	@@>		if (this.foo is bound)
+	@@>			this.foo = deepcopy this.foo;
+	@@>	}
+	@@>}
+	deepcopy(other) {
+		print "MyList.deepcopy()";
+	}
+
+
+	@@Lastly, any other operator can be written for
+	@@instances of the class by defining them as follows:
+	@@Note that inplace operators must return the object
+	@@to-be re-assigned to the source operand:
+	@@>class MyClass {
+	@@>	member counter = 0;
+	@@>	operator += (other) {
+	@@>		counter += other is MyClass ? other.counter : other;
+	@@>		return this; // The object to assign to the source operand
+	@@>	}
+	@@>}
+	@@>local i = MyClass();
+	@@>i += 2; // Think of this as `i = i.operator += (2);'
+	operator + (other) {
+		print "MyList.operator + (" + repr(other) + ")";
+		local r = copy this;
+		r.append(other);
+		return r;
+	}
+
+	@@Additionally, operators can also be deleted by using the
+	@@following syntax (this this case, the multiply operator
+	@@is being deleted)
+	operator * = del;
+
+	/* Operators can be addressed with 1 of 3 different methods:
+	 * - By using the operator's symbol, where ambiguity gets
+	 *   resolved by associated argument count (if possible)
+	 *   Note that writing `operator + = del;' is illegal, since
+	 *   the compiler doesn't know if it is the `add' or `pos'
+	 *   operator that you indend to delete.
+	 * - By using the operator's unambiguous name (see table below)
+	 * - By using the operator's non-portable, implementation-specific
+	 *   ID (this method also allowing definition of operators that
+	 *   may not be known to the compiler)
+	 *   Note however that for this method it is necessary to have
+	 *   knowledge of the operator's ID at compile-time, which is
+	 *   something that would rarely be the case.
+	 *
+	 * SYMBOL    NAME    ARGC PROTOTYPE                               USAGE                             INPLACE
+	 *   +       pos     1    `operator + ()'                         `+this'                           no
+	 *   +       add     2    `operator + (other)'                    `this + other'                    no
+	 *   -       neg     1    `operator - ()'                         `-this'                           no
+	 *   -       sub     2    `operator - (other)'                    `this - other'                    no
+	 *   *       mul     2    `operator * (other)'                    `this * other'                    no
+	 *   /       div     2    `operator / (other)'                    `this / other'                    no
+	 *   %       mod     2    `operator % (other)'                    `this % other'                    no
+	 *   &       and     2    `operator & (other)'                    `this & other'                    no
+	 *   |       or      2    `operator | (other)'                    `this | other'                    no
+	 *   ^       xor     2    `operator ^ (other)'                    `this ^ other'                    no
+	 *   ~       inv     1    `operator ~ (other)'                    `~this'                           no
+	 *   <<      shl     2    `operator << (other)'                   `this << other'                   no
+	 *   >>      shr     2    `operator >> (other)'                   `this >> other'                   no
+	 *   **      pow     2    `operator ** (other)'                   `this ** other'                   no
+	 *   +=      iadd    2    `operator += (other)'                   `this += other'                   yes
+	 *   -=      isub    2    `operator -= (other)'                   `this -= other'                   yes
+	 *   *=      imul    2    `operator *= (other)'                   `this *= other'                   yes
+	 *   /=      idiv    2    `operator /= (other)'                   `this /= other'                   yes
+	 *   %=      imod    2    `operator %= (other)'                   `this %= other'                   yes
+	 *   &=      iand    2    `operator &= (other)'                   `this &= other'                   yes
+	 *   |=      ior     2    `operator |= (other)'                   `this |= other'                   yes
+	 *   ^=      ixor    2    `operator ^= (other)'                   `this ^= other'                   yes
+	 *   <<=     ishl    2    `operator <<= (other)'                  `this <<= other'                  yes
+	 *   >>=     ishr    2    `operator >>= (other)'                  `this >>= other'                  yes
+	 *   **=     ipow    2    `operator **= (other)'                  `this **= other'                  yes
+	 *   ++      inc     1    `operator ++ ()'                        `++this'                          yes
+	 *   --      dec     1    `operator -- ()'                        `--this'                          yes
+	 *   ==      eq      2    `operator == (other)'                   `this == other'                   no
+	 *   !=      ne      2    `operator != (other)'                   `this != other'                   no
+	 *   <       lo      2    `operator < (other)'                    `this < other'                    no
+	 *   <=      le      2    `operator <= (other)'                   `this <= other'                   no
+	 *   >       gr      2    `operator > (other)'                    `this > other'                    no
+	 *   >=      ge      2    `operator >= (other)'                   `this >= other'                   no
+	 *   #       size    1    `operator # ()'                         `#this'                           no
+	 *   :=      assign  2    `operator := (other)'                   `this := other'                   no
+	 *   ()      call    *    `operator () (args...,**kwds)'          `this(args...,**kwds)'            no
+	 *   []      getitem 2    `operator [] (index)'                   `this[index]'                     no
+	 *   del[]   delitem 2    `operator del[] (index)'                `del this[index]'                 no
+	 *   []      setitem 3    `operator [] (index,value)'             `this[index] = value'             no
+	 *   []=     setitem 3    `operator []= (index,value)'            `this[index] = value'             no
+	 *   [:]     getrange 3   `operator [:] (start,end)'              `this[start:end]'                 no
+	 *   del[:]  delrange 3   `operator del[:] (start,end)'           `del this[start:end]'             no
+	 *   [:]     setrange 4   `operator [:] (start,end,values)'       `this[start:end] = values'        no
+	 *   [:]=    setrange 4   `operator [:]= (start,end,values)'      `this[start:end] = values'        no
+	 *   .       getattr 2    `operator . (name: string)'             `this.name_as_keyword'            no
+	 *   del.    delattr 2    `operator del. (name: string)'          `del this.name_as_keyword'        no
+	 *   .       setattr 3    `operator . (name: string, value)'      `this.name_as_keyword = value'    no
+	 *   .=      setattr 3    `operator .= (name: string, value)'     `this.name_as_keyword = value'    no
+	 *           enumattr 1   `operator enumattr(): {attribute...}'   `enumattr(this)'                  no
+	 *           deepcopy 2   `operator deepcopy(other)'              `deepcopy this'                   no
+	 *           copy    2    `operator copy(other)'                  `copy this'                       no
+	 *   ""      str     1    `operator str(other): string'           `str this'                        no
+	 *           repr    1    `operator repr(other): string'          `repr this'                       no
+	 *           hash    1    `operator hash(): int'                  `this.operator hash()'            no
+	 *           next    1    `operator next()'                       `foreach(local x: this)'          no
+	 *           iter    1    `operator iter(): iterator'             `for (local x: this)'             no
+	 *           for     1    `operator for(): {object...}'           `for (local x: this)'             no
+	 *   move:=  moveassign 2 `operator move := (other)'              `this := copy other'              no
+	 *           enter   1    `operator enter()'                      `with (this) { ... }'             no
+	 *           leave   1    `operator leave()'                      `with (this) { ... }'             no
+	 *           contains 2   `operator contains(item)'               `item in this'                    no
+	 *           bool    1    `operator bool(): bool'                 `if (this)'                       no
+	 *           int     1    `operator int(): int'                   `(int)this'                       no
+	 *           float   1    `operator float(): float'               `(float)this'                     no
+	 * NOTE: Only one of `operator iter()' and `operator for()' can ever be supplied for
+	 *       any single class.
+	 *
+	 * Additionally, classes derived from `file' may implement the following operators:
+	 *
+	 * SYMBOL    NAME    ARGC PROTOTYPE                               USAGE                             INPLACE
+	 *           read    2    `operator read(count: int): bytes'      `this.read(count)'                no
+	 *           write   2    `operator write(data: bytes): int'      `this.write(data)'                no
+	 *           seek    3    `operator seek(off: int, whence: int): int' `this.seek(off,whence)'       no
+	 *           sync    1    `operator sync()'                       `this.sync()'                     no
+	 *           trunc   2    `operator trunc(len: int)'              `this.trunc(len)'                 no
+	 *           close   1    `operator close()'                      `this.close()'                    no
+	 *           pread   3    `operator pread(count: int, pos: int): bytes' `this.pread(count,pos)'     no
+	 *           pwrite  3    `operator pwrite(data: bytes, pos: int): int' `this.pwrite(data,pos)'     no
+	 *           getc    1    `operator getc(): int'                  `this.getc()'                     no
+	 *           ungetc  2    `operator ungetc(ch: int): bool'        `this.ungetc(ch)'                 no
+	 *           putc    2    `operator putc(ch: int): bool'          `this.putc(ch)'                   no
+	 */
+
+}
+
+print MyList.my_class_member; /* Class member */
+
+local i = MyList(10,20,30);
+i.myMemberFunction();
+i.append(42);
+print repr i;
+
+print repr(i + "foobar");
+
+print i.myInstanceProperty; /* myInstanceProperty.get() -- Initializer for my_private_member */
+i.myInstanceProperty = 7;   /* myInstanceProperty.set(7) */
+del i.myInstanceProperty;   /* myInstanceProperty.del() */
+del i;                      /* In destructor for MyList */
+
+print "After destruction";
+
+
+@@Example usage of `this = default'
+class Point {
+	public member x;
+	public member y;
+	public member z = 7;
+
+	@@When used, the class is supplied with an automatically generated
+	@@constructor, as well as `operator repr()' that will mirror a valid
+	@@expression which may be used to instantiate an instance of the class.
+	@@Note that the order of arguments taken to the constructor matches
+	@@the order in which instance members were previously declared
+	@@Only public instance members are initialized by such a constructor,
+	@@with properties not being considered for this purpose.
+	@@With all that in mind, the constructor of this class is implemented
+	@@as follows:
+	@@>this(x?,y?,z?) {
+	@@>	this.z = 7; // Member pre-initialization
+	@@>	if (x is bound) this.x = x;
+	@@>	if (y is bound) this.y = y;
+	@@>	if (z is bound) this.z = z;
+	@@>}
+	@@Additionally, `operator repr()' is default-implemented as follows:
+	@@>operator repr() {
+	@@>	file.writer tempfp;
+	@@>	tempfp << "Point(";
+	@@>	local is_first = true;
+	@@>	if (this.x is bound) {
+	@@>		is_first = false;
+	@@>		tempfp << "x: " << repr(this.x);
+	@@>	}
+	@@>	if (this.y is bound) {
+	@@>		if (!is_first)
+	@@>			tempfp << ", ";
+	@@>		is_first = false;
+	@@>		tempfp << "y: " << repr(this.y);
+	@@>	}
+	@@>	if (this.z is bound) {
+	@@>		if (!is_first)
+	@@>			tempfp << ", ";
+	@@>		tempfp << "z: " << repr(this.z);
+	@@>	}
+	@@>	tempfp << ")";
+	@@>	return tempfp.string;
+	@@>}
+	this = default;
+}
+
+print repr Point();           /* Point(z: 7) */
+print repr Point(10,20);      /* Point(x: 10, y: 20, z: 7) */
+print repr Point(y: 16);      /* Point(y: 16, z: 7) */
+print repr Point(x: 0, y: 0); /* Point(x: 0, y: 0, z: 7) */
+print repr Point(z: 0);       /* Point(z: 0) */
+print repr Point(0,0,0);      /* Point(x: 0, y: 0, z: 0) */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

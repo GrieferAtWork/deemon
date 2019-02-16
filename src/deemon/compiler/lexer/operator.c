@@ -339,6 +339,9 @@ ast_parse_operator_name(uint16_t features) {
   result = CLASS_OPERATOR_SUPERARGS;
   goto done_y1;
  case '=':
+  if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
+      goto err;
+  ATTR_FALLTHROUGH
  case TOK_COLLON_EQUAL:
   result = OPERATOR_ASSIGN;
   if unlikely(yield() < 0) goto err;
@@ -460,7 +463,10 @@ default_case:
    if (name == ENCODE4('m','o','v','e')) {
     if unlikely(yield() < 0) goto err;
     result = OPERATOR_MOVEASSIGN;
-    if unlikely(tok != '=' && tok != TOK_COLLON_EQUAL) {
+    if unlikely(tok == '=') {
+     if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
+         goto err;
+    } else if unlikely(tok != TOK_COLLON_EQUAL) {
      if (WARN(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
          goto err;
      goto done;

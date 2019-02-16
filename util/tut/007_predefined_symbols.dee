@@ -36,8 +36,8 @@ print false;  /* false */
 local x = 42;
 print x is none; /* false -- alias for `x is type none' */
 
-/* Using none in an unpack-expression always
- * produces the required number of results. */
+/* Using none in an unpack-expression always produces the required number of results,
+ * which is something that cannot be reproduced using any other kind of object. */
 local x,y,z = none...;
 print x,y,z; /* none none none */
 
@@ -51,7 +51,7 @@ print (none.foo.bar.whatever + 7) * 3; /* none */
 
 
 /* Using `none' as the target of a file-targeted print expression
- * results in the print being discarded. */
+ * causes the results of the print to be discarded. */
 print none: x,y,z;
 
 
@@ -83,7 +83,7 @@ print y("barfoo"); /* foobarbarfoo */
 /* Also note that `operator <name>' can also be used by itself. */
 print operator + (x,"1234"); /* foobar1234 */
 
-/* When it comes to which operators exist, as well as what their names
+/* When it comes to what operators exist, as well as what their names
  * are, look at the tutorial for classes. */
 
 

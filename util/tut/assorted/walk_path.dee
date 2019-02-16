@@ -23,7 +23,7 @@ import Error from deemon;
 
 function walk(p) {
 	try {
-		for (x: dir(p)) {
+		for (local x: dir(p)) {
 			x = joinpath(p,x);
 			if (stat.isdir(x))
 				yield walk(x)...;
@@ -39,7 +39,7 @@ if (#args == 1) {
 	print "Expected query argument";
 	return 1;
 }
-for (x: walk(args[1]))
+for (local x: walk(args[1]))
 	print x;
 
 

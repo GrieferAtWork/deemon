@@ -66,7 +66,7 @@ print "This is `next'";
 print x ? "x is true" : "x isn't true";
 print x ? : "x isn't true";      /* Re-use `x' as true-branch */
 print x ? "x is true";           /* Use `none' as false-branch */
-print x ? "x is true" : ;        /* Use `x' as false-branch */
+print x ? "x is true" : ;        /* Re-use `x' as false-branch */
 
 local y = false;
 
@@ -96,13 +96,13 @@ try {
 }
 
 /* Catch-expressions can be written in one of the following ways:
- *   - catch (...)              -- Catch any kind of object that isn't an interrupt
- *   - catch (e...)             -- Catch any kind of object that isn't an interrupt and store it in a newly created local variable `e'
- *   - @:interrupt catch (...)  -- Catch any kind of object
- *   - @:interrupt catch (e...) -- Catch any kind of object and store it in a newly created local variable `e'
- *   - catch (<typeexpr>)       -- Catch any object `x' where `x is <typeexpr>' is true
- *                                 <typeexpr> is evaluated only when an exception occurs
- *   - catch (<typeexpr> as e)  -- Same as `catch (<typeexpr>)', but also store it in a newly created local variable `e'
+ *   - catch (...)               -- Catch any kind of object that isn't an interrupt
+ *   - catch (e...)              -- Catch any kind of object that isn't an interrupt and store it in a newly created local variable `e'
+ *   - @[interrupt] catch (...)  -- Catch any kind of object
+ *   - @[interrupt] catch (e...) -- Catch any kind of object and store it in a newly created local variable `e'
+ *   - catch (<typeexpr>)        -- Catch any object `x' where `x is <typeexpr>' is true
+ *                                  <typeexpr> is evaluated only when an exception occurs
+ *   - catch (<typeexpr> as e)   -- Same as `catch (<typeexpr>)', but also store it in a newly created local variable `e'
  */
 
 
@@ -129,7 +129,7 @@ for (local x,y: item_pairs) {
 		"b" : 19,
 		"c" : 31,
 	};
-	items["foobar"] = items + ...;
+	items["foobar"] = items + ...; /* sum(items) */
 	for (local key,value: items)
 		print key,"=",repr value;
 }
