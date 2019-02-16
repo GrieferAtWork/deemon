@@ -1104,18 +1104,31 @@ exec_finally:
         self->yi_frame.cf_ip <= code->co_code+code->co_codebytes);
  ipaddr = (code_addr_t)(self->yi_frame.cf_ip - code->co_code);
  while (iter-- != begin) {
-  DREF DeeObject *result;
-  if (!(iter->eh_flags&EXCEPTION_HANDLER_FFINALLY)) continue;
+  DREF DeeObject *result,**req_sp;
+  if (!(iter->eh_flags & EXCEPTION_HANDLER_FFINALLY)) continue;
   if (!(ipaddr > iter->eh_start && ipaddr <= iter->eh_end)) continue;
   /* Execute this finally-handler. */
-  self->yi_frame.cf_ip = code->co_code+iter->eh_addr;
+  self->yi_frame.cf_ip = code->co_code + iter->eh_addr;
+  /* Must adjust the stack to match the requirements of the handler. */
+  req_sp = self->yi_frame.cf_stack + iter->eh_stack;
+  if (self->yi_frame.cf_sp != req_sp) {
+   while (self->yi_frame.cf_sp > req_sp) {
+    --self->yi_frame.cf_sp;
+    Dee_Decref(*self->yi_frame.cf_sp);
+   }
+   while (self->yi_frame.cf_sp < req_sp) {
+    *self->yi_frame.cf_sp = Dee_None;
+    Dee_Incref(Dee_None);
+    ++self->yi_frame.cf_sp;
+   }
+  }
   /* We must somehow indicate to code-exec to stop when an
    * `ASM_ENDFINALLY' instruction is hit.
    * Normally, this is done when the return value has been
    * assigned, so we simply fake that by pre-assigning `none'. */
   self->yi_frame.cf_result = Dee_None;
   Dee_Incref(Dee_None);
-  if unlikely(self->yi_frame.cf_flags&CODE_FASSEMBLY) {
+  if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY) {
    /* Special case: Execute the code using the safe runtime, rather than the fast. */
    result = DeeCode_ExecFrameSafe(&self->yi_frame);
   } else {
@@ -1145,7 +1158,7 @@ yfi_dtor(YFIterator *__restrict self) {
  ASSERT_OBJECT_OPT(self->yi_frame.cf_this);
  if (self->yi_frame.cf_func)
      numlocals = self->yi_frame.cf_func->fo_code->co_localc;
- stacksize = self->yi_frame.cf_sp-self->yi_frame.cf_stack;
+ stacksize = self->yi_frame.cf_sp - self->yi_frame.cf_stack;
  Dee_XDecref(self->yi_func);
  Dee_XDecref(self->yi_frame.cf_func);
  Dee_XDecref(self->yi_frame.cf_this);
