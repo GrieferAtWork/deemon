@@ -20,7 +20,9 @@
 #define GUARD_DEX_POSIX_LIBPOSIX_H 1
 #define _KOS_SOURCE 1
 #define _GNU_SOURCE 1
+#define _XOPEN_SOURCE 700
 #define _LARGEFILE64_SOURCE 1
+#define _ATFILE_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
@@ -133,40 +135,46 @@
 #endif /* !CONFIG_NO_STDLIB */
 
 #ifdef _MSC_VER         /* Microsoft compiler */
+#define HAVE_EXECV      1
 #define execv     _execv
 #define execve    _execve
 #define execvp    _execvp
 #define execvpe   _execvpe
-#define HAVE_EXECV      1
 
+#define HAVE_WEXECV     1
 #define wexecv    _wexecv
 #define wexecve   _wexecve
 #define wexecvp   _wexecvp
 #define wexecvpe  _wexecvpe
-#define HAVE_WEXECV     1
 
+#define HAVE_SPAWNV     1
 #define spawnv    _spawnv
 #define spawnve   _spawnve
 #define spawnvp   _spawnvp
 #define spawnvpe  _spawnvpe
-#define HAVE_SPAWNV     1
 
+#define HAVE_WSPAWNV    1
 #define wspawnv   _wspawnv
 #define wspawnve  _wspawnve
 #define wspawnvp  _wspawnvp
 #define wspawnvpe _wspawnvpe
-#define HAVE_WSPAWNV    1
 
-#define cwait     _cwait
 #define HAVE_CWAIT      1
+#define cwait     _cwait
 
-#define wsystem   _wsystem
 #define HAVE_SYSTEM     1
 #define HAVE_WSYSTEM    1
+#define wsystem   _wsystem
 
 #define HAVE_FILEIO 1
 #define HAVE_LSEEK64 1
+#define HAVE_CREAT 1
+#define HAVE_WCREAT 1
+#define HAVE_WOPEN 1
+#define creat     _creat
+#define wcreat    _wcreat
 #define open      _open
+#define wopen     _wopen
 #define read      _read
 #define write     _write
 #define lseek     _lseek
@@ -183,6 +191,27 @@
 #define HAVE_FTRUNCATE64 1
 #define ftruncate   _chsize
 #define ftruncate64 _chsize_s
+
+#define HAVE_UMASK 1
+#define umask    _umask
+
+#define HAVE_DUP 1
+#define dup      _dup
+
+#define HAVE_DUP2 1
+#define dup2     _dup2
+
+#define HAVE_ISATTY 1
+#define isatty   _isatty
+
+#define HAVE_ACCESS 1
+#define HAVE_WACCESS 1
+#define access   _access
+#define waccess  _waccess
+#define F_OK     0
+#define X_OK     1 /* Not supported? */
+#define W_OK     2
+#define R_OK     4
 
 #undef O_RDONLY
 #undef O_WRONLY
@@ -206,7 +235,94 @@
 #undef O_RANDOM
 #else
 
-/* TODO */
+#if defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)
+#define HAVE_ACCESS 1
+#ifdef __USE_GNU
+#define HAVE_EUIDACCESS 1
+#define HAVE_EACCESS    1
+#endif /* __USE_GNU */
+#ifdef __USE_ATFILE
+#define HAVE_FACCESSAT  1
+#endif /* __USE_ATFILE */
+#endif
+
+#ifdef __USE_ATFILE
+#define HAVE_FCHOWNAT 1
+#endif /* __USE_ATFILE */
+
+#define HAVE_FILEIO 1 /* XXX: Add checks */
+
+#if defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)
+#define HAVE_PREAD 1
+#define HAVE_PWRITE 1
+#endif
+
+#ifdef __USE_LARGEFILE64
+#define HAVE_OPEN64 1
+#define HAVE_LSEEK64 1
+#if defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)
+#define HAVE_PREAD64 1
+#define HAVE_PWRITE64 1
+#endif
+#endif
+
+#define HAVE_DUP 1  /* XXX: Add checks */
+#define HAVE_DUP2 1 /* XXX: Add checks */
+#ifdef __USE_GNU
+#define HAVE_DUP3 1
+#endif /* __USE_GNU */
+
+#if defined(_POSIX_FSYNC) && (_POSIX_FSYNC+0) != 0
+#define HAVE_FSYNC 1
+#endif /* _POSIX_FSYNC */
+
+#if defined(_POSIX_SAVED_IDS) && (_POSIX_SAVED_IDS+0) != 0
+#define HAVE_SETREUID 1
+#define HAVE_SETREGID 1
+#endif /* _POSIX_SAVED_IDS */
+
+#define HAVE_PIPE 1 /* XXX: Add checks */
+#ifdef __USE_GNU
+#define HAVE_PIPE2 1
+#endif /* __USE_GNU */
+
+#define HAVE_EXECV 1 /* XXX: Add checks */
+#define HAVE_EXECVE 1 /* XXX: Add checks */
+#ifdef __USE_GNU
+#define HAVE_EXECVPE 1
+#endif /* __USE_GNU */
+#ifdef __USE_XOPEN2K8
+#define HAVE_FEXECVE 1
+#endif /* __USE_XOPEN2K8 */
+
+#if defined(__USE_MISC) || defined(__USE_XOPEN)
+#define HAVE_NICE 1
+#endif
+
+#define HAVE_PATHCONF 1 /* XXX: Add checks */
+#define HAVE_FPATHCONF 1 /* XXX: Add checks */
+#define HAVE_SYSCONF 1 /* XXX: Add checks */
+#ifdef __USE_POSIX2
+#define HAVE_CONFSTR 1
+#endif
+
+#define HAVE_GETPID 1 /* XXX: Add checks */
+#define HAVE_GETPPID 1 /* XXX: Add checks */
+#define HAVE_GETPGRP 1 /* XXX: Add checks */
+#if defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)
+#define HAVE_GETPGID 1
+#define HAVE_GETSID 1
+#endif
+#define HAVE_SETPGID 1 /* XXX: Add checks */
+#if defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)
+#define HAVE_SETPGRP 1
+#endif
+#define HAVE_SETSID 1 /* XXX: Add checks */
+#define HAVE_GETUID 1 /* XXX: Add checks */
+#define HAVE_GETEUID 1 /* XXX: Add checks */
+#define HAVE_GETGID 1 /* XXX: Add checks */
+#define HAVE_GETEGID 1 /* XXX: Add checks */
+
 
 #endif 
 
