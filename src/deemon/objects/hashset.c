@@ -653,7 +653,7 @@ restart:
   if (item->si_key == dummy) continue; /* Dummy key. */
   item_key   = item->si_key;
   Dee_Incref(item_key);
-  DeeHashSet_LockEndWrite(me);
+  DeeHashSet_LockEndRead(me);
   /* Invoke the compare operator outside of any lock. */
   error = DeeObject_CompareEq(search_item,item_key);
   Dee_Decref(item_key);
