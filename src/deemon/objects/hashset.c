@@ -417,8 +417,7 @@ set_rehash(Set *__restrict self, int sizedir) {
   new_mask = (new_mask << 1)|1;
   if unlikely(new_mask == 1) new_mask = 16-1; /* Start out bigger than 2. */
  } else if (sizedir < 0) {
-  new_mask = (new_mask >> 1);
-  if unlikely(!new_mask) {
+  if unlikely(!self->s_used) {
    ASSERT(!self->s_used);
    /* Special case: delete the vector. */
    if (self->s_size) {
@@ -439,8 +438,11 @@ set_rehash(Set *__restrict self, int sizedir) {
    self->s_size = 0;
    return true;
   }
+  new_mask = (new_mask >> 1);
+  if (self->s_used >= new_mask)
+      return true;
  }
- ASSERT(self->s_size < new_mask);
+ ASSERT(self->s_used < new_mask);
  ASSERT(self->s_used <= self->s_size);
  new_vector = (struct hashset_item *)Dee_TryCalloc((new_mask+1)*sizeof(struct hashset_item));
  if unlikely(!new_vector) return false;
