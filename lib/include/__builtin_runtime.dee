@@ -22,5 +22,6 @@
 #pragma push_macro(undef,"from","import")
 from "rt" import
 	__builtin_get_stacklimit = "getstacklimit",
-	__builtin_set_stacklimit = "setstacklimit";
+	__builtin_set_stacklimit = "setstacklimit"
+;
 #pragma pop_macro("from","import")

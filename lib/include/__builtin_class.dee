@@ -19,12 +19,12 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","import","return","rt","makeclass","ClassDescriptor","name")
-function __builtin_class(__base = object from deemon,
-                         __name = "",
-                         __uuid_str = none) {
+#pragma push_macro(undef,"final","function","from","import","return","rt","makeclass","ClassDescriptor","name")
+final function __builtin_class(__base = object from deemon,
+                               __name = "",
+                               __uuid_str = none) {
 	import rt;
 	return rt.makeclass(__base,rt.ClassDescriptor(name: __name));
 }
-#pragma pop_macro("from","import","return","rt","makeclass","ClassDescriptor","name")
+#pragma pop_macro("final","function","from","import","return","rt","makeclass","ClassDescriptor","name")
 

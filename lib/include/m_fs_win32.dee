@@ -32,7 +32,7 @@ final global _systemwindowsdirectory = w32.GetSystemWindowsDirectory;
 final global _wsystemwindowsdirectory = w32.GetSystemWindowsDirectory;
 final global _syswow64directory = w32.GetSystemWow64Directory;
 final global _wsyswow64directory = w32.GetSystemWow64Directory;
-final function drives() -> w32.GetLogicalDriveStrings().rstrip("\0").split("\0");
+final global function drives() -> w32.GetLogicalDriveStrings().rstrip("\0").split("\0");
 final global wdrives = drives;
 
 

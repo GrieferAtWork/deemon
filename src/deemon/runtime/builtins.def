@@ -214,7 +214,7 @@ BUILTIN_DOC_REUSE(import,&builtin_import,MODSYM_FNORMAL,
 BUILTIN_DOC_REUSE(exec,&builtin_exec,MODSYM_FNORMAL,
                   "(expr:?X3?Dstring?Dbytes?Dfile,globals?:?S?T2?Dstring?O,base?:?Dmodule)->?Dobject\n"
                   "Evaluate a user-code deemon expression and return the result\n"
-                  "This type of evaluation is much more restrictive that evaluation of "
+                  "This type of evaluation is much more restrictive than evaluation of "
                   "normal user-code, as rather than being parsed, optimized, assembled "
                   "and linked into a full byte-code object, execution happens with the "
                   "help of a seperate JIT compiler\n"
@@ -222,8 +222,8 @@ BUILTIN_DOC_REUSE(exec,&builtin_exec,MODSYM_FNORMAL,
                   "such as directives, macros or escaped line-feeds, as well as other "
                   "language-level features such as goto-labels or true support for type "
                   "annotations\n"
-                  "The given @expr is evaluated as an expression, i.e. $\"10 + 20\" "
-                  "is accepted, while $\"print 42;\" isn't")
+                  "The given @expr is either evaluated as an expression or statement, i.e. both "
+                  "$\"10 + 20\" and $\"print 42;\" are accepted")
 
 
 /* Builtin runtime operator helpers. */
