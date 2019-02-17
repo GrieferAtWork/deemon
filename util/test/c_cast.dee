@@ -32,6 +32,15 @@ assert (return_args)((42,)) == ((42,),);
 assert (return_args)pack(42) == ((42,),);
 assert (return_args)(10,20,30) == (10,20,30);
 
+function foo(...) {
+	local x = [10,20];
+	local a,b = (x)...; /* `unpack(x)' vs. `x((varargs...,),)' */
+	assert a == 10;
+	assert b == 20;
+}
+
+foo(10,20,30);
+
 /* Deemon warns amount the ambiguity who's behavior we're validating here.
  * NOTE: The first option described in the comments is the one always taken. */
 #pragma warning(push)

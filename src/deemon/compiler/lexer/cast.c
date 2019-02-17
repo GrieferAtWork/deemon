@@ -65,6 +65,7 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
  case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
   if (WARN(W_UNCLEAR_CAST_INTENT))
       goto err;
+ case TOK_DOTS:
 not_a_cast:
   /* Not a cast expression. */
   result = typeexpr;
