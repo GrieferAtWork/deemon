@@ -855,6 +855,7 @@ again:
     }
     me->w_printer.up_buffer = result->s_str;
    }
+   result->s_str[result->s_len] = 0;
   } else {
    /* The string is already being shared, meaning that the must have already been flushed. */
    ASSERT(me->w_printer.up_length == result->s_len);
@@ -865,7 +866,8 @@ again:
  } else {
 #ifndef CONFIG_NO_THREADS
   if (!atomic_rwlock_upgrade(&me->fo_lock) &&
-     (result = me->w_string) != NULL);
+     (result = me->w_string) != NULL)
+     ;
   else
 #endif
   {
@@ -878,6 +880,8 @@ again:
  }
  Dee_Incref(result);
  DeeFile_LockEndRead(me);
+ ASSERT(DeeString_STR(result)[DeeString_SIZE(result)] == 0);
+
  return (DREF DeeObject *)result;
 err_collect:
  DeeFile_LockEndRead(me);
