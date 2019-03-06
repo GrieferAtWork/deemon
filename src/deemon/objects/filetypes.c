@@ -875,6 +875,16 @@ again:
    result = (DREF DeeStringObject *)unicode_printer_trypack(&me->w_printer);
    if unlikely(!result) goto err_collect;
    me->w_string = result;
+   me->w_printer.up_flags = (uint8_t)DeeString_WIDTH(result);
+   if (me->w_printer.up_flags == STRING_WIDTH_1BYTE) {
+    me->w_string            = NULL;
+    me->w_printer.up_buffer = DeeString_STR(result);
+    me->w_printer.up_length = DeeString_SIZE(result);
+   } else {
+    me->w_string            = result;
+    me->w_printer.up_buffer = DeeString_WSTR(result);
+    me->w_printer.up_length = WSTR_LENGTH(me->w_printer.up_buffer);
+   }
    atomic_rwlock_downgrade(&me->fo_lock);
   }
  }
