@@ -77,9 +77,21 @@ fs_copyfile(DeeObject *__restrict existing_file,
  dpos_t file_size = 0,total = 0;
  /* Open a source and a destination stream. */
  src = open_file_for_copy(existing_file,OPEN_FRDONLY,0);
- if unlikely(!src) goto err;
+ if unlikely(!ITER_ISOK(src)) {
+  if (src)
+      DeeError_Throwf(&DeeError_FileNotFound,
+                      "File `%k' could not be found",
+                       existing_file);
+  goto err;
+ }
  dst = open_file_for_copy(new_file,OPEN_FWRONLY|OPEN_FCREAT|OPEN_FEXCL|OPEN_FTRUNC,0644);
- if unlikely(!dst) goto err_src;
+ if unlikely(!ITER_ISOK(dst)) {
+  if (dst)
+      DeeError_Throwf(&DeeError_FileExists,
+                      "File `%k' already exists",
+                       new_file);
+  goto err_src;
+ }
  buffer = (uint8_t *)Dee_Malloc(COPYFILE_BUFSIZE);
  if unlikely(!buffer) goto err_dst;
  if (!DeeNone_Check(progress_callback)) {
@@ -120,7 +132,8 @@ PRIVATE DEFINE_STRING(str_makeanon,"makeanon");
 PRIVATE DREF DeeObject *default_DeeTime_New(uint64_t microseconds) {
  return DeeObject_CallAttrf(TIME_MODULE,
                            (DeeObject *)&str_makeanon,
-                            "I64u",microseconds);
+                            "I64u",
+                            microseconds);
 }
 
 typedef DREF DeeObject *(*PDeeTime_New)(uint64_t microseconds);
@@ -134,7 +147,7 @@ DeeTime_New(uint64_t microseconds) {
   *(void **)&funp = DeeModule_GetNativeSymbol(TIME_MODULE,"DeeTime_New");
   /* Not a native dex, the wrong dex, or a user-implemented dex.
    * In any case, the specs describe a user-function `makeanon'
-   * that does what we want to do. */
+   * that also does what we need to do. */
   if (!funp) funp = &default_DeeTime_New;
   p_DeeTime_New = funp;
   COMPILER_WRITE_BARRIER();
