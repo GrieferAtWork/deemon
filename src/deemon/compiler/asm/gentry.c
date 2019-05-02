@@ -76,16 +76,16 @@ INTERN int
   * >> FI
   * >> PUSH(ITEM)
   * Meaning it's more of a push_next_or_pop_and_jmp
-  * 
+  *
   * This way, we're not required to introduce a new exception guard
-  * (in case we can prove that no expression could possible throw a
-  * StopIteration signal), and we can keep the runtime from needing
+  * (in case we can prove that no other expression could possible throw
+  * a StopIteration signal), and we can keep the runtime from needing
   * to unnecessarily throw an exception (thus introducing the overhead
   * to needing to keep track of the traceback), when we're just going
   * to catch it immediately afterwards irregardless.
   *
-  * -> Implement this by setting some flag to encode `iternext' branches
-  *    as `foreach' instructions that will jump to the exception handler `HND':
+  * -> Implement this by setting some flag to encode `iternext' branches as
+  *   `foreach' instructions that will jump to the exception handler `HND':
   * DEEMON:
   * >> x.operator iter();
   * ASM:

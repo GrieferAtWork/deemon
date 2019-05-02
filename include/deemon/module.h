@@ -558,8 +558,8 @@ struct Dee_compiler_options {
 DFUNDEF int DCALL
 DeeModule_LoadSourceStream(/*Module*/DeeObject *__restrict self,
                            /*File*/DeeObject *__restrict input_file,
-                           struct Dee_compiler_options *options,
-                           int start_line, int start_col);
+                           int start_line, int start_col,
+                           struct Dee_compiler_options *options);
 
 /* Given the filename of a module source file, load it
  * and create a new module from the contained source code.
@@ -584,7 +584,7 @@ DeeModule_OpenSourceFile(/*String*/DeeObject *__restrict source_pathname,
                          bool throw_error);
 DFUNDEF DREF /*Module*/DeeObject *DCALL
 DeeModule_OpenSourceFileString(/*utf-8*/char const *__restrict source_pathname, size_t source_pathsize,
-                               /*utf-8*/char const *module_name, size_t module_namesize,
+                               /*utf-8*/char const *module_global_name, size_t module_global_namesize,
                                struct Dee_compiler_options *options, bool throw_error);
 
 

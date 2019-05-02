@@ -341,6 +341,7 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, i
 
 typedef void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
 
+
 /* Object weak reference tracing. */
 struct Dee_weakref {
     struct Dee_weakref   **wr_pself; /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Indirect self pointer. */
@@ -355,7 +356,12 @@ struct Dee_weakref {
                                       *       to invoke arbitrary user-code, or drop references. */
 };
 #define Dee_WEAKREF_INIT { NULL, NULL, NULL, NULL }
+#ifdef __cplusplus
+#define Dee_WEAKREF(T)     struct ::Dee_weakref
+#else
 #define Dee_WEAKREF(T)     struct Dee_weakref
+#endif
+
 
 #ifdef DEE_SOURCE
 #define WEAKREF_INIT Dee_WEAKREF_INIT
@@ -402,18 +408,38 @@ struct Dee_weakref {
  */
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4 && __SIZEOF_LONG__ == 4
+#ifdef __cplusplus
+#define DeeWeakref_UnlockCallback(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct ::Dee_weakref *)((uintptr_t)0xccccccccul & ~1ul),__ATOMIC_RELEASE)
+#else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
    __hybrid_atomic_store((x)->wr_next,(struct Dee_weakref *)((uintptr_t)0xccccccccul & ~1ul),__ATOMIC_RELEASE)
+#endif /* !__cplusplus */
 #elif __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG__ == 8
+#ifdef __cplusplus
+#define DeeWeakref_UnlockCallback(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct ::Dee_weakref *)((uintptr_t)0xccccccccccccccccul & ~1ul),__ATOMIC_RELEASE)
+#else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
    __hybrid_atomic_store((x)->wr_next,(struct Dee_weakref *)((uintptr_t)0xccccccccccccccccul & ~1ul),__ATOMIC_RELEASE)
+#endif /* !__cplusplus */
 #elif defined(__SIZEOF_LONG_LONG__) && \
       __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG_LONG__ == 8
+#ifdef __cplusplus
+#define DeeWeakref_UnlockCallback(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct ::Dee_weakref *)((uintptr_t)0xccccccccccccccccull & ~1ul),__ATOMIC_RELEASE)
+#else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
    __hybrid_atomic_store((x)->wr_next,(struct Dee_weakref *)((uintptr_t)0xccccccccccccccccull & ~1ul),__ATOMIC_RELEASE)
+#endif /* !__cplusplus */
 #else
+#ifdef __cplusplus
+#define DeeWeakref_UnlockCallback(x) \
+   __hybrid_atomic_store((x)->wr_next,(struct ::Dee_weakref *)((uintptr_t)-1 & ~1ul),__ATOMIC_RELEASE)
+#else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
    __hybrid_atomic_store((x)->wr_next,(struct Dee_weakref *)((uintptr_t)-1 & ~1ul),__ATOMIC_RELEASE)
+#endif /* !__cplusplus */
 #endif
 #else
 #define DeeWeakref_UnlockCallback(x) \
@@ -484,8 +510,13 @@ DFUNDEF void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self,
 #else
 DFUNDEF void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
 DFUNDEF void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
+#ifdef __cplusplus
+#define Dee_weakref_copy(self,other) Dee_weakref_copy(self,(struct ::Dee_weakref *)(other))
+#define Dee_weakref_copyassign(self,other) Dee_weakref_copyassign(self,(struct ::Dee_weakref *)(other))
+#else /* __cplusplus */
 #define Dee_weakref_copy(self,other) Dee_weakref_copy(self,(struct Dee_weakref *)(other))
 #define Dee_weakref_copyassign(self,other) Dee_weakref_copyassign(self,(struct Dee_weakref *)(other))
+#endif /* !__cplusplus */
 #endif
 
 /* Overwrite an already initialize weak reference with the given `ob'.
@@ -508,7 +539,11 @@ Dee_weakref_clear(struct Dee_weakref *__restrict self);
 DFUNDEF WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref const *__restrict self);
 #else
 DFUNDEF WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref *__restrict self);
+#ifdef __cplusplus
+#define Dee_weakref_lock(self) Dee_weakref_lock((struct ::Dee_weakref *)(self))
+#else /* __cplusplus */
 #define Dee_weakref_lock(self) Dee_weakref_lock((struct Dee_weakref *)(self))
+#endif /* !__cplusplus */
 #endif
 
 /* Return the state of a snapshot of `self' currently being bound. */
@@ -516,7 +551,11 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref *__r
 DFUNDEF WUNUSED bool (DCALL Dee_weakref_bound)(struct Dee_weakref const *__restrict self);
 #else
 DFUNDEF WUNUSED bool (DCALL Dee_weakref_bound)(struct Dee_weakref *__restrict self);
+#ifdef __cplusplus
+#define Dee_weakref_bound(self) Dee_weakref_bound((struct ::Dee_weakref *)(self))
+#else /* __cplusplus */
 #define Dee_weakref_bound(self) Dee_weakref_bound((struct Dee_weakref *)(self))
+#endif /* !__cplusplus */
 #endif
 
 /* Do an atomic compare-exchange operation on the weak reference
@@ -1672,6 +1711,10 @@ DeeObject_InvokeOperator(DeeObject *__restrict self, uint16_t name,
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
                           size_t argc, DeeObject **__restrict argv);
+#define DeeObject_InvokeOperatorTuple(self,name,args) \
+        DeeObject_InvokeOperator(self,name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
+#define DeeObject_PInvokeOperatorTuple(pself,name,args) \
+        DeeObject_PInvokeOperator(pself,name,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
 
 
 #define Dee_TP_FNORMAL          0x0000 /* Normal type flags. */

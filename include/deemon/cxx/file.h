@@ -38,6 +38,7 @@ public:
     class writer;
 public:
     DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(file,object)
+    operator obj_file() const DEE_CXX_NOTHROW { return obj_file(this->ptr()); }
     size_t (read)(void *__restrict buffer, size_t bufsize) const { return throw_if_negative(DeeFile_Read(*this,buffer,bufsize)); }
     size_t (read)(void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags) const { return throw_if_negative(DeeFile_Readf(*this,buffer,bufsize,flags)); }
     size_t (write)(void const *__restrict buffer, size_t bufsize) const { return throw_if_negative(DeeFile_Write(*this,buffer,bufsize)); }

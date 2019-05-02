@@ -67,6 +67,11 @@ class Random {
 			rand32();
 	}
 
+	@@Return true for every one in @n calls
+	public final function onein(n: int): bool {
+		return rand32() < (0xffffffff + (n - 1)) / n;
+	}
+	
 
 	@@Return a 32-bit unsigned integer populated entirely with speudo-random bits.
 	public final function rand32(): int {

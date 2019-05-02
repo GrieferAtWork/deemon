@@ -738,9 +738,6 @@ DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict 
 #define ast_land(a,b)   ast_conditional(AST_FCOND_BOOL,a,b,a) /* `a && b' */
 #define ast_lor(a,b)    ast_conditional(AST_FCOND_BOOL,a,a,b) /* `a || b' */
 
-/* Return true if a given `AST_MULTIPLE' contains expand ASTs. */
-INTDEF bool (DCALL ast_multiple_hasexpand)(struct ast *__restrict self);
-
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 DECL_END

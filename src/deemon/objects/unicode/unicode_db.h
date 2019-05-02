@@ -2139,7 +2139,7 @@ struct unifold {
 };
 
 #define UNICODE_FOLD_DESCRIPTORS     0x55
-static struct unifold fold_descriptors[85] = {
+static struct unifold const fold_descriptors[85] = {
 	{ { 0x3bc } },
 	{ { 0x73, 0x73 } },
 	{ { 0x69, 0x307 } },

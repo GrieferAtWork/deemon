@@ -36,6 +36,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/traits.h>
 
 #include "../../runtime/builtin.h"
 
@@ -205,7 +206,7 @@ asm_gcall_func(struct ast *__restrict func,
   * with here, when it comes to arguments. */
  if (args->a_type == AST_MULTIPLE &&
      AST_FMULTIPLE_ISSEQUENCE(args->a_flag)) {
-  ASSERTF(!ast_multiple_hasexpand(args),"The caller should have asserted this!");
+  ASSERTF(!ast_chk_multiple_hasexpand(args),"The caller should have asserted this!");
   if (args->a_multiple.m_astc + refargc > UINT8_MAX)
       goto generic_call;
   for (i = 0; i < (uint8_t)args->a_multiple.m_astc; ++i) {
@@ -291,14 +292,14 @@ asm_gcall_expr(struct ast *__restrict func,
  if (func->a_type == AST_FUNCTION &&
      /* NOTE: Don't perform this optimization when the argument list is unpredictable. */
     (args->a_type != AST_MULTIPLE || 
-    (AST_FMULTIPLE_ISSEQUENCE(args->a_flag) && !ast_multiple_hasexpand(args))))
+    (AST_FMULTIPLE_ISSEQUENCE(args->a_flag) && !ast_chk_multiple_hasexpand(args))))
      return asm_gcall_func(func,args,ddi_ast,gflags);
 
  /* Optimized call for stack-packed argument list within an 8-bit range. */
  if ((args->a_type != AST_MULTIPLE ||
      !AST_FMULTIPLE_ISSEQUENCE(args->a_flag) ||
       args->a_multiple.m_astc > UINT8_MAX ||
-      ast_multiple_hasexpand(args)) &&
+      ast_chk_multiple_hasexpand(args)) &&
      (args->a_type != AST_CONSTEXPR ||
       args->a_constexpr != Dee_EmptyTuple)) {
   if (args->a_type == AST_CONSTEXPR &&
@@ -909,7 +910,7 @@ check_getattr_base_symbol_class_tuple:
  if (argc == 1) {
   struct ast *arg0 = argv[0];
   if (arg0->a_type == AST_MULTIPLE &&
-     !ast_multiple_hasexpand(arg0)) {
+     !ast_chk_multiple_hasexpand(arg0)) {
    if (arg0->a_flag == AST_FMULTIPLE_GENERIC &&
        arg0->a_multiple.m_astc <= UINT8_MAX) {
     size_t       seq_argc = arg0->a_multiple.m_astc;
@@ -1440,7 +1441,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     if (args->a_type == AST_MULTIPLE &&
         AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
         args->a_multiple.m_astc <= UINT8_MAX &&
-       !ast_multiple_hasexpand(args)) {
+       !ast_chk_multiple_hasexpand(args)) {
      size_t i;
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
      for (i = 0; i < args->a_multiple.m_astc; ++i) {
@@ -1476,7 +1477,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
     if (args->a_type == AST_MULTIPLE &&
         AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
         args->a_multiple.m_astc <= UINT8_MAX &&
-       !ast_multiple_hasexpand(args)) {
+       !ast_chk_multiple_hasexpand(args)) {
      size_t i;
      if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr))) goto err;
      if (asm_gpush_const((uint16_t)attrid)) goto err;
@@ -1529,7 +1530,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    if (args->a_type == AST_MULTIPLE &&
        AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
        args->a_multiple.m_astc <= UINT8_MAX &&
-      !ast_multiple_hasexpand(args)) {
+      !ast_chk_multiple_hasexpand(args)) {
     size_t i;
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
     for (i = 0; i < args->a_multiple.m_astc; ++i) {
@@ -1565,7 +1566,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
    if (args->a_type == AST_MULTIPLE &&
        AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
        args->a_multiple.m_astc <= UINT8_MAX &&
-      !ast_multiple_hasexpand(args)) {
+      !ast_chk_multiple_hasexpand(args)) {
     size_t i;
     if (ast_genasm(base,ASM_G_FPUSHRES)) goto err;
     if (ast_genasm_one(name,ASM_G_FPUSHRES)) goto err;
@@ -1609,7 +1610,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
   if (args->a_type == AST_MULTIPLE &&
       AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
       args->a_multiple.m_astc <= UINT8_MAX &&
-     !ast_multiple_hasexpand(args)) {
+     !ast_chk_multiple_hasexpand(args)) {
    size_t i;
    for (i = 0; i < args->a_multiple.m_astc; ++i) {
     if (ast_genasm_one(args->a_multiple.m_astv[i],ASM_G_FPUSHRES))

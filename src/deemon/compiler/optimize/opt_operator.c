@@ -33,6 +33,9 @@
 #include <deemon/objmethod.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/thread.h>
+#include <deemon/traceback.h>
+#include <deemon/module.h>
 
 DECL_BEGIN
 
@@ -85,6 +88,13 @@ err:
 INTDEF DREF DeeObject *DCALL
 object_id_get(DeeObject *__restrict self);
 
+
+/* Don't allow member calls with these types at compile-time. */
+#define IS_BLACKLISTED_BASE(self) \
+      ((self) == (DeeObject *)&DeeThread_Type || \
+       (self) == (DeeObject *)&DeeTraceback_Type || \
+       (self) == (DeeObject *)&DeeModule_Type)
+
 /* Returns `ITER_DONE' if the call isn't allowed. */
 PRIVATE DREF DeeObject *DCALL
 emulate_method_call(DeeObject *__restrict self,
@@ -96,11 +106,14 @@ emulate_method_call(DeeObject *__restrict self,
    * NOTE: Both `string' and `bytes' use the same underlying
    *       function in order to implement `encode' and `decode'! */
   dobjmethod_t method;
+  DeeObject *meth_self = DeeObjMethod_SELF(self);
   method = DeeObjMethod_FUNC(self);
   if (method == (dobjmethod_t)&string_encode)
-      return emulate_object_encode(DeeObjMethod_SELF(self),argc,argv);
+      return emulate_object_encode(meth_self,argc,argv);
   if (method == (dobjmethod_t)&string_decode)
-      return emulate_object_decode(DeeObjMethod_SELF(self),argc,argv);
+      return emulate_object_decode(meth_self,argc,argv);
+  if (IS_BLACKLISTED_BASE(meth_self))
+      return ITER_DONE;
  }
  if (DeeClsProperty_Check(self)) {
   dgetmethod_t get;
@@ -129,7 +142,10 @@ emulate_member_call(DeeObject *__restrict base,
       return emulate_object_decode(base,argc,argv);
  }
  /* `object.id()' should not be evaluated at compile-time! */
- if (NAME_EQ("id")) return ITER_DONE;
+ if (NAME_EQ("id"))
+     return ITER_DONE;
+ if (IS_BLACKLISTED_BASE(base))
+     return ITER_DONE;
  return DeeObject_CallAttr(base,name,argc,argv);
 }
 

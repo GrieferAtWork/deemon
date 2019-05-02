@@ -30,6 +30,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/traits.h>
 
 DECL_BEGIN
 
@@ -1443,7 +1444,7 @@ check_dst_sym_class_hybrid:
   if (src->a_type == AST_MULTIPLE &&
       src->a_flag != AST_FMULTIPLE_KEEPLAST &&
       src->a_multiple.m_astc == dst->a_multiple.m_astc &&
-     !ast_multiple_hasexpand(src) && !PUSH_RESULT) {
+     !ast_chk_multiple_hasexpand(src) && !PUSH_RESULT) {
    size_t i;
    for (i = 0; i < src->a_multiple.m_astc; ++i) {
     if (asm_gstore(dst->a_multiple.m_astv[i],

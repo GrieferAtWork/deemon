@@ -1585,9 +1585,9 @@ err_function_code:
     if unlikely(doc < strtab || doc >= fileend)
        GOTO_CORRUPTED(reader,corrupt);
    }
-   cmemb_size  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 1;
-   imemb_size  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 1;
-   op_count    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 1;
+   cmemb_size  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+   imemb_size  = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
+   op_count    = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
    cattr_count = Dec_DecodePointer(&reader);
    iattr_count = Dec_DecodePointer(&reader);
    iattr_mask  = 0;

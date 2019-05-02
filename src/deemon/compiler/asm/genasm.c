@@ -1095,9 +1095,7 @@ done_fake_none:
    struct asm_sym *loop,*stop;
    if (ast_genasm(self->a_expand,ASM_G_FPUSHRES))
        goto err;
-   /* Generate code to enumerate the sequence
-    *
-    */
+   /* Generate code to enumerate the sequence */
    if (asm_putddi(self)) goto err;
    if (asm_giterself()) goto err;
    loop = asm_newsym();

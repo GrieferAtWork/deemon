@@ -42,7 +42,7 @@ public:
     tuple(size_t objc, T **__restrict objv): sequence<T>(inherit(DeeTuple_NewVector(objc,(DeeObject **)objv))) { }
     tuple(size_t objc, T *const *__restrict objv): sequence<T>(inherit(DeeTuple_NewVector(objc,(DeeObject **)objv))) { }
     DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(tuple,sequence<T>)
-    operator obj_tuple() const { return obj_tuple(*this); }
+    operator obj_tuple() const DEE_CXX_NOTHROW { return obj_tuple(*this); }
     tuple types() const { return inherit(DeeTuple_Types(*this)); }
     void append(T const &ob) { if likely(DeeTuple_Check(this->ptr())) this->m_ptr = throw_if_null(DeeTuple_Append(*this,ob)); else sequence<T>::append(ob); }
     void append(DeeObject *__restrict ob) { if likely(DeeTuple_Check(this->ptr())) this->m_ptr = throw_if_null(DeeTuple_Append(*this,ob)); else sequence<T>::append(ob); }

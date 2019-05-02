@@ -108,7 +108,7 @@ struct asm_sym {
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 #define ASM_SYM_STCK_INVALID 0xffff
     uint16_t           as_stck;  /* [valid_if(!= ASM_SYM_STCK_INVALID)]
-                                  *  The execution stack depth where this symbol is defined. */
+                                  * The execution stack depth where this symbol is defined. */
     uint16_t           as_sect;  /* Section index or `SECTION_INVALID' when not defined. */
     uint16_t           as_hand;  /* The exception handler depth active where the symbol is defined. */
     uint16_t           as_used;  /* The number of times that this symbols is used in relocations. */
@@ -658,8 +658,8 @@ struct assembler {
     struct asm_sym        *a_loopctl[ASM_LOOPCTL_COUNT]; /* Loop control symbols. */
     DeeScopeObject        *a_scope;    /* [0..1] The scope of the last AST (Used for tracking stack-based variables) */
     struct ast_loc        *a_error;    /* [0..1] An AST location that is used as context for displaying assembler messages/warnings. */
-#define ASM_ERR(...)        parser_erratrf(current_assembler.a_error,__VA_ARGS__)
-#define ASM_WARN(...)       parser_warnatrf(current_assembler.a_error,__VA_ARGS__)
+#define ASM_ERR(...)       parser_erratrf(current_assembler.a_error,__VA_ARGS__)
+#define ASM_WARN(...)      parser_warnatrf(current_assembler.a_error,__VA_ARGS__)
     struct ddi_assembler   a_ddi;      /* Deemon debug information assembler subsystem. */
     struct handler_frame  *a_handler;  /* [0..1][(!= NULL) == (a_handlerc != 0)] Chain of active exception handlers. */
 #ifndef CONFIG_LANGUAGE_NO_ASM

@@ -88,12 +88,17 @@
     <ClInclude Include="..\include\deemon\compiler\optimize.h" />
     <ClInclude Include="..\include\deemon\compiler\symbol.h" />
     <ClInclude Include="..\include\deemon\compiler\tpp.h" />
+    <ClInclude Include="..\include\deemon\compiler\traits.h" />
     <ClInclude Include="..\include\deemon\cxx\api.h" />
+    <ClInclude Include="..\include\deemon\cxx\cell.h" />
+    <ClInclude Include="..\include\deemon\cxx\dict.h" />
     <ClInclude Include="..\include\deemon\cxx\file.h" />
     <ClInclude Include="..\include\deemon\cxx\float.h" />
     <ClInclude Include="..\include\deemon\cxx\function.h" />
     <ClInclude Include="..\include\deemon\cxx\int.h" />
     <ClInclude Include="..\include\deemon\cxx\list.h" />
+    <ClInclude Include="..\include\deemon\cxx\mapping.h" />
+    <ClInclude Include="..\include\deemon\cxx\module.h" />
     <ClInclude Include="..\include\deemon\cxx\object.h" />
     <ClInclude Include="..\include\deemon\cxx\sequence.h" />
     <ClInclude Include="..\include\deemon\cxx\string.h" />
@@ -234,6 +239,7 @@
     <ClCompile Include="..\src\deemon\compiler\optimize\traits.c" />
     <ClCompile Include="..\src\deemon\compiler\symbol.c" />
     <ClCompile Include="..\src\deemon\compiler\tpp.c" />
+    <ClCompile Include="..\src\deemon\compiler\traits.c" />
     <ClCompile Include="..\src\deemon\execute\code.c" />
     <ClCompile Include="..\src\deemon\execute\ddi.c" />
     <ClCompile Include="..\src\deemon\execute\dec.c" />

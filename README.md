@@ -11,7 +11,7 @@ Especially following this rewrite, deemon is shining more than ever when it come
 
 In other areas deemon continues to shine, being more expandable than ever with the introduction of a module-based approach to code dependencies, offering a library that comes preloaded with an <code>fs</code> module allowing for filesystem operations, or the builtin <code>file from deemon</code> type allowing for optionally buffered file or TTY I/O, across modules such as <code>time</code> for working with the gregorian calender, and <code>net</code>, which provides an object-orient model for sockets. But it doesn't just end there, as creating a new module is just as simple as putting together a small deemon script containing a couple of functions.
 
-Deemon is truely a universally useful language that has learned much from its past mistakes, shortcomings, as well as strength, now allowing you to write highly efficient code, that will be just as easy to read as it was to write.
+Deemon is a universally applicable language that has learned much from its past mistakes, shortcomings, as well as strengths, now allowing you to write highly efficient code, that is just as easy to read as it was to write.
 
 Code examples can be found in <b>/util/tut</b>
 

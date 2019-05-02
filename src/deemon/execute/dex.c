@@ -259,7 +259,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
  void *result;
  DeeDexObject *me = (DeeDexObject *)self;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
- if (!DeeDex_Check(self) || !(me->d_module.mo_flags&MODULE_FDIDLOAD))
+ if (!DeeDex_Check(self) || !(me->d_module.mo_flags & MODULE_FDIDLOAD))
       return NULL;
 #ifdef USE_LOADLIBRARY
  DBG_ALIGNMENT_DISABLE();

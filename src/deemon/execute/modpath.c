@@ -454,8 +454,8 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 INTERN int DCALL
 DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
                              DeeObject *__restrict input_file,
-                             struct compiler_options *options,
                              int start_line, int start_col,
+                             struct compiler_options *options,
                              struct string_object *input_pathname) {
  DREF DeeCompilerObject *compiler; struct TPPFile *base_file;
  DREF struct ast *code; DREF DeeCodeObject *root_code; int result;
@@ -640,15 +640,15 @@ err:
 PUBLIC int DCALL
 DeeModule_LoadSourceStream(DeeObject *__restrict self,
                            DeeObject *__restrict input_file,
-                           struct compiler_options *options,
-                           int start_line, int start_col) {
+                           int start_line, int start_col,
+                           struct compiler_options *options) {
  int result = DeeModule_BeginLoading((DeeModuleObject *)self);
  if (result == 0) {
   result = DeeModule_LoadSourceStreamEx((DeeModuleObject *)self,
                                          input_file,
-                                         options,
                                          start_line,
                                          start_col,
+                                         options,
                                          NULL);
   if unlikely(result)
        DeeModule_FailLoading((DeeModuleObject *)self);
@@ -1098,9 +1098,9 @@ load_module_after_failure:
   int error;
   error = DeeModule_LoadSourceStreamEx(result,
                                        input_stream,
+                                       0,
+                                       0,
                                        options,
-                                       0,
-                                       0,
                                        module_path_ob);
   Dee_Decref(input_stream);
   if unlikely(error) {
@@ -1238,9 +1238,9 @@ found_existing_module:
  /* If the input stream hasn't been opened yet, open it now. */
  load_error = DeeModule_LoadSourceStreamEx(result,
                                            source_stream,
-                                           options,
                                            start_line,
                                            start_col,
+                                           options,
                                           (DeeStringObject *)source_pathname);
  /* Depending on a load error having occurred, either signify
   * that the module has been loaded, or failed to be loaded. */
@@ -1327,11 +1327,11 @@ DeeModule_OpenSourceMemory(/*utf-8*/char const *__restrict data, size_t data_siz
  source_stream = DeeFile_OpenRoMemory(data,data_size);
  if unlikely(!source_stream) return NULL;
  result = DeeModule_OpenSourceStream(source_stream,
-                               start_line,
-                               start_col,
-                               options,
-                               source_pathname,
-                               module_name);
+                                     start_line,
+                                     start_col,
+                                     options,
+                                     source_pathname,
+                                     module_name);
  DeeFile_ReleaseMemory(source_stream);
  return result;
 }
@@ -1362,12 +1362,12 @@ DeeModule_OpenSourceMemoryString(/*utf-8*/char const *__restrict data, size_t da
      goto err_source_pathname_ob;
  }
  result = DeeModule_OpenSourceMemory(data,
-                               data_size,
-                               start_line,
-                               start_col,
-                               options,
-                               source_pathname_ob,
-                               module_name_ob);
+                                     data_size,
+                                     start_line,
+                                     start_col,
+                                     options,
+                                     source_pathname_ob,
+                                     module_name_ob);
  Dee_XDecref(module_name_ob);
  Dee_XDecref(source_pathname_ob);
  return result;
@@ -1528,7 +1528,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t modu
  char *buf,*dst,*module_name_start; size_t i,len;
  dhash_t hash;
  DEE_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
-             module_global_name ? "global module " : "",
+             module_global_name ? "global module " : "module",
              module_global_name ? module_global_name : Dee_EmptyString,
              module_pathsize,module_path,
              module_namesize,module_name);
@@ -1907,9 +1907,9 @@ load_module_after_dec_failure:
     }
     error = DeeModule_LoadSourceStreamEx(result,
                                          dec_stream,
+                                         0,
+                                         0,
                                          options,
-                                         0,
-                                         0,
                                          result->mo_path);
     Dee_Decref_likely(dec_stream);
     if unlikely(error) {
@@ -2193,9 +2193,9 @@ try_load_module_after_src_failure:
 load_module_after_src_failure:
   error = DeeModule_LoadSourceStreamEx(result,
                                        source_stream,
+                                       0,
+                                       0,
                                        options,
-                                       0,
-                                       0,
                                        result->mo_path);
   Dee_Decref_likely(source_stream);
   if unlikely(error) {

@@ -173,7 +173,7 @@ INTDEF int (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child
                                             struct ast_assumes const *__restrict parent);
 
 /* Merge assumptions made in `child' and `sibling', such that
- * only assumptions made in both spaces still hold true, saving
+ * only assumptions made in both places still hold true, saving
  * that intersection in `child'. Or in other words:
  *   -> Remove all of `child's assumptions, not also made by `sibling'
  *   -> child = child & sibling;
@@ -184,7 +184,7 @@ INTDEF int (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child
  * >> } else {
  * >>     foo = 14;
  * >> }
- * >> // ASSUME(foo == 7)
+ * >> // ASSUME(foo == 14)
  * Note however that negative assumptions (i.e. assumptions made
  * that state that the value of a symbol currently is unknown),
  * are merged as a union, meaning that it suffices for either `child'
@@ -219,7 +219,7 @@ INTDEF int (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
 
 struct ast_optimize_stack {
     struct ast_optimize_stack *os_prev;   /* [0..1] The ast from which the optimization originates. */
-    struct ast              *os_ast;    /* [1..1] The ast being optimized. */
+    struct ast                *os_ast;    /* [1..1] The ast being optimized. */
 #ifdef OPTIMIZE_FASSUME
     struct ast_assumes        *os_assume; /* [1..1] Valid assumptions within the current branch. */
 #endif /* OPTIMIZE_FASSUME */

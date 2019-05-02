@@ -901,21 +901,6 @@ DEFINE_AST_GENERATOR(ast_assembly,
 }
 #undef DEFINE_AST_GENERATOR
 
-INTERN bool DCALL
-ast_multiple_hasexpand(struct ast *__restrict self) {
- struct ast **iter,**end;
- ASSERT_AST(self);
- ASSERT(self->a_type == AST_MULTIPLE);
- end = (iter = self->a_multiple.m_astv)+
-               self->a_multiple.m_astc;
- for (; iter != end; ++iter) {
-  if ((*iter)->a_type == AST_EXPAND)
-        return true;
- }
- return false;
-}
-
-
 INTERN void DCALL
 cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default) {

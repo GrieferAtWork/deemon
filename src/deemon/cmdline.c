@@ -47,6 +47,8 @@ PRIVATE struct late_cmd_options late_options = { 0, 0, NULL };
 /* Execute all late-options and free the `lco_optv' of the internal late-options list. */
 INTERN int DCALL cmd_runlate(void) {
  struct late_cmd_option *iter,*end; int result = 0;
+ /* TODO: This function is called more than once during
+  *      `deemon -F', causing a crash due to the Dee_Free() below! */
  end = (iter = late_options.lco_optv)+late_options.lco_optc;
  for (; iter != end; ++iter) {
   result = (*iter->lco_func)(iter->lco_arg);

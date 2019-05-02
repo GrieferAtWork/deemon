@@ -31,7 +31,7 @@ DECL_BEGIN
 #error "Too many unicode fold extension characters"
 #endif
 
-static struct unitraits const default_traits = { 0x0, 0, 0, 0, 0, 0 };
+static struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 PUBLIC ATTR_CONST struct unitraits *DCALL
 DeeUni_Descriptor(uint32_t ch) {
  if likely(ch < UNICODE_COUNT_VALID)
@@ -42,7 +42,7 @@ PUBLIC ATTR_PURE size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
                         uint32_t buf[UNICODE_FOLDED_MAX]) {
  struct unitraits *trt;
- struct unifold *fold;
+ struct unifold const *fold;
  trt = DeeUni_Descriptor(ch);
  if (trt->ut_fold == 0xff) {
   buf[0] = DeeUni_ToLower(ch);

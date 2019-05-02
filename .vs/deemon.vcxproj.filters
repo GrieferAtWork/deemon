@@ -345,6 +345,21 @@
     <ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
       <Filter>src\deemon\objects\seq</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\cell.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\dict.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\mapping.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\module.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\traits.h">
+      <Filter>include\deemon\compiler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -838,6 +853,9 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\iterator.c">
       <Filter>src\deemon\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\traits.c">
+      <Filter>src\deemon\compiler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

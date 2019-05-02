@@ -62,7 +62,7 @@ public: /* string from deemon */
     WUNUSED bool is1byte() const DEE_CXX_NOTHROW { return DeeString_Is1Byte(this->ptr()); }
     WUNUSED bool is2byte() const DEE_CXX_NOTHROW { return DeeString_Is2Byte(this->ptr()); }
     WUNUSED bool is4byte() const DEE_CXX_NOTHROW { return DeeString_Is4Byte(this->ptr()); }
-    operator obj_string() const { return obj_string(this->ptr()); }
+    operator obj_string() const DEE_CXX_NOTHROW { return obj_string(this->ptr()); }
     WUNUSED bool bool_() const DEE_CXX_NOTHROW { return !DeeString_IsEmpty(this->ptr()); }
     WUNUSED operator bool() const DEE_CXX_NOTHROW { return !DeeString_IsEmpty(this->ptr()); }
     WUNUSED bool operator ! () const DEE_CXX_NOTHROW { return DeeString_IsEmpty(this->ptr()); }
