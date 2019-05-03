@@ -175,8 +175,8 @@ struct Dee_except_handler {
     Dee_code_addr_t                eh_end;    /* [const][>= eh_start] Exception handler protection end address. */
     Dee_code_addr_t                eh_addr;   /* [const][< eh_start && >= eh_end] Exception handler entry point. */
     uint16_t                       eh_stack;  /* [const] Stack depth that must be ensured when this handler is executed.
-                                               *  NOTE: When greater than the depth at the time of the exception
-                                               *        happening, the stack is filled with `none'. */
+                                               * NOTE: When greater than the depth at the time of the exception
+                                               *       happening, the stack is filled with `none'. */
 #define Dee_EXCEPTION_HANDLER_FNORMAL  0x0000 /* Normal exception handler flags. */
 #define Dee_EXCEPTION_HANDLER_FFINALLY 0x0001 /* This handler must be executed as a `finally' handler. */
 #define Dee_EXCEPTION_HANDLER_FINTERPT 0x0002 /* This handler is allowed to handle interrupt signals.
@@ -566,7 +566,7 @@ DDATDEF DeeTypeObject DeeCode_Type;
  * safely setting this flag usually proves to be quite difficult as it involves ensuring
  * that the code isn't already being executed by some other thread.
  * For that reason, this helper function exists, which will do whatever is necessary to
- * ensure that the code isn't running or apart of any of the execution stacks of other
+ * ensure that the code isn't running or is apart of any of the execution stacks of other
  * threads, temporarily suspending the execution of all threads but the caller's.
  * This however is just an implementation detail that the caller must not concern themselves with.
  * What the caller should be concerned about however is the error-return case:

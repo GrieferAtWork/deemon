@@ -1816,7 +1816,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
  DREF DeeObject **result; uint16_t i,count; void *new_result;
  uint8_t *reader = *preader;
  uint8_t *end = self->df_base+self->df_size;
- *pcount = count = UNALIGNED_GETLE16((*(uint16_t **)&reader)++);
+ *pcount = count = UNALIGNED_GETLE16((uint16_t *)reader),reader += 2;
  result = (DREF DeeObject **)Dee_Malloc(count*sizeof(DREF DeeObject *));
  if unlikely(!result) return NULL;
  for (i = 0; i < count; ++i) {

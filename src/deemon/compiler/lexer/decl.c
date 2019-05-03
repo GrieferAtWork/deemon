@@ -980,17 +980,31 @@ err_type_expr:
   struct decl_ast *elemv;
  case '(':
   /* Tuple type declaration. */
-  /* TODO: This should also function as regular parenthesis, just like
-   *       in normal expressions, where `()' is the empty tuple, `(foo)'
-   *       is regular parenthesis, `(foo,)' is a 1-element tuple, and
-   *      `(foo,bar)' and `(foo,bar,)' are 2-element tuples. */
-  elema = 2,elemc = 0;
-  elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-  if unlikely(!elemv) goto err;
   old_flags = TPPLexer_Current->l_flags;
   TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-  for (;;) {
+  if unlikely(yield() < 0)
+     goto err_flags;
+  error = decl_ast_parse(self);
+  if unlikely(error)
+     goto err_flags;
+  /* This also functions as regular parenthesis, just like in
+   * normal expressions, where `()' is the empty tuple, `(foo)'
+   * is regular parenthesis, `(foo,)' is a 1-element tuple, and
+   * `(foo,bar)' and `(foo,bar,)' are 2-element tuples. */
+  if (tok == ')') {
+   /* Simple parenthesis. */
+   if unlikely(yield() < 0)
+      goto err_r_flags;
+   break;
+  }
+  elema = 2,elemc = 1;
+  elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+  if unlikely(!elemv)
+     goto err_r_flags;
+  memcpy(&elemv[0],self,sizeof(struct decl_ast));
+  if (tok == ',') for (;;) {
    if unlikely(yield() < 0) goto err_elemv;
+   if (tok == ')') break; /* Single-element tuple / trailing comma */
    error = decl_ast_parse(&elemv[elemc]);
    if unlikely(error) goto err_elemv;
    ++elemc;
@@ -1052,15 +1066,29 @@ err_seq:
    Dee_Free(decl_seq);
    goto err_flags;
   }
-  if unlikely(likely(tok == TOK_DOTS) ? (yield() < 0) :
-              WARN(W_EXPECTED_DOTS_AFTER_SEQUENCE))
-     goto err_seq;
+  if (tok == ':') {
+   /* Special case: `{x: y}' is an alias for `{(x,y)...}', as it best represents a mapping */
+   struct decl_ast *elemv;
+   elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+   if unlikely(!elemv) { err_seq_0: decl_ast_fini(decl_seq); goto err_seq; }
+   memcpy(&elemv[0],decl_seq,sizeof(struct decl_ast));
+   if unlikely(yield() < 0) { err_elemv_0: decl_ast_fini(&elemv[0]); Dee_Free(elemv); goto err_seq; }
+   error = decl_ast_parse(&elemv[1]);
+   if unlikely(error)
+      goto err_elemv_0;
+   decl_seq->da_type          = DAST_TUPLE;
+   decl_seq->da_flag          = DAST_FNORMAL;
+   decl_seq->da_tuple.t_itemc = 2;
+   decl_seq->da_tuple.t_itemv = elemv; /* Inherit */
+  } else {
+   if unlikely(likely(tok == TOK_DOTS) ? (yield() < 0) :
+               WARN(W_EXPECTED_DOTS_AFTER_SEQUENCE))
+      goto err_seq_0;
+  }
   TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
   if unlikely(likely(tok == '}') ? (yield() < 0) :
-              WARN(W_EXPECTED_RBRACE_AFTER_SEQUENCE)) {
-   Dee_Free(decl_seq);
-   goto err;
-  }
+              WARN(W_EXPECTED_RBRACE_AFTER_SEQUENCE))
+     goto err_seq_0;
   self->da_type = DAST_SEQ;
   self->da_flag = DAST_FNORMAL;
   self->da_seq  = decl_seq;
@@ -1153,6 +1181,8 @@ err_nth:
   break;
  }
  return 0;
+err_r_flags:
+ TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_r:
  decl_ast_fini(self);
  goto err;

@@ -84,6 +84,7 @@ typedef struct {
  ((DREF SeqEachOperator *)DeeObject_FMalloc(COMPILER_OFFSETOF(SeqEachOperator,so_opargv) + (argc) * sizeof(DREF DeeObject *)))
 
 
+#define CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS 1
 #ifndef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #if !defined(__OPTIMIZE_SIZE__) && \
     !defined(CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS)

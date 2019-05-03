@@ -264,7 +264,7 @@ local function decode_name_end(name: string, start: int = 0): int {
 
 
 @@Lookup table to convert pretty operator names to their real counterparts
-local operator_defaults: {(string,string)...} = {
+local operator_defaults: {string: string} = {
 	"constructor" : "(args!)->?N", "copy" : "(other:?.)->?N", "deepcopy" : "(other:?.)->?N",
 	"destructor" : "()->?N", "assign" : "(other:?.)->?N", "moveassign" : "(other:?.)->?N",
 	"str" : "()->?Dstring", "repr" : "()->?Dstring", "bool" : "()->?Dbool",
@@ -295,7 +295,7 @@ local operator_defaults: {(string,string)...} = {
 };
 
 @@Lookup table to convert pretty operator names to their real counterparts
-local operator_names: {(string,string)...} = {
+local operator_names: {string: string} = {
 	"this" : "constructor", "~this" : "destructor", ":=" : "assign",
 	"move:=" : "moveassign", ":=move" : "moveassign", "++" : "inc",
 	"--" : "dec", "#" : "size", "~" : "inv", "+" : none, "-" : none,
@@ -310,7 +310,7 @@ local operator_names: {(string,string)...} = {
 	"[:]=" : "setrange", "." : "getattr", ".=" : "setattr",
 	"del." : "delattr", "lt" : "lo", "gt" : "gr",
 };
-local pretty_operator_names: {(string,string)...} = {
+local pretty_operator_names: {string: string} = {
 	"assign" : " :=", "moveassign" : "move :=", "size" : "#",
 	"inv" : "~", "add" : "+", "sub" : "-", "pos" : "+", "neg" : "-",
 	"mul" : "*", "div" : "/", "mod" : "%", "shl" : "<<",
@@ -324,7 +324,7 @@ local pretty_operator_names: {(string,string)...} = {
 };
 
 @@Weight of different node types when being sorted
-local kind_sorting_weights: {(string,int)...} = {
+local kind_sorting_weights: {string: int} = {
 	"module" : 0x0000, "operator" : 0x0100,
 	"type" : 0x0101, "singleton" : 0x0102,
 	"function" : 0x0200, "property" : 0x0201, "member" : 0x0202,
@@ -333,7 +333,7 @@ local kind_sorting_weights: {(string,int)...} = {
 };
 
 @@Weight of different operators when being sorted
-local operator_sorting_weights: {(string,int)...} = {
+local operator_sorting_weights: {string: int} = {
 	"constructor" : 0x0000, "copy" : 0x0001, "deepcopy" : 0x0002,
 	"destructor" : 0x0003, "assign" : 0x0004, "moveassign" : 0x0005,
 	"str" : 0x0100, "repr" : 0x0101, "bool" : 0x0102, "int" : 0x0103,
@@ -2529,7 +2529,7 @@ class DocSection: weakrefable {
 
 	@@Enumerate all operator sections contained within this DocSection
 	@@as tuples of (operator_name: string, section: DocSection)
-	public final enumerate_opsections(): {(string,DocSection)...} {
+	public final enumerate_opsections(): {string: DocSection} {
 		local seg = segments;
 		for (local i = 0; i < #seg; ++i) {
 			local s = seg[i];
@@ -3604,7 +3604,7 @@ set_is_type:
 	}
 
 	@@Enumerate all of the child operators of a type-like object
-	private enumerate_operators_sections(): {(string,{DocSection...})...} {
+	private enumerate_operators_sections(): {string: {DocSection...}} {
 		local result = dict();
 		for (local s: allsections) {
 			for (local name,opsec: s.enumerate_opsections()) {
@@ -3666,7 +3666,7 @@ set_is_type:
 		}
 		return result;
 	}
-	private member m_operator_sections: {(string,{DocSection...})...};
+	private member m_operator_sections: {string: {DocSection...}};
 
 	@@Enumerate the child nodes used to represent operators of @this when #istype is :true
 	private enumerate_operators(): {Doc...} {

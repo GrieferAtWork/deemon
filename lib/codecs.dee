@@ -56,7 +56,7 @@ local class CustomCodec {
 local class CpCodec {
 	public final member cp: string;
 	public final member cp_len: int;
-	public final member cp_rev: {(int,string)...};
+	public final member cp_rev: {int: string};
 	this(cp: string) {
 		this.cp = cp;
 		this.cp_len = #cp;

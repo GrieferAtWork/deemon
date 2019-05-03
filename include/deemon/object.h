@@ -1379,7 +1379,7 @@ struct Dee_type_getset {
 #define Dee_STRUCT_FLOAT       0x0020 /* `float' */
 #define Dee_STRUCT_DOUBLE      0x0021 /* `double' */
 #define Dee_STRUCT_LDOUBLE     0x0022 /* `long double' */
-#define Dee_STRUCT_VOID   STRUCT_NONE /* `void' */
+#define Dee_STRUCT_VOID        Dee_STRUCT_NONE /* `void' */
 #define Dee_STRUCT_INT8        0x0800 /* `int8_t' */
 #define Dee_STRUCT_INT16       0x0801 /* `int16_t' */
 #define Dee_STRUCT_INT32       0x0802 /* `int32_t' */
@@ -2373,7 +2373,7 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict
 typedef Dee_ssize_t (DCALL *dforeach_t)(void *arg, DeeObject *__restrict elem);
 DFUNDEF WUNUSED Dee_ssize_t (DCALL DeeObject_Foreach)(DeeObject *__restrict self, dforeach_t proc, void *arg);
 
-/* Unpack the given sequence `self' into `opjc' items then stored within the `objv' vector. */
+/* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
 DFUNDEF WUNUSED int (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc, DREF DeeObject **__restrict objv);
 
 /* Object attribute access. */

@@ -449,7 +449,7 @@ class PyAstDef: PyAst {
 	@@Name of the varargs argument, or unbound if undefined
 	final public member argname_varkwds: string;
 	@@List of arguments as tuples (name,default-value-or-none)
-	final public member arguments: {(string,PyAst | none)...};
+	final public member arguments: {string: PyAst | none};
 	@@The body of the function
 	final public member body: PyAst;
 
@@ -898,7 +898,7 @@ done:
 		result.parts = parts;
 		return result;
 	}
-	final function parse_def_arguments(): {(string,PyAst | none)...} {
+	final function parse_def_arguments(): {string: PyAst | none} {
 		while (tok != ")") {
 			if (kind != TOK_KEYWORD)
 				break;
