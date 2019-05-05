@@ -1926,7 +1926,7 @@ PRIVATE struct dex_symbol symbols[] = {
     LIBWIN32_WRITEFILE_DEF_DOC("Returns :none upon error, or dwNumberOfBytesWritten upon success (s.a. #GetLastError)")
     LIBWIN32_SETENDOFFILE_DEF
     LIBWIN32_SETFILEPOINTER_DEF_DOC("Returns :none upon error, or the new stream position upon success (s.a. #GetLastError)")
-    LIBWIN32_GETFILETIME_DEF_DOC("REturns a tuple (CreationTime,LastAccessTime,LastWriteTime) for the given @hFile")
+    LIBWIN32_GETFILETIME_DEF_DOC("Returns a tuple (CreationTime,LastAccessTime,LastWriteTime) for the given @hFile")
     LIBWIN32_SETFILETIME_DEF
     LIBWIN32_SETFILEVALIDDATA_DEF
     LIBWIN32_GETDISKFREESPACE_DEF_DOC("Returns :none upon error, or a tuple (uSectorsPerCluster,uBytesPerSector,uNumberOfFreeClusters,uTotalNumberOfClusters) (s.a. #GetLastError)")
