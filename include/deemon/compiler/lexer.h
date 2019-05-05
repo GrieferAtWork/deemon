@@ -45,7 +45,9 @@ INTDEF DREF DeeObject *FCALL ast_parse_string(void);
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
 INTDEF int DCALL ast_decode_unicode_string(struct unicode_printer *__restrict printer);
 
-/* @param: lookup_mode: Set of `LOOKUP_SYM_*' */
+#define PARSE_UNARY_DISALLOW_CASTS 0x10000
+
+/* @param: lookup_mode: Set of `LOOKUP_SYM_*', optionally or'd with `PARSE_UNARY_DISALLOW_CASTS' */
 INTDEF DREF struct ast *FCALL ast_parse_unaryhead(unsigned int lookup_mode);
 INTDEF DREF struct ast *FCALL ast_parse_unary(unsigned int lookup_mode);
 INTDEF DREF struct ast *FCALL ast_parse_prod(unsigned int lookup_mode);

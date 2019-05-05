@@ -207,7 +207,6 @@ for (local x: util::range(128)) {
 
 /* Lookup mode used by secondary AST operands */
 #define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
-#define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
 INTERN uint16_t parser_flags = PARSE_FNORMAL;
 INTERN bool DCALL maybe_expression_begin(void) {

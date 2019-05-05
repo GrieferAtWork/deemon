@@ -946,7 +946,8 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
    /* TODO: This breaks for `function foo(): type(0) {}', as the `(0)'
     *       thinks it's supposed to be a cast prefix for `{}'
     * -> Same problem also happens for in unary expression. */
-   type_expr = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
+   type_expr = ast_parse_unaryhead(LOOKUP_SYM_NORMAL|
+                                   PARSE_UNARY_DISALLOW_CASTS);
   } else {
    type_expr = ast_parse_unary(LOOKUP_SYM_NORMAL);
   }
