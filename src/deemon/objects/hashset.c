@@ -980,9 +980,9 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 set_size(Set *__restrict self) {
 #ifdef CONFIG_NO_THREADS
- return DeeInt_NewSize(self->s_size);
+ return DeeInt_NewSize(self->s_used);
 #else
- return DeeInt_NewSize(ATOMIC_READ(self->s_size));
+ return DeeInt_NewSize(ATOMIC_READ(self->s_used));
 #endif
 }
 
