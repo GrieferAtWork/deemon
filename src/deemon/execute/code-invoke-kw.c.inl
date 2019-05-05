@@ -18,7 +18,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "code-invoke.c.inl"
-#define CODE_FLAGS    CODE_FVARKWDS
+#define CODE_FLAGS   (CODE_FYIELDING)
 #define KW_IS_MAPPING 1
 #endif
 
@@ -342,8 +342,10 @@ UNIQUE(err_kargv):
 #else
  memset(&frame.cf_kw->fk_varkwds,0xcc,sizeof(void *));
 #endif
+#if CODE_FLAGS & CODE_FVARKWDS
  ASSERT(frame.cf_kw->fk_kw == kw);
- Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' */
+ Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `CODE_FVARKWDS' is set) */
+#endif
  yf->yf_kw = frame.cf_kw; /* Inherit data. */
  DeeObject_Init(yf,&DeeYieldFunction_Type);
 
