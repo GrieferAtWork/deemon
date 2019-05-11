@@ -238,10 +238,12 @@ DeeRoSet_FromSequence(DeeObject *__restrict self) {
  /* Construct a read-only set from an iterator. */
  self = DeeObject_IterSelf(self);
  if unlikely(!self) goto err;
+ /* TODO: Use the fast-sequence interface directly! */
  length_hint = DeeFastSeq_GetSize(self);
  result = likely(length_hint != DEE_FASTSEQ_NOTFAST)
         ? DeeRoSet_FromIteratorWithHint(self,length_hint)
-        : DeeRoSet_FromIterator(self);
+        : DeeRoSet_FromIterator(self)
+        ;
  Dee_Decref(self);
  return result;
 err:
@@ -288,10 +290,8 @@ insert(DREF Set *__restrict self, size_t mask,
   /* Same hash. -> Check if it's also the same key. */
   error = DeeObject_CompareEq(key,item->si_key);
   if unlikely(error < 0) goto err;
-  if (!error) continue; /* Not the same key. */
-  /* It _is_ the same key! (override it...) */
-  Dee_Decref(item->si_key);
-  break;
+  if (error)
+      return 1; /* It _is_ the same key! */
  }
  /* Fill in the item. */
  item->si_hash = hash;
@@ -330,6 +330,7 @@ done:
 PUBLIC int DCALL
 DeeRoSet_Insert(DREF DeeObject **__restrict pself,
                 DeeObject *__restrict key) {
+ int error;
  Set *me = (Set *)*pself;
  ASSERT_OBJECT_TYPE_EXACT(me,&DeeRoSet_Type);
  ASSERT(!DeeObject_IsShared(me));
@@ -343,10 +344,14 @@ DeeRoSet_Insert(DREF DeeObject **__restrict pself,
  }
  /* Insert the new key/value-pair into the set. */
  Dee_Incref(key);
- if (insert(me,me->rs_mask,key))
+ error = insert(me,me->rs_mask,key);
+ if (error != 0) {
+  if unlikely(error < 0)
      goto err;
- ++me->rs_size; /* Keep track of the number of inserted items. */
- return 0;
+ } else {
+  ++me->rs_size; /* Keep track of the number of inserted items. */
+ }
+ return error;
 err:
  return -1;
 }
@@ -354,7 +359,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
  DREF Set *result,*new_result; DREF DeeObject *elem;
- size_t elem_count = 0;
+ size_t elem_count = 0; int error;
  /* Construct a read-only set from an iterator. */
  result = ROSET_ALLOC(mask);
  if unlikely(!result) goto done;
@@ -371,11 +376,15 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
    result = new_result;
   }
   /* Insert the key-value pair into the resulting set. */
-  if unlikely(insert(result,mask,elem))
-     goto err_r;
+  error = insert(result,mask,elem);
+  if unlikely(error != 0) {
+   if unlikely(error < 0)
+      goto err_r;
+  } else {
+   ++elem_count;
+  }
   if (DeeThread_CheckInterrupt())
       goto err_r;
-  ++elem_count;
  }
  if unlikely(!elem) goto err_r;
  /* Fill in control members and setup the resulting object. */
@@ -577,7 +586,7 @@ PRIVATE struct type_member roset_class_members[] = {
     TYPE_MEMBER_END
 };
 
-PRIVATE DREF Set *DCALL roset_init(void) {
+PRIVATE DREF Set *DCALL roset_ctor(void) {
  DREF Set *result;
  result = ROSET_ALLOC(1);
  if unlikely(!result) goto done;
@@ -611,7 +620,7 @@ err:
 }
 
 PRIVATE DREF Set *DCALL
-roset_ctor(size_t argc, DeeObject **__restrict argv) {
+roset_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
  if (DeeArg_Unpack(argc,argv,"o:_RoSet",&seq))
      return NULL;
@@ -631,10 +640,10 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
     /* .tp_init = */{
         {
             /* .tp_var = */{
-                /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&roset_init,
+                /* .tp_ctor      = */(DREF DeeObject *(DCALL *)(void))&roset_ctor,
                 /* .tp_copy_ctor = */&DeeObject_NewRef,
                 /* .tp_deep_ctor = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_deepcopy,
-                /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&roset_ctor,
+                /* .tp_any_ctor  = */(DREF DeeObject *(DCALL *)(size_t,DeeObject **__restrict))&roset_init,
                 /* .tp_free      = */NULL
             }
         },

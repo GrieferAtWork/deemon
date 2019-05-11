@@ -1584,8 +1584,8 @@ typedef uint16_t Dee_uniflag_t;
  * NOTE: Technically, this should be called `DeeLatin1_Flags'... */
 DDATDEF Dee_uniflag_t const DeeAscii_Flags[256];
 
-#define DeeAscii_IsUpper(ch)  (DeeAscii_Flags[(uint8_t)(ch)] & UNICODE_FUPPER)
-#define DeeAscii_IsLower(ch)  (DeeAscii_Flags[(uint8_t)(ch)] & UNICODE_FLOWER)
+#define DeeAscii_IsUpper(ch)  (DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_FUPPER)
+#define DeeAscii_IsLower(ch)  (DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_FLOWER)
 #define DeeAscii_ToLower(ch)  (DeeAscii_IsUpper(ch) ? (uint8_t)(ch)+0x20 : (uint8_t)(ch))
 #define DeeAscii_ToUpper(ch)  (DeeAscii_IsLower(ch) ? (uint8_t)(ch)-0x20 : (uint8_t)(ch))
 #define DeeAscii_ToTitle(ch)  (DeeAscii_IsLower(ch) ? (uint8_t)(ch)-0x20 : (uint8_t)(ch))
@@ -1813,8 +1813,8 @@ struct Dee_unicode_printer {
 #if 1
     union {
         void     *up_buffer; /* [0..1][owned(DeeString_FreeWidthBuffer)] The current width-buffer. */
-        char     *_up_str;   /* Only here, show the printer's string can be viewed in a debugger. */
-        Dee_wchar_t *_up_wstr;  /* Only here, show the printer's string can be viewed in a debugger. */
+        char     *_up_str;   /* Only here, so the printer's string can be viewed in a debugger. */
+        Dee_wchar_t *_up_wstr;  /* Only here, so the printer's string can be viewed in a debugger. */
     };
 #else
     void         *up_buffer; /* [0..1][owned(DeeString_FreeWidthBuffer)] The current width-buffer. */
@@ -2262,7 +2262,7 @@ DFUNDEF void (DCALL Dee_unicode_printer_memmove)(struct Dee_unicode_printer *__r
 
 
 
-/* Helper macros for printing compile-time strings, of printf-style data. */
+/* Helper macros for printing compile-time strings, or printf-style data. */
 #define Dee_UNICODE_PRINTER_PRINT(self,S) \
         Dee_unicode_printer_print8(self,(uint8_t *)(S),COMPILER_STRLEN(S))
 #ifdef __INTELLISENSE__
@@ -2370,7 +2370,7 @@ Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct Dee_unicode_printer *__
 
 
 /* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
- * These functions will start by normalize `name', checking if it refers to
+ * These functions will start by normalizing `name', checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
  * call to `encode from codecs' / `decode from codecs':
  * >> name = name.casefold().replace("_","-");
@@ -2433,8 +2433,8 @@ DeeRegex_Matches(/*utf-8*/char const *__restrict data, size_t datalen,
 
 /* Same as `DeeRegex_Matches()', but also store a pointer to the end of
  * consumed data in `pdataend'. Because input data is formatted in UTF-8,
- * this isn't position would only be equal to `data + return' if all input
- * data was ASCII only, meaning that in the universal case, this function
+ * this position would only be equal to `data + return' if all input data
+ * was ASCII only, meaning that in the universal case, this function
  * becomes useful when dealing with unicode data.
  * @param: pdataend:    Upon success (return != 0 && return != (size_t)-1),
  *                      save a pointer to the end of consumed data here.
@@ -2478,14 +2478,6 @@ DFUNDEF int DCALL
 DeeRegex_RFind(/*utf-8*/char const *__restrict data, size_t datalen,
                /*utf-8*/char const *__restrict pattern, size_t patternlen,
                struct Dee_regex_range *__restrict presult, uint16_t flags);
-DFUNDEF int DCALL
-DeeRegex_FindEx(/*utf-8*/char const *__restrict data, size_t datalen,
-                /*utf-8*/char const *__restrict pattern, size_t patternlen,
-                struct Dee_regex_range_ex *__restrict presult, uint16_t flags);
-DFUNDEF int DCALL
-DeeRegex_RFindEx(/*utf-8*/char const *__restrict data, size_t datalen,
-                 /*utf-8*/char const *__restrict pattern, size_t patternlen,
-                 struct Dee_regex_range_ex *__restrict presult, uint16_t flags);
 
 /* Same as the functions above, but return character pointers, rather than indices. */
 DFUNDEF int DCALL
@@ -2496,6 +2488,16 @@ DFUNDEF int DCALL
 DeeRegex_RFindPtr(/*utf-8*/char const *__restrict data, size_t datalen,
                   /*utf-8*/char const *__restrict pattern, size_t patternlen,
                   struct Dee_regex_range_ptr *__restrict presult, uint16_t flags);
+
+/* Same as the functions above, but return both character indices _and_ pointers. */
+DFUNDEF int DCALL
+DeeRegex_FindEx(/*utf-8*/char const *__restrict data, size_t datalen,
+                /*utf-8*/char const *__restrict pattern, size_t patternlen,
+                struct Dee_regex_range_ex *__restrict presult, uint16_t flags);
+DFUNDEF int DCALL
+DeeRegex_RFindEx(/*utf-8*/char const *__restrict data, size_t datalen,
+                 /*utf-8*/char const *__restrict pattern, size_t patternlen,
+                 struct Dee_regex_range_ex *__restrict presult, uint16_t flags);
 
 DECL_END
 

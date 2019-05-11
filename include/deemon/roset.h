@@ -94,6 +94,9 @@ DFUNDEF DREF DeeObject *DCALL DeeRoSet_FromIteratorWithHint(DeeObject *__restric
 /* Internal functions for constructing a read-only set object. */
 DFUNDEF DREF DeeObject *DCALL DeeRoSet_New(void);
 DFUNDEF DREF DeeObject *DCALL DeeRoSet_NewWithHint(size_t num_items);
+/* @return: 0:  Successfully inserted.
+ * @return: 1:  Already exists.
+ * @return: -1: An error occurred. */
 DFUNDEF int DCALL DeeRoSet_Insert(DeeObject **__restrict pself, DeeObject *__restrict key);
 
 /* @return:  1/true:  The object exists.

@@ -707,6 +707,9 @@ deq_deepload(Deque *__restrict self) {
     if (version != self->d_version)
         break;
    }
+   if (!DequeIterator_HasNext(&iter,self))
+        break;
+   DequeIterator_Next(&iter,self);
   }
  }
  Deque_LockEndRead(self);
@@ -1015,6 +1018,9 @@ deq_contains(Deque *__restrict self, DeeObject *__restrict item) {
    Deque_LockRead(self);
    if (self->d_version != version)
        break;
+   if (!DequeIterator_HasNext(&iter,self))
+       break;
+   DequeIterator_Next(&iter,self);
   }
  }
  Deque_LockEndRead(self);

@@ -745,7 +745,7 @@ seq_eq(DeeObject *__restrict self, DeeObject *__restrict other) {
 }
 PRIVATE DREF DeeObject *DCALL
 seq_ne(DeeObject *__restrict self, DeeObject *__restrict other) {
- int result = DeeObject_CompareEq(self,other);
+ int result = DeeSeq_Eq(self,other);
  if unlikely(result < 0) return NULL;
  return_bool_(!result);
 }

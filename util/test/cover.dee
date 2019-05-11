@@ -189,6 +189,8 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		check_iterators(Deque(x).frozen);
 		check_iterators(FixedList(x));
 		check_iterators(FixedList(x).frozen);
+		check_iterators(UniqueSet(x));
+		check_iterators(UniqueSet(x).frozen);
 	}
 	function check_generic_sequence(x) {
 		check_iterators(x);

@@ -1047,8 +1047,6 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
  return name;
 }
 
-INTDEF DeeObject dict_dummy;
-
 struct cleanup_mode {
     uint16_t cm_kind;   /* The kind of cleanup (One of `CLEANUP_MODE_F*') */
 #define CLEANUP_MODE_FNONE      0x0000 /* No special cleanup required. */
@@ -1427,7 +1425,7 @@ write_regular_local:
     int error;
     DREF DeeObject *key,*item;
     key = d->d_elem[i].di_key;
-    if (!key || key == &dict_dummy) continue;
+    if (!key || key == &DeeDict_Dummy) continue;
     item = d->d_elem[i].di_value;
     Dee_Incref(key);
     Dee_Incref(item);

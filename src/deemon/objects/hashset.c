@@ -24,6 +24,7 @@
 #include <deemon/object.h>
 #include <deemon/hashset.h>
 #include <deemon/bool.h>
+#include <deemon/dict.h>
 #include <deemon/gc.h>
 #include <deemon/float.h>
 #include <deemon/none.h>
@@ -47,12 +48,10 @@ PRIVATE struct hashset_item empty_set_items[1] = {
     { NULL, 0 }
 };
 
-INTDEF DeeObject dict_dummy;
-#define dummy  (&dict_dummy)
-
+#define dummy      (&DeeDict_Dummy)
 
 PUBLIC DREF DeeObject *DCALL
-DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items) {
+DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/DREF DeeObject **__restrict items) {
  DREF Set *result;
  /* Allocate the set object. */
  result = DeeGCObject_MALLOC(Set);
@@ -80,15 +79,30 @@ DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items
   /* Without any dummy items, these are identical. */
   result->s_used = num_items;
   result->s_size = num_items;
+next_key:
   while (num_items--) {
    DREF DeeObject *key = *items++;
    dhash_t i,perturb,hash = DeeObject_Hash(key);
    perturb = i = hash & mask;
    for (;; i = DeeHashSet_HashNx(i,perturb),DeeHashSet_HashPt(perturb)) {
     struct hashset_item *item = &result->s_elem[i & mask];
-    if (item->si_key) continue; /* Already in use */
+    if (item->si_key) { /* Already in use */
+     int temp;
+     if likely(item->si_hash != hash)
+        continue;
+     temp = DeeObject_CompareEq(item->si_key,key);
+     if likely(temp == 0)
+        continue;
+     if unlikely(temp < 0)
+        goto err_r;
+     /* Duplicate key. */
+     --result->s_used;
+     --result->s_size;
+     goto next_key;
+    }
     item->si_hash = hash;
     item->si_key  = key;   /* Inherit reference. */
+    break;
    }
   }
  }
@@ -108,6 +122,7 @@ err_r:
 }
 
 
+PRIVATE void DCALL set_fini(Set *__restrict self);
 PRIVATE int DCALL
 set_init_iterator(Set *__restrict self,
                   DeeObject *__restrict iterator) {
@@ -132,6 +147,7 @@ set_init_iterator(Set *__restrict self,
 err_elem:
  Dee_Decref(elem);
 err:
+ set_fini(self);
  return -1;
 }
 
@@ -173,9 +189,7 @@ set_init_sequence(Set *__restrict self,
   weakref_support_init(self);
   return 0;
  }
- /* TODO: Optimizations for `_sharedvector' */
  /* TODO: Fast-sequence support */
-
  iterator = DeeObject_IterSelf(sequence);
  if unlikely(!iterator) goto err;
  error = set_init_iterator(self,iterator);
@@ -667,8 +681,10 @@ restart:
    /* Check if the set was modified. */
    if (me->s_elem != vector ||
        me->s_mask != mask ||
-       item->si_key != item_key)
-       goto restart;
+       item->si_key != item_key) {
+    DeeHashSet_LockDowngrade(me);
+    goto restart;
+   }
    item->si_key = dummy;
    Dee_Incref(dummy);
    ASSERT(me->s_used);
@@ -676,7 +692,7 @@ restart:
        set_rehash(me,-1);
    DeeHashSet_LockEndWrite(me);
    Dee_Decref(item_key);
-   return 0;
+   return 1;
   }
   DeeHashSet_LockRead(me);
   /* Check if the set was modified. */
@@ -686,8 +702,7 @@ restart:
       goto restart;
  }
  DeeHashSet_LockEndRead(me);
- err_unknown_key((DeeObject *)me,search_item);
- return -1;
+ return 0;
 }
 
 
@@ -899,11 +914,10 @@ again_lock:
       set_rehash(me,-1);
   DeeHashSet_LockEndRead(me);
   Dee_Decref(old_item);
-  return 0;
+  return 1;
  }
  DeeHashSet_LockEndRead(me);
- err_unknown_key_str((DeeObject *)me,search_item);
- return -1;
+ return 0;
 }
 
 
@@ -983,6 +997,15 @@ set_size(Set *__restrict self) {
  return DeeInt_NewSize(self->s_used);
 #else
  return DeeInt_NewSize(ATOMIC_READ(self->s_used));
+#endif
+}
+
+PRIVATE size_t DCALL
+set_nsi_getsize(Set *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ return self->s_used;
+#else
+ return ATOMIC_READ(self->s_used);
 #endif
 }
 
@@ -1147,6 +1170,208 @@ PRIVATE struct type_member setiterator_members[] = {
     TYPE_MEMBER_END
 };
 
+PRIVATE DREF Set *DCALL
+seti_nii_getseq(SetIterator *__restrict self) {
+ return_reference_(self->si_set);
+}
+PRIVATE size_t DCALL
+seti_nii_getindex(SetIterator *__restrict self) {
+ size_t mask; struct hashset_item *vector,*elem;
+ DeeHashSet_LockRead(self->si_set);
+ vector = self->si_set->s_elem;
+ mask   = self->si_set->s_mask;
+ DeeHashSet_LockEndRead(self->si_set);
+ elem = READ_ITEM(self);
+ if unlikely(elem < vector || elem > vector + mask)
+    return (size_t)-2; /* Indeterminate (detached) */
+ return (size_t)(elem - vector);
+}
+PRIVATE int DCALL
+seti_nii_setindex(SetIterator *__restrict self, size_t new_index) {
+ size_t mask; struct hashset_item *vector;
+ DeeHashSet_LockRead(self->si_set);
+ vector = self->si_set->s_elem;
+ mask   = self->si_set->s_mask;
+ DeeHashSet_LockEndRead(self->si_set);
+ if (new_index > mask + 1)
+     new_index = mask + 1;
+#ifdef CONFIG_NO_THREADS
+ self->si_next = vector + new_index;
+#else
+ ATOMIC_WRITE(self->si_next,vector + new_index);
+#endif
+ return 0;
+}
+
+PRIVATE int DCALL
+seti_nii_rewind(SetIterator *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+ self->si_next = self->si_set->s_elem;
+#else
+ ATOMIC_WRITE(self->si_next,ATOMIC_READ(self->si_set->s_elem));
+#endif
+ return 0;
+}
+
+PRIVATE int DCALL
+seti_nii_revert(SetIterator *__restrict self, size_t step) {
+ size_t index,mask; struct hashset_item *vector,*elem;
+#ifndef CONFIG_NO_THREADS
+again:
+#endif /* !CONFIG_NO_THREADS */
+ DeeHashSet_LockRead(self->si_set);
+ vector = self->si_set->s_elem;
+ mask   = self->si_set->s_mask;
+ DeeHashSet_LockEndRead(self->si_set);
+ elem = READ_ITEM(self);
+ if unlikely(elem < vector || elem > vector + mask)
+    return 0; /* Indeterminate (detached) */
+ index = (size_t)(elem - vector);
+ if (step < index)
+     vector = elem - step;
+#ifdef CONFIG_NO_THREADS
+ self->si_next = vector;
+#else
+ if (!ATOMIC_CMPXCH_WEAK(self->si_next,elem,vector))
+      goto again;
+#endif
+ return elem == vector ? 1 : 2;
+}
+
+PRIVATE int DCALL
+seti_nii_advance(SetIterator *__restrict self, size_t step) {
+ size_t index,mask; struct hashset_item *vector,*elem;
+#ifndef CONFIG_NO_THREADS
+again:
+#endif /* !CONFIG_NO_THREADS */
+ DeeHashSet_LockRead(self->si_set);
+ vector = self->si_set->s_elem;
+ mask   = self->si_set->s_mask;
+ DeeHashSet_LockEndRead(self->si_set);
+ elem = READ_ITEM(self);
+ if unlikely(elem < vector || elem > vector + mask)
+    return 0; /* Indeterminate (detached) */
+ index = (size_t)(elem - vector) + step;
+ if (index > mask + 1)
+     index = mask + 1;
+ vector += index;
+#ifdef CONFIG_NO_THREADS
+ self->si_next = vector;
+#else
+ if (!ATOMIC_CMPXCH_WEAK(self->si_next,elem,vector))
+      goto again;
+#endif
+ return index == mask + 1 ? 1 : 2;
+}
+
+PRIVATE int DCALL
+seti_nii_prev(SetIterator *__restrict self) {
+ size_t mask; struct hashset_item *vector,*elem;
+#ifndef CONFIG_NO_THREADS
+again:
+#endif /* !CONFIG_NO_THREADS */
+ DeeHashSet_LockRead(self->si_set);
+ vector = self->si_set->s_elem;
+ mask   = self->si_set->s_mask;
+ DeeHashSet_LockEndRead(self->si_set);
+ elem = READ_ITEM(self);
+ if unlikely(elem <= vector || elem > vector + mask)
+    return 1; /* Indeterminate (detached), or at start */
+#ifdef CONFIG_NO_THREADS
+ self->si_next = vector;
+#else
+ if (!ATOMIC_CMPXCH_WEAK(self->si_next,elem,vector))
+      goto again;
+#endif
+ return 0;
+}
+PRIVATE int DCALL
+seti_nii_next(SetIterator *__restrict self) {
+ size_t mask; struct hashset_item *vector,*elem;
+#ifndef CONFIG_NO_THREADS
+again:
+#endif /* !CONFIG_NO_THREADS */
+ DeeHashSet_LockRead(self->si_set);
+ vector = self->si_set->s_elem;
+ mask   = self->si_set->s_mask;
+ DeeHashSet_LockEndRead(self->si_set);
+ elem = READ_ITEM(self);
+ if unlikely(elem < vector || elem >= vector + mask)
+    return 1; /* Indeterminate (detached), or at end */
+ vector = elem + 1;
+#ifdef CONFIG_NO_THREADS
+ self->si_next = vector;
+#else
+ if (!ATOMIC_CMPXCH_WEAK(self->si_next,elem,vector))
+      goto again;
+#endif
+ return 0;
+}
+
+PRIVATE int DCALL
+seti_nii_hasprev(SetIterator *__restrict self) {
+ struct hashset_item *item = READ_ITEM(self);
+ Set *set = self->si_set;
+ /* Check if the iterator is in-bounds.
+  * NOTE: Since this is nothing but a shallow boolean check anyways, there
+  *       is no need to lock the dict since we're not dereferencing anything. */
+ return (item >  set->s_elem &&
+         item <= set->s_elem + (set->s_mask + 1));
+}
+
+PRIVATE DREF DeeObject *DCALL
+seti_nii_peek(SetIterator *__restrict self) {
+ DREF DeeObject *result;
+ struct hashset_item *item,*end;
+ Set *set = self->si_set;
+ DeeHashSet_LockRead(set);
+ end = set->s_elem+(set->s_mask+1);
+ item = READ_ITEM(self);
+ /* Validate that the pointer is still located in-bounds. */
+ if (item >= end) {
+  if unlikely(item > end)
+     goto set_has_changed;
+  goto iter_exhausted;
+ }
+ if unlikely(item < set->s_elem)
+    goto set_has_changed;
+ /* Search for the next non-empty item. */
+ while (item != end && (!item->si_key || item->si_key == dummy)) ++item;
+ if (item == end)
+     goto iter_exhausted;
+ result = item->si_key;
+ Dee_Incref(result);
+ DeeHashSet_LockEndRead(set);
+ return result;
+set_has_changed:
+ DeeHashSet_LockEndRead(set);
+ err_changed_sequence((DeeObject *)set);
+ return NULL;
+iter_exhausted:
+ DeeHashSet_LockEndRead(set);
+ return ITER_DONE;
+}
+
+
+PRIVATE struct type_nii setiterator_nii = {
+    /* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
+    /* .nii_flags = */TYPE_ITERX_FNORMAL,
+    {
+        /* .nii_common = */{
+            /* .nii_getseq   = */(void *)&seti_nii_getseq,
+            /* .nii_getindex = */(void *)&seti_nii_getindex,
+            /* .nii_setindex = */(void *)&seti_nii_setindex,
+            /* .nii_rewind   = */(void *)&seti_nii_rewind,
+            /* .nii_revert   = */(void *)&seti_nii_revert,
+            /* .nii_advance  = */(void *)&seti_nii_advance,
+            /* .nii_prev     = */(void *)&seti_nii_prev,
+            /* .nii_next     = */(void *)&seti_nii_next,
+            /* .nii_hasprev  = */(void *)&seti_nii_hasprev,
+            /* .nii_peek     = */(void *)&seti_nii_peek
+        }
+    }
+};
+
 PRIVATE struct type_cmp setiterator_cmp = {
     /* .tp_hash = */NULL,
     /* .tp_eq   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_eq,
@@ -1154,7 +1379,8 @@ PRIVATE struct type_cmp setiterator_cmp = {
     /* .tp_lo   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_lo,
     /* .tp_le   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_le,
     /* .tp_gr   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_gr,
-    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_ge
+    /* .tp_ge   = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&setiterator_ge,
+    /* .tp_nii  = */&setiterator_nii
 };
 
 INTERN DeeTypeObject HashSetIterator_Type = {
@@ -1221,6 +1447,17 @@ done:
  return result;
 }
 
+PRIVATE struct type_nsi set_nsi = {
+    /* .nsi_class   = */TYPE_SEQX_CLASS_SET,
+    /* .nsi_flags   = */TYPE_SEQX_FMUTABLE|TYPE_SEQX_FRESIZABLE,
+    {
+        /* .nsi_setlike = */{
+            /* .nsi_getsize    = */(void *)&set_nsi_getsize,
+            /* .nsi_insert     = */(void *)&DeeHashSet_Insert,
+            /* .nsi_remove     = */(void *)&DeeHashSet_Remove,
+        }
+    }
+};
 
 PRIVATE struct type_seq set_seq = {
     /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iter,
@@ -1231,7 +1468,8 @@ PRIVATE struct type_seq set_seq = {
     /* .tp_set       = */NULL,
     /* .tp_range_get = */NULL,
     /* .tp_range_del = */NULL,
-    /* .tp_range_set = */NULL
+    /* .tp_range_set = */NULL,
+    /* .tp_nsi       = */&set_nsi
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -1518,7 +1756,7 @@ PRIVATE struct type_gc set_gc = {
 PUBLIC DeeTypeObject DeeHashSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_hashset),
-    /* .tp_doc      = */DOC("A mutable set-like container that using hashing to detect duplicates\n"
+    /* .tp_doc      = */DOC("A mutable set-like container that uses hashing to detect/prevent duplicates\n"
                             "\n"
                             "()\n"
                             "Create an empty hashset\n"

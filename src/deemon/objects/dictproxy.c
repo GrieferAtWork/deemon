@@ -37,8 +37,7 @@
 
 DECL_BEGIN
 
-INTDEF DeeObject dict_dummy;
-#define dummy  (&dict_dummy)
+#define dummy      (&DeeDict_Dummy)
 
 typedef struct {
     /* HINT: The basic algorithm and idea of iterating

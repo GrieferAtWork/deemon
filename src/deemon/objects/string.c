@@ -395,8 +395,11 @@ string_new_empty(void) {
 PRIVATE DREF DeeObject *DCALL
 string_new(size_t argc, DeeObject **__restrict argv) {
  DeeObject *ob;
- if (DeeArg_Unpack(argc,argv,"o:string",&ob)) return NULL;
+ if (DeeArg_Unpack(argc,argv,"o:string",&ob))
+     goto err;
  return DeeObject_Str(ob);
+err:
+ return NULL;
 }
 
 PUBLIC DREF DeeObject *DCALL
@@ -1230,7 +1233,7 @@ string_range_get(String *__restrict self,
  dssize_t i_begin,i_end = (dssize_t)len;
  if (DeeObject_AsSSize(begin,&i_begin) ||
     (!DeeNone_Check(end) && DeeObject_AsSSize(end,&i_end)))
-     return NULL;
+     goto err;
  if (i_begin < 0) i_begin += len;
  if (i_end < 0) i_end += len;
  if unlikely((size_t)i_begin >= len || (size_t)i_begin >= (size_t)i_end)
@@ -1240,6 +1243,8 @@ string_range_get(String *__restrict self,
                               ((size_t)i_begin*STRING_SIZEOF_WIDTH(width)),
                                (size_t)i_end-(size_t)i_begin,
                                 width);
+err:
+ return NULL;
 }
 
 
@@ -1261,11 +1266,12 @@ string_nsi_getsize(String *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 string_nsi_getitem(String *__restrict self, size_t index) {
- if unlikely(index >= DeeString_WLEN(self)) {
-  err_index_out_of_bounds((DeeObject *)self,index,DeeString_WLEN(self));
-  return NULL;
- }
+ if unlikely(index >= DeeString_WLEN(self))
+    goto err_index;
  return DeeString_Chr(DeeString_GetChar(self,index));
+err_index:
+ err_index_out_of_bounds((DeeObject *)self,index,DeeString_WLEN(self));
+ return NULL;
 }
 
 PRIVATE struct type_nsi string_nsi = {
@@ -1322,8 +1328,10 @@ string_class_chr(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  uint32_t ch;
  if (DeeArg_Unpack(argc,argv,"I32u:chr",&ch))
-     return NULL;
+     goto err;
  return DeeString_Chr(ch);
+err:
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1387,11 +1395,12 @@ PRIVATE DREF DeeObject *DCALL
 string_getfirst(String *__restrict self) {
  void *str = DeeString_WSTR(self);
  int width = DeeString_WIDTH(self);
- if unlikely(!WSTR_LENGTH(str)) {
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
+ if unlikely(!WSTR_LENGTH(str))
+    goto err_empty;
  return DeeString_Chr(STRING_WIDTH_GETCHAR(width,str,0));
+err_empty:
+ err_empty_sequence((DeeObject *)self);
+ return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -1399,11 +1408,12 @@ string_getlast(String *__restrict self) {
  void *str = DeeString_WSTR(self);
  int width = DeeString_WIDTH(self);
  size_t length = WSTR_LENGTH(str);
- if unlikely(!length) {
-  err_empty_sequence((DeeObject *)self);
-  return NULL;
- }
+ if unlikely(!length)
+    goto err_empty;
  return DeeString_Chr(STRING_WIDTH_GETCHAR(width,str,length-1));
+err_empty:
+ err_empty_sequence((DeeObject *)self);
+ return NULL;
 }
 
 
@@ -1436,9 +1446,12 @@ string_getbuf(String *__restrict self,
               DeeBuffer *__restrict info,
               unsigned int UNUSED(flags)) {
  info->bb_base = DeeString_AsBytes((DeeObject *)self,false);
- if unlikely(!info->bb_base) return -1;
+ if unlikely(!info->bb_base)
+    goto err;
  info->bb_size = WSTR_LENGTH(info->bb_base);
  return 0;
+err:
+ return -1;
 }
 
 PRIVATE struct type_buffer string_buffer = {

@@ -30,6 +30,13 @@
 DECL_BEGIN
 
 INTERN ATTR_COLD int DCALL
+err_changed_sequence(DeeObject *__restrict seq) {
+ ASSERT_OBJECT(seq);
+ return DeeError_Throwf(&DeeError_RuntimeError,
+                        "A sequence `%k' has changed while being iterated: `%k'",
+                        Dee_TYPE(seq),seq);
+}
+INTERN ATTR_COLD int DCALL
 err_empty_sequence(DeeObject *__restrict seq) {
  ASSERT_OBJECT(seq);
  return DeeError_Throwf(&DeeError_ValueError,
@@ -59,6 +66,8 @@ err_unbound_index(DeeObject *__restrict self, size_t index) {
 PRIVATE struct dex_symbol symbols[] = {
     { "Deque", (DeeObject *)&Deque_Type },
     { "FixedList", (DeeObject *)&FixedList_Type },
+//TODO:    { "UniqueDict", (DeeObject *)&UDict_Type },
+    { "UniqueSet", (DeeObject *)&USet_Type },
     { NULL }
 };
 

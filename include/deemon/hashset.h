@@ -91,7 +91,7 @@ DFUNDEF DREF DeeObject *DCALL DeeHashSet_UnifyString(DeeObject *__restrict self,
  *                    even ones being keys and odd ones being items.
  * @param: num_items: The number of items passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, DREF DeeObject **__restrict items);
+DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/DREF DeeObject **__restrict items);
 
 /* The basic hashset item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {

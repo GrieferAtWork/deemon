@@ -210,7 +210,7 @@ DeeCell_Del(DeeObject *__restrict self) {
  DeeCell_Item(self) = NULL;
  DeeCell_LockEndWrite(self);
  /* Decref() the old value. */
- Dee_Decref(old_value);
+ Dee_XDecref(old_value);
  return 0;
 }
 PUBLIC int DCALL
@@ -226,7 +226,7 @@ DeeCell_Set(DeeObject *__restrict self,
  DeeCell_Item(self) = value;
  DeeCell_LockEndWrite(self);
  /* Decref() the old value. */
- Dee_Decref(old_value);
+ Dee_XDecref(old_value);
  return 0;
 }
 

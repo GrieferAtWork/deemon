@@ -27,6 +27,8 @@
 
 DECL_BEGIN
 
+/* TODO: mapping.keys should be a set-like type (i.e. `dict().keys is set' should be the case) */
+
 /* Base class for mapping-style sequence types (e.g. `dict')
  * :: Characteristics of a mapping type::
  *   - operator iter():

@@ -200,7 +200,7 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
  item->si_key  = key;   /* Inherit reference. */
 }
 
-INTDEF DeeObject dict_dummy;
+#define dummy      (&DeeDict_Dummy)
 #define SIZEOF_RODICT(mask)        \
        (offsetof(DeeRoDictObject,rd_elem)+(((mask)+1)*sizeof(struct rodict_item)))
 #define RODICT_INITIAL_MASK         0x1f
@@ -402,7 +402,7 @@ check_dict_again:
   elem = ((DeeDictObject *)value)->d_elem;
   for (i = 0; i <= mask; ++i) {
    if (!elem[i].di_key) continue;
-   if (elem[i].di_key == &dict_dummy) continue;
+   if (elem[i].di_key == dummy) continue;
    if (!asm_allowconst(elem[i].di_key) ||
        !asm_allowconst(elem[i].di_value)) {
     DeeDict_LockEndRead(value);
@@ -425,7 +425,7 @@ check_dict_again:
   /* Pack all key-value pairs into the ro-dict. */
   for (i = 0; i <= mask; ++i) {
    if (!elem[i].di_key) continue;
-   if (elem[i].di_key == &dict_dummy) continue;
+   if (elem[i].di_key == dummy) continue;
    Dee_Incref(elem[i].di_key);
    Dee_Incref(elem[i].di_value);
    rodict_insert_nocheck(rodict,
@@ -453,7 +453,7 @@ push_dict_parts:
    DREF DeeObject *item_key,*item_value;
    item = &((DeeDictObject *)value)->d_elem[i];
    item_key = item->di_key;
-   if (!item_key || item_key == &dict_dummy) continue;
+   if (!item_key || item_key == dummy) continue;
    item_value = item->di_value;
    Dee_Incref(item_key);
    Dee_Incref(item_value);
@@ -492,7 +492,7 @@ check_set_again:
   elem = ((DeeHashSetObject *)value)->s_elem;
   for (i = 0; i <= mask; ++i) {
    if (!elem[i].si_key) continue;
-   if (elem[i].si_key == &dict_dummy) continue;
+   if (elem[i].si_key == dummy) continue;
    if (!asm_allowconst(elem[i].si_key)) {
     DeeHashSet_LockEndRead(value);
     goto push_set_parts;
@@ -514,7 +514,7 @@ check_set_again:
   /* Pack all key-value pairs into the ro-set. */
   for (i = 0; i <= mask; ++i) {
    if (!elem[i].si_key) continue;
-   if (elem[i].si_key == &dict_dummy) continue;
+   if (elem[i].si_key == dummy) continue;
    roset_insert_nocheck(roset,
                         elem[i].si_hash,
                         elem[i].si_key);
@@ -539,7 +539,7 @@ push_set_parts:
    DREF DeeObject *item_key;
    item = &((DeeHashSetObject *)value)->s_elem[i];
    item_key = item->si_key;
-   if (!item_key || item_key == &dict_dummy) continue;
+   if (!item_key || item_key == dummy) continue;
    Dee_Incref(item_key);
    DeeHashSet_LockEndRead(value);
    /* Push the key & item. */

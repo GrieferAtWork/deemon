@@ -1,0 +1,199 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import collections;
+
+final global LIKE_SEQ = "sequence";
+final global LIKE_SET = "set";
+final global LIKE_MAP = "mapping";
+
+function testSequenceType(typ: type(object), cls: string) {
+	assert !typ();
+	assert typ().empty();
+	assert !typ().nonempty();
+	if (cls in [LIKE_SEQ,LIKE_SET]) {
+		for (local rawTestInput: {
+			none,
+			tuple {  },
+			tuple { 10, 20, 30 },
+			tuple { 10, "foo", 30 },
+			"faosdhfasidanhiawn",
+			tuple { (), (0,), (0,1,), (0,1,2,3,) },
+			"faosdhfasidanhiawnfaosdhfasidanhiawnfaosdhfasidanhiawnfaosdhfasidanhiawn",
+		}) {
+			for (local typTestInput: {
+				none, list, tuple,
+				hashset, hashset.frozen
+			}) {
+				local testInput = typTestInput is none
+					? rawTestInput
+					: typTestInput(rawTestInput)
+					;
+				local obj = typTestInput is none && rawTestInput is none
+					? typ()
+					: typ(testInput)
+					;
+				if (cls in [LIKE_SET]) {
+					assert #obj <= #testInput;
+					assert #obj == #hashset(rawTestInput);
+					assert #obj == #hashset.frozen(rawTestInput);
+					for (local x: testInput)
+						assert obj.count(x) <= testInput.count(x);
+				} else if (cls in [LIKE_SEQ]) {
+					assert obj[:] == obj;
+					assert !(obj[:] != obj);
+					assert obj == obj[:];
+					assert !(obj != obj[:]);
+					assert obj == testInput;
+					assert !(obj != testInput);
+					assert (testInput as sequence) == obj;
+					assert !((testInput as sequence) != obj);
+				}
+				assert obj == obj;
+				assert obj <= obj;
+				assert obj >= obj;
+				assert !(obj < obj);
+				assert !(obj > obj);
+				assert !(obj != obj);
+				assert obj == typ(obj);
+				assert obj <= typ(obj);
+				assert obj >= typ(obj);
+				assert !(obj < typ(obj));
+				assert !(obj > typ(obj));
+				assert !(obj != typ(obj));
+				assert obj == copy(obj);
+				assert obj <= copy(obj);
+				assert obj >= copy(obj);
+				assert !(obj < copy(obj));
+				assert !(obj > copy(obj));
+				assert !(obj != copy(obj));
+				local dc = deepcopy(obj);
+				/* A deepcopy of a UniqueSet (correctly) returns a new set of
+				 * objects who's ids differ from those in the original set.
+				 * Because of this and the fact that `x in UniqueSet()' is
+				 * only true if the set contains the exact same object, comparing
+				 * with a UniqueSet object on the left-hand-side only succeeds if
+				 * the other set contains the _exact_ same objects!
+				 * Because of this, perform the comparison with hashset()s instead! */
+				if (typ === collections.UniqueSet) {
+					assert hashset(obj) == hashset(dc);
+					assert hashset(obj) <= hashset(dc);
+					assert hashset(obj) >= hashset(dc);
+					assert !(hashset(obj) < hashset(dc));
+					assert !(hashset(obj) > hashset(dc));
+					assert !(hashset(obj) != hashset(dc));
+				} else {
+					assert obj == dc;
+					assert obj <= dc;
+					assert obj >= dc;
+					assert !(obj < dc);
+					assert !(obj > dc);
+					assert !(obj != dc);
+				}
+				{
+					local count = 0;
+					for (none: obj) ++count;
+					assert count == #obj, "Enumeration returns different counts";
+				}
+				if (testInput is none) {
+					assert !obj;
+					assert #obj == 0;
+					assert obj.empty();
+				} else {
+					assert (!!obj) == (#testInput != 0);
+				}
+				str(obj);
+				repr(obj);
+				/* Interactions between `operator bool' and `operator #' */
+				assert (!!obj) == (#obj != 0);
+				assert (!!(obj as sequence)) == (#obj != 0);
+				assert (!!obj) == (#(obj as sequence) != 0);
+				assert (!!(obj as sequence)) == (#(obj as sequence) != 0);
+				assert (obj.nonempty()) == (#obj != 0);
+				assert (obj.nonempty()) == (#(obj as sequence) != 0);
+				assert (!obj.empty()) == (#obj != 0);
+				assert (!obj.empty()) == (#(obj as sequence) != 0);
+				assert obj.empty() != obj.nonempty();
+				assert obj.length == #obj;
+				assert obj.length == #(obj as sequence);
+				assert (obj as sequence).length == #obj;
+				assert (obj as sequence).length == #(obj as sequence);
+				assert obj.__sizeof__() != 0;
+				if (obj) {
+					assert obj.first in rawTestInput;
+					assert obj.last in rawTestInput;
+				}
+				/* Test contains operations. */
+				for (local x: testInput) {
+					assert x in obj;
+					assert obj.contains(x);
+					assert obj.find(x) >= 0;
+					assert obj.rfind(x) >= 0;
+					assert obj.count(x) != 0;
+					obj.index(x);
+					obj.rindex(x);
+				}
+				for (local x: obj) {
+					assert x in testInput;
+					assert testInput.contains(x);
+					assert testInput.count(x) != 0;
+					testInput.index(x);
+					testInput.rindex(x);
+				}
+			}
+		}
+	}
+}
+function testMutableSequence(typ: type(object), cls: string) {
+	testSequenceType(typ,cls);
+}
+
+testMutableSequence(list,LIKE_SEQ);
+testSequenceType(tuple,LIKE_SEQ);
+testMutableSequence(hashset,LIKE_SET);
+testSequenceType(hashset.frozen,LIKE_MAP);
+testMutableSequence(dict,LIKE_MAP);
+testSequenceType(dict.frozen,LIKE_MAP);
+
+testMutableSequence(collections.Deque,LIKE_SEQ);
+testMutableSequence(collections.FixedList,LIKE_SEQ);
+testMutableSequence(collections.UniqueSet,LIKE_SET);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

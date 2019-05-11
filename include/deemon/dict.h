@@ -80,6 +80,13 @@ DDATDEF DeeTypeObject DeeDictKeys_Type;
 DDATDEF DeeTypeObject DeeDictItems_Type;
 DDATDEF DeeTypeObject DeeDictValues_Type;
 
+/* A dummy object used by dict and hashset to refer to
+ * deleted keys that are still apart of the hash chain.
+ * Only here to allow dex modules to correct work
+ * DON'T USE THIS OBJECT AS KEY FOR DICTS OR HASHSETS!
+ * DO NOT EXPOSE THIS OBJECT TO USER-CODE! (not even in `rt'!) */
+DDATDEF DeeObject DeeDict_Dummy;
+
 
 #define DeeDict_New()  DeeObject_NewDefault(&DeeDict_Type)
 DFUNDEF DREF DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);

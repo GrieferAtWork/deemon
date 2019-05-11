@@ -70,6 +70,8 @@
     <ClCompile Include="..\..\src\dex\collections\deque.c" />
     <ClCompile Include="..\..\src\dex\collections\fixedlist.c" />
     <ClCompile Include="..\..\src\dex\collections\libcollections.c" />
+    <ClCompile Include="..\..\src\dex\collections\unique.c" />
+    <ClCompile Include="..\..\src\dex\collections\uset.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\dex\collections\libcollections.h" />

@@ -240,6 +240,7 @@ struct Dee_type_nii {
              * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
             DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
             /* Get the iterator's position
+             * NOTE: Unbound sequence indices also count for this operation
              * @return: * :         The iterator's current position, where the a starting position is 0
              * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
              *                      from its sequence, as can happen in linked lists when the iterator's
@@ -247,6 +248,10 @@ struct Dee_type_nii {
              * @return: (size_t)-1: Error */
             size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
             /* Set the iterator's position
+             * If the given `new_index' is greater than the max allowed index,
+             * the iterator is set to an exhausted state (i.e. points at the
+             * end of the associated sequence)
+             * NOTE: Unbound sequence indices also count for this operation
              * @return:  0: Success
              * @return: -1: Error */
             int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
@@ -255,20 +260,21 @@ struct Dee_type_nii {
              * @return: -1: Error */
             int             (DCALL *nii_rewind)(DeeObject *__restrict self);
             /* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
-             * @return:  0: Success (new relative position wasn't determined)
+             * @return:  0: Success (new relative position couldn't be determined)
              * @return:  1: Success (the iterator has reached its starting position)
              * @return:  2: Success (the iterator hasn't reached its starting position)
              * @return: -1: Error */
             int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
             /* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
-             * @return:  0: Success (new relative position wasn't determined)
+             * @return:  0: Success (new relative position couldn't be determined)
              * @return:  1: Success (the iterator has become exhausted)
              * @return:  2: Success (the iterator hasn't become exhausted)
              * @return: -1: Error */
             int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
             /* Decrement the iterator by 1.
              * @return:  0: Success
-             * @return:  1: The iterator was already at its starting location
+             * @return:  1: The iterator was already at its starting location,
+             *              or the position couldn't be determined
              * @return: -1: Error */
             int             (DCALL *nii_prev)(DeeObject *__restrict self);
             /* Increment the iterator, but don't generate a value
@@ -276,12 +282,13 @@ struct Dee_type_nii {
              *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
              *       only ever be incremented by 1.
              * @return:  0: Success
-             * @return:  1: The iterator had already been exhausted
+             * @return:  1: The iterator had already been exhausted,
+             *              or the position couldn't be determined
              * @return: -1: Error */
             int             (DCALL *nii_next)(DeeObject *__restrict self);
-            /* Check if the iterator is at its starting location
-             * @return:  0: No, it isn't
-             * @return:  1: Yes, it is
+            /* Check if the iterator has a predecessor
+             * @return:  0: No, it doesn't have one (index == 0)
+             * @return:  1: Yes, it does have one (index != 0)
              * @return: -1: Error */
             int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
             /* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
@@ -600,6 +607,9 @@ INTDEF DREF DeeObject *DCALL DeeIterator_GetSeq(DeeObject *__restrict self);
  * @return: (size_t)-1: Error */
 INTDEF size_t DCALL DeeIterator_GetIndex(DeeObject *__restrict self);
 /* Set the iterator's position
+ * If the given `new_index' is greater than the max allowed index,
+ * the iterator is set to an exhausted state (i.e. points at the
+ * end of the associated sequence)
  * @return:  0: Success
  * @return: -1: Error */
 INTDEF int DCALL DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index);

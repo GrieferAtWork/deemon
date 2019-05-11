@@ -45,9 +45,11 @@
 
 DECL_BEGIN
 
-/* Dummy dict key. */
-INTERN DeeObject dict_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
-#define dummy   (&dict_dummy)
+/* A dummy object used by dict and hashset to refer to deleted
+ * keys that are still apart of the hash chain.
+ * DO NOT EXPOSE THIS OBJECT TO USER-CODE! */
+PUBLIC DeeObject DeeDict_Dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+#define dummy  (&DeeDict_Dummy)
 
 
 typedef DeeDictObject Dict;
