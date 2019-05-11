@@ -1,5 +1,5 @@
 @echo off
-rem Copyright (c) 2018 Griefer@Work
+rem Copyright (c) 2019 Griefer@Work
 rem
 rem This software is provided 'as-is', without any express or implied
 rem warranty. In no event will the authors be held liable for any damages

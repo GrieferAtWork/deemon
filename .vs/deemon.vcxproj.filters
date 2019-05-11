@@ -58,6 +58,18 @@
     <Filter Include="src\deemon\compiler\interface">
       <UniqueIdentifier>{aeb9a0ca-b69e-4dca-b272-d320ee5ec8a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="scripts">
+      <UniqueIdentifier>{b8f0fb1e-a25f-4adf-ae65-c219941de358}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scripts\tests">
+      <UniqueIdentifier>{62e22e65-44ee-491d-828d-c3c1a64e0d49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scripts\tut">
+      <UniqueIdentifier>{2240f805-9d95-492b-9647-179fcbbd37f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scripts\tut\assorted">
+      <UniqueIdentifier>{adb38cab-17b1-4224-96d1-ed3d0d604675}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\deemon\api.h">
@@ -951,6 +963,216 @@
     </None>
     <None Include="..\src\deemon\objects\seq\each-fastpass.c.inl">
       <Filter>src\deemon\objects\seq</Filter>
+    </None>
+    <None Include="..\src\deemon\linker-scripts\link-deemon.dee">
+      <Filter>scripts</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\makedb\makedb.dee">
+      <Filter>scripts</Filter>
+    </None>
+    <None Include="..\util\test.dee">
+      <Filter>scripts</Filter>
+    </None>
+    <None Include="..\util\doc-server.dee">
+      <Filter>scripts</Filter>
+    </None>
+    <None Include="..\util\evalstackdump.dee">
+      <Filter>scripts</Filter>
+    </None>
+    <None Include="..\util\test\integer_imm.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\jit.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\lexer_corners.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\range_expressions.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\recursive_references.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\scanf.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\self_recursion.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\seq_segments.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\seqtest.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\strings.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\type_annotations.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\type_mro.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\unused_getset.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\c_cast.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\class_constructors.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\conversion_operator.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\cover.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\destructor_order.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\each.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\except_branching.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\except_expr.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\except_order.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\finally_in_except.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\forward_class_symbols.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\function_keywords.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\implicit_local_conversion.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\test\import_lib.dee">
+      <Filter>scripts\tests</Filter>
+    </None>
+    <None Include="..\util\tut\002_strings.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\003_arithmetic.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\004_conversion_operators.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\005_sequence_operators.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\006_variables.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\007_predefined_symbols.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\008_statements.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\009_functions.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\demo_module.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\00A_classes.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\00B_going_further.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\001_hello_world.dee">
+      <Filter>scripts\tut</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\generators.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\linked_list.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\list_env.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\more_class_fun.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\nametuple.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\pipe_thread.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\python_style_main.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\run_all.bat">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\simple_echo.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\simple_io.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\simple_scanf.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\super_classes.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\thread_punishment.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\walk_path.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\win32_process.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\yield_awesomeness.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\yield_iter_copy.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\af_unix_socket.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\classes.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\conversion_operator.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\deemon_format.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\destructor_hax.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\enum_attributes.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\expand_expressions.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\extern_function.dee">
+      <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\util\tut\assorted\fancy_loading.dee">
+      <Filter>scripts\tut\assorted</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
