@@ -668,7 +668,7 @@ DeeBytes_TestTrait(Bytes *__restrict self,
      start_index = DeeBytes_SIZE(self);
  if (end_index > DeeBytes_SIZE(self))
      end_index = DeeBytes_SIZE(self);
- iter = DeeBytes_DATA(self);
+ iter = DeeBytes_DATA(self) + start_index;
  while (start_index < end_index) {
   if (!(DeeUni_Flags(*iter) & flags))
         return false;
@@ -685,7 +685,7 @@ DeeBytes_IsAscii(Bytes *__restrict self,
      start_index = DeeBytes_SIZE(self);
  if (end_index > DeeBytes_SIZE(self))
      end_index = DeeBytes_SIZE(self);
- iter = DeeBytes_DATA(self);
+ iter = DeeBytes_DATA(self) + start_index;
  while (start_index < end_index) {
   if (*iter > 0x7f)
       return false;
