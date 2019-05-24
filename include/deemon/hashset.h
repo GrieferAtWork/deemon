@@ -57,7 +57,7 @@ struct Dee_hashset_object {
     Dee_WEAKREF_SUPPORT
 };
 
-/* The main `hashset' container class. */
+/* The main `HashSet' container class. */
 DDATDEF DeeTypeObject DeeHashSet_Type;
 #define DeeHashSet_Check(ob)       DeeObject_InstanceOf(ob,&DeeHashSet_Type)
 #define DeeHashSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob,&DeeHashSet_Type)
@@ -86,14 +86,14 @@ DFUNDEF bool DCALL DeeHashSet_ContainsString(DeeObject *__restrict self, char co
 DFUNDEF DREF DeeObject *DCALL DeeHashSet_Unify(DeeObject *__restrict self, DeeObject *__restrict item);
 DFUNDEF DREF DeeObject *DCALL DeeHashSet_UnifyString(DeeObject *__restrict self, char const *__restrict item, size_t item_length);
 
-/* Create a new hashset by inheriting a set of passed key-item pairs.
+/* Create a new HashSet by inheriting a set of passed key-item pairs.
  * @param: items:     A vector containing `num_items' elements,
  *                    even ones being keys and odd ones being items.
  * @param: num_items: The number of items passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
 DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/DREF DeeObject **__restrict items);
 
-/* The basic hashset item lookup algorithm:
+/* The basic HashSet item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
  * >>     Dee_hash_t i,perturb;
  * >>     Dee_hash_t hash = DeeObject_Hash(0,key);

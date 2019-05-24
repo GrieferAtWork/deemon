@@ -27,7 +27,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/int.h>
 #include <deemon/string.h>
 #include <deemon/compiler/ast.h>

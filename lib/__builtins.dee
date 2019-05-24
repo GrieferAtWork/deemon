@@ -52,29 +52,29 @@ import compat_fs = .include.m_fs;
 final local opt_win32 = try import("win32") catch (...) none;
 
 
-local __objects = deemon.list {
+local __objects = deemon.List {
 	/* 0x0000 */ none, // Must be 0
 	/* 0x0001 */ "",
-	/* 0x0002 */ none, /* empty-traceback */
+	/* 0x0002 */ none, /* empty-Traceback */
 	/* 0x0003 */ true,
 	/* 0x0004 */ false,
 	/* 0x0005 */ pack(),
-	/* 0x0006 */ deemon.list,
-	/* 0x0007 */ deemon.object,
+	/* 0x0006 */ deemon.List,
+	/* 0x0007 */ deemon.Object,
 	/* 0x0008 */ deemon.string,
-	/* 0x0009 */ deemon.weakref,
-	/* 0x000a */ deemon.tuple,
-	/* 0x000b */ deemon.type_,
+	/* 0x0009 */ deemon.WeakRef,
+	/* 0x000a */ deemon.Tuple,
+	/* 0x000b */ deemon.Type,
 	/* 0x000c */ rt.NoneType,
 	/* 0x000d */ none, /* __builtin_object (Filled below) */
-	/* 0x000e */ deemon.tuple.iterator,
-	/* 0x000f */ deemon.dict,
-	/* 0x0010 */ deemon.dict.keys,
-	/* 0x0011 */ deemon.dict.items,
-	/* 0x0012 */ deemon.dict.values,
-	/* 0x0013 */ deemon.dict.iterator,
-	/* 0x0014 */ deemon.dict.keys.iterator,
-	/* 0x0015 */ deemon.dict.items.iterator,
+	/* 0x000e */ deemon.Tuple.Iterator,
+	/* 0x000f */ deemon.Dict,
+	/* 0x0010 */ deemon.Dict.Keys,
+	/* 0x0011 */ deemon.Dict.Items,
+	/* 0x0012 */ deemon.Dict.Values,
+	/* 0x0013 */ deemon.Dict.Iterator,
+	/* 0x0014 */ deemon.Dict.Keys.Iterator,
+	/* 0x0015 */ deemon.Dict.Items.Iterator,
 	/* 0x0016 */ deemon.float,
 	/* 0x0017 */ deemon.float, /* double */
 	/* 0x0018 */ deemon.float, /* long double */
@@ -104,7 +104,7 @@ local __objects = deemon.list {
 		__asm__("push except" : "=s" (result));
 		return result;
 	},
-	/* 0x002f */ [] -> deemon.traceback.current, /* __builtin_last_traceback */
+	/* 0x002f */ [] -> deemon.Traceback.current, /* __builtin_last_traceback */
 	/* 0x0030 */ operators.assign, /* __copyassign__ */
 	/* 0x0031 */ [](x) -> !x, /* __not__ */
 	/* 0x0032 */ operators.neg,
@@ -160,11 +160,11 @@ local __objects = deemon.list {
 	/* 0x0064 */ operators.iter,
 	/* 0x0065 */ operators.next,
 	/* 0x0066 */ rt.FileType,
-	/* 0x0067 */ deemon.file,
-	/* 0x0068 */ deemon.file, /* file.io (merged with `file') */
-	/* 0x0069 */ deemon.file.reader,
-	/* 0x006a */ deemon.file.writer,
-	/* 0x006b */ deemon.file.iterator,
+	/* 0x0067 */ deemon.File,
+	/* 0x0068 */ deemon.File, /* File.io (merged with `File') */
+	/* 0x0069 */ deemon.File.Reader,
+	/* 0x006a */ deemon.File.Writer,
+	/* 0x006b */ deemon.File.Iterator,
 	/* 0x006c */ deemon.Signal,
 	/* 0x006d */ deemon.Signal.Interrupt,
 	/* 0x006e */ deemon.Signal.StopIteration,
@@ -183,7 +183,7 @@ local __objects = deemon.list {
 	/* 0x007b */ threading.Semaphore,
 	/* 0x007c */ threading.Mutex,
 	/* 0x007d */ threading.Tls,
-	/* 0x007e */ deemon.thread,
+	/* 0x007e */ deemon.Thread,
 	/* 0x007f */ time.Time,
 	/* 0x0080 */ ctypes.StructuredType,
 	/* 0x0081 */ ctypes.PointerType,
@@ -195,9 +195,9 @@ local __objects = deemon.list {
 	/* 0x0087 */ [](x) -> x.base,   /* __builtin_pointer_rem */
 	/* 0x0088 */ [](x) -> x.lvalue, /* __builtin_lvalue_add */
 	/* 0x0089 */ [](x) -> x.base,   /* __builtin_lvalue_rem */
-	/* 0x008a */ deemon.traceback,
-	/* 0x008b */ deemon.traceback.iterator,
-	/* 0x008c */ deemon.frame, /* DeeTracebackEntry_Type */
+	/* 0x008a */ deemon.Traceback,
+	/* 0x008b */ deemon.Traceback.Iterator,
+	/* 0x008c */ deemon.Frame, /* DeeTracebackEntry_Type */
 	/* 0x008d */ rt.ObjMethod, /* DeeMemberFunction_Type (DeeObjMethod_Type) */
 	/* 0x008e */ rt.CMethod, /* DeeCFunction_Type (DeeCMethod_Type) */
 	/* 0x008f */ ctypes.ShLib,
@@ -213,7 +213,7 @@ local __objects = deemon.list {
 	/* 0x0099 */ rt.Compiler.Ast, /* DeeSAst_Type */
 	/* 0x009a */ fs.getcwd,
 	/* 0x009b */ fs.chdir,
-	/* 0x009c */ [] -> fs.user.home,
+	/* 0x009c */ [] -> fs.User.home,
 	/* 0x009d */ [] -> fs.environ,
 	/* 0x009e */ [](x) -> fs.environ[x],
 	/* 0x009f */ [](x) -> x in fs.environ,
@@ -253,7 +253,7 @@ local __objects = deemon.list {
 	/* 0x00c1 */ fs.readlink,
 	/* 0x00c2 */ [](expr,msg) { deemon.__assert(msg); },
 	/* 0x00c3 */ fs.dir, /* __builtin_fs_opendir */
-	/* 0x00c4 */ fs.dir.iterator,
+	/* 0x00c4 */ fs.dir.Iterator,
 	/* 0x00c5 */ ctypes.memcpy,
 	/* 0x00c6 */ ctypes.memmove,
 	/* 0x00c7 */ ctypes.memcmp,
@@ -284,8 +284,8 @@ local __objects = deemon.list {
 	/* 0x00e0 */ none, /* TODO: ctypes.aligned_realloc */
 	/* 0x00e1 */ none, /* TODO: ctypes.aligned_free */
 	/* 0x00e2 */ ipc.Pipe,
-	/* 0x00e3 */ ipc.Pipe.reader,
-	/* 0x00e4 */ ipc.Pipe.writer,
+	/* 0x00e3 */ ipc.Pipe.Reader,
+	/* 0x00e4 */ ipc.Pipe.Writer,
 	/* 0x00e5 */ deemon.Error.RuntimeError.SegFault,
 	/* 0x00e6 */ deemon.gc.collect, /* __builtin_gc_collect_now */
 	/* 0x00e7 */ fs.stat.isexe,
@@ -293,7 +293,7 @@ local __objects = deemon.list {
 	/* 0x00e9 */ ctypes.strdup, /* strndup  (`ctypes.strdup' is overloaded to implement this as well) */
 	/* 0x00ea */ ctypes.strncat,
 	/* 0x00eb */ fs.query,
-	/* 0x00ec */ fs.query.iterator,
+	/* 0x00ec */ fs.query.Iterator,
 	/* 0x00ed */ fs.link,
 	/* 0x00ee */ opt_win32.GetModuleFileName, /* __builtin_fs_win32modulename */
 	/* 0x00ef */ posix.exit,
@@ -336,8 +336,8 @@ local __objects = deemon.list {
 	/* 0x0114 */ rt.SeqIntRangeIterator, /* DeeRangeUInt32Iterator_Type */
 	/* 0x0115 */ rt.SeqIntRangeIterator, /* DeeRangeUInt64Iterator_Type */
 	/* 0x0116 */ rt.SeqIntRangeIterator, /* DeeGenericRangeIterator_Type */
-	/* 0x0117 */ deemon.sequence.range,
-	/* 0x0118 */ deemon.object.id,
+	/* 0x0117 */ deemon.Sequence.range,
+	/* 0x0118 */ deemon.Object.id,
 	/* 0x0119 */ math.sin,            /* __builtin_sin */
 	/* 0x011a */ math.cos,            /* __builtin_cos */
 	/* 0x011b */ math.tan,            /* __builtin_tan */
@@ -418,16 +418,16 @@ local __objects = deemon.list {
 	/* 0x0166 */ opt_win32.GetSystemWindowsDirectory, /* __builtin_fs_win32systemwindowsdirectory */
 	/* 0x0167 */ opt_win32.GetSystemWow64Directory, /* __builtin_fs_win32syswow64directory */
 	/* 0x0168 */ compat_fs.tmpname,
-	/* 0x0169 */ []() -> deemon.traceback()[1].__code__, /* __builtin_code -- Return the code object of the caller */
+	/* 0x0169 */ []() -> deemon.Traceback()[1].__code__, /* __builtin_code -- Return the code object of the caller */
 	/* 0x016A */ deemon.Error.RuntimeError.UnboundLocal,
 	/* 0x016B */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
-	/* 0x016C */ deemon.iterator, /* DeeGenericSequenceIterator_Type */
+	/* 0x016C */ deemon.Iterator, /* DeeGenericSequenceIterator_Type */
 	/* 0x016D */ deemon.Error.SystemError.FSError.FileNotFound,
 	/* 0x016E */ fs.stat.ischr,
 	/* 0x016F */ fs.stat.isblk,
 	/* 0x0170 */ fs.stat.isfifo,
 	/* 0x0171 */ fs.stat.issock,
-	/* 0x0172 */ deemon.instancemethod,
+	/* 0x0172 */ deemon.InstanceMethod,
 	/* 0x0173 */ rt.makeclass, /* __builtin_class */
 	/* 0x0174 */ deemon.Error.ThreadCrash,
 	/* 0x0175 */ compat_util.swap,
@@ -439,36 +439,36 @@ local __objects = deemon.list {
 	/* 0x017B */ rt.Compiler.Scope,
 	/* 0x017C */ none, /* TODO: &DeeLexerIterator_Type */
 	/* 0x017D */ deemon.Error.ValueError.IndexError,
-	/* 0x017E */ deemon.hashset,
-	/* 0x017F */ deemon.hashset.iterator,
+	/* 0x017E */ deemon.HashSet,
+	/* 0x017F */ deemon.HashSet.Iterator,
 	/* 0x0180 */ [](path,val) -> fs.chtime(path,val,none,none),
 	/* 0x0181 */ [](path,val) -> fs.chtime(path,none,none,val),
 	/* 0x0182 */ [](path,val) -> fs.chtime(path,none,val,none),
 	/* 0x0183 */ [](path,at = none,ct = none,mt = none) -> fs.chtime(path,at,mt,ct),
 	/* 0x0184 */ ctypes.ArrayType,
-	/* 0x0185 */ ctypes.Array.iterator,
+	/* 0x0185 */ ctypes.Array.Iterator,
 	/* 0x0186 */ files.Joined,
-	/* 0x0187 */ deemon.property_,
+	/* 0x0187 */ deemon.Property,
 	/* 0x0188 */ ipc.Process,
-	/* 0x0189 */ deemon.sequence.contains,
+	/* 0x0189 */ deemon.Sequence.contains,
 	/* 0x018A */ net.socket,
 	/* 0x018B */ deemon.hasattr,
 	/* 0x018C */ rt.SeqSubRangeIterator, /* SeqSubRangeIterator_Type */
-	/* 0x018D */ none, /* DeeSocketFile_Type -- Sockets no longer implement the file protocol */
-	/* 0x018E */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the file protocol */
+	/* 0x018D */ none, /* DeeSocketFile_Type -- Sockets no longer implement the File protocol */
+	/* 0x018E */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the File protocol */
 	/* 0x018F */ rt.StringIterator, /* DeeWideStringIterator_Type */
 	/* 0x0190 */ "", /* _Dee_EmptyWideString, */
 	/* 0x0191 */ rt.StringIterator, /* DeeUtf16StringIterator_Type */
 	/* 0x0192 */ "", /* _Dee_EmptyUtf16String */
 	/* 0x0193 */ rt.StringIterator, /* DeeUtf32StringIterator_Type */
 	/* 0x0194 */ "", /* _Dee_EmptyUtf32String */
-	/* 0x0195 */ []() -> fs.user.name,
+	/* 0x0195 */ []() -> fs.User.name,
 	/* 0x0196 */ fs.gethostname,
-	/* 0x0197 */ []() -> fs.user.name, /* DeeBuiltinFunction___builtin_fs_wuser */
+	/* 0x0197 */ []() -> fs.User.name, /* DeeBuiltinFunction___builtin_fs_wuser */
 	/* 0x0198 */ fs.gethostname, /* DeeBuiltinFunction___builtin_fs_whost */
 	/* 0x0199 */ fs.getcwd, /* DeeBuiltinFunction___builtin_fs_wgetcwd */
 	/* 0x019A */ fs.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
-	/* 0x019B */ [](...) -> fs.user(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
+	/* 0x019B */ [](...) -> fs.User(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
 	/* 0x019C */ []() -> fs.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
 	/* 0x019D */ opt_win32.GetModuleFileName, /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
 	/* 0x019E */ opt_win32.GetDllDirectory, /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */
@@ -477,8 +477,8 @@ local __objects = deemon.list {
 	/* 0x01A1 */ opt_win32.GetSystemWindowsDirectory, /* DeeBuiltinFunction___builtin_fs_win32wsystemwindowsdirectory */
 	/* 0x01A2 */ opt_win32.GetSystemWow64Directory, /* DeeBuiltinFunction___builtin_fs_win32wsyswow64directory */
 	/* 0x01A3 */ none, /* TODO: DeeBuiltinFunction___builtin_fs_wgettmpname */
-	/* 0x01A4 */ deemon.list.iterator,
-	/* 0x01A5 */ deemon.super_,
+	/* 0x01A4 */ deemon.List.Iterator,
+	/* 0x01A5 */ deemon.Super,
 	/* 0x01A6 */ deemon.Error.ValueError.UnicodeError,
 	/* 0x01A7 */ deemon.Error.ValueError.ReferenceError,
 	/* 0x01A8 */ net.NetError,
@@ -491,40 +491,40 @@ local __objects = deemon.list {
 	/* 0x01AF */ deemon.Error.RuntimeError.StackOverflow,
 	/* 0x01B0 */ rt.getstacklimit, /* DeeBuiltinFunction___builtin_get_stacklimit */
 	/* 0x01B1 */ rt.setstacklimit, /* DeeBuiltinFunction___builtin_set_stacklimit */
-	/* 0x01B2 */ deemon.sequence.find,
-	/* 0x01B3 */ deemon.sequence.rfind,
-	/* 0x01B4 */ deemon.sequence.index,
-	/* 0x01B5 */ deemon.sequence.rindex,
-	/* 0x01B6 */ deemon.sequence.count,
-	/* 0x01B7 */ deemon.sequence.locate,
-	/* 0x01B8 */ deemon.sequence.rlocate,
-	/* 0x01B9 */ deemon.sequence.locateall,
-	/* 0x01BA */ deemon.sequence.transform,
-	/* 0x01BB */ deemon.sequence.empty,
-	/* 0x01BC */ deemon.sequence.nonempty,
-	/* 0x01BD */ deemon.sequence.front,
-	/* 0x01BE */ deemon.sequence.back,
-	/* 0x01BF */ deemon.sequence.get,
-	/* 0x01C0 */ deemon.sequence.at,
-	/* 0x01C1 */ deemon.sequence.reversed,
-	/* 0x01C2 */ deemon.sequence.sorted,
-	/* 0x01C3 */ deemon.sequence.segments,
-	/* 0x01C4 */ deemon.cell,
+	/* 0x01B2 */ deemon.Sequence.find,
+	/* 0x01B3 */ deemon.Sequence.rfind,
+	/* 0x01B4 */ deemon.Sequence.index,
+	/* 0x01B5 */ deemon.Sequence.rindex,
+	/* 0x01B6 */ deemon.Sequence.count,
+	/* 0x01B7 */ deemon.Sequence.locate,
+	/* 0x01B8 */ deemon.Sequence.rlocate,
+	/* 0x01B9 */ deemon.Sequence.locateall,
+	/* 0x01BA */ deemon.Sequence.transform,
+	/* 0x01BB */ deemon.Sequence.empty,
+	/* 0x01BC */ deemon.Sequence.nonempty,
+	/* 0x01BD */ deemon.Sequence.front,
+	/* 0x01BE */ deemon.Sequence.back,
+	/* 0x01BF */ deemon.Sequence.get,
+	/* 0x01C0 */ deemon.Sequence.at,
+	/* 0x01C1 */ deemon.Sequence.reversed,
+	/* 0x01C2 */ deemon.Sequence.sorted,
+	/* 0x01C3 */ deemon.Sequence.segments,
+	/* 0x01C4 */ deemon.Cell,
 	/* 0x01C5 */ fs.chmod,
 	/* 0x01C6 */ [](path) -> fs.stat(path).st_mode,
 	/* 0x01C7 */ fs.chown,
 	/* 0x01C8 */ [](path) { __stack local st = fs.stat(path); return (st.st_uid,st.st_gid); },
-	/* 0x01C9 */ fs.user, /* DeeBuiltinFunction___builtin_fs_uidof */
-	/* 0x01CA */ fs.group, /* DeeBuiltinFunction___builtin_fs_gidof */
-	/* 0x01CB */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name; },
-	/* 0x01CC */ [](uid) { if (uid !is fs.user) uid = fs.user(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wuidname */
-	/* 0x01CD */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name; },
-	/* 0x01CE */ [](uid) { if (uid !is fs.group) uid = fs.group(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wgidname */
+	/* 0x01C9 */ fs.User, /* DeeBuiltinFunction___builtin_fs_uidof */
+	/* 0x01CA */ fs.Group, /* DeeBuiltinFunction___builtin_fs_gidof */
+	/* 0x01CB */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; },
+	/* 0x01CC */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wuidname */
+	/* 0x01CD */ [](uid: fs.Group | deemon.Object) { if (uid !is fs.Group) uid = fs.Group(uid); return uid.name; },
+	/* 0x01CE */ [](uid: fs.Group | deemon.Object) { if (uid !is fs.Group) uid = fs.Group(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wgidname */
 	/* 0x01CF */ [] -> opt_win32.GetLogicalDriveStrings().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32drives */
 	/* 0x01D0 */ [] -> opt_win32.GetLogicalDriveStrings().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32wdrives */
 	/* 0x01D1 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64encode */
 	/* 0x01D2 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64decode */
-	/* 0x01D3 */ deemon.sequence.iterator(), /* _Dee_EmptyZipIterator */
+	/* 0x01D3 */ deemon.Sequence.Iterator(), /* _Dee_EmptyZipIterator */
 	/* 0x01D4 */ operators.moveassign, /* DeeBuiltinFunction___moveassign__ */
 	/* 0x01D5 */ [](x,...) -> x(...), /* DeeBuiltinFunction___callv__ */
 	/* 0x01D6 */ operators.hash, /* DeeBuiltinFunction___hash__ */
@@ -541,7 +541,7 @@ local __objects = deemon.list {
 	/* 0x01E1 */ none, /* TODO: Add closure support to ctypes -- DeeBuiltinFunction___builtin_ff_closure */
 	/* 0x01E2 */ compat_util_attr.enumattr, /* DeeBuiltinFunction___builtin_enumattr */
 	/* 0x01E3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */
-	// Builtin file operators
+	// Builtin File operators
 	/* 0x01E3 */ operators.read, /* DeeBuiltinFunction___read__ */
 	/* 0x01E4 */ operators.write, /* DeeBuiltinFunction___write__ */
 	/* 0x01E5 */ operators.read, /* DeeBuiltinFunction___readp__ */
@@ -552,9 +552,9 @@ local __objects = deemon.list {
 	/* 0x01EA */ operators.sync, /* DeeBuiltinFunction___flush__ */
 	/* 0x01EB */ operators.trunc, /* DeeBuiltinFunction___trunc__ */
 	/* 0x01EC */ operators.close, /* DeeBuiltinFunction___close__ */
-	/* 0x01ED */ fs.user, /* DeeFSWin32SID_Type */
-	/* 0x01EF */ deemon.function_,
-	/* 0x01F0 */ deemon.function_.yieldfunction.iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a user-function) */
+	/* 0x01ED */ fs.User, /* DeeFSWin32SID_Type */
+	/* 0x01EF */ deemon.Function,
+	/* 0x01F0 */ deemon.Function.YieldFunction.Iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a User-function) */
 	/* 0x01F1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */
 };
 //assert #__objects == 0x01F1 + 1;

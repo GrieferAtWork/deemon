@@ -33,7 +33,7 @@ DECL_BEGIN
 
 typedef struct {
     OBJECT_HEAD
-    DREF DeeBytesObject *b_str;   /* [1..1][const] The bytes object that is being segmented. */
+    DREF DeeBytesObject *b_str;   /* [1..1][const] The Bytes object that is being segmented. */
     size_t               b_siz;   /* [!0][const] The size of a single segment. */
     ATOMIC_DATA uint8_t *b_ptr;   /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
     uint8_t             *b_end;   /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
@@ -47,7 +47,7 @@ typedef struct {
 
 typedef struct {
     OBJECT_HEAD
-    DREF DeeBytesObject *b_str; /* [1..1][const] The bytes object that is being segmented. */
+    DREF DeeBytesObject *b_str; /* [1..1][const] The Bytes object that is being segmented. */
     size_t               b_siz; /* [!0][const] The size of a single segment. */
 } BytesSegments;
 
@@ -335,13 +335,13 @@ PRIVATE struct type_seq bseg_seq = {
 
 
 PRIVATE struct type_member bseg_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSegments,b_str),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSegments,b_str),"->?DBytes"),
     TYPE_MEMBER_FIELD("__siz__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(BytesSegments,b_siz)),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member bseg_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BytesSegmentsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BytesSegmentsIterator_Type),
     TYPE_MEMBER_END
 };
 

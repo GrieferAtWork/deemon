@@ -1063,7 +1063,7 @@ PRIVATE int DCALL
 list_init(List *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *sequence; DeeObject *filler = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:list",&sequence,&filler))
+ if (DeeArg_Unpack(argc,argv,"o|o:List",&sequence,&filler))
      goto err;
  if (filler || DeeInt_Check(sequence)) {
   size_t list_size;
@@ -2486,7 +2486,7 @@ list_reserve(List *__restrict self,
      goto err;
  DeeList_LockWrite(self);
  if (size > self->l_alloc) {
-  /* Try to allocate more memory for this list. */
+  /* Try to allocate more memory for this List. */
   DREF DeeObject **new_elem;
   new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem,size*
                                                sizeof(DREF DeeObject *));
@@ -2752,15 +2752,15 @@ PRIVATE struct type_getset list_getsets[] = {
      (int(DCALL *)(DeeObject *__restrict))&list_delallocated,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_setallocated,
       DOC("->?Dint\n"
-          "@throw ValueError Attmpted to set the list preallocation size to a value lower than ${#this}\n"
+          "@throw ValueError Attmpted to set the List preallocation size to a value lower than ${#this}\n"
           "The number of allocated items\n"
           "When using performing a del-operation on this property, the allocation will "
           "be set to use the least amount of memory, which is achived by setting it to ${#this}.\n"
-          "Note however that when lowering the amount of allocated list space, failure to "
-          "reallocate the internal list vector is ignored, and the allocated list size will "
+          "Note however that when lowering the amount of allocated vector space, failure to "
+          "reallocate the internal List vector is ignored, and the allocated List size will "
           "not be modified\n"
           "Similarly, failure to allocate more memory when increasing the allocated size "
-          "of a list is ignored, with the previously allocated size remaining unchanged.\n"
+          "of a List is ignored, with the previously allocated size remaining unchanged.\n"
           ">del mylist.allocated;\n"
           ">/* Same as this: */\n"
           ">mylist.shrink();\n"
@@ -2771,19 +2771,19 @@ PRIVATE struct type_getset list_getsets[] = {
      (int(DCALL *)(DeeObject *__restrict))&list_del_first,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_set_first,
       DOC("->\n"
-          "@return The first item from @this list") },
+          "@return The first item from @this List") },
     { DeeString_STR(&str_last),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_last,
      (int(DCALL *)(DeeObject *__restrict))&list_del_last,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&list_set_last,
       DOC("->\n"
-          "@return The last item from @this list") },
+          "@return The last item from @this List") },
     { "frozen",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_frozen,
       NULL,
       NULL,
-      DOC("->?Dtuple\n"
-          "Return a copy of the contents of @this list as an immutable sequence") },
+      DOC("->?DTuple\n"
+          "Return a copy of the contents of @this List as an immutable sequence") },
     { NULL }
 };
 
@@ -2793,16 +2793,16 @@ PRIVATE struct type_method list_methods[] = {
     { DeeString_STR(&str_append),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_append,
       DOC("(items!)\n"
-          "Append all the given @items at the end of @this list") },
+          "Append all the given @items at the end of @this List") },
     { DeeString_STR(&str_extend),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_extend,
       DOC("(items:?S?O)\n"
-          "Append all elements from @items to the end of @this list") },
+          "Append all elements from @items to the end of @this List") },
     { DeeString_STR(&str_resize),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_resize,
       DOC("(newsize:?Dint,filler=!N)\n"
           "@throw IntegerOverflow The given @newsize is lower than $0\n"
-          "Resize the size of @this list to match @newsize, using @filler to initialize new items"),
+          "Resize the size of @this List to match @newsize, using @filler to initialize new items"),
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_insert),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_insert,
@@ -2832,31 +2832,31 @@ PRIVATE struct type_method list_methods[] = {
           "@return Items that was removed\n"
           "Pops an item at the given @{index}. When @index is lower "
           "than $0, add ${#this} prior to evaluation, meaning that "
-          "negative numbers pop items relative to the end of the list"),
+          "negative numbers pop items relative to the end of the List"),
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_xch),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_xch,
       DOC("(index:?Dint,value)->\n"
           "@throw IndexError The given @index is out of bounds\n"
-          "Exchange the @index'th item of @this list with @value, returning the item's old value"),
+          "Exchange the @index'th item of @this List with @value, returning the item's old value"),
       TYPE_METHOD_FKWDS },
     { DeeString_STR(&str_clear),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_clear,
       DOC("()\n"
-          "Clear all items from @this list") },
+          "Clear all items from @this List") },
     { DeeString_STR(&str_removeif),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_removeif,
-      DOC("(should:?Dcallable,start=!0,end=!-1)->?Dint\n"
+      DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
           "@return The number of removed items"
           "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
       TYPE_METHOD_FKWDS },
 
     { DeeString_STR(&str_pushfront),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_pushfront,
-      DOC("(item)\nInserts @item at the fron of this @this list. Same as ${this.insert(0,item)}") },
+      DOC("(item)\nInserts @item at the fron of this @this List. Same as ${this.insert(0,item)}") },
     { DeeString_STR(&str_pushback),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_pushback,
-      DOC("(item)\nInserts @item at the end of this @this list. Same as #append") },
+      DOC("(item)\nInserts @item at the end of this @this List. Same as #append") },
     { DeeString_STR(&str_popfront),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_popfront,
       DOC("->\nSame as ${this.pop(0)}") },
@@ -2868,17 +2868,17 @@ PRIVATE struct type_method list_methods[] = {
     { "reverse",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_reverse,
       DOC("()\n"
-          "Reverse the order of all the elements of @this list") },
+          "Reverse the order of all the elements of @this List") },
     { "sort",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sort,
       DOC("()\n"
-          "(key:?Dcallable)\n"
-          "Sort the elements of @this list in ascending order, or in accordance to @key"),
+          "(key:?DCallable)\n"
+          "Sort the elements of @this List in ascending order, or in accordance to @key"),
       TYPE_METHOD_FKWDS },
     { "sorted",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_sorted,
       DOC("->?S?O\n"
-          "(key:?Dcallable)->?S?O\n"
+          "(key:?DCallable)->?S?O\n"
           "Return a sequence that contains all elements from @this sequence, "
           "but sorted in ascending order, or in accordance to @key\n"
           "The type of sequence returned is implementation-defined"),
@@ -2892,12 +2892,12 @@ PRIVATE struct type_method list_methods[] = {
           "If @size is lower than the currently #allocated size, the function becomes a no-op") },
     { "shrink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_shrink,
       DOC("()\n"
-          "Release any pre-allocated, but unused memory, setting #allocated to the length of @this list") },
+          "Release any pre-allocated, but unused memory, setting #allocated to the length of @this List") },
 
     /* Deprecated aliases / functions. */
     { "remove_if", 
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_removeif,
-      DOC("(should:?Dcallable,start=!0,end=!-1)->?Dint\n"
+      DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
            "Deprecated alias for #removeif"),
       TYPE_METHOD_FKWDS },
     { "insert_list",
@@ -2907,7 +2907,7 @@ PRIVATE struct type_method list_methods[] = {
       TYPE_METHOD_FKWDS },
     { "insert_iter",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_insertiter_deprecated,
-      DOC("(index:?Dint,iter:?Diterator)\n"
+      DOC("(index:?Dint,iter:?DIterator)\n"
           "Deprecated alias for ${this.insertall(index,(iter as iterator from deemon).future)}") },
     { "push_front",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&list_pushfront,
@@ -3101,8 +3101,8 @@ PRIVATE struct type_math list_math = {
 };
 
 PRIVATE struct type_member list_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeListIterator_Type),
-    TYPE_MEMBER_CONST("frozen",&DeeTuple_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeListIterator_Type),
+    TYPE_MEMBER_CONST("Frozen",&DeeTuple_Type),
     TYPE_MEMBER_END
 };
 
@@ -3526,29 +3526,29 @@ PRIVATE struct type_cmp list_cmp = {
 
 PUBLIC DeeTypeObject DeeList_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_list),
+    /* .tp_name     = */DeeString_STR(&str_List),
     /* .tp_doc      = */DOC("An index-based vector sequence, capable of holding any number of objects\n"
                             "\n"
                             "()\n"
-                            "Create a new, empty list\n"
+                            "Create a new, empty List\n"
                             "\n"
                             "(items:?S?O)\n"
-                            "Create a new list, using objects enumerated by iterating @items\n"
+                            "Create a new List, using objects enumerated by iterating @items\n"
                             "\n"
                             "(size:?Dint,filler=!N)\n"
-                            "Create a new list consiting of @size elements, all initialized to @filler\n"
+                            "Create a new List consiting of @size elements, all initialized to @filler\n"
                             "\n"
                             "copy->\n"
-                            "Creates a shallow copy of @this list\n"
+                            "Creates a shallow copy of @this List\n"
                             "\n"
                             "deepcopy->\n"
-                            "Creates a deep copy of @this list\n"
+                            "Creates a deep copy of @this List\n"
                             "\n"
                             "bool->\n"
-                            "Returns :true if @this list is non-empty\n"
+                            "Returns :true if @this List is non-empty\n"
                             "\n"
                             "repr->\n"
-                            "Returns the items of @this list, following list syntax rather than abstract sequence syntax:\n"
+                            "Returns the items of @this List, following List syntax rather than abstract sequence syntax:\n"
                             ">local x = [];\n"
                             ">x.append(10);\n"
                             ">x.append(20);\n"
@@ -3556,42 +3556,42 @@ PUBLIC DeeTypeObject DeeList_Type = {
                             ">print repr x; /* `[10, 20, 30]' */\n"
                             "\n"
                             "+(other:?X2?.?S?O)->\n"
-                            "Returns a new list that is the concatenation of @this list and @other\n"
+                            "Returns a new List that is the concatenation of @this List and @other\n"
                             "\n"
                             "+=(other:?X2?.?S?O)->\n"
-                            "Appends elements from @other to @this list. (Same as #extend)\n"
+                            "Appends elements from @other to @this List. (Same as #extend)\n"
                             "\n"
                             "*(count:?Dint)->\n"
                             "@throw IntegerOverflow @count is negative\n"
-                            "Return a new list containing all the elements of @this one, repeated @count times\n"
-                            "When @count is equal to $0, an empty list is returned\n"
+                            "Return a new List containing all the elements of @this one, repeated @count times\n"
+                            "When @count is equal to $0, an empty List is returned\n"
                             "\n"
                             "*=(count:?Dint)->\n"
                             "@throw IntegerOverflow @count is negative\n"
-                            "Extend @this list to contain @count as many items, filling the new slots with repetitions of all pre-existing items\n"
+                            "Extend @this List to contain @count as many items, filling the new slots with repetitions of all pre-existing items\n"
                             "When @count is equal to $0, the operator behaves the same as #clear\n"
                             "\n"
                             "#->\n"
-                            "Returns the number of items contained within @this list\n"
+                            "Returns the number of items contained within @this List\n"
                             "\n"
                             "[](index:?Dint)->\n"
                             "@throw IndexError @index is out of bounds\n"
                             "@throw IntegerOverflow @index is negative or too large\n"
-                            "Return the @index'th item of @this list\n"
+                            "Return the @index'th item of @this List\n"
                             "\n"
                             "del[](index:?Dint)->\n"
                             "@throw IndexError @index is out of bounds\n"
                             "@throw IntegerOverflow @index is negative or too large\n"
-                            "Delete the @index'th item from @this list. (same as ${this.erase(index,1)})\n"
+                            "Delete the @index'th item from @this List. (same as ${this.erase(index,1)})\n"
                             "\n"
                             "[]=(index:?Dint,ob)->\n"
                             "@throw IndexError @index is out of bounds\n"
                             "@throw IntegerOverflow @index is negative or too large\n"
-                            "Replace the @index'th item of @this list with @ob\n"
+                            "Replace the @index'th item of @this List with @ob\n"
                             "\n"
                             "[:](start:?Dint,end:?Dint)->\n"
                             "@throw IntegerOverflow @start or @end are too large\n"
-                            "Return a new list containing the elements within the range @{start}...@end\n"
+                            "Return a new List containing the elements within the range @{start}...@end\n"
                             "If either @start or @end are negative, ${#this} is added first.\n"
                             "If following this, either is greater than ${#this}, it is clampled to that value\n"
                             "\n"
@@ -3604,13 +3604,13 @@ PUBLIC DeeTypeObject DeeList_Type = {
                             "@throw IntegerOverflow @start or @end are too large\n"
                             "Using the same index-rules as for #op:getrange, delete all items from that range "
                             "before inserting all elements from @items at the range's start. - This operation "
-                            "is performed atomically, and @this list is not modified if @items cannot be iterated\n"
+                            "is performed atomically, and @this List is not modified if @items cannot be iterated\n"
                             "\n"
                             "iter->\n"
-                            "Returns an iterator for enumerating the elements of @this list\n"
+                            "Returns an iterator for enumerating the elements of @this List\n"
                             "\n"
                             "contains->\n"
-                            "Returns :true if @elem is apart of @this list\n"
+                            "Returns :true if @elem is apart of @this List\n"
                             "\n"
                             "<(other:?X2?.?S?O)->\n"
                             "<=(other:?X2?.?S?O)->\n"
@@ -3619,7 +3619,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
                             ">(other:?X2?.?S?O)->\n"
                             ">=(other:?X2?.?S?O)->\n"
                             "@throw NotImplemented The given @other cannot be iterated\n"
-                            "Perform a lexicographical comparison between @this list and the given @other sequence\n"
+                            "Perform a lexicographical comparison between @this List and the given @other sequence\n"
                             "\n"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
@@ -3979,7 +3979,7 @@ PRIVATE struct type_cmp li_cmp = {
 };
 
 PRIVATE struct type_member li_members[] = {
-    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(ListIterator,li_list),"->?Dlist"),
+    TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(ListIterator,li_list),"->?DList"),
     TYPE_MEMBER_FIELD("index",STRUCT_ATOMIC|STRUCT_SIZE_T,offsetof(ListIterator,li_index)),
     TYPE_MEMBER_END
 };

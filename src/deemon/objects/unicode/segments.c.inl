@@ -407,7 +407,7 @@ PRIVATE struct type_member sseg_members[] = {
 };
 
 PRIVATE struct type_member sseg_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringSegmentsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringSegmentsIterator_Type),
     TYPE_MEMBER_END
 };
 

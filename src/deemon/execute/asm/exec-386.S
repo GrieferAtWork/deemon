@@ -9397,10 +9397,10 @@ inst_table:
 	.long target_push_extern             /* `push extern <imm8>:<imm8>' */
 	.long target_push_global             /* `push global <imm8>' */
 	.long target_push_local              /* `push local <imm8>' */
-	.long target_cast_tuple              /* `cast top, tuple' */
-	.long target_cast_list               /* `cast top, list' */
-	.long target_pack_tuple              /* `push pack tuple, #<imm8>' */
-	.long target_pack_list               /* `push pack list, #<imm8>' */
+	.long target_cast_tuple              /* `cast top, Tuple' */
+	.long target_cast_list               /* `cast top, List' */
+	.long target_pack_tuple              /* `push pack Tuple, #<imm8>' */
+	.long target_pack_list               /* `push pack List, #<imm8>' */
 	.long invop
 	.long invop
 	.long target_unpack                  /* `unpack pop, #<imm8>' */
@@ -9655,10 +9655,10 @@ inst_table_f0:
 	.long target16_push_extern           /* `push extern <imm16>:<imm16>' */
 	.long target16_push_global           /* `push global <imm16>' */
 	.long target16_push_local            /* `push local <imm16>' */
-	.long target_cast_hashset            /* `cast top, hashset' */
-	.long target_cast_dict               /* `cast top, dict' */
-	.long target16_pack_tuple            /* `push pack tuple, #<imm16>' */
-	.long target16_pack_list             /* `push pack list, #<imm16>' */
+	.long target_cast_hashset            /* `cast top, HashSet' */
+	.long target_cast_dict               /* `cast top, Dict' */
+	.long target16_pack_tuple            /* `push pack Tuple, #<imm16>' */
+	.long target16_pack_list             /* `push pack List, #<imm16>' */
 	.long invop
 	.long invop
 	.long target16_unpack                /* `unpack pop, #<imm16>' */
@@ -9673,8 +9673,8 @@ inst_table_f0:
 	.long invop
 	.long target_push_true               /* `push true' */
 	.long target_push_false              /* `push false' */
-	.long target_pack_hashset            /* `push pack hashset, #<imm8>' */
-	.long target_pack_dict               /* `push pack dict, #<imm8>*2' */
+	.long target_pack_hashset            /* `push pack HashSet, #<imm8>' */
+	.long target_pack_dict               /* `push pack Dict, #<imm8>*2' */
 	.long invop
 	.long invop
 	.long invop
@@ -9689,8 +9689,8 @@ inst_table_f0:
 	.long target16_setattr_this_c        /* `setattr this, const <imm16>, pop' */
 	.long target_cmp_so                  /* `cmp so, top, pop' */
 	.long target_cmp_do                  /* `cmp do, top, pop' */
-	.long target16_pack_hashset          /* `push pack hashset, #<imm16>' */
-	.long target16_pack_dict             /* `push pack dict, #<imm16>*2' */
+	.long target16_pack_hashset          /* `push pack HashSet, #<imm16>' */
+	.long target16_pack_dict             /* `push pack Dict, #<imm16>*2' */
 	.long target16_getcmember            /* `getcmember top, $<imm16>' */
 	.long target_class                   /* `class top, pop' */
 	.long target16_class_c               /* `class top, const <imm16>' */
@@ -9913,10 +9913,10 @@ prefix_inst_table:
 	.long prefix_target_push_extern             /* `push extern <imm8>:<imm8>' */
 	.long prefix_target_push_global             /* `push global <imm8>' */
 	.long prefix_target_push_local              /* `push local <imm8>' */
-	.long prefix_target_cast_tuple              /* `cast top, tuple' */
-	.long prefix_target_cast_list               /* `cast top, list' */
-	.long prefix_target_pack_tuple              /* `push pack tuple, #<imm8>' */
-	.long prefix_target_pack_list               /* `push pack list, #<imm8>' */
+	.long prefix_target_cast_tuple              /* `cast top, Tuple' */
+	.long prefix_target_cast_list               /* `cast top, List' */
+	.long prefix_target_pack_tuple              /* `push pack Tuple, #<imm8>' */
+	.long prefix_target_pack_list               /* `push pack List, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target_unpack                  /* `unpack pop, #<imm8>' */
@@ -10171,10 +10171,10 @@ prefix_inst_table_f0:
 	.long prefix_target16_push_extern           /* `push extern <imm16>:<imm16>' */
 	.long prefix_target16_push_global           /* `push global <imm16>' */
 	.long prefix_target16_push_local            /* `push local <imm16>' */
-	.long prefix_target_cast_hashset            /* `cast top, hashset' */
-	.long prefix_target_cast_dict               /* `cast top, dict' */
-	.long prefix_target16_pack_tuple            /* `push pack tuple, #<imm16>' */
-	.long prefix_target16_pack_list             /* `push pack list, #<imm16>' */
+	.long prefix_target_cast_hashset            /* `cast top, HashSet' */
+	.long prefix_target_cast_dict               /* `cast top, Dict' */
+	.long prefix_target16_pack_tuple            /* `push pack Tuple, #<imm16>' */
+	.long prefix_target16_pack_list             /* `push pack List, #<imm16>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target16_unpack                /* `unpack pop, #<imm16>' */
@@ -10189,8 +10189,8 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target_push_true               /* `push true' */
 	.long prefix_target_push_false              /* `push false' */
-	.long prefix_target_pack_hashset            /* `push pack hashset, #<imm8>' */
-	.long prefix_target_pack_dict               /* `push pack dict, #<imm8>*2' */
+	.long prefix_target_pack_hashset            /* `push pack HashSet, #<imm8>' */
+	.long prefix_target_pack_dict               /* `push pack Dict, #<imm8>*2' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10205,8 +10205,8 @@ prefix_inst_table_f0:
 	.long prefix_target16_setattr_this_c        /* `setattr this, const <imm16>, pop' */
 	.long prefix_target_cmp_so                  /* `cmp so, top, pop' */
 	.long prefix_target_cmp_do                  /* `cmp do, top, pop' */
-	.long prefix_target16_pack_hashset          /* `push pack hashset, #<imm16>' */
-	.long prefix_target16_pack_dict             /* `push pack dict, #<imm16>*2' */
+	.long prefix_target16_pack_hashset          /* `push pack HashSet, #<imm16>' */
+	.long prefix_target16_pack_dict             /* `push pack Dict, #<imm16>*2' */
 	.long prefix_target16_getcmember            /* `getcmember top, $<imm16>' */
 	.long prefix_target_class                   /* `class top, pop' */
 	.long prefix_target16_class_c               /* `class top, const <imm16>' */

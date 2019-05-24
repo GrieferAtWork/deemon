@@ -107,8 +107,8 @@ ast_gen_operator_func(struct ast *binding,
    if (ast_genasm_one(binding,ASM_G_FPUSHRES)) goto err;
    deemon_module_id = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_module_id < 0) goto err_module;
-   if (asm_gcall_extern((uint16_t)deemon_module_id,id_instancemethod,2))
-       goto err_module; /* instancemethod(<...> from operators,binding) */
+   if (asm_gcall_extern((uint16_t)deemon_module_id,id_InstanceMethod,2))
+       goto err_module; /* InstanceMethod(<...> from operators,binding) */
   }
  } else {
 generic_operator:
@@ -132,12 +132,12 @@ generic_operator:
   if unlikely(deemon_module_id < 0) goto err_module;
   if (asm_gpush_extern(opmod_id,opsym_id)) goto err_module; /* operator from operators */
   if (asm_gpush_u16(operator_name)) goto err_module;        /* operator from operators, opname */
-  if (asm_gcall_extern((uint16_t)deemon_module_id,id_instancemethod,2))
-      goto err_module; /* instancemethod(operator from operators,opname) */
+  if (asm_gcall_extern((uint16_t)deemon_module_id,id_InstanceMethod,2))
+      goto err_module; /* InstanceMethod(operator from operators,opname) */
   if (binding) {
    if (ast_genasm_one(binding,ASM_G_FPUSHRES)) goto err_module;
-   if (asm_gcall_extern((uint16_t)deemon_module_id,id_instancemethod,2))
-       goto err_module; /* instancemethod(instancemethod(operator from operators,opname),binding) */
+   if (asm_gcall_extern((uint16_t)deemon_module_id,id_InstanceMethod,2))
+       goto err_module; /* InstanceMethod(InstanceMethod(operator from operators,opname),binding) */
   }
  }
  Dee_Decref(operators_module);

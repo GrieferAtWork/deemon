@@ -92,8 +92,8 @@ DECL_BEGIN
  * >> print foo.x.value; // `Exported string from bar'
  * >> print bar.value;   // `Exported string from bar'
  * >>
- * >> assert object.id(foo.x) == object.id(bar), "Must be the same object";
- * >> assert object.id(foo.x.value) == object.id(bar.value), "Must be the same object";
+ * >> assert Object.id(foo.x) == Object.id(bar), "Must be the same object";
+ * >> assert Object.id(foo.x.value) == Object.id(bar.value), "Must be the same object";
  */
 
 #ifdef DEE_SOURCE
@@ -618,7 +618,7 @@ DeeModule_OpenSourceMemoryString(/*utf-8*/char const *__restrict data, size_t da
 
 /* Very similar to `DeeModule_OpenSourceMemory()', and used to implement it,
  * however source data is made available using a stream object derived
- * from `file from deemon'
+ * from `File from deemon'
  * @param: source_stream:   A File object from which source code will be read.
  * @param: source_pathname: The filename of the source file from which data (supposedly) originates.
  *                          Used by `#include' directives, as well as `__FILE__' and ddi information.

@@ -25,7 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/callable.h>
-#include <deemon/instancemethod.h>
+#include <deemon/InstanceMethod.h>
 #include <deemon/super.h>
 #include <deemon/bool.h>
 #include <deemon/string.h>
@@ -38,7 +38,7 @@ DECL_BEGIN
 
 typedef DeeInstanceMethodObject InstanceMethod;
 
-/* Since `super' and `instancemethod' objects share the same
+/* Since `super' and `InstanceMethod' objects share the same
  * size, we also let them share a pool of pre-allocated objects. */
 STATIC_ASSERT(sizeof(DeeSuperObject) == sizeof(InstanceMethod));
 DECLARE_OBJECT_CACHE(super,DeeSuperObject); /* TODO: Get rid of this (rely on slabs instead) */
@@ -105,7 +105,7 @@ im_init(InstanceMethod *__restrict self,
         DeeObject *kw) {
  DeeObject *thisarg,*func;
  PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:instancemethod",&func,&thisarg))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:InstanceMethod",&func,&thisarg))
      return -1;
  self->im_this = thisarg;
  self->im_func = func;
@@ -116,7 +116,7 @@ im_init(InstanceMethod *__restrict self,
 
 PRIVATE DREF DeeObject *DCALL
 im_repr(InstanceMethod *__restrict self) {
- return DeeString_Newf("instancemethod(func: %r, thisarg: %r)",self->im_func,self->im_this);
+ return DeeString_Newf("InstanceMethod(func: %r, thisarg: %r)",self->im_func,self->im_this);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -166,7 +166,7 @@ PRIVATE struct type_cmp im_cmp = {
 };
 
 
-/* Since `super' and `instancemethod' share an identical
+/* Since `super' and `InstanceMethod' share an identical
  * layout, we can re-use some operators here... */
 INTDEF void DCALL super_fini(DeeSuperObject *__restrict self);
 INTDEF void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, void *arg);
@@ -297,13 +297,13 @@ PRIVATE struct type_getset im_getsets[] = {
           "If @this function doesn't accept keyword arguments, an empty sequence is returned") },
     { DeeString_STR(&str___type__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
-      DOC("->?X2?Dtype?N\n"
+      DOC("->?X2?DType?N\n"
           "The type implementing the function that is being bound, or :none if unknown") },
     { DeeString_STR(&str___module__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
-      DOC("->?X2?Dmodule?N\n"
+      DOC("->?X2?DModule?N\n"
           "The type within which the bound function was defined "
-          "(alias for :function.__module__ though ${__func__.__module__})\n"
+          "(alias for :Function.__module__ though ${__func__.__module__})\n"
           "If something other than a user-level function was set for #__func__, "
           "a $\"__module__\" attribute will be loaded from it, with its value "
           "then forwarded") },
@@ -313,23 +313,23 @@ PRIVATE struct type_getset im_getsets[] = {
 PRIVATE struct type_member im_members[] = {
     TYPE_MEMBER_FIELD_DOC("__this__",STRUCT_OBJECT,offsetof(InstanceMethod,im_this),
                           "->\n"
-                          "The object to which @this :instancemethod is bound"),
+                          "The object to which @this :InstanceMethod is bound"),
     TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(InstanceMethod,im_func),
                           "->?D\n"
-                          "The unbound class-function that is being bound by this :instancemethod"),
+                          "The unbound class-function that is being bound by this :InstanceMethod"),
     TYPE_MEMBER_END
 };
 
 
 PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_instancemethod),
-    /* .tp_doc      = */DOC("(callable func,object thisarg)\n"
+    /* .tp_name     = */DeeString_STR(&str_InstanceMethod),
+    /* .tp_doc      = */DOC("(func:?Dcallable,thisarg)\n"
                             "Construct an object-bound instance method that can be used to invoke @func\n"
                             "\n"
                             "call(args!)->\n"
                             "Invoke the $func used to construct @this "
-                            "instancemethod as ${func(thisarg,args...)}"),
+                            "InstanceMethod as ${func(thisarg,args...)}"),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

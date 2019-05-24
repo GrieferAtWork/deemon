@@ -194,8 +194,8 @@ stype_vfunc(DeeSTypeObject *__restrict self,
 
 PRIVATE struct type_method stype_methods[] = {
     { "func", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_func,
-      DOC("(types!:?Dtype)->?Gfunction_type\n"
-          "(calling_convention:?Dstring,types!:?Dtype)->?Gfunction_type\n"
+      DOC("(types!:?DType)->?Gfunction_type\n"
+          "(calling_convention:?Dstring,types!:?DType)->?Gfunction_type\n"
           "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
           "@param calling_convention The name of the calling convention\n"
           "Construct a new function prototype, using @types as argument, @this "
@@ -203,8 +203,8 @@ PRIVATE struct type_method stype_methods[] = {
           "Note that unlike #{operator ()}, certain types from the deemon core are "
           "also accepted as argument types, such as :deemon:bool inplace of :bool") },
     { "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&stype_vfunc,
-      DOC("(types!:?Dtype)->function_type\n"
-          "(calling_convention:?Dstring,types!:?Dtype)->function_type\n"
+      DOC("(types!:?DType)->function_type\n"
+          "(calling_convention:?Dstring,types!:?DType)->function_type\n"
           "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
           "@param calling_convention The name of the calling convention\n"
           "Same as #func, but enable support for varrgs") },

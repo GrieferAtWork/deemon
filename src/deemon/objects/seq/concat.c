@@ -330,11 +330,11 @@ PRIVATE struct type_getset catiterator_getsets[] = {
     { "__curr__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&catiterator_curr_set,
-      DOC("->?Diterator") },
+      DOC("->?DIterator") },
     { NULL }
 };
 PRIVATE struct type_member catiterator_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__sequences__",STRUCT_OBJECT,offsetof(CatIterator,c_cat),"->?S?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__sequences__",STRUCT_OBJECT,offsetof(CatIterator,c_cat),"->?S?DSequence"),
     TYPE_MEMBER_END
 };
 
@@ -424,12 +424,12 @@ PRIVATE struct type_getset cat_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences,
       NULL,
       NULL,
-      DOC("->?S?Dsequence") },
+      DOC("->?S?DSequence") },
     { NULL }
 };
 
 PRIVATE struct type_member cat_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqConcatIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqConcatIterator_Type),
     TYPE_MEMBER_END
 };
 

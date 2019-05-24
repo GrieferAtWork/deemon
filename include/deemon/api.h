@@ -344,7 +344,7 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *          places, in order. If the `:' character is not followed by a `UNICODE_FSYMSTRT'
  *          character, no reference should be detected and the `:' should be included
  *          in the documentation text.
- *          e.g.: "Because it inherits from :sequence a lot of predefined functions are available"
+ *          e.g.: "Because it inherits from :Sequence a lot of predefined functions are available"
  *        - If `ident' contains another `:' character, it separates the identifier into 2 parts:
  *             `:{module:item}'  --> `module' and `item'
  *          The left part is interpreted as the module name as also accepted by the `import()' expression.
@@ -359,9 +359,9 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *        - The `item' part, or `ident' itself when no `module' was specified may contain
  *          additional `.' characters to specify a specific attribute which should be
  *          referenced instead.
- *          e.g.: "This implementation differs from :deemon:sequence.find in that it accepts @start and @end arguments."
+ *          e.g.: "This implementation differs from :deemon:Sequence.find in that it accepts @start and @end arguments."
  *        - When an attribute is known for both the type and instance, the type's is preferred.
- *          e.g.: "This refers to the type and not the method: :dict.keys"
+ *          e.g.: "This refers to the type and not the method: :Dict.keys"
  *
  *    - @ident
  *    - @{ident}

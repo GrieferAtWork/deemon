@@ -876,9 +876,9 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
   initializer_name = token.t_kwd;
   if unlikely(yield() < 0) goto err;
   /* Super-initializer:
-   * class MyList: list {
-   *     private foo;
-   *     private bar;
+   * class MyList: List {
+   *     private member foo;
+   *     private member bar;
    *     this(args...)
    *         : super(args...)
    *         , foo = 10

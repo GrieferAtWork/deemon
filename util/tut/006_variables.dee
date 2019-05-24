@@ -335,25 +335,25 @@ print barfoo;
 
 
 {
-	import list from deemon; /* See `Doc("/deemon/list")'. */
-	list a = { 10, 20, 30 };
+	import List from deemon; /* See `Doc("/deemon/List")'. */
+	List a = { 10, 20, 30 };
 	print repr a;  /* [10,20,30] */
-	list b;
+	List b;
 	print repr b;  /* [] */
-	list c({ 1, 2, 3 });
+	List c({ 1, 2, 3 });
 	print repr c;  /* [1,2,3] */
-	list d();
+	List d();
 	print repr d;  /* [] */
-	list e { 9, 8, 7 };
+	List e { 9, 8, 7 };
 	print repr e;  /* [9,8,7] */
 }
 /* Local variables can also be declared as `<type_expr> <symbol_name>',
  * following C/C++ syntax, while also allowing for the immediate initialization:
- *  - list a = { 10, 20, 30 };  -- local a = list({ 10, 20, 30 });
- *  - list b;                   -- local b = list();
- *  - list c({ 1, 2, 3 });      -- local c = list({ 1, 2, 3 });
- *  - list d();                 -- local d = list();
- *  - list e { 9, 8, 7 };       -- local e = list({ 9, 8, 7 });
+ *  - List a = { 10, 20, 30 };  -- local a = List({ 10, 20, 30 });
+ *  - List b;                   -- local b = List();
+ *  - List c({ 1, 2, 3 });      -- local c = List({ 1, 2, 3 });
+ *  - List d();                 -- local d = List();
+ *  - List e { 9, 8, 7 };       -- local e = List({ 9, 8, 7 });
  */
 
 
@@ -373,7 +373,7 @@ print barfoo;
 	print repr x;         /* [1, "foo", 5] */
 	del x[1];
 	print repr x;         /* [1, 5] */
-	del x.allocated;      /* This is a delattr expression. (which deletes any overallocations made by the list) */
+	del x.allocated;      /* This is a delattr expression. (which deletes any overallocations made by the List) */
 	print repr x;         /* [1, 5] */
 }
 
@@ -432,7 +432,7 @@ print barfoo;
 }
 
 /* Using an expand expression when assigning to a comma-seperated
- * list of variables, that expression is unpacked to match the number
+ * List of variables, that expression is unpacked to match the number
  * of target expressions, allowing for multiple return values in
  * functions (explained later) */
 

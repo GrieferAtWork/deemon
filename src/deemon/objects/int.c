@@ -2591,7 +2591,7 @@ err:
 PRIVATE struct type_method int_class_methods[] = {
     { "frombytes",
      (dobjmethod_t)&int_frombytes,
-      DOC("(data:?Dbytes,byteorder:?Dstring=!N,signed=!f)->?Dint\n"
+      DOC("(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?Dint\n"
           "@param byteorder The byteorder encoding used by the returned bytes. "
                            "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
                            "or $none (for host-endian)\n"
@@ -2646,14 +2646,14 @@ PRIVATE struct type_method int_methods[] = {
           "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
     { "tobytes",
      (DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&int_tobytes,
-      DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?Dbytes\n"
+      DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
           "@param byteorder The byteorder encoding used by the returned bytes. "
                            "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
                            "or $none (for host-endian)\n"
           "@throw IntegerOverflow @signed is false and @this integer is negative\n"
           "@throw ValueError The given @byteorder string isn't recognized\n"
           "Returns the data of @this integer as a @length bytes long "
-          "writable bytes object that is disjunct from @this integer.\n"
+          "writable Bytes object that is disjunct from @this integer.\n"
           "When @signed is :false, throw an :IntegerOverflow if @this "
           "integer is negative. Otherwise use two's complement to encode "
           "negative integers"),
@@ -2756,7 +2756,7 @@ PRIVATE struct type_member int_class_members[] = {
                           "to memory constraints.\n"
                           "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
                           "Custom, mutable sequences with sizes greater than this may expirience inaccuracies "
-                          "with the default implementation of function such as :sequence.insert's index-argument "
+                          "with the default implementation of function such as :Sequence.insert's index-argument "
                           "potentially not being able to correctly determine if a negative or positive number was given\n"
                           "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"
                           ),
@@ -2780,10 +2780,10 @@ PUBLIC DeeTypeObject DeeInt_Type = {
                             "Converts @ob into an integer\n"
                             "\n"
                             "(s:?Dstring,radix=!0)\n"
-                            "(s:?Dbytes,radix=!0)\n"
+                            "(s:?DBytes,radix=!0)\n"
                             "@throw ValueError The given string @s is not a valid integer\n"
                             "@throw ValueError The given @radix is invalid\n"
-                            "Convert the given :string or :bytes object @s into an integer\n"
+                            "Convert the given :string or :Bytes object @s into an integer\n"
                             "When @radix is $0, automatically detect it based on a prefix such as $\"0x\". "
                             "Otherwise, use @radix as it is provided\n"
                             "\n"

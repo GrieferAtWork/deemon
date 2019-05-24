@@ -280,7 +280,7 @@ PRIVATE struct type_getset repeatiter_getsets[] = {
     { "__iter__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_iter, NULL,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&repeatiter_set_iter,
-      DOC("->?Diterator") },
+      DOC("->?DIterator") },
     { "__num__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_num, NULL,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&repeatiter_set_num,
@@ -567,7 +567,7 @@ PRIVATE struct type_member repeat_members[] = {
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member repeat_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqRepeatIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqRepeatIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -576,7 +576,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqRepeat",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,num:?Dint)"),
+                            "(seq:?DSequence,num:?Dint)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1093,7 +1093,7 @@ PRIVATE struct type_member repeatitem_members[] = {
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member repeatitem_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqItemRepeatIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqItemRepeatIterator_Type),
     TYPE_MEMBER_END
 };
 

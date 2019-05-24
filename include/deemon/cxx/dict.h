@@ -26,17 +26,17 @@
 
 DEE_CXX_BEGIN
 
-template<class Tkey = object, class Tvalue = object> class dict;
+template<class KeyType = Object, class ValueType = Object> class Dict;
 
-template<class Tkey, class Tvalue>
-class dict: public mapping<Tkey,Tvalue> {
+template<class KeyType, class ValueType>
+class Dict: public Mapping<KeyType,ValueType> {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeDict_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeDict_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeDict_CheckExact(ob); }
-public: /* dict from deemon */
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(dict,mapping)
-    dict(): mapping(inherit(DeeDict_New())) {}
+public: /* Dict from deemon */
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Dict,Mapping)
+    Dict(): Mapping(inherit(DeeDict_New())) {}
 
 };
 

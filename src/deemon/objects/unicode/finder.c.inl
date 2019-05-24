@@ -546,7 +546,7 @@ PRIVATE struct type_member sf_members[] = {
 };
 
 PRIVATE struct type_member sf_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringFindIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringFindIterator_Type),
     TYPE_MEMBER_END
 };
 

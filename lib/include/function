@@ -20,5 +20,5 @@
 #include "__stddef.dee"
 
 #pragma push_macro(undef,"import","from","deemon")
-import function_ = "function" from deemon;
+import function_ = "Function" from deemon;
 #pragma pop_macro("import","from","deemon")

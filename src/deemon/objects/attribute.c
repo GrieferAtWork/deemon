@@ -131,11 +131,10 @@ PRIVATE struct type_cmp attr_cmp = {
 
 PRIVATE struct type_member attr_members[] = {
     TYPE_MEMBER_FIELD_DOC("decl",STRUCT_OBJECT,offsetof(Attr,a_info.a_decl),
-                          "The type or object that is declaring this attribute"),
+                          "The type or object that is declaring this Attribute"),
     TYPE_MEMBER_FIELD_DOC("attrtype",STRUCT_OBJECT_OPT,offsetof(Attr,a_info.a_attrtype),
-                          "->?Dtype\n"
-                          "->none\n"
-                          "The type of this attribute, or :none if not known"),
+                          "->?X2?DType?N\n"
+                          "The type of this Attribute, or :none if not known"),
     TYPE_MEMBER_END
 };
 
@@ -293,7 +292,7 @@ PRIVATE DREF DeeObject *DCALL
 attr_repr(Attr *__restrict self) {
  DREF DeeObject *flags_str,*result;
  flags_str = attr_getflags(self);
- result = DeeString_Newf("attribute(%r,%q,%r,%r,%r)",
+ result = DeeString_Newf("Attribute(%r,%q,%r,%r,%r)",
                          self->a_info.a_decl,
                          self->a_name,
                          flags_str,
@@ -308,64 +307,64 @@ attr_repr(Attr *__restrict self) {
 PRIVATE struct type_getset attr_getsets[] = {
     { "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_name, NULL, NULL,
       DOC("->?Dstring\n"
-          "The name of this attribute") },
+          "The name of this Attribute") },
     { "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_doc, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
-          "The documentation string of this attribute, or :none when no documentation is present") },
+          "The documentation string of this Attribute, or :none when no documentation is present") },
     { "canget", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_canget, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the attribute has a way of being read from") },
+          "Check if the Attribute has a way of being read from") },
     { "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_candel, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the attribute has a way of being deleted") },
+          "Check if the Attribute has a way of being deleted") },
     { "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_canset, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the attribute has a way of being written to") },
+          "Check if the Attribute has a way of being written to") },
     { "cancall", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_cancall, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if the attribute is intended to be called as a function. "
-          "Note that this feature alone does not meant that the attribute really can, or "
+          "Returns :true if the Attribute is intended to be called as a function. "
+          "Note that this feature alone does not meant that the Attribute really can, or "
           "cannot be called, only that calling it as a function might be the inteded use.") },
     { "isprivate", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_isprivate, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the attribute is considered to be private\n"
+          "Check if the Attribute is considered to be private\n"
           "Private attributes only appear in user-classes, prohibiting access to only thiscall "
           "functions with a this-argument that is an instance of the declaring class.") },
     { "isproperty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_isproperty, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the attribute is property-like, meaning that access by "
+          "Check if the Attribute is property-like, meaning that access by "
           "reading, deletion, or writing causes unpredictable side-effects") },
     { "iswrapper", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_iswrapper, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if the attribute is accessed from the implementing type, which "
+          "Check if the Attribute is accessed from the implementing type, which "
           "exposes it as a wrapper for an instance member (e.g. ${string.find} is an unbound "
-          "wrapper (aka. ${attribute(string,\"find\").iswrapper == true}) for the instance function, "
+          "wrapper (aka. ${Attribute(string,\"find\").iswrapper == true}) for the instance function, "
           "member or property that would be bound in ${\"foo\".find} (aka. "
-          "${attribute(\"foo\",\"find\").iswrapper == false}))") },
+          "${Attribute(\"foo\",\"find\").iswrapper == false}))") },
     { "isinstance", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_isinstance, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if accessing this attribute requires an instance of the declaring object "
-          "#decl, rather than being an attribute of the declaring object #decl itself.\n"
+          "Check if accessing this Attribute requires an instance of the declaring object "
+          "#decl, rather than being an Attribute of the declaring object #decl itself.\n"
           "Note that practically all attributes, such as member functions, are available as both "
-          "instance and class attribute, while in other cases an attribute will evaluate to different "
-          "objects depending on being invoked on a class or an instance (such as :dict.keys)") },
+          "instance and class Attribute, while in other cases an Attribute will evaluate to different "
+          "objects depending on being invoked on a class or an instance (such as :Dict.keys)") },
     { "isclass", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_isclass, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if access to this attribute must be made though the declaring type #decl.\n"
-          "To test if an attribute can only be accessed through an instance, use #isinstance instead") },
+          "Check if access to this Attribute must be made though the declaring type #decl.\n"
+          "To test if an Attribute can only be accessed through an instance, use #isinstance instead") },
     { "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_getflags, NULL, NULL,
       DOC("->?Dstring\n"
-          "Return a set of characters descripting the flags of @this attribute:\n"
+          "Return a set of characters descripting the flags of @this Attribute:\n"
           "%{table Character|Mnemonic|Field|Flag description\n"
-          "$\"g\"|get|#canget|The attribute has a way of being read from\n"
-          "$\"d\"|del|#candel|The attribute has a way of being deleted\n"
-          "$\"s\"|set|#canset|The attribute has a way of being written to\n"
-          "$\"f\"|function|#cancall|The attribute is intended to be called as a function\n"
-          "$\"i\"|instance|#isinstance|The attribute requires an instance of the declaring object\n"
-          "$\"c\"|class|#isclass|The attribute is accessed though the declaring type #decl\n"
-          "$\"h\"|hidden|#isprivate|The attribute is considered to be private\n"
-          "$\"p\"|property|#isproperty|The attribute is property-like\n"
-          "$\"w\"|wrapper|#iswrapper|The attribute is provided by the type as a class member that wraps around an instance member}")
+          "$\"g\"|get|#canget|The Attribute has a way of being read from\n"
+          "$\"d\"|del|#candel|The Attribute has a way of being deleted\n"
+          "$\"s\"|set|#canset|The Attribute has a way of being written to\n"
+          "$\"f\"|function|#cancall|The Attribute is intended to be called as a function\n"
+          "$\"i\"|instance|#isinstance|The Attribute requires an instance of the declaring object\n"
+          "$\"c\"|class|#isclass|The Attribute is accessed though the declaring type #decl\n"
+          "$\"h\"|hidden|#isprivate|The Attribute is considered to be private\n"
+          "$\"p\"|property|#isproperty|The Attribute is property-like\n"
+          "$\"w\"|wrapper|#iswrapper|The Attribute is provided by the type as a class member that wraps around an instance member}")
           },
     { NULL }
 };
@@ -639,7 +638,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 
 PUBLIC DeeTypeObject DeeAttribute_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_attribute),
+    /* .tp_name     = */DeeString_STR(&str_Attribute),
     /* .tp_doc      = */DOC("The descriptor object for abstract object attributes\n"
                             "\n"
                             "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)\n"
@@ -649,12 +648,12 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
                                            "using keyword arguments), flagmask is set to @flagval)\n"
                             "@throw AttributeError No attribute matching the specified restrictions could be found\n"
                             "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-                            "Lookup an attribute enumerated by ${enumattr(ob)} or ${enumattr(tp)}, matching "
+                            "Lookup an Attribute enumerated by ${enumattr(ob)} or ${enumattr(tp)}, matching "
                             "the given @name, as well as having its set of flags match @flagval, when masked by @flagmask\n"
                             "Additionally, @decl may be specified to narrow down valid matches to only those declared by it\n"
                             ">function findattr(ob,name,flagmask,flagval,decl?) {\n"
-                            "> import enumattr, Error, hashset from deemon;\n"
-                            "> flagmask = hashset(flagmask);\n"
+                            "> import enumattr, Error, HashSet from deemon;\n"
+                            "> flagmask = HashSet(flagmask);\n"
                             "> for (local attr: enumattr(ob)) {\n"
                             ">  if (attr.name != name)\n"
                             ">   continue;\n"
@@ -667,15 +666,15 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
                             "> throw Error.AttributeError(...);\n"
                             ">}\n"
                             "Using @flagmask and @flagval, you can easily restrict a search to only class-, or instance-attributes:\n"
-                            ">import attribute, dict from deemon;\n"
-                            ">// The class-variant (attribute cannot be accessed from an instance)\n"
-                            ">print repr attribute(dict,\"keys\",\"i\",\"\");\n"
-                            ">// The class-variant (attribute is a wrapper)\n"
-                            ">print repr attribute(dict,\"keys\",\"w\");\n"
-                            ">// The instance-variant (attribute can be accessed from an instance)\n"
-                            ">print repr attribute(dict,\"keys\",\"i\");\n"
-                            ">// The instance-variant (attribute isn't a wrapper)\n"
-                            ">print repr attribute(dict,\"keys\",\"w\",\"\");\n"
+                            ">import Attribute, Dict from deemon;\n"
+                            ">/* The class-variant (Attribute cannot be accessed from an instance) */\n"
+                            ">print repr Attribute(Dict,\"keys\",\"i\",\"\");\n"
+                            ">/* The class-variant (Attribute is a wrapper) */\n"
+                            ">print repr Attribute(Dict,\"keys\",\"w\");\n"
+                            ">/* The instance-variant (Attribute can be accessed from an instance) */\n"
+                            ">print repr Attribute(Dict,\"keys\",\"i\");\n"
+                            ">/* The instance-variant (Attribute isn't a wrapper) */\n"
+                            ">print repr Attribute(Dict,\"keys\",\"w\",\"\");\n"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
@@ -915,20 +914,20 @@ PRIVATE struct type_seq enumattr_seq = {
 };
 
 PRIVATE struct type_member enumattr_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeEnumAttrIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeEnumAttrIterator_Type),
     TYPE_MEMBER_END
 };
 
 PUBLIC DeeTypeObject DeeEnumAttr_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */DeeString_STR(&str_enumattr),
-    /* .tp_doc      = */DOC("(tp:?Dtype)\n"
-                            "Enumerate attributes of the :type @tp and its bases\n"
+    /* .tp_doc      = */DOC("(tp:?DType)\n"
+                            "Enumerate attributes of the :Type @tp and its bases\n"
                             "\n"
                             "(ob)\n"
                             "Same as ${enumattr(type(ob),ob)}\n"
                             "\n"
-                            "(tp:?Dtype,ob)\n"
+                            "(tp:?DType,ob)\n"
                             "Create a new sequence for enumerating the :{attribute}s of a given object.\n"
                             "When @tp is given, only enumerate objects implemented by @tp or "
                             "one of its bases and those accessible through a superview of @ob using @tp.\n"

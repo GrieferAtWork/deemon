@@ -26,28 +26,28 @@
 
 DEE_CXX_BEGIN
 
-class module: public object {
+class module: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeModule_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeModule_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeModule_CheckExact(ob); }
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(module,object)
-    module(obj_string name): object(inherit(DeeModule_New(name))) {}
-    module(char const *__restrict name): object(inherit(DeeModule_NewString(name,strlen(name)))) {}
-    module(char const *__restrict name, size_t namelen): object(inherit(DeeModule_NewString(name,namelen))) {}
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(module,Object)
+    module(obj_string name): Object(inherit(DeeModule_New(name))) {}
+    module(char const *__restrict name): Object(inherit(DeeModule_NewString(name,strlen(name)))) {}
+    module(char const *__restrict name, size_t namelen): Object(inherit(DeeModule_NewString(name,namelen))) {}
     struct Dee_module_symbol *symbol(char const *__restrict attr_name) const DEE_CXX_NOTHROW { return DeeModule_GetSymbolString((DeeModuleObject *)this->ptr(),attr_name,Dee_HashStr(attr_name)); }
     struct Dee_module_symbol *symbol(char const *__restrict attr_name, Dee_hash_t hash) const DEE_CXX_NOTHROW { return DeeModule_GetSymbolString((DeeModuleObject *)this->ptr(),attr_name,hash); }
     struct Dee_module_symbol *symbol(uint16_t gid) const DEE_CXX_NOTHROW { return DeeModule_GetSymbolID((DeeModuleObject *)this->ptr(),gid); }
     DREF DeeObject *symbol_getref(struct Dee_module_symbol *__restrict sym) const DEE_CXX_NOTHROW { return DeeModule_GetAttrSymbol((DeeModuleObject *)this->ptr(),sym); }
-    object symbol_get(struct Dee_module_symbol *__restrict sym) const { return inherit(symbol_getref(sym)); }
+    Object symbol_get(struct Dee_module_symbol *__restrict sym) const { return inherit(symbol_getref(sym)); }
     int symbol_bound(struct Dee_module_symbol *__restrict sym) const { return throw_if_negative(DeeModule_BoundAttrSymbol((DeeModuleObject *)this->ptr(),sym)) != 0; }
     void symbol_del(struct Dee_module_symbol *__restrict sym) const { throw_if_nonzero(DeeModule_DelAttrSymbol((DeeModuleObject *)this->ptr(),sym)); }
     void symbol_set(struct Dee_module_symbol *__restrict sym, DeeObject *__restrict value) const { throw_if_nonzero(DeeModule_SetAttrSymbol((DeeModuleObject *)this->ptr(),sym,value)); }
     char const *globalname(uint16_t gid) const DEE_CXX_NOTHROW { return DeeModule_GlobalName(*this,gid); }
     bool runinit() const DEE_CXX_NOTHROW { return throw_if_negative(DeeModule_RunInit(*this)) == 0; }
     void initimports() const DEE_CXX_NOTHROW { throw_if_nonzero(DeeModule_InitImports(*this)); }
-    object root(bool set_initialized = true) const DEE_CXX_NOTHROW { return inherit(DeeModule_GetRoot(*this,set_initialized)); }
+    Object root(bool set_initialized = true) const DEE_CXX_NOTHROW { return inherit(DeeModule_GetRoot(*this,set_initialized)); }
     void *nativesymbol(char const *__restrict name) const DEE_CXX_NOTHROW { return DeeModule_GetNativeSymbol(*this,name); }
 public:
     static module deemon() DEE_CXX_NOTHROW { return nonnull((DeeObject *)DeeModule_GetDeemon()); }

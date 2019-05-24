@@ -35,9 +35,9 @@ typedef struct Dee_cell_object DeeCellObject;
 
 struct Dee_cell_object {
     Dee_OBJECT_HEAD /* GC Object. */
-    DREF DeeObject *c_item;  /* [0..1] The object contained within this cell. */
+    DREF DeeObject *c_item;  /* [0..1] The object contained within this Cell. */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t    c_lock; /* Lock used for accessing this cell. */
+    Dee_rwlock_t    c_lock; /* Lock used for accessing this Cell. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -85,8 +85,8 @@ DDATDEF DeeTypeObject DeeCell_Type;
 DFUNDEF DREF DeeObject *DCALL DeeCell_New(DeeObject *__restrict item);
 #define DeeCell_NewEmpty() DeeObject_NewDefault(&DeeCell_Type)
 
-/* Get/Del/Set the value associated with a given cell.
- * HINT:  These are the getset callbacks used for `cell.item' (or its deprecated name `cell.value').
+/* Get/Del/Set the value associated with a given Cell.
+ * HINT:  These are the getset callbacks used for `Cell.item' (or its deprecated name `Cell.value').
  *        With that in mind, `DeeCell_Del()' and `DeeCell_Set()'
  *        always return `0' indicative of a successful callback.
  * NOTE: `DeeCell_Get' will return `NULL' and throw an `AttributeError' if the `self' is
@@ -95,11 +95,11 @@ DFUNDEF DREF DeeObject *DCALL DeeCell_TryGet(DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeCell_Get(DeeObject *__restrict self);
 DFUNDEF int DCALL DeeCell_Del(DeeObject *__restrict self);
 DFUNDEF int DCALL DeeCell_Set(DeeObject *__restrict self, DeeObject *__restrict value);
-/* Exchange the cell's value.
+/* Exchange the Cell's value.
  * NOTE: `DeeCell_XchNonNull()' will only set the new value when the old was non-NULL. */
 DFUNDEF DREF DeeObject *DCALL DeeCell_Xch(DeeObject *__restrict self, DeeObject *value);
 DFUNDEF DREF DeeObject *DCALL DeeCell_XchNonNull(DeeObject *__restrict self, DeeObject *value);
-/* Perform a compare-exchange, returning the old value of the cell. */
+/* Perform a compare-exchange, returning the old value of the Cell. */
 DFUNDEF DREF DeeObject *DCALL DeeCell_CmpXch(DeeObject *__restrict self,
                                              DeeObject *old_value,
                                              DeeObject *new_value);

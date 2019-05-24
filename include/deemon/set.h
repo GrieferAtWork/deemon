@@ -27,7 +27,7 @@
 
 DECL_BEGIN
 
-/* Base class for set-style sequence types (e.g. `hashset')
+/* Base class for set-style sequence types (e.g. `HashSet')
  * :: Characteristics of a set type::
  *   - class member iterator -> iterator;
  *   - operator iter():
@@ -36,7 +36,7 @@ DECL_BEGIN
  *     This sub-sequence is usually often implemented as a tuple,
  *     and code should be optimized for that code, however this
  *     is not a requirement.
- *   - operator contains(object ob) -> bool:
+ *   - operator contains(ob: object): bool:
  *     Returns :true if @ob is apart of @this set
  *   - The getitem operator is not implemented.
  *   - The getrange operator is not implemented.
@@ -52,7 +52,7 @@ DECL_BEGIN
  * operator & (set other) -> set;
  *     Returns the intersection of @this and @other
  * 
- * isdisjoint(set other) -> bool;
+ * isdisjoint(set other): bool;
  *     Returns :true if ${#(this & other) == 0}
  *     In other words: If @this and @other have no items in common.
  *
@@ -66,19 +66,19 @@ DECL_BEGIN
  *     Returns a set containing objects only found in either
  *     @this or @other, but not those found in both.
  * 
- * issubset(set other) -> bool;
- * operator <= (set other) -> bool;
+ * issubset(set other): bool;
+ * operator <= (set other): bool;
  *     Returns :true if all items found in @this set can also be found in @other
  * 
- * operator == (set other) -> bool;
+ * operator == (set other): bool;
  *     Returns :true if @this set contains the same
  *     items as @other, and not any more than that
  * 
- * operator < (set other) -> bool;
+ * operator < (set other): bool;
  *     The result of ${this <= other && this != other}
  *
- * issuperset(set other) -> bool;
- * operator >= (set other) -> bool;
+ * issuperset(set other): bool;
+ * operator >= (set other): bool;
  *     Returns :true if all items found in @other can also be found in @this set
  *
  * operator ~ () -> set;
@@ -90,7 +90,7 @@ DECL_BEGIN
  *     Its main purpose is for being used in conjunction with
  *     `operator &' in order to create a sub-set that doesn't
  *     contain a certain set of sub-elements:
- *     >> local items = hashset({ 10, 11, 15, 20, 30 });
+ *     >> local items = HashSet({ 10, 11, 15, 20, 30 });
  *     >> print repr(items & ~set({ 11, 15 }))
  *
  * NOTE: `DeeSet_Type' itself is derived from `sequence from deemon' (aka. `DeeSeq_Type')
@@ -99,7 +99,7 @@ DECL_BEGIN
  *       implicitly inherited, and also provided by objects derived from `DeeSet_Type',
  *       and `mapping from deemon' itself.
  *       This also means that sub-classes of `mapping from deemon' should respect the
- *      `iterator' interface, provided a `class member iterator -> type' which represents
+ *      `iterator' interface, provided a `class member iterator: Type' which represents
  *       the iterator type used by the mapping. */
 DDATDEF DeeTypeObject DeeSet_Type;  /* `set from deemon' */
 

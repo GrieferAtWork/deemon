@@ -510,7 +510,7 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
 /*      DTYPE16_            0x0f0c  */
 /*      DTYPE16_            0x0f0d  */
 /*      DTYPE16_            0x0f0e  */
-#define DTYPE16_CELL        0x0f0d /* +n     `DeeCell_Type'  -- Followed either by `DTYPE_NULL' for an empty cell, or another object that is contained within. */
+#define DTYPE16_CELL        0x0f0d /* +n     `DeeCell_Type'  -- Followed either by `DTYPE_NULL' for an empty Cell, or another object that is contained within. */
 #define DTYPE16_EXTENDED    0x0f0f /* Reserved for future expansion. */
 #define DTYPE16_BUILTIN_MIN 0x0f10 /* All extended type codes greater than this refer to a custom builtin SET id-0x10,
                                     * that is then followed by 1 more byte naming the object within that set:

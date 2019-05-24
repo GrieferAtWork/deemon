@@ -1766,12 +1766,12 @@ DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
   * though instead of producing bound attributes, unbound wrappers (as produced
   * by the overlay onto the regular class-attribute namespace (aka. `tp_class_cache'))
   * are accessed.
-  * >> import dict from deemon;
-  * >> local x = dict();
+  * >> import Dict from deemon;
+  * >> local x = Dict();
   * >> print x.keys;                       // callable (bound)   -- tp_methods       -- instance->tp_cache
-  * >> print dict.keys;                    // type               -- tp_class_members -- class->tp_class_cache
+  * >> print Dict.keys;                    // type               -- tp_class_members -- class->tp_class_cache
   * >> // Access to the unbound function `/deemon/dict/i:keys':
-  * >> print dict.getinstanceattr("keys"); // callable (unbound) -- tp_methods       -- class->tp_cache
+  * >> print Dict.getinstanceattr("keys"); // callable (unbound) -- tp_methods       -- class->tp_cache
   */
  DeeTypeObject *iter;
  DREF DeeObject *result;

@@ -27,7 +27,7 @@ DECL_BEGIN
 
 /*[[[deemon
 import list from deemon;
-local codecs = list {
+local codecs = List {
     ("ascii\0",           "CODEC_ASCII"),
     ("646\0",             "CODEC_ASCII"),
     ("us-ascii\0",        "CODEC_ASCII"),
@@ -82,9 +82,9 @@ codecs.sort([](x,y) -> x[0] < y[0]);
 local inset = " ";
 
 function gen_switch(prefix,indent) {
-    import hashset from deemon;
+    import HashSet from deemon;
     local cases = [];
-    local suffix_chars = hashset();
+    local suffix_chars = HashSet();
     for (local x: codecs) {
         if (x[0] == prefix) {
             print indent,;

@@ -522,8 +522,8 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
           "Returns the size of a given structured type or object in bytes\n"
           "\n"
-          "(ob:?Dbytes)->?Dint\n"
-          "Returns the size of the given :bytes ob, which is the same as ${#ob}") },
+          "(ob:?DBytes)->?Dint\n"
+          "Returns the size of the given :Bytes ob, which is the same as ${#ob}") },
     { "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
       DOC("(ob:?GStructuredType)->?Dint\n"
           "(ob:?GStructured)->?Dint\n"
@@ -609,7 +609,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "equivalent to one returned by ${malloc(0)}\n"
           "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged") },
     { "free", (DeeObject *)&ctypes_free, MODSYM_FNORMAL,
-      DOC("(ptr:?Aptr?Gvoid)->none\n"
+      DOC("(ptr:?Aptr?Gvoid)\n"
           "Release a previously allocated heap-block returned by one of :malloc, :calloc or :realloc\n"
           "If a NULL-pointer is passed for @ptr, this function has no effect and returns immediately") },
     { "trymalloc", (DeeObject *)&ctypes_trymalloc, MODSYM_FNORMAL,

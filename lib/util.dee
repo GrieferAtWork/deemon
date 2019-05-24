@@ -18,8 +18,8 @@
  */
 import * from deemon;
 
-@[gatw.doc("(items:?S?O)->")]
-@[gatw.doc("(items!)->")]
+@[optional.gatw.doc("(items:?S?O)->")]
+@[optional.gatw.doc("(items!)->")]
 @@Returns the lowers element of @items or :none when empty
 @@Objects are always compared with the current winner as left operand
 function min(items...) {
@@ -28,8 +28,8 @@ function min(items...) {
 	return items < ...;
 }
 
-@[gatw.doc("(items:?S?O)->")]
-@[gatw.doc("(items!)->")]
+@[optional.gatw.doc("(items:?S?O)->")]
+@[optional.gatw.doc("(items!)->")]
 @@Returns the greatest element of @items or :none when empty
 @@Objects are always compared with the current winner as left operand
 function max(items...) {
@@ -38,8 +38,8 @@ function max(items...) {
 	return items > ...;
 }
 
-@[gatw.doc("(items:{?Dfloat})->?Dfloat")]
-@[gatw.doc("(items!)->?Dfloat")]
+@[optional.gatw.doc("(items:{?Dfloat})->?Dfloat")]
+@[optional.gatw.doc("(items!)->?Dfloat")]
 @@Returns the average of all elements in @items
 @@All elements are casted to float, added and devided by ${#items}
 function avg(items...) {
@@ -54,8 +54,8 @@ function avg(items...) {
 	return result / count;
 }
 
-@[gatw.doc("(items:?S?O)->?Dbool")]
-@[gatw.doc("(items!)->?Dbool")]
+@[optional.gatw.doc("(items:?S?O)->?Dbool")]
+@[optional.gatw.doc("(items!)->?Dbool")]
 @@Returns :true if all elements in @items evaluate to :true
 function all(items...) {
 	if (#items == 1)
@@ -63,8 +63,8 @@ function all(items...) {
 	return items && ...;
 }
 
-@[gatw.doc("(items:?S?O)->?Dbool")]
-@[gatw.doc("(items!)->?Dbool")]
+@[optional.gatw.doc("(items:?S?O)->?Dbool")]
+@[optional.gatw.doc("(items!)->?Dbool")]
 @@Returns :true if any element in @items evaluates to :true
 function any(items...) {
 	if (#items == 1)
@@ -72,8 +72,8 @@ function any(items...) {
 	return items || ...;
 }
 
-@[gatw.doc("(items:?S?O)->")]
-@[gatw.doc("(items!)->")]
+@[optional.gatw.doc("(items:?S?O)->")]
+@[optional.gatw.doc("(items!)->")]
 @@Returns the sum of all arguments by adding them together
 @@The result is always replaced with the addition of ${result+next}
 @@Returns :none if no arguments are given
@@ -126,13 +126,13 @@ function round(x: float): int {
 
 @@Merges @seqs given sequences into a list of @seqs-elemntal sequences,
 @@where the index in every of those sequences is equivalent to the position of
-@@the origin sequence in the original argument list
+@@the origin Sequence in the original argument list
 @@HINT: The size of the returned list is ${(for (x: seqs) #x) < ...}
 @@>import zip from util;
 @@>print zip([10,20,30],[40,50,60])...;    /* "(10, 40) (20, 50) (30, 60)" */
 @@>print zip([10,20,30],[40,50,60,70])...; /* "(10, 40) (20, 50) (30, 60)" */
-@@>/* `70' is ignored because the shortest sequence's length is used */
-function zip(seqs...: sequence): {sequence...} {
+@@>/* `70' is ignored because the shortest Sequence's length is used */
+function zip(seqs...: Sequence): {Sequence...} {
 	local iterators = [(
 		for (local x: seqs)
 			x.operator iter()
@@ -161,7 +161,7 @@ function zip(seqs...: sequence): {sequence...} {
 @@>    /* Item number 2 is 30 */
 @@>    print "Item number",index,"is",item;
 @@>}
-function enumerate(seq: sequence, start: int = 0): sequence {
+function enumerate(seq: Sequence, start: int = 0): Sequence {
 	local index = start;
 	for (local item: seq) {
 		yield pack(index,item);
@@ -169,9 +169,9 @@ function enumerate(seq: sequence, start: int = 0): sequence {
 	}
 }
 
-@[gatw.doc("(x:?Dint)->?Dint")]
-@[gatw.doc("(x:?Dfloat)->?Dfloat")]
-@[gatw.doc("(x)->?O")]
+@[optional.gatw.doc("(x:?Dint)->?Dint")]
+@[optional.gatw.doc("(x:?Dfloat)->?Dfloat")]
+@[optional.gatw.doc("(x)->?O")]
 @@Return the absolute value of a given expression.
 @@>import abs from util;
 @@>print abs(10);  /* 10 */

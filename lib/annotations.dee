@@ -32,17 +32,17 @@ import * from deemon;
 @@>}
 @@>foobar(10);    /* First variant */
 @@>foobar(10,20); /* Second variant */
-class Overload: callable {
+class Overload: Callable {
 
-	private member primary: callable;
-	private member overloads: {callable...} = [];
-	this(func: callable): primary(func) { }
+	private member primary: Callable;
+	private member overloads: {Callable...} = [];
+	this(func: Callable): primary(func) { }
 
 	operator str(): string {
 		return str primary;
 	}
 	operator repr(): string {
-		file.writer fp;
+		File.Writer fp;
 		fp	<< "Overload("
 			<< repr primary
 			<< ")";
@@ -69,7 +69,7 @@ class Overload: callable {
 	}
 
 	@@Register a new overload to-be considered for invocation
-	register(func: callable): Overload {
+	register(func: Callable): Overload {
 		__stack local code = func.__code__;
 		__stack local min = code.__argc_min__;
 		__stack local max = code.__argc_max__;
@@ -88,7 +88,7 @@ class Overload: callable {
 
 
 
-@@An annotation that may be used to mark a function as deprecated, and have a warning be printed to :file.stderr the first time it is invoked
+@@An annotation that may be used to mark a function as deprecated, and have a warning be printed to :File.stderr the first time it is invoked
 @@>import Deprecated from annotations;
 @@>
 @@>@Deprecated
@@ -102,11 +102,11 @@ class Overload: callable {
 @@>
 @@>mydepr();  /* ... : Deprecated function `mydepr' called */
 @@>mydepr2(); /* ... : Deprecated function `mydepr2' called: Don't call me! */
-class Deprecated: callable {
-	private member m_func: callable;
+class Deprecated: Callable {
+	private member m_func: Callable;
 	private member m_message: string;
 	private member m_didcall: bool = false;
-	this(func: callable, reason: string = "") {
+	this(func: Callable, reason: string = "") {
 		m_func = func;
 		if (reason)
 			m_message = reason;
@@ -122,18 +122,18 @@ class Deprecated: callable {
 
 	operator () (args...) {
 		if (!m_didcall) {
-			import traceback from deemon;
+			import Traceback from deemon;
 			m_didcall = true;
-			local frame = traceback()[1];
-			local errout = file.stderr;
+			local frame = Traceback()[1];
+			local errout = File.stderr;
 			errout
-				<< frame.file
+				<< frame.File
 				<< "("
 				<< frame.line + 1
 				<< ","
 				<< frame.col + 1
 				<< ") : Deprecated ";
-			if (m_func is type_ from deemon) {
+			if (m_func is Type) {
 				errout
 					<< "class `"
 					<< m_func
@@ -145,8 +145,8 @@ class Deprecated: callable {
 					<< "' called";
 			}
 			if (m_message is bound)
-				print file.stderr: ":",m_message,;
-			print file.stderr:;
+				print File.stderr: ":",m_message,;
+			print File.stderr:;
 		}
 		return m_func(args...);
 	}
@@ -169,12 +169,12 @@ class Deprecated: callable {
 @@> print "Synchronized call to myfunc()";
 @@>}
 @@When annotated with an explicit lock object, the annotated function is called while being surrounded by an ${operator enter} / ${operator leave} pair, thus allowing the use of a lock to restrict invocation"
-class Synchronized: callable {
-	private member m_func: callable;
-	private member m_lock: Mutex from threading | object;
+class Synchronized: Callable {
+	private member m_func: Callable;
+	private member m_lock: Mutex from threading | Object;
 	@@@param lock The lock that is entered prior to invocation of @func, and will be left afterwards. When omit, a new instance of :threading.Mutex will be constructed and used in its place"
 	@@Construct a new Synchronized function annotation for @func
-	this(func: callable, lock?: Mutex from threading | object) {
+	this(func: Callable, lock?: Mutex from threading | Object) {
 		m_func = func;
 		if (lock is bound)
 			m_lock = lock;
@@ -222,12 +222,12 @@ class Synchronized: callable {
 @@>myfunc();
 @@>/* ??? Microseconds (about 2x as many; probably less due to CPU caching) */
 @@>print repr myfunc.total.microseconds;
-class Timed: callable {
-	private static member m_libtime: module;
-	private member m_func: callable;
+class Timed: Callable {
+	private static member m_libtime: Module;
+	private member m_func: Callable;
 	private member m_total_spend: Time from time;
 	private member m_num_invocations: int = 0;
-	this(func: callable) {
+	this(func: Callable) {
 		m_func = func;
 		if (m_libtime !is bound)
 			m_libtime = import("time");

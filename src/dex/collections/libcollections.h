@@ -389,7 +389,7 @@ struct udict_object {
     struct udict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
                                 * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t           d_lock; /* Lock used for accessing this dict. */
+    rwlock_t           d_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
     WEAKREF_SUPPORT
 };
@@ -465,9 +465,9 @@ INTDEF DREF URoDict *DCALL URoDict_FromIterator(DeeObject *__restrict iterator);
 INTDEF DREF URoDict *DCALL URoDict_FromSequence(DeeObject *__restrict sequence);
 
 /* Unique map/set types.
- * These function identical to the normal dict/hashset, but instead
+ * These function identical to the normal Dict/HashSet, but instead
  * of using `x.operator hash()' + `x == y' to check for duplicates,
- * these types use `object.id(x)' + `x === y', meaning that they don't
+ * these types use `Object.id(x)' + `x === y', meaning that they don't
  * rely on any user-defined operator, or on hashing being implemented. */
 INTDEF DeeTypeObject USet_Type;
 INTDEF DeeTypeObject USetIterator_Type;

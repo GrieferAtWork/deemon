@@ -39,7 +39,7 @@
 #include <deemon/roset.h>
 #include <deemon/cell.h>
 #include <deemon/list.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/dict.h>
 #include <deemon/int.h>
 #include <deemon/gc.h>
@@ -268,7 +268,7 @@ struct builtin_desc {
 /*[[[deemon
 #include <file>
 #include <util>
-local sets = dict();
+local sets = Dict();
 for (local l: file.open(__FILE__)) {
     local setid,name,id,typeval;
     try setid,name,id,typeval = l.scanf(" # define DEC_BUILTIN_SET%[^_]_%[^ ] %[^ ] /" "* %[^ ] *" "/")...;
@@ -1516,14 +1516,14 @@ err_function_code:
    end = self->df_data+self->df_size;
    while (num_items--) {
     DREF DeeObject *key,*value; int error;
-    /* Read the individual dict key-item pairs. */
+    /* Read the individual Dict key-item pairs. */
     if unlikely(reader >= end) key = SET_CORRUPTED(reader,ITER_DONE);
     else key = DecFile_LoadObject(self,&reader);
     if unlikely(!ITER_ISOK(key)) { Dee_Decref(result); result = key; goto done; }
     if unlikely(reader >= end) value = SET_CORRUPTED(reader,ITER_DONE);
     else value = DecFile_LoadObject(self,&reader);
     if unlikely(!ITER_ISOK(value)) { Dee_Decref(value); Dee_Decref(result); result = value; goto done; }
-    /* Insert the key and item into the dict. */
+    /* Insert the key and item into the Dict. */
     error = (*DeeDict_Type.tp_seq->tp_set)(result,key,value);
     Dee_Decref(value);
     Dee_Decref(key);
@@ -1542,14 +1542,14 @@ err_function_code:
    end = self->df_data+self->df_size;
    while (num_items--) {
     DREF DeeObject *key,*value; int error;
-    /* Read the individual dict key-item pairs. */
+    /* Read the individual Dict key-item pairs. */
     if unlikely(reader >= end) key = SET_CORRUPTED(reader,ITER_DONE);
     else key = DecFile_LoadObject(self,&reader);
     if unlikely(!ITER_ISOK(key)) { Dee_Decref(result); result = key; goto done; }
     if unlikely(reader >= end) value = SET_CORRUPTED(reader,ITER_DONE);
     else value = DecFile_LoadObject(self,&reader);
     if unlikely(!ITER_ISOK(value)) { Dee_Decref(value); Dee_Decref(result); result = value; goto done; }
-    /* Insert the key and item into the dict. */
+    /* Insert the key and item into the Dict. */
     error = DeeRoDict_Insert(&result,key,value);
     Dee_Decref(value);
     Dee_Decref(key);
@@ -1747,13 +1747,13 @@ err_function_code:
 
   case DTYPE16_CELL & 0xff:
    if (*reader == DTYPE_NULL) {
-    /* When followed by `DTYPE_NULL', create an empty cell. */
+    /* When followed by `DTYPE_NULL', create an empty Cell. */
     ++reader;
     result = DeeCell_NewEmpty();
    } else {
     result = DecFile_LoadObject(self,&reader);
     if likely(ITER_ISOK(result)) {
-     /* Pack the read object into a cell. */
+     /* Pack the read object into a Cell. */
      DREF DeeObject *new_result;
      new_result = DeeCell_New(result);
      Dee_Decref(result);

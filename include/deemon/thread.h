@@ -185,7 +185,7 @@ struct Dee_deep_assoc {
      * existing object, such that an attempt to deep-copy an object
      * that is already being duplicated will return the partially
      * constructed copy.
-     * For this, we need something that is similar to what a dict
+     * For this, we need something that is similar to what a Dict
      * does, however it doesn't need to be thread-safe (because
      * we keep track of this thread-locally and only clear the
      * set of objects having already been copied once execution

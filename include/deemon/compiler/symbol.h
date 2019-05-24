@@ -195,7 +195,7 @@ struct class_attribute;
  *        .                    | (attr:?Dstring)->?O
  *        del.                 | (attr:?Dstring)
  *        .=                   | (attr:?Dstring,value:?O)
- *        enumattr             | ()->?S?Dattribute
+ *        enumattr             | ()->?S?DAttribute
  *        enter, leave         | ()
  *    Alternatively to the operator's symbol-like name, one can also use the operators real name,
  *    optionally surrounded by any number of _ (underscores), such that `__le__' is the same as `<='
@@ -247,16 +247,16 @@ struct class_attribute;
  *   ?A<NAME><TYPE>  --- Referring to an attribute <DECODED_FIRST_NAME> of another TYPE-ENCODING <TYPE>
  *
  * Extended type encodings (Implemented by `doc.TypeExpr', rather than `doc.TypeRef'):
- *   ?C<TYPE><TYPE>    --- Referring to a cell <FIRST_TYPE> containing an element of type <SECOND_TYPE> (SECOND_TYPE
- *                         is only there to improve meta-information, whilst FIRST_TYPE should implement an instance-attribute
- *                        `value', with when accessed should yield an element of <SECOND_TYPE>)
- *                         This type of encoding is used to represent `weakref with object',
- *                        `tls with object' or `cell with object'
- *   ?T<N>(<TYPE> * N) --- A tuple expression containing <N> (encoded as a decimal) other types
+ *   ?C<TYPE><TYPE>    --- Referring to a Cell <FIRST_TYPE> containing an element of type <SECOND_TYPE> (SECOND_TYPE
+ *                         is only there to improve meta-information, whilst FIRST_TYPE should implement an instance-
+ *                         attribute `value', with when accessed should yield an element of <SECOND_TYPE>)
+ *                         This type of encoding is used to represent `WeakRef with object',
+ *                        `Tls with object' or `Cell with object'
+ *   ?T<N>(<TYPE> * N) --- A Tuple expression containing <N> (encoded as a decimal) other types
  *                         e.g.: `?T2?Dstring?Dint' --- `(string,int)'
  *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
  *                         e.g.: `?S?Dstring' --- `{string...}'
- *   ?S<TYPE>          --- A generic sequence expression for <TYPE>
+ *   ?S<TYPE>          --- A generic Sequence expression for <TYPE>
  *                         e.g.: `?S?Dstring' --- `{string...}'
  *   ?Q<EXPR>]         --- Referring to the types which a given <EXPR> can take on (yes: the trailing `]' is intended)
  *
@@ -295,10 +295,10 @@ struct class_attribute;
  *       "G" <NAME>                 // Referring to a global symbol exported from the associated module
  *       "E" <NAME> ":" <NAME>      // Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
  *       "M" <NAME>                 // Referring to a module  (import("<DECODED_NAME>"))
- *       "T<N>" ((EXPR)... * <N>) | // TUPLE(EXPR * <N>)   A tuple of <N> (encoded as a decimal) elements
- *       "L<N>" ((EXPR)... * <N>) | // LIST(EXPR * <N>)    A list of <N> (encoded as a decimal) elements
- *       "S<N>" ((EXPR)... * <N>) | // HASHSET(EXPR * <N>) A set of <N> (encoded as a decimal) elements
- *       "H<N>" ((EXPR)... * <N>) | // DICT(EXPR * <N>)    A dict of <N> (encoded as a decimal) elements (every first is a key, every second is the associated value)
+ *       "T<N>" ((EXPR)... * <N>) | // TUPLE(EXPR * <N>)   A Tuple of <N> (encoded as a decimal) elements
+ *       "L<N>" ((EXPR)... * <N>) | // LIST(EXPR * <N>)    A List of <N> (encoded as a decimal) elements
+ *       "S<N>" ((EXPR)... * <N>) | // HASHSET(EXPR * <N>) A Set of <N> (encoded as a decimal) elements
+ *       "H<N>" ((EXPR)... * <N>) | // DICT(EXPR * <N>)    A Dict of <N> (encoded as a decimal) elements (every first is a key, every second is the associated value)
  *       "A" EXPR EXPR |            // FIRST_EXPR.operator . (SECOND_EXPR)
  *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR,SECOND_EXPR)
  *       "C" EXPR |                 // copy(EXPR)
@@ -368,11 +368,11 @@ struct class_attribute;
 #define DAST_SYMBOL  0x0001 /* `int from deemon' Declaration information is provided as a symbol reference. */
 #define DAST_CONST   0x0002 /* `type(0)' Declaration information is provided as a constant type. */
 #define DAST_ALT     0x0003 /* `int | bool' Declaration information has multiple, alternative representations. */
-#define DAST_TUPLE   0x0004 /* `(int,string,float)' Declaration describes an n-element tuple of values. */
+#define DAST_TUPLE   0x0004 /* `(int,string,float)' Declaration describes an n-element Tuple of values. */
 #define DAST_SEQ     0x0005 /* `{int...}' Declaration describes a variable-length sequence of some element-type. */
 #define DAST_FUNC    0x0006 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
-#define DAST_ATTR    0x0007 /* `list.iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0008 /* `weakref with object' Extended type information to describe cell-like objects */
+#define DAST_ATTR    0x0007 /* `list.Iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0008 /* `WeakRef with object' Extended type information to describe Cell-like objects */
 #define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
 
 #define DAST_FNORMAL 0x0000 /* Normal declaration ast flags */
@@ -388,9 +388,9 @@ struct decl_ast {
             struct decl_ast*a_altv;    /* [0..a_altc][owned] Vector of alternative representations. */
         }                   da_alt;    /* [DAST_ALT] One of many different representations is acceptable. */
         struct {
-            size_t          t_itemc;   /* Amount of tuple elements. */
-            struct decl_ast*t_itemv;   /* [0..a_altc][owned] Vector of tuple elements. */
-        }                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length tuple containing known types. */
+            size_t          t_itemc;   /* Amount of Tuple elements. */
+            struct decl_ast*t_itemv;   /* [0..a_altc][owned] Vector of Tuple elements. */
+        }                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length Tuple containing known types. */
         struct decl_ast    *da_seq;    /* [1..1][owned][DAST_SEQ] The sequence element */
         struct {
             struct decl_ast                *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
@@ -1073,8 +1073,8 @@ decl_ast_func_getscope(struct decl_ast const *__restrict self) {
  return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);
 }
 
-#define DAST_ATTR    0x0007 /* `list.iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0008 /* `weakref with object' Extended type information to describe cell-like objects */
+#define DAST_ATTR    0x0007 /* `list.Iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0008 /* `WeakRef with object' Extended type information to describe Cell-like objects */
 #define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
 
 

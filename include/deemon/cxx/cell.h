@@ -25,24 +25,24 @@
 
 DEE_CXX_BEGIN
 
-class cell: public object {
+class Cell: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeCell_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeCell_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeCell_CheckExact(ob); }
 private:
-    cell(DeeObject *__restrict ob,int): object(inherit(DeeCell_New(ob))) {}
+    Cell(DeeObject *__restrict ob,int): Object(inherit(DeeCell_New(ob))) {}
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(cell,object)
-    cell(): object(inherit(DeeCell_NewEmpty())) {}
-    static cell with(DeeObject *__restrict ob) { return cell(ob,0); }
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Cell,Object)
+    Cell(): Object(inherit(DeeCell_NewEmpty())) {}
+    static Cell with(DeeObject *__restrict ob) { return Cell(ob,0); }
     WUNUSED DREF DeeObject *getref() const DEE_CXX_NOTHROW { return DeeCell_Get(m_ptr); }
     WUNUSED ATTR_RETNONNULL DREF DeeObject *getref(DeeObject *__restrict def) const DEE_CXX_NOTHROW { DREF DeeObject *result = DeeCell_TryGet(m_ptr); if (!result) { Dee_Incref(def); result = def; } return result; }
     WUNUSED DREF DeeObject *xchref(DeeObject *newval) const DEE_CXX_NOTHROW { return DeeCell_Xch(m_ptr,newval); }
     WUNUSED DREF DeeObject *xchnonnullref(DeeObject *newval) const DEE_CXX_NOTHROW { return DeeCell_XchNonNull(m_ptr,newval); }
     WUNUSED DREF DeeObject *cmpxchref(DeeObject *oldval, DeeObject *newval) const DEE_CXX_NOTHROW { return DeeCell_CmpXch(m_ptr,oldval,newval); }
-    object get() const { return inherit(getref()); }
-    object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
+    Object get() const { return inherit(getref()); }
+    Object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
     void del() const { throw_if_nonzero(DeeCell_Del(m_ptr)); }
     void set(DeeObject *__restrict ob) const { throw_if_nonzero(DeeCell_Set(m_ptr,ob)); }
     bool bound() const DEE_CXX_NOTHROW { return DeeCell_Bound(m_ptr); }

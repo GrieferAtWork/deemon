@@ -541,7 +541,7 @@ PRIVATE struct type_seq kwds_seq = {
 };
 
 PRIVATE struct type_member kwds_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeKwdsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeKwdsIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1085,7 +1085,7 @@ PRIVATE struct type_member kmap_members[] = {
 };
 
 PRIVATE struct type_member kmap_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeKwdsMappingIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeKwdsMappingIterator_Type),
     TYPE_MEMBER_END
 };
 

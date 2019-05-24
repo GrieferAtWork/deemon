@@ -19,7 +19,7 @@
 import * from deemon;
 import * from errors;
 
-local rand_map = {
+final local rand_map: {int...} = {
 	0x11e0ebcc,0xa914eba6,0xe400e438,0xa6c4a4df,
 	0x0da46171,0x4b9a27d1,0x201910ae,0x95e213cb,
 	0xd5ce0943,0x00005fdc,0x0319257d,0x09280b06,
@@ -34,7 +34,7 @@ class Random {
 	static final property current: Random = {
 		get(): Random {
 			if (m_random_tls !is bound)
-				m_random_tls = import("threading").Tls(Random);
+				m_random_tls = import("threading").Tls(Random());
 			return m_random_tls.value;
 		}
 	}
@@ -83,14 +83,14 @@ class Random {
 	}
 
 	@@Generate a random value of type @T
-	public final function next(T: type_) {
+	public final function next(T: Type) {
 		if (T === int)
 			return rand32();
 		throw TypeError("Cannot generate random data of type " + T);
 	}
 
 	@@Alias for #next
-	operator () (T: type_) {
+	operator () (T: Type) {
 		return next(T);
 	}
 

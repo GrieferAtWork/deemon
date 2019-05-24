@@ -25,25 +25,25 @@
 
 DEE_CXX_BEGIN
 
-class float_: public object {
+class float_: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeFloat_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFloat_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeFloat_CheckExact(ob); }
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(float_,object)
-    float_(): object(inherit(DeeFloat_New(0.0))) {}
-    float_(float value): object(inherit(DeeFloat_New((double)value))) {}
-    float_(double value): object(inherit(DeeFloat_New(value))) {}
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(float_,Object)
+    float_(): Object(inherit(DeeFloat_New(0.0))) {}
+    float_(float value): Object(inherit(DeeFloat_New((double)value))) {}
+    float_(double value): Object(inherit(DeeFloat_New(value))) {}
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-    float_(long double value): object(inherit(DeeFloat_New((double)value))) {}
+    float_(long double value): Object(inherit(DeeFloat_New((double)value))) {}
 #endif
 #ifndef __OPTIMIZE_SIZE__
-    using object::getval;
-    float_ const &getval(float &value) const { if likely(DeeFloat_CheckExact(this->ptr())) value = (float)DeeFloat_VALUE(this->ptr()); else object::getval(value); return *this; }
-    float_ const &getval(double &value) const { if likely(DeeFloat_CheckExact(this->ptr())) value = (double)DeeFloat_VALUE(this->ptr()); else object::getval(value); return *this; }
+    using Object::getval;
+    float_ const &getval(float &value) const { if likely(DeeFloat_CheckExact(this->ptr())) value = (float)DeeFloat_VALUE(this->ptr()); else Object::getval(value); return *this; }
+    float_ const &getval(double &value) const { if likely(DeeFloat_CheckExact(this->ptr())) value = (double)DeeFloat_VALUE(this->ptr()); else Object::getval(value); return *this; }
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-    float_ const &getval(long double &value) const { if likely(DeeFloat_CheckExact(this->ptr())) value = (long double)DeeFloat_VALUE(this->ptr()); else object::getval(value); return *this; }
+    float_ const &getval(long double &value) const { if likely(DeeFloat_CheckExact(this->ptr())) value = (long double)DeeFloat_VALUE(this->ptr()); else Object::getval(value); return *this; }
 #endif
     WUNUSED float asfloat() const { float result; getval(result); return result; }
     WUNUSED double asdouble() const { double result; getval(result); return result; }

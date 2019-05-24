@@ -43,8 +43,8 @@ typedef DeeStringObject String;
 
 typedef struct {
     OBJECT_HEAD
-    DREF DeeObject *ss_data;   /* [1..1][const] The string data object (either a string, or bytes object). */
-    DREF DeeObject *ss_format; /* [1..1][const] The scanner format object (either a string, or bytes object). */
+    DREF DeeObject *ss_data;   /* [1..1][const] The string data object (either a string, or Bytes object). */
+    DREF DeeObject *ss_format; /* [1..1][const] The scanner format object (either a string, or Bytes object). */
 } StringScanner;
 
 typedef struct {
@@ -645,12 +645,12 @@ PRIVATE struct type_seq ss_seq = {
 };
 
 PRIVATE struct type_member ss_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringScanner,ss_data),"->?X2?Dstring?Dbytes"),
-    TYPE_MEMBER_FIELD_DOC("__format__",STRUCT_OBJECT,offsetof(StringScanner,ss_format),"->?X2?Dstring?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(StringScanner,ss_data),"->?X2?Dstring?DBytes"),
+    TYPE_MEMBER_FIELD_DOC("__format__",STRUCT_OBJECT,offsetof(StringScanner,ss_format),"->?X2?Dstring?DBytes"),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member ss_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringScanIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringScanIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -707,7 +707,7 @@ INTERN DeeTypeObject StringScan_Type = {
 /* Implement c-style string scanning, using a scanf()-style format string.
  * This functions then returns a sequence of all scanned objects, that is
  * the usually used in an expand expression:
- * >> for (local line: file.stdin) {
+ * >> for (local line: File.stdin) {
  * >>     local a,b,c;
  * >>     try {
  * >>         a,b,c = line.scanf("%s %s %s")...;

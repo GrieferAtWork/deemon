@@ -837,7 +837,7 @@ PRIVATE struct type_method appexit_class_methods[] = {
           "When no @exitcode is given, the host's default default value of EXIT_FAILURE, or $1 is used\n"
           "This function never returns normally") },
     { "atexit", &appexit_class_atexit,
-      DOC("(callback:?Dcallable,args=!T0)\n"
+      DOC("(callback:?DCallable,args=!T0)\n"
           "@throw RuntimeError Additional atexit-callbacks can no longer be registered\n"
           "@throw NotImplemented Deemon was built without support for #atexit\n"
           "Register a given @callback to be executed before deemon terminates") },
@@ -848,7 +848,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"AppExit",
     /* .tp_doc      = */DOC("An AppExit object is a special kind of interrupt that "
-                            "is not derived from :object, and has no base class at "
+                            "is not derived from :Object, and has no base class at "
                             "all. It's purpose is to allow user-code to throw an "
                             "instance of it and have the stack unwind itself, alongside "
                             "all existing objects being destroyed normally before deemon "

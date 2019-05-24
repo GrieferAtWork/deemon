@@ -61,8 +61,8 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 
  case '+': /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
  case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
- case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
- case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
+ case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(Cell(castexpr))' */
+ case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(List(castexpr))' */
   if (WARN(W_UNCLEAR_CAST_INTENT))
       goto err;
  case TOK_DOTS:

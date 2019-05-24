@@ -27,7 +27,7 @@ x = 42;
 //       objects and are only created at runtime (unless declared with 'const')
 
 // Also note how we extend a type that's neither ''
-class foo: list {
+class foo: List {
 	// A class function
 	class function new() -> foo();
 

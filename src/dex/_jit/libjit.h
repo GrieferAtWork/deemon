@@ -380,7 +380,7 @@ struct jit_lexer {
             unsigned int    jl_flags;     /* Set of `JIT_SCANDATA_F*' */
         }                   jl_scandata;  /* Data fields used by `JITLexer_Scan*' functions. */
         struct {
-            DeeObject      *jl_text;      /* [1..1] The object that owns input text (Usually a string or bytes object)
+            DeeObject      *jl_text;      /* [1..1] The object that owns input text (Usually a string or Bytes object)
                                            * For expressions such as ones used to create lambda functions, a reference
                                            * to this object is stored to ensure that child code will not be deallocated. */
             JITContext     *jl_context;   /* [1..1][const] The associated JIT context. */
@@ -544,7 +544,7 @@ struct jit_context {
                      jc_locals;   /* Local variable table (forms a chain all the way to the previous base-scope) */
     DeeObject       *jc_globals;  /* [0..1] A pre-defined, mapping-like object containing pre-defined globals.
                                    * This object can be passed via the `globals' argument to `exec from deemon'
-                                   * When not user-defined, a dict object is created the first time a write happens. */
+                                   * When not user-defined, a Dict object is created the first time a write happens. */
 #ifdef __INTELLISENSE__
     DeeObject       *jc_retval;   /* [0..1] Function return value.
                                    * When this is set to be non-NULL, and one of the `JITLexer_Eval*' functions
@@ -726,8 +726,8 @@ INTDEF DREF /*Module*/DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict 
  * >> foo += 42;            // (foo += (42));
  * >> foo,bar = (10,20)...; // (foo,bar = (10,20)...);
  * >> foo,bar = 10;         // (foo,(bar = 10));
- * >> { 10 }                // (list { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * >> { "foo": 10 }         // (dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { 10 }                // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { "foo": 10 }         // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
  * @param: seq_type:  The type of sequence to generate (one of `DeeTuple_Type' or `DeeList_Type')
  *                    When `NULL', evaluate to the last comma-expression.

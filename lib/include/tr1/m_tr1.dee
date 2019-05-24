@@ -23,17 +23,17 @@ import * from errors;
 @@Usage:
 @@>#include <tr1/unique_iterator>
 @@>local list elem = { 10,20,20,30,30,40,50,11,12,12,20,12,70 };
-@@>/* Skip equivalent consecutive entries in any given iterator
+@@>/* Skip equivalent consecutive entries in any given Iterator
 @@> * This will print '10 20 30 40 50 11 12 20 12 70' */
 @@>print tr1::unique_iterator(elem.operator __iterself__())...;
-class unique_iterator: iterator {
-	public member __iter__: iterator;
-	this(iter: iterator)
+class unique_iterator: Iterator {
+	public member __iter__: Iterator;
+	this(iter: Iterator)
 		: __iter__(iter)
 	{ }
 
-	@@have the iterator double as an iterable
-	operator iter(): iterator -> copy this;
+	@@have the Iterator double as an iterable
+	operator iter(): Iterator -> copy this;
 
 	private member m_first;
 	private member m_second;

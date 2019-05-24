@@ -512,24 +512,24 @@ INSTR("super",(
 
 /* CONSTRAINTS: `cast <s>, ...' */
 INSTR("cast",(
-    O2(ASM_CAST_TUPLE,  FNORMAL,(TOP)(TUPLE))   /* `cast top, tuple' */
-    O2(ASM_CAST_LIST,   FNORMAL,(TOP)(LIST))    /* `cast top, list' */
-    O2(ASM_CAST_DICT,   FNORMAL,(TOP)(DICT))    /* `cast top, dict' */
-    O2(ASM_CAST_HASHSET,FNORMAL,(TOP)(HASHSET)) /* `cast top, hashset' */
+    O2(ASM_CAST_TUPLE,  FNORMAL,(TOP)(TUPLE))   /* `cast top, Tuple' */
+    O2(ASM_CAST_LIST,   FNORMAL,(TOP)(LIST))    /* `cast top, List' */
+    O2(ASM_CAST_DICT,   FNORMAL,(TOP)(DICT))    /* `cast top, Dict' */
+    O2(ASM_CAST_HASHSET,FNORMAL,(TOP)(HASHSET)) /* `cast top, HashSet' */
     O2(ASM_CAST_INT,    FNORMAL,(TOP)(INT))     /* `cast top, int' */
     O2(ASM_BOOL,        FNORMAL,(TOP)(BOOL))    /* `cast top, bool' */
 ))
 
 /* CONSTRAINTS: `pack ..., ...' */
 INSTR("pack",(
-    O2(ASM_PACK_TUPLE,    FPUSH|FSTKABS,(TUPLE)(SPIMM8))                /* `push pack tuple, #<imm8>' */
-    O2(ASM16_PACK_TUPLE,  FPUSH|FSTKABS,(TUPLE)(SPIMM16))               /* `push pack tuple, #<imm16>' */
-    O2(ASM_PACK_LIST,     FPUSH|FSTKABS,(LIST)(SPIMM8))                 /* `push pack list, #<imm8>' */
-    O2(ASM16_PACK_LIST,   FPUSH|FSTKABS,(LIST)(SPIMM16))                /* `push pack list, #<imm16>' */
-    O2(ASM_PACK_HASHSET,  FPUSH|FSTKABS,(HASHSET)(SPIMM8))              /* `push pack hashset, #<imm8>' */
-    O2(ASM16_PACK_HASHSET,FPUSH|FSTKABS,(HASHSET)(SPIMM16))             /* `push pack hashset, #<imm16>' */
-    O2(ASM_PACK_DICT,     FPUSH|FSTKABS,(DICT)(FSTACKFLAG|DISP8_HALF))  /* `push pack dict, #<imm8> * 2' */
-    O2(ASM16_PACK_DICT,   FPUSH|FSTKABS,(DICT)(FSTACKFLAG|DISP16_HALF)) /* `push pack dict, #<imm16> * 2' */
+    O2(ASM_PACK_TUPLE,    FPUSH|FSTKABS,(TUPLE)(SPIMM8))                /* `push pack Tuple, #<imm8>' */
+    O2(ASM16_PACK_TUPLE,  FPUSH|FSTKABS,(TUPLE)(SPIMM16))               /* `push pack Tuple, #<imm16>' */
+    O2(ASM_PACK_LIST,     FPUSH|FSTKABS,(LIST)(SPIMM8))                 /* `push pack List, #<imm8>' */
+    O2(ASM16_PACK_LIST,   FPUSH|FSTKABS,(LIST)(SPIMM16))                /* `push pack List, #<imm16>' */
+    O2(ASM_PACK_HASHSET,  FPUSH|FSTKABS,(HASHSET)(SPIMM8))              /* `push pack HashSet, #<imm8>' */
+    O2(ASM16_PACK_HASHSET,FPUSH|FSTKABS,(HASHSET)(SPIMM16))             /* `push pack HashSet, #<imm16>' */
+    O2(ASM_PACK_DICT,     FPUSH|FSTKABS,(DICT)(FSTACKFLAG|DISP8_HALF))  /* `push pack Dict, #<imm8> * 2' */
+    O2(ASM16_PACK_DICT,   FPUSH|FSTKABS,(DICT)(FSTACKFLAG|DISP16_HALF)) /* `push pack Dict, #<imm16> * 2' */
 ))
 
 /* CONSTRAINTS: `unpack <ps>, ...' */

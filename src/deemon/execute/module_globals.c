@@ -532,7 +532,7 @@ PRIVATE struct type_member me_members[] = {
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member me_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ModuleExportsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ModuleExportsIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -864,7 +864,7 @@ PRIVATE struct type_seq mg_seq = {
 };
 
 PRIVATE struct type_member mg_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ModuleGlobalsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ModuleGlobalsIterator_Type),
     TYPE_MEMBER_END
 };
 

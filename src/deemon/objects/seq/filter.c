@@ -195,8 +195,8 @@ PRIVATE struct type_getset filteriterator_getsets[] = {
 };
 
 PRIVATE struct type_member filteriterator_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(FilterIterator,fi_iter),"->?Diterator"),
-    TYPE_MEMBER_FIELD_DOC("__filter__",STRUCT_OBJECT,offsetof(FilterIterator,fi_func),"->?Dcallable"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(FilterIterator,fi_iter),"->?DIterator"),
+    TYPE_MEMBER_FIELD_DOC("__filter__",STRUCT_OBJECT,offsetof(FilterIterator,fi_func),"->?DCallable"),
     TYPE_MEMBER_END
 };
 
@@ -276,13 +276,13 @@ PRIVATE struct type_seq filter_seq = {
 };
 
 PRIVATE struct type_member filter_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Filter,f_seq),"->?Dsequence"),
-    TYPE_MEMBER_FIELD_DOC("__filter__",STRUCT_OBJECT,offsetof(Filter,f_fun),"->?Dcallable"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Filter,f_seq),"->?DSequence"),
+    TYPE_MEMBER_FIELD_DOC("__filter__",STRUCT_OBJECT,offsetof(Filter,f_fun),"->?DCallable"),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member filter_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqFilterIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqFilterIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -340,7 +340,7 @@ INTERN DeeTypeObject SeqFilter_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqFilter",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,fun:?Dcallable)"),
+                            "(seq:?DSequence,fun:?DCallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

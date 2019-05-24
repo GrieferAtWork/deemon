@@ -247,7 +247,7 @@ PRIVATE struct type_seq env_seq = {
 };
 
 PRIVATE struct type_member env_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeEnvIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeEnvIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -940,8 +940,8 @@ INIT_FS_ERROR("NoLink",
 PRIVATE struct dex_symbol symbols[] = {
     { "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },
     { "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FNORMAL },
-    { "user", (DeeObject *)&DeeUser_Type, MODSYM_FNORMAL },
-    { "group", (DeeObject *)&DeeGroup_Type, MODSYM_FNORMAL },
+    { "User", (DeeObject *)&DeeUser_Type, MODSYM_FNORMAL },
+    { "Group", (DeeObject *)&DeeGroup_Type, MODSYM_FNORMAL },
     { "NoDirectory", (DeeObject *)&DeeError_NoDirectory, MODSYM_FNORMAL },
     { "IsDirectory", (DeeObject *)&DeeError_IsDirectory, MODSYM_FNORMAL },
     { "CrossDevice", (DeeObject *)&DeeError_CrossDevice, MODSYM_FNORMAL },
@@ -955,7 +955,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "A :mapping-style singleton instance that can be used to "
           "access and enumerate environment variables by name:\n"
           ">print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */\n"
-          "Other mapping operations known from :dict can be used "
+          "Other mapping operations known from :Dict can be used "
           "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
           "check for the existance of (${... in environ}) environment variables, "
           "as well as enumerating all variables (${for (key,item: environ) ...})") },
@@ -979,7 +979,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "Returns the user-assigned name of the hosting machine") },
     { "chdir", (DeeObject *)&libfs_chdir, MODSYM_FNORMAL,
       DOC("(path:?Dstring)\n"
-          "(fp:?Dfile)\n"
+          "(fp:?DFile)\n"
           "(fd:?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
@@ -991,7 +991,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "relative to the old current working directory") },
     { "chtime", (DeeObject *)&libfs_chtime, MODSYM_FNORMAL,
       DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
-          "(fp:?Dfile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
+          "(fp:?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
           "(fd:?Dint,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
@@ -1010,7 +1010,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "Change the timestamps associated with the given @path") },
     { "chmod", (DeeObject *)&libfs_chmod, MODSYM_FNORMAL,
       DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n"
-          "(fp:?Dfile,mode:?X2?Dstring?Dint)\n"
+          "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
           "(fd:?Dint,mode:?X2?Dstring?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
@@ -1041,7 +1041,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "of that link, rather than those of the pointed-to file") },
     { "chown", (DeeObject *)&libfs_chown, MODSYM_FNORMAL,
       DOC("(path:?Dstring,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
-          "(fp:?Dfile,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
+          "(fp:?DFile,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
           "(fd:?Dint,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path could not be found\n"
@@ -1145,7 +1145,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "@throw SystemError Failed to rename the given @existing_path for some reason\n"
           "Renames or moves a given @existing_path to be referred to as @new_path from then on") },
     { "copyfile", (DeeObject *)&libfs_copyfile, MODSYM_FNORMAL,
-      DOC("(existing_file:?X3?Dstring?Dfile?Dint,new_file:?X3?Dstring?Dfile?Dint,progress:?Dcallable=!N)\n"
+      DOC("(existing_file:?X3?Dstring?DFile?Dint,new_file:?X3?Dstring?DFile?Dint,progress:?DCallable=!N)\n"
           "@interrupt\n"
           "@throw FileExists The given @new_file already exists\n"
           "@throw NoDirectory A part of the given @existing_file or @new_file is not a directory\n"
@@ -1172,7 +1172,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "propagated after the partially copied file may have been deleted, based on "
           "the host operating system's preferrance") },
     { "link", (DeeObject *)&libfs_link, MODSYM_FNORMAL,
-      DOC("(existing_path:?X3?Dstring?Dfile?Dint,new_path:?Dstring)\n"
+      DOC("(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n"
           "@interrupt\n"
           "@throw FileNotFound The given @existing_path could not be found, or a parent directory of @new_path does not exist\n"
           "@throw NoDirectory A part of the given @existing_path or @new_path is not a directory\n"
@@ -1210,12 +1210,12 @@ PRIVATE struct dex_symbol symbols[] = {
           "their name being replaced with @target_text, at which point the resulting path "
           "is then re-evaluated:\n"
           ">import symlink from fs;\n"
-          ">import file from deemon;\n"
+          ">import File from deemon;\n"
           ">symlink(\"../foo\",\"/path/to/link\");\n"
           ">/* \"/path/to/[link]/file.txt\" */\n"
           ">/* \"/path/to/[../foo]/file.txt\" */\n"
           ">/* \"/path/foo/file.txt\" */\n"
-          ">file.open(\"/path/to/link/file.txt\");\n"
+          ">File.open(\"/path/to/link/file.txt\");\n"
           "Because of the fact that some filesystem support alternative path separators, "
           "those seperators may not be allowed to appear in symbolic link texts. If this "
           "is the case and if @format_target is :true, the given @target_text will be "
@@ -1223,7 +1223,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "functioning properly") },
     { "readlink", (DeeObject *)&libfs_readlink, MODSYM_FNORMAL,
       DOC("(path:?Dstring)->?Dstring\n"
-          "(fp:?Dfile)->?Dstring\n"
+          "(fp:?DFile)->?Dstring\n"
           "(fd:?Dint)->?Dstring\n"
           "@interrupt\n"
           "@throw FileNotFound The given @path does not exist\n"
@@ -1320,11 +1320,11 @@ PRIVATE struct dex_symbol symbols[] = {
           "For this purpose, all path elements are joined with #SEP, "
           "after removal of additional slashes and spaces surrounding the given @paths")  },
     { "expand", (DeeObject *)&libfs_expand, MODSYM_FNORMAL,
-      DOC("(path:?Dstring,env:?Dmapping=!Genviron)->?Dstring\n"
-          "(path:?Dstring,options:?Dstring=!Phvpf,env:?Dmapping=!Genviron)->?Dstring\n"
-          "(path:?Dstring,options:?Dint,env:?Dmapping=!Genviron)->?Dstring\n"
+      DOC("(path:?Dstring,env:?DMapping=!Genviron)->?Dstring\n"
+          "(path:?Dstring,options:?Dstring=!Phvpf,env:?DMapping=!Genviron)->?Dstring\n"
+          "(path:?Dstring,options:?Dint,env:?DMapping=!Genviron)->?Dstring\n"
           "@interrupt\n"
-          "@param env A dict-style mapping used to resolve variable names. Defaults to :environ\n"
+          "@param env A Dict-style mapping used to resolve variable names. Defaults to :environ\n"
           "@throw ValueError The given @options string contains unrecognized options\n"
           "@throw ValueError An unknown environment variable was accessed and $\"f\" isn't part of @options\n"
           "Expand parts of the given @path, according to @options which is either an "
@@ -1406,7 +1406,7 @@ PRIVATE struct dex_symbol symbols[] = {
           "maximum of around ${2**16}")  },
     { "chattr_np", (DeeObject *)&libfs_chattr_np, MODSYM_FHIDDEN,
       DOC("(path:?Dstring,mode:?Dint)\n"
-          "(fp:?Dfile,mode:?Dint)\n"
+          "(fp:?DFile,mode:?Dint)\n"
           "(fd:?Dint,mode:?Dint)\n"
           "@interrupt\n"
           "@throw FileNotFound The file specified by @path could not be found\n"

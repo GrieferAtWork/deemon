@@ -20,5 +20,5 @@
 #include "__stddef.dee"
 
 #pragma push_macro(undef,"import","from","deemon")
-from deemon import cell = "cell";
+from deemon import cell = "Cell";
 #pragma pop_macro("import","from","deemon")

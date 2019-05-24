@@ -167,7 +167,7 @@ PRIVATE struct type_getset segiter_getsets[] = {
 };
 
 PRIVATE struct type_member segiter_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SegmentsIterator,si_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SegmentsIterator,si_iter),"->?DIterator"),
     TYPE_MEMBER_FIELD("__len__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SegmentsIterator,si_len)),
     TYPE_MEMBER_END
 };
@@ -204,7 +204,7 @@ PRIVATE struct type_cmp segiter_cmp = {
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSegmentsIterator",
-    /* .tp_doc      = */DOC("(iter?:?Diterator,len=!1)"),
+    /* .tp_doc      = */DOC("(iter?:?DIterator,len=!1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -249,7 +249,7 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 
 
 PRIVATE struct type_member seg_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqSegmentsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqSegmentsIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -430,7 +430,7 @@ PRIVATE struct type_seq seg_seq = {
 };
 
 PRIVATE struct type_member seg_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Segments,s_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Segments,s_seq),"->?DSequence"),
     TYPE_MEMBER_FIELD("__len__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(Segments,s_len)),
     TYPE_MEMBER_END
 };
@@ -438,7 +438,7 @@ PRIVATE struct type_member seg_members[] = {
 PRIVATE DeeTypeObject SeqSegments_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSegments",
-    /* .tp_doc      = */DOC("(seq?:?Dsequence,len=!1)"),
+    /* .tp_doc      = */DOC("(seq?:?DSequence,len=!1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

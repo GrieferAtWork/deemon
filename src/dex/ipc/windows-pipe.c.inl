@@ -98,8 +98,8 @@ err_fread_hwrite:
 
 
 PRIVATE struct type_member pipe_class_members[] = {
-    TYPE_MEMBER_CONST("reader",(DeeObject *)&DeePipeReader_Type),
-    TYPE_MEMBER_CONST("writer",(DeeObject *)&DeePipeWriter_Type),
+    TYPE_MEMBER_CONST("Reader",(DeeObject *)&DeePipeReader_Type),
+    TYPE_MEMBER_CONST("Writer",(DeeObject *)&DeePipeWriter_Type),
     TYPE_MEMBER_END
 };
 

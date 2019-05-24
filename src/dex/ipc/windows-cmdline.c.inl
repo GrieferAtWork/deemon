@@ -134,7 +134,7 @@ cmdline_split(DeeStringObject *__restrict cmdline) {
  char *iter,*end; struct ascii_printer printer; int temp;
  DREF DeeObject *arg,*result = DeeList_New();
  /* Since this function isn't actually used that often, it doesn't use
-  * an anonymous sequence type, but simply creates and returns a list
+  * an anonymous sequence type, but simply creates and returns a List
   * object. */
  if unlikely(!result) goto done;
  end = (iter = DeeString_STR(cmdline))+DeeString_SIZE(cmdline);

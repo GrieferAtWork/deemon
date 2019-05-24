@@ -136,7 +136,7 @@ objectlist_extendseq(struct objectlist *__restrict self,
 }
 
 
-/* Pack the given objectlist into a list.
+/* Pack the given objectlist into a List.
  * Upon success, `self' will have been finalized. */
 LOCAL DREF DeeObject *DCALL
 objectlist_packlist(struct objectlist *__restrict self) {
@@ -145,7 +145,7 @@ objectlist_packlist(struct objectlist *__restrict self) {
                                        self->ol_list);
 }
 
-/* Pack the given objectlist into a tuple.
+/* Pack the given objectlist into a Tuple.
  * Upon success, `self' will have been finalized. */
 LOCAL DREF DeeObject *DCALL
 objectlist_packtuple(struct objectlist *__restrict self) {

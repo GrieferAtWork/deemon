@@ -533,7 +533,7 @@ PRIVATE struct type_attr se_attr = {
 };
 
 PRIVATE struct type_member se_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SeqEachBase,se_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SeqEachBase,se_seq),"->?DSequence"),
     TYPE_MEMBER_END
 };
 
@@ -541,7 +541,7 @@ PRIVATE struct type_member se_members[] = {
 INTERN DeeTypeObject SeqEach_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqEach",
-    /* .tp_doc      = */DOC("(seq:?Dsequence)"),
+    /* .tp_doc      = */DOC("(seq:?DSequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FMOVEANY,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1190,7 +1190,7 @@ PRIVATE struct type_seq seo_seq = {
 #define seo_members   se_members /* TODO: Access to operator name & arguments */
 
 PRIVATE struct type_member seo_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqEachOperatorIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqEachOperatorIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1199,7 +1199,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqEachOperator",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,op:?X2?Dstring?Dint,args=!T0)"),
+                            "(seq:?DSequence,op:?X2?Dstring?Dint,args=!T0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FMOVEANY,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -1423,7 +1423,7 @@ PRIVATE struct type_cmp sewi_cmp = {
 
 PRIVATE struct type_member seoi_members[] = {
     TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_each),"->?Ert:SeqEachOperator"),
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_iter),"->?DIterator"),
     TYPE_MEMBER_END
 };
 

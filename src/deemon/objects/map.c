@@ -60,7 +60,7 @@ PRIVATE int DCALL
 proxy_iterator_init(MapProxyIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  self->mpi_map = Dee_EmptyMapping;
- if (DeeArg_Unpack(argc,argv,"|o:_mappingproxy.iterator",&self->mpi_map))
+ if (DeeArg_Unpack(argc,argv,"|o:_mappingproxy.Iterator",&self->mpi_map))
      return -1;
  self->mpi_iter = DeeObject_IterSelf(self->mpi_map);
  if unlikely(!self->mpi_iter) return -1;
@@ -414,19 +414,19 @@ PRIVATE struct type_seq proxyitems_seq = {
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
 };
 PRIVATE struct type_member proxykeys_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeMappingKeysIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeMappingKeysIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member proxyvalues_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeMappingValuesIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeMappingValuesIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member proxyitems_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeMappingItemsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeMappingItemsIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member proxy_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeMappingProxyIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeMappingProxyIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1057,22 +1057,22 @@ PRIVATE struct type_getset map_getsets[] = {
       NULL,
       NULL,
       DOC("->?S?O\n"
-          "Returns a :sequence that can be enumerated to view only the keys of @this mapping") },
+          "Returns a :Sequence that can be enumerated to view only the keys of @this Mapping") },
     { "values",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_values,
       NULL,
       NULL,
       DOC("->?S?O\n"
-          "Returns a :sequence that can be enumerated to view only the values of @this mapping") },
+          "Returns a :Sequence that can be enumerated to view only the values of @this Mapping") },
     { "items",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_items,
       NULL,
       NULL,
       DOC("->?S?T2?O?O\n"
-          "Returns a :sequence that can be enumerated to view the key-item "
+          "Returns a :Sequence that can be enumerated to view the key-item "
           "pairs as 2-element sequences, the same way they could be viewed "
-          "if @this mapping itself was being iterated\n"
-          "Note however that the returned :sequence is pure, meaning that it "
+          "if @this Mapping itself was being iterated\n"
+          "Note however that the returned :Sequence is pure, meaning that it "
           "implements a index-based getitem and getrange operators, the same "
           "way one would expect of any regular object implementing the sequence "
           "protocol") },
@@ -1080,19 +1080,19 @@ PRIVATE struct type_getset map_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterkeys,
       NULL,
       NULL,
-      DOC("->?Diterator\n"
+      DOC("->?DIterator\n"
           "Returns an iterator for #{keys}. Same as ${this.keys.operator iter()}") },
     { "itervalues",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_itervalues,
       NULL,
       NULL,
-      DOC("->?Diterator\n"
+      DOC("->?DIterator\n"
           "Returns an iterator for #{values}. Same as ${this.values.operator iter()}") },
     { "iteritems",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iteritems,
       NULL,
       NULL,
-      DOC("->?Diterator\n"
+      DOC("->?DIterator\n"
           "Returns an iterator for #{items}. Same as ${this.items.operator iter()}") },
     { DeeString_STR(&str_first),
      &DeeMap_GetFirst,
@@ -1106,8 +1106,8 @@ PRIVATE struct type_getset map_getsets[] = {
      &DeeRoDict_FromSequence,
       NULL,
       NULL,
-      DOC("->?Dmapping\n"
-          "Returns a read-only (frozen) copy of @this mapping") },
+      DOC("->?DMapping\n"
+          "Returns a read-only (frozen) copy of @this Mapping") },
     { NULL }
 };
 
@@ -1118,7 +1118,7 @@ map_iterator_get(DeeTypeObject *__restrict self) {
  if (self == &DeeMapping_Type)
      return_reference_(&DeeIterator_Type);
  err_unknown_attribute(self,
-                       DeeString_STR(&str_iterator),
+                       DeeString_STR(&str_Iterator),
                        ATTR_ACCESS_GET);
  return NULL;
 }
@@ -1129,8 +1129,8 @@ map_frozen_get(DeeTypeObject *__restrict self) {
  DREF DeeTypeObject *result;
  struct attribute_info info;
  struct attribute_lookup_rules rules;
- rules.alr_name       = "frozen";
- rules.alr_hash       = Dee_HashPtr("frozen",COMPILER_STRLEN("frozen"));
+ rules.alr_name       = "Frozen";
+ rules.alr_hash       = Dee_HashPtr("Frozen",COMPILER_STRLEN("Frozen"));
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = ATTR_PERMGET|ATTR_IMEMBER;
  rules.alr_perm_value = ATTR_PERMGET|ATTR_IMEMBER;
@@ -1152,7 +1152,7 @@ map_frozen_get(DeeTypeObject *__restrict self) {
   if (info.a_doc) {
    /* TODO: Use doc meta-information to determine the return type! */
   }
-  /* Fallback: just tell the caller what they already know: a mapping will be returned... */
+  /* Fallback: just tell the caller what they already know: a Mapping will be returned... */
   result = &DeeMapping_Type;
   Dee_Incref(&DeeMapping_Type);
  }
@@ -1164,27 +1164,27 @@ err:
 
 
 PRIVATE struct type_getset map_class_getsets[] = {
-    { DeeString_STR(&str_iterator),
+    { DeeString_STR(&str_Iterator),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterator_get,
       NULL,
       NULL,
-      DOC("->?Dtype\n"
-          "Returns the iterator class used by instances of @this mapping type\n"
-          "This member must be overwritten by sub-classes of :mapping") },
-    { "frozen",
+      DOC("->?DType\n"
+          "Returns the iterator class used by instances of @this Mapping type\n"
+          "This member must be overwritten by sub-classes of :Mapping") },
+    { "Frozen",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_frozen_get,
       NULL,
       NULL,
-      DOC("->?Dtype\n"
+      DOC("->?DType\n"
           "Returns the type of sequence returned by the #i:frozen property") },
     { NULL }
 };
 
 PRIVATE struct type_member map_class_members[] = {
-    TYPE_MEMBER_CONST_DOC("proxy",&DeeMappingProxy_Type,"->?Dtype\nThe common base-class of #c:keys, #c:values and #c:items"),
-    TYPE_MEMBER_CONST_DOC("keys",&DeeMappingKeys_Type,"->?Dtype\nThe return type of the #i:keys member function"),
-    TYPE_MEMBER_CONST_DOC("values",&DeeMappingValues_Type,"->?Dtype\nThe return type of the #i:values member function"),
-    TYPE_MEMBER_CONST_DOC("items",&DeeMappingItems_Type,"->?Dtype\nThe return type of the #i:items member function"),
+    TYPE_MEMBER_CONST_DOC("Proxy",&DeeMappingProxy_Type,"->?DType\nThe common base-class of #c:keys, #c:values and #c:items"),
+    TYPE_MEMBER_CONST_DOC("Keys",&DeeMappingKeys_Type,"->?DType\nThe return type of the #i:keys member function"),
+    TYPE_MEMBER_CONST_DOC("Values",&DeeMappingValues_Type,"->?DType\nThe return type of the #i:values member function"),
+    TYPE_MEMBER_CONST_DOC("Items",&DeeMappingItems_Type,"->?DType\nThe return type of the #i:items member function"),
     TYPE_MEMBER_END
 };
 
@@ -1193,8 +1193,8 @@ INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 PUBLIC DeeTypeObject DeeMapping_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_mapping),
-    /* .tp_doc      = */DOC("A recommended abstract base class for any mapping "
+    /* .tp_name     = */DeeString_STR(&str_Mapping),
+    /* .tp_doc      = */DOC("A recommended abstract base class for any Mapping "
                             "type that wishes to implement a key-value protocol\n"
                             "An object derived from this class must implement ${operator iter}, "
                             "and preferrably (but optionally) or ${operator []} (getitem)\n"
@@ -1202,11 +1202,11 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
                             "\n"
                             "()\n"
                             "A no-op default constructor that is implicitly called by sub-classes\n"
-                            "When invoked manually, a general-purpose, empty mapping is returned\n"
+                            "When invoked manually, a general-purpose, empty Mapping is returned\n"
                             "\n"
                             "repr->\n"
-                            "Returns the representation of all sequence elements, using "
-                            "abstract mapping syntax\n"
+                            "Returns the representation of all sequence elements, "
+                            "using abstract mapping syntax\n"
                             "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
                             "\n"
                             "[:]->!D\n"

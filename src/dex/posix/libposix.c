@@ -753,8 +753,8 @@ err:
 /*[[[deemon import("_dexutils").gw("read","fd:d,buf:obj:buffer->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject *__restrict buf);
 PRIVATE DREF DeeObject *DCALL libposix_read_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_READ_DEF { "read", (DeeObject *)&libposix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes)->?Dint") },
-#define LIBPOSIX_READ_DEF_DOC(doc) { "read", (DeeObject *)&libposix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes)->?Dint\n" doc) },
+#define LIBPOSIX_READ_DEF { "read", (DeeObject *)&libposix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint") },
+#define LIBPOSIX_READ_DEF_DOC(doc) { "read", (DeeObject *)&libposix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_read,libposix_read_f);
 #ifndef LIBPOSIX_KWDS_FD_BUF_DEFINED
 #define LIBPOSIX_KWDS_FD_BUF_DEFINED 1
@@ -806,8 +806,8 @@ err:
 /*[[[deemon import("_dexutils").gw("write","fd:d,buf:obj:buffer->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject *__restrict buf);
 PRIVATE DREF DeeObject *DCALL libposix_write_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_WRITE_DEF { "write", (DeeObject *)&libposix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes)->?Dint") },
-#define LIBPOSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&libposix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes)->?Dint\n" doc) },
+#define LIBPOSIX_WRITE_DEF { "write", (DeeObject *)&libposix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint") },
+#define LIBPOSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&libposix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_write,libposix_write_f);
 #ifndef LIBPOSIX_KWDS_FD_BUF_DEFINED
 #define LIBPOSIX_KWDS_FD_BUF_DEFINED 1
@@ -862,8 +862,8 @@ err:
 /*[[[deemon import("_dexutils").gw("pread","fd:d,buf:obj:buffer,offset:I64d->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int64_t offset);
 PRIVATE DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_PREAD_DEF { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint") },
-#define LIBPOSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint\n" doc) },
+#define LIBPOSIX_PREAD_DEF { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
+#define LIBPOSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_pread,libposix_pread_f);
 #ifndef LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
@@ -912,8 +912,8 @@ err:
 /*[[[deemon import("_dexutils").gw("pread","fd:d,buf:obj:buffer,offset:I32d->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int32_t offset);
 PRIVATE DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_PREAD_DEF { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint") },
-#define LIBPOSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint\n" doc) },
+#define LIBPOSIX_PREAD_DEF { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
+#define LIBPOSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_pread,libposix_pread_f);
 #ifndef LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
@@ -970,8 +970,8 @@ err:
 /*[[[deemon import("_dexutils").gw("pwrite","fd:d,buf:obj:buffer,offset:I64d->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int64_t offset);
 PRIVATE DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_PWRITE_DEF { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint") },
-#define LIBPOSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint\n" doc) },
+#define LIBPOSIX_PWRITE_DEF { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
+#define LIBPOSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_pwrite,libposix_pwrite_f);
 #ifndef LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
@@ -1020,8 +1020,8 @@ err:
 /*[[[deemon import("_dexutils").gw("pwrite","fd:d,buf:obj:buffer,offset:I32d->?Dint"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int32_t offset);
 PRIVATE DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_PWRITE_DEF { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint") },
-#define LIBPOSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?Dbytes,offset:?Dint)->?Dint\n" doc) },
+#define LIBPOSIX_PWRITE_DEF { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
+#define LIBPOSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_pwrite,libposix_pwrite_f);
 #ifndef LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define LIBPOSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
@@ -1750,11 +1750,11 @@ PRIVATE DEFINE_CMETHOD(libposix_errno_get,&libposix_errno_get_f);
 PRIVATE DEFINE_CMETHOD(libposix_errno_set,&libposix_errno_set_f);
 
 
-/*[[[deemon import("_dexutils").gw("atexit","callback:?Dcallable,args:?Dtuple=Dee_EmptyTuple"); ]]]*/
+/*[[[deemon import("_dexutils").gw("atexit","callback:?DCallable,args:?DTuple=Dee_EmptyTuple"); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libposix_atexit_f_impl(DeeObject *__restrict callback, DeeObject *__restrict args);
 PRIVATE DREF DeeObject *DCALL libposix_atexit_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBPOSIX_ATEXIT_DEF { "atexit", (DeeObject *)&libposix_atexit, MODSYM_FNORMAL, DOC("(callback:?Dcallable,args:?Dtuple=!T0)") },
-#define LIBPOSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&libposix_atexit, MODSYM_FNORMAL, DOC("(callback:?Dcallable,args:?Dtuple=!T0)\n" doc) },
+#define LIBPOSIX_ATEXIT_DEF { "atexit", (DeeObject *)&libposix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)") },
+#define LIBPOSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&libposix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libposix_atexit,libposix_atexit_f);
 #ifndef LIBPOSIX_KWDS_CALLBACK_ARGS_DEFINED
 #define LIBPOSIX_KWDS_CALLBACK_ARGS_DEFINED 1
@@ -2759,7 +2759,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/char
   if (DeeObject_AsUINT(owner,&owner_uid))
       goto err;
  } else {
-  owner = DeeObject_CallAttrString(FS_MODULE,"user",1,&owner);
+  owner = DeeObject_CallAttrString(FS_MODULE,"User",1,&owner);
   if unlikely(!owner)
      goto err;
   result = DeeObject_AsUINT(owner,&owner_uid);
@@ -2771,7 +2771,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/char
   if (DeeObject_AsUINT(group,&group_gid))
       goto err;
  } else {
-  group = DeeObject_CallAttrString(FS_MODULE,"group",1,&group);
+  group = DeeObject_CallAttrString(FS_MODULE,"Group",1,&group);
   if unlikely(!group)
      goto err;
   result = DeeObject_AsUINT(group,&group_gid);
@@ -3130,15 +3130,15 @@ PRIVATE struct dex_symbol symbols[] = {
     DEFINE_LIBFS_ALIAS_S(unlink,"(path:?Dstring)\n")
     DEFINE_LIBFS_ALIAS_S(remove,"(path:?Dstring)\n")
     DEFINE_LIBFS_ALIAS_S(rename,"(existing_path:?Dstring,new_path:?Dstring)\n")
-    DEFINE_LIBFS_ALIAS_S(link,"(existing_path:?X3?Dstring?Dfile?Dint,new_path:?Dstring)\n")
+    DEFINE_LIBFS_ALIAS_S(link,"(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n")
     DEFINE_LIBFS_ALIAS_S(symlink,"(target_text:?Dstring,link_path:?Dstring,format_target=!t)\n")
-    DEFINE_LIBFS_ALIAS_S(readlink,"(path:?Dstring)->?Dstring\n(fp:?Dfile)->?Dstring\n(fd:?Dint)->?Dstring\n")
-    DEFINE_LIBFS_ALIAS_ALT("fopendir",opendir,"dir","(fp:?Dfile)\n(fd:?Dint)\n")
-    DEFINE_LIBFS_ALIAS_S_ALT("fstat",stat,"(fp:?Dfile)\n(fd:?Dint)\n")
-    DEFINE_LIBFS_ALIAS_S_ALT("fchdir",chdir,"(fp:?Dfile)\n(fd:?Dint)\n")
-    DEFINE_LIBFS_ALIAS_S_ALT("fchmod",chmod,"(fp:?Dfile,mode:?X2?Dstring?Dint)\n"
+    DEFINE_LIBFS_ALIAS_S(readlink,"(path:?Dstring)->?Dstring\n(fp:?DFile)->?Dstring\n(fd:?Dint)->?Dstring\n")
+    DEFINE_LIBFS_ALIAS_ALT("fopendir",opendir,"dir","(fp:?DFile)\n(fd:?Dint)\n")
+    DEFINE_LIBFS_ALIAS_S_ALT("fstat",stat,"(fp:?DFile)\n(fd:?Dint)\n")
+    DEFINE_LIBFS_ALIAS_S_ALT("fchdir",chdir,"(fp:?DFile)\n(fd:?Dint)\n")
+    DEFINE_LIBFS_ALIAS_S_ALT("fchmod",chmod,"(fp:?DFile,mode:?X2?Dstring?Dint)\n"
                                             "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
-    DEFINE_LIBFS_ALIAS_S_ALT("fchown",chown,"(fp:?Dfile,user:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint)\n"
+    DEFINE_LIBFS_ALIAS_S_ALT("fchown",chown,"(fp:?DFile,user:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint)\n"
                                             "(fd:?Dint,user:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint)\n")
 
     /* Application exit control */

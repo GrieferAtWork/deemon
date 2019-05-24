@@ -68,7 +68,7 @@
  *                                         >>     }
  *                                         >>     // NOTE: `operator repr' is only implemented if not already defined by the user
  *                                         >>     operator repr(): string {
- *                                         >>         file.writer fp;
+ *                                         >>         File.Writer fp;
  *                                         >>         fp << "MyClass(";
  *                                         >>         local is_first = true;
  *                                         >>         if (this.foo is bound) {
@@ -247,7 +247,7 @@ typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 #define Dee_CLASS_ATTRIBUTE_FFINAL    0x0002 /* The attribute is accessed directly, and cannot be overwritten by sub-classes. */
 #define Dee_CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
 /*      Dee_CLASS_ATTRIBUTE_F         0x0008  * ... */
-#define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `instancemethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
+#define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `InstanceMethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
 #define Dee_CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
                                               * When `Dee_CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
                                               * When `Dee_CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,

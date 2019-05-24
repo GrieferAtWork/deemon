@@ -167,7 +167,7 @@ PRIVATE struct notify_entry const empty_notifications[1] = {
 PRIVATE DEFINE_RWLOCK(notify_lock);
 #endif
 
-/* The usual deal: it's a hash-vector (s.a.: dict, member_table, etc. etc.) */
+/* The usual deal: it's a hash-vector (s.a.: Dict, member_table, etc. etc.) */
 PRIVATE size_t               notify_used = 0;
 PRIVATE size_t               notify_size = 0;
 PRIVATE size_t               notify_mask = 0;

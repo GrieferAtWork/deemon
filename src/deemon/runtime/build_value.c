@@ -414,7 +414,7 @@ do_string:
   ++format;
  } break;
 
- /* TODO: tuple, set, cell */
+ /* TODO: Tuple, Set, Cell */
  /* TODO: float */
 
  default:
@@ -655,7 +655,7 @@ parse_unsigned_int:
    }
   } else {
    ASSERTF(format[-1] == 'c',"Invalid format: `%s' (`%s')",format,*pformat);
-   /* Unicode character (either a single-character string/bytes object, or an integer). */
+   /* Unicode character (either a single-character string/Bytes object, or an integer). */
    if (DeeString_Check(self)) {
     uint32_t ch;
     if (DeeString_WLEN(self) != 1)

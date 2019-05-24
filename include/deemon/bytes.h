@@ -41,11 +41,11 @@ struct Dee_bytes_object {
     DREF DeeObject *b_orig;    /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
     DeeBuffer       b_buffer;  /* [const] The buffer being accessed. */
     unsigned int    b_flags;   /* [const] Buffer access flags (Set of `DEE_BUFFER_F*') */
-    uint8_t         b_data[1]; /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the bytes object owns its own data) */
+    uint8_t         b_data[1]; /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
 };
 
 
-/* Define a statically initialized bytes object `name' */
+/* Define a statically initialized Bytes object `name' */
 #define Dee_DEFINE_BYTES(name,flags,num_bytes,...) \
         Dee_DEFINE_BYTES_EX(name,flags,uint8_t,num_bytes,__VA_ARGS__)
 #define Dee_DEFINE_BYTES_EX(name,flags,Titem,num_items,...) \
@@ -87,10 +87,10 @@ struct { \
  * API through which user-code can operate with bytes objects. */
 DDATDEF DeeTypeObject DeeBytes_Type;
 
-/* A singleton representing an empty bytes object.
+/* A singleton representing an empty Bytes object.
  * NOTE: This object is not required to be used for empty bytes.
  *       Other instances may be used as well!
- * NOTE: The empty bytes object is writable (though there is no memory to write to)
+ * NOTE: The empty Bytes object is writable (though there is no memory to write to)
  */
 #ifdef GUARD_DEEMON_OBJECTS_BYTES_C
 DDATDEF DeeBytesObject                DeeBytes_Empty;
@@ -184,7 +184,7 @@ struct Dee_bytes_printer {
      * being `bytes_printer_print'
      */
     size_t          bp_length;  /* The number of bytes already printed. */
-    DeeBytesObject *bp_bytes;   /* [0..1][owned] The resulting bytes object. */
+    DeeBytesObject *bp_bytes;   /* [0..1][owned] The resulting Bytes object. */
     unsigned char   bp_numpend; /* The number of pending UTF-8 characters. */
     unsigned char   bp_pend[7]; /* Pending UTF-8 characters. */
 };
@@ -215,21 +215,21 @@ struct Dee_bytes_printer {
 #endif /* DEE_SOURCE */
 
 /* _Always_ inherit all byte data (even upon error) saved in
- * `self', and construct a new bytes object from all that data, before
+ * `self', and construct a new Bytes object from all that data, before
  * returning a reference to that object.
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
  *      ---> Regardless of return value, `self' is finalized and left
  *           in an undefined state, the same way it would have been
  *           after a call to `bytes_printer_fini()'
- * @return: * :   A reference to the packed bytes object.
+ * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
 DFUNDEF DREF DeeObject *
 (DCALL Dee_bytes_printer_pack)(/*inherit(always)*/struct Dee_bytes_printer *__restrict self);
 
-/* Append the given `text' to the end of the bytes object.
+/* Append the given `text' to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
  * Dee_formatprinter_t-compatible callback for generating data to-be
- * written into a bytes object. */
+ * written into a Bytes object. */
 DFUNDEF Dee_ssize_t
 (DCALL Dee_bytes_printer_print)(void *__restrict self,
                                 /*utf-8*/char const *__restrict text,
@@ -251,7 +251,7 @@ DFUNDEF Dee_ssize_t
  * about any kind of encoding. - Just copy over the raw bytes.
  * -> A far as unicode support goes, this function has _nothing_ to
  *    do with any kind of encoding. - It just blindly copies the given
- *    data into the buffer of the resulting bytes object.
+ *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
 DFUNDEF Dee_ssize_t
 (DCALL Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,

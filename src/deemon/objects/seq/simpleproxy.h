@@ -37,9 +37,9 @@ typedef struct {
 INTDEF DeeTypeObject SeqIds_Type;             /* sequence.ids */
 INTDEF DeeTypeObject SeqTypes_Type;           /* sequence.types */
 INTDEF DeeTypeObject SeqClasses_Type;         /* sequence.classes */
-INTDEF DeeTypeObject SeqIdsIterator_Type;     /* sequence.ids.iterator */
-INTDEF DeeTypeObject SeqTypesIterator_Type;   /* sequence.types.iterator */
-INTDEF DeeTypeObject SeqClassesIterator_Type; /* sequence.classes.iterator */
+INTDEF DeeTypeObject SeqIdsIterator_Type;     /* sequence.ids.Iterator */
+INTDEF DeeTypeObject SeqTypesIterator_Type;   /* sequence.types.Iterator */
+INTDEF DeeTypeObject SeqClassesIterator_Type; /* sequence.classes.Iterator */
 
 INTDEF DREF DeeObject *DCALL SeqIds_New(DeeObject *__restrict seq);
 INTDEF DREF DeeObject *DCALL SeqTypes_New(DeeObject *__restrict seq);

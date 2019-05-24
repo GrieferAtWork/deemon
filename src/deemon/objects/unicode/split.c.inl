@@ -376,12 +376,12 @@ PRIVATE struct type_member split_members[] = {
 };
 
 PRIVATE struct type_member split_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member casesplit_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringCaseSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringCaseSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -718,7 +718,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 };
 
 PRIVATE struct type_member linesplit_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringLineSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringLineSplitIterator_Type),
     TYPE_MEMBER_END
 };
 

@@ -222,10 +222,10 @@ PRIVATE char const mnemonic_names[256][31] = {
     /* 0x3d */ "push   ", /* `ASM_PUSH_EXTERN' */
     /* 0x3e */ "push   ", /* `ASM_PUSH_GLOBAL' */
     /* 0x3f */ "push   ", /* `ASM_PUSH_LOCAL' */
-    /* 0x40 */ "cast   top, tuple", /* `ASM_CAST_TUPLE' */
-    /* 0x41 */ "cast   top, list", /* `ASM_CAST_LIST' */
-    /* 0x42 */ "push   pack tuple, " PREFIX_STACKEFFECT, /* `ASM_PACK_TUPLE' */
-    /* 0x43 */ "push   pack list, " PREFIX_STACKEFFECT, /* `ASM_PACK_LIST' */
+    /* 0x40 */ "cast   top, Tuple", /* `ASM_CAST_TUPLE' */
+    /* 0x41 */ "cast   top, List", /* `ASM_CAST_LIST' */
+    /* 0x42 */ "push   pack Tuple, " PREFIX_STACKEFFECT, /* `ASM_PACK_TUPLE' */
+    /* 0x43 */ "push   pack List, " PREFIX_STACKEFFECT, /* `ASM_PACK_LIST' */
     /* 0x44 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x45 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0x46 */ "unpack pop, " PREFIX_STACKEFFECT, /* `ASM_UNPACK' */
@@ -480,10 +480,10 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf03d */ "push   ", /* `ASM16_PUSH_EXTERN' */
     /* 0xf03e */ "push   ", /* `ASM16_PUSH_GLOBAL' */
     /* 0xf03f */ "push   ", /* `ASM16_PUSH_LOCAL' */
-    /* 0xf040 */ "cast   top, hashset", /* `ASM_CAST_HASHSET' */
-    /* 0xf041 */ "cast   top, dict", /* `ASM_CAST_DICT' */
-    /* 0xf042 */ "push   pack tuple, " PREFIX_STACKEFFECT, /* `ASM16_PACK_TUPLE' */
-    /* 0xf043 */ "push   pack list, " PREFIX_STACKEFFECT, /* `ASM16_PACK_LIST' */
+    /* 0xf040 */ "cast   top, HashSet", /* `ASM_CAST_HASHSET' */
+    /* 0xf041 */ "cast   top, Dict", /* `ASM_CAST_DICT' */
+    /* 0xf042 */ "push   pack Tuple, " PREFIX_STACKEFFECT, /* `ASM16_PACK_TUPLE' */
+    /* 0xf043 */ "push   pack List, " PREFIX_STACKEFFECT, /* `ASM16_PACK_LIST' */
     /* 0xf044 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf045 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf046 */ "unpack pop, " PREFIX_STACKEFFECT, /* `ASM16_UNPACK' */
@@ -498,8 +498,8 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf04f */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf050 */ "push   true", /* `ASM_PUSH_TRUE' */
     /* 0xf051 */ "push   false", /* `ASM_PUSH_FALSE' */
-    /* 0xf052 */ "push   pack hashset, " PREFIX_STACKEFFECT, /* `ASM_PACK_HASHSET' */
-    /* 0xf053 */ "push   pack dict, " PREFIX_STACKEFFECT, /* `ASM_PACK_DICT' */
+    /* 0xf052 */ "push   pack HashSet, " PREFIX_STACKEFFECT, /* `ASM_PACK_HASHSET' */
+    /* 0xf053 */ "push   pack Dict, " PREFIX_STACKEFFECT, /* `ASM_PACK_DICT' */
     /* 0xf054 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf055 */ UNKNOWN_MNEMONIC, /* --- */
     /* 0xf056 */ UNKNOWN_MNEMONIC, /* --- */
@@ -514,8 +514,8 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
     /* 0xf05f */ "setattr this, ", /* `ASM16_SETATTR_THIS_C' */
     /* 0xf060 */ "cmp    so, top, pop", /* `ASM_CMP_SO' */
     /* 0xf061 */ "cmp    do, top, pop", /* `ASM_CMP_DO' */
-    /* 0xf062 */ "push   pack hashset, " PREFIX_STACKEFFECT, /* `ASM16_PACK_HASHSET' */
-    /* 0xf063 */ "push   pack dict, " PREFIX_STACKEFFECT, /* `ASM16_PACK_DICT' */
+    /* 0xf062 */ "push   pack HashSet, " PREFIX_STACKEFFECT, /* `ASM16_PACK_HASHSET' */
+    /* 0xf063 */ "push   pack Dict, " PREFIX_STACKEFFECT, /* `ASM16_PACK_DICT' */
     /* 0xf064 */ "getcmember top, " PREFIX_INTEGERAL, /* `ASM16_GETCMEMBER' */
     /* 0xf065 */ "class  top, pop", /* `ASM_CLASS' */
     /* 0xf066 */ "class  top, ", /* `ASM16_CLASS_C' */

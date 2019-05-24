@@ -34,7 +34,7 @@
 #include <deemon/list.h>
 #include <deemon/tuple.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/assembler.h>
@@ -406,7 +406,7 @@ PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
  uint16_t (*popcode)[2],op;
  ASSERT(type != AST_FMULTIPLE_KEEPLAST);
  if (AST_FMULTIPLE_ISDICT(type)) {
-  /* Special case: dict. */
+  /* Special case: Dict. */
   if unlikely((num_args&1) && asm_gpop())
      goto err; /* Discard superfluous element. */
   num_args /= 2;
@@ -1873,7 +1873,7 @@ operator_without_prefix:
    if (!PUSH_RESULT) goto done;
    deemon_modid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_modid < 0) goto err;
-   if (asm_gcall_extern((uint16_t)deemon_modid,id_cell,0)) goto err;
+   if (asm_gcall_extern((uint16_t)deemon_modid,id_Cell,0)) goto err;
   } break;
   {
    int32_t deemon_modid;
@@ -1882,7 +1882,7 @@ operator_without_prefix:
    if (!PUSH_RESULT) goto done;
    deemon_modid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(deemon_modid < 0) goto err;
-   if (asm_gcall_extern((uint16_t)deemon_modid,id_cell,1)) goto err;
+   if (asm_gcall_extern((uint16_t)deemon_modid,id_Cell,1)) goto err;
   } break;
   ACTION(AST_FACTION_TYPEOF)
    if (ast_genasm(self->a_action.a_act0,PUSH_RESULT)) goto err;

@@ -217,9 +217,9 @@ PRIVATE struct type_getset locatoriter_getsets[] = {
 };
 
 PRIVATE struct type_member locatoriter_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(LocatorIterator,li_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(LocatorIterator,li_iter),"->?DIterator"),
     TYPE_MEMBER_FIELD("__elem__",STRUCT_OBJECT,offsetof(LocatorIterator,li_elem)),
-    TYPE_MEMBER_FIELD_DOC("__pred__",STRUCT_OBJECT_OPT,offsetof(LocatorIterator,li_pred),"->?Dcallable"),
+    TYPE_MEMBER_FIELD_DOC("__pred__",STRUCT_OBJECT_OPT,offsetof(LocatorIterator,li_pred),"->?DCallable"),
     TYPE_MEMBER_END
 };
 
@@ -364,14 +364,14 @@ err_r:
 }
 
 PRIVATE struct type_member locator_members[] = {
-   TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Locator,l_seq),"->?Dsequence"),
+   TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Locator,l_seq),"->?DSequence"),
    TYPE_MEMBER_FIELD("__elem__",STRUCT_OBJECT,offsetof(Locator,l_elem)),
-   TYPE_MEMBER_FIELD_DOC("__pred__",STRUCT_OBJECT_OPT,offsetof(Locator,l_pred),"->?Dcallable"),
+   TYPE_MEMBER_FIELD_DOC("__pred__",STRUCT_OBJECT_OPT,offsetof(Locator,l_pred),"->?DCallable"),
    TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member locator_class_members[] = {
-   TYPE_MEMBER_CONST("iterator",&SeqLocatorIterator_Type),
+   TYPE_MEMBER_CONST("Iterator",&SeqLocatorIterator_Type),
    TYPE_MEMBER_END
 };
 
@@ -391,7 +391,7 @@ INTERN DeeTypeObject SeqLocator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqLocator",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,elem,pred?:?Dcallable)"),
+                            "(seq:?DSequence,elem,pred?:?DCallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

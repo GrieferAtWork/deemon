@@ -93,8 +93,8 @@ PRIVATE struct type_getset transiter_getsets[] = {
 };
 
 PRIVATE struct type_member transiter_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_iter),"->?Diterator"),
-    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_func),"->?Dcallable"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_iter),"->?DIterator"),
+    TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(TransformationIterator,ti_func),"->?DCallable"),
     TYPE_MEMBER_END
 };
 
@@ -270,13 +270,13 @@ err:
 }
 
 PRIVATE struct type_member trans_members[] = {
-   TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Transformation,t_seq),"->?Dsequence"),
-   TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(Transformation,t_fun),"->?Dcallable"),
+   TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Transformation,t_seq),"->?DSequence"),
+   TYPE_MEMBER_FIELD_DOC("__func__",STRUCT_OBJECT,offsetof(Transformation,t_fun),"->?DCallable"),
    TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member trans_class_members[] = {
-   TYPE_MEMBER_CONST("iterator",&SeqTransformationIterator_Type),
+   TYPE_MEMBER_CONST("Iterator",&SeqTransformationIterator_Type),
    TYPE_MEMBER_END
 };
 
@@ -422,7 +422,7 @@ err:
 INTERN DeeTypeObject SeqTransformation_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqTransformation",
-    /* .tp_doc      = */DOC("(seq:?Dsequence,fun:?Dcallable)"),
+    /* .tp_doc      = */DOC("(seq:?DSequence,fun:?DCallable)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

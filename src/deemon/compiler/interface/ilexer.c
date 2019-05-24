@@ -1405,7 +1405,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_token, NULL, NULL,
       DOC("->?#Token\n"
           "Returns a descriptor for the currently active token") },
-    { DeeString_STR(&str_file),
+    { "file",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
       DOC("->?X2?#File?N\n"
           "Returns the currently active file, or :none if no file is currently active. Same as #token.id") },
@@ -2191,7 +2191,7 @@ err:
 PRIVATE struct type_method lexer_methods[] = {
     { "include",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_include,
-      DOC("(stream:?Dfile,filename:?Dstring=!N)\n"
+      DOC("(stream:?DFile,filename:?Dstring=!N)\n"
           "(filename:?Dstring,filename:?Dstring=!N)\n"
           "Include a new file, pushing its contents onto the ${#include}-stack\n"
           "Note that when including a file with the current token being $0 (as indicate of EOF), "
@@ -2199,13 +2199,13 @@ PRIVATE struct type_method lexer_methods[] = {
           "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
           "will think that no input data is available, causing compiler error to be produced:\n"
           ">import Compiler from rt;\n"
-          ">import file from deemon;\n"
+          ">import File from deemon;\n"
           ">local com = Compiler();\n"
-          ">com.lexer.include(file.open(\"input.dee\"));\n"
+          ">com.lexer.include(File.open(\"input.dee\"));\n"
           ">com.lexer.next(); /* Don't forget to always load the first token */\n"
           ">local ast = com.parser.parse_allstmt();\n"
           ">print ast;\n"
-          "Hint: In order to tokenize source code from a string, use :file.reader") },
+          "Hint: In order to tokenize source code from a string, use :File.Reader") },
     { "nextraw",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&lexer_nextraw,
       DOC("->?Dint\n"
@@ -2954,7 +2954,7 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
           ":none if the current token doesn't have an associated keyword\n"
           "When setting this field, both the token's #Keyword, as well "
           "as its #id field are set to the given value") },
-    { DeeString_STR(&str_file),
+    { "file",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
       DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
           "Returns the currently active file, or :none if no file is currently active") },
@@ -4232,17 +4232,17 @@ PRIVATE struct type_getset file_getsets[] = {
     { "istext",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_istext, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this file is a text-file (as opposed "
+          "Returns :true if @this File is a text-file (as opposed "
           "to the result of macro expansion (s.a. #ismacro), or some other kind of file)") },
     { "ismacro",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_ismacro, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this file is a macro-file (as opposed "
+          "Returns :true if @this File is a macro-file (as opposed "
           "to a text-file (s.a. #istext), or some other kind of file)") },
     { "isexpanded",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isexpand, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this file is an expanded function-like macro-file, "
+          "Returns :true if @this File is an expanded function-like macro-file, "
           "or the result of injecting custom text into the token stream\n"
           "Note that functions and getsets related to #ismacro cannot be used "
           "when #isexpanded is :true, and that #ismacro will return :false when "
@@ -4250,12 +4250,12 @@ PRIVATE struct type_getset file_getsets[] = {
     { "origin",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_origin, NULL, NULL,
       DOC("->?X2?.?N\n"
-          "Returns the originating location of @this file, "
-          "or :none if @this file is the base-file") },
+          "Returns the originating location of @this File, "
+          "or :none if @this File is the base-file") },
     { "alltext",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_alltext, NULL, NULL,
       DOC("->?Dstring\n"
-          "Returns the currently loaded text data of @this file") },
+          "Returns the currently loaded text data of @this File") },
     { "nexttext",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_nexttext, NULL, NULL,
       DOC("->?Dstring\n"
@@ -4266,7 +4266,7 @@ PRIVATE struct type_getset file_getsets[] = {
           "Returns the current position (as a pair of integer `line,column', both of which "
           "are zero-based, meaning you'll probably have to add ${+1} to get line numbers as "
           "they would be used in a text editor)\n"
-          "In the event that @this file is a macro, the positions returned refer to the "
+          "In the event that @this File is a macro, the positions returned refer to the "
           "macro declaration position") },
     { DeeString_STR(&str_filename),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_filename,
@@ -4290,29 +4290,29 @@ PRIVATE struct type_getset file_getsets[] = {
     { "name",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_name, NULL, NULL,
       DOC("->?Dstring\n"
-          "Returns the name of @this file, that is the filename, or in the event of @this "
+          "Returns the name of @this File, that is the filename, or in the event of @this "
           "file being a macro, the name of that macro") },
     { "lineoffset",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_lineoffset,
      (int(DCALL *)(DeeObject *__restrict))&file_dellineoffset,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setlineoffset,
       DOC("->?Dint\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
           "Get, del(set to zero), or set the line-offset within @this "
           "text file, as can also be set by the #line directive") },
     { "stream",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_stream, NULL, NULL,
-      DOC("->?Dfile\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
-          "Returns the file stream from which data is read into @this file") },
+      DOC("->?DFile\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+          "Returns the file stream from which data is read into @this File") },
     { "guard",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getguard,
      (int(DCALL *)(DeeObject *__restrict))&file_delguard,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setguard,
       DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
           "Get, delete, or set a keyword that is checked for being defined "
-          "before allowing @this file to be included by ${#include} again\n"
+          "before allowing @this File to be included by ${#include} again\n"
           "In the event of the keyword having an associated macro that is also "
           "defined, the file will not be included, but simply be skipped.\n"
           "Setting :none is the same as deleting the guard, and :none is returned if no guard is set") },
@@ -4321,27 +4321,27 @@ PRIVATE struct type_getset file_getsets[] = {
      (int(DCALL *)(DeeObject *__restrict))&file_delnewguard,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setnewguard,
       DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
           "Get, delete, or set a keyword that will be set as #guard (if no guard has "
-          "already been set) once @this file is popped from the ${#include}-stack, and "
+          "already been set) once @this File is popped from the ${#include}-stack, and "
           "#disallowguard is :false") },
     { "includecount",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_includecount, NULL, NULL,
       DOC("->?Dint\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
-          "Return the number of times that @this file exists within the ${#include}-stack") },
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+          "Return the number of times that @this File exists within the ${#include}-stack") },
     { "readcount",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_readcount, NULL, NULL,
       DOC("->?Dint\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
           "Returns the number of bytes already read from the underlying source stream") },
     { "disallowguard",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getdisallowguard,
      (int(DCALL *)(DeeObject *__restrict))&file_deldisallowguard,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setdisallowguard,
       DOC("->?Dbool\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
-          "Get, del (set to false), or set @this file's disallow-guard property.\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+          "Get, del (set to false), or set @this File's disallow-guard property.\n"
           "When set to :false, #newguard will be applied as #guard when the file is "
           "popped, allowing the lexer to remember a potential file guard.\n"
           "This flag is set to :true automatically when an outer-most ${#ifndef}-block "
@@ -4352,8 +4352,8 @@ PRIVATE struct type_getset file_getsets[] = {
      (int(DCALL *)(DeeObject *__restrict))&file_delissystemheader,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setissystemheader,
       DOC("->?Dbool\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
-          "Get, del (set to false), or set if @this file is considered a system header\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+          "Get, del (set to false), or set if @this File is considered a system header\n"
           "When :true, all non-error warnings are suppressed\n"
           "This flag is usually set by a ${#pragma GCC system_header} directive") },
     { "nonblocking",
@@ -4361,7 +4361,7 @@ PRIVATE struct type_getset file_getsets[] = {
      (int(DCALL *)(DeeObject *__restrict))&file_delnonblocking,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setnonblocking,
       DOC("->?Dbool\n"
-          "@throw ValueError @this file isn't a text file (#istext is :false)\n"
+          "@throw ValueError @this File isn't a text file (#istext is :false)\n"
           "Get, del (set to false), or set if the underlying stream allows "
           "for non-blocking I/O, and should be performed in non-blocking mode "
           "when #nextchunk is called with $nonblocking set to :true and when "
@@ -4370,53 +4370,53 @@ PRIVATE struct type_getset file_getsets[] = {
     { "isfunctionmacro",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isfunctionmacro, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this file is a function-like macro-file\n"
+          "Returns :true if @this File is a function-like macro-file\n"
           "Note that in this case, #ismacro will also return :true") },
     { "iskeywordmacro",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_iskeywordmacro, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this file is a keyword-like macro-file\n"
+          "Returns :true if @this File is a keyword-like macro-file\n"
           "Note that in this case, #ismacro will also return :true") },
     { "definitionsfile",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsfile, NULL, NULL,
       DOC("->?X2?.?N\n"
-          "@throw ValueError @this file isn't a macro file (#ismacro is :false)\n"
+          "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
           "Returns the file that was used to define @this macro, or return :none if "
           "the macro was defined through other means, such as via the commandline") },
     { "definitionsposition",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsposition, NULL, NULL,
       DOC("->?X2?T2?Dint?Dint?N\n"
-          "@throw ValueError @this file isn't a macro file (#ismacro is :false)\n"
+          "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
           "Return the (line,column) pair of the definition location of @this macro file\n"
           "Macros not defined through files will return ${(0,0)}") },
     { "previousdefinition",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_previousdefinition, NULL, NULL,
       DOC("->?X2?.?N\n"
-          "@throw ValueError @this file isn't a macro file (#ismacro is :false)\n"
+          "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
           "Return the previous definition of pushed macro (as created by ${#pragma push_macro(\"foo\")})\n"
           "If the macro hasn't been pushed, or is the oldest variant, :none is returned") },
     { "pushcount",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_pushcount, NULL, NULL,
       DOC("->?Dint\n"
-          "@throw ValueError @this file isn't a macro file (#ismacro is :false)\n"
+          "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
           "The amount of times ${#pragma push_macro(\"foo\")} was repeated without actually "
           "providing a new definition of the macro. Used to handle recursive use of that pragma") },
     { "keywordexpandorigin",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_keywordexpandorigin, NULL, NULL,
       DOC("->?.\n"
-          "@throw ValueError @this file isn't a keyword-like macro file (#iskeywordmacro is :false)\n"
+          "@throw ValueError @this File isn't a keyword-like macro file (#iskeywordmacro is :false)\n"
           "The originating file of a keyword-like macro") },
     { "isvariadicmacro",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isvariadicmacro, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this file is a function-like macro-file (s.a. "
+          "Returns :true if @this File is a function-like macro-file (s.a. "
           "#isfunctionmacro) taking a variable number of arguments") },
     { "allowselfexpansion",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getallowselfexpansion,
      (int(DCALL *)(DeeObject *__restrict))&file_delallowselfexpansion,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setallowselfexpansion,
       DOC("->?Dbool\n"
-          "@throw ValueError @this file isn't a function-like macro file (#isfunctionmacro is :false)\n"
+          "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
           "Get, del (set to :false), or set if @this function-like macro is allowed to expand to itself\n"
           "This flag is set for newly defined macros when the $\"macro-recursion\" extension is enabled, "
           "and is cleared when that extension is disabled (default)\n"
@@ -4428,7 +4428,7 @@ PRIVATE struct type_getset file_getsets[] = {
      (int(DCALL *)(DeeObject *__restrict))&file_delkeepargumentspace,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setkeepargumentspace,
       DOC("->?Dbool\n"
-          "@throw ValueError @this file isn't a function-like macro file (#isfunctionmacro is :false)\n"
+          "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
           "Get, del (set to :false), or set if whitespace surrounding arguments passed "
           "to @this function-like macro should be kept, or trimmed.\n"
           "This flag is set for newly defined macros when the $\"macro-argument-whitespace\" extension "
@@ -4444,18 +4444,18 @@ PRIVATE struct type_getset file_getsets[] = {
       NULL,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&file_setfunctionmacrovariant,
       DOC("->?Dstring\n"
-          "@throw ValueError @this file isn't a function-like macro file (#isfunctionmacro is :false)\n"
+          "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
           "@throw ValueError Attempted to set a value not apart of ${(\"(\",\"[\",\"{\",\"<\")}\n"
           "Get or set the type of parenthesis used to start the argument list of @this function-like macro") },
     { "functionmacroargc",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroargc, NULL, NULL,
       DOC("->?Dint\n"
-          "@throw ValueError @this file isn't a function-like macro file (#isfunctionmacro is :false)\n"
+          "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
           "Return the number of (non-variadic) argument taken by @this function-like macro") },
     { "functionmacroexpansions",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroexpansions, NULL, NULL,
       DOC("->?Dint\n"
-          "@throw ValueError @this file isn't a function-like macro file (#isfunctionmacro is :false)\n"
+          "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
           "Return the number of times that @this function-like macro is being expanded\n"
           "Note that normally only function-like macros with #allowselfexpansion set to :true "
           "can ever be expanded more than once at the same time") },

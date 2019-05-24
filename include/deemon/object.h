@@ -1511,7 +1511,7 @@ struct Dee_membercache {
 #define OPERATOR_MOVEASSIGN   0x0005 /* `operator move := (object other) -> this'                         - `__moveassign__'  - `tp_move_assign'. */
 #define OPERATOR_STR          0x0006 /* `operator str() -> string'                                        - `__str__'         - `tp_str'. */
 #define OPERATOR_REPR         0x0007 /* `operator repr() -> string'                                       - `__repr__'        - `tp_repr'. */
-#define OPERATOR_BOOL         0x0008 /* `operator bool() -> bool'                                         - `__bool__'        - `tp_bool'. */
+#define OPERATOR_BOOL         0x0008 /* `operator bool(): bool'                                         - `__bool__'        - `tp_bool'. */
 #define OPERATOR_ITERNEXT     0x0009 /* `operator next() -> object'                                       - `__next__'        - `tp_iter_next'. */
 #define OPERATOR_CALL         0x000a /* `operator ()(args...) -> object'                                  - `__call__'        - `tp_call'. */
 #define OPERATOR_INT          0x000b /* `operator int() -> int'                                           - `__int__'         - `tp_int'. */
@@ -2074,7 +2074,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeObject_VThisCallf(DeeObject *__restrict
  * pure user-code varargs functions:
  * >> function foo(args...) {
  * >>     import object from deemon;
- * >>     print object.id(args);
+ * >>     print Object.id(args);
  * >> }
  * // `my_tuple' will be re-used as `args',
  * // without the need to creating a new tuple

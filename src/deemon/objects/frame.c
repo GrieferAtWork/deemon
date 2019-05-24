@@ -429,7 +429,7 @@ err_dead_frame(Frame *__restrict UNUSED(self)) {
 PRIVATE ATTR_COLD int DCALL
 err_readonly_frame(Frame *__restrict UNUSED(self)) {
  return DeeError_Throwf(&DeeError_ValueError,
-                        "The frame is readonly and cannot be modifed");
+                        "The Frame is readonly and cannot be modifed");
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -568,53 +568,53 @@ PRIVATE struct type_getset frame_getsets[] = {
     { "location",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
       DOC("->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
-          "Returns a sequence of tuples describing the frame location, "
+          "Returns a sequence of tuples describing the Frame location, "
           "the first of which is identical to (#file,#line,#col,#name)\n"
           "Rarely ever does the location consist of more than a single "
           "location tuple, however if a function call has been inlined "
           "as a call from another location, the compiler will generate DDI "
           "instrumentation to ensure consistent debug information for both "
           "the inlined function, as well as the call-site") },
-    { DeeString_STR(&str_file),
+    { "file",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
-          "The filename of this frame's source file, or :none when indeterminate") },
+          "The filename of this Frame's source file, or :none when indeterminate") },
     { "line",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
       DOC("->?X2?Dint?N\n"
-          "The line number within this frame's source file, or :none when indeterminate") },
+          "The line number within this Frame's source file, or :none when indeterminate") },
     { "col",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
       DOC("->?X2?Dint?N\n"
-          "The column offset within this frame's source file, or :none when indeterminate") },
+          "The column offset within this Frame's source file, or :none when indeterminate") },
     { "name",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
-          "The name of this frame's function, or :none when indeterminate") },
+          "The name of this Frame's function, or :none when indeterminate") },
     { "func",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
       DOC("->?X2?Dfunction?N\n"
-          "Returns the function that is referenced by @this frame, or :none if not available") },
+          "Returns the function that is referenced by @this Frame, or :none if not available") },
     { "__iswritable__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_iswritable, NULL, NULL,
       DOC("->?Dbool\n"
-          "Evaluates to :true if @this frame is writable") },
+          "Evaluates to :true if @this Frame is writable") },
     { "__code__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcode, NULL, NULL,
       DOC("->?Ert:Code\n"
-          "@throw ReferenceError The frame has continued execution, or was otherwise released\n"
+          "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
           "The code object that is being executed") },
     { "__pc__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getpc, NULL,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&frame_setpc,
       DOC("->?Dint\n"
-          "@throw ReferenceError The frame has continued execution, or was otherwise released\n"
-          "@throw ValueError Attampted to set PC within a read-only frame\n"
+          "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
+          "@throw ValueError Attampted to set PC within a read-only Frame\n"
           "The current program counter") },
     { "__sp__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getsp_obj, NULL, NULL,
       DOC("->?Dint\n"
-          "@throw ReferenceError The frame has continued execution, or was otherwise released\n"
+          "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
           "@throw ValueError The stack depth was undefined and could not be determined\n"
           "Get the current stack depth (same as ${#this.__stack__})\n"
           "To modify this value, use #__stack__ to append/pop objects") },
@@ -657,7 +657,7 @@ PRIVATE struct type_member frame_members[] = {
 
 PUBLIC DeeTypeObject DeeFrame_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_frame),
+    /* .tp_name     = */DeeString_STR(&str_Frame),
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

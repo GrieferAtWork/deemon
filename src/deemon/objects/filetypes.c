@@ -615,7 +615,7 @@ PRIVATE int DCALL
 reader_init(Reader *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  size_t begin = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId:reader",&self->r_owner,&begin,&end) ||
+ if (DeeArg_Unpack(argc,argv,"o|IdId:_FileReader",&self->r_owner,&begin,&end) ||
      DeeObject_GetBuf(self->r_owner,&self->r_buffer,Dee_BUFFER_FREADONLY))
      return -1;
  /* Truncate the end-pointer. */
@@ -647,7 +647,7 @@ PRIVATE struct type_getset reader_getsets[] = {
 PUBLIC DeeFileTypeObject DeeFileReader_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"reader",
+        /* .tp_name     = */"_FileReader",
         /* .tp_doc      = */DOC("()\n"
                                 "(buffer s,start=!0,end=!-1)\n"
                                 "Create a file stream for reading data of the given @s as a buffer, "
@@ -784,7 +784,7 @@ writer_ctor(Writer *__restrict self) {
 PRIVATE int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeStringObject *init_string;
- if (DeeArg_Unpack(argc,argv,"o:writer",&init_string) ||
+ if (DeeArg_Unpack(argc,argv,"o:_FileWriter",&init_string) ||
      DeeObject_AssertTypeExact((DeeObject *)init_string,&DeeString_Type))
      goto err;
  rwlock_init(&self->fo_lock);
@@ -1606,7 +1606,7 @@ err:
 PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"writer",
+        /* .tp_name     = */"_FileWriter",
         /* .tp_doc      = */NULL,
         /* .tp_flags    = */TP_FNORMAL,
         /* .tp_weakrefs = */0,

@@ -60,8 +60,8 @@
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
-#include <deemon/hashset.h>
-#include <deemon/instancemethod.h>
+#include <deemon/HashSet.h>
+#include <deemon/InstanceMethod.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
@@ -740,7 +740,7 @@ PRIVATE struct type_method fl_methods[] = {
 };
 
 PRIVATE struct type_member fl_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&FixedListIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&FixedListIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -749,7 +749,7 @@ INTERN DeeTypeObject FixedList_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"FixedList",
     /* .tp_doc      = */DOC("A mutable, but fixed-length sequence type, functioning as "
-                            "a sort-of hybrid between :deemon.list and :deemon.tuple\n"
+                            "a sort-of hybrid between :deemon.List and :deemon.tuple\n"
                             "\n"
                             "()\n"
                             "Construct a fixed list that is empty\n"

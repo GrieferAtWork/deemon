@@ -28,7 +28,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/int.h>
 #include <deemon/string.h>
 #include <deemon/compiler/ast.h>
@@ -1457,10 +1457,10 @@ parse_local_operand:
    if (IS_KWD_NOCASE_S(13,DeeString_STR(&str_this_function))) { result->io_class = OPERAND_CLASS_THIS_FUNCTION; goto done_yield_1; }
    if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_true))) { case KWD_true: result->io_class = OPERAND_CLASS_TRUE; goto done_yield_1; }
    if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_false))) { case KWD_false: result->io_class = OPERAND_CLASS_FALSE; goto done_yield_1; }
-   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_list))) { result->io_class = OPERAND_CLASS_LIST; goto done_yield_1; }
-   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_tuple))) { result->io_class = OPERAND_CLASS_TUPLE; goto done_yield_1; }
-   if (IS_KWD_NOCASE_S(7,DeeString_STR(&str_hashset))) { result->io_class = OPERAND_CLASS_HASHSET; goto done_yield_1; }
-   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_dict))) { result->io_class = OPERAND_CLASS_DICT; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_List))) { result->io_class = OPERAND_CLASS_LIST; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(5,DeeString_STR(&str_Tuple))) { result->io_class = OPERAND_CLASS_TUPLE; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(7,DeeString_STR(&str_HashSet))) { result->io_class = OPERAND_CLASS_HASHSET; goto done_yield_1; }
+   if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_Dict))) { result->io_class = OPERAND_CLASS_DICT; goto done_yield_1; }
    if (IS_KWD_NOCASE_S(3,DeeString_STR(&str_int))) { result->io_class = OPERAND_CLASS_INT; goto done_yield_1; }
    if (IS_KWD_NOCASE_S(4,DeeString_STR(&str_bool))) { result->io_class = OPERAND_CLASS_BOOL; goto done_yield_1; }
    if (IS_KWD_NOCASE("eq")) { result->io_class = OPERAND_CLASS_EQ; goto done_yield_1; }

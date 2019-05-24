@@ -30,7 +30,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/code.h>
 #include <deemon/module.h>
 #include <deemon/compiler/ast.h>
@@ -308,7 +308,7 @@ asm_gcall_expr(struct ast *__restrict func,
    argc = (uint8_t)DeeTuple_SIZE(args->a_constexpr);
    /* Special handling for small argument tuples to prevent this:
     * >> push global @foo
-    * >> pack tuple, #0
+    * >> pack Tuple, #0
     * >> call top, pop
     * That assembly is kind-of less efficient than this:
     * >> call global @foo, #0
@@ -492,7 +492,7 @@ got_small_method:
      /* Call to the current or surrounding function, when
       * that function is defined to be a this-call function.
       * In this case, pushing the raw function would result
-      * in an instancemethod object having to be created at
+      * in an InstanceMethod object having to be created at
       * runtime, which is something that we can prevent by
       * referencing the associated this-argument and simply
       * calling the function directly. */
@@ -1118,9 +1118,9 @@ invoke_cattr_funsym_argv:
       goto pop_unused;
      }
      symid = asm_newmodule(DeeModule_GetDeemon());
-     if unlikely(symid < 0) goto err; /* Call as an instancemethod */
-     if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err;
-     /* Fallthrough to invoke the instancemethod normally. */
+     if unlikely(symid < 0) goto err; /* Call as an InstanceMethod */
+     if (asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2)) goto err;
+     /* Fallthrough to invoke the InstanceMethod normally. */
     }
     for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
     if (asm_putddi(ddi_ast)) goto err; /* func, args... */
@@ -1207,9 +1207,9 @@ invoke_cattr_funsym_argv:
      goto pop_unused;
     }
     symid = asm_newmodule(DeeModule_GetDeemon());
-    if unlikely(symid < 0) goto err; /* Call as an instancemethod */
-    if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err;
-    /* Fallthrough to invoke the instancemethod normally. */
+    if unlikely(symid < 0) goto err; /* Call as an InstanceMethod */
+    if (asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2)) goto err;
+    /* Fallthrough to invoke the InstanceMethod normally. */
    }
 got_method:
    for (i = 0; i < argc; ++i) if (ast_genasm_one(argv[i],ASM_G_FPUSHRES)) goto err;
@@ -1228,7 +1228,7 @@ got_method:
    /* Call to the current or surrounding function, when
     * that function is defined to be a this-call function.
     * In this case, pushing the raw function would result
-    * in an instancemethod object having to be created at
+    * in an InstanceMethod object having to be created at
     * runtime, which is something that we can prevent by
     * referencing the associated this-argument and simply
     * calling the function directly. */

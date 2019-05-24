@@ -18,34 +18,35 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import * from deemon;
 
-@"({string...} fields)->type"
-@"Returns a tuple-like sequence type that where tuple indices can"
-@"also be accessed as attributes, using the given @fields as names"
-function nametuple(fields) {
-	import sequence, tuple, mapping from deemon;
+@@Returns a Tuple-like sequence type that where Tuple indices can
+@@also be accessed as attributes, using the given @fields as names
+function nameTuple(fields: {string...}): Type {
 	local num_fields = #fields;
-	class NameTuple: sequence {
-		private m_values;
+	class NameTuple: Sequence {
+		private member m_values: Tuple;
 		this(init) {
 			/* XXX: keyword arguments? */
-			if (init is mapping) {
-				m_values = tuple.unpack(num_fields,
-					for (local name: fields) init[name]);
+			if (init is Mapping) {
+				m_values = Tuple.unpack(
+					num_fields,
+						for (local name: fields)
+							init[name]);
 			} else {
-				m_values = tuple.unpack(num_fields,init);
+				m_values = Tuple.unpack(num_fields,init);
 			}
 		}
-		operator [] (index) -> m_values[index];
-		operator [:] (start,end) -> m_values[start:end];
-		operator . (name) -> m_values[fields.index(name)];
+		operator [] (index: int) -> m_values[index];
+		operator [:] (start: int, end: int) -> m_values[start:end];
+		operator . (name: string) -> m_values[fields.index(name)];
 		operator # () -> num_fields;
-		operator contains(ob) -> ob in m_values;
-		operator for() {
+		operator contains(ob): bool -> ob in m_values;
+		operator for(): Sequence {
 			for (local x: m_values)
 				yield x;
 		}
-		operator repr() -> repr m_values;
+		operator repr(): string -> repr m_values;
 	};
 	return NameTuple;
 }
@@ -53,7 +54,7 @@ function nametuple(fields) {
 
 #ifdef __MAIN__
 
-local point = nametuple({ "x", "y" });
+local point = nameTuple({ "x", "y" });
 
 local x = point({ 10, 20 });
 

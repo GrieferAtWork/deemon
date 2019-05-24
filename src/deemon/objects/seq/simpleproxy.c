@@ -528,22 +528,22 @@ PRIVATE struct type_seq classes_seq = {
 
 
 PRIVATE struct type_member ids_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqIdsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqIdsIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member types_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqTypesIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqTypesIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member classes_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqClassesIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqClassesIterator_Type),
     TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject SeqIds_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqIds",
-    /* .tp_doc      = */DOC("(seq?:?Dsequence)"),
+    /* .tp_doc      = */DOC("(seq?:?DSequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -587,7 +587,7 @@ INTERN DeeTypeObject SeqIds_Type = {
 INTERN DeeTypeObject SeqTypes_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqTypes",
-    /* .tp_doc      = */DOC("(seq?:?Dsequence)"),
+    /* .tp_doc      = */DOC("(seq?:?DSequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -631,7 +631,7 @@ INTERN DeeTypeObject SeqTypes_Type = {
 INTERN DeeTypeObject SeqClasses_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqClasses",
-    /* .tp_doc      = */DOC("(seq?:?Dsequence)"),
+    /* .tp_doc      = */DOC("(seq?:?DSequence)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -754,7 +754,7 @@ PRIVATE struct type_cmp iter_cmp = {
 };
 
 PRIVATE struct type_member iter_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqSimpleProxyIterator,si_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqSimpleProxyIterator,si_iter),"->?DIterator"),
     TYPE_MEMBER_END
 };
 

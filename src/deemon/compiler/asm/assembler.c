@@ -1887,7 +1887,7 @@ PRIVATE int DCALL fix_relint_r(DeeObject **__restrict pobj) {
   goto done;
  }
  if (DeeRoDict_Check(obj)) {
-  /* RO-dict objects can easily appear as part of jump-tables. */
+  /* RO-Dict objects can easily appear as part of jump-tables. */
   struct rodict_item *iter,*end;
   iter = ((DeeRoDictObject *)obj)->rd_elem;
   end = iter + ((DeeRoDictObject *)obj)->rd_mask+1;

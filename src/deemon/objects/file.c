@@ -1476,7 +1476,7 @@ file_class_default_stderr(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE DREF DeeObject *DCALL
 file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
- return get_files_object(&str_joined);
+ return get_files_object(&str_Joined);
 }
 
 PRIVATE struct type_getset file_class_getsets[] = {
@@ -1484,38 +1484,38 @@ PRIVATE struct type_getset file_class_getsets[] = {
      &file_class_get_stdin,
      &file_class_del_stdin,
      &file_class_set_stdin,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "The standard input stream") },
     { "stdout",
      &file_class_get_stdout,
      &file_class_del_stdout,
      &file_class_set_stdout,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "The standard output stream\n"
           "This is also what $print statements will write to when used "
           "without an explicit file target:\n"
           ">print \"foo\";\n"
           ">// Same as:\n"
-          ">import file from deemon;\n"
-          ">print file.stdout: \"foo\";\n"
+          ">import File from deemon;\n"
+          ">print File.stdout: \"foo\";\n"
           ) },
     { "stderr",
      &file_class_get_stderr,
      &file_class_del_stderr,
      &file_class_set_stderr,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "The standard error stream") },
     { "default_stdin",
      &file_class_default_stdin, NULL, NULL,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "The default standard input stream") },
     { "default_stdout",
      &file_class_default_stdout, NULL, NULL,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "The default standard output stream") },
     { "default_stderr",
      &file_class_default_stderr, NULL, NULL,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "The default standard error stream") },
     { "stddbg",
 #if DEE_STDDBG == DEE_STDERR
@@ -1524,13 +1524,13 @@ PRIVATE struct type_getset file_class_getsets[] = {
      &file_class_stddbg,
 #endif
       NULL, NULL,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "A standard stream that usually simply aliases the "
           "default #stderr, but should be used for debug-output\n"
           "Note that unlike the other streams, this one can't be redirected") },
-    { DeeString_STR(&str_joined),
+    { DeeString_STR(&str_Joined),
      &file_class_getjoined, NULL, NULL,
-      DOC("->?Dtype\n"
+      DOC("->?DType\n"
           "Deprecated alias for :files:joined") },
     { NULL }
 };
@@ -1554,11 +1554,11 @@ PRIVATE DEFINE_UINT32(file_SEEK_END,SEEK_END);
 
 
 PRIVATE struct type_member file_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",(DeeObject *)&DeeFile_Type),
-    TYPE_MEMBER_CONST("reader",(DeeObject *)&DeeFileReader_Type),
-    TYPE_MEMBER_CONST("writer",(DeeObject *)&DeeFileWriter_Type),
-    TYPE_MEMBER_CONST("buffer",(DeeObject *)&DeeFileBuffer_Type),
-    TYPE_MEMBER_CONST("system",(DeeObject *)&DeeSystemFile_Type),
+    TYPE_MEMBER_CONST("Iterator",(DeeObject *)&DeeFile_Type),
+    TYPE_MEMBER_CONST("Reader",(DeeObject *)&DeeFileReader_Type),
+    TYPE_MEMBER_CONST("Writer",(DeeObject *)&DeeFileWriter_Type),
+    TYPE_MEMBER_CONST("Buffer",(DeeObject *)&DeeFileBuffer_Type),
+    TYPE_MEMBER_CONST("System",(DeeObject *)&DeeSystemFile_Type),
     TYPE_MEMBER_CONST_DOC("io",(DeeObject *)&DeeFile_Type,
                           "Deprecated alias for backwards-compatible access to "
                           "std-streams that used to be located in ${file.io.stdxxx}\n"
@@ -1956,7 +1956,7 @@ err:
 PRIVATE struct type_method file_methods[] = {
     { "read",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_read,
-      DOC("(maxbytes=!-1,readall=!f)->?Dbytes\n"
+      DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
           "Read and return at most @maxbytes of data from the file stream. "
           "When @readall is :true, keep on reading data until the buffer is full, or the "
           "read-callback returns ${0}, rather than until it returns something other than the "
@@ -1964,7 +1964,7 @@ PRIVATE struct type_method file_methods[] = {
       TYPE_METHOD_FKWDS },
     { "readinto",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_readinto,
-      DOC("(dst:?Dbytes,readall=!f)->?Dint\n"
+      DOC("(dst:?DBytes,readall=!f)->?Dint\n"
           "Read data into the given buffer @dst and return the number of bytes read. "
           "When @readall is :true, keep on reading data until the buffer is full, or the "
           "read-callback returns ${0}, rather than until it returns something other than the "
@@ -1972,7 +1972,7 @@ PRIVATE struct type_method file_methods[] = {
       TYPE_METHOD_FKWDS },
     { "write",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_write,
-      DOC("(data:?Dbytes,writeall=!t)->?Dint\n"
+      DOC("(data:?DBytes,writeall=!t)->?Dint\n"
           "Write @data to the file stream and return the actual number of bytes written. "
           "When @writeall is :true, keep writing data until the write-callback "
           "returns $0 or until all data has been written, rather than invoke "
@@ -1980,19 +1980,19 @@ PRIVATE struct type_method file_methods[] = {
       TYPE_METHOD_FKWDS },
     { "pread",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_pread,
-      DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?Dbytes\n"
+      DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
           "Similar to #read, but read data from a given file-offset "
           "@pos, rather than from the current file position"),
       TYPE_METHOD_FKWDS },
     { "preadinto",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_preadinto,
-      DOC("(dst:?Dbytes,pos:?Dint,readall=!f)->?Dbytes\n"
+      DOC("(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
           "Similar to #readinto, but read data from a given file-offset "
           "@pos, rather than from the current file position"),
       TYPE_METHOD_FKWDS },
     { "pwrite",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_pwrite,
-      DOC("(data:?Dbytes,pos:?Dint,writeall=!t)->?Dint\n"
+      DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
           "Similar to #write, but write data to a given file-offset "
           "@pos, rather than at the current file position"),
       TYPE_METHOD_FKWDS },
@@ -2047,34 +2047,34 @@ PRIVATE struct type_method file_methods[] = {
     { "putc",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_putc,
       DOC("(byte:?Dint)->?Dbool\n"
-          "Append a single @byte at the end of @this file, returning :true on "
+          "Append a single @byte at the end of @this File, returning :true on "
           "success, or :false if the file has entered an end-of-file state") },
     { DeeString_STR(&str_size), &file_size,
       DOC("->?Dint\n"
           "Returns the size (in bytes) of the file stream") },
     { "readline",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_readline,
-      DOC("(keeplf:?Dbool)->?Dbytes\n"
-          "(maxbytes=!-1,keeplf=!t)->?Dbytes\n"
+      DOC("(keeplf:?Dbool)->?DBytes\n"
+          "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
           "Read one line from the file stream, but read at most @maxbytes bytes.\n"
-          "When @keeplf is :false, strip the trailing linefeed from the returned bytes object") },
+          "When @keeplf is :false, strip the trailing linefeed from the returned Bytes object") },
 
     /* Deprecated functions. */
     { "readall", &file_readall,
-      DOC("(maxbytes=!-1)->?Dbytes\n"
+      DOC("(maxbytes=!-1)->?DBytes\n"
           "Deprecated alias for ${this.read(maxbytes,true)}") },
     { "readat",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_pread,
-      DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?Dbytes\n"
+      DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
           "Deprecated alias for #pread"),
       TYPE_METHOD_FKWDS },
     { "writeat",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_pwrite,
-      DOC("(data:?Dbytes,pos:?Dint,writeall=!t)->?Dint\n"
+      DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
           "Deprecated alias for #pwrite"),
       TYPE_METHOD_FKWDS },
     { "readallat", &file_readallat,
-      DOC("(pos:?Dint,maxbytes=!-1)->?Dbytes\n"
+      DOC("(pos:?Dint,maxbytes=!-1)->?DBytes\n"
           "Deprecated alias for ${this.pread(pos,maxbytes,true)}") },
     { "setpos",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_seek,
@@ -2086,7 +2086,7 @@ PRIVATE struct type_method file_methods[] = {
           "Deprecated alias for #sync") },
     { "puts",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t,DeeObject **__restrict))&file_write,
-      DOC("(data:?Dbytes)->?Dint\n"
+      DOC("(data:?DBytes)->?Dint\n"
           "Deprecated alias for #write"),
       TYPE_METHOD_FKWDS },
 
@@ -2173,62 +2173,62 @@ PRIVATE struct type_math file_math = {
 PUBLIC DeeFileTypeObject DeeFile_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */DeeString_STR(&str_file),
+        /* .tp_name     = */DeeString_STR(&str_File),
         /* .tp_doc      = */DOC("The base class for all file types\n"
                                 "Types derived from this are able to implement a variety of "
                                 "new operators related to file operations, which are then "
                                 "used by the member functions and other operators provided "
                                 "by this type, or can also be used directly:\n"
                                 "%{table Operator prototype|Description\n"
-                                "${operator read(size: int) -\\> buffer}|Reads up to size bytes and returns a buffer (usually a :string) containing read data\n"
-                                "${operator write(buf: bytes) -\\> int}|Writes data from buf into the file and returns the number of bytes written\n"
-                                "${operator seek(off: int, whence: int) -\\> int}|Moves the file pointer relative to whence, "
-                                                                                 "which is one of #SEEK_SET, #SEEK_CUR or #SEEK_END. "
-                                                                                 "The return value of this operator is the new, "
-                                                                                 "absolute file position within the stream\n"
-                                "${operator sync() -\\> none}|Synchronize unwritten data with lower-level components\n"
-                                "${operator trunc(int newsize) -\\> none}|Truncate, or pre-allocate file memory to match a length of newsize\n"
-                                "${operator close() -\\> none}|Close the file. This operator is invoked during destruction, but "
-                                                              "can also be invoked before then using the #close member function\n"
-                                "${operator pread(size: int, pos: int) -\\> bytes}|Similar to ${operator read}, but data is read from the given absolute file position pos\n"
-                                "${operator pwrite(buf: bytes, pos: int) -\\> int}|Similar to ${operator write}, but data is written to the given absolute file position pos\n"
-                                "${operator getc() -\\> int}|Reads, and returns a single byte from the stream (Usually the same as ${operator read(1)}). "
+                                "${operator read(size: int): Bytes}|Reads up to size bytes and returns a buffer (usually a :string) containing read data\n"
+                                "${operator write(buf: bytes): int}|Writes data from buf into the file and returns the number of bytes written\n"
+                                "${operator seek(off: int, whence: int): int}|Moves the file pointer relative to whence, "
+                                                                             "which is one of #SEEK_SET, #SEEK_CUR or #SEEK_END. "
+                                                                             "The return value of this operator is the new, "
+                                                                             "absolute file position within the stream\n"
+                                "${operator sync(): none}|Synchronize unwritten data with lower-level components\n"
+                                "${operator trunc(int newsize): none}|Truncate, or pre-allocate file memory to match a length of newsize\n"
+                                "${operator close(): none}|Close the file. This operator is invoked during destruction, but "
+                                                          "can also be invoked before then using the #close member function\n"
+                                "${operator pread(size: int, pos: int): bytes}|Similar to ${operator read}, but data is read from the given absolute file position pos\n"
+                                "${operator pwrite(buf: bytes, pos: int): int}|Similar to ${operator write}, but data is written to the given absolute file position pos\n"
+                                "${operator getc(): int}|Reads, and returns a single byte from the stream (Usually the same as ${operator read(1)}). "
                                                             "If EOF has been reached, a negative value is returned\n"
-                                "${operator ungetc(ch: int) -\\> bool}|Returns a previously read character to the stream, allowing it to be read once again. "
-                                                                      "This functionality isn't provided by many file types, but #buffer supports it, thereby "
-                                                                      "allowing you to wrap practically any file into a buffer to enable support for ungetc, "
-                                                                      "which is a dependency for #{readline}. "
-                                                                      "If the character could be returned, :true is returned. Otherwise :false is\n"
-                                "${operator putc(ch: int) -\\> bool}|Write a single byte to the stream (Usually the same as ${operator write((uint8_t from ctypes)ch)}). "
-                                                                    "Returns :true if the byte was successfully written, or :false if EOF was reached}\n"
+                                "${operator ungetc(ch: int): bool}|Returns a previously read character to the stream, allowing it to be read once again. "
+                                                                  "This functionality isn't provided by many file types, but #buffer supports it, thereby "
+                                                                  "allowing you to wrap practically any file into a buffer to enable support for ungetc, "
+                                                                  "which is a dependency for #{readline}. "
+                                                                  "If the character could be returned, :true is returned. Otherwise :false is\n"
+                                "${operator putc(ch: int): bool}|Write a single byte to the stream (Usually the same as ${operator write((uint8_t from ctypes)ch)}). "
+                                                                "Returns :true if the byte was successfully written, or :false if EOF was reached}\n"
                                 "\n"
                                 "()\n"
-                                "Default-construct the file base-class\n"
+                                "Default-construct the File base-class\n"
                                 "\n"
                                 "iter->?.\n"
                                 "Returns an iterator that allows for line-wise processing of "
                                 "file data, making use of the the #readline member function\n"
                                 "The returned lines have their trailing line-feeds stripped\n"
-                                "Note that because a file cannot be iterated multiple times "
+                                "Note that because a File cannot be iterated multiple times "
                                 "without additional work being done, as well as the fact that "
-                                "this type of iteration isn't thread-save, :file isn't derived "
-                                "from :sequence, meaning that abstract sequence functions are "
+                                "this type of iteration isn't thread-save, :File isn't derived "
+                                "from :Sequence, meaning that abstract Sequence functions are "
                                 "not implicitly provided, but would have to be invoked like "
-                                "${sequence.find(file.open(\"foo.txt\"),\"find this line\")}\n"
-                                "Note that because isn't derived from :sequence, the returned "
-                                "iterator also isn't required to be derived from :iterator\n"
+                                "${Sequence.find(File.open(\"foo.txt\"),\"find this line\")}\n"
+                                "Note that because isn't derived from :Sequence, the returned "
+                                "iterator also isn't required to be derived from :Iterator\n"
                                 "\n"
-                                "next->?Dbytes\n"
+                                "next->?DBytes\n"
                                 "Alias for #readline, allowing for line-wise reading of lines\n"
                                 "Note that the trailing linefeed is always included in this\n"
                                 "\n"
                                 "<<(ob)->\n"
-                                "@return Always re-returns @this file\n"
+                                "@return Always re-returns @this File\n"
                                 "Same as ${print this: ob,;}\n"
                                 "\n"
-                                ">>(buf:?Dbytes)->\n"
+                                ">>(buf:?DBytes)->\n"
                                 "@throw FSError Failed to fill the entirety of @buf\n"
-                                "@return Always re-returns @this file\n"
+                                "@return Always re-returns @this File\n"
                                 "Same as ${this.readinto(buf,true)}\n"
                                 "\n"
                                 "leave->\n"

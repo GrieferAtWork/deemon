@@ -145,7 +145,7 @@ PRIVATE int DCALL
 super_init(Super *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *ob; DeeTypeObject *tp = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:super",&ob,&tp))
+ if (DeeArg_Unpack(argc,argv,"o|o:Super",&ob,&tp))
      return -1;
  /* Special handling when the base-object is another super-object. */
  if (DeeSuper_Check(ob)) {
@@ -624,7 +624,7 @@ super_selfof(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method super_class_methods[] = {
     { "typeof", &super_typeof,
-      DOC("(ob:?.)->?Dtype\n"
+      DOC("(ob:?.)->?DType\n"
           "@throw TypeError @ob is not a super-object\n"
           "@return the type of a given super-view @ob") },
     { "selfof", &super_selfof,
@@ -637,25 +637,25 @@ PRIVATE struct type_method super_class_methods[] = {
 
 PUBLIC DeeTypeObject DeeSuper_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_super),
+    /* .tp_name     = */DeeString_STR(&str_Super),
     /* .tp_doc      = */DOC("Emulate access to an instance of a derived class in "
                             "a way that bypasses overwritten operators/methods\n"
                             "\n"
                             "()\n"
-                            "Same as ${super(none,type none)}\n"
+                            "Same as ${Super(none,type none)}\n"
                             "\n"
                             "(ob:?.)\n"
-                            "Same as ${super(super.selfof(ob),super.typeof(ob).__base__}\n"
+                            "Same as ${Super(Super.selfof(ob),Super.typeof(ob).__base__}\n"
                             "@throw TypeError The class of @ob has no base-class\n"
                             "\n"
                             "(ob)\n"
                             "@throw TypeError The type of @ob has no base-class\n"
-                            "Same as ${super(ob,type(ob).__base__}\n"
+                            "Same as ${Super(ob,type(ob).__base__}\n"
                             "\n"
-                            "(ob,tp:?Dtype)\n"
+                            "(ob,tp:?DType)\n"
                             "@throw TypeError The given object @ob is not an instance of @tp\n"
                             "Creates a new super-view for @ob as an instance of @tp\n"
-                            "When @ob is another super-view, ${super.selfof(ob)} is used instead\n"
+                            "When @ob is another super-view, ${Super.selfof(ob)} is used instead\n"
                             "\n"
                             ":=->\n"
                             "move:=->\n"

@@ -37,7 +37,7 @@
 #include <deemon/super.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/arg.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/assembler.h>

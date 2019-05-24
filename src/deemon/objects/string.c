@@ -966,7 +966,7 @@ PRIVATE int DCALL
 stringiter_init(StringIterator *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  String *str;
- if (DeeArg_Unpack(argc,argv,"o:string.iterator",&str))
+ if (DeeArg_Unpack(argc,argv,"o:string.Iterator",&str))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)str,&DeeString_Type))
      goto err;
@@ -1319,7 +1319,7 @@ PRIVATE struct type_seq string_seq = {
 };
 
 PRIVATE struct type_member string_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1487,7 +1487,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             "> return #this != 0;\n"
                             ">}\n"
                             "\n"
-                            "+(other:?X3?.?Dbytes?O)->\n"
+                            "+(other:?X3?.?DBytes?O)->\n"
                             "Return a new string that is the concatenation of @this and ${str other}\n"
                             ">operator + (other) {\n"
                             "> return \"{}{}\".format({ this, other });\n"
@@ -1497,7 +1497,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             "@throw IntegerOverflow @times is negative, or too large\n"
                             "Returns @this string repeated @times number of times\n"
                             "\n"
-                            "%(args:?Dtuple)->\n"
+                            "%(args:?DTuple)->\n"
                             "%(arg:?O)->\n"
                             "Using @this string as a printf-style format string, use a tuple found "
                             "in @args to format it into a new string, which is then returned\n"
@@ -1506,12 +1506,12 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             ">local x = 42;\n"
                             ">print \"x = %d\" % x; /* \"x = 42\" */\n"
                             "\n"
-                            "<(other:?X2?.?Dbytes)->\n"
-                            "<=(other:?X2?.?Dbytes)->\n"
-                            "==(other:?X2?.?Dbytes)->\n"
-                            "!=(other:?X2?.?Dbytes)->\n"
-                            ">(other:?X2?.?Dbytes)->\n"
-                            ">=(other:?X2?.?Dbytes)->\n"
+                            "<(other:?X2?.?DBytes)->\n"
+                            "<=(other:?X2?.?DBytes)->\n"
+                            "==(other:?X2?.?DBytes)->\n"
+                            "!=(other:?X2?.?DBytes)->\n"
+                            ">(other:?X2?.?DBytes)->\n"
+                            ">=(other:?X2?.?DBytes)->\n"
                             "Perform a lexicographical comparison between @this string and @other, and return the result\n"
                             "\n"
                             "iter->\n"
@@ -1520,7 +1520,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
                             "#->\n"
                             "Returns the length of @this string in characters\n"
                             "\n"
-                            "contains(substr:?X2?.?Dbytes)->\n"
+                            "contains(substr:?X2?.?DBytes)->\n"
                             "Returns :true if @substr is apart of @this string\n"
                             ">print \"foo\" in \"bar\";    /* false */\n"
                             ">print \"foo\" in \"foobar\"; /* true */\n"

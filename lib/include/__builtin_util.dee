@@ -19,7 +19,7 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","import","sequence","deemon","operator","final","local")
+#pragma push_macro(undef,"from","import","Sequence","deemon","operator","final","local")
 from "util" import
 	__builtin_avg = "avg",
 	__builtin_all = "all",
@@ -41,26 +41,26 @@ from ".m_util" import
 	__builtin_ord = "ord",
 	__builtin_swap = "swap"
 ;
-final local __builtin_range = (sequence from deemon).operator . ("range");
-final local __builtin_id = (object from deemon).operator . ("id");
-final local __builtin_seq_find = (sequence from deemon).operator . ("find");
-final local __builtin_seq_rfind = (sequence from deemon).operator . ("rfind");
-final local __builtin_seq_index = (sequence from deemon).operator . ("index");
-final local __builtin_seq_rindex = (sequence from deemon).operator . ("rindex");
-final local __builtin_seq_contains = (sequence from deemon).operator . ("contains");
-final local __builtin_seq_count = (sequence from deemon).operator . ("count");
-final local __builtin_seq_locate = (sequence from deemon).operator . ("locate");
-final local __builtin_seq_rlocate = (sequence from deemon).operator . ("rlocate");
-final local __builtin_seq_locate_all = (sequence from deemon).operator . ("locateall");
-final local __builtin_seq_transform = (sequence from deemon).operator . ("transform");
-final local __builtin_seq_empty = (sequence from deemon).operator . ("empty");
-final local __builtin_seq_non_empty = (sequence from deemon).operator . ("nonempty");
-final local __builtin_seq_front = (sequence from deemon).operator . ("front");
-final local __builtin_seq_back = (sequence from deemon).operator . ("back");
-final local __builtin_seq_get = (sequence from deemon).operator . ("get");
-final local __builtin_seq_at = (sequence from deemon).operator . ("at");
-final local __builtin_seq_reversed = (sequence from deemon).operator . ("reversed");
-final local __builtin_seq_sorted = (sequence from deemon).operator . ("sorted");
-final local __builtin_seq_segments = (sequence from deemon).operator . ("segments");
-#pragma pop_macro("from","util","import","sequence","deemon","operator","final","local")
+final local __builtin_range = (Sequence from deemon).operator . ("range");
+final local __builtin_id = (Object from deemon).operator . ("id");
+final local __builtin_seq_find = (Sequence from deemon).operator . ("find");
+final local __builtin_seq_rfind = (Sequence from deemon).operator . ("rfind");
+final local __builtin_seq_index = (Sequence from deemon).operator . ("index");
+final local __builtin_seq_rindex = (Sequence from deemon).operator . ("rindex");
+final local __builtin_seq_contains = (Sequence from deemon).operator . ("contains");
+final local __builtin_seq_count = (Sequence from deemon).operator . ("count");
+final local __builtin_seq_locate = (Sequence from deemon).operator . ("locate");
+final local __builtin_seq_rlocate = (Sequence from deemon).operator . ("rlocate");
+final local __builtin_seq_locate_all = (Sequence from deemon).operator . ("locateall");
+final local __builtin_seq_transform = (Sequence from deemon).operator . ("transform");
+final local __builtin_seq_empty = (Sequence from deemon).operator . ("empty");
+final local __builtin_seq_non_empty = (Sequence from deemon).operator . ("nonempty");
+final local __builtin_seq_front = (Sequence from deemon).operator . ("front");
+final local __builtin_seq_back = (Sequence from deemon).operator . ("back");
+final local __builtin_seq_get = (Sequence from deemon).operator . ("get");
+final local __builtin_seq_at = (Sequence from deemon).operator . ("at");
+final local __builtin_seq_reversed = (Sequence from deemon).operator . ("reversed");
+final local __builtin_seq_sorted = (Sequence from deemon).operator . ("sorted");
+final local __builtin_seq_segments = (Sequence from deemon).operator . ("segments");
+#pragma pop_macro("from","util","import","Sequence","deemon","operator","final","local")
 

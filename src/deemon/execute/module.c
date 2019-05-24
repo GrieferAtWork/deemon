@@ -846,7 +846,7 @@ DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self,
 PRIVATE void DCALL
 err_module_not_loaded(DeeModuleObject *__restrict self) {
  DeeError_Throwf(&DeeError_RuntimeError,
-                 "Cannot initialized module `%k' that hasn't been loaded yet",
+                 "Cannot initialized Module `%k' that hasn't been loaded yet",
                  self->mo_name);
 }
 
@@ -1298,7 +1298,7 @@ module_get_imports(DeeModuleObject *__restrict self) {
 PRIVATE struct type_member module_members[] = {
     TYPE_MEMBER_FIELD_DOC("__name__",STRUCT_OBJECT,offsetof(DeeModuleObject,mo_name),
                           "->?Dstring\n"
-                          "The name of @this module"),
+                          "The name of @this Module"),
     TYPE_MEMBER_END
 };
 
@@ -1311,7 +1311,7 @@ PRIVATE struct type_getset module_getsets[] = {
     { "__exports__", &DeeModule_ViewExports, NULL, NULL,
       DOC("->?S?T2?Dstring?O\n"
           "Returns a modifyable mapping-like object containing @this "
-          "module's global variables accessible by name (and enumerable)\n"
+          "Module's global variables accessible by name (and enumerable)\n"
           "Note that only existing exports can be modified, however no new symbols can be added:\n"
           ">import util;\n"
           ">print util.min;                // function\n"
@@ -1321,7 +1321,7 @@ PRIVATE struct type_getset module_getsets[] = {
           ">util.__exports__[\"min\"] = 42;\n"
           ">print util.min;                // 42") },
     { "__imports__", (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_imports, NULL, NULL,
-      DOC("->?S?Dmodule\n"
+      DOC("->?S?DModule\n"
           "Returns an immutable sequence of all other modules imported by this one") },
     { "__globals__", &DeeModule_ViewGlobals, NULL, NULL,
       DOC("->?S?O\n"
@@ -1331,22 +1331,22 @@ PRIVATE struct type_getset module_getsets[] = {
     { "__code__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_code, NULL, NULL,
       DOC("->?Ert:Code\n"
-          "@throw ValueError The module hasn't been fully loaded\n"
-          "Returns the code object for the module's root initializer") },
+          "@throw ValueError The Module hasn't been fully loaded\n"
+          "Returns the code object for the Module's root initializer") },
     { "__path__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_path, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
-          "@throw ValueError The module hasn't been fully loaded\n"
-          "Returns the absolute filesystem path of the module's source file, or :none "
-          "if the module wasn't created from a file accessible via the filesystem") },
+          "@throw ValueError The Module hasn't been fully loaded\n"
+          "Returns the absolute filesystem path of the Module's source file, or :none "
+          "if the Module wasn't created from a file accessible via the filesystem") },
     { "__isglobal__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_isglobal, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this module is global (i.e. can be accessed as ${import(this.__name__)})") },
+          "Returns :true if @this Module is global (i.e. can be accessed as ${import(this.__name__)})") },
     { "__haspath__",
      (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_haspath, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this module has a path found within the filesystem") },
+          "Returns :true if @this Module has a path found within the filesystem") },
     { NULL }
 };
 
@@ -1362,11 +1362,11 @@ module_class_setpath(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_getset module_class_getsets[] = {
     { "path", &module_class_getpath, NULL, &module_class_setpath,
-      DOC("->?Dlist\n"
+      DOC("->?DList\n"
           "A list of strings describing the search path for system libraries") },
     /* Deprecated aliases to emulate the old `dexmodule' builtin type. */
     { "search_path", &module_class_getpath, NULL, &module_class_setpath,
-      DOC("->?Dlist\n"
+      DOC("->?DList\n"
           "Deprecated alias for #path") },
     { NULL }
 };
@@ -1388,7 +1388,7 @@ module_class_open(DeeObject *__restrict UNUSED(self),
 PRIVATE struct type_method module_class_methods[] = {
     /* Deprecated aliases to emulate the old `dexmodule' builtin type. */
     { "open", &module_class_open,
-      DOC("(name:?Dstring)->?Dmodule\n"
+      DOC("(name:?Dstring)->?DModule\n"
           "Deprecated alias for :import") },
     { NULL }
 };
@@ -1563,7 +1563,7 @@ PRIVATE struct type_cmp module_cmp = {
 
 PUBLIC DeeTypeObject DeeModule_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_module),
+    /* .tp_name     = */DeeString_STR(&str_Module),
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(DeeModuleObject),

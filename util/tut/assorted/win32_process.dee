@@ -18,13 +18,13 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import pipe, process from ipc;
-import file from deemon;
+import Pipe, process from ipc;
+import File from deemon;
 
 /* Create pipes for stdin, stdout and stderr */
-ir,iw = pipe.new()...;
-or,ow = pipe.new()...;
-er,ew = pipe.new()...;
+ir,iw = Pipe.new()...;
+or,ow = Pipe.new()...;
+er,ew = Pipe.new()...;
 
 /* Create a process for 'cmd' */
 p = process("cmd");
@@ -58,9 +58,9 @@ print p.terminated();
  *       output is read as soon as it arrives.
  *       >> You proove yourself that it works by
  *          commenting out the 'iw.close()' */
-for (l: file.buffer(or))
+for (l: File.Buffer(or))
 	print ">>",l.rstrip().center(100);
-for (l: file.buffer(er))
+for (l: File.Buffer(er))
 	print "ERR>>",l.rstrip();
 
 /* Finally join the process (though it should already have terminated) */

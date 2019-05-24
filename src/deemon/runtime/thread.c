@@ -1075,7 +1075,7 @@ PUBLIC void DCALL DeeThread_Init(void) {
  if unlikely(thread_self_tls == TLS_OUT_OF_INDEXES) {
 #ifndef CONFIG_NO_STDIO
   fprintf(stderr,"Failed to initialize deemon thread subsystem: "
-                 "Couldn't allocate thread.self tls: %u\n",
+                 "Couldn't allocate Thread.current Tls: %u\n",
                 (unsigned int)GetLastError());
 #endif
   abort();
@@ -1138,7 +1138,7 @@ PUBLIC void DCALL DeeThread_Init(void) {
  if unlikely(error) {
 #ifndef CONFIG_NO_STDIO
   fprintf(stderr,"Failed to initialize deemon thread subsystem: "
-                 "Couldn't allocate thread.self tls: %d - %s\n",
+                 "Couldn't allocate Thread.current Tls: %d - %s\n",
                  error,strerror(error));
 #endif
   abort();
@@ -2416,7 +2416,7 @@ PRIVATE DREF DeeObject *DCALL
 thread_str(DeeThreadObject *__restrict self) {
  if (self->t_threadname)
      return_reference_((DeeObject *)self->t_threadname);
- return_reference_(&str_thread);
+ return_reference_(&str_Thread);
 }
 PRIVATE DREF DeeObject *DCALL
 thread_repr(DeeThreadObject *__restrict self) {
@@ -2461,7 +2461,7 @@ PRIVATE int DCALL
 thread_ctor(DeeThreadObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  if unlikely(argc > 3) {
-  err_invalid_argc(DeeString_STR(&str_thread),argc,0,3);
+  err_invalid_argc(DeeString_STR(&str_Thread),argc,0,3);
   goto err;
  }
  self->t_threadname = NULL;
@@ -2803,7 +2803,7 @@ PRIVATE struct type_method thread_methods[] = {
     { "interrupt", &thread_interrupt,
       DOC("->?Dbool\n"
           "(signal)->?Dbool\n"
-          "(async_func:?Dcallable,async_args:?Dtuple)->?Dbool\n"
+          "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
           "@return true: The interrupt was delivered\n"
           "@return false: The :thread has already terminated and can no longer process interrupts\n"
           "Throws the given @signal or an instance of :Interrupt within @this thread, "
@@ -2849,11 +2849,11 @@ PRIVATE struct type_method thread_methods[] = {
       DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
           "Old, deprecated name for #timedjoin") },
     { "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crash_error,
-      DOC("->?Dtraceback\n"
+      DOC("->?DTraceback\n"
           "->?N\n"
           "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
     { "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&thread_crash_traceback,
-      DOC("->?Dtraceback\n"
+      DOC("->?DTraceback\n"
           "->?N\n"
           "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
     { NULL }
@@ -3269,7 +3269,7 @@ PRIVATE struct type_getset thread_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
      (int(DCALL *)(DeeObject *__restrict))&thread_callback_del,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callback_set,
-      DOC("->?Dcallable\n"
+      DOC("->?DCallable\n"
           "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
                                 "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
                                 "member function, write-access to this field is denied in sub-classes of :thread and only granted "
@@ -3283,7 +3283,7 @@ PRIVATE struct type_getset thread_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callargs_get,
      (int(DCALL *)(DeeObject *__restrict))&thread_callargs_del,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&thread_callargs_set,
-      DOC("->?Dtuple\n"
+      DOC("->?DTuple\n"
           "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
                                 "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
                                 "member function, write-access to this field is denied in sub-classes of :thread and only granted "
@@ -3300,7 +3300,7 @@ PRIVATE struct type_getset thread_getsets[] = {
           "than all the errors that caused the thread to crash being encapsulated and propagated") },
     { "crashinfo",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
-      DOC("->?S?T2?O?Dtraceback\n"
+      DOC("->?S?T2?O?DTraceback\n"
           "@throw ValueEror @this thread hasn't terminated yet\n"
           "Returns a sequence of 2-element tuples describing the errors that were "
           "active when the thread crashed (s.a. #hascrashed), or an empty sequence when "
@@ -3311,9 +3311,9 @@ PRIVATE struct type_getset thread_getsets[] = {
           "functions that did something similar prior to deemon 200\n"
           "When iterated, elements of the returned sequence identify errors that "
           "caused the crash from most to least recently thrown") },
-    { DeeString_STR(&str_traceback),
+    { "traceback",
      &DeeThread_Trace, NULL, NULL,
-      DOC("->?Dtraceback\n"
+      DOC("->?DTraceback\n"
           "Generate a traceback for the thread's current execution position") },
     { "id",
      &thread_id, NULL, NULL,
@@ -3443,13 +3443,13 @@ PRIVATE struct type_gc thread_gc = {
 
 PUBLIC DeeTypeObject DeeThread_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_thread),
+    /* .tp_name     = */DeeString_STR(&str_Thread),
     /* .tp_doc      = */DOC("The core object type for enabling parallel computation\n"
                             "\n"
                             "()\n"
                             "(name:?Dstring)\n"
-                            "(main:?Dcallable,args:?Dtuple=!N)\n"
-                            "(name:?Dstring,main:?Dcallable,args:?Dtuple=!N)\n"
+                            "(main:?DCallable,args:?DTuple=!N)\n"
+                            "(name:?Dstring,main:?DCallable,args:?DTuple=!N)\n"
                             "Construct a new thread that that has yet to be started.\n"
                             "When no @main callable has been provided, invoke a $run "
                             "member which must be implemented by a sub-class:\n"

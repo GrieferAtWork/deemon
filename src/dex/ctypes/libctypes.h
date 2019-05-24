@@ -853,7 +853,7 @@ DeeStructType_FromSequence(DeeObject *name,
  * >> operator . (string name) -> int.vfunc(default_cc).ptr;
  * >>
  * >> // Check export presence.
- * >> operator contains (string name) -> bool;
+ * >> operator contains (string name): bool;
  * >>
  * >> // Optionally (if not supported, throw an UnsupportedAPI error):
  * >> //    enumerate exported symbols.

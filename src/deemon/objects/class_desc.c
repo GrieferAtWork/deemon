@@ -37,7 +37,7 @@
 #include <deemon/thread.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
-#include <deemon/instancemethod.h>
+#include <deemon/InstanceMethod.h>
 #include <deemon/property.h>
 #include <deemon/attribute.h>
 
@@ -382,7 +382,7 @@ PRIVATE struct type_seq cot_seq = {
 };
 
 PRIVATE struct type_member cot_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ClassOperatorTableIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ClassOperatorTableIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -661,7 +661,7 @@ PRIVATE struct type_getset cati_getsets[] = {
 };
 
 PRIVATE struct type_member cat_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ClassAttributeTableIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ClassAttributeTableIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -786,7 +786,7 @@ PRIVATE struct type_getset ca_getsets[] = {
           "This is done so-as to allow instance attributes such as member functions to be stored "
           "within the class itself, rather than having to be copied into each and every instance "
           "of the class\n"
-          "S.a. :type.__ctable__ and :type.__itable__") },
+          "S.a. :Type.__ctable__ and :Type.__itable__") },
     { "isprivate", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isprivate, NULL, NULL,
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class attribute was declared as $private") },
@@ -803,7 +803,7 @@ PRIVATE struct type_getset ca_getsets[] = {
       DOC("->?Dbool\n"
           "Evaluates to :true if @this class attribute referrs to a method\n"
           "When set, reading from the attribute will return a an object "
-          "${instancemethod(obj.MEMBER_TABLE[this.addr],obj)}\n"
+          "${InstanceMethod(obj.MEMBER_TABLE[this.addr],obj)}\n"
           "Note however that this is rarely ever required to be done, as method attributes "
           "are usually called directly, in which case a callattr instruction can silently "
           "prepend the this-argument before the passed argument list") },
@@ -2214,7 +2214,7 @@ PRIVATE struct type_nsi ot_nsi = {
 PRIVATE struct type_seq ot_seq = {
     /* .tp_iter_self = */NULL, /* WARNING: If you assign a dedicated iterator here, `librt' will
                                 * not longer be able to reverse-engineer `DeeGenericIterator_Type', as in
-                                * order to do that, it does `DeeObject_GetAttr(&ObjectTable_Type,"iterator")'
+                                * order to do that, it does `DeeObject_GetAttr(&ObjectTable_Type,"Iterator")'
                                 */
     /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ot_size,
     /* .tp_contains  = */NULL,
@@ -2264,7 +2264,7 @@ ot_isitable(ObjectTable *__restrict self) {
 PRIVATE struct type_getset ot_getsets[] = {
     { DeeString_STR(&str___type__),
      (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_gettype, NULL, NULL,
-      DOC("->?Dtype\nThe type describing @this object table") },
+      DOC("->?DType\nThe type describing @this object table") },
     { "__class__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_getclass, NULL, NULL,
       DOC("->?Ert:ClassDescriptor\nSame as ${this.__type__.__class__}") },
     { "__isctable__", (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_isctable, NULL, NULL,
@@ -2329,7 +2329,7 @@ err:
 INTERN DeeTypeObject ObjectTable_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_ObjectTable",
-    /* .tp_doc      = */DOC("(ob:?X2?O?Dtype)\n"
+    /* .tp_doc      = */DOC("(ob:?X2?O?DType)\n"
                             "@throw TypeError The given @ob isn't a class or class instance\n"
                             "Load the object member table of a class, or class instance"),
     /* .tp_flags    = */TP_FFINAL,
@@ -2599,7 +2599,7 @@ PRIVATE struct type_getset instancemember_getsets[] = {
           "The documentation string associated with @this instance member") },
     { DeeString_STR(&str___module__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_module, NULL, NULL,
-      DOC("->?X2?Dmodule?N\n"
+      DOC("->?X2?DModule?N\n"
           "Returns the module that is defining @this instance "
           "member, or :none if that module could not be defined") },
     { NULL }

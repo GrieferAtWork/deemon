@@ -194,7 +194,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
  * NOTE: The first time a buffered TTY device is written to, this
  *       function is added to the `atexit()' chain unless deemon
  *       was built with the `CONFIG_NO_STDLIB' option enabled.
- * NOTE: This function can be called as `(file from deemon).buffer.sync()' */
+ * NOTE: This function can be called as `(File from deemon).buffer.sync()' */
 DFUNDEF int DCALL DeeFileBuffer_SyncTTYs(void);
 
 
@@ -239,7 +239,7 @@ struct Dee_file_reader_object {
                                * The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
 };
 
-DDATDEF DeeFileTypeObject DeeFileReader_Type; /* file.reader */
+DDATDEF DeeFileTypeObject DeeFileReader_Type; /* File.Reader */
 
 /* Open a new file stream for reading memory from `data...+=data_size'
  * This stream assumes that data is immutable, and owned by `data_owner'.
@@ -269,7 +269,7 @@ struct Dee_file_writer_object {
                                            * Cached variant of the last-accessed, generated multi-byte string. */
 };
 
-DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* file.writer */
+DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 
 /* Open a new file stream that writes all written data into a string. */
 DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_OpenWriter(void);

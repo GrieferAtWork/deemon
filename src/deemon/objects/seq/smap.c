@@ -555,7 +555,7 @@ PRIVATE struct type_seq smap_seq = {
 };
 
 PRIVATE struct type_member smap_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SharedMapIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SharedMapIterator_Type),
     TYPE_MEMBER_END
 };
 

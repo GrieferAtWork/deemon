@@ -745,7 +745,7 @@ PRIVATE struct type_member refa_members[] = {
 };
 
 PRIVATE struct type_member refa_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ReFindAllIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ReFindAllIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -832,7 +832,7 @@ PRIVATE struct type_seq rela_seq = {
 };
 
 PRIVATE struct type_member rela_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ReLocateAllIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ReLocateAllIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -985,7 +985,7 @@ PRIVATE struct type_seq resp_seq = {
 };
 
 PRIVATE struct type_member resp_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ReSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ReSplitIterator_Type),
     TYPE_MEMBER_END
 };
 

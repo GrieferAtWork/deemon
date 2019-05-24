@@ -33,7 +33,7 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/rodict.h>
@@ -176,7 +176,7 @@ usetiterator_bool(USetIterator *__restrict self) {
  USet *set = self->si_set;
  /* Check if the iterator is in-bounds.
   * NOTE: Since this is nothing but a shallow boolean check anyways, there
-  *       is no need to lock the dict since we're not dereferencing anything. */
+  *       is no need to lock the Dict since we're not dereferencing anything. */
  return (item >= set->s_elem &&
          item <  set->s_elem+(set->s_mask+1));
 }
@@ -743,14 +743,14 @@ PRIVATE struct type_getset uset_getsets[] = {
 //TODO:     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&URoSet_FromSequence,
 //TODO:      NULL,
 //TODO:      NULL,
-//TODO:      DOC("->?Afrozen?.\n"
+//TODO:      DOC("->?AFrozen?.\n"
 //TODO:          "Returns a read-only (frozen) copy of @this set") },
     { NULL }
 };
 
 PRIVATE struct type_member uset_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&USetIterator_Type),
-//TODO:    TYPE_MEMBER_CONST("frozen",&URoSet_Type),
+    TYPE_MEMBER_CONST("Iterator",&USetIterator_Type),
+//TODO:    TYPE_MEMBER_CONST("Frozen",&URoSet_Type),
     TYPE_MEMBER_END
 };
 
@@ -795,7 +795,7 @@ uset_deepload(USet *__restrict self) {
  struct uset_item *new_map,*ols_map; size_t new_mask;
  for (;;) {
   DeeHashSet_LockRead(self);
-  /* Optimization: if the dict is empty, then there's nothing to copy! */
+  /* Optimization: if the Dict is empty, then there's nothing to copy! */
   if (self->s_elem == empty_set_items) {
    DeeHashSet_LockEndRead(self);
    return 0;
@@ -1229,7 +1229,7 @@ PRIVATE struct type_gc uset_gc = {
 INTERN DeeTypeObject USet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"UniqueSet",
-    /* .tp_doc      = */DOC("A mutable set-like container that uses @?Aid?Dobject "
+    /* .tp_doc      = */DOC("A mutable set-like container that uses @?Aid?O "
                             "and ${x === y} to detect/prevent duplicates\n"
                             "\n"
                             "()\n"
@@ -1380,7 +1380,7 @@ urosetiterator_bool(URoSetIterator *__restrict self) {
  URoSet *set = self->si_set;
  /* Check if the iterator is in-bounds.
   * NOTE: Since this is nothing but a shallow boolean check anyways, there
-  *       is no need to lock the dict since we're not dereferencing anything. */
+  *       is no need to lock the Dict since we're not dereferencing anything. */
  return (item >= set->rs_elem &&
          item <  set->rs_elem+(set->rs_mask+1));
 }

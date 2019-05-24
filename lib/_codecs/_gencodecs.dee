@@ -26,7 +26,7 @@ import * from deemon;
 @@returned, and the caller should not attempt to override the codec file,
 @@as special handling is required for the codepage format
 function ParseUnicodeDefinitionsFile(
-	lines: {bytes...} | {string...}): (string,string) | none {
+	lines: {Bytes...} | {string...}): (string,string) | none {
 	local result = [0] * 256;
 	for (local i: [:128])
 		result[i] = i;

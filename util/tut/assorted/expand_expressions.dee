@@ -94,8 +94,8 @@ print a,b; /* 10, 30 */
 /* Some notable usage cases */
 
 /* Directly expand the tuple returned and store it's values */
-import pipe from ipc;
-r,w = pipe.new()...;
+import Pipe from ipc;
+r,w = Pipe.new()...;
 print r,w;
 del r;
 del w;

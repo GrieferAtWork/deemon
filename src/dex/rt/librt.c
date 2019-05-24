@@ -39,8 +39,8 @@
 #include <deemon/filetypes.h>
 #include <deemon/float.h>
 #include <deemon/gc.h>
-#include <deemon/hashset.h>
-#include <deemon/instancemethod.h>
+#include <deemon/HashSet.h>
+#include <deemon/InstanceMethod.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
@@ -124,8 +124,8 @@ PRIVATE DEFINE_KWCMETHOD(librt_makeclass,librt_makeclass_f);
 #if 1
 #define STR_ITERATOR  COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name,DeeStringObject,s_str)
 #else
-#define STR_ITERATOR &str_iterator
-PRIVATE DEFINE_STRING(str_iterator,"iterator");
+#define STR_ITERATOR &str_Iterator
+PRIVATE DEFINE_STRING(str_Iterator,"Iterator");
 #endif
 
 LOCAL DREF DeeObject *DCALL
@@ -1467,12 +1467,12 @@ PRIVATE struct dex_symbol symbols[] = {
           "for an arbitrary architecture") },
     { "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
     { "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
-      DOC("(base:?X2?Dtype?N,descriptor:?#ClassDescriptor)->?Dtype\n"
+      DOC("(base:?X2?DType?N,descriptor:?#ClassDescriptor)->?DType\n"
           "Construct a new class from a given @base type, as well as class @descriptor") },
 
     /* Access of the arguments passed to the __MAIN__ module. */
     { "argv", (DeeObject *)&librt_argv_get, MODSYM_FPROPERTY,
-      DOC("->?Dtuple\n"
+      DOC("->?DTuple\n"
           "The arguments that are passed to the __MAIN__ user-code "
           "module, where they are available as ${[...]}\n"
           "Since because of this these arguments aren't accessible from any other "
@@ -1696,8 +1696,8 @@ PRIVATE struct dex_symbol symbols[] = {
     { "InstanceMember", (DeeObject *)&DeeInstanceMember_Type, MODSYM_FREADONLY },   /* An unbund class->instance member (e.g. `class MyClass { member foo; } type(MyClass.foo);') */
     { "CMethod", (DeeObject *)&DeeCMethod_Type, MODSYM_FREADONLY },                 /* C-variant of `function' (e.g. `boundattr from deemon') */
     { "KwCMethod", (DeeObject *)&DeeKwCMethod_Type, MODSYM_FREADONLY },             /* C-variant of `function' (with keyword support) */
-    { "ObjMethod", (DeeObject *)&DeeObjMethod_Type, MODSYM_FREADONLY },             /* C-variant of `instancemethod' (e.g. `"FOO".lower') */
-    { "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY },         /* C-variant of `instancemethod' (with keyword support) */
+    { "ObjMethod", (DeeObject *)&DeeObjMethod_Type, MODSYM_FREADONLY },             /* C-variant of `InstanceMethod' (e.g. `"FOO".lower') */
+    { "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY },         /* C-variant of `InstanceMethod' (with keyword support) */
     { "ClassMethod", (DeeObject *)&DeeClsMethod_Type, MODSYM_FREADONLY },           /* C-variant of an unbound class->instance method (e.g. `string.lower') */
     { "KwClassMethod", (DeeObject *)&DeeKwClsMethod_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance method (with keyword support) */
     { "ClassProperty", (DeeObject *)&DeeClsProperty_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance getset (e.g. `sequence.length') */
@@ -1705,9 +1705,9 @@ PRIVATE struct dex_symbol symbols[] = {
     { "FileType", (DeeObject *)&DeeFileType_Type, MODSYM_FREADONLY },               /* `type(file)' -- The typetype for file types. */
     { "YieldFunction", (DeeObject *)&DeeYieldFunction_Type, MODSYM_FREADONLY },
     { "YieldFunctionIterator", (DeeObject *)&DeeYieldFunctionIterator_Type, MODSYM_FREADONLY },
-    { "RoDict", (DeeObject *)&DeeRoDict_Type, MODSYM_FREADONLY },                   /* A read-only variant of the builtin `dict' type (used by the compiler to construct constant, generic mapping expression) */
+    { "RoDict", (DeeObject *)&DeeRoDict_Type, MODSYM_FREADONLY },                   /* A read-only variant of the builtin `Dict' type (used by the compiler to construct constant, generic mapping expression) */
     { "RoDictIterator", (DeeObject *)&librt_get_RoDictIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* RoDictIterator_Type */
-    { "RoSet", (DeeObject *)&DeeRoSet_Type, MODSYM_FREADONLY },                     /* A read-only variant of the builtin `hashset' type (used by the compiler to construct constant, generic set expression) */
+    { "RoSet", (DeeObject *)&DeeRoSet_Type, MODSYM_FREADONLY },                     /* A read-only variant of the builtin `HashSet' type (used by the compiler to construct constant, generic set expression) */
     { "RoSetIterator", (DeeObject *)&librt_get_RoSetIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* RoSetIterator_Type */
     { "Kwds", (DeeObject *)&DeeKwds_Type, MODSYM_FREADONLY },                       /* The type used to represent keyword arguments being mapped onto positional arguments. */
     { "KwdsIterator", (DeeObject *)&librt_get_KwdsIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* DeeKwdsIterator_Type */
@@ -1731,7 +1731,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "HashSetIterator", (DeeObject *)&librt_get_HashSetIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* HashSetIterator_Type */
     { "TracebackIterator", (DeeObject *)&librt_get_TracebackIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* DeeTracebackIterator_Type */
 
-    /* Helper types used to drive the builtin `dict' type */
+    /* Helper types used to drive the builtin `Dict' type */
     { "DictIterator", (DeeObject *)&librt_get_DictIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* DictIterator_Type */
     { "DictProxy", (DeeObject *)&DeeDictProxy_Type, MODSYM_FREADONLY },
     { "DictProxyIterator", (DeeObject *)&librt_get_DictProxyIterator, MODSYM_FREADONLY|MODSYM_FPROPERTY|MODSYM_FCONSTEXPR }, /* DictProxyIterator_Type */
@@ -1789,7 +1789,7 @@ PRIVATE struct dex_symbol symbols[] = {
     { "WeakRef", (DeeObject *)&DeeWeakRef_Type, MODSYM_FREADONLY },
     { "Cell", (DeeObject *)&DeeCell_Type, MODSYM_FREADONLY },
     { "File", (DeeObject *)&DeeFile_Type, MODSYM_FREADONLY },                       /* (intended) base class for all file types (is to `FileType' what `Object' is to `Type'). */
-    { "FileBuffer", (DeeObject *)&DeeFileBuffer_Type, MODSYM_FREADONLY },           /* `file.buffer' */
+    { "FileBuffer", (DeeObject *)&DeeFileBuffer_Type, MODSYM_FREADONLY },           /* `File.Buffer' */
     { "SystemFile", (DeeObject *)&DeeSystemFile_Type, MODSYM_FREADONLY },           /* Base class for file types that are managed by the system. */
     { "FSFile", (DeeObject *)&DeeFSFile_Type, MODSYM_FREADONLY },                   /* Derived from `SystemFile': A system file that has been opened via the file system. */
     { "NoneType", (DeeObject *)&DeeNone_Type, MODSYM_FREADONLY },                   /* `type(none)' */
@@ -1801,11 +1801,11 @@ PRIVATE struct dex_symbol symbols[] = {
           "constructed from user-code such that it would reference data, and that memory "
           "files impose special access restrictions to prevent user-code from maintaining "
           "access to wrapped memory once the file's creator destroys it") },
-    { "FileReader", (DeeObject *)&DeeFileReader_Type, MODSYM_FREADONLY },           /* `file.reader' */
-    { "FileWriter", (DeeObject *)&DeeFileWriter_Type, MODSYM_FREADONLY },           /* `file.writer' */
+    { "FileReader", (DeeObject *)&DeeFileReader_Type, MODSYM_FREADONLY },           /* `File.Reader' */
+    { "FileWriter", (DeeObject *)&DeeFileWriter_Type, MODSYM_FREADONLY },           /* `File.Writer' */
     { "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },             /* `attribute' */
     { "EnumAttr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY },               /* `enumattr' */
-    { "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.iterator' */
+    { "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.Iterator' */
 
     { NULL }
 };

@@ -139,14 +139,14 @@ inline WUNUSED obj_inherited DCALL inherit(obj_inherited ptr) { return obj_inher
 inline WUNUSED obj_nonnull_inherited DCALL inherit(obj_nonnull ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
 inline WUNUSED obj_nonnull_inherited DCALL inherit(obj_nonnull_inherited ptr) { return obj_nonnull_inherited((DeeObject *)ptr); }
 
-class object;
+class Object;
 class string;
-class super;
-template<class T = object> class type;
-template<class T = object> class iterator;
-template<class T = object> class sequence;
-template<class T = object> class tuple;
-template<class Prototype> class function;
+class Super;
+template<class T = Object> class Type;
+template<class T = Object> class Iterator;
+template<class T = Object> class Sequence;
+template<class T = Object> class Tuple;
+template<class Prototype> class Function;
 class int_;
 class float_;
 
@@ -370,28 +370,28 @@ err_cannot_lock_weakref(void) {
 } /* namespace detail... */
 
 
-class weakref {
+class WeakRef {
 private:
     struct ::Dee_weakref w_ref; /* The underlying weak reference. */
 public:
-    weakref() DEE_CXX_NOTHROW { Dee_weakref_null(&w_ref); }
-    weakref(DeeObject *ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
-    weakref(obj_nonnull ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); }
-    weakref(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
-    weakref(weakref const &other) DEE_CXX_NOTHROW { Dee_weakref_copy(&w_ref,&other.w_ref); }
-    weakref(weakref &&other) DEE_CXX_NOTHROW { Dee_weakref_move(&w_ref,&other.w_ref); }
-    ~weakref() DEE_CXX_NOTHROW { Dee_weakref_fini(&w_ref); }
-    weakref &operator = (DeeObject *ob) { if (ob) { if (!ob) Dee_weakref_clear(&w_ref); else if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
-    weakref &operator = (obj_nonnull ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); return *this; }
-    weakref &operator = (obj_maybenull ob) { if (ob) { if (!ob) Dee_weakref_clear(&w_ref); else if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
-    weakref &operator = (weakref &&other) DEE_CXX_NOTHROW { Dee_weakref_moveassign(&w_ref,&other.w_ref); return *this; }
-    weakref &operator = (weakref const &other) DEE_CXX_NOTHROW { Dee_weakref_copyassign(&w_ref,&other.w_ref); return *this; }
+    WeakRef() DEE_CXX_NOTHROW { Dee_weakref_null(&w_ref); }
+    WeakRef(DeeObject *ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
+    WeakRef(obj_nonnull ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); }
+    WeakRef(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_null(&w_ref); }
+    WeakRef(WeakRef const &other) DEE_CXX_NOTHROW { Dee_weakref_copy(&w_ref,&other.w_ref); }
+    WeakRef(WeakRef &&other) DEE_CXX_NOTHROW { Dee_weakref_move(&w_ref,&other.w_ref); }
+    ~WeakRef() DEE_CXX_NOTHROW { Dee_weakref_fini(&w_ref); }
+    WeakRef &operator = (DeeObject *ob) { if (ob) { if (!ob) Dee_weakref_clear(&w_ref); else if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
+    WeakRef &operator = (obj_nonnull ob) { if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); return *this; }
+    WeakRef &operator = (obj_maybenull ob) { if (ob) { if (!ob) Dee_weakref_clear(&w_ref); else if (!Dee_weakref_set(&w_ref,ob)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); return *this; }
+    WeakRef &operator = (WeakRef &&other) DEE_CXX_NOTHROW { Dee_weakref_moveassign(&w_ref,&other.w_ref); return *this; }
+    WeakRef &operator = (WeakRef const &other) DEE_CXX_NOTHROW { Dee_weakref_copyassign(&w_ref,&other.w_ref); return *this; }
     DREF DeeObject *trylockref() const DEE_CXX_NOTHROW { return Dee_weakref_lock(&w_ref); }
     ATTR_RETNONNULL DREF DeeObject *lockref() const { DREF DeeObject *result = Dee_weakref_lock(&w_ref); if (!result) detail::err_cannot_lock_weakref(); return result; }
     ATTR_RETNONNULL DREF DeeObject *lockref(DeeObject *__restrict defl) const DEE_CXX_NOTHROW { DREF DeeObject *result = Dee_weakref_lock(&w_ref); if (!result) { result = defl; Dee_Incref(defl); } return result; }
-    inline WUNUSED object trylock() const DEE_CXX_NOTHROW;
-    inline WUNUSED object lock() const;
-    inline WUNUSED object lock(DeeObject *__restrict defl) const DEE_CXX_NOTHROW;
+    inline WUNUSED Object trylock() const DEE_CXX_NOTHROW;
+    inline WUNUSED Object lock() const;
+    inline WUNUSED Object lock(DeeObject *__restrict defl) const DEE_CXX_NOTHROW;
     bool alive() const DEE_CXX_NOTHROW { return Dee_weakref_bound(&w_ref); }
     operator bool() const DEE_CXX_NOTHROW { return Dee_weakref_bound(&w_ref); }
     bool operator !() const DEE_CXX_NOTHROW { return !Dee_weakref_bound(&w_ref); }
@@ -402,30 +402,30 @@ public:
     void set(obj_maybenull ob) { if (ob) { if (!Dee_weakref_init(&w_ref,ob,NULL)) detail::err_cannot_weak_reference(ob); } else Dee_weakref_clear(&w_ref); }
 };
 
-class object: public detail::object_base {
+class Object: public detail::object_base {
     template<class T> class proxy_base {
     public:
-        object get() const { return inherit(((T const *)this)->getref()); }
-        operator object() const { return inherit(((T const *)this)->getref()); }
+        Object get() const { return inherit(((T const *)this)->getref()); }
+        operator Object() const { return inherit(((T const *)this)->getref()); }
         void set(DeeObject *__restrict value) const { *((T const *)this) = value; }
     };
     template<class T> class call_proxy_base: public proxy_base<T> {
     public:
-        object call() const { return inherit(((T const *)this)->callref()); }
-        object call(obj_tuple args) const { return inherit(((T const *)this)->callref(args)); }
-        object call(obj_tuple args, DeeObject *kw) const { return inherit(((T const *)this)->callref(args,kw)); }
-        object call(size_t argc, DeeObject **__restrict argv) const { return inherit(((T const *)this)->callref(argc,argv)); }
-        object call(size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,argv,kw)); }
-        object call(size_t argc, DeeObject *const *__restrict argv) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv)); }
-        object call(size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv,kw)); }
-        object call(size_t argc, object **__restrict argv) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv)); }
-        object call(size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv,kw)); }
-        object call(size_t argc, object *const *__restrict argv) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv)); }
-        object call(size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv,kw)); }
-        object call(std::initializer_list<DeeObject *> const &args) const { return inherit(((T const *)this)->callref(args.size(),(DeeObject **)args.begin())); }
-        object call(std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(((T const *)this)->callref(args.size(),(DeeObject **)args.begin(),kw)); }
-        WUNUSED object operator ()(obj_tuple args) const { return inherit(((T const *)this)->callref(args)); }
-        WUNUSED object operator ()(std::initializer_list<DeeObject *> const &args) const { return inherit(((T const *)this)->callref(args.size(),(DeeObject **)args.begin())); }
+        Object call() const { return inherit(((T const *)this)->callref()); }
+        Object call(obj_tuple args) const { return inherit(((T const *)this)->callref(args)); }
+        Object call(obj_tuple args, DeeObject *kw) const { return inherit(((T const *)this)->callref(args,kw)); }
+        Object call(size_t argc, DeeObject **__restrict argv) const { return inherit(((T const *)this)->callref(argc,argv)); }
+        Object call(size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,argv,kw)); }
+        Object call(size_t argc, DeeObject *const *__restrict argv) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv)); }
+        Object call(size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv,kw)); }
+        Object call(size_t argc, Object **__restrict argv) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv)); }
+        Object call(size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv,kw)); }
+        Object call(size_t argc, Object *const *__restrict argv) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv)); }
+        Object call(size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(((T const *)this)->callref(argc,(DeeObject **)argv,kw)); }
+        Object call(std::initializer_list<DeeObject *> const &args) const { return inherit(((T const *)this)->callref(args.size(),(DeeObject **)args.begin())); }
+        Object call(std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(((T const *)this)->callref(args.size(),(DeeObject **)args.begin(),kw)); }
+        WUNUSED Object operator ()(obj_tuple args) const { return inherit(((T const *)this)->callref(args)); }
+        WUNUSED Object operator ()(std::initializer_list<DeeObject *> const &args) const { return inherit(((T const *)this)->callref(args.size(),(DeeObject **)args.begin())); }
     };
     class attr_proxy_obj: public call_proxy_base<attr_proxy_obj> {
     private:
@@ -514,7 +514,7 @@ class object: public detail::object_base {
         DREF DeeObject *getref() const { return DeeObject_GetItem(m_ptr,m_str); }
         DREF DeeObject *getref(DeeObject *__restrict def) const { return DeeObject_GetItemDef(m_ptr,m_str,def); }
         using proxy_base::get;
-        object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
+        Object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItem(m_ptr,m_str)); }
         item_proxy_obj const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItem(m_ptr,m_str,value)); return *this; }
     };
@@ -530,7 +530,7 @@ class object: public detail::object_base {
         DREF DeeObject *getref() const { return DeeObject_GetItemIndex(m_ptr,m_idx); }
         DREF DeeObject *getref(DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(m_idx)); result = DeeObject_GetItemDef(m_ptr,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
         using proxy_base::get;
-        object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
+        Object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItemIndex(m_ptr,m_idx)); }
         item_proxy_idx const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemIndex(m_ptr,m_idx,value)); return *this; }
     };
@@ -548,7 +548,7 @@ class object: public detail::object_base {
         DREF DeeObject *getref() const { return DeeObject_GetItemString(m_ptr,m_str,m_hsh); }
         DREF DeeObject *getref(DeeObject *__restrict def) const { return DeeObject_GetItemStringDef(m_ptr,m_str,m_hsh,def); }
         using proxy_base::get;
-        object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
+        Object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItemString(m_ptr,m_str,m_hsh)); }
         item_proxy_sth const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemString(m_ptr,m_str,m_hsh,value)); return *this; }
     };
@@ -565,7 +565,7 @@ class object: public detail::object_base {
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemStringLen(m_ptr,m_str,m_len,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemStringLen(m_ptr,m_str,m_len,m_hsh); }
         DREF DeeObject *getref(DeeObject *__restrict def) const { return DeeObject_GetItemStringLenDef(m_ptr,m_str,m_len,m_hsh,def); }
-        object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
+        Object get(DeeObject *__restrict def) const { return inherit(getref(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItemStringLen(m_ptr,m_str,m_len,m_hsh)); }
         item_proxy_snh const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemStringLen(m_ptr,m_str,m_len,m_hsh,value)); return *this; }
     };
@@ -622,19 +622,19 @@ public:
     static bool check(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW { return true; }
     static bool checkexact(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW { return true; }
 public:
-    template<class T> object(T const &init, typename detail::any_convertible<T>::available* =0)
+    template<class T> Object(T const &init, typename detail::any_convertible<T>::available* =0)
         : object_base(inherit(detail::any_convertible<T>::convert(init))) { }
-    template<class T> object(std::initializer_list<T> const &init, typename detail::any_convertible<std::initializer_list<T> >::available* =0)
+    template<class T> Object(std::initializer_list<T> const &init, typename detail::any_convertible<std::initializer_list<T> >::available* =0)
         : object_base(inherit(detail::any_convertible<std::initializer_list<T> >::convert(init))) { }
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(object,object_base)
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Object,object_base)
     attr_proxy_obj attr(obj_string name) const { return attr_proxy_obj(*this,name); }
     attr_proxy_str attr(char const *__restrict name) const { return attr_proxy_str(*this,name); }
     attr_proxy_sth attr(char const *__restrict name, Dee_hash_t hash) const { return attr_proxy_sth(*this,name,hash); }
     attr_proxy_snh attr(char const *__restrict name, size_t attrlen, Dee_hash_t hash) const { return attr_proxy_snh(*this,name,attrlen,hash); }
-    object getattr(obj_string name) const { return inherit(DeeObject_GetAttr(*this,name)); }
-    object getattr(char const *__restrict name) const { return inherit(DeeObject_GetAttrString(*this,name)); }
-    object getattr(char const *__restrict name, Dee_hash_t hash) const { return inherit(DeeObject_GetAttrStringHash(*this,name,hash)); }
-    object getattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) const { return inherit(DeeObject_GetAttrStringLenHash(*this,name,namelen,hash)); }
+    Object getattr(obj_string name) const { return inherit(DeeObject_GetAttr(*this,name)); }
+    Object getattr(char const *__restrict name) const { return inherit(DeeObject_GetAttrString(*this,name)); }
+    Object getattr(char const *__restrict name, Dee_hash_t hash) const { return inherit(DeeObject_GetAttrStringHash(*this,name,hash)); }
+    Object getattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) const { return inherit(DeeObject_GetAttrStringLenHash(*this,name,namelen,hash)); }
     bool hasattr(obj_string name) const { return throw_if_negative(DeeObject_HasAttr(*this,name)) != 0; }
     bool hasattr(char const *__restrict name) const { return throw_if_negative(DeeObject_HasAttrString(*this,name)) != 0; }
     bool hasattr(char const *__restrict name, Dee_hash_t hash) const { return throw_if_negative(DeeObject_HasAttrStringHash(*this,name,hash)) != 0; }
@@ -651,69 +651,69 @@ public:
     void setattr(char const *__restrict name, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetAttrString(*this,name,value)); }
     void setattr(char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetAttrStringHash(*this,name,hash,value)); }
     void setattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetAttrStringLenHash(*this,name,namelen,hash,value)); }
-    object callattr(obj_string name, obj_tuple args) const { return inherit(DeeObject_CallAttrTuple(*this,name,args)); }
-    object callattr(obj_string name, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrTupleKw(*this,name,args,kw)); }
-    object callattr(obj_string name, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,argv)); }
-    object callattr(obj_string name, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,argv,kw)); }
-    object callattr(obj_string name, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,(DeeObject **)argv)); }
-    object callattr(obj_string name, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,(DeeObject **)argv,kw)); }
-    object callattr(obj_string name, size_t argc, object **__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,(DeeObject **)argv)); }
-    object callattr(obj_string name, size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,(DeeObject **)argv,kw)); }
-    object callattr(obj_string name, size_t argc, object *const *__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,(DeeObject **)argv)); }
-    object callattr(obj_string name, size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,(DeeObject **)argv,kw)); }
-    object callattr(obj_string name, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttr(*this,name,args.size(),(DeeObject **)args.begin())); }
-    object callattr(obj_string name, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,args.size(),(DeeObject **)args.begin(),kw)); }
-    object callattr(char const *__restrict name, obj_tuple args) const { return inherit(DeeObject_CallAttrStringTuple(*this,name,(DeeObject *)args)); }
-    object callattr(char const *__restrict name, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringTupleKw(*this,name,(DeeObject *)args,kw)); }
-    object callattr(char const *__restrict name, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,argv)); }
-    object callattr(char const *__restrict name, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,argv,kw)); }
-    object callattr(char const *__restrict name, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, size_t argc, object **__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, size_t argc, object *const *__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttrString(*this,name,args.size(),(DeeObject **)args.begin())); }
-    object callattr(char const *__restrict name, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,args.size(),(DeeObject **)args.begin(),kw)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, obj_tuple args) const { return inherit(DeeObject_CallAttrStringHashTuple(*this,name,hash,(DeeObject *)args)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashTupleKw(*this,name,hash,(DeeObject *)args,kw)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,argv)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,argv,kw)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, object **__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, object *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,args.size(),(DeeObject **)args.begin())); }
-    object callattr(char const *__restrict name, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,args.size(),(DeeObject **)args.begin(),kw)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, obj_tuple args) const { return inherit(DeeObject_CallAttrStringLenHashTuple(*this,name,namelen,hash,(DeeObject *)args)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashTupleKw(*this,name,namelen,hash,(DeeObject *)args,kw)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,argv)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,argv,kw)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, object **__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, object *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,(DeeObject **)argv)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,(DeeObject **)argv,kw)); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,args.size(),(DeeObject **)args.begin())); }
-    object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,args.size(),(DeeObject **)args.begin(),kw)); }
+    Object callattr(obj_string name, obj_tuple args) const { return inherit(DeeObject_CallAttrTuple(*this,name,args)); }
+    Object callattr(obj_string name, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrTupleKw(*this,name,args,kw)); }
+    Object callattr(obj_string name, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,argv)); }
+    Object callattr(obj_string name, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,argv,kw)); }
+    Object callattr(obj_string name, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,(DeeObject **)argv)); }
+    Object callattr(obj_string name, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,(DeeObject **)argv,kw)); }
+    Object callattr(obj_string name, size_t argc, Object **__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,(DeeObject **)argv)); }
+    Object callattr(obj_string name, size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,(DeeObject **)argv,kw)); }
+    Object callattr(obj_string name, size_t argc, Object *const *__restrict argv) const { return inherit(DeeObject_CallAttr(*this,name,argc,(DeeObject **)argv)); }
+    Object callattr(obj_string name, size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,argc,(DeeObject **)argv,kw)); }
+    Object callattr(obj_string name, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttr(*this,name,args.size(),(DeeObject **)args.begin())); }
+    Object callattr(obj_string name, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrKw(*this,name,args.size(),(DeeObject **)args.begin(),kw)); }
+    Object callattr(char const *__restrict name, obj_tuple args) const { return inherit(DeeObject_CallAttrStringTuple(*this,name,(DeeObject *)args)); }
+    Object callattr(char const *__restrict name, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringTupleKw(*this,name,(DeeObject *)args,kw)); }
+    Object callattr(char const *__restrict name, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,argv)); }
+    Object callattr(char const *__restrict name, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,argv,kw)); }
+    Object callattr(char const *__restrict name, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, size_t argc, Object **__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, size_t argc, Object *const *__restrict argv) const { return inherit(DeeObject_CallAttrString(*this,name,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttrString(*this,name,args.size(),(DeeObject **)args.begin())); }
+    Object callattr(char const *__restrict name, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringKw(*this,name,args.size(),(DeeObject **)args.begin(),kw)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, obj_tuple args) const { return inherit(DeeObject_CallAttrStringHashTuple(*this,name,hash,(DeeObject *)args)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashTupleKw(*this,name,hash,(DeeObject *)args,kw)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,argv)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,argv,kw)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, Object **__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, Object *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttrStringHash(*this,name,hash,args.size(),(DeeObject **)args.begin())); }
+    Object callattr(char const *__restrict name, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringHashKw(*this,name,hash,args.size(),(DeeObject **)args.begin(),kw)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, obj_tuple args) const { return inherit(DeeObject_CallAttrStringLenHashTuple(*this,name,namelen,hash,(DeeObject *)args)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashTupleKw(*this,name,namelen,hash,(DeeObject *)args,kw)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,argv)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,argv,kw)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, Object **__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, Object *const *__restrict argv) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,argc,(DeeObject **)argv)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,argc,(DeeObject **)argv,kw)); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_CallAttrStringLenHash(*this,name,namelen,hash,args.size(),(DeeObject **)args.begin())); }
+    Object callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallAttrStringLenHashKw(*this,name,namelen,hash,args.size(),(DeeObject **)args.begin(),kw)); }
     item_proxy_obj item(DeeObject *__restrict index) const { return item_proxy_obj(*this,index); }
     item_proxy_idx item(size_t index) const { return item_proxy_idx(*this,index); }
     item_proxy_sth item(char const *__restrict name) const { return item_proxy_sth(*this,name); }
     item_proxy_sth item(char const *__restrict name, Dee_hash_t hash) const { return item_proxy_sth(*this,name,hash); }
     item_proxy_snh item(char const *__restrict name, size_t len, Dee_hash_t hash) const { return item_proxy_snh(*this,name,len,hash); }
-    object getitem(DeeObject *__restrict index) const { return inherit(DeeObject_GetItem(*this,index)); }
-    object getitem(DeeObject *__restrict index, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,index,def)); }
-    object getitem(size_t index) const { return inherit(DeeObject_GetItemIndex(*this,index)); }
-    object getitem(size_t index, DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(index)); result = DeeObject_GetItemDef(*this,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
-    object getitem(char const *__restrict name) const { return inherit(DeeObject_GetItemString(*this,name,Dee_HashStr(name))); }
-    object getitem(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,Dee_HashStr(name),def)); }
-    object getitem(char const *__restrict name, Dee_hash_t hash) const { return inherit(DeeObject_GetItemString(*this,name,hash)); }
-    object getitem(char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
-    object getitem(char const *__restrict name, size_t len, Dee_hash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,name,len,hash)); }
-    object getitem(char const *__restrict name, size_t len, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,name,len,hash,def)); }
+    Object getitem(DeeObject *__restrict index) const { return inherit(DeeObject_GetItem(*this,index)); }
+    Object getitem(DeeObject *__restrict index, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,index,def)); }
+    Object getitem(size_t index) const { return inherit(DeeObject_GetItemIndex(*this,index)); }
+    Object getitem(size_t index, DeeObject *__restrict def) const { DREF DeeObject *result,*index_ob = throw_if_null(DeeInt_NewSize(index)); result = DeeObject_GetItemDef(*this,index_ob,def); Dee_Decref(index_ob); return inherit(result); }
+    Object getitem(char const *__restrict name) const { return inherit(DeeObject_GetItemString(*this,name,Dee_HashStr(name))); }
+    Object getitem(char const *__restrict name, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,Dee_HashStr(name),def)); }
+    Object getitem(char const *__restrict name, Dee_hash_t hash) const { return inherit(DeeObject_GetItemString(*this,name,hash)); }
+    Object getitem(char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,name,hash,def)); }
+    Object getitem(char const *__restrict name, size_t len, Dee_hash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,name,len,hash)); }
+    Object getitem(char const *__restrict name, size_t len, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,name,len,hash,def)); }
     bool bounditem(DeeObject *__restrict key_or_index, bool allow_missing = true) const { int result = DeeObject_BoundItem(*this,key_or_index,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     bool bounditem(size_t index, bool allow_missing = true) const { int result = DeeObject_BoundItemIndex(*this,index,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
     bool bounditem(char const *__restrict key, bool allow_missing = true) const { int result = DeeObject_BoundItemString(*this,key,Dee_HashStr(key),allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
@@ -738,10 +738,10 @@ public:
     range_proxy_io range(size_t begin, DeeObject *__restrict end) const { return range_proxy_io(*this,begin,end); }
     range_proxy_oi range(DeeObject *__restrict begin, size_t end) const { return range_proxy_oi(*this,begin,end); }
     range_proxy_ii range(size_t begin, size_t end) const { return range_proxy_ii(*this,begin,end); }
-    object getrange(DeeObject *__restrict begin, DeeObject *__restrict end) const { return inherit(DeeObject_GetRange(*this,begin,end)); }
-    object getrange(size_t begin, DeeObject *__restrict end) const { return inherit(DeeObject_GetRangeBeginIndex(*this,begin,end)); }
-    object getrange(DeeObject *__restrict begin, size_t end) const { return inherit(DeeObject_GetRangeEndIndex(*this,begin,end)); }
-    object getrange(size_t begin, size_t end) const { return inherit(DeeObject_GetRangeIndex(*this,begin,end)); }
+    Object getrange(DeeObject *__restrict begin, DeeObject *__restrict end) const { return inherit(DeeObject_GetRange(*this,begin,end)); }
+    Object getrange(size_t begin, DeeObject *__restrict end) const { return inherit(DeeObject_GetRangeBeginIndex(*this,begin,end)); }
+    Object getrange(DeeObject *__restrict begin, size_t end) const { return inherit(DeeObject_GetRangeEndIndex(*this,begin,end)); }
+    Object getrange(size_t begin, size_t end) const { return inherit(DeeObject_GetRangeIndex(*this,begin,end)); }
     void delrange(DeeObject *__restrict begin, DeeObject *__restrict end) const { throw_if_negative(DeeObject_DelRange(*this,begin,end)); }
     void delrange(size_t begin, DeeObject *__restrict end) const { DREF DeeObject *begin_ob = throw_if_null(DeeInt_NewSize(begin)); int error = DeeObject_DelRange(*this,begin_ob,end); Dee_Decref(begin_ob); throw_if_nonzero(error); }
     void delrange(DeeObject *__restrict begin, size_t end) const { DREF DeeObject *end_ob = throw_if_null(DeeInt_NewSize(end)); int error = DeeObject_DelRange(*this,begin,end_ob); Dee_Decref(end_ob); throw_if_nonzero(error); }
@@ -750,39 +750,39 @@ public:
     void setrange(size_t begin, DeeObject *__restrict end, DeeObject *__restrict values) const { throw_if_nonzero(DeeObject_SetRangeBeginIndex(*this,begin,end,values)); }
     void setrange(DeeObject *__restrict begin, size_t end, DeeObject *__restrict values) const { throw_if_nonzero(DeeObject_SetRangeEndIndex(*this,begin,end,values)); }
     void setrange(size_t begin, size_t end, DeeObject *__restrict values) const { throw_if_nonzero(DeeObject_SetRangeIndex(*this,begin,end,values)); }
-    object call() const { return inherit(DeeObject_Call(*this,0,NULL)); }
-    object call(obj_tuple args) const { return inherit(DeeObject_CallTuple(*this,args)); }
-    object call(obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallTupleKw(*this,args,kw)); }
-    object call(size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_Call(*this,argc,argv)); }
-    object call(size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,argv,kw)); }
-    object call(size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_Call(*this,argc,(DeeObject **)argv)); }
-    object call(size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,(DeeObject **)argv,kw)); }
-    object call(size_t argc, object **__restrict argv) const { return inherit(DeeObject_Call(*this,argc,(DeeObject **)argv)); }
-    object call(size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,(DeeObject **)argv,kw)); }
-    object call(size_t argc, object *const *__restrict argv) const { return inherit(DeeObject_Call(*this,argc,(DeeObject **)argv)); }
-    object call(size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,(DeeObject **)argv,kw)); }
-    object call(std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_Call(*this,args.size(),(DeeObject **)args.begin())); }
-    object call(std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,args.size(),(DeeObject **)args.begin(),kw)); }
-    object thiscall(DeeObject *__restrict this_arg) const { return inherit(DeeObject_ThisCall(*this,this_arg,0,NULL)); }
-    object thiscall(DeeObject *__restrict this_arg, obj_tuple args) const { return inherit(DeeObject_ThisCallTuple(*this,this_arg,args)); }
-    object thiscall(DeeObject *__restrict this_arg, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_ThisCallTupleKw(*this,this_arg,args,kw)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,argv)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,argv,kw)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,(DeeObject **)argv)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, object **__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,(DeeObject **)argv)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, object *const *__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,(DeeObject **)argv)); }
-    object thiscall(DeeObject *__restrict this_arg, size_t argc, object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
-    object thiscall(DeeObject *__restrict this_arg, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_ThisCall(*this,this_arg,args.size(),(DeeObject **)args.begin())); }
-    object thiscall(DeeObject *__restrict this_arg, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,args.size(),(DeeObject **)args.begin(),kw)); }
+    Object call() const { return inherit(DeeObject_Call(*this,0,NULL)); }
+    Object call(obj_tuple args) const { return inherit(DeeObject_CallTuple(*this,args)); }
+    Object call(obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_CallTupleKw(*this,args,kw)); }
+    Object call(size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_Call(*this,argc,argv)); }
+    Object call(size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,argv,kw)); }
+    Object call(size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_Call(*this,argc,(DeeObject **)argv)); }
+    Object call(size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,(DeeObject **)argv,kw)); }
+    Object call(size_t argc, Object **__restrict argv) const { return inherit(DeeObject_Call(*this,argc,(DeeObject **)argv)); }
+    Object call(size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,(DeeObject **)argv,kw)); }
+    Object call(size_t argc, Object *const *__restrict argv) const { return inherit(DeeObject_Call(*this,argc,(DeeObject **)argv)); }
+    Object call(size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,argc,(DeeObject **)argv,kw)); }
+    Object call(std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_Call(*this,args.size(),(DeeObject **)args.begin())); }
+    Object call(std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_CallKw(*this,args.size(),(DeeObject **)args.begin(),kw)); }
+    Object thiscall(DeeObject *__restrict this_arg) const { return inherit(DeeObject_ThisCall(*this,this_arg,0,NULL)); }
+    Object thiscall(DeeObject *__restrict this_arg, obj_tuple args) const { return inherit(DeeObject_ThisCallTuple(*this,this_arg,args)); }
+    Object thiscall(DeeObject *__restrict this_arg, obj_tuple args, DeeObject *kw) const { return inherit(DeeObject_ThisCallTupleKw(*this,this_arg,args,kw)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,argv)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,argv,kw)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject *const *__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,(DeeObject **)argv)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, Object **__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,(DeeObject **)argv)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, Object **__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, Object *const *__restrict argv) const { return inherit(DeeObject_ThisCall(*this,this_arg,argc,(DeeObject **)argv)); }
+    Object thiscall(DeeObject *__restrict this_arg, size_t argc, Object *const *__restrict argv, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,argc,(DeeObject **)argv,kw)); }
+    Object thiscall(DeeObject *__restrict this_arg, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_ThisCall(*this,this_arg,args.size(),(DeeObject **)args.begin())); }
+    Object thiscall(DeeObject *__restrict this_arg, std::initializer_list<DeeObject *> const &args, DeeObject *kw) const { return inherit(DeeObject_ThisCallKw(*this,this_arg,args.size(),(DeeObject **)args.begin(),kw)); }
     string str() const;
     string repr() const;
-    deemon::super super() const;
-    deemon::super super(DeeTypeObject *__restrict super_type) const;
-    template<class T = object> deemon::super super() const;
-    deemon::type<object> type() const;
-    deemon::type<object> class_() const;
+    deemon::Super super() const;
+    deemon::Super super(DeeTypeObject *__restrict super_type) const;
+    template<class T = Object> deemon::Super super() const;
+    deemon::Type<Object> type() const;
+    deemon::Type<Object> class_() const;
     int_ int_() const;
     bool bool_() const { return throw_if_negative(DeeObject_Bool(*this)) != 0; }
     WUNUSED Dee_hash_t hash() const DEE_CXX_NOTHROW { return DeeObject_Hash(*this); }
@@ -792,181 +792,181 @@ public:
     bool nonequal(DeeObject *__restrict other, DeeObject *key) const { return throw_if_negative(DeeObject_CompareKeyEq(*this,other,key)) == 0; }
     size_t size() const { return throw_if_minusone(DeeObject_Size(*this)); }
     bool contains(DeeObject *__restrict elem) const { return throw_if_negative(DeeObject_Contains(*this,elem)) != 0; }
-    object sizeobj() const { return inherit(DeeObject_SizeObject(*this)); }
-    object containsobj(DeeObject *__restrict elem) const { return inherit(DeeObject_ContainsObject(*this,elem)); }
-    object const &assign(DeeObject *__restrict some_object) const { throw_if_nonzero(DeeObject_Assign(*this,some_object)); return *this; }
-    object const &moveassign(DeeObject *__restrict some_object) const { throw_if_nonzero(DeeObject_MoveAssign(*this,some_object)); return *this; }
+    Object sizeobj() const { return inherit(DeeObject_SizeObject(*this)); }
+    Object containsobj(DeeObject *__restrict elem) const { return inherit(DeeObject_ContainsObject(*this,elem)); }
+    Object const &assign(DeeObject *__restrict some_object) const { throw_if_nonzero(DeeObject_Assign(*this,some_object)); return *this; }
+    Object const &moveassign(DeeObject *__restrict some_object) const { throw_if_nonzero(DeeObject_MoveAssign(*this,some_object)); return *this; }
     void enter() const { throw_if_nonzero(DeeObject_Enter(*this)); }
     void leave() const { throw_if_nonzero(DeeObject_Leave(*this)); }
     ATTR_NORETURN void throw_() const { DeeError_Throw(*this); throw_last_deemon_exception(); }
     void unpack(size_t objc, DREF DeeObject **__restrict objv) const { throw_if_nonzero(DeeObject_Unpack(*this,objc,objv)); }
 //  void unpack(size_t objc, object **__restrict objv) const { throw_if_nonzero(DeeObject_Unpack(*this,objc,(DeeObject **)objv)); }
-    typedef detail::cxx_iterator<object> iterator;
+    typedef detail::cxx_iterator<Object> iterator;
     WUNUSED iterator begin() const { return inherit(DeeObject_IterSelf(*this)); }
     WUNUSED iterator end() const { return iterator(); }
-    deemon::iterator<object> iter() const;
-    template<class T = object> deemon::iterator<T> iter() const;
+    deemon::Iterator<Object> iter() const;
+    template<class T = Object> deemon::Iterator<T> iter() const;
 
-    object next() const { DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this)); if (result == ITER_DONE) result = NULL; return inherit(maybenull(result)); }
+    Object next() const { DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this)); if (result == ITER_DONE) result = NULL; return inherit(maybenull(result)); }
 #undef print
     size_t print(Dee_formatprinter_t printer, void *arg) const { return throw_if_negative(DeeObject_Print(*this,printer,arg)); }
     size_t print(Dee_formatprinter_t printer, void *arg, DeeObject *__restrict format_str) const { return throw_if_negative(DeeObject_PrintFormat(*this,printer,arg,format_str)); }
     size_t print(Dee_formatprinter_t printer, void *arg, /*utf-8*/char const *__restrict format_str) const { return throw_if_negative(DeeObject_PrintFormatString(*this,printer,arg,format_str,strlen(format_str))); }
     size_t print(Dee_formatprinter_t printer, void *arg, /*utf-8*/char const *__restrict format_str, size_t format_len) const { return throw_if_negative(DeeObject_PrintFormatString(*this,printer,arg,format_str,format_len)); }
     size_t printrepr(Dee_formatprinter_t printer, void *arg) const { return throw_if_negative(DeeObject_PrintRepr(*this,printer,arg)); }
-    object inv() const { return inherit(DeeObject_Inv(*this)); }
-    object pos() const { return inherit(DeeObject_Pos(*this)); }
-    object neg() const { return inherit(DeeObject_Neg(*this)); }
-    object add(int8_t right) const { return inherit(DeeObject_AddS8(*this,right)); }
-    object add(uint32_t right) const { return inherit(DeeObject_AddInt(*this,right)); }
-    object add(DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
-    object sub(int8_t right) const { return inherit(DeeObject_SubS8(*this,right)); }
-    object sub(uint32_t right) const { return inherit(DeeObject_SubInt(*this,right)); }
-    object sub(DeeObject *__restrict right) const { return inherit(DeeObject_Sub(*this,right)); }
-    object mul(int8_t right) const { return inherit(DeeObject_MulInt(*this,right)); }
-    object mul(DeeObject *__restrict right) const { return inherit(DeeObject_Mul(*this,right)); }
-    object div(int8_t right) const { return inherit(DeeObject_DivInt(*this,right)); }
-    object div(DeeObject *__restrict right) const { return inherit(DeeObject_Div(*this,right)); }
-    object mod(int8_t right) const { return inherit(DeeObject_ModInt(*this,right)); }
-    object mod(DeeObject *__restrict right) const { return inherit(DeeObject_Mod(*this,right)); }
-    object shl(uint8_t right) const { return inherit(DeeObject_ShlInt(*this,right)); }
-    object shl(DeeObject *__restrict right) const { return inherit(DeeObject_Shl(*this,right)); }
-    object shr(uint8_t right) const { return inherit(DeeObject_ShrInt(*this,right)); }
-    object shr(DeeObject *__restrict right) const { return inherit(DeeObject_Shr(*this,right)); }
-    object and_(uint32_t right) const { return inherit(DeeObject_AndInt(*this,right)); }
-    object and_(DeeObject *__restrict right) const { return inherit(DeeObject_And(*this,right)); }
-    object or_(uint32_t right) const { return inherit(DeeObject_OrInt(*this,right)); }
-    object or_(DeeObject *__restrict right) const { return inherit(DeeObject_Or(*this,right)); }
-    object xor_(uint32_t right) const { return inherit(DeeObject_XorInt(*this,right)); }
-    object xor_(DeeObject *__restrict right) const { return inherit(DeeObject_Xor(*this,right)); }
-    object pow(DeeObject *__restrict right) const { return inherit(DeeObject_Pow(*this,right)); }
-    object &inplace_add(int8_t right) { throw_if_nonzero(DeeObject_InplaceAddS8(&this->m_ptr,right)); return *this; }
-    object &inplace_add(uint32_t right) { throw_if_nonzero(DeeObject_InplaceAddInt(&this->m_ptr,right)); return *this; }
-    object &inplace_add(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAdd(&this->m_ptr,right)); return *this; }
-    object &inplace_sub(int8_t right) { throw_if_nonzero(DeeObject_InplaceSubS8(&this->m_ptr,right)); return *this; }
-    object &inplace_sub(uint32_t right) { throw_if_nonzero(DeeObject_InplaceSubInt(&this->m_ptr,right)); return *this; }
-    object &inplace_sub(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceSub(&this->m_ptr,right)); return *this; }
-    object &inplace_mul(int8_t right) { throw_if_nonzero(DeeObject_InplaceMulInt(&this->m_ptr,right)); return *this; }
-    object &inplace_mul(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMul(&this->m_ptr,right)); return *this; }
-    object &inplace_div(int8_t right) { throw_if_nonzero(DeeObject_InplaceDivInt(&this->m_ptr,right)); return *this; }
-    object &inplace_div(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceDiv(&this->m_ptr,right)); return *this; }
-    object &inplace_mod(int8_t right) { throw_if_nonzero(DeeObject_InplaceModInt(&this->m_ptr,right)); return *this; }
-    object &inplace_mod(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMod(&this->m_ptr,right)); return *this; }
-    object &inplace_shl(uint8_t right) { throw_if_nonzero(DeeObject_InplaceShlInt(&this->m_ptr,right)); return *this; }
-    object &inplace_shl(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShl(&this->m_ptr,right)); return *this; }
-    object &inplace_shr(uint8_t right) { throw_if_nonzero(DeeObject_InplaceShrInt(&this->m_ptr,right)); return *this; }
-    object &inplace_shr(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShr(&this->m_ptr,right)); return *this; }
-    object &inplace_and(uint32_t right) { throw_if_nonzero(DeeObject_InplaceAndInt(&this->m_ptr,right)); return *this; }
-    object &inplace_and(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAnd(&this->m_ptr,right)); return *this; }
-    object &inplace_or(uint32_t right) { throw_if_nonzero(DeeObject_InplaceOrInt(&this->m_ptr,right)); return *this; }
-    object &inplace_or(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceOr(&this->m_ptr,right)); return *this; }
-    object &inplace_xor(uint32_t right) { throw_if_nonzero(DeeObject_InplaceXorInt(&this->m_ptr,right)); return *this; }
-    object &inplace_xor(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceXor(&this->m_ptr,right)); return *this; }
-    object &inplace_pow(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplacePow(&this->m_ptr,right)); return *this; }
+    Object inv() const { return inherit(DeeObject_Inv(*this)); }
+    Object pos() const { return inherit(DeeObject_Pos(*this)); }
+    Object neg() const { return inherit(DeeObject_Neg(*this)); }
+    Object add(int8_t right) const { return inherit(DeeObject_AddS8(*this,right)); }
+    Object add(uint32_t right) const { return inherit(DeeObject_AddInt(*this,right)); }
+    Object add(DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
+    Object sub(int8_t right) const { return inherit(DeeObject_SubS8(*this,right)); }
+    Object sub(uint32_t right) const { return inherit(DeeObject_SubInt(*this,right)); }
+    Object sub(DeeObject *__restrict right) const { return inherit(DeeObject_Sub(*this,right)); }
+    Object mul(int8_t right) const { return inherit(DeeObject_MulInt(*this,right)); }
+    Object mul(DeeObject *__restrict right) const { return inherit(DeeObject_Mul(*this,right)); }
+    Object div(int8_t right) const { return inherit(DeeObject_DivInt(*this,right)); }
+    Object div(DeeObject *__restrict right) const { return inherit(DeeObject_Div(*this,right)); }
+    Object mod(int8_t right) const { return inherit(DeeObject_ModInt(*this,right)); }
+    Object mod(DeeObject *__restrict right) const { return inherit(DeeObject_Mod(*this,right)); }
+    Object shl(uint8_t right) const { return inherit(DeeObject_ShlInt(*this,right)); }
+    Object shl(DeeObject *__restrict right) const { return inherit(DeeObject_Shl(*this,right)); }
+    Object shr(uint8_t right) const { return inherit(DeeObject_ShrInt(*this,right)); }
+    Object shr(DeeObject *__restrict right) const { return inherit(DeeObject_Shr(*this,right)); }
+    Object and_(uint32_t right) const { return inherit(DeeObject_AndInt(*this,right)); }
+    Object and_(DeeObject *__restrict right) const { return inherit(DeeObject_And(*this,right)); }
+    Object or_(uint32_t right) const { return inherit(DeeObject_OrInt(*this,right)); }
+    Object or_(DeeObject *__restrict right) const { return inherit(DeeObject_Or(*this,right)); }
+    Object xor_(uint32_t right) const { return inherit(DeeObject_XorInt(*this,right)); }
+    Object xor_(DeeObject *__restrict right) const { return inherit(DeeObject_Xor(*this,right)); }
+    Object pow(DeeObject *__restrict right) const { return inherit(DeeObject_Pow(*this,right)); }
+    Object &inplace_add(int8_t right) { throw_if_nonzero(DeeObject_InplaceAddS8(&this->m_ptr,right)); return *this; }
+    Object &inplace_add(uint32_t right) { throw_if_nonzero(DeeObject_InplaceAddInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_add(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAdd(&this->m_ptr,right)); return *this; }
+    Object &inplace_sub(int8_t right) { throw_if_nonzero(DeeObject_InplaceSubS8(&this->m_ptr,right)); return *this; }
+    Object &inplace_sub(uint32_t right) { throw_if_nonzero(DeeObject_InplaceSubInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_sub(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceSub(&this->m_ptr,right)); return *this; }
+    Object &inplace_mul(int8_t right) { throw_if_nonzero(DeeObject_InplaceMulInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_mul(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMul(&this->m_ptr,right)); return *this; }
+    Object &inplace_div(int8_t right) { throw_if_nonzero(DeeObject_InplaceDivInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_div(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceDiv(&this->m_ptr,right)); return *this; }
+    Object &inplace_mod(int8_t right) { throw_if_nonzero(DeeObject_InplaceModInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_mod(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMod(&this->m_ptr,right)); return *this; }
+    Object &inplace_shl(uint8_t right) { throw_if_nonzero(DeeObject_InplaceShlInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_shl(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShl(&this->m_ptr,right)); return *this; }
+    Object &inplace_shr(uint8_t right) { throw_if_nonzero(DeeObject_InplaceShrInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_shr(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShr(&this->m_ptr,right)); return *this; }
+    Object &inplace_and(uint32_t right) { throw_if_nonzero(DeeObject_InplaceAndInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_and(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAnd(&this->m_ptr,right)); return *this; }
+    Object &inplace_or(uint32_t right) { throw_if_nonzero(DeeObject_InplaceOrInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_or(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceOr(&this->m_ptr,right)); return *this; }
+    Object &inplace_xor(uint32_t right) { throw_if_nonzero(DeeObject_InplaceXorInt(&this->m_ptr,right)); return *this; }
+    Object &inplace_xor(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceXor(&this->m_ptr,right)); return *this; }
+    Object &inplace_pow(DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplacePow(&this->m_ptr,right)); return *this; }
 
     /* Generic operator invocation. */
-    object invoke_operator(uint16_t name, obj_tuple args) const { return inherit(DeeObject_InvokeOperatorTuple(*this,name,(DeeObject *)args)); }
-    object invoke_operator(uint16_t name, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_InvokeOperator(*this,name,argc,argv)); }
-    object invoke_operator(uint16_t name, size_t argc, object *__restrict argv) const { return inherit(DeeObject_InvokeOperator(*this,name,argc,(DeeObject **)argv)); }
-    object invoke_operator(uint16_t name, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_InvokeOperator(*this,name,args.size(),(DeeObject **)args.begin())); }
-    object invoke_inplace_operator(uint16_t name, obj_tuple args) { return inherit(DeeObject_PInvokeOperatorTuple(&this->m_ptr,name,(DeeObject *)args)); }
-    object invoke_inplace_operator(uint16_t name, size_t argc, DeeObject **__restrict argv) { return inherit(DeeObject_PInvokeOperator(&this->m_ptr,name,argc,argv)); }
-    object invoke_inplace_operator(uint16_t name, size_t argc, object *__restrict argv) { return inherit(DeeObject_PInvokeOperator(&this->m_ptr,name,argc,(DeeObject **)argv)); }
-    object invoke_inplace_operator(uint16_t name, std::initializer_list<DeeObject *> const &args) { return inherit(DeeObject_PInvokeOperator(&this->m_ptr,name,args.size(),(DeeObject **)args.begin())); }
+    Object invoke_operator(uint16_t name, obj_tuple args) const { return inherit(DeeObject_InvokeOperatorTuple(*this,name,(DeeObject *)args)); }
+    Object invoke_operator(uint16_t name, size_t argc, DeeObject **__restrict argv) const { return inherit(DeeObject_InvokeOperator(*this,name,argc,argv)); }
+    Object invoke_operator(uint16_t name, size_t argc, Object *__restrict argv) const { return inherit(DeeObject_InvokeOperator(*this,name,argc,(DeeObject **)argv)); }
+    Object invoke_operator(uint16_t name, std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_InvokeOperator(*this,name,args.size(),(DeeObject **)args.begin())); }
+    Object invoke_inplace_operator(uint16_t name, obj_tuple args) { return inherit(DeeObject_PInvokeOperatorTuple(&this->m_ptr,name,(DeeObject *)args)); }
+    Object invoke_inplace_operator(uint16_t name, size_t argc, DeeObject **__restrict argv) { return inherit(DeeObject_PInvokeOperator(&this->m_ptr,name,argc,argv)); }
+    Object invoke_inplace_operator(uint16_t name, size_t argc, Object *__restrict argv) { return inherit(DeeObject_PInvokeOperator(&this->m_ptr,name,argc,(DeeObject **)argv)); }
+    Object invoke_inplace_operator(uint16_t name, std::initializer_list<DeeObject *> const &args) { return inherit(DeeObject_PInvokeOperator(&this->m_ptr,name,args.size(),(DeeObject **)args.begin())); }
 
     /* Operator integration */
     WUNUSED item_proxy_obj operator [](DeeObject *__restrict index) const { return item_proxy_obj(*this,index); }
     WUNUSED item_proxy_idx operator [](size_t index) const { return item_proxy_idx(*this,index); }
     WUNUSED item_proxy_sth operator [](char const *__restrict name) const { return item_proxy_sth(*this,name); }
-    WUNUSED object operator ()(obj_tuple args) const { return inherit(DeeObject_CallTuple(*this,args)); }
-    WUNUSED object operator ()(std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_Call(*this,args.size(),(DeeObject **)args.begin())); }
+    WUNUSED Object operator ()(obj_tuple args) const { return inherit(DeeObject_CallTuple(*this,args)); }
+    WUNUSED Object operator ()(std::initializer_list<DeeObject *> const &args) const { return inherit(DeeObject_Call(*this,args.size(),(DeeObject **)args.begin())); }
     WUNUSED operator bool() const { return throw_if_negative(DeeObject_Bool(*this)) != 0; }
     WUNUSED bool operator ! () const { return throw_if_negative(DeeObject_Bool(*this)) == 0; }
-    WUNUSED object operator == (DeeObject *__restrict other) const { return DeeObject_CompareEqObject(*this,other); }
-    WUNUSED object operator != (DeeObject *__restrict other) const { return DeeObject_CompareNeObject(*this,other); }
-    WUNUSED object operator < (DeeObject *__restrict other) const { return DeeObject_CompareLoObject(*this,other); }
-    WUNUSED object operator <= (DeeObject *__restrict other) const { return DeeObject_CompareLeObject(*this,other); }
-    WUNUSED object operator > (DeeObject *__restrict other) const { return DeeObject_CompareGrObject(*this,other); }
-    WUNUSED object operator >= (DeeObject *__restrict other) const { return DeeObject_CompareGeObject(*this,other); }
-    WUNUSED object operator ~ () const { return inherit(DeeObject_Inv(*this)); }
-    WUNUSED object operator + () const { return inherit(DeeObject_Pos(*this)); }
-    WUNUSED object operator - () const { return inherit(DeeObject_Neg(*this)); }
-    WUNUSED object operator + (int8_t right) const { return inherit(DeeObject_AddS8(*this,right)); }
-    WUNUSED object operator + (uint32_t right) const { return inherit(DeeObject_AddInt(*this,right)); }
-    WUNUSED object operator + (DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
-    WUNUSED object operator - (int8_t right) const { return inherit(DeeObject_SubS8(*this,right)); }
-    WUNUSED object operator - (uint32_t right) const { return inherit(DeeObject_SubInt(*this,right)); }
-    WUNUSED object operator - (DeeObject *__restrict right) const { return inherit(DeeObject_Sub(*this,right)); }
-    WUNUSED object operator * (int8_t right) const { return inherit(DeeObject_MulInt(*this,right)); }
-    WUNUSED object operator * (DeeObject *__restrict right) const { return inherit(DeeObject_Mul(*this,right)); }
-    WUNUSED object operator / (int8_t right) const { return inherit(DeeObject_DivInt(*this,right)); }
-    WUNUSED object operator / (DeeObject *__restrict right) const { return inherit(DeeObject_Div(*this,right)); }
-    WUNUSED object operator % (int8_t right) const { return inherit(DeeObject_ModInt(*this,right)); }
-    WUNUSED object operator % (DeeObject *__restrict right) const { return inherit(DeeObject_Mod(*this,right)); }
-    WUNUSED object operator << (uint8_t right) const { return inherit(DeeObject_ShlInt(*this,right)); }
-    WUNUSED object operator << (DeeObject *__restrict right) const { return inherit(DeeObject_Shl(*this,right)); }
-    WUNUSED object operator >> (uint8_t right) const { return inherit(DeeObject_ShrInt(*this,right)); }
-    WUNUSED object operator >> (DeeObject *__restrict right) const { return inherit(DeeObject_Shr(*this,right)); }
-    WUNUSED object operator & (uint32_t right) const { return inherit(DeeObject_AndInt(*this,right)); }
-    WUNUSED object operator & (DeeObject *__restrict right) const { return inherit(DeeObject_And(*this,right)); }
-    WUNUSED object operator | (uint32_t right) const { return inherit(DeeObject_OrInt(*this,right)); }
-    WUNUSED object operator | (DeeObject *__restrict right) const { return inherit(DeeObject_Or(*this,right)); }
-    WUNUSED object operator ^ (uint32_t right) const { return inherit(DeeObject_XorInt(*this,right)); }
-    WUNUSED object operator ^ (DeeObject *__restrict right) const { return inherit(DeeObject_Xor(*this,right)); }
-    object &operator ++ () { throw_if_nonzero(DeeObject_Inc(&this->m_ptr)); return *this; }
-    object &operator -- () { throw_if_nonzero(DeeObject_Dec(&this->m_ptr)); return *this; }
-    WUNUSED object operator ++ (int) { DREF DeeObject *result = throw_if_null(DeeObject_Copy(*this)); int error = DeeObject_Inc(&this->m_ptr); if unlikely(error) { Dee_Decref(result); throw_last_deemon_exception(); } return inherit(nonnull(result)); }
-    WUNUSED object operator -- (int) { DREF DeeObject *result = throw_if_null(DeeObject_Copy(*this)); int error = DeeObject_Dec(&this->m_ptr); if unlikely(error) { Dee_Decref(result); throw_last_deemon_exception(); } return inherit(nonnull(result)); }
-    object &operator += (int8_t right) { throw_if_nonzero(DeeObject_InplaceAddS8(&this->m_ptr,right)); return *this; }
-    object &operator += (uint32_t right) { throw_if_nonzero(DeeObject_InplaceAddInt(&this->m_ptr,right)); return *this; }
-    object &operator += (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAdd(&this->m_ptr,right)); return *this; }
-    object &operator -= (int8_t right) { throw_if_nonzero(DeeObject_InplaceSubS8(&this->m_ptr,right)); return *this; }
-    object &operator -= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceSubInt(&this->m_ptr,right)); return *this; }
-    object &operator -= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceSub(&this->m_ptr,right)); return *this; }
-    object &operator *= (int8_t right) { throw_if_nonzero(DeeObject_InplaceMulInt(&this->m_ptr,right)); return *this; }
-    object &operator *= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMul(&this->m_ptr,right)); return *this; }
-    object &operator /= (int8_t right) { throw_if_nonzero(DeeObject_InplaceDivInt(&this->m_ptr,right)); return *this; }
-    object &operator /= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceDiv(&this->m_ptr,right)); return *this; }
-    object &operator %= (int8_t right) { throw_if_nonzero(DeeObject_InplaceModInt(&this->m_ptr,right)); return *this; }
-    object &operator %= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMod(&this->m_ptr,right)); return *this; }
-    object &operator <<= (uint8_t right) { throw_if_nonzero(DeeObject_InplaceShlInt(&this->m_ptr,right)); return *this; }
-    object &operator <<= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShl(&this->m_ptr,right)); return *this; }
-    object &operator >>= (uint8_t right) { throw_if_nonzero(DeeObject_InplaceShrInt(&this->m_ptr,right)); return *this; }
-    object &operator >>= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShr(&this->m_ptr,right)); return *this; }
-    object &operator &= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceAndInt(&this->m_ptr,right)); return *this; }
-    object &operator &= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAnd(&this->m_ptr,right)); return *this; }
-    object &operator |= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceOrInt(&this->m_ptr,right)); return *this; }
-    object &operator |= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceOr(&this->m_ptr,right)); return *this; }
-    object &operator ^= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceXorInt(&this->m_ptr,right)); return *this; }
-    object &operator ^= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceXor(&this->m_ptr,right)); return *this; }
+    WUNUSED Object operator == (DeeObject *__restrict other) const { return DeeObject_CompareEqObject(*this,other); }
+    WUNUSED Object operator != (DeeObject *__restrict other) const { return DeeObject_CompareNeObject(*this,other); }
+    WUNUSED Object operator < (DeeObject *__restrict other) const { return DeeObject_CompareLoObject(*this,other); }
+    WUNUSED Object operator <= (DeeObject *__restrict other) const { return DeeObject_CompareLeObject(*this,other); }
+    WUNUSED Object operator > (DeeObject *__restrict other) const { return DeeObject_CompareGrObject(*this,other); }
+    WUNUSED Object operator >= (DeeObject *__restrict other) const { return DeeObject_CompareGeObject(*this,other); }
+    WUNUSED Object operator ~ () const { return inherit(DeeObject_Inv(*this)); }
+    WUNUSED Object operator + () const { return inherit(DeeObject_Pos(*this)); }
+    WUNUSED Object operator - () const { return inherit(DeeObject_Neg(*this)); }
+    WUNUSED Object operator + (int8_t right) const { return inherit(DeeObject_AddS8(*this,right)); }
+    WUNUSED Object operator + (uint32_t right) const { return inherit(DeeObject_AddInt(*this,right)); }
+    WUNUSED Object operator + (DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
+    WUNUSED Object operator - (int8_t right) const { return inherit(DeeObject_SubS8(*this,right)); }
+    WUNUSED Object operator - (uint32_t right) const { return inherit(DeeObject_SubInt(*this,right)); }
+    WUNUSED Object operator - (DeeObject *__restrict right) const { return inherit(DeeObject_Sub(*this,right)); }
+    WUNUSED Object operator * (int8_t right) const { return inherit(DeeObject_MulInt(*this,right)); }
+    WUNUSED Object operator * (DeeObject *__restrict right) const { return inherit(DeeObject_Mul(*this,right)); }
+    WUNUSED Object operator / (int8_t right) const { return inherit(DeeObject_DivInt(*this,right)); }
+    WUNUSED Object operator / (DeeObject *__restrict right) const { return inherit(DeeObject_Div(*this,right)); }
+    WUNUSED Object operator % (int8_t right) const { return inherit(DeeObject_ModInt(*this,right)); }
+    WUNUSED Object operator % (DeeObject *__restrict right) const { return inherit(DeeObject_Mod(*this,right)); }
+    WUNUSED Object operator << (uint8_t right) const { return inherit(DeeObject_ShlInt(*this,right)); }
+    WUNUSED Object operator << (DeeObject *__restrict right) const { return inherit(DeeObject_Shl(*this,right)); }
+    WUNUSED Object operator >> (uint8_t right) const { return inherit(DeeObject_ShrInt(*this,right)); }
+    WUNUSED Object operator >> (DeeObject *__restrict right) const { return inherit(DeeObject_Shr(*this,right)); }
+    WUNUSED Object operator & (uint32_t right) const { return inherit(DeeObject_AndInt(*this,right)); }
+    WUNUSED Object operator & (DeeObject *__restrict right) const { return inherit(DeeObject_And(*this,right)); }
+    WUNUSED Object operator | (uint32_t right) const { return inherit(DeeObject_OrInt(*this,right)); }
+    WUNUSED Object operator | (DeeObject *__restrict right) const { return inherit(DeeObject_Or(*this,right)); }
+    WUNUSED Object operator ^ (uint32_t right) const { return inherit(DeeObject_XorInt(*this,right)); }
+    WUNUSED Object operator ^ (DeeObject *__restrict right) const { return inherit(DeeObject_Xor(*this,right)); }
+    Object &operator ++ () { throw_if_nonzero(DeeObject_Inc(&this->m_ptr)); return *this; }
+    Object &operator -- () { throw_if_nonzero(DeeObject_Dec(&this->m_ptr)); return *this; }
+    WUNUSED Object operator ++ (int) { DREF DeeObject *result = throw_if_null(DeeObject_Copy(*this)); int error = DeeObject_Inc(&this->m_ptr); if unlikely(error) { Dee_Decref(result); throw_last_deemon_exception(); } return inherit(nonnull(result)); }
+    WUNUSED Object operator -- (int) { DREF DeeObject *result = throw_if_null(DeeObject_Copy(*this)); int error = DeeObject_Dec(&this->m_ptr); if unlikely(error) { Dee_Decref(result); throw_last_deemon_exception(); } return inherit(nonnull(result)); }
+    Object &operator += (int8_t right) { throw_if_nonzero(DeeObject_InplaceAddS8(&this->m_ptr,right)); return *this; }
+    Object &operator += (uint32_t right) { throw_if_nonzero(DeeObject_InplaceAddInt(&this->m_ptr,right)); return *this; }
+    Object &operator += (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAdd(&this->m_ptr,right)); return *this; }
+    Object &operator -= (int8_t right) { throw_if_nonzero(DeeObject_InplaceSubS8(&this->m_ptr,right)); return *this; }
+    Object &operator -= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceSubInt(&this->m_ptr,right)); return *this; }
+    Object &operator -= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceSub(&this->m_ptr,right)); return *this; }
+    Object &operator *= (int8_t right) { throw_if_nonzero(DeeObject_InplaceMulInt(&this->m_ptr,right)); return *this; }
+    Object &operator *= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMul(&this->m_ptr,right)); return *this; }
+    Object &operator /= (int8_t right) { throw_if_nonzero(DeeObject_InplaceDivInt(&this->m_ptr,right)); return *this; }
+    Object &operator /= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceDiv(&this->m_ptr,right)); return *this; }
+    Object &operator %= (int8_t right) { throw_if_nonzero(DeeObject_InplaceModInt(&this->m_ptr,right)); return *this; }
+    Object &operator %= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceMod(&this->m_ptr,right)); return *this; }
+    Object &operator <<= (uint8_t right) { throw_if_nonzero(DeeObject_InplaceShlInt(&this->m_ptr,right)); return *this; }
+    Object &operator <<= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShl(&this->m_ptr,right)); return *this; }
+    Object &operator >>= (uint8_t right) { throw_if_nonzero(DeeObject_InplaceShrInt(&this->m_ptr,right)); return *this; }
+    Object &operator >>= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceShr(&this->m_ptr,right)); return *this; }
+    Object &operator &= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceAndInt(&this->m_ptr,right)); return *this; }
+    Object &operator &= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceAnd(&this->m_ptr,right)); return *this; }
+    Object &operator |= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceOrInt(&this->m_ptr,right)); return *this; }
+    Object &operator |= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceOr(&this->m_ptr,right)); return *this; }
+    Object &operator ^= (uint32_t right) { throw_if_nonzero(DeeObject_InplaceXorInt(&this->m_ptr,right)); return *this; }
+    Object &operator ^= (DeeObject *__restrict right) { throw_if_nonzero(DeeObject_InplaceXor(&this->m_ptr,right)); return *this; }
 
     /* High-level interface for up-casting object types. */
-    template<class T> WUNUSED T &as(typename std::enable_if<std::is_base_of<object,T>::value,int>::type* =0) DEE_CXX_NOTHROW { return *(T *)this; }
-    template<class T> WUNUSED T const &as(typename std::enable_if<std::is_base_of<object,T>::value,int>::type* =0) const DEE_CXX_NOTHROW { return *(T *)this; }
+    template<class T> WUNUSED T &as(typename std::enable_if<std::is_base_of<Object,T>::value,int>::type* =0) DEE_CXX_NOTHROW { return *(T *)this; }
+    template<class T> WUNUSED T const &as(typename std::enable_if<std::is_base_of<Object,T>::value,int>::type* =0) const DEE_CXX_NOTHROW { return *(T *)this; }
     /* Same as `as()', but throw an exception if the cast cannot be performed. */
-    template<class T> WUNUSED T &as_chk(typename std::enable_if<std::is_base_of<object,T>::value,int>::type* =0) { if (!T::check(m_ptr)) { DeeObject_TypeAssertFailed(m_ptr,T::classtype()); throw_last_deemon_exception(); } return *(T *)this; }
-    template<class T> WUNUSED T const &as_chk(typename std::enable_if<std::is_base_of<object,T>::value,int>::type* =0) const { if (!T::check(m_ptr)) { DeeObject_TypeAssertFailed(m_ptr,T::classtype()); throw_last_deemon_exception(); } return *(T *)this; }
+    template<class T> WUNUSED T &as_chk(typename std::enable_if<std::is_base_of<Object,T>::value,int>::type* =0) { if (!T::check(m_ptr)) { DeeObject_TypeAssertFailed(m_ptr,T::classtype()); throw_last_deemon_exception(); } return *(T *)this; }
+    template<class T> WUNUSED T const &as_chk(typename std::enable_if<std::is_base_of<Object,T>::value,int>::type* =0) const { if (!T::check(m_ptr)) { DeeObject_TypeAssertFailed(m_ptr,T::classtype()); throw_last_deemon_exception(); } return *(T *)this; }
 
     /* Integer conversion */
-    object const &getval(char &value) const { throw_if_nonzero(DeeObject_AsChar(*this,&value)); return *this; }
-    object const &getval(signed char &value) const { throw_if_nonzero(DeeObject_AsSChar(*this,&value)); return *this; }
-    object const &getval(unsigned char &value) const { throw_if_nonzero(DeeObject_AsUChar(*this,&value)); return *this; }
-    object const &getval(short &value) const { throw_if_nonzero(DeeObject_AsShort(*this,&value)); return *this; }
-    object const &getval(unsigned short &value) const { throw_if_nonzero(DeeObject_AsUShort(*this,&value)); return *this; }
-    object const &getval(int &value) const { throw_if_nonzero(DeeObject_AsInt(*this,&value)); return *this; }
-    object const &getval(unsigned int &value) const { throw_if_nonzero(DeeObject_AsUInt(*this,&value)); return *this; }
-    object const &getval(long &value) const { throw_if_nonzero(DeeObject_AsLong(*this,&value)); return *this; }
-    object const &getval(unsigned long &value) const { throw_if_nonzero(DeeObject_AsULong(*this,&value)); return *this; }
+    Object const &getval(char &value) const { throw_if_nonzero(DeeObject_AsChar(*this,&value)); return *this; }
+    Object const &getval(signed char &value) const { throw_if_nonzero(DeeObject_AsSChar(*this,&value)); return *this; }
+    Object const &getval(unsigned char &value) const { throw_if_nonzero(DeeObject_AsUChar(*this,&value)); return *this; }
+    Object const &getval(short &value) const { throw_if_nonzero(DeeObject_AsShort(*this,&value)); return *this; }
+    Object const &getval(unsigned short &value) const { throw_if_nonzero(DeeObject_AsUShort(*this,&value)); return *this; }
+    Object const &getval(int &value) const { throw_if_nonzero(DeeObject_AsInt(*this,&value)); return *this; }
+    Object const &getval(unsigned int &value) const { throw_if_nonzero(DeeObject_AsUInt(*this,&value)); return *this; }
+    Object const &getval(long &value) const { throw_if_nonzero(DeeObject_AsLong(*this,&value)); return *this; }
+    Object const &getval(unsigned long &value) const { throw_if_nonzero(DeeObject_AsULong(*this,&value)); return *this; }
 #ifdef __COMPILER_HAVE_LONGLONG
-    object const &getval(long long &value) const { throw_if_nonzero(DeeObject_AsLLong(*this,&value)); return *this; }
-    object const &getval(unsigned long long &value) const { throw_if_nonzero(DeeObject_AsULLong(*this,&value)); return *this; }
+    Object const &getval(long long &value) const { throw_if_nonzero(DeeObject_AsLLong(*this,&value)); return *this; }
+    Object const &getval(unsigned long long &value) const { throw_if_nonzero(DeeObject_AsULLong(*this,&value)); return *this; }
 #endif
-    object const &getval(Dee_int128_t &value) const { throw_if_nonzero(DeeObject_AsInt128(*this,&value)); return *this; }
-    object const &getval(Dee_uint128_t &value) const { throw_if_nonzero(DeeObject_AsUInt128(*this,&value)); return *this; }
-    object const &getval(float &value) const { double temp; getval(temp); value = (float)temp; return *this; }
-    object const &getval(double &value) const { throw_if_nonzero(DeeObject_AsDouble(*this,&value)); return *this; }
+    Object const &getval(Dee_int128_t &value) const { throw_if_nonzero(DeeObject_AsInt128(*this,&value)); return *this; }
+    Object const &getval(Dee_uint128_t &value) const { throw_if_nonzero(DeeObject_AsUInt128(*this,&value)); return *this; }
+    Object const &getval(float &value) const { double temp; getval(temp); value = (float)temp; return *this; }
+    Object const &getval(double &value) const { throw_if_nonzero(DeeObject_AsDouble(*this,&value)); return *this; }
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-    object const &getval(long double &value) const { double temp; getval(temp); value = (long double)temp; return *this; }
+    Object const &getval(long double &value) const { double temp; getval(temp); value = (long double)temp; return *this; }
 #endif
 
     /* Helper functions to explicitly convert an object to an integral value. */
@@ -1012,37 +1012,37 @@ public:
 };
 
 
-WUNUSED object weakref::trylock() const DEE_CXX_NOTHROW { return inherit(maybenull(trylockref())); }
-WUNUSED object weakref::lock() const { return inherit(nonnull(lockref())); }
-WUNUSED object weakref::lock(DeeObject *__restrict defl) const DEE_CXX_NOTHROW { return inherit(nonnull(lockref(defl))); }
+WUNUSED Object WeakRef::trylock() const DEE_CXX_NOTHROW { return inherit(maybenull(trylockref())); }
+WUNUSED Object WeakRef::lock() const { return inherit(nonnull(lockref())); }
+WUNUSED Object WeakRef::lock(DeeObject *__restrict defl) const DEE_CXX_NOTHROW { return inherit(nonnull(lockref(defl))); }
 
 
-class none: public object {
+class none: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeNone_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeNone_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeNone_CheckExact(ob); }
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(none,object)
-    none() DEE_CXX_NOTHROW: object(nonnull(Dee_None)) { }
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(none,Object)
+    none() DEE_CXX_NOTHROW: Object(nonnull(Dee_None)) { }
 };
 
 
-class bool_: public object {
+class bool_: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeBool_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeBool_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeBool_CheckExact(ob); }
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(bool_,object)
-    bool_() DEE_CXX_NOTHROW: object(nonnull(Dee_False)) { }
-    bool_(bool value) DEE_CXX_NOTHROW: object(nonnull(DeeBool_For(value))) { }
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(bool_,Object)
+    bool_() DEE_CXX_NOTHROW: Object(nonnull(Dee_False)) { }
+    bool_(bool value) DEE_CXX_NOTHROW: Object(nonnull(DeeBool_For(value))) { }
     static WUNUSED bool_ true_() DEE_CXX_NOTHROW { return nonnull(Dee_True); }
     static WUNUSED bool_ false_() DEE_CXX_NOTHROW { return nonnull(Dee_False); }
 #ifndef __OPTIMIZE_SIZE__
     //bool bool_() const DEE_CXX_NOTHROW { return DeeBool_IsTrue(this->ptr()); }
-    WUNUSED operator bool () const { return likely(DeeBool_Check(this->ptr())) ? DeeBool_IsTrue(this->ptr()) : object::operator bool(); }
-    WUNUSED bool operator ! () const { return likely(DeeBool_Check(this->ptr())) ? !DeeBool_IsTrue(this->ptr()) : object::operator !(); }
+    WUNUSED operator bool () const { return likely(DeeBool_Check(this->ptr())) ? DeeBool_IsTrue(this->ptr()) : Object::operator bool(); }
+    WUNUSED bool operator ! () const { return likely(DeeBool_Check(this->ptr())) ? !DeeBool_IsTrue(this->ptr()) : Object::operator !(); }
 #endif /* !__OPTIMIZE_SIZE__ */
 };
 

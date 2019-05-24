@@ -280,7 +280,7 @@ PRIVATE struct type_member stringordinals_members[] = {
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member stringordinals_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&StringOrdinalsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&StringOrdinalsIterator_Type),
     TYPE_MEMBER_END
 };
 

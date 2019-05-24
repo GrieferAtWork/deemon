@@ -29,13 +29,13 @@ function status(message) {
 	print "\r"," " * 60,;
 	print "\r",;
 	print message,;
-	file.stdout.sync();
+	File.stdout.sync();
 }
 
 function scan_path(p: string, rel: string) {
 	local files;
 	try {
-		files = list(dir(p));
+		files = List(dir(p));
 	} catch (e...) {
 		print "WARNING: Broken library path",repr p;
 		print ">",e;
@@ -56,7 +56,7 @@ function scan_path(p: string, rel: string) {
 	}
 }
 
-for (local p: module.path) {
+for (local p: Module.path) {
 	scan_path(p,"");
 }
 

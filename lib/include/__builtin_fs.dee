@@ -19,7 +19,7 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","fs","import","user","environ","final","function","return","if","expand","chtime","stat","local","group")
+#pragma push_macro(undef,"from","fs","import","User","environ","final","function","return","if","expand","chtime","stat","local","Group")
 from fs import
 	__builtin_fs_getcwd = "getcwd",
 	__builtin_fs_wgetcwd = "getcwd",
@@ -46,8 +46,8 @@ from fs import
 	__builtin_fs_readlink = "readlink",
 	__builtin_fs_chmod = "chmod",
 	__builtin_fs_chown = "chown",
-	__builtin_fs_uidof = "user",
-	__builtin_fs_gidof = "group",
+	__builtin_fs_uidof = "User",
+	__builtin_fs_gidof = "Group",
 	__builtin_fs_machine = "gethostname"
 #define __builtin_fs_wmachine __builtin_fs_machine
 #ifdef __WINDOWS__
@@ -56,7 +56,7 @@ from fs import
 #endif
 ;
 
-final function __builtin_fs_gethome() -> (user from fs).operator . ("home");
+final function __builtin_fs_gethome() -> (User from fs)().operator . ("home");
 #define __builtin_fs_wgethome __builtin_fs_gethome
 #define __builtin_fs_wgettmp __builtin_fs_gettmp
 //const __builtin_fs_gettmpname = __builtin_object(0x0168); /* TODO */
@@ -107,15 +107,15 @@ final function __builtin_fs_getown(__path) {
 
 #define __builtin_fs_wuidname __builtin_fs_uidname
 final function __builtin_fs_uidname(__uid) {
-	if (__uid !is user from fs)
-		__uid = (user from fs)(__uid);
+	if (__uid !is User from fs)
+		__uid = (User from fs)(__uid);
 	return __uid.operator . ("name");
 }
 
 #define __builtin_fs_wgidname __builtin_fs_gidname
 final function __builtin_fs_gidname(__gid) {
-	if (__gid !is group from fs)
-		__gid = (group from fs)(__gid);
+	if (__gid !is Group from fs)
+		__gid = (Group from fs)(__gid);
 	return __gid.operator . ("name");
 }
 
@@ -143,10 +143,10 @@ final function __builtin_fs_win32drives() {
 #pragma pop_macro("win32","GetLogicalDriveStrings","rstrip","split")
 #endif
 
-function __builtin_fs_user() -> (user from fs).operator . ("name");
+function __builtin_fs_user() -> (User from fs)().operator . ("name");
 #define __builtin_fs_wuser __builtin_fs_user
 
-#pragma pop_macro("from","fs","import","user","environ","final","function","return","if","expand","chtime","stat","local","group")
+#pragma pop_macro("from","fs","import","User","environ","final","function","return","if","expand","chtime","stat","local","Group")
 
 
 

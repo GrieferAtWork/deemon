@@ -20,13 +20,12 @@
 
 /* Implementation of a linked_list class in user code */
 
-import gc from deemon;
-import Error from deemon;
+import * from deemon;
 
 local class LinkedListNode {
-	public m_prev;
-	public m_next;
-	public m_value;
+	public member m_prev;
+	public member m_next;
+	public member m_value;
 
 	this(prev,next,value)
 		: m_prev(prev)
@@ -44,22 +43,22 @@ local class LinkedListNode {
 };
 
 
-@"Not actually meant to be used, a double-linked list"
-@"class that is implemented purely in user-code."
-@"It's pretty much written as efficiently as possible, but it really"
-@"isn't how a container should be implemented in deemon"
-@"It's actual purpose is for demonstration purposes, as well as to"
-@"prove that deemon's GC (which has been re-written fully in deemon 200),"
-@"is fully capable of dealing even with the utterly painful case which doubly-linked"
-@"lists represent when it comes to cleaning up after the user."
-@"Also: Don't forget that deemon's main method of destroying objects is reference counting,"
-@"so this isn't just any ordinary GC (and neither did I copy python, like I did for `int')"
-global class LinkedList: sequence from deemon {
+@@Not actually meant to be used, a double-linked list
+@@class that is implemented purely in user-code.
+@@It's pretty much written as efficiently as possible, but it really
+@@isn't how a container should be implemented in deemon
+@@It's actual purpose is for demonstration purposes, as well as to
+@@prove that deemon's GC (which has been re-written fully in deemon 200),
+@@is fully capable of dealing even with the utterly painful case which doubly-linked
+@@lists represent when it comes to cleaning up after the user.
+@@Also: Don't forget that deemon's main method of destroying objects is reference counting,
+@@so this isn't just any ordinary GC (and neither did I copy python, like I did for `int')
+global class LinkedList: Sequence from deemon {
 	private m_front = none;
 	private m_back = none;
 
-	@"Insert the given object @ob at the front"
-	pushfront(ob) {
+	@@Insert the given object @ob at the front
+	function pushfront(ob) {
 		local new_node = LinkedListNode(none,m_front,ob);
 		if (m_back is none)
 			m_back = new_node;
@@ -67,8 +66,8 @@ global class LinkedList: sequence from deemon {
 		m_front = new_node;
 	}
 
-	@"Insert the given object @ob at the back"
-	pushback(ob) {
+	@@Insert the given object @ob at the back
+	function pushback(ob) {
 		local new_node = LinkedListNode(m_back,none,ob);
 		if (m_front is none)
 			m_front = new_node;
@@ -76,8 +75,8 @@ global class LinkedList: sequence from deemon {
 		m_back = new_node;
 	}
 
-	@"Pop one item from the front and return it"
-	popfront() {
+	@@Pop one item from the front and return it
+	function popfront() {
 		local pop_node = m_front;
 		if (pop_node is none)
 			throw Error.ValueError("Empty list");
@@ -88,8 +87,8 @@ global class LinkedList: sequence from deemon {
 		return pop_node.m_value;
 	}
 
-	@"Pop one item from the back and return it"
-	popback() {
+	@@Pop one item from the back and return it
+	function popback() {
 		local pop_node = m_back;
 		if (pop_node is none)
 			throw Error.ValueError("Empty list");
@@ -100,8 +99,8 @@ global class LinkedList: sequence from deemon {
 		return pop_node.m_value;
 	}
 
-	@"Iterator support"
-	operator for() {
+	@@Iterator support
+	operator for(): Sequence {
 		local node_iter = m_front;
 		while (node_iter !is none) {
 			yield node_iter.m_value;
@@ -109,12 +108,12 @@ global class LinkedList: sequence from deemon {
 		}
 	}
 
-	@"Returns a representation of @this :LinkedList in abstract-sequence syntax"
-	operator repr() {
+	@@Returns a representation of @this :LinkedList in abstract-Sequence syntax
+	operator repr(): string {
 		return "{ "+", ".join(for (local x: this) repr x)+" }";
 	}
 
-	this(init = none) {
+	this(init: Sequence = none) {
 		if (init !is none) {
 			for (local x: init)
 				pushback(x);

@@ -39,7 +39,7 @@ INTDEF DeeTypeObject BytesLineSplit_Type;
 
 typedef struct {
     OBJECT_HEAD
-    DREF Bytes          *bs_bytes;     /* [1..1][const] The bytes object being split. */
+    DREF Bytes          *bs_bytes;     /* [1..1][const] The Bytes object being split. */
     DREF DeeObject      *bs_sep_owner; /* [0..1][const] The owner of the split sequence. */
     uint8_t             *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
     size_t               bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
@@ -51,7 +51,7 @@ typedef struct {
     DREF BytesSplit     *bsi_split;    /* [1..1][const] The underlying split controller. */
     ATOMIC_DATA uint8_t *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
     uint8_t             *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
-    Bytes               *bsi_bytes;    /* [1..1][const][== bsi_split] The bytes object being split. */
+    Bytes               *bsi_bytes;    /* [1..1][const][== bsi_split] The Bytes object being split. */
     uint8_t             *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
     size_t               bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
 } BytesSplitIterator;
@@ -235,7 +235,7 @@ bsci_next(BytesSplitIterator *__restrict self) {
 
 PRIVATE struct type_member bsi_members[] = {
     TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_split),"->?Ert:BytesSplit"),
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes),"->?DBytes"),
     TYPE_MEMBER_END
 };
 
@@ -244,7 +244,7 @@ PRIVATE struct type_member bsi_members[] = {
 #else
 PRIVATE struct type_member bcsi_members[] = {
     TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_split),"->?Ert:BytesCaseSplit"),
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplitIterator,bsi_bytes),"->?DBytes"),
     TYPE_MEMBER_END
 };
 #endif
@@ -466,24 +466,24 @@ bs_getsep(BytesSplit *__restrict self) {
 
 PRIVATE struct type_getset bs_getsets[] = {
     { "__sep__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_getsep, NULL, NULL,
-      DOC("->?Dbytes") },
+      DOC("->?DBytes") },
     { NULL }
 };
 
 PRIVATE struct type_member bs_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplit,bs_bytes),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesSplit,bs_bytes),"->?DBytes"),
     TYPE_MEMBER_FIELD("__sep_owner__",STRUCT_OBJECT,offsetof(BytesSplit,bs_sep_owner)),
     TYPE_MEMBER_FIELD("__sep_length__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(BytesSplit,bs_sep_len)),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member bs_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BytesSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BytesSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member bcs_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BytesCaseSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BytesCaseSplitIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -675,13 +675,13 @@ err_r:
 
 typedef struct {
     OBJECT_HEAD
-    DREF Bytes          *bls_bytes;    /* [1..1][const] The bytes object being split. */
+    DREF Bytes          *bls_bytes;    /* [1..1][const] The Bytes object being split. */
     bool                 bls_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplit;
 
 typedef struct {
     OBJECT_HEAD
-    DREF Bytes          *blsi_bytes;    /* [1..1][const] The bytes object being split. */
+    DREF Bytes          *blsi_bytes;    /* [1..1][const] The Bytes object being split. */
     ATOMIC_DATA uint8_t *blsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
     uint8_t             *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
     bool                 blsi_keepends; /* [const] If true, keep line endings. */
@@ -815,7 +815,7 @@ PRIVATE struct type_getset blsi_getsets[] = {
 };
 
 PRIVATE struct type_member blsi_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesLineSplitIterator,blsi_bytes),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesLineSplitIterator,blsi_bytes),"->?DBytes"),
     TYPE_MEMBER_FIELD("__keepends__",STRUCT_BOOL|STRUCT_CONST,offsetof(BytesLineSplitIterator,blsi_keepends)),
     TYPE_MEMBER_END
 };
@@ -928,13 +928,13 @@ PRIVATE struct type_seq bls_seq = {
 };
 
 PRIVATE struct type_member bls_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesLineSplit,bls_bytes),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesLineSplit,bls_bytes),"->?DBytes"),
     TYPE_MEMBER_FIELD("__keepends__",STRUCT_BOOL|STRUCT_CONST,offsetof(BytesLineSplit,bls_keepends)),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member bls_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BytesLineSplitIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BytesLineSplitIterator_Type),
     TYPE_MEMBER_END
 };
 

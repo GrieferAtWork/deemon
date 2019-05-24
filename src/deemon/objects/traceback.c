@@ -411,7 +411,7 @@ PRIVATE struct type_cmp traceiter_cmp = {
 INTERN DeeTypeObject DeeTracebackIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_TracebackIterator",
-    /* .tp_doc      = */DOC("(seq?:?Dtraceback,index=!0)"),
+    /* .tp_doc      = */DOC("(traceback?:?DTraceback,index=!0)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -682,7 +682,7 @@ PRIVATE struct type_getset traceback_class_getsets[] = {
     { NULL }
 };
 PRIVATE struct type_member traceback_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeTracebackIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeTracebackIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -722,7 +722,7 @@ PRIVATE struct type_method traceback_methods[] = {
 
 PUBLIC DeeTypeObject DeeTraceback_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_traceback),
+    /* .tp_name     = */DeeString_STR(&str_Traceback),
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FGC,
     /* .tp_weakrefs = */0,

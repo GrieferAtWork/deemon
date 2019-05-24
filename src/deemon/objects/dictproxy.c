@@ -41,13 +41,13 @@ DECL_BEGIN
 
 typedef struct {
     /* HINT: The basic algorithm and idea of iterating
-     *       a dict is the same as for a set. */
+     *       a Dict is the same as for a set. */
     OBJECT_HEAD
-    DeeDictObject    *di_dict; /* [1..1][const] The dict being iterated. */
+    DeeDictObject    *di_dict; /* [1..1][const] The Dict being iterated. */
     struct dict_item *di_next; /* [?..1][MAYBE(in(di_dict->d_elem))][atomic]
                                 * The first candidate for the next item.
                                 * NOTE: Before being dereferenced, this pointer is checked
-                                *       for being located inside the dict's element vector.
+                                *       for being located inside the Dict's element vector.
                                 *       In the event that it is located at its end, `ITER_DONE'
                                 *       is returned, though in the event that it is located
                                 *       outside, an error is thrown (`err_changed_sequence()'). */
@@ -63,9 +63,9 @@ INTERN DREF DeeObject *DCALL
 dictiterator_next_key(DictIterator *__restrict self) {
  DREF DeeObject *result;
  struct dict_item *item,*end;
- DeeDictObject *dict = self->di_dict;
- DeeDict_LockRead(dict);
- end = dict->d_elem+(dict->d_mask+1);
+ DeeDictObject *Dict = self->di_dict;
+ DeeDict_LockRead(Dict);
+ end = Dict->d_elem+(Dict->d_mask+1);
 #ifndef CONFIG_NO_THREADS
  for (;;)
 #endif
@@ -82,7 +82,7 @@ dictiterator_next_key(DictIterator *__restrict self) {
       goto dict_has_changed;
    goto iter_exhausted;
   }
-  if unlikely(item < dict->d_elem)
+  if unlikely(item < Dict->d_elem)
      goto dict_has_changed;
   /* Search for the next non-empty item. */
   while (item != end && (!item->di_key || item->di_key == dummy)) ++item;
@@ -104,14 +104,14 @@ dictiterator_next_key(DictIterator *__restrict self) {
  }
  result = item->di_key;
  Dee_Incref(result);
- DeeDict_LockEndRead(dict);
+ DeeDict_LockEndRead(Dict);
  return result;
 dict_has_changed:
- DeeDict_LockEndRead(dict);
- err_changed_sequence((DeeObject *)dict);
+ DeeDict_LockEndRead(Dict);
+ err_changed_sequence((DeeObject *)Dict);
  return NULL;
 iter_exhausted:
- DeeDict_LockEndRead(dict);
+ DeeDict_LockEndRead(Dict);
  return ITER_DONE;
 }
 
@@ -119,9 +119,9 @@ PRIVATE DREF DeeObject *DCALL
 dictiterator_next_item(DictIterator *__restrict self) {
  DREF DeeObject *result,*result_key,*result_item;
  struct dict_item *item,*end;
- DeeDictObject *dict = self->di_dict;
- DeeDict_LockRead(dict);
- end = dict->d_elem+(dict->d_mask+1);
+ DeeDictObject *Dict = self->di_dict;
+ DeeDict_LockRead(Dict);
+ end = Dict->d_elem+(Dict->d_mask+1);
 #ifndef CONFIG_NO_THREADS
  for (;;)
 #endif
@@ -138,7 +138,7 @@ dictiterator_next_item(DictIterator *__restrict self) {
       goto dict_has_changed;
    goto iter_exhausted;
   }
-  if unlikely(item < dict->d_elem)
+  if unlikely(item < Dict->d_elem)
      goto dict_has_changed;
   /* Search for the next non-empty item. */
   while (item != end && (!item->di_key || item->di_key == dummy)) ++item;
@@ -162,17 +162,17 @@ dictiterator_next_item(DictIterator *__restrict self) {
  result_item = item->di_value;
  Dee_Incref(result_key);
  Dee_Incref(result_item);
- DeeDict_LockEndRead(dict);
+ DeeDict_LockEndRead(Dict);
  result = DeeTuple_Pack(2,result_key,result_item);
  Dee_Decref(result_item);
  Dee_Decref(result_key);
  return result;
 dict_has_changed:
- DeeDict_LockEndRead(dict);
- err_changed_sequence((DeeObject *)dict);
+ DeeDict_LockEndRead(Dict);
+ err_changed_sequence((DeeObject *)Dict);
  return NULL;
 iter_exhausted:
- DeeDict_LockEndRead(dict);
+ DeeDict_LockEndRead(Dict);
  return ITER_DONE;
 }
 
@@ -180,9 +180,9 @@ INTERN DREF DeeObject *DCALL
 dictiterator_next_value(DictIterator *__restrict self) {
  DREF DeeObject *result;
  struct dict_item *item,*end;
- DeeDictObject *dict = self->di_dict;
- DeeDict_LockRead(dict);
- end = dict->d_elem+(dict->d_mask+1);
+ DeeDictObject *Dict = self->di_dict;
+ DeeDict_LockRead(Dict);
+ end = Dict->d_elem+(Dict->d_mask+1);
 #ifndef CONFIG_NO_THREADS
  for (;;)
 #endif
@@ -199,7 +199,7 @@ dictiterator_next_value(DictIterator *__restrict self) {
       goto dict_has_changed;
    goto iter_exhausted;
   }
-  if unlikely(item < dict->d_elem)
+  if unlikely(item < Dict->d_elem)
      goto dict_has_changed;
   /* Search for the next non-empty item. */
   while (item != end && (!item->di_key || item->di_key == dummy)) ++item;
@@ -221,41 +221,41 @@ dictiterator_next_value(DictIterator *__restrict self) {
  }
  result = item->di_value;
  Dee_Incref(result);
- DeeDict_LockEndRead(dict);
+ DeeDict_LockEndRead(Dict);
  return result;
 dict_has_changed:
- DeeDict_LockEndRead(dict);
- err_changed_sequence((DeeObject *)dict);
+ DeeDict_LockEndRead(Dict);
+ err_changed_sequence((DeeObject *)Dict);
  return NULL;
 iter_exhausted:
- DeeDict_LockEndRead(dict);
+ DeeDict_LockEndRead(Dict);
  return ITER_DONE;
 }
 
 PRIVATE int DCALL
 dictiterator_bool(DictIterator *__restrict self) {
  struct dict_item *item = READ_ITEM(self);
- DeeDictObject *dict = self->di_dict;
+ DeeDictObject *Dict = self->di_dict;
  /* Check if the iterator is in-bounds.
   * NOTE: Since this is nothing but a shallow boolean check anyways, there
-  *       is no need to lock the dict since we're not dereferencing anything. */
- return (item >= dict->d_elem &&
-         item <  dict->d_elem+(dict->d_mask+1));
+  *       is no need to lock the Dict since we're not dereferencing anything. */
+ return (item >= Dict->d_elem &&
+         item <  Dict->d_elem+(Dict->d_mask+1));
 }
 
 INTERN int DCALL
 dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
- DeeDictObject *dict;
- if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&dict) ||
-     DeeObject_AssertType((DeeObject *)dict,&DeeDict_Type))
+ DeeDictObject *Dict;
+ if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&Dict) ||
+     DeeObject_AssertType((DeeObject *)Dict,&DeeDict_Type))
      return -1;
- self->di_dict = dict;
- Dee_Incref(dict);
+ self->di_dict = Dict;
+ Dee_Incref(Dict);
 #ifdef CONFIG_NO_THREADS
- self->di_next = dict->d_elem;
+ self->di_next = Dict->d_elem;
 #else
- self->di_next = ATOMIC_READ(dict->d_elem);
+ self->di_next = ATOMIC_READ(Dict->d_elem);
 #endif
  return 0;
 }
@@ -385,11 +385,11 @@ done:
 
 typedef struct {
  OBJECT_HEAD
- DREF DeeDictObject *dp_dict; /* [1..1][const] Referenced dict object. */
+ DREF DeeDictObject *dp_dict; /* [1..1][const] Referenced Dict object. */
 } DictProxy;
 
 typedef struct {
- DictIterator    dpi_base;  /* The underlying dict iterator. */
+ DictIterator    dpi_base;  /* The underlying Dict iterator. */
  DREF DictProxy *dpi_proxy; /* [1..1][const] The proxy that spawned this iterator. */
 } DictProxyIterator;
 
@@ -616,13 +616,13 @@ err:
 PRIVATE int DCALL
 proxy_init(DictProxy *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- DeeObject *dict;
- if (DeeArg_Unpack(argc,argv,"o:_DictProxy",&dict))
+ DeeObject *Dict;
+ if (DeeArg_Unpack(argc,argv,"o:_DictProxy",&Dict))
      goto err;
- if (DeeObject_AssertType(dict,&DeeDict_Type))
+ if (DeeObject_AssertType(Dict,&DeeDict_Type))
      goto err;
- self->dp_dict = (DREF DeeDictObject *)dict;
- Dee_Incref(dict);
+ self->dp_dict = (DREF DeeDictObject *)Dict;
+ Dee_Incref(Dict);
  return 0;
 err:
  return -1;
@@ -694,19 +694,19 @@ PRIVATE struct type_member proxy_members[] = {
 };
 
 PRIVATE struct type_member proxy_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DictProxyIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DictProxyIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member dict_keys_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DictKeysIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DictKeysIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member dict_items_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DictItemsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DictItemsIterator_Type),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member dict_values_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DictValuesIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DictValuesIterator_Type),
     TYPE_MEMBER_END
 };
 

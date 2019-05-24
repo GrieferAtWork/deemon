@@ -1160,7 +1160,7 @@ err:
 
 /* Very similar to `DeeModule_OpenSourceMemory()', and used to implement it,
  * however source data is made available using a stream object derived
- * from `file from deemon' */
+ * from `File from deemon' */
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenSourceStream(DeeObject *__restrict source_stream,
                            int start_line, int start_col,

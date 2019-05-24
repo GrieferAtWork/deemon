@@ -262,7 +262,7 @@ PRIVATE struct type_member env_members[] = {
 
 INTERN DeeTypeObject DeeEnvIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"environ.iterator",
+    /* .tp_name     = */"environ.Iterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,

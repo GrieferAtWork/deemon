@@ -743,11 +743,11 @@ PRIVATE struct type_method sysfile_methods[] = {
     { "flush",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_flush,
       DOC("()\n"
-          "An alias for #sync used for compatibility with :file.buffer") },
+          "An alias for #sync used for compatibility with :File.Buffer") },
     { "setbuf",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&sysfile_setbuf,
       DOC("(string mode,size=!0)\n"
-          "Set the buffering mode in a manner that is compatible with :file.buffer.setbuf") },
+          "Set the buffering mode in a manner that is compatible with :File.Buffer.setbuf") },
     { NULL }
 };
 
@@ -757,10 +757,10 @@ sysfile_getfile(SystemFile *__restrict self) {
 }
 
 PRIVATE struct type_getset sysfile_getsets[] = {
-    { DeeString_STR(&str_file),
+    { "file",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sysfile_getfile, NULL, NULL,
-      DOC("->file\n"
-          "Returns @this file, indicating the self-buffering "
+      DOC("->?DFile\n"
+          "Returns @this File, indicating the self-buffering "
           "behavior of system files on this host") },
 };
 PRIVATE struct type_member sysfile_members[] = {
@@ -792,7 +792,7 @@ sysfile_class_sync(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method sysfile_class_methods[] = {
     { "sync", &sysfile_class_sync,
-      DOC("()->none\n"
+      DOC("()\n"
           "Synchronize all unwritten data with the host operating system") },
     { NULL }
 };

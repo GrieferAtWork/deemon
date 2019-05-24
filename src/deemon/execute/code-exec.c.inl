@@ -38,7 +38,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/map.h>
@@ -4099,7 +4099,7 @@ do_setattr_this_c:
      }
 
      RAW_TARGET(ASM_CALL_MAP) {
-         /* dict-style sequence constructor invocation (Implemented using `_sharedkeyvector'). */
+         /* Dict-style sequence constructor invocation (Implemented using `_sharedkeyvector'). */
          uint8_t n_args = READ_imm8();
          DREF DeeObject *callback_result;
 #ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND

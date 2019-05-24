@@ -41,7 +41,7 @@
 #include <deemon/dict.h>
 #include <deemon/dec.h>
 #include <deemon/super.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/tuple.h>
 #include <deemon/map.h>
 #include <deemon/list.h>

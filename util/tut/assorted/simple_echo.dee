@@ -20,11 +20,11 @@
 
 // A simple application that linewise echos all data from stdin to stdout
 
-import file from deemon;
+import File from deemon;
 
 print "Type an empty line to stop";
-/* Iterating a file yields its data line-wise */
-for (l: file.stdin) {
+/* Iterating a File yields its data line-wise */
+for (l: File.stdin) {
 	if (l.islf())
 		break;
 	/* Print without linefeed (readline()

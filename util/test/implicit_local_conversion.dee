@@ -22,7 +22,7 @@
 import deemon;
 import deemon_module = deemon;
 
-/* Make sure an import symbols are implicitly cast to local variables
+/* Make sure import symbols can implicitly be casted to local variables
  * if they are ever written to. - Also ensure that optimization potentially
  * done in a case such as this doesn't try to optimize this incorrectly. */
 

@@ -37,9 +37,9 @@ final global function extractFileDir(p: string): string {
 }
 final global extractFileDrive = fs.driveof;
 final global function extractShortPathName(p: string): string -> p; // I can't be bothered...
-final global function fileCreate(p,...): file -> file.open(p,"w+");
+final global function fileCreate(p,...): File -> File.open(p,"w+");
 final global fileDelete = fs.unlink;
-final global function fileRead(fp: file,args...) {
+final global function fileRead(fp: File, args...) {
 	if (#args == 1) {
 		/* XXX: This isn't how deemon 200+ handles
 		 *      binary reads from files anymore... */
@@ -48,7 +48,7 @@ final global function fileRead(fp: file,args...) {
 		fp.read(args...);
 	}
 }
-final global function fileWrite(fp: file,args...) {
+final global function fileWrite(fp: File,args...) {
 	if (#args == 1) {
 		/* XXX: writeo() no longer exists in deemon 200+ */
 		fp.writeo(args[0]);
@@ -56,18 +56,18 @@ final global function fileWrite(fp: file,args...) {
 		fp.write(args...);
 	}
 }
-final global function fileSeek(fp: file, off: int, origin: int) {
+final global function fileSeek(fp: File, off: int, origin: int) {
 	fp.seek(off,origin);
 }
-final global function fileOpen(p: string,...): file -> file.open(p,"r+");
-final global function fileClose(fp: file) -> fp.close();
+final global function fileOpen(p: string,...): File -> File.open(p,"r+");
+final global function fileClose(fp: File) -> fp.close();
 final global fileExists = fs.stat.isreg;
 final global function diskFree(p: string): int -> 0; /* ' Can't be bothered! */
 final global function diskSize(p: string): int -> 0; /* ' Can't be bothered! */
 
-final global seekFromBeginning = file.SEEK_SET;
-final global seekFromCurrent = file.SEEK_CUR;
-final global seekFromEnd = file.SEEK_END;
+final global seekFromBeginning = File.SEEK_SET;
+final global seekFromCurrent = File.SEEK_CUR;
+final global seekFromEnd = File.SEEK_END;
 
 final global dirCreate = fs.mkdir;
 final global dirDelete = fs.rmdir;

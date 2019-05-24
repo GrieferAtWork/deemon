@@ -746,7 +746,7 @@ PRIVATE struct type_seq blv_seq = {
 };
 
 PRIVATE struct type_member blv_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BlackListVarkwdsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BlackListVarkwdsIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1125,7 +1125,7 @@ PRIVATE struct type_cmp blmi_cmp = {
 
 PRIVATE struct type_member blmi_members[] = {
     TYPE_MEMBER_FIELD_DOC("seq",STRUCT_OBJECT,offsetof(BlackListMappingIterator,mi_map),"->?Ert:BlackListMapping"),
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(BlackListMappingIterator,mi_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(BlackListMappingIterator,mi_iter),"->?DIterator"),
     TYPE_MEMBER_END
 };
 
@@ -1584,7 +1584,7 @@ PRIVATE struct type_seq blm_seq = {
 };
 
 PRIVATE struct type_member blm_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BlackListMappingIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BlackListMappingIterator_Type),
     TYPE_MEMBER_END
 };
 

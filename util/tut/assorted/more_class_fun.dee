@@ -22,9 +22,9 @@
 
 class a_class {
 
-	private m_x;
-	private m_y;
-	private m_z;
+	private member m_x;
+	private member m_y;
+	private member m_z;
 
 	dump() {
 		print m_x,m_y,m_z;
@@ -52,7 +52,7 @@ class a_class {
 		yield m_z;
 	}
 
-	class property MY_CONSTANT = { get() -> 42; }
+	static property MY_CONSTANT = { get() -> 42; }
 
 	my_getset = {
 		get()  { print "Getter:",this; return 42; }
@@ -66,7 +66,8 @@ a = a_class(10,20,30);
 
 print "a_class.MY_CONSTANT =",a_class.MY_CONSTANT;
 
-for (x: a) print x;
+for (local x: a)
+	print x;
 a.dump();
 
 print a+a;

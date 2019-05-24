@@ -1374,7 +1374,7 @@ PRIVATE struct type_seq to_seq = {
 };
 
 PRIVATE struct type_member to_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&TypeOperatorsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&TypeOperatorsIterator_Type),
     TYPE_MEMBER_END
 };
 

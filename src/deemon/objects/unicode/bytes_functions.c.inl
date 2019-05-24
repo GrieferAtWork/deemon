@@ -1200,7 +1200,7 @@ bytes_replace(Bytes *__restrict self, size_t argc,
                                  (size_t)((end-block_begin)+
                                           (find_needle.n_size-1))) < 0)
     goto err;
- /* Pack together a bytes object. */
+ /* Pack together a Bytes object. */
  return (DREF Bytes *)bytes_printer_pack(&printer);
 err:
  bytes_printer_fini(&printer);
@@ -1250,7 +1250,7 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
                                  (size_t)((end-block_begin)+
                                           (find_needle.n_size-1))) < 0)
     goto err;
- /* Pack together a bytes object. */
+ /* Pack together a Bytes object. */
  return (DREF Bytes *)bytes_printer_pack(&printer);
 err:
  bytes_printer_fini(&printer);
@@ -2017,7 +2017,7 @@ err:
 }
 
 struct bcompare_args {
-    DeeObject *other;   /* [1..1] String or bytes object. */
+    DeeObject *other;   /* [1..1] String or Bytes object. */
     uint8_t   *lhs_ptr; /* [0..my_len] Starting pointer of lhs. */
     size_t     lhs_len; /* Number of bytes in lhs. */
     uint8_t   *rhs_ptr; /* [0..my_len] Starting pointer of rhs. */
@@ -3421,7 +3421,7 @@ INTERN struct type_method bytes_methods[] = {
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-          "Same as :string.decode, but instead use the data of @this bytes object as characters to decode"),
+          "Same as :string.decode, but instead use the data of @this Bytes object as characters to decode"),
       TYPE_METHOD_FKWDS },
     { "encode",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_encode,
@@ -3429,9 +3429,9 @@ INTERN struct type_method bytes_methods[] = {
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-          "Same as :string.encode, but instead use the data of @this bytes object as characters to decode"),
+          "Same as :string.encode, but instead use the data of @this Bytes object as characters to decode"),
       TYPE_METHOD_FKWDS },
-    { DeeString_STR(&str_bytes),
+    { "bytes",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_substr,
       DOC("(start=!0,end=!-1)->?.\n"
           "Same as #substr (here for ABI compatibility with :string.bytes)"),
@@ -3439,7 +3439,7 @@ INTERN struct type_method bytes_methods[] = {
     { "ord",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_ord,
       DOC("->?Dint\n"
-          "@throw ValueError The length of @this bytes object is not equal to $1\n"
+          "@throw ValueError The length of @this Bytes object is not equal to $1\n"
           "Same as ${this[0]}\n"
           "\n"
           "(index:?Dint)->?Dint\n"
@@ -3451,11 +3451,11 @@ INTERN struct type_method bytes_methods[] = {
     { "resized",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_resized,
       DOC("(new_size:?Dint,filler?:?Dint)->?.\n"
-          "Return a new writable bytes object with a length of @new_size, and its "
+          "Return a new writable Bytes object with a length of @new_size, and its "
           "first ${(#this,new_size) < ...} bytes initialized from ${this.substr(0,new_size)}, "
           "with the remainder then either left uninitialized, or initialized to @filler\n"
-          "Note that because a bytes object cannot be resized in-line, code using this function "
-          "must make use of the returned bytes object:\n"
+          "Note that because a Bytes object cannot be resized in-line, code using this function "
+          "must make use of the returned Bytes object:\n"
           ">local x = \"foobar\";\n"
           ">local y = x.bytes();\n"
           ">print repr y; /* \"foobar\" */\n"
@@ -3464,20 +3464,20 @@ INTERN struct type_method bytes_methods[] = {
     { "reverse",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_reverse,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
+          "@throw BufferError @this Bytes object is not writable\n"
           "Same as #reversed, but modifications are performed "
-          "in-line, before @this bytes object is re-returned"),
+          "in-line, before @this Bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "makereadonly",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makereadonly,
       DOC("->?.\n"
-          "The inverse of #makewritable, either re-returning @this bytes object if it "
+          "The inverse of #makewritable, either re-returning @this Bytes object if it "
           "already is read-only, or construct a view for the data contained within @this "
-          "bytes object, but making that view read-only") },
+          "Bytes object, but making that view read-only") },
     { "makewritable",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_makewritable,
       DOC("->?.\n"
-          "Either re-return @this bytes object is it already #iswritable, or create a "
+          "Either re-return @this Bytes object is it already #iswritable, or create a "
           "copy (s.a. #op:copy) and return it:\n"
           ">function makewritable() {\n"
           "> if (this.iswritable)\n"
@@ -3491,7 +3491,7 @@ INTERN struct type_method bytes_methods[] = {
           "${this.substr(start,end)}, that is a string containing 2 characters "
           "for each encoded byte, both of which are lower-case hexadecimal digits\n"
           "The returned string is formatted such that #fromhex can be used to decode "
-          "it into another bytes object"),
+          "it into another Bytes object"),
       TYPE_METHOD_FKWDS },
 
     /* Bytes formatting / scanning. */
@@ -3782,71 +3782,71 @@ INTERN struct type_method bytes_methods[] = {
     { "lower",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
       DOC("(start=!0,end=!-1)->?.\n"
-          "Returns a writable copy of @this bytes object converted to lower-case (when interpreted as ASCII)"),
+          "Returns a writable copy of @this Bytes object converted to lower-case (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "upper",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_upper,
       DOC("(start=!0,end=!-1)->?.\n"
-          "Returns a writable copy of @this bytes object converted to upper-case (when interpreted as ASCII)"),
+          "Returns a writable copy of @this Bytes object converted to upper-case (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "title",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_title,
       DOC("(start=!0,end=!-1)->?.\n"
-          "Returns a writable copy of @this bytes object converted to title-casing (when interpreted as ASCII)"),
+          "Returns a writable copy of @this Bytes object converted to title-casing (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "capitalize",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_capitalize,
       DOC("(start=!0,end=!-1)->?.\n"
-          "Returns a writable copy of @this bytes object with each word capitalized (when interpreted as ASCII)"),
+          "Returns a writable copy of @this Bytes object with each word capitalized (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "swapcase",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_swapcase,
       DOC("(start=!0,end=!-1)->?.\n"
-          "Returns a writable copy of @this bytes object with the casing of each "
+          "Returns a writable copy of @this Bytes object with the casing of each "
           "character that has two different casings swapped (when interpreted as ASCII)"),
       TYPE_METHOD_FKWDS },
     { "casefold",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lower,
       DOC("(start=!0,end=!-1)->?.\n"
           "Alias for #{lower}. This function exists to match :string.casefold in "
-          "order to improve binary compatibility between :bytes and :string objects"),
+          "order to improve binary compatibility between :Bytes and :string objects"),
       TYPE_METHOD_FKWDS },
 
     /* Inplace variants of bytes conversion functions */
     { "tolower",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #lower, but character modifications are performed in-place, and @this bytes object is re-returned"),
+          "@throw BufferError @this Bytes object is not writable\n"
+          "Same as #lower, but character modifications are performed in-place, and @this Bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "toupper",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_toupper,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #upper, but character modifications are performed in-place, and @this bytes object is re-returned"),
+          "@throw BufferError @this Bytes object is not writable\n"
+          "Same as #upper, but character modifications are performed in-place, and @this Bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "totitle",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_totitle,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #title, but character modifications are performed in-place, and @this bytes object is re-returned"),
+          "@throw BufferError @this Bytes object is not writable\n"
+          "Same as #title, but character modifications are performed in-place, and @this Bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "tocapitalize",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tocapitalize,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #capitalize, but character modifications are performed in-place, and @this bytes object is re-returned"),
+          "@throw BufferError @this Bytes object is not writable\n"
+          "Same as #capitalize, but character modifications are performed in-place, and @this Bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "toswapcase",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_toswapcase,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #swapcase, but character modifications are performed in-place, and @this bytes object is re-returned"),
+          "@throw BufferError @this Bytes object is not writable\n"
+          "Same as #swapcase, but character modifications are performed in-place, and @this Bytes object is re-returned"),
       TYPE_METHOD_FKWDS },
     { "tocasefold",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_tolower,
       DOC("(start=!0,end=!-1)->?.\n"
-          "@throw BufferError @this bytes object is not writable\n"
+          "@throw BufferError @this Bytes object is not writable\n"
           "Alias for #tolower, here to coincide with #casefold existing as an alias for #lower"),
       TYPE_METHOD_FKWDS },
 
@@ -3856,7 +3856,7 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-          "Find up to @max occurrances of @find and replace each with @replace, then return the resulting data as a writable bytes object"),
+          "Find up to @max occurrances of @find and replace each with @replace, then return the resulting data as a writable Bytes object"),
       TYPE_METHOD_FKWDS },
     { "toreplace",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_toreplace,
@@ -3864,8 +3864,8 @@ INTERN struct type_method bytes_methods[] = {
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
           "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
-          "@throw BufferError @this bytes object is not writable\n"
-          "Same as #replace, but the bytes object is modified in-place, and @this is re-returned"),
+          "@throw BufferError @this Bytes object is not writable\n"
+          "Same as #replace, but the Bytes object is modified in-place, and @this is re-returned"),
       TYPE_METHOD_FKWDS },
     { "find",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_find,
@@ -3918,24 +3918,24 @@ INTERN struct type_method bytes_methods[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_substr,
       DOC("(start=!0,end=!-1)->?.\n"
           "Similar to ${this[start:end]}, and semantically equialent to :string.substr\n"
-          "This function can be used to view a sub-set of bytes from @this bytes object\n"
-          "Modifications then made to the returned bytes object will affect the same memory already described by @this bytes object"),
+          "This function can be used to view a sub-set of bytes from @this Bytes object\n"
+          "Modifications then made to the returned Bytes object will affect the same memory already described by @this Bytes object"),
       TYPE_METHOD_FKWDS },
     { "strip",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_strip,
       DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all leading and trailing whitespace-characters, or "
-          "characters apart of @mask, and return a sub-view of @this bytes object") },
+          "characters apart of @mask, and return a sub-view of @this Bytes object") },
     { "lstrip",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_lstrip,
       DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all leading whitespace-characters, or characters "
-          "apart of @mask, and return a sub-view of @this bytes object") },
+          "apart of @mask, and return a sub-view of @this Bytes object") },
     { "rstrip",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rstrip,
       DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
           "Strip all trailing whitespace-characters, or characters "
-          "apart of @mask, and return a sub-view of @this bytes object") },
+          "apart of @mask, and return a sub-view of @this Bytes object") },
     { "sstrip",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_sstrip,
       DOC("(other:?X3?.?Dstring?Dint)->?.\n"
@@ -4047,7 +4047,7 @@ INTERN struct type_method bytes_methods[] = {
           "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
           "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
           "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
-          "@throw BufferError @this bytes object is not writable\n"
+          "@throw BufferError @this Bytes object is not writable\n"
           "Same as #toreplace, however ascii-casing is ignored during character comparisons"),
       TYPE_METHOD_FKWDS },
     { "casefind",
@@ -4177,17 +4177,17 @@ INTERN struct type_method bytes_methods[] = {
     { "center",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_center,
       DOC("(width:?Dint,filler:?X3?.?Dstring?Dint=!P{ })->?.\n"
-          "Use a writable copy of @this bytes object as result, then evenly "
+          "Use a writable copy of @this Bytes object as result, then evenly "
           "insert @filler at the front and back to pad its length to @width bytes") },
     { "ljust",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_ljust,
       DOC("(width:?Dint,filler=!P{ })->?.\n"
-          "Use a writable copy of @this bytes object as result, then "
+          "Use a writable copy of @this Bytes object as result, then "
           "insert @filler at the back to pad its length to @width bytes") },
     { "rjust",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_rjust,
       DOC("(width:?Dint,filler=!P{ })->?.\n"
-          "Use a writable copy of @this bytes object as result, then "
+          "Use a writable copy of @this Bytes object as result, then "
           "insert @filler at the front to pad its length to @width bytes") },
     { "zfill",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_zfill,
@@ -4204,27 +4204,27 @@ INTERN struct type_method bytes_methods[] = {
       DOC("(tabwidth=!8)->?.\n"
           "Expand tab characters with whitespace offset from the "
           "start of their respective line at multiples of @tabwidth\n"
-          "Note that in the event of no tabs being found, @this bytes object may be re-returned") },
+          "Note that in the event of no tabs being found, @this Bytes object may be re-returned") },
     { "unifylines",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_unifylines,
       DOC("(replacement:?X3?.?Dstring?Dint=!P{\\\n})->?.\n"
           "Unify all ascii-linefeed character sequences ($\"\\n\", $\"\\r\" and $\"\\r\\n\") "
-          "found in @this bytes object to make exclusive use of @replacement\n"
+          "found in @this Bytes object to make exclusive use of @replacement\n"
           "Note that in the event of no line-feeds differing from @replacement being found, "
-          "@this bytes object may be re-returned") },
+          "@this Bytes object may be re-returned") },
 
     /* Bytes splitter functions. */
     { "join",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_join,
       DOC("(seq:?S?O)->?.\n"
           "Iterate @seq and convert all items into string, inserting @this "
-          "bytes object before each string's :string.bytes representation element, "
-          "starting only with the second. :bytes objects contained in @seq are not "
+          "Bytes object before each string's :string.bytes representation element, "
+          "starting only with the second. :Bytes objects contained in @seq are not "
           "converted to and from strings, but inserted directly") },
     { "split",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_split,
       DOC("(needle:?X3?.?Dstring?Dint)->?S?.\n"
-          "Split @this bytes object at each instance of @sep, "
+          "Split @this Bytes object at each instance of @sep, "
           "returning a sequence of the resulting parts\n"
           "The returned bytes objects are views of @this byte object, meaning they "
           "have the same #iswritable characteristics as @this, and refer to the same "
@@ -4239,7 +4239,7 @@ INTERN struct type_method bytes_methods[] = {
     { "splitlines",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_splitlines,
       DOC("(keepends=!f)->?S?.\n"
-          "Split @this bytes object at each linefeed, returning a sequence of all contained lines\n"
+          "Split @this Bytes object at each linefeed, returning a sequence of all contained lines\n"
           "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
           "When @keepends is :true, items found in the returned sequence will still have their "
           "original, trailing line-feed appended\n"
@@ -4252,7 +4252,7 @@ INTERN struct type_method bytes_methods[] = {
     { "indent",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_indent,
       DOC("(filler:?X3?.?Dstring?Dint=!P{\t})->?.\n"
-          "Using @this bytes object as result, insert @filler at the front, as well as after "
+          "Using @this Bytes object as result, insert @filler at the front, as well as after "
           "every ascii-linefeed with the exception of one that may be located at its end\n"
           "The inteded use is for generating strings from structured data, such as HTML:\n"
           ">text = \"<html>\n{}\n</html>\".format({ get_html_bytes().strip().indent() });") },
@@ -4373,7 +4373,7 @@ INTERN struct type_method bytes_methods[] = {
     { "segments",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_segments,
       DOC("(substring_length:?Dint)->?S?.\n"
-          "Split @this bytes object into segments, each exactly @substring_length characters long, with the "
+          "Split @this Bytes object into segments, each exactly @substring_length characters long, with the "
           "last segment containing the remaining characters and having a length of between "
           "$1 and @substring_length characters.\n"
           "This function is similar to #distribute, but instead of being given the "
@@ -4382,7 +4382,7 @@ INTERN struct type_method bytes_methods[] = {
     { "distribute",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&bytes_distribute,
       DOC("(substring_count:?Dint)->?S?.\n"
-          "Split @this bytes object into @substring_count similarly sized sub-strings, each with a "
+          "Split @this Bytes object into @substring_count similarly sized sub-strings, each with a "
           "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
           "sub-string containing all remaining characters.\n"
           "This function is similar to #segments, but instead of being given the "

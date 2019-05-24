@@ -123,8 +123,8 @@ for (local x,y: item_pairs) {
  * as those objects are generally written as {(object,object)...}, meaning they're
  * usually sequences of 2-element sequences. */
 {
-	import dict from deemon;
-	local items = dict {
+	import Dict from deemon;
+	local items = Dict {
 		"a" : 3,
 		"b" : 19,
 		"c" : 31,

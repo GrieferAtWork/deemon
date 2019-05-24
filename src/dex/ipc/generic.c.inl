@@ -476,19 +476,19 @@ PRIVATE struct type_getset process_getsets[] = {
     { "stdin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
                (int(DCALL *)(DeeObject *__restrict))&process_del_stdin,
                (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_stdin,
-      DOC("->?Dfile\nGet or set the standard input stream used by the process") },
+      DOC("->?DFile\nGet or set the standard input stream used by the process") },
     { "stdout", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdout,
                 (int(DCALL *)(DeeObject *__restrict))&process_del_stdout,
                 (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_stdout,
-      DOC("->?Dfile\nGet or set the standard output stream used by the process") },
+      DOC("->?DFile\nGet or set the standard output stream used by the process") },
     { "stderr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stderr,
                 (int(DCALL *)(DeeObject *__restrict))&process_del_stderr,
                 (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_stderr,
-      DOC("->?Dfile\nGet or set the standard error stream used by the process") },
+      DOC("->?DFile\nGet or set the standard error stream used by the process") },
     { "pwd", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_pwd,
              (int(DCALL *)(DeeObject *__restrict))&process_del_pwd,
              (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_pwd,
-      DOC("->?Dfile\nGet or set the process working directory used by the process") },
+      DOC("->?DFile\nGet or set the process working directory used by the process") },
     { "exe", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_exe,
              (int(DCALL *)(DeeObject *__restrict))&process_del_exe,
              (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&process_set_exe,
@@ -610,7 +610,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 
 INTERN DeeTypeObject DeeProcEnumIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"enumproc.iterator",
+    /* .tp_name     = */"enumproc.Iterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -654,7 +654,7 @@ INTERN DeeTypeObject DeeProcEnumIterator_Type = {
 };
 
 PRIVATE struct type_member enumproc_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeProcEnumIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeProcEnumIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -719,8 +719,8 @@ err:
 
 
 PRIVATE struct type_member pipe_class_members[] = {
-    TYPE_MEMBER_CONST("reader",(DeeObject *)&DeePipeReader_Type),
-    TYPE_MEMBER_CONST("writer",(DeeObject *)&DeePipeWriter_Type),
+    TYPE_MEMBER_CONST("Reader",(DeeObject *)&DeePipeReader_Type),
+    TYPE_MEMBER_CONST("Writer",(DeeObject *)&DeePipeWriter_Type),
     TYPE_MEMBER_END
 };
 

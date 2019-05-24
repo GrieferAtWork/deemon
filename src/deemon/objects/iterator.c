@@ -76,7 +76,7 @@ PRIVATE DREF DeeObject *DCALL iterator_sub(DeeObject *__restrict self, DeeObject
 PRIVATE int DCALL
 iterator_bool(DeeObject *__restrict self) {
  DeeObject *elem;
- /* Check if the iterator has been exhausted
+ /* Check if the Iterator has been exhausted
   * by creating a copy and testing it. */
  if unlikely((self = DeeObject_Copy(self)) == NULL)
     goto err;
@@ -97,7 +97,7 @@ iterator_repr(DeeObject *__restrict self) {
  struct unicode_printer p = UNICODE_PRINTER_INIT;
  DREF DeeObject *iterator = DeeObject_Copy(self);
  DREF DeeObject *elem;
- /* Create a representation of the iterator's elements:
+ /* Create a representation of the Iterator's elements:
   * >> local x = [10,20,30];
   * >> local y = x.operator __iter__();
   * >> y.operator __next__();
@@ -805,14 +805,14 @@ PRIVATE struct type_method iterator_methods[] = {
     { "next",
      &iterator_next,
       DOC("(defl?)->\n"
-          "@throw StopIteration @this iterator has been exhausted, and no @decl was given\n"
+          "@throw StopIteration @this Iterator has been exhausted, and no @decl was given\n"
           "Same as ${this.operator next()}\n"
-          "When given, @defl is returned when the iterator has been "
+          "When given, @defl is returned when the Iterator has been "
           "exhaused, rather than throwing a :StopIteration error") },
     { DeeString_STR(&str_peek),
      &iterator_peek,
       DOC("(defl?)->\n"
-          "@throw StopIteration @this iterator has been exhausted, and no @decl was given\n"
+          "@throw StopIteration @this Iterator has been exhausted, and no @decl was given\n"
           "Peek the next upcoming object, but don't advance to it\n"
           ">function peek(defl?) {\n"
           "> local c = copy this;\n"
@@ -827,9 +827,9 @@ PRIVATE struct type_method iterator_methods[] = {
     { DeeString_STR(&str_prev),
      &iterator_prev,
       DOC("->?Dbool\n"
-          "@throw NotImplemented @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-          "Rewind @this iterator to the previous item, returning :false if "
-          "@this iterator had already been positioned at the start of its sequence, "
+          "@throw NotImplemented @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+          "Rewind @this Iterator to the previous item, returning :false if "
+          "@this Iterator had already been positioned at the start of its sequence, "
           "or :true otherwise\n"
           ">function prev(): bool {\n"
           "> for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
@@ -923,8 +923,8 @@ PRIVATE struct type_method iterator_methods[] = {
     { DeeString_STR(&str_rewind),
      &iterator_rewind,
       DOC("()\n"
-          "@throw NotImplemented @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-          "Rewind @this iterator to the start of its sequence\n"
+          "@throw NotImplemented @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+          "Rewind @this Iterator to the start of its sequence\n"
           ">function rewind() {\n"
           "> for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
           ">  if (tp.hasprivateattribute(\"index\")) {\n"
@@ -981,8 +981,8 @@ PRIVATE struct type_method iterator_methods[] = {
     { DeeString_STR(&str_revert),
      &iterator_revert,
       DOC("(step:?Dint)\n"
-          "@throw NotImplemented @step is positive, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-          "Revert @this iterator by @step items\n"
+          "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+          "Revert @this Iterator by @step items\n"
           ">function revert(step: int) {\n"
           "> step = (int)step;\n"
           "> if (step == 0)\n"
@@ -1033,8 +1033,8 @@ PRIVATE struct type_method iterator_methods[] = {
     { DeeString_STR(&str_advance),
      &iterator_advance,
       DOC("(step:?Dint)\n"
-          "@throw NotImplemented @step is negative, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-          "Revert @this iterator by @step items\n"
+          "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+          "Revert @this Iterator by @step items\n"
           ">function advance(step: int) {\n"
           "> step = (int)step;\n"
           "> if (step == 0)\n"
@@ -1088,10 +1088,10 @@ PRIVATE struct type_method iterator_methods[] = {
 };
 
 
-/* Get the iterator's position
+/* Get the Iterator's position
  * @return: * :         The iterator's current position, where the a starting position is 0
- * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
- *                      from its sequence, as can happen in linked lists when the iterator's
+ * @return: (size_t)-2: The position is indeterminate (the Iterator may have become detached
+ *                      from its sequence, as can happen in linked lists when the Iterator's
  *                      link entry gets removed)
  * @return: (size_t)-1: Error */
 INTERN size_t DCALL
@@ -1166,7 +1166,7 @@ err:
  return (size_t)-1;
 }
 
-/* Set the iterator's position
+/* Set the Iterator's position
  * @return:  0: Success
  * @return: -1: Error */
 INTERN int DCALL
@@ -1199,7 +1199,7 @@ err:
  return -1;
 }
 
-/* Rewind the iterator to its starting position
+/* Rewind the Iterator to its starting position
  * @return:  0: Success
  * @return: -1: Error */
 INTERN int DCALL
@@ -1422,25 +1422,25 @@ done:
  return 0;
 }
 
-/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+/* Revert the Iterator by at most `step' (When `step' is too large, same as `rewind')
  * @return:  0: Success (new relative position wasn't determined)
- * @return:  1: Success (the iterator has reached its starting position)
- * @return:  2: Success (the iterator hasn't reached its starting position)
+ * @return:  1: Success (the Iterator has reached its starting position)
+ * @return:  2: Success (the Iterator hasn't reached its starting position)
  * @return: -1: Error */
 INTERN int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
  return iterator_do_revert(self,step,NULL,NULL);
 }
 
-/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+/* Advance the Iterator by at most `step' (When `step' is too large, exhaust the Iterator)
  * @return:  0: Success (new relative position wasn't determined)
- * @return:  1: Success (the iterator has become exhausted)
- * @return:  2: Success (the iterator hasn't become exhausted)
+ * @return:  1: Success (the Iterator has become exhausted)
+ * @return:  2: Success (the Iterator hasn't become exhausted)
  * @return: -1: Error */
 INTERN int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
  return iterator_do_advance(self,step,NULL,NULL);
 }
 
-/* Decrement the iterator by 1.
+/* Decrement the Iterator by 1.
  * @return:  0: Success
  * @return:  1: The iterator was already at its starting location
  * @return: -1: Error */
@@ -1705,9 +1705,9 @@ err:
  return -1;
 }
 
-/* Increment the iterator, but don't generate a value
+/* Increment the Iterator, but don't generate a value
  * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
- *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
+ *       meaning that (also unlike `tp_iter_next()'), the Iterator's index should
  *       only ever be incremented by 1.
  * @return:  0: Success
  * @return:  1: The iterator had already been exhausted
@@ -1716,7 +1716,7 @@ INTERN int DCALL DeeIterator_Next(DeeObject *__restrict self) {
  return iterator_do_advance(self,1,&DeeInt_One,&DeeInt_MinusOne);
 }
 
-/* Check if the iterator is at its starting location
+/* Check if the Iterator is at its starting location
  * @return:  0: No, it isn't
  * @return:  1: Yes, it is
  * @return: -1: Error */
@@ -1794,7 +1794,7 @@ err:
  return -1;
 }
 
-/* Peek the next iterator value, but don't actually advance the iterator.
+/* Peek the next iterator value, but don't actually advance the Iterator.
  * @return: ITER_DONE: The iterator has already been exhausted. */
 INTERN DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
  DREF DeeObject *result;
@@ -1869,7 +1869,7 @@ PRIVATE DeeObject *bidirectional_iterator_attributes[] = {
 };
 
 
-/* Return the sequence associated with the iterator, or NULL on error.
+/* Return the sequence associated with the Iterator, or NULL on error.
  * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
 INTERN DREF DeeObject *DCALL
 DeeIterator_GetSeq(DeeObject *__restrict self) {
@@ -2004,7 +2004,7 @@ err:
 PRIVATE struct type_getset iterator_getsets[] = {
     { DeeString_STR(&str_seq),
      &DeeIterator_GetSeq, NULL, NULL,
-      DOC("->?Dsequence\n"
+      DOC("->?DSequence\n"
           "Returns the underlying sequence that is being iterated\n"
           "Since use of this member isn't all too common, sub-classes are allowed "
           "to (and sometimes do) not return the exact original sequence, but rather "
@@ -2014,14 +2014,14 @@ PRIVATE struct type_getset iterator_getsets[] = {
           "order to be identical") },
     { "future",
      &IteratorFuture_For, NULL, NULL,
-      DOC("->?Dsequence\n"
+      DOC("->?DSequence\n"
           "Returns an abstract sequence proxy that always refers to the items that are "
-          "still left to be yielded by @this iterator. Note that for this to function "
-          "properly, the iterator must be copyable.\n"
-          "Also note that as soon as more items are iterated from @this iterator, those "
+          "still left to be yielded by @this Iterator. Note that for this to function "
+          "properly, the Iterator must be copyable.\n"
+          "Also note that as soon as more items are iterated from @this Iterator, those "
           "items will disappear from its future sequence immediately.\n"
-          "In the end, this property will simply return a proxy-type derived from :sequence, "
-          "who's ${operator iter} is set up to return a copy of the pointed-to iterator.\n"
+          "In the end, this property will simply return a proxy-type derived from :Sequence, "
+          "who's ${operator iter} is set up to return a copy of the pointed-to Iterator.\n"
           ">local x = [10,20,30];\n"
           ">local it = x.operator iter();\n"
           ">print repr it.future;     /* { 10, 20, 30 } */\n"
@@ -2029,38 +2029,38 @@ PRIVATE struct type_getset iterator_getsets[] = {
           ">print repr it.future;     /* { 20, 30 } */") },
     { "pending",
      &IteratorPending_For, NULL, NULL,
-      DOC("->?Dsequence\n"
+      DOC("->?DSequence\n"
           "Very similar to #future, however the when invoking ${operator iter} on "
-          "the returned sequence, rather than having it return a copy of @this iterator, "
-          "re-return the exact same iterator, allowing the use of this member for iterators "
+          "the returned sequence, rather than having it return a copy of @this Iterator, "
+          "re-return the exact same Iterator, allowing the use of this member for iterators "
           "that don't implement a way of being copied\n"
           ">local x = [10,20,30];\n"
           ">local it = x.operator iter();\n"
           ">print it.operator next(); /* 10 */\n"
           ">print repr it.pending;    /* { 20, 30 } */\n"
           ">/* ERROR: Signal.StopIteration.\n"
-          "> *        The `repr' used the same iterator,\n"
+          "> *        The `repr' used the same Iterator,\n"
           "> *        which consumed all remaining items */\n"
           ">print it.operator next();") },
     { "isbidirectional",
      &iterator_get_isbidirectional, NULL, NULL,
       DOC("->?Dbool\n"
-          "Check if @this iterator can be used as bi-directional\n"
-          "In order for this to be possible, a sub-class of :iterator must implement at least "
-          "one of the following members, as which point the entire bi-directional iterator "
-          "function set becomes available. Also note that for full support, an iterator should "
+          "Check if @this Iterator can be used as bi-directional\n"
+          "In order for this to be possible, a sub-class of :Iterator must implement at least "
+          "one of the following members, as which point the entire bi-directional Iterator "
+          "function set becomes available. Also note that for full support, an Iterator should "
           "also implement #seq, #op:assign, #op:copy and #op:eq or #op:ne\n"
           "%{table Function|Prototype|Description\n"
-          "#op:dec|${operator -- (): iterator}|Decrement the iterator by one\n"
-          "#op:isub|${operator -= (step:?Dint): iterator}|Revert the iterator by `step'\n"
+          "#op:dec|${operator -- (): iterator}|Decrement the Iterator by one\n"
+          "#op:isub|${operator -= (step:?Dint): iterator}|Revert the Iterator by `step'\n"
           "#op:sub|${operator - (step:?Dint): iterator}|Create a new iterator reverted by `step'\n"
-          "#op:iadd|${operator += (step:?Dint): iterator}|Advance the iterator by `step' (which may be negative)\n"
+          "#op:iadd|${operator += (step:?Dint): iterator}|Advance the Iterator by `step' (which may be negative)\n"
           "#op:add|${operator + (step:?Dint): iterator}|Create a new iterator advanced by `step' (which may be negative)\n"
-          "#revert|${function revert(step: int)}|Revert the iterator by `step' (same as #op:isub)\n"
-          "#advance|${function advance(step: int)}|Advance the iterator by `step' (which may be negative) (same as #op:iadd)\n"
-          "#index|${property index: int = { get(); set(); }}|Get/set the exact index of the iterator within its sequence\n"
-          "#prev|${function prev(): bool}|Decrement the iterator's position, returning :false if the iterator had already been fully unwound and :true otherwise\n"
-          "#rewind|${function rewind()}|Rewind the iterator fully}\n"
+          "#revert|${function revert(step: int)}|Revert the Iterator by `step' (same as #op:isub)\n"
+          "#advance|${function advance(step: int)}|Advance the Iterator by `step' (which may be negative) (same as #op:iadd)\n"
+          "#index|${property index: int = { get(); set(); }}|Get/set the exact index of the Iterator within its sequence\n"
+          "#prev|${function prev(): bool}|Decrement the Iterator's position, returning :false if the Iterator had already been fully unwound and :true otherwise\n"
+          "#rewind|${function rewind()}|Rewind the Iterator fully}\n"
           "The minimum requirement for access to the entire feature-set is provision of #index and #op:next, "
           "at which point all functions will have become unlocked\n"
           "Hint: If a sub-class wishes to implement any of the above functions, without being considered "
@@ -2068,8 +2068,8 @@ PRIVATE struct type_getset iterator_getsets[] = {
     { DeeString_STR(&str_hasprev),
      &iterator_get_hasprev, NULL, NULL,
       DOC("->?Dbool\n"
-          "@throw NotImplemented @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-          "Returns :true if @this iterator has a predecessor\n"
+          "@throw NotImplemented @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+          "Returns :true if @this Iterator has a predecessor\n"
           ">property hasprev: bool = {\n"
           "> get(): bool {\n"
           ">  for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
@@ -2096,13 +2096,13 @@ PRIVATE struct type_getset iterator_getsets[] = {
     { DeeString_STR(&str_hasnext),
      &iterator_get_hasnext, NULL, NULL,
       DOC("->?Dbool\n"
-          "Returns :true if @this iterator has a successor (alias for #op:bool)") },
+          "Returns :true if @this Iterator has a successor (alias for #op:bool)") },
     { DeeString_STR(&str_index),
      &iterator_get_index, NULL,
      &iterator_set_index,
       DOC("->?Dint\n"
-          "@throw NotImplemented @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-          "Get/set the current sequence index of @this iterator\n"
+          "@throw NotImplemented @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+          "Get/set the current sequence index of @this Iterator\n"
           "Note however that depending on the type of sequence, certain indices "
           "may not have values bound to them. When invoked, #op:next usually skips "
           "ahead to the first bound index, meaning that #op:next does not necessarily "
@@ -2142,19 +2142,19 @@ PRIVATE struct type_getset iterator_getsets[] = {
 
 PRIVATE int DCALL
 iterator_inc(DeeObject **__restrict pself) {
- /* Simply advance the iterator. */
+ /* Simply advance the Iterator. */
  return iterator_do_advance(*pself,1,&DeeInt_One,&DeeInt_MinusOne);
 }
 PRIVATE int DCALL
 iterator_dec(DeeObject **__restrict pself) {
- /* Simply revert the iterator. */
+ /* Simply revert the Iterator. */
  return iterator_do_revert(*pself,1,&DeeInt_One,&DeeInt_MinusOne);
 }
 PRIVATE int DCALL
 iterator_inplace_add(DeeObject **__restrict pself,
                      DeeObject *__restrict countob) {
  dssize_t count;
- /* Increment the iterator by `(int)count' */
+ /* Increment the Iterator by `(int)count' */
  if (DeeObject_AsSSize(countob,&count))
      goto err;
  if unlikely((unlikely(count < 0) ? iterator_do_revert(*pself,(size_t)-count,NULL,countob)
@@ -2168,7 +2168,7 @@ PRIVATE int DCALL
 iterator_inplace_sub(DeeObject **__restrict pself,
                      DeeObject *__restrict countob) {
  dssize_t count;
- /* Increment the iterator by `(int)count' */
+ /* Increment the Iterator by `(int)count' */
  if (DeeObject_AsSSize(countob,&count))
      goto err;
  if unlikely((unlikely(count < 0) ? iterator_do_advance(*pself,(size_t)-count,NULL,countob)
@@ -2182,7 +2182,7 @@ PRIVATE DREF DeeObject *DCALL
 iterator_add(DeeObject *__restrict self,
              DeeObject *__restrict countob) {
  DREF DeeObject *result; dssize_t count;
- /* Increment the iterator by `(int)count' */
+ /* Increment the Iterator by `(int)count' */
  if (DeeObject_AsSSize(countob,&count))
      goto err;
  result = DeeObject_Copy(self);
@@ -2201,7 +2201,7 @@ PRIVATE DREF DeeObject *DCALL
 iterator_sub(DeeObject *__restrict self,
              DeeObject *__restrict countob) {
  DREF DeeObject *result; dssize_t count;
- /* Increment the iterator by `(int)count' */
+ /* Increment the Iterator by `(int)count' */
  if (DeeObject_AsSSize(countob,&count))
      goto err;
  result = DeeObject_Copy(self);
@@ -2253,9 +2253,9 @@ PRIVATE struct type_math iterator_math = {
 
 
 
-/* TODO: tee(int n=2)->?S?Dsequence
+/* TODO: tee(int n=2)->?S?DSequence
  * Return @n independent sequences, each containing a copy of all elements
- * that were pending for @this, with @this iterator never needing to be copied,
+ * that were pending for @this, with @this Iterator never needing to be copied,
  * and elements only read from that iterator as that element is first accessed by
  * one of the returned iterators, and elements being removed from a pre-cached
  * set of pending elements once all of the iterators have read that item.
@@ -2337,28 +2337,28 @@ INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 /* General-purpose iterator type sub-class. */
 PUBLIC DeeTypeObject DeeIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_iterator),
+    /* .tp_name     = */DeeString_STR(&str_Iterator),
     /* .tp_doc      = */DOC("The abstract base class implementing helper functions and utility operators "
                             "for any iterator-like object derived from it. Sub-classes should always "
                             "implement ${operator next} which is what actually determines if a type "
-                            "qualifies as an iterator\n"
+                            "qualifies as an Iterator\n"
                             "Sub-class are also encouraged to implement a copy-constructor, as well "
                             "as a member or property $seq which yields the underlying sequence being "
                             "iterated. Note that all builtin iterator types implement the $seq member, "
                             "and unless there is a good reason not to, most also implement a copy-constructor\n"
                             "\n"
                             "()\n"
-                            "Default-construct an iterator object\n"
+                            "Default-construct an Iterator object\n"
                             "\n"
                             "next->\n"
                             "Default-implemented to always indicate iterator exhaustion\n"
                             "This function must be overwritten by sub-classes\n"
                             "\n"
                             "repr->\n"
-                            "Copies @this iterator and enumerate all remaining elements, constructing "
+                            "Copies @this Iterator and enumerate all remaining elements, constructing "
                             "a representation of all of them using abstract sequence syntax\n"
                             ">operator repr() {\n"
-                            "> file.writer tempfp;\n"
+                            "> File.Writer tempfp;\n"
                             "> tempfp << \"{ [...]\";\n"
                             "> local c = copy this;\n"
                             "> foreach (local x: c)\n"
@@ -2368,7 +2368,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             ">}\n"
                             "\n"
                             "bool->\n"
-                            "Returns :false if @this iterator has been exhausted, or :true otherwise.\n"
+                            "Returns :false if @this Iterator has been exhausted, or :true otherwise.\n"
                             ">operator bool() {\n"
                             "> local c = copy this;\n"
                             "> return try ({\n"
@@ -2380,19 +2380,19 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             ">}\n"
                             "\n"
                             "+(step:?Dint)->\n"
-                            "@throw NotImplemented @step is negative, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
+                            "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
                             "@throw IntegerOverflow @step is too large\n"
-                            "Copies @this iterator and advance it by yielding @step items from it before returning it\n"
-                            "If the iterator becomes exhausted before then, stop and return that exhausted iteartor\n"
+                            "Copies @this Iterator and advance it by yielding @step items from it before returning it\n"
+                            "If the Iterator becomes exhausted before then, stop and return that exhausted iteartor\n"
                             "\n"
                             "+=(step:?Dint)->\n"
-                            "@throw NotImplemented @step is negative, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
+                            "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
                             "@throw IntegerOverflow @step is too large\n"
-                            "Advance @this iterator by yielding @step items\n"
-                            "If @this iterator becomes exhausted before then, stop prematurely\n"
+                            "Advance @this Iterator by yielding @step items\n"
+                            "If @this Iterator becomes exhausted before then, stop prematurely\n"
                             "\n"
                             "++->\n"
-                            "Advance @this iterator by one. No-op if the iterator has been exhausted\n"
+                            "Advance @this Iterator by one. No-op if the Iterator has been exhausted\n"
                             "Note this is very similar to #op:next, however in the case of generator-like "
                             "iterators, doing this may be faster since no generator value has to be created\n"
                             "\n"
@@ -2410,20 +2410,20 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             ">}\n"
                             "\n"
                             "-(step:?Dint)->\n"
-                            "@throw NotImplemented @step is positive, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
+                            "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
                             "@throw IntegerOverflow @step is too large\n"
-                            "Copies @this iterator and reverts it by @step before returning it\n"
-                            "If the iterator reaches its starting position before then, stop prematurely\n"
+                            "Copies @this Iterator and reverts it by @step before returning it\n"
+                            "If the Iterator reaches its starting position before then, stop prematurely\n"
                             "\n"
                             "--->\n"
-                            "@throw NotImplemented @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
-                            "Decrement @this operator by one. No-op if the iterator is already at its starting position\n"
+                            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
+                            "Decrement @this operator by one. No-op if the Iterator is already at its starting position\n"
                             "\n"
                             "-=(step:?Dint)->\n"
-                            "@throw NotImplemented @step is positive, and @this iterator isn't bi-directional (s.a. #isbidirectional)\n"
+                            "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. #isbidirectional)\n"
                             "@throw IntegerOverflow @step is too large\n"
-                            "Revert @this iterator by @step items\n"
-                            "If @this iterator reaches its starting position before then, stop prematurely\n"
+                            "Revert @this Iterator by @step items\n"
+                            "If @this Iterator reaches its starting position before then, stop prematurely\n"
                             "\n"
                             "<->\n"
                             "<=->\n"
@@ -2432,7 +2432,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
                             ">->\n"
                             ">=->\n"
                             "@throw TypeError The types of @other and @this don't match\n"
-                            "Compare @this iterator with @other, returning :true/:false "
+                            "Compare @this Iterator with @other, returning :true/:false "
                             "indicate of the remaining number of elements left to be yielded.\n"
                             "Various iterator sub-classes also override these operators, and their "
                             "behavior in respect to the types (and more importantly: the underlying "
@@ -2565,7 +2565,7 @@ PRIVATE struct type_seq if_seq = {
 };
 
 PRIVATE struct type_member if_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(IteratorFuture,if_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(IteratorFuture,if_iter),"->?DIterator"),
     TYPE_MEMBER_END
 };
 PRIVATE struct type_member if_class_members[] = {
@@ -2574,14 +2574,14 @@ PRIVATE struct type_member if_class_members[] = {
      * should always be derived from that type.
      * -> The only time this isn't correct is when the user manually constructs
      *    instances of this type... */
-    TYPE_MEMBER_CONST("iterator",&DeeIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeIterator_Type),
     TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject IteratorFuture_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_IteratorFuture",
-    /* .tp_doc      = */DOC("(iter?:?Diterator)"),
+    /* .tp_doc      = */DOC("(iter?:?DIterator)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -2685,7 +2685,7 @@ PRIVATE struct type_seq ip_seq = {
 INTERN DeeTypeObject IteratorPending_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_IteratorPending",
-    /* .tp_doc      = */DOC("(iter?:?Diterator)"),
+    /* .tp_doc      = */DOC("(iter?:?DIterator)"),
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

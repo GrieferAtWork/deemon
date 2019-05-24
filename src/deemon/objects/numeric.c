@@ -627,7 +627,7 @@ PRIVATE struct type_getset numeric_getsets[] = {
 
 PUBLIC DeeTypeObject DeeNumeric_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_numeric),
+    /* .tp_name     = */DeeString_STR(&str_Numeric),
     /* .tp_doc      = */DOC("Base class for :int and :float"),
     /* .tp_flags    = */TP_FNORMAL | TP_FABSTRACT,
     /* .tp_weakrefs = */0,

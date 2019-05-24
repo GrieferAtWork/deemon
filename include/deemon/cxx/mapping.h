@@ -27,7 +27,7 @@
 
 DEE_CXX_BEGIN
 
-template<class Tkey = object, class Tvalue = object> class mapping;
+template<class KeyType = Object, class ValueType = Object> class Mapping;
 
 namespace detail {
 class mapping_base: public sequence_base {
@@ -38,22 +38,22 @@ public:
 public:
     DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(mapping_base,sequence_base)
     operator obj_mapping() const DEE_CXX_NOTHROW { return obj_mapping(this->ptr()); }
-    sequence<object> popitem() const { return inherit(DeeObject_CallAttrString(*this,"popitem",0,NULL)); }
-    sequence<sequence<object> > items() const { return inherit(DeeObject_GetAttrString(*this,"item")); }
-    void update(sequence<sequence<object> > const &new_items) const { Dee_Decref(throw_if_null(DeeObject_CallAttrString(*this,"update",1,(DeeObject **)&new_items))); }
+    Sequence<Object> popitem() const { return inherit(DeeObject_CallAttrString(*this,"popitem",0,NULL)); }
+    Sequence<Sequence<Object> > items() const { return inherit(DeeObject_GetAttrString(*this,"item")); }
+    void update(Sequence<Sequence<Object> > const &new_items) const { Dee_Decref(throw_if_null(DeeObject_CallAttrString(*this,"update",1,(DeeObject **)&new_items))); }
     void update(DeeObject *__restrict new_items) const { Dee_Decref(throw_if_null(DeeObject_CallAttrString(*this,"update",1,(DeeObject **)&new_items))); }
 };
 }
 
 
-template<class Tkey, class Tvalue>
-class mapping: public detail::mapping_base {
+template<class KeyType, class ValueType>
+class Mapping: public detail::mapping_base {
     template<class T_> class proxy_base {
     public:
-       Tvalue get() const { return inherit(((T_ const *)this)->getref()); }
-       operator Tvalue() const { return inherit(((T_ const *)this)->getref()); }
+       ValueType get() const { return inherit(((T_ const *)this)->getref()); }
+       operator ValueType() const { return inherit(((T_ const *)this)->getref()); }
        void set(DeeObject *__restrict value) const { *((T_ const *)this) = value; }
-       void set(Tvalue const &value) const { *((T_ const *)this) = value; }
+       void set(ValueType const &value) const { *((T_ const *)this) = value; }
     };
     class item_proxy_obj: public proxy_base<item_proxy_obj> {
     private:
@@ -66,10 +66,10 @@ class mapping: public detail::mapping_base {
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItem(m_ptr,m_key,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItem(m_ptr,m_key); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemDef(m_ptr,m_key,def); }
-        Tvalue getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
+        ValueType getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItem(m_ptr,m_key)); }
         item_proxy_obj const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItem(m_ptr,m_key,value)); return *this; }
-        item_proxy_obj const &operator = (Tvalue const &value) const { throw_if_nonzero(DeeObject_SetItem(m_ptr,m_key,value)); return *this; }
+        item_proxy_obj const &operator = (ValueType const &value) const { throw_if_nonzero(DeeObject_SetItem(m_ptr,m_key,value)); return *this; }
     };
     class item_proxy_sth: public proxy_base<item_proxy_sth> {
     private:
@@ -84,10 +84,10 @@ class mapping: public detail::mapping_base {
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemString(m_ptr,m_str,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemString(m_ptr,m_str,m_hsh); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemStringDef(m_ptr,m_str,m_hsh,def); }
-        Tvalue getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
+        ValueType getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItemString(m_ptr,m_str,m_hsh)); }
         item_proxy_sth const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemString(m_ptr,m_str,m_hsh,value)); return *this; }
-        item_proxy_sth const &operator = (Tvalue const &value) const { throw_if_nonzero(DeeObject_SetItemString(m_ptr,m_str,m_hsh,value)); return *this; }
+        item_proxy_sth const &operator = (ValueType const &value) const { throw_if_nonzero(DeeObject_SetItemString(m_ptr,m_str,m_hsh,value)); return *this; }
     };
     class item_proxy_shn: public proxy_base<item_proxy_shn> {
     private:
@@ -102,91 +102,91 @@ class mapping: public detail::mapping_base {
         bool bound(bool allow_missing = true) const { int result = DeeObject_BoundItemStringLen(m_ptr,m_str,m_len,m_hsh,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
         DREF DeeObject *getref() const { return DeeObject_GetItemStringLen(m_ptr,m_str,m_len,m_hsh); }
         DREF DeeObject *getref_def(DeeObject *__restrict def) const { return DeeObject_GetItemStringLenDef(m_ptr,m_str,m_len,m_hsh,def); }
-        Tvalue getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
+        ValueType getdef(DeeObject *__restrict def) const { return inherit(getref_def(def)); }
         void del() const { throw_if_nonzero(DeeObject_DelItemStringLen(m_ptr,m_str,m_len,m_hsh)); }
         item_proxy_shn const &operator = (DeeObject *__restrict value) const { throw_if_nonzero(DeeObject_SetItemStringLen(m_ptr,m_str,m_len,m_hsh,value)); return *this; }
-        item_proxy_shn const &operator = (Tvalue const &value) const { throw_if_nonzero(DeeObject_SetItemStringLen(m_ptr,m_str,m_len,m_hsh,value)); return *this; }
+        item_proxy_shn const &operator = (ValueType const &value) const { throw_if_nonzero(DeeObject_SetItemStringLen(m_ptr,m_str,m_len,m_hsh,value)); return *this; }
     };
 public: /* mapping from deemon */
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(mapping,mapping_base)
-    WUNUSED item_proxy_obj item(Tkey const &key) const { return item_proxy_obj(*this,key); }
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Mapping,mapping_base)
+    WUNUSED item_proxy_obj item(KeyType const &key) const { return item_proxy_obj(*this,key); }
     WUNUSED item_proxy_obj item(DeeObject *__restrict key) const { return item_proxy_obj(*this,key); }
     WUNUSED item_proxy_sth item(char const *__restrict key) const { return item_proxy_sth(*this,key); }
     WUNUSED item_proxy_sth item(char const *__restrict key, Dee_hash_t hash) const { return item_proxy_sth(*this,key,hash); }
     WUNUSED item_proxy_shn item(char const *__restrict key, size_t len, Dee_hash_t hash) const { return item_proxy_shn(*this,key,len,hash); }
-    WUNUSED Tvalue getitem(Tkey const &key) const { return inherit(DeeObject_GetItem(*this,key)); }
-    WUNUSED Tvalue getitem(Tkey const &key, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue getitem(Tkey const &key, Tvalue const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue getitem(DeeObject *__restrict key) const { return inherit(DeeObject_GetItem(*this,key)); }
-    WUNUSED Tvalue getitem(DeeObject *__restrict key, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue getitem(DeeObject *__restrict key, Tvalue const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue getitem(char const *__restrict key) const { return inherit(DeeObject_GetItemString(*this,key,Dee_HashStr(key))); }
-    WUNUSED Tvalue getitem(char const *__restrict key, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, Tvalue const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, Dee_hash_t hash) const { return inherit(DeeObject_GetItemString(*this,key,hash)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, Dee_hash_t hash, Tvalue const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, size_t len, Dee_hash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,key,len,hash)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, size_t len, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
-    WUNUSED Tvalue getitem(char const *__restrict key, size_t len, Dee_hash_t hash, Tvalue const &def) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
+    WUNUSED ValueType getitem(KeyType const &key) const { return inherit(DeeObject_GetItem(*this,key)); }
+    WUNUSED ValueType getitem(KeyType const &key, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType getitem(KeyType const &key, ValueType const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType getitem(DeeObject *__restrict key) const { return inherit(DeeObject_GetItem(*this,key)); }
+    WUNUSED ValueType getitem(DeeObject *__restrict key, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType getitem(DeeObject *__restrict key, ValueType const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType getitem(char const *__restrict key) const { return inherit(DeeObject_GetItemString(*this,key,Dee_HashStr(key))); }
+    WUNUSED ValueType getitem(char const *__restrict key, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
+    WUNUSED ValueType getitem(char const *__restrict key, ValueType const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
+    WUNUSED ValueType getitem(char const *__restrict key, Dee_hash_t hash) const { return inherit(DeeObject_GetItemString(*this,key,hash)); }
+    WUNUSED ValueType getitem(char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
+    WUNUSED ValueType getitem(char const *__restrict key, Dee_hash_t hash, ValueType const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
+    WUNUSED ValueType getitem(char const *__restrict key, size_t len, Dee_hash_t hash) const { return inherit(DeeObject_GetItemStringLen(*this,key,len,hash)); }
+    WUNUSED ValueType getitem(char const *__restrict key, size_t len, Dee_hash_t hash, DeeObject *__restrict def) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
+    WUNUSED ValueType getitem(char const *__restrict key, size_t len, Dee_hash_t hash, ValueType const &def) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
     using detail::mapping_base::bounditem;
     using detail::mapping_base::hasitem;
     using detail::mapping_base::delitem;
     using detail::mapping_base::setitem;
-    bool bounditem(Tkey const &key, bool allow_missing = true) const { int result = DeeObject_BoundItem(*this,key,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
-    bool hasitem(Tkey const &key) const { int result = DeeObject_HasItem(*this,key); if (result == -1) throw_last_deemon_exception(); return result > 0; }
-    void delitem(Tkey const &index) const { throw_if_negative(DeeObject_DelItem(*this,index)); }
-    void setitem(Tkey const &index, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
-    void setitem(Tkey const &index, Tvalue const &value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
-    void setitem(DeeObject *__restrict index, Tvalue const &value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
-    WUNUSED item_proxy_obj operator [](Tkey const &key) const { return item_proxy_obj(*this,key); }
+    bool bounditem(KeyType const &key, bool allow_missing = true) const { int result = DeeObject_BoundItem(*this,key,allow_missing); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+    bool hasitem(KeyType const &key) const { int result = DeeObject_HasItem(*this,key); if (result == -1) throw_last_deemon_exception(); return result > 0; }
+    void delitem(KeyType const &index) const { throw_if_negative(DeeObject_DelItem(*this,index)); }
+    void setitem(KeyType const &index, DeeObject *__restrict value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
+    void setitem(KeyType const &index, ValueType const &value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
+    void setitem(DeeObject *__restrict index, ValueType const &value) const { throw_if_negative(DeeObject_SetItem(*this,index,value)); }
+    WUNUSED item_proxy_obj operator [](KeyType const &key) const { return item_proxy_obj(*this,key); }
     WUNUSED item_proxy_obj operator [](DeeObject *__restrict key) const { return item_proxy_obj(*this,key); }
     WUNUSED item_proxy_sth operator [](char const *__restrict key) const { return item_proxy_sth(*this,key); }
 
-    WUNUSED Tvalue get(Tkey const &key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue get(Tkey const &key, Tvalue const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue get(DeeObject *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue get(DeeObject *__restrict key, Tvalue const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
-    WUNUSED Tvalue get(char const *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
-    WUNUSED Tvalue get(char const *__restrict key, Tvalue const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
-    WUNUSED Tvalue get(char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
-    WUNUSED Tvalue get(char const *__restrict key, Dee_hash_t hash, Tvalue const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
-    WUNUSED Tvalue get(char const *__restrict key, size_t len, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
-    WUNUSED Tvalue get(char const *__restrict key, size_t len, Dee_hash_t hash, Tvalue const &def) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
+    WUNUSED ValueType get(KeyType const &key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType get(KeyType const &key, ValueType const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType get(DeeObject *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType get(DeeObject *__restrict key, ValueType const &def) const { return inherit(DeeObject_GetItemDef(*this,key,def)); }
+    WUNUSED ValueType get(char const *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
+    WUNUSED ValueType get(char const *__restrict key, ValueType const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,Dee_HashStr(key),def)); }
+    WUNUSED ValueType get(char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
+    WUNUSED ValueType get(char const *__restrict key, Dee_hash_t hash, ValueType const &def) const { return inherit(DeeObject_GetItemStringDef(*this,key,hash,def)); }
+    WUNUSED ValueType get(char const *__restrict key, size_t len, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
+    WUNUSED ValueType get(char const *__restrict key, size_t len, Dee_hash_t hash, ValueType const &def) const { return inherit(DeeObject_GetItemStringLenDef(*this,key,len,hash,def)); }
 
-    Tvalue setdefault(Tkey const &key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
-    Tvalue setdefault(Tkey const &key, Tvalue const &def) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
-    Tvalue setdefault(DeeObject *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
-    Tvalue setdefault(DeeObject *__restrict key, Tvalue const &def) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
-    Tvalue setdefault(char const *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","so",key,def)); }
-    Tvalue setdefault(char const *__restrict key, Tvalue const &def) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","so",key,def)); }
-    Tvalue setdefault(char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const {
+    ValueType setdefault(KeyType const &key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
+    ValueType setdefault(KeyType const &key, ValueType const &def) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
+    ValueType setdefault(DeeObject *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
+    ValueType setdefault(DeeObject *__restrict key, ValueType const &def) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","oo",key,def)); }
+    ValueType setdefault(char const *__restrict key, DeeObject *__restrict def = Dee_None) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","so",key,def)); }
+    ValueType setdefault(char const *__restrict key, ValueType const &def) const { return inherit(DeeObject_CallAttrStringf(*this,"setdefault","so",key,def)); }
+    ValueType setdefault(char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const {
         DREF DeeObject *keyob = throw_if_null(DeeString_NewWithHash(key,hash));
         DREF DeeObject *result = DeeObject_CallAttrStringf(*this,"setdefault","oo",keyob,def);
         Dee_Decref(keyob);
         return inherit(result);
     }
-    Tvalue setdefault(char const *__restrict key, Dee_hash_t hash, Tvalue const &def) const {
+    ValueType setdefault(char const *__restrict key, Dee_hash_t hash, ValueType const &def) const {
         DREF DeeObject *keyob = throw_if_null(DeeString_NewWithHash(key,hash));
         DREF DeeObject *result = DeeObject_CallAttrStringf(*this,"setdefault","oo",keyob,def);
         Dee_Decref(keyob);
         return inherit(result);
     }
-    Tvalue setdefault(char const *__restrict key, size_t len, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const {
+    ValueType setdefault(char const *__restrict key, size_t len, Dee_hash_t hash, DeeObject *__restrict def = Dee_None) const {
         DREF DeeObject *keyob = throw_if_null(DeeString_NewSizedWithHash(key,len,hash));
         DREF DeeObject *result = DeeObject_CallAttrStringf(*this,"setdefault","oo",keyob,def);
         Dee_Decref(keyob);
         return inherit(result);
     }
-    Tvalue setdefault(char const *__restrict key, size_t len, Dee_hash_t hash, Tvalue const &def) const {
+    ValueType setdefault(char const *__restrict key, size_t len, Dee_hash_t hash, ValueType const &def) const {
         DREF DeeObject *keyob = throw_if_null(DeeString_NewSizedWithHash(key,len,hash));
         DREF DeeObject *result = DeeObject_CallAttrStringf(*this,"setdefault","oo",keyob,def);
         Dee_Decref(keyob);
         return inherit(result);
     }
-    sequence<Tkey> keys() const { return inherit(DeeObject_GetAttrString(*this,"keys")); }
-    sequence<Tvalue> values() const { return inherit(DeeObject_GetAttrString(*this,"values")); }
-    mapping frozen() const { return inherit(DeeObject_GetAttrString(*this,"frozen")); }
+    Sequence<KeyType> keys() const { return inherit(DeeObject_GetAttrString(*this,"keys")); }
+    Sequence<ValueType> values() const { return inherit(DeeObject_GetAttrString(*this,"values")); }
+    Mapping frozen() const { return inherit(DeeObject_GetAttrString(*this,"frozen")); }
 };
 
 

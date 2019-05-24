@@ -18,26 +18,26 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import thread from deemon;
+import Thread from deemon;
 import * from time;
 
 function loading_text(text) {
 	while (1) {
 		print "\r-",text,;
-		thread.sleep(milliseconds(1));
+		Thread.sleep(milliseconds(100));
 		print "\r\\",text,;
-		thread.sleep(milliseconds(1));
+		Thread.sleep(milliseconds(100));
 		print "\r|",text,;
-		thread.sleep(milliseconds(1));
+		Thread.sleep(milliseconds(100));
 		print "\r/",text,;
-		thread.sleep(milliseconds(1));
+		Thread.sleep(milliseconds(100));
 	}
 }
 
 function wait_for_nothing(text) {
-	t = thread(loading_text,(text+"...",));
+	t = Thread(loading_text,(text+"...",));
 	t.start();
-	thread.sleep(seconds(1));
+	Thread.sleep(seconds(1));
 	t.interrupt();
 	t.join();
 	print "\r|",text.ljust(50),"DONE";

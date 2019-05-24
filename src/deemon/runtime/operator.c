@@ -33,7 +33,7 @@
 #include <deemon/error_types.h>
 #include <deemon/mro.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/objmethod.h>
 #include <deemon/class.h>
 #include <deemon/none.h>

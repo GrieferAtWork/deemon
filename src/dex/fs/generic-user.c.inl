@@ -45,7 +45,7 @@ fs_printuser(struct unicode_printer *__restrict UNUSED(printer), bool try_get) {
 }
 INTERN DeeTypeObject DeeUser_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"user",
+    /* .tp_name     = */"User",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,

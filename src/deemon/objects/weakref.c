@@ -88,7 +88,7 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
   if likely(result)
       Dee_Decref(result);
   else {
-   DeeError_Print("Unhandled exception in weakref callback",
+   DeeError_Print("Unhandled exception in WeakRef callback",
                    ERROR_PRINT_DOHANDLE);
   }
  }
@@ -100,7 +100,7 @@ ob_weakref_init(WeakRef *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj;
  self->wr_del = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:weakref",&obj,&self->wr_del))
+ if (DeeArg_Unpack(argc,argv,"o|o:WeakRef",&obj,&self->wr_del))
      goto err;
  if (self->wr_del) {
   Dee_Incref(self->wr_del);
@@ -125,7 +125,7 @@ ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
  DeeObject *obj;
  PRIVATE DEFINE_KWLIST(kwlist,{ K(obj), K(callback), KEND });
  self->wr_del = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:weakref",&obj,&self->wr_del))
+ if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:WeakRef",&obj,&self->wr_del))
      goto err;
  if (self->wr_del) {
   Dee_Incref(self->wr_del);
@@ -182,15 +182,15 @@ ob_weakref_moveassign(WeakRef *__restrict self,
  return 0;
 }
 
-PRIVATE DEFINE_STRING(empty_weakref,"empty weakref");
-PRIVATE DEFINE_STRING(empty_weakref_repr,"weakref()");
+PRIVATE DEFINE_STRING(empty_weakref,"empty WeakRef");
+PRIVATE DEFINE_STRING(empty_weakref_repr,"WeakRef()");
 
 PRIVATE DREF DeeObject *DCALL
 ob_weakref_str(WeakRef *__restrict self) {
  DREF DeeObject *refobj;
  refobj = Dee_weakref_lock(&self->wr_ref);
  if (!refobj) return_reference_((DeeObject *)&empty_weakref);
- return DeeString_Newf("weakref -> %K",refobj);
+ return DeeString_Newf("WeakRef -> %K",refobj);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -198,7 +198,7 @@ ob_weakref_repr(WeakRef *__restrict self) {
  DREF DeeObject *refobj;
  refobj = Dee_weakref_lock(&self->wr_ref);
  if (!refobj) return_reference_((DeeObject *)&empty_weakref_repr);
- return DeeString_Newf("weakref(%R)",refobj);
+ return DeeString_Newf("WeakRef(%R)",refobj);
 }
 
 PRIVATE int DCALL
@@ -345,32 +345,32 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
 
 PRIVATE struct type_member ob_weakref_members[] = {
     TYPE_MEMBER_FIELD_DOC("callback",STRUCT_OBJECT,offsetof(WeakRef,wr_del),
-                          "->?Dcallable\n"
+                          "->?DCallable\n"
                           "@throw UnboundAttribute No callback has been specified\n"
                           "The second argument passed to the constructor, specifying "
                           "an optional callback to-be executed when the bound object "
                           "dies on its own\n"
-                          "When invoked, the callback is passed a reference to @this weakref object"),
+                          "When invoked, the callback is passed a reference to @this WeakRef object"),
     TYPE_MEMBER_END
 };
 
 
 PUBLIC DeeTypeObject DeeWeakRef_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_weakref),
-    /* .tp_doc      = */DOC("A weak reference to another object implementing weakref functionality\n"
+    /* .tp_name     = */DeeString_STR(&str_WeakRef),
+    /* .tp_doc      = */DOC("A weak reference to another object implementing WeakRef functionality\n"
                             "\n"
                             "()\n"
                             "Construct an unbound weak reference\n"
                             "\n"
-                            "(obj,callback?:?Dcallable)\n"
+                            "(obj,callback?:?DCallable)\n"
                             "@throw TypeError The given object @obj does not implement weak referencing support\n"
                             "Construct a weak reference bound to @obj, that will be notified once said "
                             "object is supposed to be destroyed. With that in mind, weak references don't "
                             "actually hold references at all, but rather allow the user to test if an "
                             "object is still allocated at runtime.\n"
                             "If given, @callback is invoked with a single argument passed as "
-                            "@this weakref object once the then bound object dies on its own\n"
+                            "@this WeakRef object once the then bound object dies on its own\n"
                             "Note however that the bound callback does not influence anything "
                             "else, such as comparison operators, which only compare the ids of "
                             "bound objects, even after those objects have died\n"
@@ -396,7 +396,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
                             "\n"
                             ":=(other:?X2?.?O)->\n"
                             "@throw TypeError The given @other does not implement weak referencing support\n"
-                            "Assign the value of @other to @this weakref object\n"
+                            "Assign the value of @other to @this WeakRef object\n"
                             "\n"
                             "move:=->\n"
                             "Override @this weak reference with the value referenced by @other, "
@@ -478,7 +478,7 @@ weakrefable_moveassign(WeakRefAble *__restrict self,
 
 PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_weakrefable),
+    /* .tp_name     = */DeeString_STR(&str_WeakRefAble),
     /* .tp_doc      = */DOC("An base class that user-defined clases can "
                             "be derived from to become weakly referencable"),
     /* .tp_flags    = */TP_FNORMAL|TP_FNAMEOBJECT,

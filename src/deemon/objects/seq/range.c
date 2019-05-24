@@ -939,7 +939,7 @@ PRIVATE struct type_member range_members[] = {
 };
 
 PRIVATE struct type_member range_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqRangeIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqRangeIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1453,7 +1453,7 @@ PRIVATE struct type_member intrange_members[] = {
 };
 
 PRIVATE struct type_member intrange_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqIntRangeIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqIntRangeIterator_Type),
     TYPE_MEMBER_END
 };
 

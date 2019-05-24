@@ -44,7 +44,7 @@ DeeCell_New(DeeObject *__restrict item) {
  ASSERT_OBJECT(item);
  result = DeeGCObject_MALLOC(Cell);
  if unlikely(!result) goto done;
- /* Initialize and fill in the new cell. */
+ /* Initialize and fill in the new Cell. */
  DeeObject_Init(result,&DeeCell_Type);
  Dee_Incref(item);
  result->c_item = item;
@@ -81,7 +81,7 @@ cell_copy(Cell *__restrict self,
 PRIVATE int DCALL
 cell_init(Cell *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:cell",&self->c_item))
+ if (DeeArg_Unpack(argc,argv,"o:Cell",&self->c_item))
      return -1;
  Dee_Incref(self->c_item);
 #ifndef CONFIG_NO_THREADS
@@ -152,7 +152,7 @@ DeeCell_Xch(DeeObject *__restrict self,
  DREF DeeObject *result;
  ASSERT_OBJECT_TYPE(self,&DeeCell_Type);
  ASSERT_OBJECT_OPT(value);
- /* Exchange the cell's value. */
+ /* Exchange the Cell's value. */
  Dee_XIncref(value);
  DeeCell_LockWrite(self);
  result = DeeCell_Item(self);
@@ -166,7 +166,7 @@ DeeCell_XchNonNull(DeeObject *__restrict self,
  DREF DeeObject *result;
  ASSERT_OBJECT_TYPE(self,&DeeCell_Type);
  ASSERT_OBJECT_OPT(value);
- /* Exchange the cell's value. */
+ /* Exchange the Cell's value. */
  Dee_XIncref(value);
  DeeCell_LockWrite(self);
  result = DeeCell_Item(self);
@@ -187,7 +187,7 @@ DeeCell_CmpXch(DeeObject *__restrict self,
  ASSERT_OBJECT_TYPE(self,&DeeCell_Type);
  ASSERT_OBJECT_OPT(old_value);
  ASSERT_OBJECT_OPT(new_value);
- /* Extract the cell's value. */
+ /* Extract the Cell's value. */
  DeeCell_LockWrite(self);
  result = DeeCell_Item(self);
  if (result == old_value) {
@@ -204,7 +204,7 @@ PUBLIC int DCALL
 DeeCell_Del(DeeObject *__restrict self) {
  DREF DeeObject *old_value;
  ASSERT_OBJECT_TYPE(self,&DeeCell_Type);
- /* Extract the cell's value. */
+ /* Extract the Cell's value. */
  DeeCell_LockWrite(self);
  old_value = DeeCell_Item(self);
  DeeCell_Item(self) = NULL;
@@ -220,7 +220,7 @@ DeeCell_Set(DeeObject *__restrict self,
  ASSERT_OBJECT_TYPE(self,&DeeCell_Type);
  ASSERT_OBJECT(value);
  Dee_Incref(value);
- /* Exchange the cell's value. */
+ /* Exchange the Cell's value. */
  DeeCell_LockWrite(self);
  old_value = DeeCell_Item(self);
  DeeCell_Item(self) = value;
@@ -237,8 +237,8 @@ PRIVATE DREF DeeObject *DCALL
 cell_str(Cell *__restrict self) {
  DREF DeeObject *item;
  item = DeeCell_TryGet((DeeObject *)self);
- if (!item) return_reference_(&str_cell);
- return DeeString_Newf("cell -> %K",item);
+ if (!item) return_reference_(&str_Cell);
+ return DeeString_Newf("Cell -> %K",item);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -292,8 +292,8 @@ PRIVATE struct type_cmp cell_cmp = {
 
 PRIVATE struct type_getset cell_getsets[] = {
     { "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
-      DOC("@throw UnboundAttribute Attempted to read from an empty cell\n"
-          "read/write access to the underlying, contained :object") },
+      DOC("@throw UnboundAttribute Attempted to read from an empty Cell\n"
+          "read/write access to the underlying, contained :Object") },
     { NULL }
 };
 
@@ -441,36 +441,36 @@ PRIVATE struct type_method cell_methods[] = {
     { DeeString_STR(&str_get),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_get,
       DOC("->\n"
-          "@throw ValueError @this cell is empty\n"
-          "Returns the contained value of the cell\n"
+          "@throw ValueError @this Cell is empty\n"
+          "Returns the contained value of the Cell\n"
           "\n"
           "(def)->\n"
-          "Returns the contained value of the cell or @def when it is empty") },
+          "Returns the contained value of the Cell or @def when it is empty") },
     { "delete",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_delete,
       DOC("->?Dbool\n"
-          "Delete the value stored in @this cell, returning :true if "
-          "the cell wasn't empty before, or :false if it already was") },
+          "Delete the value stored in @this Cell, returning :true if "
+          "the Cell wasn't empty before, or :false if it already was") },
     { DeeString_STR(&str_pop),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_pop,
       DOC("->\n"
-          "@throw ValueError The cell was empty\n"
+          "@throw ValueError The Cell was empty\n"
           "\n"
           "(def)->\n"
           "Pop and return the previously contained object, @def, or throw a ValueError") },
     { DeeString_STR(&str_set),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_set,
       DOC("(value)->?Dbool\n"
-          "Set (override) @this cell's value, returning :true if a previous value "
+          "Set (override) @this Cell's value, returning :true if a previous value "
           "has been overwritten, or :falue if no value had been set before") },
     { DeeString_STR(&str_xch),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_xch,
       DOC("(value)->\n"
-          "@throw ValueError @this cell is empty\n"
-          "Overwrite the cell's value and return the old value or throw an error when it was empty\n"
+          "@throw ValueError @this Cell is empty\n"
+          "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
           "\n"
           "(value,def)->\n"
-          "Returns the contained value of the cell or @def when it is empty") },
+          "Returns the contained value of the Cell or @def when it is empty") },
     { "cmpdel",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_cmpdel,
       DOC("(old_value)->?Dbool\n"
@@ -479,7 +479,7 @@ PRIVATE struct type_method cell_methods[] = {
     { "cmpxch",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&cell_cmpxch,
       DOC("(old_value,new_value)->\n"
-          "@throw ValueError @this cell is empty\n"
+          "@throw ValueError @this Cell is empty\n"
           "\n"
           "(old_value,new_value,def)->\n"
           "Do an id-compare of the stored object against @old_value and overwrite "
@@ -521,14 +521,14 @@ PRIVATE struct type_gc cell_gc = {
 
 PUBLIC DeeTypeObject DeeCell_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_cell),
+    /* .tp_name     = */DeeString_STR(&str_Cell),
     /* .tp_doc      = */DOC("A 1-layer indirection allowing for referral to another object\n"
                             "\n"
                             "()\n"
-                            "Create a new, empty cell\n"
+                            "Create a new, empty Cell\n"
                             "\n"
                             "(obj)\n"
-                            "Create a new cell containing @obj"),
+                            "Create a new Cell containing @obj"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

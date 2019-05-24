@@ -25,19 +25,19 @@
 
 DEE_CXX_BEGIN
 
-class super: public object {
+class Super: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeSuper_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeSuper_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeSuper_CheckExact(ob); }
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(super,object)
-    super(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self)
-        : object(inherit(DeeSuper_New(tp_self,self))) {}
-    deemon::type<object> supertype() const;
-    object const &superself() const {
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Super,Object)
+    Super(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self)
+        : Object(inherit(DeeSuper_New(tp_self,self))) {}
+    deemon::Type<Object> supertype() const;
+    Object const &superself() const {
         if (DeeSuper_CheckExact(this->ptr()))
-            return *(object const *)&DeeSuper_SELF(this->ptr());
+            return *(Object const *)&DeeSuper_SELF(this->ptr());
         return *this;
     }
 };
@@ -45,20 +45,20 @@ public:
 
 
 #ifdef GUARD_DEEMON_CXX_TYPE_H
-inline deemon::type<object> super::supertype() const {
+inline deemon::Type<Object> Super::supertype() const {
     if (DeeSuper_CheckExact(this->ptr()))
         return nonnull(DeeSuper_TYPE(this->ptr()));
     return nonnull(Dee_TYPE(this->ptr()));
 }
 #endif /* GUARD_DEEMON_CXX_TYPE_H */
 
-inline deemon::super object::super() const {
+inline deemon::Super Object::super() const {
     return inherit(DeeSuper_Of(*this));
 }
-inline deemon::super object::super(DeeTypeObject *__restrict super_type) const {
+inline deemon::Super Object::super(DeeTypeObject *__restrict super_type) const {
     return inherit(DeeSuper_New(super_type,*this));
 }
-template<class T> inline deemon::super object::super() const {
+template<class T> inline deemon::Super Object::super() const {
     return inherit(DeeSuper_New(T::classtype(),*this));
 }
 

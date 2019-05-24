@@ -25,29 +25,29 @@
 
 DEE_CXX_BEGIN
 
-class int_: public object {
+class int_: public Object {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeInt_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeInt_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeInt_CheckExact(ob); }
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(int_,object)
-    int_() DEE_CXX_NOTHROW: object(nonnull((DeeObject *)&DeeInt_Zero)) { }
-    int_(char value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewChar(value))) { }
-    int_(signed char value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewSChar(value))) { }
-    int_(unsigned char value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewUChar(value))) { }
-    int_(short value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewShort(value))) { }
-    int_(unsigned short value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewUShort(value))) { }
-    int_(int value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewInt(value))) { }
-    int_(unsigned int value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewUInt(value))) { }
-    int_(long value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewLong(value))) { }
-    int_(unsigned long value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewULong(value))) { }
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(int_,Object)
+    int_() DEE_CXX_NOTHROW: Object(nonnull((DeeObject *)&DeeInt_Zero)) { }
+    int_(char value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewChar(value))) { }
+    int_(signed char value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewSChar(value))) { }
+    int_(unsigned char value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewUChar(value))) { }
+    int_(short value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewShort(value))) { }
+    int_(unsigned short value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewUShort(value))) { }
+    int_(int value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewInt(value))) { }
+    int_(unsigned int value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewUInt(value))) { }
+    int_(long value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewLong(value))) { }
+    int_(unsigned long value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewULong(value))) { }
 #ifdef __COMPILER_HAVE_LONGLONG
-    int_(long long value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewLLong(value))) { }
-    int_(unsigned long long value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewULLong(value))) { }
+    int_(long long value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewLLong(value))) { }
+    int_(unsigned long long value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewULLong(value))) { }
 #endif /* __COMPILER_HAVE_LONGLONG */
-    int_(Dee_int128_t value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewS128(value))) { }
-    int_(Dee_uint128_t value) DEE_CXX_NOTHROW: object(inherit(DeeInt_NewU128(value))) { }
+    int_(Dee_int128_t value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewS128(value))) { }
+    int_(Dee_uint128_t value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewU128(value))) { }
 
 #ifndef __OPTIMIZE_SIZE__
     /* Optimized conversion operators (based on `DeeInt_AsS32()' and friends) */
@@ -104,7 +104,7 @@ public:
 
 
 };
-inline int_ object::int_() const { return inherit(DeeObject_Int(*this)); }
+inline int_ Object::int_() const { return inherit(DeeObject_Int(*this)); }
 
 #ifdef GUARD_DEEMON_CXX_SEQUENCE_H
 deemon::int_ detail::sequence_base::erase(size_t index) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","Iu",index)); }
@@ -112,17 +112,17 @@ deemon::int_ detail::sequence_base::erase(size_t index, size_t count) const { re
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","o",index)); }
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index, size_t count) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","oIu",index,count)); }
 deemon::int_ detail::sequence_base::erase(DeeObject *__restrict index, DeeObject *__restrict count) const { return inherit(DeeObject_CallAttrStringf(*this,"erase","oo",index,count)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Id",end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdId",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Ido",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdoId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Idoo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oId",start,end)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdId",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdo",start,end,step)); }
-sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","ooId",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Id",end)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdId",start,end)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdId",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdIdo",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Ido",start,end)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","IdoId",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *__restrict end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","Idoo",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oId",start,end)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdId",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, Dee_ssize_t end, DeeObject *__restrict step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","oIdo",start,end,step)); }
+Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict start, DeeObject *__restrict end, Dee_ssize_t step) { return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type,"range","ooId",start,end,step)); }
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn,name) \
 Treturn (detail::sequence_base::name)(DeeObject *__restrict elem) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",elem)); } \
 Treturn (detail::sequence_base::name)(DeeObject *__restrict elem, DeeObject *__restrict key) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"oo",elem,key)); } \
@@ -174,13 +174,13 @@ WUNUSED Treturn (string::name)(DeeObject *__restrict needle, size_t start, size_
 /**/
 DEFINE_FIND_FUNCTION(deemon::int_,find,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,rfind,needle)
-DEFINE_FIND_FUNCTION(sequence<deemon::int_>,findall,needle)
+DEFINE_FIND_FUNCTION(Sequence<deemon::int_>,findall,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,index,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,rindex,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,count,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,casefind,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,caserfind,needle)
-DEFINE_FIND_FUNCTION(sequence<deemon::int_>,casefindall,needle)
+DEFINE_FIND_FUNCTION(Sequence<deemon::int_>,casefindall,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,caseindex,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,caserindex,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,casecount,needle)
@@ -233,10 +233,10 @@ DEFINE_FINDMATCH_FUNCTION(deemon::int_,findmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_,indexmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_,rfindmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_,rindexmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,casefindmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caseindexmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caserfindmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caserindexmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,casefindmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caseindexmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caserfindmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caserindexmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn,name) \
 WUNUSED Treturn (string::name)(DeeObject *__restrict pattern) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",pattern)); } \
@@ -267,11 +267,11 @@ WUNUSED Treturn (string::name)(/*utf-8*/char const *__restrict pattern, size_t s
 WUNUSED Treturn (string::name)(/*utf-8*/char const *__restrict pattern, size_t start, size_t end, /*utf-8*/char const *__restrict rules) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"sIuIus",pattern,start,end,rules)); } \
 /**/
 DEFINE_RE_FUNCTION(deemon::int_,rematch)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,refind)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,rerfind)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,reindex)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,rerindex)
-DEFINE_RE_FUNCTION(sequence<sequence<deemon::int_> >,refindall)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,refind)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,rerfind)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,reindex)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,rerindex)
+DEFINE_RE_FUNCTION(Sequence<Sequence<deemon::int_> >,refindall)
 DEFINE_RE_FUNCTION(deemon::int_,recount)
 #undef DEFINE_RE_FUNCTION
 #endif /* GUARD_DEEMON_CXX_STRING_H */

@@ -204,7 +204,7 @@ PRIVATE DEFINE_KWCMETHOD(libjit_exec,&libjit_exec_f);
 
 PRIVATE struct dex_symbol symbols[] = {
     { "exec", (DeeObject *)&libjit_exec, MODSYM_FNORMAL,
-      DOC("(expr:?X3?Dstring?Dbytes?Dfile,globals?:?S?T2?Dstring?O,base?:?Dmodule)->\n"
+      DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?S?T2?Dstring?O,base?:?DModule)->\n"
           "Execute a given expression @expr and return the result\n"
           "This function is used to implement the builtin :deemon.exec function") },
     /* TODO: `mode:?Dstring=!Prestricted'
@@ -286,7 +286,7 @@ PRIVATE struct dex_symbol symbols[] = {
      *       to the deemon library path, meaning that they don't pose a security
      *       risk on their own.
      *     - Seperately, the runtime restricts access to `file.open()',
-     *      `file.system' (and `file.io'), as well as `file.buffer.sync()'
+     *      `file.system' (and `file.io'), as well as `File.Buffer.sync()'
      *       Attempting to perform any of these operations will cause a
      *       NotImplemented error to be thrown, emulating a target system
      *       that doesn't implement user-code I/O support.
@@ -339,24 +339,24 @@ PRIVATE struct dex_symbol symbols[] = {
      *        - `deemon.Signal'
      *        - `deemon.bool'
      *        - `deemon.string'
-     *        - `deemon.bytes'
-     *        - `deemon.tuple'
-     *        - `deemon.list'
-     *        - `deemon.dict'
-     *        - `deemon.hashset'
+     *        - `deemon.Bytes'
+     *        - `deemon.Tuple'
+     *        - `deemon.List'
+     *        - `deemon.Dict'
+     *        - `deemon.HashSet'
      *        - `deemon.int'
      *        - `deemon.float'
-     *        - `deemon.object'
-     *        - `deemon.type'
-     *        - `deemon.cell'
-     *        - `deemon.weakref'
+     *        - `deemon.Object'
+     *        - `deemon.Type'
+     *        - `deemon.Cell'
+     *        - `deemon.WeakRef'
      *        - `type(none)'
-     *        - `deemon.super_'
-     *        - `deemon.instancemethod'
-     *        - `deemon.property_'
-     *        - `deemon.attribute'
+     *        - `deemon.Super'
+     *        - `deemon.InstanceMethod'
+     *        - `deemon.Property'
+     *        - `deemon.Attribute'
+     *        - `deemon.Frame'
      *        - `deemon.enumattr'
-     *        - `deemon.frame'
      *     - `print' statements without a file target are compiled as follows
      *       >> print "foo"; // This...
      *       >> print globals["__stdout__"]: "foo"; // ... becomes this
@@ -368,13 +368,13 @@ PRIVATE struct dex_symbol symbols[] = {
      *       expressions.
      *       NOTE: An exception to this are `x is y', as well as `x === y' and `x !== y' expressions.
      *       The types are:
-     *         - `deemon.thread'  (blocking access to multi-threading)
-     *         - `deemon.file'  (blocking access to `deemon.file.open()')
+     *         - `deemon.Thread'  (blocking access to multi-threading)
+     *         - `deemon.File'  (blocking access to `deemon.file.open()')
      *       Additionally, the following objects are disallowed:
      *         - `deemon.gc'
      *         - `deemon.enumattr'  (There is no reason for code to do this)
      *                               NOTE: This also includes `operator enumattr()'!
-     *         - `deemon.traceback'  (Tracebacks should be restricted to the invoker of the code)
+     *         - `deemon.Traceback'  (Tracebacks should be restricted to the invoker of the code)
      *         - `deemon.import' and `deemon.import_'
      *         - `deemon.Error.SystemError'
      *         - `deemon.Error.AppExit'

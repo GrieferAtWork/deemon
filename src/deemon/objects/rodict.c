@@ -42,7 +42,7 @@ typedef DeeRoDictObject Dict;
 
 typedef struct {
     OBJECT_HEAD
-    Dict               *di_dict; /* [1..1][const] The dict being iterated. */
+    Dict               *di_dict; /* [1..1][const] The Dict being iterated. */
     struct rodict_item *di_next; /* [?..1][in(di_dict->rd_elem)][atomic]
                                   * The first candidate for the next item. */
 } DictIterator;
@@ -64,13 +64,13 @@ rodictiterator_ctor(DictIterator *__restrict self) {
 INTERN int DCALL
 rodictiterator_init(DictIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
- Dict *dict;
- if (DeeArg_Unpack(argc,argv,"o:_RoDictIterator",&dict) ||
-     DeeObject_AssertTypeExact((DeeObject *)dict,&DeeRoDict_Type))
+ Dict *Dict;
+ if (DeeArg_Unpack(argc,argv,"o:_RoDictIterator",&Dict) ||
+     DeeObject_AssertTypeExact((DeeObject *)Dict,&DeeRoDict_Type))
      return -1;
- self->di_dict = dict;
- Dee_Incref(dict);
- self->di_next = dict->rd_elem;
+ self->di_dict = Dict;
+ Dee_Incref(Dict);
+ self->di_next = Dict->rd_elem;
  return 0;
 }
 
@@ -95,10 +95,10 @@ rodictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE int DCALL
 rodictiterator_bool(DictIterator *__restrict self) {
  struct rodict_item *item = READ_ITEM(self);
- Dict *dict = self->di_dict;
+ Dict *Dict = self->di_dict;
  for (;; ++item) {
   /* Check if the iterator is in-bounds. */
-  if (item > dict->rd_elem+dict->rd_mask)
+  if (item > Dict->rd_elem+Dict->rd_mask)
       return 0;
   if (item->di_key) break;
  }
@@ -307,11 +307,11 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
  DREF DeeObject *result;
  size_t length_hint;
  /* Optimization: Since rodicts are immutable, re-return if the
-  *               given sequence already is a read-only dict. */
+  *               given sequence already is a read-only Dict. */
  if (DeeRoDict_CheckExact(self))
      return_reference_(self);
  /* TODO: if (DeeDict_CheckExact(self)) ... */
- /* Construct a read-only dict from an iterator. */
+ /* Construct a read-only Dict from an iterator. */
  self = DeeObject_IterSelf(self);
  if unlikely(!self) return NULL;
  length_hint = DeeFastSeq_GetSize(self);
@@ -423,7 +423,7 @@ DeeRoDict_Insert(DREF DeeObject **__restrict pself,
   me->rd_mask = new_mask;
   me->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
  }
- /* Insert the new key/value-pair into the dict. */
+ /* Insert the new key/value-pair into the Dict. */
  Dee_Incref(key);
  Dee_Incref(value);
  if (insert(me,me->rd_mask,&me->rd_size,key,value))
@@ -437,7 +437,7 @@ PRIVATE DREF DeeObject *DCALL
 DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
  DREF Dict *result,*new_result; DREF DeeObject *elem;
  size_t elem_count = 0;
- /* Construct a read-only dict from an iterator. */
+ /* Construct a read-only Dict from an iterator. */
  result = RODICT_ALLOC(mask);
  if unlikely(!result) goto done;
  while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
@@ -446,7 +446,7 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
   error = DeeObject_Unpack(elem,2,key_and_value);
   Dee_Decref(elem);
   if unlikely(error) goto err_r;
-  /* Check if we must re-hash the resulting dict. */
+  /* Check if we must re-hash the resulting Dict. */
   if (elem_count*2 > mask) {
    size_t new_mask = (mask << 1) | 1;
    new_result = rehash(result,mask,new_mask);
@@ -457,7 +457,7 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
    }
    mask = new_mask;
   }
-  /* Insert the key-value pair into the resulting dict. */
+  /* Insert the key-value pair into the resulting Dict. */
   if unlikely(insert(result,mask,&elem_count,key_and_value[0],key_and_value[1]))
      goto err_r;
   if (DeeThread_CheckInterrupt())
@@ -836,8 +836,8 @@ PRIVATE struct type_member rodict_members[] = {
 
 
 PRIVATE struct type_member rodict_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RoDictIterator_Type),
-    TYPE_MEMBER_CONST("frozen",&DeeRoDict_Type),
+    TYPE_MEMBER_CONST("Iterator",&RoDictIterator_Type),
+    TYPE_MEMBER_CONST("Frozen",&DeeRoDict_Type),
     TYPE_MEMBER_END
 };
 
@@ -864,7 +864,7 @@ rodict_deepcopy(Dict *__restrict self) {
   if unlikely(!key_copy) goto err;
   value_copy = DeeObject_DeepCopy(self->rd_elem[i].di_value);
   if unlikely(!value_copy) { Dee_Decref(key_copy); goto err; }
-  /* Insert the copied key & value into the new dict. */
+  /* Insert the copied key & value into the new Dict. */
   temp = DeeRoDict_Insert((DREF DeeObject **)&result,key_copy,value_copy);
   Dee_Decref(value_copy);
   Dee_Decref(key_copy);

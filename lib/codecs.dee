@@ -21,11 +21,11 @@ import * from deemon;
 import * from errors;
 import * from util;
 
-local function unknown_codec(name) {
+local function unknown_codec(name: string) {
 	throw ValueError("Unknown codec {!r}".format({ name }));
 }
 
-local function sanitize_codec_name(name) {
+local function sanitize_codec_name(name: string) {
 	/* Make sure it's not detected as a module name. */
 	if (("." in name) || !name || (!name.isalnum(0) && name[0] !in ["_"]))
 		unknown_codec(name);
@@ -41,9 +41,9 @@ local function decode_unsupported(...) {
 }
 
 local class CustomCodec {
-	public final member encode: callable;
-	public final member decode: callable;
-	this(encode: callable = none, decode: callable = none) {
+	public final member encode: Callable;
+	public final member decode: Callable;
+	this(encode: Callable = none, decode: Callable = none) {
 		this.encode = encode;
 		this.decode = decode;
 		if (this.encode is none)
@@ -65,11 +65,11 @@ local class CpCodec {
 		if (cp_rev !is bound) {
 			/* Create a mapping for translating unicode
 			 * characters to their encoded ordinals. */
-			cp_rev = dict(
+			cp_rev = Dict(
 				for (local ord,ch: enumerate(cp.ordinals))
 					(ch,string.chr(ord)));
 		}
-		file.writer writer;
+		File.Writer writer;
 		for (local ch: data) {
 			ch = ch.ord();
 			local mapped_ch = cp_rev.get(ch);
@@ -96,7 +96,7 @@ local class CpCodec {
 	public final function decode(data, errors: string) {
 		/* TODO: Add a builtin function to quickly translate
 		 *       strings in a manner such as this one. */
-		file.writer writer;
+		File.Writer writer;
 		if (data is string)
 			data = data.ordinals;
 		for (local ch: data) {
@@ -121,10 +121,10 @@ local class CpCodec {
 
 
 @@Cache of loaded codecs
-local loaded_codecs = dict();
+local loaded_codecs = Dict();
 
 @@Cache of loaded codecs
-local user_codecs = dict();
+local user_codecs = Dict();
 
 local function load_codec_module(name) {
 	/* Load the codec from a module. */
@@ -163,7 +163,7 @@ local function get_codec(name) {
 
 
 @@General purpose encode() function that is invoked by the deemon
-@@runtime for :string and :bytes whenever a codec was specified
+@@runtime for :string and :Bytes whenever a codec was specified
 @@that wasn't recognized.
 @@When this function is called, the given @name has already been normalized,
 @@but has yet to be sanity-checked to become a valid name for a codec module.
@@ -193,19 +193,19 @@ function __decode(data, name: string, errors: string = "strict") {
 
 @@Register a given @codec for @name
 @@The given @codec can be an arbitrary object, which should implement member functions
-@@`encode(data: object, errors: string)' and `decode(data: object, errors: string)'
+@@`encode(data: Object, errors: string)' and `decode(data: Object, errors: string)'
 @@If either function is missing, attempting to perform that operation using the codec
 @@will cause a :ValueError to be thrown
 @@@throw KeyError A codec that is matching the given @name has already been defined
-function register(name: string, codec: object) {
+function register(name: string, codec: Object) {
 	if (!user_codecs.setnew(name,codec))
 		throw KeyError("Codec {!r} has already been defined".format({ name }));
 }
 
 
 @@Normalize (_NOT_ sanitize) a given codec name, the same way the deemon
-@@core does when the encode/decode functions of :string or :bytes are invoked.
-local function normalize_codec_name(name) {
+@@core does when the encode/decode functions of :string or :Bytes are invoked.
+local function normalize_codec_name(name: string): string {
 	name = name.casefold().replace("_","-");
 	if (name.startswith("iso-"))
 		name = "iso"+name[4:];
@@ -218,28 +218,28 @@ local function normalize_codec_name(name) {
 
 @@Transform @data according to @name
 @@Normally, this function doesn't need to be used, as encoded data is usually
-@@only encapsulated as :bytes or :string objects, which provide encode/decode
+@@only encapsulated as :Bytes or :string objects, which provide encode/decode
 @@functionality via member functions.
 @@However, this function can be used to invoke codecs with arbitrary objects
 @@given as input, while also allowing arbitrary objects as output.
 @@@throw ValueError The given @name isn't a known codec
 @@@param errors One of $"strict", $"ignore" or $"replace"
 function decode(data, name: string, errors: string = "strict") {
-	if (data is string || data is bytes)
+	if (data is string || data is Bytes)
 		return data.decode(name,errors);
 	return __decode(data,normalize_codec_name(name),errors);
 }
 
 @@Transform @data according to @name
 @@Normally, this function doesn't need to be used, as encoded data is usually
-@@only encapsulated as :bytes or :string objects, which provide encode/decode
+@@only encapsulated as :Bytes or :string objects, which provide encode/decode
 @@functionality via member functions.
 @@However, this function can be used to invoke codecs with arbitrary objects
 @@given as input, while also allowing arbitrary objects as output.
 @@@throw ValueError The given @name isn't a known codec
 @@@param errors One of $"strict", $"ignore" or $"replace"
 function encode(data, name: string, errors: string = "strict") {
-	if (data is string || data is bytes)
+	if (data is string || data is Bytes)
 		return data.encode(name,errors);
 	return __encode(data,normalize_codec_name(name),errors);
 }

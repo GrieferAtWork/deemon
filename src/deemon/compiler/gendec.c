@@ -34,7 +34,7 @@
 #include <deemon/error.h>
 #include <deemon/tuple.h>
 #include <deemon/list.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/roset.h>
 #include <deemon/dict.h>
 #include <deemon/rodict.h>
@@ -731,7 +731,7 @@ do{ struct dec_recursion_frame _frame; \
  * object `self' are already being generated.
  * NOTE: This function must only be called
  *       before encoding any GC-able sequence object,
- *       such as a cell, a list, a set, or a dict. */
+ *       such as a Cell, a List, a Set, or a Dict. */
 PRIVATE int (DCALL dec_recursion_check)(DeeObject *__restrict self) {
  struct dec_recursion_frame *iter;
  for (iter = dec_obj_recursion; iter;
@@ -889,7 +889,7 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   DeeDict_LockEndRead(me);
   if (dec_putptr((uint32_t)length)) goto err;
   DEC_RECURSION_BEGIN(self);
-  /* Encode all of the dict's elements. */
+  /* Encode all of the Dict's elements. */
   written = 0;
   DeeDict_LockRead(me);
   for (i = 0; i <= me->d_mask; ++i) {
@@ -906,7 +906,7 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
     Dee_Decref(key);
     break;
    }
-   /* Emit the dict key + value pair. */
+   /* Emit the Dict key + value pair. */
    error = dec_putobj(key);
    if (!error) error = dec_putobj(value);
    Dee_Decref(value);
@@ -933,11 +933,11 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
   if (dec_putb((DTYPE16_RODICT & 0xff00) >> 8)) goto err;
   if (dec_putb(DTYPE16_RODICT & 0xff)) goto err;
   if (dec_putptr((uint32_t)me->rd_size)) goto err;
-  /* Encode all of the ro-dict's elements. */
+  /* Encode all of the ro-Dict's elements. */
   for (i = 0; i <= me->rd_mask; ++i) {
    int error;
    if (!me->rd_elem[i].di_key) continue;
-   /* Emit the dict key + value pair. */
+   /* Emit the Dict key + value pair. */
    error = dec_putobj(me->rd_elem[i].di_key);
    if (!error) error = dec_putobj(me->rd_elem[i].di_value);
    if unlikely(error) goto err;

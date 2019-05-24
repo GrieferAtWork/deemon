@@ -434,15 +434,15 @@ PRIVATE struct type_seq bcf_seq = {
 
 
 PRIVATE struct type_member bf_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesFind,bf_bytes),"->?Dbytes"),
-    TYPE_MEMBER_FIELD_DOC("__needle__",STRUCT_OBJECT,offsetof(BytesFind,bf_needle),"->?Dbytes"),
+    TYPE_MEMBER_FIELD_DOC("__str__",STRUCT_OBJECT,offsetof(BytesFind,bf_bytes),"->?DBytes"),
+    TYPE_MEMBER_FIELD_DOC("__needle__",STRUCT_OBJECT,offsetof(BytesFind,bf_needle),"->?DBytes"),
     TYPE_MEMBER_FIELD("__start__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(BytesFind,bf_start)),
     TYPE_MEMBER_FIELD("__end__",STRUCT_SIZE_T|STRUCT_CONST,offsetof(BytesFind,bf_end)),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member bf_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&BytesFindIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&BytesFindIterator_Type),
     TYPE_MEMBER_END
 };
 

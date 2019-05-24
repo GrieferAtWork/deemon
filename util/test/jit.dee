@@ -48,34 +48,34 @@ assert identical(exec('type true'),  bool);
 assert identical(exec('type(true)'), bool);
 assert identical(exec('str(true)'),  "true");
 
-/* Parenthesis vs. tuples, as well as expand-sequence casting. */
+/* Parenthesis vs. tuples, as well as expand-Sequence casting. */
 assert identical(exec('(1)'),        1);
-assert identical(exec('(1,)'),       tuple { 1 });
-assert identical(exec('(1,2)'),      tuple { 1, 2 });
-assert identical(exec('([]...)'),    tuple { });
-assert identical(exec('([]...,)'),   tuple { });
-assert identical(exec('([1]...)'),   tuple { 1 });
-assert identical(exec('([1]...,)'),  tuple { 1 });
-assert identical(exec('([1,2]...)'), tuple { 1, 2 });
-assert identical(exec('([1,2]...,)'),tuple { 1, 2 });
-assert identical(exec('[]'),         list { });
-assert identical(exec('[1]'),        list { 1 });
-assert identical(exec('[1,]'),       list { 1 });
-assert identical(exec('[1,2]'),      list { 1, 2 });
-assert identical(exec('[()...]'),    list { });
-assert identical(exec('[()...,]'),   list { });
-assert identical(exec('[(1,)...]'),  list { 1 });
-assert identical(exec('[(1,)...,]'), list { 1 });
-assert identical(exec('[(1,2)...]'), list { 1, 2 });
-assert identical(exec('[(1,2)...,]'),list { 1, 2 });
-assert identical(exec('(tuple from deemon)([:5])'),tuple { 0, 1, 2, 3, 4 });
-assert identical(exec('tuple from deemon([:5])'),tuple { 0, 1, 2, 3, 4 });
+assert identical(exec('(1,)'),       Tuple { 1 });
+assert identical(exec('(1,2)'),      Tuple { 1, 2 });
+assert identical(exec('([]...)'),    Tuple { });
+assert identical(exec('([]...,)'),   Tuple { });
+assert identical(exec('([1]...)'),   Tuple { 1 });
+assert identical(exec('([1]...,)'),  Tuple { 1 });
+assert identical(exec('([1,2]...)'), Tuple { 1, 2 });
+assert identical(exec('([1,2]...,)'),Tuple { 1, 2 });
+assert identical(exec('[]'),         List { });
+assert identical(exec('[1]'),        List { 1 });
+assert identical(exec('[1,]'),       List { 1 });
+assert identical(exec('[1,2]'),      List { 1, 2 });
+assert identical(exec('[()...]'),    List { });
+assert identical(exec('[()...,]'),   List { });
+assert identical(exec('[(1,)...]'),  List { 1 });
+assert identical(exec('[(1,)...,]'), List { 1 });
+assert identical(exec('[(1,2)...]'), List { 1, 2 });
+assert identical(exec('[(1,2)...,]'),List { 1, 2 });
+assert identical(exec('(Tuple from deemon)([:5])'),Tuple { 0, 1, 2, 3, 4 });
+assert identical(exec('Tuple from deemon([:5])'),Tuple { 0, 1, 2, 3, 4 });
 
 /* Range expressions. */
-assert identical(exec('[:20]'),      sequence.range(0,20));
-assert identical(exec('[:20,2]'),    sequence.range(0,20,2));
-assert identical(exec('[10:20]'),    sequence.range(10,20));
-assert identical(exec('[10:20,2]'),  sequence.range(10,20,2));
+assert identical(exec('[:20]'),      Sequence.range(0,20));
+assert identical(exec('[:20,2]'),    Sequence.range(0,20,2));
+assert identical(exec('[10:20]'),    Sequence.range(10,20));
+assert identical(exec('[10:20,2]'),  Sequence.range(10,20,2));
 
 /* Attribute lookup. */
 assert identical(exec('(string from deemon).center'), string.center);
@@ -98,7 +98,7 @@ assert identical(exec('bound("foo".nonexisting_symbols)'),false);
 assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
 
 {
-	local glob = dict {
+	local glob = Dict {
 		"x" : "foo",
 		"y" : 20,
 	};
@@ -108,7 +108,7 @@ assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
 
 
 {
-	local glob = dict();
+	local glob = Dict();
 	/* Execute a piece of code to define some globals,
 	 * as well as create and return a JIT function. */
 	local x = exec(r'

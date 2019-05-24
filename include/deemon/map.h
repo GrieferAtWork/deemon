@@ -27,9 +27,9 @@
 
 DECL_BEGIN
 
-/* TODO: mapping.keys should be a set-like type (i.e. `dict().keys is set' should be the case) */
+/* TODO: Mapping.Keys should be a set-like type (i.e. `Dict().keys is set' should be the case) */
 
-/* Base class for mapping-style sequence types (e.g. `dict')
+/* Base class for mapping-style sequence types (e.g. `Dict')
  * :: Characteristics of a mapping type::
  *   - operator iter():
  *     sequence item through iteration yields another
@@ -46,37 +46,37 @@ DECL_BEGIN
  * automatically provide for the following member functions and operators:
  *   - `operator getrange()'
  *      - Always thrown a NotImplement error, overriding `sequence.operator getrange'.
- *   - `operator | (mapping other) -> mapping'
- *   - `operator & (mapping other) -> mapping'
+ *   - `operator | (mapping other): Mapping'
+ *   - `operator & (mapping other): Mapping'
  *      - Returns a mapping consisting of the union, or intersection of keys from `this' and `other'
- *   - `operator contains(object key) -> bool'
+ *   - `operator contains(key: object): bool'
  *      - Returns `true' / `false' indicative of there being a key-item pair for `key'
  *   - `operator tp_repr() -> string'
  *      - Returns a representation of the contents of the mapping,
  *        following the generic-mapping syntax of `{ key: item, ... }'
- *   - `class member proxy -> type'
+ *   - `class member proxy: Type'
  *      - Returns the common base-class of `keys', `values' and `items'
  *        By default, this is `DeeMappingProxy_Type'
- *   - `class member keys -> type'
+ *   - `class member keys: Type'
  *      - Returns the return type of the `keys' member function
  *        By default, this is `DeeMappingKeys_Type'
- *   - `class member values -> type'
+ *   - `class member values: Type'
  *      - Returns the return type of the `values' member function
  *        By default, this is `DeeMappingValues_Type'
- *   - `class member items -> type'
+ *   - `class member items: Type'
  *      - Returns the return type of the `items' member function
  *        By default, this is `DeeMappingItems_Type'
- *   - `function keys() -> mapping.keys'
+ *   - `function keys(): Mapping.Keys'
  *      - Returns a sequence that can be enumerated to view only the keys of a mapping
- *   - `function values() -> mapping.values'
+ *   - `function values(): Mapping.Values'
  *      - Returns a sequence that can be enumerated to view only the values of a mapping
- *   - `function items() -> mapping.items'
+ *   - `function items(): Mapping.Items'
  *      - Returns a sequence that can be enumerated to view the key-item pairs as
  *        2-element sequences, the same way they could be viewed if the mapping itself
  *        was being iterated.
  *        Note however that the returned object is a pure sequence, meaning that it
  *        implements an index-based getitem operator, as well as a getrange operator.
- *   - `function get(object key, object def = none) -> object'
+ *   - `function get(key: object, object def = none) -> object'
  *      - Same as `operator []', but if `key' doesn't exist, `def' is returned instead.
  * NOTE: `DeeMapping_Type' itself is derived from `sequence from deemon' (aka. `DeeSeq_Type')
  * NOTE: Because `DeeMapping_Type' inherits from `DeeSeq_Type', all member functions that
@@ -84,7 +84,7 @@ DECL_BEGIN
  *       implicitly inherited, and also provided by objects derived from `DeeMapping_Type',
  *       and `mapping from deemon' itself.
  *       This also means that sub-classes of `mapping from deemon' should respect the
- *      `iterator' interface, provided a `class member iterator -> type' which represents
+ *      `iterator' interface, provided a `class member iterator: Type' which represents
  *       the iterator type used by the mapping. */
 DDATDEF DeeTypeObject DeeMapping_Type;  /* `mapping from deemon' */
 

@@ -27,7 +27,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/none.h>
 #include <deemon/list.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/dict.h>
 #include <deemon/tuple.h>
 #include <deemon/seq.h>
@@ -50,7 +50,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
  elemv[0] = initial_key;
  elemv[1] = item;        /* Inherit */
  ++elemc;
- /* Parse the remainder of a dict initializer. */
+ /* Parse the remainder of a Dict initializer. */
  while (tok == ',') {
   if unlikely(yield() < 0) goto err_dict_elemv;
   /* Parse the key expression. */

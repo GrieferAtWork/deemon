@@ -29,7 +29,7 @@
 #include <deemon/map.h>
 #include <deemon/dict.h>
 #include <deemon/float.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>

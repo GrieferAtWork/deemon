@@ -20,5 +20,5 @@
 #include "__stddef.dee"
 
 #pragma push_macro(undef,"import","from","deemon")
-from deemon import dexmodule = "module";
+from deemon import dexmodule = "Module";
 #pragma pop_macro("import","from","deemon")

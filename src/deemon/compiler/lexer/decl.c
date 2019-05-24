@@ -29,7 +29,7 @@
 #include <deemon/bool.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/tuple.h>
 #include <deemon/none.h>
 #include <deemon/compiler/tpp.h>
@@ -228,7 +228,7 @@ check_symbol:
 
   case SYMBOL_TYPE_EXTERN:
    return (sym->s_extern.e_module == &deemon_module &&
-           sym->s_extern.e_symbol->ss_index == id_object);
+           sym->s_extern.e_symbol->ss_index == id_Object);
 
   case SYMBOL_TYPE_CONST:
    return sym->s_const == (DeeObject *)&DeeObject_Type;
@@ -414,7 +414,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
   if (i == id_none) {
    if (UNICODE_PRINTER_PRINT(printer,"?N") < 0)
        goto err;
-  } else if (i == id_object) {
+  } else if (i == id_Object) {
    if (UNICODE_PRINTER_PRINT(printer,"?O") < 0)
        goto err;
   } else {
@@ -490,7 +490,7 @@ switch_symbol_type:
         goto err;
    } else {
     /* Reference into deemon. */
-    if (msym->ss_index == id_object) {
+    if (msym->ss_index == id_Object) {
      if (UNICODE_PRINTER_PRINT(printer,"?O") < 0)
          goto err;
     } else if (msym->ss_index == id_none) {
@@ -943,9 +943,6 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
   /* Type-of-expression declaration. */
   if unlikely(yield() < 0) goto err;
   if (tok == '(') {
-   /* TODO: This breaks for `function foo(): type(0) {}', as the `(0)'
-    *       thinks it's supposed to be a cast prefix for `{}'
-    * -> Same problem also happens for in unary expression. */
    type_expr = ast_parse_unaryhead(LOOKUP_SYM_NORMAL|
                                    PARSE_UNARY_DISALLOW_CASTS);
   } else {

@@ -26,13 +26,13 @@
 /* Deemon's contains dedicated syntax for 4 different types of sequences: */
 print repr([ 10, 20, 30 ]);     /* List objects -- Mutable, resizable, ordered */
 print repr(( 10, 20, 30 ));     /* Tuple objects -- ordered */
-print repr({ 10, 20, 30 });     /* Abstract sequence -- Context-dependent behavior */
-print repr({ 10: 20, 30: 40 }); /* Abstract mapping -- Context-dependent behavior */
+print repr({ 10, 20, 30 });     /* Abstract Sequence -- Context-dependent behavior */
+print repr({ 10: 20, 30: 40 }); /* Abstract Mapping -- Context-dependent behavior */
 
 /* Now don't be confused at this point.
  * Abstract sequences / mapping objects are quite simple:
  *  - Instead of telling the compiler that you want a set of objects in the
- *    form of a list or tuple (both of which are further elaborated on below),
+ *    form of a List or Tuple (both of which are further elaborated on below),
  *    you are simply telling it that you don't care what their typing will
  *    be at runtime, so long as their types will be derived from
  *      - `sequence from deemon'  for Abstract sequence expressions
@@ -115,7 +115,7 @@ print repr [10:0,-3]; /* { 10, 7, 4, 1 } */
 
 /* Don't get confused from their similarly though. Range expressions
  * are _not_ lists, but abtract sequences themself, meaning you'd have
- * to cast them to a list if you wish to modify their values, which
+ * to cast them to a List if you wish to modify their values, which
  * brings me to the expand expression. */
 
 /* [10, 20, 30, 40, 50, 60, 70] */
@@ -153,7 +153,7 @@ print x[14];  /* foobar */
  * generic mapping-like object, as can be seen in the example above.
  * Mapping-like objects themself then are usually derived from Doc("/deemon/mapping")
  * Additionally, deemon includes a builtin type for mutable mappings
- * known as `dict from deemon', which is basically the same as the python
+ * known as `Dict from deemon', which is basically the same as the python
  * type of the same name. */
 
 

@@ -46,7 +46,7 @@ import * from threading;
 @@>thread.sleep(seconds(1));
 @@>my_thread.interrupt();
 @@>my_thread.join();
-function suspend_thread(t: thread) {
+function suspend_thread(t: Thread) {
 	local key = Semaphore(0);
 	local sync = Semaphore(0);
 
@@ -63,8 +63,8 @@ function suspend_thread(t: thread) {
 
 	/* Return a with-compatible object. */
 	return (class {
-		private m_key;
-		this(key) { m_key = key; }
+		private m_key: Semaphore;
+		this(key: Semaphore) { m_key = key; }
 		operator leave() { m_key.post(); }
 		operator enter() { }
 	})(key);

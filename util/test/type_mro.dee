@@ -18,10 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import type_, file from deemon;
+import Type, File from deemon;
 
-/* Instance-attributes of `type_' are unbound (aka. instance-wrappers)
- * when accessed as attributes of `type_' itself. */
-assert type_.baseof(type_,type_);
-assert type_.baseof(type_,type(file));
+/* Instance-attributes of `Type' are unbound (aka. instance-wrappers)
+ * when accessed as attributes of `Type' itself. */
+assert Type.baseof(Type,Type);
+assert Type.baseof(Type,type(File));
 

@@ -20,7 +20,7 @@
 
 /* Only functions marked as '@copyable'
  * are allowed to have their stackframes copied. */
-@copyable
+@[copyable]
 function test() {
 	print "Begin";
 	yield 10;

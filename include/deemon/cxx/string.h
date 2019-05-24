@@ -35,21 +35,21 @@
 DEE_CXX_BEGIN
 
 
-class string: public sequence<string> {
+class string: public Sequence<string> {
 public:
     static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeString_Type; }
     static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_Check(ob); }
     static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeString_CheckExact(ob); }
 public: /* string from deemon */
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(string,sequence<string>)
-    string() DEE_CXX_NOTHROW: sequence<string>(nonnull(Dee_EmptyString)) { }
-    string(/*utf-8*/char const *__restrict utf8_str): sequence<string>(inherit(DeeString_NewUtf8(utf8_str,strlen(utf8_str),STRING_ERROR_FSTRICT))) { }
-    string(/*utf-8*/char const *__restrict utf8_str, size_t utf8_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf8(utf8_str,utf8_len,error_mode))) { }
-    string(/*utf-16*/uint16_t const *__restrict utf16_str, size_t utf16_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf16(utf16_str,utf16_len,error_mode))) { }
-    string(/*utf-32*/uint32_t const *__restrict utf32_str, size_t utf32_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewUtf32(utf32_str,utf32_len,error_mode))) { }
+    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(string,Sequence<string>)
+    string() DEE_CXX_NOTHROW: Sequence<string>(nonnull(Dee_EmptyString)) { }
+    string(/*utf-8*/char const *__restrict utf8_str): Sequence<string>(inherit(DeeString_NewUtf8(utf8_str,strlen(utf8_str),STRING_ERROR_FSTRICT))) { }
+    string(/*utf-8*/char const *__restrict utf8_str, size_t utf8_len, unsigned int error_mode = STRING_ERROR_FSTRICT): Sequence<string>(inherit(DeeString_NewUtf8(utf8_str,utf8_len,error_mode))) { }
+    string(/*utf-16*/uint16_t const *__restrict utf16_str, size_t utf16_len, unsigned int error_mode = STRING_ERROR_FSTRICT): Sequence<string>(inherit(DeeString_NewUtf16(utf16_str,utf16_len,error_mode))) { }
+    string(/*utf-32*/uint32_t const *__restrict utf32_str, size_t utf32_len, unsigned int error_mode = STRING_ERROR_FSTRICT): Sequence<string>(inherit(DeeString_NewUtf32(utf32_str,utf32_len,error_mode))) { }
 #ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
-    string(/*wide*/dwchar_t const *__restrict wide_str): sequence<string>(inherit(DeeString_NewWide(wide_str,wcslen(wide_str),STRING_ERROR_FSTRICT))) { }
-    string(/*wide*/dwchar_t const *__restrict wide_str, size_t wide_len, unsigned int error_mode = STRING_ERROR_FSTRICT): sequence<string>(inherit(DeeString_NewWide(wide_str,wide_len,error_mode))) { }
+    string(/*wide*/dwchar_t const *__restrict wide_str): Sequence<string>(inherit(DeeString_NewWide(wide_str,wcslen(wide_str),STRING_ERROR_FSTRICT))) { }
+    string(/*wide*/dwchar_t const *__restrict wide_str, size_t wide_len, unsigned int error_mode = STRING_ERROR_FSTRICT): Sequence<string>(inherit(DeeString_NewWide(wide_str,wide_len,error_mode))) { }
 #endif
     static WUNUSED string vcformat(/*utf-8*/char const *__restrict str, va_list args) { return inherit(DeeString_VNewf(str,args)); }
     static WUNUSED string cformat(/*utf-8*/char const *__restrict str, ...) { va_list args; DREF DeeObject *result; va_start(args,str); result = DeeString_VNewf(str,args); va_end(args); return inherit(result); }
@@ -87,18 +87,18 @@ public: /* string from deemon */
 #ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
     explicit ATTR_RETNONNULL operator dwchar_t *() const { return aswide(); }
 #endif
-    object decode(/*utf-8*/char const *__restrict codec_name) const { return inherit(DeeObject_CallAttrStringf(*this,"decode","s",codec_name)); }
-    object decode(/*utf-8*/char const *__restrict codec_name, /*utf-8*/char const *__restrict errors) const { return inherit(DeeObject_CallAttrStringf(*this,"decode","ss",codec_name,errors)); }
-    object encode(/*utf-8*/char const *__restrict codec_name) const { return inherit(DeeObject_CallAttrStringf(*this,"encode","s",codec_name)); }
-    object encode(/*utf-8*/char const *__restrict codec_name, /*utf-8*/char const *__restrict errors) const { return inherit(DeeObject_CallAttrStringf(*this,"encode","ss",codec_name,errors)); }
+    Object decode(/*utf-8*/char const *__restrict codec_name) const { return inherit(DeeObject_CallAttrStringf(*this,"decode","s",codec_name)); }
+    Object decode(/*utf-8*/char const *__restrict codec_name, /*utf-8*/char const *__restrict errors) const { return inherit(DeeObject_CallAttrStringf(*this,"decode","ss",codec_name,errors)); }
+    Object encode(/*utf-8*/char const *__restrict codec_name) const { return inherit(DeeObject_CallAttrStringf(*this,"encode","s",codec_name)); }
+    Object encode(/*utf-8*/char const *__restrict codec_name, /*utf-8*/char const *__restrict errors) const { return inherit(DeeObject_CallAttrStringf(*this,"encode","ss",codec_name,errors)); }
     WUNUSED string format(obj_sequence args) const { return inherit(DeeObject_CallAttrStringf(*this,"format","o",(DeeObject *)args)); }
-    WUNUSED string format(std::initializer_list<DeeObject *> const &args) const { tuple<object> ob_args(args); return inherit(DeeObject_CallAttrStringf(*this,"format","o",(DeeObject *)ob_args)); }
-    WUNUSED sequence scanf(/*utf-8*/char const *__restrict format) const { return inherit(DeeObject_CallAttrStringf(*this,"scanf","s",format)); }
-    WUNUSED sequence scanf(obj_string format) const { return inherit(DeeObject_CallAttrStringf(*this,"scanf","o",(DeeObject *)format)); }
+    WUNUSED string format(std::initializer_list<DeeObject *> const &args) const { Tuple<Object> ob_args(args); return inherit(DeeObject_CallAttrStringf(*this,"format","o",(DeeObject *)ob_args)); }
+    WUNUSED Sequence scanf(/*utf-8*/char const *__restrict format) const { return inherit(DeeObject_CallAttrStringf(*this,"scanf","s",format)); }
+    WUNUSED Sequence scanf(obj_string format) const { return inherit(DeeObject_CallAttrStringf(*this,"scanf","o",(DeeObject *)format)); }
 #define DEFINE_CHARACTER_TRAIT(name) \
-    WUNUSED bool (name)() const { return object(inherit(DeeObject_CallAttrString(*this,#name,0,NULL))).bool_(); } \
-    WUNUSED bool (name)(size_t index) const { return object(inherit(DeeObject_CallAttrStringf(*this,#name,"Iu",index))).bool_(); } \
-    WUNUSED bool (name)(size_t start, size_t end) const { return object(inherit(DeeObject_CallAttrStringf(*this,#name,"IuIu",start,end))).bool_(); } \
+    WUNUSED bool (name)() const { return Object(inherit(DeeObject_CallAttrString(*this,#name,0,NULL))).bool_(); } \
+    WUNUSED bool (name)(size_t index) const { return Object(inherit(DeeObject_CallAttrStringf(*this,#name,"Iu",index))).bool_(); } \
+    WUNUSED bool (name)(size_t start, size_t end) const { return Object(inherit(DeeObject_CallAttrStringf(*this,#name,"IuIu",start,end))).bool_(); } \
 /**/
     DEFINE_CHARACTER_TRAIT(isprint)
     DEFINE_CHARACTER_TRAIT(isalpha)
@@ -118,9 +118,9 @@ public: /* string from deemon */
     DEFINE_CHARACTER_TRAIT(isascii)
 #undef DEFINE_CHARACTER_TRAIT
 #define DEFINE_CHARACTER_TRAIT(name) \
-    WUNUSED bool (name)() const { return object(inherit(DeeObject_CallAttrString(*this,#name,0,NULL))).bool_(); } \
-    WUNUSED bool (name)(size_t start) const { return object(inherit(DeeObject_CallAttrStringf(*this,#name,"Iu",start))).bool_(); } \
-    WUNUSED bool (name)(size_t start, size_t end) const { return object(inherit(DeeObject_CallAttrStringf(*this,#name,"IuIu",start,end))).bool_(); } \
+    WUNUSED bool (name)() const { return Object(inherit(DeeObject_CallAttrString(*this,#name,0,NULL))).bool_(); } \
+    WUNUSED bool (name)(size_t start) const { return Object(inherit(DeeObject_CallAttrStringf(*this,#name,"Iu",start))).bool_(); } \
+    WUNUSED bool (name)(size_t start, size_t end) const { return Object(inherit(DeeObject_CallAttrStringf(*this,#name,"IuIu",start,end))).bool_(); } \
 /**/
     DEFINE_CHARACTER_TRAIT(isanyprint)
     DEFINE_CHARACTER_TRAIT(isanyalpha)
@@ -166,12 +166,12 @@ public: /* string from deemon */
     WUNUSED deemon::int_ asdecimal(size_t index, int defl) const;
     WUNUSED deemon::int_ asdecimal(DeeObject *__restrict index) const;
     WUNUSED deemon::int_ asdecimal(DeeObject *__restrict index, int defl) const;
-    WUNUSED object asnumber(size_t index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asnumber","Iuo",index,defl)); }
-    WUNUSED object asnumber(DeeObject *__restrict index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asnumber","oo",index,defl)); }
-    WUNUSED object asdigit(size_t index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdigit","Iuo",index,defl)); }
-    WUNUSED object asdigit(DeeObject *__restrict index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdigit","oo",index,defl)); }
-    WUNUSED object asdecimal(size_t index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdecimal","Iuo",index,defl)); }
-    WUNUSED object asdecimal(DeeObject *__restrict index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdecimal","oo",index,defl)); }
+    WUNUSED Object asnumber(size_t index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asnumber","Iuo",index,defl)); }
+    WUNUSED Object asnumber(DeeObject *__restrict index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asnumber","oo",index,defl)); }
+    WUNUSED Object asdigit(size_t index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdigit","Iuo",index,defl)); }
+    WUNUSED Object asdigit(DeeObject *__restrict index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdigit","oo",index,defl)); }
+    WUNUSED Object asdecimal(size_t index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdecimal","Iuo",index,defl)); }
+    WUNUSED Object asdecimal(DeeObject *__restrict index, DeeObject *__restrict defl) const { return inherit(DeeObject_CallAttrStringf(*this,"asdecimal","oo",index,defl)); }
 #define DEFINE_REPLACE_FUNCTION(name) \
     WUNUSED string (name)(DeeObject *__restrict find, DeeObject *__restrict repl) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"oo",find,repl)); } \
     WUNUSED string (name)(DeeObject *__restrict find, DeeObject *__restrict repl, size_t maxcount) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"ooIu",find,repl,maxcount)); } \
@@ -195,13 +195,13 @@ public: /* string from deemon */
 /**/
     DEFINE_FIND_FUNCTION(deemon::int_,find,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,rfind,needle)
-    DEFINE_FIND_FUNCTION(sequence<deemon::int_>,findall,needle)
+    DEFINE_FIND_FUNCTION(Sequence<deemon::int_>,findall,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,index,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,rindex,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,count,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,casefind,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,caserfind,needle)
-    DEFINE_FIND_FUNCTION(sequence<deemon::int_>,casefindall,needle)
+    DEFINE_FIND_FUNCTION(Sequence<deemon::int_>,casefindall,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,caseindex,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,caserindex,needle)
     DEFINE_FIND_FUNCTION(deemon::int_,casecount,needle)
@@ -217,13 +217,13 @@ public: /* string from deemon */
     DEFINE_FIND_FUNCTION(deemon::bool_,contains,needle)
     DEFINE_FIND_FUNCTION(deemon::bool_,startswith,needle)
     DEFINE_FIND_FUNCTION(deemon::bool_,endswith,needle)
-    DEFINE_FIND_FUNCTION(tuple<string>,partition,needle)
-    DEFINE_FIND_FUNCTION(tuple<string>,rpartition,needle)
+    DEFINE_FIND_FUNCTION(Tuple<string>,partition,needle)
+    DEFINE_FIND_FUNCTION(Tuple<string>,rpartition,needle)
     DEFINE_FIND_FUNCTION(deemon::bool_,casecontains,needle)
     DEFINE_FIND_FUNCTION(deemon::bool_,casestartswith,needle)
     DEFINE_FIND_FUNCTION(deemon::bool_,caseendswith,needle)
-    DEFINE_FIND_FUNCTION(tuple<string>,casepartition,needle)
-    DEFINE_FIND_FUNCTION(tuple<string>,caserpartition,needle)
+    DEFINE_FIND_FUNCTION(Tuple<string>,casepartition,needle)
+    DEFINE_FIND_FUNCTION(Tuple<string>,caserpartition,needle)
 #undef DEFINE_FIND_FUNCTION
     WUNUSED string substr(size_t start) const { return inherit(DeeObject_CallAttrStringf(*this,"substr","Iu",start)); }
     WUNUSED string substr(size_t start, size_t end) const { return inherit(DeeObject_CallAttrStringf(*this,"substr","IuIu",start,end)); }
@@ -319,17 +319,17 @@ public: /* string from deemon */
     DEFINE_UNIFYLINES(indent,filler)
 #undef DEFINE_UNIFYLINES
     WUNUSED string join(DeeObject *__restrict seq) const { return inherit(DeeObject_CallAttrStringf(*this,"join","o",seq)); }
-    WUNUSED string join(std::initializer_list<DeeObject *> const &seq) const { tuple<object> seq_obj(seq); return inherit(DeeObject_CallAttrStringf(*this,"join","o",seq_obj.ptr())); }
+    WUNUSED string join(std::initializer_list<DeeObject *> const &seq) const { Tuple<Object> seq_obj(seq); return inherit(DeeObject_CallAttrStringf(*this,"join","o",seq_obj.ptr())); }
 #define DEFINE_SPLIT_FUNCTION(name) \
-    WUNUSED sequence<string> (name)(DeeObject *__restrict sep) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",sep)); } \
-    WUNUSED sequence<string> (name)(/*utf-8*/char const *__restrict sep) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"s",sep)); } \
-    WUNUSED sequence<string> (name)(/*utf-8*/char const *__restrict sep, size_t sep_size) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"$s",sep_size,sep)); } \
+    WUNUSED Sequence<string> (name)(DeeObject *__restrict sep) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",sep)); } \
+    WUNUSED Sequence<string> (name)(/*utf-8*/char const *__restrict sep) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"s",sep)); } \
+    WUNUSED Sequence<string> (name)(/*utf-8*/char const *__restrict sep, size_t sep_size) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"$s",sep_size,sep)); } \
 /**/
     DEFINE_SPLIT_FUNCTION(split)
     DEFINE_SPLIT_FUNCTION(casesplit)
 #undef DEFINE_SPLIT_FUNCTION
-    WUNUSED sequence<string> splitlines() const { return inherit(DeeObject_CallAttrString(*this,"splitlines",0,NULL)); }
-    WUNUSED sequence<string> splitlines(bool keepends) const { return inherit(DeeObject_CallAttrStringf(*this,"join","b",keepends)); }
+    WUNUSED Sequence<string> splitlines() const { return inherit(DeeObject_CallAttrString(*this,"splitlines",0,NULL)); }
+    WUNUSED Sequence<string> splitlines(bool keepends) const { return inherit(DeeObject_CallAttrStringf(*this,"join","b",keepends)); }
     WUNUSED string dedent() const { return inherit(DeeObject_CallAttrString(*this,"dedent",0,NULL)); }
     WUNUSED string dedent(size_t max_chars) const { return inherit(DeeObject_CallAttrStringf(*this,"dedent","Iu",max_chars)); }
     WUNUSED string dedent(size_t max_chars, DeeObject *__restrict mask) const { return inherit(DeeObject_CallAttrStringf(*this,"dedent","Iuo",max_chars,mask)); }
@@ -353,10 +353,10 @@ public: /* string from deemon */
     DEFINE_FINDMATCH_FUNCTION(deemon::int_,indexmatch)
     DEFINE_FINDMATCH_FUNCTION(deemon::int_,rfindmatch)
     DEFINE_FINDMATCH_FUNCTION(deemon::int_,rindexmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,casefindmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caseindexmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caserfindmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caserindexmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,casefindmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caseindexmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caserfindmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caserindexmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_FINDMATCH_FUNCTION(Treturn,name) \
     WUNUSED Treturn (name)(DeeObject *__restrict open, DeeObject *__restrict close) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"oo",open,close)); } \
@@ -372,15 +372,15 @@ public: /* string from deemon */
     WUNUSED Treturn (name)(/*utf-8*/char const *__restrict open, /*utf-8*/char const *__restrict close, size_t start) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"ssIu",open,close,start)); } \
     WUNUSED Treturn (name)(/*utf-8*/char const *__restrict open, /*utf-8*/char const *__restrict close, size_t start, size_t end) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"ssIuIu",open,close,start,end)); } \
 /**/
-    DEFINE_FINDMATCH_FUNCTION(sequence<string>,partitionmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<string>,rpartitionmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<string>,casepartitionmatch)
-    DEFINE_FINDMATCH_FUNCTION(sequence<string>,caserpartitionmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<string>,partitionmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<string>,rpartitionmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<string>,casepartitionmatch)
+    DEFINE_FINDMATCH_FUNCTION(Sequence<string>,caserpartitionmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
-    WUNUSED sequence<string> segments(size_t substring_length) const { return inherit(DeeObject_CallAttrStringf(*this,"segments","Iu",substring_length)); }
-    WUNUSED sequence<string> segments(DeeObject *__restrict substring_length) const { return inherit(DeeObject_CallAttrStringf(*this,"segments","o",substring_length)); }
-    WUNUSED sequence<string> distribute(size_t substring_count) const { return inherit(DeeObject_CallAttrStringf(*this,"distribute","Iu",substring_count)); }
-    WUNUSED sequence<string> distribute(DeeObject *__restrict substring_count) const { return inherit(DeeObject_CallAttrStringf(*this,"distribute","o",substring_count)); }
+    WUNUSED Sequence<string> segments(size_t substring_length) const { return inherit(DeeObject_CallAttrStringf(*this,"segments","Iu",substring_length)); }
+    WUNUSED Sequence<string> segments(DeeObject *__restrict substring_length) const { return inherit(DeeObject_CallAttrStringf(*this,"segments","o",substring_length)); }
+    WUNUSED Sequence<string> distribute(size_t substring_count) const { return inherit(DeeObject_CallAttrStringf(*this,"distribute","Iu",substring_count)); }
+    WUNUSED Sequence<string> distribute(DeeObject *__restrict substring_count) const { return inherit(DeeObject_CallAttrStringf(*this,"distribute","o",substring_count)); }
 #define DEFINE_RE_FUNCTION(Treturn,name) \
     WUNUSED Treturn (name)(DeeObject *__restrict pattern) const; \
     WUNUSED Treturn (name)(DeeObject *__restrict pattern, DeeObject *__restrict rules) const; \
@@ -410,11 +410,11 @@ public: /* string from deemon */
     WUNUSED Treturn (name)(/*utf-8*/char const *__restrict pattern, size_t start, size_t end, /*utf-8*/char const *__restrict rules) const; \
 /**/
     DEFINE_RE_FUNCTION(deemon::int_,rematch)
-    DEFINE_RE_FUNCTION(sequence<deemon::int_>,refind)
-    DEFINE_RE_FUNCTION(sequence<deemon::int_>,rerfind)
-    DEFINE_RE_FUNCTION(sequence<deemon::int_>,reindex)
-    DEFINE_RE_FUNCTION(sequence<deemon::int_>,rerindex)
-    DEFINE_RE_FUNCTION(sequence<sequence<deemon::int_> >,refindall)
+    DEFINE_RE_FUNCTION(Sequence<deemon::int_>,refind)
+    DEFINE_RE_FUNCTION(Sequence<deemon::int_>,rerfind)
+    DEFINE_RE_FUNCTION(Sequence<deemon::int_>,reindex)
+    DEFINE_RE_FUNCTION(Sequence<deemon::int_>,rerindex)
+    DEFINE_RE_FUNCTION(Sequence<Sequence<deemon::int_> >,refindall)
     DEFINE_RE_FUNCTION(deemon::int_,recount)
 #undef DEFINE_RE_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn,name) \
@@ -447,10 +447,10 @@ public: /* string from deemon */
 /**/
     DEFINE_RE_FUNCTION(string,relocate)
     DEFINE_RE_FUNCTION(string,rerlocate)
-    DEFINE_RE_FUNCTION(sequence<string>,repartition)
-    DEFINE_RE_FUNCTION(sequence<string>,rerpartition)
-    DEFINE_RE_FUNCTION(sequence<string>,relocateall)
-    DEFINE_RE_FUNCTION(sequence<string>,resplit)
+    DEFINE_RE_FUNCTION(Sequence<string>,repartition)
+    DEFINE_RE_FUNCTION(Sequence<string>,rerpartition)
+    DEFINE_RE_FUNCTION(Sequence<string>,relocateall)
+    DEFINE_RE_FUNCTION(Sequence<string>,resplit)
     DEFINE_RE_FUNCTION(deemon::bool_,restartswith)
     DEFINE_RE_FUNCTION(deemon::bool_,reendswith)
     DEFINE_RE_FUNCTION(string,restrip)
@@ -493,20 +493,20 @@ public: /* string from deemon */
 public:
     WUNUSED string add(DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
     WUNUSED string operator + (DeeObject *__restrict right) const { return inherit(DeeObject_Add(*this,right)); }
-    WUNUSED string &inplace_add(DeeObject *__restrict right) { sequence<string>::inplace_add(right); return *this; }
-    WUNUSED string &operator += (DeeObject *__restrict right) { sequence<string>::operator += (right); return *this; }
+    WUNUSED string &inplace_add(DeeObject *__restrict right) { Sequence<string>::inplace_add(right); return *this; }
+    WUNUSED string &operator += (DeeObject *__restrict right) { Sequence<string>::operator += (right); return *this; }
     WUNUSED string mul(DeeObject *__restrict n) const { return inherit(DeeObject_Mul(*this,n)); }
     WUNUSED string mul(int8_t n) const { return inherit(DeeObject_MulInt(*this,n)); }
     WUNUSED string mul(size_t n) const { return inherit(_mulref(n)); }
     WUNUSED string operator * (DeeObject *__restrict n) const { return inherit(DeeObject_Mul(*this,n)); }
     WUNUSED string operator * (int8_t n) const { return inherit(DeeObject_MulInt(*this,n)); }
     WUNUSED string operator * (size_t n) const { return inherit(_mulref(n)); }
-    WUNUSED string &inplace_mul(DeeObject *__restrict n) { sequence<string>::inplace_mul(n); return *this; }
-    WUNUSED string &inplace_mul(int8_t n) { sequence<string>::inplace_mul(n); return *this; }
-    WUNUSED string &inplace_mul(size_t n) { sequence<string>::inplace_mul(n); return *this; }
-    WUNUSED string &operator *= (DeeObject *__restrict n) { sequence<string>::inplace_mul(n); return *this; }
-    WUNUSED string &operator *= (int8_t n) { sequence<string>::inplace_mul(n); return *this; }
-    WUNUSED string &operator *= (size_t n) { sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &inplace_mul(DeeObject *__restrict n) { Sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &inplace_mul(int8_t n) { Sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &inplace_mul(size_t n) { Sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &operator *= (DeeObject *__restrict n) { Sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &operator *= (int8_t n) { Sequence<string>::inplace_mul(n); return *this; }
+    WUNUSED string &operator *= (size_t n) { Sequence<string>::inplace_mul(n); return *this; }
 };
 
 
@@ -536,13 +536,13 @@ WUNUSED Treturn (string::name)(DeeObject *__restrict needle, size_t start, size_
 /**/
 DEFINE_FIND_FUNCTION(deemon::int_,find,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,rfind,needle)
-DEFINE_FIND_FUNCTION(sequence<deemon::int_>,findall,needle)
+DEFINE_FIND_FUNCTION(Sequence<deemon::int_>,findall,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,index,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,rindex,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,count,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,casefind,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,caserfind,needle)
-DEFINE_FIND_FUNCTION(sequence<deemon::int_>,casefindall,needle)
+DEFINE_FIND_FUNCTION(Sequence<deemon::int_>,casefindall,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,caseindex,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,caserindex,needle)
 DEFINE_FIND_FUNCTION(deemon::int_,casecount,needle)
@@ -595,10 +595,10 @@ DEFINE_FINDMATCH_FUNCTION(deemon::int_,findmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_,indexmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_,rfindmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_,rindexmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,casefindmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caseindexmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caserfindmatch)
-DEFINE_FINDMATCH_FUNCTION(sequence<deemon::int_>,caserindexmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,casefindmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caseindexmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caserfindmatch)
+DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>,caserindexmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn,name) \
 WUNUSED Treturn (string::name)(DeeObject *__restrict pattern) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"o",pattern)); } \
@@ -629,26 +629,26 @@ WUNUSED Treturn (string::name)(/*utf-8*/char const *__restrict pattern, size_t s
 WUNUSED Treturn (string::name)(/*utf-8*/char const *__restrict pattern, size_t start, size_t end, /*utf-8*/char const *__restrict rules) const { return inherit(DeeObject_CallAttrStringf(*this,#name,"sIuIus",pattern,start,end,rules)); } \
 /**/
 DEFINE_RE_FUNCTION(deemon::int_,rematch)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,refind)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,rerfind)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,reindex)
-DEFINE_RE_FUNCTION(sequence<deemon::int_>,rerindex)
-DEFINE_RE_FUNCTION(sequence<sequence<deemon::int_> >,refindall)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,refind)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,rerfind)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,reindex)
+DEFINE_RE_FUNCTION(Sequence<deemon::int_>,rerindex)
+DEFINE_RE_FUNCTION(Sequence<Sequence<deemon::int_> >,refindall)
 DEFINE_RE_FUNCTION(deemon::int_,recount)
 #undef DEFINE_RE_FUNCTION
 #endif /* GUARD_DEEMON_CXX_INT_H */
 
 #ifdef GUARD_DEEMON_CXX_FILE_H
-inline string (file::filename)() const { return inherit(DeeFile_Filename(*this)); }
-inline string (file::readline)(size_t max_length, bool keep_lf) const { return inherit(DeeFile_ReadLine(*this,max_length,keep_lf)); }
-inline string (file::read)(size_t max_length, bool readall) const { return inherit(DeeFile_ReadText(*this,max_length,readall)); }
-inline string (file::pread)(dpos_t pos, size_t max_length, bool readall) const { return inherit(DeeFile_PReadText(*this,max_length,pos,readall)); }
-inline deemon::string (file::writer::string)() const { return inherit(DeeObject_InstanceOfExact(this->ptr(),(DeeTypeObject *)&DeeFileWriter_Type) ? DeeFileWriter_GetString(*this) : DeeObject_GetAttrString(*this,"string")); }
+inline string (File::filename)() const { return inherit(DeeFile_Filename(*this)); }
+inline string (File::readline)(size_t max_length, bool keep_lf) const { return inherit(DeeFile_ReadLine(*this,max_length,keep_lf)); }
+inline string (File::read)(size_t max_length, bool readall) const { return inherit(DeeFile_ReadText(*this,max_length,readall)); }
+inline string (File::pread)(dpos_t pos, size_t max_length, bool readall) const { return inherit(DeeFile_PReadText(*this,max_length,pos,readall)); }
+inline deemon::string (File::Writer::string)() const { return inherit(DeeObject_InstanceOfExact(this->ptr(),(DeeTypeObject *)&DeeFileWriter_Type) ? DeeFileWriter_GetString(*this) : DeeObject_GetAttrString(*this,"string")); }
 #endif /* GUARD_DEEMON_CXX_FILE_H */
 
 
-inline string object::str() const { return inherit(DeeObject_Str(*this)); }
-inline string object::repr() const { return inherit(DeeObject_Repr(*this)); }
+inline string Object::str() const { return inherit(DeeObject_Str(*this)); }
+inline string Object::repr() const { return inherit(DeeObject_Repr(*this)); }
 inline string str(DeeObject *__restrict ob) { return inherit(DeeObject_Str(ob)); }
 inline string repr(DeeObject *__restrict ob) { return inherit(DeeObject_Repr(ob)); }
 

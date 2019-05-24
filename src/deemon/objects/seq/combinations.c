@@ -526,12 +526,12 @@ PRIVATE struct type_seq com_seq = {
 };
 
 PRIVATE struct type_member com_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqCombinationsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqCombinationsIterator_Type),
     TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member com_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Combinations,c_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(Combinations,c_seq),"->?DSequence"),
     TYPE_MEMBER_END
 };
 
@@ -768,7 +768,7 @@ PRIVATE struct type_seq rcom_seq = {
 };
 
 PRIVATE struct type_member rcom_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqRepeatCombinationsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqRepeatCombinationsIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1001,7 +1001,7 @@ PRIVATE struct type_seq pmut_seq = {
 };
 
 PRIVATE struct type_member pmut_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqPermutationsIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqPermutationsIterator_Type),
     TYPE_MEMBER_END
 };
 

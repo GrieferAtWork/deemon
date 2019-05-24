@@ -852,7 +852,7 @@ DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator __itersel
 #define DeeFunction_CheckExact(ob)              DeeObject_InstanceOfExact(ob,&DeeFunction_Type)
 #define DeeYieldFunction_Check(ob)              DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type) /* `yield_function' is final */
 #define DeeYieldFunction_CheckExact(ob)         DeeObject_InstanceOfExact(ob,&DeeYieldFunction_Type)
-#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type) /* `yield_function.iterator' is final */
+#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type) /* `yield_function.Iterator' is final */
 #define DeeYieldFunctionIterator_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeYieldFunctionIterator_Type)
 
 

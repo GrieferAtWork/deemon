@@ -42,9 +42,9 @@ local function recv_all(socket) {
 @@> print repr line;
 class FTPClient {
 
-	private m_socket;
-	private m_passv_address;
-	private m_verbose;
+	private member m_socket: socket;
+	private member m_passv_address: sockaddr;
+	private member m_verbose: bool;
 
 	this(sock: socket = none, verbose: bool = false) {
 		if (sock is none)
@@ -127,11 +127,11 @@ class FTPClient {
 		return result;
 	}
 
-	LIST(): {bytes...} {
+	LIST(): {Bytes...} {
 		return receive("LIST","LIST\r\n").rstrip().splitlines();
 	}
 
-	RETR(filename: string): bytes {
+	RETR(filename: string): Bytes {
 		return receive("RETR","RETR {}\r\n".format({ filename }));
 	}
 

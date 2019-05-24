@@ -30,7 +30,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/set.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/format.h>
 #include <deemon/seq.h>
 #include <deemon/map.h>
@@ -228,7 +228,7 @@ INTERN struct type_getset compiler_getsets[] = {
           "Note that this scope is fixed and cannot be changed") },
     { DeeString_STR(&str_module),
       (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_module, NULL, NULL,
-      DOC("->?Dmodule\n"
+      DOC("->?DModule\n"
           "Returns the module being constructed by @this compiler\n"
           "Warning: The returned module is incomplete and uninitialized, "
                    "and can't actually be used, yet") },
@@ -1603,7 +1603,7 @@ INTERN struct type_method compiler_methods[] = {
           "Construct a branch for checking if a given symbol @sym is bound"),
       TYPE_METHOD_FKWDS },
     { "makemultiple", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&ast_makemultiple,
-      DOC("(branches:?S?AAst?Ert:Compiler,typing:?Dtype=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+      DOC("(branches:?S?AAst?Ert:Compiler,typing:?DType=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
           "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
           "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError The compiler of one of the given @branches or @scope doesn't match @this\n"
@@ -1614,12 +1614,12 @@ INTERN struct type_method compiler_methods[] = {
           "when @typing is :none, or construct a sequence expression for the associated type when @typeing "
           "is one of the following\n"
           "%{table Type|Example|Description\n"
-          ":deemon:tuple|${(a,b,c)}|Construct a tuple expression\n"
-          ":deemon:list|${[a,b,c]}|Construct a list expression\n"
-          ":deemon:hashset|-|Construct a mutable hashset sequence expression\n"
-          ":deemon:dict|-|Construct a mutable dict-like mapping expression\n"
-          ":deemon:sequence|${{ a, b, c }}|Construct an abstract sequence expression\n"
-          ":deemon:mapping|${{ a: b, c: d }}|Construct an abstract mapping expression}\n"
+          ":deemon:Tuple|${(a,b,c)}|Construct a Tuple expression\n"
+          ":deemon:List|${[a,b,c]}|Construct a List expression\n"
+          ":deemon:HashSet|-|Construct a mutable HashSet sequence expression\n"
+          ":deemon:Dict|-|Construct a mutable Dict-like mapping expression\n"
+          ":deemon:Sequence|${{ a, b, c }}|Construct an abstract sequence expression\n"
+          ":deemon:Mapping|${{ a: b, c: d }}|Construct an abstract mapping expression}\n"
           "Note that in any kind of sequence branch, asts created by @makeexpand may "
           "appear, and will be inlined as part of the greater whole expression"),
       TYPE_METHOD_FKWDS },

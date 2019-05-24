@@ -23,7 +23,7 @@ import * from deemon;
 @@Wehn called as ${cmp(lhs,rhs)}, the given @cmp function should
 @@return ${< 0} when ${lhs < rhs}, return ${== 0} when ${lhs == rhs}
 @@and return ${> 0} when ${lhs > rhs}
-function predcmp2key(cmp: callable) {
+function predcmp2key(cmp: Callable) {
 	class KeyClass {
 		private member m_self;
 		this(self) { m_self = self; }
@@ -43,7 +43,7 @@ function predcmp2key(cmp: callable) {
 @@>local x = ["FOO","bar","FOoBaR"];
 @@>x.sort(predlo2key([](x,y) -> x.lower() < y.lower()));
 @@>x.sort(string.lower); /* Same as this */
-function predlo2key(pred_lo: callable) {
+function predlo2key(pred_lo: Callable) {
 	class KeyClass {
 		private member m_self;
 		this(self) { m_self = self; }
@@ -60,7 +60,7 @@ function predlo2key(pred_lo: callable) {
 @@>local x = ["FOO","foo","FOoBaR"];
 @@>print x.find("foo",predeq2key([](x,y) -> x.lower() == y.lower()));
 @@>print x.find("foo",string.lower); /* Same as this */
-function predeq2key(pred_eq: callable) {
+function predeq2key(pred_eq: Callable) {
 	class KeyClass {
 		private member m_self;
 		this(self) { m_self = self; }
@@ -79,7 +79,7 @@ function identity(key) {
 
 @@@return A key function that is the combination of all given @keys
 @@Construct and return a key function which, when executed, transforms the given object using all of the given @keys functions in reverse order, meaning that the last function is executed first, while the return value of the first function is eventually propagated as the actual key value
-function keycombine(keys...: callable): callable {
+function keycombine(keys...: Callable): Callable {
 	if (#keys == 1)
 		return keys[0];
 	local keyfuncs = keys.reversed();

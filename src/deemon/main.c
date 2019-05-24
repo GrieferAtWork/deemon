@@ -962,7 +962,7 @@ int main(int argc, char *argv[]) {
 
  /*_CrtSetBreakAlloc(280);*/
 
- /* TODO: Make dict and rodict sensitive to item ordering
+ /* TODO: Make Dict and rodict sensitive to item ordering
   *       -> `{ foo: "bar", bar: "foo" }' should on some level
   *          be destinct from `{ bar: "foo", foo: "bar" }' */
  /* TODO: Using type caches, add the ability for volatile extensions
@@ -2313,7 +2313,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
   * The idea here is that format-scripts usually do
   * something like this:
   * >> import * from deemon;
-  * >> for (local line: file.open("../../defs/mydef.def")) {
+  * >> for (local line: File.open("../../defs/mydef.def")) {
   * >>     line = line.strip();
   * >>     if (!line || line.startswith("#")) continue;
   * >>     local x,y = line.scanf("%d = %d")...;

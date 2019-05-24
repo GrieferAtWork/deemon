@@ -4401,12 +4401,12 @@ print_ast_repr(struct ast *__restrict self,
   char *typing; size_t i;
  case AST_MULTIPLE:
   typing = NULL;
-  /**/ if (self->a_flag == AST_FMULTIPLE_TUPLE) typing = DeeString_STR(&str_tuple);
-  else if (self->a_flag == AST_FMULTIPLE_LIST) typing = DeeString_STR(&str_list);
-  else if (self->a_flag == AST_FMULTIPLE_HASHSET) typing = DeeString_STR(&str_set);
-  else if (self->a_flag == AST_FMULTIPLE_DICT) typing = DeeString_STR(&str_dict);
-  else if (self->a_flag == AST_FMULTIPLE_GENERIC) typing = DeeString_STR(&str_sequence);
-  else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) typing = DeeString_STR(&str_mapping);
+  /**/ if (self->a_flag == AST_FMULTIPLE_TUPLE) typing = DeeString_STR(&str_Tuple);
+  else if (self->a_flag == AST_FMULTIPLE_LIST) typing = DeeString_STR(&str_List);
+  else if (self->a_flag == AST_FMULTIPLE_HASHSET) typing = DeeString_STR(&str_Set);
+  else if (self->a_flag == AST_FMULTIPLE_DICT) typing = DeeString_STR(&str_Dict);
+  else if (self->a_flag == AST_FMULTIPLE_GENERIC) typing = DeeString_STR(&str_Sequence);
+  else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) typing = DeeString_STR(&str_Mapping);
   printf("makemultiple(branches: { ");
   for (i = 0; i < self->a_multiple.m_astc; ++i) {
    if (i != 0) PRINT(", ");
@@ -4787,7 +4787,7 @@ PRIVATE struct type_getset ast_getsets[] = {
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple_typing,
       NULL,
      (int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&ast_setmultiple_typing,
-      DOC("->?Dtype\n"
+      DOC("->?DType\n"
           "@throw TypeError #kind isn't $\"multiple\"\n"
           "@throw TypeError Attempted to set a typing that is neither :none, nor one of the type listed in :Compiler.makemultiple\n"
           "Get or set the typing of a @ multi-branch ast") },

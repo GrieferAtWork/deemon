@@ -208,7 +208,7 @@ PRIVATE struct type_seq ss_seq = {
 };
 
 PRIVATE struct type_member ss_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SlabStatIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SlabStatIterator_Type),
     TYPE_MEMBER_CONST("item",&SlabInfo_Type),
     TYPE_MEMBER_END
 };

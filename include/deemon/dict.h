@@ -53,22 +53,22 @@ struct Dee_dict_object {
     struct Dee_dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
                                    * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t          d_lock; /* Lock used for accessing this dict. */
+    Dee_rwlock_t          d_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
     Dee_WEAKREF_SUPPORT
 };
 
-/* The main `dict' container class (and all related types):
- * >> class dict: mapping { ... };
- * >> class dict.proxy: sequence { ... };
- * >> class dict.keys: dict.proxy { ... };
- * >> class dict.values: dict.proxy { ... };
- * >> class dict.items: dict.proxy { ... };
- * >> class dict.iterator: iterator { ... };
- * >> class dict.proxy.iterator: dict.iterator { ... };
- * >> class dict.keys.iterator: dict.proxy.iterator { ... };
- * >> class dict.values.iterator: dict.proxy.iterator { ... };
- * >> class dict.items.iterator: dict.proxy.iterator { ... };
+/* The main `Dict' container class (and all related types):
+ * >> class Dict: Mapping { ... };
+ * >> class Dict.Proxy: sequence { ... };
+ * >> class Dict.Keys: Dict.Proxy { ... };
+ * >> class Dict.Values: Dict.Proxy { ... };
+ * >> class Dict.Items: Dict.Proxy { ... };
+ * >> class Dict.Iterator: iterator { ... };
+ * >> class Dict.Proxy.Iterator: Dict.Iterator { ... };
+ * >> class Dict.Keys.Iterator: Dict.Proxy.Iterator { ... };
+ * >> class Dict.Values.Iterator: Dict.Proxy.Iterator { ... };
+ * >> class Dict.Items.Iterator: Dict.Proxy.Iterator { ... };
  */
 DDATDEF DeeTypeObject DeeDict_Type;
 #define DeeDict_Check(ob)         DeeObject_InstanceOf(ob,&DeeDict_Type)
@@ -80,7 +80,7 @@ DDATDEF DeeTypeObject DeeDictKeys_Type;
 DDATDEF DeeTypeObject DeeDictItems_Type;
 DDATDEF DeeTypeObject DeeDictValues_Type;
 
-/* A dummy object used by dict and hashset to refer to
+/* A dummy object used by Dict and HashSet to refer to
  * deleted keys that are still apart of the hash chain.
  * Only here to allow dex modules to correct work
  * DON'T USE THIS OBJECT AS KEY FOR DICTS OR HASHSETS!
@@ -117,7 +117,7 @@ INTDEF bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char cons
 #define DeeDict_SetItemStringLen(self,key,keylen,hash,value)  DeeObject_SetItemStringLen(self,key,keylen,hash,value)
 #endif /* !CONFIG_BUILDING_DEEMON */
 
-/* Create a new dict by inheriting a set of passed key-item pairs.
+/* Create a new Dict by inheriting a set of passed key-item pairs.
  * @param: key_items:    A vector containing `num_keyitems*2' elements,
  *                       even ones being keys and odd ones being items.
  * @param: num_keyitems: The number of key-item pairs passed.

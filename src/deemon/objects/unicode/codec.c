@@ -120,7 +120,7 @@ err_unknown_codec(DeeObject *__restrict name) {
 PRIVATE ATTR_COLD int DCALL
 err_expected_string_or_bytes(DeeObject *__restrict self) {
  return DeeError_Throwf(&DeeError_TypeError,
-                        "Expected a string or bytes object, but got an instance of %k",
+                        "Expected a string or Bytes object, but got an instance of %k",
                         self->ob_type);
 }
 
@@ -799,7 +799,7 @@ DeeCodec_Decode(DeeObject *__restrict self,
  if unlikely(!result) {
   /* Translate any kind of value error into an unknown-codec error.
    * This includes things such as key-errors thrown by the codec library,
-   * as is likely to be the case when a dict is used by the implementation. */
+   * as is likely to be the case when a Dict is used by the implementation. */
   if (DeeError_Catch(&DeeError_ValueError))
       goto err_unknown;
  }
@@ -854,7 +854,7 @@ DeeCodec_Encode(DeeObject *__restrict self,
  if unlikely(!result) {
   /* Translate any kind of value error into an unknown-codec error.
    * This includes things such as key-errors thrown by the codec library,
-   * as is likely to be the case when a dict is used by the implementation. */
+   * as is likely to be the case when a Dict is used by the implementation. */
   if (DeeError_Catch(&DeeError_ValueError))
       goto err_unknown;
  }

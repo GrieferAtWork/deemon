@@ -90,56 +90,56 @@ DECL_BEGIN
                                        "@interrupt\n" \
                                        "Check if @this stat-file refers to a socket")
 #define DeeStat_class_exists_doc   DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the referred file exists, or if the given file described " \
                                        "can be used with :stat")
 #define DeeStat_class_isdir_doc    DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing directory")
 #define DeeStat_class_ischr_doc    DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing character device")
 #define DeeStat_class_isblk_doc    DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing block device")
 #define DeeStat_class_isreg_doc    DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing regular file")
 #define DeeStat_class_isfifo_doc   DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing pipe")
 #define DeeStat_class_islnk_doc    DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing symbolic link")
 #define DeeStat_class_issock_doc   DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of :stat, " \
                                        "check if the passed parameters refer to an existing socket")
 #define DeeStat_class_ishidden_doc DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of " \
@@ -148,7 +148,7 @@ DECL_BEGIN
                                        "filename, this function always returns :false if the path-string " \
                                        "of the file described by the passed arguments cannot be determined")
 #define DeeStat_class_isexe_doc    DOC("(path:?Dstring)->?Dbool\n" \
-                                       "(fp:?Dfile)->?Dbool\n" \
+                                       "(fp:?DFile)->?Dbool\n" \
                                        "(fd:?Dint)->?Dbool\n" \
                                        "@interrupt\n" \
                                        "Taking the same arguments as the constructor of " \
@@ -157,7 +157,7 @@ DECL_BEGIN
                                        "filename, this function always returns :false if the path-string " \
                                        "of the file described by the passed arguments cannot be determined")
 #define DeeStat_TP_DOC             DOC("(path:?Dstring)\n" \
-                                       "(fp:?Dfile)\n" \
+                                       "(fp:?DFile)\n" \
                                        "(fd:?Dint)\n" \
                                        "@interrupt\n" \
                                        "@throw FileNotFound The given @path or @fp could not be found\n" \
@@ -170,7 +170,7 @@ DECL_BEGIN
                                        "methods as general purpose property checks that do not " \
                                        "require calculation of #st_mode")
 #define DeeLStat_TP_DOC            DOC("(path:?Dstring)\n" \
-                                       "(fp:?Dfile)\n" \
+                                       "(fp:?DFile)\n" \
                                        "(fd:?Dint)\n" \
                                        "@interrupt\n" \
                                        "@throw FileNotFound The given @path or @fp could not be found\n" \
@@ -179,7 +179,7 @@ DECL_BEGIN
 #define DeeDirIterator_TP_DOC      DOC("Construct a directory iteration descriptor that yields the names " \
                                        "of all filesystem objects found within a the associated directory")
 #define DeeDir_TP_DOC              DOC("(path:?Dstring)\n" \
-                                       "(fp:?Dfile)\n" \
+                                       "(fp:?DFile)\n" \
                                        "(fd:?Dint)\n" \
                                        "@interrupt\n" \
                                        "Construct a sequence for enumerating the contents of a directory")

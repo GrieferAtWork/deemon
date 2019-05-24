@@ -24,7 +24,7 @@
 
 DECL_BEGIN
 
-/* `numeric from deemon' - Base class for `float' and `int'
+/* `Numeric from deemon' - Base class for `float' and `int'
  *  The main purpose of this type is to query an object
  *  for being a number object (`float' or `int'), or a user-defined
  *  numeric type, similar to how `sequence' and `iterator' are builtin

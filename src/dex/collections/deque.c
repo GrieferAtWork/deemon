@@ -1441,7 +1441,7 @@ PRIVATE struct type_method deq_methods[] = {
 };
 
 PRIVATE struct type_member deq_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DequeIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DequeIterator_Type),
     TYPE_MEMBER_END
 };
 

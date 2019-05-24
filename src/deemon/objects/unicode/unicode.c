@@ -5552,10 +5552,10 @@ err:
 
 
 
-/* Append the given `text' to the end of the bytes object.
+/* Append the given `text' to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
  * dformatprinter-compatible callback for generating data to-be
- * written into a bytes object. */
+ * written into a Bytes object. */
 PUBLIC dssize_t DCALL
 bytes_printer_print(void *__restrict self,
                     /*utf-8*/char const *__restrict text, size_t textlen) {

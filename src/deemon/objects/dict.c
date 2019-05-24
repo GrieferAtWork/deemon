@@ -45,7 +45,7 @@
 
 DECL_BEGIN
 
-/* A dummy object used by dict and hashset to refer to deleted
+/* A dummy object used by Dict and HashSet to refer to deleted
  * keys that are still apart of the hash chain.
  * DO NOT EXPOSE THIS OBJECT TO USER-CODE! */
 PUBLIC DeeObject DeeDict_Dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
@@ -61,18 +61,18 @@ PRIVATE struct dict_item const empty_dict_items[1] = {
 PUBLIC DREF DeeObject *DCALL
 DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict key_items) {
  DREF Dict *result;
- /* Allocate the dict object. */
+ /* Allocate the Dict object. */
  result = DeeGCObject_MALLOC(Dict);
  if unlikely(!result) return NULL;
  if (!num_keyitems) {
-  /* Special case: allocate an empty dict. */
+  /* Special case: allocate an empty Dict. */
   result->d_mask = 0;
   result->d_size = 0;
   result->d_used = 0;
   result->d_elem = (struct dict_item *)empty_dict_items;
  } else {
   size_t min_mask = 16-1,mask;
-  /* Figure out how large the mask of the dict is going to be. */
+  /* Figure out how large the mask of the Dict is going to be. */
   while ((num_keyitems&min_mask) != num_keyitems)
           min_mask = (min_mask << 1)|1;
   /* Prefer using a mask of one greater level to improve performance. */
@@ -106,7 +106,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
 #ifndef CONFIG_NO_THREADS
  rwlock_init(&result->d_lock);
 #endif /* !CONFIG_NO_THREADS */
- /* Initialize and start tracking the new dict. */
+ /* Initialize and start tracking the new Dict. */
  weakref_support_init(result);
  DeeObject_Init(result,&DeeDict_Type);
  DeeGC_Track((DeeObject *)result);
@@ -313,18 +313,18 @@ dict_deepload(Dict *__restrict self) {
  /* #1 Allocate 2 new element-vector of the same size as `self'
   *    One of them has a length `d_mask+1', the other `d_used'
   * #2 Copy all key/value pairs from `self' into the d_used-one (create references)
-  *    NOTE: Skip NULL/dummy entries in the dict vector.
+  *    NOTE: Skip NULL/dummy entries in the Dict vector.
   * #3 Go through the vector and create deep copies of all keys and items.
   *    For every key, hash it and insert it into the 2nd vector from before.
   * #4 Clear and free the 1st vector.
-  * #5 Assign the 2nd vector to the dict, extracting the old one at the same time.
+  * #5 Assign the 2nd vector to the Dict, extracting the old one at the same time.
   * #6 Clear and free the old vector. */
  Entry *new_items,*items = NULL;
  size_t i,hash_i,item_count,old_item_count = 0;
  struct dict_item *new_map,*old_map; size_t new_mask;
  for (;;) {
   DeeDict_LockRead(self);
-  /* Optimization: if the dict is empty, then there's nothing to copy! */
+  /* Optimization: if the Dict is empty, then there's nothing to copy! */
   if (self->d_elem == empty_dict_items) {
    DeeDict_LockEndRead(self);
    return 0;
@@ -473,7 +473,7 @@ dict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
 /* Resize the hash size by a factor of 2 and re-insert all elements.
  * When `sizedir > 0', increase the hash; When `sizedir < 0', decrease it.
  * During this process all dummy items are discarded.
- * @return: true:  Successfully rehashed the dict.
+ * @return: true:  Successfully rehashed the Dict.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
 PRIVATE bool DCALL
 dict_rehash(Dict *__restrict self, int sizedir) {
@@ -515,7 +515,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
  ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
  ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
  if (self->d_elem != empty_dict_items) {
-  /* Re-insert all existing items into the new dict vector. */
+  /* Re-insert all existing items into the new Dict vector. */
   end = (iter = self->d_elem)+(self->d_mask+1);
   for (; iter != end; ++iter) {
    struct dict_item *item;
@@ -729,7 +729,7 @@ again_lock:
   item->di_key = dummy;
   item->di_value = NULL;
   ASSERT(me->d_used);
-  /* Try to rehash the dict and get rid of dummy
+  /* Try to rehash the Dict and get rid of dummy
    * items if there are a lot of them now. */
   if (--me->d_used <= me->d_size/3)
       dict_rehash(me,-1);
@@ -775,7 +775,7 @@ again_lock:
   item->di_key = dummy;
   item->di_value = NULL;
   ASSERT(me->d_used);
-  /* Try to rehash the dict and get rid of dummy
+  /* Try to rehash the Dict and get rid of dummy
    * items if there are a lot of them now. */
   if (--me->d_used <= me->d_size/3)
       dict_rehash(me,-1);
@@ -855,13 +855,13 @@ again:
   Dee_Incref(value);
   ++me->d_used;
   ++me->d_size;
-  /* Try to keep the dict vector big at least twice as big as the element count. */
+  /* Try to keep the Dict vector big at least twice as big as the element count. */
   if (me->d_size*2 > me->d_mask)
       dict_rehash(me,1);
   DeeDict_LockEndWrite(self);
   return 0;
  }
- /* Rehash the dict and try again. */
+ /* Rehash the Dict and try again. */
  if (dict_rehash(me,1)) {
   DeeDict_LockDowngrade(self);
   goto again;
@@ -941,13 +941,13 @@ again:
   Dee_Incref(value);
   ++me->d_used;
   ++me->d_size;
-  /* Try to keep the dict vector big at least twice as big as the element count. */
+  /* Try to keep the Dict vector big at least twice as big as the element count. */
   if (me->d_size*2 > me->d_mask)
       dict_rehash(me,1);
   DeeDict_LockEndWrite(self);
   return 0;
  }
- /* Rehash the dict and try again. */
+ /* Rehash the Dict and try again. */
  if (dict_rehash(me,1)) {
   DeeDict_LockDowngrade(self);
   goto again;
@@ -993,7 +993,7 @@ restart:
   if unlikely(error < 0)
      return NULL; /* Error in compare operator. */
   DeeDict_LockRead(self);
-  /* Check if the dict was modified. */
+  /* Check if the Dict was modified. */
   if (self->d_elem != vector ||
       self->d_mask != mask ||
       item->di_key != item_key)
@@ -1035,7 +1035,7 @@ restart:
   if unlikely(error < 0)
      return NULL; /* Error in compare operator. */
   DeeDict_LockRead(self);
-  /* Check if the dict was modified. */
+  /* Check if the Dict was modified. */
   if (self->d_elem != vector ||
       self->d_mask != mask ||
       item->di_key != item_key ||
@@ -1078,7 +1078,7 @@ restart:
   if unlikely(error < 0)
      return NULL; /* Error in compare operator. */
   DeeDict_LockRead(self);
-  /* Check if the dict was modified. */
+  /* Check if the Dict was modified. */
   if (((Dict *)self)->d_elem != vector ||
       ((Dict *)self)->d_mask != mask ||
       item->di_key != item_key ||
@@ -1119,7 +1119,7 @@ restart:
    DREF DeeObject *item_value;
    /* Found it! */
    DeeDict_LockWrite(self);
-   /* Check if the dict was modified. */
+   /* Check if the Dict was modified. */
    if (self->d_elem != vector ||
        self->d_mask != mask ||
        item->di_key != item_key) {
@@ -1138,7 +1138,7 @@ restart:
    return item_value;
   }
   DeeDict_LockRead(self);
-  /* Check if the dict was modified. */
+  /* Check if the Dict was modified. */
   if (self->d_elem != vector ||
       self->d_mask != mask ||
       item->di_key != item_key)
@@ -1189,7 +1189,7 @@ again:
    DREF DeeObject *item_value;
    /* Found an existing item. */
    DeeDict_LockWrite(self);
-   /* Check if the dict was modified. */
+   /* Check if the Dict was modified. */
    if (self->d_elem != vector ||
        self->d_mask != mask ||
        item->di_key != item_key) {
@@ -1207,7 +1207,7 @@ again:
    return 0;
   }
   DeeDict_LockRead(self);
-  /* Check if the dict was modified. */
+  /* Check if the Dict was modified. */
   if (self->d_elem != vector ||
       self->d_mask != mask ||
       item->di_key != item_key)
@@ -1234,13 +1234,13 @@ again:
   Dee_Incref(value);
   ++self->d_used;
   ++self->d_size;
-  /* Try to keep the dict vector big at least twice as big as the element count. */
+  /* Try to keep the Dict vector big at least twice as big as the element count. */
   if (self->d_size*2 > self->d_mask)
       dict_rehash(self,1);
   DeeDict_LockEndWrite(self);
   return 0;
  }
- /* Rehash the dict and try again. */
+ /* Rehash the Dict and try again. */
  if (dict_rehash(self,1)) {
   DeeDict_LockDowngrade(self);
   goto again;
@@ -1290,7 +1290,7 @@ again:
    /* Found an existing key. */
    if (mode == SETITEM_SETOLD) {
     DeeDict_LockWrite(self);
-    /* Check if the dict was modified. */
+    /* Check if the Dict was modified. */
     if (self->d_elem != vector ||
         self->d_mask != mask ||
         item->di_key != item_key) {
@@ -1307,7 +1307,7 @@ again:
     Dee_Decref(item_value);
    } else {
     DeeDict_LockRead(self);
-    /* Check if the dict was modified. */
+    /* Check if the Dict was modified. */
     if (self->d_elem != vector ||
         self->d_mask != mask ||
         item->di_key != item_key)
@@ -1322,7 +1322,7 @@ again:
    return 1;
   }
   DeeDict_LockRead(self);
-  /* Check if the dict was modified. */
+  /* Check if the Dict was modified. */
   if (self->d_elem != vector ||
       self->d_mask != mask ||
       item->di_key != item_key)
@@ -1353,13 +1353,13 @@ again:
   Dee_Incref(value);
   ++self->d_used;
   ++self->d_size;
-  /* Try to keep the dict vector big at least twice as big as the element count. */
+  /* Try to keep the Dict vector big at least twice as big as the element count. */
   if (self->d_size*2 > self->d_mask)
       dict_rehash(self,1);
   DeeDict_LockEndWrite(self);
   return 0;
  }
- /* Rehash the dict and try again. */
+ /* Rehash the Dict and try again. */
  if (dict_rehash(self,1)) {
   DeeDict_LockDowngrade(self);
   goto again;
@@ -1504,7 +1504,7 @@ PRIVATE int DCALL
 dict_init(Dict *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if unlikely(DeeArg_Unpack(argc,argv,"o:dict",&seq))
+ if unlikely(DeeArg_Unpack(argc,argv,"o:Dict",&seq))
     goto err;
  return dict_init_sequence(self,seq);
 err:
@@ -1720,17 +1720,17 @@ PRIVATE struct type_method dict_methods[] = {
     { DeeString_STR(&str_clear),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_doclear,
       DOC("()\n"
-          "Clear all values from @this :dict") },
+          "Clear all values from @this :Dict") },
     { "popitem",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_popsomething,
       DOC("->?T2?O?O\n"
           "@return A random pair key-value pair that has been removed\n"
-          "@throw ValueError @this :dict was empty") },
+          "@throw ValueError @this :Dict was empty") },
     { "setdefault",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setdefault,
       DOC("(key,def=!N)->\n"
           "@return The object currently assigned to @key\n"
-          "Lookup @key in @this dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
+          "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
     { "setold",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_setold,
       DOC("(key,value)->?Dbool\n"
@@ -1754,7 +1754,7 @@ PRIVATE struct type_method dict_methods[] = {
     { "update",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_update,
       DOC("(items:?S?T2?O?O)\n"
-          "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict") },
+          "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this Dict") },
     { "__sizeof__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&dict_sizeof,
       DOC("->?Dint") },
@@ -1779,25 +1779,25 @@ INTERN struct type_getset dict_getsets[] = {
       NULL,
       NULL,
       DOC("->?Akeys?.\n"
-          "@return A proxy sequence for viewing the keys of @this :dict") },
+          "@return A proxy sequence for viewing the keys of @this :Dict") },
     { "values",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values,
       NULL,
       NULL,
       DOC("->?Akeys?.\n"
-          "@return A proxy sequence for viewing the values of @this :dict") },
+          "@return A proxy sequence for viewing the values of @this :Dict") },
     { "items",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items,
       NULL,
       NULL,
       DOC("->?Akeys?.\n"
-          "@return A proxy sequence for viewing the key-value pairs of @this :dict") },
+          "@return A proxy sequence for viewing the key-value pairs of @this :Dict") },
     { "frozen",
      &DeeRoDict_FromSequence,
       NULL,
       NULL,
       DOC("->?Ert:RoDict\n"
-          "Returns a read-only (frozen) copy of @this dict") },
+          "Returns a read-only (frozen) copy of @this Dict") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "max_load_factor",
      &set_get_maxloadfactor,
@@ -1813,12 +1813,12 @@ INTERN struct type_getset dict_getsets[] = {
 
 INTDEF DeeTypeObject DictIterator_Type;
 PRIVATE struct type_member dict_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DictIterator_Type),
-    TYPE_MEMBER_CONST("proxy",&DeeDictProxy_Type),
-    TYPE_MEMBER_CONST("keys",&DeeDictKeys_Type),
-    TYPE_MEMBER_CONST("items",&DeeDictItems_Type),
-    TYPE_MEMBER_CONST("values",&DeeDictValues_Type),
-    TYPE_MEMBER_CONST("frozen",&DeeRoDict_Type),
+    TYPE_MEMBER_CONST("Iterator",&DictIterator_Type),
+    TYPE_MEMBER_CONST("Proxy",&DeeDictProxy_Type),
+    TYPE_MEMBER_CONST("Keys",&DeeDictKeys_Type),
+    TYPE_MEMBER_CONST("Items",&DeeDictItems_Type),
+    TYPE_MEMBER_CONST("Values",&DeeDictValues_Type),
+    TYPE_MEMBER_CONST("Frozen",&DeeRoDict_Type),
     TYPE_MEMBER_END
 };
 
@@ -1828,15 +1828,15 @@ PRIVATE struct type_gc dict_gc = {
 
 PUBLIC DeeTypeObject DeeDict_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_dict),
+    /* .tp_name     = */DeeString_STR(&str_Dict),
     /* .tp_doc      = */DOC("The builtin mapping object for translating keys to items\n"
                             "\n"
                             "()\n"
-                            "Create a new, empty dict\n"
+                            "Create a new, empty Dict\n"
                             "\n"
                             "(items:?S?T2?O?O)\n"
-                            "Create a new dict, using key-items pairs extracted from @items.\n"
-                            "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this dict"),
+                            "Create a new Dict, using key-items pairs extracted from @items.\n"
+                            "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this Dict"),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(Dict),
     /* .tp_features = */TF_NONE,

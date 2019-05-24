@@ -21,10 +21,10 @@
 /* A simple application that shows how io works
  * and the optional stream parameter for print */
 
-import file from deemon;
+import File from deemon;
 
 /* Open a file in write mode */
-fp = file.open("simple_io_out.txt","w");
+fp = File.open("simple_io_out.txt","w");
 
 /* Fill it with some data */
 print fp: "Hello world from simple_io!";        /* Print unicode as UTF-8 */

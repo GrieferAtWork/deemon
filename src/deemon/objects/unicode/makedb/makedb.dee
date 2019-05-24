@@ -73,7 +73,7 @@ function split_tables(tab) {
 		local size = 2**shift;
 		local a = [];
 		local b = [];
-		local cache = dict();
+		local cache = Dict();
 		for (local i: util::range(0,#tab,size)) {
 			local part = tab[i:i+size];
 			local offset = cache.get(part);
@@ -100,7 +100,7 @@ local records = [];
 
 function read_lines(filename) {
 	print "Loading unicode database",repr filename;
-	for (local line: file.open(filename)) {
+	for (local line: File.open(filename)) {
 		line = line.strip();
 		local com = line.find("#");
 		if (com >= 0) {
@@ -121,7 +121,7 @@ for (local line: read_lines("UnicodeData.txt")) {
 }
 for (local x: records) {
 	if (x !is none) {
-		x.append(dict()); /* [15] Extended traits. */
+		x.append(Dict()); /* [15] Extended traits. */
 		x.append(none);   /* [16] case-folding sequence. */
 	}
 }
@@ -198,8 +198,8 @@ print "done";
 /* Figure out flags. */
 local descriptors = list();
 local fold_descriptors = list();
-local fold_descriptors_map = dict();
-local descriptor_cache = dict();
+local fold_descriptors_map = Dict();
+local descriptor_cache = Dict();
 local descriptor_ids = [0] * #records;
 
 /* Enable symbol usage for underscore. */
@@ -208,7 +208,7 @@ function force_symbol_character(ord,traits) {
 	print repr x;
 	if (x is none) {
 		x = [none] * 16;
-		x[15] = dict();
+		x[15] = Dict();
 		records[ord] = x;
 	}
 	x = x[15];

@@ -30,11 +30,7 @@ reader,writer = pipe.new()...;
 food = thread("food",function {
 	// Fill the writer pipe with some data
 	// Reminder: Both print/write versions do the same
-	for (
-		i = 0;
-		i < 20;
-		++i
-	) {
+	for (local i = 0; i < 20; ++i) {
 #if 1
 		print writer: "food",i;
 #else

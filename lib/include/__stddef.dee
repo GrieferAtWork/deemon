@@ -72,15 +72,15 @@
 
 
 /* A _really_ dirty fix for an incompatibility between
- * deemon200+'s and deemon100+'s dict member functions:
- * - While the intention of dict's proxy views had always been to
+ * deemon200+'s and deemon100+'s Dict member functions:
+ * - While the intention of Dict's proxy views had always been to
  *   emulate python, deemon 100+ did this incorrectly and had swapped
  *   the meaning of `items' and `values'
  * - In python (just as in deemon200), `items' is a sequence of 2-element
  *   tuples, each referring to a key-value pair, while `values' is the
  *   same sequence, however only referring to the value-portion.
  * - To keep backwards-compatibility with older code, as well as considering
- *   that old code was usually written to use dict.items() / dict.keys()
+ *   that old code was usually written to use Dict.items() / Dict.keys()
  *   directly, we simply make use of macros to swap the 2 functions within
  *   the preprocessor.
  * -> This is _extremely_ ugly, however since we _really_ don't care about
@@ -108,7 +108,6 @@ local function __ctypes_new(tp) {
 #define __builtin_dex(x)                    import(x)
 #define __builtin_breakpoint()              __asm__("debug break")
 #define __builtin_typeof(x)                 type(x)
-#define __builtin_help(...)               ((doc from deemon)(__VA_ARGS__))
 #define __builtin_expect(x,y)              (x)
 #define __builtin_object(id)               (get_builtin from __builtins(id))
 #define __builtin_predictable(x)            false
@@ -129,7 +128,7 @@ local function __ctypes_new(tp) {
 #define __builtin_choose_expr(c,tt,ff)    ((c)?(tt):(ff))
 #define __builtin_unreachable()             __asm__("" : : : "noreturn")
 #define __builtin_types_compatible_p(x,y) ((x)===(y))
-#define __builtin_last_traceback()        ((traceback from deemon).current)
+#define __builtin_last_traceback()        ((Traceback from deemon).current)
 #define __builtin_super_1(x)              ((x).super)
 #define __builtin_super_2(x,y)            ((x) as (y))
 #define __builtin_super(...)                __builtin_super_##__VA_NARGS__(__VA_ARGS__)
@@ -138,7 +137,7 @@ local function __ctypes_new(tp) {
 #define __builtin_offsetof(s,t)           ((s).offsetof(#t))
 
 /* Define some unary-expression keywords that got removed */
-#define weak   weakref from deemon pack /* Create weak referece */
+#define weak   WeakRef from deemon pack /* Create weak referece */
 #define move   copy                     /* Move-construct (implement as copy-construct) */
 
 /* Stub-implement removed static-if keywords (as far as possible). */
@@ -195,8 +194,15 @@ local function __ctypes_new(tp) {
 
 /* Import some of the symbols that old code assumes to be visible. */
 from deemon import
-	bool, string, tuple, list, int,
-	float, object, dict, set = "hashset"
+	bool,
+	string,
+	tuple = "Tuple",
+	list = "List",
+	int,
+	float,
+	object = "Object",
+	dict = "Dict",
+	set = "HashSet"
 ;
 
 /* Import some C-types.
@@ -246,7 +252,7 @@ from ctypes import
 
 /* The deemon 100+ runtime used reserved identifiers
  * for attributes names in a bunch of places:
- * >> fp = file.writer();
+ * >> fp = File.Writer();
  * >> fp.pack(); // You should use `fp.string' now
  * >> local my_cell = cell(42);
  * >> my_cell.del(); // You should use `del my_cell.value' now
@@ -307,10 +313,10 @@ from ctypes import
  */
 {
 	/* Change PWD to the original PWD */
-	import fs;
-	__stack local rel = fs.headof(__BASE_FILE__);
-	if (fs.isrel(rel))
-		fs.chdir("../" * rel.replace("\\","/").count("/"));
+	import __fs = "fs";
+	__stack local __rel = __fs.headof(__BASE_FILE__);
+	if (__fs.isrel(__rel))
+		__fs.chdir("../" * __rel.replace("\\","/").count("/"));
 }
 
 #endif

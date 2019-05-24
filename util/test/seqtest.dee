@@ -21,27 +21,27 @@
 import * from deemon;
 import collections;
 
-final global LIKE_SEQ = "sequence";
+final global LIKE_SEQ = "Sequence";
 final global LIKE_SET = "set";
 final global LIKE_MAP = "mapping";
 
-function testSequenceType(typ: type(object), cls: string) {
+function testSequenceType(typ: Type, cls: string) {
 	assert !typ();
 	assert typ().empty();
 	assert !typ().nonempty();
 	if (cls in [LIKE_SEQ,LIKE_SET]) {
 		for (local rawTestInput: {
 			none,
-			tuple {  },
-			tuple { 10, 20, 30 },
-			tuple { 10, "foo", 30 },
+			Tuple {  },
+			Tuple { 10, 20, 30 },
+			Tuple { 10, "foo", 30 },
 			"faosdhfasidanhiawn",
-			tuple { (), (0,), (0,1,), (0,1,2,3,) },
+			Tuple { (), (0,), (0,1,), (0,1,2,3,) },
 			"faosdhfasidanhiawnfaosdhfasidanhiawnfaosdhfasidanhiawnfaosdhfasidanhiawn",
 		}) {
 			for (local typTestInput: {
-				none, list, tuple,
-				hashset, hashset.frozen
+				none, List, Tuple,
+				HashSet, HashSet.Frozen
 			}) {
 				local testInput = typTestInput is none
 					? rawTestInput
@@ -53,8 +53,8 @@ function testSequenceType(typ: type(object), cls: string) {
 					;
 				if (cls in [LIKE_SET]) {
 					assert #obj <= #testInput;
-					assert #obj == #hashset(rawTestInput);
-					assert #obj == #hashset.frozen(rawTestInput);
+					assert #obj == #HashSet(rawTestInput);
+					assert #obj == #HashSet.Frozen(rawTestInput);
 					for (local x: testInput)
 						assert obj.count(x) <= testInput.count(x);
 				} else if (cls in [LIKE_SEQ]) {
@@ -64,8 +64,8 @@ function testSequenceType(typ: type(object), cls: string) {
 					assert !(obj != obj[:]);
 					assert obj == testInput;
 					assert !(obj != testInput);
-					assert (testInput as sequence) == obj;
-					assert !((testInput as sequence) != obj);
+					assert (testInput as Sequence) == obj;
+					assert !((testInput as Sequence) != obj);
 				}
 				assert obj == obj;
 				assert obj <= obj;
@@ -92,14 +92,14 @@ function testSequenceType(typ: type(object), cls: string) {
 				 * only true if the set contains the exact same object, comparing
 				 * with a UniqueSet object on the left-hand-side only succeeds if
 				 * the other set contains the _exact_ same objects!
-				 * Because of this, perform the comparison with hashset()s instead! */
+				 * Because of this, perform the comparison with HashSet()s instead! */
 				if (typ === collections.UniqueSet) {
-					assert hashset(obj) == hashset(dc);
-					assert hashset(obj) <= hashset(dc);
-					assert hashset(obj) >= hashset(dc);
-					assert !(hashset(obj) < hashset(dc));
-					assert !(hashset(obj) > hashset(dc));
-					assert !(hashset(obj) != hashset(dc));
+					assert HashSet(obj) == HashSet(dc);
+					assert HashSet(obj) <= HashSet(dc);
+					assert HashSet(obj) >= HashSet(dc);
+					assert !(HashSet(obj) < HashSet(dc));
+					assert !(HashSet(obj) > HashSet(dc));
+					assert !(HashSet(obj) != HashSet(dc));
 				} else {
 					assert obj == dc;
 					assert obj <= dc;
@@ -124,18 +124,18 @@ function testSequenceType(typ: type(object), cls: string) {
 				repr(obj);
 				/* Interactions between `operator bool' and `operator #' */
 				assert (!!obj) == (#obj != 0);
-				assert (!!(obj as sequence)) == (#obj != 0);
-				assert (!!obj) == (#(obj as sequence) != 0);
-				assert (!!(obj as sequence)) == (#(obj as sequence) != 0);
+				assert (!!(obj as Sequence)) == (#obj != 0);
+				assert (!!obj) == (#(obj as Sequence) != 0);
+				assert (!!(obj as Sequence)) == (#(obj as Sequence) != 0);
 				assert (obj.nonempty()) == (#obj != 0);
-				assert (obj.nonempty()) == (#(obj as sequence) != 0);
+				assert (obj.nonempty()) == (#(obj as Sequence) != 0);
 				assert (!obj.empty()) == (#obj != 0);
-				assert (!obj.empty()) == (#(obj as sequence) != 0);
+				assert (!obj.empty()) == (#(obj as Sequence) != 0);
 				assert obj.empty() != obj.nonempty();
 				assert obj.length == #obj;
-				assert obj.length == #(obj as sequence);
-				assert (obj as sequence).length == #obj;
-				assert (obj as sequence).length == #(obj as sequence);
+				assert obj.length == #(obj as Sequence);
+				assert (obj as Sequence).length == #obj;
+				assert (obj as Sequence).length == #(obj as Sequence);
 				assert obj.__sizeof__() != 0;
 				if (obj) {
 					assert obj.first in rawTestInput;
@@ -162,16 +162,16 @@ function testSequenceType(typ: type(object), cls: string) {
 		}
 	}
 }
-function testMutableSequence(typ: type(object), cls: string) {
+function testMutableSequence(typ: Type, cls: string) {
 	testSequenceType(typ,cls);
 }
 
-testMutableSequence(list,LIKE_SEQ);
-testSequenceType(tuple,LIKE_SEQ);
-testMutableSequence(hashset,LIKE_SET);
-testSequenceType(hashset.frozen,LIKE_MAP);
-testMutableSequence(dict,LIKE_MAP);
-testSequenceType(dict.frozen,LIKE_MAP);
+testMutableSequence(List,LIKE_SEQ);
+testSequenceType(Tuple,LIKE_SEQ);
+testMutableSequence(HashSet,LIKE_SET);
+testSequenceType(HashSet.Frozen,LIKE_MAP);
+testMutableSequence(Dict,LIKE_MAP);
+testSequenceType(Dict.Frozen,LIKE_MAP);
 
 testMutableSequence(collections.Deque,LIKE_SEQ);
 testMutableSequence(collections.FixedList,LIKE_SEQ);

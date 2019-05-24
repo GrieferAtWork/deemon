@@ -20,7 +20,7 @@
 
 /*[[[deemon
 import * from deemon;
-for (local l: file.open("../../include/deemon/asm.h")) {
+for (local l: File.open("../../include/deemon/asm.h")) {
 	local name,id;
 	try {
 		name,id = l.scanf(" # define ASM%[^ ] 0x%[^ /\r\n]")...;
@@ -412,8 +412,8 @@ import * from deemon;
 @@> statics: { "foo", "bar" }
 @@>));
 @@>print fun(); /* "foobar" */
-function code(data: {int...}): bytes {
-	file.writer w;
+function code(data: {int...}): Bytes {
+	File.Writer w;
 	for (local d: data) {
 		local b = d.tobytes(d.bytecount,"little",false);
 		b.reverse();

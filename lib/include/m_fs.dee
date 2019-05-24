@@ -23,12 +23,12 @@ final global getcwd = fs.getcwd;
 final global chdir = fs.chdir;
 final global tmp = fs.gettmp;
 final global tmpname = none; /* TODO */
-final function home(...) -> fs.user(...).home;
+final function home(...) -> fs.User(...).home;
 final function listenv() -> [fs.environ...];
 final function getenv(name) -> fs.environ[name];
 final function delenv(name) -> fs.environ.operator del[](name);
 final function setenv(name,value) -> fs.environ.operator [] (name,value);
-final function user() -> fs.user.name;
+final function User() -> fs.User.name;
 final global host = fs.gethostname;
 final global path = fs_path;
 final function getatime(path) -> fs.stat(path).st_atime;
@@ -67,8 +67,8 @@ final global copy_ = fs.copyfile;
 final global move_ = fs.rename;
 final global link = fs.symlink;
 final global readlink = fs.readlink;
-final global uid_t = fs.user;
-final global gid_t = fs.group;
+final global uid_t = fs.User;
+final global gid_t = fs.Group;
 final global chmod = fs.chmod;
 final function getmod(path) -> fs.stat(path).st_mode;
 final global chown = fs.chown;
@@ -76,16 +76,16 @@ final function getown(path) {
 	__stack local st = fs.stat(path);
 	return (st.st_uid,st.st_gid);
 }
-final global uidof = fs.user;
-final global gidof = fs.group;
+final global uidof = fs.User;
+final global gidof = fs.Group;
 final function uidname(uid) {
-	if (uid !is fs.user)
-		uid = fs.user(uid);
+	if (uid !is fs.User)
+		uid = fs.User(uid);
 	return uid.name;
 }
 final function gidname(gid) {
-	if (gid !is fs.group)
-		gid = fs.group(gid);
+	if (gid !is fs.Group)
+		gid = fs.Group(gid);
 	return gid.name;
 }
 final global dir = fs.dir;

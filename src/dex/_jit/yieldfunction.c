@@ -269,7 +269,7 @@ PRIVATE struct type_member jy_members[] = {
 };
 
 PRIVATE struct type_member jy_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&JITYieldFunctionIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&JITYieldFunctionIterator_Type),
     TYPE_MEMBER_END
 };
 

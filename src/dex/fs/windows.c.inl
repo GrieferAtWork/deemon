@@ -807,7 +807,7 @@ PRIVATE struct type_member env_members[] = {
 
 INTERN DeeTypeObject DeeEnvIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"env.iterator",
+    /* .tp_name     = */"env.Iterator",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
@@ -1960,7 +1960,7 @@ PRIVATE struct type_getset user_getsets[] = {
 
 INTERN DeeTypeObject DeeUser_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"user",
+    /* .tp_name     = */"User",
     /* .tp_doc      = */NULL,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -4041,7 +4041,7 @@ PRIVATE struct type_member diriter_members[] = {
 
 INTERN DeeTypeObject DeeDirIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"dir.iterator",
+    /* .tp_name     = */"dir.Iterator",
     /* .tp_doc      = */DeeDirIterator_TP_DOC,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -4132,7 +4132,7 @@ PRIVATE struct type_seq dir_seq = {
 };
 
 PRIVATE struct type_member dir_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeDirIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeDirIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -4337,7 +4337,7 @@ err:
 
 INTERN DeeTypeObject DeeQueryIterator_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"query.iterator",
+    /* .tp_name     = */"query.Iterator",
     /* .tp_doc      = */DeeQueryIterator_TP_DOC,
     /* .tp_flags    = */TP_FNORMAL,
     /* .tp_weakrefs = */0,
@@ -4381,7 +4381,7 @@ INTERN DeeTypeObject DeeQueryIterator_Type = {
 };
 
 PRIVATE struct type_member query_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeQueryIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeQueryIterator_Type),
     TYPE_MEMBER_END
 };
 

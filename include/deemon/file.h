@@ -286,7 +286,7 @@ DFUNDEF Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
 /* Check if the given file is an interactive device.
  * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
  *       invokes `self.isatty()' without arguments, casting the return value to bool.
- *       This function is used to implement the auto-buffering mode of `file.buffer'
+ *       This function is used to implement the auto-buffering mode of `File.Buffer'
  * @return: > 0 : The file is a TTY
  * @return:   0 : The file isn't a TTY
  * @return: < 0 : An error occurred. */

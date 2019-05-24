@@ -2399,7 +2399,7 @@ Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct Dee_unicode_printer *__
  *                The type of this object is unrelated to `self', but rather
  *                depends on `self' and is usually a bytes, or string object.
  *                In most cases, `DeeCodec_Decode()' returns a string object,
- *                while `DeeCodec_Encode()' returns a bytes object.
+ *                while `DeeCodec_Encode()' returns a Bytes object.
  * @return: NULL: An error occurred.
  */
 DFUNDEF DREF DeeObject *DCALL

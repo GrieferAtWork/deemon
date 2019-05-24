@@ -29,7 +29,7 @@
 #include <deemon/map.h>
 #include <deemon/dict.h>
 #include <deemon/float.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/bool.h>
@@ -52,7 +52,7 @@ INTERN uint8_t const chops[128] = {
 #include <util>
 
 
-local table = dict {
+local table = Dict {
     "+": "OPERATOR_ADD",
     "-": "OPERATOR_SUB",
     "*": "OPERATOR_MUL",
@@ -569,30 +569,30 @@ do_unary_operator:
 
 
   /* I admit it. I was an idiot for adding this dedicated syntax for constructing
-   * cell objects. I wasn't thinking and as a result of that, I have to maintain
+   * Cell objects. I wasn't thinking and as a result of that, I have to maintain
    * it for backwards compatibility.
    * Anyways... The most I can do for now is have it emit a warning, telling that
-   * you should be using `cell from deemon' instead (which actually won't even
-   * break backwards-compatibility with the old deemon, who's `cell' object
+   * you should be using `Cell from deemon' instead (which actually won't even
+   * break backwards-compatibility with the old deemon, who's `Cell' object
    * offered you the same functionality)
    * NOTE: To ensure backwards-compatibility, you may place this
-   *       in your code in order to simply always use `cell(...)':
+   *       in your code in order to simply always use `Cell(...)':
    * >> #if __DEEMON__ >= 200
-   * >> import cell from deemon;
+   * >> import Cell from deemon;
    * >> #else
-   * >> #define cell(...) < __VA_ARGS__ >
+   * >> #define Cell(...) < __VA_ARGS__ >
    * >> #endif
    */
  case TOK_LOGT:
   loc_here(&loc);
   if (WARN(W_DEPRECATED_CELL_SYNTAX)) goto err;
   goto do_empty_cell;
- case '<': /* cell */
+ case '<': /* Cell */
   loc_here(&loc);
   if (WARN(W_DEPRECATED_CELL_SYNTAX)) goto err;
   if (yield() < 0) goto err;
   if (tok == '>') {
-   /* empty cell. */
+   /* empty Cell. */
 do_empty_cell:
    result = ast_action0(AST_FACTION_CELL0);
   } else {

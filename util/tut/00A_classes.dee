@@ -21,7 +21,7 @@
 import * from deemon;
 
 @@Classes in deemon are written in a syntax similar to that of C++
-class MyList: list {
+class MyList: List {
 
 	@@Member variables must be declared as such before they can be used
 	@@Note that the visiblity of members can be specified for only a single
@@ -106,7 +106,7 @@ public:
 	public member my_future_member = "Declared after first use";
 
 
-	@@This function overrides a function from the base-class `list'
+	@@This function overrides a function from the base-class @List
 	function append(item) {
 		print "MyList.append(" + repr(item) + ")";
 		/* Using `super', we can access members of the base-class without
@@ -114,7 +114,7 @@ public:
 		super.append(item);
 		/* For this purpose, `super' behaves similar to either one of the
 		 * following 2 expressions. */
-		(this as list).append(item);
+		(this as List).append(item);
 		(this as MyList.__base__).append(item);
 	}
 
@@ -165,13 +165,13 @@ public:
 		 * written. */
 		: super([args...])
 		/* Also following C++ syntax, instance members can also be initialized
-		 * as part of the initializer list supplied following a `:' */
+		 * as part of the initializer List supplied following a `:' */
 		, my_final_member("Value for my_final_member")
 	{
 		/* The actual body of the constructor.
 		 * This portion once again behaves like a regular function who's arguments
 		 * have previously been specified by the `this' above.
-		 * Note that the initializer-list portion of the declaration is entirely
+		 * Note that the initializer-List portion of the declaration is entirely
 		 * optional. - The only situation when it is actually mandatory is in order
 		 * to invoke a super-constructor with non-empty arguments. */
 		print "In constructor for MyList",repr args;
@@ -386,7 +386,7 @@ class Point {
 	@@>}
 	@@Additionally, `operator repr()' is default-implemented as follows:
 	@@>operator repr() {
-	@@>	file.writer tempfp;
+	@@>	File.Writer tempfp;
 	@@>	tempfp << "Point(";
 	@@>	local is_first = true;
 	@@>	if (this.x is bound) {

@@ -63,10 +63,10 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
  * >> property memory -> file; // A file allowing read/write access to the process's VM
  *
  * Execution state functions:
- * >> function started() -> bool;
- * >> function detached() -> bool;
- * >> function terminated() -> bool;
- * >> function isachild() -> bool;
+ * >> function started(): bool;
+ * >> function detached(): bool;
+ * >> function terminated(): bool;
+ * >> function isachild(): bool;
  *
  * Execution control functions:
  * >> function start() -> none;
@@ -75,9 +75,9 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
  * >> function join() -> int;
  * >> function tryjoin() -> (bool,int);
  * >> function timedjoin(timeout_in_microseconds:?Dint) -> (bool,int);
- * >> function detach() -> bool;
+ * >> function detach(): bool;
  *    Returns false if the process already was detached.
- * >> function terminate(int exit_code = 0) -> bool;
+ * >> function terminate(int exit_code = 0): bool;
  *    Returns false if the process already was terminated.
  *
  * Non-portable control functions:

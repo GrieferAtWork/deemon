@@ -82,8 +82,8 @@ DECL_BEGIN
  *           The intention here is that a sub-class defining its own iterator
  *           should override this field in order to return its own type.
  *     - Abstraction that automatically defines the following methods:
- *        - `empty() -> bool'
- *        - `non_empty() -> bool'
+ *        - `empty(): bool'
+ *        - `non_empty(): bool'
  *        - `front() -> object'
  *        - `back() -> object'
  *        - `filter(callable func) -> sequence'
@@ -96,11 +96,11 @@ DECL_BEGIN
  *           - Same as `reduce([](a,b) -> a+b);'
  *           - Preferred way to concat sequences containing strings:
  *              - `print ["foo","bar","foobar"].sum(); // "foobarfoobar"'
- *        - `any() -> bool'
+ *        - `any(): bool'
  *           - Same as `reduce([](a,b) -> a || b);', but stop on the first `true' and return `false' when empty.
- *        - `all() -> bool'
+ *        - `all(): bool'
  *           - Same as `reduce([](a,b) -> a && b);', but stop on the first `false' and return `true' when empty.
- *        - `non() -> bool'
+ *        - `non(): bool'
  *           - Returns true if all elements of the sequence equate to `false' and return `true' when empty.
  *        - `parity() -> object'
  *           - Same as `reduce([](a,b) -> !!a ^ !!b);'
@@ -108,37 +108,37 @@ DECL_BEGIN
  *           - Same as `reduce([](a,b) -> key(a,b) ? a : b);'
  *        - `max(callable key = none) -> object'
  *           - Same as `reduce([](a,b) -> key(a,b) ? b : a);'
- *        - `count(object ob, callable key = none) -> int'
- *        - `locate(object ob, callable key = none) -> object'
- *        - `rlocate(object ob, callable key = none) -> object'
- *        - `locateall(object ob, callable key = none) -> sequence'
+ *        - `count(ob: object, callable key = none) -> int'
+ *        - `locate(ob: object, callable key = none) -> object'
+ *        - `rlocate(ob: object, callable key = none) -> object'
+ *        - `locateall(ob: object, callable key = none) -> sequence'
  *        - `transform(callable transformation) -> sequence'
  *           - Invoke `transformation()' on all items and return a sequence of all the results.
  *           - Same as `(for (local x: this) transformation(x));'
- *        - `contains(object ob, callable key = none) -> bool'
+ *        - `contains(ob: object, callable key = none): bool'
  *           - Same as the `tp_contains' operator, but allows for a key function to be used.
- *        - `partition(object ob, callable key = none) -> (sequence,(ob),sequence)'
- *        - `rpartition(object ob, callable key = none) -> (sequence,(ob),sequence)'
- *        - `startswith(object ob, callable key = none) -> bool'
- *        - `endswith(object ob, callable key = none) -> bool'
- *        - `find(object ob, callable key = none) -> int'
- *        - `rfind(object ob, callable key = none) -> int'
- *        - `index(object ob, callable key = none) -> int'
- *        - `rindex(object ob, callable key = none) -> int'
+ *        - `partition(ob: object, callable key = none) -> (sequence,(ob),sequence)'
+ *        - `rpartition(ob: object, callable key = none) -> (sequence,(ob),sequence)'
+ *        - `startswith(ob: object, callable key = none): bool'
+ *        - `endswith(ob: object, callable key = none): bool'
+ *        - `find(ob: object, callable key = none) -> int'
+ *        - `rfind(ob: object, callable key = none) -> int'
+ *        - `index(ob: object, callable key = none) -> int'
+ *        - `rindex(ob: object, callable key = none) -> int'
  *        - `join(sequence items) -> sequence'
- *        - `strip(object ob, callable key = none) -> sequence'
- *        - `lstrip(object ob, callable key = none) -> sequence'
- *        - `rstrip(object ob, callable key = none) -> sequence'
+ *        - `strip(ob: object, callable key = none) -> sequence'
+ *        - `lstrip(ob: object, callable key = none) -> sequence'
+ *        - `rstrip(ob: object, callable key = none) -> sequence'
  *        - `split(object sep, callable key = none) -> sequence'
  *        - `reversed() -> sequence'
  *        - `sorted(callable key = none) -> sequence'
  *        - `segments(size_t segsize) -> sequence'
  *        - `countseq(sequence seq, callable key = none) -> int'
- *        - `containsseq(sequence seq, callable key = none) -> bool'
+ *        - `containsseq(sequence seq, callable key = none): bool'
  *        - `partitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence)'
  *        - `rpartitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence)'
- *        - `startswithseq(sequence seq, callable key = none) -> bool'
- *        - `endswithseq(sequence seq, callable key = none) -> bool'
+ *        - `startswithseq(sequence seq, callable key = none): bool'
+ *        - `endswithseq(sequence seq, callable key = none): bool'
  *        - `findseq(sequence seq, callable key = none) -> int'
  *        - `rfindseq(sequence seq, callable key = none) -> int'
  *        - `indexseq(sequence seq, callable key = none) -> int'
@@ -384,7 +384,7 @@ struct Dee_type_nsi {
         }                   nsi_seqlike;
         struct { /* TYPE_SEQX_CLASS_MAP */
             size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
-            /* Same as `mapping.iterator.operator next()' of the mapping's core iterator,
+            /* Same as `mapping.Iterator.operator next()' of the mapping's core iterator,
              * however only return the key / value, rather than a key-value tuple.
              * @param: iterator: An iterator object, as returned by `mapping.operator iter()' */
             DREF DeeObject *(DCALL *nsi_nextkey)(DeeObject *__restrict iterator);

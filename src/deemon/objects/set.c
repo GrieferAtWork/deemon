@@ -122,13 +122,13 @@ PRIVATE struct type_seq invset_seq = {
 PRIVATE DREF DeeTypeObject *DCALL
 invset_iterator_get(DeeTypeObject *__restrict self) {
  err_unknown_attribute(self,
-                       DeeString_STR(&str_iterator),
+                       DeeString_STR(&str_Iterator),
                        ATTR_ACCESS_GET);
  return NULL;
 }
 
 PRIVATE struct type_getset invset_class_getsets[] = {
-    { DeeString_STR(&str_iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterator_get, NULL, NULL },
+    { DeeString_STR(&str_Iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterator_get, NULL, NULL },
     { NULL }
 };
 
@@ -524,10 +524,10 @@ INTERN struct type_method set_methods[] = {
 
 INTERN struct type_getset set_getsets[] = {
     { "frozen", &DeeRoSet_FromSequence, NULL, NULL,
-      DOC("->?Ert:RoSet\n"
-          "Returns a copy of @this set, with all of its current elements frozen in place, "
-          "constructing a snapshot of the set's current contents. - The actual type of "
-          "set returned is implementation- and type- specific, and copying itself may "
+      DOC("->?#Frozen\n"
+          "Returns a copy of @this Set, with all of its current elements frozen in place, "
+          "constructing a snapshot of the Set's current contents. - The actual type of "
+          "Set returned is implementation- and type- specific, and copying itself may "
           "either be done immediatly, or as copy-on-write") },
     { NULL }
 };
@@ -538,7 +538,7 @@ set_iterator_get(DeeTypeObject *__restrict self) {
  if (self == &DeeSet_Type)
      return_reference_(&DeeIterator_Type);
  err_unknown_attribute(self,
-                       DeeString_STR(&str_iterator),
+                       DeeString_STR(&str_Iterator),
                        ATTR_ACCESS_GET);
  return NULL;
 }
@@ -549,8 +549,8 @@ set_frozen_get(DeeTypeObject *__restrict self) {
  DREF DeeTypeObject *result;
  struct attribute_info info;
  struct attribute_lookup_rules rules;
- rules.alr_name       = "frozen";
- rules.alr_hash       = Dee_HashPtr("frozen",COMPILER_STRLEN("frozen"));
+ rules.alr_name       = "Frozen";
+ rules.alr_hash       = Dee_HashPtr("Frozen",COMPILER_STRLEN("Frozen"));
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = ATTR_PERMGET|ATTR_IMEMBER;
  rules.alr_perm_value = ATTR_PERMGET|ATTR_IMEMBER;
@@ -572,7 +572,7 @@ set_frozen_get(DeeTypeObject *__restrict self) {
   if (info.a_doc) {
    /* TODO: Use doc meta-information to determine the return type! */
   }
-  /* Fallback: just tell the caller what they already know: a set will be returned... */
+  /* Fallback: just tell the caller what they already know: a Set will be returned... */
   result = &DeeSet_Type;
   Dee_Incref(&DeeSet_Type);
  }
@@ -584,18 +584,18 @@ err:
 
 
 PRIVATE struct type_getset set_class_getsets[] = {
-    { DeeString_STR(&str_iterator),
+    { DeeString_STR(&str_Iterator),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iterator_get,
       NULL,
       NULL,
-      DOC("->?Dtype\n"
-          "Returns the iterator class used by instances of @this set type\n"
-          "This member must be overwritten by sub-classes of :set") },
-    { "frozen",
+      DOC("->?DType\n"
+          "Returns the iterator class used by instances of @this Set type\n"
+          "This member must be overwritten by sub-classes of :Set") },
+    { "Frozen",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_frozen_get,
       NULL,
       NULL,
-      DOC("->?Dtype\n"
+      DOC("->?DType\n"
           "Returns the type of sequence returned by the #i:frozen property") },
     { NULL }
 };
@@ -743,7 +743,7 @@ PRIVATE struct type_seq set_seq = {
  *       >> // Option #3:
  *       >> if (item in this)
  *       >>     return false;
- *       >> this &= ~([item] as set from deemon);
+ *       >> this &= ~([item] as Set from deemon);
  *       >> return true;
  * TODO: removeall(items:?S?O)->?Dint
  *       >> local result = 0;
@@ -759,13 +759,13 @@ PRIVATE struct type_seq set_seq = {
  *       >>     // Option #3:
  *       >>     if (x in this)
  *       >>         continue;
- *       >>     this &= ~([x] as set from deemon);
+ *       >>     this &= ~([x] as Set from deemon);
  *       >>     ++result;
  *       >> }
  *       >> return result;
- * TODO: clear()->none
+ * TODO: clear(): none
  *       >> // Option #1:
- *       >> this := (set from deemon)();
+ *       >> this := (Set from deemon)();
  *       >> // Option #2:
  *       >> this.removeall(this);
  *       >> // Option #3:
@@ -836,15 +836,15 @@ INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 PUBLIC DeeTypeObject DeeSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_set),
-    /* .tp_doc      = */DOC("A recommended abstract base class for any set type "
-                            "that wishes to implement the object-set protocol\n"
+    /* .tp_name     = */DeeString_STR(&str_Set),
+    /* .tp_doc      = */DOC("A recommended abstract base class for any Set type "
+                            "that wishes to implement the Object-Set protocol\n"
                             "An object derived from this class must implement "
                             "${operator contains}, and preferrably ${operator iter}\n"
                             "\n"
                             "()\n"
                             "A no-op default constructor that is implicitly called by sub-classes\n"
-                            "When invoked manually, a general-purpose, empty set is returned\n"
+                            "When invoked manually, a general-purpose, empty Set is returned\n"
                             "\n"
                             "repr->\n"
                             "Returns the representation of all sequence elements, "
@@ -852,18 +852,18 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                             "e.g.: ${{ \"foo\", \"bar\", \"baz\" }}\n"
                             "\n"
                             "contains->\n"
-                            "Returns :true indicative of @item being apart of @this set\n"
+                            "Returns :true indicative of @item being apart of @this Set\n"
                             "\n"
                             "bool->\n"
-                            "Returns :true if @this set is non-empty\n"
+                            "Returns :true if @this Set is non-empty\n"
                             "\n"
                             "iter->\n"
-                            "Returns an iterator for enumerating all items apart of @this set\n"
-                            "Note that some set types do not implement this functionality, most "
+                            "Returns an iterator for enumerating all items apart of @this Set\n"
+                            "Note that some Set types do not implement this functionality, most "
                             "notably symbolically inversed sets\n"
                             "\n"
                             "sub->\n"
-                            "Returns a set of all objects from @this, excluding those also found in @other\n"
+                            "Returns a Set of all objects from @this, excluding those also found in @other\n"
                             "\n"
                             "&->\n"
                             "Returns the intersection of @this and @other\n"
@@ -873,14 +873,14 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                             "Returns the union of @this and @other\n"
                             "\n"
                             "^->\n"
-                            "Returns a set containing objects only found in either "
+                            "Returns a Set containing objects only found in either "
                             "@this or @other, but not those found in both\n"
                             "\n"
                             "<=->\n"
-                            "Returns :true if all items found in @this set can also be found in @other\n"
+                            "Returns :true if all items found in @this Set can also be found in @other\n"
                             "\n"
                             "==->\n"
-                            "Returns :true if @this set contains the same items as @other, and not any more than that\n"
+                            "Returns :true if @this Set contains the same items as @other, and not any more than that\n"
                             "\n"
                             "!=->\n"
                             "Returns :true if @this contains different, or less items than @other\n"
@@ -889,24 +889,24 @@ PUBLIC DeeTypeObject DeeSet_Type = {
                             "The result of ${this <= other && this != other}\n"
                             "\n"
                             ">=->\n"
-                            "Returns :true if all items found in @other can also be found in @this set\n"
+                            "Returns :true if all items found in @other can also be found in @this Set\n"
                             "\n"
                             ">->\n"
                             "The result of ${this >= other && this != other}\n"
                             "\n"
                             "~->\n"
-                            "Returns a symbolic set that behaves as though it contained "
-                            "any feasible object that isn't already apart of @this set\n"
-                            "Note however that due to the impossibility of such a set, you "
+                            "Returns a symbolic Set that behaves as though it contained "
+                            "any feasible object that isn't already apart of @this Set\n"
+                            "Note however that due to the impossibility of such a Set, you "
                             "cannot iterate its elements, and the only ~real~ operator "
                             "implemented by it is ${operator contains}\n"
                             "Its main purpose is for being used in conjunction with "
                             "${operator &} in order to create a sub-set that doesn't "
                             "contain a certain set of sub-elements:\n"
-                            ">import set from deemon;\n"
+                            ">import Set from deemon;\n"
                             ">local x = { 10, 11, 15, 20, 30 };\n"
                             ">local y = { 11, 15 };\n"
-                            ">print repr((x as set) & ~(y as set)); // { 10, 20, 30 }"),
+                            ">print repr((x as Set) & ~(y as Set)); // { 10, 20, 30 }"),
     /* .tp_flags    = */TP_FNORMAL|TP_FABSTRACT|TP_FNAMEOBJECT, /* Generic base class type. */
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

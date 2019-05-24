@@ -28,7 +28,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/error.h>
 #include <deemon/objmethod.h>
 #include <deemon/compiler/ast.h>
@@ -118,7 +118,7 @@ emulate_method_call(DeeObject *__restrict self,
  if (DeeClsProperty_Check(self)) {
   dgetmethod_t get;
   get = DeeClsProperty_GET(self);
-  /* `object.id()' should not be evaluated at compile-time! */
+  /* `Object.id()' should not be evaluated at compile-time! */
   if (get == &object_id_get)
       return ITER_DONE;
  }
@@ -141,7 +141,7 @@ emulate_member_call(DeeObject *__restrict base,
   if (NAME_EQ("decode"))
       return emulate_object_decode(base,argc,argv);
  }
- /* `object.id()' should not be evaluated at compile-time! */
+ /* `Object.id()' should not be evaluated at compile-time! */
  if (NAME_EQ("id"))
      return ITER_DONE;
  if (IS_BLACKLISTED_BASE(base))
@@ -400,7 +400,7 @@ generic_operator_optimizations:
       *       the optimization.
       * >> local x = [("foo",a),("bar",b)];
       * >> // Optimize into this:
-      * >> local y = dict { "foo" : a, "bar" : b }; */
+      * >> local y = Dict { "foo" : a, "bar" : b }; */
      goto after_sequence_cast_propagation;
     }
    } else {
@@ -409,7 +409,7 @@ generic_operator_optimizations:
         goto after_sequence_cast_propagation;
      /* TODO: Take every first and second element and pack them together
       *       as tuple expression-like multi-branches.
-      * >> local x = list { "foo" : a, "bar" : b };
+      * >> local x = List { "foo" : a, "bar" : b };
       * >> // Optimize into this:
       * >> local y = [("foo",a),("bar",b)];
       */

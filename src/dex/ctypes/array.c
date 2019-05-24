@@ -580,7 +580,7 @@ PRIVATE struct stype_seq array_seq = {
 
 
 PRIVATE struct type_member array_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&ArrayIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&ArrayIterator_Type),
     TYPE_MEMBER_END
 };
 

@@ -1254,7 +1254,7 @@ buffer_ctor(Buffer *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  uint16_t mode = (FILE_BUFFER_MODE_AUTO);
  DeeObject *file; char const *mode_str = NULL; size_t size = 0;
- if (DeeArg_Unpack(argc,argv,"o|sd:buffer",&file,&mode_str,&size))
+ if (DeeArg_Unpack(argc,argv,"o|sd:_FileBuffer",&file,&mode_str,&size))
      goto err;
  if (mode_str) {
   char const *mode_iter = mode_str;
@@ -1609,9 +1609,9 @@ err_closed_unlock:
 
 
 PRIVATE struct type_getset buffer_getsets[] = {
-    { DeeString_STR(&str_file),
+    { "file",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_getfile, NULL, NULL,
-      DOC("->?Dfile\n"
+      DOC("->?DFile\n"
           "Returns the file that is being buffered") },
     { "filename",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_filename, NULL, NULL,
@@ -1654,10 +1654,10 @@ PRIVATE struct type_method buffer_class_methods[] = {
 PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
     /* .ft_base = */{
         OBJECT_HEAD_INIT(&DeeFileType_Type),
-        /* .tp_name     = */"buffer",
+        /* .tp_name     = */"_FileBuffer",
         /* .tp_doc      = */DOC("General-purpose input/output file buffering\n"
                                 "\n"
-                                "(fp:?Dfile,mode=!Pauto,size=!0)\n"
+                                "(fp:?DFile,mode=!Pauto,size=!0)\n"
                                 "@throw ValueError The given @mode is malformed, or not recognized\n"
                                 "Construct a new buffer for @fp using the given @mode and @size\n"
                                 "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
@@ -1679,20 +1679,20 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
                                 "$\"c\", $\"c-\", $\"c,\", $\"close,\"|When the buffer is closed using ${operator close}, "
                                                                       "also invoke that same operator on the contained file\n"
                                 "$\"ro\", $\"ro-\", $\"ro,\", $\"readonly,\"|Disable write-access to the underlying @fp}\n"
-                                ">import file from deemon;\n"
-                                ">local base_fp = file.open(\"foo.txt\",\"rdonly,nobuf\"); /* Open without buffering */\n"
-                                ">local fp = file.buffer(base_fp,\"sync,full\"); /* Create a buffer wrapper */\n"
+                                ">import File from deemon;\n"
+                                ">local base_fp = File.open(\"foo.txt\",\"rdonly,nobuf\"); /* Open without buffering */\n"
+                                ">local fp = File.Buffer(base_fp,\"sync,full\"); /* Create a buffer wrapper */\n"
                                 ">fp.write(\"foo\"); /* Write data to buffer */\n"
                                 ">fp.sync(); /* Commit data to disk */\n"
                                 "The most notably useful feature made possible through use of buffers is "
                                 "the possibility of adding #getc and #ungetc support to file types that "
                                 "normally wouldn't support the later\n"
-                                "During initialization, deemon will initialize the standard "
-                                "streams :file.stdin, :file.stdout and :file.stderr as follows:\n"
-                                ">import file from deemon;\n"
-                                ">file.stdin = file.buffer(file.default_stdin,\"ro,auto\");\n"
-                                ">file.stdout = file.buffer(file.default_stdout,\"auto\");\n"
-                                ">file.stderr = file.buffer(file.default_stderr,\"auto\");"),
+                                "During initialization, deemon will assign the standard "
+                                "streams :File.stdin, :File.stdout and :File.stderr as follows:\n"
+                                ">import File from deemon;\n"
+                                ">File.stdin = File.Buffer(File.default_stdin,\"ro,auto\");\n"
+                                ">File.stdout = File.Buffer(File.default_stdout,\"auto\");\n"
+                                ">File.stderr = File.Buffer(File.default_stderr,\"auto\");"),
         /* .tp_flags    = */TP_FNORMAL,
         /* .tp_weakrefs = */0,
         /* .tp_features = */TF_HASFILEOPS,

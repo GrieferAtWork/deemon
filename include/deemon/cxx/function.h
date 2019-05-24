@@ -28,7 +28,7 @@
 DEE_CXX_BEGIN
 
 template<class Prototype>
-class function: public object {
+class Function: public Object {
 public:
 };
 

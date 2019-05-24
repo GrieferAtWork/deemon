@@ -54,7 +54,7 @@ DECL_BEGIN
  * >>     print @"Well... It's one of 'em!", nl
  * >> 1:
  * As the name implies, this type of set is read-only, in a sense being
- * for `hashset' what `tuple' is for `list'.
+ * for `HashSet' what `tuple' is for `list'.
  * Because read-only sets cannot be modified, this allows them to operate
  * using an inline hash-vector, as well as not requiring the use of any
  * sort of lock.
@@ -62,7 +62,7 @@ DECL_BEGIN
  *        sequence type that is not required to implement the deemon standard
  *        programming interface.
  *        However GriferAtWork's implementation uses it to solve the problem
- *        caused by having hashset objects appear as constant variables. */
+ *        caused by having HashSet objects appear as constant variables. */
 typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {

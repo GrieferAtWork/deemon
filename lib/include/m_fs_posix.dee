@@ -18,11 +18,11 @@
  */
 import fs;
 
-final global uid_t = fs.user;
-final global gid_t = fs.group;
+final global uid_t = fs.User;
+final global gid_t = fs.Group;
 final global chmod = fs.chmod;
 final global chown = fs.chown;
-final global uidof = fs.user;
-final global gidof = fs.group;
+final global uidof = fs.User;
+final global gidof = fs.Group;
 
 

@@ -879,7 +879,7 @@ err:
 
 
 
-/*  ====== `tuple.iterator' type implementation ======  */
+/*  ====== `Tuple.Iterator' type implementation ======  */
 typedef struct {
     OBJECT_HEAD
     DREF DeeTupleObject *ti_tuple; /* [1..1][const] Referenced tuple. */
@@ -1189,7 +1189,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 
 
 
-/*  ====== `tuple' type implementation ======  */
+/*  ====== `Tuple' type implementation ======  */
 
 PRIVATE DREF Tuple *DCALL tuple_ctor(void) {
  return_reference_((DREF Tuple *)Dee_EmptyTuple);
@@ -1218,7 +1218,7 @@ err:
 PRIVATE DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:tuple",&seq))
+ if (DeeArg_Unpack(argc,argv,"o:Tuple",&seq))
      goto err;
  return (DREF Tuple *)DeeTuple_FromSequence(seq);
 err:
@@ -1437,12 +1437,12 @@ PRIVATE struct type_method tuple_class_methods[] = {
       &tuple_unpack,
       DOC("(num:?Dint,seq:?S?O)->?.\n"
            "@throw UnpackError The given @seq doesn't contain exactly @num elements\n"
-           "Unpack the given sequence @seq into a tuple consisting of @num elements") },
+           "Unpack the given sequence @seq into a Tuple consisting of @num elements") },
     { NULL }
 };
 
 PRIVATE struct type_member tuple_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeTupleIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeTupleIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1755,26 +1755,26 @@ PRIVATE struct type_cmp tuple_cmp = {
 
 PUBLIC DeeTypeObject DeeTuple_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_tuple),
+    /* .tp_name     = */DeeString_STR(&str_Tuple),
     /* .tp_doc      = */DOC("A builtin type that is similar to :list, however represents a fixed-length, "
-                            "immutable sequence of objects. Tuples are fast, low-level :sequence-like objects "
+                            "immutable sequence of objects. Tuples are fast, low-level :Sequence-like objects "
                             "that are written as ${(elem1,elem2,etc)}, with the exception of single-element "
                             "tuples being written as ${(single_element,)}\n"
                             "\n"
                             "()\n"
-                            "Construct an empty tuple\n"
+                            "Construct an empty Tuple\n"
                             "\n"
                             "(items:?S?O)\n"
-                            "Construct a new tuple that is pre-initializes with the elements from @items\n"
+                            "Construct a new Tuple that is pre-initializes with the elements from @items\n"
                             "\n"
                             "str->\n"
-                            "Returns a representation of @this tuple:\n"
+                            "Returns a representation of @this Tuple:\n"
                             ">operator str() {\n"
                             "> return \"(\" + \", \".join(this) + \")\";\n"
                             ">}\n"
                             "\n"
                             "repr->\n"
-                            "Returns a representation of @this tuple:\n"
+                            "Returns a representation of @this Tuple:\n"
                             ">operator repr() {\n"
                             "> if (#this == 1)\n"
                             ">  return \"({!r},)\".format({ this[0] });\n"
@@ -1782,18 +1782,18 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
                             ">}\n"
                             "\n"
                             "bool->\n"
-                            "Returns :true if @this tuple is non-empty\n"
+                            "Returns :true if @this Tuple is non-empty\n"
                             "\n"
                             "+->\n"
                             "+(other:?S?O)->\n"
                             "@throw NotImplemented The given @other isn't iterable\n"
-                            "Returns a new tuple consisting of the elements from @this, followed by "
-                            "those from @other, which may be another tuple, or a generic sequence\n"
+                            "Returns a new Tuple consisting of the elements from @this, followed by "
+                            "those from @other, which may be another Tuple, or a generic sequence\n"
                             "\n"
                             "*(count:?Dint)->\n"
                             "@throw IntegerOverflow The given @count is negative, or too large\n"
-                            "Return a new tuple consisting of the elements from @this, repeated @count times\n"
-                            "When @count is $0, an empty tuple is returned. When @count is $1, @this tuple is re-returned\n"
+                            "Return a new Tuple consisting of the elements from @this, repeated @count times\n"
+                            "When @count is $0, an empty Tuple is returned. When @count is $1, @this Tuple is re-returned\n"
                             "\n"
                             "==->\n"
                             "!=->\n"
@@ -1801,26 +1801,26 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
                             "<=->\n"
                             ">->\n"
                             ">=->\n"
-                            "Perform a lexicographical comparison between the elements of @this tuple and the given @other sequence\n"
+                            "Perform a lexicographical comparison between the elements of @this Tuple and the given @other sequence\n"
                             "\n"
                             "iter->\n"
-                            "Returns an iterator for enumerating the elements of @this tuple\n"
+                            "Returns an iterator for enumerating the elements of @this Tuple\n"
                             "\n"
                             "#->\n"
-                            "Returns the number of elements contained inside of @this tuple\n"
+                            "Returns the number of elements contained inside of @this Tuple\n"
                             "\n"
                             "contains->\n"
-                            "Returns :true if @elem is apart of @this tuple, or @false otherwise\n"
+                            "Returns :true if @elem is apart of @this Tuple, or @false otherwise\n"
                             "\n"
                             "[]->\n"
                             "@throw IntegerOverflow The given @index is negative, or too large\n"
                             "@throw IndexError The given @index is out of bounds\n"
-                            "Returns the @index'th item of @this tuple\n"
+                            "Returns the @index'th item of @this Tuple\n"
                             "\n"
                             "[:]->?.\n"
-                            "Returns a new tuple for the given subrange, following the usual rules for "
+                            "Returns a new Tuple for the given subrange, following the usual rules for "
                             "negative @start or @end values, as well as :none being passed for either "
-                            "(s.a. :sequence.op:getrange)"
+                            "(s.a. :Sequence.op:getrange)"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE|TP_FFINAL|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */0,

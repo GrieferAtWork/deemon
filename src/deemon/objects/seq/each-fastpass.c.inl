@@ -339,7 +339,7 @@ PRIVATE struct type_seq F(seq) = {
 };
 
 PRIVATE struct type_member F(members)[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(STRUCT_TYPE,se_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(STRUCT_TYPE,se_seq),"->?DSequence"),
     TYPE_MEMBER_FIELD_DOC("__attr__",STRUCT_OBJECT,offsetof(STRUCT_TYPE,sg_attr),"->?Dstring"),
 #ifdef DEFINE_CALLATTRKW
     TYPE_MEMBER_FIELD_DOC("__kw__",STRUCT_OBJECT,offsetof(STRUCT_TYPE,sg_kw),"->?S?T2?Dstring?O"),
@@ -348,7 +348,7 @@ PRIVATE struct type_member F(members)[] = {
 };
 
 PRIVATE struct type_member F(class_members)[] = {
-    TYPE_MEMBER_CONST("iterator",&ITERATOR_TYPE_OBJECT),
+    TYPE_MEMBER_CONST("Iterator",&ITERATOR_TYPE_OBJECT),
     TYPE_MEMBER_END
 };
 
@@ -585,18 +585,18 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 #define TYPE_FLAGS     (TP_FNORMAL|TP_FFINAL|TP_FMOVEANY)
     /* .tp_name     = */"_SeqEachGetAttr",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,attr:?Dstring)"),
+                            "(seq:?DSequence,attr:?Dstring)"),
     /* .tp_flags    = */TYPE_FLAGS,
 #elif defined(DEFINE_CALLATTR)
     /* .tp_name     = */"_SeqEachCallAttr",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,attr:?Dstring,args=!T0)"),
+                            "(seq:?DSequence,attr:?Dstring,args=!T0)"),
 #define TYPE_FLAGS     (TP_FNORMAL|TP_FFINAL|TP_FMOVEANY|TP_FVARIABLE)
     /* .tp_flags    = */TYPE_FLAGS,
 #elif defined(DEFINE_CALLATTRKW)
     /* .tp_name     = */"_SeqEachCallAttrKw",
     /* .tp_doc      = */DOC("()\n"
-                            "(seq:?Dsequence,attr:?Dstring,args=!T0,kw:?S?T2?Dstring?O=!T0)"),
+                            "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?S?T2?Dstring?O=!T0)"),
 #define TYPE_FLAGS     (TP_FNORMAL|TP_FFINAL|TP_FMOVEANY|TP_FVARIABLE)
     /* .tp_flags    = */TYPE_FLAGS,
 #else
@@ -718,7 +718,7 @@ PRIVATE struct type_member Fi(members)[] = {
 #else
 #error "Unsupported mode"
 #endif
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SeqEachIterator,ei_iter),"->?DIterator"),
     TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */

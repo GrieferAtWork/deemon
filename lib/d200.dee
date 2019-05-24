@@ -41,13 +41,13 @@ class OldUserClass
 	 * any user-defined class could be weakly referneced by
 	 * default, since _any_ object was capable of sustaining
 	 * weak references. */
-	: weakrefable
+	: WeakRefAble
 {
 
-	@@A dict mapping old member variables to their proper names
-	private m_members = dict();
+	@@A Dict mapping old member variables to their proper names
+	private m_members: {string: Object} = Dict();
 
-	operator . (name: string): object {
+	operator . (name: string): Object {
 		return m_members[name];
 	}
 
@@ -55,7 +55,7 @@ class OldUserClass
 		del m_members[name];
 	}
 
-	operator .= (name: string, value: object) {
+	operator .= (name: string, value: Object) {
 		m_members[name] = value;
 	}
 

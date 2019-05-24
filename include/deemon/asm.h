@@ -63,7 +63,7 @@
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to execute `ASM_PUSH_THIS' without `CODE_FTHISCALL' being set:
  *       throw an `Error.RuntimeError.IllegalInstruction'
- *  >> Attempting to use `ASM_CALL_TUPLE' (& related instruction) without a tuple:
+ *  >> Attempting to use `ASM_CALL_TUPLE' (& related instruction) without a Tuple:
  *       throw an `Error.TypeError'
  *  >> Attempting to use `ASM_PUSH_EXCEPT' when no exception has been thrown:
  *       throw an `Error.RuntimeError.IllegalInstruction'
@@ -87,13 +87,13 @@
  *   - pointer    REG_PC              // Instruction pointer
  *   - pointer    REG_SP              // Stack pointer (Describes a potentially infinite amount of memory)
  *   - pointer    REG_START_PC        // Instruction pointer directed at the start of the current instruction.
- *   - object     REG_RESULT          // Result value
+ *   - Object     REG_RESULT          // Result value
  *   - bool       REG_RESULT_ITERDONE // When true, the function shall return to indicate iterator exhaustion. Only available in yielding function.
  *   - integer    REG_EXCEPTION_START // Value of `thread->t_exceptsz' when the frame got created
- *   - object[]   REG_LOCALS          // A variable number of object slots for local variables, limited by code requirements.
- *   - object[]   REG_CONSTANTS       // A variable number of constant object slots, stored alongside code. Also contained are static variables.
- *   - object[]   REG_GLOBALS         // A variable number of object slots for global variables, limited by module requirements.
- *   - object[][] REG_EXTERN          // A variable number of object slots, accessible through a variable number of module slots.
+ *   - Object[]   REG_LOCALS          // A variable number of Object slots for local variables, limited by code requirements.
+ *   - Object[]   REG_CONSTANTS       // A variable number of constant Object slots, stored alongside code. Also contained are static variables.
+ *   - Object[]   REG_GLOBALS         // A variable number of Object slots for global variables, limited by module requirements.
+ *   - Object[][] REG_EXTERN          // A variable number of Object slots, accessible through a variable number of module slots.
  *
  * Frame setup:
  * >>     IF GET_THREADLOCAL_FRAME_COUNT() >= MAX_FRAME_COUNT THEN
@@ -153,34 +153,34 @@
  * >>     PROPAGATE_EXCEPTIONS_TO_CALLER();
  * >>
  * >>
- * >> void    THROW(object obj);
- * >> void    THROW_OR_UNDEFINED_BEHAVIOR(object obj); // Causes undefined behavior in fast-mode code. Else, throws an exception `obj' in safe-mode code
+ * >> void    THROW(Object obj);
+ * >> void    THROW_OR_UNDEFINED_BEHAVIOR(Object obj); // Causes undefined behavior in fast-mode code. Else, throws an exception `obj' in safe-mode code
  * >>
  * >> // Access to stack items.
- * >> void    PUSH(object obj);
- * >> object  POP();
- * >> tuple   POP(Integer num_items);
- * >> object &NTH(Integer nth_item);
- * >> object &EXTERN(Integer module_index, Integer symbol_index);
- * >> object &GLOBAL(Integer symbol_index);
- * >> object &LOCAL(Integer local_index);
- * >> object &STATIC(Integer static_index);
- * >> object  CONSTANT(Integer static_index); // Constant and static symbols use the same indices
- * >> object  MODULE(Integer module_index);
- * >> object  REF(Integer reference_index);
- * >> object  ARG(Integer argument_index);
- * >> object &TOP    = NTH(0);
- * >> object &FIRST  = NTH(0);
- * >> object &SECOND = NTH(1);
- * >> object &THIRD  = NTH(2);
- * >> object &FOURTH = NTH(3);
+ * >> void    PUSH(Object obj);
+ * >> Object  POP();
+ * >> Tuple   POP(Integer num_items);
+ * >> Object &NTH(Integer nth_item);
+ * >> Object &EXTERN(Integer module_index, Integer symbol_index);
+ * >> Object &GLOBAL(Integer symbol_index);
+ * >> Object &LOCAL(Integer local_index);
+ * >> Object &STATIC(Integer static_index);
+ * >> Object  CONSTANT(Integer static_index); // Constant and static symbols use the same indices
+ * >> Object  MODULE(Integer module_index);
+ * >> Object  REF(Integer reference_index);
+ * >> Object  ARG(Integer argument_index);
+ * >> Object &TOP    = NTH(0);
+ * >> Object &FIRST  = NTH(0);
+ * >> Object &SECOND = NTH(1);
+ * >> Object &THIRD  = NTH(2);
+ * >> Object &FOURTH = NTH(3);
  * >> // When `handle_interrupt' is FALSE, `@[interrupt]'
  * >> // exceptions are re-scheduled as pending interrupts
  * >> void    POP_EXCEPT(bool handle_interrupt);
  * >> void    PRINT_EXCEPT(string reason);
- * >> // Check if a given object @ob is bound.
- * >> bool    IS_BOUND(object ob);
- * >> void    UNBIND(object obj);
+ * >> // Check if a given Object @ob is bound.
+ * >> bool    IS_BOUND(Object &obj);
+ * >> void    UNBIND(Object &obj);
  * >> // Propagate active exceptions to the caller after ensuring that no
  * >> // more than a single exception has been set since `REG_EXCEPTION_START'
  * >> NORETURN void PROPAGATE_EXCEPTIONS_TO_CALLER();
@@ -206,7 +206,7 @@
                                     * >>     REG_RESULT          = none;
                                     * >> FI
                                     * >> GOTO RETURN; */
-#define ASM_RET               0x01 /* [1][-1,+0]   `ret pop'                            - Return an object to the caller. This instruction does not return.
+#define ASM_RET               0x01 /* [1][-1,+0]   `ret pop'                            - Return an Object to the caller. This instruction does not return.
                                     * [1][-0,+0]   `ret PREFIX'                         - `PREFIX: ret'
                                     * >> IF IS_BOUND(REG_RESULT) THEN
                                     * >>     REG_RESULT = UNBOUND;
@@ -217,11 +217,11 @@
                                     * >> ELSE
                                     * >>     GOTO RETURN;
                                     * >> FI */
-#define ASM_YIELD             0x01 /* [1][-1,+0]   `yield pop'                          - Pop one object and yield it to the caller.
+#define ASM_YIELD             0x01 /* [1][-1,+0]   `yield pop'                          - Pop one Object and yield it to the caller.
                                     * [1][-0,+0]   `yield PREFIX'                       - `PREFIX: yield'
                                     *                                                     This instruction may not return, and if it does, it doesn't immediately.
                                     *                                                     NOTE: Same opcode as `ASM_RET_POP'. - Behavior is selected by `CODE_FYIELDING' */
-#define ASM_YIELDALL          0x02 /* [1][-1,+0]   `yield foreach, pop'                 - Pop one object and iterate it, yielding all contained objects, one at a time.
+#define ASM_YIELDALL          0x02 /* [1][-1,+0]   `yield foreach, pop'                 - Pop one Object and iterate it, yielding all contained objects, one at a time.
                                     * [1][-0,+0]   `yield foreach, PREFIX'              - `PREFIX: yield foreach'
                                     *                                                     NOTE: Only available in code of yield functions.
                                     *                                                     HINT: During execution, this opcode will replace stack-top with its own iterator and
@@ -242,7 +242,7 @@
                                     * >> DONE
                                     * >> REG_PC = REG_START_PC;
                                     * >> GOTO RETURN_WITHOUT_FINALLY; */
-#define ASM_THROW             0x03 /* [1][-1,+0]   `throw pop'                          - Pop one object and throw it as an exception. This instruction does not return.
+#define ASM_THROW             0x03 /* [1][-1,+0]   `throw pop'                          - Pop one Object and throw it as an exception. This instruction does not return.
                                     * [1][-0,+0]   `throw PREFIX'                       - `PREFIX: throw'
                                     * >> THROW(POP());
                                     * >> EXCEPT();
@@ -293,17 +293,17 @@
                                     * >> PUSH(bool(IS_BOUND(LOCAL(IMM8)))); */
 
 /* Control-flow-related instructions. */
-#define ASM_JF                0x10 /* [2][-1,+0]   `jf pop, <Sdisp8>'                   - Pop one object. If it evaluates to `false', add `<Sdisp8>' to the `REG_PC' of the next instruction.
+#define ASM_JF                0x10 /* [2][-1,+0]   `jf pop, <Sdisp8>'                   - Pop one Object. If it evaluates to `false', add `<Sdisp8>' to the `REG_PC' of the next instruction.
                                     * [2][-0,+0]   `jf PREFIX, <Sdisp8>'                - `PREFIX: jf <Sdisp8>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator. */
-#define ASM_JF16              0x11 /* [3][-1,+0]   `jf pop, <Sdisp16>'                  - Pop one object. If it evaluates to `false', add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
+#define ASM_JF16              0x11 /* [3][-1,+0]   `jf pop, <Sdisp16>'                  - Pop one Object. If it evaluates to `false', add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
                                     * [3][-0,+0]   `jf PREFIX, <Sdisp16>'               - `PREFIX: jf <Sdisp16>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator.
                                     * >> IF !POP() THEN REG_PC += SDISP16; FI */
-#define ASM_JT                0x12 /* [2][-1,+0]   `jt pop, <Sdisp8>'                   - Pop one object. If it evaluates to `true', add `<Sdisp8>' to the `REG_PC' of the next instruction.
+#define ASM_JT                0x12 /* [2][-1,+0]   `jt pop, <Sdisp8>'                   - Pop one Object. If it evaluates to `true', add `<Sdisp8>' to the `REG_PC' of the next instruction.
                                     * [2][-0,+0]   `jt PREFIX, <Sdisp8>'                - `PREFIX: jt <Sdisp8>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator. */
-#define ASM_JT16              0x13 /* [3][-1,+0]   `jt pop, <Sdisp16>'                  - Pop one object. If it evaluates to `true', add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
+#define ASM_JT16              0x13 /* [3][-1,+0]   `jt pop, <Sdisp16>'                  - Pop one Object. If it evaluates to `true', add `<Sdisp16>' (little endian) to the `REG_PC' of the next instruction.
                                     * [3][-0,+0]   `jt PREFIX, <Sdisp16>'               - `PREFIX: jt <Sdisp16>'
                                     * NOTE: This instruction unconditionally invokes the `bool' operator.
                                     * >> IF POP() THEN REG_PC += SDISP16; FI */
@@ -314,7 +314,7 @@
                                     * [2][-0,+1|0] `foreach PREFIX, <Sdisp8>'           - `PREFIX: foreach <Sdisp8>' */
 #define ASM_FOREACH16         0x17 /* [3][-1,+2|0] `foreach top, <Sdisp16>'             - Invoke the __iternext__ operator on stack-top, popping the iterator and performing a `jmp' using <Sdisp16> when it is empty, or leaving the iterator and pushing the loaded value onto the stack otherwise.
                                     * [3][-0,+1|0] `foreach PREFIX, <Sdisp16>'          - `PREFIX: foreach <Sdisp16>' 
-                                    * >> object ob = TOP.operator next();
+                                    * >> ob: Object = TOP.operator next();
                                     * >> IF IS_BOUND(ob) THEN
                                     * >>     PUSH(ob);
                                     * >> ELSE
@@ -331,39 +331,39 @@
 #define ASM_OPERATOR          0x19 /* [3][-1-n,+1] `op top, $<imm8>, #<imm8>'           - Invoke an operator `$<imm8>' on `top' after popping `#<imm8>' values used as arguments.
                                     * [3][-n,+1]   `PREFIX: push op $<imm8>, #<imm8>'
                                     * >> int id = IMM8;
-                                    * >> object args = POP(IMM8);
+                                    * >> Object args = POP(IMM8);
                                     * >> IF CURRENT_INSTRUCTION_HAS_PREFIX THEN
-                                    * >>     object obj = GET_PREFIX_OBJECT();
+                                    * >>     Object obj = GET_PREFIX_OBJECT();
                                     * >>     obj = INVOKE_OPERATOR(id,obj,args...);
                                     * >>     SET_PREFIX_OBJECT(obj);
                                     * >> ELSE
-                                    * >>     object obj = POP();
+                                    * >>     Object obj = POP();
                                     * >>     PUSH(INVOKE_OPERATOR(id,obj,args...));
                                     * >> FI */
-#define ASM_OPERATOR_TUPLE    0x1a /* [2][-2,+1]   `op top, $<imm8>, pop...'            - Similar to `ASM_CALL_OP', but directly pop the argument tuple.
+#define ASM_OPERATOR_TUPLE    0x1a /* [2][-2,+1]   `op top, $<imm8>, pop...'            - Similar to `ASM_CALL_OP', but directly pop the argument Tuple.
                                     * [2][-1,+1]   `PREFIX: push op $<imm8>, pop...'
-                                    * >> object args = POP();
-                                    * >> IF args !is tuple THEN
+                                    * >> Object args = POP();
+                                    * >> IF args !is Tuple THEN
                                     * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.TypeError());
                                     * >>     EXCEPT();
                                     * >> FI
                                     * >> IF CURRENT_INSTRUCTION_HAS_PREFIX THEN
-                                    * >>     object obj = GET_PREFIX_OBJECT();
+                                    * >>     Object obj = GET_PREFIX_OBJECT();
                                     * >>     obj = INVOKE_OPERATOR(IMM8,obj,args...);
                                     * >>     SET_PREFIX_OBJECT(obj);
                                     * >> ELSE
-                                    * >>     object obj = POP();
+                                    * >>     Object obj = POP();
                                     * >>     PUSH(INVOKE_OPERATOR(IMM8,obj,args...));
                                     * >> FI */
-#define ASM_CALL              0x1b /* [2][-1-n,+1] `call top, #<imm8>'                  - Pop <imm8> values and pack then into a tuple then used to call a function popped thereafter. - Push the result onto the stack.
-                                    * >> object args = POP(IMM8);
-                                    * >> object func = POP();
+#define ASM_CALL              0x1b /* [2][-1-n,+1] `call top, #<imm8>'                  - Pop <imm8> values and pack then into a Tuple then used to call a function popped thereafter. - Push the result onto the stack.
+                                    * >> Object args = POP(IMM8);
+                                    * >> Object func = POP();
                                     * >> PUSH(func(args...));
                                     */
-#define ASM_CALL_TUPLE        0x1c /* [1][-2,+1]   `call top, pop...'                   - Similar to `ASM_CALL', but call the function using a tuple found in stack-top. NOTE: Undefined behavior ensues if something other than a tuple is found.
-                                    * >> object args = POP();
-                                    * >> object func = POP();
-                                    * >> IF args !is tuple THEN
+#define ASM_CALL_TUPLE        0x1c /* [1][-2,+1]   `call top, pop...'                   - Similar to `ASM_CALL', but call the function using a Tuple found in stack-top. NOTE: Undefined behavior ensues if something other than a Tuple is found.
+                                    * >> Object args = POP();
+                                    * >> Object func = POP();
+                                    * >> IF args !is Tuple THEN
                                     * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.TypeError());
                                     * >>     EXCEPT();
                                     * >> FI
@@ -378,7 +378,7 @@
 /* Stack control instructions. */
 #define ASM_SWAP              0x20 /* [1][-2,+2]   `swap'                               - Swap the 2 top-most stack entries.
                                     * [1][-1,+1]   `swap top, PREFIX', `swap PREFIX, top' - `PREFIX: swap top'
-                                    * >> object ob = TOP;
+                                    * >> ob: Object = TOP;
                                     * >> TOP = SECOND;
                                     * >> SECOND = ob; */
 #define ASM_LROT              0x21 /* [2][-n,+n]   `lrot #<imm8>+3'                     - Rotate the top <imm8>+3 stack objects left by one; away from SP.
@@ -402,7 +402,7 @@
                                     * [2][-n,+n]   `rrot #<imm8>+2, PREFIX'             - `PREFIX: rrot #<imm8>+3'
                                     * NOTE: `rrot #2' should be encoded as `swap', `rrot #1' should be discarded, `rrot #0' is illegal.
                                     * HINT: The operand details the number of affected stack slots. */
-#define ASM_DUP               0x23 /* [1][-1,+2]   `dup', `dup #SP - 1', `push top'     - Duplicate the top-most stack object.
+#define ASM_DUP               0x23 /* [1][-1,+2]   `dup', `dup #SP - 1', `push top'     - Duplicate the top-most stack Object.
                                     *              `mov PREFIX, top', `mov PREFIX, #SP - 1'
                                     * >> TARGET = TOP; */
 #define ASM_DUP_N             0x24 /* [2][-n,+n+1] `dup #SP - <imm8> - 2', `push #SP - <imm8> - 2' - Push the <imm8>+2'th stack entry (before adjustment).
@@ -422,7 +422,7 @@
                                     * >> POP(); */
 #define ASM_POP_N             0x26 /* [2][-n-1,+n] `pop #SP - <imm8> - 2',              - Pop one stack and overwrite the `#<imm8>+1'th stack entry (before adjustment) with the value.
                                     * [2][-0,+0]   `mov #SP - <imm8> - 2, PREFIX'       - `PREFIX: pop #SP - <imm8> - 2'
-                                    * >> object &dst = NTH(IMM8 + 2);
+                                    * >> Object &dst = NTH(IMM8 + 2);
                                     * >> dst = POP(); */
 #define ASM_ADJSTACK          0x27 /* [2][-?,+?]   `adjstack #SP +/- <Simm8>'           - Adjust the stack-pointer by adding <Simm8> to it, popping values when negative, or pushing `none' when positive.
                                     *                                                     NOTE: The user-code assembler, always knowing the proper stack-depth,
@@ -445,10 +445,10 @@
                                     * >>     offset = offset + 1;
                                     * >> DONE
                                     */
-#define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `pop' and the associated object from `top'.
-                                    * >> object ob = POP();
+#define ASM_SUPER             0x28 /* [1][-2,+1]   `super top, pop'                     - Create a new super-wrapper using a type from `pop' and the associated Object from `top'.
+                                    * >> ob: Object = POP();
                                     * >> PUSH(POP() as ob); */
-#define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as object.
+#define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as Object.
                                     * >> PUSH(THIS as REF(IMM8)); */
 /*      ASM_                  0x2a  *               --------                            - ------------------ */
 /*      ASM_                  0x2b  *               --------                            - ------------------ */
@@ -515,21 +515,21 @@
                                     * >> DESTINATION = LOCAL(IMM8); */
 
 /* Sequence control instructions. */
-#define ASM_CAST_TUPLE        0x40 /* [1][-1,+1]   `cast top, tuple'                    - Convert a sequence in stack-top into a tuple.
-                                    * >> PUSH(tuple(POP())); */
-#define ASM_CAST_LIST         0x41 /* [1][-1,+1]   `cast top, list'                     - Convert a sequence in stack-top into a list.
-                                    * >> PUSH(list(POP())); */
-#define ASM_PACK_TUPLE        0x42 /* [2][-n,+1]   `push pack tuple, #<imm8>'           - Pop <imm8> elements and pack them into a tuple.
-                                    * >> PUSH(tuple(POP(IMM8))); */
-#define ASM_PACK_LIST         0x43 /* [2][-n,+1]   `push pack list, #<imm8>'            - Pop <imm8> elements and pack them into a list.
-                                    * >> PUSH(list(POP(IMM8))); */
+#define ASM_CAST_TUPLE        0x40 /* [1][-1,+1]   `cast top, Tuple'                    - Convert a sequence in stack-top into a Tuple.
+                                    * >> PUSH(Tuple(POP())); */
+#define ASM_CAST_LIST         0x41 /* [1][-1,+1]   `cast top, List'                     - Convert a sequence in stack-top into a List.
+                                    * >> PUSH(List(POP())); */
+#define ASM_PACK_TUPLE        0x42 /* [2][-n,+1]   `push pack Tuple, #<imm8>'           - Pop <imm8> elements and pack them into a Tuple.
+                                    * >> PUSH(Tuple(POP(IMM8))); */
+#define ASM_PACK_LIST         0x43 /* [2][-n,+1]   `push pack List, #<imm8>'            - Pop <imm8> elements and pack them into a List.
+                                    * >> PUSH(List(POP(IMM8))); */
 /*      ASM_                  0x44  *               --------                            - ------------------ */
 /*      ASM_                  0x45  *               --------                            - ------------------ */
 #define ASM_UNPACK            0x46 /* [2][-1,+n]   `unpack pop, #<imm8>'                - Pop a sequence and unpack it into <imm8> elements then pushed onto the stack.
                                     *              `unpack PREFIX, #<imm8>', `PREFIX: unpack #<imm8>'
                                     * >> int n = IMM8;
-                                    * >> object seq = SOURCE;
-                                    * >> FOR object item IN seq DO
+                                    * >> Object seq = SOURCE;
+                                    * >> FOR Object item IN seq DO
                                     * >>     IF N == 0 THEN
                                     * >>         THROW(Error.ValueError.UnpackError());
                                     * >>         EXCEPT();
@@ -544,16 +544,16 @@
                                     */
 #define ASM_CONCAT            0x47 /* [1][-2,+1]   `concat top, pop'                    - Concat a generic sequence in stack-top with a sequence below that, replacing it with the result (The original left sequence is not modified!).
                                     * >> PUSH(POP() + POP());  // For sequences (Same as ASM_ADD, but the left-sequence (top) may be modified in-place) */
-#define ASM_EXTEND            0x48 /* [2][-n-1,+1] `extend top, #<imm8>'                - Same as `pack tuple, #<imm8>; concat top, pop;'.
+#define ASM_EXTEND            0x48 /* [2][-n-1,+1] `extend top, #<imm8>'                - Same as `pack Tuple, #<imm8>; concat top, pop;'.
                                     * >> TOP.extend(POP(IMM8)); */
 #define ASM_TYPEOF            0x49 /* [1][-1,+1]   `typeof top'                         - Replace the top stack-entry with its own class.
                                     * >> PUSH(type POP()); */
 #define ASM_CLASSOF           0x4a /* [1][-1,+1]   `classof top'                        - Replace the top stack-entry with its own type.
                                     * >> PUSH(POP().class); */
-#define ASM_SUPEROF           0x4b /* [1][-1,+1]   `superof top'                        - Replace the top stack-entry with a wrapper for the associated super-object.
+#define ASM_SUPEROF           0x4b /* [1][-1,+1]   `superof top'                        - Replace the top stack-entry with a wrapper for the associated super-Object.
                                     * >> PUSH(POP().super); */
-#define ASM_INSTANCEOF        0x4c /* [1][-2,+1]   `instanceof top, pop'                - Pop one object (type), then another (object) and check if `object' is an instance of `type', pushing `true' or `false' indicative of this.
-                                    * >> object tp = POP();
+#define ASM_INSTANCEOF        0x4c /* [1][-2,+1]   `instanceof top, pop'                - Pop one Object (type), then another (Object) and check if `Object' is an instance of `type', pushing `true' or `false' indicative of this.
+                                    * >> Object tp = POP();
                                     * >> IF tp === none THEN
                                     * >>     PUSH(POP() === none);
                                     * >> ELSE
@@ -577,13 +577,13 @@
                                     * >> PUSH(copy POP()); */
 #define ASM_DEEPCOPY          0x55 /* [1][-1,+1]   `deepcopy top'                       - Replace stack-top with a deep-copy of itself.
                                     * >> PUSH(deepcopy POP()); */
-#define ASM_GETATTR           0x56 /* [1][-2,+1]   `getattr top, pop'                   - Pop a string, then use it to lookup an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string.
+#define ASM_GETATTR           0x56 /* [1][-2,+1]   `getattr top, pop'                   - Pop a string, then use it to lookup an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
                                     * >> PUSH(POP().operator . (POP())); */
-#define ASM_DELATTR           0x57 /* [1][-2,+0]   `delattr pop, pop'                   - Pop a string, then use it to delete an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string.
+#define ASM_DELATTR           0x57 /* [1][-2,+0]   `delattr pop, pop'                   - Pop a string, then use it to delete an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
                                     * >> POP().operator del. (POP()); */
-#define ASM_SETATTR           0x58 /* [1][-3,+0]   `setattr pop, pop, pop'              - Pop a value and a string then use them to set an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string.
+#define ASM_SETATTR           0x58 /* [1][-3,+0]   `setattr pop, pop, pop'              - Pop a value and a string then use them to set an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
                                     * >> POP().operator . (POP(),POP()); */
-#define ASM_BOUNDATTR         0x59 /* [1][-2,+1]   `boundattr top, pop'                 - Pop a string, then use it to check if an attribute is bound in stack-top. @throws: Error.TypeError: The attribute object isn't a string.
+#define ASM_BOUNDATTR         0x59 /* [1][-2,+1]   `boundattr top, pop'                 - Pop a string, then use it to check if an attribute is bound in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
                                     * >> PUSH(bound(POP().operator . (POP())); */
 #define ASM_GETATTR_C         0x5a /* [2][-1,+1]   `getattr top, const <imm8>'          - Perform a fast attribute lookup on stack-top using a string in constant slot `<imm8>'.
                                     * >> PUSH(POP().operator . (CONST(IMM8))); */
@@ -619,17 +619,17 @@
 #define ASM_CALLCMEMBER_THIS_R 0x6b/* [4][-n,+1]   `push callcmember this, ref <imm8>, $<imm8>, #<imm8>'- Lookup a class member of `ref <imm8>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0x6c  *               --------                            - ------------------ */
 /*      ASM_                  0x6d  *               --------                            - ------------------ */
-#define ASM_FUNCTION_C        0x6e /* [3][-n,+1]   `push function const <imm8>, #<imm8>+1' - Create a new function object, using constant slot <imm8> as code and popping $<imm8>+1 objects for use by references.
+#define ASM_FUNCTION_C        0x6e /* [3][-n,+1]   `push function const <imm8>, #<imm8>+1' - Create a new function Object, using constant slot <imm8> as code and popping $<imm8>+1 objects for use by references.
                                     * [3][-n,+0]   `PREFIX: function const <imm8>, #<imm8>+1' */
-#define ASM_FUNCTION_C_16     0x6f /* [4][-n,+1]   `push function const <imm8>, #<imm16>+1' - Create a new function object, using constant slot <imm8> as code and popping $<imm16>+1 objects for use by references.
+#define ASM_FUNCTION_C_16     0x6f /* [4][-n,+1]   `push function const <imm8>, #<imm16>+1' - Create a new function Object, using constant slot <imm8> as code and popping $<imm16>+1 objects for use by references.
                                     * [4][-n,+0]   `PREFIX: function const <imm8>, #<imm16>+1' */
 
 /* Arithmetic instructions (NOTE: May be prefixed to perform an inplace operation). */
 #define ASM_CAST_INT          0x70 /* [1][-1,+1]   `cast top, int'                      - Convert the top-most stack entry into an integer. */
-#define ASM_INV               0x71 /* [1][-1,+1]   `inv top'                            - Apply the __inv__ operator to the top-most stack object. */
-#define ASM_POS               0x72 /* [1][-1,+1]   `pos top'                            - Apply the __pos__ operator to the top-most stack object. */
-#define ASM_NEG               0x73 /* [1][-1,+1]   `neg top'                            - Apply the __neg__ operator to the top-most stack object. */
-#define ASM_ADD               0x74 /* [1][-2,+1]   `add top, pop'                       - Apply the __add__ operator to the top-most stack object.
+#define ASM_INV               0x71 /* [1][-1,+1]   `inv top'                            - Apply the __inv__ operator to the top-most stack Object. */
+#define ASM_POS               0x72 /* [1][-1,+1]   `pos top'                            - Apply the __pos__ operator to the top-most stack Object. */
+#define ASM_NEG               0x73 /* [1][-1,+1]   `neg top'                            - Apply the __neg__ operator to the top-most stack Object. */
+#define ASM_ADD               0x74 /* [1][-2,+1]   `add top, pop'                       - Apply the __add__ operator to the top-most stack Object.
                                     * [1][-1,+0]   `add PREFIX, pop' - `PREFIX: add pop'- Perform an inplace __add__ operation on `prefix', using `pop' as second operand. */
 #define ASM_SUB               0x75 /* [1][-2,+1]   `sub top, pop'                       - Apply the __sub__ operator to the two top-most objects on the stack.
                                     * [1][-1,+0]   `sub PREFIX, pop' - `PREFIX: sub pop'- Perform an inplace __sub__ operation on `prefix', using `pop' as second operand. */
@@ -679,7 +679,7 @@
                                     * [5][-0,+0]   `or PREFIX, $<imm32>'                - `PREFIX: or $<Simm8>' */
 #define ASM_XOR_IMM32         0x8c /* [5][-1,+1]   `xor top, $<imm32>'                  - Same as `ASM_XOR', but use <imm32> as second operand.
                                     * [5][-0,+0]   `xor PREFIX, $<imm32>'               - `PREFIX: xor $<Simm8>' */
-#define ASM_ISNONE            0x8d /* [1][-1,+1]   `instanceof top, none'               - Check if `top' is the `none' object and push true/false indicative of this. */
+#define ASM_ISNONE            0x8d /* [1][-1,+1]   `instanceof top, none'               - Check if `top' is the `none' Object and push true/false indicative of this. */
 /*      ASM_                  0x8e  *               --------                            - ------------------ */
 #define ASM_DELOP             0x8f /* [1][-0,+0]    --------                            - Same as `nop', but without an assigned mnemonic.
                                     *                                                     This instruction is meant for the compiler to be used
@@ -694,19 +694,19 @@
                                     * HINT: This instruction can be used with the 0F, as well as any storage prefix. */
 
 /* Print instructions. */
-#define ASM_PRINT             0x91 /* [1][-1,+0]   `print pop'                          - Pop one object and print it to stdout. */
+#define ASM_PRINT             0x91 /* [1][-1,+0]   `print pop'                          - Pop one Object and print it to stdout. */
 #define ASM_PRINT_SP          0x92 /* [1][-1,+0]   `print pop, sp'                      - Same as `ASM_PRINT', but follow up by printing a space character. */
 #define ASM_PRINT_NL          0x93 /* [1][-1,+0]   `print pop, nl'                      - Same as `ASM_PRINT', but follow up by printing a new-line character. */
 #define ASM_PRINTNL           0x94 /* [1][-0,+0]   `print nl'                           - Print a new-line character to stdout. */
-#define ASM_PRINTALL          0x95 /* [1][-1,+0]   `print pop...'                       - Pop one object and iterate it as a sequence, printing all elements separated by space characters to stdout. */
+#define ASM_PRINTALL          0x95 /* [1][-1,+0]   `print pop...'                       - Pop one Object and iterate it as a sequence, printing all elements separated by space characters to stdout. */
 #define ASM_PRINTALL_SP       0x96 /* [1][-1,+0]   `print pop..., sp'                   - Same as `ASM_PRINTALL', but follow up by printing a space character. */
 #define ASM_PRINTALL_NL       0x97 /* [1][-1,+0]   `print pop..., nl'                   - Same as `ASM_PRINTALL', but follow up by printing a new-line character. */
 /*      ASM_                  0x98  *               --------                            - ------------------ */
-#define ASM_FPRINT            0x99 /* [1][-2,+1]   `print top, pop'                     - Pop one object and print it to a file in stack-top. */
+#define ASM_FPRINT            0x99 /* [1][-2,+1]   `print top, pop'                     - Pop one Object and print it to a file in stack-top. */
 #define ASM_FPRINT_SP         0x9a /* [1][-2,+1]   `print top, pop, sp'                 - Same as `ASM_FPRINT', but follow up by printing a space character. */
 #define ASM_FPRINT_NL         0x9b /* [1][-2,+1]   `print top, pop, nl'                 - Same as `ASM_FPRINT', but follow up by printing a new-line character. */
 #define ASM_FPRINTNL          0x9c /* [1][-1,+1]   `print top, nl'                      - Print a new-line character to a file in stack-top. */
-#define ASM_FPRINTALL         0x9d /* [1][-2,+1]   `print top, pop...'                  - Pop one object and iterate it as a sequence, printing all elements separated by space characters a file in stack-top. */
+#define ASM_FPRINTALL         0x9d /* [1][-2,+1]   `print top, pop...'                  - Pop one Object and iterate it as a sequence, printing all elements separated by space characters a file in stack-top. */
 #define ASM_FPRINTALL_SP      0x9e /* [1][-2,+1]   `print top, pop..., sp'              - Same as `ASM_FPRINTALL', but follow up by printing a space character. */
 #define ASM_FPRINTALL_NL      0x9f /* [1][-2,+1]   `print top, pop..., nl'              - Same as `ASM_FPRINTALL', but follow up by printing a new-line character. */
 /*      ASM_                  0xa0  *               --------                            - ------------------ */
@@ -716,7 +716,7 @@
 #define ASM_RANGE_0_I16       0xa4 /* [3][-0,+1]   `push range $0, $<imm16>'            - Create a new range from using `int(0)' as `begin' and `int(<imm16>)' as `end'. */
 /*      ASM_                  0xa5  *               --------                            - ------------------ */
 #define ASM_ENTER             0xa6 /* [1][-1,+1]   `enter top'                          - Invoke `operator enter()' on `top', but don't pop or replace it with another value. */
-#define ASM_LEAVE             0xa7 /* [1][-1,+0]   `leave pop'                          - Pop one object and invoke `operator leave()' on it. */
+#define ASM_LEAVE             0xa7 /* [1][-1,+0]   `leave pop'                          - Pop one Object and invoke `operator leave()' on it. */
 /*      ASM_                  0xa8  *               --------                            - ------------------ */
 #define ASM_FPRINT_C          0xa9 /* [2][-1,+1]   `print top, const <imm8>'            - Print a constant from `<imm8>' to a file in stack-top. */
 #define ASM_FPRINT_C_SP       0xaa /* [2][-1,+1]   `print top, const <imm8>, sp'        - Same as `ASM_FPRINT_C', but follow up by printing a space character. */
@@ -727,8 +727,8 @@
 #define ASM_RANGE_STEP_DEF    0xaf /* [1][-2,+1]   `push range default, pop, pop'       - Create a new range from using `type(end)()' as `begin', `top' as `end' and `pop' (second) as step. */
 
 /* Sequence operators. */
-#define ASM_CONTAINS          0xb0 /* [1][-2,+1]   `contains top, pop'                  - Pop an object and invoke the __contains__ operator on stack-top. */
-#define ASM_CONTAINS_C        0xb1 /* [2][-1,+1]   `push contains const <imm8>, pop'    - Pop an object and check if it is contained within a sequence found int the given constant (which is usually a read-only hashset). */
+#define ASM_CONTAINS          0xb0 /* [1][-2,+1]   `contains top, pop'                  - Pop an Object and invoke the __contains__ operator on stack-top. */
+#define ASM_CONTAINS_C        0xb1 /* [2][-1,+1]   `push contains const <imm8>, pop'    - Pop an Object and check if it is contained within a sequence found int the given constant (which is usually a read-only HashSet). */
 #define ASM_GETITEM           0xb2 /* [1][-2,+1]   `getitem top, pop'                   - Pop a key/index and invoke the __getitem__ operator on stack-top. */
 #define ASM_GETITEM_I         0xb3 /* [3][-1,+1]   `getitem top, $<Simm16>'             - Invoke the __getitem__ operator on stack-top, using an int <Simm16> (little-endian) as index. */
 #define ASM_GETITEM_C         0xb4 /* [2][-1,+1]   `getitem top, const <imm8>'          - Invoke the __getitem__ operator on stack-top, using constant slot `<imm8>' as key. */
@@ -765,12 +765,12 @@
 /* Call attribute. */
 #define ASM_CALLATTR_C_KW     0xce /* [4][-1-n,+1] `callattr top, const <imm8>, #<imm8>, const <imm8>' - Similar to `ASM_CALLATTR_C', but also pass a keywords mapping from `<imm8>' */
 #define ASM_CALLATTR_C_TUPLE_KW 0xcf/*[3][-2,  +1] `callattr top, const <imm8>, pop..., const <imm8>'  - Similar to `ASM_CALLATTR_C_TUPLE', but also pass a keywords mapping from `<imm8>' */
-#define ASM_CALLATTR          0xd0 /* [2][-2-n,+1] `callattr top, pop, #<imm8>'         - Pop #<imm8> arguments into a tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string. */
-#define ASM_CALLATTR_TUPLE    0xd1 /* [1][-3,  +1] `callattr top, pop, pop...'          - Pop a tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute object isn't a string. */
-#define ASM_CALLATTR_C        0xd2 /* [3][-1-n,+1] `callattr top, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
-#define ASM_CALLATTR_C_TUPLE  0xd3 /* [2][-2,  +1] `callattr top, const <imm8>, pop...' - Pop a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
-#define ASM_CALLATTR_THIS_C   0xd4 /* [3][-n,  +1] `push callattr this, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM_CALLATTR_THIS_C_TUPLE 0xd5 /* [2][-1,+1] `push callattr this, const <imm8>, pop...' - Pop a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM_CALLATTR          0xd0 /* [2][-2-n,+1] `callattr top, pop, #<imm8>'         - Pop #<imm8> arguments into a Tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string. */
+#define ASM_CALLATTR_TUPLE    0xd1 /* [1][-3,  +1] `callattr top, pop, pop...'          - Pop a Tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string. */
+#define ASM_CALLATTR_C        0xd2 /* [3][-1-n,+1] `callattr top, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
+#define ASM_CALLATTR_C_TUPLE  0xd3 /* [2][-2,  +1] `callattr top, const <imm8>, pop...' - Pop a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
+#define ASM_CALLATTR_THIS_C   0xd4 /* [3][-n,  +1] `push callattr this, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM_CALLATTR_THIS_C_TUPLE 0xd5 /* [2][-1,+1] `push callattr this, const <imm8>, pop...' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
 #define ASM_CALLATTR_C_SEQ    0xd6 /* [3][-1-n,+1] `callattr top, const <imm8>, [#<imm8>]' - Call an attribute <imm8> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM_CALLATTR_C_MAP    0xd7 /* [3][-1-n,+1] `callattr top, const <imm8>, {#<imm8>*2}' - Call an attribute <imm8> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xd8  *               --------                            - ------------------ */
@@ -778,9 +778,9 @@
 #define ASM_DELMEMBER_THIS_R  0xda /* [3][-0,+0]   `delmember this, ref <imm8>, $<imm8>' - Same as `ASM_DELMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
 #define ASM_SETMEMBER_THIS_R  0xdb /* [3][-1,+0]   `setmember this, ref <imm8>, $<imm8>, pop' - Same as `ASM_SETMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
 #define ASM_BOUNDMEMBER_THIS_R 0xdc/* [3][-0,+1]   `push boundmember this, ref <imm8>, $<imm8>' - Same as `ASM_BOUNDMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
-#define ASM_CALL_EXTERN       0xdd /* [4][-n,+1]   `push call extern <imm8>:<imm8>, #<imm8>' - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call an external function referenced by <imm8>:<imm8> (first). */
-#define ASM_CALL_GLOBAL       0xde /* [3][-n,+1]   `push call global <imm8>, #<imm8>'   - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call a function in global slot <imm8> (first). */
-#define ASM_CALL_LOCAL        0xdf /* [3][-n,+1]   `push call local <imm8>, #<imm8>'    - Pop #<imm8> (second) values from the stack, pack then into a tuple, then call a function in local slot <imm8> (first). */
+#define ASM_CALL_EXTERN       0xdd /* [4][-n,+1]   `push call extern <imm8>:<imm8>, #<imm8>' - Pop #<imm8> (second) values from the stack, pack then into a Tuple, then call an external function referenced by <imm8>:<imm8> (first). */
+#define ASM_CALL_GLOBAL       0xde /* [3][-n,+1]   `push call global <imm8>, #<imm8>'   - Pop #<imm8> (second) values from the stack, pack then into a Tuple, then call a function in global slot <imm8> (first). */
+#define ASM_CALL_LOCAL        0xdf /* [3][-n,+1]   `push call local <imm8>, #<imm8>'    - Pop #<imm8> (second) values from the stack, pack then into a Tuple, then call a function in local slot <imm8> (first). */
 
 
 
@@ -844,7 +844,7 @@
 /*      ASM_                  0xf9  *  --------                            - ------------------ */
 /* XXX: Prefix: ASM_MEMBER `member this, ref <imm8>, <imm8>' - Use a member of `this' */
 /*      ASM_                  0xfa  *  --------                            - ------------------ */
-#define ASM_STACK             0xfb /* `stack #<imm8>'                      - Use an object located on the stack as storage class.
+#define ASM_STACK             0xfb /* `stack #<imm8>'                      - Use an Object located on the stack as storage class.
                                     *                                        The associated operand is an absolute offset from the stack's base. */
 #define ASM_STATIC            0xfc /* `static <imm8>'                      - Same as `ASM_LOCAL', but used to write to static variables. */
 #define ASM_EXTERN            0xfd /* `extern <imm8>:<imm8>'               - Same as `ASM_LOCAL', but used to write to extern variables. */
@@ -977,12 +977,12 @@
 #define ASM16_OPERATOR_TUPLE  0xf01a /* [4][-2,+1]   `op top, $<imm16>, pop'              - Same as `ASM_OPERATOR_TUPLE', but can be used to invoke extended operator codes.
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement range-initializers. */
-#define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific dict-style sequence type as a single argument. Used to implement range-initializers. */
+#define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement range-initializers. */
 #define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of prepending `pop' before `pop...', then using the result as argument list).
-                                      * >> object args    = POP();
-                                      * >> object thisarg = POP();
-                                      * >> object func    = POP();
-                                      * >> IF args !is tuple THEN
+                                      * >> Object args    = POP();
+                                      * >> Object thisarg = POP();
+                                      * >> Object func    = POP();
+                                      * >> IF args !is Tuple THEN
                                       * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.TypeError());
                                       * >>     EXCEPT();
                                       * >> FI
@@ -1003,7 +1003,7 @@
                                       * [4][-n-1,+n+1] `mov #SP - <imm16> - 2, PREFIX'    - `PREFIX: pop #SP - <imm16> - 2' */
 #define ASM16_ADJSTACK        0xf027 /* [4][-?,+?]   `adjstack #SP +/- <Simm16>'          - Same as `ASM_ADJSTACK', but using a 16-bit stack-offset. */
 /*      ASM_                  0xf028  *               --------                            - ------------------ */
-#define ASM16_SUPER_THIS_R    0xf029 /* [4][-0,+1]   `push super this, ref <imm16>'       - Similar to `ASM_SUPER', but use a referenced variable `<imm16>' as type and the this-argument as object. */
+#define ASM16_SUPER_THIS_R    0xf029 /* [4][-0,+1]   `push super this, ref <imm16>'       - Similar to `ASM_SUPER', but use a referenced variable `<imm16>' as type and the this-argument as Object. */
 /*      ASM_                  0xf02a  *               --------                            - ------------------ */
 /*      ASM_                  0xf02b  *               --------                            - ------------------ */
 #define ASM16_POP_STATIC      0xf02c /* [4][-1,+0]   `pop static <imm16>'                 - Pop the top stack value into the static variable indexed by `<imm16>', overwriting the previous value.
@@ -1018,7 +1018,7 @@
 /*      ASM_                  0xf031  *               --------                            - ------------------ */
 /*      ASM_                  0xf032  *               --------                            - ------------------ */
 /*      ASM_                  0xf033  *               --------                            - ------------------ */
-#define ASM_PUSH_EXCEPT       0xf034 /* [2][-0,+1]   `push except'                        - Push the current exception onto the stack. (Used by `catch' statements to access throw's error object)
+#define ASM_PUSH_EXCEPT       0xf034 /* [2][-0,+1]   `push except'                        - Push the current exception onto the stack. (Used by `catch' statements to access throw's error Object)
                                       * [2][-0,+0]   `mov  PREFIX, except'                - `PREFIX: push except' */
 #define ASM_PUSH_THIS         0xf035 /* [2][-0,+1]   `push this'                          - Push the `this' argument onto the stack (Only valid for code with the `CODE_FTHISCALL' flag set)
                                       * [2][-0,+0]   `mov  PREFIX, this'                  - `PREFIX: push this' */
@@ -1042,18 +1042,18 @@
                                       * [4][-0,+0]   `mov  PREFIX, global <imm16>'        - `PREFIX: push global <imm16>' */
 #define ASM16_PUSH_LOCAL      0xf03f /* [4][-0,+1]   `push local <imm16>'                 - Push the local variable indexed by `<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                       * [4][-0,+0]   `mov  PREFIX, local <imm16>'         - `PREFIX: push local <imm16>' */
-#define ASM_CAST_HASHSET      0xf040 /* [2][-1,+1]   `cast top, hashset'                  - Convert a sequence in stack-top into a hashset.
-                                      * >> PUSH(hashset(POP())); */
-#define ASM_CAST_DICT         0xf041 /* [2][-1,+1]   `cast top, dict'                     - Convert a sequence in stack-top into a dict.
-                                      * >> PUSH(dict(POP())); */
-#define ASM16_PACK_TUPLE      0xf042 /* [4][-n,+1]   `push pack tuple, #<imm16>'          - Pop <imm16> elements and pack them into a tuple.
-                                      * >> PUSH(tuple({ POP(IMM16)... })); */
-#define ASM16_PACK_LIST       0xf043 /* [4][-n,+1]   `push pack list, #<imm16>'           - Pop <imm16> elements and pack them into a list.
-                                      * >> PUSH(list({ POP(IMM16)... })); */
+#define ASM_CAST_HASHSET      0xf040 /* [2][-1,+1]   `cast top, HashSet'                  - Convert a sequence in stack-top into a HashSet.
+                                      * >> PUSH(HashSet(POP())); */
+#define ASM_CAST_DICT         0xf041 /* [2][-1,+1]   `cast top, Dict'                     - Convert a sequence in stack-top into a Dict.
+                                      * >> PUSH(Dict(POP())); */
+#define ASM16_PACK_TUPLE      0xf042 /* [4][-n,+1]   `push pack Tuple, #<imm16>'          - Pop <imm16> elements and pack them into a Tuple.
+                                      * >> PUSH(Tuple({ POP(IMM16)... })); */
+#define ASM16_PACK_LIST       0xf043 /* [4][-n,+1]   `push pack List, #<imm16>'           - Pop <imm16> elements and pack them into a List.
+                                      * >> PUSH(List({ POP(IMM16)... })); */
 /*      ASM_                  0xf044  *               --------                            - ------------------ */
 /*      ASM_                  0xf045  *               --------                            - ------------------ */
 #define ASM16_UNPACK          0xf046 /* [4][-1,+n]   `unpack pop, #<imm16>'                 - Pop a sequence and unpack it into <imm16> elements then pushed onto the stack.
-                                      * >> PUSH(tuple.unpack(POP(),IMM16)...); */
+                                      * >> PUSH(Tuple.unpack(POP(),IMM16)...); */
 /*      ASM_                  0xf047  *               --------                            - ------------------ */
 /*      ASM_                  0xf048  *               --------                            - ------------------ */
 /*      ASM_                  0xf049  *               --------                            - ------------------ */
@@ -1069,10 +1069,10 @@
 #define ASM_PUSH_FALSE        0xf051 /* [2][-0,+1]   `push false'                         - The the builtin `false' singleton onto the stack.
                                       * [4][-0,+0]   `mov  PREFIX, false'                 - `PREFIX: push false'
                                       * >> DESTINATION = false; */
-#define ASM_PACK_HASHSET      0xf052 /* [3][-n,+1]   `push pack hashset, #<imm8>'         - Pop <imm8> elements and pack them into a hashset.
-                                      * >> PUSH(hashset({ POP(IMM8)... })); */
-#define ASM_PACK_DICT         0xf053 /* [3][-n,+1]   `push pack dict, #<imm8>*2'          - Pop <imm8>*2 elements and pack them into a dict, using every first as key and every second as item.
-                                      * >> PUSH(dict({ POP(IMM8 * 2)... }.segments(2))); */
+#define ASM_PACK_HASHSET      0xf052 /* [3][-n,+1]   `push pack HashSet, #<imm8>'         - Pop <imm8> elements and pack them into a HashSet.
+                                      * >> PUSH(HashSet({ POP(IMM8)... })); */
+#define ASM_PACK_DICT         0xf053 /* [3][-n,+1]   `push pack Dict, #<imm8>*2'          - Pop <imm8>*2 elements and pack them into a Dict, using every first as key and every second as item.
+                                      * >> PUSH(Dict({ POP(IMM8 * 2)... }.segments(2))); */
 /*      ASM_                  0xf054  *               --------                            - ------------------ */
 /*      ASM_                  0xf055  *               --------                            - ------------------ */
 /*      ASM_                  0xf056  *               --------                            - ------------------ */
@@ -1092,14 +1092,14 @@
                                       * >> THIS.operator del. (CONST(IMM16)); */
 #define ASM16_SETATTR_THIS_C  0xf05f /* [4][-1,+0]   `setattr this, const <imm16>, pop'   - Pop a value and set an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
                                       * >> THIS.operator .= (CONST(IMM16),POP()); */
-#define ASM_CMP_SO            0xf060 /* [2][-2,+1]   `cmp so, top, pop'                   - Compare for SameObject and push the result (`object.id(a) == object.id(b)' / `a === b').
+#define ASM_CMP_SO            0xf060 /* [2][-2,+1]   `cmp so, top, pop'                   - Compare for SameObject and push the result (`Object.id(a) == Object.id(b)' / `a === b').
                                       * >> PUSH(POP() === POP()); */
-#define ASM_CMP_DO            0xf061 /* [2][-2,+1]   `cmp do, top, pop'                   - Compare for DifferentObject and push the result (`object.id(a) != object.id(b)' / `a !== b').
+#define ASM_CMP_DO            0xf061 /* [2][-2,+1]   `cmp do, top, pop'                   - Compare for DifferentObject and push the result (`Object.id(a) != Object.id(b)' / `a !== b').
                                       * >> PUSH(POP() !== POP()); */
-#define ASM16_PACK_HASHSET    0xf062 /* [4][-n,+1]   `push pack hashset, #<imm16>'        - Pop <imm16> elements and pack them into a hashset.
-                                      * >> PUSH(hashset({ POP(IMM16)... })); */
-#define ASM16_PACK_DICT       0xf063 /* [4][-n,+1]   `push pack dict, #<imm16>*2'         - Pop <imm16>*2 elements and pack them into a dict, using every first as key and every second as item.
-                                      * >> PUSH(dict({ POP(IMM16 * 2)... }.segments(2))); */
+#define ASM16_PACK_HASHSET    0xf062 /* [4][-n,+1]   `push pack HashSet, #<imm16>'        - Pop <imm16> elements and pack them into a HashSet.
+                                      * >> PUSH(HashSet({ POP(IMM16)... })); */
+#define ASM16_PACK_DICT       0xf063 /* [4][-n,+1]   `push pack Dict, #<imm16>*2'         - Pop <imm16>*2 elements and pack them into a Dict, using every first as key and every second as item.
+                                      * >> PUSH(Dict({ POP(IMM16 * 2)... }.segments(2))); */
 #define ASM16_GETCMEMBER      0xf064 /* [4][-1,+1]   `getcmember top, $<imm16>'           - Lookup a class member of `top', given its index.
                                       * >> PUSH(type.__ctable__(POP())[IMM16]); */
 #define ASM_CLASS             0xf065 /* [2][-2,+1]   `class top, pop'                     - Same as `ASM_CLASS_C', however the class descriptor is popped from the stack.
@@ -1116,9 +1116,9 @@
 #define ASM16_CALLCMEMBER_THIS_R 0xf06b/*[7][-n,+1]  `push callcmember this, ref <imm16>, $<imm16>, #<imm8>'- Lookup a class member of `ref <imm16>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */
 /*      ASM_                  0xf06d  *               --------                            - ------------------ */
-#define ASM16_FUNCTION_C      0xf06e /* [5][-n,+1]   `push function const <imm16>, #<imm8>+1' - Create a new function object, using constant slot <imm16> as code and popping $<imm8>+1 objects for use by references.
+#define ASM16_FUNCTION_C      0xf06e /* [5][-n,+1]   `push function const <imm16>, #<imm8>+1' - Create a new function Object, using constant slot <imm16> as code and popping $<imm8>+1 objects for use by references.
                                       * [5][-n,+0]   `PREFIX: function const <imm16>, #<imm8>+1' */
-#define ASM16_FUNCTION_C_16   0xf06f /* [6][-n,+1]   `push function const <imm16>, #<imm16>+1' - Create a new function object, using constant slot <imm16> as code and popping $<imm16>+1 objects for use by references.
+#define ASM16_FUNCTION_C_16   0xf06f /* [6][-n,+1]   `push function const <imm16>, #<imm16>+1' - Create a new function Object, using constant slot <imm16> as code and popping $<imm16>+1 objects for use by references.
                                       * [6][-n,+0]   `PREFIX: function const <imm16>, #<imm16>+1' */
 #define ASM_SUPERGETATTR_THIS_RC 0xf070/*[4][-0,+1]  `push getattr this, ref <imm8>, const <imm8>' - Perform a super attribute lookup `(this as ref <imm8>).operator . (const <imm8>)'. */
 #define ASM16_SUPERGETATTR_THIS_RC 0xf071/*[6][-0,+1]`push getattr this, ref <imm16>, const <imm16>' - Perform a super attribute lookup `(this as ref <imm16>).operator . (const <imm16>)'. */
@@ -1177,7 +1177,7 @@
 #define ASM16_PRINT_C_NL      0xf0a3 /* [4][-0,+0]   `print const <imm16>, nl'            - Same as `ASM_PRINT_C16', but follow up by printing a new-line character. */
 #define ASM_RANGE_0_I32       0xf0a4 /* [5][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
 /*      ASM_                  0xf0a5  *               --------                            - ------------------ */
-#define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs tuple doesn't need to be pushed. */
+#define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs Tuple doesn't need to be pushed. */
 #define ASM_PUSH_VARKWDS_NE   0xf0a7 /* [2][-0,+1]   `push bool varkwds'                  - Push true/false indicative of variable arguments being present. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set) */
 /*      ASM_                  0xf0a7  *               --------                            - ------------------ */
 /*      ASM_                  0xf0a8  *               --------                            - ------------------ */
@@ -1189,7 +1189,7 @@
 /*      ASM_                  0xf0ae  *               --------                            - ------------------ */
 /*      ASM_                  0xf0af  *               --------                            - ------------------ */
 /*      ASM_                  0xf0b0  *               --------                            - ------------------ */
-#define ASM16_CONTAINS_C      0xf0b1 /* [3][-1,+1]   `push contains const <imm16>, pop'   - Pop an object and check if it is contained within a sequence found int the given constant (which is usually a read-only hashset). */
+#define ASM16_CONTAINS_C      0xf0b1 /* [3][-1,+1]   `push contains const <imm16>, pop'   - Pop an Object and check if it is contained within a sequence found int the given constant (which is usually a read-only HashSet). */
 #define ASM_VARARGS_GETITEM   0xf0b2 /* [2][-1,+1]   `getitem varargs, top'               - Pop an index `i', and use it to look up the i'th variable argument. If the index is negative, throw IntegerOverflow, If it is too large, throw IndexError. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set) */
 #define ASM_VARARGS_GETITEM_I 0xf0b3 /* [3][-0,+1]   `push getitem varargs, $<imm8>'      - Same as `getitem varargs, top', however the index is encoded as an 8-bit, unsigned immediate operand. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set) */
 #define ASM16_GETITEM_C       0xf0b4 /* [4][-1,+1]   `getitem top, const <imm16>'         - Invoke the __getitem__ operator on stack-top, using constant slot `<imm16>' (little-endian) as key. */
@@ -1222,10 +1222,10 @@
 #define ASM16_CALLATTR_C_TUPLE_KW 0xf0cf/*[6][-2,+1] `callattr top, const <imm16>, pop..., const <imm16>'  - Similar to `ASM_CALLATTR_C_TUPLE', but also pass a keywords mapping from `<imm8>' */
 #define ASM_CALLATTR_KWDS     0xf0d0 /* [2][-3-n,+1] `callattr top, pop, #<imm8>, pop'    - Similar to `ASM_CALLATTR_TUPLE_KWDS', but take arguments from the stack */
 #define ASM_CALLATTR_TUPLE_KWDS 0xf0d1 /*[2][-4,+1]  `callattr top, pop, pop..., pop'     - The universal call-attribute-with-keywords instruction that also takes keywords from the stack. */
-#define ASM16_CALLATTR_C      0xf0d2 /* [5][-1-n,+1] `callattr top, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_CALLATTR_C_TUPLE 0xf0d3 /*[4][-2,+1]   `callattr top, const <imm16>, pop'   - Pop a tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_CALLATTR_THIS_C 0xf0d4 /* [5][-n,+1]   `callattr this, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM16_CALLATTR_THIS_C_TUPLE 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM16_CALLATTR_C      0xf0d2 /* [5][-1-n,+1] `callattr top, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
+#define ASM16_CALLATTR_C_TUPLE 0xf0d3 /*[4][-2,+1]   `callattr top, const <imm16>, pop'   - Pop a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
+#define ASM16_CALLATTR_THIS_C 0xf0d4 /* [5][-n,+1]   `callattr this, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM16_CALLATTR_THIS_C_TUPLE 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
 #define ASM16_CALLATTR_C_SEQ  0xf0d6 /* [4][-1-n,+1] `callattr top, const <imm16>, [#<imm8>]' - Call an attribute <imm16> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM16_CALLATTR_C_MAP  0xf0d7 /* [4][-1-n,+1] `callattr top, const <imm16>, {#<imm8>*2}' - Call an attribute <imm16> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xf0d8  *               --------                            - ------------------ */
@@ -1233,9 +1233,9 @@
 #define ASM16_DELMEMBER_THIS_R 0xf0da/* [6][-0,+0]   `delmember this, ref <imm16>, $<imm16>' - Same as `ASM16_DELMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_SETMEMBER_THIS_R 0xf0db/* [6][-1,+0]   `setmember this, ref <imm16>, $<imm16>, pop' - Same as `ASM16_SETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_BOUNDMEMBER_THIS_R 0xf0dc/*[6][-0,+1]  `push boundmember this, ref <imm16>, $<imm16>' - Same as `ASM16_BOUNDMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
-#define ASM16_CALL_EXTERN     0xf0dd /* [7][-n,+1]   `push call extern <imm16>:<imm16>, #<imm8>' - Pop #<imm8> values from the stack, pack then into a tuple, then call an external function referenced by <imm16>:<imm16>. */
-#define ASM16_CALL_GLOBAL     0xf0de /* [5][-n,+1]   `push call global <imm16>, #<imm8>'  - Pop #<imm8> values from the stack, pack then into a tuple, then call a function in global slot <imm16>. */
-#define ASM16_CALL_LOCAL      0xf0df /* [5][-n,+1]   `push call local <imm16>, #<imm8>'   - Pop #<imm8> values from the stack, pack then into a tuple, then call a function in local slot <imm16>. */
+#define ASM16_CALL_EXTERN     0xf0dd /* [7][-n,+1]   `push call extern <imm16>:<imm16>, #<imm8>' - Pop #<imm8> values from the stack, pack then into a Tuple, then call an external function referenced by <imm16>:<imm16>. */
+#define ASM16_CALL_GLOBAL     0xf0de /* [5][-n,+1]   `push call global <imm16>, #<imm8>'  - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in global slot <imm16>. */
+#define ASM16_CALL_LOCAL      0xf0df /* [5][-n,+1]   `push call local <imm16>, #<imm8>'   - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in local slot <imm16>. */
 /*      ASM_                  0xf0f0  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f1  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f2  *               --------                            - ------------------ */
@@ -1247,7 +1247,7 @@
 /*      ASM_                  0xf0f8  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f9  *               --------                            - ------------------ */
 /*      ASM_                  0xf0fa  *               --------                            - ------------------ */
-#define ASM16_STACK           0xf0fb /* `stack #<imm16>'                                  - Use an object located on the stack as storage class.
+#define ASM16_STACK           0xf0fb /* `stack #<imm16>'                                  - Use an Object located on the stack as storage class.
                                       *                                                     The associated operand is an absolute offset from the stack's base. */
 #define ASM16_STATIC          0xf0fc /* `static <imm16>'                                  - Same as `ASM_LOCAL16', but used to write to static variables. */
 #define ASM16_EXTERN          0xf0fd /* `extern <imm16>:<imm16>'                          - Same as `ASM_LOCAL16', but used to write to extern variables. */

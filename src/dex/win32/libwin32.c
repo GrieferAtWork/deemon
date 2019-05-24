@@ -402,8 +402,8 @@ err:
      ); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libwin32_WriteFile_f_impl(HANDLE hFile, DeeObject *__restrict lpBuffer, DeeObject *lpOverlapped);
 PRIVATE DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBWIN32_WRITEFILE_DEF { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?Dbytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N") },
-#define LIBWIN32_WRITEFILE_DEF_DOC(doc) { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?Dbytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N\n" doc) },
+#define LIBWIN32_WRITEFILE_DEF { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N") },
+#define LIBWIN32_WRITEFILE_DEF_DOC(doc) { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_WriteFile,libwin32_WriteFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED 1
@@ -464,8 +464,8 @@ err:
      ); ]]]*/
 FORCELOCAL DREF DeeObject *DCALL libwin32_ReadFile_f_impl(HANDLE hFile, DeeObject *__restrict lpBuffer, DeeObject *lpOverlapped);
 PRIVATE DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-#define LIBWIN32_READFILE_DEF { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?Dbytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N") },
-#define LIBWIN32_READFILE_DEF_DOC(doc) { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?Dbytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N\n" doc) },
+#define LIBWIN32_READFILE_DEF { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N") },
+#define LIBWIN32_READFILE_DEF_DOC(doc) { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?Dint,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?X2?Dint?N\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ReadFile,libwin32_ReadFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED 1

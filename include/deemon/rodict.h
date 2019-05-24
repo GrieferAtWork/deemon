@@ -39,12 +39,12 @@ DECL_BEGIN
 #define RODICT_HASHIT     Dee_RODICT_HASHIT
 #endif /* DEE_SOURCE */
 
-/* A read-only variant of a dict object, who's main purpose is to be used
+/* A read-only variant of a Dict object, who's main purpose is to be used
  * by compiler optimizations in order to optimize generic mapping expressions
  * in various locations, when mapping arguments are constant.
  * As the name implies, this type of mapping is read-only, in a sense being
- * for `dict' what `tuple' is for `list'.
- * The read-only dict type inherits from `mapping', meaning that mapping
+ * for `Dict' what `tuple' is for `list'.
+ * The read-only Dict type inherits from `mapping', meaning that mapping
  * proxy types are automatically provided for by abstract base classes.
  * Secondly, because read-only dicts cannot be modified, this allows them
  * to operate using an inline hash-vector, as well as not requiring the
@@ -53,7 +53,7 @@ DECL_BEGIN
  *        sequence type that is not required to implement the deemon standard
  *        programming interface.
  *        However GriferAtWork's implementation uses it to solve the problem
- *        caused by having dict objects appear as constant variables. */
+ *        caused by having Dict objects appear as constant variables. */
 typedef struct Dee_rodict_object DeeRoDictObject;
 
 struct Dee_rodict_item {
@@ -82,7 +82,7 @@ DFUNDEF DREF DeeObject *DCALL DeeRoDict_FromSequence(DeeObject *__restrict self)
 DFUNDEF DREF DeeObject *DCALL DeeRoDict_FromIterator(DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
 
-/* Internal functions for constructing a read-only dict object. */
+/* Internal functions for constructing a read-only Dict object. */
 DFUNDEF DREF DeeObject *DCALL DeeRoDict_New(void);
 DFUNDEF DREF DeeObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
 DFUNDEF int DCALL DeeRoDict_Insert(DREF DeeObject **__restrict pself, DeeObject *__restrict key, DeeObject *__restrict value);

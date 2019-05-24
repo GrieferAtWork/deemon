@@ -23,8 +23,8 @@ import * from deemon;
 function assert_range(r,e) {
 	assert r == e;
 	assert (!!r) == (!!e), "{!r}, {!r}".format({
-		r as sequence,
-		e as sequence
+		r as Sequence,
+		e as Sequence
 	});
 	local n = #e;
 	assert #r == n;
@@ -34,7 +34,7 @@ function assert_range(r,e) {
 		assert x in r;
 }
 
-class IntWrapper: numeric {
+class IntWrapper: Numeric {
 	public final member i: int = 0;
 	this = default;
 	operator ++ () { return IntWrapper(i + 1); }

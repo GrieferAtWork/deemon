@@ -25,7 +25,7 @@
 #include <deemon/list.h>
 #include <deemon/tuple.h>
 #include <deemon/string.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/cell.h>
 #include <deemon/dict.h>
 #include <deemon/roset.h>

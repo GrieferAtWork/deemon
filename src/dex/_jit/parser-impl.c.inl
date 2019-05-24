@@ -26,7 +26,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>
 #include <deemon/objmethod.h>
-#include <deemon/instancemethod.h>
+#include <deemon/InstanceMethod.h>
 #include <deemon/super.h>
 #include <deemon/dict.h>
 #include <deemon/list.h>
@@ -426,8 +426,8 @@ DEFINE_SECONDARY(CastOperand) {
 
  case '+': /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
  case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
-//case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(cell(castexpr))' */
- case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(list(castexpr))' */
+//case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(Cell(castexpr))' */
+ case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(List(castexpr))' */
 not_a_cast:
   /* Not a cast expression. */
   result = LHS_OR_OK; /* Inherit reference */
@@ -658,7 +658,7 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
   result = CALL_PRIMARYF(Expression,JITLEXER_EVAL_FSECONDARY);
   if (ISERR(result)) goto err;
   if (self->jl_tok == ':') {
-   /* Mapping-like dict expression. */
+   /* Mapping-like Dict expression. */
    result = CALL_SECONDARY(CommaDictOperand,result);
   } else {
    result = CALL_SECONDARY(CommaListOperand,result);

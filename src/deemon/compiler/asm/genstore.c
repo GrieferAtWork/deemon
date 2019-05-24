@@ -1465,13 +1465,13 @@ check_dst_sym_class_hybrid:
  /* TODO: Special handling when the stored value uses the target:
   *  >> local my_list = [10,20,my_list]; // Should create a self-referencing list.
   * ASM:
-  *  >>    pack list 0
+  *  >>    pack List 0
   *  >>    pop  local @my_list
   *  >>    push local @my_list  // May be optimized to a dup
   *  >>    push $10
   *  >>    push $20
   *  >>    push local @my_list
-  *  >>    pack list 3
+  *  >>    pack List 3
   *  >>    move assign top, pop // Move-assign the second list.
   * Essentially, this would look like this:
   *  >> local my_list = [];

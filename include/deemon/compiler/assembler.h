@@ -344,10 +344,10 @@ struct asm_invoke_operand {
 #define OPERAND_CLASS_THIS_FUNCTION    0x0087     /* `this_function' */
 #define OPERAND_CLASS_TRUE             0x0088     /* `true' */
 #define OPERAND_CLASS_FALSE            0x0089     /* `false' */
-#define OPERAND_CLASS_LIST             0x008a     /* `list' */
-#define OPERAND_CLASS_TUPLE            0x008b     /* `tuple' */
-#define OPERAND_CLASS_HASHSET          0x008c     /* `hashset' */
-#define OPERAND_CLASS_DICT             0x008d     /* `dict' */
+#define OPERAND_CLASS_LIST             0x008a     /* `List' */
+#define OPERAND_CLASS_TUPLE            0x008b     /* `Tuple' */
+#define OPERAND_CLASS_HASHSET          0x008c     /* `HashSet' */
+#define OPERAND_CLASS_DICT             0x008d     /* `Dict' */
 #define OPERAND_CLASS_INT              0x008e     /* `int' */
 #define OPERAND_CLASS_BOOL             0x008f     /* `bool' */
 #define OPERAND_CLASS_EQ               0x0090     /* `eq' */

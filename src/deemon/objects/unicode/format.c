@@ -761,7 +761,7 @@ err:
 
 /* Format a given `format' string subject to {}-style formatting rules.
  * NOTE: This is the function called by `.format' for strings.
- * @param: args: A sequence (usually a dict, or a list) used for
+ * @param: args: A sequence (usually a Dict, or a List) used for
  *               providing input values to the format string. */
 INTERN dssize_t DCALL
 DeeString_Format(dformatprinter printer, void *arg,

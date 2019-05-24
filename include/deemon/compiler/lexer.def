@@ -237,7 +237,7 @@ DEF_WARNING(W_EXPECTED_RPAREN_AFTER_PACK,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expecte
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_LPAREN,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after `(', but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_RANGLE_AFTER_LANGLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `>' after `<', but got " TOK_S,TOK_A))
 
-DEF_WARNING(W_DEPRECATED_CELL_SYNTAX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `<...>' for constructing cells is deprecated. Use `(cell from deemon)(...)' instead"))
+DEF_WARNING(W_DEPRECATED_CELL_SYNTAX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `<...>' for constructing cells is deprecated. Use `(Cell from deemon)(...)' instead"))
 DEF_WARNING(W_DEPRECATED_ATTRIBUTE_SYNTAX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `::' to lookup attributes is deprecated. Use `.' instead"))
 DEF_WARNING(W_DEPRECATED_GLOBAL_PREFIX,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Using `::' as global prefix is deprecated. Remove the prefix and rename other variables with the same name, or use `__nth'"))
 DEF_WARNING(W_DEPRECATED_PREFIX_IN_EXPRESSION,(WG_D200,WG_SYNTAX),WSTATE_WARN,WARNF("Lookup modifiers other than `__nth' in expressions are no longer allowed since deemon 200"))
@@ -342,7 +342,7 @@ DEF_WARNING(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL,(WG_SYNTAX),WSTATE_ERROR,WARNF
 DEF_WARNING(W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION,(WG_SYNTAX),WSTATE_ERROR,WARNF("Unexpected token " TOK_S " encountered within declaration expression",TOK_A))
 DEF_WARNING(W_EXPECTED_DOTS_AFTER_SEQUENCE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `...' after sequence declaration, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_SEQUENCE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `}' after sequence declaration, but got " TOK_S,TOK_A))
-DEF_WARNING(W_EXPECTED_RPAREN_AFTER_TUPLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after tuple declaration, but got " TOK_S,TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_TUPLE,(WG_SYNTAX),WSTATE_ERROR,WARNF("Expected `)' after Tuple declaration, but got " TOK_S,TOK_A))
 DEF_WARNING(W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION,(WG_CONST,WG_VALUE),WSTATE_ERROR,WARNF("Expected a constant expression as argument for `type' inside of a declaration expression"))
 #endif
 

@@ -26,7 +26,7 @@
 #include <deemon/objmethod.h>
 #include <deemon/class.h>
 #include <deemon/file.h>
-#include <deemon/instancemethod.h>
+#include <deemon/InstanceMethod.h>
 #include <deemon/arg.h>
 #include <deemon/none.h>
 #include <deemon/string.h>

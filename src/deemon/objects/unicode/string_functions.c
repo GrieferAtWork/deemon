@@ -1980,7 +1980,7 @@ string_bytes(String *__restrict self, size_t argc,
   if unlikely(temp < 0) goto err;
   allow_invalid = !!temp;
  } else {
-  if (DeeArg_Unpack(argc,argv,"|IdIdb:bytes",&start,&end,&allow_invalid))
+  if (DeeArg_Unpack(argc,argv,"|IdIdb:Bytes",&start,&end,&allow_invalid))
       goto err;
  }
  my_bytes = DeeString_AsBytes((DeeObject *)self,allow_invalid);
@@ -8617,7 +8617,7 @@ INTERN struct type_method string_methods[] = {
       TYPE_METHOD_FKWDS },
     { "encode",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_encode,
-      DOC("(codec:?.,errors=!Pstrict)->?X3?Dbytes?.?O\n"
+      DOC("(codec:?.,errors=!Pstrict)->?X3?DBytes?.?O\n"
           "@throw ValueError The given @codec or @errors wasn't recognized\n"
           "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
           "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
@@ -8635,26 +8635,26 @@ INTERN struct type_method string_methods[] = {
               "Validate that all character of @this are apart of the unicode range U+0000 - U+007F\n"
           "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
               "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF\n"
-          "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:bytes|Encode character of @this string as a UTF-8 encoded byte sequence\n"
-          "$\"utf-16\"|$\"utf16\", $\"u16\"|:bytes|Encode 'as a UTF-16 sequence, encoded in host-endian\n"
-          "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:bytes|Encode @this string as a UTF-16 sequence, encoded in little-endian\n"
-          "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:bytes|Encode @this string as a UTF-16 sequence, encoded in big-endian\n"
-          "$\"utf-32\"|$\"utf32\", $\"u32\"|:bytes|Encode @this string as a UTF-32 sequence, encoded in host-endian\n"
-          "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:bytes|Encode @this string as a UTF-32 sequence, encoded in little-endian\n"
-          "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:bytes|Encode @this string as a UTF-32 sequence, encoded in big-endian\n"
+          "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:Bytes|Encode character of @this string as a UTF-8 encoded byte sequence\n"
+          "$\"utf-16\"|$\"utf16\", $\"u16\"|:Bytes|Encode 'as a UTF-16 sequence, encoded in host-endian\n"
+          "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in little-endian\n"
+          "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in big-endian\n"
+          "$\"utf-32\"|$\"utf32\", $\"u32\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in host-endian\n"
+          "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in little-endian\n"
+          "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in big-endian\n"
           "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Encode @this string as a backslash-escaped string. This is similar to #op:repr, however the string is not surrounded by $\"\\\"\"-characters\n"
           "}\n"
           "If the given @codec is not apart of this list, a call is made to :codecs:encode"),
       TYPE_METHOD_FKWDS },
-    { DeeString_STR(&str_bytes),
+    { "bytes",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_bytes,
-      DOC("(allow_invalid=!f)->?Dbytes\n"
-          "(start:?Dint,end:?Dint,allow_invalid=!f)->?Dbytes\n"
+      DOC("(allow_invalid=!f)->?DBytes\n"
+          "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
           "@throw ValueError @allow_invalid is :false, and @this string contains characters above $0xff\n"
           "Returns a read-only bytes representation of the characters within ${this.substr(start,end)}, "
           "using a single byte per character. A character greater than $0xff either causes : ValueError "
           "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
-          "$\"?\" in the returned bytes object") },
+          "$\"?\" in the returned Bytes object") },
     { "ord",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&string_ord,
       DOC("->?Dint\n"
@@ -8707,11 +8707,11 @@ INTERN struct type_method string_methods[] = {
           "If a spec portion is not present, ${str selected_object} is simply appended "
           "to the resulting string. Otherwise, ${selected_object.__format__(spec_string)} "
           "is invoked, and the resulting object is appended instead\n"
-          "For this purpose, :object implements a function :object.__format__ that provides "
-          "some basic spec options, which are also used for types not derived from :object, "
+          "For this purpose, :Object implements a function :object.__format__ that provides "
+          "some basic spec options, which are also used for types not derived from :Object, "
           "or ones overwriting ${operator .}, where invocationg with $\"__format__\" throws "
           "either a :NotImplemented or :AttributeError error.\n"
-          "When used, :object.__format__ provides the following functionality, with a "
+          "When used, :Object.__format__ provides the following functionality, with a "
           ":ValueError being thrown for anything else, or anything not matching these "
           "criteria\n"
           "%{table Spec option|Description\n"

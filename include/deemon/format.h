@@ -143,15 +143,15 @@ struct va_list_struct { va_list vl_ap; };
  * Format language syntax:
  *     __main__ ::= object;
  *     object ::= ('n' | '-')         // `none'
- *              | ref_object          // `object' <-- `va_arg(DeeObject *)'
+ *              | ref_object          // `Object' <-- `va_arg(DeeObject *)'
  *              | ref_int             // `int'    <-- `va_arg(...)'
  *              | ref_float           // `float'  <-- `va_arg(...)'
  *              | ref_bool            // `bool'   <-- `va_arg(...)'
  *              | ref_str             // `string' <-- `va_arg(...)'
- *              | '[' [objects] ']'   // `list'
- *              | '(' [objects] ')'   // `tuple'
- *              | '{' [objects] '}'   // `set'
- *              | '<' [object] '>'    // `cell' (When `object')
+ *              | '[' [objects] ']'   // `List'
+ *              | '(' [objects] ')'   // `Tuple'
+ *              | '{' [objects] '}'   // `Set'
+ *              | '<' [object] '>'    // `Cell' (When `object')
  *     ;
  *     objects ::= (object | ',')...  // `,' is simply ignored, but can be used to prevent ambiguity
  *     

@@ -20,7 +20,7 @@
 #include "__stddef.dee"
 
 #pragma push_macro(undef,"final","function","from","import","return","rt","makeclass","ClassDescriptor","name")
-final function __builtin_class(__base = object from deemon,
+final function __builtin_class(__base = Object from deemon,
                                __name = "",
                                __uuid_str = none) {
 	import rt;

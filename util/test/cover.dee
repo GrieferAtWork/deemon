@@ -79,7 +79,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 }
 
 {
-	local x = dict {
+	local x = Dict {
 		"foo" : "bar",
 		11 : 22
 	};
@@ -125,20 +125,20 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	};
 	function check_mapping(x) {
 		assert repr(x) in map_reprs;
-		assert repr(x as mapping) in map_reprs;
-		assert repr(x as sequence) in seq_reprs;
+		assert repr(x as Mapping) in map_reprs;
+		assert repr(x as Sequence) in seq_reprs;
 		assert repr(x.items) in seq_reprs;
-		assert repr(x.items as sequence) in seq_reprs;
+		assert repr(x.items as Sequence) in seq_reprs;
 		assert repr(x.keys) in key_reprs;
-		assert repr(x.keys as sequence) in key_reprs;
+		assert repr(x.keys as Sequence) in key_reprs;
 		assert repr(x.values) in value_reprs;
-		assert repr(x.values as sequence) in value_reprs;
-		assert x.keys is x.class.keys;
-		assert x.values is x.class.values;
-		assert x.items is x.class.items;
-		assert x.keys.operator iter() is x.class.keys.iterator;
-		assert x.values.operator iter() is x.class.values.iterator;
-		assert x.items.operator iter() is x.class.items.iterator;
+		assert repr(x.values as Sequence) in value_reprs;
+		assert x.keys is x.class.Keys;
+		assert x.values is x.class.Values;
+		assert x.items is x.class.Items;
+		assert x.keys.operator iter() is x.class.Keys.Iterator;
+		assert x.values.operator iter() is x.class.Values.Iterator;
+		assert x.items.operator iter() is x.class.Items.Iterator;
 		assert x.get("foo") == "bar";
 		assert x.get(11) == 22;
 		assert x.get("MISSING") === none;
@@ -148,9 +148,9 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	function check_iterators(x) {
 		str(x);
 		repr(x);
-		assert x is sequence;
+		assert x is Sequence;
 		local a = x.operator iter();
-		assert a is iterator, "" + type(a);
+		assert a is Iterator, "" + type(a);
 		local b = x.operator iter();
 		assert a !== b;
 		assert a == b;
@@ -180,11 +180,11 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	}
 	function check_iterators_cast(x) {
 		check_iterators(x);
-		check_iterators(tuple(x));
-		check_iterators(list(x));
-		check_iterators(list(x).frozen);
-		check_iterators(hashset(x));
-		check_iterators(hashset(x).frozen);
+		check_iterators(Tuple(x));
+		check_iterators(List(x));
+		check_iterators(List(x).frozen);
+		check_iterators(HashSet(x));
+		check_iterators(HashSet(x).frozen);
 		check_iterators(Deque(x));
 		check_iterators(Deque(x).frozen);
 		check_iterators(FixedList(x));
@@ -241,14 +241,14 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		}
 	}
 
-	assert x is dict;
-	assert x.frozen is dict.frozen;
-	assert type(x) == dict;
-	assert type(x.frozen) == dict.frozen;
+	assert x is Dict;
+	assert x.frozen is Dict.Frozen;
+	assert type(x) == Dict;
+	assert type(x.frozen) == Dict.Frozen;
 	check_mapping(x);
-	check_mapping(x as mapping);
+	check_mapping(x as Mapping);
 	check_mapping(x.frozen);
-	check_mapping((x as mapping).frozen);
+	check_mapping((x as Mapping).frozen);
 
 	check_iterators_cast(x);
 	check_iterators_cast(x.keys);
@@ -258,10 +258,10 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	check_iterators_cast(x.frozen.keys);
 	check_iterators_cast(x.frozen.values);
 	check_iterators_cast(x.frozen.items);
-	check_iterators_cast((x as mapping).frozen);
-	check_iterators_cast((x as mapping).frozen.keys);
-	check_iterators_cast((x as mapping).frozen.values);
-	check_iterators_cast((x as mapping).frozen.items);
+	check_iterators_cast((x as Mapping).frozen);
+	check_iterators_cast((x as Mapping).frozen.keys);
+	check_iterators_cast((x as Mapping).frozen.values);
+	check_iterators_cast((x as Mapping).frozen.items);
 	local strings = {
 		"",
 		"123",
@@ -275,7 +275,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		"a8rochrb sq3duw9owx vsozqogcoabap295 azq"
 		"a8rochrb sq3duw9owx vsozqogcoabap295 azq",
 		"AbCCAUssdagOASFDAFhlhASTOHAfhfdhasufdh&&&A/",
-		string(file.open(__FILE__).read().decode("ascii")).substr(0,1024)
+		string(File.open(__FILE__).read().decode("ascii")).substr(0,1024)
 	};
 
 	for (local s: strings) {
@@ -287,42 +287,42 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		check_string(s);
 		check_string(s.bytes());
 		check_generic_sequence(s.ordinals);
-		check_generic_sequence(s as sequence);
-		check_generic_sequence(s.bytes() as sequence);
-		check_generic_sequence(s.ordinals as sequence);
-		local character_tuple = tuple(s);
-		local bytes_tuple = tuple(s.bytes());
-		local ord_tuple = tuple(s.ordinals);
+		check_generic_sequence(s as Sequence);
+		check_generic_sequence(s.bytes() as Sequence);
+		check_generic_sequence(s.ordinals as Sequence);
+		local character_tuple = Tuple(s);
+		local bytes_tuple = Tuple(s.bytes());
+		local ord_tuple = Tuple(s.ordinals);
 		check_generic_sequence(character_tuple);
-		check_generic_sequence(character_tuple as sequence);
+		check_generic_sequence(character_tuple as Sequence);
 		check_generic_sequence(bytes_tuple);
-		check_generic_sequence(bytes_tuple as sequence);
+		check_generic_sequence(bytes_tuple as Sequence);
 		check_generic_sequence(ord_tuple);
-		check_generic_sequence(ord_tuple as sequence);
-		check_generic_sequence(list(character_tuple));
-		check_generic_sequence(list(character_tuple) as sequence);
-		check_generic_sequence(list(bytes_tuple));
-		check_generic_sequence(list(bytes_tuple) as sequence);
-		check_generic_sequence(list(ord_tuple));
-		check_generic_sequence(list(ord_tuple) as sequence);
-		check_generic_set(hashset(character_tuple));
-//		check_generic_set(hashset(character_tuple) as set);
-		check_generic_set(hashset(bytes_tuple));
-//		check_generic_set(hashset(bytes_tuple) as set);
-		check_generic_set(hashset(ord_tuple));
-//		check_generic_set(hashset(ord_tuple) as set);
+		check_generic_sequence(ord_tuple as Sequence);
+		check_generic_sequence(List(character_tuple));
+		check_generic_sequence(List(character_tuple) as Sequence);
+		check_generic_sequence(List(bytes_tuple));
+		check_generic_sequence(List(bytes_tuple) as Sequence);
+		check_generic_sequence(List(ord_tuple));
+		check_generic_sequence(List(ord_tuple) as Sequence);
+		check_generic_set(HashSet(character_tuple));
+//		check_generic_set(HashSet(character_tuple) as Set);
+		check_generic_set(HashSet(bytes_tuple));
+//		check_generic_set(HashSet(bytes_tuple) as Set);
+		check_generic_set(HashSet(ord_tuple));
+//		check_generic_set(HashSet(ord_tuple) as Set);
 		check_generic_sequence(Deque(character_tuple));
-		check_generic_sequence(Deque(character_tuple) as sequence);
+		check_generic_sequence(Deque(character_tuple) as Sequence);
 		check_generic_sequence(Deque(bytes_tuple));
-		check_generic_sequence(Deque(bytes_tuple) as sequence);
+		check_generic_sequence(Deque(bytes_tuple) as Sequence);
 		check_generic_sequence(Deque(ord_tuple));
-		check_generic_sequence(Deque(ord_tuple) as sequence);
+		check_generic_sequence(Deque(ord_tuple) as Sequence);
 		check_generic_sequence(FixedList(character_tuple));
-		check_generic_sequence(FixedList(character_tuple) as sequence);
+		check_generic_sequence(FixedList(character_tuple) as Sequence);
 		check_generic_sequence(FixedList(bytes_tuple));
-		check_generic_sequence(FixedList(bytes_tuple) as sequence);
+		check_generic_sequence(FixedList(bytes_tuple) as Sequence);
 		check_generic_sequence(FixedList(ord_tuple));
-		check_generic_sequence(FixedList(ord_tuple) as sequence);
+		check_generic_sequence(FixedList(ord_tuple) as Sequence);
 	}
 	local mb_strings = {
 		"\u1234",
@@ -341,30 +341,30 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		}
 		check_string(s);
 		check_generic_sequence(s.ordinals);
-		check_generic_sequence(s as sequence);
-		check_generic_sequence(s.ordinals as sequence);
-		local character_tuple = tuple(s);
-		local ord_tuple = tuple(s.ordinals);
+		check_generic_sequence(s as Sequence);
+		check_generic_sequence(s.ordinals as Sequence);
+		local character_tuple = Tuple(s);
+		local ord_tuple = Tuple(s.ordinals);
 		check_generic_sequence(character_tuple);
-		check_generic_sequence(character_tuple as sequence);
+		check_generic_sequence(character_tuple as Sequence);
 		check_generic_sequence(ord_tuple);
-		check_generic_sequence(ord_tuple as sequence);
-		check_generic_sequence(list(character_tuple));
-		check_generic_sequence(list(character_tuple) as sequence);
-		check_generic_sequence(list(ord_tuple));
-		check_generic_sequence(list(ord_tuple) as sequence);
-		check_generic_set(hashset(character_tuple));
-//		check_generic_set(hashset(character_tuple) as set);
-		check_generic_set(hashset(ord_tuple));
-//		check_generic_set(hashset(ord_tuple) as set);
+		check_generic_sequence(ord_tuple as Sequence);
+		check_generic_sequence(List(character_tuple));
+		check_generic_sequence(List(character_tuple) as Sequence);
+		check_generic_sequence(List(ord_tuple));
+		check_generic_sequence(List(ord_tuple) as Sequence);
+		check_generic_set(HashSet(character_tuple));
+//		check_generic_set(HashSet(character_tuple) as Set);
+		check_generic_set(HashSet(ord_tuple));
+//		check_generic_set(HashSet(ord_tuple) as Set);
 		check_generic_sequence(Deque(character_tuple));
-		check_generic_sequence(Deque(character_tuple) as sequence);
+		check_generic_sequence(Deque(character_tuple) as Sequence);
 		check_generic_sequence(Deque(ord_tuple));
-		check_generic_sequence(Deque(ord_tuple) as sequence);
+		check_generic_sequence(Deque(ord_tuple) as Sequence);
 		check_generic_sequence(FixedList(character_tuple));
-		check_generic_sequence(FixedList(character_tuple) as sequence);
+		check_generic_sequence(FixedList(character_tuple) as Sequence);
 		check_generic_sequence(FixedList(ord_tuple));
-		check_generic_sequence(FixedList(ord_tuple) as sequence);
+		check_generic_sequence(FixedList(ord_tuple) as Sequence);
 	}
 	
 }
@@ -380,7 +380,7 @@ import("__builtins");
 		copy i;
 		deepcopy i;
 		if (i) {}
-		local itT = T.iterator;
+		local itT = T.Iterator;
 		local iti = itT();
 		repr iti;
 		local iti2 = copy iti;

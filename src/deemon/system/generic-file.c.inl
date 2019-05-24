@@ -170,7 +170,7 @@ sysfile_class_sync(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method sysfile_class_methods[] = {
     { "sync", &sysfile_class_sync,
-      DOC("()->none\n"
+      DOC("()\n"
           "Synchronize all unwritten data with the host operating system") },
     { NULL }
 };

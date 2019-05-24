@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import file, int from deemon;
+import File, int from deemon;
 import fs;
 import Process, Pipe from ipc;
 
@@ -31,10 +31,10 @@ proc.stdout = ow;
 proc.start();
 ir.close();
 ow.close();
-or = file.buffer(or);
+or = File.Buffer(or);
 
 local info = [];
-for (local l: file.open("deemon.exe.stackdump")) {
+for (local l: File.open("deemon.exe.stackdump")) {
 	try {
 		local arg = (for (local x: l.split(" ")) if (x) x)[1];
 		if (!arg) continue;

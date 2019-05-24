@@ -201,7 +201,7 @@ PRIVATE int DCALL
 tls_init(Tls *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->t_factory = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:tls",&self->t_factory))
+ if (DeeArg_Unpack(argc,argv,"|o:Tls",&self->t_factory))
      goto err;
  self->t_index = tls_alloc();
  if unlikely(self->t_index == (size_t)-1) goto err;
@@ -418,7 +418,7 @@ tls_init(Tls *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->t_value   = NULL;
  self->t_factory = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:tls",&self->t_factory))
+ if (DeeArg_Unpack(argc,argv,"|o:Tls",&self->t_factory))
      goto err;
  /* Save a reference for the factory. */
  Dee_XIncref(self->t_factory);
@@ -710,7 +710,7 @@ INTERN DeeTypeObject DeeTls_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"Tls",
     /* .tp_doc      = */DOC("()\n"
-                            "(factory:?Dcallable)\n"
+                            "(factory:?DCallable)\n"
                             "Construct a new tls descriptor using an optional @factory that "
                             "is used to construct the default values of per-thread variables\n"
                             "You may pass :none for @factory to pre-initialize the TLS value to :none\n"

@@ -30,7 +30,7 @@ local b = "b";
 local c = "c";
 
 /* Prevent variables from being propagated, as them being turned into
- * constants would really test the validity of recursively referenced
+ * constants wouldn't really test the validity of recursively referenced
  * symbol. */
 PREVENT_OPTIMIZATIONS(a);
 PREVENT_OPTIMIZATIONS(b);

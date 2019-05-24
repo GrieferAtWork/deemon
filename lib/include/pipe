@@ -21,19 +21,19 @@
 
 #pragma push_macro(undef, \
 	"class","function","new","import","Pipe", \
-	"from","ipc","file","deemon","local","buffer", \
+	"from","ipc","File","deemon","local","buffer", \
 	"return")
 
 class pipe {
 	@@A wrapper around :ipc:pipe.new for existing code that assumes
-	@@that it is possible to use :file.readline for reading from pipes
+	@@that it is possible to use :File.readline for reading from pipes
 	@@However changes in deemon's file implementation now require the
 	@@use of a buffer due to a dependency on the ungetc operator, meaning
 	@@that in order to read from a pipe now, the user must wrap it within
-	@@a :file.buffer object
+	@@a :File.Buffer object
 	class function new(__args...) {
 		import Pipe from ipc;
-		import file from deemon;
+		import File from deemon;
 		local __r,__w = Pipe.new(__args...)...;
 		/* Wrap inside a read-only, read-through buffer to emulate the
 		 * old behavior. readline() only requires an ungetc() implementation
@@ -41,12 +41,12 @@ class pipe {
 		 * is the exact behavior of read/write-through buffers (aka. `none')
 		 * NOTE: Also set the `close' flag so that the buffer is allowed
 		 *       to close() the underlying pipe. */
-		return (file.buffer(__r,"ro,c,none"),__w);
+		return (File.Buffer(__r,"ro,c,none"),__w);
 	}
 }
 #pragma pop_macro( \
 	"class","function","new","import","Pipe", \
-	"from","ipc","file","deemon","local","buffer", \
+	"from","ipc","File","deemon","local","buffer", \
 	"return")
 
 

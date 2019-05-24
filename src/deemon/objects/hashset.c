@@ -22,7 +22,7 @@
 #include <deemon/api.h>
 #include <deemon/alloc.h>
 #include <deemon/object.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h>
 #include <deemon/gc.h>
@@ -283,7 +283,7 @@ set_deepload(Set *__restrict self) {
  struct hashset_item *new_map,*ols_map; size_t new_mask;
  for (;;) {
   DeeHashSet_LockRead(self);
-  /* Optimization: if the dict is empty, then there's nothing to copy! */
+  /* Optimization: if the Dict is empty, then there's nothing to copy! */
   if (self->s_elem == empty_set_items) {
    DeeHashSet_LockEndRead(self);
    return 0;
@@ -1142,7 +1142,7 @@ setiterator_bool(SetIterator *__restrict self) {
  Set *set = self->si_set;
  /* Check if the iterator is in-bounds.
   * NOTE: Since this is nothing but a shallow boolean check anyways, there
-  *       is no need to lock the dict since we're not dereferencing anything. */
+  *       is no need to lock the Dict since we're not dereferencing anything. */
  return (item >= set->s_elem &&
          item <  set->s_elem+(set->s_mask+1));
 }
@@ -1314,7 +1314,7 @@ seti_nii_hasprev(SetIterator *__restrict self) {
  Set *set = self->si_set;
  /* Check if the iterator is in-bounds.
   * NOTE: Since this is nothing but a shallow boolean check anyways, there
-  *       is no need to lock the dict since we're not dereferencing anything. */
+  *       is no need to lock the Dict since we're not dereferencing anything. */
  return (item >  set->s_elem &&
          item <= set->s_elem + (set->s_mask + 1));
 }
@@ -1531,7 +1531,7 @@ PRIVATE int DCALL
 set_init(Set *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; int error;
- if unlikely(DeeArg_Unpack(argc,argv,"o:hashset",&seq))
+ if unlikely(DeeArg_Unpack(argc,argv,"o:HashSet",&seq))
     goto err;
  /* TODO: Support for initialization from `_roset' */
  /* TODO: Optimization for fast-sequence types. */
@@ -1731,7 +1731,7 @@ INTERN struct type_getset hashset_getsets[] = {
       NULL,
       NULL,
       DOC("->?Ert:RoSet\n"
-          "Returns a read-only (frozen) copy of @this hashset") },
+          "Returns a read-only (frozen) copy of @this HashSet") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
     { "max_load_factor",
      &set_get_maxloadfactor,
@@ -1744,8 +1744,8 @@ INTERN struct type_getset hashset_getsets[] = {
 };
 
 PRIVATE struct type_member set_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&HashSetIterator_Type),
-    TYPE_MEMBER_CONST("frozen",&DeeRoSet_Type),
+    TYPE_MEMBER_CONST("Iterator",&HashSetIterator_Type),
+    TYPE_MEMBER_CONST("Frozen",&DeeRoSet_Type),
     TYPE_MEMBER_END
 };
 
@@ -1755,33 +1755,33 @@ PRIVATE struct type_gc set_gc = {
 
 PUBLIC DeeTypeObject DeeHashSet_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */DeeString_STR(&str_hashset),
+    /* .tp_name     = */DeeString_STR(&str_HashSet),
     /* .tp_doc      = */DOC("A mutable set-like container that uses hashing to detect/prevent duplicates\n"
                             "\n"
                             "()\n"
-                            "Create an empty hashset\n"
+                            "Create an empty HashSet\n"
                             "\n"
                             "(items:?S?O)\n"
-                            "Create a new hashset populated with elements from @items\n"
+                            "Create a new HashSet populated with elements from @items\n"
                             "\n"
                             "copy->\n"
-                            "Returns a shallow copy of @this hashset\n"
+                            "Returns a shallow copy of @this HashSet\n"
                             "\n"
                             "deepcopy->\n"
-                            "Returns a deep copy of @this hashset\n"
+                            "Returns a deep copy of @this HashSet\n"
                             "\n"
                             "bool->\n"
-                            "Returns :true if @this hashset is non-empty\n"
+                            "Returns :true if @this HashSet is non-empty\n"
                             "\n"
                             "contains->\n"
-                            "Returns :true if @item is apart of @this hashset\n"
+                            "Returns :true if @item is apart of @this HashSet\n"
                             "\n"
                             "#->\n"
-                            "Returns the number of items apart of @this hashset\n"
+                            "Returns the number of items apart of @this HashSet\n"
                             "\n"
                             "iter->\n"
                             "Returns an iterator for enumerating all items "
-                            "in @this hashset, following a random order\n"
+                            "in @this HashSet, following a random order\n"
                             ),
     /* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
     /* .tp_weakrefs = */WEAKREF_SUPPORT_ADDR(Set),

@@ -114,7 +114,7 @@ class PyAst {
 			return {};
 		}
 	}
-	public function generate_line_directive(out: file, config: GenConfig) {
+	public function generate_line_directive(out: File, config: GenConfig) {
 		if (location !is bound)
 			return;
 		if (!config.emitline)
@@ -141,7 +141,7 @@ class PyAstComment: PyAst {
 	final public member text: string;
 	this = default;
 
-	function generate(out: file, config: GenConfig, as_expression: bool) {
+	function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (as_expression) {
 			++config.indent;
 			out << "\n";
@@ -187,7 +187,7 @@ class PyAstMultiple: PyAst {
 		}
 	}
 	final function merge() {
-		local b = list(branches);
+		local b = List(branches);
 		local n = #b - 1;
 		for (local i = 0; i < n;) {
 			local first = b[i];
@@ -217,7 +217,7 @@ class PyAstMultiple: PyAst {
 		branches = b;
 		return this;
 	}
-	function generate(out: file, config: GenConfig, as_expression: bool) {
+	function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (as_expression) {
 			out << "({\n";
 			++config.out_line;
@@ -268,7 +268,7 @@ class PyAstExpression: PyAst {
 	@@Names of all of the used symbols
 	final public member used_symbols: {string...} = [];
 
-	public function generate(out: file, config: GenConfig, as_expression: bool) {
+	public function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (!as_expression) {
 			this.generate_line_directive(out,config);
 			out << "\t" * config.indent;
@@ -276,7 +276,7 @@ class PyAstExpression: PyAst {
 		local last_string = "";
 		for (local x: parts) {
 			if (x !is string) {
-				file.writer tempfp;
+				File.Writer tempfp;
 				x.generate(tempfp,config,true);
 				x = tempfp.string;
 			}
@@ -311,7 +311,7 @@ class PyAstFor: PyAst {
 		}
 	}
 
-	function generate(out: file, config: GenConfig, as_expression: bool) {
+	function generate(out: File, config: GenConfig, as_expression: bool) {
 		this.generate_line_directive(out,config);
 		local ind = "\t" * config.indent;
 		out << ind << "for (";
@@ -356,7 +356,7 @@ class PyAstWhile: PyAst {
 		}
 	}
 
-	function generate(out: file, config: GenConfig, as_expression: bool) {
+	function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (as_expression) {
 			out << "({\n";
 			++config.out_line;
@@ -402,7 +402,7 @@ class PyAstIf: PyAst {
 		}
 	}
 
-	function generate(out: file, config: GenConfig, as_expression: bool) {
+	function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (as_expression) {
 			cond.generate(out,config,true);
 			out << " ? ";
@@ -482,7 +482,7 @@ class PyAstDef: PyAst {
 			yield x.used_symbols...;
 	}
 
-	function generate(out: file, config: GenConfig, as_expression: bool) {
+	function generate(out: File, config: GenConfig, as_expression: bool) {
 		local need_semi = false;
 		if (!as_expression) {
 			this.generate_line_directive(out,config);
@@ -532,7 +532,7 @@ skip_arguments:
 		++config.out_line;
 		++config.indent;
 		local is_first = true;
-		local local_vars = list(hashset(enum_local_vars()));
+		local local_vars = List(HashSet(enum_local_vars()));
 		local_vars.sort();
 		for (local s: local_vars) {
 			if (is_first) {
@@ -685,20 +685,20 @@ again_primary:
 				"bin" : "(bin from python.builtins)",
 				"bool" : "(bool from deemon)",
 				/* TODO: bytearray() */
-				"callable" : "(callable from deemon)",
+				"callable" : "(Callable from deemon)",
 				"chr" : "(chr from python.builtins)",
 				/* TODO: classmethod() */
 				"cmp" : "(cmp from python.builtins)",
 				/* TODO: compile() */
 				/* TODO: complex() */
 				"delattr" : "(delattr from operators)",
-				"dict" : "(dict from deemon)",
+				"Dict" : "(Dict from deemon)",
 				"divmod" : "(divmod from python.builtins)",
 				/* TODO: dir() */
 				"enumerate" : "(enumerate from util)",
 				/* TODO: eval() */
 				/* TODO: execfile() */
-				"file" : "(file from deemon)",
+				"file" : "(File from deemon)",
 				"filter" : "(filter from python.builtins)",
 				"float" : "(float from deemon)",
 				"format" : "(format from python.builtins)",
@@ -716,15 +716,15 @@ again_primary:
 				"issubclass" : "(issubclass from python.builtins)",
 				"iter" : "(iter from operators)",
 				"len" : "(size from operators)",
-				"list" : "(list from deemon)",
+				"list" : "(List from deemon)",
 				/* TODO: locals() */
 				"long" : "(int from deemon)",
 				"map" : "(map from python.builtins)",
 				"max" : "(max from util)",
-				"memoryview" : "(bytes from deemon)",
+				"memoryview" : "(Bytes from deemon)",
 				"min" : "(min from util)",
 				"next" : "(next from operators)",
-				"object" : "(object from deemon)",
+				"object" : "(Object from deemon)",
 				"oct" : "(oct from python.builtins)",
 				"open" : "(open from python.builtins)",
 				"ord" : "(ord from python.builtins)",
@@ -736,14 +736,14 @@ again_primary:
 				/* TODO: reload() */
 				"reversed" : "(reversed from python.builtins)",
 				"round" : "(round from util)",
-				"set" : "(hashset from deemon)",
+				"set" : "(HashSet from deemon)",
 				"setattr" : "(setattr from operators)",
 				"slice" : "(slice from python.builtins)",
 				"sorted" : "(sorted from python.builtins)",
 				/* TODO: staticmethod() */
 				"sum" : "(sum from util)",
-				"super" : "(super_ from python.builtins)",
-				"tuple" : "(tuple from deemon)",
+				"super" : "(Super from python.builtins)",
+				"tuple" : "(Tuple from deemon)",
 				"unichr" : "(chr from python.builtins)",
 				"unicode" : "(string from deemon)",
 				/* TODO: vars() */
@@ -751,7 +751,7 @@ again_primary:
 				"zip" : "(zip from util)",
 				"__import__" : "import",
 				"apply" : "(apply from python.builtins)",
-				"buffer" : "(bytes from deemon)",
+				"buffer" : "(Bytes from deemon)",
 				"coerce" : "(coerce from python.builtins)",
 				"intern" : "(intern from python.builtins)",
 			};
@@ -1087,7 +1087,7 @@ again:
 			local name = tok;
 			next();
 			skip("(");
-			local args = tuple(parse_def_arguments());
+			local args = Tuple(parse_def_arguments());
 			local varargs_name = none;
 			local varkwds_name = none;
 			while (tok != ")") {
@@ -1396,16 +1396,16 @@ done:
 @@@param emitline When true, include line-directives such that the deemon compiler will point to the original python source for errors/ddi information. Note however that :deemon.exec doesn't use a preprocessor and thus cannot handle these directives
 @@@return Re-returns @output if given, otherwise return the deemon code as a string
 @@Convert python source code into deemon
-function convert(input?: file | string, output?: file, filename?: string, emitline: bool = false): file | string {
+function convert(input?: File | string, output?: File, filename?: string, emitline: bool = false): File | string {
 	if (input !is bound)
-		input = file.open(filename,"r");
+		input = File.open(filename,"r");
 	local t;
 	if (input is string) {
 do_load_string_input:
 		t = Tokenizer(
 			text: input);
 		t.filename = filename is bound ? filename : "<input>";
-	} else if (input is bytes) {
+	} else if (input is Bytes) {
 		input = input.encode("utf-8");
 		goto do_load_string_input;
 	} else {
@@ -1420,17 +1420,17 @@ do_load_string_input:
 		ast.generate(output,conf,false);
 		return output;
 	}
-	file.writer tempfp;
+	File.Writer tempfp;
 	ast.generate(tempfp,conf,false);
 	return tempfp.string;
 }
 
 @@Convert a given piece of python input into deemon,
 @@then execute that deemon code using :deemon.exec
-@@>import dict from deemon;
+@@>import Dict from deemon;
 @@>import exec from py2dee;
 @@>
-@@>local glob = dict();
+@@>local glob = Dict();
 @@>exec(r'
 @@>def foo(x,y):
 @@>	print(x + y)
@@ -1440,16 +1440,16 @@ do_load_string_input:
 @@>
 @@>glob["foo"](7,8);  /* prints `15' */
 @@>glob["bar"]();     /* prints `30' */
-function exec(input?: file | string | bytes, filename?: string, args..., **kwds) {
+function exec(input?: File | string | Bytes, filename?: string, args..., **kwds) {
 	if (input !is bound)
-		input = file.open(filename,"r");
+		input = File.open(filename,"r");
 	local t;
 	if (input is string) {
 do_load_string_input:
 		t = Tokenizer(
 			text: input);
 		t.filename = filename is bound ? filename : "<input>";
-	} else if (input is bytes) {
+	} else if (input is Bytes) {
 		input = input.encode("utf-8");
 		goto do_load_string_input;
 	} else {
@@ -1460,7 +1460,7 @@ do_load_string_input:
 	t.next();
 	local ast = t.parse_root_statements();
 	local conf = GenConfig(emitline: false);
-	file.writer tempfp;
+	File.Writer tempfp;
 	ast.generate(tempfp,conf,false);
 	import deemon;
 	/* Execute the converted code as deemon */
@@ -1472,8 +1472,8 @@ do_load_string_input:
 local args = [...][1:];
 if (!args) {
 	convert(
-		input: file.stdin,
-		output: file.stdout,
+		input: File.stdin,
+		output: File.stdout,
 		filename: "<stdin>",
 		emitline: true);
 	return 0;
@@ -1491,7 +1491,7 @@ if (args[0] == "-o") {
 	outfilename = args[1];
 	args = args[2:];
 }
-local infile = file.stdin;
+local infile = File.stdin;
 local infilename = "<stdin>";
 if (args) {
 	if (#args > 1) {
@@ -1499,11 +1499,11 @@ if (args) {
 		return 1;
 	}
 	infilename = args[0];
-	infile = file.open(infilename,"r");
+	infile = File.open(infilename,"r");
 }
-local outfile = file.stdout;
+local outfile = File.stdout;
 if (outfilename)
-	outfile = file.open(outfilename,"w");
+	outfile = File.open(outfilename,"w");
 convert(
 	input: infile,
 	output: outfile,

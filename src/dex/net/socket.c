@@ -1972,12 +1972,12 @@ socket_recvinto(Socket *__restrict self, size_t argc,
  if (DeeArg_Unpack(argc,argv,"o|oo:recvinto",&data,&arg1,&arg2))
      goto err;
  if (!arg1) {
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg2) {
-  //"(dst:?Dbytes,flags=!P{})->?Dint\n"
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+  //"(dst:?DBytes,flags=!P{})->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeString_Check(arg1)) {
    if (sock_getmsgflagsof(arg1,&flags))
        goto err;
@@ -1988,8 +1988,8 @@ socket_recvinto(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeObject_AsInt64(arg1,(int64_t *)&timeout))
       goto err;
   if (sock_getmsgflagsof(arg2,&flags))
@@ -2101,12 +2101,12 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
  if (DeeArg_Unpack(argc,argv,"o|oo:recvfrominto",&data,&arg1,&arg2))
      goto err;
  if (!arg1) {
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg2) {
-  //"(dst:?Dbytes,flags=!P{})->?Dint\n"
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+  //"(dst:?DBytes,flags=!P{})->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeString_Check(arg1)) {
    if (sock_getmsgflagsof(arg1,&flags))
        goto err;
@@ -2117,8 +2117,8 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-  //"(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+  //"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
   if (DeeObject_AsInt64(arg1,(int64_t *)&timeout))
       goto err;
   if (sock_getmsgflagsof(arg2,&flags))
@@ -2176,12 +2176,12 @@ socket_send(Socket *__restrict self, size_t argc,
  if (DeeArg_Unpack(argc,argv,"o|oo:send",&data,&arg_0,&arg_1))
      goto err;
  if (!arg_0) {
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg_1) {
-  /* "(data:?Dbytes,flags=!P{})->?Dint\n" */
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?DBytes,flags=!P{})->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   if (DeeString_Check(arg_0)) {
    if (sock_getmsgflagsof(arg_0,&flags))
        goto err;
@@ -2192,8 +2192,8 @@ socket_send(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
   if (DeeObject_AsInt64(arg_0,(int64_t *)&timeout) ||
       sock_getmsgflagsof(arg_1,&flags))
       goto err;
@@ -2242,12 +2242,12 @@ socket_sendto(Socket *__restrict self, size_t argc,
  }
  DBG_ALIGNMENT_ENABLE();
  if (!arg_0) {
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   timeout = (uint64_t)-1;
   flags   = 0;
  } else if (!arg_1) {
-  /* "(data:?Dbytes,flags=!P{})->?Dint\n" */
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?DBytes,flags=!P{})->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
   if (DeeString_Check(arg_0)) {
    if (sock_getmsgflagsof(arg_0,&flags))
        goto err;
@@ -2258,8 +2258,8 @@ socket_sendto(Socket *__restrict self, size_t argc,
    flags = 0;
   }
  } else {
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
-  /* "(data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+  /* "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
   if (DeeObject_AsInt64(arg_0,(int64_t *)&timeout) ||
       sock_getmsgflagsof(arg_1,&flags))
       goto err;
@@ -2445,11 +2445,11 @@ PRIVATE struct type_method socket_methods[] = {
           "Same as calling #accept with a timeout_microseconds argument of ${0}") },
     { "recv",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recv,
-      DOC("(flags:?Dstring)->?Dbytes\n"
-          "(max_size=!-1,flags=!P{})->?Dbytes\n"
-          "(max_size=!-1,timeout_microseconds=!-1)->?Dbytes\n"
-          "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?Dbytes\n"
-          "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?Dbytes\n"
+      DOC("(flags:?Dstring)->?DBytes\n"
+          "(max_size=!-1,flags=!P{})->?DBytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1)->?DBytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?DBytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?DBytes\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2471,10 +2471,10 @@ PRIVATE struct type_method socket_methods[] = {
           "termination of the connection") },
     { "recvinto",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvinto,
-      DOC("(dst:?Dbytes,flags=!P{})->?Dint\n"
-          "(dst:?Dbytes,timeout_microseconds=!-1)->?Dint\n"
-          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+      DOC("(dst:?DBytes,flags=!P{})->?Dint\n"
+          "(dst:?DBytes,timeout_microseconds=!-1)->?Dint\n"
+          "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+          "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2486,11 +2486,11 @@ PRIVATE struct type_method socket_methods[] = {
           "Same as #recv, but received data is written into the given buffer @dst") },
     { "recvfrom",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvfrom,
-      DOC("(flags:?Dstring)->?T2?Gsockaddr?Dbytes\n"
-          "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?Dbytes\n"
-          "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?Dbytes\n"
-          "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dbytes\n"
-          "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dbytes\n"
+      DOC("(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
+          "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?DBytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
+          "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?DBytes\n"
           "@interrupt\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
           "@throw NetError.ConnectReset The peer has reset the connection\n"
@@ -2506,10 +2506,10 @@ PRIVATE struct type_method socket_methods[] = {
           "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
     { "recvfrominto",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_recvfrominto,
-      DOC("(dst:?Dbytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
-          "(dst:?Dbytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
-          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
-          "(dst:?Dbytes,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
+      DOC("(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
+          "(dst:?DBytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
+          "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
+          "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
           "@interrupt\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
           "@throw NetError.ConnectReset The peer has reset the connection\n"
@@ -2520,9 +2520,9 @@ PRIVATE struct type_method socket_methods[] = {
           "Same as #recvfrom, buf read received data into the given buffer @dst") },
     { "send",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_send,
-      DOC("(data:?Dbytes,flags=!P{})->?Dint\n"
-          "(data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-          "(data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+      DOC("(data:?DBytes,flags=!P{})->?Dint\n"
+          "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+          "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2538,12 +2538,12 @@ PRIVATE struct type_method socket_methods[] = {
           "Send @data over the network to the peer of a connected socket") },
     { "sendto",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&socket_sendto,
-      DOC("(target:?Dbytes,data:?Dbytes,flags=!P{})->?Dint\n"
-          "(target:?Dbytes,data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-          "(target:?Dbytes,data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-          "(target:?O,data:?Dbytes,flags=!P{})->?Dint\n"
-          "(target:?O,data:?Dbytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-          "(target:?O,data:?Dbytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+      DOC("(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
+          "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+          "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+          "(target:?O,data:?DBytes,flags=!P{})->?Dint\n"
+          "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+          "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
           "@interrupt\n"
           "@throw NetError.NotConnected @this socket is not connected\n"
           "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"

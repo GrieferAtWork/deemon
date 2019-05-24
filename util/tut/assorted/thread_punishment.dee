@@ -54,13 +54,13 @@ function get_weak_self_dict() {
 	d = dict();
 	d["foo"] = "bar";
 	d["bar"] = "foo";
-	d["this"] = d; // Dict contains itself (requires gc to destroy)
+	d["this"] = d; // dict contains itself (requires gc to destroy)
 	return weak d;
 }
 
 w = get_weak_self_dict();
 for (i = 0; i < 20000; ++i) {
-	// Constantly lock the weakref to the dangling dict
+	// Constantly lock the WeakRef to the dangling dict
 	// Once the gc thread has destroyed the dict, this fails.
 	// The painful part is making this not crash the runtime, which it doesn't.
 	local x = w.try_lock();

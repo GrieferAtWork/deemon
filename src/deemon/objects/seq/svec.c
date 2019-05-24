@@ -916,7 +916,7 @@ PRIVATE struct type_seq rvec_seq = {
 };
 
 PRIVATE struct type_member rvec_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RefVectorIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&RefVectorIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -1505,7 +1505,7 @@ PRIVATE struct type_seq svec_seq = {
 };
 
 PRIVATE struct type_member svec_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SharedVectorIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SharedVectorIterator_Type),
     TYPE_MEMBER_END
 };
 

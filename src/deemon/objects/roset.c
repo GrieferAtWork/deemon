@@ -581,8 +581,8 @@ PRIVATE struct type_member roset_members[] = {
 };
 
 PRIVATE struct type_member roset_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&RoSetIterator_Type),
-    TYPE_MEMBER_CONST("frozen",&DeeRoSet_Type),
+    TYPE_MEMBER_CONST("Iterator",&RoSetIterator_Type),
+    TYPE_MEMBER_CONST("Frozen",&DeeRoSet_Type),
     TYPE_MEMBER_END
 };
 

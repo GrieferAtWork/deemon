@@ -139,7 +139,7 @@ PRIVATE struct type_getset subrangeiterator_getsets[] = {
 };
 
 PRIVATE struct type_member subrangeiterator_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SubRangeIterator,sr_iter),"->?Diterator"),
+    TYPE_MEMBER_FIELD_DOC("__iter__",STRUCT_OBJECT,offsetof(SubRangeIterator,sr_iter),"->?DIterator"),
     TYPE_MEMBER_FIELD("__start__",STRUCT_SIZE_T,offsetof(SubRangeIterator,sr_start)),
     TYPE_MEMBER_FIELD("__size__",STRUCT_SIZE_T,offsetof(SubRangeIterator,sr_size)),
     TYPE_MEMBER_END
@@ -295,7 +295,7 @@ err:
 }
 
 PRIVATE struct type_member subrange_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SubRange,sr_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SubRange,sr_seq),"->?DSequence"),
     TYPE_MEMBER_FIELD("__start__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SubRange,sr_start)),
     TYPE_MEMBER_FIELD("__size__",STRUCT_CONST|STRUCT_SIZE_T,offsetof(SubRange,sr_size)),
     TYPE_MEMBER_END
@@ -303,7 +303,7 @@ PRIVATE struct type_member subrange_members[] = {
 
 
 PRIVATE struct type_member subrange_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&SeqSubRangeIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&SeqSubRangeIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -483,7 +483,7 @@ err:
 INTERN DeeTypeObject SeqSubRange_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSubRange",
-    /* .tp_doc      = */DOC("(seq:?Dsequence,start=!0,end=!-1)"),
+    /* .tp_doc      = */DOC("(seq:?DSequence,start=!0,end=!-1)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,
@@ -726,14 +726,14 @@ PRIVATE struct type_seq subrangen_seq = {
 };
 
 PRIVATE struct type_member subrangen_members[] = {
-    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SubRangeN,sr_seq),"->?Dsequence"),
+    TYPE_MEMBER_FIELD_DOC("__seq__",STRUCT_OBJECT,offsetof(SubRangeN,sr_seq),"->?DSequence"),
     TYPE_MEMBER_FIELD("__start__",STRUCT_SIZE_T,offsetof(SubRangeN,sr_start)),
     TYPE_MEMBER_END
 };
 
 
 PRIVATE struct type_member subrangen_class_members[] = {
-    TYPE_MEMBER_CONST("iterator",&DeeIterator_Type),
+    TYPE_MEMBER_CONST("Iterator",&DeeIterator_Type),
     TYPE_MEMBER_END
 };
 
@@ -790,7 +790,7 @@ err:
 INTERN DeeTypeObject SeqSubRangeN_Type = {
     OBJECT_HEAD_INIT(&DeeType_Type),
     /* .tp_name     = */"_SeqSubRangeN",
-    /* .tp_doc      = */DOC("(seq:?Dsequence,start=!0)"),
+    /* .tp_doc      = */DOC("(seq:?DSequence,start=!0)"),
     /* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
     /* .tp_weakrefs = */0,
     /* .tp_features = */TF_NONE,

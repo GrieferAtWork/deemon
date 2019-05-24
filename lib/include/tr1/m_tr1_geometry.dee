@@ -23,10 +23,10 @@ import * from math;
 import * from util;
 
 global class point {
-	public member x: numeric;
-	public member y: numeric;
+	public member x: Numeric;
+	public member y: Numeric;
 
-	this(x: numeric, y: numeric) {
+	this(x: Numeric, y: Numeric) {
 		this.x = x;
 		this.y = y;
 	}
@@ -55,12 +55,12 @@ global class point {
 
 	operator + (other: point) -> point(x + other.x, y + other.y);
 	operator - (other: point) -> point(x - other.x, y - other.y);
-	operator * (other: numeric) -> point(x * other, y * other);
-	operator / (other: numeric) -> point(x / other, y / other);
+	operator * (other: Numeric) -> point(x * other, y * other);
+	operator / (other: Numeric) -> point(x / other, y / other);
 	operator += (other: point) { x += other.x; y += other.y; return this; }
 	operator -= (other: point) { x -= other.x; y -= other.y; return this; }
-	operator *= (other: numeric) { x *= other; y *= other; return this; }
-	operator /= (other: numeric) { x /= other; y /= other; return this; }
+	operator *= (other: Numeric) { x *= other; y *= other; return this; }
+	operator /= (other: Numeric) { x /= other; y /= other; return this; }
 
 	function distance(to: point): float -> sqrt(distance_sqr(to));
 	function distance_sqr(to: point): float -> sqr(to.x - x) + sqr(to.y - y);
@@ -73,10 +73,10 @@ global class point {
 
 global class rect {
 
-	public member xmin: numeric;
-	public member ymin: numeric;
-	public member xmax: numeric;
-	public member ymax: numeric;
+	public member xmin: Numeric;
+	public member ymin: Numeric;
+	public member xmax: Numeric;
+	public member ymax: Numeric;
 
 	@[gatw.doc("()")]
 	@[gatw.doc("(min:?Gpoint,max:?Gpoint)")]
@@ -132,19 +132,19 @@ global class rect {
 		ymax = other.ymax;
 	}
 
-	property sizex: numeric = {
-		get(): numeric {
+	property sizex: Numeric = {
+		get(): Numeric {
 			return abs(xmax - xmin);
 		}
-		set(x: numeric) {
+		set(x: Numeric) {
 			xmax = xmin + x;
 		}
 	}
-	property sizey: numeric = {
-		get(): numeric {
+	property sizey: Numeric = {
+		get(): Numeric {
 			return abs(ymax - ymin);
 		}
-		set(y: numeric) {
+		set(y: Numeric) {
 			ymax = ymin + y;
 		}
 	}

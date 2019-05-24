@@ -163,7 +163,7 @@ INTERN ATTR_COLD int DCALL err_cannot_lock_weakref(void) {
 INTERN ATTR_COLD int DCALL
 err_bytes_not_writable(DeeObject *__restrict UNUSED(bytes_ob)) {
  return DeeError_Throwf(&DeeError_BufferError,
-                        "The bytes object is not writable");
+                        "The Bytes object is not writable");
 }
 
 INTERN ATTR_COLD int DCALL

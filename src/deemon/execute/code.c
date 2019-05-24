@@ -771,7 +771,7 @@ PRIVATE struct type_member code_members[] = {
                           "->?Ert:Ddi\n"
                           "The DDI (DeemonDebugInformation) data block"),
     TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT,offsetof(DeeCodeObject,co_module),
-                          "->?Dmodule"),
+                          "->?DModule"),
     TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_min),
                           "Min amount of arguments required to execute @this code"),
     TYPE_MEMBER_FIELD_DOC("__argc_max__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(DeeCodeObject,co_argc_max),
@@ -791,17 +791,17 @@ PRIVATE struct type_getset code_getsets[] = {
     { DeeString_STR(&str___name__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
-          "Returns the name of @this code object, or :none if unknown (s.a. :function.__name__)") },
+          "Returns the name of @this code object, or :none if unknown (s.a. :Function.__name__)") },
     { DeeString_STR(&str___doc__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
       DOC("->?X2?Dstring?N\n"
-          "Returns the documentation string of @this code object, or :none if unknown (s.a. :function.__doc__)") },
+          "Returns the documentation string of @this code object, or :none if unknown (s.a. :Function.__doc__)") },
     { DeeString_STR(&str___type__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
-      DOC("->?X2?Dtype?N\n"
+      DOC("->?X2?DType?N\n"
           "Try to determine if @this code object is defined as part of a user-defined class, "
           "and if it is, return that class type, or :none if that class couldn't be found, "
-          "or if @this code object is defined as stand-alone (s.a. :function.__type__)") },
+          "or if @this code object is defined as stand-alone (s.a. :Function.__type__)") },
     { DeeString_STR(&str___kwds__),
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_kwds, NULL, NULL,
       DOC("->?S?Dstring\n"
@@ -814,19 +814,19 @@ PRIVATE struct type_getset code_getsets[] = {
           "and if so, if it is used to define an operator callback. If that is the case, "
           "return the internal ID of the operator that @this code object provides, or :none "
           "if that class couldn't be found, @this code object is defined as stand-alone, or "
-          "defined as a class- or instance-method (s.a. :function.__operator__)") },
+          "defined as a class- or instance-method (s.a. :Function.__operator__)") },
     { "__operatorname__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
       DOC("->?X3?Dstring?Dint?N\n"
           "Same as #__operator__, but instead try to return the unambiguous name of the "
           "operator, though still return its ID if the operator isn't recognized as being "
-          "part of the standard (s.a. :function.__operatorname__)") },
+          "part of the standard (s.a. :Function.__operatorname__)") },
     { "__property__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
       DOC("->?X2?Dint?N\n"
           "Returns an integer describing the kind if @this code is part of a property or getset, "
           "or returns :none if the function's property could not be found, or if the function isn't "
-          "declared as a property callback (s.a. :function.__property__)") },
+          "declared as a property callback (s.a. :Function.__property__)") },
     { "__default__",
      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
       DOC("->?S?O\n"
@@ -1323,8 +1323,8 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  uint16_t refc = 0;
  uint16_t coargc = 0;
  DeeBuffer text_buf;
- /* (text:?Dbytes=!N,module:?Dmodule=!N,statics:?S?O=!N,
-  *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?Dtype=!N,
+ /* (text:?DBytes=!N,module:?DModule=!N,statics:?S?O=!N,
+  *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
   *  localc=!0,stackc=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
   *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
  PRIVATE DEFINE_KWLIST(kwlist,{
@@ -1667,10 +1667,10 @@ PUBLIC DeeTypeObject DeeCode_Type = {
     /* .tp_doc      = */DOC("()\n"
                             "Return a singleton, stub code object that always returns :none\n"
                             "\n"
-                            "(text:?Dbytes=!N,module:?Dmodule=!N,statics:?S?O=!N,"
+                            "(text:?DBytes=!N,module:?DModule=!N,statics:?S?O=!N,"
                             "except:?S?X3?T4?Dint?Dint?Dint?Dint"
                                         "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
-                                        "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?Dtype"
+                                        "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
                                         "=!N,"
                             "nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,"
                             "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N)\n"
@@ -1680,7 +1680,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
                             "@param text The bytecode that should be executed by the code\n"
                             "@param module The module to-be used as the declaring module\n"
                             "@param statics An indexable sequence containing the static variables that are to be made available to the code\n"
-                            "@param except A sequence of (startpc\\: :int, endpc\\: :int, entrypc\\: :int, entrysp\\: :int, flags\\: :string \\| :int = \"\", mask\\: :type = none)-"
+                            "@param except A sequence of (startpc\\: :int, endpc\\: :int, entrypc\\: :int, entrysp\\: :int, flags\\: :string \\| :int = \"\", mask\\: :Type = none)-"
                                           "tuples, with `flags' being a comma-seperated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
                             "@param nlocal The number of local variables to-be allocated for every frame\n"
                             "@param nstack The amount of stack space to be allocated for every frame\n"

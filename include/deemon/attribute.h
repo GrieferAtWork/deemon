@@ -37,7 +37,7 @@
  *       calling setjmp(), meaning that this configuration option is still
  *       bound to situations for which we have pre-written assembly to
  *       set the stack-pointer ourselves.
- * NOTE: To prevent any impact from this configuration option, the `enumattr.iterator'
+ * NOTE: To prevent any impact from this configuration option, the `enumattr.Iterator'
  *       type is never copyable, even when this option is disabled.
  */
 #define CONFIG_LONGJMP_ENUMATTR         1
@@ -138,7 +138,7 @@ struct Dee_enumattr_iterator_object {
 
 DDATDEF DeeTypeObject DeeAttribute_Type;        /* `attribute from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */
-DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).iterator' */
+DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).Iterator' */
 #define DeeEnumAttr_Check(x)      DeeObject_InstanceOfExact(x,&DeeEnumAttr_Type) /* `enumattr' is final */
 #define DeeEnumAttr_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeEnumAttr_Type)
 

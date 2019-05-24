@@ -34,7 +34,7 @@
 #include <deemon/tuple.h>
 #include <deemon/list.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/int.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
@@ -148,10 +148,10 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
  case OPERAND_CLASS_THIS_FUNCTION: raw_operand_string = DeeString_STR(&str_this_function); goto do_raw_string;
  case OPERAND_CLASS_TRUE         : raw_operand_string = DeeString_STR(&str_true); goto do_raw_string;
  case OPERAND_CLASS_FALSE        : raw_operand_string = DeeString_STR(&str_false); goto do_raw_string;
- case OPERAND_CLASS_LIST         : raw_operand_string = DeeString_STR(&str_list); goto do_raw_string;
- case OPERAND_CLASS_TUPLE        : raw_operand_string = DeeString_STR(&str_tuple); goto do_raw_string;
- case OPERAND_CLASS_HASHSET      : raw_operand_string = DeeString_STR(&str_hashset); goto do_raw_string;
- case OPERAND_CLASS_DICT         : raw_operand_string = DeeString_STR(&str_dict); goto do_raw_string;
+ case OPERAND_CLASS_LIST         : raw_operand_string = DeeString_STR(&str_List); goto do_raw_string;
+ case OPERAND_CLASS_TUPLE        : raw_operand_string = DeeString_STR(&str_Tuple); goto do_raw_string;
+ case OPERAND_CLASS_HASHSET      : raw_operand_string = DeeString_STR(&str_HashSet); goto do_raw_string;
+ case OPERAND_CLASS_DICT         : raw_operand_string = DeeString_STR(&str_Dict); goto do_raw_string;
  case OPERAND_CLASS_INT          : raw_operand_string = DeeString_STR(&str_int); goto do_raw_string;
  case OPERAND_CLASS_BOOL         : raw_operand_string = DeeString_STR(&str_bool); goto do_raw_string;
  case OPERAND_CLASS_EQ           : raw_operand_string = "eq"; goto do_raw_string;
@@ -1015,7 +1015,7 @@ struct assembler_state {
 #define ASM_OP_IMM64         OPNAME3('N','6','4') /* `$42'                        Any unsigned 64-bit integer. */
 #define ASM_OP_CAST          OPNAME2('C','a')     /* `...'                        A valid operand for the `cast' instruction. */
 #define ASM_OP_SEQ_SEQ       OPNAME2('Q','s')     /* `[#...]'                     A sequence-operand, as accepted by the `call' instruction. */
-#define ASM_OP_SEQ_MAP       OPNAME2('Q','m')     /* `{#...}'                     A dict-compatible sequence-operand, as accepted by the `call' instruction. */
+#define ASM_OP_SEQ_MAP       OPNAME2('Q','m')     /* `{#...}'                     A Dict-compatible sequence-operand, as accepted by the `call' instruction. */
 #define ASM_OP_PREFIX        OPNAME1('p')         /* Input operand: Same as `ceglCsS' (Any prefix operand, including const-as-static)
                                                    * Output operand: Same as `eglCsS' (Any prefix operand, including const-as-static) */
 #define ASM_OP_INTEGER       OPNAME1('i')         /* Same as `I32N32' (Any integer operand). */
@@ -1413,7 +1413,7 @@ write_regular_local:
   }
   if (self->a_type == AST_CONSTEXPR &&
       DeeDict_Check(self->a_constexpr)) {
-   /* Push the key-item pairs of a dict. */
+   /* Push the key-item pairs of a Dict. */
    size_t i,length = 0;
    DeeDictObject *d = (DeeDictObject *)self->a_constexpr;
    DeeDict_LockRead(d);
@@ -1533,10 +1533,10 @@ write_regular_local:
 
  case ASM_OP_CAST:
   if (self->a_type != AST_CONSTEXPR) goto next_option;
-  if (self->a_constexpr == (DeeObject *)&DeeTuple_Type) { result = &str_tuple; Dee_Incref(result); break; }
-  if (self->a_constexpr == (DeeObject *)&DeeList_Type) { result = &str_list; Dee_Incref(result); break; }
-  if (self->a_constexpr == (DeeObject *)&DeeDict_Type) { result = &str_dict; Dee_Incref(result); break; }
-  if (self->a_constexpr == (DeeObject *)&DeeHashSet_Type) { result = &str_hashset; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeTuple_Type) { result = &str_Tuple; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeList_Type) { result = &str_List; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeDict_Type) { result = &str_Dict; Dee_Incref(result); break; }
+  if (self->a_constexpr == (DeeObject *)&DeeHashSet_Type) { result = &str_HashSet; Dee_Incref(result); break; }
   if (self->a_constexpr == (DeeObject *)&DeeInt_Type) { result = &str_int; Dee_Incref(result); break; }
   if (self->a_constexpr == (DeeObject *)&DeeBool_Type) { result = &str_bool; Dee_Incref(result); break; }
   goto next_option;

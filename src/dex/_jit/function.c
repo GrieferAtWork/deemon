@@ -1033,15 +1033,15 @@ PRIVATE struct type_getset jf_getsets[] = {
 
 PRIVATE struct type_member jf_members[] = {
     TYPE_MEMBER_FIELD_DOC("__impbase__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase),
-                          "->?X2?Dmodule?N\n"
+                          "->?X2?DModule?N\n"
                           "Returns the module used for relative module imports"),
     TYPE_MEMBER_FIELD_DOC("__globals__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_globals),
                           "->?X2?S?T2?Dstring?O?N"),
     TYPE_MEMBER_FIELD_DOC("__module__",STRUCT_OBJECT_OPT,offsetof(JITFunction,jf_impbase),
-                          "->?X2?Dmodule?N\n"
+                          "->?X2?DModule?N\n"
                           "Alias for #__impbase__"),
     TYPE_MEMBER_FIELD_DOC("__source__",STRUCT_OBJECT,offsetof(JITFunction,jf_source),
-                          "->?X3?Dstring?Dbytes?O\n"
+                          "->?X3?Dstring?DBytes?O\n"
                           "Returns the object that owns the source code executed by @this function (s.a. #__text__)"),
     TYPE_MEMBER_FIELD_DOC("__argc_min__",STRUCT_CONST|STRUCT_UINT16_T,offsetof(JITFunction,jf_argc_min),
                           "Min amount of arguments required to execute @this function"),

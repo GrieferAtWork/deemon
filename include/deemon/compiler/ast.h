@@ -175,16 +175,16 @@ struct ast {
                                                  *       multiple expressions should be packed together. */
 #   define AST_FMULTIPLE_KEEPLAST       0x0000  /* Default: Evaluate, but discard all but the last expression, which is then propagated as value.
                                                  *          If an `AST_EXPAND' expression appears in the sequence,  */
-#   define AST_FMULTIPLE_TUPLE          0x1000  /* Pack all elements into a tuple, correctly handling `AST_EXPAND' elements. */
-#   define AST_FMULTIPLE_LIST           0x1001  /* Pack all elements into a list, correctly handling `AST_EXPAND' elements. */
-#   define AST_FMULTIPLE_HASHSET        0x1002  /* Pack all elements into a hashset, correctly handling `AST_EXPAND' elements. */
-#   define AST_FMULTIPLE_DICT           0x1003  /* Pack all elements into a dict, correctly handling `AST_EXPAND' elements.
+#   define AST_FMULTIPLE_TUPLE          0x1000  /* Pack all elements into a Tuple, correctly handling `AST_EXPAND' elements. */
+#   define AST_FMULTIPLE_LIST           0x1001  /* Pack all elements into a List, correctly handling `AST_EXPAND' elements. */
+#   define AST_FMULTIPLE_HASHSET        0x1002  /* Pack all elements into a HashSet, correctly handling `AST_EXPAND' elements. */
+#   define AST_FMULTIPLE_DICT           0x1003  /* Pack all elements into a Dict, correctly handling `AST_EXPAND' elements.
                                                  * NOTE: This sequence class requires that `m_astc' is aligned
                                                  *       by 2, with every first used as key, and every second as item.
                                                  *       If it isn't aligned by 2, the last expression is ignored and not compiled. */
 #   define AST_FMULTIPLE_GENERIC        0x1008  /* Pack elements into a sequence of unspecified typing (used to encode
                                                  * brace-initializer being encoded as `ASM_CALL_SEQ' instructions). */
-#   define AST_FMULTIPLE_GENERIC_KEYS   0x100b  /* Pack elements into a dict-style sequence of unspecified typing (used to
+#   define AST_FMULTIPLE_GENERIC_KEYS   0x100b  /* Pack elements into a mapping-like sequence of unspecified typing (used to
                                                  * encode brace-initializer being encoded as `ASM_CALL_MAP' instructions). */
 #   define AST_FMULTIPLE_ISSEQUENCE(x) (((x)&0x1000) && ((x)&0x0003) <= 1)
 #   define AST_FMULTIPLE_ISGENERIC(x)  (((x)&0x1008) == 0x1008)
@@ -313,10 +313,10 @@ struct ast {
                                            * Otherwise, it is replaced with an external binding to one
                                            * of the symbols found in the `operators' module:
                                            * >> x = operator +;   // compiles (in this implementation) as `x = __pooad from operators;'
-                                           * >> x = y.operator +; // compiles (in this implementation) as `x = (instancemethod from deemon)(y,__pooad from operators);' */
+                                           * >> x = y.operator +; // compiles (in this implementation) as `x = (InstanceMethod from deemon)(y,__pooad from operators);' */
         struct {
             DREF struct ast  *of_binding; /* [0..1] The first argument of the operator (if it is bound).
-                                           * When set, construct an instancemethod object that is bound to this expression. */
+                                           * When set, construct an InstanceMethod object that is bound to this expression. */
         } a_operator_func;
 
 
@@ -357,8 +357,8 @@ struct ast {
                                         *       The main intention of this flag is to implement
                                         *       better compile-time optimizations for `typeof()'
                                         *       and `.class'. */
-#   define AST_FACTION_CELL0    0x0000 /* `<>'                        - Create an empty cell. */
-#   define AST_FACTION_CELL1    0x1001 /* `< <act0> >'                - Create an cell for `<act0>'. */
+#   define AST_FACTION_CELL0    0x0000 /* `<>'                        - Create an empty Cell. */
+#   define AST_FACTION_CELL1    0x1001 /* `< <act0> >'                - Create an Cell for `<act0>'. */
 #   define AST_FACTION_TYPEOF   0x1002 /* `type(<act0>)'              - Return the actual type of `<act0>' */
 #   define AST_FACTION_CLASSOF  0x1003 /* `<act0>.class'              - Return the effective class of `<act0>' (Dereference super objects) */
 #   define AST_FACTION_SUPEROF  0x1004 /* `<act0>.super'              - Return the super-object of `<act0>' */
@@ -432,7 +432,7 @@ struct ast {
 #   define AST_FSWITCH_NORMAL   0x0000 /* Normal switch flags (automatically determine mode) */
 #   define AST_FSWITCH_NOJMPTAB 0x0001 /* Never generate a jump table to perform the actual switch.
                                         * Normally, all cases that could be expressed as constant
-                                        * key-expressions of a dict, (or even more preferred, indices of a list)
+                                        * key-expressions of a Dict, (or even more preferred, indices of a List)
                                         * are packaged together within a compile-time generated jump table
                                         * that is stored as a constant/static variable and used using
                                         * one of the 2 following code patterns (depending on whether or
@@ -448,7 +448,7 @@ struct ast {
                                         * >>#if IDENTICAL_STACK_DEPTHS
                                         * >>     jmp      pop
                                         * >>#else
-                                        * >>     unpack   tuple, #2
+                                        * >>     unpack   #2
                                         * >>     jmp      pop, #pop
                                         * >>#endif
                                         * >>1:   // case "foo":

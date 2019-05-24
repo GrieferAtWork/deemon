@@ -29,7 +29,7 @@
 #include <deemon/roset.h>
 #include <deemon/module.h>
 #include <deemon/dict.h>
-#include <deemon/hashset.h>
+#include <deemon/HashSet.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/none.h>
@@ -336,7 +336,7 @@ push_tuple_parts:
    if (end != start) {
     DREF DeeObject *subrange;
     if (end == start+1) {
-     /* Special case: encode as  `pack list, #1' */
+     /* Special case: encode as  `pack List, #1' */
      subrange = DeeList_GET(value,start);
      Dee_Incref(subrange);
      DeeList_LockEndRead(value);
@@ -383,18 +383,18 @@ push_tuple_parts:
 #endif
  if (DeeDict_Check(value)) {
   /* Construct dicts in one of 2 ways:
-   *   #1: If all dict elements are allocated as constants,
-   *       push as a read-only dict, then cast to a regular
-   *       dict.
-   *   #2: Otherwise, push all dict key/item pairs manually,
-   *       before packing everything together as a dict. */
+   *   #1: If all Dict elements are allocated as constants,
+   *       push as a read-only Dict, then cast to a regular
+   *       Dict.
+   *   #2: Otherwise, push all Dict key/item pairs manually,
+   *       before packing everything together as a Dict. */
   size_t i,mask,ro_mask,num_items;
   struct dict_item *elem;
   DREF DeeRoDictObject *rodict;
 check_dict_again:
   DeeDict_LockRead(value);
   if (!((DeeDictObject *)value)->d_used) {
-   /* Simple case: The dict is empty, so we can just pack an empty dict at runtime. */
+   /* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
    DeeDict_LockEndRead(value);
    return asm_gpack_dict(0);
   }
@@ -422,7 +422,7 @@ check_dict_again:
   }
   rodict->rd_size = num_items;
   rodict->rd_mask = ro_mask;
-  /* Pack all key-value pairs into the ro-dict. */
+  /* Pack all key-value pairs into the ro-Dict. */
   for (i = 0; i <= mask; ++i) {
    if (!elem[i].di_key) continue;
    if (elem[i].di_key == dummy) continue;
@@ -435,17 +435,17 @@ check_dict_again:
   }
   DeeDict_LockEndRead(value);
   DeeObject_Init(rodict,&DeeRoDict_Type);
-  /* All right! we've got the ro-dict all packed together!
+  /* All right! we've got the ro-Dict all packed together!
    * -> Register it as a constant. */
   cid = asm_newconst((DeeObject *)rodict);
   Dee_Decref(rodict);
   if unlikely(cid < 0) goto err;
-  /* Now push the ro-dict, then cast it to a regular one. */
+  /* Now push the ro-Dict, then cast it to a regular one. */
   if (asm_gpush_const((uint16_t)cid)) goto err;
   if (asm_gcast_dict()) goto err;
   return 0;
 push_dict_parts:
-  /* Construct a dict by pushing its individual parts. */
+  /* Construct a Dict by pushing its individual parts. */
   num_items = 0;
   DeeDict_LockRead(value);
   for (i = 0; i <= ((DeeDictObject *)value)->d_mask; ++i) {
@@ -468,7 +468,7 @@ push_dict_parts:
    DeeDict_LockRead(value);
   }
   DeeDict_LockEndRead(value);
-  /* With everything pushed, pack together the dict. */
+  /* With everything pushed, pack together the Dict. */
   return asm_gpack_dict((uint16_t)num_items);
  }
  if (DeeHashSet_Check(value)) {
@@ -484,7 +484,7 @@ push_dict_parts:
 check_set_again:
   DeeHashSet_LockRead(value);
   if (!((DeeHashSetObject *)value)->s_used) {
-   /* Simple case: The set is empty, so we can just pack an empty hashset at runtime. */
+   /* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
    DeeHashSet_LockRead(value);
    return asm_gpack_hashset(0);
   }
@@ -663,9 +663,9 @@ check_function_class:
      }
      if (asm_gpush_symbol(class_sym,warn_ast)) goto err;   /* args..., func, class_sym */
      symid = asm_newmodule(DeeModule_GetDeemon());
-     if unlikely(symid < 0) goto err; /* Call as an instancemethod */
-     if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err; /* args..., class_sym.func */
-     /* Fallthrough to invoke the instancemethod normally. */
+     if unlikely(symid < 0) goto err; /* Call as an InstanceMethod */
+     if (asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2)) goto err; /* args..., class_sym.func */
+     /* Fallthrough to invoke the InstanceMethod normally. */
     }
     if (asm_grrot(argc + 1)) goto err; /* func, args... */
     return asm_gcall(argc);            /* result */
@@ -737,10 +737,10 @@ check_function_class:
     }
     if (asm_gpush_symbol(this_sym,warn_ast)) goto err;  /* args..., func, this */
     symid = asm_newmodule(DeeModule_GetDeemon());
-    if unlikely(symid < 0) goto err; /* Call as an instancemethod */
-    if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2))
+    if unlikely(symid < 0) goto err; /* Call as an InstanceMethod */
+    if (asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2))
         goto err; /* args..., this.func */
-    /* Fallthrough to invoke the instancemethod normally. */
+    /* Fallthrough to invoke the InstanceMethod normally. */
    }
    /* args..., func */
 got_attribute_value:
@@ -877,8 +877,8 @@ check_sym_class:
    } else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
     if (asm_gpush_symbol(class_sym,warn_ast)) goto err;   /* func, class_sym */
     symid = asm_newmodule(DeeModule_GetDeemon());
-    if unlikely(symid < 0) goto err; /* Call as an instancemethod */
-    if (asm_gcall_extern((uint16_t)symid,id_instancemethod,2)) goto err; /* class_sym.func */
+    if unlikely(symid < 0) goto err; /* Call as an InstanceMethod */
+    if (asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2)) goto err; /* class_sym.func */
    }
    return 0;
   }
@@ -937,7 +937,7 @@ check_sym_class:
    symid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(symid < 0) goto err;
    if (asm_gpush_symbol(this_sym,warn_ast)) goto err;
-   return asm_gcall_extern((uint16_t)symid,id_instancemethod,2);
+   return asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2);
   }
   return 0;
  } break;
@@ -968,7 +968,7 @@ check_sym_class:
    if (asm_gpush_this()) goto err;
    symid = asm_newmodule(DeeModule_GetDeemon());
    if unlikely(symid < 0) goto err;
-   return asm_gcall_extern((uint16_t)symid,id_instancemethod,2);
+   return asm_gcall_extern((uint16_t)symid,id_InstanceMethod,2);
   }
   return asm_gpush_this_function();
  case SYMBOL_TYPE_THIS:

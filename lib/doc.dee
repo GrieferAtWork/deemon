@@ -71,9 +71,9 @@ local function decode_text(text: string): string {
 }
 
 @@Search for a given @ob within the export table of @mod, returning its name or :none if not found
-local function lookup_object_in_module(mod: deemon.module,ob): string | none {
+local function lookup_object_in_module(mod: Module, ob: Object): string | none {
 	/* Search the export table of this module! */
-	for (local name,obj: deemon.module.__exports__(mod)) {
+	for (local name,obj: Module.__exports__(mod)) {
 		if (obj === ob)
 			return name;
 	}
@@ -84,20 +84,20 @@ local function lookup_object_in_module(mod: deemon.module,ob): string | none {
 @@a string in the form of $"?E<MODULE>:<NAME>" if this applies.
 @@Otherwise, when the module could not be determined, return a
 @@string in the form of $"?U<NAME>"
-local function encode_type(tp: deemon.type_): string {
-	if (tp === deemon.object)
+local function encode_type(tp: deemon.Type): string {
+	if (tp === deemon.Object)
 		return "?O";
-	local mod = deemon.type_.__module__(tp);
+	local mod = deemon.Type.__module__(tp);
 	if (mod is none) /* Module could not be determined */
 		return "?U" + encode_name(tp.__name__);
 	local name = lookup_object_in_module(mod,tp);
 	if (name is none)
-		name = deemon.type_.__name__(tp);
+		name = deemon.Type.__name__(tp);
 	if (mod === deemon)
 		return "?D" + encode_name(name);
 	return "?E{}:{}".format({
 		/* TODO: This only works for global modules! */
-		encode_name(deemon.module.__name__(mod)),
+		encode_name(Module.__name__(mod)),
 		encode_name(name),
 	});
 }
@@ -123,7 +123,7 @@ local function encode_type_from_path(path: string): string {
 
 @@Encode an arbitrary object expression @ob as a function default argument
 @@If the given @ob cannot be encoded as such, return :none instead
-local function encode_expr(ob: object): string | none {
+local function encode_expr(ob: Object): string | none {
 	if (ob is int || ob is float)
 		return "!" + ob;
 	if (ob is string)
@@ -132,13 +132,13 @@ local function encode_expr(ob: object): string | none {
 		return "!N";
 	if (ob is bool)
 		return ob ? "!t" : "!f";
-	if (ob is type object) {
-		if (ob === deemon.object)
+	if (ob is Type) {
+		if (ob === deemon.Object)
 			return "!Dobject";
 		return "!" + encode_type(ob)[1:];
 	}
-	if (ob is deemon.module)
-		return "!M" + encode_name(deemon.module.__name__(ob));
+	if (ob is Module)
+		return "!M" + encode_name(Module.__name__(ob));
 	return none;
 }
 
@@ -290,7 +290,7 @@ local operator_defaults: {string: string} = {
 	"setitem" : "(index:?Dint,value)->?N", "getrange" : "(start:?Dint,end:?Dint)->?S?O",
 	"delrange" : "(start:?Dint,end:?Dint)->?N", "setrange" : "(start:?Dint,end:?Dint,values:?S?O)->?N",
 	"getattr" : "(attr:?Dstring)->", "delattr" : "(attr:?Dstring)->?N",
-	"setattr" : "(attr:?Dstring,value)->?N", "enumattr" : "()->?S?Dattribute",
+	"setattr" : "(attr:?Dstring,value)->?N", "enumattr" : "()->?S?DAttribute",
 	"enter" : "()->?N", "leave" : "()->?N",
 };
 
@@ -379,14 +379,14 @@ local function operator_realname(name: string, argc: int | none = none): string 
 @@Returns the Doc-like path for a given fully qualified type
 @@If no such path exists, return :none instead
 @@NOTE: The returned path includes a leading $"/"
-local function get_qualified_typepath(docnode: weakref with Doc, qual: string): string | none {
+local function get_qualified_typepath(docnode: WeakRef with Doc, qual: string): string | none {
 	if (#qual >= 2) switch (qual[1]) {
 	case "G": {
 		local mod = docnode.value.module;
 		if (mod is none)
 			return none;
 		return "/{}/{}".format({
-			deemon.module.__name__(mod),
+			Module.__name__(mod),
 			decode_name(qual.substr(2)),
 		});
 	}	break;
@@ -413,12 +413,12 @@ local function get_qualified_typepath(docnode: weakref with Doc, qual: string): 
 	return none;
 }
 
-local function find_error_by_name(t: type_, qual: string, s: string): string | none {
+local function find_error_by_name(t: deemon.Type, qual: string, s: string): string | none {
 	if (t.__name__ == s)
 		return qual;
 	for (local attr: deemon.enumattr(t)) {
 		if (attr.decl != t) break;
-		if (attr.attrtype != type deemon.object) break;
+		if (attr.attrtype != type deemon.Object) break;
 		if (!attr.isclass) continue;
 		local result = find_error_by_name(
 			t.operator . (attr.name),
@@ -429,7 +429,7 @@ local function find_error_by_name(t: type_, qual: string, s: string): string | n
 	}
 }
 
-local function qualify_legacy_typeref(docnode: weakref with Doc, s: string): string {
+local function qualify_legacy_typeref(docnode: WeakRef with Doc, s: string): string {
 	/* Search for a legacy-like type reference */
 	local node = docnode.value;
 	if (!node.istype && node.parent !is none)
@@ -451,7 +451,7 @@ local function qualify_legacy_typeref(docnode: weakref with Doc, s: string): str
 }
 
 @@Turn @s into a fully qualified type reference string
-local function qualify_typeref_string(docnode: weakref with Doc, s: string): string {
+local function qualify_typeref_string(docnode: WeakRef with Doc, s: string): string {
 	if (s.startswith("?") && #s >= 2) {
 		switch (s[1]) {
 		case ".": {
@@ -467,7 +467,7 @@ local function qualify_typeref_string(docnode: weakref with Doc, s: string): str
 				local mod = node.module;
 				return "?E{}:{}".format({
 					/* TODO: This only works for global modules! */
-					encode_name(deemon.module.__name__(mod)),
+					encode_name(Module.__name__(mod)),
 					s.substr(2,len)
 				});
 			}
@@ -479,7 +479,7 @@ local function qualify_typeref_string(docnode: weakref with Doc, s: string): str
 			});
 		}	break;
 		case "N": return "?Edeemon:none";
-		case "O": return "?Edeemon:object";
+		case "O": return "?Edeemon:Object";
 		case "D":
 			return "?Edeemon:" + decode_name(s.substr(2));
 		case "U":
@@ -506,7 +506,7 @@ local function qualify_typeref_string(docnode: weakref with Doc, s: string): str
 @@Return the type associated with a given fully qualified path
 @@If the type could not be accessed, return :none or throw an
 @@exception.
-local function get_type_from_qualpath(docnode: weakref with Doc, qual: string): deemon.type_ | none {
+local function get_type_from_qualpath(docnode: WeakRef with Doc, qual: string): deemon.Type | none {
 	if (#qual < 2)
 		return none;
 	switch (qual[1]) {
@@ -547,7 +547,7 @@ local function get_type_from_qualpath(docnode: weakref with Doc, qual: string): 
 @@Abstract representation of a type reference, using either
 @@the new-style ?... encoding, or the direct naming of types
 @@seen in old-style documentation strings
-class TypeRef: weakrefable {
+class TypeRef: WeakRefAble {
 
 	@@The fully qualified documentation string for this type
 	@@Example: $"?Edeemon:int"
@@ -563,13 +563,13 @@ class TypeRef: weakrefable {
 			return m_docstring;
 		}
 	}
-	public final member m_docstring: string | deemon.type_;
+	public final member m_docstring: string | deemon.Type;
 
 	@@The doc node that contains a reference to @this TypeRef
-	public final member docnode: weakref with Doc;
+	public final member docnode: WeakRef with Doc;
 
-	this(d: Doc | weakref with Doc, ds: string | deemon.type_)
-		: docnode(d is weakref ? d : weakref(d))
+	this(d: Doc | WeakRef with Doc, ds: string | deemon.Type)
+		: docnode(d is WeakRef ? d : WeakRef(d))
 	{
 		if (ds is string) {
 			m_docstring = qualify_typeref_string(docnode,ds);
@@ -586,19 +586,19 @@ class TypeRef: weakrefable {
 
 	@@The actual type object represented by @this TypeRef,
 	@@or :none if that type is unreachable or unknown
-	public final property typ: deemon.type_ | none = {
-		get(): deemon.type_ | none {
+	public final property typ: deemon.Type | none = {
+		get(): deemon.Type | none {
 			if (m_typ !is bound) {
 				m_typ =
 					try get_type_from_qualpath(docnode,m_docstring)
 					catch (...) none;
-				if (m_typ !is deemon.type_)
+				if (m_typ !is deemon.Type)
 					m_typ = none;
 			}
 			return m_typ;
 		}
 	}
-	private member m_typ: deemon.type_ | none;
+	private member m_typ: deemon.Type | none;
 
 
 	@@Returns the Doc path associated with the type referenced by @this
@@ -623,7 +623,7 @@ class TypeRef: weakrefable {
 					return none;
 				}
 				local result = Doc(p);
-				m_node = weakref();
+				m_node = WeakRef();
 				return result;
 			} else {
 				local result = m_node.lock(none);
@@ -639,16 +639,16 @@ class TypeRef: weakrefable {
 			}
 		}
 	}
-	private member m_node: weakref with Doc | none;
+	private member m_node: WeakRef with Doc | none;
 
 	@@Get the human-readable name of the type Referneced by @this
 	@@The returned string does not retain all available information,
 	@@and ishas 2 different forms:
 	@@ - When the type is found to be apart of the same module as the referencing
 	@@   doc node, then the module prefix is omitted, and the returned string is
-	@@   structured in the form of $"MyType.iterator" (for ${(MyType from mymodule).iterator})
+	@@   structured in the form of $"MyType.Iterator" (for ${(MyType from mymodule).Iterator})
 	@@ - When the type is apart of a different module, then that module's name is
-	@@   prefixed, resulting in the form of $"mymodule.MyType.iterator"
+	@@   prefixed, resulting in the form of $"mymodule.MyType.Iterator"
 	@@   When that other module is the builtin :deemon module, the module prefix
 	@@   will be attempted to be omitted, however if the current module also contains
 	@@   an export with the same name, the prefix is retained.
@@ -672,9 +672,9 @@ class TypeRef: weakrefable {
 			local modname = decode_name(qual.substr(2,modend));
 			local modexp = decode_name(qual.substr(modend + 1));
 			local mymod = docnode.lock(none).module;
-			if (mymod !is none && modname == deemon.module.__name__(mymod))
+			if (mymod !is none && modname == Module.__name__(mymod))
 				return modexp;
-			if (modname == "deemon" && modexp !in deemon.module.__exports__(mymod))
+			if (modname == "deemon" && modexp !in Module.__exports__(mymod))
 				return modexp;
 			return "{}.{}".format({ modname, modexp });
 		}	break;
@@ -923,7 +923,7 @@ again:
 @@>print d.decls[0].parameters[0].isaccepted(1234);  /* true */
 @@>print d.decls[0].parameters[0].isaccepted(1.0);   /* true */
 @@>print d.decls[0].parameters[0].isaccepted("foo"); /* false */
-class TypeExpr: weakrefable {
+class TypeExpr: WeakRefAble {
 
 	@@The raw documentation string for this type
 	@@Example: $"?T2?Dint?Dint"
@@ -934,20 +934,20 @@ class TypeExpr: weakrefable {
 			return m_docstring;
 		}
 	}
-	private member m_docstring: string | deemon.type_;
+	private member m_docstring: string | deemon.Type;
 
 	@@The doc node that contains a reference to @this TypeExpr
-	public final property docnode: weakref with Doc = {
-		get(): weakref with Doc {
+	public final property docnode: WeakRef with Doc = {
+		get(): WeakRef with Doc {
 			return docdecl.value.docsect.value.docnode;
 		}
 	}
 
 	@@The doc Declaration that uses @this TypeExpr
-	public final member docdecl: weakref with Declaration;
+	public final member docdecl: WeakRef with Declaration;
 
-	this(d: Declaration | weakref with Declaration, ds: string | deemon.type_)
-		: docdecl(d is weakref ? d : weakref(d))
+	this(d: Declaration | WeakRef with Declaration, ds: string | deemon.Type)
+		: docdecl(d is WeakRef ? d : WeakRef(d))
 		, m_docstring(ds)
 	{
 		if (m_docstring !is string) {
@@ -972,15 +972,15 @@ class TypeExpr: weakrefable {
 	}
 
 	@@Returns :true if the type referred to by @this TypeExpr
-	@@accepts any kind of input (aka. referrs to deemon.object)
+	@@accepts any kind of input (aka. referrs to deemon.Object)
 	@@Seperately, a X-expression with at least one element
 	@@accepting anything, also accepts anything itself.
 	public final property acceptsany: bool = {
 		get(): bool {
 			if (m_acceptsany !is bound) {
 				if (m_docstring !is string)
-					m_acceptsany = m_docstring === deemon.object;
-				else if (m_docstring in ["?O","?Dobject","?Edeemon:object"])
+					m_acceptsany = m_docstring === deemon.Object;
+				else if (m_docstring in ["?O","?Dobject","?Edeemon:Object"])
 					m_acceptsany = true;
 				else {
 					m_acceptsany = false;
@@ -1000,8 +1000,8 @@ class TypeExpr: weakrefable {
 	private member m_acceptsany: bool;
 
 
-	@@Check if a given object @ob can be accepted as argument for @this TypeExpr
-	public final isaccepted(ob: object): bool {
+	@@Check if a given Object @ob can be accepted as argument for @this TypeExpr
+	public final isaccepted(ob: Object): bool {
 		switch (kind) {
 		case "E":
 			return ob is Etyperef.typ;
@@ -1009,7 +1009,7 @@ class TypeExpr: weakrefable {
 			if (ob !is Ccelltype.typ)
 				return false;
 			local cellitem = Citemtype.typ;
-			if (cellitem === deemon.object)
+			if (cellitem === deemon.Object)
 				return true;
 			try {
 				if (ob.value is cellitem)
@@ -1020,7 +1020,7 @@ class TypeExpr: weakrefable {
 		case "T": {
 			local items;
 			try {
-				items = tuple(ob);
+				items = Tuple(ob);
 			} catch (...) {
 				return false;
 			}
@@ -1071,18 +1071,18 @@ check_elem:
 	}
 
 	@@Enumerate the (simplified) set of types which @this TypeExpr accepts
-	@@For this purpose, contained-information for cell-like objects is removed, and
-	@@any kind of sequence-like type is interpreted as one of :sequence or :mapping
-	public final property types: {deemon.type_...} = {
-		get(): {deemon.type_...} {
+	@@For this purpose, contained-information for Cell-like objects is removed, and
+	@@any kind of sequence-like type is interpreted as one of :Sequence or :mapping
+	public final property types: {deemon.Type...} = {
+		get(): {deemon.Type...} {
 			if (m_types !is bound)
-				m_types = hashset(enumtypes());
+				m_types = HashSet(enumtypes());
 			return m_types;
 		}
 	}
-	private member m_types: {deemon.type_...};
+	private member m_types: {deemon.Type...};
 
-	private enumtypes(): {deemon.type_...} {
+	private enumtypes(): {deemon.Type...} {
 		switch (kind) {
 		case "E":
 			yield Etyperef.typ;
@@ -1091,7 +1091,7 @@ check_elem:
 			yield Ccelltype.enumtypes()...;
 			break;
 		case "T":
-			yield deemon.sequence;
+			yield deemon.Sequence;
 			break;
 		case "X":
 			for (local x: Xtypes)
@@ -1102,14 +1102,14 @@ check_elem:
 			if (st.docstring.startswith("?T2"))
 				yield deemon.mapping; /* Sequence of 2-element tuples. */
 			else {
-				yield deemon.sequence; /* Sequence of something else. */
+				yield deemon.Sequence; /* Sequence of something else. */
 			}
 		}	break;
 		case "Q":
 			yield Qexpr.exprtypes...;
 			break;
 		default:
-			yield deemon.object;
+			yield deemon.Object;
 			break;
 		}
 	}
@@ -1153,13 +1153,13 @@ check_elem:
 		while (pos < #m_docstring && m_docstring.isdigit(pos))
 			++pos;
 		local n = try int(m_docstring[2:pos]) catch (...) 0;
-		local result = list(n,none);
+		local result = List(n,none);
 		for (local i: [:n]) {
 			local end = typeexpr_end(m_docstring,pos);
 			result[i] = TypeExpr(docdecl,m_docstring.substr(pos,end));
 			pos = end;
 		}
-		m_cache = tuple(result);
+		m_cache = Tuple(result);
 	}
 	private loadS() {
 		m_cache = TypeExpr(docdecl,m_docstring.substr(2));
@@ -1199,7 +1199,7 @@ check_elem:
 		}
 	}
 
-	@@Returns the sequence of tuple element types
+	@@Returns the sequence of Tuple element types
 	@@WARNING: This property must only be used when #kind is equal to $"T"
 	public final property Ttypes: {TypeExpr...} = {
 		get(): {TypeExpr...} {
@@ -1265,7 +1265,7 @@ check_elem:
 
 @@Abstract representation of documentation expressions,
 @@as used to encode parameter default values
-class Expression: weakrefable {
+class Expression: WeakRefAble {
 
 	@@The raw documentation string for this expression
 	@@Example: $"!Edeemon:none"
@@ -1279,17 +1279,17 @@ class Expression: weakrefable {
 	private member m_docstring: string | bool;
 
 	@@The doc Declaration that contains a reference to @this Expression
-	public final member docdecl: weakref with Declaration;
+	public final member docdecl: WeakRef with Declaration;
 
 	@@The doc node associated with @this Expression
-	public final property docnode: weakref with Doc = {
-		get(): weakref with Doc {
+	public final property docnode: WeakRef with Doc = {
+		get(): WeakRef with Doc {
 			return docdecl.value.docsect.value.docnode;
 		}
 	}
 
-	this(d: Declaration | weakref with Declaration, ds: string | bool, cval?: object)
-		: docdecl(d is weakref ? d : weakref(d))
+	this(d: Declaration | WeakRef with Declaration, ds: string | bool, cval?: Object)
+		: docdecl(d is WeakRef ? d : WeakRef(d))
 		, m_docstring(ds)
 	{
 		if (cval is bound) {
@@ -1432,8 +1432,8 @@ done:
 
 
 	@@Returns the constant default value when #kind is $"C"
-	public final property Cvalue: object = {
-		get(): object {
+	public final property Cvalue: Object = {
+		get(): Object {
 			if (m_cache !is bound) {
 				if (m_docstring[1] == "P") {
 					m_cache = decode_name(m_docstring.substr(2));
@@ -1507,12 +1507,12 @@ done:
 	}
 
 	@@The module that is being imported
-	public final property Emodule: module | none = {
-		get(): module | none {
+	public final property Emodule: Module | none = {
+		get(): Module | none {
 			if (m_cache !is bound)
 				Edecode();
 			local result = m_cache[0];
-			if (result !is module && result !is none) {
+			if (result !is Module && result !is none) {
 				if (result.startswith(".")) {
 					local base = docnode.value.module;
 					result = result == "."
@@ -1533,8 +1533,8 @@ done:
 			if (m_cache !is bound)
 				Edecode();
 			local result = m_cache[0];
-			if (result is module)
-				result = module.__name__(result);
+			if (result is Module)
+				result = Module.__name__(result);
 			return result;
 		}
 	}
@@ -1550,8 +1550,8 @@ done:
 	}
 
 	@@The external object that is being referenced
-	public final property Evalue: object | none = {
-		get(): object | none {
+	public final property Evalue: Object | none = {
+		get(): Object | none {
 			local mod = Emodule;
 			local att = m_cache[1];
 			if (mod !is none && att !is none)
@@ -1584,7 +1584,7 @@ done:
 				 * In the first variant, the compiler isn't required to do this,
 				 * leading to the weak references we use to point back to the
 				 * original doc node to have become stale, causing the `value'
-				 * dereference in the following line to read a dead weakref.
+				 * dereference in the following line to read a dead WeakRef.
 				 */
 				m_cache = docdecl.value.getparambyname(
 					decode_name(m_docstring.substr(3)));
@@ -1610,30 +1610,30 @@ done:
 				while (pos < #m_docstring && m_docstring.isdigit(pos))
 					++pos;
 				local count = try int(m_docstring.substr(2,pos)) catch (...) 0;
-				local items = list(count);
+				local items = List(count);
 				for (local i: [:count]) {
 					local start = pos;
 					pos = deflexpr_end(m_docstring,pos);
 					items[i] = Expression(docdecl,m_docstring.substr(start,pos));
 				}
-				m_cache = tuple(items);
+				m_cache = Tuple(items);
 			}
 			return m_cache;
 		}
 	}
 
 	@@Returns the sequence type of @this, which is one of:
-	@@ - :deemon.list
-	@@ - :deemon.tuple
-	@@ - :deemon.dict
-	@@ - :deemon.hashset
-	public final property Stype: deemon.type_ = {
-		get(): deemon.type_ {
+	@@ - :deemon.List
+	@@ - :deemon.Tuple
+	@@ - :deemon.Dict
+	@@ - :deemon.HashSet
+	public final property Stype: deemon.Type = {
+		get(): deemon.Type {
 			local map = {
-				"L" : deemon.list,
-				"T" : deemon.tuple,
-				"D" : deemon.dict,
-				"S" : deemon.hashset,
+				"L" : deemon.List,
+				"T" : deemon.Tuple,
+				"D" : deemon.Dict,
+				"S" : deemon.HashSet,
 			};
 			return map[m_docstring[1]];
 		}
@@ -1642,8 +1642,8 @@ done:
 	public final property StypeExpr: TypeExpr = {
 		get(): TypeExpr {
 			local map = {
-				"L" : "?Dlist",
-				"T" : "?Dtuple",
+				"L" : "?DList",
+				"T" : "?DTuple",
 				"D" : "?Ddict",
 				"S" : "?Dhashset",
 			};
@@ -1693,14 +1693,14 @@ done:
 			case "L":
 				return "[{}]".format({ ",".join(Sitems) });
 			case "T": {
-				local t = tuple(Sitems);
+				local t = Tuple(Sitems);
 				if (!t) return "()";
 				if (#t == 1)
 					return "({},)".format({ t[0] });
 				return "({})".format({ ",".join(t) });
 			}
 			case "D": {
-				file.writer result;
+				File.Writer result;
 				result << "{ ";
 				local is_first = true;
 				for (local a,b: Sitems.segments(2)) {
@@ -1729,20 +1729,20 @@ done:
 }
 
 
-class Parameter: weakrefable {
+class Parameter: WeakRefAble {
 
 	@@The raw documentation string for this parameter
 	@@Example: $"x:?Dint"
 	public final member docstring: string;
 
 	@@The declaration that @this parameter is apart of
-	public final member docdecl: weakref with Declaration;
+	public final member docdecl: WeakRef with Declaration;
 
 	@@The argument index of this parameter
 	public final member docargi: int;
 
-	this(d: Declaration | weakref with Declaration, argi: int, ds: string)
-		: docdecl(d is weakref ? d : weakref(d))
+	this(d: Declaration | WeakRef with Declaration, argi: int, ds: string)
+		: docdecl(d is WeakRef ? d : WeakRef(d))
 		, docargi(argi)
 		, docstring(ds)
 	{}
@@ -1907,7 +1907,7 @@ class Parameter: weakrefable {
 			m_defstring = docstring.substr(name_end + 1);
 			/* Try to determine the default value of the Parameter */
 			if (m_typstring is none) {
-				local types = tuple(defexpr.exprtypes);
+				local types = Tuple(defexpr.exprtypes);
 				if (types) {
 					if (#types == 1) {
 						m_typ = types[0];
@@ -1972,7 +1972,7 @@ class Parameter: weakrefable {
 	private member m_typ: TypeExpr;
 
 	@@Alias for ${this.typ.isaccepted(ob)}
-	public final isaccepted(ob: object): bool {
+	public final isaccepted(ob: Object): bool {
 		return typ.isaccepted(ob);
 	}
 
@@ -2002,8 +2002,8 @@ class Parameter: weakrefable {
 							.docnode.lock(none);
 						if (node !is none && node.object is bound) {
 							local ob = node.object;
-							if (ob is deemon.function_) {
-								/* Extract from default argument list of user-level function */
+							if (ob is deemon.Function) {
+								/* Extract from default argument List of user-level function */
 								local code = ob.__code__;
 								local argc_min = code.__argc_min__;
 								if (docargi >= argc_min &&
@@ -2055,7 +2055,7 @@ done:
 
 	@@Returns A pretty, human-readable representation of this parameter
 	operator str(): string {
-		file.writer fp;
+		File.Writer fp;
 		if (isvarkwds)
 			fp << "**";
 		fp << name;
@@ -2081,14 +2081,14 @@ done:
 
 
 @@Declaration descriptor for a function or field
-class Declaration: weakrefable {
+class Declaration: WeakRefAble {
 
 	@@The raw documentation string for this declaration
 	@@Example: $"(x:?Dint)->?Dint"
 	public final member docstring: string;
 
 	@@The Doc section containing @this declaration
-	public final member docsect: weakref with DocSection;
+	public final member docsect: WeakRef with DocSection;
 
 	@@True if @this Declaration is for an operator
 	@@This is the case when the associated doc-node is a type,
@@ -2100,12 +2100,12 @@ class Declaration: weakrefable {
 		}
 	}
 
-	this(s: DocSection | weakref with DocSection, ds: string)
-		: docsect(s is weakref ? s : weakref(s))
+	this(s: DocSection | WeakRef with DocSection, ds: string)
+		: docsect(s is WeakRef ? s : WeakRef(s))
 		, docstring(ds)
 	{}
 
-	private member m_parstring: string | none; /* Argument list */
+	private member m_parstring: string | none; /* Argument List */
 	private member m_namstring: string | none;
 	private member m_retstring: string | none;
 	private member m_opname: string | none;
@@ -2158,7 +2158,7 @@ class Declaration: weakrefable {
 						}
 					}
 				} else if (docsect.value.docnode.value.isfunction) {
-					m_parstring = ""; /* Default to an empty argument list for functions */
+					m_parstring = ""; /* Default to an empty argument List for functions */
 				}
 			}
 			m_explittype = true;
@@ -2176,7 +2176,7 @@ class Declaration: weakrefable {
 				}
 			}
 		} else if (m_parstring is none) {
-			/* Default to returning `object' when the parameter list was omitted. */
+			/* Default to returning `Object' when the parameter List was omitted. */
 			m_retstring = "";
 			if (isoperator) {
 				local defl = operator_defaults.get(opname);
@@ -2192,9 +2192,9 @@ class Declaration: weakrefable {
 		}
 	}
 
-	@@Returns the (paren-stripped) string associated with the argument list
+	@@Returns the (paren-stripped) string associated with the argument List
 	@@portion of @this Declaration. - If the declaration doesn't include an
-	@@explicit argument list, :none is returned instead.
+	@@explicit argument List, :none is returned instead.
 	public final property parstring: string | none = {
 		get(): string | none {
 			if (m_parstring !is bound)
@@ -2239,9 +2239,9 @@ class Declaration: weakrefable {
 
 	@@Evaluates to :true if the return type of @this declaration has been
 	@@explicitly defined. When :false, the return type was either implied
-	@@as :object (when a return arrow was present, but no return type), or
+	@@as :Object (when a return arrow was present, but no return type), or
 	@@as automatically deduced (as done for operators, as well as for function
-	@@prototypes implying a none-return type when a parameter list is given,
+	@@prototypes implying a none-return type when a parameter List is given,
 	@@but no return arrow was found)
 	public final property istypeexplicit: bool = {
 		get(): bool {
@@ -2282,7 +2282,7 @@ class Declaration: weakrefable {
 	@@Returns the return expression string (as used to describe the typing
 	@@of a member-like declaration, or the return type of a function-like one)
 	@@If no type expression has been defined, return :none instead.
-	@@Note when this evaluates to an empty string, `deemon.object' is returned.
+	@@Note when this evaluates to an empty string, `deemon.Object' is returned.
 	public final property retstring: string | none = {
 		get(): string | none {
 			if (m_retstring !is bound)
@@ -2333,7 +2333,7 @@ class Declaration: weakrefable {
 						m_parameters = none; /* No parameters */
 					}
 				} else {
-					m_parameters = tuple(
+					m_parameters = Tuple(
 						for (local i,part: util.enumerate(split_nonescaped(parstr,",")))
 							Parameter(this,i,part));
 				}
@@ -2355,7 +2355,7 @@ class Declaration: weakrefable {
 	@@If @this declaration is that of a function or operator, check if the
 	@@type specifications of that function allow the given @args to be used
 	@@in a call to the function or operator
-	public final isaccepted(args...: object): bool {
+	public final isaccepted(args...: Object): bool {
 		local par = parameters;
 		if (par is none)
 			return false;
@@ -2402,17 +2402,17 @@ class Declaration: weakrefable {
 	}
 }
 
-class TextSegment: weakrefable {
+class TextSegment: WeakRefAble {
 
 	@@The raw documentation string for this text segment
 	@@Example: $"(x:?Dint,y:?Dint)->?Dint\nAdd together 2 numbers"
 	public final member docstring: string;
 
 	@@The Doc section containing @this text segment
-	public final member docsect: weakref with DocSection;
+	public final member docsect: WeakRef with DocSection;
 
-	this(s: DocSection | weakref with DocSection, ds: string)
-		: docsect(s is weakref ? s : weakref(s))
+	this(s: DocSection | WeakRef with DocSection, ds: string)
+		: docsect(s is WeakRef ? s : WeakRef(s))
 		, docstring(ds)
 	{}
 
@@ -2513,17 +2513,17 @@ local function split_section(sect: DocSection, docstring: string): {Declaration 
 }
 
 
-class DocSection: weakrefable {
+class DocSection: WeakRefAble {
 
 	@@The raw documentation string for this doc section
 	public final member docstring: string;
 
 	@@The Doc node of which this is a section.
 	@@NOTE: For operator DocSections, this refers to the type node, not the operator node!
-	public final member docnode: weakref with Doc;
+	public final member docnode: WeakRef with Doc;
 
-	this(d: Doc | weakref with Doc, ds: string)
-		: docnode(d is weakref ? d : weakref(d))
+	this(d: Doc | WeakRef with Doc, ds: string)
+		: docnode(d is WeakRef ? d : WeakRef(d))
 		, docstring(ds)
 	{}
 
@@ -2620,13 +2620,13 @@ class DocSection: weakrefable {
 	private member m_hasdecls: bool;
 
 	@@Split @this DocSection into segments of special doc-strings & human-text
-	@@The returned tuple is (is_declaration,content), where is_declaration is
+	@@The returned Tuple is (is_declaration,content), where is_declaration is
 	@@a line applicable to contain either the "->" or the "<START_OF_LINE>("
 	@@pattern.
 	public final property segments: {Declaration | TextSegment...} = {
 		get() {
 			if (m_segments !is bound)
-				m_segments = tuple(split_section(this,docstring));
+				m_segments = Tuple(split_section(this,docstring));
 			return m_segments;
 		}
 	}
@@ -2636,7 +2636,7 @@ class DocSection: weakrefable {
 
 
 @@Automatically generate documentation for a given @fun
-local function generate_function_params(fp: file, fun: deemon.function_) {
+local function generate_function_params(fp: File, fun: deemon.Function) {
 	/* We can actually figure out a lot about this function! */
 	local code = fun.__code__;
 	local argc_min = code.__argc_min__;
@@ -2711,7 +2711,7 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 @@modifiers in order to address different attributes namespaces:
 @@
 @@%{table Prefix|Description
-@@$""|The attribute is either a class-attribute, or an instance-attribute (may lead to ambiguity when a name is re-used, such as by :dict.c:keys and :dict.i:keys)"
+@@$""|The attribute is either a class-attribute, or an instance-attribute (may lead to ambiguity when a name is re-used, such as by :Dict.c:keys and :Dict.i:keys)"
 @@$"c:"|The attribute is a class-attribute (e.g. ${string.chr})
 @@$"i:"|The attribute is a instance-attribute (e.g. ${string.find})
 @@$"op:"|The attribute is a real operator name (e.g. ${"eq"} instead of ${"=="})}
@@ -2724,7 +2724,7 @@ local function generate_function_params(fp: file, fun: deemon.function_) {
 @@functions or classes usually cannot be addressed, and that builtin objects used by the
 @@deemon core, which aren't actually exported from the builtin deemon module cannot be
 @@addressed without the use of the :rt module.
-class Doc: weakrefable {
+class Doc: WeakRefAble {
 
 	@@A universally, unique path that can be used to address this Doc item
 	@@NOTE: If the path cannot be determined, return :none instead
@@ -2785,7 +2785,7 @@ class Doc: weakrefable {
 		get(): string {
 			local result = none;
 			if (istype && object is bound)
-				result = deemon.type_.__name__(object);
+				result = deemon.Type.__name__(object);
 			return result is none ? name : result;
 		}
 	}
@@ -2865,20 +2865,20 @@ class Doc: weakrefable {
 	}
 
 	@@The object represented by @this Doc node (May be unbound)
-	public final member object;
-	public final property attr: attribute | none = {
-		get(): attribute | none {
+	public final member object: Object;
+	public final property attr: Attribute | none = {
+		get(): Attribute | none {
 			if (m_attr !is bound) {
 				if (isoperator || parent is none)
 					m_attr = none;
 				else {
-					m_attr = deemon.attribute(parent.object,name);
+					m_attr = Attribute(parent.object,name);
 				}
 			}
 			return m_attr;
 		}
 	}
-	private member m_attr: attribute | none;
+	private member m_attr: Attribute | none;
 
 	@@The parent doc, or :none when unknown or @this
 	@@Doc node is already a top-level module node
@@ -2895,63 +2895,63 @@ class Doc: weakrefable {
 	@@If no documentation string could be located, this is an empty string
 	public final member docstring: string;
 
-	@[gatw.doc("(path:?Dstring)")]
-	@[gatw.doc("Lookup a given @path in the form \"/<module>/<x>/<y>/<z>\"")]
-	@[gatw.doc("")]
-	@[gatw.doc("(mod:?Dmodule)")]
-	@[gatw.doc("Lookup the Doc node for a given module")]
-	@[gatw.doc("")]
-	@[gatw.doc("(tp:?Dtype)")]
-	@[gatw.doc("Lookup the Doc node for a given type")]
-	@[gatw.doc("")]
-	@[gatw.doc("(attr:?Dattribute)")]
-	@[gatw.doc("Lookup the Doc node for a given attribute")]
-	@[gatw.doc("")]
-	@[gatw.doc("(wrapper)")]
-	@[gatw.doc("Lookup the Doc node for a wrapper, as produced by expressions such as ${string.lower}")]
-	@[gatw.doc("")]
-	@[gatw.doc("(base:?Dmodule,attrname:?Dstring)")]
-	@[gatw.doc("(base:?Dtype,attrname:?Dstring)")]
-	@[gatw.doc("(base:?GDoc,attrname:?Dstring)")]
-	@[gatw.doc("(base,attrname:?Dstring)")]
-	@[gatw.doc("Lookup a given @attrname as a child of a given @base")]
-	this(doc_parent_or_path, attribute_name?: deemon.attribute | string, operator_doc?: {DocSection...}) {
+	@[optional.gatw.doc("(path:?Dstring)")]
+	@[optional.gatw.doc("Lookup a given @path in the form \"/<module>/<x>/<y>/<z>\"")]
+	@[optional.gatw.doc("")]
+	@[optional.gatw.doc("(mod:?DModule)")]
+	@[optional.gatw.doc("Lookup the Doc node for a given module")]
+	@[optional.gatw.doc("")]
+	@[optional.gatw.doc("(tp:?DType)")]
+	@[optional.gatw.doc("Lookup the Doc node for a given type")]
+	@[optional.gatw.doc("")]
+	@[optional.gatw.doc("(attr:?DAttribute)")]
+	@[optional.gatw.doc("Lookup the Doc node for a given attribute")]
+	@[optional.gatw.doc("")]
+	@[optional.gatw.doc("(wrapper)")]
+	@[optional.gatw.doc("Lookup the Doc node for a wrapper, as produced by expressions such as ${string.lower}")]
+	@[optional.gatw.doc("")]
+	@[optional.gatw.doc("(base:?DModule,attrname:?Dstring)")]
+	@[optional.gatw.doc("(base:?DType,attrname:?Dstring)")]
+	@[optional.gatw.doc("(base:?GDoc,attrname:?Dstring)")]
+	@[optional.gatw.doc("(base,attrname:?Dstring)")]
+	@[optional.gatw.doc("Lookup a given @attrname as a child of a given @base")]
+	this(doc_parent_or_path, attribute_name?: Attribute | string, operator_doc?: {DocSection...}) {
 		if (attribute_name !is bound) {
-			if (doc_parent_or_path is deemon.module) {
+			if (doc_parent_or_path is Module) {
 				/* Doc(module) */
 				object    = doc_parent_or_path;
 				m_attr    = none;
 				docstring = "";
 				m_parent  = none;
-				name = deemon.module.__name__(doc_parent_or_path);
+				name = Module.__name__(doc_parent_or_path);
 				return;
 			}
-			if (doc_parent_or_path is deemon.type_) {
+			if (doc_parent_or_path is deemon.Type) {
 				/* Doc(type) */
 				local type_module;
 load_type_input:
 				object = doc_parent_or_path;
-				m_parent = type_module = deemon.type_.__module__(doc_parent_or_path);
-				docstring = deemon.type_.__doc__(doc_parent_or_path).rstrip();
+				m_parent = type_module = deemon.Type.__module__(doc_parent_or_path);
+				docstring = deemon.Type.__doc__(doc_parent_or_path).rstrip();
 				istype = true;
-				name = deemon.type_.__name__(doc_parent_or_path);
+				name = deemon.Type.__name__(doc_parent_or_path);
 				if (type_module is none) {
 					m_attr = none;
 					m_path = none;
 				} else {
-					m_attr = deemon.attribute.lookup(type_module,name);
+					m_attr = Attribute.lookup(type_module,name);
 					if (m_attr is none) {
-						module;
+						module; /* ??? */
 						m_parent = none;
 						m_path = none;
 					} else {
-						m_path = "/{}/{}".format({ deemon.module.__name__(type_module), name });
+						m_path = "/{}/{}".format({ Module.__name__(type_module), name });
 					}
 				}
 				return;
 			}
-			if (doc_parent_or_path is deemon.attribute) {
-				/* Doc(attribute) */
+			if (doc_parent_or_path is Attribute) {
+				/* Doc(Attribute) */
 				name = doc_parent_or_path.name;
 				local ds = doc_parent_or_path.doc;
 				if (ds is none)
@@ -2962,8 +2962,8 @@ load_type_input:
 					local parob = decl;
 					if (doc_parent_or_path.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
-						 * between stuff like `dict.c:keys' and `dict.i:keys' */
-						object = deemon.type_.getinstanceattr(parob,name);
+						 * between stuff like `foo.c:field' and `foo.i:field' */
+						object = deemon.Type.getinstanceattr(parob,name);
 					} else {
 						object = parob.operator . (name);
 					}
@@ -2975,7 +2975,7 @@ load_type_input:
 			if (doc_parent_or_path !is string) {
 				/* Check for singleton-like object instances. */
 				local tp = type doc_parent_or_path;
-				if (deemon.type_.__issingleton__(tp)) {
+				if (deemon.Type.__issingleton__(tp)) {
 					doc_parent_or_path = tp;
 					goto load_type_input;
 				}
@@ -3057,7 +3057,7 @@ err_unknown_attribute:
 		}
 		m_parent = doc_parent_or_path;
 		local my_attr;
-		if (attribute_name is deemon.attribute) {
+		if (attribute_name is Attribute) {
 			my_attr = attribute_name;
 			fixed_attribute_name = attribute_name.name;
 			attribute_name = "{}{}".format({
@@ -3081,10 +3081,10 @@ err_unknown_attribute:
 			local sect;
 			if (operator_doc is bound) {
 				/* Caller-provided documentation string */
-				sect = tuple(operator_doc);
+				sect = Tuple(operator_doc);
 			} else {
 				/* Manually lookup the doc section associated with this operaotr. */
-				sect = tuple(doc_parent_or_path.getopdoc(attribute_name));
+				sect = Tuple(doc_parent_or_path.getopdoc(attribute_name));
 				if (!sect)
 					goto err_unknown_operator;
 			}
@@ -3098,13 +3098,13 @@ err_unknown_attribute:
 			try {
 				if (attribute_name.startswith("i:")) {
 					fixed_attribute_name = attribute_name[2:];
-					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name,"i");
+					my_attr = Attribute(doc_parent_or_path.object,fixed_attribute_name,"i");
 				} else if (attribute_name.startswith("c:")) {
 					fixed_attribute_name = attribute_name[2:];
-					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name,"i","");
+					my_attr = Attribute(doc_parent_or_path.object,fixed_attribute_name,"i","");
 				} else {
 					fixed_attribute_name = attribute_name;
-					my_attr = deemon.attribute(doc_parent_or_path.object,fixed_attribute_name);
+					my_attr = Attribute(doc_parent_or_path.object,fixed_attribute_name);
 				}
 			} catch (Error.AttributeError) {
 				goto err_unknown_attribute;
@@ -3112,15 +3112,15 @@ err_unknown_attribute:
 		}
 		assert operator_doc !is bound;
 		assert my_attr is bound;
-		assert my_attr is deemon.attribute;
+		assert my_attr is Attribute;
 		if (!my_attr.isprivate && !my_attr.isproperty) {
 			local parob = doc_parent_or_path.object;
-			if (parob is deemon.type_) {
+			if (parob is deemon.Type) {
 				if (my_attr.isclass) {
 					if (my_attr.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
-						 * between stuff like `dict.c:keys' and `dict.i:keys' */
-						object = deemon.type_.getinstanceattr(parob,fixed_attribute_name);
+						 * between stuff like `foo.c:field' and `foo.i:field' */
+						object = deemon.Type.getinstanceattr(parob,fixed_attribute_name);
 					} else {
 						try {
 							object = parob.operator . (fixed_attribute_name);
@@ -3137,22 +3137,22 @@ err_unknown_attribute:
 		}
 		/* Types implement their own documentation strings. */
 		if (object is bound) {
-			if (object is deemon.type_) {
+			if (object is deemon.Type) {
 set_is_type:
-				docstring = deemon.type_.__doc__(object).rstrip();
+				docstring = deemon.Type.__doc__(object).rstrip();
 				istype = true;
-			} else if (deemon.type_.__issingleton__(type object)) {
+			} else if (deemon.Type.__issingleton__(type(object))) {
 				/* When accessing the documentation of a singleton object instance
 				 * (as indicated by us having an instance of that singleton, when its
 				 * type offers no way of being constructed; `this = del'), display
 				 * documentation for the type instead of the singleton */
-				object = type object;
+				object = type(object);
 				issingleton = true;
 				goto set_is_type;
 			}
 		}
 		local tp = my_attr.attrtype;
-		if (tp !is none && deemon.type_.derivedfrom(tp,deemon.type_))
+		if (tp !is none && deemon.Type.derivedfrom(tp,deemon.Type))
 			istype = true;
 		/* If we couldn't load a non-empty doc string from other places,
 		 * try to load the doc string from the attribute descriptor. */
@@ -3180,9 +3180,9 @@ set_is_type:
 	public final property haschildren: bool = {
 		get() {
 			if (object is bound) {
-				if (object is deemon.module)
+				if (object is deemon.Module)
 					return true;
-				if (object is deemon.type_)
+				if (object is deemon.Type)
 					return true;
 			}
 			return false;
@@ -3195,9 +3195,9 @@ set_is_type:
 			if (isoperator)
 				return true;
 			local at = attr;
-			if (at !is none && (at.cancall || callable.baseof(at.attrtype)))
+			if (at !is none && (at.cancall || Callable.baseof(at.attrtype)))
 				return true;
-			return object is bound && object is callable;
+			return object is bound && object is Callable;
 		}
 	}
 
@@ -3220,7 +3220,7 @@ set_is_type:
 	@@Evaluates to :true if the object is a module
 	public final property ismodule: bool = {
 		get() {
-			return object is bound && object is deemon.module;
+			return object is bound && object is Module;
 		}
 	}
 
@@ -3265,7 +3265,7 @@ set_is_type:
 				if (at is none)
 					return "operator";
 			} else {
-				if (object is deemon.module)
+				if (object is deemon.Module)
 					return "module";
 			}
 			if (at !is bound)
@@ -3273,7 +3273,7 @@ set_is_type:
 			if (at !is none) {
 				if (at.isproperty)
 					return at.isinstance ? "property" : "class_property";
-				if (at.cancall || callable.baseof(at.attrtype))
+				if (at.cancall || Callable.baseof(at.attrtype))
 					return at.isinstance ? "function" : "class_function";
 				return at.isinstance ? "member" : "class_member";
 			}
@@ -3298,7 +3298,7 @@ set_is_type:
 			x = this;
 			for (;;) {
 				if (x.istype && x.object is bound) {
-					local mod = deemon.type_.__module__(x.object);
+					local mod = deemon.Type.__module__(x.object);
 					if (mod !is none)
 						return Doc(mod);
 				}
@@ -3311,7 +3311,7 @@ set_is_type:
 
 	@@Returns the module (i.e the path-base) of this node
 	@@If the module could not be determined, return :none instead
-	public final property module: deemon.module | none = {
+	public final property module: Module | none = {
 		get() {
 			local x = this;
 			for (;;) {
@@ -3326,7 +3326,7 @@ set_is_type:
 			x = this;
 			for (;;) {
 				if (x.istype && x.object is bound) {
-					local mod = deemon.type_.__module__(x.object);
+					local mod = deemon.Type.__module__(x.object);
 					if (mod !is none)
 						return mod;
 				}
@@ -3355,12 +3355,12 @@ set_is_type:
 	}
 
 	@@Returns the type of the base class of @this node, or :none if @this node isn't a type, or if that type doesn't have a base.
-	public final property objectbase: deemon.type_ | none = {
-		get(): deemon.type_ | none {
+	public final property objectbase: deemon.Type | none = {
+		get(): deemon.Type | none {
 			if (object !is bound ||
-				object !is deemon.type_)
+				object !is deemon.Type)
 				return none;
-			return deemon.type_.__base__(object);
+			return deemon.Type.__base__(object);
 		}
 	}
 
@@ -3389,9 +3389,9 @@ set_is_type:
 	}
 
 	@@Return a function-like declaration found in the documenation
-	@@of @this Doc node that matches the given argument list.
+	@@of @this Doc node that matches the given argument List.
 	@@If no such declaration could be found, return :none instead.
-	public final declfor(args...: object): Declaration | none {
+	public final declfor(args...: Object): Declaration | none {
 		for (local d: decls)
 			if (d.isaccepted(args...))
 				return d;
@@ -3399,7 +3399,7 @@ set_is_type:
 	}
 
 
-	@@Check if one of @this doc's declarations accepts the given argument list.
+	@@Check if one of @this doc's declarations accepts the given argument List.
 	@@>function foo(x: int | string, y: int | float) {
 	@@>}
 	@@>print Doc(foo).isaccepted(10,20);      /* true */
@@ -3408,13 +3408,13 @@ set_is_type:
 	@@>print Doc(foo).isaccepted("bar",20);   /* true */
 	@@>print Doc(foo).isaccepted("bar",1.0);  /* true */
 	@@>print Doc(foo).isaccepted();           /* false */
-	public final isaccepted(args...: object): bool {
+	public final isaccepted(args...: Object): bool {
 		return declfor(args...) !is none;
 	}
 
 	@@Similar to @isaccepted, but return the type expression
 	@@what gets returned by the declaration capable of accepting
-	@@the given argument list.
+	@@the given argument List.
 	@@NOTE: This function does not actually perform a call!
 	@@      It merely emulates the call and returns the type
 	@@      expression describing the set of types possibly
@@ -3427,7 +3427,7 @@ set_is_type:
 	@@> return str(x + y);
 	@@>}
 	@@>print repr Doc(foo).callwith(10,1.0).types; /* { int, string } */
-	public final callwith(args...: object): TypeExpr | none {
+	public final callwith(args...: Object): TypeExpr | none {
 		return declfor(args...).ret;
 	}
 
@@ -3456,8 +3456,8 @@ set_is_type:
 	private autogenerate_decls(): {DocSection...} {
 		if (isoperator) {
 			yield parent.autogenerate_opdecl(name)...;
-		} else if (object is bound && object is deemon.function_) {
-			file.writer resdoc;
+		} else if (object is bound && object is deemon.Function) {
+			File.Writer resdoc;
 			generate_function_params(resdoc,object);
 			if (object.__code__.isconstructor) {
 				/* Constructors always return :none */
@@ -3469,7 +3469,7 @@ set_is_type:
 			local at = attr;
 			if (at !is none) {
 				local attr_type = at.attrtype;
-				if (at.cancall || callable.baseof(attr_type))
+				if (at.cancall || Callable.baseof(attr_type))
 					yield DocSection(this,"(args!)->"); /* Some kind of function... */
 				else if (attr_type !is none)
 					yield DocSection(this,"->" + encode_type(attr_type));
@@ -3511,7 +3511,7 @@ set_is_type:
 					if (!has_desc) {
 						/* Without any pre-defined declaration, autogenerate some. */
 						local new_result;
-						new_result = list(autogenerate_decls());
+						new_result = List(autogenerate_decls());
 						new_result.extend(result);
 						result = new_result;
 					}
@@ -3525,15 +3525,15 @@ set_is_type:
 
 	@@Automatically generate documentation for native type constructors.
 	private autogenerate_native_constructor_desc(): {DocSection...} {
-		if (deemon.type_.__issuperconstructible__(object)) {
+		if (deemon.Type.__issuperconstructible__(object)) {
 			yield DocSection(this,"constructor->!S");
 		} else {
 			local hasany = false;
-			if (deemon.type_.__isnoargconstructible__(object)) {
+			if (deemon.Type.__isnoargconstructible__(object)) {
 				yield DocSection(this,"constructor()->");
 				hasany = true;
 			}
-			if (deemon.type_.__isvarargconstructible__(object)) {
+			if (deemon.Type.__isvarargconstructible__(object)) {
 				yield DocSection(this,"constructor->");
 				hasany = true;
 			}
@@ -3564,18 +3564,18 @@ set_is_type:
 			 * specified operator, auto-generate a doc for it. */
 			if (object !is bound)
 				return;
-			if (deemon.type_.__isclass__(object)) {
-				local cls = deemon.type_.__class__(object);
+			if (deemon.Type.__isclass__(object)) {
+				local cls = deemon.Type.__class__(object);
 				/* Check if `cls' makes any mention of the operator
 				 * For example: `operator str = del;' */
 				local opaddr = cls.operators.get(opname);
 				if (opaddr !is none) {
 					/* The operator does indeed get overwritten by this class */
-					local ctab = deemon.type_.__ctable__(object);
+					local ctab = deemon.Type.__ctable__(object);
 					if (ctab[opaddr] is bound) {
 						local fun = ctab[opaddr];
-						if (fun is deemon.function_) {
-							file.writer resdoc;
+						if (fun is deemon.Function) {
+							File.Writer resdoc;
 							resdoc << opname;
 							generate_function_params(resdoc,fun);
 							resdoc << "->";
@@ -3594,7 +3594,7 @@ set_is_type:
 					}
 				}
 			} else {
-				if (deemon.type_.hasprivateoperator(object,opname))
+				if (deemon.Type.hasprivateoperator(object,opname))
 					yield autogenerate_opdecl(opname)...;
 				else if (opname == "constructor") {
 					yield autogenerate_native_constructor_desc()...;
@@ -3605,10 +3605,10 @@ set_is_type:
 
 	@@Enumerate all of the child operators of a type-like object
 	private enumerate_operators_sections(): {string: {DocSection...}} {
-		local result = dict();
+		local result: {string: {DocSection...}} = Dict();
 		for (local s: allsections) {
 			for (local name,opsec: s.enumerate_opsections()) {
-				local lst = result.get(name);
+				local lst: {DocSection...} = result.get(name);
 				if (lst is none)
 					result[name] = lst = [];
 				lst.append(opsec);
@@ -3616,9 +3616,9 @@ set_is_type:
 		}
 		/* Enumerate operators overwritten, but not documented */
 		if (object is bound && istype) {
-			if (deemon.type_.__isclass__(object)) {
-				local ctab = deemon.type_.__ctable__(object);
-				local cls = deemon.type_.__class__(object);
+			if (deemon.Type.__isclass__(object)) {
+				local ctab = deemon.Type.__ctable__(object);
+				local cls = deemon.Type.__class__(object);
 				local ops = cls.operators;
 				if (cls.hassuperconstructor && "constructor" !in result)
 					result["constructor"] = (DocSection(this,"constructor->!S"),);
@@ -3626,8 +3626,8 @@ set_is_type:
 					if (name !in result) {
 						if (ctab[addr] is bound) {
 							local fun = ctab[addr];
-							if (fun is deemon.function_) {
-								file.writer resdoc;
+							if (fun is deemon.Function) {
+								File.Writer resdoc;
 								resdoc << name;
 								generate_function_params(resdoc,fun);
 								resdoc << "->";
@@ -3638,7 +3638,7 @@ set_is_type:
 								}
 								result[name] = (DocSection(this,resdoc.string),);
 							} else {
-								result[name] = tuple(autogenerate_opdecl(name));
+								result[name] = Tuple(autogenerate_opdecl(name));
 							}
 						} else {
 							result[name] = (DocSection(this,name + "->!D"),);
@@ -3647,20 +3647,20 @@ set_is_type:
 				}
 			} else {
 				if ("constructor" !in result)
-					result["constructor"] = tuple(autogenerate_native_constructor_desc());
-				for (local name: deemon.type_.__operators__(object)) {
+					result["constructor"] = Tuple(autogenerate_native_constructor_desc());
+				for (local name: deemon.Type.__operators__(object)) {
 					if (name !is string)
 						continue;
 					/* Don't implicitly generate documentation for destructors of native classes
 					 * Since these classes pretty much always require the presence of a destructor
 					 * in order to allow them to clean up pointed-to objects, there really isn't
 					 * any point in documenting them unless the type does so explicitly.
-					 * -> So just skip them if we encounter them as part of the list of operators
+					 * -> So just skip them if we encounter them as part of the List of operators
 					 *    that have been overwritten by the type. */
 					if (name == "destructor")
 						continue;
 					if (name !in result)
-						result[name] = tuple(autogenerate_opdecl(name));
+						result[name] = Tuple(autogenerate_opdecl(name));
 				}
 			}
 		}
@@ -3689,14 +3689,14 @@ set_is_type:
 			return false;
 		local my_object = object;
 		local decl_object = my_object;
-		if (decl_object !is deemon.type_ &&
-		    decl_object !is deemon.module)
+		if (decl_object !is deemon.Type &&
+		    decl_object !is Module)
 			decl_object = type decl_object;
 		if (name.startswith("i:"))
-			return attribute.exists(my_object,name[2:],"i",decl: decl_object);
+			return Attribute.exists(my_object,name[2:],"i",decl: decl_object);
 		if (name.startswith("c:"))
-			return attribute.exists(my_object,name[2:],"i","",decl: decl_object);
-		return attribute.exists(my_object,name,decl: decl_object);
+			return Attribute.exists(my_object,name[2:],"i","",decl: decl_object);
+		return Attribute.exists(my_object,name,decl: decl_object);
 	}
 
 	@@Enumerate all child nodes of @this documentation node
@@ -3709,8 +3709,8 @@ set_is_type:
 			return;
 		local my_object = object;
 		local decl_object = my_object;
-		if (decl_object !is deemon.type_ &&
-		    decl_object !is deemon.module)
+		if (decl_object !is deemon.Type &&
+		    decl_object !is Module)
 			decl_object = type decl_object;
 		for (local x: enumattr(my_object)) {
 			if (x.decl !== decl_object)
@@ -3722,7 +3722,7 @@ set_is_type:
 	@@Convenience interface for printing documentation information
 	@@in a basic, but neat (and human-readable) format
 	operator str(): string {
-		file.writer fp;
+		File.Writer fp;
 		print fp: "-"*80;
 		print fp: "| Documentation for `{}'".format({ prettypath });
 		for (local sec: docsections) {
@@ -3736,7 +3736,7 @@ set_is_type:
 		}
 		print fp: "-"*80;
 		if (ismodule) {
-			local children = list(this);
+			local children = List(this);
 			children.sort();
 			for (local child: children) {
 				fp << child;
