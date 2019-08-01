@@ -24,88 +24,124 @@ import deemon;
 import * from deemon;
 
 function identical(a,b) {
-	return type a === type b && a == b;
+	return type a === type b
+		/* Make sure that the comparison works in every way */
+		&& (a == b)
+		&& (b == a)
+		&& !(a != b)
+		&& !(b != a)
+		;
 }
 
 /* Basic literal / constant parsing. */
-assert identical(exec('1'),          1);
-assert identical(exec('1.0'),        1.0);
-assert identical(exec('"foo"'),      "foo");
-assert identical(exec("'foo'"),      "foo");
-assert identical(exec('true'),       true);
-assert identical(exec('false'),      false);
-assert identical(exec('none'),       none);
+assert identical(exec(r'1'),          1);
+assert identical(exec(r'1.0'),        1.0);
+assert identical(exec(r'"foo"'),      "foo");
+assert identical(exec(r"'foo'"),      "foo");
+assert identical(exec(r'true'),       true);
+assert identical(exec(r'false'),      false);
+assert identical(exec(r'none'),       none);
 
 /* Simple arithmetic. */
-assert identical(exec('10*2 + 11*3'),53);
-assert identical(exec('10/2*5'),     25);
-assert identical(exec('10/(2*5)'),   1);
+assert identical(exec(r'10*2 + 11*3'),53);
+assert identical(exec(r'10/2*5'),     25);
+assert identical(exec(r'10/(2*5)'),   1);
 
 /* Simple unary instructions */
-assert identical(exec('str 1'),      "1");
-assert identical(exec('str 1.0'),    "1.0");
-assert identical(exec('type true'),  bool);
-assert identical(exec('type(true)'), bool);
-assert identical(exec('str(true)'),  "true");
+assert identical(exec(r'str 1'),      "1");
+assert identical(exec(r'str 1.0'),    "1.0");
+assert identical(exec(r'type true'),  bool);
+assert identical(exec(r'type(true)'), bool);
+assert identical(exec(r'str(true)'),  "true");
 
 /* Parenthesis vs. tuples, as well as expand-Sequence casting. */
-assert identical(exec('(1)'),        1);
-assert identical(exec('(1,)'),       Tuple { 1 });
-assert identical(exec('(1,2)'),      Tuple { 1, 2 });
-assert identical(exec('([]...)'),    Tuple { });
-assert identical(exec('([]...,)'),   Tuple { });
-assert identical(exec('([1]...)'),   Tuple { 1 });
-assert identical(exec('([1]...,)'),  Tuple { 1 });
-assert identical(exec('([1,2]...)'), Tuple { 1, 2 });
-assert identical(exec('([1,2]...,)'),Tuple { 1, 2 });
-assert identical(exec('[]'),         List { });
-assert identical(exec('[1]'),        List { 1 });
-assert identical(exec('[1,]'),       List { 1 });
-assert identical(exec('[1,2]'),      List { 1, 2 });
-assert identical(exec('[()...]'),    List { });
-assert identical(exec('[()...,]'),   List { });
-assert identical(exec('[(1,)...]'),  List { 1 });
-assert identical(exec('[(1,)...,]'), List { 1 });
-assert identical(exec('[(1,2)...]'), List { 1, 2 });
-assert identical(exec('[(1,2)...,]'),List { 1, 2 });
-assert identical(exec('(Tuple from deemon)([:5])'),Tuple { 0, 1, 2, 3, 4 });
-assert identical(exec('Tuple from deemon([:5])'),Tuple { 0, 1, 2, 3, 4 });
+assert identical(exec(r'(1)'),        1);
+assert identical(exec(r'(1,)'),       Tuple { 1 });
+assert identical(exec(r'(1,2)'),      Tuple { 1, 2 });
+assert identical(exec(r'()'),         Tuple { });
+assert identical(exec(r'([]...)'),    Tuple { });
+assert identical(exec(r'([]...,)'),   Tuple { });
+assert identical(exec(r'([1]...)'),   Tuple { 1 });
+assert identical(exec(r'([1]...,)'),  Tuple { 1 });
+assert identical(exec(r'([1,2]...)'), Tuple { 1, 2 });
+assert identical(exec(r'([1,2]...,)'),Tuple { 1, 2 });
+assert identical(exec(r'[]'),         List { });
+assert identical(exec(r'[1]'),        List { 1 });
+assert identical(exec(r'[1,]'),       List { 1 });
+assert identical(exec(r'[1,2]'),      List { 1, 2 });
+assert identical(exec(r'[()...]'),    List { });
+assert identical(exec(r'[()...,]'),   List { });
+assert identical(exec(r'[(1,)...]'),  List { 1 });
+assert identical(exec(r'[(1,)...,]'), List { 1 });
+assert identical(exec(r'[(1,2)...]'), List { 1, 2 });
+assert identical(exec(r'[(1,2)...,]'),List { 1, 2 });
+assert identical(exec(r'(Tuple from deemon)([:5])'),Tuple { 0, 1, 2, 3, 4 });
+assert identical(exec(r'Tuple from deemon([:5])'),Tuple { 0, 1, 2, 3, 4 });
 
 /* Range expressions. */
-assert identical(exec('[:20]'),      Sequence.range(0,20));
-assert identical(exec('[:20,2]'),    Sequence.range(0,20,2));
-assert identical(exec('[10:20]'),    Sequence.range(10,20));
-assert identical(exec('[10:20,2]'),  Sequence.range(10,20,2));
+assert identical(exec(r'[:20]'),      Sequence.range(0,20));
+assert identical(exec(r'[:20,2]'),    Sequence.range(0,20,2));
+assert identical(exec(r'[10:20]'),    Sequence.range(10,20));
+assert identical(exec(r'[10:20,2]'),  Sequence.range(10,20,2));
 
 /* Attribute lookup. */
-assert identical(exec('(string from deemon).center'), string.center);
+assert identical(exec(r'(string from deemon).center'), string.center);
 
 /* The builtin import() function. */
-assert exec('import("deemon")') === deemon;
+assert exec(r'import("deemon")') === deemon;
 
 /* Bound expressions. */
-assert identical(exec('"foo".find is bound'),true);
-assert identical(exec('"foo".nonexisting_symbols is bound'),false);
-assert identical(exec('"foo".find !is bound'),false);
-assert identical(exec('"foo".nonexisting_symbols !is bound'),true);
-assert identical(exec('"foo".find !!is bound'),true);
-assert identical(exec('"foo".nonexisting_symbols !!is bound'),false);
-assert identical(exec('bound("foo".find)'),true);
-assert identical(exec('bound("foo".nonexisting_symbols)'),false);
+assert identical(exec(r'"foo".find is bound'),true);
+assert identical(exec(r'"foo".nonexisting_symbols is bound'),false);
+assert identical(exec(r'"foo".find !is bound'),false);
+assert identical(exec(r'"foo".nonexisting_symbols !is bound'),true);
+assert identical(exec(r'"foo".find !!is bound'),true);
+assert identical(exec(r'"foo".nonexisting_symbols !!is bound'),false);
+assert identical(exec(r'bound("foo".find)'),true);
+assert identical(exec(r'bound("foo".nonexisting_symbols)'),false);
+
+assert identical(exec(r'[10,20,"foo",false,none]'),[10,20,"foo",false,none]);
+assert identical(#exec(r'[10,20,"foo",false,none]'),#[10,20,"foo",false,none]);
+//TODO:assert exec(r'{ 10, 20, "foo", false, none }') == { 10, 20, "foo", false, none };
+//TODO:{
+//TODO:	local map = exec(r'{ 10: 20, 20: 30, "foo": "bar" }');
+//TODO:	assert #map == 3;
+//TODO:	assert identical(map.get(10),20);
+//TODO:	assert identical(map.get(20),30);
+//TODO:	assert identical(map.get("foo"),"bar");
+//TODO:	assert identical(map[10],20);
+//TODO:	assert identical(map[20],30);
+//TODO:	assert identical(map["foo"],"bar");
+//TODO:}
 
 
 /* Conditional execution containing an errorous dead branch. */
-assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
+assert identical(exec(r'true ? "ok" : "foo".bar.baz.bim'),"ok");
 
 {
 	local glob = Dict {
 		"x" : "foo",
 		"y" : 20,
 	};
-	exec("result = x.center(y - 5)", globals: glob);
+	exec(r'result = x.center(y - 5)', globals: glob);
 	assert identical(glob["result"],"foo".center(15));
 }
 
+
+/* Test simple lambda expressions */
+{
+	local lmb = exec(r'[](x) -> x.startswith("foo")');
+	local items = ["foz","foo","bar","foobar"];
+	items.removeif(lmb);
+	assert items == ["foz","bar"];
+}
+/* Also re-try the test with a block-lambda */
+{
+	local lmb = exec(r'[](x) { return x.startswith("foo"); }');
+	local items = ["foz","foo","bar","foobar"];
+	items.removeif(lmb);
+	assert items == ["foz","bar"];
+}
 
 {
 	local glob = Dict();
@@ -136,6 +172,7 @@ assert identical(exec('true ? "ok" : "foo".bar.baz.bim'),"ok");
 	assert x.__argc_max__ == 2;
 	assert x.__globals__ === glob;
 }
+
 
 
 

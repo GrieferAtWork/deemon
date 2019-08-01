@@ -335,7 +335,7 @@ frame_getfile(Frame *__restrict self) {
     result = Dee_None,Dee_Incref(Dee_None);
  else {
   if (!state.rs_regs.dr_path-- ||
-     (temp = DeeCode_GetDDIString((DeeObject *)code,state.rs_regs.dr_file)) == NULL)
+     (temp = DeeCode_GetDDIString((DeeObject *)code,state.rs_regs.dr_path)) == NULL)
    result = DeeString_New(file);
   else {
    result = DeeString_Newf("%s" TRACEBACK_SLASH "%s",temp,file);

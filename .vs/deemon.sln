@@ -103,6 +103,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net", "net", "{AEC1B98C-EA2
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "posix", "dex\posix.vcxproj", "{A09058C8-D00B-45BE-A6FC-467B05B65890}"
+	ProjectSection(ProjectDependencies) = postProject
+		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "python", "python", "{9D042239-9D4D-464F-8A1F-A0F834C003D0}"
 	ProjectSection(SolutionItems) = preProject

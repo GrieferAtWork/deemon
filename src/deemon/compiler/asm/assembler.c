@@ -1334,9 +1334,6 @@ INTERN struct except_handler *DCALL asm_pack_exceptv(void) {
   dst->eh_start = iter->ex_start->as_addr;
   dst->eh_end   = iter->ex_end->as_addr;
   dst->eh_addr  = iter->ex_addr->as_addr;
-#if __SIZEOF_POINTER__ > 4
-  dst->eh_pad   = 0;
-#endif
  }
 #ifndef CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
  Dee_Free(current_assembler.a_exceptv);

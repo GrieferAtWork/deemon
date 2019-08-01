@@ -902,8 +902,8 @@ PRIVATE void DCALL uset_clear(USet *__restrict self) {
  /* Destroy the vector. */
  if (elem != empty_set_items) {
   size_t i;
-  for (i = 0; i <= self->s_mask; ++i) {
-   DeeObject *key = self->s_elem[i].si_key;
+  for (i = 0; i <= mask; ++i) {
+   DeeObject *key = elem[i].si_key;
    Dee_XDecref(key);
   }
   Dee_Free(elem);
@@ -1264,10 +1264,10 @@ INTERN DeeTypeObject USet_Type = {
     /* .tp_init = */{
         {
             /* .tp_alloc = */{
-                /* .tp_ctor      = */&USet_InitEmpty,
-                /* .tp_copy_ctor = */&USet_InitCopy,
-                /* .tp_deep_ctor = */&USet_InitCopy,
-                /* .tp_any_ctor  = */&uset_init,
+                /* .tp_ctor      = */(void *)&USet_InitEmpty,
+                /* .tp_copy_ctor = */(void *)&USet_InitCopy,
+                /* .tp_deep_ctor = */(void *)&USet_InitCopy,
+                /* .tp_any_ctor  = */(void *)&uset_init,
                 TYPE_FIXED_ALLOCATOR_GC(DeeHashSetObject)
             }
         },

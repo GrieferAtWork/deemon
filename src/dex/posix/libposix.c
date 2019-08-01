@@ -2473,7 +2473,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pipe_f_impl(void)
  if (error < 0) {
   error = errno;
   HANDLE_EINTR(error,again)
-  HANDLE_ENOSYS(result,err,"pipe")
+  HANDLE_ENOSYS(error,err,"pipe")
   /* TODO: Other errors */
   DeeError_SysThrowf(&DeeError_SystemError,error,
                      "Failed to create pipe");
