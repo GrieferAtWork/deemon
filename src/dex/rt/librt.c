@@ -444,19 +444,19 @@ librt_get_DocKwdsIterator_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(a
 
 PRIVATE DREF DeeObject *DCALL
 librt_get_MappingProxy_impl_f(void) {
- return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"proxy");
+ return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"Proxy");
 }
 PRIVATE DREF DeeObject *DCALL
 librt_get_MappingKeys_impl_f(void) {
- return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"proxy");
+ return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"Proxy");
 }
 PRIVATE DREF DeeObject *DCALL
 librt_get_MappingValues_impl_f(void) {
- return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"values");
+ return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"Values");
 }
 PRIVATE DREF DeeObject *DCALL
 librt_get_MappingItems_impl_f(void) {
- return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"items");
+ return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type,"Items");
 }
 PRIVATE DREF DeeObject *DCALL
 librt_get_MappingProxy_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
