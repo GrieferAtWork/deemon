@@ -82,7 +82,7 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 
 PRIVATE int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_KwdsIterator",&self->ki_map) ||
+ if (DeeArg_Unpack(argc, argv,"o:_KwdsIterator",&self->ki_map) ||
      DeeObject_AssertTypeExact((DeeObject *)self->ki_map,&DeeKwds_Type))
      return -1;
  Dee_Incref(self->ki_map);
@@ -631,7 +631,7 @@ err:
 #define kmapiter_deep kwdsiter_deep
 PRIVATE int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_KwdsMappingIterator",&self->ki_map))
+ if (DeeArg_Unpack(argc, argv,"o:_KwdsMappingIterator",&self->ki_map))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->ki_map,&DeeKwdsMapping_Type))
      goto err;
@@ -897,7 +897,7 @@ PRIVATE int DCALL
 kmap_init(KwdsMapping *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *args; size_t i;
- if (DeeArg_Unpack(argc,argv,"oo:_KwdsMapping",&self->kmo_kwds,&args))
+ if (DeeArg_Unpack(argc, argv,"oo:_KwdsMapping",&self->kmo_kwds,&args))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->kmo_kwds,&DeeKwds_Type))
      goto err;
@@ -1143,7 +1143,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
  * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
  *       to clean up the returned object. */
 PUBLIC DREF DeeObject *DCALL
-DeeKwdsMapping_New(/*Kwds*/DeeObject *__restrict kwds,
+DeeKwdsMapping_New(/*Kwds*/ DeeObject *__restrict kwds,
                    DeeObject **__restrict argv) {
  DREF KwdsMapping *result;
  ASSERT_OBJECT_TYPE_EXACT(kwds,&DeeKwds_Type);
@@ -1370,7 +1370,7 @@ DeeArg_GetKw(size_t *__restrict pargc,
   }
   *pargc -= num_keywords;
   /* Turn keywords and arguments into a proper mapping-like object. */
-  return DeeKwdsMapping_New(kw,argv + *pargc);
+  return DeeKwdsMapping_New(kw, argv + *pargc);
  }
  /* `kw' already is a user-provided mapping. */
  return_reference_(kw);

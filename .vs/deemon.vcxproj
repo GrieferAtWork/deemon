@@ -144,7 +144,6 @@
     <ClInclude Include="..\include\deemon\util\objectlist.h" />
     <ClInclude Include="..\include\deemon\util\recursive-rwlock.h" />
     <ClInclude Include="..\include\deemon\util\rwlock.h" />
-    <ClInclude Include="..\include\deemon\util\seqwriter.h" />
     <ClInclude Include="..\include\deemon\util\string.h" />
     <ClInclude Include="..\include\deemon\weakref.h" />
     <ClInclude Include="..\src\deemon\cmdline.h" />
@@ -336,6 +335,7 @@
     <ClCompile Include="..\src\deemon\system\file.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.clang-format" />
     <None Include="..\include\deemon\compiler\lexer.def" />
     <None Include="..\src\.sources" />
     <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />

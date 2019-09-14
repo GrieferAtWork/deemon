@@ -238,7 +238,7 @@ PRIVATE DREF FixedList *DCALL
 fl_init(size_t argc, DeeObject **__restrict argv) {
  DREF FixedList *result;
  DeeObject *size_ob,*init = NULL; size_t size;
- if (DeeArg_Unpack(argc,argv,"o|o:FixedList",&size_ob,&init))
+ if (DeeArg_Unpack(argc, argv,"o|o:FixedList",&size_ob,&init))
      goto err;
  if (init) {
   if (DeeObject_AsSize(size_ob,&size))
@@ -710,7 +710,7 @@ PRIVATE struct type_seq fl_seq = {
 PRIVATE DREF DeeObject *DCALL
 fl_clear_meth(FixedList *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":clear"))
+ if (DeeArg_Unpack(argc, argv,":clear"))
      goto err;
  fl_clear(self);
  return_none;
@@ -721,7 +721,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 fl_sizeof(FixedList *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  return DeeInt_NewSize(offsetof(FixedList,fl_elem) +
                       (self->fl_size * sizeof(DREF DeeObject *)));
@@ -882,7 +882,7 @@ PRIVATE int DCALL
 fli_init(FixedListIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->li_iter = 0;
- if (DeeArg_Unpack(argc,argv,"o|Iu:FixedListIterator",&self->li_list,&self->li_iter))
+ if (DeeArg_Unpack(argc, argv,"o|Iu:FixedListIterator",&self->li_list,&self->li_iter))
      goto err;
  if (DeeObject_AssertTypeExact(self->li_list,&FixedList_Type))
      goto err;

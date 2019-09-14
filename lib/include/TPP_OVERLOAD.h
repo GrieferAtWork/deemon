@@ -31,6 +31,6 @@
 // >> FUNC()         // prints: "FUNC_0()"
 // >> FUNC(42)       // prints: "FUNC_1(42)"
 // >> FUNC(42,10)    // prints: "FUNC_2(42,10)"
-#define TPP_OVERLOAD(func,...) __TPP_BASIC_CAT(func,TPP_VA_NARGS(__VA_ARGS__))(__VA_ARGS__)
+#define TPP_OVERLOAD(func, ...) __TPP_BASIC_CAT(func,TPP_VA_NARGS(__VA_ARGS__))(__VA_ARGS__)
 
 #endif /* !TPP_OVERLOAD */

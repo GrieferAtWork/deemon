@@ -428,7 +428,7 @@ frame_chain_contains_code(struct code_frame *__restrict iter, uint16_t count,
 }
 
 PUBLIC int DCALL
-DeeCode_SetAssembly(/*Code*/DeeObject *__restrict self) {
+DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self) {
  DeeCodeObject *me = (DeeCodeObject *)self;
  DeeThreadObject *caller;
  ASSERT_OBJECT_TYPE(self,&DeeCode_Type);
@@ -1342,7 +1342,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
      K(ddi),
      KEND
  });
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,
                      "|"
                      "o"     /* text */
                      "o"     /* module */

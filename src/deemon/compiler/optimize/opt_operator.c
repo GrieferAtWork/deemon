@@ -55,7 +55,7 @@ emulate_object_decode(DeeObject *__restrict self,
   * mustn't, because the codec is implemented externally */
  DeeObject *name; char *errors = NULL;
  unsigned int error_mode = STRING_ERROR_FSTRICT;
- if (DeeArg_Unpack(argc,argv,"o|s:decode",&name,&errors) ||
+ if (DeeArg_Unpack(argc, argv,"o|s:decode",&name,&errors) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
  if (errors) {
@@ -72,7 +72,7 @@ emulate_object_encode(DeeObject *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
  DeeObject *name; char *errors = NULL;
  unsigned int error_mode = STRING_ERROR_FSTRICT;
- if (DeeArg_Unpack(argc,argv,"o|s:encode",&name,&errors) ||
+ if (DeeArg_Unpack(argc, argv,"o|s:encode",&name,&errors) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
  if (errors) {
@@ -109,9 +109,9 @@ emulate_method_call(DeeObject *__restrict self,
   DeeObject *meth_self = DeeObjMethod_SELF(self);
   method = DeeObjMethod_FUNC(self);
   if (method == (dobjmethod_t)&string_encode)
-      return emulate_object_encode(meth_self,argc,argv);
+      return emulate_object_encode(meth_self,argc, argv);
   if (method == (dobjmethod_t)&string_decode)
-      return emulate_object_decode(meth_self,argc,argv);
+      return emulate_object_decode(meth_self,argc, argv);
   if (IS_BLACKLISTED_BASE(meth_self))
       return ITER_DONE;
  }
@@ -122,7 +122,7 @@ emulate_method_call(DeeObject *__restrict self,
   if (get == &object_id_get)
       return ITER_DONE;
  }
- return DeeObject_Call(self,argc,argv);
+ return DeeObject_Call(self,argc, argv);
 }
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
@@ -137,16 +137,16 @@ emulate_member_call(DeeObject *__restrict base,
   /* Same as the other call emulator: special
    * handling for (string|bytes).(encode|decode) */
   if (NAME_EQ("encode"))
-      return emulate_object_encode(base,argc,argv);
+      return emulate_object_encode(base,argc, argv);
   if (NAME_EQ("decode"))
-      return emulate_object_decode(base,argc,argv);
+      return emulate_object_decode(base,argc, argv);
  }
  /* `Object.id()' should not be evaluated at compile-time! */
  if (NAME_EQ("id"))
      return ITER_DONE;
  if (IS_BLACKLISTED_BASE(base))
      return ITER_DONE;
- return DeeObject_CallAttr(base,name,argc,argv);
+ return DeeObject_CallAttr(base,name,argc, argv);
 }
 
 

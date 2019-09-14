@@ -325,7 +325,7 @@ nope:
  * >>     name = "{" + name + "}";
  * >> } */
 INTERN int DCALL
-decl_ast_escapename(/*utf-8*/char const *__restrict name, size_t name_len,
+decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
                     struct unicode_printer *__restrict printer) {
  char const *iter,*end,*flush_start = name;
  bool must_escape = !name_len || !DeeUni_IsSymStrt(name[0]);

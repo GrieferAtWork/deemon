@@ -22,12 +22,13 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../string.h"
 #include <stdbool.h>
+
+#include "../string.h"
 
 #ifdef GUARD_TPP_H
 #error "Don't #include `tpp.h' directly. - Deemon must configure it for itself!"
-#endif
+#endif /* GUARD_TPP_H */
 
 DECL_BEGIN
 
@@ -239,48 +240,56 @@ tok_t yield(void);
 tok_t yieldnb(void);
 tok_t yieldnbif(bool allow);
 #else
-#define token            TPPLexer_Global.l_token
-#define tok              TPPLexer_Global.l_token.t_id
-#define yield()          TPPLexer_Yield()
-#define yieldnb()        TPPLexer_YieldNB()
-#define yieldnbif(allow) ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
+#define token             TPPLexer_Global.l_token
+#define tok               TPPLexer_Global.l_token.t_id
+#define yield()           TPPLexer_Yield()
+#define yieldnb()         TPPLexer_YieldNB()
+#define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
 #endif
-#define HAS(ext)         TPPLexer_HasExtension(ext)
-#define WARN(...)        parser_warnf(__VA_ARGS__)
-#define WARNAT(loc,...)  parser_warnatf(loc,__VA_ARGS__)
-#define WARNSYM(sym,...) parser_warnatrf(&(sym)->s_decl,__VA_ARGS__)
-#define WARNAST(ast,...) parser_warnastf(ast,__VA_ARGS__)
-#define PERR(...)        parser_errf(__VA_ARGS__)
-#define PERRAT(loc,...)  parser_erratf(loc,__VA_ARGS__)
-#define PERRSYM(sym,...) parser_erratrf(&(sym)->s_decl,__VA_ARGS__)
-#define PERRAST(ast,...) parser_errastf(ast,__VA_ARGS__)
-#define TPP_PUSHF()      do{uint32_t _old_flags = TPPLexer_Current->l_flags
-#define TPP_BREAKF()     TPPLexer_Current->l_flags = _old_flags
-#define TPP_POPF()       TPPLexer_Current->l_flags = _old_flags;}__WHILE0
+#define HAS(ext)          TPPLexer_HasExtension(ext)
+#define WARN(...)         parser_warnf(__VA_ARGS__)
+#define WARNAT(loc, ...)  parser_warnatf(loc,__VA_ARGS__)
+#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl,__VA_ARGS__)
+#define WARNAST(ast, ...) parser_warnastf(ast,__VA_ARGS__)
+#define PERR(...)         parser_errf(__VA_ARGS__)
+#define PERRAT(loc, ...)  parser_erratf(loc,__VA_ARGS__)
+#define PERRSYM(sym, ...) parser_erratrf(&(sym)->s_decl,__VA_ARGS__)
+#define PERRAST(ast, ...) parser_errastf(ast,__VA_ARGS__)
+#define TPP_PUSHF()       do{uint32_t _old_flags = TPPLexer_Current->l_flags
+#define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
+#define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags;}__WHILE0
 
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define parser_warnf(...)            __builtin_expect(parser_warnf(__VA_ARGS__),0)
-#define parser_warnatf(loc,...)      __builtin_expect(parser_warnatf(loc,__VA_ARGS__),0)
-#define parser_warnastf(loc_ast,...) __builtin_expect(parser_warnastf(loc_ast,__VA_ARGS__),0)
+#define parser_warnf(...)             __builtin_expect(parser_warnf(__VA_ARGS__),0)
+#define parser_warnatf(loc, ...)      __builtin_expect(parser_warnatf(loc,__VA_ARGS__),0)
+#define parser_warnastf(loc_ast, ...) __builtin_expect(parser_warnastf(loc_ast,__VA_ARGS__),0)
 #endif
 #endif
 
 
 
-#define SKIP_WRAPLF(iter,end) \
- (*(iter) == '\\' && (iter) != (end)-1\
-  ? ((iter)[1] == '\n' ? ((iter) += 2,1) :\
-     (iter)[1] == '\r' ? ((iter) += \
-    ((iter) != (end)-2 && (iter)[2] == '\n') ? 3 : 2,1)\
-  : 0) : 0)
-#define SKIP_WRAPLF_REV(iter,begin) \
- ((iter)[-1] == '\n' && (iter) != (begin)+1 \
-  ? ((iter)[-2] == '\\' ? ((iter) -= 2,1) : \
-    ((iter)[-2] == '\r' && (iter) != (begin)+2 && (iter)[-3] == '\\') ? ((iter) -= 3,1) \
-  : 0) : (((iter)[-1] == '\r' && (iter) != (begin)+1 && (iter)[-2] == '\\') \
-  ? ((iter) -= 2,1) : 0))
+#define SKIP_WRAPLF(iter, end)                                 \
+	(*(iter) == '\\' && (iter) != (end)-1                      \
+	 ? ((iter)[1] == '\n'                                      \
+	    ? ((iter) += 2, 1)                                     \
+	    : (iter)[1] == '\r'                                    \
+	      ? ((iter) +=                                         \
+	         ((iter) != (end)-2 && (iter)[2] == '\n') ? 3 : 2, \
+	         1)                                                \
+	      : 0)                                                 \
+	 : 0)
+#define SKIP_WRAPLF_REV(iter, begin)                                          \
+	((iter)[-1] == '\n' && (iter) != (begin) + 1                              \
+	 ? ((iter)[-2] == '\\'                                                    \
+	    ? ((iter) -= 2, 1)                                                    \
+	    : ((iter)[-2] == '\r' && (iter) != (begin) + 2 && (iter)[-3] == '\\') \
+	      ? ((iter) -= 3, 1)                                                  \
+	      : 0)                                                                \
+	 : (((iter)[-1] == '\r' && (iter) != (begin) + 1 && (iter)[-2] == '\\')   \
+	    ? ((iter) -= 2, 1)                                                    \
+	    : 0))
 
 INTDEF struct TPPKeyword TPPKeyword_Empty;
 INTDEF struct TPPKeyword *DCALL tok_without_underscores(void);

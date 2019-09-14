@@ -60,7 +60,7 @@ PRIVATE int DCALL
 proxy_iterator_init(MapProxyIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  self->mpi_map = Dee_EmptyMapping;
- if (DeeArg_Unpack(argc,argv,"|o:_mappingproxy.Iterator",&self->mpi_map))
+ if (DeeArg_Unpack(argc, argv,"|o:_mappingproxy.Iterator",&self->mpi_map))
      return -1;
  self->mpi_iter = DeeObject_IterSelf(self->mpi_map);
  if unlikely(!self->mpi_iter) return -1;
@@ -336,7 +336,7 @@ PRIVATE int DCALL
 proxy_init(MapProxy *__restrict self, size_t argc,
            DeeObject **__restrict argv) {
  self->mp_map = Dee_EmptyMapping;
- if (DeeArg_Unpack(argc,argv,"|o:_MappingProxy",&self->mp_map))
+ if (DeeArg_Unpack(argc, argv,"|o:_MappingProxy",&self->mp_map))
      return -1;
  Dee_Incref(self->mp_map);
  return 0;
@@ -907,7 +907,7 @@ map_iteritems(DeeObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 map_get(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*def = Dee_None;
- if (DeeArg_Unpack(argc,argv,"o|o:get",&key,&def))
+ if (DeeArg_Unpack(argc, argv,"o|o:get",&key,&def))
      return NULL;
  return DeeObject_GetItemDef(self,key,def);
 }

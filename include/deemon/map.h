@@ -20,10 +20,12 @@
 #define GUARD_DEEMON_MAP_H 1
 
 #include "api.h"
-#include "object.h"
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+
+#include "object.h"
 
 DECL_BEGIN
 

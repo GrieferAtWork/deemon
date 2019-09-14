@@ -20,10 +20,13 @@
 #define GUARD_DEEMON_ROSET_H 1
 
 #include "api.h"
+
 #include "object.h"
+
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -67,25 +70,25 @@ typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {
 #ifdef __INTELLISENSE__
-    DeeObject      *si_key;   /* [0..1][const] Set item key. */
+	DeeObject      *si_key;   /* [0..1][const] Set item key. */
 #else
-    DREF DeeObject *si_key;   /* [0..1][const] Set item key. */
+	DREF DeeObject *si_key;   /* [0..1][const] Set item key. */
 #endif
-    Dee_hash_t      si_hash;  /* [valis_if(si_key)][const]
-                               * Hash of `si_key' (with a starting value of `0'). */
+	Dee_hash_t      si_hash;  /* [valis_if(si_key)][const]
+	                           * Hash of `si_key' (with a starting value of `0'). */
 };
 
 struct Dee_roset_object {
-    Dee_OBJECT_HEAD
-    size_t                rs_mask;    /* [> rs_size] Allocated set size. */
-    size_t                rs_size;    /* [< rs_mask] Amount of non-NULL keys. */
-    struct Dee_roset_item rs_elem[1]; /* [1..rs_mask+1] Set key hash-vector. */
+	Dee_OBJECT_HEAD
+	size_t                rs_mask;    /* [> rs_size] Allocated set size. */
+	size_t                rs_size;    /* [< rs_mask] Amount of non-NULL keys. */
+	struct Dee_roset_item rs_elem[1]; /* [1..rs_mask+1] Set key hash-vector. */
 };
 
 /* The main `_roset' container class. */
 DDATDEF DeeTypeObject DeeRoSet_Type;
-#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob,&DeeRoSet_Type) /* `_roset' is final */
-#define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob,&DeeRoSet_Type)
+#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_roset' is final */
+#define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
 
 DFUNDEF DREF DeeObject *DCALL DeeRoSet_FromSequence(DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeRoSet_FromIterator(DeeObject *__restrict self);
@@ -106,10 +109,10 @@ DFUNDEF int DCALL DeeRoSet_Contains(DeeObject *__restrict self, DeeObject *__res
 DFUNDEF bool DCALL DeeRoSet_ContainsString(DeeObject *__restrict self, char const *__restrict key, size_t key_length);
 
 /* Hash-iteration control. */
-#define Dee_ROSET_HASHST(self,ro)      ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
-#define Dee_ROSET_HASHNX(hs,perturb)  (((hs) << 2) + (hs) + (perturb) + 1)
+#define Dee_ROSET_HASHST(self, ro)     ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
+#define Dee_ROSET_HASHNX(hs, perturb)  (((hs) << 2) + (hs) + (perturb) + 1)
 #define Dee_ROSET_HASHPT(perturb)      ((perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_ROSET_HASHIT(self,i)      (((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem+((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
+#define Dee_ROSET_HASHIT(self, i)      (((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem+((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
 
 DECL_END
 

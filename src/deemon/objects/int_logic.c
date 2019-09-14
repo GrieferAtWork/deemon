@@ -81,7 +81,7 @@ int_copy(DeeIntObject const *__restrict self) {
 }
 
 INTERN DREF DeeIntObject *DCALL
-int_normalize(/*inherit(always)*/DREF DeeIntObject *__restrict v) {
+int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
  dssize_t j = ABS(v->ob_size);
  dssize_t i = j;
  while (i > 0 && v->ob_digit[i-1] == 0) --i;

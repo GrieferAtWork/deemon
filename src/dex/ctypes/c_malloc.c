@@ -52,7 +52,7 @@ INTERN DREF DeeObject *DCALL
 capi_free(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *uptr;
  union pointer ptr;
- if (DeeArg_Unpack(argc,argv,"o:free",&uptr) ||
+ if (DeeArg_Unpack(argc, argv,"o:free",&uptr) ||
      DeeObject_AsPointer(uptr,&DeeCVoid_Type,&ptr))
      goto err;
  CTYPES_RECURSIVE_FAULTPROTECT(Dee_Free(ptr.ptr),goto err);
@@ -64,7 +64,7 @@ err:
 INTERN DREF DeeObject *DCALL
 capi_malloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result; size_t num_bytes;
- if (DeeArg_Unpack(argc,argv,"Iu:malloc",&num_bytes))
+ if (DeeArg_Unpack(argc, argv,"Iu:malloc",&num_bytes))
      goto err;
  ptr = Dee_Malloc(num_bytes);
  if unlikely(!ptr) goto err;
@@ -80,7 +80,7 @@ INTERN DREF DeeObject *DCALL
 capi_realloc(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *uptr; DREF DeeObject *result;
  union pointer ptr; size_t new_size;
- if (DeeArg_Unpack(argc,argv,"oIu:realloc",&uptr,&new_size) ||
+ if (DeeArg_Unpack(argc, argv,"oIu:realloc",&uptr,&new_size) ||
      DeeObject_AsPointer(uptr,&DeeCVoid_Type,&ptr))
      goto err;
  /* Allocate the resulting pointer _before_ doing the realloc().
@@ -105,7 +105,7 @@ INTERN DREF DeeObject *DCALL
 capi_calloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result;
  size_t count,num_bytes = 1,total;
- if (DeeArg_Unpack(argc,argv,"Iu|Iu:calloc",&count,&num_bytes))
+ if (DeeArg_Unpack(argc, argv,"Iu|Iu:calloc",&count,&num_bytes))
      goto err;
  total = count * num_bytes;
  /* Check for allocation overflow. */
@@ -130,7 +130,7 @@ err:
 INTERN DREF DeeObject *DCALL
 capi_trymalloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result; size_t num_bytes;
- if (DeeArg_Unpack(argc,argv,"Iu:trymalloc",&num_bytes))
+ if (DeeArg_Unpack(argc, argv,"Iu:trymalloc",&num_bytes))
      goto err;
  ptr = Dee_TryMalloc(num_bytes);
  result = DeePointer_NewVoid(ptr);
@@ -145,7 +145,7 @@ INTERN DREF DeeObject *DCALL
 capi_tryrealloc(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *uptr; DREF DeeObject *result;
  union pointer ptr; size_t new_size;
- if (DeeArg_Unpack(argc,argv,"oIu:tryrealloc",&uptr,&new_size) ||
+ if (DeeArg_Unpack(argc, argv,"oIu:tryrealloc",&uptr,&new_size) ||
      DeeObject_AsPointer(uptr,&DeeCVoid_Type,&ptr))
      goto err;
  /* Allocate the resulting pointer _before_ doing the realloc().
@@ -171,7 +171,7 @@ INTERN DREF DeeObject *DCALL
 capi_trycalloc(size_t argc, DeeObject **__restrict argv) {
  void *ptr; DREF DeeObject *result;
  size_t count,num_bytes = 1,total;
- if (DeeArg_Unpack(argc,argv,"Iu|Iu:trycalloc",&count,&num_bytes))
+ if (DeeArg_Unpack(argc, argv,"Iu|Iu:trycalloc",&count,&num_bytes))
      goto err;
  total = count * num_bytes;
  /* Check for allocation overflow. */
@@ -195,7 +195,7 @@ INTERN DREF DeeObject *DCALL
 capi_strdup(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result; size_t len,maxlen = (size_t)-1;
  DeeObject *str_ob; union pointer str; void *resptr;
- if (DeeArg_Unpack(argc,argv,"o|Iu:strdup",&str_ob,&maxlen))
+ if (DeeArg_Unpack(argc, argv,"o|Iu:strdup",&str_ob,&maxlen))
      goto err;
  if (DeeObject_AsPointer(str_ob,&DeeCChar_Type,&str))
      goto err;
@@ -218,7 +218,7 @@ INTERN DREF DeeObject *DCALL
 capi_trystrdup(size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result; size_t len,maxlen = (size_t)-1;
  DeeObject *str_ob; union pointer str; void *resptr;
- if (DeeArg_Unpack(argc,argv,"o|Iu:trystrdup",&str_ob,&maxlen))
+ if (DeeArg_Unpack(argc, argv,"o|Iu:trystrdup",&str_ob,&maxlen))
      goto err;
  if (DeeObject_AsPointer(str_ob,&DeeCChar_Type,&str))
      goto err;

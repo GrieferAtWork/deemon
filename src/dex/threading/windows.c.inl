@@ -108,7 +108,7 @@ PRIVATE int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  LONG init_value = 0;
- if (DeeArg_Unpack(argc,argv,"|I32u:semaphore",&init_value))
+ if (DeeArg_Unpack(argc, argv,"|I32u:semaphore",&init_value))
      goto err;
  DBG_ALIGNMENT_DISABLE();
  self->sem_handle = CreateSemaphoreW(NULL,init_value,0x7fffffff,NULL);
@@ -138,7 +138,7 @@ PRIVATE DREF DeeObject *DCALL
 sema_post(Semaphore *__restrict self, size_t argc,
           DeeObject **__restrict argv) {
  LONG count = 1;
- if (DeeArg_Unpack(argc,argv,"|I32u:post",&count))
+ if (DeeArg_Unpack(argc, argv,"|I32u:post",&count))
      goto err;
  DBG_ALIGNMENT_DISABLE();
  if unlikely(!ReleaseSemaphore(self->sem_handle,count,NULL))
@@ -154,7 +154,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 sema_wait(Semaphore *__restrict self, size_t argc,
           DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":wait") ||
+ if (DeeArg_Unpack(argc, argv,":wait") ||
      nt_WaitForSemaphore(self->sem_handle,(uint64_t)-1))
      return NULL;
  return_none;
@@ -163,7 +163,7 @@ PRIVATE DREF DeeObject *DCALL
 sema_trywait(Semaphore *__restrict self, size_t argc,
              DeeObject **__restrict argv) {
  int error;
- if (DeeArg_Unpack(argc,argv,":trywait"))
+ if (DeeArg_Unpack(argc, argv,":trywait"))
      goto err;
  error = nt_WaitForSemaphore(self->sem_handle,0);
  if unlikely(error < 0) goto err;
@@ -175,7 +175,7 @@ PRIVATE DREF DeeObject *DCALL
 sema_timedwait(Semaphore *__restrict self, size_t argc,
                DeeObject **__restrict argv) {
  int error; uint64_t timeout;
- if (DeeArg_Unpack(argc,argv,"I64u:timedwait",&timeout))
+ if (DeeArg_Unpack(argc, argv,"I64u:timedwait",&timeout))
      goto err;
  error = nt_WaitForSemaphore(self->sem_handle,timeout);
  if unlikely(error < 0) goto err;
@@ -186,7 +186,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 sema_fileno(Semaphore *__restrict self, size_t argc,
             DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":fileno"))
+ if (DeeArg_Unpack(argc, argv,":fileno"))
      return NULL;
  return DeeInt_NewUIntptr((uintptr_t)self->sem_handle);
 }
@@ -402,7 +402,7 @@ PRIVATE struct type_with mutex_with = {
 PRIVATE DREF DeeObject *DCALL
 mutex_acquire(Mutex *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":acquire") ||
+ if (DeeArg_Unpack(argc, argv,":acquire") ||
      mutex_timedenter(self,(uint64_t)-1))
      return NULL;
  return_none;
@@ -411,7 +411,7 @@ PRIVATE DREF DeeObject *DCALL
 mutex_tryacquire(Mutex *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  int error;
- if (DeeArg_Unpack(argc,argv,":tryacquire"))
+ if (DeeArg_Unpack(argc, argv,":tryacquire"))
      goto err;
  error = mutex_timedenter(self,0);
  if unlikely(error < 0) goto err;
@@ -423,7 +423,7 @@ PRIVATE DREF DeeObject *DCALL
 mutex_timedacquire(Mutex *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  int error; uint64_t timeout;
- if (DeeArg_Unpack(argc,argv,"I64u:tryacquire",&timeout))
+ if (DeeArg_Unpack(argc, argv,"I64u:tryacquire",&timeout))
      goto err;
  error = mutex_timedenter(self,timeout);
  if unlikely(error < 0) goto err;
@@ -434,7 +434,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 mutex_release(Mutex *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":release") ||
+ if (DeeArg_Unpack(argc, argv,":release") ||
      mutex_leave(self))
      return NULL;
  return_none;

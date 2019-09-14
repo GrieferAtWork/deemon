@@ -221,9 +221,9 @@ fs_pathisabs(DeeObject *__restrict path) {
  *              |
  *              +- return
  */
-PRIVATE /*utf-8*/char *DCALL
-find_last_path_segment(/*utf-8*/char *__restrict pth_begin,
-                       /*utf-8*/char *__restrict pth_end) {
+PRIVATE /*utf-8*/ char *DCALL
+find_last_path_segment(/*utf-8*/ char *__restrict pth_begin,
+                       /*utf-8*/ char *__restrict pth_end) {
  char *next; uint32_t ch;
  int name_state;
  size_t count = 0;
@@ -778,8 +778,8 @@ INTERN DREF DeeObject *DCALL
 fs_pathexpand(DeeObject *__restrict path, uint16_t options,
               DeeObject *__restrict environ_mapping) {
  struct unicode_printer printer = ASCII_PRINTER_INIT;
- /*utf-8*/char *iter,*begin,*end,*iter_next;
- /*utf-8*/char *flush_start,*flush_end;
+ /*utf-8*/ char *iter,*begin,*end,*iter_next;
+ /*utf-8*/ char *flush_start,*flush_end;
  uint32_t ch;
  ASSERT_OBJECT(environ_mapping);
  ASSERT_OBJECT_TYPE_EXACT(path,&DeeString_Type);
@@ -886,9 +886,9 @@ home_lookup_failed:
  }
 
  {
-  /*utf-8*/char *env_start;
-  /*utf-8*/char *name_start;
-  /*utf-8*/char *name_end;
+  /*utf-8*/ char *env_start;
+  /*utf-8*/ char *name_start;
+  /*utf-8*/ char *name_end;
   int error;
  case '$':
   if (!(options&FS_EXPAND_FVARS))

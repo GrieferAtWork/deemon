@@ -168,7 +168,7 @@ JITObjectTable_TryRehash(JITObjectTable *__restrict self,
  * @return: -1: An error occurred (failed to increase the hash size of `self') */
 INTERN int DCALL
 JITObjectTable_Update(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh,
                       DeeObject *value,
                       bool override_existing) {
@@ -257,7 +257,7 @@ again:
  * @return: false: The object table didn't include an entry matching the given name. */
 INTERN bool DCALL
 JITObjectTable_Delete(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
  dhash_t i,perturb;
  perturb = i = namehsh & self->ot_mask;
@@ -292,7 +292,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
 INTERN struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
  dhash_t i,perturb;
  perturb = i = namehsh & self->ot_mask;
@@ -314,7 +314,7 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
 INTERN struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
  dhash_t i,perturb;
  struct jit_object_entry *result_entry;

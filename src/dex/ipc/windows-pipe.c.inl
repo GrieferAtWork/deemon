@@ -60,7 +60,7 @@ pipe_class_new(DeeObject *__restrict UNUSED(self),
  DWORD pipe_size = 0; HANDLE hReader,hWriter;
  DREF SystemFile *fReader,*fWriter;
  DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,"|I32u:new",&pipe_size))
+ if (DeeArg_Unpack(argc, argv,"|I32u:new",&pipe_size))
      goto err;
  DBG_ALIGNMENT_DISABLE();
  if (!CreatePipe(&hReader,&hWriter,NULL,pipe_size)) {

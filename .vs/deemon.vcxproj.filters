@@ -339,9 +339,6 @@
     <ClInclude Include="..\include\deemon\util\bytewriter.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\util\seqwriter.h">
-      <Filter>include\deemon\util</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\deemon\util\objectlist.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
@@ -1173,6 +1170,9 @@
     </None>
     <None Include="..\util\tut\assorted\fancy_loading.dee">
       <Filter>scripts\tut\assorted</Filter>
+    </None>
+    <None Include="..\.clang-format">
+      <Filter>src</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

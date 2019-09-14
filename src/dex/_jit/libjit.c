@@ -47,7 +47,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  PRIVATE struct keyword kwlist[] = { K(expr), K(globals), K(base), KEND };
  globals = NULL;
  context.jc_impbase = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:exec",
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|oo:exec",
                     &lexer.jl_text,
                     &globals,
                     &context.jc_impbase))

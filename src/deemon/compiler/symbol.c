@@ -801,7 +801,7 @@ PRIVATE int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DeeModuleObject *module;
- if (DeeArg_Unpack(argc,argv,"o:root_scope",&module))
+ if (DeeArg_Unpack(argc, argv,"o:root_scope",&module))
      goto err;
  if (DeeObject_AssertType((DeeObject *)module,&DeeModule_Type))
      goto err;

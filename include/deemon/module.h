@@ -20,20 +20,25 @@
 #define GUARD_DEEMON_MODULE_H 1
 
 #include "api.h"
-#include "object.h"
+
 #include <hybrid/typecore.h>
-#include <stddef.h>
+
 #include <stdbool.h>
+#include <stddef.h>
+
+#include "object.h"
+
 #ifdef CONFIG_BUILDING_DEEMON
 #include "gc.h"
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
+
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"
 #endif /* GUARD_DEEMON_EXECUTE_MODPATH_C */
 
 #ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif
+#include "util/rwlock.h"
+#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -215,33 +220,33 @@ typedef struct Dee_module_path_object DeeModulePathObject;
 #define Dee_MODULE_PROPERTY_SET    2 /* Index offset for property set callbacks. */
 
 struct Dee_module_symbol {
-    /* For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
-     * one of the symbol flags being used to indicate if it's actually an object, which must
-     * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
-    char const                *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
-    char const                *ss_doc;    /* [0..1] An optional documentation string. */
-    Dee_hash_t                 ss_hash;   /* [== Dee_HashStr(ss_name)] Hash-value of this symbol. */
-    uint16_t                   ss_flags;  /* Set of `MODSYM_F*'. */
-    union {
-        uint16_t               ss_index;  /* [< :mo_globalc] The index of this symbol in the `:mo_globalv' vector.
-                                           * NOTE: In the case of a property, either 1 or 3 indices are allocated,
-                                           *       3 if `MODSYM_FREADONLY' isn't set, and 1 if it is. */
-        struct {
-            uint16_t           ss_symid;  /* [< :mo_importv[ss_impid]->mo_globalc]
-                                           * The index of this symbol in the module's `:mo_globalv' vector.
-                                           * NOTE: Must be at the same offset as `ss_index' */
-            uint16_t           ss_impid;  /* [< :mo_importc] The index of the referenced module in the import vector. */
-        }                      ss_extern; /* [valid_if(MODSYM_FEXTERN)] External symbol reference. */
-    };
+	/* For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
+	 * one of the symbol flags being used to indicate if it's actually an object, which must
+	 * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
+	char const                *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
+	char const                *ss_doc;    /* [0..1] An optional documentation string. */
+	Dee_hash_t                 ss_hash;   /* [== Dee_HashStr(ss_name)] Hash-value of this symbol. */
+	uint16_t                   ss_flags;  /* Set of `MODSYM_F*'. */
+	union {
+		uint16_t               ss_index;  /* [< :mo_globalc] The index of this symbol in the `:mo_globalv' vector.
+		                                   * NOTE: In the case of a property, either 1 or 3 indices are allocated,
+		                                   *       3 if `MODSYM_FREADONLY' isn't set, and 1 if it is. */
+		struct {
+			uint16_t           ss_symid;  /* [< :mo_importv[ss_impid]->mo_globalc]
+			                               * The index of this symbol in the module's `:mo_globalv' vector.
+			                               * NOTE: Must be at the same offset as `ss_index' */
+			uint16_t           ss_impid;  /* [< :mo_importc] The index of the referenced module in the import vector. */
+		}                      ss_extern; /* [valid_if(MODSYM_FEXTERN)] External symbol reference. */
+	};
 };
 
-#define Dee_MODULE_SYMBOL_EQUALS(x,name,size)  \
-       (memcmp((x)->ss_name,name,(size)*sizeof(char)) == 0 && \
-       (x)->ss_name[size] == 0)
-#define Dee_MODULE_SYMBOL_GETNAMESTR(x)                        ((x)->ss_name)
-#define Dee_MODULE_SYMBOL_GETNAMELEN(x)      (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : strlen((x)->ss_name))
-#define Dee_MODULE_SYMBOL_GETDOCSTR(x)                         ((x)->ss_doc)
-#define Dee_MODULE_SYMBOL_GETDOCLEN(x)       (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : strlen((x)->ss_doc))
+#define Dee_MODULE_SYMBOL_EQUALS(x, name, size)                \
+	(memcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
+	 (x)->ss_name[size] == 0)
+#define Dee_MODULE_SYMBOL_GETNAMESTR(x) ((x)->ss_name)
+#define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : strlen((x)->ss_name))
+#define Dee_MODULE_SYMBOL_GETDOCSTR(x)  ((x)->ss_doc)
+#define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : strlen((x)->ss_doc))
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
 INTDEF DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
@@ -268,63 +273,63 @@ INTDEF DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_m
                                              *       of this module have also been initialized successfully. */
 
 struct Dee_module_object {
-    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    Dee_OBJECT_HEAD /* GC Object. */
-    DREF struct Dee_string_object
-                                *mo_name;      /* [1..1][const] Name of this module (e.g.: `foo'). */
-    DeeModuleObject            **mo_pself;     /* [1..1][0..1][lock(INTERN(modules_lock))] Module self-pointer in the module file hash-table.
-                                                * [if(MODULE_FDIDINIT,DREF)] When the module has been initialized, this becomes a reference to keep cached modules alive. */
-    DeeModuleObject             *mo_next;      /* [0..1][valid_if(mo_pself)][lock(INTERN(modules_lock))] Next module with the same modulated `mo_path' hash (module file hash-table). */
-    DREF struct Dee_string_object
-                                *mo_path;      /* [0..1][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The absolute filename of this module's source file. */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	Dee_OBJECT_HEAD /* GC Object. */
+	DREF struct Dee_string_object
+	                            *mo_name;      /* [1..1][const] Name of this module (e.g.: `foo'). */
+	DeeModuleObject            **mo_pself;     /* [1..1][0..1][lock(INTERN(modules_lock))] Module self-pointer in the module file hash-table.
+	                                            * [if(MODULE_FDIDINIT,DREF)] When the module has been initialized, this becomes a reference to keep cached modules alive. */
+	DeeModuleObject             *mo_next;      /* [0..1][valid_if(mo_pself)][lock(INTERN(modules_lock))] Next module with the same modulated `mo_path' hash (module file hash-table). */
+	DREF struct Dee_string_object
+	                            *mo_path;      /* [0..1][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The absolute filename of this module's source file. */
 #ifdef CONFIG_HOST_WINDOWS
-    Dee_hash_t                   mo_pathhash;  /* The case-insensitive hash for `mo_path' */
+	Dee_hash_t                   mo_pathhash;  /* The case-insensitive hash for `mo_path' */
 #endif /* CONFIG_HOST_WINDOWS */
-    DeeModuleObject            **mo_globpself; /* [1..1][0..1][lock(INTERN(modules_glob_lock))] Module self-pointer in the global module hash-table.*/
-    DeeModuleObject             *mo_globnext;  /* [0..1][valid_if(mo_globpself)][lock(INTERN(modules_glob_lock))] Next global module with the same modulated `mo_name'. */
-    uint16_t                     mo_importc;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of other modules imported by this one. */
-    uint16_t                     mo_globalc;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of global symbols slots provided by this module. */
-    uint16_t                     mo_flags;     /* [const] Module flags (Set of `MODULE_F*') */
-    uint16_t                     mo_bucketm;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] Mask that should be applied to hash values before indexing `mo_bucketv'. */
-    struct Dee_module_symbol    *mo_bucketv;   /* [1..mo_bucketm+1][owned_if(!= empty_module_buckets)][const]
-                                                * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
-                                                * This is where module symbol names are stored and also used to
-                                                * implement symbol access by name at runtime. */
+	DeeModuleObject            **mo_globpself; /* [1..1][0..1][lock(INTERN(modules_glob_lock))] Module self-pointer in the global module hash-table.*/
+	DeeModuleObject             *mo_globnext;  /* [0..1][valid_if(mo_globpself)][lock(INTERN(modules_glob_lock))] Next global module with the same modulated `mo_name'. */
+	uint16_t                     mo_importc;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of other modules imported by this one. */
+	uint16_t                     mo_globalc;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of global symbols slots provided by this module. */
+	uint16_t                     mo_flags;     /* [const] Module flags (Set of `MODULE_F*') */
+	uint16_t                     mo_bucketm;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] Mask that should be applied to hash values before indexing `mo_bucketv'. */
+	struct Dee_module_symbol    *mo_bucketv;   /* [1..mo_bucketm+1][owned_if(!= empty_module_buckets)][const]
+	                                            * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
+	                                            * This is where module symbol names are stored and also used to
+	                                            * implement symbol access by name at runtime. */
 #define Dee_MODULE_HASHST(self,hash)  ((hash) & ((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketm)
 #define Dee_MODULE_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define Dee_MODULE_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_MODULE_HASHIT(self,i)     (((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
-    DREF DeeModuleObject *const *mo_importv;   /* [1..1][const_if(MODULE_FDIDLOAD)][0..rs_importc][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
-    DREF DeeObject             **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
-    DREF struct Dee_code_object *mo_root;      /* [0..1][lock(mo_lock)][const_if(MODULE_FDIDLOAD)] Root code object (Also used as constructor).
-                                                * HINT: Other code objects are addressed through constant/static variables.
-                                                * HINT: When this field has been assigned a non-NULL value, it can be assumed that `MODULE_FDIDLOAD' has been set! */
+	DREF DeeModuleObject *const *mo_importv;   /* [1..1][const_if(MODULE_FDIDLOAD)][0..rs_importc][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
+	DREF DeeObject             **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
+	DREF struct Dee_code_object *mo_root;      /* [0..1][lock(mo_lock)][const_if(MODULE_FDIDLOAD)] Root code object (Also used as constructor).
+	                                            * HINT: Other code objects are addressed through constant/static variables.
+	                                            * HINT: When this field has been assigned a non-NULL value, it can be assumed that `MODULE_FDIDLOAD' has been set! */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t                 mo_lock;      /* Lock for this module. */
-    struct Dee_thread_object    *mo_loader;    /* [?..1][valid_if((MODULE_FLOADING && !MODULE_FDIDLOAD) ||
-                                                *                 (MODULE_FINITIALIZING && !MODULE_FDIDINIT))]
-                                                * The thread currently loading/initializing this module.
-                                                * This is used to prevent a deadlock upon load recursion,
-                                                * but will allow for waiting when the load is done by
-                                                * another thread.
-                                                * WARNING: It may however deadlock when 2 threads try to
-                                                *          load/initialize modules when interlocked with
-                                                *          each other... ('Don't know how I could prevent
-                                                *          this short of putting a big 'ol lock around
-                                                *          everything that may initialize a module, when
-                                                *          doing so would kind-of defeat the purpose of
-                                                *          making everything thread-safe...)
-                                                *     XXX: The lock would have to be re-entrant & global and
-                                                *          be held during `DeeObject_Call(init_function,0,NULL)'
-                                                *          inside of `DeeModule_RunInit()' */
+	Dee_rwlock_t                 mo_lock;      /* Lock for this module. */
+	struct Dee_thread_object    *mo_loader;    /* [?..1][valid_if((MODULE_FLOADING && !MODULE_FDIDLOAD) ||
+	                                            *                 (MODULE_FINITIALIZING && !MODULE_FDIDINIT))]
+	                                            * The thread currently loading/initializing this module.
+	                                            * This is used to prevent a deadlock upon load recursion,
+	                                            * but will allow for waiting when the load is done by
+	                                            * another thread.
+	                                            * WARNING: It may however deadlock when 2 threads try to
+	                                            *          load/initialize modules when interlocked with
+	                                            *          each other... ('Don't know how I could prevent
+	                                            *          this short of putting a big 'ol lock around
+	                                            *          everything that may initialize a module, when
+	                                            *          doing so would kind-of defeat the purpose of
+	                                            *          making everything thread-safe...)
+	                                            *     XXX: The lock would have to be re-entrant & global and
+	                                            *          be held during `DeeObject_Call(init_function,0,NULL)'
+	                                            *          inside of `DeeModule_RunInit()' */
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC
-    uint64_t                     mo_ctime;     /* [valid_if(MODULE_FDIDLOAD && MODULE_FHASCTIME)]
-                                                * Time (in milliseconds since 01.01.1970)
-                                                * when compilation of the module finished.
-                                                * NOTE: Never equal to (uint64_t)-1 */
+	uint64_t                     mo_ctime;     /* [valid_if(MODULE_FDIDLOAD && MODULE_FHASCTIME)]
+	                                            * Time (in milliseconds since 01.01.1970)
+	                                            * when compilation of the module finished.
+	                                            * NOTE: Never equal to (uint64_t)-1 */
 #endif /* !CONFIG_NO_DEC */
-    Dee_WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 };
 
 
@@ -345,9 +350,9 @@ DFUNDEF ATTR_CONST ATTR_RETNONNULL DeeModuleObject *DCALL DeeModule_GetDeemon(vo
 #ifdef CONFIG_BUILDING_DEEMON
 /* A stub module-object named `' (empty string), and pointing to `empty_code'. */
 struct static_module_struct {
-    /* Even though never tracked, static modules still need the GC header for visiting. */
-    struct gc_head_raw m_head;
-    DeeModuleObject    m_module;
+	/* Even though never tracked, static modules still need the GC header for visiting. */
+	struct gc_head_raw m_head;
+	DeeModuleObject    m_module;
 };
 
 #ifdef __INTELLISENSE__
@@ -363,19 +368,19 @@ INTDEF struct static_module_struct deemon_module_head;
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeModule_Type;
-#define DeeModule_Check(ob)      DeeObject_InstanceOf(ob,&DeeModule_Type)
-#define DeeModule_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeModule_Type)
+#define DeeModule_Check(ob)      DeeObject_InstanceOf(ob, &DeeModule_Type)
+#define DeeModule_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeModule_Type)
 
 /* Create a new module object that has yet to be initialized or loaded. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL DeeModule_New(/*String*/DeeObject *__restrict name);
-DFUNDEF DREF /*Module*/DeeObject *DCALL DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen);
+DFUNDEF DREF /*Module*/ DeeObject *DCALL DeeModule_New(/*String*/ DeeObject *__restrict name);
+DFUNDEF DREF /*Module*/ DeeObject *DCALL DeeModule_NewString(/*utf-8*/ char const *__restrict name, size_t namelen);
 
 /* Returns the name of the given module, which is either the module's
  * global name in the event of it being global (s.a. `DeeModule_IsGlobal()'),
  * or the last identifying segment of a relative import operation when the
  * module was been imported as a relative module. */
-DFUNDEF DREF /*String*/DeeObject *DCALL /* TODO */
-DeeModule_GetName(/*Module*/DeeObject *__restrict self);
+DFUNDEF DREF /*String*/ DeeObject *DCALL /* TODO */
+DeeModule_GetName(/*Module*/ DeeObject *__restrict self);
 
 /* Return the name by which a given module `base' may address `self' in an
  * import() operation. - If the 2 modules are closely related, or when `self'
@@ -399,9 +404,9 @@ DeeModule_GetName(/*Module*/DeeObject *__restrict self);
  *                      from within `base'.
  *                      On unix, this never happens, but on windows this can happen
  *                      when `self' and `base' are stored on different drives. */
-DFUNDEF DREF /*String*/DeeObject *DCALL /* TODO */
-DeeModule_GetRelName(/*Module*/DeeObject *__restrict self,
-                     /*Module*/DeeObject *__restrict base,
+DFUNDEF DREF /*String*/ DeeObject *DCALL /* TODO */
+DeeModule_GetRelName(/*Module*/ DeeObject *__restrict self,
+                     /*Module*/ DeeObject *__restrict base,
                      unsigned int max_rel_distance);
 #define Dee_MODULE_RELNAME_DEFAULT_MAX_REL_DISTANCE 2 /* Default value for `max_rel_distance', as used for the
                                                        * purposes of dec module dependency encoding. */
@@ -479,63 +484,61 @@ typedef int (DCALL *Dee_compiler_error_handler_t)(struct Dee_compiler_error_obje
 /* General-purpose, optional compiler options that
  * can be specified whenever a module is loaded. */
 struct Dee_compiler_options {
-    struct Dee_compiler_options
-                            *co_inner;             /* [0..1] Options used for compiling modules imported by this one. */
-    struct Dee_string_object*co_pathname;          /* [0..1] A filename used to resolve #include and relative import directives. */
-    struct Dee_string_object*co_filename;          /* [0..1] The filename that should appear in debug information when referring to `input_file'.
-                                                    *        This is also the filename returned by `__FILE__' and `__BASEFILE__',
-                                                    *        if not otherwise overwritten using `#line' */
-    struct Dee_string_object*co_rootname;          /* [0..1] The name of the root code object (as set in DDI) */
-    int              (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
-                                                    *        This callback can be used to perform additional compiler
-                                                    *        initialization, such as defining macros/assertions, or
-                                                    *        adding addition include paths.
-                                                    *        NOTE: Invocation happens after other compiler options have
-                                                    *              all been set and the initial source file has been
-                                                    *              pushed onto the #include-stack, though the first
-                                                    *              token hasn't been yielded, yet.
-                                                    * @return: >= 0: Setup was successful.
-                                                    * @return: < 0: `DeeModule_LoadSourceStream()' will fail with the same error. */
-    void                    *co_setup_arg;         /* [?..?] Argument to `co_setup' */
-    Dee_compiler_error_handler_t
-                             co_error_handler;     /* [0..1] Called before compiler errors are processed.
-                                                    * This function's usual purpose is to print the error
-                                                    * during live-compilation mode, but can also be used
-                                                    * to put a twist on how errors are actually processed. */
-    void                    *co_error_arg;         /* [?..?] Argument to `co_error_handler' */
-    uint16_t                 co_tabwidth;          /* The width of tabulators, or `0' to use the hard-coded default. */
-    uint16_t                 co_compiler;          /* Set of `COMPILER_F*' from `<deemon/compiler/compiler.h>'. */
-    uint16_t                 co_parser;            /* Set of `PARSE_F*'    from `<deemon/compiler/lexer.h>' */
-    uint16_t                 co_optimizer;         /* Set of `OPTIMIZE_F*' from `<deemon/compiler/ast.h>' */
-    uint16_t                 co_unwind_limit;      /* Limit control for loop unwinding: The max amount of times that
-                                                    * a constant loop may be unwound. (Set to ZERO(0) to disable) */
-    uint16_t                 co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/assembler.h>' */
-#define Dee_DEC_FNORMAL      0x0000                /* Normal DEC operations mode. */
-#define Dee_DEC_FDISABLE     0x0001                /* Do not load DEC files. */
-#define Dee_DEC_FLOADOUTDATED 0x0002               /* Don't check dependencies and imported modules for having changed
-                                                    * since the dec file has been created (can lead to inconsistencies
-                                                    * and invalid global variable indices).
-                                                    * This flag also suppresses the need of non-module dependencies to
-                                                    * even exist (such as the module's original source file), though
-                                                    * executing a DEC file without the original source at hand is not
-                                                    * intended behavior per-sé. */
-#define Dee_DEC_FUNTRUSTED   0x0004                /* The origin of the DEC source is not trusted.
-                                                    * When this flag is set, all generated code objects have the `CODE_FASSEMBLY'
-                                                    * flag set, as well as have their text followed by `INSTRLEN_MAX'
-                                                    * bytes of `ASM_RET_NONE' instruction (aka. trailing ZERO-bytes).
-                                                    * This way, the contained assembly will be unable to escape its
-                                                    * own text segment which would otherwise pose a security risk when
-                                                    * untrusted code was able to start executing random instruction
-                                                    * based on unrelated, arbitrary data in host memory (HeartBleed anyone?) */
-    uint16_t                 co_decloader;         /* Set of `DEC_F*' (unused when deemon was built with `CONFIG_NO_DEC') */
-    uint16_t                 co_decwriter;         /* Set of `DEC_WRITE_F*' from `<deemon/compiler/dec.h>' (unused when deemon was built with `CONFIG_NO_DEC') */
-    DeeObject               *co_decoutput;         /* [0..1] Dec output location (ignored when `ASM_FNODEC' is set)
-                                                    *  - Filename (string) of the generated `.dec' file.
-                                                    *  - Stream (any other object) into which to write the contents of the dec file.
-                                                    *  - When `NULL', the filename is selected such that it will be used to
-                                                    *    quickly load module object when one of the dec-enabled `DeeModule_OpenGlobal*'
-                                                    *    functions is used (aka. `<source_path>/.<source_file>.dec')
-                                                    * Note that when passing a string, that file will be overwritten, should it already exists. */
+	struct Dee_compiler_options  *co_inner;             /* [0..1] Options used for compiling modules imported by this one. */
+	struct Dee_string_object     *co_pathname;          /* [0..1] A filename used to resolve #include and relative import directives. */
+	struct Dee_string_object     *co_filename;          /* [0..1] The filename that should appear in debug information when referring to `input_file'.
+	                                                     *        This is also the filename returned by `__FILE__' and `__BASEFILE__',
+	                                                     *        if not otherwise overwritten using `#line' */
+	struct Dee_string_object     *co_rootname;          /* [0..1] The name of the root code object (as set in DDI) */
+	int                   (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
+	                                                     *        This callback can be used to perform additional compiler
+	                                                     *        initialization, such as defining macros/assertions, or
+	                                                     *        adding addition include paths.
+	                                                     *        NOTE: Invocation happens after other compiler options have
+	                                                     *              all been set and the initial source file has been
+	                                                     *              pushed onto the #include-stack, though the first
+	                                                     *              token hasn't been yielded, yet.
+	                                                     * @return: >= 0: Setup was successful.
+	                                                     * @return: < 0: `DeeModule_LoadSourceStream()' will fail with the same error. */
+	void                         *co_setup_arg;         /* [?..?] Argument to `co_setup' */
+	Dee_compiler_error_handler_t  co_error_handler;     /* [0..1] Called before compiler errors are processed.
+	                                                     * This function's usual purpose is to print the error
+	                                                     * during live-compilation mode, but can also be used
+	                                                     * to put a twist on how errors are actually processed. */
+	void                         *co_error_arg;         /* [?..?] Argument to `co_error_handler' */
+	uint16_t                      co_tabwidth;          /* The width of tabulators, or `0' to use the hard-coded default. */
+	uint16_t                      co_compiler;          /* Set of `COMPILER_F*' from `<deemon/compiler/compiler.h>'. */
+	uint16_t                      co_parser;            /* Set of `PARSE_F*'    from `<deemon/compiler/lexer.h>' */
+	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*' from `<deemon/compiler/ast.h>' */
+	uint16_t                      co_unwind_limit;      /* Limit control for loop unwinding: The max amount of times that
+	                                                     * a constant loop may be unwound. (Set to ZERO(0) to disable) */
+	uint16_t                      co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/assembler.h>' */
+#define Dee_DEC_FNORMAL           0x0000                /* Normal DEC operations mode. */
+#define Dee_DEC_FDISABLE          0x0001                /* Do not load DEC files. */
+#define Dee_DEC_FLOADOUTDATED     0x0002                /* Don't check dependencies and imported modules for having changed
+	                                                     * since the dec file has been created (can lead to inconsistencies
+	                                                     * and invalid global variable indices).
+	                                                     * This flag also suppresses the need of non-module dependencies to
+	                                                     * even exist (such as the module's original source file), though
+	                                                     * executing a DEC file without the original source at hand is not
+	                                                     * intended behavior per-sé. */
+#define Dee_DEC_FUNTRUSTED        0x0004                /* The origin of the DEC source is not trusted.
+	                                                     * When this flag is set, all generated code objects have the `CODE_FASSEMBLY'
+	                                                     * flag set, as well as have their text followed by `INSTRLEN_MAX'
+	                                                     * bytes of `ASM_RET_NONE' instruction (aka. trailing ZERO-bytes).
+	                                                     * This way, the contained assembly will be unable to escape its
+	                                                     * own text segment which would otherwise pose a security risk when
+	                                                     * untrusted code was able to start executing random instruction
+	                                                     * based on unrelated, arbitrary data in host memory (HeartBleed anyone?) */
+	uint16_t                      co_decloader;         /* Set of `DEC_F*' (unused when deemon was built with `CONFIG_NO_DEC') */
+	uint16_t                      co_decwriter;         /* Set of `DEC_WRITE_F*' from `<deemon/compiler/dec.h>' (unused when deemon was built with `CONFIG_NO_DEC') */
+	DeeObject                    *co_decoutput;         /* [0..1] Dec output location (ignored when `ASM_FNODEC' is set)
+	                                                     *  - Filename (string) of the generated `.dec' file.
+	                                                     *  - Stream (any other object) into which to write the contents of the dec file.
+	                                                     *  - When `NULL', the filename is selected such that it will be used to
+	                                                     *    quickly load module object when one of the dec-enabled `DeeModule_OpenGlobal*'
+	                                                     *    functions is used (aka. `<source_path>/.<source_file>.dec')
+	                                                     * Note that when passing a string, that file will be overwritten, should it already exists. */
 };
 
 /* Load the given module from a filestream opened for a source file.
@@ -556,8 +559,8 @@ struct Dee_compiler_options {
  *       as without this information given, the process
  *       working directory will be used instead. */
 DFUNDEF int DCALL
-DeeModule_LoadSourceStream(/*Module*/DeeObject *__restrict self,
-                           /*File*/DeeObject *__restrict input_file,
+DeeModule_LoadSourceStream(/*Module*/ DeeObject *__restrict self,
+                           /*File*/ DeeObject *__restrict input_file,
                            int start_line, int start_col,
                            struct Dee_compiler_options *options);
 
@@ -577,14 +580,14 @@ DeeModule_LoadSourceStream(/*Module*/DeeObject *__restrict self,
  * @param: throw_error:        When true, throw an error if the module couldn't be
  *                             found and return `NULL', otherwise return `ITER_DONE'.
  * @return: ITER_DONE:        `throw_error' is `true' and `source_pathname' could not be found. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenSourceFile(/*String*/DeeObject *__restrict source_pathname,
-                         /*String*/DeeObject *module_global_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceFile(/*String*/ DeeObject *__restrict source_pathname,
+                         /*String*/ DeeObject *module_global_name,
                          struct Dee_compiler_options *options,
                          bool throw_error);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenSourceFileString(/*utf-8*/char const *__restrict source_pathname, size_t source_pathsize,
-                               /*utf-8*/char const *module_global_name, size_t module_global_namesize,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceFileString(/*utf-8*/ char const *__restrict source_pathname, size_t source_pathsize,
+                               /*utf-8*/ char const *module_global_name, size_t module_global_namesize,
                                struct Dee_compiler_options *options, bool throw_error);
 
 
@@ -606,15 +609,15 @@ DeeModule_OpenSourceFileString(/*utf-8*/char const *__restrict source_pathname, 
  * @param: start_line:      The starting line number of the data blob (zero-based)
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenSourceMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                            int start_line, int start_col, struct Dee_compiler_options *options,
-                           /*String*/DeeObject *source_pathname, /*String*/DeeObject *module_name);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenSourceMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+                           /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name);
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                  int start_line, int start_col, struct Dee_compiler_options *options,
-                                 /*utf-8*/char const *source_pathname, size_t source_pathsize,
-                                 /*utf-8*/char const *module_name, size_t module_namesize);
+                                 /*utf-8*/ char const *source_pathname, size_t source_pathsize,
+                                 /*utf-8*/ char const *module_name, size_t module_namesize);
 
 /* Very similar to `DeeModule_OpenSourceMemory()', and used to implement it,
  * however source data is made available using a stream object derived
@@ -629,15 +632,15 @@ DeeModule_OpenSourceMemoryString(/*utf-8*/char const *__restrict data, size_t da
  * @param: start_line:      The starting line number of the data blob (zero-based)
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenSourceStream(/*File*/DeeObject *__restrict source_stream,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceStream(/*File*/ DeeObject *__restrict source_stream,
                            int start_line, int start_col, struct Dee_compiler_options *options,
-                           /*String*/DeeObject *source_pathname, /*String*/DeeObject *module_name);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenSourceStreamString(/*File*/DeeObject *__restrict source_stream,
+                           /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name);
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceStreamString(/*File*/ DeeObject *__restrict source_stream,
                                  int start_line, int start_col, struct Dee_compiler_options *options,
-                                 /*utf-8*/char const *source_pathname, size_t source_pathsize,
-                                 /*utf-8*/char const *module_name, size_t module_namesize);
+                                 /*utf-8*/ char const *source_pathname, size_t source_pathsize,
+                                 /*utf-8*/ char const *module_name, size_t module_namesize);
 
 
 
@@ -804,17 +807,17 @@ DeeModule_OpenSourceStreamString(/*File*/DeeObject *__restrict source_stream,
  *                          will be bound prior to the initial launch of interactive assembly.
  *                          Thus, provided symbols are made available by name, left to-be used
  *                          by the module however it pleases. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenInteractive(/*File*/DeeObject *__restrict source_stream, unsigned int mode,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenInteractive(/*File*/ DeeObject *__restrict source_stream, unsigned int mode,
                           int start_line, int start_col, struct Dee_compiler_options *options,
-                          /*String*/DeeObject *source_pathname, /*String*/DeeObject *module_name,
-                          /*Tuple*/DeeObject *argv, /*Mapping{(string,object)...}*/DeeObject *default_symbols);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenInteractiveString(/*File*/DeeObject *__restrict source_stream, unsigned int mode,
+                          /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name,
+                          /*Tuple*/ DeeObject *argv, /*Mapping{(string,object)...}*/ DeeObject *default_symbols);
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenInteractiveString(/*File*/ DeeObject *__restrict source_stream, unsigned int mode,
                                 int start_line, int start_col, struct Dee_compiler_options *options,
-                                /*utf-8*/char const *source_pathname, size_t source_pathsize,
-                                /*utf-8*/char const *module_name, size_t module_namesize,
-                                /*Tuple*/DeeObject *argv, /*Mapping{(string,object)...}*/DeeObject *default_symbols);
+                                /*utf-8*/ char const *source_pathname, size_t source_pathsize,
+                                /*utf-8*/ char const *module_name, size_t module_namesize,
+                                /*Tuple*/ DeeObject *argv, /*Mapping{(string,object)...}*/ DeeObject *default_symbols);
 
 /* No special syntactical changes are made. - The root scope is a yield-like
  * function, and streamed source code must include `yield'-statements in
@@ -834,8 +837,8 @@ DeeModule_OpenInteractiveString(/*File*/DeeObject *__restrict source_stream, uns
 #define Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE  0x0004
 
 DDATDEF DeeTypeObject DeeInteractiveModule_Type;
-#define DeeInteractiveModule_Check(ob)      DeeObject_InstanceOf(ob,&DeeInteractiveModule_Type)
-#define DeeInteractiveModule_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeInteractiveModule_Type)
+#define DeeInteractiveModule_Check(ob)      DeeObject_InstanceOf(ob, &DeeInteractiveModule_Type)
+#define DeeInteractiveModule_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeInteractiveModule_Type)
 
 
 
@@ -856,7 +859,7 @@ DDATDEF DeeTypeObject DeeInteractiveModule_Type;
  * >> // Invoke the native symbol.
  * >> return DeeInt_New((*padd)(x,y)); */
 DFUNDEF void *DCALL
-DeeModule_GetNativeSymbol(/*Module*/DeeObject *__restrict self,
+DeeModule_GetNativeSymbol(/*Module*/ DeeObject *__restrict self,
                           char const *__restrict name);
 
 /* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
@@ -872,7 +875,7 @@ DeeModule_GetNativeSymbol(/*Module*/DeeObject *__restrict self,
  *                as a module, or points to a heap/stack segment.
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr);
 
 
@@ -901,12 +904,12 @@ DeeModule_FromStaticPointer(void const *__restrict ptr);
  *     system is case-insensitive as well.
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenGlobal(/*String*/DeeObject *__restrict module_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenGlobal(/*String*/ DeeObject *__restrict module_name,
                      struct Dee_compiler_options *options,
                      bool throw_error);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenGlobalString(/*utf-8*/char const *__restrict module_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
                            size_t module_namesize,
                            struct Dee_compiler_options *options,
                            bool throw_error);
@@ -914,10 +917,10 @@ DeeModule_OpenGlobalString(/*utf-8*/char const *__restrict module_name,
 /* Get a global module that has already been loaded, given its name.
  * If the module hasn't been loaded yet, NULL is returned.
  * NOTE: These functions never throw an error! */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
 DeeModule_Get(DeeObject *__restrict module_name);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
                     size_t module_namesize);
 
 
@@ -935,15 +938,15 @@ DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
  * NOTE: This function also tries to open DEX modules, as well as `.*.dec' files.
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenRelative(/*String*/DeeObject *__restrict module_name,
-                       /*utf-8*/char const *__restrict module_pathname,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenRelative(/*String*/ DeeObject *__restrict module_name,
+                       /*utf-8*/ char const *__restrict module_pathname,
                        size_t module_pathsize,
                        struct Dee_compiler_options *options,
                        bool throw_error);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t module_namesize,
-                             /*utf-8*/char const *__restrict module_pathname, size_t module_pathsize,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_t module_namesize,
+                             /*utf-8*/ char const *__restrict module_pathname, size_t module_pathsize,
                              struct Dee_compiler_options *options,
                              bool throw_error);
 
@@ -991,10 +994,10 @@ DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t
  * @return: * :        The module that was imported.
  * @return: ITER_DONE: The module could not be found (only when `Dee_MODULE_OPENINPATH_FTHROWERROR' isn't set)
  * @return: NULL:      An error occurred. */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
-                     /*utf-8*/char const *__restrict module_name, size_t module_namesize,
-                     /*String*/DeeObject *module_global_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
+                     /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
+                     /*String*/ DeeObject *module_global_name,
                      struct Dee_compiler_options *options,
                      unsigned int mode);
 #define Dee_MODULE_OPENINPATH_FNORMAL      0x0000 /* Normal flags */
@@ -1021,8 +1024,8 @@ DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_
  *              >> print [...];  // [10,20,30]
  *              DeeObject_Callf(DeeModule_GetRoot(my_module,true),"ddd",10,20,30);
  * @return: NULL: Failed to create a function object for the module's root code object. */
-DFUNDEF DREF /*Callable*/DeeObject *DCALL
-DeeModule_GetRoot(/*Module*/DeeObject *__restrict self,
+DFUNDEF DREF /*Callable*/ DeeObject *DCALL
+DeeModule_GetRoot(/*Module*/ DeeObject *__restrict self,
                   bool set_initialized);
 
 
@@ -1032,19 +1035,19 @@ DeeModule_GetRoot(/*Module*/DeeObject *__restrict self,
  * NOTE: For Always using this function as sometimes,
  *       the timestamp is calculated lazily.
  * NOTE: If the module's file could not be found, 0 is returned. */
-DFUNDEF uint64_t DCALL DeeModule_GetCTime(/*Module*/DeeObject *__restrict self);
+DFUNDEF uint64_t DCALL DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEC */
 
 /* Same as `DeeModule_Import', but relative module
  * paths are imported in relation to `basemodule' */
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_ImportRel(/*Module*/DeeObject *__restrict basemodule,
-                    /*String*/DeeObject *__restrict module_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,
+                    /*String*/ DeeObject *__restrict module_name,
                     struct Dee_compiler_options *options,
                     bool throw_error);
-DFUNDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_ImportRelString(/*Module*/DeeObject *__restrict basemodule,
-                          /*utf-8*/char const *__restrict module_name,
+DFUNDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
+                          /*utf-8*/ char const *__restrict module_name,
                           size_t module_namesize,
                           struct Dee_compiler_options *options,
                           bool throw_error);
@@ -1056,8 +1059,8 @@ DeeModule_ImportRelString(/*Module*/DeeObject *__restrict basemodule,
  * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'.
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
-INTDEF DREF /*Module*/DeeObject *DCALL
-DeeModule_Import(/*String*/DeeObject *__restrict module_name,
+INTDEF DREF /*Module*/ DeeObject *DCALL
+DeeModule_Import(/*String*/ DeeObject *__restrict module_name,
                  struct Dee_compiler_options *options,
                  bool throw_error);
 
@@ -1100,7 +1103,7 @@ DFUNDEF int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, stru
  *                return the name of an alias, but that of the original symbol itself, so long as that
  *                symbol actually exist, which if it doesn't, it will return the name of a random alias. */
 DFUNDEF char const *DCALL
-DeeModule_GlobalName(/*Module*/DeeObject *__restrict self, uint16_t gid);
+DeeModule_GlobalName(/*Module*/ DeeObject *__restrict self, uint16_t gid);
 
 /* Try to run the initializer of a module, should it not have been run yet.
  * This function will atomically ensure that the initializer
@@ -1115,13 +1118,13 @@ DeeModule_GlobalName(/*Module*/DeeObject *__restrict self, uint16_t gid);
  * @return: -1: An error occurred during initialization.
  * @return:  0: Successfully initialized the module/the module was already initialized.
  * @return:  1: You are already in the process of initializing this module (not an error). */
-DFUNDEF int DCALL DeeModule_RunInit(/*Module*/DeeObject *__restrict self);
+DFUNDEF int DCALL DeeModule_RunInit(/*Module*/ DeeObject *__restrict self);
 
 /* Initialize all modules imported by the given one.
  * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
  * @return: -1: An error occurred during initialization.
  * @return:  0: All modules imported by the given one are now initialized. */
-DFUNDEF int DCALL DeeModule_InitImports(/*Module*/DeeObject *__restrict self);
+DFUNDEF int DCALL DeeModule_InitImports(/*Module*/ DeeObject *__restrict self);
 
 DECL_END
 

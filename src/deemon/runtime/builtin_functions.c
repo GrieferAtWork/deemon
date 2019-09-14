@@ -45,7 +45,7 @@ DECL_BEGIN
 PRIVATE DREF DeeObject *DCALL
 f_builtin_hasattr(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*attr; int result;
- if (DeeArg_Unpack(argc,argv,"oo:hasattr",&self,&attr))
+ if (DeeArg_Unpack(argc, argv,"oo:hasattr",&self,&attr))
      goto err;
  if (DeeObject_AssertTypeExact(attr,&DeeString_Type))
      goto err;
@@ -61,7 +61,7 @@ INTERN DEFINE_CMETHOD(builtin_hasattr,&f_builtin_hasattr);
 PRIVATE DREF DeeObject *DCALL
 f_builtin_hasitem(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*key; int result;
- if (DeeArg_Unpack(argc,argv,"oo:hasitem",&self,&key))
+ if (DeeArg_Unpack(argc, argv,"oo:hasitem",&self,&key))
      goto err;
  result = DeeObject_HasItem(self,key);
  if unlikely(result < 0)
@@ -75,7 +75,7 @@ INTERN DEFINE_CMETHOD(builtin_hasitem,&f_builtin_hasitem);
 PRIVATE DREF DeeObject *DCALL
 f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*attr; bool allow_missing = true;
- if (DeeArg_Unpack(argc,argv,"oo|b:boundattr",&self,&attr,&allow_missing))
+ if (DeeArg_Unpack(argc, argv,"oo|b:boundattr",&self,&attr,&allow_missing))
      goto err;
  if (DeeObject_AssertTypeExact(attr,&DeeString_Type))
      goto err;
@@ -99,7 +99,7 @@ INTERN DEFINE_CMETHOD(builtin_boundattr,&f_builtin_boundattr);
 PRIVATE DREF DeeObject *DCALL
 f_builtin_bounditem(size_t argc, DeeObject **__restrict argv) {
  DeeObject *self,*key; bool allow_missing = true;
- if (DeeArg_Unpack(argc,argv,"oo|b:bounditem",&self,&key,&allow_missing))
+ if (DeeArg_Unpack(argc, argv,"oo|b:bounditem",&self,&key,&allow_missing))
      goto err;
  switch (DeeObject_BoundItem(self,key,allow_missing)) {
  default: return_false;
@@ -116,7 +116,7 @@ f_builtin_import(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DREF DeeObject *result;
  DeeObject *module_name,*base = NULL;
  PRIVATE struct keyword kwlist[] = { K(name), K(base), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:import",&module_name,&base))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|o:import",&module_name,&base))
      goto err;
  if (DeeObject_AssertTypeExact(module_name,&DeeString_Type))
      goto err;
@@ -147,7 +147,7 @@ builtin_exec_fallback(size_t argc,
  DeeObject *expr,*globals = NULL;
  char const *usertext; size_t usersize;
  PRIVATE struct keyword kwlist[] = { K(expr), K(globals), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|o:exec",&expr,&globals))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|o:exec",&expr,&globals))
      goto err;
  if (DeeString_Check(expr)) {
   usertext = DeeString_AsUtf8(expr);
@@ -262,7 +262,7 @@ f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
   Dee_Incref(exec);
   rwlock_endread(&jit_access_lock);
 do_exec:
-  result = DeeObject_CallKw(exec,argc,argv,kw);
+  result = DeeObject_CallKw(exec,argc, argv, kw);
   Dee_Decref(exec);
   return result;
  }
@@ -313,7 +313,7 @@ set_exec_and_run:
   goto do_exec;
  }
 fallback:
- return builtin_exec_fallback(argc,argv,kw);
+ return builtin_exec_fallback(argc, argv, kw);
 err:
  return NULL;
 }
@@ -412,7 +412,7 @@ f_rt_assert(size_t argc, DeeObject **__restrict argv) {
  }
  if (operator_name >= 0) {
   DREF DeeObject *repr;
-  repr = get_expression_repr((uint16_t)operator_name,argc,argv);
+  repr = get_expression_repr((uint16_t)operator_name,argc, argv);
   if unlikely(!repr) goto err;
   if (DeeString_IsEmpty(message)) {
    message = DeeString_Newf("Assertion failed: %k",repr);
@@ -530,7 +530,7 @@ f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
  DeeThreadObject *ts;
  size_t argc_cur,argc_min = 0,argc_max;
  char *function_name = NULL;
- if (DeeArg_Unpack(argc,argv,"Iu:__badcall",&argc_max))
+ if (DeeArg_Unpack(argc, argv,"Iu:__badcall",&argc_max))
      goto done;
  ts = DeeThread_Self();
  argc_cur = argc_max;
@@ -555,7 +555,7 @@ INTERN DEFINE_CMETHOD(rt_badcall,&f_rt_badcall);
 PRIVATE DREF DeeObject *DCALL
 f_rt_roloc(size_t argc, DeeObject **__restrict argv) {
  DeeThreadObject *ts; uint16_t lid;
- if (DeeArg_Unpack(argc,argv,"I16u:__roloc",&lid))
+ if (DeeArg_Unpack(argc, argv,"I16u:__roloc",&lid))
      goto done;
  ts = DeeThread_Self();
  if likely(ts->t_execsz) {

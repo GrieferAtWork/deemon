@@ -112,10 +112,10 @@ file_shl(DeeObject *__restrict self,
 
 #ifndef OBJECT_TATTR_DECLARED
 #define OBJECT_TATTR_DECLARED 1
-INTDEF DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
-INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name);
-INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, DeeObject *__restrict value);
-INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
+INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
+INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, DeeObject *__restrict value);
+INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
 #endif
 
 

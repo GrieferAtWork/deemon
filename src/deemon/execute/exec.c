@@ -97,7 +97,7 @@ DeeExec_RunStream(DeeObject *__restrict source_stream,
                                           module_name);
  if unlikely(!function)
     goto err;
- result = DeeObject_Call(function,argc,argv);
+ result = DeeObject_Call(function,argc, argv);
  Dee_Decref(function);
  return result;
 err:
@@ -110,9 +110,9 @@ DeeExec_RunStreamString(DeeObject *__restrict source_stream,
                         int start_line, int start_col,
                         struct compiler_options *options,
                         DeeObject *default_symbols,
-                        /*utf-8*/char const *source_pathname,
+                        /*utf-8*/ char const *source_pathname,
                         size_t source_pathsize,
-                        /*utf-8*/char const *module_name,
+                        /*utf-8*/ char const *module_name,
                         size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *source_pathname_ob = NULL;
@@ -154,7 +154,7 @@ err:
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module or the module's root function used to describe the code
  * that is being executed. */
-PUBLIC /*Callable*/DREF DeeObject *DCALL
+PUBLIC /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
                               unsigned int mode,
                               int start_line, int start_col,
@@ -180,15 +180,15 @@ DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
 err:
  return NULL;
 }
-PUBLIC /*Module*/DREF DeeObject *DCALL
+PUBLIC /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
                                   unsigned int mode,
                                   int start_line, int start_col,
                                   struct compiler_options *options,
                                   DeeObject *default_symbols,
-                                  /*utf-8*/char const *source_pathname,
+                                  /*utf-8*/ char const *source_pathname,
                                   size_t source_pathsize,
-                                  /*utf-8*/char const *module_name,
+                                  /*utf-8*/ char const *module_name,
                                   size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *source_pathname_ob = NULL;
@@ -223,15 +223,15 @@ err_source_pathname_ob:
 err:
  return NULL;
 }
-PUBLIC /*Callable*/DREF DeeObject *DCALL
+PUBLIC /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
                                     unsigned int mode,
                                     int start_line, int start_col,
                                     struct compiler_options *options,
                                     DeeObject *default_symbols,
-                                    /*utf-8*/char const *source_pathname,
+                                    /*utf-8*/ char const *source_pathname,
                                     size_t source_pathsize,
-                                    /*utf-8*/char const *module_name,
+                                    /*utf-8*/ char const *module_name,
                                     size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module;
@@ -257,7 +257,7 @@ err:
 
 /* Same as the functions above, but instead take a raw memory block as input */
 PUBLIC DREF DeeObject *DCALL
-DeeExec_RunMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   unsigned int mode, size_t argc, DeeObject **argv,
                   int start_line, int start_col,
                   struct compiler_options *options,
@@ -285,14 +285,14 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                         unsigned int mode, size_t argc, DeeObject **argv,
                         int start_line, int start_col,
                         struct compiler_options *options,
                         DeeObject *default_symbols,
-                        /*utf-8*/char const *source_pathname,
+                        /*utf-8*/ char const *source_pathname,
                         size_t source_pathsize,
-                        /*utf-8*/char const *module_name,
+                        /*utf-8*/ char const *module_name,
                         size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *stream;
@@ -316,8 +316,8 @@ DeeExec_RunMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
 err:
  return NULL;
 }
-PUBLIC /*Module*/DREF DeeObject *DCALL
-DeeExec_CompileModuleMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+PUBLIC /*Module*/ DREF DeeObject *DCALL
+DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                             unsigned int mode, int start_line, int start_col,
                             struct compiler_options *options,
                             DeeObject *default_symbols,
@@ -341,8 +341,8 @@ DeeExec_CompileModuleMemory(/*utf-8*/char const *__restrict data, size_t data_si
 err:
  return NULL;
 }
-PUBLIC /*Callable*/DREF DeeObject *DCALL
-DeeExec_CompileFunctionMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+PUBLIC /*Callable*/ DREF DeeObject *DCALL
+DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                               unsigned int mode, int start_line, int start_col,
                               struct compiler_options *options,
                               DeeObject *default_symbols,
@@ -366,14 +366,14 @@ DeeExec_CompileFunctionMemory(/*utf-8*/char const *__restrict data, size_t data_
 err:
  return NULL;
 }
-PUBLIC /*Module*/DREF DeeObject *DCALL
-DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+PUBLIC /*Module*/ DREF DeeObject *DCALL
+DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                   unsigned int mode, int start_line, int start_col,
                                   struct compiler_options *options,
                                   DeeObject *default_symbols,
-                                  /*utf-8*/char const *source_pathname,
+                                  /*utf-8*/ char const *source_pathname,
                                   size_t source_pathsize,
-                                  /*utf-8*/char const *module_name,
+                                  /*utf-8*/ char const *module_name,
                                   size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *stream;
@@ -395,14 +395,14 @@ DeeExec_CompileModuleMemoryString(/*utf-8*/char const *__restrict data, size_t d
 err:
  return NULL;
 }
-PUBLIC /*Callable*/DREF DeeObject *DCALL
-DeeExec_CompileFunctionMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+PUBLIC /*Callable*/ DREF DeeObject *DCALL
+DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                     unsigned int mode, int start_line, int start_col,
                                     struct compiler_options *options,
                                     DeeObject *default_symbols,
-                                    /*utf-8*/char const *source_pathname,
+                                    /*utf-8*/ char const *source_pathname,
                                     size_t source_pathsize,
-                                    /*utf-8*/char const *module_name,
+                                    /*utf-8*/ char const *module_name,
                                     size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *stream;
@@ -712,7 +712,7 @@ PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
 PRIVATE DREF DeeTupleObject *usercode_argv = (DREF DeeTupleObject *)Dee_EmptyTuple;
 #ifdef CONFIG_NO_THREADS
 PUBLIC ATTR_RETNONNULL
-/*Tuple*/DREF DeeObject *DCALL Dee_GetArgv(void) {
+/*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
  DREF DeeTupleObject *result;
  result = usercode_argv;
  Dee_Incref(result);
@@ -720,7 +720,7 @@ PUBLIC ATTR_RETNONNULL
  return (DREF DeeObject *)result;
 }
 PUBLIC NONNULL((1)) void DCALL
-Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv) {
+Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
  DREF DeeTupleObject *old_argv;
  ASSERT_OBJECT_TYPE_EXACT(argv,&DeeTuple_Type);
  Dee_Incref(argv);
@@ -730,7 +730,7 @@ Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv) {
 }
 #else
 PUBLIC ATTR_RETNONNULL
-/*Tuple*/DREF DeeObject *DCALL Dee_GetArgv(void) {
+/*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
  DREF DeeTupleObject *result;
  for (;;) {
   result = ATOMIC_XCH(usercode_argv,NULL);
@@ -743,7 +743,7 @@ PUBLIC ATTR_RETNONNULL
  return (DREF DeeObject *)result;
 }
 PUBLIC NONNULL((1)) void DCALL
-Dee_SetArgv(/*Tuple*/DeeObject *__restrict argv) {
+Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
  DREF DeeTupleObject *old_argv;
  ASSERT_OBJECT_TYPE_EXACT(argv,&DeeTuple_Type);
  Dee_Incref(argv);

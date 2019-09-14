@@ -92,7 +92,7 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
     /* .tp_class_members = */NULL
 };
 
-INTERN bool DCALL fs_hasenv(/*String*/DeeObject *__restrict UNUSED(name)) { return false; }
+INTERN bool DCALL fs_hasenv(/*String*/ DeeObject *__restrict UNUSED(name)) { return false; }
 INTERN DREF DeeObject *DCALL
 fs_getenv(DeeObject *__restrict UNUSED(name), bool try_get) {
  if (!try_get) fs_unsupported();
@@ -107,7 +107,7 @@ fs_printenv(char const *__restrict UNUSED(name),
 }
 INTERN int DCALL fs_delenv(DeeObject *__restrict UNUSED(name)) { return -1; }
 INTERN int DCALL fs_setenv(DeeObject *__restrict UNUSED(name), DeeObject *__restrict UNUSED(value)) { return fs_unsupported(); }
-INTERN DREF /*String*/DeeObject *DCALL fs_gethostname(void) { return fs_getcwd(); }
+INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) { return fs_getcwd(); }
 INTERN DREF DeeObject *DCALL fs_gettmp(void) { return fs_getcwd(); }
 INTERN int DCALL fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
 INTERN DREF DeeObject *DCALL fs_getcwd(void) { fs_unsupported(); return NULL; }
@@ -161,7 +161,7 @@ PRIVATE DREF DeeObject *DCALL \
 funnam(DeeObject *__restrict UNUSED(self), \
        size_t argc, DeeObject **__restrict argv) { \
  DeeObject *path; \
- if (DeeArg_Unpack(argc,argv,"o:" name,&path)) \
+ if (DeeArg_Unpack(argc, argv,"o:" name,&path)) \
      return NULL; \
  return_; \
 }

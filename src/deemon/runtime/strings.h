@@ -21,16 +21,16 @@
 
 #ifndef ONLY_LISTING
 #include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/file.h>
+#include <deemon/object.h>
 DECL_BEGIN
 #endif /* !ONLY_LISTING */
 
 #ifndef STRING2
-#define STRING2(name,str) INTDEF DeeObject name;
+#define STRING2(name, str) INTDEF DeeObject name;
 #endif
 #ifndef STRING
-#define STRING(str) STRING2(str_##str,#str)
+#define STRING(str) STRING2(str_##str, #str)
 #endif
 
 STRING(Signal)
@@ -85,7 +85,7 @@ STRING(strict)
 STRING(replace)
 STRING(ignore)
 STRING(fs)
-STRING2(str_environ,"environ")
+STRING2(str_environ, "environ")
 STRING(get)
 STRING(set)
 STRING(enumattr)
@@ -131,9 +131,9 @@ STRING(first)
 STRING(last)
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 STRING(fileno)
-#define STR_FILENO  DeeString_STR(&str_fileno)
+#define STR_FILENO DeeString_STR(&str_fileno)
 #else
-#define STR_FILENO  "fileno"
+#define STR_FILENO "fileno"
 #endif
 
 STRING(size)
@@ -146,9 +146,9 @@ STRING(except)
 STRING(this)
 STRING(this_module)
 STRING(this_function)
-STRING2(str_cell_empty,"cell empty")
+STRING2(str_cell_empty, "cell empty")
 #endif
-STRING2(str_tab,"\t")
+STRING2(str_tab, "\t")
 
 STRING(__pooad)
 STRING(__neosb)
@@ -158,8 +158,8 @@ STRING(__gaosa)
 
 STRING(d200)
 
-STRING2(str_nomemory,"allocation failed")
-STRING2(str_dots,"...")
+STRING2(str_nomemory, "allocation failed")
+STRING2(str_dots, "...")
 
 
 /* Strings used for internal AST branches */

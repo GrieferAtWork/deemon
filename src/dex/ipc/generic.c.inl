@@ -55,7 +55,7 @@ PRIVATE int DCALL ipc_unimplemented(void) {
 PRIVATE DREF DeeObject *DCALL
 process_start(Process *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":start"))
+ if (DeeArg_Unpack(argc, argv,":start"))
      goto err;
  if (self == &this_process)
      return_false;
@@ -67,7 +67,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_detach(Process *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":detach"))
+ if (DeeArg_Unpack(argc, argv,":detach"))
      goto err;
  if (self == &this_process)
      return_false;
@@ -79,7 +79,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_id(Process *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":id"))
+ if (DeeArg_Unpack(argc, argv,":id"))
      goto err;
  if (self == &this_process)
      return_reference_(&DeeInt_Zero);
@@ -92,7 +92,7 @@ PRIVATE DREF DeeObject *DCALL
 process_terminate(Process *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  uint32_t exit_code = 0;
- if (DeeArg_Unpack(argc,argv,"|I32u:terminate",&exit_code))
+ if (DeeArg_Unpack(argc, argv,"|I32u:terminate",&exit_code))
      goto err;
  if (self == &this_process) {
   Dee_Exit((int)exit_code,false);
@@ -107,7 +107,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_join(Process *__restrict self, size_t argc,
              DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":join"))
+ if (DeeArg_Unpack(argc, argv,":join"))
      goto err;
  ipc_unimplemented();
 err:
@@ -117,7 +117,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_tryjoin(Process *__restrict self, size_t argc,
                 DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":tryjoin"))
+ if (DeeArg_Unpack(argc, argv,":tryjoin"))
      goto err;
  ipc_unimplemented();
 err:
@@ -128,7 +128,7 @@ PRIVATE DREF DeeObject *DCALL
 process_timedjoin(Process *__restrict self, size_t argc,
                   DeeObject **__restrict argv) {
  uint64_t timeout;
- if (DeeArg_Unpack(argc,argv,"I64d:timedjoin",&timeout))
+ if (DeeArg_Unpack(argc, argv,"I64d:timedjoin",&timeout))
      goto err;
  ipc_unimplemented();
 err:
@@ -138,7 +138,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_started(Process *__restrict self, size_t argc,
                 DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":started"))
+ if (DeeArg_Unpack(argc, argv,":started"))
      goto err;
  if (self == &this_process)
      return_true;
@@ -150,7 +150,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_detached(Process *__restrict self, size_t argc,
                  DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":detached"))
+ if (DeeArg_Unpack(argc, argv,":detached"))
      goto err;
  if (self == &this_process)
      return_false;
@@ -162,7 +162,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_isachild(Process *__restrict self, size_t argc,
                  DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isachild"))
+ if (DeeArg_Unpack(argc, argv,":isachild"))
      goto err;
  if (self == &this_process)
      return_false;
@@ -174,7 +174,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_terminated(Process *__restrict self, size_t argc,
                    DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":terminated"))
+ if (DeeArg_Unpack(argc, argv,":terminated"))
      goto err;
  if (self == &this_process)
      return_false;
@@ -300,7 +300,7 @@ call_extern(DeeObject *__restrict module_name,
  DREF DeeObject *module,*result;
  module = DeeModule_OpenGlobal(module_name,NULL,true);
  if unlikely(!module) goto err;
- result = DeeObject_CallAttr(module,global_name,argc,argv);
+ result = DeeObject_CallAttr(module,global_name,argc, argv);
  Dee_Decref(module);
  return result;
 err:
@@ -521,7 +521,7 @@ PRIVATE struct type_getset process_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":self"))
+ if (DeeArg_Unpack(argc, argv,":self"))
      return NULL;
  return_reference_((DeeObject *)&this_process);
 }
@@ -542,7 +542,7 @@ PRIVATE int DCALL
 process_init(Process *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *temp;
- if (DeeArg_Unpack(argc,argv,"o|o:process",&temp,&temp))
+ if (DeeArg_Unpack(argc, argv,"o|o:process",&temp,&temp))
      goto err;
  return 0;
 err:
@@ -710,7 +710,7 @@ PRIVATE DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **__restrict argv) {
  uint32_t pipe_size;
- if (DeeArg_Unpack(argc,argv,"|I32u:new",&pipe_size))
+ if (DeeArg_Unpack(argc, argv,"|I32u:new",&pipe_size))
      goto err;
  ipc_unimplemented();
 err:

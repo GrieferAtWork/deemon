@@ -20,13 +20,13 @@
 #ifndef TPP_FOREACH
 #include "__TPP_STDINC.h"
 
-#define __TPP_PRIVATE_FOREACH_NEMPTY2(p,r,...) r
-#define __TPP_PRIVATE_FOREACH_0(m,d,...) /* break */
-#define __TPP_PRIVATE_FOREACH_1(m,d,first,...)\
+#define __TPP_PRIVATE_FOREACH_NEMPTY2(p,r, ...) r
+#define __TPP_PRIVATE_FOREACH_0(m,d, ...) /* break */
+#define __TPP_PRIVATE_FOREACH_1(m,d,first, ...)\
 m(first,d)__TPP_PRIVATE_FOREACH_E(m,d,__VA_ARGS__)
-#define __TPP_PRIVATE_FOREACH_E(m,d,...)\
+#define __TPP_PRIVATE_FOREACH_E(m,d, ...)\
 __TPP_BASIC_CAT(__TPP_PRIVATE_FOREACH_,__TPP_PRIVATE_FOREACH_NEMPTY2(__VA_COMMA__ 1,0))(m,d,__VA_ARGS__)
-#define __TPP_PRIVATE_FOREACH_C(m,d,...)\
+#define __TPP_PRIVATE_FOREACH_C(m,d, ...)\
 __TPP_PRIVATE_FOREACH_E(m,d,__VA_ARGS__)
 
 

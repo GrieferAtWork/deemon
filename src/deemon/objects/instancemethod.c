@@ -105,7 +105,7 @@ im_init(InstanceMethod *__restrict self,
         DeeObject *kw) {
  DeeObject *thisarg,*func;
  PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:InstanceMethod",&func,&thisarg))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"oo:InstanceMethod",&func,&thisarg))
      return -1;
  self->im_this = thisarg;
  self->im_func = func;
@@ -122,12 +122,12 @@ im_repr(InstanceMethod *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 im_call(InstanceMethod *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- return DeeObject_ThisCall(self->im_func,self->im_this,argc,argv);
+ return DeeObject_ThisCall(self->im_func,self->im_this,argc, argv);
 }
 PRIVATE DREF DeeObject *DCALL
 im_callkw(InstanceMethod *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
- return DeeObject_ThisCallKw(self->im_func,self->im_this,argc,argv,kw);
+ return DeeObject_ThisCallKw(self->im_func,self->im_this,argc, argv, kw);
 }
 PRIVATE dhash_t DCALL
 im_hash(InstanceMethod *__restrict self) {

@@ -280,144 +280,144 @@ err_unsupported(char const *__restrict name) {
 #endif
 
 #if defined(ENOENT) && defined(ENOTDIR)
-#define HANDLE_ENOENT_ENOTDIR(error,err_label,...) \
+#define HANDLE_ENOENT_ENOTDIR(error,err_label, ...) \
  if ((error) == ENOENT || (error) == ENOTDIR) { \
      DeeError_SysThrowf(&DeeError_FileNotFound,error,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(ENOENT)
-#define HANDLE_ENOENT_ENOTDIR(error,err_label,...) \
+#define HANDLE_ENOENT_ENOTDIR(error,err_label, ...) \
  if ((error) == ENOENT) { \
      DeeError_SysThrowf(&DeeError_FileNotFound,error,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(ENOTDIR)
-#define HANDLE_ENOENT_ENOTDIR(error,err_label,...) \
+#define HANDLE_ENOENT_ENOTDIR(error,err_label, ...) \
  if ((error) == ENOTDIR) { \
      DeeError_SysThrowf(&DeeError_FileNotFound,error,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_ENOENT_ENOTDIR(error,err_label,...) /* nothing */
+#define HANDLE_ENOENT_ENOTDIR(error,err_label, ...) /* nothing */
 #endif
 
 
 #if defined(ENXIO) && defined(EISDIR)
-#define HANDLE_ENXIO_EISDIR(error,err_label,...) \
+#define HANDLE_ENXIO_EISDIR(error,err_label, ...) \
  if ((error) == ENXIO || (error) == EISDIR) { \
      DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(ENXIO)
-#define HANDLE_ENXIO_EISDIR(error,err_label,...) \
+#define HANDLE_ENXIO_EISDIR(error,err_label, ...) \
  if ((error) == ENXIO) { \
      DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(EISDIR)
-#define HANDLE_ENXIO_EISDIR(error,err_label,...) \
+#define HANDLE_ENXIO_EISDIR(error,err_label, ...) \
  if ((error) == EISDIR) { \
      DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_ENXIO_EISDIR(error,err_label,...) /* nothing */
+#define HANDLE_ENXIO_EISDIR(error,err_label, ...) /* nothing */
 #endif
 
 #if defined(EROFS) && defined(ETXTBSY)
-#define HANDLE_EROFS_ETXTBSY(error,err_label,...) \
+#define HANDLE_EROFS_ETXTBSY(error,err_label, ...) \
  if ((error) == EROFS || (error) == ETXTBSY) { \
      DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(EROFS)
-#define HANDLE_EROFS_ETXTBSY(error,err_label,...) \
+#define HANDLE_EROFS_ETXTBSY(error,err_label, ...) \
  if ((error) == EROFS) { \
      DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(ETXTBSY)
-#define HANDLE_EROFS_ETXTBSY(error,err_label,...) \
+#define HANDLE_EROFS_ETXTBSY(error,err_label, ...) \
  if ((error) == ETXTBSY) { \
      DeeError_SysThrowf(&DeeError_ReadOnlyFile,error,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_EROFS_ETXTBSY(error,err_label,...) /* nothing */
+#define HANDLE_EROFS_ETXTBSY(error,err_label, ...) /* nothing */
 #endif
 
 
 
 #if defined(EACCES)
-#define HANDLE_EACCES(error,err_label,...) \
+#define HANDLE_EACCES(error,err_label, ...) \
  if ((error) == EACCES) { \
      DeeError_SysThrowf(&DeeError_FileAccessError,error,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_EACCES(error,err_label,...) /* nothing */
+#define HANDLE_EACCES(error,err_label, ...) /* nothing */
 #endif
 
 #if defined(EEXIST)
-#define HANDLE_EEXIST_IF(error,cond,err_label,...) \
+#define HANDLE_EEXIST_IF(error,cond,err_label, ...) \
  if ((error) == EEXIST && (cond)) { \
      DeeError_SysThrowf(&DeeError_FileExists,error,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_EEXIST_IF(error,cond,err_label,...) /* nothing */
+#define HANDLE_EEXIST_IF(error,cond,err_label, ...) /* nothing */
 #endif
 
 #if defined(EINVAL)
-#define HANDLE_EINVAL(error,err_label,...) \
+#define HANDLE_EINVAL(error,err_label, ...) \
  if ((error) == EINVAL) { \
      DeeError_Throwf(&DeeError_ValueError,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_EINVAL(error,err_label,...) /* nothing */
+#define HANDLE_EINVAL(error,err_label, ...) /* nothing */
 #endif
 
 #if defined(ENOMEM)
-#define HANDLE_ENOMEM(error,err_label,...) \
+#define HANDLE_ENOMEM(error,err_label, ...) \
  if ((error) == ENOMEM) { \
      DeeError_Throwf(&DeeError_NoMemory,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_ENOMEM(error,err_label,...) /* nothing */
+#define HANDLE_ENOMEM(error,err_label, ...) /* nothing */
 #endif
 
 #if defined(EBADF)
-#define HANDLE_EBADF(error,err_label,...) \
+#define HANDLE_EBADF(error,err_label, ...) \
  if ((error) == EBADF) { \
      DeeError_Throwf(&DeeError_FileClosed,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_EBADF(error,err_label,...) /* nothing */
+#define HANDLE_EBADF(error,err_label, ...) /* nothing */
 #endif
 
 #if defined(EFBIG) && defined(EINVAL)
-#define HANDLE_EFBIG_EINVAL(error,err_label,...) \
+#define HANDLE_EFBIG_EINVAL(error,err_label, ...) \
  if ((error) == EFBIG || (error) == EINVAL) { \
      DeeError_Throwf(&DeeError_IntegerOverflow,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(EFBIG)
-#define HANDLE_EFBIG_EINVAL(error,err_label,...) \
+#define HANDLE_EFBIG_EINVAL(error,err_label, ...) \
  if ((error) == EFBIG) { \
      DeeError_Throwf(&DeeError_IntegerOverflow,__VA_ARGS__); \
      goto err_label; \
  }
 #elif defined(EINVAL)
-#define HANDLE_EFBIG_EINVAL(error,err_label,...) \
+#define HANDLE_EFBIG_EINVAL(error,err_label, ...) \
  if ((error) == EINVAL) { \
      DeeError_Throwf(&DeeError_IntegerOverflow,__VA_ARGS__); \
      goto err_label; \
  }
 #else
-#define HANDLE_EFBIG_EINVAL(error,err_label,...) /* nothing */
+#define HANDLE_EFBIG_EINVAL(error,err_label, ...) /* nothing */
 #endif
 
 
@@ -487,7 +487,7 @@ PRIVATE DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **__restric
 	DeeStringObject *filename;
 	unsigned int oflags;
 	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_oflags_mode,"ou|u:open",&filename,&oflags,&mode))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_oflags_mode,"ou|u:open",&filename,&oflags,&mode))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -529,7 +529,7 @@ err:
 
 #if !defined(HAVE_WOPEN) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("open","filename:c:char[],oflags:u,mode:u=0644->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/char const *__restrict filename, unsigned int oflags, unsigned int mode);
+FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int oflags, unsigned int mode);
 PRIVATE DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_OPEN_DEF { "open", (DeeObject *)&libposix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=0644)->?Dint") },
 #define LIBPOSIX_OPEN_DEF_DOC(doc) { "open", (DeeObject *)&libposix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=0644)->?Dint\n" doc) },
@@ -539,11 +539,11 @@ PRIVATE DEFINE_KWCMETHOD(libposix_open,libposix_open_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_filename_oflags_mode,{ K(filename), K(oflags), K(mode), KEND });
 #endif /* !LIBPOSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	unsigned int oflags;
 	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_oflags_mode,"ou|u:open",&filename,&oflags,&mode))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_oflags_mode,"ou|u:open",&filename,&oflags,&mode))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -554,7 +554,7 @@ PRIVATE DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **__restric
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/char const *__restrict filename, unsigned int oflags, unsigned int mode)
+FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int oflags, unsigned int mode)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -615,7 +615,7 @@ PRIVATE DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **__restri
 	dwchar_t const *filename_str;
 	DeeStringObject *filename;
 	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_mode,"o|u:creat",&filename,&mode))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_mode,"o|u:creat",&filename,&mode))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -676,7 +676,7 @@ err:
 #if !(defined(HAVE_WCREAT) || defined(HAVE_WOPEN) || \
      defined(HAVE_WCREAT64) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("creat","filename:c:char[],mode:u=0644->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/char const *__restrict filename, unsigned int mode);
+FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int mode);
 PRIVATE DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_CREAT_DEF { "creat", (DeeObject *)&libposix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=0644)->?Dint") },
 #define LIBPOSIX_CREAT_DEF_DOC(doc) { "creat", (DeeObject *)&libposix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=0644)->?Dint\n" doc) },
@@ -686,10 +686,10 @@ PRIVATE DEFINE_KWCMETHOD(libposix_creat,libposix_creat_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_filename_mode,{ K(filename), K(mode), KEND });
 #endif /* !LIBPOSIX_KWDS_FILENAME_MODE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_mode,"o|u:creat",&filename,&mode))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_mode,"o|u:creat",&filename,&mode))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -700,7 +700,7 @@ PRIVATE DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **__restri
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/char const *__restrict filename, unsigned int mode)
+FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int mode)
 //[[[end]]]
 {
 #if defined(HAVE_FILEIO) && (defined(HAVE_CREAT) || \
@@ -763,7 +763,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd_buf,{ K(fd), K(buf), KEND });
 PRIVATE DREF DeeObject *DCALL libposix_read_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
 	DeeObject *buf;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_buf,"do:read",&fd,&buf))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_buf,"do:read",&fd,&buf))
 	    goto err;
 	return libposix_read_f_impl(fd,buf);
 err:
@@ -816,7 +816,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd_buf,{ K(fd), K(buf), KEND });
 PRIVATE DREF DeeObject *DCALL libposix_write_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
 	DeeObject *buf;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_buf,"do:write",&fd,&buf))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_buf,"do:write",&fd,&buf))
 	    goto err;
 	return libposix_write_f_impl(fd,buf);
 err:
@@ -873,7 +873,7 @@ PRIVATE DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **__restri
 	int fd;
 	DeeObject *buf;
 	int64_t offset;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_buf_offset,"doI64d:pread",&fd,&buf,&offset))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_buf_offset,"doI64d:pread",&fd,&buf,&offset))
 	    goto err;
 	return libposix_pread_f_impl(fd,buf,offset);
 err:
@@ -923,7 +923,7 @@ PRIVATE DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **__restri
 	int fd;
 	DeeObject *buf;
 	int32_t offset;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_buf_offset,"doI32d:pread",&fd,&buf,&offset))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_buf_offset,"doI32d:pread",&fd,&buf,&offset))
 	    goto err;
 	return libposix_pread_f_impl(fd,buf,offset);
 err:
@@ -981,7 +981,7 @@ PRIVATE DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **__restr
 	int fd;
 	DeeObject *buf;
 	int64_t offset;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_buf_offset,"doI64d:pwrite",&fd,&buf,&offset))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_buf_offset,"doI64d:pwrite",&fd,&buf,&offset))
 	    goto err;
 	return libposix_pwrite_f_impl(fd,buf,offset);
 err:
@@ -1031,7 +1031,7 @@ PRIVATE DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **__restr
 	int fd;
 	DeeObject *buf;
 	int32_t offset;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_buf_offset,"doI32d:pwrite",&fd,&buf,&offset))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_buf_offset,"doI32d:pwrite",&fd,&buf,&offset))
 	    goto err;
 	return libposix_pwrite_f_impl(fd,buf,offset);
 err:
@@ -1089,7 +1089,7 @@ PRIVATE DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **__restri
 	int fd;
 	int64_t off;
 	int whence;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_off_whence,"dI64dd:lseek",&fd,&off,&whence))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_off_whence,"dI64dd:lseek",&fd,&off,&whence))
 	    goto err;
 	return libposix_lseek_f_impl(fd,off,whence);
 err:
@@ -1135,7 +1135,7 @@ PRIVATE DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **__restri
 	int fd;
 	int32_t off;
 	int whence;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_off_whence,"dI32dd:lseek",&fd,&off,&whence))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_off_whence,"dI32dd:lseek",&fd,&off,&whence))
 	    goto err;
 	return libposix_lseek_f_impl(fd,off,whence);
 err:
@@ -1185,7 +1185,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd,{ K(fd), KEND });
 #endif /* !LIBPOSIX_KWDS_FD_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_close_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd,"d:close",&fd))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd,"d:close",&fd))
 	    goto err;
 	return libposix_close_f_impl(fd);
 err:
@@ -1233,7 +1233,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd,{ K(fd), KEND });
 #endif /* !LIBPOSIX_KWDS_FD_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_fsync_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd,"d:fsync",&fd))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd,"d:fsync",&fd))
 	    goto err;
 	return libposix_fsync_f_impl(fd);
 err:
@@ -1280,7 +1280,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd,{ K(fd), KEND });
 #endif /* !LIBPOSIX_KWDS_FD_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_fdatasync_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd,"d:fdatasync",&fd))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd,"d:fdatasync",&fd))
 	    goto err;
 	return libposix_fdatasync_f_impl(fd);
 err:
@@ -1325,7 +1325,7 @@ PRIVATE DREF DeeObject *DCALL libposix_getpid_f(size_t argc, DeeObject **__restr
 #define LIBPOSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&libposix_getpid, MODSYM_FNORMAL, DOC("()->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libposix_getpid,libposix_getpid_f);
 PRIVATE DREF DeeObject *DCALL libposix_getpid_f(size_t argc, DeeObject **__restrict argv) {
-	if (DeeArg_Unpack(argc,argv,":getpid"))
+	if (DeeArg_Unpack(argc, argv,":getpid"))
 	    goto err;
 	return libposix_getpid_f_impl();
 err:
@@ -1376,7 +1376,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_mask,{ K(mask), KEND });
 #endif /* !LIBPOSIX_KWDS_MASK_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_umask_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int mask;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_mask,"d:umask",&mask))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_mask,"d:umask",&mask))
 	    goto err;
 	return libposix_umask_f_impl(mask);
 err:
@@ -1425,7 +1425,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd,{ K(fd), KEND });
 #endif /* !LIBPOSIX_KWDS_FD_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_dup_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd,"d:dup",&fd))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd,"d:dup",&fd))
 	    goto err;
 	return libposix_dup_f_impl(fd);
 err:
@@ -1476,7 +1476,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_oldfd_newfd,{ K(oldfd), K(newfd), KEND });
 PRIVATE DREF DeeObject *DCALL libposix_dup2_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int oldfd;
 	int newfd;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_oldfd_newfd,"dd:dup2",&oldfd,&newfd))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_oldfd_newfd,"dd:dup2",&oldfd,&newfd))
 	    goto err;
 	return libposix_dup2_f_impl(oldfd,newfd);
 err:
@@ -1529,7 +1529,7 @@ PRIVATE DREF DeeObject *DCALL libposix_dup3_f(size_t argc, DeeObject **__restric
 	int oldfd;
 	int newfd;
 	int flags;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_oldfd_newfd_flags,"ddd:dup3",&oldfd,&newfd,&flags))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_oldfd_newfd_flags,"ddd:dup3",&oldfd,&newfd,&flags))
 	    goto err;
 	return libposix_dup3_f_impl(oldfd,newfd,flags);
 err:
@@ -1600,7 +1600,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd,{ K(fd), KEND });
 #endif /* !LIBPOSIX_KWDS_FD_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_isatty_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd,"d:isatty",&fd))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd,"d:isatty",&fd))
 	    goto err;
 	return libposix_isatty_f_impl(fd);
 err:
@@ -1645,7 +1645,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("system","command:c:char[]->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/char const *__restrict command);
+FORCELOCAL DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *__restrict command);
 PRIVATE DREF DeeObject *DCALL libposix_system_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_SYSTEM_DEF { "system", (DeeObject *)&libposix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint") },
 #define LIBPOSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&libposix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
@@ -1655,9 +1655,9 @@ PRIVATE DEFINE_KWCMETHOD(libposix_system,libposix_system_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_command,{ K(command), KEND });
 #endif /* !LIBPOSIX_KWDS_COMMAND_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_system_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *command_str;
+	/*utf-8*/ char const *command_str;
 	DeeStringObject *command;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_command,"o:system",&command))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_command,"o:system",&command))
 	    goto err;
 	if (DeeObject_AssertTypeExact(command,&DeeString_Type))
 	    goto err;
@@ -1668,7 +1668,7 @@ PRIVATE DREF DeeObject *DCALL libposix_system_f(size_t argc, DeeObject **__restr
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/char const *__restrict command)
+FORCELOCAL DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *__restrict command)
 //[[[end]]]
 {
 #ifdef HAVE_SYSTEM
@@ -1704,7 +1704,7 @@ PRIVATE DREF DeeObject *DCALL libposix_sched_yield_f(size_t argc, DeeObject **__
 #define LIBPOSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&libposix_sched_yield, MODSYM_FNORMAL, DOC("()->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libposix_sched_yield,libposix_sched_yield_f);
 PRIVATE DREF DeeObject *DCALL libposix_sched_yield_f(size_t argc, DeeObject **__restrict argv) {
-	if (DeeArg_Unpack(argc,argv,":sched_yield"))
+	if (DeeArg_Unpack(argc, argv,":sched_yield"))
 	    goto err;
 	return libposix_sched_yield_f_impl();
 err:
@@ -1721,7 +1721,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_sched_yield_f_impl(void)
 
 PRIVATE DREF DeeObject *DCALL
 libposix_errno_get_f(size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":errno.getter"))
+ if (DeeArg_Unpack(argc, argv,":errno.getter"))
      goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
  return DeeInt_NewInt(errno);
@@ -1734,7 +1734,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 libposix_errno_set_f(size_t argc, DeeObject **__restrict argv) {
  int value;
- if (DeeArg_Unpack(argc,argv,"d:errno.setter",&value))
+ if (DeeArg_Unpack(argc, argv,"d:errno.setter",&value))
      goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
  errno = value;
@@ -1763,7 +1763,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_callback_args,{ K(callback), K(args), KEND }
 PRIVATE DREF DeeObject *DCALL libposix_atexit_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	DeeObject *callback;
 	DeeObject *args = Dee_EmptyTuple;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_callback_args,"o|o:atexit",&callback,&args))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_callback_args,"o|o:atexit",&callback,&args))
 	    goto err;
 	return libposix_atexit_f_impl(callback,args);
 err:
@@ -1794,7 +1794,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_exitcode,{ K(exitcode), KEND });
 #endif /* !LIBPOSIX_KWDS_EXITCODE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_exit_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int exitcode;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_exitcode,"d:exit",&exitcode))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_exitcode,"d:exit",&exitcode))
 	    goto err;
 	return libposix_exit_f_impl(exitcode);
 err:
@@ -1820,7 +1820,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_exitcode,{ K(exitcode), KEND });
 #endif /* !LIBPOSIX_KWDS_EXITCODE_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix__exit_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int exitcode;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_exitcode,"d:_exit",&exitcode))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_exitcode,"d:_exit",&exitcode))
 	    goto err;
 	return libposix__exit_f_impl(exitcode);
 err:
@@ -1841,7 +1841,7 @@ PRIVATE DREF DeeObject *DCALL libposix_abort_f(size_t argc, DeeObject **__restri
 #define LIBPOSIX_ABORT_DEF_DOC(doc) { "abort", (DeeObject *)&libposix_abort, MODSYM_FNORMAL, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(libposix_abort,libposix_abort_f);
 PRIVATE DREF DeeObject *DCALL libposix_abort_f(size_t argc, DeeObject **__restrict argv) {
-	if (DeeArg_Unpack(argc,argv,":abort"))
+	if (DeeArg_Unpack(argc, argv,":abort"))
 	    goto err;
 	return libposix_abort_f_impl();
 err:
@@ -1873,7 +1873,7 @@ PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__res
 	dwchar_t const *filename_str;
 	DeeStringObject *filename;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_len,"oI64d:truncate",&filename,&len))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_len,"oI64d:truncate",&filename,&len))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -1928,7 +1928,7 @@ err:
 #endif
 #if !(defined(HAVE_WTRUNCATE64) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I64d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/char const *__restrict filename, int64_t len);
+FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int64_t len);
 PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
@@ -1938,10 +1938,10 @@ PRIVATE DEFINE_KWCMETHOD(libposix_truncate,libposix_truncate_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_filename_len,{ K(filename), K(len), KEND });
 #endif /* !LIBPOSIX_KWDS_FILENAME_LEN_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_len,"oI64d:truncate",&filename,&len))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_len,"oI64d:truncate",&filename,&len))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -1952,7 +1952,7 @@ PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__res
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/char const *__restrict filename, int64_t len)
+FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int64_t len)
 //[[[end]]]
 {
  int result;
@@ -2012,7 +2012,7 @@ PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__res
 	dwchar_t const *filename_str;
 	DeeStringObject *filename;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_len,"oI32d:truncate",&filename,&len))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_len,"oI32d:truncate",&filename,&len))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -2068,7 +2068,7 @@ err:
 #endif
 #if !(defined(HAVE_WTRUNCATE) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I32d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/char const *__restrict filename, int32_t len);
+FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int32_t len);
 PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
@@ -2078,10 +2078,10 @@ PRIVATE DEFINE_KWCMETHOD(libposix_truncate,libposix_truncate_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_filename_len,{ K(filename), K(len), KEND });
 #endif /* !LIBPOSIX_KWDS_FILENAME_LEN_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_len,"oI32d:truncate",&filename,&len))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_len,"oI32d:truncate",&filename,&len))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -2092,7 +2092,7 @@ PRIVATE DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **__res
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/char const *__restrict filename, int32_t len)
+FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int32_t len)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -2151,7 +2151,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd_len,{ K(fd), K(len), KEND });
 PRIVATE DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_len,"dI64d:ftruncate",&fd,&len))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_len,"dI64d:ftruncate",&fd,&len))
 	    goto err;
 	return libposix_ftruncate_f_impl(fd,len);
 err:
@@ -2196,7 +2196,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_fd_len,{ K(fd), K(len), KEND });
 PRIVATE DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int fd;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_fd_len,"dI32d:ftruncate",&fd,&len))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_fd_len,"dI32d:ftruncate",&fd,&len))
 	    goto err;
 	return libposix_ftruncate_f_impl(fd,len);
 err:
@@ -2234,7 +2234,7 @@ err:
 #endif
 
 /*[[[deemon import("_dexutils").gw("access","filename:c:char[],how:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/char const *__restrict filename, int how);
+FORCELOCAL DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *__restrict filename, int how);
 PRIVATE DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_ACCESS_DEF { "access", (DeeObject *)&libposix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define LIBPOSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&libposix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
@@ -2244,10 +2244,10 @@ PRIVATE DEFINE_KWCMETHOD(libposix_access,libposix_access_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_filename_how,{ K(filename), K(how), KEND });
 #endif /* !LIBPOSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int how;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_how,"od:access",&filename,&how))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_how,"od:access",&filename,&how))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -2258,7 +2258,7 @@ PRIVATE DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **__restr
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/char const *__restrict filename, int how)
+FORCELOCAL DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *__restrict filename, int how)
 //[[[end]]]
 {
 #ifdef HAVE_ACCESS
@@ -2303,7 +2303,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("euidaccess","filename:c:char[],how:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/char const *__restrict filename, int how);
+FORCELOCAL DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *__restrict filename, int how);
 PRIVATE DREF DeeObject *DCALL libposix_euidaccess_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&libposix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define LIBPOSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&libposix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
@@ -2313,10 +2313,10 @@ PRIVATE DEFINE_KWCMETHOD(libposix_euidaccess,libposix_euidaccess_f);
 PRIVATE DEFINE_KWLIST(libposix_kwds_filename_how,{ K(filename), K(how), KEND });
 #endif /* !LIBPOSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_euidaccess_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int how;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_filename_how,"od:euidaccess",&filename,&how))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_filename_how,"od:euidaccess",&filename,&how))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -2327,7 +2327,7 @@ PRIVATE DREF DeeObject *DCALL libposix_euidaccess_f(size_t argc, DeeObject **__r
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/char const *__restrict filename, int how)
+FORCELOCAL DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *__restrict filename, int how)
 //[[[end]]]
 {
 #if defined(HAVE_EUIDACCESS) || defined(HAVE_EACCESS)
@@ -2373,7 +2373,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("faccessat","dfd:d,filename:c:char[],how:d,atflags:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/char const *__restrict filename, int how, int atflags);
+FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, int how, int atflags);
 PRIVATE DREF DeeObject *DCALL libposix_faccessat_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&libposix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
 #define LIBPOSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&libposix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
@@ -2384,11 +2384,11 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_dfd_filename_how_atflags,{ K(dfd), K(filenam
 #endif /* !LIBPOSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_faccessat_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int dfd;
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int how;
 	int atflags;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_dfd_filename_how_atflags,"dodd:faccessat",&dfd,&filename,&how,&atflags))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_dfd_filename_how_atflags,"dodd:faccessat",&dfd,&filename,&how,&atflags))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -2399,7 +2399,7 @@ PRIVATE DREF DeeObject *DCALL libposix_faccessat_f(size_t argc, DeeObject **__re
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/char const *__restrict filename, int how, int atflags)
+FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, int how, int atflags)
 //[[[end]]]
 {
 #ifdef HAVE_FACCESSAT
@@ -2451,7 +2451,7 @@ PRIVATE DREF DeeObject *DCALL libposix_pipe_f(size_t argc, DeeObject **__restric
 #define LIBPOSIX_PIPE_DEF_DOC(doc) { "pipe", (DeeObject *)&libposix_pipe, MODSYM_FNORMAL, DOC("()->?T2?Dint?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libposix_pipe,libposix_pipe_f);
 PRIVATE DREF DeeObject *DCALL libposix_pipe_f(size_t argc, DeeObject **__restrict argv) {
-	if (DeeArg_Unpack(argc,argv,":pipe"))
+	if (DeeArg_Unpack(argc, argv,":pipe"))
 	    goto err;
 	return libposix_pipe_f_impl();
 err:
@@ -2564,7 +2564,7 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_oflags,{ K(oflags), KEND });
 #endif /* !LIBPOSIX_KWDS_OFLAGS_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_pipe2_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int oflags;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_oflags,"d:pipe2",&oflags))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_oflags,"d:pipe2",&oflags))
 	    goto err;
 	return libposix_pipe2_f_impl(oflags);
 err:
@@ -2721,7 +2721,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("fchownat","dfd:d,filename:c:char[],owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags);
+FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags);
 PRIVATE DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 #define LIBPOSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint") },
 #define LIBPOSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint\n" doc) },
@@ -2732,12 +2732,12 @@ PRIVATE DEFINE_KWLIST(libposix_kwds_dfd_filename_owner_group_atflags,{ K(dfd), K
 #endif /* !LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED */
 PRIVATE DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	int dfd;
-	/*utf-8*/char const *filename_str;
+	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	DeeObject *owner;
 	DeeObject *group;
 	int atflags;
-	if (DeeArg_UnpackKw(argc,argv,kw,libposix_kwds_dfd_filename_owner_group_atflags,"doood:fchownat",&dfd,&filename,&owner,&group,&atflags))
+	if (DeeArg_UnpackKw(argc, argv, kw,libposix_kwds_dfd_filename_owner_group_atflags,"doood:fchownat",&dfd,&filename,&owner,&group,&atflags))
 	    goto err;
 	if (DeeObject_AssertTypeExact(filename,&DeeString_Type))
 	    goto err;
@@ -2748,7 +2748,7 @@ PRIVATE DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **__res
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags)
+FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags)
 //[[[end]]]
 {
 #ifdef HAVE_FCHOWNAT

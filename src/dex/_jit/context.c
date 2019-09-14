@@ -719,7 +719,7 @@ done:
 INTERN int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
-                  /*utf-8*/char const *__restrict name,
+                  /*utf-8*/ char const *__restrict name,
                   size_t namelen, unsigned int mode) {
  JITObjectTable *tab;
  struct jit_object_entry *ent;
@@ -809,7 +809,7 @@ err:
 INTERN int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      struct jit_symbol *__restrict result,
-                     /*utf-8*/char const *__restrict name,
+                     /*utf-8*/ char const *__restrict name,
                      size_t namelen, size_t nth) {
  (void)self;
  (void)result;

@@ -697,8 +697,8 @@ PUBLIC DREF DeeObject *
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeTuple_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
-                         /*inherit(on_success)*/DREF DeeObject **__restrict argv) {
+DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
+                         /*inherit(on_success)*/ DREF DeeObject **__restrict argv) {
  DREF DeeTupleObject *result;
  ASSERT_OBJECT(self);
  ASSERT(DeeTuple_Check(self));
@@ -726,7 +726,7 @@ err:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeTuple_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self,
+DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                          DeeObject *__restrict sequence) {
  DeeObject **iter,**end,**srcdst;
  DREF DeeTupleObject *result;
@@ -927,7 +927,7 @@ tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
  self->ti_index = 0;
- if (DeeArg_Unpack(argc,argv,"|oIu:_TupleIterator",
+ if (DeeArg_Unpack(argc, argv,"|oIu:_TupleIterator",
                   &self->ti_tuple,&self->ti_index))
      goto err;
  if (DeeObject_AssertTypeExact(self->ti_tuple,&DeeTuple_Type))
@@ -1218,7 +1218,7 @@ err:
 PRIVATE DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:Tuple",&seq))
+ if (DeeArg_Unpack(argc, argv,"o:Tuple",&seq))
      goto err;
  return (DREF Tuple *)DeeTuple_FromSequence(seq);
 err:
@@ -1420,7 +1420,7 @@ tuple_unpack(DeeObject *__restrict UNUSED(self),
              size_t argc, DeeObject **__restrict argv) {
  size_t num_items; DeeObject *init;
  DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,"Iuo:unpack",&num_items,&init))
+ if (DeeArg_Unpack(argc, argv,"Iuo:unpack",&num_items,&init))
      return NULL;
  result = DeeTuple_NewUninitialized(num_items);
  if unlikely(!result) goto done;
@@ -1518,7 +1518,7 @@ tuple_hash(Tuple *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 tuple_sizeof(Tuple *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  return DeeInt_NewSize(offsetof(Tuple,t_elem)+
                       (self->t_size * sizeof(DeeObject *)));

@@ -381,10 +381,10 @@ F(intinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
            T *self, size_t argc, DeeObject **__restrict argv) {
  T value; DeeObject *arg;
 #ifdef NAME
- if (DeeArg_Unpack(argc,argv,"o:" NAME,&arg))
+ if (DeeArg_Unpack(argc, argv,"o:" NAME,&arg))
      goto err;
 #else
- if (DeeArg_Unpack(argc,argv,"o:" PP_STR(T),&arg))
+ if (DeeArg_Unpack(argc, argv,"o:" PP_STR(T),&arg))
      goto err;
 #endif
  if (OBJECT_AS_T(arg,&value))

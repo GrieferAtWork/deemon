@@ -20,27 +20,32 @@
 #define GUARD_DEEMON_NONE_H 1
 
 #include "api.h"
-#include "object.h"
+
 #include <stddef.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define Dee_none_object none_object
 #define return_none     Dee_return_none
-#endif
+#endif /* DEE_SOURCE */
 
 typedef struct Dee_none_object DeeNoneObject;
-struct Dee_none_object { Dee_OBJECT_HEAD Dee_WEAKREF_SUPPORT };
+struct Dee_none_object {
+	Dee_OBJECT_HEAD
+	Dee_WEAKREF_SUPPORT
+};
 
 DDATDEF DeeTypeObject DeeNone_Type;
 #ifdef GUARD_DEEMON_OBJECTS_NONE_C
 DDATDEF DeeNoneObject DeeNone_Singleton;
 #define Dee_None    ((DeeObject *)&DeeNone_Singleton)
-#else
+#else /* GUARD_DEEMON_OBJECTS_NONE_C */
 DDATDEF DeeObject     DeeNone_Singleton;
 #define Dee_None    (&DeeNone_Singleton)
-#endif
+#endif /* !GUARD_DEEMON_OBJECTS_NONE_C */
 #define Dee_return_none  Dee_return_reference_(Dee_None)
 
 /* WARNING: If these two macros are ever changed, make sure to allow

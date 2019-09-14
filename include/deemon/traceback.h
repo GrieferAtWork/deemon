@@ -20,10 +20,12 @@
 #define GUARD_DEEMON_TRACEBACK_H 1
 
 #include "api.h"
-#include "object.h"
-#include "code.h"
-#include <stddef.h>
+
 #include <stdarg.h>
+#include <stddef.h>
+
+#include "code.h"
+#include "object.h"
 
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
@@ -42,50 +44,50 @@ struct Dee_thread_object;
 struct Dee_code_frame;
 
 struct Dee_traceback_object {
-    Dee_OBJECT_HEAD /* GC object. */
-    DREF struct Dee_thread_object
-                              *tb_thread;    /* [0..1][const] The thread for which this is a traceback. */
+	Dee_OBJECT_HEAD /* GC object. */
+	DREF struct Dee_thread_object
+	                          *tb_thread;    /* [0..1][const] The thread for which this is a traceback. */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t               tb_lock;      /* Lock for accessing this traceback. */
-#endif
-    uint16_t                   tb_numframes; /* [const] The amount of allocated frames. */
-    uint16_t                   tb_padding[3];/* ... */
-    struct Dee_code_frame      tb_frames[1]; /* [0..tb_numframes][lock(tb_lock)]
-                                              * [OVERRIDE([*].cf_frame,[0..1][owned])] May randomly be NULL if duplication failed.
-                                              * [OVERRIDE([*].cf_func,DREF [1..1])]
-                                              * [OVERRIDE([*].cf_argv,DREF [1..1][0..cf_argc][owned])]
-                                              * [OVERRIDE([*].cf_this,DREF [0..1])]
-                                              * [OVERRIDE([*].cf_vargs,DREF [0..1])]
-                                              * [OVERRIDE([*].cf_result,DREF [0..1])]
-                                              * [OVERRIDE([*].cf_prev,[?..?])]
-                                              * [OVERRIDE([*].cf_flags,[valid])]
-                                              * [OVERRIDE([*].cf_sp,[(!= NULL) == (cf_stack != NULL)][== cf_stack+cf_stacksz])] May randomly remain NULL if duplication failed.
-                                              * [OVERRIDE([*].cf_stack,[(!= NULL) == (cf_stacksz == 0)][0..cf_stacksz][owned])]
-                                              * [OVERRIDE([*].cf_stacksz,[(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
-                                              * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
-                                              *       Frames who's stack has yet to be duplicated have a `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
+	Dee_rwlock_t               tb_lock;      /* Lock for accessing this traceback. */
+#endif /* !CONFIG_NO_THREADS */
+	uint16_t                   tb_numframes; /* [const] The amount of allocated frames. */
+	uint16_t                   tb_padding[3];/* ... */
+	struct Dee_code_frame      tb_frames[1]; /* [0..tb_numframes][lock(tb_lock)]
+	                                          * [OVERRIDE([*].cf_frame,[0..1][owned])] May randomly be NULL if duplication failed.
+	                                          * [OVERRIDE([*].cf_func,DREF [1..1])]
+	                                          * [OVERRIDE([*].cf_argv,DREF [1..1][0..cf_argc][owned])]
+	                                          * [OVERRIDE([*].cf_this,DREF [0..1])]
+	                                          * [OVERRIDE([*].cf_vargs,DREF [0..1])]
+	                                          * [OVERRIDE([*].cf_result,DREF [0..1])]
+	                                          * [OVERRIDE([*].cf_prev,[?..?])]
+	                                          * [OVERRIDE([*].cf_flags,[valid])]
+	                                          * [OVERRIDE([*].cf_sp,[(!= NULL) == (cf_stack != NULL)][== cf_stack+cf_stacksz])] May randomly remain NULL if duplication failed.
+	                                          * [OVERRIDE([*].cf_stack,[(!= NULL) == (cf_stacksz == 0)][0..cf_stacksz][owned])]
+	                                          * [OVERRIDE([*].cf_stacksz,[(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
+	                                          * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
+	                                          *       Frames who's stack has yet to be duplicated have a `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
 };
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef GUARD_DEEMON_OBJECTS_TRACEBACK_C
 struct empty_traceback_object {
-    Dee_OBJECT_HEAD
-    DREF struct Dee_thread_object *tb_thread;
+	Dee_OBJECT_HEAD
+	DREF struct Dee_thread_object *tb_thread;
 #ifndef CONFIG_NO_THREADS
-    rwlock_t                   tb_lock;
-#endif
-    uint16_t                   tb_numframes;
-    uint16_t                   tb_padding[3];
+	rwlock_t                   tb_lock;
+#endif /* !CONFIG_NO_THREADS */
+	uint16_t                   tb_numframes;
+	uint16_t                   tb_padding[3];
 };
 INTDEF struct empty_traceback_object empty_traceback;
-#else
+#else /* GUARD_DEEMON_OBJECTS_TRACEBACK_C */
 INTDEF DeeTracebackObject empty_traceback;
-#endif
-#endif
+#endif /* !GUARD_DEEMON_OBJECTS_TRACEBACK_C */
+#endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeTraceback_Type;
-#define DeeTraceback_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeTraceback_Type) /* `traceback' is final */
-#define DeeTraceback_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeTraceback_Type)
+#define DeeTraceback_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeTraceback_Type) /* `traceback' is final */
+#define DeeTraceback_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTraceback_Type)
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -98,46 +100,46 @@ INTDEF void DCALL DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
  * NOTE: The given `thread' must be the caller's. */
 INTDEF DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct Dee_thread_object *__restrict thread);
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 typedef struct frame_object DeeFrameObject;
 struct frame_object {
-    Dee_OBJECT_HEAD /* More of a frame-reference object. */
-    DREF DeeObject        *f_owner; /* [0..1][const] Owner of the frame (Required to prevent the frame from being destroyed). */
-    struct Dee_code_frame *f_frame; /* [lock(*f_plock)][0..1][lock(f_lock)]
-                                     * The actual frame that is being referenced. */
+	Dee_OBJECT_HEAD /* More of a frame-reference object. */
+	DREF DeeObject        *f_owner; /* [0..1][const] Owner of the frame (Required to prevent the frame from being destroyed). */
+	struct Dee_code_frame *f_frame; /* [lock(*f_plock)][0..1][lock(f_lock)]
+	                                 * The actual frame that is being referenced. */
 #ifndef CONFIG_NO_THREADS
-    union {
-        Dee_rwlock_t      *f_plock;       /* [0..1][valid_if(!DEEFRAME_FRECLOCK)][const]
-                                           * Lock that must be acquired when accessing the frame. */
-        Dee_recursive_rwlock_t *f_prlock; /* [1..1][valid_if(DEEFRAME_FRECLOCK)][const]
-                                           * Lock that must be acquired when accessing the frame. */
-    };
-    Dee_rwlock_t           f_lock;  /* Lock for accessing fields of this frame object. */
+	union {
+		Dee_rwlock_t      *f_plock;       /* [0..1][valid_if(!DEEFRAME_FRECLOCK)][const]
+											* Lock that must be acquired when accessing the frame. */
+		Dee_recursive_rwlock_t *f_prlock; /* [1..1][valid_if(DEEFRAME_FRECLOCK)][const]
+											* Lock that must be acquired when accessing the frame. */
+	};
+	Dee_rwlock_t           f_lock;  /* Lock for accessing fields of this frame object. */
 #endif /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FNORMAL   0x0000 /* Normal frame flags. */
 #define DEEFRAME_FREADONLY 0x0000 /* Contents of the frame may not be modified. */
 #define DEEFRAME_FWRITABLE 0x0001 /* Contents of the frame may be modified. */
 #define DEEFRAME_FUNDEFSP  0x0002 /* The stack-pointer of the frame is undefined.
-                                   * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
-                                   * pointer may be obtainable from DDI information, as well
-                                   * as use of the current PC, alongside further validation. */
+	                               * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
+	                               * pointer may be obtainable from DDI information, as well
+	                               * as use of the current PC, alongside further validation. */
 #define DEEFRAME_FUNDEFSP2 0x0004 /* The stack-pointer of the frame is always undefined.
-                                   * This flag is set after `DEEFRAME_FUNDEFSP' was set and
-                                   * the actual stack pointer could still not be determined
-                                   * from meta-information.
-                                   * However, this should not happen for normal code, as a truely
-                                   * inconsistent stack can (should) only happen when the function
-                                   * contains custom user-assembly. */
+	                               * This flag is set after `DEEFRAME_FUNDEFSP' was set and
+	                               * the actual stack pointer could still not be determined
+	                               * from meta-information.
+	                               * However, this should not happen for normal code, as a truely
+	                               * inconsistent stack can (should) only happen when the function
+	                               * contains custom user-assembly. */
 #define DEEFRAME_FREGENGSP 0x0008 /* The SP pointer was reverse engineered and stored in `f_revsp' */
 #ifndef CONFIG_NO_THREADS
 #define DEEFRAME_FRECLOCK  0x8000 /* The frame uses a recursive lock. */
 #else /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FRECLOCK  0x0000 /* Ignored. */
 #endif /* CONFIG_NO_THREADS */
-    uint16_t           f_flags; /* [const] Contents of the frame may be modified. */
-    uint16_t           f_revsp; /* [lock(f_lock)][valid_if(DEEFRAME_FREGENGSP)] Reverse engineered SP. */
+	uint16_t           f_flags; /* [const] Contents of the frame may be modified. */
+	uint16_t           f_revsp; /* [lock(f_lock)][valid_if(DEEFRAME_FREGENGSP)] Reverse engineered SP. */
 };
 
 DDATDEF DeeTypeObject DeeFrame_Type;
@@ -150,25 +152,25 @@ DFUNDEF DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
                                       uint16_t flags, void *lock);
-#define DeeFrame_NewReference(owner,frame,flags) \
-        DeeFrame_NewReferenceWithLock(owner,frame,flags,NULL)
-#else
+#define DeeFrame_NewReference(owner, frame, flags) \
+	DeeFrame_NewReferenceWithLock(owner, frame, flags, NULL)
+#else /* !CONFIG_NO_THREADS */
 DFUNDEF DREF DeeObject *
 (DCALL DeeFrame_NewReference)(DeeObject *owner,
                               struct Dee_code_frame *__restrict frame,
                               uint16_t flags);
-#define DeeFrame_NewReferenceWithLock(owner,frame,flags,lock) \
-        DeeFrame_NewReference(owner,frame,flags)
-#endif
+#define DeeFrame_NewReferenceWithLock(owner, frame, flags, lock) \
+	DeeFrame_NewReference(owner, frame, flags)
+#endif /* CONFIG_NO_THREADS */
 
 /* Construct a shared frame object, which can be manually
  * invalidated once the caller calls `DeeFrame_DecrefShared()'.
  * The intended use of this is for user-code handling of breakpoints.
  * @param: flags: Set of `DEEFRAME_F*' */
-#define DeeFrame_NewSharedWithLock(frame,flags,lock) \
-        DeeFrame_NewReferenceWithLock(NULL,frame,flags,lock)
-#define DeeFrame_NewShared(frame,flags) \
-        DeeFrame_NewReference(NULL,frame,flags)
+#define DeeFrame_NewSharedWithLock(frame, flags, lock) \
+	DeeFrame_NewReferenceWithLock(NULL, frame, flags, lock)
+#define DeeFrame_NewShared(frame, flags) \
+	DeeFrame_NewReference(NULL, frame, flags)
 DFUNDEF void DCALL DeeFrame_DecrefShared(DREF DeeObject *__restrict self);
 
 

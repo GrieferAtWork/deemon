@@ -24,31 +24,31 @@
 #define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../thread.h"
-
 #include <string.h>
+
+#include "../thread.h"
 
 DECL_BEGIN
 
 #define Dee_compiler_error_object compiler_error_object
 struct Dee_compiler_error_object;
 struct parser_errors {
-    size_t                                  pe_errora; /* Allocated vector size. */
-    size_t                                  pe_errorc; /* Total amount of errors/warnings. */
-    DREF struct Dee_compiler_error_object **pe_errorv; /* [1..1][0..ce_errorc|ALLOC(ce_errora)][owned] Vector of compiler errors. */
-    struct Dee_compiler_error_object       *pe_master; /* [0..1][in(ce_errors)]
-                                                        * The current master error, or NULL when no
-                                                        * errors, or only warnings have been emit thus far. */
-    uint16_t                                pe_except; /* Old exception recursion.
-                                                        * To allow for recursive parsers, as well as not throw a compiler error if
-                                                        * something went wrong during parsing, we keep track of the active exception
-                                                        * recursion recursion before compilation started.
-                                                        * Later, we compare the old recursion to the new and analyze all errors that occurred in-between.
-                                                        * Any object derived from `DeeError_CompilerError' is appended to `pe_errors'.
-                                                        * If after doing this, `pe_except' doesn't match the then active exception
-                                                        * recursion, all compiler errors are discarded before all errors except for
-                                                        * the first (at index `pe_except') are discarded, while interrupts are re-scheduled.
-                                                        * This way, we can keep the regular exception system functioning like normal. */
+	size_t                                  pe_errora; /* Allocated vector size. */
+	size_t                                  pe_errorc; /* Total amount of errors/warnings. */
+	DREF struct Dee_compiler_error_object **pe_errorv; /* [1..1][0..ce_errorc|ALLOC(ce_errora)][owned] Vector of compiler errors. */
+	struct Dee_compiler_error_object       *pe_master; /* [0..1][in(ce_errors)]
+	                                                    * The current master error, or NULL when no
+	                                                    * errors, or only warnings have been emit thus far. */
+	uint16_t                                pe_except; /* Old exception recursion.
+	                                                    * To allow for recursive parsers, as well as not throw a compiler error if
+	                                                    * something went wrong during parsing, we keep track of the active exception
+	                                                    * recursion recursion before compilation started.
+	                                                    * Later, we compare the old recursion to the new and analyze all errors that occurred in-between.
+	                                                    * Any object derived from `DeeError_CompilerError' is appended to `pe_errors'.
+	                                                    * If after doing this, `pe_except' doesn't match the then active exception
+	                                                    * recursion, all compiler errors are discarded before all errors except for
+	                                                    * the first (at index `pe_except') are discarded, while interrupts are re-scheduled.
+	                                                    * This way, we can keep the regular exception system functioning like normal. */
 };
 
 INTDEF struct parser_errors current_parser_errors;
@@ -78,14 +78,15 @@ INTDEF void DCALL parser_start(void);
 
 /* Wrapper for sub-parser-error groups.
  * The main group is controlled by the active compiler. */
-#define BEGIN_PARSER_CALLBACK() \
-  do{ struct parser_errors _old_errors; \
-      memcpy(&_old_errors,&current_parser_errors,sizeof(struct parser_errors)); \
-      parser_errors_init(&current_parser_errors)
-#define END_PARSER_CALLBACK() \
-      parser_errors_fini(&current_parser_errors); \
-      memcpy(&current_parser_errors,&_old_errors,sizeof(struct parser_errors)); \
-  }__WHILE0
+#define BEGIN_PARSER_CALLBACK()                                                     \
+	do {                                                                            \
+		struct parser_errors _old_errors;                                           \
+		memcpy(&_old_errors, &current_parser_errors, sizeof(struct parser_errors)); \
+		parser_errors_init(&current_parser_errors)
+#define END_PARSER_CALLBACK()                                                       \
+		parser_errors_fini(&current_parser_errors);                                 \
+		memcpy(&current_parser_errors, &_old_errors, sizeof(struct parser_errors)); \
+	} __WHILE0
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

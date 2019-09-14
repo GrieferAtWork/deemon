@@ -38,7 +38,7 @@ INTERN struct ast_tags current_tags;
 
 INTERN DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
-                              /*inherit(always)*/DREF struct ast *__restrict input) {
+                              /*inherit(always)*/ DREF struct ast *__restrict input) {
  DREF struct ast *merge,**expr_v,*args;
  while (self->an_annoc) {
   struct ast *func = self->an_annov[self->an_annoc - 1].aa_func;

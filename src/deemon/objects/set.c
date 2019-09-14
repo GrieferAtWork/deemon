@@ -70,7 +70,7 @@ PRIVATE int DCALL
 invset_init(DeeInverseSetObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  self->is_set = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|o:_InverseSet",&self->is_set))
+ if (DeeArg_Unpack(argc, argv,"|o:_InverseSet",&self->is_set))
      goto err;
  Dee_Incref(self->is_set);
  return 0;
@@ -311,7 +311,7 @@ PRIVATE DREF DeeObject *DCALL
 set_difference(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DeeObject *other;
- if (DeeArg_Unpack(argc,argv,"o:difference",&other))
+ if (DeeArg_Unpack(argc, argv,"o:difference",&other))
      return NULL;
  return DeeSet_Difference(self,other);
 }
@@ -319,7 +319,7 @@ PRIVATE DREF DeeObject *DCALL
 set_intersection(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *other;
- if (DeeArg_Unpack(argc,argv,"o:intersection",&other))
+ if (DeeArg_Unpack(argc, argv,"o:intersection",&other))
      return NULL;
  return DeeSet_Intersection(self,other);
 }
@@ -327,7 +327,7 @@ PRIVATE DREF DeeObject *DCALL
 set_isdisjoint(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DeeObject *other; int result;
- if (DeeArg_Unpack(argc,argv,"o:isdisjoint",&other) ||
+ if (DeeArg_Unpack(argc, argv,"o:isdisjoint",&other) ||
     (result = DeeSet_IsDisjoint(self,other)) < 0)
      return NULL;
  return_bool_(result);
@@ -336,7 +336,7 @@ PRIVATE DREF DeeObject *DCALL
 set_union(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *other;
- if (DeeArg_Unpack(argc,argv,"o:union",&other))
+ if (DeeArg_Unpack(argc, argv,"o:union",&other))
      return NULL;
  return DeeSet_Union(self,other);
 }
@@ -344,7 +344,7 @@ PRIVATE DREF DeeObject *DCALL
 set_symmetric_difference(DeeObject *__restrict self,
                          size_t argc, DeeObject **__restrict argv) {
  DeeObject *other;
- if (DeeArg_Unpack(argc,argv,"o:symmetric_difference",&other))
+ if (DeeArg_Unpack(argc, argv,"o:symmetric_difference",&other))
      return NULL;
  return DeeSet_SymmetricDifference(self,other);
 }
@@ -352,7 +352,7 @@ PRIVATE DREF DeeObject *DCALL
 set_issubset(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *other; int result;
- if (DeeArg_Unpack(argc,argv,"o:issubset",&other) ||
+ if (DeeArg_Unpack(argc, argv,"o:issubset",&other) ||
     (result = DeeSet_IsSubSet(self,other)) < 0)
      return NULL;
  return_bool_(result);
@@ -361,7 +361,7 @@ PRIVATE DREF DeeObject *DCALL
 set_issuperset(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DeeObject *other; int result;
- if (DeeArg_Unpack(argc,argv,"o:issuperset",&other) ||
+ if (DeeArg_Unpack(argc, argv,"o:issuperset",&other) ||
     (result = DeeSet_IsSubSet(other,self)) < 0)
      return NULL;
  return_bool_(result);

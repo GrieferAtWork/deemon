@@ -164,9 +164,9 @@ struct stype_seq {
 
 struct stype_attr {
     /* Structured attribute operators. */
-    DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/DeeObject *__restrict name);
-    int             (DCALL *st_delattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/DeeObject *__restrict name);
-    int             (DCALL *st_setattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/DeeObject *__restrict name, DeeObject *__restrict value);
+    DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name);
+    int             (DCALL *st_delattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name);
+    int             (DCALL *st_setattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name, DeeObject *__restrict value);
     dssize_t        (DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
 };
 
@@ -695,7 +695,7 @@ INTDEF DeeArrayTypeObject DeeArray_Type;
 #if 1 /* Both would work, but this one takes constant armored time. */
 #define DeeArray_Check(ob) DeeArrayType_Check(Dee_TYPE(ob))
 #else
-#define DeeArray_Check(ob) DeeObject_InstanceOf(ob,&DeeArray_Type)
+#define DeeArray_Check(ob) DeeObject_InstanceOf(ob, &DeeArray_Type)
 #endif
 
 /* Construct an array structured type that
@@ -762,7 +762,7 @@ INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
 #if 1 /* Both would work, but this one takes constant armored time. */
 #define DeeCFunction_Check(ob) DeeCFunctionType_Check(Dee_TYPE(ob))
 #else
-#define DeeCFunction_Check(ob) DeeObject_InstanceOf(ob,&DeeCFunction_Type)
+#define DeeCFunction_Check(ob) DeeObject_InstanceOf(ob, &DeeCFunction_Type)
 #endif
 
 /* Construct a C-function structured type that returns

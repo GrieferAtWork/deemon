@@ -75,7 +75,7 @@ INTDEF void DCALL DeeInt_Free(DeeIntObject *__restrict self);
 #endif
 
 INTDEF DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);
-INTDEF DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/DREF DeeIntObject *__restrict v);
+INTDEF DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v);
 INTDEF DREF DeeObject *DCALL int_add(DeeIntObject *__restrict a, DeeIntObject *__restrict b);
 INTDEF DREF DeeObject *DCALL int_sub(DeeIntObject *__restrict a, DeeIntObject *__restrict b);
 INTDEF DREF DeeObject *DCALL int_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b);

@@ -20,33 +20,69 @@
 #define GUARD_DEEMON_CXX_TUPLE_H 1
 
 #include "api.h"
-#include "object.h"
-#include "sequence.h"
+
 #include "../seq.h"
 #include "../tuple.h"
+#include "object.h"
+#include "sequence.h"
 
 DEE_CXX_BEGIN
 
 template<class T>
 class Tuple: public Sequence<T> {
 public:
-    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeTuple_Type; }
-    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeTuple_Check(ob); }
-    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeTuple_CheckExact(ob); }
+	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
+		return &DeeTuple_Type;
+	}
+	static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+		return DeeTuple_Check(ob);
+	}
+	static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+		return DeeTuple_CheckExact(ob);
+	}
+
 public:
-    Tuple() DEE_CXX_NOTHROW: Sequence<T>(nonnull(Dee_EmptyTuple)) { }
-    Tuple(std::initializer_list<T> const &items): Sequence<T>(inherit(DeeTuple_NewVector(items.size(),(DeeObject **)items.begin()))) { }
-    Tuple(std::initializer_list<DeeObject *> const &items): Sequence<T>(inherit(DeeTuple_NewVector(items.size(),items.begin()))) { }
-    Tuple(size_t objc, DeeObject **__restrict objv): Sequence<T>(inherit(DeeTuple_NewVector(objc,objv))) { }
-    Tuple(size_t objc, DeeObject *const *__restrict objv): Sequence<T>(inherit(DeeTuple_NewVector(objc,objv))) { }
-    Tuple(size_t objc, T **__restrict objv): Sequence<T>(inherit(DeeTuple_NewVector(objc,(DeeObject **)objv))) { }
-    Tuple(size_t objc, T *const *__restrict objv): Sequence<T>(inherit(DeeTuple_NewVector(objc,(DeeObject **)objv))) { }
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Tuple,Sequence<T>)
-    operator obj_tuple() const DEE_CXX_NOTHROW { return obj_tuple(*this); }
-    Tuple types() const { return inherit(DeeTuple_Types(*this)); }
-    void append(T const &ob) { if likely(DeeTuple_Check(this->ptr())) this->m_ptr = throw_if_null(DeeTuple_Append(*this,ob)); else Sequence<T>::append(ob); }
-    void append(DeeObject *__restrict ob) { if likely(DeeTuple_Check(this->ptr())) this->m_ptr = throw_if_null(DeeTuple_Append(*this,ob)); else Sequence<T>::append(ob); }
-    void appenditer(DeeObject *__restrict iter) { if likely(DeeTuple_Check(this->ptr())) this->m_ptr = throw_if_null(DeeTuple_AppendIterator(*this,iter)); else Sequence<T>::appenditer(iter); }
+	Tuple() DEE_CXX_NOTHROW: Sequence<T>(nonnull(Dee_EmptyTuple)) {}
+	Tuple(std::initializer_list<T> const &items)
+	    : Sequence<T>(inherit(DeeTuple_NewVector(items.size(), (DeeObject **)items.begin()))) {}
+	Tuple(std::initializer_list<DeeObject *> const &items)
+	    : Sequence<T>(inherit(DeeTuple_NewVector(items.size(), items.begin()))) {}
+	Tuple(size_t objc, DeeObject **__restrict objv)
+	    : Sequence<T>(inherit(DeeTuple_NewVector(objc, objv))) {}
+	Tuple(size_t objc, DeeObject *const *__restrict objv)
+	    : Sequence<T>(inherit(DeeTuple_NewVector(objc, objv))) {}
+	Tuple(size_t objc, T **__restrict objv)
+	    : Sequence<T>(inherit(DeeTuple_NewVector(objc, (DeeObject **)objv))) {}
+	Tuple(size_t objc, T *const *__restrict objv)
+	    : Sequence<T>(inherit(DeeTuple_NewVector(objc, (DeeObject **)objv))) {}
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Tuple, Sequence<T>)
+	operator obj_tuple() const DEE_CXX_NOTHROW {
+		return obj_tuple(*this);
+	}
+	Tuple(types)() const {
+		return inherit(DeeTuple_Types(*this));
+	}
+	void(append)(T const &ob) {
+		if likely(DeeTuple_Check(this->ptr()))
+			this->m_ptr = throw_if_null(DeeTuple_Append(*this, ob));
+		else {
+			Sequence<T>::append(ob);
+		}
+	}
+	void(append)(DeeObject *__restrict ob) {
+		if likely(DeeTuple_Check(this->ptr()))
+			this->m_ptr = throw_if_null(DeeTuple_Append(*this, ob));
+		else {
+			Sequence<T>::append(ob);
+		}
+	}
+	void(appenditer)(DeeObject *__restrict iter) {
+		if likely(DeeTuple_Check(this->ptr()))
+			this->m_ptr = throw_if_null(DeeTuple_AppendIterator(*this, iter));
+		else {
+			Sequence<T>::appenditer(iter);
+		}
+	}
 };
 
 

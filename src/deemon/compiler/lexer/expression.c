@@ -301,7 +301,7 @@ make_bound_expression(struct ast *__restrict base_expr,
 
 PUBLIC int DCALL
 DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
-                          /*utf-8*/char const *__restrict start,
+                          /*utf-8*/ char const *__restrict start,
                           size_t length) {
  /* Still allow escaped line-feeds! */
  char *flush_start = (char *)start;
@@ -1209,7 +1209,7 @@ err_merge_r:
  goto err_r;
 }
 INTERN DREF struct ast *FCALL
-ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict result) {
+ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) {
  DREF struct ast *merge;
  DREF struct ast *other;
  struct ast_loc loc;
@@ -1489,7 +1489,7 @@ ast_parse_unary(unsigned int lookup_mode) {
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_prod_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_PROD(cmd));
@@ -1515,7 +1515,7 @@ err_r:
  return NULL;
 }
 INTERN DREF struct ast *FCALL
-ast_parse_sum_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_SUM(cmd));
@@ -1545,7 +1545,7 @@ err_r:
 }
 
 INTERN DREF struct ast *FCALL
-ast_parse_shift_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_SHIFT(cmd));
@@ -1574,7 +1574,7 @@ err_r:
 }
 
 INTERN DREF struct ast *FCALL
-ast_parse_cmp_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_CMP(cmd));
@@ -1610,7 +1610,7 @@ err_r:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_cmpeq_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_CMPEQ(cmd));
@@ -1681,7 +1681,7 @@ err_r:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_and_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_AND(tok));
@@ -1706,7 +1706,7 @@ err_r:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_xor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_XOR(tok));
@@ -1731,7 +1731,7 @@ err_r:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_or_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_OR(tok));
@@ -1756,7 +1756,7 @@ err_r:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_as_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_AS(tok));
@@ -1781,7 +1781,7 @@ err_r:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_land_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_LAND(tok));
@@ -1815,7 +1815,7 @@ err:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_lor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc;
  ASSERT(TOKEN_IS_LOR(tok));
@@ -1854,7 +1854,7 @@ err:
  return NULL;
 }
 INTERN DREF struct ast *FCALL
-ast_parse_cond_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *merge,*tt,*ff;
  struct ast_loc loc;
  /* >>  x ? y : z // >> x ? y : z
@@ -1942,7 +1942,7 @@ PRIVATE uint16_t const inplace_fops[] = {
 };
 
 INTERN DREF struct ast *FCALL
-ast_parse_assign_operand(/*inherit(always)*/DREF struct ast *__restrict lhs) {
+ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
  DREF struct ast *rhs,*merge;
  struct ast_loc loc; tok_t cmd = tok;
  ASSERT(TOKEN_IS_ASSIGN(cmd));
@@ -2197,7 +2197,7 @@ done:
 
 
 INTERN DREF struct ast *FCALL
-ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict baseexpr) {
+ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr) {
  baseexpr = ast_parse_unary_operand(baseexpr);
  if unlikely(!baseexpr) goto done;
  /* parse binary operators */

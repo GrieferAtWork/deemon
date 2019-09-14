@@ -247,7 +247,7 @@ INTERN int DCALL
 dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  DeeDictObject *Dict;
- if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&Dict) ||
+ if (DeeArg_Unpack(argc, argv,"o:_DictIterator",&Dict) ||
      DeeObject_AssertType((DeeObject *)Dict,&DeeDict_Type))
      return -1;
  self->di_dict = Dict;
@@ -496,7 +496,7 @@ INTERN int DCALL
 dictproxyiterator_init(DictProxyIterator *__restrict self,
                        size_t argc, DeeObject **__restrict argv) {
  DictProxy *proxy;
- if (DeeArg_Unpack(argc,argv,"o:_DictIterator",&proxy))
+ if (DeeArg_Unpack(argc, argv,"o:_DictIterator",&proxy))
      goto err;
  if (DeeObject_AssertType((DeeObject *)proxy,
                            DeeObject_InstanceOf((DeeObject *)self,&DictKeysIterator_Type)  ? &DeeDictKeys_Type :
@@ -617,7 +617,7 @@ PRIVATE int DCALL
 proxy_init(DictProxy *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *Dict;
- if (DeeArg_Unpack(argc,argv,"o:_DictProxy",&Dict))
+ if (DeeArg_Unpack(argc, argv,"o:_DictProxy",&Dict))
      goto err;
  if (DeeObject_AssertType(Dict,&DeeDict_Type))
      goto err;

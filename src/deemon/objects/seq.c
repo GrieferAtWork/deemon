@@ -313,7 +313,7 @@ seqiterator_init(SeqIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeTypeObject *tp_iter;
  self->si_index = &DeeInt_Zero;
- if (DeeArg_Unpack(argc,argv,"o|o:Sequence.Iterator",&self->si_seq,&self->si_index) ||
+ if (DeeArg_Unpack(argc, argv,"o|o:Sequence.Iterator",&self->si_seq,&self->si_index) ||
      DeeObject_AssertTypeExact(self->si_index,&DeeInt_Type))
      return -1;
  tp_iter = Dee_TYPE(self->si_seq);
@@ -1050,7 +1050,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_at(DeeObject *__restrict self,
        size_t argc, DeeObject **__restrict argv) {
  DeeObject *index;
- if (DeeArg_Unpack(argc,argv,"o:at",&index))
+ if (DeeArg_Unpack(argc, argv,"o:at",&index))
      goto err;
  return DeeObject_GetItem(self,index);
 err:
@@ -1060,7 +1060,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_empty(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":empty"))
+ if (DeeArg_Unpack(argc, argv,":empty"))
      goto err;
  result = DeeSeq_NonEmpty(self);
  if unlikely(result < 0) goto err;
@@ -1072,7 +1072,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_nonempty(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":nonempty"))
+ if (DeeArg_Unpack(argc, argv,":nonempty"))
      goto err;
  result = DeeSeq_NonEmpty(self);
  if unlikely(result < 0) goto err;
@@ -1088,19 +1088,19 @@ seq_nonempty_deprecated(DeeObject *__restrict self,
   * We don't simply alias this function to `seq_nonempty' to allow
   * sub-classes to provide their own `nonempty' function, which we
   * want to call here instead of our generic one. */
- return DeeObject_CallAttr(self,&str_nonempty,argc,argv);
+ return DeeObject_CallAttr(self,&str_nonempty,argc, argv);
 }
 PRIVATE DREF DeeObject *DCALL
 seq_front(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":front"))
+ if (DeeArg_Unpack(argc, argv,":front"))
      return NULL;
  return DeeObject_GetAttr(self,&str_first);
 }
 PRIVATE DREF DeeObject *DCALL
 seq_back(DeeObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":back"))
+ if (DeeArg_Unpack(argc, argv,":back"))
      return NULL;
  return DeeObject_GetAttr(self,&str_last);
 }
@@ -1108,7 +1108,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_reduce(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *combine,*init = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:reduce",&combine,&init))
+ if (DeeArg_Unpack(argc, argv,"o|o:reduce",&combine,&init))
      return NULL;
  return DeeSeq_Reduce(self,combine,init);
 }
@@ -1116,14 +1116,14 @@ PRIVATE DREF DeeObject *DCALL
 seq_filter(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *pred_keep;
- if (DeeArg_Unpack(argc,argv,"o:filter",&pred_keep))
+ if (DeeArg_Unpack(argc, argv,"o:filter",&pred_keep))
      return NULL;
  return DeeSeq_Filter(self,pred_keep);
 }
 PRIVATE DREF DeeObject *DCALL
 seq_sum(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":sum"))
+ if (DeeArg_Unpack(argc, argv,":sum"))
      return NULL;
  return DeeSeq_Sum(self);
 }
@@ -1131,7 +1131,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_any(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":any"))
+ if (DeeArg_Unpack(argc, argv,":any"))
      return NULL;
  result = DeeSeq_Any(self);
  return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
@@ -1140,7 +1140,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_all(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":all"))
+ if (DeeArg_Unpack(argc, argv,":all"))
      return NULL;
  result = DeeSeq_All(self);
  return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
@@ -1149,7 +1149,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_parity(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":parity"))
+ if (DeeArg_Unpack(argc, argv,":parity"))
      return NULL;
  result = DeeSeq_Parity(self);
  return unlikely(result < 0) ? NULL : DeeObject_NewRef(DeeBool_For(result));
@@ -1160,7 +1160,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_min(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:min",&key))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_sort_kwlist,"|o:min",&key))
      return NULL;
  if (DeeNone_Check(key)) key = NULL;
  return DeeSeq_Min(self,key);
@@ -1169,7 +1169,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_max(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:max",&key))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_sort_kwlist,"|o:max",&key))
      return NULL;
  if (DeeNone_Check(key)) key = NULL;
  return DeeSeq_Max(self,key);
@@ -1178,7 +1178,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_count(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None; size_t result;
- if (DeeArg_Unpack(argc,argv,"o|o:count",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:count",&elem,&key))
      goto err;
  if (DeeNone_Check(key)) {
   result = DeeSeq_Count(self,elem,NULL);
@@ -1198,7 +1198,7 @@ seq_locate(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None;
  DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,"o|o:locate",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:locate",&elem,&key))
      goto err;
  if (DeeNone_Check(key)) {
   result = DeeSeq_Locate(self,elem,NULL);
@@ -1217,7 +1217,7 @@ seq_rlocate(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None;
  DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,"o|o:rlocate",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:rlocate",&elem,&key))
      goto err;
  if (DeeNone_Check(key)) {
   result = DeeSeq_RLocate(self,elem,NULL);
@@ -1236,7 +1236,7 @@ seq_locateall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None;
  DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,"o|o:locateall",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:locateall",&elem,&key))
      goto err;
  if (DeeNone_Check(key)) {
   result = DeeSeq_LocateAll(self,elem,NULL);
@@ -1254,7 +1254,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_transform(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *transformation;
- if (DeeArg_Unpack(argc,argv,"o:transform",&transformation))
+ if (DeeArg_Unpack(argc, argv,"o:transform",&transformation))
      goto err;
  return DeeSeq_Transform(self,transformation);
 err:
@@ -1264,7 +1264,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_contains(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None; int result;
- if (DeeArg_Unpack(argc,argv,"o|o:contains",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:contains",&elem,&key))
      goto err;
  /* Without a key function, invoke the regular contains-operator. */
  if (DeeNone_Check(key))
@@ -1282,7 +1282,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_startswith(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None; int result;
- if (DeeArg_Unpack(argc,argv,"o|o:startswith",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:startswith",&elem,&key))
      goto err;
  if (DeeNone_Check(key)) {
   result = DeeSeq_StartsWith(self,elem,NULL);
@@ -1301,7 +1301,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_endswith(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key = Dee_None; int result;
- if (DeeArg_Unpack(argc,argv,"o|o:endswith",&elem,&key))
+ if (DeeArg_Unpack(argc, argv,"o|o:endswith",&elem,&key))
      goto err;
  if (DeeNone_Check(key)) {
   result = DeeSeq_EndsWith(self,elem,NULL);
@@ -1384,7 +1384,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_find(DeeObject *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; size_t result,start,end;
- if (get_sequence_find_args("find",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args("find",argc, argv,&elem,&key,&start,&end))
      goto err;
  if (!key) {
   result = DeeSeq_Find(self,start,end,elem,NULL);
@@ -1408,7 +1408,7 @@ seq_rfind(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key;
  size_t result,start,end;
- if (get_sequence_find_args("rfind",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args("rfind",argc, argv,&elem,&key,&start,&end))
      goto err;
  if (!key) {
   result = DeeSeq_RFind(self,start,end,elem,NULL);
@@ -1431,7 +1431,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_index(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; size_t result,start,end;
- if (get_sequence_find_args("index",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args("index",argc, argv,&elem,&key,&start,&end))
      goto err;
  if (!key) {
   result = DeeSeq_Find(self,start,end,elem,NULL);
@@ -1455,7 +1455,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_rindex(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; size_t result,start,end;
- if (get_sequence_find_args("rindex",argc,argv,&elem,&key,&start,&end))
+ if (get_sequence_find_args("rindex",argc, argv,&elem,&key,&start,&end))
      goto err;
  if (!key) {
   result = DeeSeq_RFind(self,start,end,elem,NULL);
@@ -1478,7 +1478,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_reversed(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":reversed"))
+ if (DeeArg_Unpack(argc, argv,":reversed"))
      goto err;
  return DeeSeq_Reversed(self);
 err:
@@ -1488,7 +1488,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_sorted(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sorted",&key))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_sort_kwlist,"|o:sorted",&key))
      goto err;
  if (DeeNone_Check(key))
      key = NULL;
@@ -1500,7 +1500,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_segments(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  size_t segsize;
- if (DeeArg_Unpack(argc,argv,"Iu:segments",&segsize))
+ if (DeeArg_Unpack(argc, argv,"Iu:segments",&segsize))
      goto err;
  if unlikely(!segsize)
     goto err_invalid_segsize;
@@ -1514,7 +1514,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_distribute(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  size_t segsize,mylen;
- if (DeeArg_Unpack(argc,argv,"Iu:distribute",&segsize))
+ if (DeeArg_Unpack(argc, argv,"Iu:distribute",&segsize))
      goto err;
  if unlikely(!segsize)
     goto err_invalid_segsize;
@@ -1534,7 +1534,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_combinations(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  size_t r;
- if (DeeArg_Unpack(argc,argv,"Iu:combinations",&r))
+ if (DeeArg_Unpack(argc, argv,"Iu:combinations",&r))
      goto err;
  return DeeSeq_Combinations(self,r);
 err:
@@ -1544,7 +1544,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_repeatcombinations(DeeObject *__restrict self,
                        size_t argc, DeeObject **__restrict argv) {
  size_t r;
- if (DeeArg_Unpack(argc,argv,"Iu:repeatcombinations",&r))
+ if (DeeArg_Unpack(argc, argv,"Iu:repeatcombinations",&r))
      goto err;
  return DeeSeq_RepeatCombinations(self,r);
 err:
@@ -1554,7 +1554,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_permutations(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  size_t r; DeeObject *arg = Dee_None;
- if (DeeArg_Unpack(argc,argv,"|o:permutations",&arg))
+ if (DeeArg_Unpack(argc, argv,"|o:permutations",&arg))
      goto err;
  if (DeeNone_Check(arg))
      return DeeSeq_Permutations(self);
@@ -1571,7 +1571,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_insert(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *item;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_insert_kwlist,"Iuo:insert",&index,&item))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_insert_kwlist,"Iuo:insert",&index,&item))
      goto err;
  if (DeeSeq_Insert(self,index,item))
      goto err;
@@ -1585,7 +1585,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_insertall(DeeObject *__restrict self, size_t argc,
               DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *items;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_insertall_kwlist,"Iuo:insertall",&index,&items))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_insertall_kwlist,"Iuo:insertall",&index,&items))
      goto err;
  if (DeeSeq_InsertAll(self,index,items))
      goto err;
@@ -1599,7 +1599,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_erase(DeeObject *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
  size_t index,count = 1,result;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
      goto err;
  result = DeeSeq_Erase(self,index,count);
  if unlikely(result == (size_t)-1)
@@ -1614,7 +1614,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_xch(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *value;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_xch_kwlist,"Iuo:xch",&index,&value))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_xch_kwlist,"Iuo:xch",&index,&value))
      goto err;
  return DeeSeq_XchItem(self,index,value);
 err:
@@ -1626,7 +1626,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_pop(DeeObject *__restrict self, size_t argc,
         DeeObject **__restrict argv, DeeObject *kw) {
  dssize_t index = -1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_pop_kwlist,"|Id:pop",&index))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_pop_kwlist,"|Id:pop",&index))
      goto err;
  return DeeSeq_PopItem(self,index);
 err:
@@ -1636,7 +1636,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_popfront(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *args[1],*result;
- if (DeeArg_Unpack(argc,argv,":popfront"))
+ if (DeeArg_Unpack(argc, argv,":popfront"))
      goto err;
  args[0] = &DeeInt_Zero;
  result = DeeObject_CallAttr(self,&str_pop,1,args);
@@ -1650,7 +1650,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_popback(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *args[1],*result;
- if (DeeArg_Unpack(argc,argv,":popback"))
+ if (DeeArg_Unpack(argc, argv,":popback"))
      goto err;
  args[0] = &DeeInt_MinusOne;
  result = DeeObject_CallAttr(self,&str_pop,1,args);
@@ -1664,7 +1664,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_pushfront(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *args[2];
- if (DeeArg_Unpack(argc,argv,"o:pushfront",&args[1]))
+ if (DeeArg_Unpack(argc, argv,"o:pushfront",&args[1]))
      goto err;
  args[0] = &DeeInt_Zero;
  return DeeObject_CallAttr(self,&str_insert,2,args);
@@ -1675,7 +1675,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_append(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj;
- if (DeeArg_Unpack(argc,argv,"o:append",&obj))
+ if (DeeArg_Unpack(argc, argv,"o:append",&obj))
      goto err;
  if (DeeSeq_Append(self,obj))
      goto err;
@@ -1687,7 +1687,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_extend(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *values;
- if (DeeArg_Unpack(argc,argv,"o:extend",&values))
+ if (DeeArg_Unpack(argc, argv,"o:extend",&values))
      goto err;
  if (DeeSeq_Extend(self,values))
      goto err;
@@ -1698,14 +1698,14 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_pushback(DeeObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- return DeeObject_CallAttr(self,&str_append,argc,argv);
+ return DeeObject_CallAttr(self,&str_append,argc, argv);
 }
 PRIVATE DREF DeeObject *DCALL
 seq_remove(DeeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; int result; size_t start,end;
  if (get_sequence_find_args(DeeString_STR(&str_remove),
-                            argc,argv,&elem,&key,&start,&end))
+                            argc, argv,&elem,&key,&start,&end))
      goto err;
  result = DeeSeq_Remove(self,start,end,elem,key);
  if unlikely(result < 0) goto err;
@@ -1718,7 +1718,7 @@ seq_rremove(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; int result; size_t start,end;
  if (get_sequence_find_args(DeeString_STR(&str_rremove),
-                            argc,argv,&elem,&key,&start,&end))
+                            argc, argv,&elem,&key,&start,&end))
      goto err;
  result = DeeSeq_RRemove(self,start,end,elem,key);
  if unlikely(result < 0) goto err;
@@ -1731,7 +1731,7 @@ seq_removeall(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *elem,*key; size_t result; size_t start,end;
  if (get_sequence_find_args(DeeString_STR(&str_removeall),
-                            argc,argv,&elem,&key,&start,&end))
+                            argc, argv,&elem,&key,&start,&end))
      goto err;
  result = DeeSeq_RemoveAll(self,start,end,elem,key);
  if unlikely(result == (size_t)-1) goto err;
@@ -1746,7 +1746,7 @@ seq_removeif(DeeObject *__restrict self, size_t argc,
              DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *should;
  size_t result,start = 0,end = (size_t)-1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
      goto err;
  result = DeeSeq_RemoveIf(self,should,start,end);
  if unlikely(result == (size_t)-1)
@@ -1759,7 +1759,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_clear(DeeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":clear"))
+ if (DeeArg_Unpack(argc, argv,":clear"))
      goto err;
  if (DeeObject_SetRange(self,Dee_None,Dee_None,Dee_None))
      goto err;
@@ -1774,7 +1774,7 @@ seq_fill(DeeObject *__restrict self, size_t argc,
  size_t start = 0,end = (size_t)-1,result;
  DeeObject *filler = Dee_None;
  PRIVATE DEFINE_KWLIST(kwlist,{ K(start), K(end), K(filler), KEND });
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|IdIdo:fill",&start,&end,&filler))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|IdIdo:fill",&start,&end,&filler))
      goto err;
  result = DeeSeq_Fill(self,start,end,filler);
  if unlikely(result == (size_t)-1) goto err;
@@ -1789,7 +1789,7 @@ seq_resize(DeeObject *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  DREF DeeObject *result;
  size_t newsize,oldsize; DeeObject *filler = Dee_None;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
      goto err;
  if (!newsize) {
   result = DeeObject_CallAttr(self,&str_clear,0,NULL);
@@ -1823,7 +1823,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 seq_reverse(DeeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":reverse"))
+ if (DeeArg_Unpack(argc, argv,":reverse"))
      goto err;
  if (DeeSeq_Reverse(self))
      goto err;
@@ -1835,7 +1835,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_sort(DeeObject *__restrict self, size_t argc,
          DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sort",&key))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_sort_kwlist,"|o:sort",&key))
      goto err;
  if (DeeNone_Check(key))
      key = NULL;
@@ -3528,7 +3528,7 @@ seq_class_range(DeeObject *__restrict UNUSED(self),
   *  behavior from a core function (since `Sequence' is a
   *  builtin type like `list', `tuple', etc.). */
  DeeObject *start,*end = NULL,*step = NULL,*result;
- if (DeeArg_Unpack(argc,argv,"o|oo:range",&start,&end,&step))
+ if (DeeArg_Unpack(argc, argv,"o|oo:range",&start,&end,&step))
      goto err;
  if (end) return DeeRange_New(start,end,step);
  /* Use a default-constructed instance of `type(start)' for the real start. */
@@ -3545,7 +3545,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_class_repeat(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *obj; size_t count;
- if (DeeArg_Unpack(argc,argv,"oIu:repeat",&obj,&count))
+ if (DeeArg_Unpack(argc, argv,"oIu:repeat",&obj,&count))
      goto err;
  return DeeSeq_RepeatItem(obj,count);
 err:
@@ -3555,7 +3555,7 @@ PRIVATE DREF DeeObject *DCALL
 seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; size_t count;
- if (DeeArg_Unpack(argc,argv,"oIu:repeatseq",&seq,&count))
+ if (DeeArg_Unpack(argc, argv,"oIu:repeatseq",&seq,&count))
      goto err;
  return DeeSeq_Repeat(seq,count);
 err:
@@ -3570,7 +3570,7 @@ seq_class_concat(DeeObject *__restrict UNUSED(self),
  DREF DeeObject *result;
  if (!argc) return_empty_seq;
  if (argc == 1) return_reference_(argv[0]);
- result = DeeTuple_NewVector(argc,argv);
+ result = DeeTuple_NewVector(argc, argv);
  if likely(result) {
   ASSERT(result->ob_type == &DeeTuple_Type);
   Dee_DecrefNokill(&DeeTuple_Type);

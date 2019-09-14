@@ -29,15 +29,15 @@ struct code_object;
 struct class_attribute;
 struct class_desc;
 
-#define CATCH_ATTRIBUTE_ERROR() \
- (DeeError_Catch(&DeeError_AttributeError) || \
-  DeeError_Catch(&DeeError_NotImplemented))
+#define CATCH_ATTRIBUTE_ERROR()                  \
+	(DeeError_Catch(&DeeError_AttributeError) || \
+	 DeeError_Catch(&DeeError_NotImplemented))
 
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD int DCALL err_subclass_final_type(DeeTypeObject *__restrict tp);
 #define err_unexpected_type(self,wanted_type) DeeObject_TypeAssertFailed(self,wanted_type)
-#define err_unimplemented_constructor(tp,argc,argv) \
-        err_unimplemented_constructor_kw(tp,argc,argv,NULL)
+#define err_unimplemented_constructor(tp, argc, argv) \
+	err_unimplemented_constructor_kw(tp, argc, argv, NULL)
 INTDEF ATTR_COLD int DCALL err_unimplemented_constructor_kw(DeeTypeObject *__restrict tp, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
 INTDEF ATTR_COLD int DCALL err_divide_by_zero(DeeObject *__restrict a, DeeObject *__restrict b);
 INTDEF ATTR_COLD int DCALL err_divide_by_zero_i(dssize_t a);
@@ -154,7 +154,7 @@ INTDEF ATTR_COLD int DCALL err_file_not_found_ob(DeeObject *__restrict filename)
 * `function' failed, using `GetLastError()' as error code. */
 INTDEF ATTR_COLD int DCALL err_system_error(char const *__restrict function);
 INTDEF ATTR_COLD int DCALL err_system_error_code(char const *__restrict function, unsigned long last_error);
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_NO_STDIO */
 
 DECL_END

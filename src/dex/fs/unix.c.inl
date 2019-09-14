@@ -244,7 +244,7 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
 #define HOST_NAME_MAX 64
 #endif
 
-INTERN DREF /*String*/DeeObject *
+INTERN DREF /*String*/ DeeObject *
 DCALL fs_gethostname(void) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  size_t buflen = HOST_NAME_MAX; char *newbuf;
@@ -741,7 +741,7 @@ PRIVATE int DCALL
 stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:stat",&path))
+ if (DeeArg_Unpack(argc, argv,"o:stat",&path))
      goto err;
  return Stat_Init(&self->st_stat,path,false,false);
 err:
@@ -752,7 +752,7 @@ PRIVATE int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:lstat",&path))
+ if (DeeArg_Unpack(argc, argv,"o:lstat",&path))
      goto err;
  return Stat_Init(&self->st_stat,path,false,true);
 err:
@@ -850,7 +850,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 stat_isdir(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isdir"))
+ if (DeeArg_Unpack(argc, argv,":isdir"))
      goto err;
  return_bool(S_ISDIR(self->st_stat.st_mode));
 err:
@@ -860,7 +860,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stat_ischr(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":ischr"))
+ if (DeeArg_Unpack(argc, argv,":ischr"))
      goto err;
  return_bool(S_ISCHR(self->st_stat.st_mode));
 err:
@@ -870,7 +870,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stat_isblk(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isblk"))
+ if (DeeArg_Unpack(argc, argv,":isblk"))
      goto err;
  return_bool(S_ISBLK(self->st_stat.st_mode));
 err:
@@ -880,7 +880,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stat_isreg(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isreg"))
+ if (DeeArg_Unpack(argc, argv,":isreg"))
      goto err;
  return_bool(S_ISREG(self->st_stat.st_mode));
 err:
@@ -890,7 +890,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stat_isfifo(DeeStatObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isfifo"))
+ if (DeeArg_Unpack(argc, argv,":isfifo"))
      goto err;
  return_bool(S_ISFIFO(self->st_stat.st_mode));
 err:
@@ -900,7 +900,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stat_islnk(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":islnk"))
+ if (DeeArg_Unpack(argc, argv,":islnk"))
      goto err;
  return_bool(S_ISLNK(self->st_stat.st_mode));
 err:
@@ -910,7 +910,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stat_issock(DeeStatObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":issock"))
+ if (DeeArg_Unpack(argc, argv,":issock"))
      goto err;
  return_bool(S_ISSOCK(self->st_stat.st_mode));
 err:
@@ -932,7 +932,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_exists(DeeObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:exists",&path))
+ if (DeeArg_Unpack(argc, argv,"o:exists",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -945,7 +945,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isdir(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:isdir",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isdir",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -958,7 +958,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_ischr(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:ischr",&path))
+ if (DeeArg_Unpack(argc, argv,"o:ischr",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -971,7 +971,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isblk(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:isblk",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isblk",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -984,7 +984,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isreg(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:isreg",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isreg",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -997,7 +997,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isfifo(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:isfifo",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isfifo",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -1010,7 +1010,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_islnk(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:islnk",&path))
+ if (DeeArg_Unpack(argc, argv,"o:islnk",&path))
      goto err;
  error = Stat_Init(&buf,path,true,true); /* Always do an lstat() for this */
  if unlikely(error < 0) goto err;
@@ -1023,7 +1023,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_issock(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:issock",&path))
+ if (DeeArg_Unpack(argc, argv,"o:issock",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -1057,7 +1057,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_ishidden(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error;
- if (DeeArg_Unpack(argc,argv,"o:ishidden",&path))
+ if (DeeArg_Unpack(argc, argv,"o:ishidden",&path))
      goto err;
  error = do_ishidden(path);
  if (error < 0) goto err;
@@ -1070,7 +1070,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isexe(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; STRUCT_STAT buf;
- if (DeeArg_Unpack(argc,argv,"o:isexe",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isexe",&path))
      goto err;
  error = Stat_Init(&buf,path,true,self == (DeeObject *)&DeeLStat_Type);
  if unlikely(error < 0) goto err;
@@ -2027,7 +2027,7 @@ dir_copy(Dir *__restrict self,
 PRIVATE int DCALL
 dir_ctor(Dir *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:dir",&self->d_path))
+ if (DeeArg_Unpack(argc, argv,"o:dir",&self->d_path))
      goto err;
  if (DeeString_Check(self->d_path)) {
   Dee_Incref(self->d_path);

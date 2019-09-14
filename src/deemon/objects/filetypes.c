@@ -292,7 +292,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
  * an empty data set.
  * The main use of this functionality is to allow the use of `DeeModule_LoadSourceStream()'
  * with a stream backed by source code located in memory. */
-PUBLIC DREF /*File*/DeeObject *DCALL
+PUBLIC DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size) {
  DREF MemoryFile *result;
  result = DeeObject_MALLOC(MemoryFile);
@@ -306,7 +306,7 @@ done:
 }
 
 PUBLIC void DCALL
-DeeFile_ReleaseMemory(DREF /*File*/DeeObject *__restrict self) {
+DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
  ASSERT_OBJECT_TYPE_EXACT(self,(DeeTypeObject *)&DeeMemoryFile_Type);
  if (!DeeObject_IsShared(self)) {
   /* The file also went away, so we can simply not free its data! */
@@ -615,7 +615,7 @@ PRIVATE int DCALL
 reader_init(Reader *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  size_t begin = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"o|IdId:_FileReader",&self->r_owner,&begin,&end) ||
+ if (DeeArg_Unpack(argc, argv,"o|IdId:_FileReader",&self->r_owner,&begin,&end) ||
      DeeObject_GetBuf(self->r_owner,&self->r_buffer,Dee_BUFFER_FREADONLY))
      return -1;
  /* Truncate the end-pointer. */
@@ -717,7 +717,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
  * However, the end result of both mechanisms is the same, in that
  * the stream indirectly referenced a given data-block, rather than
  * having to keep its own copy of some potentially humongous memory block. */
-PUBLIC DREF /*File*/DeeObject *DCALL
+PUBLIC DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size) {
  DREF Reader *result;
@@ -738,7 +738,7 @@ done:
 
 /* Similar to `DeeFile_OpenObjectMemory()', but used
  * to open a generic object using the buffer-interface. */
-PUBLIC DREF /*File*/DeeObject *DCALL
+PUBLIC DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          dssize_t begin, dssize_t end) {
  DREF Reader *result;
@@ -784,7 +784,7 @@ writer_ctor(Writer *__restrict self) {
 PRIVATE int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeStringObject *init_string;
- if (DeeArg_Unpack(argc,argv,"o:_FileWriter",&init_string) ||
+ if (DeeArg_Unpack(argc, argv,"o:_FileWriter",&init_string) ||
      DeeObject_AssertTypeExact((DeeObject *)init_string,&DeeString_Type))
      goto err;
  rwlock_init(&self->fo_lock);
@@ -984,7 +984,7 @@ PRIVATE struct type_getset writer_getsets[] = {
 PRIVATE DREF DeeStringObject *DCALL
 writer_get(Writer *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":get"))
+ if (DeeArg_Unpack(argc, argv,":get"))
      return NULL;
  return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
 }
@@ -992,7 +992,7 @@ PRIVATE DREF DeeObject *DCALL
 writer_size(Writer *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  size_t result;
- if (DeeArg_Unpack(argc,argv,":size"))
+ if (DeeArg_Unpack(argc, argv,":size"))
      return NULL;
 #ifdef CONFIG_NO_THREADS
  result = self->w_printer.up_length;
@@ -1005,7 +1005,7 @@ PRIVATE DREF DeeObject *DCALL
 writer_allocated(Writer *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  size_t result;
- if (DeeArg_Unpack(argc,argv,":allocated"))
+ if (DeeArg_Unpack(argc, argv,":allocated"))
      return NULL;
  DeeFile_LockRead(self);
  result = self->w_printer.up_buffer
@@ -1018,7 +1018,7 @@ PRIVATE DREF DeeObject *DCALL
 writer_sizeof(Writer *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  size_t result;
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  DeeFile_LockRead(self);
  result = sizeof(Writer) + (
@@ -1662,7 +1662,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 };
 
 /* Open a new file stream that writes all written data into a string. */
-PUBLIC DREF /*File*/DeeObject *DCALL DeeFile_OpenWriter(void) {
+PUBLIC DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
  DREF Writer *result;
  result = DeeObject_MALLOC(Writer);
  if unlikely(!result) goto done;

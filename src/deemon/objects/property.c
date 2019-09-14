@@ -88,7 +88,7 @@ property_init_kw(Property *__restrict self, size_t argc,
  self->p_get = NULL;
  self->p_del = NULL;
  self->p_set = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|ooo:Property",
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|ooo:Property",
                     &self->p_get,&self->p_del,&self->p_set))
      goto err;
  if (DeeNone_Check(self->p_get)) self->p_get = NULL;
@@ -331,7 +331,7 @@ PRIVATE DREF DeeObject *DCALL
 property_call(Property *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  if likely(self->p_get)
-    return DeeObject_Call(self->p_get,argc,argv);
+    return DeeObject_Call(self->p_get,argc, argv);
  err_unbound_attribute(&DeeProperty_Type,DeeString_STR(&str_get));
  return NULL;
 }

@@ -24,24 +24,24 @@
 DECL_BEGIN
 
 #ifdef MRO_LEN
-#define S(without_len,with_len) with_len
-#define NLen(x)                 x ## Len
-#define N_len(x)                x ## _len
-#define IF_LEN(...)             __VA_ARGS__
-#define IF_NLEN(...)            /* nothing */
-#define ATTR_ARG                char const *__restrict attr, size_t attrlen
-#define ATTREQ(item)            streq_len((item)->mcs_name,attr,attrlen)
-#define NAMEEQ(name)            streq_len(name,attr,attrlen)
-#else
-#define S(without_len,with_len) without_len
-#define NLen(x)                 x
-#define N_len(x)                x
-#define IF_LEN(...)             /* nothing */
-#define IF_NLEN(...)            __VA_ARGS__
-#define ATTR_ARG                char const *__restrict attr
-#define ATTREQ(item)            streq((item)->mcs_name,attr)
-#define NAMEEQ(name)            streq(name,attr)
-#endif
+#define S(without_len, with_len) with_len
+#define NLen(x)                  x##Len
+#define N_len(x)                 x##_len
+#define IF_LEN(...)              __VA_ARGS__
+#define IF_NLEN(...)             /* nothing */
+#define ATTR_ARG                 char const *__restrict attr, size_t attrlen
+#define ATTREQ(item)             streq_len((item)->mcs_name, attr, attrlen)
+#define NAMEEQ(name)             streq_len(name, attr, attrlen)
+#else /* MRO_LEN */
+#define S(without_len, with_len) without_len
+#define NLen(x)                  x
+#define N_len(x)                 x
+#define IF_LEN(...)              /* nothing */
+#define IF_NLEN(...)             __VA_ARGS__
+#define ATTR_ARG                 char const *__restrict attr
+#define ATTREQ(item)             streq((item)->mcs_name, attr)
+#define NAMEEQ(name)             streq(name, attr)
+#endif /* !MRO_LEN */
 
 
 /* Lookup an attribute from cache.
@@ -1007,10 +1007,10 @@ NLen(DeeType_CallCachedAttr)(DeeTypeObject *__restrict tp_self,
    func = item->mcs_method.m_func;
    if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
     MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-    return (*(dkwobjmethod_t)func)(self,argc,argv,NULL);
+    return (*(dkwobjmethod_t)func)(self,argc, argv,NULL);
    }
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return (*func)(self,argc,argv);
+   return (*func)(self,argc, argv);
   }
   {
    dgetmethod_t getter;
@@ -1022,7 +1022,7 @@ NLen(DeeType_CallCachedAttr)(DeeTypeObject *__restrict tp_self,
     callback = (*getter)(self);
 check_and_invoke_callback:
     if unlikely(!callback) goto err;
-    result = DeeObject_Call(callback,argc,argv);
+    result = DeeObject_Call(callback,argc, argv);
     Dee_Decref(callback);
     return result;
    }
@@ -1048,7 +1048,7 @@ check_and_invoke_callback:
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_CallAttribute(desc,
                                     DeeInstance_DESC(desc,self),
-                                    self,catt,argc,argv);
+                                    self,catt,argc, argv);
   }
   default: __builtin_unreachable();
   }
@@ -1109,10 +1109,10 @@ NLen(DeeType_CallCachedClassAttr)(DeeTypeObject *__restrict tp_self,
    func = item->mcs_method.m_func;
    if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
     MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-    return (*(dkwobjmethod_t)func)((DeeObject *)tp_self,argc,argv,NULL);
+    return (*(dkwobjmethod_t)func)((DeeObject *)tp_self,argc, argv,NULL);
    }
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return (*func)((DeeObject *)tp_self,argc,argv);
+   return (*func)((DeeObject *)tp_self,argc, argv);
   }
   {
    dgetmethod_t getter;
@@ -1124,7 +1124,7 @@ NLen(DeeType_CallCachedClassAttr)(DeeTypeObject *__restrict tp_self,
     callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
     if unlikely(!callback) goto err;
-    result = DeeObject_Call(callback,argc,argv);
+    result = DeeObject_Call(callback,argc, argv);
     Dee_Decref(callback);
     return result;
    }
@@ -1148,7 +1148,7 @@ check_and_invoke_callback:
    catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_CallAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,argc,argv);
+   return DeeInstance_CallAttribute(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,argc, argv);
   }
   {
    dobjmethod_t func;
@@ -1209,7 +1209,7 @@ check_and_invoke_callback:
    catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_CallInstanceAttribute(type,catt,argc,argv);
+   return DeeClass_CallInstanceAttribute(type,catt,argc, argv);
   }
   default: __builtin_unreachable();
   }
@@ -1306,7 +1306,7 @@ NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
    catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_CallInstanceAttribute(type,catt,argc,argv);
+   return DeeClass_CallInstanceAttribute(type,catt,argc, argv);
   }
   default: __builtin_unreachable();
   }
@@ -1356,7 +1356,7 @@ S(DeeType_CallCachedAttrKw,
    func = item->mcs_method.m_func;
    if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
     MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-    return (*(dkwobjmethod_t)func)(self,argc,argv,kw);
+    return (*(dkwobjmethod_t)func)(self,argc, argv, kw);
    }
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    if (kw) {
@@ -1369,7 +1369,7 @@ S(DeeType_CallCachedAttrKw,
      if (temp != 0) goto err_no_keywords;
     }
    }
-   return (*func)(self,argc,argv);
+   return (*func)(self,argc, argv);
   }
   {
    dgetmethod_t getter;
@@ -1381,7 +1381,7 @@ S(DeeType_CallCachedAttrKw,
     callback = (*getter)(self);
 check_and_invoke_callback:
     if unlikely(!callback) goto err;
-    result = DeeObject_CallKw(callback,argc,argv,kw);
+    result = DeeObject_CallKw(callback,argc, argv, kw);
     Dee_Decref(callback);
     return result;
    }
@@ -1407,7 +1407,7 @@ check_and_invoke_callback:
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
    return DeeInstance_CallAttributeKw(desc,
                                       DeeInstance_DESC(desc,self),
-                                      self,catt,argc,argv,kw);
+                                      self,catt,argc, argv, kw);
   }
   default: __builtin_unreachable();
   }
@@ -1445,7 +1445,7 @@ S(DeeType_CallCachedClassAttrKw,
    func = item->mcs_method.m_func;
    if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
     MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-    return (*(dkwobjmethod_t)func)((DeeObject *)tp_self,argc,argv,kw);
+    return (*(dkwobjmethod_t)func)((DeeObject *)tp_self,argc, argv, kw);
    }
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
    if (kw) {
@@ -1458,7 +1458,7 @@ S(DeeType_CallCachedClassAttrKw,
      if (temp != 0) goto err_no_keywords;
     }
    }
-   return (*func)((DeeObject *)tp_self,argc,argv);
+   return (*func)((DeeObject *)tp_self,argc, argv);
   }
   {
    dgetmethod_t getter;
@@ -1470,7 +1470,7 @@ S(DeeType_CallCachedClassAttrKw,
     callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
     if unlikely(!callback) goto err;
-    result = DeeObject_CallKw(callback,argc,argv,kw);
+    result = DeeObject_CallKw(callback,argc, argv, kw);
     Dee_Decref(callback);
     return result;
    }
@@ -1494,7 +1494,7 @@ check_and_invoke_callback:
    catt = item->mcs_attrib.a_attr;
    desc = item->mcs_attrib.a_desc;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeInstance_CallAttributeKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,argc,argv,kw);
+   return DeeInstance_CallAttributeKw(desc,class_desc_as_instance(desc),(DeeObject *)tp_self,catt,argc, argv, kw);
   }
   {
    dobjmethod_t func;
@@ -1542,7 +1542,7 @@ check_and_invoke_callback:
    /* Allow non-instance objects for generic types. */
    if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0],type))
       goto err;
-   if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg)) goto err;
+   if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:get",&thisarg)) goto err;
    return (*get)(thisarg);
   }
   {
@@ -1557,7 +1557,7 @@ check_and_invoke_callback:
    /* Allow non-instance objects for generic types. */
    if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0],type))
       goto err;
-   if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg)) goto err;
+   if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:get",&thisarg)) goto err;
    return type_member_get(&member,thisarg);
   }
   {
@@ -1567,7 +1567,7 @@ check_and_invoke_callback:
    catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-   return DeeClass_CallInstanceAttributeKw(type,catt,argc,argv,kw);
+   return DeeClass_CallInstanceAttributeKw(type,catt,argc, argv, kw);
   }
   default: __builtin_unreachable();
   }
@@ -1655,7 +1655,7 @@ S(DeeType_CallCachedInstanceAttrKw,
    /* Allow non-instance objects for generic types. */
    if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0],type))
       goto err;
-   if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg)) goto err;
+   if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:get",&thisarg)) goto err;
    return (*get)(thisarg);
   }
   {
@@ -1670,7 +1670,7 @@ S(DeeType_CallCachedInstanceAttrKw,
    /* Allow non-instance objects for generic types. */
    if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0],type))
       goto err;
-   if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg)) goto err;
+   if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:get",&thisarg)) goto err;
    return type_member_get(&member,thisarg);
   }
   {
@@ -1680,7 +1680,7 @@ S(DeeType_CallCachedInstanceAttrKw,
    catt = item->mcs_attrib.a_attr;
    type = item->mcs_decl;
    MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-   return DeeClass_CallInstanceAttributeKw(type,catt,argc,argv,kw);
+   return DeeClass_CallInstanceAttributeKw(type,catt,argc, argv, kw);
   }
   default: __builtin_unreachable();
   }
@@ -3159,7 +3159,7 @@ not_found:
 INTDEF struct class_attribute *
 (DCALL DeeType_QueryAttributeWithHash)(DeeTypeObject *__restrict tp_invoker,
                                        DeeTypeObject *__restrict tp_self,
-                                       /*String*/DeeObject *__restrict attr,
+                                       /*String*/ DeeObject *__restrict attr,
                                        dhash_t hash) {
  struct class_attribute *result;
  result = DeeClass_QueryInstanceAttributeWithHash(tp_self,attr,hash);
@@ -3184,7 +3184,7 @@ INTDEF struct class_attribute *
 INTDEF struct class_attribute *
 (DCALL DeeType_QueryClassAttributeWithHash)(DeeTypeObject *__restrict tp_invoker,
                                             DeeTypeObject *__restrict tp_self,
-                                            /*String*/DeeObject *__restrict attr,
+                                            /*String*/ DeeObject *__restrict attr,
                                             dhash_t hash) {
  struct class_attribute *result;
  result = DeeClass_QueryClassAttributeWithHash(tp_self,attr,hash);
@@ -3210,7 +3210,7 @@ INTDEF struct class_attribute *
 INTDEF struct class_attribute *
 (DCALL DeeType_QueryInstanceAttributeWithHash)(DeeTypeObject *__restrict tp_invoker,
                                                DeeTypeObject *__restrict tp_self,
-                                               /*String*/DeeObject *__restrict attr,
+                                               /*String*/ DeeObject *__restrict attr,
                                                dhash_t hash) {
  struct class_attribute *result;
  result = DeeClass_QueryInstanceAttributeWithHash(tp_self,attr,hash);
@@ -3278,7 +3278,7 @@ N_len(type_method_callattr)(struct membercache *__restrict cache, DeeTypeObject 
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
-  return type_method_call(chain,self,argc,argv);
+  return type_method_call(chain,self,argc, argv);
  }
  return ITER_DONE;
 }
@@ -3291,7 +3291,7 @@ INTDEF DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
-  return type_obmeth_call(tp_self,chain,argc,argv);
+  return type_obmeth_call(tp_self,chain,argc, argv);
  }
  return ITER_DONE;
 }
@@ -3305,7 +3305,7 @@ S(type_method_callattr_kw,
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(cache,decl,hash,chain);
-  return type_method_call_kw(chain,self,argc,argv,kw);
+  return type_method_call_kw(chain,self,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3321,7 +3321,7 @@ INTERN DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(&tp_invoker->tp_class_cache,tp_self,hash,chain);
-  return type_obmeth_call_kw(tp_self,chain,argc,argv,kw);
+  return type_obmeth_call_kw(tp_self,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3336,7 +3336,7 @@ INTERN DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmethod(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obmeth_call_kw(tp_self,chain,argc,argv,kw);
+  return type_obmeth_call_kw(tp_self,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3351,7 +3351,7 @@ S(type_instance_method_callattr_kw,
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemethod(cache,decl,hash,chain);
-  return type_obmeth_call_kw(decl,chain,argc,argv,kw);
+  return type_obmeth_call_kw(decl,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3474,7 +3474,7 @@ INTERN DREF DeeObject *
  for (; chain->gs_name; ++chain) {
   if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,hash,chain);
-  return type_obprop_call(tp_self,chain,argc,argv);
+  return type_obprop_call(tp_self,chain,argc, argv);
  }
  return ITER_DONE;
 }
@@ -3488,7 +3488,7 @@ INTERN DREF DeeObject *
  for (; chain->gs_name; ++chain) {
   if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obprop_call(tp_self,chain,argc,argv);
+  return type_obprop_call(tp_self,chain,argc, argv);
  }
  return ITER_DONE;
 }
@@ -3504,7 +3504,7 @@ INTERN DREF DeeObject *
  for (; chain->gs_name; ++chain) {
   if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addinstancegetset(&tp_invoker->tp_class_cache,tp_self,hash,chain);
-  return type_obprop_call_kw(tp_self,chain,argc,argv,kw);
+  return type_obprop_call_kw(tp_self,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3519,7 +3519,7 @@ INTERN DREF DeeObject *
  for (; chain->gs_name; ++chain) {
   if (!NAMEEQ(chain->gs_name)) continue;
   membercache_addgetset(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obprop_call_kw(tp_self,chain,argc,argv,kw);
+  return type_obprop_call_kw(tp_self,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3616,7 +3616,7 @@ INTERN DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,hash,chain);
-  return type_obmemb_call(tp_self,chain,argc,argv);
+  return type_obmemb_call(tp_self,chain,argc, argv);
  }
  return ITER_DONE;
 }
@@ -3630,7 +3630,7 @@ INTERN DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obmemb_call(tp_self,chain,argc,argv);
+  return type_obmemb_call(tp_self,chain,argc, argv);
  }
  return ITER_DONE;
 }
@@ -3646,7 +3646,7 @@ INTERN DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addinstancemember(&tp_invoker->tp_class_cache,tp_self,hash,chain);
-  return type_obmemb_call_kw(tp_self,chain,argc,argv,kw);
+  return type_obmemb_call_kw(tp_self,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }
@@ -3661,7 +3661,7 @@ INTERN DREF DeeObject *
  for (; chain->m_name; ++chain) {
   if (!NAMEEQ(chain->m_name)) continue;
   membercache_addmember(&tp_invoker->tp_cache,tp_self,hash,chain);
-  return type_obmemb_call_kw(tp_self,chain,argc,argv,kw);
+  return type_obmemb_call_kw(tp_self,chain,argc, argv, kw);
  }
  return ITER_DONE;
 }

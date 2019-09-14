@@ -20,11 +20,13 @@
 #define GUARD_DEEMON_NOTIFY_H 1
 
 #include "api.h"
+
 #include "object.h"
+
 #ifndef CONFIG_NO_NOTIFICATIONS
 #include "int.h"
 #include "string.h"
-#endif
+#endif /* !CONFIG_NO_NOTIFICATIONS */
 
 DECL_BEGIN
 
@@ -46,9 +48,9 @@ DECL_BEGIN
 #define Dee_NOTIFICATION_CLASS_FIDMASK     0x7fff /* MASK: The actual notification class ID. */
 #ifdef CONFIG_HOST_WINDOWS
 #define Dee_NOTIFICATION_CLASS_ENVIRON     0x8000 /* Environment variable. (The callback name is the variable name) */
-#else
+#else /* CONFIG_HOST_WINDOWS */
 #define Dee_NOTIFICATION_CLASS_ENVIRON     0x0000 /* Environment variable. (The callback name is the variable name) */
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 
 
 /* Returns the value of `(environ from fs).get(name,none)',
@@ -60,20 +62,22 @@ DFUNDEF DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restrict name);
 
 
 #ifndef CONFIG_NO_DEX
-#define DEX_NOTIFICATION_ENVIRON(name)  { Dee_NOTIFICATION_CLASS_ENVIRON, \
-                                          Dee_DEX_NOTIFICATION_FNORMAL, \
-                                         (struct string_object *)&name##_envname, \
-                                         &name##_notify, NULL }
-#define DEX_NOTIFICATION_END            { 0, 0, NULL, NULL, NULL }
+#define DEX_NOTIFICATION_ENVIRON(name)         \
+	{ Dee_NOTIFICATION_CLASS_ENVIRON,          \
+	  Dee_DEX_NOTIFICATION_FNORMAL,            \
+	  (struct string_object *)&name##_envname, \
+	  &name##_notify, NULL }
+#define DEX_NOTIFICATION_END \
+	{ 0, 0, NULL, NULL, NULL }
 #endif /* !CONFIG_NO_DEX */
 
 
-#define DECLARE_NOTIFY_ENVIRON_INTEGER(T,name) \
-INTDEF T name##_value; \
-INTDEF bool name##_loaded; \
-INTDEF DeeObject name##_envname; \
-INTDEF int DCALL name##_notify(DeeObject *UNUSED(arg)); \
-INTDEF int DCALL name##_get(T *__restrict result);
+#define DECLARE_NOTIFY_ENVIRON_INTEGER(T, name)             \
+	INTDEF T name##_value;                                  \
+	INTDEF bool name##_loaded;                              \
+	INTDEF DeeObject name##_envname;                        \
+	INTDEF int DCALL name##_notify(DeeObject *UNUSED(arg)); \
+	INTDEF int DCALL name##_get(T *__restrict result);
 
 
 
@@ -81,7 +85,7 @@ INTDEF int DCALL name##_get(T *__restrict result);
  * >> DREF DeeObject *DCALL
  * >> get_my_envint(size_t argc, DeeObject **__restrict argv) {
  * >>     int result;
- * >>     if (DeeArg_Unpack(argc,argv,":get_my_envint"))
+ * >>     if (DeeArg_Unpack(argc, argv,":get_my_envint"))
  * >>         goto err;
  * >>     if (my_envint_get(&result))
  * >>         goto err;
@@ -90,49 +94,48 @@ INTDEF int DCALL name##_get(T *__restrict result);
  * >>     return NULL;
  * >> }
  */
-#define DEFINE_NOTIFY_ENVIRON_INTEGER(T,name,default,environ_name) \
-INTERN T name##_value = (default); \
-INTERN bool name##_loaded = false; \
-INTERN DEFINE_STRING(name##_envname,environ_name); \
-INTERN int DCALL name##_notify(DeeObject *UNUSED(arg)) \
-{ \
-    name##_loaded = false; \
-    return 0; \
-} \
-INTERN int DCALL name##_get(T *__restrict result) \
-{ \
-    DREF DeeObject *value; \
-    if (!name##_loaded) { \
-        value = Dee_GetEnv((DeeObject *)&name##_envname); \
-        if (value == ITER_DONE) { \
-            name##_value = (default); \
-        } else { \
-            char *strval; \
-            if unlikely(!value) goto err; \
-            if unlikely(DeeObject_AssertTypeExact(value,&DeeString_Type)) \
-               goto err_value; \
-            strval = DeeString_AsUtf8(value); \
-            if unlikely(!strval) \
-               goto err_value; \
-            if (!*strval) { \
-                name##_value = (default); /* Empty string --> default */ \
-            } else { \
-                if unlikely(Dee_TAtoi(T,strval,WSTR_LENGTH(strval), \
-                                      DEEINT_STRING(0,DEEINT_STRING_FNORMAL), \
-                                     &name##_value)) \
-                   goto err_value; \
-            } \
-            Dee_Decref(value); \
-        } \
-        name##_loaded = true; \
-    } \
-    *result = name##_value; \
-    return 0; \
-err_value: \
-    Dee_Decref(value); \
-err: \
-    return -1; \
-}
+#define DEFINE_NOTIFY_ENVIRON_INTEGER(T, name, default, environ_name)              \
+	INTERN T name##_value     = (default);                                         \
+	INTERN bool name##_loaded = false;                                             \
+	INTERN DEFINE_STRING(name##_envname, environ_name);                            \
+	INTERN int DCALL name##_notify(DeeObject *UNUSED(arg)) {                       \
+		name##_loaded = false;                                                     \
+		return 0;                                                                  \
+	}                                                                              \
+	INTERN int DCALL name##_get(T *__restrict result) {                            \
+		DREF DeeObject *value;                                                     \
+		if (!name##_loaded) {                                                      \
+			value = Dee_GetEnv((DeeObject *)&name##_envname);                      \
+			if (value == ITER_DONE) {                                              \
+				name##_value = (default);                                          \
+			} else {                                                               \
+				char *strval;                                                      \
+				if unlikely(!value)                                                \
+					goto err;                                                      \
+				if unlikely(DeeObject_AssertTypeExact(value, &DeeString_Type))     \
+					goto err_value;                                                \
+				strval = DeeString_AsUtf8(value);                                  \
+				if unlikely(!strval)                                               \
+					goto err_value;                                                \
+				if (!*strval) {                                                    \
+					name##_value = (default); /* Empty string --> default */       \
+				} else {                                                           \
+					if unlikely(Dee_TAtoi(T, strval, WSTR_LENGTH(strval),          \
+					                      DEEINT_STRING(0, DEEINT_STRING_FNORMAL), \
+					                      &name##_value))                          \
+						goto err_value;                                            \
+				}                                                                  \
+				Dee_Decref(value);                                                 \
+			}                                                                      \
+			name##_loaded = true;                                                  \
+		}                                                                          \
+		*result = name##_value;                                                    \
+		return 0;                                                                  \
+	err_value:                                                                     \
+		Dee_Decref(value);                                                         \
+	err:                                                                           \
+		return -1;                                                                 \
+	}
 
 
 

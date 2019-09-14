@@ -1254,7 +1254,7 @@ buffer_ctor(Buffer *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  uint16_t mode = (FILE_BUFFER_MODE_AUTO);
  DeeObject *file; char const *mode_str = NULL; size_t size = 0;
- if (DeeArg_Unpack(argc,argv,"o|sd:_FileBuffer",&file,&mode_str,&size))
+ if (DeeArg_Unpack(argc, argv,"o|sd:_FileBuffer",&file,&mode_str,&size))
      goto err;
  if (mode_str) {
   char const *mode_iter = mode_str;
@@ -1392,7 +1392,7 @@ buffer_size(Buffer *__restrict self,
  Dee_Incref(file);
  buf_endwrite(self);
  /* Forward the to contained file. */
- result = DeeObject_CallAttr(file,&str_size,argc,argv);
+ result = DeeObject_CallAttr(file,&str_size,argc, argv);
  Dee_Decref(file);
  return result;
 err_closed_unlock:
@@ -1414,7 +1414,7 @@ buffer_fileno(Buffer *__restrict self,
  Dee_Incref(file);
  buf_endwrite(self);
  /* Forward the to contained file. */
- result = DeeObject_CallAttr(file,&str_fileno,argc,argv);
+ result = DeeObject_CallAttr(file,&str_fileno,argc, argv);
  Dee_Decref(file);
  return result;
 err_closed_unlock:
@@ -1429,7 +1429,7 @@ PRIVATE DREF DeeObject *DCALL
 buffer_isatty(Buffer *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  int error;
- if (DeeArg_Unpack(argc,argv,":isatty"))
+ if (DeeArg_Unpack(argc, argv,":isatty"))
      goto err;
  buf_write(self);
  /* Determine if the buffer points to a TTY. */
@@ -1446,7 +1446,7 @@ PRIVATE DREF DeeObject *DCALL
 buffer_flush(Buffer *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  int error;
- if (DeeArg_Unpack(argc,argv,":flush"))
+ if (DeeArg_Unpack(argc, argv,":flush"))
      goto err;
  buf_write(self);
  /* Synchronize the buffer, but don't synchronize its file. */
@@ -1469,7 +1469,7 @@ buffer_setbuf(Buffer *__restrict self,
  char const *mode_str; size_t size = 0;
  unsigned int i; union{ char chrs[4]; uint32_t id; } buf;
  PRIVATE DEFINE_KWLIST(kwlist,{ K(mode), K(size), KEND });
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"s|d:setbuf",&mode_str,&size))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"s|d:setbuf",&mode_str,&size))
      goto err;
  mode_iter = mode_str,mode = 0;
  /* Interpret the given mode string. */
@@ -1624,7 +1624,7 @@ PRIVATE struct type_getset buffer_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 buffer_class_sync(DeeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":sync"))
+ if (DeeArg_Unpack(argc, argv,":sync"))
      goto err;
  if (DeeFileBuffer_SyncTTYs())
      goto err;

@@ -240,7 +240,7 @@ PRIVATE int DCALL
 traceiter_init(TraceIterator *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  size_t index = 0;
- if (DeeArg_Unpack(argc,argv,"o|Iu:_TracebackIterator",
+ if (DeeArg_Unpack(argc, argv,"o|Iu:_TracebackIterator",
                   &self->ti_trace,&index))
      goto err;
  if (DeeObject_AssertTypeExact(self->ti_trace,&DeeTraceback_Type))
@@ -695,7 +695,7 @@ PRIVATE DREF DeeObject *DCALL
 traceback_sizeof(DeeTracebackObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  size_t result; uint16_t i;
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  result = offsetof(DeeTracebackObject,tb_frames) +
          (self->tb_numframes * sizeof(struct code_frame));

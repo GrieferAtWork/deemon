@@ -291,7 +291,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
  result = DeeGCObject_CALLOC(DeeCFunctionTypeObject);
  if unlikely(!result) goto err_argv;
  /* Create the name of the resulting type. */
- name = (DREF DeeStringObject *)generate_function_name(return_type,calling_convention,argc,argv);
+ name = (DREF DeeStringObject *)generate_function_name(return_type,calling_convention,argc, argv);
  if unlikely(!name) goto err_argv_r;
  /* Store a reference to the cfunction-base type. */
  Dee_Incref((DeeObject *)return_type);
@@ -461,12 +461,12 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 #endif
  ASSERT(!return_type->st_cfunction.sf_size ||
          return_type->st_cfunction.sf_mask);
- hash = cfunction_hashof(return_type,calling_convention,argc,argv);
+ hash = cfunction_hashof(return_type,calling_convention,argc, argv);
  if (return_type->st_cfunction.sf_size) {
   result = return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
   while (result &&
         (result->ft_hash != hash ||
-        !cfunction_equals(result,return_type,calling_convention,argc,argv)))
+        !cfunction_equals(result,return_type,calling_convention,argc, argv)))
          result = result->ft_chain.le_next;
   /* Check if we can re-use an existing type. */
   if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
@@ -482,7 +482,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 #endif
  /* Construct a new cfunction type. */
  result = cfunctiontype_new(return_type,calling_convention,
-                            argc,argv,hash,inherit_argv);
+                            argc, argv,hash,inherit_argv);
  if unlikely(!result) goto done;
  /* Add the new type to the cache. */
 register_type:
@@ -495,7 +495,7 @@ register_type:
   new_result = return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
   while (new_result &&
         (new_result->ft_hash != hash ||
-        !cfunction_equals(new_result,return_type,calling_convention,argc,argv)))
+        !cfunction_equals(new_result,return_type,calling_convention,argc, argv)))
          new_result = new_result->ft_chain.le_next;
   /* Check if we can re-use an existing type. */
   if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {

@@ -91,8 +91,8 @@ typedef struct {
 
 
 INTDEF DeeTypeObject BlackListVarkwds_Type;
-#define BlackListVarkwds_Check(x)      DeeObject_InstanceOfExact(x,&BlackListVarkwds_Type) /* `_BlackListVarkwds' is final */
-#define BlackListVarkwds_CheckExact(x) DeeObject_InstanceOfExact(x,&BlackListVarkwds_Type)
+#define BlackListVarkwds_Check(x)      DeeObject_InstanceOfExact(x, &BlackListVarkwds_Type) /* `_BlackListVarkwds' is final */
+#define BlackListVarkwds_CheckExact(x) DeeObject_InstanceOfExact(x, &BlackListVarkwds_Type)
 
 
 
@@ -191,8 +191,8 @@ typedef struct {
 
 
 INTDEF DeeTypeObject BlackListMapping_Type;
-#define BlackListMapping_Check(x)      DeeObject_InstanceOfExact(x,&BlackListMapping_Type) /* `_BlackListMapping' is final */
-#define BlackListMapping_CheckExact(x) DeeObject_InstanceOfExact(x,&BlackListMapping_Type)
+#define BlackListMapping_Check(x)      DeeObject_InstanceOfExact(x, &BlackListMapping_Type) /* `_BlackListMapping' is final */
+#define BlackListMapping_CheckExact(x) DeeObject_InstanceOfExact(x, &BlackListMapping_Type)
 
 
 INTDEF bool DCALL BlackListMapping_IsBlackListed(BlackListMapping *__restrict self, DeeObject *__restrict name);

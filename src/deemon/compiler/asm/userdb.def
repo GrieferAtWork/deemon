@@ -19,12 +19,12 @@
 #ifdef __INTELLISENSE__
 #include <deemon/compiler/assembler.h>
 #undef INSTR
-#define INSTR(name,...)
+#define INSTR(name, ...)
 #endif
 
 #ifndef INSTR
 #ifndef __DEEMON__
-#error "Must `#define INSTR(name,...)' before including this file"
+#error "Must `#define INSTR(name, ...)' before including this file"
 #endif
 #endif
 

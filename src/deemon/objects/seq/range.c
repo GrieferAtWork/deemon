@@ -99,7 +99,7 @@ INTDEF DeeTypeObject SeqRange_Type;
 PRIVATE int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqRangeIterator",&self->ri_range))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqRangeIterator",&self->ri_range))
      goto err;
  if (DeeObject_AssertTypeExact(self->ri_range,&SeqRange_Type))
      goto err;
@@ -1009,7 +1009,7 @@ PRIVATE int DCALL
 range_init(Range *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  self->r_step = NULL;
- if (DeeArg_Unpack(argc,argv,"oo|o:_Range",
+ if (DeeArg_Unpack(argc, argv,"oo|o:_Range",
                   &self->r_start,
                   &self->r_end,
                   &self->r_step))
@@ -1117,7 +1117,7 @@ iri_copy(IntRangeIterator *__restrict self,
 PRIVATE int DCALL
 iri_init(IntRangeIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqIntRangeIterator",&self->iri_range))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqIntRangeIterator",&self->iri_range))
      goto err;
  if (DeeObject_AssertTypeExact(self->iri_range,&SeqIntRange_Type))
      goto err;
@@ -1494,7 +1494,7 @@ PRIVATE int DCALL
 intrange_init(IntRange *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  self->ir_step = 1;
- if (DeeArg_Unpack(argc,argv,"IdId|Id:_SeqIntRange",
+ if (DeeArg_Unpack(argc, argv,"IdId|Id:_SeqIntRange",
                   &self->ir_start,
                   &self->ir_end,
                   &self->ir_step))

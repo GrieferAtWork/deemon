@@ -38,7 +38,7 @@ typedef int Dee_rwlock_t;
 #define Dee_rwlock_endwrite(self)   (void)0
 #define Dee_rwlock_endread(self)    (void)0
 #define Dee_rwlock_end(self)        (void)0
-#else
+#else /* CONFIG_NO_THREADS */
 #include <hybrid/sync/atomic-rwlock.h>
 
 typedef atomic_rwlock_t Dee_rwlock_t;
@@ -58,7 +58,7 @@ typedef atomic_rwlock_t Dee_rwlock_t;
 #define Dee_rwlock_endwrite(self)   atomic_rwlock_endwrite(self)
 #define Dee_rwlock_endread(self)    atomic_rwlock_endread(self)
 #define Dee_rwlock_end(self)        atomic_rwlock_end(self)
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #ifdef DEE_SOURCE
 typedef Dee_rwlock_t rwlock_t;

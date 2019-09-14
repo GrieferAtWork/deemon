@@ -50,7 +50,7 @@ done:
 
 PRIVATE DREF SeqEachOperator *DCALL
 seqeach_makeop1(DeeObject *__restrict seq, uint16_t opname,
-                /*inherit(always)*/DREF DeeObject *__restrict arg_0) {
+                /*inherit(always)*/ DREF DeeObject *__restrict arg_0) {
  DREF SeqEachOperator *result;
  result = SeqEachOperator_MALLOC(1);
  if unlikely(!result) goto err;
@@ -68,8 +68,8 @@ err:
 
 PRIVATE DREF SeqEachOperator *DCALL
 seqeach_makeop2(DeeObject *__restrict seq, uint16_t opname,
-                /*inherit(always)*/DREF DeeObject *__restrict arg_0,
-                /*inherit(always)*/DREF DeeObject *__restrict arg_1) {
+                /*inherit(always)*/ DREF DeeObject *__restrict arg_0,
+                /*inherit(always)*/ DREF DeeObject *__restrict arg_1) {
  DREF SeqEachOperator *result;
  result = SeqEachOperator_MALLOC(2);
  if unlikely(!result) goto err;
@@ -115,7 +115,7 @@ err:
 PRIVATE int DCALL
 se_init(SeqEachBase *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqEach",&self->se_seq))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqEach",&self->se_seq))
      goto err;
  Dee_Incref(self->se_seq);
  return 0;
@@ -224,7 +224,7 @@ se_bool(SeqEachBase *__restrict self) {
 PRIVATE DREF SeqEachOperator *DCALL
 se_call(SeqEachBase *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *tuple;
- tuple = DeeTuple_NewVector(argc,argv);
+ tuple = DeeTuple_NewVector(argc, argv);
  if unlikely(!tuple)
     goto err;
  return seqeach_makeop1(self->se_seq,OPERATOR_CALL,tuple);
@@ -235,7 +235,7 @@ PRIVATE DREF SeqEachOperator *DCALL
 se_call_kw(SeqEachBase *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  DREF DeeObject *tuple;
- tuple = DeeTuple_NewVector(argc,argv);
+ tuple = DeeTuple_NewVector(argc, argv);
  if unlikely(!tuple)
     goto err;
  return kw
@@ -526,9 +526,9 @@ se_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
 }
 
 PRIVATE struct type_attr se_attr = {
-    /* .tp_getattr  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&se_getattr,
-    /* .tp_delattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&se_delattr,
-    /* .tp_setattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict,DeeObject *__restrict))&se_setattr,
+    /* .tp_getattr  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&se_getattr,
+    /* .tp_delattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&se_delattr,
+    /* .tp_setattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict,DeeObject *__restrict))&se_setattr,
     /* .tp_enumattr = */(dssize_t(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,denum_t,void *))&se_enumattr
 };
 
@@ -661,7 +661,7 @@ seo_init(SeqEachOperator *__restrict self,
  size_t i;
  DeeObject *name;
  DeeObject *args = Dee_EmptyTuple;
- if (DeeArg_Unpack(argc,argv,"oo|o:_SeqEachOperator",
+ if (DeeArg_Unpack(argc, argv,"oo|o:_SeqEachOperator",
                   &self->se_seq,&name,&args))
      goto err;
  if (DeeObject_AssertTypeExact(args,&DeeTuple_Type))
@@ -736,7 +736,7 @@ sew_setattr(DeeObject *__restrict self, DeeObject *__restrict attr, DeeObject *_
 PRIVATE DREF DeeObject *DCALL
 sew_call(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *tuple;
- tuple = DeeTuple_NewVector(argc,argv);
+ tuple = DeeTuple_NewVector(argc, argv);
  if unlikely(!tuple)
     goto err;
  return (DREF DeeObject *)seqeach_makeop1(self,OPERATOR_CALL,tuple);
@@ -747,7 +747,7 @@ PRIVATE DREF SeqEachOperator *DCALL
 sew_call_kw(DeeObject *__restrict self, size_t argc,
             DeeObject **__restrict argv, DeeObject *kw) {
  DREF DeeObject *tuple;
- tuple = DeeTuple_NewVector(argc,argv);
+ tuple = DeeTuple_NewVector(argc, argv);
  if unlikely(!tuple)
     goto err;
  return kw
@@ -1069,9 +1069,9 @@ DEFINE_SEW_BINARY(sew_getattr,OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 PRIVATE struct type_attr sew_attr = {
-    /* .tp_getattr  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&sew_getattr,
-    /* .tp_delattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&sew_delattr,
-    /* .tp_setattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict,DeeObject *__restrict))&sew_setattr,
+    /* .tp_getattr  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&sew_getattr,
+    /* .tp_delattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&sew_delattr,
+    /* .tp_setattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict,DeeObject *__restrict))&sew_setattr,
     /* .tp_enumattr = */(dssize_t(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,denum_t,void *))&sew_enumattr
 };
 
@@ -1112,7 +1112,7 @@ sew_size(SeqEachBase *__restrict self) {
 
 LOCAL DREF DeeObject *DCALL
 seo_transform(SeqEachOperator *__restrict self,
-              /*inherit(always)*/DREF DeeObject *__restrict elem) {
+              /*inherit(always)*/ DREF DeeObject *__restrict elem) {
  DREF DeeObject *result;
  result = DeeObject_InvokeOperator(elem,
                                    self->so_opname,
@@ -1263,7 +1263,7 @@ err:
 PRIVATE int DCALL
 seoi_init(SeqEachIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SeqEachOperatorIterator",&self->ei_each))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqEachOperatorIterator",&self->ei_each))
      goto err;
  if (DeeObject_AssertTypeExact(self->ei_each,&SeqEachOperator_Type))
      goto err;
@@ -1517,7 +1517,7 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
  size_t i;
  DREF SeqEachCallAttrKw *result;
  if (!kw)
-     return DeeSeqEach_CallAttr(self,attr,argc,argv);
+     return DeeSeqEach_CallAttr(self,attr,argc, argv);
  result = (DREF SeqEachCallAttrKw *)DeeObject_Malloc(COMPILER_OFFSETOF(SeqEachCallAttrKw,sg_argv) +
                                                     (argc * sizeof(DREF DeeObject *)));
  if unlikely(!result) goto done;

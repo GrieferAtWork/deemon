@@ -213,7 +213,7 @@ struct jit_symbol {
         struct {
             struct jit_object_entry *jo_ent;     /* [1..1] The entry, the last time it was loaded. */
             struct jit_object_table *jo_tab;     /* [1..1] The object table in question. */
-            /*utf-8*/char const     *jo_namestr; /* [0..jo_namelen] The object name. */
+            /*utf-8*/ char const     *jo_namestr; /* [0..jo_namelen] The object name. */
             size_t                   jo_namelen; /* Length of the object name. */
         } js_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
         struct {
@@ -223,7 +223,7 @@ struct jit_symbol {
         } js_extern; /* JIT_SYMBOL_EXTERN */
         DREF struct string_object   *js_global; /* [1..1] JIT_SYMBOL_GLOBAL user-level global symbol name. */
         struct {
-            /*utf-8*/char const     *jg_namestr; /* [0..jg_namelen] The global symbol name. */
+            /*utf-8*/ char const     *jg_namestr; /* [0..jg_namelen] The global symbol name. */
             size_t                   jg_namelen; /* Length of the global symbol name. */
             dhash_t                  jg_namehsh; /* Hash for the global symbol name. */
         } js_globalstr; /* JIT_SYMBOL_GLOBALSTR */
@@ -264,7 +264,7 @@ struct jit_lvalue {
         struct {
             struct jit_object_entry *lo_ent;     /* [1..1] The entry, the last time it was loaded. */
             struct jit_object_table *lo_tab;     /* [1..1] The object table in question. */
-            /*utf-8*/char const     *lo_namestr; /* [0..lo_namelen] The object name. */
+            /*utf-8*/ char const     *lo_namestr; /* [0..lo_namelen] The object name. */
             size_t                   lo_namesiz; /* Length of the object name. */
         } lv_objent; /* JIT_LVALUE_OBJENT | JIT_LVALUE_ROOBJENT -- Object table entry. */
         struct {
@@ -274,7 +274,7 @@ struct jit_lvalue {
         } lv_extern; /* JIT_LVALUE_EXTERN */
         DREF struct string_object   *lv_global; /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
         struct {
-            /*utf-8*/char const     *lg_namestr; /* [0..jg_namelen] The global symbol name. */
+            /*utf-8*/ char const     *lg_namestr; /* [0..jg_namelen] The global symbol name. */
             size_t                   lg_namelen; /* Length of the global symbol name. */
             dhash_t                  lg_namehsh; /* Hash of the global symbol name. */
         } lv_globalstr; /* JIT_LVALUE_GLOBALSTR */
@@ -284,7 +284,7 @@ struct jit_lvalue {
         } lv_attr; /* JIT_LVALUE_ATTR */
         struct {
             DREF DeeObject      *la_base; /* [1..1] Expression base object */
-            /*utf-8*/char const *la_name; /* [0..la_size] Attribute name. */
+            /*utf-8*/ char const *la_name; /* [0..la_size] Attribute name. */
             size_t               la_size; /* Length of the attribute name. */
             dhash_t              la_hash; /* Hash of the attribute name. */
         } lv_attrstr; /* JIT_LVALUE_ATTRSTR */
@@ -431,7 +431,7 @@ JITLexer_ErrorTrace(JITLexer *__restrict self,
 
 
 struct jit_object_entry {
-    /*utf-8*/char const *oe_namestr; /* [0..oe_namelen] Name of the object
+    /*utf-8*/ char const *oe_namestr; /* [0..oe_namelen] Name of the object
                                       * NOTE: `NULL' indicates an unused/sentinal entry;
                                       *       `ITER_DONE' indicates a deleted entry. */
     size_t               oe_namelen; /* Length of the object name. */
@@ -496,7 +496,7 @@ JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
  * @return: -1: An error occurred (failed to increase the hash size of `self') */
 INTDEF int DCALL
 JITObjectTable_Update(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh,
                       DeeObject *value,
                       bool override_existing);
@@ -506,7 +506,7 @@ JITObjectTable_Update(JITObjectTable *__restrict self,
  * @return: false: The object table didn't include an entry matching the given name. */
 INTDEF bool DCALL
 JITObjectTable_Delete(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh);
 
 /* Lookup a given object within `self'
@@ -514,7 +514,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
 INTDEF struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh);
 
 /* Lookup or create an entry for a given name within `self'
@@ -522,7 +522,7 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
 INTDEF struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
-                      /*utf-8*/char const *namestr,
+                      /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh);
 
 
@@ -601,12 +601,12 @@ INTDEF JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self)
 INTDEF int FCALL
 JITContext_Lookup(JITContext *__restrict self,
                   struct jit_symbol *__restrict result,
-                  /*utf-8*/char const *__restrict name,
+                  /*utf-8*/ char const *__restrict name,
                   size_t namelen, unsigned int mode);
 INTDEF int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      struct jit_symbol *__restrict result,
-                     /*utf-8*/char const *__restrict name,
+                     /*utf-8*/ char const *__restrict name,
                      size_t namelen, size_t nth);
 
 #define LOOKUP_SYM_NORMAL    0x0000
@@ -676,26 +676,26 @@ INTDEF DREF DeeObject *FCALL JITLexer_EvalAssign(JITLexer *__restrict self, unsi
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
-INTDEF DREF DeeObject *FCALL JITLexer_EvalUnaryOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalProdOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalSumOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalShiftOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalCmpOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalCmpEQOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalAndOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalXorOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalOrOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalAsOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalLandOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalLorOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalCondOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalAssignOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalUnaryOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalProdOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalSumOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalShiftOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalCmpOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalCmpEQOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalAndOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalXorOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalOrOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalAsOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalLandOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalLorOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalCondOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalAssignOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
 
-INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaTupleOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaTupleOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaTupleOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaListOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaListOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaListOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaDictOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalCommaDictOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipCommaDictOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Evaluate/skip an argument list, including keyword labels */
@@ -716,7 +716,7 @@ INTDEF int FCALL
 JITLexer_SkipKeywordLabelList(JITLexer *__restrict self);
 
 
-INTDEF DREF /*Module*/DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict self);
+INTDEF DREF /*Module*/ DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict self);
 #define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self,NULL,NULL,NULL) < 0 ? -1 : 0)
 
 
@@ -812,7 +812,7 @@ INTDEF int FCALL JITLexer_SkipCondOperand(JITLexer *__restrict self, unsigned in
 INTDEF int FCALL JITLexer_SkipAssignOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Parse any kind of post-expression operand. */
-INTDEF DREF DeeObject *FCALL JITLexer_EvalOperand(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags);
+INTDEF DREF DeeObject *FCALL JITLexer_EvalOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Recursively skip a pair of tokens, such as `{' and `}' or `(' and `)'
@@ -998,8 +998,8 @@ JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 #define JIT_FUNCTION_FYIELDING 0x0002 /* The function's contains a yield statement. */
 struct jit_function_object {
     OBJECT_HEAD
-    /*utf-8*/char const    *jf_source_start; /* [1..1][const] Source start pointer. */
-    /*utf-8*/char const    *jf_source_end;   /* [1..1][const] Source end pointer. */
+    /*utf-8*/ char const    *jf_source_start; /* [1..1][const] Source start pointer. */
+    /*utf-8*/ char const    *jf_source_end;   /* [1..1][const] Source end pointer. */
     DREF DeeObject         *jf_source;       /* [1..1][const] The object that owns input text. */
     DREF DeeModuleObject   *jf_impbase;      /* [0..1][const] Base module used for relative, static imports (such as `foo from .baz.bar')
                                               * When `NULL', code isn't allowed to perform relative imports. */
@@ -1026,12 +1026,12 @@ INTDEF DeeTypeObject JITFunction_Type;
 /* Create a new JIT function object by parsing the specified
  * parameter list, and executing the given source region. */
 INTDEF DREF DeeObject *DCALL
-JITFunction_New(/*utf-8*/char const *name_start,
-                /*utf-8*/char const *name_end,
-                /*utf-8*/char const *params_start,
-                /*utf-8*/char const *params_end,
-                /*utf-8*/char const *__restrict source_start,
-                /*utf-8*/char const *__restrict source_end,
+JITFunction_New(/*utf-8*/ char const *name_start,
+                /*utf-8*/ char const *name_end,
+                /*utf-8*/ char const *params_start,
+                /*utf-8*/ char const *params_end,
+                /*utf-8*/ char const *__restrict source_start,
+                /*utf-8*/ char const *__restrict source_end,
                 JITObjectTable *parent_object_table,
                 DeeObject *__restrict source,
                 DeeModuleObject *impbase,
@@ -1045,7 +1045,7 @@ JITFunction_New(/*utf-8*/char const *name_start,
  * `self->jf_varargs' and `self->jf_varkwds' fields. */
 INTDEF struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunctionObject *__restrict self,
-                           /*utf-8*/char const *namestr,
+                           /*utf-8*/ char const *namestr,
                            size_t namelen);
 
 /* Analyze the contents of an expression/statement for possible references

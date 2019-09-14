@@ -20,13 +20,16 @@
 #define GUARD_DEEMON_RODICT_H 1
 
 #include "api.h"
+
 #include "object.h"
+
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
+
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdarg.h>
 
 DECL_BEGIN
 
@@ -58,25 +61,25 @@ typedef struct Dee_rodict_object DeeRoDictObject;
 
 struct Dee_rodict_item {
 #ifdef __INTELLISENSE__
-    DeeObject      *di_key;   /* [0..1][const] Dictionary item key. */
-    DeeObject      *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
+	DeeObject      *di_key;   /* [0..1][const] Dictionary item key. */
+	DeeObject      *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
 #else
-    DREF DeeObject *di_key;   /* [0..1][const] Dictionary item key. */
-    DREF DeeObject *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
+	DREF DeeObject *di_key;   /* [0..1][const] Dictionary item key. */
+	DREF DeeObject *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
 #endif
-    Dee_hash_t      di_hash;  /* [valid_if(di_key)][const] Hash of `di_key' (with a starting value of `0'). */
+	Dee_hash_t      di_hash;  /* [valid_if(di_key)][const] Hash of `di_key' (with a starting value of `0'). */
 };
 
 struct Dee_rodict_object {
-    Dee_OBJECT_HEAD
-    size_t                 rd_mask;    /* [const][!0] Allocated dictionary mask. */
-    size_t                 rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
-    struct Dee_rodict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
+	Dee_OBJECT_HEAD
+	size_t                 rd_mask;    /* [const][!0] Allocated dictionary mask. */
+	size_t                 rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
+	struct Dee_rodict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
 };
 
 DDATDEF DeeTypeObject DeeRoDict_Type;
-#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob,&DeeRoDict_Type) /* `_rodict' is final */
-#define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob,&DeeRoDict_Type)
+#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_rodict' is final */
+#define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
 DFUNDEF DREF DeeObject *DCALL DeeRoDict_FromSequence(DeeObject *__restrict self);
 DFUNDEF DREF DeeObject *DCALL DeeRoDict_FromIterator(DeeObject *__restrict self);
@@ -99,10 +102,10 @@ INTDEF bool DCALL DeeRoDict_HasItemStringLen(DeeObject *__restrict self, char co
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */
-#define Dee_RODICT_HASHST(self,hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
-#define Dee_RODICT_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define Dee_RODICT_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_RODICT_HASHIT(self,i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
+#define Dee_RODICT_HASHST(self, hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
+#define Dee_RODICT_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
+#define Dee_RODICT_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_RODICT_HASHIT(self, i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
 
 
 DECL_END

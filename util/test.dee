@@ -22,10 +22,10 @@ import * from fs;
 
 @@Run all tests found in the `/util/test' directory
 function runall() {
-	local path = joinpath(headof(__FILE__),"test/*.dee");
+	local path = joinpath(headof(__FILE__), "test/*.dee");
 	for (local x: query(path)) {
 		local test_name = x[:-4];
-		print ">> Running test:",test_name;
+		print ">> Running test:", test_name;
 		import(".test." + test_name);
 	}
 	print "DONE";

@@ -252,7 +252,7 @@ err_r:
 
 LOCAL DREF DeeObject *DCALL
 F(transform)(STRUCT_TYPE *__restrict self,
-             /*inherit(always)*/DREF DeeObject *__restrict elem) {
+             /*inherit(always)*/ DREF DeeObject *__restrict elem) {
  DREF DeeObject *result;
 #ifdef DEFINE_GETATTR
  result = DeeObject_GetAttr(elem,(DeeObject *)self->sg_attr);
@@ -420,7 +420,7 @@ err:
 PRIVATE int DCALL
 F(init)(STRUCT_TYPE *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_SeqEachGetAttr",
+ if (DeeArg_Unpack(argc, argv,"oo:_SeqEachGetAttr",
                   &self->se_seq,
                   &self->sg_attr))
      goto err;
@@ -524,11 +524,11 @@ F(init)(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; size_t i;
  DeeObject *args = Dee_EmptyTuple;
 #ifdef DEFINE_CALLATTR
- if (DeeArg_Unpack(argc,argv,"oo|o:_SeqEachCallAttr",&seq,&attr,&args))
+ if (DeeArg_Unpack(argc, argv,"oo|o:_SeqEachCallAttr",&seq,&attr,&args))
      goto err;
 #elif defined(DEFINE_CALLATTRKW)
  DeeObject *kw = Dee_EmptyMapping;
- if (DeeArg_Unpack(argc,argv,"oo|oo:_SeqEachCallAttrKw",&seq,&attr,&args,&kw))
+ if (DeeArg_Unpack(argc, argv,"oo|oo:_SeqEachCallAttrKw",&seq,&attr,&args,&kw))
      goto err;
 #else
 #error "Unsupported mode"
@@ -568,14 +568,14 @@ F(call)(STRUCT_TYPE *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  return (DREF SeqEachCallAttr *)DeeSeqEach_CallAttr(self->se_seq,
                                                    (DeeObject *)self->sg_attr,
-                                                    argc,argv);
+                                                    argc, argv);
 }
 PRIVATE DREF SeqEachCallAttrKw *DCALL
 F(call_kw)(STRUCT_TYPE *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  return (DREF SeqEachCallAttrKw *)DeeSeqEach_CallAttrKw(self->se_seq,
                                                        (DeeObject *)self->sg_attr,
-                                                        argc,argv,kw);
+                                                        argc, argv, kw);
 }
 #endif
 
@@ -685,13 +685,13 @@ PRIVATE int DCALL
 Fi(init)(SeqEachIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
 #ifdef DEFINE_GETATTR
- if (DeeArg_Unpack(argc,argv,"o:_SeqEachGetAttrIterator",&self->ei_each))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqEachGetAttrIterator",&self->ei_each))
      goto err;
 #elif defined(DEFINE_CALLATTR)
- if (DeeArg_Unpack(argc,argv,"o:_SeqEachCallAttrIterator",&self->ei_each))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqEachCallAttrIterator",&self->ei_each))
      goto err;
 #elif defined(DEFINE_CALLATTRKW)
- if (DeeArg_Unpack(argc,argv,"o:_SeqEachCallAttrIteratorKw",&self->ei_each))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqEachCallAttrIteratorKw",&self->ei_each))
      goto err;
 #else
 #error "Unsupported mode"

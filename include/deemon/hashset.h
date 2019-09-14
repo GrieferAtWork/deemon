@@ -20,10 +20,13 @@
 #define GUARD_DEEMON_HASHSET_H 1
 
 #include "api.h"
+
 #include "object.h"
+
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -38,29 +41,29 @@ DECL_BEGIN
 typedef struct Dee_hashset_object DeeHashSetObject;
 
 struct Dee_hashset_item {
-    DREF DeeObject *si_key;   /* [0..1][lock(:s_lock)] Set item key. */
-    Dee_hash_t      si_hash;  /* [valis_if(si_key)][lock(:s_lock)] Hash of `si_key' (with a starting value of `0').
-                               * NOTE: Some random value when `si_key' is the dummy key. */
+	DREF DeeObject *si_key;   /* [0..1][lock(:s_lock)] Set item key. */
+	Dee_hash_t      si_hash;  /* [valis_if(si_key)][lock(:s_lock)] Hash of `si_key' (with a starting value of `0').
+	                           * NOTE: Some random value when `si_key' is the dummy key. */
 };
 
 struct Dee_hashset_object {
-    Dee_OBJECT_HEAD /* GC Object */
-    size_t                   s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
-    size_t                   s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
-    size_t                   s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
-                                      * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
-    struct Dee_hashset_item *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
-                                      * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
+	Dee_OBJECT_HEAD /* GC Object */
+	size_t                   s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
+	size_t                   s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
+	size_t                   s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
+	                                  * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
+	struct Dee_hashset_item *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
+	                                  * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t             s_lock; /* Lock used for accessing this set. */
+	Dee_rwlock_t             s_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
-    Dee_WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 };
 
 /* The main `HashSet' container class. */
 DDATDEF DeeTypeObject DeeHashSet_Type;
-#define DeeHashSet_Check(ob)       DeeObject_InstanceOf(ob,&DeeHashSet_Type)
-#define DeeHashSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob,&DeeHashSet_Type)
+#define DeeHashSet_Check(ob)       DeeObject_InstanceOf(ob, &DeeHashSet_Type)
+#define DeeHashSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeHashSet_Type)
 
 #define DeeHashSet_New()      DeeObject_NewDefault(&DeeHashSet_Type)
 DFUNDEF DREF DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
@@ -91,7 +94,7 @@ DFUNDEF DREF DeeObject *DCALL DeeHashSet_UnifyString(DeeObject *__restrict self,
  *                    even ones being keys and odd ones being items.
  * @param: num_items: The number of items passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/DREF DeeObject **__restrict items);
+DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **__restrict items);
 
 /* The basic HashSet item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
@@ -139,7 +142,7 @@ DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*i
 #define DeeHashSet_LockEndWrite(x)   rwlock_endwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
 #define DeeHashSet_LockEndRead(x)    rwlock_endread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
 #define DeeHashSet_LockEnd(x)        rwlock_end(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#else
+#else /* !CONFIG_NO_THREADS */
 #define DeeHashSet_LockReading(x)          1
 #define DeeHashSet_LockWriting(x)          1
 #define DeeHashSet_LockTryread(x)          1
@@ -152,7 +155,7 @@ DFUNDEF DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*i
 #define DeeHashSet_LockEndWrite(x)   (void)0
 #define DeeHashSet_LockEndRead(x)    (void)0
 #define DeeHashSet_LockEnd(x)        (void)0
-#endif
+#endif /* CONFIG_NO_THREADS */
 
 DECL_END
 

@@ -366,7 +366,7 @@ done:
 }
 PUBLIC DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
-                               /*inherit(on_success)*/DREF DeeObject **__restrict objv) {
+                               /*inherit(on_success)*/ DREF DeeObject **__restrict objv) {
  DREF List *result;
  result = DeeGCObject_MALLOC(List);
  if unlikely(!result) goto done;
@@ -413,7 +413,7 @@ err_r:
 
 
 INTERN DREF DeeObject *DCALL
-DeeList_Concat(/*inherit(on_success)*/DREF DeeObject *__restrict self,
+DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                DeeObject *__restrict sequence) {
  DREF DeeObject *result;
  size_t fast_seqlen;
@@ -440,8 +440,8 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL
-DeeList_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
-                        /*inherit(on_success)*/DREF DeeObject **__restrict argv) {
+DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
+                        /*inherit(on_success)*/ DREF DeeObject **__restrict argv) {
  DREF List *result;
  if (!DeeObject_IsShared(self)) {
   size_t req_alloc;
@@ -1063,7 +1063,7 @@ PRIVATE int DCALL
 list_init(List *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *sequence; DeeObject *filler = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:List",&sequence,&filler))
+ if (DeeArg_Unpack(argc, argv,"o|o:List",&sequence,&filler))
      goto err;
  if (filler || DeeInt_Check(sequence)) {
   size_t list_size;
@@ -2142,7 +2142,7 @@ list_append(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  /* Optimize for the case of a single object to-be appended. */
  if (likely(argc == 1) ? DeeList_Append((DeeObject *)self,argv[0])
-                       : DeeList_AppendVector((DeeObject *)self,argc,argv))
+                       : DeeList_AppendVector((DeeObject *)self,argc, argv))
      return NULL;
  return_none;
 }
@@ -2151,7 +2151,7 @@ PRIVATE DREF DeeObject *DCALL
 list_extend(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *extension;
- if (DeeArg_Unpack(argc,argv,"o:extend",&extension) ||
+ if (DeeArg_Unpack(argc, argv,"o:extend",&extension) ||
      DeeList_AppendSequence((DeeObject *)self,extension))
      return NULL;
  return_none;
@@ -2161,7 +2161,7 @@ PRIVATE DREF DeeObject *DCALL
 list_insert(List *__restrict self, size_t argc,
             DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *item;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_insert_kwlist,"Iuo:insert",&index,&item) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_insert_kwlist,"Iuo:insert",&index,&item) ||
      DeeList_Insert((DeeObject *)self,index,item))
      return NULL;
  return_none;
@@ -2170,7 +2170,7 @@ PRIVATE DREF DeeObject *DCALL
 list_insertall(List *__restrict self, size_t argc,
                DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *items;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_insertall_kwlist,"Ido:insertall",&index,&items) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_insertall_kwlist,"Ido:insertall",&index,&items) ||
      DeeList_InsertSequence((DeeObject *)self,index,items))
      return NULL;
  return_none;
@@ -2180,7 +2180,7 @@ list_removeif(List *__restrict self, size_t argc,
               DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *should;
  size_t result,start = 0,end = (size_t)-1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_removeif_kwlist,"o|IdId:removeif",&should,&start,&end))
      goto err;
  result = DeeList_RemoveIf(self,should,start,end);
  if unlikely(result == (size_t)-1)
@@ -2193,7 +2193,7 @@ PRIVATE DREF DeeObject *DCALL
 list_insertiter_deprecated(List *__restrict self, size_t argc,
                            DeeObject **__restrict argv) {
  size_t index; DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"Ido:insert_iter",&index,&seq) ||
+ if (DeeArg_Unpack(argc, argv,"Ido:insert_iter",&index,&seq) ||
      DeeList_InsertIterator((DeeObject *)self,index,seq))
      return NULL;
  return_none;
@@ -2203,7 +2203,7 @@ PRIVATE DREF DeeObject *DCALL
 list_erase(List *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
  size_t index,count = 1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_erase_kwlist,"Iu|Iu:erase",&index,&count))
      return NULL;
  count = DeeList_Erase((DeeObject *)self,index,count);
  if unlikely(count == (size_t)-1) return NULL;
@@ -2214,7 +2214,7 @@ PRIVATE DREF DeeObject *DCALL
 list_xch(List *__restrict self, size_t argc,
          DeeObject **__restrict argv, DeeObject *kw) {
  size_t index; DeeObject *value;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_xch_kwlist,"Iuo:xch",&index,&value))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_xch_kwlist,"Iuo:xch",&index,&value))
      goto err;
  return list_nsi_xch(self,index,value);
 err:
@@ -2225,7 +2225,7 @@ PRIVATE DREF DeeObject *DCALL
 list_pop(List *__restrict self, size_t argc,
          DeeObject **__restrict argv, DeeObject *kw) {
  dssize_t index = -1;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_pop_kwlist,"|Id:pop",&index))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_pop_kwlist,"|Id:pop",&index))
      return NULL;
  return DeeList_Pop((DeeObject *)self,index);
 }
@@ -2233,7 +2233,7 @@ list_pop(List *__restrict self, size_t argc,
 PRIVATE DREF DeeObject *DCALL
 list_clear(List *__restrict self, size_t argc,
            DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":clear"))
+ if (DeeArg_Unpack(argc, argv,":clear"))
      return NULL;
  DeeList_Clear((DeeObject *)self);
  return_none;
@@ -2248,7 +2248,7 @@ list_clear(List *__restrict self, size_t argc,
 PRIVATE DREF DeeObject *DCALL
 list_sizeof(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      return NULL;
  return DeeInt_NewSize(sizeof(List) +
                       (WEAK_READSIZE(self) * sizeof(DeeObject *)));
@@ -2452,7 +2452,7 @@ PRIVATE DREF DeeObject *DCALL
 list_pushfront(List *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *item;
- if (DeeArg_Unpack(argc,argv,"o:pushfront",&item) ||
+ if (DeeArg_Unpack(argc, argv,"o:pushfront",&item) ||
      DeeList_Insert((DeeObject *)self,0,item))
      goto err;
  return_none;
@@ -2463,7 +2463,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 list_popfront(List *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":popfront"))
+ if (DeeArg_Unpack(argc, argv,":popfront"))
      goto err;
  return DeeList_Pop((DeeObject *)self,0);
 err:
@@ -2472,7 +2472,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 list_popback(List *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":popback"))
+ if (DeeArg_Unpack(argc, argv,":popback"))
      goto err;
  return DeeList_Pop((DeeObject *)self,-1);
 err:
@@ -2482,7 +2482,7 @@ PRIVATE DREF DeeObject *DCALL
 list_reserve(List *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  size_t size;
- if (DeeArg_Unpack(argc,argv,"Iu:reserve",&size))
+ if (DeeArg_Unpack(argc, argv,"Iu:reserve",&size))
      goto err;
  DeeList_LockWrite(self);
  if (size > self->l_alloc) {
@@ -2503,7 +2503,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 list_shrink(List *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":shrink"))
+ if (DeeArg_Unpack(argc, argv,":shrink"))
      goto err;
  list_do_shrink(self);
  return_none;
@@ -2528,7 +2528,7 @@ DeeList_Reverse(DeeObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 list_reverse(List *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":reverse"))
+ if (DeeArg_Unpack(argc, argv,":reverse"))
      return NULL;
  DeeList_Reverse((DeeObject *)self);
  return_none;
@@ -2637,7 +2637,7 @@ PRIVATE DREF DeeObject *DCALL
 list_sort(List *__restrict self, size_t argc,
           DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sort",&key))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_sort_kwlist,"|o:sort",&key))
      goto err;
  if (DeeNone_Check(key))
      key = NULL;
@@ -2651,7 +2651,7 @@ PRIVATE DREF DeeObject *DCALL
 list_sorted(List *__restrict self, size_t argc,
             DeeObject **__restrict argv, DeeObject *kw) {
  DeeObject *key = NULL;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_sort_kwlist,"|o:sorted",&key))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_sort_kwlist,"|o:sorted",&key))
      goto err;
  if (DeeNone_Check(key))
      key = NULL;
@@ -2665,7 +2665,7 @@ PRIVATE DREF DeeObject *DCALL
 list_resize(List *__restrict self, size_t argc,
             DeeObject **__restrict argv, DeeObject *kw) {
  size_t newsize; DeeObject *filler = Dee_None;
- if (DeeArg_UnpackKw(argc,argv,kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
+ if (DeeArg_UnpackKw(argc, argv, kw,seq_resize_kwlist,"Iu|o:resize",&newsize,&filler))
      goto err;
 again:
  DeeList_LockWrite(self);
@@ -3709,7 +3709,7 @@ PRIVATE int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->li_index = 0;
- if (DeeArg_Unpack(argc,argv,"o|Iu:_ListIterator",&self->li_list,&self->li_index))
+ if (DeeArg_Unpack(argc, argv,"o|Iu:_ListIterator",&self->li_list,&self->li_index))
      goto err;
  if (DeeObject_AssertType((DeeObject *)self->li_list,&DeeList_Type))
      goto err;

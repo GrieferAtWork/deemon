@@ -43,9 +43,9 @@ function write_page_tail(fp) {
 }
 function escape_html(text) {
 	return text
-		.replace("<","&lt;")
-		.replace(">","&gt;")
-		.replace("\n","<br />\r\n");
+		.replace("<", "&lt;")
+		.replace(">", "&gt;")
+		.replace("\n", "<br />\r\n");
 }
 
 global doc_cache = Dict();
@@ -72,16 +72,16 @@ function print_typeref(fp: File, t: TypeRef) {
 function print_typeexpr(fp: File, t: TypeExpr) {
 	switch (t.kind) {
 	case "E":
-		return print_typeref(fp,t.Etyperef);
+		return print_typeref(fp, t.Etyperef);
 	case "C":
-		print_typeexpr(fp,t.Ccelltype);
+		print_typeexpr(fp, t.Ccelltype);
 		fp << " with ";
-		print_typeexpr(fp,t.Citemtype);
+		print_typeexpr(fp, t.Citemtype);
 		break;
 	case "T":
 		if (#t.Ttypes == 1) {
 			fp << "(";
-			print_typeexpr(fp,t.Ttypes[0]);
+			print_typeexpr(fp, t.Ttypes[0]);
 			fp << ",)";
 		} else {
 			fp << "(";
@@ -89,7 +89,7 @@ function print_typeexpr(fp: File, t: TypeExpr) {
 			for (local x: t.Ttypes) {
 				if (!is_first) fp << ",";
 				is_first = false;
-				print_typeexpr(fp,x);
+				print_typeexpr(fp, x);
 			}
 			fp << ")";
 		}
@@ -99,7 +99,7 @@ function print_typeexpr(fp: File, t: TypeExpr) {
 		for (local x: t.Xtypes) {
 			if (!is_first) fp << " | ";
 			is_first = false;
-			print_typeexpr(fp,x);
+			print_typeexpr(fp, x);
 		}
 	}	break;
 	case "S":
@@ -146,11 +146,11 @@ function print_decl_params(fp: File, decl: Declaration) {
 			else if (par.isoptional)
 				fp << "?";
 			fp << ": ";
-			print_typeexpr(fp,par.typ);
+			print_typeexpr(fp, par.typ);
 			local def = par.defexpr;
 			if (def !is none) {
 				fp << " = ";
-				print_expr(fp,def);
+				print_expr(fp, def);
 			}
 		}
 		fp << ")";
@@ -158,7 +158,7 @@ function print_decl_params(fp: File, decl: Declaration) {
 	local ret = decl.ret;
 	if (decl.istypeexplicit || !ret.isnone) {
 		fp << ": ";
-		print_typeexpr(fp,ret);
+		print_typeexpr(fp, ret);
 	}
 }
 
@@ -170,7 +170,7 @@ function print_text(fp: File, t: TextSegment) {
 
 function get_module_page(fp: File, path: {string...}) {
 	local d = get_doc_path("/".join(path));
-	write_page_head(fp,d.prettypath);
+	write_page_head(fp, d.prettypath);
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>";
@@ -216,10 +216,10 @@ function get_module_page(fp: File, path: {string...}) {
 				fp << pretty_name;
 				if (!pretty_name[#pretty_name-1].issymcont())
 					fp << " ";
-				print_decl_params(fp,seg);
+				print_decl_params(fp, seg);
 				fp << "</code></div>\r\n";
 			} else {
-				print_text(fp,seg);
+				print_text(fp, seg);
 			}
 		}
 	}
@@ -232,7 +232,7 @@ function get_module_page(fp: File, path: {string...}) {
 		local child_link = "/modules" + child.path;
 		local pretty_name = child.name;
 		local has_descls = false;
-		//TODO:local tooltip = get_tooltip_text(d,text);
+		//TODO:local tooltip = get_tooltip_text(d, text);
 		for (local d: child.decls) {
 			has_descls = true;
 			fp << "<tr><td>" << child.kind << "</td><td><div><code>";
@@ -246,7 +246,7 @@ function get_module_page(fp: File, path: {string...}) {
 			//TODO:}
 			if (!pretty_name[#pretty_name-1].issymcont())
 				fp << " ";
-			print_decl_params(fp,d);
+			print_decl_params(fp, d);
 			fp << "</code></div></td></tr>\r\n";
 		}
 		if (!has_descls) {
@@ -263,7 +263,7 @@ function ls_modules_path(p: string, prefix: string, show_all: bool = false): {st
 	import fs;
 	try {
 		for (local f: fs.dir(p)) {
-			local path = fs.joinpath(p,f);
+			local path = fs.joinpath(p, f);
 			if (f.startswith("_") && !show_all)
 				continue; /* Hidden symbol (e.g. `_codecs') */
 			if (fs.stat.isdir(path)) {
@@ -271,7 +271,7 @@ function ls_modules_path(p: string, prefix: string, show_all: bool = false): {st
 				if (f == "include" && !show_all)
 					continue;
 				local new_prefix = "{}{}.".format({ prefix, f });
-				for (local x: ls_modules_path(path,prefix))
+				for (local x: ls_modules_path(path, prefix))
 					yield new_prefix + x;
 				continue;
 			}
@@ -296,7 +296,7 @@ function ls_modules(): {string...} {
 }
 
 function get_modules_list(fp: File) {
-	write_page_head(fp,"Modules");
+	write_page_head(fp, "Modules");
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
@@ -313,7 +313,7 @@ function get_modules_list(fp: File) {
 }
 
 function get_home_page(fp: File) {
-	write_page_head(fp,"Home");
+	write_page_head(fp, "Home");
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
@@ -332,7 +332,7 @@ function get_page(fp: File, path: string) {
 		return get_home_page(fp);
 	if (path[0] == "modules") {
 		if (#path >= 2) {
-			return get_module_page(fp,path[1:]);
+			return get_module_page(fp, path[1:]);
 		}
 		return get_modules_list(fp);
 	}
@@ -341,7 +341,7 @@ function get_page(fp: File, path: string) {
 
 
 function ClientThreadMain(con) {
-	print "New connection:",con;
+	print "New connection:", con;
 	try {
 		try {
 			try for (;;) {
@@ -352,19 +352,19 @@ function ClientThreadMain(con) {
 				local fp = File.Writer();
 				local protocol = command[#command-8:];
 				if (!command.startswith("GET") ||
-				     protocol !in ["HTTP/1.1","HTTP/1.0"]) {
-					print "Bad command:",repr command;
+				     protocol !in ["HTTP/1.1", "HTTP/1.0"]) {
+					print "Bad command:", repr command;
 					fp << protocol << " 400 Bad Request\r\n";
 				} else {
 					command = command[3:#command-8].strip();
 					local content;
 					local content_type = "text/html";
 					if (command == "/style.css") {
-						content = File.open(fs.headof(__FILE__) + "/style.css","r").read();
+						content = File.open(fs.headof(__FILE__) + "/style.css", "r").read();
 						content_type = "text/css";
 					} else {
 						content = File.Writer();
-						get_page(content,command);
+						get_page(content, command);
 						content = content.string.encode("utf-8");
 					}
 					fp << protocol << " 200 OK\r\n"
@@ -383,7 +383,7 @@ function ClientThreadMain(con) {
 			} catch (e...) {
 				local err_out = File.Writer();
 				local err_content = File.Writer();
-				write_page_head(err_content,e);
+				write_page_head(err_content, e);
 				err_content <<
 					"<main>\r\n"
 					"<h2>DOC Server crashed</h2><br />"
@@ -395,9 +395,9 @@ function ClientThreadMain(con) {
 						<< "</b>: ";
 				}
 				err_content
-					<< (e is string ? e : repr e).replace("\n","<br />\r\n")
+					<< (e is string ? e : repr e).replace("\n", "<br />\r\n")
 					<< "<hr>"
-					<< repr(Traceback.current).replace("\n","<br />\r\n")
+					<< repr(Traceback.current).replace("\n", "<br />\r\n")
 					<< "<hr></main>\r\n";
 				write_page_tail(err_content);
 				err_content = err_content.string.encode("utf-8");
@@ -412,7 +412,7 @@ function ClientThreadMain(con) {
 			}
 		} finally {
 			con.close();
-			print "Disconnected:",con;
+			print "Disconnected:", con;
 		}
 	} catch (e...) {
 		print "Client thread crashed:";
@@ -426,10 +426,10 @@ function ClientThreadMain(con) {
 #ifdef __MAIN__
 local s;
 try {
-	s = socket("INET6",none,none);
+	s = socket("INET6", none, none);
 	s.bind("[::]:8080");
 } catch (...) {
-	s = socket("INET",none,none);
+	s = socket("INET", none, none);
 	s.bind("0.0.0.0:8080");
 	print "Cannot use IPv6 to run server (using IPv4)";
 }
@@ -444,7 +444,7 @@ print;
 try {
 	for (;;) {
 		local con = s.accept();
-		local th = Thread(ClientThreadMain,pack con);
+		local th = Thread(ClientThreadMain, pack con);
 		th.start();
 		th.detach();
 	}

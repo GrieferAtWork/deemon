@@ -7,6 +7,7 @@
 /.vs/*.sdf
 /.vs/*.suo
 /.vs/*.opensdf
+/.vs/.vs
 *.exe
 *.exp
 *.lib

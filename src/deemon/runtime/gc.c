@@ -1212,7 +1212,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_collect(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **__restrict argv) {
  size_t max = (size_t)-1,result;
- if (DeeArg_Unpack(argc,argv,"|Iu:collect",&max))
+ if (DeeArg_Unpack(argc, argv,"|Iu:collect",&max))
      goto err;
  result = DeeGC_Collect(max);
  return DeeInt_NewSize(result);
@@ -1224,7 +1224,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_referred(DeeObject *__restrict UNUSED(self),
                 size_t argc, DeeObject **__restrict argv) {
  DeeObject *start;
- if (DeeArg_Unpack(argc,argv,"o:referred",&start))
+ if (DeeArg_Unpack(argc, argv,"o:referred",&start))
      goto err;
  return (DREF DeeObject *)DeeGC_NewReferred(start);
 err:
@@ -1234,7 +1234,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_referredgc(DeeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **__restrict argv) {
  DeeObject *start;
- if (DeeArg_Unpack(argc,argv,"o:referredgc",&start))
+ if (DeeArg_Unpack(argc, argv,"o:referredgc",&start))
      goto err;
  return (DREF DeeObject *)DeeGC_NewReferredGC(start);
 err:
@@ -1245,7 +1245,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_reachable(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *start;
- if (DeeArg_Unpack(argc,argv,"o:reachable",&start))
+ if (DeeArg_Unpack(argc, argv,"o:reachable",&start))
      goto err;
  return (DREF DeeObject *)DeeGC_NewReachable(start);
 err:
@@ -1255,7 +1255,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_reachablegc(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **__restrict argv) {
  DeeObject *start;
- if (DeeArg_Unpack(argc,argv,"o:reachablegc",&start))
+ if (DeeArg_Unpack(argc, argv,"o:reachablegc",&start))
      goto err;
  return (DREF DeeObject *)DeeGC_NewReachableGC(start);
 err:
@@ -1265,7 +1265,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_referring(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *to;
- if (DeeArg_Unpack(argc,argv,"o:referring",&to))
+ if (DeeArg_Unpack(argc, argv,"o:referring",&to))
      goto err;
  return (DREF DeeObject *)DeeGC_NewGCReferred(to);
 err:
@@ -1275,7 +1275,7 @@ PRIVATE DREF DeeObject *DCALL
 gcenum_isreferring(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **__restrict argv) {
  DeeObject *from,*to;
- if (DeeArg_Unpack(argc,argv,"oo:isreferring",&from,&to))
+ if (DeeArg_Unpack(argc, argv,"oo:isreferring",&from,&to))
      goto err;
  return_bool(DeeGC_ReferredBy(from,to));
 err:

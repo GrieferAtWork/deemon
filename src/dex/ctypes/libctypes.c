@@ -140,7 +140,7 @@ PRIVATE DREF DeeObject *DCALL
 f_ctypes_sizeof(size_t argc, DeeObject **__restrict argv) {
  DeeSTypeObject *type;
  DeeObject *arg; size_t result;
- if (DeeArg_Unpack(argc,argv,"o:sizeof",&arg))
+ if (DeeArg_Unpack(argc, argv,"o:sizeof",&arg))
      goto err;
  if (DeeStruct_Check(arg))
   type = (DeeSTypeObject *)Dee_TYPE(arg);
@@ -161,7 +161,7 @@ PRIVATE DREF DeeObject *DCALL
 f_ctypes_alignof(size_t argc, DeeObject **__restrict argv) {
  DeeSTypeObject *type;
  DeeObject *arg; size_t result;
- if (DeeArg_Unpack(argc,argv,"o:alignof",&arg))
+ if (DeeArg_Unpack(argc, argv,"o:alignof",&arg))
      goto err;
  if (DeeStruct_Check(arg))
   type = (DeeSTypeObject *)Dee_TYPE(arg);
@@ -180,7 +180,7 @@ PRIVATE DREF DeeObject *DCALL
 f_ctypes_intfor(size_t argc, DeeObject **__restrict argv) {
  DeeSTypeObject *result = NULL;
  bool return_signed = true; size_t intsize;
- if (DeeArg_Unpack(argc,argv,"o|b:intfor",&intsize,&return_signed))
+ if (DeeArg_Unpack(argc, argv,"o|b:intfor",&intsize,&return_signed))
      goto err;
  switch (intsize) {
  case 1: result = return_signed ? &DeeCInt8_Type : &DeeCUInt8_Type; break;
@@ -228,21 +228,21 @@ err:
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_bswap16(size_t argc, DeeObject **__restrict argv) {
  uint16_t i;
- if (DeeArg_Unpack(argc,argv,"I16u:bswap16",&i))
+ if (DeeArg_Unpack(argc, argv,"I16u:bswap16",&i))
      return NULL;
  return int_newu16(BSWAP16(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_bswap32(size_t argc, DeeObject **__restrict argv) {
  uint32_t i;
- if (DeeArg_Unpack(argc,argv,"I32u:bswap32",&i))
+ if (DeeArg_Unpack(argc, argv,"I32u:bswap32",&i))
      return NULL;
  return int_newu32(BSWAP32(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_bswap64(size_t argc, DeeObject **__restrict argv) {
  uint64_t i;
- if (DeeArg_Unpack(argc,argv,"I64u:bswap64",&i))
+ if (DeeArg_Unpack(argc, argv,"I64u:bswap64",&i))
      return NULL;
  return int_newu64(BSWAP64(i));
 }
@@ -250,21 +250,21 @@ f_ctypes_bswap64(size_t argc, DeeObject **__restrict argv) {
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_leswap16(size_t argc, DeeObject **__restrict argv) {
  uint16_t i;
- if (DeeArg_Unpack(argc,argv,"I16u:leswap16",&i))
+ if (DeeArg_Unpack(argc, argv,"I16u:leswap16",&i))
      return NULL;
  return int_newu16(LESWAP16(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_leswap32(size_t argc, DeeObject **__restrict argv) {
  uint32_t i;
- if (DeeArg_Unpack(argc,argv,"I32u:leswap32",&i))
+ if (DeeArg_Unpack(argc, argv,"I32u:leswap32",&i))
      return NULL;
  return int_newu32(LESWAP32(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_leswap64(size_t argc, DeeObject **__restrict argv) {
  uint64_t i;
- if (DeeArg_Unpack(argc,argv,"I64u:leswap64",&i))
+ if (DeeArg_Unpack(argc, argv,"I64u:leswap64",&i))
      return NULL;
  return int_newu64(LESWAP64(i));
 }
@@ -272,21 +272,21 @@ f_ctypes_leswap64(size_t argc, DeeObject **__restrict argv) {
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_beswap16(size_t argc, DeeObject **__restrict argv) {
  uint16_t i;
- if (DeeArg_Unpack(argc,argv,"I16u:beswap16",&i))
+ if (DeeArg_Unpack(argc, argv,"I16u:beswap16",&i))
      return NULL;
  return int_newu16(BESWAP16(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_beswap32(size_t argc, DeeObject **__restrict argv) {
  uint32_t i;
- if (DeeArg_Unpack(argc,argv,"I32u:beswap32",&i))
+ if (DeeArg_Unpack(argc, argv,"I32u:beswap32",&i))
      return NULL;
  return int_newu32(BESWAP32(i));
 }
 PRIVATE DREF DeeObject *DCALL
 f_ctypes_beswap64(size_t argc, DeeObject **__restrict argv) {
  uint64_t i;
- if (DeeArg_Unpack(argc,argv,"I64u:beswap64",&i))
+ if (DeeArg_Unpack(argc, argv,"I64u:beswap64",&i))
      return NULL;
  return int_newu64(BESWAP64(i));
 }
@@ -414,7 +414,7 @@ capi_errno_del(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
 PRIVATE DREF DeeObject *DCALL
 capi_errno_set(size_t argc, DeeObject **__restrict argv) {
  int newval;
- if (DeeArg_Unpack(argc,argv,"d:errno.setter",&newval))
+ if (DeeArg_Unpack(argc, argv,"d:errno.setter",&newval))
      goto err;
  errno = newval;
  return_none;
@@ -440,12 +440,12 @@ PRIVATE DREF DeeObject *DCALL
 capi_strerror(size_t argc, DeeObject **__restrict argv) {
 #if !defined(CONFIG_HAVE_ERRNO_H) || defined(CONFIG_NO_STRERROR)
  int no;
- if (DeeArg_Unpack(argc,argv,"|d:strerror",&no))
+ if (DeeArg_Unpack(argc, argv,"|d:strerror",&no))
      goto err;
  return_none;
 #else
  int no = errno; char *name;
- if (DeeArg_Unpack(argc,argv,"|d:strerror",&no))
+ if (DeeArg_Unpack(argc, argv,"|d:strerror",&no))
      goto err;
  name = strerror(no);
  if (name)

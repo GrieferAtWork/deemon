@@ -272,7 +272,7 @@ symbol_getalias(DeeCompilerSymbolObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result = NULL; struct symbol *sym;
  COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_Unpack(argc,argv,":getalias"))
+ if (DeeArg_Unpack(argc, argv,":getalias"))
      goto done;
  sym = DeeCompilerItem_VALUE(self,struct symbol);
  if likely(sym) {
@@ -297,7 +297,7 @@ symbol_setalias(DeeCompilerSymbolObject *__restrict self,
  DREF DeeObject *result = NULL; struct symbol *sym;
  DeeCompilerSymbolObject *other; struct symbol *other_sym;
  COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_Unpack(argc,argv,"o:setalias",&other) ||
+ if (DeeArg_Unpack(argc, argv,"o:setalias",&other) ||
      DeeObject_AssertTypeExact(other,&DeeCompilerSymbol_Type))
      goto done;
  if unlikely(other->ci_compiler != DeeCompiler_Current) {
@@ -343,7 +343,7 @@ done:
 PRIVATE DREF DeeObject *DCALL
 symbol_setnone(DeeCompilerSymbolObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":setnone") ||
+ if (DeeArg_Unpack(argc, argv,":setnone") ||
      symbol_delkind(self))
      return NULL;
  return_reference_((DeeObject *)self);

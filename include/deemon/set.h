@@ -20,10 +20,12 @@
 #define GUARD_DEEMON_SET_H 1
 
 #include "api.h"
-#include "object.h"
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
@@ -115,7 +117,7 @@ DDATDEF DeeObject      DeeSet_EmptyInstance;
 /* Check for a symbolic, empty set.
  * NOTE: This function isn't guarantied to capture any kind of empty set,
  *       only sets that are meant to symbolically represent any empty one. */
-#define DeeSet_CheckEmpty(x) DeeObject_InstanceOfExact(x,&DeeSet_Type)
+#define DeeSet_CheckEmpty(x) DeeObject_InstanceOfExact(x, &DeeSet_Type)
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -128,7 +130,7 @@ INTDEF int DCALL DeeSet_IsSubSet(DeeObject *__restrict lhs, DeeObject *__restric
 INTDEF int DCALL DeeSet_IsTrueSubSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
 INTDEF int DCALL DeeSet_IsSameSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
 INTDEF int DCALL DeeSet_IsDisjoint(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 #ifdef DEE_SOURCE
@@ -137,20 +139,20 @@ INTDEF int DCALL DeeSet_IsDisjoint(DeeObject *__restrict lhs, DeeObject *__restr
 
 typedef struct Dee_inverse_set_object DeeInverseSetObject;
 struct Dee_inverse_set_object {
-    /* An inverse set, that is the symbolic set containing all
-     * object, excluding those already contained within `is_set'
-     * Since such a set cannot be iterated, working with it
-     * requires some special operations, as well as special
-     * support in some places, which is why it is exposed here.
-     * In user-code, such a set is created through use of `operator ~()' */
-    Dee_OBJECT_HEAD
-    DREF DeeObject *is_set; /* [1..1][const] The underlying set. */
+	/* An inverse set, that is the symbolic set containing all
+	 * object, excluding those already contained within `is_set'
+	 * Since such a set cannot be iterated, working with it
+	 * requires some special operations, as well as special
+	 * support in some places, which is why it is exposed here.
+	 * In user-code, such a set is created through use of `operator ~()' */
+	Dee_OBJECT_HEAD
+	DREF DeeObject *is_set; /* [1..1][const] The underlying set. */
 };
 #define DeeInverseSet_SET(ob) (((DeeInverseSetObject *)Dee_REQUIRES_OBJECT(ob))->is_set)
 
 DDATDEF DeeTypeObject DeeInverseSet_Type;
-#define DeeInverseSet_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeInverseSet_Type) /* _inverseset is final */
-#define DeeInverseSet_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeInverseSet_Type)
+#define DeeInverseSet_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeInverseSet_Type) /* _inverseset is final */
+#define DeeInverseSet_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeInverseSet_Type)
 
 
 DECL_END

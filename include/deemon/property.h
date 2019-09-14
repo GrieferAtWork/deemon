@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_PROPERTY_H 1
 
 #include "api.h"
+
 #include "object.h"
 
 DECL_BEGIN
@@ -31,43 +32,43 @@ DECL_BEGIN
 typedef struct Dee_property_object DeePropertyObject;
 
 struct Dee_property_object {
-    /* A wrapper object describing an instance
-     * property when accessed through the class:
-     * >> class MyClass {
-     * >>     private foo_value = 42;
-     * >>     
-     * >>     foo = {
-     * >>         get() {
-     * >>             print "In getter";
-     * >>             return foo_value;
-     * >>         }
-     * >>         set(v) {
-     * >>             print "In setter";
-     * >>             foo_value = v;
-     * >>         }
-     * >>     }
-     * >> }
-     * >>
-     * >> local prop = MyClass.foo; // This is a `struct Dee_property_object'
-     * >> print repr prop;          // `property { get = @thiscall function(), set = @thiscall function(v) }'
-     * >> local inst = MyClass();
-     * >> print inst.foo;           // `In getter' `42'
-     * >> print prop.get(inst);     // `In getter' `42'
-     * Note that property wrappers are always unbound and not actually
-     * used when accessing instance members through normal means.
-     * They are merely used as syntactical sugar to allow access to
-     * public instance properties when only given the class that
-     * implements that property.
-     */
-    Dee_OBJECT_HEAD
-    DREF DeeObject *p_get; /* [0..1][const] Getter callback. */
-    DREF DeeObject *p_del; /* [0..1][const] Delete callback. */
-    DREF DeeObject *p_set; /* [0..1][const] Setter callback. */
+	/* A wrapper object describing an instance
+	 * property when accessed through the class:
+	 * >> class MyClass {
+	 * >>     private foo_value = 42;
+	 * >>     
+	 * >>     foo = {
+	 * >>         get() {
+	 * >>             print "In getter";
+	 * >>             return foo_value;
+	 * >>         }
+	 * >>         set(v) {
+	 * >>             print "In setter";
+	 * >>             foo_value = v;
+	 * >>         }
+	 * >>     }
+	 * >> }
+	 * >>
+	 * >> local prop = MyClass.foo; // This is a `struct Dee_property_object'
+	 * >> print repr prop;          // `property { get = @thiscall function(), set = @thiscall function(v) }'
+	 * >> local inst = MyClass();
+	 * >> print inst.foo;           // `In getter' `42'
+	 * >> print prop.get(inst);     // `In getter' `42'
+	 * Note that property wrappers are always unbound and not actually
+	 * used when accessing instance members through normal means.
+	 * They are merely used as syntactical sugar to allow access to
+	 * public instance properties when only given the class that
+	 * implements that property.
+	 */
+	Dee_OBJECT_HEAD
+	DREF DeeObject *p_get; /* [0..1][const] Getter callback. */
+	DREF DeeObject *p_del; /* [0..1][const] Delete callback. */
+	DREF DeeObject *p_set; /* [0..1][const] Setter callback. */
 };
 
 DDATDEF DeeTypeObject DeeProperty_Type;
-#define DeeProperty_Check(ob)      DeeObject_InstanceOf(ob,&DeeProperty_Type)
-#define DeeProperty_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeProperty_Type)
+#define DeeProperty_Check(ob)      DeeObject_InstanceOf(ob, &DeeProperty_Type)
+#define DeeProperty_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeProperty_Type)
 
 DECL_END
 

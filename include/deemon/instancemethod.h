@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_INSTANCEMETHOD_H 1
 
 #include "api.h"
+
 #include "object.h"
 
 DECL_BEGIN
@@ -32,21 +33,23 @@ DECL_BEGIN
 typedef struct Dee_instance_method DeeInstanceMethodObject;
 
 struct Dee_instance_method {
-    Dee_OBJECT_HEAD
-    DREF DeeObject *im_func; /* [1..1] The function to-be called. */
-    DREF DeeObject *im_this; /* [1..1] The this argument. */
+	Dee_OBJECT_HEAD
+	DREF DeeObject *im_func; /* [1..1] The function to-be called. */
+	DREF DeeObject *im_this; /* [1..1] The this argument. */
 };
 #define DeeInstanceMethod_FUNC(x) ((DeeInstanceMethodObject *)Dee_REQUIRES_OBJECT(x))->im_func
 #define DeeInstanceMethod_THIS(x) ((DeeInstanceMethodObject *)Dee_REQUIRES_OBJECT(x))->im_this
 
 DDATDEF DeeTypeObject DeeInstanceMethod_Type;
-#define DeeInstanceMethod_Check(ob)      DeeObject_InstanceOf(ob,&DeeInstanceMethod_Type)
-#define DeeInstanceMethod_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeInstanceMethod_Type)
+#define DeeInstanceMethod_Check(ob)      DeeObject_InstanceOf(ob, &DeeInstanceMethod_Type)
+#define DeeInstanceMethod_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeInstanceMethod_Type)
 
-#define Dee_DEFINE_INSTANCEMETHOD(name,func,thisarg) \
-DeeInstanceMethodObject name = { \
-    Dee_OBJECT_HEAD_INIT(&DeeInstanceMethod_Type), \
-   (DREF DeeObject *)(func), (DREF DeeObject *)(thisarg) }
+#define Dee_DEFINE_INSTANCEMETHOD(name, func, thisarg) \
+	DeeInstanceMethodObject name = {                   \
+		Dee_OBJECT_HEAD_INIT(&DeeInstanceMethod_Type), \
+		(DREF DeeObject *)(func),                      \
+		(DREF DeeObject *)(thisarg)                    \
+	}
 
 
 /* Create a new instance method.

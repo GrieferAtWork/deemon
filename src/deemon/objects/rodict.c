@@ -65,7 +65,7 @@ INTERN int DCALL
 rodictiterator_init(DictIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  Dict *Dict;
- if (DeeArg_Unpack(argc,argv,"o:_RoDictIterator",&Dict) ||
+ if (DeeArg_Unpack(argc, argv,"o:_RoDictIterator",&Dict) ||
      DeeObject_AssertTypeExact((DeeObject *)Dict,&DeeRoDict_Type))
      return -1;
  self->di_dict = Dict;
@@ -351,8 +351,8 @@ done:
 PRIVATE int DCALL
 insert(DREF Dict *__restrict self, size_t mask,
        size_t *__restrict pelemcount,
-       /*inherit(always)*/DREF DeeObject *__restrict key,
-       /*inherit(always)*/DREF DeeObject *__restrict value) {
+       /*inherit(always)*/ DREF DeeObject *__restrict key,
+       /*inherit(always)*/ DREF DeeObject *__restrict value) {
  size_t i,perturb,hash; struct rodict_item *item;
  hash    = DeeObject_Hash(key);
  perturb = i = hash & mask;
@@ -793,7 +793,7 @@ PRIVATE DREF DeeObject *DCALL
 rodict_get(Dict *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*def = Dee_None;
- if (DeeArg_Unpack(argc,argv,"o|o:get",&key,&def))
+ if (DeeArg_Unpack(argc, argv,"o|o:get",&key,&def))
      goto err;
  return DeeRoDict_GetItemDef((DeeObject *)self,key,def);
 err:
@@ -803,7 +803,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 rodict_sizeof(Dict *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  return DeeInt_NewSize(offsetof(Dict,rd_elem) +
                      ((self->rd_mask + 1) *
@@ -880,7 +880,7 @@ err:
 PRIVATE DREF Dict *DCALL
 rodict_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:_RoDict",&seq))
+ if (DeeArg_Unpack(argc, argv,"o:_RoDict",&seq))
      return NULL;
  return (DREF Dict *)DeeRoDict_FromSequence(seq);
 }

@@ -49,7 +49,7 @@ PRIVATE int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  self->sem_count = 0;
- return DeeArg_Unpack(argc,argv,"|Iu:semaphore",&self->sem_count);
+ return DeeArg_Unpack(argc, argv,"|Iu:semaphore",&self->sem_count);
 }
 PRIVATE int DCALL
 sema_enter(Semaphore *__restrict self) {
@@ -104,7 +104,7 @@ PRIVATE DREF DeeObject *DCALL
 sema_post(Semaphore *__restrict self, size_t argc,
           DeeObject **__restrict argv) {
  size_t count = 1;
- if (DeeArg_Unpack(argc,argv,"|Iu:post",&count) ||
+ if (DeeArg_Unpack(argc, argv,"|Iu:post",&count) ||
      sema_leave(self,count))
      return NULL;
  return_none;
@@ -113,7 +113,7 @@ sema_post(Semaphore *__restrict self, size_t argc,
 PRIVATE DREF DeeObject *DCALL
 sema_wait(Semaphore *__restrict self, size_t argc,
           DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":wait") ||
+ if (DeeArg_Unpack(argc, argv,":wait") ||
      sema_enter(self))
      return NULL;
  return_none;
@@ -121,7 +121,7 @@ sema_wait(Semaphore *__restrict self, size_t argc,
 PRIVATE DREF DeeObject *DCALL
 sema_trywait(Semaphore *__restrict self, size_t argc,
              DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":trywait"))
+ if (DeeArg_Unpack(argc, argv,":trywait"))
      goto err;
 #ifdef CONFIG_NO_THREADS
  if (!self->sem_count) return_false;
@@ -145,7 +145,7 @@ PRIVATE DREF DeeObject *DCALL
 sema_timedwait(Semaphore *__restrict self, size_t argc,
                DeeObject **__restrict argv) {
  uint64_t timeout;
- if (DeeArg_Unpack(argc,argv,"I64u:timedwait",&timeout))
+ if (DeeArg_Unpack(argc, argv,"I64u:timedwait",&timeout))
      goto err;
 #ifdef CONFIG_NO_THREADS
  if (!self->sem_count) return_false;
@@ -316,7 +316,7 @@ PRIVATE struct type_with mutex_with = {
 PRIVATE DREF DeeObject *DCALL
 mutex_acquire(Mutex *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":acquire") ||
+ if (DeeArg_Unpack(argc, argv,":acquire") ||
      mutex_enter(self))
      return NULL;
  return_none;
@@ -324,7 +324,7 @@ mutex_acquire(Mutex *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 mutex_tryacquire(Mutex *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":tryacquire"))
+ if (DeeArg_Unpack(argc, argv,":tryacquire"))
      goto err;
 #ifndef CONFIG_NO_THREADS
  {
@@ -346,7 +346,7 @@ PRIVATE DREF DeeObject *DCALL
 mutex_timedacquire(Mutex *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  uint64_t timeout;
- if (DeeArg_Unpack(argc,argv,"I64u:tryacquire",&timeout))
+ if (DeeArg_Unpack(argc, argv,"I64u:tryacquire",&timeout))
      goto err;
 #ifndef CONFIG_NO_THREADS
  {
@@ -370,7 +370,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 mutex_release(Mutex *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":release") ||
+ if (DeeArg_Unpack(argc, argv,":release") ||
      mutex_leave(self))
      return NULL;
  return_none;

@@ -860,7 +860,7 @@ err_unknown_env_var(DeeObject *__restrict name) {
 }
 
 INTERN bool DCALL
-fs_hasenv(/*String*/DeeObject *__restrict name) {
+fs_hasenv(/*String*/ DeeObject *__restrict name) {
  LPWSTR wname; bool result;
  wname = (LPWSTR)DeeString_AsWide(name);
  if unlikely(!wname) {
@@ -950,7 +950,7 @@ err:
  return -1;
 }
 INTERN int DCALL
-fs_printenv(/*utf-8*/char const *__restrict name,
+fs_printenv(/*utf-8*/ char const *__restrict name,
             struct unicode_printer *__restrict printer,
             bool try_get) {
  LPWSTR buffer,wname; DWORD new_bufsize,bufsize = 256;
@@ -1045,7 +1045,7 @@ err:
  return -1;
 }
 
-INTERN DREF /*String*/DeeObject *DCALL fs_gethostname(void) {
+INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
  DWORD bufsize = MAX_COMPUTERNAME_LENGTH + 1;
  LPWSTR buffer,new_buffer;
  if (DeeThread_CheckInterrupt()) goto err;
@@ -1759,7 +1759,7 @@ PRIVATE int DCALL
 user_init(struct user_object *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *name_or_id = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:user",&name_or_id))
+ if (DeeArg_Unpack(argc, argv,"|o:user",&name_or_id))
      goto err;
  if (!name_or_id) {
   self->u_sd  = NULL;
@@ -2317,7 +2317,7 @@ PRIVATE int DCALL
 stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:stat",&path))
+ if (DeeArg_Unpack(argc, argv,"o:stat",&path))
      return -1;
  return Stat_Init(&self->st_stat,path,DOSTAT_FNORMAL);
 }
@@ -2325,7 +2325,7 @@ PRIVATE int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *path;
- if (DeeArg_Unpack(argc,argv,"o:lstat",&path))
+ if (DeeArg_Unpack(argc, argv,"o:lstat",&path))
      return -1;
  return Stat_Init(&self->st_stat,path,DOSTAT_FLSTAT);
 }
@@ -2475,7 +2475,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 stat_isdir(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isdir"))
+ if (DeeArg_Unpack(argc, argv,":isdir"))
      return NULL;
  if (self->st_stat.s_info.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
      return_true;
@@ -2485,7 +2485,7 @@ stat_isdir(DeeStatObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 stat_ischr(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":ischr"))
+ if (DeeArg_Unpack(argc, argv,":ischr"))
      return NULL;
  if (!(self->st_stat.s_info.dwFileAttributes&FILE_ATTRIBUTE_DEVICE))
        return_false;
@@ -2495,7 +2495,7 @@ stat_ischr(DeeStatObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 stat_isblk(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isblk"))
+ if (DeeArg_Unpack(argc, argv,":isblk"))
      return NULL;
  if (!(self->st_stat.s_info.dwFileAttributes&FILE_ATTRIBUTE_DEVICE))
        return_false;
@@ -2505,7 +2505,7 @@ stat_isblk(DeeStatObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 stat_isreg(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isreg"))
+ if (DeeArg_Unpack(argc, argv,":isreg"))
      return NULL;
  return_bool(!(self->st_stat.s_info.dwFileAttributes&
               (FILE_ATTRIBUTE_DEVICE|FILE_ATTRIBUTE_DIRECTORY|
@@ -2515,7 +2515,7 @@ stat_isreg(DeeStatObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 stat_isfifo(DeeStatObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isfifo"))
+ if (DeeArg_Unpack(argc, argv,":isfifo"))
      return NULL;
  return_bool(stat_get_nttype(&self->st_stat,true) == FILE_TYPE_PIPE);
 }
@@ -2523,7 +2523,7 @@ stat_isfifo(DeeStatObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 stat_islnk(DeeStatObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":islnk"))
+ if (DeeArg_Unpack(argc, argv,":islnk"))
      return NULL;
  return_bool(stat_get_nttype(&self->st_stat,true) == FILE_TYPE_PIPE);
 }
@@ -2531,7 +2531,7 @@ stat_islnk(DeeStatObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 stat_issock(DeeStatObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":issock"))
+ if (DeeArg_Unpack(argc, argv,":issock"))
      return NULL;
  return_bool(stat_get_nttype(&self->st_stat,true) == FILE_TYPE_REMOTE);
 }
@@ -2552,7 +2552,7 @@ stat_class_exists(DeeObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:exists",&path))
+ if (DeeArg_Unpack(argc, argv,"o:exists",&path))
      goto err;
  if (DeeString_Check(path)) {
   DWORD attr; /* Do a quick attribute query. */
@@ -2576,7 +2576,7 @@ stat_class_isdir(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:isdir",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isdir",&path))
      goto err;
  if (DeeString_Check(path)) {
   DWORD attr; /* Do a quick attribute query. */
@@ -2601,7 +2601,7 @@ stat_class_ischr(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:ischr",&path))
+ if (DeeArg_Unpack(argc, argv,"o:ischr",&path))
      goto err;
  error = Stat_Init(&buf,path,self == (DeeObject *)&DeeLStat_Type
                    ? DOSTAT_FTRY|DOSTAT_FLSTAT
@@ -2624,7 +2624,7 @@ stat_class_isblk(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:isblk",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isblk",&path))
      goto err;
  error = Stat_Init(&buf,path,self == (DeeObject *)&DeeLStat_Type
                    ? DOSTAT_FTRY|DOSTAT_FLSTAT
@@ -2647,7 +2647,7 @@ stat_class_isreg(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:isreg",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isreg",&path))
      goto err;
  if (DeeString_Check(path)) {
   DWORD attr; /* Do a quick attribute query. */
@@ -2681,7 +2681,7 @@ stat_class_isfifo(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:isfifo",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isfifo",&path))
      goto err;
  error = Stat_Init(&buf,path,self == (DeeObject *)&DeeLStat_Type
                    ? DOSTAT_FTRY|DOSTAT_FLSTAT
@@ -2700,7 +2700,7 @@ stat_class_islnk(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:islnk",&path))
+ if (DeeArg_Unpack(argc, argv,"o:islnk",&path))
      goto err;
  if (DeeString_Check(path)) {
   DWORD attr; /* Do a quick attribute query. */
@@ -2725,7 +2725,7 @@ stat_class_issock(DeeObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:issock",&path))
+ if (DeeArg_Unpack(argc, argv,"o:issock",&path))
      goto err;
  error = Stat_Init(&buf,path,self == (DeeObject *)&DeeLStat_Type
                    ? DOSTAT_FTRY|DOSTAT_FLSTAT
@@ -2744,7 +2744,7 @@ stat_class_ishidden(DeeObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error; Stat buf;
  if (DeeThread_CheckInterrupt()) goto err;
- if (DeeArg_Unpack(argc,argv,"o:ishidden",&path))
+ if (DeeArg_Unpack(argc, argv,"o:ishidden",&path))
      goto err;
  if (DeeString_Check(path)) {
   DWORD attr; /* Do a quick attribute query. */
@@ -2813,7 +2813,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isexe(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; bool result;
- if (DeeArg_Unpack(argc,argv,"o:isexe",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isexe",&path))
      goto err;
  if (DeeThread_CheckInterrupt()) goto err;
  if (DeeInt_Check(path))
@@ -4100,7 +4100,7 @@ dir_copy(Dir *__restrict self,
 PRIVATE int DCALL
 dir_ctor(Dir *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:dir",&self->d_path))
+ if (DeeArg_Unpack(argc, argv,"o:dir",&self->d_path))
      goto err;
  if (DeeString_Check(self->d_path)) {
   Dee_Incref(self->d_path);

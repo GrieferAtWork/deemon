@@ -116,7 +116,7 @@ libdisasm_public_printcode_f(size_t argc,
  dssize_t error; DeeObject *flags_ob = NULL;
  unsigned int flags = PCODE_FNORMAL/*|PCODE_FDDI*/;
  PRIVATE DEFINE_KWLIST(kwlist,{ K(code), K(out), K(flags), KEND });
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|oo:printcode",&code,&fp,&flags_ob))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|oo:printcode",&code,&fp,&flags_ob))
      goto err;
  if (DeeFunction_Check(code))
      code = DeeFunction_CODE(code);

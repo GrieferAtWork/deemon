@@ -66,7 +66,7 @@ INTDEF void DCALL GCSetMaker_Fini(GCSetMaker *__restrict self);
 /* @return:  1: Object was already inserted into the set.
  * @return:  0: Object was newly inserted into the set.
  * @return: -1: An allocation failed (release all locks and to collect `self->gs_err' bytes of memory) */
-INTDEF int DCALL GCSetMaker_Insert(GCSetMaker *__restrict self, /*inherit(return == 0)*/DREF DeeObject *__restrict ob);
+INTDEF int DCALL GCSetMaker_Insert(GCSetMaker *__restrict self, /*inherit(return == 0)*/ DREF DeeObject *__restrict ob);
 
 /* Remove all non-GC objects from the given set. */
 INTDEF int DCALL GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self);

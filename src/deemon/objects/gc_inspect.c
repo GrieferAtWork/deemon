@@ -356,7 +356,7 @@ GCSetMaker_Rehash(GCSetMaker *__restrict self) {
  * @return: -1: An allocation failed (release all locks and to collect `self->gs_err' bytes of memory) */
 INTERN int DCALL
 GCSetMaker_Insert(GCSetMaker *__restrict self,
-                  /*inherit(return == 0)*/DREF DeeObject *__restrict ob) {
+                  /*inherit(return == 0)*/ DREF DeeObject *__restrict ob) {
  size_t j,i,perturb;
  GCSet *set;
 again:

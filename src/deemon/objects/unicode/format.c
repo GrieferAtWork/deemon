@@ -765,7 +765,7 @@ err:
  *               providing input values to the format string. */
 INTERN dssize_t DCALL
 DeeString_Format(dformatprinter printer, void *arg,
-                 /*utf-8*/char const *__restrict format,
+                 /*utf-8*/ char const *__restrict format,
                  size_t format_len, DeeObject *__restrict args) {
  struct formatter self; dssize_t result;
  self.f_flush_start = (char *)format;

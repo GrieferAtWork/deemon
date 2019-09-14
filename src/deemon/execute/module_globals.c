@@ -85,7 +85,7 @@ PRIVATE int DCALL
 mei_init(ModuleExportsIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  ModuleExports *exports_map;
- if (DeeArg_Unpack(argc,argv,"o:_ModuleExportsIterator",&exports_map) ||
+ if (DeeArg_Unpack(argc, argv,"o:_ModuleExportsIterator",&exports_map) ||
      DeeObject_AssertTypeExact((DeeObject *)exports_map,&ModuleExports_Type))
      return -1;
  self->mei_index = 0;
@@ -297,7 +297,7 @@ me_ctor(ModuleExports *__restrict self) {
 PRIVATE int DCALL
 me_init(ModuleExports *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_ModuleExports",&self->me_module) ||
+ if (DeeArg_Unpack(argc, argv,"o:_ModuleExports",&self->me_module) ||
      DeeObject_AssertType((DeeObject *)self->me_module,&DeeModule_Type))
      return -1;
  Dee_Incref(&empty_module);
@@ -439,7 +439,7 @@ me_get_f(ModuleExports *__restrict self,
  DREF DeeObject *result; DeeObject *key;
  DeeModuleObject *module = self->me_module;
  struct module_symbol *symbol; DeeObject *defl = Dee_None;
- if (DeeArg_Unpack(argc,argv,"o|o:get",&key,&defl))
+ if (DeeArg_Unpack(argc, argv,"o|o:get",&key,&defl))
      goto err;
  if (!DeeString_Check(key))
       goto unknown_key;
@@ -634,7 +634,7 @@ PRIVATE int DCALL
 mgi_init(ModuleGlobalsIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  ModuleGlobals *globals;
- if (DeeArg_Unpack(argc,argv,"o:_ModuleGlobalsIterator",&globals) ||
+ if (DeeArg_Unpack(argc, argv,"o:_ModuleGlobalsIterator",&globals) ||
      DeeObject_AssertTypeExact((DeeObject *)globals,&ModuleGlobals_Type))
      return -1;
  self->mgi_index = 0;
@@ -756,7 +756,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 PRIVATE int DCALL
 mg_init(ModuleGlobals *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_ModuleGlobals",&self->mg_module) ||
+ if (DeeArg_Unpack(argc, argv,"o:_ModuleGlobals",&self->mg_module) ||
      DeeObject_AssertType((DeeObject *)self->mg_module,&DeeModule_Type))
      return -1;
  Dee_Incref(&empty_module);

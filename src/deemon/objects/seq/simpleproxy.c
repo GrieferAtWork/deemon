@@ -60,7 +60,7 @@ err:
 PRIVATE int DCALL
 proxy_init(SeqSimpleProxy *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,
+ if (DeeArg_Unpack(argc, argv,
                    self->ob_type == &SeqIds_Type   ? "o:_SeqIds" :
                    self->ob_type == &SeqTypes_Type ? "o:_SeqTypes" :
                                                      "o:_SeqClasses"
@@ -699,7 +699,7 @@ iter_init(SeqSimpleProxyIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  SeqSimpleProxy *seq;
  DeeTypeObject *tp;
- if (DeeArg_Unpack(argc,argv,
+ if (DeeArg_Unpack(argc, argv,
                    self->ob_type == &SeqIdsIterator_Type   ? "o:_SeqIdsIterator" :
                    self->ob_type == &SeqTypesIterator_Type ? "o:_SeqTypesIterator" :
                                                              "o:_SeqClassesIterator"

@@ -34,10 +34,10 @@ typedef struct xml_node_object XMLNodeObject;
 typedef struct xml_node_attributes_proxy XMLNodeAttributesProxy;
 
 struct xml_node_attr {
-    /*utf-8*/char const *na_name_str;    /* [0..1] Starting address of the name (`NULL' for sentinel entries / `ITER_DONE' for deleted ones) */
+    /*utf-8*/ char const *na_name_str;    /* [0..1] Starting address of the name (`NULL' for sentinel entries / `ITER_DONE' for deleted ones) */
     size_t               na_name_size;   /* Name size (in bytes). */
     dhash_t              na_name_hash;   /* Name hash. */
-    /*utf-8*/char const *na_value_start; /* [1..na_value_size] Attribute value starting pointer. */
+    /*utf-8*/ char const *na_value_start; /* [1..na_value_size] Attribute value starting pointer. */
     size_t               na_value_size;  /* Value size (in bytes). */
     DREF DeeObject      *na_owner;       /* [1..1] Some object holding references to the owner
                                           * objects for `na_name_str' and `na_value_start'. */
@@ -113,35 +113,35 @@ struct xml_node {
     XMLNode                *xn_sib_prev;   /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Previous sibling node. */
     XMLNode                *xn_sib_next;   /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Next sibling node. */
     DREF DeeObject         *xn_kind_obj;   /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_kind_str' */
-    /*utf-8*/char const    *xn_kind_str;   /* [1..1][lock(xn_lock)] XML kind name start pointer.
+    /*utf-8*/ char const    *xn_kind_str;   /* [1..1][lock(xn_lock)] XML kind name start pointer.
                                             * >> <foo bar="baz">content</foo>
                                             *     ^
                                             * NOTE: When `xn_parent' is `NULL', this field cannot be accessed, or set. */
-    /*utf-8*/char const    *xn_kind_end;   /* [1..1][lock(xn_lock)] XML kind name end pointer.
+    /*utf-8*/ char const    *xn_kind_end;   /* [1..1][lock(xn_lock)] XML kind name end pointer.
                                             * >> <foo bar="baz">content</foo>
                                             *        ^ */
     dhash_t                 xn_kind_hash;  /* [lock(xn_lock)] Hash for `xn_kind_str'. */
     struct xml_node_attributes xn_attr;    /* [lock(xn_lock)] Set of cached node attributes. */
     DREF DeeObject         *xn_attr_obj;   /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_attr_str' */
-    /*utf-8*/char const    *xn_attr_str;   /* [1..1][lock(xn_lock)] XML attribute start pointer.
+    /*utf-8*/ char const    *xn_attr_str;   /* [1..1][lock(xn_lock)] XML attribute start pointer.
                                             * >> <foo bar="baz">content</foo>
                                             *         ^ */
-    /*utf-8*/char const    *xn_attr_end;   /* [1..1][lock(xn_lock)] XML attribute end pointer.
+    /*utf-8*/ char const    *xn_attr_end;   /* [1..1][lock(xn_lock)] XML attribute end pointer.
                                             * >> <foo bar="baz">content</foo>
                                             *                  ^ */
-    /*utf-8*/char const    *xn_attr_next;  /* [1..1][lock(xn_lock)] Pointer to the next attribute that hasn't been loaded.
+    /*utf-8*/ char const    *xn_attr_next;  /* [1..1][lock(xn_lock)] Pointer to the next attribute that hasn't been loaded.
                                             * This pointer is located between `xn_attr_str..xn_attr_end'
                                             * NOTE: This pointer can only be incremented, and not past `xn_attr_end'.
                                             *       Once equal to `xn_attr_end', all attributes have been loaded. */
     struct xml_node_children xn_children;  /* [lock(xn_lock)] Set of loaded XML child nodes. */
     DREF DeeObject         *xn_text_obj;   /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_text_str' */
-    /*utf-8*/char const    *xn_text_str;   /* [1..1][lock(xn_lock)] XML text start pointer.
+    /*utf-8*/ char const    *xn_text_str;   /* [1..1][lock(xn_lock)] XML text start pointer.
                                             * >> <foo bar="baz">content</foo>
                                             *                   ^ */
-    /*utf-8*/char const    *xn_text_end;   /* [1..1][lock(xn_lock)] XML text end pointer.
+    /*utf-8*/ char const    *xn_text_end;   /* [1..1][lock(xn_lock)] XML text end pointer.
                                             * >> <foo bar="baz">content</foo>
                                             *                          ^ */
-    /*utf-8*/char const    *xn_text_next;  /* [1..1][lock(xn_lock)] Pointer before the next child node that hasn't been loaded.
+    /*utf-8*/ char const    *xn_text_next;  /* [1..1][lock(xn_lock)] Pointer before the next child node that hasn't been loaded.
                                             * NOTE: This pointer can only be incremented, and not past `xn_attr_end'.
                                             *       Once equal to `xn_attr_end', all attributes have been loaded. */
 };
@@ -165,8 +165,8 @@ INTDEF void DCALL XMLNode_Destroy(XMLNode *__restrict self);
 INTDEF int DCALL
 XMLNode_InitFromString(XMLNode *__restrict self,
                        DeeObject *__restrict data_owner,
-                       /*utf-8*/char const *__restrict text,
-                       /*utf-8*/char const *__restrict text_end);
+                       /*utf-8*/ char const *__restrict text,
+                       /*utf-8*/ char const *__restrict text_end);
 
 /* Return a reference to the previous/next sibling node of `self'
  * @param: self:       The node who's sibling should be queried.

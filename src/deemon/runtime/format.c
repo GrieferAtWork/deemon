@@ -1228,7 +1228,7 @@ err:
 
 PUBLIC dssize_t DCALL
 DeeFormat_Quote(dformatprinter printer, void *arg,
-                /*utf-8*/char const *__restrict text, size_t textlen,
+                /*utf-8*/ char const *__restrict text, size_t textlen,
                 unsigned int flags) {
  char encoded_text[12]; size_t encoded_text_size;
  dssize_t result = 0,temp; char const *c_hex;
@@ -1433,7 +1433,7 @@ err:
 
 PUBLIC dssize_t DCALL
 DeeFormat_Repeat(/*ascii*/dformatprinter printer, void *arg,
-                 /*ascii*/char ch, size_t count) {
+                 /*ascii*/ char ch, size_t count) {
  char buffer[128];
  dssize_t temp,result;
  if (count <= sizeof(buffer)) {
@@ -1458,7 +1458,7 @@ err:
 
 DFUNDEF dssize_t DCALL
 DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
-                     /*utf-8*/char const *__restrict str,
+                     /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters) {
  size_t utf8_length,i;
  dssize_t temp,result;

@@ -25,8 +25,8 @@
 
 fs.chdir(fs.path.head(__FILE__));
 
-local proc = process("cmd",["/c","dumpbin","/exports","../../../deemon.exe"]);
-local r,w = pipe.new()...;
+local proc = process("cmd", ["/c", "dumpbin", "/exports", "../../../deemon.exe"]);
+local r, w = pipe.new()...;
 proc.stdout = w;
 proc.start();
 w.close();
@@ -34,7 +34,7 @@ w.close();
 local symbols = [];
 for (local l: r) {
 	local name;
-	try none,none,none,name = l.scanf(" %[^ ] %[^ ] %[^ ] %[^ ]")...;
+	try none, none, none, name = l.scanf(" %[^ ] %[^ ] %[^ ] %[^ ]")...;
 	catch (...) continue;
 	name = name.strip();
 	if ("@" !in name) continue;
@@ -46,7 +46,7 @@ for (local l: r) {
 r.close();
 proc.join();
 
-local out = file.open("link-deemon-msvc.def","w");
+local out = file.open("link-deemon-msvc.def", "w");
 print out: "EXPORTS";
 print out: "\t; For compatibility with GCC, export all";
 print out: "\t; stdcall symbols without a leading underscore.";
@@ -57,7 +57,7 @@ for (local name: symbols) {
 		continue;
 	print out: "\t"+name[1:]+"="+name;
 }
-local out = file.open("link-deemon-gcc.def","w");
+local out = file.open("link-deemon-gcc.def", "w");
 print out: "EXPORTS";
 print out: "\t; For compatibility with MSVC, export all";
 print out: "\t; stdcall symbols with a leading underscore.";

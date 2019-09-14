@@ -121,10 +121,10 @@ F(floatinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
              T *self, size_t argc, DeeObject **__restrict argv) {
  double value; DeeObject *arg;
 #ifdef NAME
- if (DeeArg_Unpack(argc,argv,"o:" NAME,&arg))
+ if (DeeArg_Unpack(argc, argv,"o:" NAME,&arg))
      goto err;
 #else
- if (DeeArg_Unpack(argc,argv,"o:" PP_STR(T),&arg))
+ if (DeeArg_Unpack(argc, argv,"o:" PP_STR(T),&arg))
      goto err;
 #endif
  if (DeeObject_AsDouble(arg,&value))

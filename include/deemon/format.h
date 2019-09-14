@@ -70,15 +70,15 @@ DFUNDEF Dee_ssize_t DeeFormat_Printf(Dee_formatprinter_t printer, void *arg, cha
 DFUNDEF Dee_ssize_t DCALL DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg, char const *__restrict format, va_list args);
 
 
-#define DeeFormat_PRINT(printer,arg,str) \
-        (*printer)(arg,str,COMPILER_STRLEN(str))
+#define DeeFormat_PRINT(printer, arg, str) \
+	(*printer)(arg, str, COMPILER_STRLEN(str))
 
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
  *       when targeting an `ascii_printer' */
 DFUNDEF Dee_ssize_t DCALL
 DeeFormat_Quote(/*ascii*/Dee_formatprinter_t printer, void *arg,
-                /*utf-8*/char const *__restrict text, size_t textlen,
+                /*utf-8*/ char const *__restrict text, size_t textlen,
                 unsigned int flags);
 #define Dee_FORMAT_QUOTE_FNORMAL   0x0000 /* Normal format-quote flags. */
 #define Dee_FORMAT_QUOTE_FFORCEHEX 0x0002 /* Force hex encoding of all control characters without special strings (`"\n"', etc.). */
@@ -117,13 +117,13 @@ DeeFormat_Quote32(/*ascii*/Dee_formatprinter_t printer, void *arg,
 /* Repeat the given `ch' a total of `count' times. */
 DFUNDEF Dee_ssize_t DCALL
 DeeFormat_Repeat(/*ascii*/Dee_formatprinter_t printer, void *arg,
-                 /*ascii*/char ch, size_t count);
+                 /*ascii*/ char ch, size_t count);
 
 /* Repeat `str...+=length' such that a total of `total_characters'
  * characters (not bytes, but characters) are printed. */
 DFUNDEF Dee_ssize_t DCALL
 DeeFormat_RepeatUtf8(Dee_formatprinter_t printer, void *arg,
-                     /*utf-8*/char const *__restrict str,
+                     /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters);
 
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
@@ -311,11 +311,11 @@ DFUNDEF char *DCALL Dee_vsnprintf(char *__restrict buffer, size_t bufsize, char 
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define Dee_Unpackf(self,...)                   __builtin_expect(Dee_Unpackf(self,__VA_ARGS__),0)
-#define Dee_VUnpackf(self,format,args)          __builtin_expect(Dee_VUnpackf(self,format,args),0)
-#define Dee_VPUnpackf(self,pformat,pargs)       __builtin_expect(Dee_VPUnpackf(self,pformat,pargs),0)
+#define Dee_Unpackf(self, ...)              __builtin_expect(Dee_Unpackf(self, __VA_ARGS__), 0)
+#define Dee_VUnpackf(self, format, args)    __builtin_expect(Dee_VUnpackf(self, format, args), 0)
+#define Dee_VPUnpackf(self, pformat, pargs) __builtin_expect(Dee_VPUnpackf(self, pformat, pargs), 0)
 #endif /* !__NO_builtin_expect */
-#endif
+#endif /* !__INTELLISENSE__ */
 
 
 /* ==========? Extensible formating functions ?========== */
@@ -324,9 +324,11 @@ DFUNDEF char *DCALL Dee_vsnprintf(char *__restrict buffer, size_t bufsize, char 
  * If given, also include keyword names & types from `kw'
  * >> foo(10,1.0,"bar",enabled: true);
  * Printed: "int, float, string, enabled: bool" */
-#define DeeFormat_PrintArgumentTypes(printer,arg,argc,argv) \
-        DeeFormat_PrintArgumentTypesKw(printer,arg,argc,argv,NULL)
-DFUNDEF Dee_ssize_t (DCALL DeeFormat_PrintArgumentTypesKw)(Dee_formatprinter_t printer, void *arg, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+#define DeeFormat_PrintArgumentTypes(printer, arg, argc, argv) \
+	DeeFormat_PrintArgumentTypesKw(printer, arg, argc, argv, NULL)
+DFUNDEF Dee_ssize_t (DCALL DeeFormat_PrintArgumentTypesKw)(Dee_formatprinter_t printer, void *arg,
+                                                           size_t argc, DeeObject **__restrict argv,
+                                                           DeeObject *kw);
 
 
 DECL_END

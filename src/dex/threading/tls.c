@@ -201,7 +201,7 @@ PRIVATE int DCALL
 tls_init(Tls *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->t_factory = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:Tls",&self->t_factory))
+ if (DeeArg_Unpack(argc, argv,"|o:Tls",&self->t_factory))
      goto err;
  self->t_index = tls_alloc();
  if unlikely(self->t_index == (size_t)-1) goto err;
@@ -418,7 +418,7 @@ tls_init(Tls *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->t_value   = NULL;
  self->t_factory = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:Tls",&self->t_factory))
+ if (DeeArg_Unpack(argc, argv,"|o:Tls",&self->t_factory))
      goto err;
  /* Save a reference for the factory. */
  Dee_XIncref(self->t_factory);
@@ -622,21 +622,21 @@ PRIVATE DREF DeeObject *DCALL
 tls_xch(Tls *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  DeeObject *newval;
- if (DeeArg_Unpack(argc,argv,"o:xch",&newval))
+ if (DeeArg_Unpack(argc, argv,"o:xch",&newval))
      return NULL;
  return tls_xchitem(self,newval);
 }
 PRIVATE DREF DeeObject *DCALL
 tls_pop(Tls *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":pop"))
+ if (DeeArg_Unpack(argc, argv,":pop"))
      return NULL;
  return tls_xchitem(self,ITER_DONE);
 }
 PRIVATE DREF DeeObject *DCALL
 tls_get(Tls *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":get"))
+ if (DeeArg_Unpack(argc, argv,":get"))
      return NULL;
  return tls_getvalue(self);
 }
@@ -644,7 +644,7 @@ PRIVATE DREF DeeObject *DCALL
 tls_delete(Tls *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":delete"))
+ if (DeeArg_Unpack(argc, argv,":delete"))
      goto err;
  result = tls_dodelitem(self);
  if unlikely(result < 0) goto err;
@@ -656,7 +656,7 @@ PRIVATE DREF DeeObject *DCALL
 tls_set(Tls *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  DeeObject *ob;
- if (DeeArg_Unpack(argc,argv,"o:set",&ob) ||
+ if (DeeArg_Unpack(argc, argv,"o:set",&ob) ||
      tls_setvalue(self,ob))
      return NULL;
  return_none;

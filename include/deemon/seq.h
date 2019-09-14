@@ -20,10 +20,12 @@
 #define GUARD_DEEMON_SEQ_H 1
 
 #include "api.h"
-#include "object.h"
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
@@ -220,90 +222,90 @@ DDATDEF DeeObject      DeeSeq_EmptyInstance;
 
 /* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
 struct Dee_type_nii {
-    /* Native Iterator Interface for types. */
+	/* Native Iterator Interface for types. */
 #define Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL 0x0000 /* uni-directional iterator */
 #define Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL  0x0001 /* bi-directional iterator */
 #define Dee_TYPE_ITERX_FNORMAL              0x0000 /* Normal iterator flags. */
 #if __SIZEOF_POINTER__ == 4
-    uint16_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
-    uint16_t                nii_flags; /* Iterator flags (Set of `TYPE_ITERX_F*') */
+	uint16_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
+	uint16_t                nii_flags; /* Iterator flags (Set of `TYPE_ITERX_F*') */
 #elif __SIZEOF_POINTER__ == 8
-    uint32_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
-    uint32_t                nii_flags; /* Iterator class (Set of `TYPE_ITERX_F*') */
+	uint32_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
+	uint32_t                nii_flags; /* Iterator class (Set of `TYPE_ITERX_F*') */
 #else
 #error "Unsupported __SIZEOF_POINTER__"
 #endif
-    union {
-        void              *_nii_class_functions[10];
-        struct {
-            /* Return the sequence associated with the iterator, or NULL on error.
-             * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
-            DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
-            /* Get the iterator's position
-             * NOTE: Unbound sequence indices also count for this operation
-             * @return: * :         The iterator's current position, where the a starting position is 0
-             * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
-             *                      from its sequence, as can happen in linked lists when the iterator's
-             *                      link entry gets removed)
-             * @return: (size_t)-1: Error */
-            size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
-            /* Set the iterator's position
-             * If the given `new_index' is greater than the max allowed index,
-             * the iterator is set to an exhausted state (i.e. points at the
-             * end of the associated sequence)
-             * NOTE: Unbound sequence indices also count for this operation
-             * @return:  0: Success
-             * @return: -1: Error */
-            int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
-            /* Rewind the iterator to its starting position
-             * @return:  0: Success
-             * @return: -1: Error */
-            int             (DCALL *nii_rewind)(DeeObject *__restrict self);
-            /* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
-             * @return:  0: Success (new relative position couldn't be determined)
-             * @return:  1: Success (the iterator has reached its starting position)
-             * @return:  2: Success (the iterator hasn't reached its starting position)
-             * @return: -1: Error */
-            int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
-            /* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
-             * @return:  0: Success (new relative position couldn't be determined)
-             * @return:  1: Success (the iterator has become exhausted)
-             * @return:  2: Success (the iterator hasn't become exhausted)
-             * @return: -1: Error */
-            int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
-            /* Decrement the iterator by 1.
-             * @return:  0: Success
-             * @return:  1: The iterator was already at its starting location,
-             *              or the position couldn't be determined
-             * @return: -1: Error */
-            int             (DCALL *nii_prev)(DeeObject *__restrict self);
-            /* Increment the iterator, but don't generate a value
-             * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
-             *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
-             *       only ever be incremented by 1.
-             * @return:  0: Success
-             * @return:  1: The iterator had already been exhausted,
-             *              or the position couldn't be determined
-             * @return: -1: Error */
-            int             (DCALL *nii_next)(DeeObject *__restrict self);
-            /* Check if the iterator has a predecessor
-             * @return:  0: No, it doesn't have one (index == 0)
-             * @return:  1: Yes, it does have one (index != 0)
-             * @return: -1: Error */
-            int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
-            /* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
-            /* Peek the next iterator value, but don't actually advance the iterator.
-             * @return: ITER_DONE: The iterator has already been exhausted. */
-            DREF DeeObject *(DCALL *nii_peek)(DeeObject *__restrict self);
-        }                   nii_common;
-    };
+	union {
+		void              *_nii_class_functions[10];
+		struct {
+			/* Return the sequence associated with the iterator, or NULL on error.
+			 * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
+			DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
+			/* Get the iterator's position
+			 * NOTE: Unbound sequence indices also count for this operation
+			 * @return: * :         The iterator's current position, where the a starting position is 0
+			 * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
+			 *                      from its sequence, as can happen in linked lists when the iterator's
+			 *                      link entry gets removed)
+			 * @return: (size_t)-1: Error */
+			size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
+			/* Set the iterator's position
+			 * If the given `new_index' is greater than the max allowed index,
+			 * the iterator is set to an exhausted state (i.e. points at the
+			 * end of the associated sequence)
+			 * NOTE: Unbound sequence indices also count for this operation
+			 * @return:  0: Success
+			 * @return: -1: Error */
+			int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
+			/* Rewind the iterator to its starting position
+			 * @return:  0: Success
+			 * @return: -1: Error */
+			int             (DCALL *nii_rewind)(DeeObject *__restrict self);
+			/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+			 * @return:  0: Success (new relative position couldn't be determined)
+			 * @return:  1: Success (the iterator has reached its starting position)
+			 * @return:  2: Success (the iterator hasn't reached its starting position)
+			 * @return: -1: Error */
+			int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
+			/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+			 * @return:  0: Success (new relative position couldn't be determined)
+			 * @return:  1: Success (the iterator has become exhausted)
+			 * @return:  2: Success (the iterator hasn't become exhausted)
+			 * @return: -1: Error */
+			int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
+			/* Decrement the iterator by 1.
+			 * @return:  0: Success
+			 * @return:  1: The iterator was already at its starting location,
+			 *              or the position couldn't be determined
+			 * @return: -1: Error */
+			int             (DCALL *nii_prev)(DeeObject *__restrict self);
+			/* Increment the iterator, but don't generate a value
+			 * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
+			 *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
+			 *       only ever be incremented by 1.
+			 * @return:  0: Success
+			 * @return:  1: The iterator had already been exhausted,
+			 *              or the position couldn't be determined
+			 * @return: -1: Error */
+			int             (DCALL *nii_next)(DeeObject *__restrict self);
+			/* Check if the iterator has a predecessor
+			 * @return:  0: No, it doesn't have one (index == 0)
+			 * @return:  1: Yes, it does have one (index != 0)
+			 * @return: -1: Error */
+			int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
+			/* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
+			/* Peek the next iterator value, but don't actually advance the iterator.
+			 * @return: ITER_DONE: The iterator has already been exhausted. */
+			DREF DeeObject *(DCALL *nii_peek)(DeeObject *__restrict self);
+		}                   nii_common;
+	};
 };
 
 
 /* ==== NATIVE SEQUENCE INTERFACE EXTENSIONS FOR TYPES ==== */
 
 struct Dee_type_nsi {
-    /* Native Sequence Interface for types. */
+	/* Native Sequence Interface for types. */
 #define Dee_TYPE_SEQX_CLASS_SEQ  0x0000 /* Sequence-like */
 #define Dee_TYPE_SEQX_CLASS_MAP  0x0001 /* Mapping-like */
 #define Dee_TYPE_SEQX_CLASS_SET  0x0002 /* Set-like */
@@ -311,117 +313,117 @@ struct Dee_type_nsi {
 #define Dee_TYPE_SEQX_FMUTABLE   0x0001 /* The sequence is mutable. */
 #define Dee_TYPE_SEQX_FRESIZABLE 0x0002 /* The sequence is resizable. */
 #if __SIZEOF_POINTER__ == 4
-    uint16_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
-    uint16_t                nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
+	uint16_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
+	uint16_t                nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
 #elif __SIZEOF_POINTER__ == 8
-    uint32_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
-    uint32_t                nsi_flags; /* Sequence class (Set of `TYPE_SEQX_F*') */
+	uint32_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
+	uint32_t                nsi_flags; /* Sequence class (Set of `TYPE_SEQX_F*') */
 #else
 #error "Unsupported __SIZEOF_POINTER__"
 #endif
-    union {
-        void              *_nsi_class_functions[22];
-        struct {
-            size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
-        }                   nsi_common;
-        struct { /* TYPE_SEQX_CLASS_SEQ */
-           /* NOTE: If provided, these functions are only ever called as extensions to the
-            *       regular sequence operators, meaning that if you implement `nsi_getsize',
-            *       you are also _required_ to implement `tp_size'
-            * NOTE: Any object implementing sequence extensions _must_ at
-            *       the very least provide the operators for `nsi_getsize'!
-            * NOTE: The `*_fast' variants are allowed to assume:
-            *      `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
-            size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
-            /* Same as `nsi_getsize', but never throw any errors, and simply return (size_t)-1 to indicate failure.
-             * HINT: This callback is used to implement `DeeFastSeq_GetSize()', with
-             *       either `nsi_getitem_fast()' or `nsi_getitem()' then being used
-             *       to implement the item lookup itself.
-             * WARNING: When implementing this operator, you must also implement at
-             *          least one of `nsi_getitem' or `nsi_getitem_fast' */
-            size_t          (DCALL *nsi_getsize_fast)(DeeObject *__restrict self);
-            DREF DeeObject *(DCALL *nsi_getitem)(DeeObject *__restrict self, size_t index);
-            int             (DCALL *nsi_delitem)(DeeObject *__restrict self, size_t index);
-            int             (DCALL *nsi_setitem)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
-            /* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound. */
-            DREF DeeObject *(DCALL *nsi_getitem_fast)(DeeObject *__restrict self, size_t index);
-            DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
-            DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, Dee_ssize_t start); /* end: Dee_None */
-            int             (DCALL *nsi_setrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict values);
-            int             (DCALL *nsi_setrange_n)(DeeObject *__restrict self, Dee_ssize_t start, DeeObject *__restrict values); /* end: Dee_None */
-            /* NOTE: start/end in here operate differently (and simpler) than in ranges:
-             *       If either value is `>= nsi_getsize()', truncate it to that length.
-             * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
-             * @return: * : Index of the matching item
-             * @return: (size_t)-1: Index not found.
-             * @return: (size_t)-2: Error. */
-            size_t          (DCALL *nsi_find)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
-            size_t          (DCALL *nsi_rfind)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
-            DREF DeeObject *(DCALL *nsi_xch)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
-            int             (DCALL *nsi_insert)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
-            int             (DCALL *nsi_insertall)(DeeObject *__restrict self, size_t index, DeeObject *__restrict values);
-            int             (DCALL *nsi_insertvec)(DeeObject *__restrict self, size_t index, size_t insertc, DeeObject **__restrict insertv);
-            /* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
-             *       first, such that `nsi_pop(self,-1)' is equivalent to a `popback()' function call. */
-            DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
-            /* NOTE: erase differs from delrange, in that erase _always_ removes the indices,
-             *       while delrange is allowed to leave the index range as unbound.
-             * @return: * : Number or erased items.
-             * @return: (size_t)-1: Error. */
-            size_t          (DCALL *nsi_erase)(DeeObject *__restrict self, size_t index, size_t count);
-            /* Remove or unbind the first/last/all instance(s) of `elem'
-             * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
-             * @return: 0 : Element not found.
-             * @return: 1 : Element was unbound.
-             * @return: -1 : error. */
-            int             (DCALL *nsi_remove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
-            int             (DCALL *nsi_rremove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
-            /* NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
-             * @return: * : The number of removed items.
-             * @return: (size_t)-1: Error. */
-            size_t          (DCALL *nsi_removeall)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
-            size_t          (DCALL *nsi_removeif)(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
-        }                   nsi_seqlike;
-        struct { /* TYPE_SEQX_CLASS_MAP */
-            size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
-            /* Same as `mapping.Iterator.operator next()' of the mapping's core iterator,
-             * however only return the key / value, rather than a key-value tuple.
-             * @param: iterator: An iterator object, as returned by `mapping.operator iter()' */
-            DREF DeeObject *(DCALL *nsi_nextkey)(DeeObject *__restrict iterator);
-            DREF DeeObject *(DCALL *nsi_nextvalue)(DeeObject *__restrict iterator);
-            /* Lookup the given `key' and return its association, or `defl' if it doesn't yet exist.
-             * WARNING: `defl' may be ITER_DONE, in which case you really shouldn't incref() it! */
-            DREF DeeObject *(DCALL *nsi_getdefault)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict defl);
-            /* Check if the mapping contains a element for `key' and return that element's value, or
-             * insert a new element for `key', setting its value to `defl', then returning `defl'. */
-            DREF DeeObject *(DCALL *nsi_setdefault)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict defl);
-            /* Update an existing mapping element
-             * @param: poldvalue: When non-NULL, store a reference to the old item here.
-             * @return: 1:  The existing key was updated.
-             * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
-             * @return: -1: Error. */
-            int             (DCALL *nsi_updateold)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict value, DREF DeeObject **poldvalue);
-            /* Insert a new mapping element, but don't change a pre-existing one
-             * @param: poldvalue: When non-NULL, store a reference to the old item here.
-             * @return: 1:  A new element was inserted.
-             * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
-             * @return: -1: Error. */
-            int             (DCALL *nsi_insertnew)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict value, DREF DeeObject **poldvalue);
-        }                   nsi_maplike;
-        struct { /* TYPE_SEQX_CLASS_SET */
-            size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
-            /* Insert a new `key' into the set
-             * @return: 1:  The given `key' was inserted.
-             * @return: 0:  A identical key was already apart of the set.
-             * @return: -1: Error. */
-            int             (DCALL *nsi_insert)(DeeObject *__restrict self, DeeObject *__restrict key);
-            /* Remove a given `key' from the set
-             * @return: 1:  The given `key' was removed.
-             * @return: 0:  The given `key' could not be found within the set.
-             * @return: -1: Error. */
-            int             (DCALL *nsi_remove)(DeeObject *__restrict self, DeeObject *__restrict key);
-        }                   nsi_setlike;
-    };
+	union {
+		void              *_nsi_class_functions[22];
+		struct {
+			size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+		}                   nsi_common;
+		struct { /* TYPE_SEQX_CLASS_SEQ */
+			/* NOTE: If provided, these functions are only ever called as extensions to the
+			*       regular sequence operators, meaning that if you implement `nsi_getsize',
+			*       you are also _required_ to implement `tp_size'
+			* NOTE: Any object implementing sequence extensions _must_ at
+			*       the very least provide the operators for `nsi_getsize'!
+			* NOTE: The `*_fast' variants are allowed to assume:
+			*      `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
+			size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			/* Same as `nsi_getsize', but never throw any errors, and simply return (size_t)-1 to indicate failure.
+			 * HINT: This callback is used to implement `DeeFastSeq_GetSize()', with
+			 *       either `nsi_getitem_fast()' or `nsi_getitem()' then being used
+			 *       to implement the item lookup itself.
+			 * WARNING: When implementing this operator, you must also implement at
+			 *          least one of `nsi_getitem' or `nsi_getitem_fast' */
+			size_t          (DCALL *nsi_getsize_fast)(DeeObject *__restrict self);
+			DREF DeeObject *(DCALL *nsi_getitem)(DeeObject *__restrict self, size_t index);
+			int             (DCALL *nsi_delitem)(DeeObject *__restrict self, size_t index);
+			int             (DCALL *nsi_setitem)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
+			/* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound. */
+			DREF DeeObject *(DCALL *nsi_getitem_fast)(DeeObject *__restrict self, size_t index);
+			DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
+			DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, Dee_ssize_t start); /* end: Dee_None */
+			int             (DCALL *nsi_setrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *__restrict values);
+			int             (DCALL *nsi_setrange_n)(DeeObject *__restrict self, Dee_ssize_t start, DeeObject *__restrict values); /* end: Dee_None */
+			/* NOTE: start/end in here operate differently (and simpler) than in ranges:
+			 *       If either value is `>= nsi_getsize()', truncate it to that length.
+			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
+			 * @return: * : Index of the matching item
+			 * @return: (size_t)-1: Index not found.
+			 * @return: (size_t)-2: Error. */
+			size_t          (DCALL *nsi_find)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+			size_t          (DCALL *nsi_rfind)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+			DREF DeeObject *(DCALL *nsi_xch)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
+			int             (DCALL *nsi_insert)(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
+			int             (DCALL *nsi_insertall)(DeeObject *__restrict self, size_t index, DeeObject *__restrict values);
+			int             (DCALL *nsi_insertvec)(DeeObject *__restrict self, size_t index, size_t insertc, DeeObject **__restrict insertv);
+			/* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
+			 *       first, such that `nsi_pop(self,-1)' is equivalent to a `popback()' function call. */
+			DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
+			/* NOTE: erase differs from delrange, in that erase _always_ removes the indices,
+			 *       while delrange is allowed to leave the index range as unbound.
+			 * @return: * : Number or erased items.
+			 * @return: (size_t)-1: Error. */
+			size_t          (DCALL *nsi_erase)(DeeObject *__restrict self, size_t index, size_t count);
+			/* Remove or unbind the first/last/all instance(s) of `elem'
+			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
+			 * @return: 0 : Element not found.
+			 * @return: 1 : Element was unbound.
+			 * @return: -1 : error. */
+			int             (DCALL *nsi_remove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+			int             (DCALL *nsi_rremove)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+			/* NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
+			 * @return: * : The number of removed items.
+			 * @return: (size_t)-1: Error. */
+			size_t          (DCALL *nsi_removeall)(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key);
+			size_t          (DCALL *nsi_removeif)(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
+		}                   nsi_seqlike;
+		struct { /* TYPE_SEQX_CLASS_MAP */
+			size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			/* Same as `mapping.Iterator.operator next()' of the mapping's core iterator,
+			 * however only return the key / value, rather than a key-value tuple.
+			 * @param: iterator: An iterator object, as returned by `mapping.operator iter()' */
+			DREF DeeObject *(DCALL *nsi_nextkey)(DeeObject *__restrict iterator);
+			DREF DeeObject *(DCALL *nsi_nextvalue)(DeeObject *__restrict iterator);
+			/* Lookup the given `key' and return its association, or `defl' if it doesn't yet exist.
+			 * WARNING: `defl' may be ITER_DONE, in which case you really shouldn't incref() it! */
+			DREF DeeObject *(DCALL *nsi_getdefault)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict defl);
+			/* Check if the mapping contains a element for `key' and return that element's value, or
+			 * insert a new element for `key', setting its value to `defl', then returning `defl'. */
+			DREF DeeObject *(DCALL *nsi_setdefault)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict defl);
+			/* Update an existing mapping element
+			 * @param: poldvalue: When non-NULL, store a reference to the old item here.
+			 * @return: 1:  The existing key was updated.
+			 * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
+			 * @return: -1: Error. */
+			int             (DCALL *nsi_updateold)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict value, DREF DeeObject **poldvalue);
+			/* Insert a new mapping element, but don't change a pre-existing one
+			 * @param: poldvalue: When non-NULL, store a reference to the old item here.
+			 * @return: 1:  A new element was inserted.
+			 * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
+			 * @return: -1: Error. */
+			int             (DCALL *nsi_insertnew)(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict value, DREF DeeObject **poldvalue);
+		}                   nsi_maplike;
+		struct { /* TYPE_SEQX_CLASS_SET */
+			size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			/* Insert a new `key' into the set
+			 * @return: 1:  The given `key' was inserted.
+			 * @return: 0:  A identical key was already apart of the set.
+			 * @return: -1: Error. */
+			int             (DCALL *nsi_insert)(DeeObject *__restrict self, DeeObject *__restrict key);
+			/* Remove a given `key' from the set
+			 * @return: 1:  The given `key' was removed.
+			 * @return: 0:  The given `key' could not be found within the set.
+			 * @return: -1: Error. */
+			int             (DCALL *nsi_remove)(DeeObject *__restrict self, DeeObject *__restrict key);
+		}                   nsi_setlike;
+	};
 };
 
 
@@ -664,9 +666,9 @@ DeeRefVector_New(DeeObject *__restrict owner, size_t length,
                  DeeObject **__restrict vector,
 #ifndef CONFIG_NO_THREADS
                  Dee_rwlock_t *plock
-#else
+#else /* !CONFIG_NO_THREADS */
                  bool writable
-#endif
+#endif /* CONFIG_NO_THREADS */
                  );
 
 #ifdef __INTELLISENSE__
@@ -674,9 +676,9 @@ DFUNDEF DREF DeeObject *DCALL
 DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
                          DeeObject *const *__restrict vector);
 #elif defined(CONFIG_NO_THREADS)
-#define DeeRefVector_NewReadonly(owner,length,vector) DeeRefVector_New(owner,length,(DeeObject **)(vector),false)
+#define DeeRefVector_NewReadonly(owner, length, vector) DeeRefVector_New(owner, length, (DeeObject **)(vector), false)
 #else
-#define DeeRefVector_NewReadonly(owner,length,vector) DeeRefVector_New(owner,length,(DeeObject **)(vector),NULL)
+#define DeeRefVector_NewReadonly(owner, length, vector) DeeRefVector_New(owner, length, (DeeObject **)(vector), NULL)
 #endif
 
 
@@ -710,8 +712,8 @@ DFUNDEF void DCALL DeeSharedVector_Decref(DREF DeeObject *__restrict self);
 
 
 typedef struct {
-    DREF DeeObject  *si_key;    /* [1..1][const] The key of this shared item. */
-    DREF DeeObject  *si_value;  /* [1..1][const] The value of this shared item. */
+	DREF DeeObject  *si_key;    /* [1..1][const] The key of this shared item. */
+	DREF DeeObject  *si_value;  /* [1..1][const] The value of this shared item. */
 } DeeSharedItem;
 
 /* Create a new shared vector that will inherit elements
@@ -796,11 +798,11 @@ DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeFastSeq_GetItemNB(DeeObject *__
  *                that must be freed using `Dee_Free', before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
-DFUNDEF /*owned(Dee_Free)*/DREF DeeObject **DCALL
+DFUNDEF /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict plength);
 
-DFUNDEF /*owned(Dee_Free)*/DREF DeeObject **DCALL
+DFUNDEF /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated);
@@ -825,7 +827,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
  *                      no longer being valid! */
 DFUNDEF size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                  /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                   /*in-out*/size_t *__restrict pallocated);
 
 /* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
@@ -836,7 +838,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
  *    vector which may already contain other objects upon entry. */
 DFUNDEF size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
-                                        /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                        /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                         /*in-out*/size_t *__restrict pallocated,
                                         /*in*/size_t offset);
 

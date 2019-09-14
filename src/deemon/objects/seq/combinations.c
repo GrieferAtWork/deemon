@@ -128,7 +128,7 @@ PRIVATE int DCALL
 comiter_init(CombinationsIterator *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  size_t i,comlen;
- if (DeeArg_Unpack(argc,argv,"o:_SeqCombinationsIterator",&self->ci_combi))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqCombinationsIterator",&self->ci_combi))
      goto err;
  if (DeeObject_AssertTypeExact(self->ci_combi,&SeqCombinations_Type))
      goto err;
@@ -682,7 +682,7 @@ PRIVATE int DCALL
 rcomiter_init(CombinationsIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  size_t i,comlen;
- if (DeeArg_Unpack(argc,argv,"o:_SeqRepeatCombinationsIterator",&self->ci_combi))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqRepeatCombinationsIterator",&self->ci_combi))
      goto err;
  if (DeeObject_AssertTypeExact(self->ci_combi,&SeqRepeatCombinations_Type))
      goto err;
@@ -911,7 +911,7 @@ PRIVATE int DCALL
 pmutiter_init(CombinationsIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  size_t i,comlen;
- if (DeeArg_Unpack(argc,argv,"o:_SeqPermutationsIterator",&self->ci_combi))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqPermutationsIterator",&self->ci_combi))
      goto err;
  if (DeeObject_AssertTypeExact(self->ci_combi,&SeqPermutations_Type))
      goto err;

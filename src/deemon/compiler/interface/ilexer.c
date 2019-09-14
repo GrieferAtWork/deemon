@@ -1794,7 +1794,7 @@ lexer_include(DeeCompilerWrapperObject *__restrict self,
  DeeObject *arg,*filename = Dee_None;
  DREF DeeObject *stream;
  /*ref*/struct TPPFile *file;
- if (DeeArg_Unpack(argc,argv,"o|o:include",&arg,&filename))
+ if (DeeArg_Unpack(argc, argv,"o|o:include",&arg,&filename))
      goto err;
  if (!DeeNone_Check(filename) &&
       DeeObject_AssertTypeExact(filename,&DeeString_Type))
@@ -1842,7 +1842,7 @@ lexer_nextraw(DeeCompilerWrapperObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  tok_t result;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,":nextraw"))
+ if (DeeArg_Unpack(argc, argv,":nextraw"))
      goto err;
  old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
@@ -1860,7 +1860,7 @@ lexer_nextpp(DeeCompilerWrapperObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  tok_t result;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,":nextpp"))
+ if (DeeArg_Unpack(argc, argv,":nextpp"))
      goto err;
  old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
@@ -1878,7 +1878,7 @@ lexer_next(DeeCompilerWrapperObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  tok_t result;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,":next"))
+ if (DeeArg_Unpack(argc, argv,":next"))
      goto err;
  old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
@@ -1896,7 +1896,7 @@ lexer_nextraw_nb(DeeCompilerWrapperObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  tok_t result;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,":nextraw_nb"))
+ if (DeeArg_Unpack(argc, argv,":nextraw_nb"))
      goto err;
  old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
@@ -1914,7 +1914,7 @@ lexer_nextpp_nb(DeeCompilerWrapperObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  tok_t result;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,":nextpp_nb"))
+ if (DeeArg_Unpack(argc, argv,":nextpp_nb"))
      goto err;
  old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
@@ -1932,7 +1932,7 @@ lexer_next_nb(DeeCompilerWrapperObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  tok_t result;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,":next_nb"))
+ if (DeeArg_Unpack(argc, argv,":next_nb"))
      goto err;
  old_exceptsz = DeeThread_Self()->t_exceptsz;
  COMPILER_BEGIN(self->cw_compiler);
@@ -1949,7 +1949,7 @@ INTERN DREF DeeObject *DCALL
 lexer_seterr(DeeCompilerWrapperObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":seterr"))
+ if (DeeArg_Unpack(argc, argv,":seterr"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_SetErr();
@@ -1963,7 +1963,7 @@ INTERN DREF DeeObject *DCALL
 lexer_unseterr(DeeCompilerWrapperObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":unseterr"))
+ if (DeeArg_Unpack(argc, argv,":unseterr"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_UnsetErr();
@@ -1977,7 +1977,7 @@ INTERN DREF DeeObject *DCALL
 lexer_popfile(DeeCompilerWrapperObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  bool result;
- if (DeeArg_Unpack(argc,argv,":popfile"))
+ if (DeeArg_Unpack(argc, argv,":popfile"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_Current->l_token.t_file != &TPPFile_Empty;
@@ -2001,7 +2001,7 @@ lexer_getkwd(DeeCompilerWrapperObject *__restrict self,
  DREF DeeObject *result; char *name_utf8;
  DeeObject *name; bool create = true;
  struct TPPKeyword *kwd;
- if (DeeArg_UnpackKw(argc,argv,kw,getkwd_kwlist,"o|b:getkwd",&name,&create) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,getkwd_kwlist,"o|b:getkwd",&name,&create) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
  name_utf8 = DeeString_AsUtf8(name);
@@ -2038,7 +2038,7 @@ lexer_getxkwd(DeeCompilerWrapperObject *__restrict self,
  DREF DeeObject *result; char *name_utf8;
  DeeObject *name; bool create = true;
  struct TPPKeyword *kwd;
- if (DeeArg_UnpackKw(argc,argv,kw,getkwd_kwlist,"o|b:getxkwd",&name,&create) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,getkwd_kwlist,"o|b:getxkwd",&name,&create) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
  name_utf8 = DeeString_AsUtf8(name);
@@ -2073,7 +2073,7 @@ lexer_getkwdid(DeeCompilerWrapperObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result; unsigned int id;
  struct TPPKeyword *kwd;
- if (DeeArg_Unpack(argc,argv,"u:getkwdid",&id))
+ if (DeeArg_Unpack(argc, argv,"u:getkwdid",&id))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  kwd = TPPLexer_LookupKeywordID((tok_t)id);
@@ -2094,7 +2094,7 @@ lexer_undef(DeeCompilerWrapperObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *name; int error; char *utf8_name;
  uint16_t old_exceptsz;
- if (DeeArg_Unpack(argc,argv,"o:undef",&name) ||
+ if (DeeArg_Unpack(argc, argv,"o:undef",&name) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL)
      goto err;
@@ -2117,7 +2117,7 @@ lexer_define(DeeCompilerWrapperObject *__restrict self,
  char *utf8_name,*utf8_value; bool builtin = false;
  uint16_t old_exceptsz;
  PRIVATE struct keyword kwlist[] = { K(name), K(value), K(builtin), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo|b:define",&name,&value,&builtin) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"oo|b:define",&name,&value,&builtin) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
      DeeObject_AssertTypeExact(value,&DeeString_Type) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL ||
@@ -2144,7 +2144,7 @@ lexer_addassert(DeeCompilerWrapperObject *__restrict self,
  DeeObject *name,*value; int error;
  char *utf8_name,*utf8_value;
  uint16_t old_exceptsz;
- if (DeeArg_UnpackKw(argc,argv,kw,assertion_kwlist,"oo:addassert",&name,&value) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,assertion_kwlist,"oo:addassert",&name,&value) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
      DeeObject_AssertTypeExact(value,&DeeString_Type) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL ||
@@ -2169,7 +2169,7 @@ lexer_delassert(DeeCompilerWrapperObject *__restrict self,
  DeeObject *name,*value = NULL; int error;
  char *utf8_name,*utf8_value = NULL;
  uint16_t old_exceptsz;
- if (DeeArg_UnpackKw(argc,argv,kw,assertion_kwlist,"o|o:delassert",&name,&value) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,assertion_kwlist,"o|o:delassert",&name,&value) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
     (value && DeeObject_AssertTypeExact(value,&DeeString_Type)) ||
     (utf8_name = DeeString_AsUtf8(name)) == NULL ||
@@ -2528,7 +2528,7 @@ PRIVATE DREF DeeObject *DCALL
 lexer_syspaths_push(DeeCompilerWrapperObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":push"))
+ if (DeeArg_Unpack(argc, argv,":push"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_PushInclude();
@@ -2542,7 +2542,7 @@ PRIVATE DREF DeeObject *DCALL
 lexer_syspaths_pop(DeeCompilerWrapperObject *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  int result;
- if (DeeArg_Unpack(argc,argv,":pop"))
+ if (DeeArg_Unpack(argc, argv,":pop"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  result = TPPLexer_PopInclude();
@@ -2555,7 +2555,7 @@ PRIVATE DREF DeeObject *DCALL
 lexer_syspaths_insert(DeeCompilerWrapperObject *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
  int result; DeeObject *path; char *utf8,*copy;
- if (DeeArg_Unpack(argc,argv,"o:insert",&path) ||
+ if (DeeArg_Unpack(argc, argv,"o:insert",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type) ||
     (utf8 = DeeString_AsUtf8(path)) == NULL)
      goto err;
@@ -2576,7 +2576,7 @@ PRIVATE DREF DeeObject *DCALL
 lexer_syspaths_remove(DeeCompilerWrapperObject *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
  int result; DeeObject *path; char *utf8,*copy;
- if (DeeArg_Unpack(argc,argv,"o:remove",&path) ||
+ if (DeeArg_Unpack(argc, argv,"o:remove",&path) ||
      DeeObject_AssertTypeExact(path,&DeeString_Type) ||
     (utf8 = DeeString_AsUtf8(path)) == NULL)
      goto err;
@@ -2979,7 +2979,7 @@ lexer_token_decodestring(DeeCompilerWrapperObject *__restrict self,
                          size_t argc, DeeObject **__restrict argv) {
  int error;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
- if (DeeArg_Unpack(argc,argv,":decodestring"))
+ if (DeeArg_Unpack(argc, argv,":decodestring"))
      goto err;
  COMPILER_BEGIN(self->cw_compiler);
  if (TPPLexer_Current->l_token.t_id != TOK_STRING ||
@@ -3002,7 +3002,7 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *__restrict self,
                           size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result = NULL;
  bool warnchar = true;
- if (DeeArg_Unpack(argc,argv,"|b:decodeinteger",&warnchar))
+ if (DeeArg_Unpack(argc, argv,"|b:decodeinteger",&warnchar))
      goto done2;
  COMPILER_BEGIN(self->cw_compiler);
  if (TPPLexer_Current->l_token.t_id == TOK_INT) {
@@ -4469,7 +4469,7 @@ file_nextchunk(DeeCompilerItemObject *__restrict self,
  unsigned int flags = 0; DREF DeeObject *result = NULL;
  int error; struct TPPFile *file;
  PRIVATE struct keyword kwlist[] = { K(extend), K(binary), K(nonblocking), KEND };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|bbb",&extend,&binary,&nonblocking))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|bbb",&extend,&binary,&nonblocking))
      goto done;
  if (extend) flags |= TPPFILE_NEXTCHUNK_FLAG_EXTEND;
  if (binary) flags |= TPPFILE_NEXTCHUNK_FLAG_BINARY;

@@ -403,7 +403,7 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = 0;
  rules.alr_perm_value = 0;
- if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo:attribute",
+ if (DeeArg_UnpackKw(argc, argv, kw,attrinit_kwlist,"oo|ooo:attribute",
                     &search_self,
                     &search_name,
                     &flagmask,
@@ -472,7 +472,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = 0;
  rules.alr_perm_value = 0;
- if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo:exists",
+ if (DeeArg_UnpackKw(argc, argv, kw,attrinit_kwlist,"oo|ooo:exists",
                     &search_self,
                     &search_name,
                     &flagmask,
@@ -538,7 +538,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
  rules.alr_decl       = NULL;
  rules.alr_perm_mask  = 0;
  rules.alr_perm_value = 0;
- if (DeeArg_UnpackKw(argc,argv,kw,attrinit_kwlist,"oo|ooo:lookup",
+ if (DeeArg_UnpackKw(argc, argv, kw,attrinit_kwlist,"oo|ooo:lookup",
                     &search_self,
                     &search_name,
                     &flagmask,
@@ -782,7 +782,7 @@ PRIVATE int DCALL
 enumattr_init(EnumAttr *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *a,*b = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:enumattr",&a,&b))
+ if (DeeArg_Unpack(argc, argv,"o|o:enumattr",&a,&b))
      return -1;
  if (b) {
   if (DeeObject_AssertType(a,&DeeType_Type) ||
@@ -989,7 +989,7 @@ PRIVATE int DCALL
 enumattriter_init(EnumAttrIter *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  EnumAttr *seq;
- if (DeeArg_Unpack(argc,argv,"o:_EnumAttrIterator",&seq))
+ if (DeeArg_Unpack(argc, argv,"o:_EnumAttrIterator",&seq))
      goto err;
  if (DeeObject_AssertType((DeeObject *)seq,&DeeEnumAttr_Type))
      goto err;

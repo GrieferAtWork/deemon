@@ -176,7 +176,7 @@ PRIVATE int DCALL
 transiter_init(TransformationIterator *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  Transformation *trans;
- if (DeeArg_Unpack(argc,argv,"o:_SeqTransformationIterator",&trans))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqTransformationIterator",&trans))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)trans,&SeqTransformation_Type))
      goto err;
@@ -410,7 +410,7 @@ err:
 PRIVATE int DCALL
 trans_init(Transformation *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_SeqTransformation",&self->t_seq,&self->t_fun))
+ if (DeeArg_Unpack(argc, argv,"oo:_SeqTransformation",&self->t_seq,&self->t_fun))
      goto err;
  Dee_Incref(self->t_seq);
  Dee_Incref(self->t_fun);

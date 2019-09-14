@@ -1443,7 +1443,7 @@ utf32_to_utf8(uint32_t *__restrict src, size_t src_len,
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_Pack2ByteBuffer(/*inherit(always)*/uint16_t *__restrict text) {
+DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
  size_t i,length,utf8_length;
  DREF String *result; struct string_utf *utf;
  ASSERT(text);
@@ -1495,7 +1495,7 @@ err:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/uint16_t *__restrict text) {
+DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) {
  size_t i,length,utf8_length;
  DREF String *result; struct string_utf *utf;
  ASSERT(text);
@@ -1548,7 +1548,7 @@ err:
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_PackUtf16Buffer(/*inherit(always)*/uint16_t *__restrict text,
+DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
                           unsigned int error_mode) {
  size_t i,length,utf8_length; struct string_utf *utf;
  DREF String *result; size_t character_count;
@@ -1720,7 +1720,7 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/uint16_t *__restrict text) {
+DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) {
  size_t i,length,utf8_length; struct string_utf *utf;
  DREF String *result; size_t character_count;
  int kind = 0; /* 0: UTF-16 w/o surrogates
@@ -1868,7 +1868,7 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeString_PackUtf32Buffer(/*inherit(always)*/uint32_t *__restrict text,
+DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
                           unsigned int error_mode) {
  size_t i,length,utf8_length;
  DREF String *result; struct string_utf *utf;
@@ -1937,7 +1937,7 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/uint32_t *__restrict text) {
+DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) {
  size_t i,length,utf8_length;
  DREF String *result; struct string_utf *utf;
  ASSERT(text);
@@ -2356,7 +2356,7 @@ err:
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_SetUtf8(/*inherit(always)*/DREF DeeObject *__restrict self,
+DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode) {
  DREF String *result; uint8_t *iter,*end;
  struct string_utf *utf = NULL;
@@ -2542,7 +2542,7 @@ err_r:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_TrySetUtf8(/*inherit(on_success)*/DREF DeeObject *__restrict self) {
+DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
  DREF String *result; uint8_t *iter,*end;
  struct string_utf *utf = NULL;
  uint32_t *buffer32,*dst32;
@@ -3699,7 +3699,7 @@ PUBLIC int
  * @return: -1:      Failed to append the string. */
 PUBLIC dssize_t DCALL
 Dee_unicode_printer_print(void *__restrict self,
-                          /*utf-8*/char const *__restrict text,
+                          /*utf-8*/ char const *__restrict text,
                           size_t textlen) {
  struct unicode_printer *me;
  size_t result = textlen;
@@ -3762,7 +3762,7 @@ err:
 
 PUBLIC dssize_t DCALL
 Dee_unicode_printer_printutf16(struct unicode_printer *__restrict self,
-                               /*utf-16*/uint16_t const *__restrict text,
+                               /*utf-16*/ uint16_t const *__restrict text,
                                size_t textlen) {
  size_t result = textlen;
  uint16_t *flush_start;
@@ -4579,7 +4579,7 @@ DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
  * @return: -1: Failed to allocate the string. */
 PUBLIC dssize_t DCALL
 Dee_unicode_printer_reuse(struct unicode_printer *__restrict self,
-                          /*utf-8*/char const *__restrict str, size_t length) {
+                          /*utf-8*/ char const *__restrict str, size_t length) {
  size_t result;
  /* TODO: Search for an existing instance. */
  result = self->up_length;
@@ -5353,7 +5353,7 @@ PUBLIC void
 }
 PUBLIC dssize_t
 (DCALL Dee_unicode_printer_confirm_utf32)(struct unicode_printer *__restrict self,
-                                          /*inherit(always)*/uint32_t *buf,
+                                          /*inherit(always)*/ uint32_t *buf,
                                           size_t final_length) {
  if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE) {
   if (!buf) return 0;
@@ -5380,7 +5380,7 @@ PUBLIC dssize_t
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_FromBackslashEscaped(/*utf-8*/char const *__restrict start,
+DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  if unlikely(DeeString_DecodeBackslashEscaped(&printer,start,length,error_mode))
@@ -5393,7 +5393,7 @@ err:
 
 PUBLIC int DCALL
 DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
-                                 /*utf-8*/char const *__restrict start,
+                                 /*utf-8*/ char const *__restrict start,
                                  size_t length, unsigned int error_mode){
  char const *iter,*end,*flush_start;
  end = (iter = start)+length;
@@ -5558,7 +5558,7 @@ err:
  * written into a Bytes object. */
 PUBLIC dssize_t DCALL
 bytes_printer_print(void *__restrict self,
-                    /*utf-8*/char const *__restrict text, size_t textlen) {
+                    /*utf-8*/ char const *__restrict text, size_t textlen) {
  uint32_t ch32; char *flush_start;
  size_t result = textlen;
  struct bytes_printer *me;

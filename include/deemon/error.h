@@ -20,9 +20,11 @@
 #define GUARD_DEEMON_ERROR_H 1
 
 #include "api.h"
-#include "object.h"
-#include <stdint.h>
+
 #include <stdbool.h>
+#include <stdint.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
@@ -40,7 +42,7 @@ DECL_BEGIN
 #define ERROR_HANDLED_RESTORE   Dee_ERROR_HANDLED_RESTORE
 #define ERROR_HANDLED_INTERRUPT Dee_ERROR_HANDLED_INTERRUPT
 #define DERROR_NOTIMPLEMENTED   DeeError_NOTIMPLEMENTED
-#endif
+#endif /* DEE_SOURCE */
 
 typedef struct Dee_error_object DeeErrorObject;
 typedef int32_t Dee_syserrno_t;
@@ -162,12 +164,18 @@ DDATDEF DeeTypeObject             DeeError_FileClosed;
  * Additionally, this type of error is used by the builtin implementation
  * of `exit()' when deemon was built with `CONFIG_NO_STDLIB'. */
 DDATDEF DeeTypeObject DeeError_AppExit;
-struct Dee_appexit_object { Dee_OBJECT_HEAD int ae_exitcode; };
-#define DeeAppExit_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeError_AppExit)
+struct Dee_appexit_object {
+	Dee_OBJECT_HEAD
+	int ae_exitcode;
+};
+#define DeeAppExit_Check(ob)    DeeObject_InstanceOfExact(ob, &DeeError_AppExit)
 #define DeeAppExit_Exitcode(ob) ((struct Dee_appexit_object *)Dee_REQUIRES_OBJECT(ob))->ae_exitcode
 
-struct Dee_threadexit_object { Dee_OBJECT_HEAD DREF DeeObject *te_result; };
-#define DeeThreadExit_Check(ob)    DeeObject_InstanceOfExact(ob,&DeeError_ThreadExit)
+struct Dee_threadexit_object {
+	Dee_OBJECT_HEAD
+	DREF DeeObject *te_result;
+};
+#define DeeThreadExit_Check(ob)  DeeObject_InstanceOfExact(ob, &DeeError_ThreadExit)
 #define DeeThreadExit_Result(ob) ((struct Dee_threadexit_object *)Dee_REQUIRES_OBJECT(ob))->te_result
 
 struct Dee_string_object;
@@ -175,13 +183,15 @@ struct Dee_string_object;
 /* Object header for types derived from `DeeError_Error'
  * Note that types derived from `DeeError_Signal' don't have any special header.
  * Special object heads for other error types can be found in `error_types.h' */
-#define Dee_ERROR_OBJECT_HEAD \
-    Dee_OBJECT_HEAD \
-    DREF struct Dee_string_object *e_message; /* [0..1][const] Error message string. \
-                                               * NOTE: May be substituted with, or extended by \
-                                               *       the `__str__' operators of sub-classes). */ \
-    DREF DeeObject                *e_inner;   /* [0..1][const] Inner error object. */
-struct Dee_error_object { Dee_ERROR_OBJECT_HEAD };
+#define Dee_ERROR_OBJECT_HEAD                                                                      \
+	Dee_OBJECT_HEAD                                                                                \
+	DREF struct Dee_string_object *e_message; /* [0..1][const] Error message string.               \
+	                                           * NOTE: May be substituted with, or extended by     \
+	                                           *       the `__str__' operators of sub-classes). */ \
+	DREF DeeObject                *e_inner;   /* [0..1][const] Inner error object. */
+struct Dee_error_object {
+	Dee_ERROR_OBJECT_HEAD
+};
 
 
 
@@ -227,9 +237,9 @@ DFUNDEF bool DCALL DeeError_Print(char const *reason, unsigned int handle_errors
 #define Dee_ERROR_PRINT_DOHANDLE   1
 #ifdef CONFIG_NO_THREADS
 #define Dee_ERROR_PRINT_HANDLEINTR Dee_ERROR_PRINT_DOHANDLE
-#else
+#else /* CONFIG_NO_THREADS */
 #define Dee_ERROR_PRINT_HANDLEINTR 2
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
 DFUNDEF void DCALL DeeError_Display(char const *reason, DeeObject *__restrict error, DeeObject *traceback);
@@ -241,9 +251,9 @@ DFUNDEF void DCALL DeeError_Display(char const *reason, DeeObject *__restrict er
 #ifdef CONFIG_NO_THREADS
 DFUNDEF bool (DCALL DeeError_HandledNoSMP)(void);
 #define DeeError_Handled(mode) DeeError_HandledNoSMP()
-#else
+#else /* CONFIG_NO_THREADS */
 DFUNDEF bool (DCALL DeeError_Handled)(unsigned int mode);
-#endif
+#endif /* !CONFIG_NO_THREADS */
 #define Dee_ERROR_HANDLED_NORMAL    0x0000 /* Only handle non-interrupt exceptions (return `false' if the current error is an interrupt). */
 #define Dee_ERROR_HANDLED_RESTORE   0x0001 /* Handle non-interrupt exceptions normally, and re-schedule interrupt exceptions
                                             * to-be delivered once again the next time `DeeThread_CheckInterrupt()' is called. */
@@ -252,7 +262,7 @@ DFUNDEF bool (DCALL DeeError_Handled)(unsigned int mode);
 
 /* Throw an error indicating that the current function isn't implemented. */
 #define DeeError_NOTIMPLEMENTED() \
-  DeeError_Throwf(&DeeError_NotImplemented,"Not implemented: %s",__FUNCTION__)
+	DeeError_Throwf(&DeeError_NotImplemented, "Not implemented: %s", __FUNCTION__)
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -260,7 +270,7 @@ DFUNDEF bool (DCALL DeeError_Handled)(unsigned int mode);
 /* Install the keyboard interrupt handler. */
 INTDEF void DCALL DeeError_InstallKeyboardInterrupt(void);
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 DECL_END

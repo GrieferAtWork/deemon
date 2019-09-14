@@ -657,14 +657,14 @@ PRIVATE void corrupt_heref(DecFile *__restrict self,
 }
 #define HAVE_GOTO_CORRUPTED 1
 #define GOTO_CORRUPTED(reader,sym)      do{corrupt_here(self,reader,__FILE__,__LINE__);goto sym;}__WHILE0
-#define GOTO_CORRUPTEDF(reader,sym,...) do{corrupt_heref(self,reader,__FILE__,__LINE__,__VA_ARGS__);goto sym;}__WHILE0
+#define GOTO_CORRUPTEDF(reader,sym, ...) do{corrupt_heref(self,reader,__FILE__,__LINE__,__VA_ARGS__);goto sym;}__WHILE0
 #define SET_CORRUPTED(reader,expr)        (corrupt_here(self,reader,__FILE__,__LINE__),expr)
-#define SET_CORRUPTEDF(reader,expr,...)   (corrupt_heref(self,reader,__FILE__,__LINE__,__VA_ARGS__),expr)
+#define SET_CORRUPTEDF(reader,expr, ...)   (corrupt_heref(self,reader,__FILE__,__LINE__,__VA_ARGS__),expr)
 #else
 #define GOTO_CORRUPTED(reader,sym)      goto sym
-#define GOTO_CORRUPTEDF(reader,sym,...) goto sym
+#define GOTO_CORRUPTEDF(reader,sym, ...) goto sym
 #define SET_CORRUPTED(reader,expr)      expr
-#define SET_CORRUPTEDF(reader,expr,...) expr
+#define SET_CORRUPTEDF(reader,expr, ...) expr
 #endif
 
 
@@ -2476,7 +2476,7 @@ done:
 }
 
 PUBLIC uint64_t DCALL
-DeeModule_GetCTime(/*Module*/DeeObject *__restrict self) {
+DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
  uint64_t result;
  ASSERT_OBJECT_TYPE(self,&DeeModule_Type);
  if (((DeeModuleObject *)self)->mo_flags & MODULE_FHASCTIME) {

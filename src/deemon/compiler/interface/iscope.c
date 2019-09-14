@@ -296,7 +296,7 @@ scope_newanon(DeeCompilerScopeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result = NULL; struct symbol *sym;
  COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_Unpack(argc,argv,":newanon"))
+ if (DeeArg_Unpack(argc, argv,":newanon"))
      goto done;
  sym = new_unnamed_symbol_in_scope(self->ci_value);
  if unlikely(!sym) goto done;
@@ -316,7 +316,7 @@ scope_newlocal(DeeCompilerScopeObject *__restrict self,
  DeeObject *name,*loc = NULL; bool requirenew = true; char *name_utf8;
  PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
  COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|bo:newlocal",&name,&requirenew,&loc) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|bo:newlocal",&name,&requirenew,&loc) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type) ||
     (name_utf8 = DeeString_AsUtf8(name)) == NULL)
      goto done;

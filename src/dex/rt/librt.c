@@ -87,7 +87,7 @@ DECL_BEGIN
 PRIVATE DREF DeeObject *DCALL
 librt_getstacklimit_f(size_t argc, DeeObject **__restrict argv) {
  uint16_t result;
- if (DeeArg_Unpack(argc,argv,":getstacklimit"))
+ if (DeeArg_Unpack(argc, argv,":getstacklimit"))
      goto err;
  result = ATOMIC_READ(DeeExec_StackLimit);
  return DeeInt_NewU16(result);
@@ -97,7 +97,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 librt_setstacklimit_f(size_t argc, DeeObject **__restrict argv) {
  uint16_t result,newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
- if (DeeArg_Unpack(argc,argv,"|I16u:setstacklimit",&newval))
+ if (DeeArg_Unpack(argc, argv,"|I16u:setstacklimit",&newval))
      goto err;
  result = ATOMIC_XCH(DeeExec_StackLimit,newval);
  return DeeInt_NewU16(result);
@@ -108,7 +108,7 @@ PRIVATE DREF DeeObject *DCALL
 librt_makeclass_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
  DeeTypeObject *base; DeeObject *descriptor;
  PRIVATE DEFINE_KWLIST(kwlist,{ K(base), K(descriptor), KEND });
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"oo:makeclass",&base,&descriptor))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"oo:makeclass",&base,&descriptor))
      goto err;
  if (DeeObject_AssertTypeExact(descriptor,&DeeClassDescriptor_Type))
      goto err;
@@ -1401,7 +1401,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReSplitIterator,librt_get_ReSplitIterator_f);
 
 PRIVATE DREF DeeObject *DCALL
 librt_argv_get_f(size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":argv.getter"))
+ if (DeeArg_Unpack(argc, argv,":argv.getter"))
      goto err;
  return Dee_GetArgv();
 err:
@@ -1410,7 +1410,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 librt_argv_set_f(size_t argc, DeeObject **__restrict argv) {
  DeeObject *new_tuple;
- if (DeeArg_Unpack(argc,argv,"o:argv.setter",&new_tuple))
+ if (DeeArg_Unpack(argc, argv,"o:argv.setter",&new_tuple))
      goto err;
  if (DeeObject_AssertTypeExact(new_tuple,&DeeTuple_Type))
      goto err;

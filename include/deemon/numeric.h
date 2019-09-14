@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_NUMERIC_H 1
 
 #include "api.h"
+
 #include "object.h"
 
 DECL_BEGIN

@@ -20,9 +20,11 @@
 #define GUARD_DEEMON_BOOL_H 1
 
 #include "api.h"
-#include "object.h"
-#include <stddef.h>
+
 #include <stdbool.h>
+#include <stddef.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
@@ -43,12 +45,14 @@ typedef struct Dee_bool_object DeeBoolObject;
  *       The fact that this can be done is the reason why a boolean
  *       doesn't store its value in its structure, but rather in its
  *       self-address. */
-struct Dee_bool_object { Dee_OBJECT_HEAD };
+struct Dee_bool_object {
+	Dee_OBJECT_HEAD
+};
 
-#define DeeBool_Check(x)      DeeObject_InstanceOfExact(x,&DeeBool_Type) /* `bool' is final. */
-#define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeBool_Type)
-#define DeeBool_IsTrue(x)   ((DeeBoolObject *)Dee_REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
-#define DeeBool_For(val)    ((DeeObject *)&Dee_FalseTrue[!!(val)])
+#define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool' is final. */
+#define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBool_Type)
+#define DeeBool_IsTrue(x)     ((DeeBoolObject *)Dee_REQUIRES_OBJECT(x) != &Dee_FalseTrue[0])
+#define DeeBool_For(val)      ((DeeObject *)&Dee_FalseTrue[!!(val)])
 #define Dee_return_bool(val)  Dee_return_reference(DeeBool_For(val))
 #define Dee_return_bool_(val) Dee_return_reference_(DeeBool_For(val))
 #define Dee_return_true       Dee_return_reference_(Dee_True)

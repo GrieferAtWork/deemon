@@ -399,8 +399,8 @@ err:
 INTERN int DCALL
 XMLNode_InitFromString(XMLNode *__restrict self,
                        DeeObject *__restrict data_owner,
-                       /*utf-8*/char const *__restrict text,
-                       /*utf-8*/char const *__restrict text_end);
+                       /*utf-8*/ char const *__restrict text,
+                       /*utf-8*/ char const *__restrict text_end);
 
 
 

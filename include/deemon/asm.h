@@ -334,11 +334,11 @@
                                     * >> Object args = POP(IMM8);
                                     * >> IF CURRENT_INSTRUCTION_HAS_PREFIX THEN
                                     * >>     Object obj = GET_PREFIX_OBJECT();
-                                    * >>     obj = INVOKE_OPERATOR(id,obj,args...);
+                                    * >>     obj = INVOKE_OPERATOR(id,obj, args...);
                                     * >>     SET_PREFIX_OBJECT(obj);
                                     * >> ELSE
                                     * >>     Object obj = POP();
-                                    * >>     PUSH(INVOKE_OPERATOR(id,obj,args...));
+                                    * >>     PUSH(INVOKE_OPERATOR(id,obj, args...));
                                     * >> FI */
 #define ASM_OPERATOR_TUPLE    0x1a /* [2][-2,+1]   `op top, $<imm8>, pop...'            - Similar to `ASM_CALL_OP', but directly pop the argument Tuple.
                                     * [2][-1,+1]   `PREFIX: push op $<imm8>, pop...'
@@ -349,11 +349,11 @@
                                     * >> FI
                                     * >> IF CURRENT_INSTRUCTION_HAS_PREFIX THEN
                                     * >>     Object obj = GET_PREFIX_OBJECT();
-                                    * >>     obj = INVOKE_OPERATOR(IMM8,obj,args...);
+                                    * >>     obj = INVOKE_OPERATOR(IMM8, obj, args...);
                                     * >>     SET_PREFIX_OBJECT(obj);
                                     * >> ELSE
                                     * >>     Object obj = POP();
-                                    * >>     PUSH(INVOKE_OPERATOR(IMM8,obj,args...));
+                                    * >>     PUSH(INVOKE_OPERATOR(IMM8, obj, args...));
                                     * >> FI */
 #define ASM_CALL              0x1b /* [2][-1-n,+1] `call top, #<imm8>'                  - Pop <imm8> values and pack then into a Tuple then used to call a function popped thereafter. - Push the result onto the stack.
                                     * >> Object args = POP(IMM8);
@@ -884,7 +884,7 @@
 /*      ASM_                  0xf005  *               --------                            - ------------------ */
 #define ASM_ENDCATCH_N        0xf006 /* [3][-0,+0]   `end catch, #<imm8>+1'               - Unconditionally handle the <imm8>+1'th exception.
                                       *                                                    `end catch, #0' should be encoded the same as `end catch'
-                                      * >> IF (thread->t_exceptsz-REG_EXCEPTION_START) > IMM8 THEN
+                                      * >> IF (thread->t_exceptsz - REG_EXCEPTION_START) > IMM8 THEN
                                       * >>     POP_NTH_EXCEPT(WITH handle_interrupt = TRUE, WITH nth = IMM8 + 1);
                                       * >> FI
                                       * This instruction is required to properly discard the primary
@@ -926,7 +926,7 @@
                                       * >> IF IS_BOUND(REG_RESULT) THEN
                                       * >>     RETURN();
                                       * >> FI
-                                      * >> IF (THREAD->t_exceptsz-REG_EXCEPTION_START) > IMM8+1
+                                      * >> IF (THREAD->t_exceptsz - REG_EXCEPTION_START) > IMM8 + 1
                                       * >>     EXCEPT();
                                       * >> FI */
 #define ASM16_CALL_KW         0xf008 /* [5][-1-n,+1] `call top, #<imm8>, const <imm16>'   - Similar to `ASM_CALL', but also pass a keywords mapping from `<imm16>' */
@@ -1387,10 +1387,10 @@
 #define DDI_GENERIC_START 0x10 /* First instruction that is executed in a generic context. */
 #define DDI_MAXSHIFT      0xff /* A generic opcode with the greatest shift of both UIP and LNO. */
 
-#define DDI_GENERIC_IP(x) (((x)&0xf0) >> 4) /* Intentionally designed to be >= 1 (because `0x0*' is used for misc. opcodes)
-                                             * This way, any generic instruction is _always_ a checkpoint! */
-#define DDI_GENERIC_LN(x)  ((x)&0x0f)
-#define DDI_GENERIC(ip,ln) (((ip) << 4)|(ln))
+#define DDI_GENERIC_IP(x)   (((x)&0xf0) >> 4) /* Intentionally designed to be >= 1 (because `0x0*' is used for misc. opcodes)
+                                               * This way, any generic instruction is _always_ a checkpoint! */
+#define DDI_GENERIC_LN(x)   ((x)&0x0f)
+#define DDI_GENERIC(ip, ln) (((ip) << 4)|(ln))
 
 #define DDI_INSTRLEN_MAX  3 /* Technically, instructions can be larger than this,
                              * however this is used for the size of padding-data

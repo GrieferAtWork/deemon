@@ -32,17 +32,17 @@ DECL_BEGIN
 typedef struct Dee_float_object DeeFloatObject;
 
 struct Dee_float_object {
-    Dee_OBJECT_HEAD
-    double      f_value; /* [const] The value of this float as a C-double. */
+	Dee_OBJECT_HEAD
+	double      f_value; /* [const] The value of this float as a C-double. */
 };
-#define Dee_DEFINE_FLOAT(name,value) \
-  DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
+#define Dee_DEFINE_FLOAT(name, value) \
+	DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
 
 
 #define DeeFloat_VALUE(x) ((DeeFloatObject *)Dee_REQUIRES_OBJECT(x))->f_value
 
-#define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x,&DeeFloat_Type) /* `float' is final */
-#define DeeFloat_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeFloat_Type)
+#define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x, &DeeFloat_Type) /* `float' is final */
+#define DeeFloat_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeFloat_Type)
 DDATDEF DeeTypeObject DeeFloat_Type;
 
 /* Create and return a new floating point object. */

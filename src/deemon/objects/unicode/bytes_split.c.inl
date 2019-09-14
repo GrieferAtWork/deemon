@@ -65,7 +65,7 @@ typedef struct {
 PRIVATE int DCALL
 bsi_init(BytesSplitIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_BytesSplitIterator",
+ if (DeeArg_Unpack(argc, argv,"o:_BytesSplitIterator",
                   &self->bsi_split))
      goto err;
  if (Dee_TYPE(self) == &BytesSplitIterator_Type) {
@@ -353,7 +353,7 @@ bs_ctor(BytesSplit *__restrict self) {
 PRIVATE int DCALL
 bs_init(BytesSplit *__restrict self, size_t argc,
         DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_BytesSplit",&self->bs_bytes,&self->bs_sep_owner))
+ if (DeeArg_Unpack(argc, argv,"oo:_BytesSplit",&self->bs_bytes,&self->bs_sep_owner))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->bs_bytes,&DeeBytes_Type))
      goto err;
@@ -703,7 +703,7 @@ blsi_init(BytesLineSplitIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  BytesLineSplit *ls;
  self->blsi_keepends = false;
- if (DeeArg_Unpack(argc,argv,"o|b:_BytesLineSplitIterator",&ls,&self->blsi_keepends) ||
+ if (DeeArg_Unpack(argc, argv,"o|b:_BytesLineSplitIterator",&ls,&self->blsi_keepends) ||
      DeeObject_AssertTypeExact((DeeObject *)ls,&BytesLineSplit_Type))
      goto err;
  self->blsi_bytes = ls->bls_bytes;
@@ -885,7 +885,7 @@ PRIVATE int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject **__restrict argv) {
  self->bls_keepends = false;
- if (DeeArg_Unpack(argc,argv,"o|b:_BytesLineSplit",&self->bls_bytes,&self->bls_keepends) ||
+ if (DeeArg_Unpack(argc, argv,"o|b:_BytesLineSplit",&self->bls_bytes,&self->bls_keepends) ||
      DeeObject_AssertTypeExact((DeeObject *)self->bls_bytes,&DeeBytes_Type))
      goto err;
  Dee_Incref(self->bls_bytes);

@@ -23,7 +23,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
-#define STRING2(name,str) INTERN DEFINE_STRING(name,str);
+#define STRING2(name, str) INTERN DEFINE_STRING(name, str);
 #include "strings.h"
 
 #endif /* !GUARD_DEEMON_RUNTIME_STRINGS_C */

@@ -503,7 +503,7 @@ err:
 
 
 LOCAL uniflag_t DCALL
-get_regex_trait(/*utf-32*/uint32_t name) {
+get_regex_trait(/*utf-32*/ uint32_t name) {
  uniflag_t result;
  switch (name) {
 #define REGEX_TRAIT_NAMES  "pasnlutcdD01"
@@ -1352,8 +1352,8 @@ forward_error:
 
 
 PUBLIC size_t DCALL
-DeeRegex_Matches(/*utf-8*/char const *__restrict data, size_t datalen,
-                 /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_Matches(/*utf-8*/ char const *__restrict data, size_t datalen,
+                 /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  uint16_t flags) {
  struct regex_data rdat; int error;
  ASSERT(datalen != (size_t)-1);
@@ -1372,9 +1372,9 @@ DeeRegex_Matches(/*utf-8*/char const *__restrict data, size_t datalen,
 
 
 PUBLIC size_t DCALL
-DeeRegex_MatchesPtr(/*utf-8*/char const *__restrict data, size_t datalen,
-                    /*utf-8*/char const *__restrict pattern, size_t patternlen,
-                    /*utf-8*/char const **__restrict pdataend,
+DeeRegex_MatchesPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
+                    /*utf-8*/ char const *__restrict pattern, size_t patternlen,
+                    /*utf-8*/ char const **__restrict pdataend,
                     uint16_t flags) {
  struct regex_data rdat; int error;
  ASSERT(datalen != (size_t)-1);
@@ -1434,8 +1434,8 @@ LOCAL bool DCALL is_regex_suffix(char ch) {
 
 
 PUBLIC int DCALL
-DeeRegex_Find(/*utf-8*/char const *__restrict data, size_t datalen,
-              /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_Find(/*utf-8*/ char const *__restrict data, size_t datalen,
+              /*utf-8*/ char const *__restrict pattern, size_t patternlen,
               struct regex_range *__restrict presult, uint16_t flags) {
  uint32_t candidate; int error;
  char *piter,*pend,*diter,*dend;
@@ -1510,8 +1510,8 @@ count_utf8_characters(char *start,
 }
 
 PUBLIC int DCALL
-DeeRegex_RFind(/*utf-8*/char const *__restrict data, size_t datalen,
-               /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_RFind(/*utf-8*/ char const *__restrict data, size_t datalen,
+               /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                struct regex_range *__restrict presult, uint16_t flags) {
  uint32_t candidate; int error;
  char *piter,*pend,*diter,*dend;
@@ -1577,8 +1577,8 @@ err:
 }
 
 PUBLIC int DCALL
-DeeRegex_FindEx(/*utf-8*/char const *__restrict data, size_t datalen,
-                /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_FindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
+                /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                 struct regex_range_ex *__restrict presult, uint16_t flags) {
  uint32_t candidate; int error;
  char *piter,*pend,*diter,*dend;
@@ -1651,8 +1651,8 @@ err:
 }
 
 PUBLIC int DCALL
-DeeRegex_RFindEx(/*utf-8*/char const *__restrict data, size_t datalen,
-                 /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_RFindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
+                 /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  struct regex_range_ex *__restrict presult, uint16_t flags) {
  uint32_t candidate; int error;
  char *piter,*pend,*diter,*dend;
@@ -1723,8 +1723,8 @@ err:
 }
 
 PUBLIC int DCALL
-DeeRegex_FindPtr(/*utf-8*/char const *__restrict data, size_t datalen,
-                 /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_FindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
+                 /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  struct regex_range_ptr *__restrict presult, uint16_t flags) {
  int error; struct regex_data rdat;
  uint8_t candidate; char *piter,*pend,*dend;
@@ -1788,8 +1788,8 @@ err:
  return -1;
 }
 PUBLIC int DCALL
-DeeRegex_RFindPtr(/*utf-8*/char const *__restrict data, size_t datalen,
-                  /*utf-8*/char const *__restrict pattern, size_t patternlen,
+DeeRegex_RFindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
+                  /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                   struct regex_range_ptr *__restrict presult, uint16_t flags) {
  int error; struct regex_data rdat;
  uint8_t candidate; char *piter,*pend,*dend;

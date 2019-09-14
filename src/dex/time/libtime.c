@@ -398,7 +398,7 @@ time_as(DeeTimeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  struct repr_name const *iter;
  DeeObject *name; char const *str; size_t len;
- if (DeeArg_Unpack(argc,argv,"o:as",&name) ||
+ if (DeeArg_Unpack(argc, argv,"o:as",&name) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      return NULL;
  str = DeeString_STR(name);
@@ -1109,7 +1109,7 @@ PRIVATE DREF DeeObject *DCALL
 time_doformat(DeeTimeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  char const *format;
- if (DeeArg_Unpack(argc,argv,"s:format",&format))
+ if (DeeArg_Unpack(argc, argv,"s:format",&format))
      return NULL;
  return time_doformat_string(self,format);
 }
@@ -1720,7 +1720,7 @@ PRIVATE struct type_getset time_class_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 f_libtime_now(size_t argc, DeeObject **__restrict argv) {
  DREF DeeTimeObject *result;
- if (DeeArg_Unpack(argc,argv,":now"))
+ if (DeeArg_Unpack(argc, argv,":now"))
      goto err;
  result = DeeObject_MALLOC(DeeTimeObject);
  if unlikely(!result) goto err;
@@ -1735,7 +1735,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 f_libtime_tick(size_t argc, DeeObject **__restrict argv) {
  DREF DeeTimeObject *result;
- if (DeeArg_Unpack(argc,argv,":tick"))
+ if (DeeArg_Unpack(argc, argv,":tick"))
      goto err;
  result = DeeObject_MALLOC(DeeTimeObject);
  if unlikely(!result) goto err;
@@ -1759,7 +1759,7 @@ PRIVATE DREF DeeObject *DCALL \
 f_libtime_##name(size_t argc, DeeObject **__restrict argv) \
 { \
  DeeObject *value_ob; dtime_t value; \
- if (DeeArg_Unpack(argc,argv,"o:" #name,&value_ob) || \
+ if (DeeArg_Unpack(argc, argv,"o:" #name,&value_ob) || \
      object_as_time(value_ob,&value)) \
      return NULL; \
  return new; \
@@ -1770,7 +1770,7 @@ PRIVATE DREF DeeObject *DCALL \
 f_libtime_##name(size_t argc, DeeObject **__restrict argv) \
 { \
  dtime_half_t value; \
- if (DeeArg_Unpack(argc,argv,"I64d:" #name,&value)) \
+ if (DeeArg_Unpack(argc, argv,"I64d:" #name,&value)) \
      return NULL; \
  return new; \
 } \
@@ -1781,7 +1781,7 @@ PRIVATE DREF DeeObject *DCALL \
 f_libtime_##name(size_t argc, DeeObject **__restrict argv) \
 { \
  dtime_t value; \
- if (DeeArg_Unpack(argc,argv,"I64d:" #name,&value)) \
+ if (DeeArg_Unpack(argc, argv,"I64d:" #name,&value)) \
      return NULL; \
  return new; \
 } \
@@ -1791,7 +1791,7 @@ PRIVATE DREF DeeObject *DCALL \
 f_libtime_##name(size_t argc, DeeObject **__restrict argv) \
 { \
  dtime_half_t value; \
- if (DeeArg_Unpack(argc,argv,"I32d:" #name,&value)) \
+ if (DeeArg_Unpack(argc, argv,"I32d:" #name,&value)) \
      return NULL; \
  return new; \
 } \
@@ -1825,7 +1825,7 @@ f_libtime_maketime(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
      KS(timestr_microsecond),
      KEND
  };
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|uuuuu:maketime",&hor,&min,&sec,&mil,&mic))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|uuuuu:maketime",&hor,&min,&sec,&mil,&mic))
      goto err;
  result = DeeObject_MALLOC(DeeTimeObject);
  if unlikely(!result) goto done;
@@ -1857,10 +1857,10 @@ f_libtime_makedate(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
      KEND
  };
 #ifdef HAVE_128BIT_TIME
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|I64uuu:makedate",&yer,&mon,&day))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|I64uuu:makedate",&yer,&mon,&day))
      goto err;
 #else
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|I32uuu:makedate",&yer,&mon,&day))
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|I32uuu:makedate",&yer,&mon,&day))
      goto err;
 #endif
  result = DeeObject_MALLOC(DeeTimeObject);
@@ -1884,11 +1884,11 @@ f_libtime_makeanon(size_t argc, DeeObject **__restrict argv) {
  dtime_t value; DREF DeeTimeObject *result;
 #ifdef HAVE_128BIT_TIME
  DeeObject *temp;
- if (DeeArg_Unpack(argc,argv,"o:makeanon",&temp) ||
+ if (DeeArg_Unpack(argc, argv,"o:makeanon",&temp) ||
      object_as_time(temp,&value))
      goto err;
 #else
- if (DeeArg_Unpack(argc,argv,"I64u:makeanon",&value))
+ if (DeeArg_Unpack(argc, argv,"I64u:makeanon",&value))
      goto err;
 #endif
  result = DeeObject_MALLOC(DeeTimeObject);
@@ -1903,24 +1903,24 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL time_class_now(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_now(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_tick(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_tick(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_milliseconds(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_milliseconds(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_seconds(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_seconds(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_minutes(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_minutes(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_hours(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_hours(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_days(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_days(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_weeks(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_weeks(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_months(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_months(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_years(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_years(argc,argv); }
-PRIVATE DREF DeeObject *DCALL time_class_maketime(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv, DeeObject *kw) { return f_libtime_maketime(argc,argv,kw); }
-PRIVATE DREF DeeObject *DCALL time_class_makedate(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv, DeeObject *kw) { return f_libtime_makedate(argc,argv,kw); }
+PRIVATE DREF DeeObject *DCALL time_class_now(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_now(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_tick(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_tick(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_milliseconds(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_milliseconds(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_seconds(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_seconds(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_minutes(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_minutes(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_hours(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_hours(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_days(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_days(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_weeks(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_weeks(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_months(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_months(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_years(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv) { return f_libtime_years(argc, argv); }
+PRIVATE DREF DeeObject *DCALL time_class_maketime(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv, DeeObject *kw) { return f_libtime_maketime(argc, argv, kw); }
+PRIVATE DREF DeeObject *DCALL time_class_makedate(DeeObject *__restrict UNUSED(self), size_t argc, DeeObject **__restrict argv, DeeObject *kw) { return f_libtime_makedate(argc, argv, kw); }
 
 PRIVATE DREF DeeObject *DCALL
 time_class_from_time_t(DeeObject *__restrict UNUSED(self),
                        size_t argc, DeeObject **__restrict argv) {
  time_t value; DREF DeeTimeObject *result;
- if (DeeArg_Unpack(argc,argv,sizeof(time_t) == 4
+ if (DeeArg_Unpack(argc, argv,sizeof(time_t) == 4
                            ? "I32u:from_time_t"
                            : "I64u:from_time_t",
                   &value))
@@ -1939,7 +1939,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 time_class_freq(DeeObject *__restrict UNUSED(self),
                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":freq"))
+ if (DeeArg_Unpack(argc, argv,":freq"))
      return NULL;
  return DeeInt_NewInt(MICROSECONDS_PER_SECOND);
 }
@@ -2020,7 +2020,7 @@ time_init(DeeTimeObject *__restrict self,
  };
  self->t_kind = TIME_KIND(TIME_MICROSECONDS,TIME_REPR_NONE);
  self->t_time = 0;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,
 #ifdef HAVE_128BIT_TIME
                      "|I64uuuuuuuu:time",
 #else

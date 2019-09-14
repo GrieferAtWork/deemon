@@ -581,7 +581,7 @@ process_start(Process *__restrict self,
  DREF DeeStringObject *final_exe;
  STARTUPINFOW startupInfo;
  PROCESS_INFORMATION procInfo;
- if (DeeArg_Unpack(argc,argv,":start"))
+ if (DeeArg_Unpack(argc, argv,":start"))
      goto done;
  if (DeeThread_CheckInterrupt())
      goto done;
@@ -940,7 +940,7 @@ PRIVATE DREF DeeObject *DCALL
 process_detach(Process *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  uint16_t state;
- if (DeeArg_Unpack(argc,argv,":detach"))
+ if (DeeArg_Unpack(argc, argv,":detach"))
      goto err;
  while (ATOMIC_FETCHOR(self->p_state,PROCESS_FDETACHING) &
                                      PROCESS_FDETACHING)
@@ -981,7 +981,7 @@ PRIVATE DREF DeeObject *DCALL
 process_id(Process *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DWORD pid;
- if (DeeArg_Unpack(argc,argv,":id"))
+ if (DeeArg_Unpack(argc, argv,":id"))
      goto err;
  rwlock_read(&self->p_lock);
  if (!(self->p_state&PROCESS_FSTARTED)) {
@@ -1015,7 +1015,7 @@ PRIVATE DREF DeeObject *DCALL
 process_terminate(Process *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  UINT exit_code = 0;
- if (DeeArg_Unpack(argc,argv,"|I32u:terminate",&exit_code))
+ if (DeeArg_Unpack(argc, argv,"|I32u:terminate",&exit_code))
      goto err;
  if (DeeThread_CheckInterrupt()) goto err;
  rwlock_write(&self->p_lock);
@@ -1083,7 +1083,7 @@ PRIVATE DREF DeeObject *DCALL
 process_join(Process *__restrict self, size_t argc,
              DeeObject **__restrict argv) {
  int error; DWORD result;
- if (DeeArg_Unpack(argc,argv,":join"))
+ if (DeeArg_Unpack(argc, argv,":join"))
      goto err;
  error = process_dojoin(self,&result,(uint64_t)-1);
  if unlikely(error < 0) goto err;
@@ -1096,7 +1096,7 @@ PRIVATE DREF DeeObject *DCALL
 process_tryjoin(Process *__restrict self, size_t argc,
                 DeeObject **__restrict argv) {
  int error; DWORD result;
- if (DeeArg_Unpack(argc,argv,":tryjoin"))
+ if (DeeArg_Unpack(argc, argv,":tryjoin"))
      goto err;
  error = process_dojoin(self,&result,0);
  if unlikely(error < 0) goto err;
@@ -1111,7 +1111,7 @@ PRIVATE DREF DeeObject *DCALL
 process_timedjoin(Process *__restrict self, size_t argc,
                   DeeObject **__restrict argv) {
  int error; DWORD result; uint64_t timeout;
- if (DeeArg_Unpack(argc,argv,"I64d:timedjoin",&timeout))
+ if (DeeArg_Unpack(argc, argv,"I64d:timedjoin",&timeout))
      goto err;
  error = process_dojoin(self,&result,timeout);
  if unlikely(error < 0) goto err;
@@ -1125,7 +1125,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_started(Process *__restrict self, size_t argc,
                 DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":started"))
+ if (DeeArg_Unpack(argc, argv,":started"))
      goto err;
  return_bool(self->p_state&PROCESS_FSTARTED);
 err:
@@ -1135,7 +1135,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_detached(Process *__restrict self, size_t argc,
                  DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":detached"))
+ if (DeeArg_Unpack(argc, argv,":detached"))
      goto err;
  return_bool(self->p_state&PROCESS_FDETACHED);
 err:
@@ -1145,7 +1145,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 process_isachild(Process *__restrict self, size_t argc,
                  DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":isachild"))
+ if (DeeArg_Unpack(argc, argv,":isachild"))
      goto err;
  return_bool(self->p_state&PROCESS_FCHILD);
 err:
@@ -1156,7 +1156,7 @@ PRIVATE DREF DeeObject *DCALL
 process_terminated(Process *__restrict self, size_t argc,
                    DeeObject **__restrict argv) {
  DWORD exitcode;
- if (DeeArg_Unpack(argc,argv,":terminated"))
+ if (DeeArg_Unpack(argc, argv,":terminated"))
      goto err;
  if (self->p_state&PROCESS_FTERMINATED)
      return_true;
@@ -1617,7 +1617,7 @@ call_extern(DeeObject *__restrict module_name,
  DREF DeeObject *module,*result;
  module = DeeModule_OpenGlobal(module_name,NULL,true);
  if unlikely(!module) goto err;
- result = DeeObject_CallAttr(module,global_name,argc,argv);
+ result = DeeObject_CallAttr(module,global_name,argc, argv);
  Dee_Decref(module);
  return result;
 err:
@@ -1986,7 +1986,7 @@ PRIVATE struct type_getset process_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":self"))
+ if (DeeArg_Unpack(argc, argv,":self"))
      return NULL;
  return_reference_((DeeObject *)&this_process);
 }
@@ -2009,7 +2009,7 @@ process_init(Process *__restrict self,
  struct ascii_printer cmdline = ASCII_PRINTER_INIT;
  DREF DeeStringObject *exe; int temp;
  DeeObject *args = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:process",&exe,&args))
+ if (DeeArg_Unpack(argc, argv,"o|o:process",&exe,&args))
      goto err;
  /* Add the initial exe-argument. */
  if (DeeString_Check(exe)) {

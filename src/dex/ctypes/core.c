@@ -183,12 +183,12 @@ err:
 PRIVATE DREF DeeObject *DCALL
 stype_func(DeeSTypeObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
- return stype_dofunc(self,argc,argv,(cc_t)0);
+ return stype_dofunc(self,argc, argv,(cc_t)0);
 }
 PRIVATE DREF DeeObject *DCALL
 stype_vfunc(DeeSTypeObject *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- return stype_dofunc(self,argc,argv,CC_FVARARGS);
+ return stype_dofunc(self,argc, argv,CC_FVARARGS);
 }
 
 
@@ -295,7 +295,7 @@ stype_call(DeeSTypeObject *__restrict self,
                                              false);
 create_inst:
  /* Construct a new instance. */
- return DeeObject_New((DeeTypeObject *)self,argc,argv);
+ return DeeObject_New((DeeTypeObject *)self,argc, argv);
 }
 
 
@@ -737,7 +737,7 @@ struct_init(DeeObject *__restrict self,
  orig_type = tp_self = (DeeSTypeObject *)Dee_TYPE(self);
  do {
   if (tp_self->st_init)
-      return (*tp_self->st_init)(orig_type,DeeStruct_Data(self),argc,argv);
+      return (*tp_self->st_init)(orig_type,DeeStruct_Data(self),argc, argv);
  } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_CONSTRUCTOR);
@@ -789,7 +789,7 @@ PRIVATE DREF DeeObject *DCALL
 struct_call(DeeObject *__restrict self, size_t argc,
             DeeObject **__restrict argv) {
  return DeeStruct_Call((DeeSTypeObject *)Dee_TYPE(self),
-                         DeeStruct_Data(self),argc,argv);
+                         DeeStruct_Data(self),argc, argv);
 }
 PRIVATE int DCALL
 struct_int32(DeeObject *__restrict self, int32_t *__restrict result) {
@@ -994,7 +994,7 @@ PRIVATE struct type_getset struct_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 struct_ref_func(DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__ref__"))
+ if (DeeArg_Unpack(argc, argv,":__ref__"))
      goto err;
  return struct_ref(self);
 err:
@@ -1284,7 +1284,7 @@ DeeStruct_Call(DeeSTypeObject *__restrict tp_self,
  DeeSTypeObject *orig_type = tp_self;
  do {
   if (tp_self->st_call)
-      return (*tp_self->st_call)(orig_type,self,argc,argv);
+      return (*tp_self->st_call)(orig_type,self,argc, argv);
  } while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
            DeeSType_Check(tp_self));
  err_unimplemented_operator(orig_type,OPERATOR_CALL);

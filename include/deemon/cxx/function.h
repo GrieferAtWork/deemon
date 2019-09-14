@@ -20,10 +20,11 @@
 #define GUARD_DEEMON_CXX_FUNCTION_H 1
 
 #include "api.h"
-#include "object.h"
-#include "sequence.h"
+
 #include "../seq.h"
 #include "../tuple.h"
+#include "object.h"
+#include "sequence.h"
 
 DEE_CXX_BEGIN
 

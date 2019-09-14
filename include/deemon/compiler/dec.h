@@ -23,10 +23,10 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef CONFIG_NO_DEC
-#include "../object.h"
+#include "../code.h"
 #include "../dec.h"
 #include "../module.h"
-#include "../code.h"
+#include "../object.h"
 
 DECL_BEGIN
 
@@ -55,70 +55,70 @@ DECL_BEGIN
 
 
 struct dec_sym {
-    struct dec_sym     *ds_next; /* [0..1][owned] Next symbol. */
-    struct dec_section *ds_sect; /* [0..1] Section within which this symbol is defined. */
-    uint32_t            ds_addr; /* Offset into `ds_sect' where the symbol is defined. */
+	struct dec_sym     *ds_next; /* [0..1][owned] Next symbol. */
+	struct dec_section *ds_sect; /* [0..1] Section within which this symbol is defined. */
+	uint32_t            ds_addr; /* Offset into `ds_sect' where the symbol is defined. */
 };
 #define DEC_SYM_DEFINED(x) ((x)->ds_sect != NULL)
 
 struct dec_rel {
-    struct dec_sym *dr_sym;    /* [0..1] Symbol against which the relocation is performed. */
-    uint32_t        dr_addr;   /* Offset into the associated section where this relocation must be applied. */
-    uint8_t         dr_type;   /* Relocation type (One of `DECREL_*') */
+	struct dec_sym *dr_sym;    /* [0..1] Symbol against which the relocation is performed. */
+	uint32_t        dr_addr;   /* Offset into the associated section where this relocation must be applied. */
+	uint8_t         dr_type;   /* Relocation type (One of `DECREL_*') */
 #ifndef __INTELLISENSE__
-    uint8_t         dr_pad[3]; /* ... */
+	uint8_t         dr_pad[3]; /* ... */
 #endif
 };
 
 struct dec_section {
-    struct dec_section *ds_next;  /* [0..1][owned] Additional sections inserted after this one, but before the next. */
-    uint8_t            *ds_begin; /* [0..1][owned] Allocated base pointer. */
-    uint8_t            *ds_iter;  /* [(!= NULL) == (ds_begin != NULL)][>= ds_begin && <= ds_end] Target text pointer. */
-    uint8_t            *ds_end;   /* [0..1][owned] Allocated base pointer. */
-    size_t              ds_relc;  /* Used amount of relocations. */
-    size_t              ds_rela;  /* Allocated amount of relocations. */
-    struct dec_rel     *ds_relv;  /* [0..ds_relc|ALLOC(ds_rela)][SORT(ASCENDING(->dr_addr))][owned] Vector of relocations. */
-    uint32_t            ds_base;  /* Base file address of the section (used during final linkage) */
-    struct dec_sym      ds_start; /* A statically allocated symbol pointing to the start of this section. */
+	struct dec_section *ds_next;  /* [0..1][owned] Additional sections inserted after this one, but before the next. */
+	uint8_t            *ds_begin; /* [0..1][owned] Allocated base pointer. */
+	uint8_t            *ds_iter;  /* [(!= NULL) == (ds_begin != NULL)][>= ds_begin && <= ds_end] Target text pointer. */
+	uint8_t            *ds_end;   /* [0..1][owned] Allocated base pointer. */
+	size_t              ds_relc;  /* Used amount of relocations. */
+	size_t              ds_rela;  /* Allocated amount of relocations. */
+	struct dec_rel     *ds_relv;  /* [0..ds_relc|ALLOC(ds_rela)][SORT(ASCENDING(->dr_addr))][owned] Vector of relocations. */
+	uint32_t            ds_base;  /* Base file address of the section (used during final linkage) */
+	struct dec_sym      ds_start; /* A statically allocated symbol pointing to the start of this section. */
 #if __SIZEOF_POINTER__ > 4
-    uint32_t            ds_pad;   /* ... */
+	uint32_t            ds_pad;   /* ... */
 #endif
 };
 #define DEC_SECTION_ISEMPTY(x) ((x)->ds_iter == (x)->ds_begin)
 
 struct dec_writer {
-    struct dec_section  dw_sec_defl[DEC_SECTION_COUNT]; /* Default (builtin) sections. */
-    struct dec_section *dw_sec_curr;      /* [1..1] The currently selected section. */
-    struct dec_sym     *dw_symbols;       /* [0..1][owned] Chain of all symbols that have been allocated. */
+	struct dec_section  dw_sec_defl[DEC_SECTION_COUNT]; /* Default (builtin) sections. */
+	struct dec_section *dw_sec_curr;      /* [1..1] The currently selected section. */
+	struct dec_sym     *dw_symbols;       /* [0..1][owned] Chain of all symbols that have been allocated. */
 #define DEC_WRITE_FNORMAL       0x0000    /* Normal DEC writer flags. */
 #define DEC_WRITE_FREUSE_GLOBAL 0x0001    /* Try to reduce the size of the DEC file by
-                                           * merging mirror copies of data blocks found anywhere
-                                           * within the file, when both blocks of data are pointed
-                                           * to by file offsets found anywhere else in the file.
-                                           * This optimization is expensive but greatly helps to
-                                           * counteract data redundancy that can easily be introduced
-                                           * through duplicate user-functions, etc. etc.
-                                           * Due to the fact that the actual yield from this option is
-                                           * fairly low when compared against its practicality and most
-                                           * importantly: it's impact on performance, to use this option
-                                           * you must explicitly opt-in when enabling it, as it is
-                                           * disabled by default. */
+	                                       * merging mirror copies of data blocks found anywhere
+	                                       * within the file, when both blocks of data are pointed
+	                                       * to by file offsets found anywhere else in the file.
+	                                       * This optimization is expensive but greatly helps to
+	                                       * counteract data redundancy that can easily be introduced
+	                                       * through duplicate user-functions, etc. etc.
+	                                       * Due to the fact that the actual yield from this option is
+	                                       * fairly low when compared against its practicality and most
+	                                       * importantly: it's impact on performance, to use this option
+	                                       * you must explicitly opt-in when enabling it, as it is
+	                                       * disabled by default. */
 #define DEC_WRITE_FNODEBUG      0x0002    /* Don't generate DDI object, or DDI text, leaving the
-                                           * `DEC_SECTION_DEBUG' and `DEC_SECTION_DEBUG_TEXT' sections empty. */
+	                                       * `DEC_SECTION_DEBUG' and `DEC_SECTION_DEBUG_TEXT' sections empty. */
 #define DEC_WRITE_FNODOC        0x0004    /* Don't include documentation strings in the generated DEC file. */
 #define DEC_WRITE_FBIGFILE      0x8000    /* Try to never make use of `DECREL_ABS16' or `DECREL_ABS16_NULL' relocations.
-                                           * When the final link fails because of a `DECREL_ABS16' or `DECREL_ABS16_NULL'
-                                           * relocations being truncated, this flag is set and linking is restarted. */
-    uint16_t            dw_flags;
-    uint8_t             dw_objset;        /* The default set of builtin objects written within `DEC_SECTION_HEADER'. */
+	                                       * When the final link fails because of a `DECREL_ABS16' or `DECREL_ABS16_NULL'
+	                                       * relocations being truncated, this flag is set and linking is restarted. */
+	uint16_t            dw_flags;
+	uint8_t             dw_objset;        /* The default set of builtin objects written within `DEC_SECTION_HEADER'. */
 };
 #define DEC_FOREACH_SECTION_VARS \
-    struct dec_section *_main_section
-#define DEC_FOREACH_SECTION(sec) \
-    for (_main_section  = current_dec.dw_sec_defl; \
-         _main_section != COMPILER_ENDOF(current_dec.dw_sec_defl); \
-       ++_main_section) \
-    for ((sec) = _main_section; (sec); (sec) = (sec)->ds_next)
+	struct dec_section *_main_section
+#define DEC_FOREACH_SECTION(sec)                                   \
+	for (_main_section = current_dec.dw_sec_defl;                  \
+	     _main_section != COMPILER_ENDOF(current_dec.dw_sec_defl); \
+	     ++_main_section)                                          \
+		for ((sec) = _main_section; (sec); (sec) = (sec)->ds_next)
 
 
 /* The currently active DEC writer. */
@@ -179,9 +179,9 @@ INTDEF int (DCALL dec_putw)(uint16_t host_endian_word);
 INTDEF int (DCALL dec_putl)(uint32_t host_endian_dword);
 #ifdef __INTELLISENSE__
 INTDEF int (DCALL dec_putc)(char ch);
-#else
+#else /* __INTELLISENSE__ */
 #define dec_putc(ch) dec_putb((uint8_t)(ch))
-#endif
+#endif /* !__INTELLISENSE__ */
 
 /* Encode a given floating point value as an ieee754-double */
 INTDEF int (DCALL dec_putieee754)(double value);
@@ -194,9 +194,9 @@ INTDEF int (DCALL dec_putptr)(uint32_t value);
 INTDEF int (DCALL dec_putsleb)(int value);
 #ifdef __INTELLISENSE__
 INTDEF int (DCALL dec_putuleb)(unsigned int value);
-#else
+#else /* __INTELLISENSE__ */
 #define dec_putuleb(value)  dec_putptr((uint32_t)(value))
-#endif
+#endif /* !__INTELLISENSE__ */
 
 
 /* Create, insert and return a new section that will
@@ -216,19 +216,19 @@ INTDEF struct dec_sym *DCALL dec_newsym(void);
 /* Define the given symbol at the current text position. */
 LOCAL void DCALL
 dec_defsym(struct dec_sym *__restrict sym) {
- Dee_ASSERT(!DEC_SYM_DEFINED(sym));
- /* Simply set the section and address to what is currently active. */
- sym->ds_sect = dec_curr;
- sym->ds_addr = dec_addr;
+	Dee_ASSERT(!DEC_SYM_DEFINED(sym));
+	/* Simply set the section and address to what is currently active. */
+	sym->ds_sect = dec_curr;
+	sym->ds_addr = dec_addr;
 }
 
 /* Define the given symbol at the given address within the current section. */
 LOCAL void DCALL
 dec_defsymat(struct dec_sym *__restrict sym, uint32_t addr) {
- Dee_ASSERT(!DEC_SYM_DEFINED(sym));
- /* Simply set the section and address. */
- sym->ds_sect = dec_curr;
- sym->ds_addr = addr;
+	Dee_ASSERT(!DEC_SYM_DEFINED(sym));
+	/* Simply set the section and address. */
+	sym->ds_sect = dec_curr;
+	sym->ds_addr = addr;
 }
 
 /* Allocate a new, uninitialized relocation at the end of the current section.
@@ -284,21 +284,21 @@ INTDEF int (DCALL dec_createfp)(DeeModuleObject *__restrict module,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define dec_putb(byte)              __builtin_expect(dec_putb(byte),0)
-#define dec_putw(host_endian_word)  __builtin_expect(dec_putw(host_endian_word),0)
-#define dec_putl(host_endian_dword) __builtin_expect(dec_putl(host_endian_dword),0)
-#define dec_putieee754(value)       __builtin_expect(dec_putieee754(value),0)
-#define dec_putsleb(value)          __builtin_expect(dec_putsleb(value),0)
-#define dec_putptr(value)           __builtin_expect(dec_putptr(value),0)
-#define dec_putrel(type,sym)        __builtin_expect(dec_putrel(type,sym),0)
-#define dec_putrelat(addr,type,sym) __builtin_expect(dec_putrelat(addr,type,sym),0)
-#define dec_link()                  __builtin_expect(dec_link(),DECREL_NONE)
-#define dec_write(file_stream)      __builtin_expect(dec_write(file_stream),0)
-#define dec_generate(module)        __builtin_expect(dec_generate(module),0)
-#define dec_putobj(self)            __builtin_expect(dec_putobj(self),0)
-#define dec_putcode(self)           __builtin_expect(dec_putcode(self),0)
-#define dec_putobjv(count,vec)      __builtin_expect(dec_putobjv(count,vec),0)
-#define dec_create(module)          __builtin_expect(dec_create(module),0)
+#define dec_putb(byte)                __builtin_expect(dec_putb(byte), 0)
+#define dec_putw(host_endian_word)    __builtin_expect(dec_putw(host_endian_word), 0)
+#define dec_putl(host_endian_dword)   __builtin_expect(dec_putl(host_endian_dword), 0)
+#define dec_putieee754(value)         __builtin_expect(dec_putieee754(value), 0)
+#define dec_putsleb(value)            __builtin_expect(dec_putsleb(value), 0)
+#define dec_putptr(value)             __builtin_expect(dec_putptr(value), 0)
+#define dec_putrel(type, sym)         __builtin_expect(dec_putrel(type, sym), 0)
+#define dec_putrelat(addr, type, sym) __builtin_expect(dec_putrelat(addr, type, sym), 0)
+#define dec_link()                    __builtin_expect(dec_link(), DECREL_NONE)
+#define dec_write(file_stream)        __builtin_expect(dec_write(file_stream), 0)
+#define dec_generate(module)          __builtin_expect(dec_generate(module), 0)
+#define dec_putobj(self)              __builtin_expect(dec_putobj(self), 0)
+#define dec_putcode(self)             __builtin_expect(dec_putcode(self), 0)
+#define dec_putobjv(count, vec)       __builtin_expect(dec_putobjv(count, vec), 0)
+#define dec_create(module)            __builtin_expect(dec_create(module), 0)
 #endif
 #endif
 

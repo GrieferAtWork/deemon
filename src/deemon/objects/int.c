@@ -856,7 +856,7 @@ invalid_r:
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeInt_FromString(/*utf-8*/char const *__restrict str,
+DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags) {
  unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
  bool negative = false; DREF DeeIntObject *result;
@@ -988,7 +988,7 @@ invalid:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeInt_FromAscii(/*ascii*/char const *__restrict str,
+DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
                  size_t len, uint32_t radix_and_flags) {
  unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
  bool negative = false; DREF DeeIntObject *result;
@@ -1113,7 +1113,7 @@ invalid:
 }
 
 PUBLIC int
-(DCALL Dee_Atoi64)(/*utf-8*/char const *__restrict str,
+(DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
                    size_t len, uint32_t radix_and_flags,
                    int64_t *__restrict value) {
  unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
@@ -1229,7 +1229,7 @@ err_invalid:
 }
 
 PUBLIC int
-(DCALL Dee_Atoi32)(/*utf-8*/char const *__restrict str,
+(DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str,
                    size_t len, uint32_t radix_and_flags,
                    int32_t *__restrict value) {
  int64_t val64;
@@ -1253,7 +1253,7 @@ err:
  return -1;
 }
 PUBLIC int
-(DCALL Dee_Atoi16)(/*utf-8*/char const *__restrict str,
+(DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str,
                    size_t len, uint32_t radix_and_flags,
                    int16_t *__restrict value) {
  int64_t val64;
@@ -1277,7 +1277,7 @@ err:
  return -1;
 }
 PUBLIC int
-(DCALL Dee_Atoi8)(/*utf-8*/char const *__restrict str,
+(DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags,
                   int8_t *__restrict value) {
  int64_t val64;
@@ -2208,7 +2208,7 @@ PRIVATE DREF DeeObject *DCALL int_return_zero(void) {
 PRIVATE DREF DeeObject *DCALL
 int_new(size_t argc, DeeObject **__restrict argv) {
  DeeObject *val; uint16_t radix = 0;
- if (DeeArg_Unpack(argc,argv,"o|I16u:int",&val,&radix))
+ if (DeeArg_Unpack(argc, argv,"o|I16u:int",&val,&radix))
      goto err;
  if (DeeString_Check(val)) {
   char *utf8 = DeeString_AsUtf8(val);
@@ -2439,11 +2439,11 @@ int_tostr(DeeObject *__restrict self, size_t argc,
  uint32_t flags = 10 << DEEINT_PRINT_RSHIFT; char *flags_str = NULL;
  PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
 #ifdef CONFIG_BIG_ENDIAN
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|I16us:tostr",
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|I16us:tostr",
                   &((uint16_t *)&flags)[0],&flags_str))
      goto err;
 #else
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"|I16us:tostr",
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"|I16us:tostr",
                   &((uint16_t *)&flags)[1],&flags_str))
      goto err;
 #endif
@@ -2471,7 +2471,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 int_hex(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":hex"))
+ if (DeeArg_Unpack(argc, argv,":hex"))
      goto err;
  return int_tostr_impl(self,DEEINT_PRINT(16,DEEINT_PRINT_FNUMSYS));
 err:
@@ -2481,7 +2481,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 int_bin(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":bin"))
+ if (DeeArg_Unpack(argc, argv,":bin"))
      goto err;
  return int_tostr_impl(self,DEEINT_PRINT(2,DEEINT_PRINT_FNUMSYS));
 err:
@@ -2491,7 +2491,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 int_oct(DeeObject *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":oct"))
+ if (DeeArg_Unpack(argc, argv,":oct"))
      goto err;
  return int_tostr_impl(self,DEEINT_PRINT(8,DEEINT_PRINT_FNUMSYS));
 err:
@@ -2506,7 +2506,7 @@ int_tobytes(DeeIntObject *__restrict self,
  size_t length; DeeObject *byteorder = Dee_None;
  bool is_signed = false; bool encode_little;
  DREF DeeObject *result;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"Iu|ob:tobytes",
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"Iu|ob:tobytes",
                     &length,&byteorder,&is_signed))
      goto err;
  if (DeeNone_Check(byteorder)) {
@@ -2553,7 +2553,7 @@ int_frombytes(DeeObject *__restrict UNUSED(self),
  DeeObject *bytes; DeeObject *byteorder = Dee_None;
  bool is_signed = false; bool encode_little; DeeBuffer buf;
  DREF DeeObject *result;
- if (DeeArg_UnpackKw(argc,argv,kw,kwlist,"o|ob:frombytes",
+ if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|ob:frombytes",
                     &bytes,&byteorder,&is_signed))
      goto err;
  if (DeeNone_Check(byteorder)) {
@@ -2606,7 +2606,7 @@ PRIVATE DREF DeeObject *DCALL
 int_sizeof(DeeIntObject *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  size_t int_size;
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  int_size = (size_t)self->ob_size;
  if ((dssize_t)int_size < 0)

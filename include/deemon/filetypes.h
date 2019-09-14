@@ -20,12 +20,14 @@
 #define GUARD_DEEMON_FILETYPES_H 1
 
 #include "api.h"
-#include "object.h"
+
 #include "file.h"
+#include "object.h"
 #include "string.h"
+
 #ifndef CONFIG_NO_THREADS
 #include "util/recursive-rwlock.h"
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -64,62 +66,62 @@ typedef struct Dee_file_reader_object DeeFileReaderObject;
 typedef struct Dee_file_writer_object DeeFileWriterObject;
 
 struct Dee_system_file_object {
-    Dee_LFILE_OBJECT_HEAD
+	Dee_LFILE_OBJECT_HEAD
 #ifdef CONFIG_HOST_WINDOWS
-    DREF DeeObject *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
-    /*HANDLE*/void *sf_handle;     /* [0..1] Underlying file handle.
-                                    *      - STD handles are set to `NULL' before being initialized.
-                                    *      - Closed handlers are set to `INVALID_HANDLE_VALUE' */
-    /*HANDLE*/void *sf_ownhandle;  /* [0..1] The owned file handle. */
-    uint32_t        sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
-    unsigned char   sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
-    unsigned char   sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
+	DREF DeeObject *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
+	/*HANDLE*/void *sf_handle;     /* [0..1] Underlying file handle.
+	                                *      - STD handles are set to `NULL' before being initialized.
+	                                *      - Closed handlers are set to `INVALID_HANDLE_VALUE' */
+	/*HANDLE*/void *sf_ownhandle;  /* [0..1] The owned file handle. */
+	uint32_t        sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
+	unsigned char   sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
+	unsigned char   sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
 #elif defined(CONFIG_HOST_UNIX)
-    DREF DeeObject *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
-    int             sf_handle;     /* [0..1] Underlying system file. */
-    int             sf_ownhandle;  /* [0..1] The owned underlying system file. */
+	DREF DeeObject *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
+	int             sf_handle;     /* [0..1] Underlying system file. */
+	int             sf_ownhandle;  /* [0..1] The owned underlying system file. */
 #elif !defined(CONFIG_NO_STDIO)
-    DREF DeeObject *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
-    FILE           *sf_handle;     /* [0..1] Underlying system file. */
-    FILE           *sf_ownhandle;  /* [0..1] The owned underlying system file. */
+	DREF DeeObject *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
+	FILE           *sf_handle;     /* [0..1] Underlying system file. */
+	FILE           *sf_ownhandle;  /* [0..1] The owned underlying system file. */
 #endif
 };
 
 
 struct Dee_file_buffer_link {
-    DeeFileBufferObject **fbl_pself; /* [1..1,==self][0..1][lock(INTERN(:buffer_ttys_lock))] Self-pointer. */
-    DeeFileBufferObject  *fbl_next;  /* [0..1][valid_if(fbl_pself != NULL)][lock(INTERN(:buffer_ttys_lock))] Next-pointer. */
+	DeeFileBufferObject **fbl_pself; /* [1..1,==self][0..1][lock(INTERN(:buffer_ttys_lock))] Self-pointer. */
+	DeeFileBufferObject  *fbl_next;  /* [0..1][valid_if(fbl_pself != NULL)][lock(INTERN(:buffer_ttys_lock))] Next-pointer. */
 };
 
 struct Dee_file_buffer_object {
-    Dee_FILE_OBJECT_HEAD
+	Dee_FILE_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-    Dee_recursive_rwlock_t      fb_lock;  /* Lock for synchronizing access to the buffer. */
-#endif
-    DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.
-                                           * NOTE: Set to `NULL' when the buffer is closed. */
-    uint8_t                    *fb_ptr;   /* [>= fb_base][+fb_cnt <= fb_base+fb_size][lock(fb_lock)]
-                                           * Pointer to the next character to-be read/written.
-                                           * The absolute in-file position is then `fb_fblk+(fb_ptr-fb_base)' */
-    size_t                      fb_cnt;   /* [lock(fb_lock)] The amount of unread, buffered bytes located at `fb_ptr'. */
-    uint8_t                    *fb_chng;  /* [>= fb_base][+fb_chsz <= fb_base+fb_size]
-                                           * [valid_if(fb_chsz != 0)][lock(fb_lock)]
-                                           * Pointer to the first character that was
-                                           * changed since the buffer had been loaded. */
-    size_t                      fb_chsz;  /* [lock(fb_lock)] Amount of bytes that were changed. */
-    uint8_t                    *fb_base;  /* [0..fb_size][owned_if(!FILE_BUFFER_FSTATICBUF)][lock(fb_lock)] Allocated buffer.
-                                           * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
-    size_t                      fb_size;  /* [lock(fb_lock)] Total allocated / available buffer size.
-                                           * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
-    struct Dee_file_buffer_link fb_ttych; /* Chain of changed TTY file buffers (buffers that are used with an interactive file).
-                                           * Any buffer that is connected to an interactive device is flushed before
-                                           * data is read from any other interactive device.
-                                           * This chain is weakly linked in that buffer objects remove themself
-                                           * before destruction, also meaning that any buffer contained in this
-                                           * chain may have a reference counter to ZERO(0). */
-    Dee_pos_t                   fb_fblk;  /* The starting address of the data block currently stored in `fb_base'. */
-    Dee_pos_t                   fb_fpos;  /* The current (assumed) position within `fb_file'. */
-    uint16_t                    fb_flag;  /* [lock(fb_lock)] The current state of the buffer (Set of `FILE_BUFFER_F*'). */
+	Dee_recursive_rwlock_t      fb_lock;  /* Lock for synchronizing access to the buffer. */
+#endif /* !CONFIG_NO_THREADS */
+	DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.
+	                                       * NOTE: Set to `NULL' when the buffer is closed. */
+	uint8_t                    *fb_ptr;   /* [>= fb_base][+fb_cnt <= fb_base+fb_size][lock(fb_lock)]
+	                                       * Pointer to the next character to-be read/written.
+	                                       * The absolute in-file position is then `fb_fblk+(fb_ptr-fb_base)' */
+	size_t                      fb_cnt;   /* [lock(fb_lock)] The amount of unread, buffered bytes located at `fb_ptr'. */
+	uint8_t                    *fb_chng;  /* [>= fb_base][+fb_chsz <= fb_base+fb_size]
+	                                       * [valid_if(fb_chsz != 0)][lock(fb_lock)]
+	                                       * Pointer to the first character that was
+	                                       * changed since the buffer had been loaded. */
+	size_t                      fb_chsz;  /* [lock(fb_lock)] Amount of bytes that were changed. */
+	uint8_t                    *fb_base;  /* [0..fb_size][owned_if(!FILE_BUFFER_FSTATICBUF)][lock(fb_lock)] Allocated buffer.
+	                                       * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
+	size_t                      fb_size;  /* [lock(fb_lock)] Total allocated / available buffer size.
+	                                       * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
+	struct Dee_file_buffer_link fb_ttych; /* Chain of changed TTY file buffers (buffers that are used with an interactive file).
+	                                       * Any buffer that is connected to an interactive device is flushed before
+	                                       * data is read from any other interactive device.
+	                                       * This chain is weakly linked in that buffer objects remove themself
+	                                       * before destruction, also meaning that any buffer contained in this
+	                                       * chain may have a reference counter to ZERO(0). */
+	Dee_pos_t                   fb_fblk;  /* The starting address of the data block currently stored in `fb_base'. */
+	Dee_pos_t                   fb_fpos;  /* The current (assumed) position within `fb_file'. */
+	uint16_t                    fb_flag;  /* [lock(fb_lock)] The current state of the buffer (Set of `FILE_BUFFER_F*'). */
 };
 
 #define Dee_FILE_BUFFER_FNORMAL     0x0000 /* Normal buffer flags. */
@@ -200,11 +202,12 @@ DFUNDEF int DCALL DeeFileBuffer_SyncTTYs(void);
 
 
 struct Dee_memory_file_object {
-    Dee_LFILE_OBJECT_HEAD
-    char   *mf_begin; /* [0..1][<= mf_end][lock(fo_lock)] The effective start position. */
-    char   *mf_ptr;   /* [0..1][>= mf_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
-    char   *mf_end;   /* [0..1][>= mf_begin][lock(fo_lock)] The effective end position. */
+	Dee_LFILE_OBJECT_HEAD
+	char   *mf_begin; /* [0..1][<= mf_end][lock(fo_lock)] The effective start position. */
+	char   *mf_ptr;   /* [0..1][>= mf_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
+	char   *mf_end;   /* [0..1][>= mf_begin][lock(fo_lock)] The effective end position. */
 };
+
 DDATDEF DeeFileTypeObject DeeMemoryFile_Type;
 
 
@@ -220,23 +223,23 @@ DDATDEF DeeFileTypeObject DeeMemoryFile_Type;
  * an empty data set.
  * The main use of this functionality is to allow the use of `DeeModule_LoadSourceStream()'
  * with a stream backed by source code located in memory. */
-DFUNDEF DREF /*File*/DeeObject *DCALL
+DFUNDEF DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size);
 DFUNDEF void DCALL
-DeeFile_ReleaseMemory(DREF /*File*/DeeObject *__restrict self);
+DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self);
 
 
 
 
 struct Dee_file_reader_object {
-    Dee_LFILE_OBJECT_HEAD
-    char           *r_begin;  /* [0..1][in(r_string->s_str)][<= r_end][lock(fo_lock)] The effective start position within `r_string'. */
-    char           *r_ptr;    /* [0..1][>= r_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
-    char           *r_end;    /* [0..1][in(r_string->s_str)][>= r_begin][lock(fo_lock)] The effective end position within `r_string'. */
-    DREF DeeObject *r_owner;  /* [0..1][lock(fo_lock)] The owner for the data.
-                               * NOTE: Set to NULL when the file is closed. */
-    DeeBuffer       r_buffer; /* [valid_if(r_owner)][lock(fo_lock)]
-                               * The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
+	Dee_LFILE_OBJECT_HEAD
+	char           *r_begin;  /* [0..1][in(r_string->s_str)][<= r_end][lock(fo_lock)] The effective start position within `r_string'. */
+	char           *r_ptr;    /* [0..1][>= r_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
+	char           *r_end;    /* [0..1][in(r_string->s_str)][>= r_begin][lock(fo_lock)] The effective end position within `r_string'. */
+	DREF DeeObject *r_owner;  /* [0..1][lock(fo_lock)] The owner for the data.
+	                           * NOTE: Set to NULL when the file is closed. */
+	DeeBuffer       r_buffer; /* [valid_if(r_owner)][lock(fo_lock)]
+	                           * The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
 };
 
 DDATDEF DeeFileTypeObject DeeFileReader_Type; /* File.Reader */
@@ -251,28 +254,28 @@ DDATDEF DeeFileTypeObject DeeFileReader_Type; /* File.Reader */
  * However, the end result of both mechanisms is the same, in that
  * the stream indirectly referenced a given data-block, rather than
  * having to keep its own copy of some potentially humongous memory block. */
-DFUNDEF DREF /*File*/DeeObject *DCALL
+DFUNDEF DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size);
 
 /* Similar to `DeeFile_OpenObjectMemory()', but used
  * to open a generic object using the buffer-interface. */
-DFUNDEF DREF /*File*/DeeObject *DCALL
+DFUNDEF DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          Dee_ssize_t begin, Dee_ssize_t end);
 
 
 struct Dee_file_writer_object {
-    Dee_LFILE_OBJECT_HEAD
-    struct Dee_unicode_printer w_printer; /* [lock(fo_lock)][owned_if(!w_string)] The printer used to generate the string. */
-    DREF DeeStringObject      *w_string;  /* [lock(fo_lock)][0..1][valid_if((w_printer.up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
-                                           * Cached variant of the last-accessed, generated multi-byte string. */
+	Dee_LFILE_OBJECT_HEAD
+	struct Dee_unicode_printer w_printer; /* [lock(fo_lock)][owned_if(!w_string)] The printer used to generate the string. */
+	DREF DeeStringObject      *w_string;  /* [lock(fo_lock)][0..1][valid_if((w_printer.up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
+	                                       * Cached variant of the last-accessed, generated multi-byte string. */
 };
 
 DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 
 /* Open a new file stream that writes all written data into a string. */
-DFUNDEF DREF /*File*/DeeObject *DCALL DeeFile_OpenWriter(void);
+DFUNDEF DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
 
 /* Returns the current string written by the writer. */
 DFUNDEF DREF DeeObject *DCALL DeeFileWriter_GetString(DeeObject *__restrict self);

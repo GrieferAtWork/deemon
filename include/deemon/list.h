@@ -20,12 +20,15 @@
 #define GUARD_DEEMON_LIST_H 1
 
 #include "api.h"
+
 #include "object.h"
+
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
-#include <stddef.h>
+
 #include <stdarg.h>
+#include <stddef.h>
 
 DECL_BEGIN
 
@@ -36,15 +39,15 @@ DECL_BEGIN
 typedef struct Dee_list_object DeeListObject;
 
 struct Dee_list_object {
-    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    Dee_OBJECT_HEAD /* GC Object */
-    size_t           l_alloc; /* [lock(l_lock)][>= l_size] Allocated list size. */
-    size_t           l_size;  /* [lock(l_lock)] List size. */
-    DREF DeeObject **l_elem;  /* [1..1][0..l_size|ALLOC(l_alloc)][owned][lock(l_lock)] List elements. */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	Dee_OBJECT_HEAD /* GC Object */
+	size_t           l_alloc; /* [lock(l_lock)][>= l_size] Allocated list size. */
+	size_t           l_size;  /* [lock(l_lock)] List size. */
+	DREF DeeObject **l_elem;  /* [1..1][0..l_size|ALLOC(l_alloc)][owned][lock(l_lock)] List elements. */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t     l_lock;  /* Lock used for accessing this list. */
+	Dee_rwlock_t     l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
-    Dee_WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 };
 
 #ifndef CONFIG_NO_THREADS
@@ -60,7 +63,7 @@ struct Dee_list_object {
 #define DeeList_LockEndWrite(x)   Dee_rwlock_endwrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
 #define DeeList_LockEndRead(x)    Dee_rwlock_endread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
 #define DeeList_LockEnd(x)        Dee_rwlock_end(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#else
+#else /* !CONFIG_NO_THREADS */
 #define DeeList_LockReading(x)          1
 #define DeeList_LockWriting(x)          1
 #define DeeList_LockTryread(x)          1
@@ -73,17 +76,17 @@ struct Dee_list_object {
 #define DeeList_LockEndWrite(x)   (void)0
 #define DeeList_LockEndRead(x)    (void)0
 #define DeeList_LockEnd(x)        (void)0
-#endif
+#endif /* CONFIG_NO_THREADS */
 
-#define DeeList_IsEmpty(ob)                (!DeeList_SIZE(ob))
-#define DeeList_CAPACITY(ob)               ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_alloc
-#define DeeList_SIZE(ob)                   ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_size
-#define DeeList_ELEM(ob)                   ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem
-#define DeeList_GET(ob,i)                  ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem[i]
-#define DeeList_SET(ob,i,v)                ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem[i]=(v)
+#define DeeList_IsEmpty(ob)   (!DeeList_SIZE(ob))
+#define DeeList_CAPACITY(ob)  ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_alloc
+#define DeeList_SIZE(ob)      ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_size
+#define DeeList_ELEM(ob)      ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem
+#define DeeList_GET(ob, i)    ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem[i]
+#define DeeList_SET(ob, i, v) ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_elem[i]=(v)
 
-#define DeeList_Check(x)       DeeObject_InstanceOf(x,&DeeList_Type)
-#define DeeList_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeList_Type)
+#define DeeList_Check(x)       DeeObject_InstanceOf(x, &DeeList_Type)
+#define DeeList_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeList_Type)
 
 DDATDEF DeeTypeObject DeeList_Type;
 
@@ -91,7 +94,7 @@ DDATDEF DeeTypeObject DeeList_Type;
 DFUNDEF DREF DeeObject *DCALL DeeList_NewVector(size_t objc, DeeObject *const *__restrict objv);
 DFUNDEF DREF DeeObject *DCALL DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv);
 /* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
-DFUNDEF DREF DeeObject *DCALL DeeList_NewVectorInheritedHeap(size_t obja, size_t objc, /*inherit(on_success)*/DREF DeeObject **__restrict objv);
+DFUNDEF DREF DeeObject *DCALL DeeList_NewVectorInheritedHeap(size_t obja, size_t objc, /*inherit(on_success)*/ DREF DeeObject **__restrict objv);
 
 /* Create a new list object. */
 #define DeeList_New()   DeeObject_NewDefault(&DeeList_Type)
@@ -106,12 +109,12 @@ DFUNDEF void DCALL DeeList_FreeUninitialized(DeeObject *__restrict self);
 /* Concat a list and some generic sequence,
  * inheriting a reference from `self' in the process. */
 INTDEF DREF DeeObject *DCALL
-DeeList_Concat(/*inherit(on_success)*/DREF DeeObject *__restrict self,
+DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                DeeObject *__restrict sequence);
 INTDEF DREF DeeObject *DCALL
-DeeList_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
-                        /*inherit(on_success)*/DREF DeeObject **__restrict argv);
-#endif
+DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
+                        /*inherit(on_success)*/ DREF DeeObject **__restrict argv);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 /* @return: * : The actual number of deleted items.
  * @return: (size_t)-1: Error. */

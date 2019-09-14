@@ -99,7 +99,7 @@ PRIVATE int DCALL
 stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
                         size_t argc, DeeObject **__restrict argv) {
  StringOrdinals *ords;
- if (DeeArg_Unpack(argc,argv,"o:_StringOrdinalsIterator",&ords) ||
+ if (DeeArg_Unpack(argc, argv,"o:_StringOrdinalsIterator",&ords) ||
      DeeObject_AssertTypeExact((DeeObject *)ords,&StringOrdinals_Type))
      return -1;
  self->soi_str     = ords->so_str;

@@ -157,7 +157,7 @@ INTERN int DCALL
 usetiterator_init(USetIterator *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
  USet *set;
- if (DeeArg_Unpack(argc,argv,"o:_UniqueSetIterator",&set) ||
+ if (DeeArg_Unpack(argc, argv,"o:_UniqueSetIterator",&set) ||
      DeeObject_AssertType((DeeObject *)set,&USet_Type))
      return -1;
  self->si_set = set;
@@ -1028,7 +1028,7 @@ PRIVATE int DCALL
 uset_init(USet *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if unlikely(DeeArg_Unpack(argc,argv,"o:UniqueSet",&seq))
+ if unlikely(DeeArg_Unpack(argc, argv,"o:UniqueSet",&seq))
     goto err;
  return USet_InitSequence(self,seq);
 err:
@@ -1039,7 +1039,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 uset_pop(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
  size_t i; DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,":pop"))
+ if (DeeArg_Unpack(argc, argv,":pop"))
      goto err;
  DeeHashSet_LockWrite(self);
  for (i = 0; i <= self->s_mask; ++i) {
@@ -1063,7 +1063,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 uset_doclear(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":clear"))
+ if (DeeArg_Unpack(argc, argv,":clear"))
      goto err;
  uset_clear(self);
  return_none;
@@ -1074,7 +1074,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 uset_insert(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item; int result;
- if (DeeArg_Unpack(argc,argv,"o:insert",&item))
+ if (DeeArg_Unpack(argc, argv,"o:insert",&item))
      goto err;
  result = USet_Insert(self,item);
  if unlikely(result < 0)
@@ -1087,7 +1087,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 uset_unify(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item;
- if (DeeArg_Unpack(argc,argv,"o:unify",&item))
+ if (DeeArg_Unpack(argc, argv,"o:unify",&item))
      goto err;
  /* Since items are always unique, simply try to insert the given one! */
  if (USet_Insert(self,item) < 0)
@@ -1110,7 +1110,7 @@ insert_callback(USet *__restrict self, DeeObject *item) {
 PRIVATE DREF DeeObject *DCALL
 uset_update(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *items; dssize_t result;
- if (DeeArg_Unpack(argc,argv,"o:update",&items))
+ if (DeeArg_Unpack(argc, argv,"o:update",&items))
      goto err;
  result = DeeObject_Foreach(items,(dforeach_t)&insert_callback,self);
  if unlikely(result < 0)
@@ -1123,7 +1123,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 uset_remove(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item; int result;
- if (DeeArg_Unpack(argc,argv,"o:remove",&item))
+ if (DeeArg_Unpack(argc, argv,"o:remove",&item))
      goto err;
  result = USet_Remove(self,item);
  if unlikely(result < 0)
@@ -1137,7 +1137,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 uset_sizeof(USet *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  return DeeInt_NewSize(sizeof(USet) +
                      ((self->s_mask + 1) *
@@ -1365,7 +1365,7 @@ INTERN int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  URoSet *set;
- if (DeeArg_Unpack(argc,argv,"o:_UniqueRoSetIterator",&set) ||
+ if (DeeArg_Unpack(argc, argv,"o:_UniqueRoSetIterator",&set) ||
      DeeObject_AssertType((DeeObject *)set,&URoSet_Type))
      return -1;
  self->si_set = set;

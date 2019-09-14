@@ -20,8 +20,10 @@
 #define GUARD_DEEMON_SUPER_H 1
 
 #include "api.h"
-#include "object.h"
+
 #include <stddef.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
@@ -32,21 +34,21 @@ DECL_BEGIN
 typedef struct Dee_super_object DeeSuperObject;
 
 struct Dee_super_object {
-    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    Dee_OBJECT_HEAD
-    DREF DeeTypeObject *s_type; /* [1..1][const] Super-type.
-                                 *   NOTE: This is never `&DeeSuper_Type' itself and the
-                                 *         check `DeeObject_InstanceOf(s_self,s_type)'
-                                 *         must always succeed. */
-    DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	Dee_OBJECT_HEAD
+	DREF DeeTypeObject *s_type; /* [1..1][const] Super-type.
+	                             *   NOTE: This is never `&DeeSuper_Type' itself and the
+	                             *         check `DeeObject_InstanceOf(s_self,s_type)'
+	                             *         must always succeed. */
+	DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
 };
 
 #define DeeSuper_TYPE(x) ((DeeSuperObject *)Dee_REQUIRES_OBJECT(x))->s_type
 #define DeeSuper_SELF(x) ((DeeSuperObject *)Dee_REQUIRES_OBJECT(x))->s_self
 
 DDATDEF DeeTypeObject DeeSuper_Type;
-#define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob,&DeeSuper_Type) /* `super' is final */
-#define DeeSuper_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeSuper_Type)
+#define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeSuper_Type) /* `super' is final */
+#define DeeSuper_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeSuper_Type)
 
 /* Create a new super-wrapper for `tp_self:self'.
  * NOTE: This function automatically checks the given operands for validity:

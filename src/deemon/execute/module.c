@@ -1034,21 +1034,21 @@ module_repr(DeeModuleObject *__restrict self) {
 
 INTERN DREF DeeObject *DCALL
 module_getattr(DeeModuleObject *__restrict self,
-               /*String*/DeeObject *__restrict name) {
+               /*String*/ DeeObject *__restrict name) {
  return DeeModule_GetAttrString(self,
                                 DeeString_STR(name),
                                 DeeString_Hash(name));
 }
 INTERN int DCALL
 module_delattr(DeeModuleObject *__restrict self,
-               /*String*/DeeObject *__restrict name) {
+               /*String*/ DeeObject *__restrict name) {
  return DeeModule_DelAttrString(self,
                                 DeeString_STR(name),
                                 DeeString_Hash(name));
 }
 INTERN int DCALL
 module_setattr(DeeModuleObject *__restrict self,
-               /*String*/DeeObject *__restrict name,
+               /*String*/ DeeObject *__restrict name,
                DeeObject *__restrict value) {
  return DeeModule_SetAttrString(self,
                                 DeeString_STR(name),
@@ -1378,7 +1378,7 @@ module_class_open(DeeObject *__restrict UNUSED(self),
   * The only reason it exist is to be a deprecated alias for backwards
   * compatibility with the old deemon. */
  DeeObject *module_name;
- if (DeeArg_Unpack(argc,argv,"o:open",&module_name) ||
+ if (DeeArg_Unpack(argc, argv,"o:open",&module_name) ||
      DeeObject_AssertTypeExact(module_name,&DeeString_Type))
      return NULL;
  return DeeModule_Import(module_name,NULL,true);

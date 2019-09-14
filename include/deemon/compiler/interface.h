@@ -21,8 +21,8 @@
 
 #include "../api.h"
 #include "../object.h"
-#include "compiler.h"
 #include "ast.h"
+#include "compiler.h"
 #include "tpp.h"
 
 DECL_BEGIN
@@ -36,10 +36,18 @@ typedef struct compiler_keyword_object DeeCompilerKeywordObject;
 typedef struct compiler_symbol_object DeeCompilerSymbolObject;
 typedef struct compiler_ast_object DeeCompilerAstObject;
 typedef struct compiler_scope_object DeeCompilerScopeObject;
-struct compiler_keyword_object { Dee_COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword) };
-struct compiler_symbol_object { Dee_COMPILER_ITEM_OBJECT_HEAD(struct symbol) };
-struct compiler_ast_object { Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct ast) };
-struct compiler_scope_object { Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct scope_object) };
+struct compiler_keyword_object {
+	Dee_COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword)
+};
+struct compiler_symbol_object {
+	Dee_COMPILER_ITEM_OBJECT_HEAD(struct symbol)
+};
+struct compiler_ast_object {
+	Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct ast)
+};
+struct compiler_scope_object {
+	Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct scope_object)
+};
 
 INTDEF DeeTypeObject DeeCompilerKeyword_Type;         /* item */
 INTDEF DeeTypeObject DeeCompilerSymbol_Type;          /* item */
@@ -72,20 +80,20 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerIfdef(DeeCompilerObject *__rest
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerToken(DeeCompilerObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetParser(DeeCompilerObject *__restrict self);
 INTDEF DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
-#else
-#define DeeCompiler_GetKeyword(kwd)          DeeCompiler_GetItem(&DeeCompilerKeyword_Type,kwd)
-#define DeeCompiler_GetSymbol(sym)           DeeCompiler_GetItem(&DeeCompilerSymbol_Type,sym)
-#define DeeCompiler_GetFile(file)            DeeCompiler_GetItem(&DeeCompilerFile_Type,file)
-#define DeeCompiler_GetLexer(self)           DeeCompiler_GetWrapper(self,&DeeCompilerLexer_Type)
-#define DeeCompiler_GetLexerKeywords(self)   DeeCompiler_GetWrapper(self,&DeeCompilerLexerKeywords_Type)
-#define DeeCompiler_GetLexerExtensions(self) DeeCompiler_GetWrapper(self,&DeeCompilerLexerExtensions_Type)
-#define DeeCompiler_GetLexerWarnings(self)   DeeCompiler_GetWrapper(self,&DeeCompilerLexerWarnings_Type)
-#define DeeCompiler_GetLexerSyspaths(self)   DeeCompiler_GetWrapper(self,&DeeCompilerLexerSyspaths_Type)
-#define DeeCompiler_GetLexerIfdef(self)      DeeCompiler_GetWrapper(self,&DeeCompilerLexerIfdef_Type)
-#define DeeCompiler_GetLexerToken(self)      DeeCompiler_GetWrapper(self,&DeeCompilerLexerToken_Type)
-#define DeeCompiler_GetParser(self)          DeeCompiler_GetWrapper(self,&DeeCompilerParser_Type)
-#define DeeCompiler_GetAst(branch)           DeeCompiler_GetObjItem(&DeeCompilerAst_Type,(DeeObject *)(branch))
-#endif
+#else /* __INTELLISENSE__ */
+#define DeeCompiler_GetKeyword(kwd)          DeeCompiler_GetItem(&DeeCompilerKeyword_Type, kwd)
+#define DeeCompiler_GetSymbol(sym)           DeeCompiler_GetItem(&DeeCompilerSymbol_Type, sym)
+#define DeeCompiler_GetFile(file)            DeeCompiler_GetItem(&DeeCompilerFile_Type, file)
+#define DeeCompiler_GetLexer(self)           DeeCompiler_GetWrapper(self, &DeeCompilerLexer_Type)
+#define DeeCompiler_GetLexerKeywords(self)   DeeCompiler_GetWrapper(self, &DeeCompilerLexerKeywords_Type)
+#define DeeCompiler_GetLexerExtensions(self) DeeCompiler_GetWrapper(self, &DeeCompilerLexerExtensions_Type)
+#define DeeCompiler_GetLexerWarnings(self)   DeeCompiler_GetWrapper(self, &DeeCompilerLexerWarnings_Type)
+#define DeeCompiler_GetLexerSyspaths(self)   DeeCompiler_GetWrapper(self, &DeeCompilerLexerSyspaths_Type)
+#define DeeCompiler_GetLexerIfdef(self)      DeeCompiler_GetWrapper(self, &DeeCompilerLexerIfdef_Type)
+#define DeeCompiler_GetLexerToken(self)      DeeCompiler_GetWrapper(self, &DeeCompilerLexerToken_Type)
+#define DeeCompiler_GetParser(self)          DeeCompiler_GetWrapper(self, &DeeCompilerParser_Type)
+#define DeeCompiler_GetAst(branch)           DeeCompiler_GetObjItem(&DeeCompilerAst_Type, (DeeObject *)(branch))
+#endif /* !__INTELLISENSE__ */
 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
 INTDEF struct type_member DeeCompilerItem_Members[];
@@ -129,7 +137,7 @@ INTDEF tok_t DCALL get_token_from_str(char const *__restrict name, bool create_m
 INTDEF tok_t DCALL get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
-INTDEF DREF /*String*/DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
+INTDEF DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
 INTDEF dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'

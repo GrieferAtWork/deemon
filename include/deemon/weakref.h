@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_WEAKREF_H 1
 
 #include "api.h"
+
 #include "object.h"
 
 DECL_BEGIN
@@ -33,9 +34,9 @@ typedef struct Dee_weakref_object DeeWeakRefObject;
 typedef struct Dee_weakrefable_object DeeWeakRefAbleObject;
 
 struct Dee_weakref_object {
-    Dee_OBJECT_HEAD
-    struct Dee_weakref wr_ref; /* The weak reference pointer. */
-    DREF DeeObject    *wr_del; /* [0..1][const] Deletion callback. */
+	Dee_OBJECT_HEAD
+	struct Dee_weakref wr_ref; /* The weak reference pointer. */
+	DREF DeeObject    *wr_del; /* [0..1][const] Deletion callback. */
 };
 
 #define DeeWeakRef_Check(self)      DeeObject_InstanceOfExact(self,&DeeWeakRef_Type) /* `WeakRef' is final */
@@ -45,7 +46,10 @@ DDATDEF DeeTypeObject DeeWeakRef_Type;
 
 /* Base class that should be used for user-defined classes
  * that are supposed to support being weakly referenced. */
-struct Dee_weakrefable_object { Dee_OBJECT_HEAD Dee_WEAKREF_SUPPORT };
+struct Dee_weakrefable_object {
+	Dee_OBJECT_HEAD
+	Dee_WEAKREF_SUPPORT
+};
 DDATDEF DeeTypeObject DeeWeakRefAble_Type;
 
 DECL_END

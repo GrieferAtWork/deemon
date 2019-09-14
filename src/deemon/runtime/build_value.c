@@ -854,7 +854,7 @@ PUBLIC int (DeeArg_Unpack)(size_t argc, DeeObject **__restrict argv,
                            char const *__restrict format, ...) {
  int result; va_list args;
  va_start(args,format);
- result = DeeArg_VUnpack(argc,argv,format,args);
+ result = DeeArg_VUnpack(argc, argv,format,args);
  va_end(args);
  return result;
 }
@@ -885,7 +885,7 @@ PUBLIC int
  bool is_optional; int temp;
  struct va_list_struct *pargs;
  if (!kw) /* Without arguments, do a regular unpack. */
-      return DeeArg_VUnpack(argc,argv,format,args);
+      return DeeArg_VUnpack(argc, argv,format,args);
  fmt_start = format;
  is_optional = false;
  pargs = (struct va_list_struct *)VALIST_ADDR(args);
@@ -1066,7 +1066,7 @@ PUBLIC int
                   char const *__restrict format, ...) {
  int result; va_list args;
  va_start(args,format);
- result = DeeArg_VUnpackKw(argc,argv,kw,kwlist,format,args);
+ result = DeeArg_VUnpackKw(argc, argv, kw,kwlist,format,args);
  va_end(args);
  return result;
 }

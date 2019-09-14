@@ -94,7 +94,7 @@ pointer_init(DeePointerTypeObject *__restrict tp_self,
              size_t argc, DeeObject **__restrict argv) {
  DeeObject *arg;
  union pointer value;
- if (DeeArg_Unpack(argc,argv,"o:pointer",&arg))
+ if (DeeArg_Unpack(argc, argv,"o:pointer",&arg))
      goto err;
  if (DeeNone_Check(arg)) {
   /* none is the NULL pointer. */
@@ -165,7 +165,7 @@ pointer_call(DeePointerTypeObject *__restrict tp_self,
              DeeObject **__restrict argv) {
  union pointer ptr;
  CTYPES_FAULTPROTECT(ptr.ptr = self->ptr,return NULL);
- return DeeStruct_Call(tp_self->pt_orig,ptr.ptr,argc,argv);
+ return DeeStruct_Call(tp_self->pt_orig,ptr.ptr,argc, argv);
 }
 
 PRIVATE DREF struct lvalue_object *DCALL
@@ -211,7 +211,7 @@ PRIVATE struct type_getset pointer_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 struct_deref_func(DeeObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__deref__"))
+ if (DeeArg_Unpack(argc, argv,":__deref__"))
      goto err;
  return (DREF DeeObject *)pointer_get_deref((struct pointer_object *)self);
 err:

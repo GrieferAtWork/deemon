@@ -20,24 +20,32 @@
 #define GUARD_DEEMON_CXX_DICT_H 1
 
 #include "api.h"
-#include "object.h"
-#include "mapping.h"
+
 #include "../dict.h"
+#include "mapping.h"
+#include "object.h"
 
 DEE_CXX_BEGIN
 
 template<class KeyType = Object, class ValueType = Object> class Dict;
 
 template<class KeyType, class ValueType>
-class Dict: public Mapping<KeyType,ValueType> {
+class Dict: public Mapping<KeyType, ValueType> {
 public:
-    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeDict_Type; }
-    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeDict_Check(ob); }
-    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeDict_CheckExact(ob); }
-public: /* Dict from deemon */
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Dict,Mapping)
-    Dict(): Mapping(inherit(DeeDict_New())) {}
+	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
+		return &DeeDict_Type;
+	}
+	static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+		return DeeDict_Check(ob);
+	}
+	static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+		return DeeDict_CheckExact(ob);
+	}
 
+public: /* Dict from deemon */
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Dict, Mapping)
+	Dict()
+	    : Mapping(inherit(DeeDict_New())) {}
 };
 
 

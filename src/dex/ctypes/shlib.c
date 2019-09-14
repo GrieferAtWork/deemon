@@ -73,7 +73,7 @@ PRIVATE int DCALL
 shlib_init(Shlib *__restrict self, size_t argc,
            DREF DeeObject **__restrict argv) {
  DeeStringObject *name,*cc_name = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:shlib",&name,&cc_name) ||
+ if (DeeArg_Unpack(argc, argv,"o|o:shlib",&name,&cc_name) ||
      DeeObject_AssertTypeExact((DeeObject *)name,&DeeString_Type))
      goto err;
  /* Parse the given default calling convention. */
@@ -333,7 +333,7 @@ shlib_base(Shlib *__restrict self, size_t argc,
            DeeObject **__restrict argv) {
  DREF struct pointer_object *result;
  DREF DeeSTypeObject *result_type;
- if (DeeArg_Unpack(argc,argv,":base"))
+ if (DeeArg_Unpack(argc, argv,":base"))
      goto err;
  result_type = get_void_pointer();
  if unlikely(!result_type) goto err;
@@ -364,7 +364,7 @@ INTERN bool DCALL clear_void_pointer(void) {
 PRIVATE DREF DeeObject *DCALL
 shlib_base(Shlib *__restrict self, size_t argc,
            DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":base"))
+ if (DeeArg_Unpack(argc, argv,":base"))
      goto err;
  err_shlib_unsupported();
 err:

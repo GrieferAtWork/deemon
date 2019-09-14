@@ -108,7 +108,7 @@
 #define DEFINE_PRIMARY(name) \
    INTERN DREF DeeObject *FCALL JITLexer_Eval##name(JITLexer *__restrict self, unsigned int flags)
 #define DEFINE_SECONDARY(name) \
-   INTERN DREF DeeObject *FCALL JITLexer_Eval##name(JITLexer *__restrict self, /*inherit(always)*/DREF DeeObject *__restrict lhs, unsigned int flags)
+   INTERN DREF DeeObject *FCALL JITLexer_Eval##name(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags)
 #endif
 
 
@@ -3303,7 +3303,7 @@ err_r:
 
 INTERN RETURN_TYPE FCALL
 FUNC(Operand)(JITLexer *__restrict self,
-              IF_EVAL(/*inherit(always)*/DREF DeeObject *__restrict lhs,)
+              IF_EVAL(/*inherit(always)*/ DREF DeeObject *__restrict lhs,)
               unsigned int flags) {
  RETURN_TYPE result = LHS_OR_OK;
  (void)flags;

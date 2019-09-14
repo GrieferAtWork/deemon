@@ -23,7 +23,7 @@
 
 #ifndef __cplusplus
 #error "C++ only API. Use the base C api instead"
-#endif
+#endif /* !__cplusplus */
 
 #define DEE_CXX_BEGIN    namespace deemon {
 #define DEE_CXX_END      }

@@ -89,7 +89,7 @@ PRIVATE int DCALL
 float_ctor(Float *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *arg; char *str;
- if (DeeArg_Unpack(argc,argv,"o:float",&arg))
+ if (DeeArg_Unpack(argc, argv,"o:float",&arg))
      goto err;
  /* Invoke the float-operator on anything that isn't a string. */
  if (!DeeString_Check(arg))

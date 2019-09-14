@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_DEC_H 1
 
 #include "api.h"
+
 #include <stdint.h>
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -57,221 +58,224 @@ DECL_BEGIN
 #define DVERSION_CUR  0 /* The currently active version of the DEC file format. */
 
 typedef struct PACKED {
-    uint8_t  e_ident[DI_NIDENT]; /* Identification bytes. (See `DI_*') */
-    uint8_t  e_builtinset;       /* Set of builtin object (One of `DBUILTINS_*') */
-    uint8_t  e_size;             /* Absolute size of the header (`Dec_Ehdr').
-                                  * NOTE: When larger than expected, don't assume errors, but ignore trailing data! */
-    uint16_t e_version;          /* DEC version number (One of `DVERSION_*'). */
-    uint32_t e_impoff;           /* Absolute file-offset of the import string map (`Dec_Strmap').
-                                  * NOTE: When ZERO(0), then there is no import table.
-                                  * NOTE: Strings are encoded in relative-import format
-                                  *      (as accepted by `DeeModule_OpenRelative') */
-    uint32_t e_depoff;           /* When checking if a DEC file has become outdated, the obvious
-                                  * candidate that must be checked is the `*.dex' replaced with `*.dee'.
-                                  * However because deemon makes use of a C-compatible preprocessor,
-                                  * user-code can create additional dependencies that must also be
-                                  * able to trigger dismissal and re-generation of `*.dec' files.
-                                  * This field describes an absolute file-offset to a `Dec_Strmap'
-                                  * structure containing the relative pathnames (using `/' for slashes)
-                                  * of all additional dependencies who's timestamps must be checked
-                                  * before it can be confirmed that no dependency of this DEC file
-                                  * has been modified. */
-    uint32_t e_globoff;          /* Absolute file-offset of the global variable table (`Dec_Glbmap').
-                                  * NOTE: When ZERO(0), then there are no globals. */
-    uint32_t e_rootoff;          /* Absolute file-offset of the root code object (`Dec_Code'). */
-    uint32_t e_stroff;           /* Absolute file-offset of the UTF-8 encoded string table. */
-    uint32_t e_strsiz;           /* The absolute length of the string table (in bytes). */
-    uint32_t e_timestamp_lo;     /* In microseconds since `01.01.1970', the point in
-                                  * time when this compiled source file was generated.
-                                  * Since DEC files are meant to be used as a shallow
-                                  * cache file that is automatically discarded if the
-                                  * actual source file has since changed, this is the
-                                  * time against which everything must be compared. */
-    uint32_t e_timestamp_hi;     /* High 32-bits of the timestamp. */
+	uint8_t  e_ident[DI_NIDENT]; /* Identification bytes. (See `DI_*') */
+	uint8_t  e_builtinset;       /* Set of builtin object (One of `DBUILTINS_*') */
+	uint8_t  e_size;             /* Absolute size of the header (`Dec_Ehdr').
+	                              * NOTE: When larger than expected, don't assume errors, but ignore trailing data! */
+	uint16_t e_version;          /* DEC version number (One of `DVERSION_*'). */
+	uint32_t e_impoff;           /* Absolute file-offset of the import string map (`Dec_Strmap').
+	                              * NOTE: When ZERO(0), then there is no import table.
+	                              * NOTE: Strings are encoded in relative-import format
+	                              *      (as accepted by `DeeModule_OpenRelative') */
+	uint32_t e_depoff;           /* When checking if a DEC file has become outdated, the obvious
+	                              * candidate that must be checked is the `*.dex' replaced with `*.dee'.
+	                              * However because deemon makes use of a C-compatible preprocessor,
+	                              * user-code can create additional dependencies that must also be
+	                              * able to trigger dismissal and re-generation of `*.dec' files.
+	                              * This field describes an absolute file-offset to a `Dec_Strmap'
+	                              * structure containing the relative pathnames (using `/' for slashes)
+	                              * of all additional dependencies who's timestamps must be checked
+	                              * before it can be confirmed that no dependency of this DEC file
+	                              * has been modified. */
+	uint32_t e_globoff;          /* Absolute file-offset of the global variable table (`Dec_Glbmap').
+	                              * NOTE: When ZERO(0), then there are no globals. */
+	uint32_t e_rootoff;          /* Absolute file-offset of the root code object (`Dec_Code'). */
+	uint32_t e_stroff;           /* Absolute file-offset of the UTF-8 encoded string table. */
+	uint32_t e_strsiz;           /* The absolute length of the string table (in bytes). */
+	uint32_t e_timestamp_lo;     /* In microseconds since `01.01.1970', the point in
+	                              * time when this compiled source file was generated.
+	                              * Since DEC files are meant to be used as a shallow
+	                              * cache file that is automatically discarded if the
+	                              * actual source file has since changed, this is the
+	                              * time against which everything must be compared. */
+	uint32_t e_timestamp_hi;     /* High 32-bits of the timestamp. */
 } Dec_Ehdr;
 
 
 
 typedef struct PACKED {
-    uint16_t i_len;    /* Number of string pointers.
-                        * NOTE: When (uint16_t)-1, a `uint32_t' follows with the actual size. */
-    uint8_t  i_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
-                        * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'. */
+	uint16_t i_len;    /* Number of string pointers.
+	                    * NOTE: When (uint16_t)-1, a `uint32_t' follows with the actual size. */
+	uint8_t  i_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
+	                    * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'. */
 } Dec_Strmap;
 
 typedef struct PACKED {
-    uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
-    uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
-                             * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
-                             * NOTE: If this value points to an empty string, then this
-                             *       symbol hasn't been given a name and neither `s_doclen',
-                             *       nor `s_doc' exist. */
-    uint8_t    s_doclen[1]; /* Length of the documentation string (decodable using `Dec_DecodePointer()'). */
-    uint8_t    s_doc[1];    /* Documentation string of the symbol. - offsets into the string table (`e_stroff').
-                             * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
-                             * NOTE: Only exists when `s_doclen' evaluates to non-zero. */
+	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
+	uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
+	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
+	                         * NOTE: If this value points to an empty string, then this
+	                         *       symbol hasn't been given a name and neither `s_doclen',
+	                         *       nor `s_doc' exist. */
+	uint8_t    s_doclen[1]; /* Length of the documentation string (decodable using `Dec_DecodePointer()'). */
+	uint8_t    s_doc[1];    /* Documentation string of the symbol. - offsets into the string table (`e_stroff').
+	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
+	                         * NOTE: Only exists when `s_doclen' evaluates to non-zero. */
 } Dec_GlbSym;
 
 typedef struct PACKED {
-    uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
-    uint16_t   s_addr;      /* Symbol address, or module import index, or getter symbol index. */
-    uint16_t   s_addr2;     /* [exists_if(s_flg & MODSYM_FEXTERN)] External module symbol index. */
-    uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
-                             * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
-                             * NOTE: If this value points to an empty string, then this
-                             *       symbol hasn't been given a name and neither `s_doclen',
-                             *       nor `s_doc' exist. */
-    uint8_t    s_doclen[1]; /* Length of the documentation string (decodable using `Dec_DecodePointer()'). */
-    uint8_t    s_doc[1];    /* Documentation string of the symbol. - offsets into the string table (`e_stroff').
-                             * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
-                             * NOTE: Only exists when `s_doclen' evaluates to non-zero. */
+	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
+	uint16_t   s_addr;      /* Symbol address, or module import index, or getter symbol index. */
+	uint16_t   s_addr2;     /* [exists_if(s_flg & MODSYM_FEXTERN)] External module symbol index. */
+	uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
+	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
+	                         * NOTE: If this value points to an empty string, then this
+	                         *       symbol hasn't been given a name and neither `s_doclen',
+	                         *       nor `s_doc' exist. */
+	uint8_t    s_doclen[1]; /* Length of the documentation string (decodable using `Dec_DecodePointer()'). */
+	uint8_t    s_doc[1];    /* Documentation string of the symbol. - offsets into the string table (`e_stroff').
+	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
+	                         * NOTE: Only exists when `s_doclen' evaluates to non-zero. */
 } Dec_GlbExt;
 
 typedef struct PACKED {
-    uint16_t   g_cnt;    /* Number of global variables. */
-    uint16_t   g_len;    /* Number of global symbols. */
-    Dec_GlbSym g_map[1]; /* [g_cnt] Vector of global variable descriptors. */
-    Dec_GlbExt g_ext[1]; /* [g_len-g_cnt] Vector of extended global variable descriptors. */
+	uint16_t   g_cnt;    /* Number of global variables. */
+	uint16_t   g_len;    /* Number of global symbols. */
+	Dec_GlbSym g_map[1]; /* [g_cnt] Vector of global variable descriptors. */
+	Dec_GlbExt g_ext[1]; /* [g_len-g_cnt] Vector of extended global variable descriptors. */
 } Dec_Glbmap;
 
 
 typedef struct PACKED {
-    uint8_t    cs_type;    /* Type code (One of `DTYPE_*') */
-    uint8_t    cs_data[1]; /* Type data (depends on `DTYPE_*'; may not actually exist)
-                            * NOTE: If or not `DTYPE_NULL' is allowed depends on the usage context. */
+	uint8_t    cs_type;    /* Type code (One of `DTYPE_*') */
+	uint8_t    cs_data[1]; /* Type data (depends on `DTYPE_*'; may not actually exist)
+	                        * NOTE: If or not `DTYPE_NULL' is allowed depends on the usage context. */
 } Dec_Object;
 
 
 /* Code controller data structures. */
 typedef struct PACKED {
-    uint16_t   os_len;    /* Number of objects. */
-    Dec_Object os_vec[1]; /* Vector of objects.
-                           * NOTE: Whether or not `DTYPE_NULL' is allowed
-                           *       depends on the usage context. */
+	uint16_t   os_len;    /* Number of objects. */
+	Dec_Object os_vec[1]; /* Vector of objects.
+	                       * NOTE: Whether or not `DTYPE_NULL' is allowed
+	                       *       depends on the usage context. */
 } Dec_Objects;
 
 typedef struct PACKED {
-    uint16_t   ce_flags;  /* Set of `EXCEPTION_HANDLER_F*' */
-    uint32_t   ce_begin;  /* [<= ce_end] Exception handler protection start address. */
-    uint32_t   ce_end;    /* [>= ce_begin] Exception handler protection end address. */
-    uint32_t   ce_addr;   /* [< ce_begin && >= ce_end] Exception handler entry point. */
-    uint16_t   ce_stack;  /* Stack depth that must be ensured when this handler is executed. */
-    Dec_Object ce_mask;   /* Exception handler mask. (NOTE: `DTYPE_NULL' is allowed) */
+	uint16_t   ce_flags;  /* Set of `EXCEPTION_HANDLER_F*' */
+	uint32_t   ce_begin;  /* [<= ce_end] Exception handler protection start address. */
+	uint32_t   ce_end;    /* [>= ce_begin] Exception handler protection end address. */
+	uint32_t   ce_addr;   /* [< ce_begin && >= ce_end] Exception handler entry point. */
+	uint16_t   ce_stack;  /* Stack depth that must be ensured when this handler is executed. */
+	Dec_Object ce_mask;   /* Exception handler mask. (NOTE: `DTYPE_NULL' is allowed) */
 } Dec_CodeExcept;
+
 typedef struct PACKED {
-    uint16_t       ces_len;    /* Amount of exception descriptors. */
-    Dec_CodeExcept ces_vec[1]; /* [ces_len] Vector of exception descriptors. */
+	uint16_t       ces_len;    /* Amount of exception descriptors. */
+	Dec_CodeExcept ces_vec[1]; /* [ces_len] Vector of exception descriptors. */
 } Dec_CodeExceptions;
 
 typedef struct PACKED {
-    uint16_t   ce_flags;  /* Set of `EXCEPTION_HANDLER_F*' */
-    uint16_t   ce_begin;  /* [<= ce_end] Exception handler protection start address. */
-    uint16_t   ce_end;    /* [>= ce_begin] Exception handler protection end address. */
-    uint16_t   ce_addr;   /* [< ce_begin && >= ce_end] Exception handler entry point. */
-    uint8_t    ce_stack;  /* Stack depth that must be ensured when this handler is executed. */
-    Dec_Object ce_mask;   /* Exception handler mask. (NOTE: `DTYPE_NULL' is allowed) */
+	uint16_t   ce_flags;  /* Set of `EXCEPTION_HANDLER_F*' */
+	uint16_t   ce_begin;  /* [<= ce_end] Exception handler protection start address. */
+	uint16_t   ce_end;    /* [>= ce_begin] Exception handler protection end address. */
+	uint16_t   ce_addr;   /* [< ce_begin && >= ce_end] Exception handler entry point. */
+	uint8_t    ce_stack;  /* Stack depth that must be ensured when this handler is executed. */
+	Dec_Object ce_mask;   /* Exception handler mask. (NOTE: `DTYPE_NULL' is allowed) */
 } Dec_8BitCodeExcept;
+
 typedef struct PACKED {
-    uint8_t            ces_len;    /* Amount of exception descriptors. */
-    Dec_8BitCodeExcept ces_vec[1]; /* [ces_len] Vector of exception descriptors. */
+	uint8_t            ces_len;    /* Amount of exception descriptors. */
+	Dec_8BitCodeExcept ces_vec[1]; /* [ces_len] Vector of exception descriptors. */
 } Dec_8BitCodeExceptions;
 
 typedef struct PACKED {
-    /* All uint8_t[1]-fields in this structure are tightly packed
-     * integers decodable using `READ_SLEB()' or `READ_ULEB()'
-     * The actual length and member-offsets within this
-     * structure are therefor only known at compile-time. */
-    uint16_t     rs_flags;   /* Set of `DDI_REGS_F*' */
-    uint8_t      rs_uip[1];  /* [DECODE(READ_ULEB)] Initial user instruction. */
-    uint8_t      rs_usp[1];  /* [DECODE(READ_ULEB)] Initial stack alignment/depth. */
-    uint8_t      rs_path[1]; /* [DECODE(READ_ULEB)] Initial path number. (NOTE: ZERO indicates no path and all other values are used as index-1 in the `cd_paths' vector of the associated `Dec_CodeDDI') */
-    uint8_t      rs_file[1]; /* [DECODE(READ_ULEB)] Initial file number. */
-    uint8_t      rs_name[1]; /* [DECODE(READ_ULEB)] Initial name offset (points into the string table). */
-    uint8_t      rs_col[1];  /* [DECODE(READ_SLEB)] Initial column number within the active line. */
-    uint8_t      rs_lno[1];  /* [DECODE(READ_SLEB)] Initial Line number (0-based). */
+	/* All uint8_t[1]-fields in this structure are tightly packed
+	 * integers decodable using `READ_SLEB()' or `READ_ULEB()'
+	 * The actual length and member-offsets within this
+	 * structure are therefor only known at compile-time. */
+	uint16_t     rs_flags;   /* Set of `DDI_REGS_F*' */
+	uint8_t      rs_uip[1];  /* [DECODE(READ_ULEB)] Initial user instruction. */
+	uint8_t      rs_usp[1];  /* [DECODE(READ_ULEB)] Initial stack alignment/depth. */
+	uint8_t      rs_path[1]; /* [DECODE(READ_ULEB)] Initial path number. (NOTE: ZERO indicates no path and all other values are used as index-1 in the `cd_paths' vector of the associated `Dec_CodeDDI') */
+	uint8_t      rs_file[1]; /* [DECODE(READ_ULEB)] Initial file number. */
+	uint8_t      rs_name[1]; /* [DECODE(READ_ULEB)] Initial name offset (points into the string table). */
+	uint8_t      rs_col[1];  /* [DECODE(READ_SLEB)] Initial column number within the active line. */
+	uint8_t      rs_lno[1];  /* [DECODE(READ_SLEB)] Initial Line number (0-based). */
 } Dec_DDIRegStart;
 
 typedef struct PACKED {
-    uint16_t  dx_size;    /* Data size (when (uint16_t)-1, the a uint32_t containing the actual size follows immediatly) */
-    uint8_t   dx_data[1]; /* [dx_size] DDI extension data. */
+	uint16_t  dx_size;    /* Data size (when (uint16_t)-1, the a uint32_t containing the actual size follows immediatly) */
+	uint8_t   dx_data[1]; /* [dx_size] DDI extension data. */
 } Dec_DDIExdat;
 
 typedef struct PACKED {
-    uint32_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
-    uint32_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
-    uint32_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
-    uint32_t        cd_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
-    uint16_t        cd_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
-    Dec_DDIRegStart cd_regs;    /* The initial register state. */
+	uint32_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
+	uint32_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
+	uint32_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
+	uint32_t        cd_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
+	uint16_t        cd_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
+	Dec_DDIRegStart cd_regs;    /* The initial register state. */
 } Dec_CodeDDI;
 
 typedef struct PACKED {
-    uint16_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
-    uint16_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
-    uint16_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
-    uint16_t        cd_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
-    uint8_t         cd_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
-    Dec_DDIRegStart cd_regs;    /* The initial register state. */
+	uint16_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
+	uint16_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
+	uint16_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
+	uint16_t        cd_ddisize; /* The total size (in bytes) of DDI text for translating instruction pointers to file+line, etc. */
+	uint8_t         cd_ddiinit; /* Amount of leading DDI instruction bytes that are used for state initialization */
+	Dec_DDIRegStart cd_regs;    /* The initial register state. */
 } Dec_8BitCodeDDI;
 
 typedef struct PACKED {
-    uint8_t     ck_len[1]; /* Length of the keyword (excluding any trailing \0 character) */
-    uint8_t     ck_off[1]; /* [exists_if(ck_len != 0)] Offset into string table to where the keyword's name is written. */
+	uint8_t     ck_len[1]; /* Length of the keyword (excluding any trailing \0 character) */
+	uint8_t     ck_off[1]; /* [exists_if(ck_len != 0)] Offset into string table to where the keyword's name is written. */
 } Dec_CodeKwd;
+
 typedef struct PACKED {
-    Dec_CodeKwd ck_map[1]; /* Vector of code keywords.
-                            * NOTE: The length of this vector is `co_argc_max' */
+	Dec_CodeKwd ck_map[1]; /* Vector of code keywords.
+	                        * NOTE: The length of this vector is `co_argc_max' */
 } Dec_CodeKwds;
 
 typedef struct PACKED {
-    uint8_t  ck_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
-                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
-                         * NOTE: The length of this vector is `co_argc_max' */
+	uint8_t  ck_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
+	                     * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
+	                     * NOTE: The length of this vector is `co_argc_max' */
 } Dec_8BitCodeKwds;
 
 typedef struct PACKED {
-    uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
-                               * NOTE: When set, this data structure must be
-                               *       interpreted as an `Dec_8BitCode' object */
-    uint16_t   co_localc;     /* Amount of local variables used by code. */
-    uint16_t   co_refc;       /* Amount of reference variables used by this code. */
-    uint16_t   co_argc_min;   /* Min amount of arguments required to execute this code. */
-    uint16_t   co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
-    uint16_t   co_pad;        /* ... */
-    uint32_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects').
-                               * NOTE: `DTYPE_NULL' is not allowed. */
-    uint32_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_CodeExceptions'). */
-    uint32_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
-                               * NOTE: When ZERO(0), there are no default arguments, but if not,
-                               *       `co_argc_max' can be calculated from `co_argc_min+os_len'
-                               * NOTE: `DTYPE_NULL' is not allowed. */
-    uint32_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_CodeDDI').
-                               * NOTE: When ZERO(0), there is no DDI information. */
-    uint32_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_CodeKwds')
-                               * NOTE: When ZERO(0), there is no keyword information. */
-    uint32_t   co_textsiz;    /* Absolute size of this code's text section (in bytes) */
-    uint32_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
+	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
+	                           * NOTE: When set, this data structure must be
+	                           *       interpreted as an `Dec_8BitCode' object */
+	uint16_t   co_localc;     /* Amount of local variables used by code. */
+	uint16_t   co_refc;       /* Amount of reference variables used by this code. */
+	uint16_t   co_argc_min;   /* Min amount of arguments required to execute this code. */
+	uint16_t   co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
+	uint16_t   co_pad;        /* ... */
+	uint32_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects').
+	                           * NOTE: `DTYPE_NULL' is not allowed. */
+	uint32_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_CodeExceptions'). */
+	uint32_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
+	                           * NOTE: When ZERO(0), there are no default arguments, but if not,
+	                           *       `co_argc_max' can be calculated from `co_argc_min+os_len'
+	                           * NOTE: `DTYPE_NULL' is not allowed. */
+	uint32_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_CodeDDI').
+	                           * NOTE: When ZERO(0), there is no DDI information. */
+	uint32_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_CodeKwds')
+	                           * NOTE: When ZERO(0), there is no keyword information. */
+	uint32_t   co_textsiz;    /* Absolute size of this code's text section (in bytes) */
+	uint32_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
 } Dec_Code;
 
 typedef struct PACKED {
-    uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
-                               * NOTE: This data structure must only (and always) be used
-                               *       when the `DEC_CODE_F8BIT' flag is set. */
-    uint8_t    co_localc;     /* Amount of local variables used by code. */
-    uint8_t    co_refc;       /* Amount of reference variables used by this code. */
-    uint8_t    co_argc_min;   /* Min amount of arguments required to execute this code. */
-    uint8_t    co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
-    uint16_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects'). */
-    uint16_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_8BitCodeExceptions'). */
-    uint16_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
-                               * NOTE: When ZERO(0), there are no default arguments, but if not,
-                               *      `co_argc_max' can be calculated from `co_argc_min+os_len' */
-    uint16_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_8BitCodeDDI').
-                               * NOTE: When ZERO(0), there is no DDI information. */
-    uint16_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_8BitCodeKwds')
-                               * NOTE: When ZERO(0), there is no keyword information. */
-    uint16_t   co_textsiz;    /* Absolute size of this code's text section (in bytes) */
-    uint16_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
+	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
+	                           * NOTE: This data structure must only (and always) be used
+	                           *       when the `DEC_CODE_F8BIT' flag is set. */
+	uint8_t    co_localc;     /* Amount of local variables used by code. */
+	uint8_t    co_refc;       /* Amount of reference variables used by this code. */
+	uint8_t    co_argc_min;   /* Min amount of arguments required to execute this code. */
+	uint8_t    co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
+	uint16_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects'). */
+	uint16_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_8BitCodeExceptions'). */
+	uint16_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
+	                           * NOTE: When ZERO(0), there are no default arguments, but if not,
+	                           *      `co_argc_max' can be calculated from `co_argc_min+os_len' */
+	uint16_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_8BitCodeDDI').
+	                           * NOTE: When ZERO(0), there is no DDI information. */
+	uint16_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_8BitCodeKwds')
+	                           * NOTE: When ZERO(0), there is no keyword information. */
+	uint16_t   co_textsiz;    /* Absolute size of this code's text section (in bytes) */
+	uint16_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
 } Dec_8BitCode;
 
 /* The following 2 structure are taken from /usr/include/i386-linux-gnu/ieee754.h */
@@ -292,149 +296,150 @@ typedef struct PACKED {
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 typedef union PACKED {
-    double d;
-    struct {
+	double d;
+	struct {
 #ifdef CONFIG_BIG_ENDIAN
-        unsigned int negative:1;
-        unsigned int exponent:11;
-        unsigned int mantissa0:20;
-        unsigned int mantissa1:32;
+		unsigned int negative:1;
+		unsigned int exponent:11;
+		unsigned int mantissa0:20;
+		unsigned int mantissa1:32;
 #elif CONFIG_HOST_FLOAT_ENDIAN == 4321
-        unsigned int mantissa0:20;
-        unsigned int exponent:11;
-        unsigned int negative:1;
-        unsigned int mantissa1:32;
+		unsigned int mantissa0:20;
+		unsigned int exponent:11;
+		unsigned int negative:1;
+		unsigned int mantissa1:32;
 #else
-        unsigned int mantissa1:32;
-        unsigned int mantissa0:20;
-        unsigned int exponent:11;
-        unsigned int negative:1;
+		unsigned int mantissa1:32;
+		unsigned int mantissa0:20;
+		unsigned int exponent:11;
+		unsigned int negative:1;
 #endif
-    } ieee;
-    struct {
+	} ieee;
+	struct {
 #ifdef CONFIG_BIG_ENDIAN
-        unsigned int negative:1;
-        unsigned int exponent:11;
-        unsigned int quiet_nan:1;
-        unsigned int mantissa0:19;
-        unsigned int mantissa1:32;
+		unsigned int negative:1;
+		unsigned int exponent:11;
+		unsigned int quiet_nan:1;
+		unsigned int mantissa0:19;
+		unsigned int mantissa1:32;
 #elif CONFIG_HOST_FLOAT_ENDIAN == 4321
-        unsigned int mantissa0:19;
-        unsigned int quiet_nan:1;
-        unsigned int exponent:11;
-        unsigned int negative:1;
-        unsigned int mantissa1:32;
+		unsigned int mantissa0:19;
+		unsigned int quiet_nan:1;
+		unsigned int exponent:11;
+		unsigned int negative:1;
+		unsigned int mantissa1:32;
 #else
-        unsigned int mantissa1:32;
-        unsigned int mantissa0:19;
-        unsigned int quiet_nan:1;
-        unsigned int exponent:11;
-        unsigned int negative:1;
+		unsigned int mantissa1:32;
+		unsigned int mantissa0:19;
+		unsigned int quiet_nan:1;
+		unsigned int exponent:11;
+		unsigned int negative:1;
 #endif
-    } ieee_nan;
+	} ieee_nan;
 } Dec_host_ieee754_double;
 
 typedef union PACKED {
-    struct {
-        unsigned int mantissa1:32;
-        unsigned int mantissa0:20;
-        unsigned int exponent:11;
-        unsigned int negative:1;
-    } ieee;
-    struct {
-        unsigned int mantissa1:32;
-        unsigned int mantissa0:19;
-        unsigned int quiet_nan:1;
-        unsigned int exponent:11;
-        unsigned int negative:1;
-    } ieee_nan;
+	struct {
+		unsigned int mantissa1:32;
+		unsigned int mantissa0:20;
+		unsigned int exponent:11;
+		unsigned int negative:1;
+	} ieee;
+	struct {
+		unsigned int mantissa1:32;
+		unsigned int mantissa0:19;
+		unsigned int quiet_nan:1;
+		unsigned int exponent:11;
+		unsigned int negative:1;
+	} ieee_nan;
 } Dec_ieee754_double;
 
 
 typedef struct PACKED {
-    uint16_t           co_name; /* Name of the operator (one of `OPERATOR_*') */
-    uint16_t           co_addr; /* [<= :cd_cmemb_size] Index into the class member
-                                 * table, to where the operator callback can be bound. */
+	uint16_t           co_name; /* Name of the operator (one of `OPERATOR_*') */
+	uint16_t           co_addr; /* [<= :cd_cmemb_size] Index into the class member
+	                             * table, to where the operator callback can be bound. */
 } Dec_ClassOperator;
 
 typedef struct PACKED {
-    uint16_t           ca_addr;          /* Address of the attribute (behavior depends on flags) */
-    uint16_t           ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
-    uint8_t            ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
-                                          * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t            ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
-                                          * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t            ca_doc[1];        /* Only exists when `ca_doclen' evaluates to non-zero:
-                                          * The offset into `e_stroff' of the documentation string's start.
-                                          * NOTE: Decode using `Dec_DecodePointer()' */
+	uint16_t           ca_addr;          /* Address of the attribute (behavior depends on flags) */
+	uint16_t           ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
+	uint8_t            ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	                                      * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t            ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+	                                      * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t            ca_doc[1];        /* Only exists when `ca_doclen' evaluates to non-zero:
+	                                      * The offset into `e_stroff' of the documentation string's start.
+	                                      * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_ClassAttribute;
 
 typedef struct PACKED {
-    uint16_t           cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
-    uint8_t            cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
-                                          * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t            cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
-                                          * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t            cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
-                                          * The offset into `e_stroff' of the documentation string's start.
-                                          * NOTE: Decode using `Dec_DecodePointer()' */
-    uint16_t           cd_cmemb_size;    /* The allocation size of the class member table. */
-    uint16_t           cd_imemb_size;    /* The allocation size of the instance member table. */
-    uint16_t           cd_op_count;      /* Amount of user-defined operator bindings. */
-    uint8_t            cd_cattr_count[1];/* Amount of class attributes (Decode using `Dec_DecodePointer()'). */
-    uint8_t            cd_iattr_count[1];/* Amount of instance attributes (Decode using `Dec_DecodePointer()'). */
-    Dec_ClassOperator  cd_op_list[1];    /* [cd_op_count] List of operator bindings. */
-    Dec_ClassAttribute cd_cattr_list[1]; /* [cd_cattr_count] List of class attributes. */
-    Dec_ClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
+	uint16_t           cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
+	uint8_t            cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	                                      * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t            cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+	                                      * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t            cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
+	                                      * The offset into `e_stroff' of the documentation string's start.
+	                                      * NOTE: Decode using `Dec_DecodePointer()' */
+	uint16_t           cd_cmemb_size;    /* The allocation size of the class member table. */
+	uint16_t           cd_imemb_size;    /* The allocation size of the instance member table. */
+	uint16_t           cd_op_count;      /* Amount of user-defined operator bindings. */
+	uint8_t            cd_cattr_count[1];/* Amount of class attributes (Decode using `Dec_DecodePointer()'). */
+	uint8_t            cd_iattr_count[1];/* Amount of instance attributes (Decode using `Dec_DecodePointer()'). */
+	Dec_ClassOperator  cd_op_list[1];    /* [cd_op_count] List of operator bindings. */
+	Dec_ClassAttribute cd_cattr_list[1]; /* [cd_cattr_count] List of class attributes. */
+	Dec_ClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
 } Dec_ClassDescriptor;
 
 typedef struct PACKED {
-    uint8_t                co_name; /* Name of the operator (one of `OPERATOR_*') */
-    uint8_t                co_addr; /* [<= :cd_cmemb_size] Index into the class member
-                                     * table, to where the operator callback can be bound. */
+	uint8_t                co_name; /* Name of the operator (one of `OPERATOR_*') */
+	uint8_t                co_addr; /* [<= :cd_cmemb_size] Index into the class member
+	                                 * table, to where the operator callback can be bound. */
 } Dec_8BitClassOperator;
 
 typedef struct PACKED {
-    uint8_t                ca_addr;          /* Address of the attribute (behavior depends on flags) */
-    uint8_t                ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
-    uint8_t                ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
-                                              * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t                ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
-                                              * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t                ca_doc[1];        /* Only exists when `ca_doclen' evaluates to non-zero:
-                                              * The offset into `e_stroff' of the documentation string's start.
-                                              * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t                ca_addr;          /* Address of the attribute (behavior depends on flags) */
+	uint8_t                ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
+	uint8_t                ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	                                          * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t                ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+	                                          * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t                ca_doc[1];        /* Only exists when `ca_doclen' evaluates to non-zero:
+	                                          * The offset into `e_stroff' of the documentation string's start.
+	                                          * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_8BitClassAttribute;
 
 typedef struct PACKED {
-    uint8_t                cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
-    uint8_t                cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
-                                              * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t                cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
-                                              * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t                cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
-                                              * The offset into `e_stroff' of the documentation string's start.
-                                              * NOTE: Decode using `Dec_DecodePointer()' */
-    uint8_t                cd_cmemb_size;    /* The allocation size of the class member table. */
-    uint8_t                cd_imemb_size;    /* The allocation size of the instance member table. */
-    uint8_t                cd_op_count;      /* Amount of user-defined operator bindings. */
-    uint8_t                cd_cattr_count;   /* Amount of class attributes. */
-    uint8_t                cd_iattr_count;   /* Amount of instance attributes. */
-    Dec_8BitClassOperator  cd_op_list[1];    /* [cd_op_count] List of operator bindings. */
-    Dec_8BitClassAttribute cd_cattr_list[1]; /* [cd_cattr_count] List of class attributes. */
-    Dec_8BitClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
+	uint8_t                cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
+	uint8_t                cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	                                          * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t                cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+	                                          * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t                cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
+	                                          * The offset into `e_stroff' of the documentation string's start.
+	                                          * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t                cd_cmemb_size;    /* The allocation size of the class member table. */
+	uint8_t                cd_imemb_size;    /* The allocation size of the instance member table. */
+	uint8_t                cd_op_count;      /* Amount of user-defined operator bindings. */
+	uint8_t                cd_cattr_count;   /* Amount of class attributes. */
+	uint8_t                cd_iattr_count;   /* Amount of instance attributes. */
+	Dec_8BitClassOperator  cd_op_list[1];    /* [cd_op_count] List of operator bindings. */
+	Dec_8BitClassAttribute cd_cattr_list[1]; /* [cd_cattr_count] List of class attributes. */
+	Dec_8BitClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
 } Dec_8BitClassDescriptor;
 
 
 typedef struct PACKED {
-    uint8_t       kwe_nam[1];    /* Name of the keyword (Pointer to a ZERO-terminated string within the `e_stroff' string table)
-                                  * NOTE: Decode using `Dec_DecodePointer()' */
+	uint8_t       kwe_nam[1];    /* Name of the keyword (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	                              * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_KwdsEntry;
+
 typedef struct PACKED {
-    uint8_t       kw_siz;        /* The amount of keyword entries. */
-    Dec_KwdsEntry kw_members[1]; /* [kw_siz] One entry for each member.
-                                  * NOTE: The keyword index (`struct kwds_entry::ke_index')
-                                  *       is the index into this vector. */
+	uint8_t       kw_siz;        /* The amount of keyword entries. */
+	Dec_KwdsEntry kw_members[1]; /* [kw_siz] One entry for each member.
+	                              * NOTE: The keyword index (`struct kwds_entry::ke_index')
+	                              *       is the index into this vector. */
 } Dec_Kwds;
 
 
@@ -446,16 +451,15 @@ typedef struct PACKED {
  *       identical to ULEB encoding used by DDI. */
 LOCAL uint32_t DCALL
 Dec_DecodePointer(uint8_t **__restrict pptr) {
- uint32_t result = 0; uint8_t byte;
- uint8_t *ptr = *pptr;
- uint8_t num_bits = 0;
- do {
-  byte      = *ptr++;
-  result   |= (byte & 0x7f) << num_bits;
-  num_bits += 7;
- } while (byte & 0x80);
- *pptr = ptr;
- return result;
+	uint32_t result = 0;
+	uint8_t  byte, *ptr = *pptr, num_bits = 0;
+	do {
+		byte = *ptr++;
+		result |= (byte & 0x7f) << num_bits;
+		num_bits += 7;
+	} while (byte & 0x80);
+	*pptr = ptr;
+	return result;
 }
 
 
@@ -577,21 +581,21 @@ struct code_object;
 struct ddi_object;
 
 typedef struct {
-    union {
-        uint8_t               *df_data;    /* [0..df_size+DECFILE_PADDING][owned]
-                                            *  A full mapping of all data from the input DEC file, followed
-                                            *  by a couple of bytes of padding data that is ZERO-initialized. */
-        uint8_t               *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
-        Dec_Ehdr              *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
-    };
-    size_t                     df_size;    /* Total number of usable bytes of memory
-                                            * that can be found within the source file. */
-    DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
-    DREF struct module_object *df_module;  /* [1..1] The module that is being loaded. */
-    struct compiler_options   *df_options; /* [0..1] Compilation options. */
-    DREF struct string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
-                                            *        This string is used by DDI descriptors in
-                                            *        order to allow for sharing of string tables. */
+	union {
+		uint8_t               *df_data;    /* [0..df_size+DECFILE_PADDING][owned]
+		                                    *  A full mapping of all data from the input DEC file, followed
+		                                    *  by a couple of bytes of padding data that is ZERO-initialized. */
+		uint8_t               *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
+		Dec_Ehdr              *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
+	};
+	size_t                     df_size;    /* Total number of usable bytes of memory
+	                                        * that can be found within the source file. */
+	DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
+	DREF struct module_object *df_module;  /* [1..1] The module that is being loaded. */
+	struct compiler_options   *df_options; /* [0..1] Compilation options. */
+	DREF struct string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
+	                                        *        This string is used by DDI descriptors in
+	                                        *        order to allow for sharing of string tables. */
 } DecFile;
 
 /* Initialize a DEC file, given an input stream, as well as its pathname.

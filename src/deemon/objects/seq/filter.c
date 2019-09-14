@@ -57,7 +57,7 @@ PRIVATE int DCALL
 filteriterator_init(FilterIterator *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
  Filter *filter;
- if (DeeArg_Unpack(argc,argv,"o:_SeqFilterIterator",&filter))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqFilterIterator",&filter))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)filter,&SeqFilter_Type))
      goto err;
@@ -324,7 +324,7 @@ err:
 PRIVATE int DCALL
 filter_init(Filter *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"oo:_SeqFilter",&self->f_seq,&self->f_fun))
+ if (DeeArg_Unpack(argc, argv,"oo:_SeqFilter",&self->f_seq,&self->f_fun))
      goto err;
  self->f_seq = Dee_EmptySeq;
  self->f_fun = Dee_None;

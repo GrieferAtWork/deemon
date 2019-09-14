@@ -48,7 +48,7 @@ PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
  return DeeError_Throwf(&DeeError_UnsupportedAPI,
                          fs_unsupported_message);
 }
-INTERN DREF /*String*/DeeObject *DCALL fs_gethostname(void) { return fs_getcwd(); }
+INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) { return fs_getcwd(); }
 INTERN DREF DeeObject *DCALL fs_gettmp(void) { return fs_getcwd(); }
 INTERN int DCALL fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) { return fs_unsupported(); }
 INTERN DREF DeeObject *DCALL fs_getcwd(void) { fs_unsupported(); return NULL; }
@@ -123,7 +123,7 @@ PRIVATE int DCALL
 stat_ctor(Stat *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error;
- if (DeeArg_Unpack(argc,argv,"o:stat",&path))
+ if (DeeArg_Unpack(argc, argv,"o:stat",&path))
      goto err;
  self->st_file = file_open(path,"r");
  if unlikely(!self->st_file) goto err;
@@ -177,7 +177,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 PRIVATE DREF DeeObject *DCALL \
 funnam(DeeObject *__restrict UNUSED(self), \
        size_t argc, DeeObject **__restrict argv) { \
- if (DeeArg_Unpack(argc,argv,":" name)) \
+ if (DeeArg_Unpack(argc, argv,":" name)) \
      return NULL; \
  return_; \
 }
@@ -205,7 +205,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_exists(DeeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error;
- if (DeeArg_Unpack(argc,argv,"o:exists",&path))
+ if (DeeArg_Unpack(argc, argv,"o:exists",&path))
      goto err;
  error = file_exists(path);
  if unlikely(error < 0) goto err;
@@ -218,7 +218,7 @@ PRIVATE DREF DeeObject *DCALL
 stat_class_isreg(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  DeeObject *path; int error;
- if (DeeArg_Unpack(argc,argv,"o:isreg",&path))
+ if (DeeArg_Unpack(argc, argv,"o:isreg",&path))
      goto err;
  error = file_exists(path);
  if unlikely(error < 0) goto err;
@@ -232,7 +232,7 @@ PRIVATE DREF DeeObject *DCALL \
 funnam(DeeObject *__restrict UNUSED(self), \
        size_t argc, DeeObject **__restrict argv) { \
  DeeObject *path; \
- if (DeeArg_Unpack(argc,argv,"o:" name,&path)) \
+ if (DeeArg_Unpack(argc, argv,"o:" name,&path)) \
      return NULL; \
  return_; \
 }

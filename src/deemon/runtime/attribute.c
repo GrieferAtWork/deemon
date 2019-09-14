@@ -446,11 +446,11 @@ DeeObject_TGenericCallAttrString(DeeTypeObject *__restrict tp_self,
  ASSERT_OBJECT(self);
  ASSERT(DeeType_Check(tp_self));
  ASSERT(DeeObject_InstanceOf(self,tp_self));
- if ((result = DeeType_CallCachedAttr(tp_self,self,name,hash,argc,argv)) == ITER_DONE) {
+ if ((result = DeeType_CallCachedAttr(tp_self,self,name,hash,argc, argv)) == ITER_DONE) {
   DeeTypeObject *iter = tp_self;
   do {
    if (iter->tp_methods &&
-      (result = DeeType_CallMethodAttr(tp_self,iter,self,name,hash,argc,argv)) != ITER_DONE)
+      (result = DeeType_CallMethodAttr(tp_self,iter,self,name,hash,argc, argv)) != ITER_DONE)
        goto done;
    if (iter->tp_getsets &&
       (result = DeeType_GetGetSetAttr(tp_self,iter,self,name,hash)) != ITER_DONE)
@@ -463,7 +463,7 @@ DeeObject_TGenericCallAttrString(DeeTypeObject *__restrict tp_self,
 done_call:
   if likely(result) {
    DREF DeeObject *real_result;
-   real_result = DeeObject_Call(result,argc,argv);
+   real_result = DeeObject_Call(result,argc, argv);
    Dee_Decref(result);
    result = real_result;
   }
@@ -482,11 +482,11 @@ DeeObject_TGenericCallAttrStringLen(DeeTypeObject *__restrict tp_self,
  ASSERT_OBJECT(self);
  ASSERT(DeeType_Check(tp_self));
  ASSERT(DeeObject_InstanceOf(self,tp_self));
- if ((result = DeeType_CallCachedAttrLen(tp_self,self,name,namelen,hash,argc,argv)) == ITER_DONE) {
+ if ((result = DeeType_CallCachedAttrLen(tp_self,self,name,namelen,hash,argc, argv)) == ITER_DONE) {
   DeeTypeObject *iter = tp_self;
   do {
    if (iter->tp_methods &&
-      (result = DeeType_CallMethodAttrLen(tp_self,iter,self,name,namelen,hash,argc,argv)) != ITER_DONE)
+      (result = DeeType_CallMethodAttrLen(tp_self,iter,self,name,namelen,hash,argc, argv)) != ITER_DONE)
        goto done;
    if (iter->tp_getsets &&
       (result = DeeType_GetGetSetAttrLen(tp_self,iter,self,name,namelen,hash)) != ITER_DONE)
@@ -499,7 +499,7 @@ DeeObject_TGenericCallAttrStringLen(DeeTypeObject *__restrict tp_self,
 done_call:
   if likely(result) {
    DREF DeeObject *real_result;
-   real_result = DeeObject_Call(result,argc,argv);
+   real_result = DeeObject_Call(result,argc, argv);
    Dee_Decref(result);
    result = real_result;
   }
@@ -518,11 +518,11 @@ DeeObject_TGenericCallAttrStringKw(DeeTypeObject *__restrict tp_self,
  ASSERT_OBJECT(self);
  ASSERT(DeeType_Check(tp_self));
  ASSERT(DeeObject_InstanceOf(self,tp_self));
- if ((result = DeeType_CallCachedAttrKw(tp_self,self,name,hash,argc,argv,kw)) == ITER_DONE) {
+ if ((result = DeeType_CallCachedAttrKw(tp_self,self,name,hash,argc, argv, kw)) == ITER_DONE) {
   DeeTypeObject *iter = tp_self;
   do {
    if (iter->tp_methods &&
-      (result = DeeType_CallMethodAttrKw(tp_self,iter,self,name,hash,argc,argv,kw)) != ITER_DONE)
+      (result = DeeType_CallMethodAttrKw(tp_self,iter,self,name,hash,argc, argv, kw)) != ITER_DONE)
        goto done;
    if (iter->tp_getsets &&
       (result = DeeType_GetGetSetAttr(tp_self,iter,self,name,hash)) != ITER_DONE)
@@ -535,7 +535,7 @@ DeeObject_TGenericCallAttrStringKw(DeeTypeObject *__restrict tp_self,
 done_call:
   if likely(result) {
    DREF DeeObject *real_result;
-   real_result = DeeObject_CallKw(result,argc,argv,kw);
+   real_result = DeeObject_CallKw(result,argc, argv, kw);
    Dee_Decref(result);
    result = real_result;
   }
@@ -555,11 +555,11 @@ DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *__restrict tp_self,
  ASSERT_OBJECT(self);
  ASSERT(DeeType_Check(tp_self));
  ASSERT(DeeObject_InstanceOf(self,tp_self));
- if ((result = DeeType_CallCachedAttrLenKw(tp_self,self,name,namelen,hash,argc,argv,kw)) == ITER_DONE) {
+ if ((result = DeeType_CallCachedAttrLenKw(tp_self,self,name,namelen,hash,argc, argv, kw)) == ITER_DONE) {
   DeeTypeObject *iter = tp_self;
   do {
    if (iter->tp_methods &&
-      (result = DeeType_CallMethodAttrLenKw(tp_self,iter,self,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+      (result = DeeType_CallMethodAttrLenKw(tp_self,iter,self,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
        goto done;
    if (iter->tp_getsets &&
       (result = DeeType_GetGetSetAttrLen(tp_self,iter,self,name,namelen,hash)) != ITER_DONE)
@@ -572,7 +572,7 @@ DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *__restrict tp_self,
 done_call:
   if likely(result) {
    DREF DeeObject *real_result;
-   real_result = DeeObject_CallKw(result,argc,argv,kw);
+   real_result = DeeObject_CallKw(result,argc, argv, kw);
    Dee_Decref(result);
    result = real_result;
   }
@@ -1104,7 +1104,7 @@ DeeType_CallAttrString(DeeTypeObject *__restrict self,
                        size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result;
  DeeTypeObject *iter;
- if ((result = DeeType_CallCachedClassAttr(self,name,hash,argc,argv)) != ITER_DONE)
+ if ((result = DeeType_CallCachedClassAttr(self,name,hash,argc, argv)) != ITER_DONE)
       goto done;
  iter = self;
  do {
@@ -1112,15 +1112,15 @@ DeeType_CallAttrString(DeeTypeObject *__restrict self,
    struct class_attribute *attr;
    if ((attr = DeeType_QueryClassAttributeStringWithHash(self,iter,name,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallClassAttribute(iter,attr,argc,argv);
+    return DeeClass_CallClassAttribute(iter,attr,argc, argv);
    }
    if ((attr = DeeType_QueryInstanceAttributeStringWithHash(self,iter,name,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallInstanceAttribute(iter,attr,argc,argv);
+    return DeeClass_CallInstanceAttribute(iter,attr,argc, argv);
    }
   } else {
    if (iter->tp_class_methods &&
-      (result = DeeType_CallClassMethodAttr(self,iter,name,hash,argc,argv)) != ITER_DONE)
+      (result = DeeType_CallClassMethodAttr(self,iter,name,hash,argc, argv)) != ITER_DONE)
        goto done;
    if (iter->tp_class_getsets &&
       (result = DeeType_GetClassGetSetAttr(self,iter,name,hash)) != ITER_DONE)
@@ -1133,23 +1133,23 @@ DeeType_CallAttrString(DeeTypeObject *__restrict self,
 #endif
    {
     if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-       (result = DeeType_CallInstanceMethodAttr(self,iter,name,hash,argc,argv)) != ITER_DONE)
+       (result = DeeType_CallInstanceMethodAttr(self,iter,name,hash,argc, argv)) != ITER_DONE)
         goto done;
     if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-       (result = DeeType_CallInstanceGetSetAttr(self,iter,name,hash,argc,argv)) != ITER_DONE)
+       (result = DeeType_CallInstanceGetSetAttr(self,iter,name,hash,argc, argv)) != ITER_DONE)
         goto done;
     if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-       (result = DeeType_CallInstanceMemberAttr(self,iter,name,hash,argc,argv)) != ITER_DONE)
+       (result = DeeType_CallInstanceMemberAttr(self,iter,name,hash,argc, argv)) != ITER_DONE)
         goto done;
    }
   }
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-  if ((result = DeeObject_GenericCallAttrString((DeeObject *)iter,name,hash,argc,argv)) != ITER_DONE)
+  if ((result = DeeObject_GenericCallAttrString((DeeObject *)iter,name,hash,argc, argv)) != ITER_DONE)
       goto done;
 #endif
  } while ((iter = DeeType_Base(iter)) != NULL);
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
- if ((result = DeeObject_GenericCallAttrString((DeeObject *)self,name,hash,argc,argv)) != ITER_DONE)
+ if ((result = DeeObject_GenericCallAttrString((DeeObject *)self,name,hash,argc, argv)) != ITER_DONE)
      goto done;
 #endif
  err_unknown_attribute(self,name,ATTR_ACCESS_GET);
@@ -1158,7 +1158,7 @@ err:
 done_invoke:
  if (result) {
   DREF DeeObject *real_result;
-  real_result = DeeObject_Call(result,argc,argv);
+  real_result = DeeObject_Call(result,argc, argv);
   Dee_Decref(result);
   result = real_result;
  }
@@ -1173,7 +1173,7 @@ DeeType_CallAttrStringLen(DeeTypeObject *__restrict self,
                           size_t argc, DeeObject **__restrict argv) {
  DREF DeeObject *result;
  DeeTypeObject *iter;
- if ((result = DeeType_CallCachedClassAttrLen(self,name,namelen,hash,argc,argv)) != ITER_DONE)
+ if ((result = DeeType_CallCachedClassAttrLen(self,name,namelen,hash,argc, argv)) != ITER_DONE)
       goto done;
  iter = self;
  do {
@@ -1181,15 +1181,15 @@ DeeType_CallAttrStringLen(DeeTypeObject *__restrict self,
    struct class_attribute *attr;
    if ((attr = DeeType_QueryClassAttributeStringLenWithHash(self,iter,name,namelen,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallClassAttribute(iter,attr,argc,argv);
+    return DeeClass_CallClassAttribute(iter,attr,argc, argv);
    }
    if ((attr = DeeType_QueryInstanceAttributeStringLenWithHash(self,iter,name,namelen,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallInstanceAttribute(iter,attr,argc,argv);
+    return DeeClass_CallInstanceAttribute(iter,attr,argc, argv);
    }
   } else {
    if (iter->tp_class_methods &&
-      (result = DeeType_CallClassMethodAttrLen(self,iter,name,namelen,hash,argc,argv)) != ITER_DONE)
+      (result = DeeType_CallClassMethodAttrLen(self,iter,name,namelen,hash,argc, argv)) != ITER_DONE)
        goto done;
    if (iter->tp_class_getsets &&
       (result = DeeType_GetClassGetSetAttrLen(self,iter,name,namelen,hash)) != ITER_DONE)
@@ -1202,23 +1202,23 @@ DeeType_CallAttrStringLen(DeeTypeObject *__restrict self,
 #endif
    {
     if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-       (result = DeeType_CallInstanceMethodAttrLen(self,iter,name,namelen,hash,argc,argv)) != ITER_DONE)
+       (result = DeeType_CallInstanceMethodAttrLen(self,iter,name,namelen,hash,argc, argv)) != ITER_DONE)
         goto done;
     if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-       (result = DeeType_CallInstanceGetSetAttrLen(self,iter,name,namelen,hash,argc,argv)) != ITER_DONE)
+       (result = DeeType_CallInstanceGetSetAttrLen(self,iter,name,namelen,hash,argc, argv)) != ITER_DONE)
         goto done;
     if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-       (result = DeeType_CallInstanceMemberAttrLen(self,iter,name,namelen,hash,argc,argv)) != ITER_DONE)
+       (result = DeeType_CallInstanceMemberAttrLen(self,iter,name,namelen,hash,argc, argv)) != ITER_DONE)
         goto done;
    }
   }
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-  if ((result = DeeObject_GenericCallAttrStringLen((DeeObject *)iter,name,namelen,hash,argc,argv)) != ITER_DONE)
+  if ((result = DeeObject_GenericCallAttrStringLen((DeeObject *)iter,name,namelen,hash,argc, argv)) != ITER_DONE)
       goto done;
 #endif
  } while ((iter = DeeType_Base(iter)) != NULL);
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
- if ((result = DeeObject_GenericCallAttrStringLen((DeeObject *)self,name,namelen,hash,argc,argv)) != ITER_DONE)
+ if ((result = DeeObject_GenericCallAttrStringLen((DeeObject *)self,name,namelen,hash,argc, argv)) != ITER_DONE)
      goto done;
 #endif
  err_unknown_attribute_len(self,
@@ -1230,7 +1230,7 @@ err:
 done_invoke:
  if (result) {
   DREF DeeObject *real_result;
-  real_result = DeeObject_Call(result,argc,argv);
+  real_result = DeeObject_Call(result,argc, argv);
   Dee_Decref(result);
   result = real_result;
  }
@@ -1245,7 +1245,7 @@ DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
                          DeeObject *kw) {
  DREF DeeObject *result;
  DeeTypeObject *iter;
- if ((result = DeeType_CallCachedClassAttrKw(self,name,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeType_CallCachedClassAttrKw(self,name,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
  iter = self;
  do {
@@ -1253,15 +1253,15 @@ DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
    struct class_attribute *attr;
    if ((attr = DeeType_QueryClassAttributeStringWithHash(self,iter,name,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallClassAttributeKw(iter,attr,argc,argv,kw);
+    return DeeClass_CallClassAttributeKw(iter,attr,argc, argv, kw);
    }
    if ((attr = DeeType_QueryInstanceAttributeStringWithHash(self,iter,name,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
+    return DeeClass_CallInstanceAttributeKw(iter,attr,argc, argv, kw);
    }
   } else {
    if (iter->tp_class_methods &&
-      (result = DeeType_CallClassMethodAttrKw(self,iter,name,hash,argc,argv,kw)) != ITER_DONE)
+      (result = DeeType_CallClassMethodAttrKw(self,iter,name,hash,argc, argv, kw)) != ITER_DONE)
        goto done;
    if (iter->tp_class_getsets &&
       (result = DeeType_GetClassGetSetAttr(self,iter,name,hash)) != ITER_DONE)
@@ -1274,23 +1274,23 @@ DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
 #endif
    {
     if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-       (result = DeeType_CallInstanceMethodAttrKw(self,iter,name,hash,argc,argv,kw)) != ITER_DONE)
+       (result = DeeType_CallInstanceMethodAttrKw(self,iter,name,hash,argc, argv, kw)) != ITER_DONE)
         goto done;
     if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-       (result = DeeType_CallInstanceGetSetAttrKw(self,iter,name,hash,argc,argv,kw)) != ITER_DONE)
+       (result = DeeType_CallInstanceGetSetAttrKw(self,iter,name,hash,argc, argv, kw)) != ITER_DONE)
         goto done;
     if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-       (result = DeeType_CallInstanceMemberAttrKw(self,iter,name,hash,argc,argv,kw)) != ITER_DONE)
+       (result = DeeType_CallInstanceMemberAttrKw(self,iter,name,hash,argc, argv, kw)) != ITER_DONE)
         goto done;
    }
   }
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-  if ((result = DeeObject_GenericCallAttrStringKw((DeeObject *)iter,name,hash,argc,argv,kw)) != ITER_DONE)
+  if ((result = DeeObject_GenericCallAttrStringKw((DeeObject *)iter,name,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
 #endif
  } while ((iter = DeeType_Base(iter)) != NULL);
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
- if ((result = DeeObject_GenericCallAttrStringKw((DeeObject *)self,name,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeObject_GenericCallAttrStringKw((DeeObject *)self,name,hash,argc, argv, kw)) != ITER_DONE)
      goto done;
 #endif
  err_unknown_attribute(self,name,ATTR_ACCESS_GET);
@@ -1299,7 +1299,7 @@ err:
 done_invoke:
  if (result) {
   DREF DeeObject *real_result;
-  real_result = DeeObject_CallKw(result,argc,argv,kw);
+  real_result = DeeObject_CallKw(result,argc, argv, kw);
   Dee_Decref(result);
   result = real_result;
  }
@@ -1316,7 +1316,7 @@ DeeType_CallAttrStringLenKw(DeeTypeObject *__restrict self,
                             DeeObject *kw) {
  DREF DeeObject *result;
  DeeTypeObject *iter;
- if ((result = DeeType_CallCachedClassAttrLenKw(self,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeType_CallCachedClassAttrLenKw(self,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
  iter = self;
  do {
@@ -1324,15 +1324,15 @@ DeeType_CallAttrStringLenKw(DeeTypeObject *__restrict self,
    struct class_attribute *attr;
    if ((attr = DeeType_QueryClassAttributeStringLenWithHash(self,iter,name,namelen,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallClassAttributeKw(iter,attr,argc,argv,kw);
+    return DeeClass_CallClassAttributeKw(iter,attr,argc, argv, kw);
    }
    if ((attr = DeeType_QueryInstanceAttributeStringLenWithHash(self,iter,name,namelen,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
+    return DeeClass_CallInstanceAttributeKw(iter,attr,argc, argv, kw);
    }
   } else {
    if (iter->tp_class_methods &&
-      (result = DeeType_CallClassMethodAttrLenKw(self,iter,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+      (result = DeeType_CallClassMethodAttrLenKw(self,iter,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
        goto done;
    if (iter->tp_class_getsets &&
       (result = DeeType_GetClassGetSetAttrLen(self,iter,name,namelen,hash)) != ITER_DONE)
@@ -1345,23 +1345,23 @@ DeeType_CallAttrStringLenKw(DeeTypeObject *__restrict self,
 #endif
    {
     if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-       (result = DeeType_CallInstanceMethodAttrLenKw(self,iter,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+       (result = DeeType_CallInstanceMethodAttrLenKw(self,iter,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
         goto done;
     if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-       (result = DeeType_CallInstanceGetSetAttrLenKw(self,iter,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+       (result = DeeType_CallInstanceGetSetAttrLenKw(self,iter,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
         goto done;
     if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-       (result = DeeType_CallInstanceMemberAttrLenKw(self,iter,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+       (result = DeeType_CallInstanceMemberAttrLenKw(self,iter,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
         goto done;
    }
   }
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-  if ((result = DeeObject_GenericCallAttrStringLenKw((DeeObject *)iter,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+  if ((result = DeeObject_GenericCallAttrStringLenKw((DeeObject *)iter,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
 #endif
  } while ((iter = DeeType_Base(iter)) != NULL);
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
- if ((result = DeeObject_GenericCallAttrStringLenKw((DeeObject *)self,name,namelen,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeObject_GenericCallAttrStringLenKw((DeeObject *)self,name,namelen,hash,argc, argv, kw)) != ITER_DONE)
      goto done;
 #endif
  err_unknown_attribute_len(self,
@@ -1373,7 +1373,7 @@ err:
 done_invoke:
  if (result) {
   DREF DeeObject *real_result;
-  real_result = DeeObject_CallKw(result,argc,argv,kw);
+  real_result = DeeObject_CallKw(result,argc, argv, kw);
   Dee_Decref(result);
   result = real_result;
  }
@@ -1845,7 +1845,7 @@ DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self,
                                  DeeObject *kw) {
  DeeTypeObject *iter;
  DREF DeeObject *result;
- if ((result = DeeType_CallCachedInstanceAttrKw(self,name,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeType_CallCachedInstanceAttrKw(self,name,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
  iter = self;
  do {
@@ -1853,11 +1853,11 @@ DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self,
    struct class_attribute *attr;
    if ((attr = DeeType_QueryIInstanceAttributeStringWithHash(self,iter,name,hash)) != NULL) {
     if (!class_attribute_mayaccess(attr,iter)) { err_class_protected_member(iter,attr); goto err; }
-    return DeeClass_CallInstanceAttributeKw(iter,attr,argc,argv,kw);
+    return DeeClass_CallInstanceAttributeKw(iter,attr,argc, argv, kw);
    }
   } else {
    if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-      (result = DeeType_CallIInstanceMethodAttrKw(self,iter,name,hash,argc,argv,kw)) != ITER_DONE)
+      (result = DeeType_CallIInstanceMethodAttrKw(self,iter,name,hash,argc, argv, kw)) != ITER_DONE)
        goto done;
    if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
       (result = DeeType_GetIInstanceGetSetAttr(self,iter,name,hash)) != ITER_DONE)
@@ -1873,7 +1873,7 @@ err:
 done_invoke:
  if (result) {
   DREF DeeObject *real_result;
-  real_result = DeeObject_CallKw(result,argc,argv,kw);
+  real_result = DeeObject_CallKw(result,argc, argv, kw);
   Dee_Decref(result);
   result = real_result;
  }
@@ -1991,7 +1991,7 @@ INTDEF int DCALL super_setattr(DeeObject *__restrict self, DeeObject *__restrict
 
 PUBLIC int
 (DCALL DeeObject_HasAttr)(DeeObject *__restrict self,
-                          /*String*/DeeObject *__restrict attr_name) {
+                          /*String*/ DeeObject *__restrict attr_name) {
  DeeTypeObject *iter,*tp_self; dhash_t hash;
  ASSERT_OBJECT(self);
  ASSERT_OBJECT(attr_name);
@@ -2198,7 +2198,7 @@ err:
 
 PUBLIC int
 (DCALL DeeObject_BoundAttr)(DeeObject *__restrict self,
-                            /*String*/DeeObject *__restrict attr_name) {
+                            /*String*/ DeeObject *__restrict attr_name) {
  int result; dhash_t hash;
  DeeTypeObject *iter;
  DeeTypeObject *tp_self;
@@ -2462,7 +2462,7 @@ err:
 
 PUBLIC DREF DeeObject *DCALL
 DeeObject_CallAttrKw(DeeObject *__restrict self,
-                     /*String*/DeeObject *__restrict attr_name,
+                     /*String*/ DeeObject *__restrict attr_name,
                      size_t argc, DeeObject **__restrict argv,
                      DeeObject *kw) {
  DREF DeeObject *result; dhash_t hash;
@@ -2474,7 +2474,7 @@ DeeObject_CallAttrKw(DeeObject *__restrict self,
 again:
  if (iter->tp_attr) goto do_iter_attr;
  hash = DeeString_Hash(attr_name);
- if ((result = DeeType_CallCachedAttrKw(iter,self,DeeString_STR(attr_name),hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeType_CallCachedAttrKw(iter,self,DeeString_STR(attr_name),hash,argc, argv, kw)) != ITER_DONE)
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
@@ -2490,11 +2490,11 @@ again:
     return DeeInstance_CallAttributeKw(desc,
                                        DeeInstance_DESC(desc,
                                                         self),
-                                       self,attr,argc,argv,kw);
+                                       self,attr,argc, argv, kw);
    }
   }
   if (iter->tp_methods &&
-     (result = DeeType_CallMethodAttrKw(tp_self,iter,self,DeeString_STR(attr_name),hash,argc,argv,kw)) != ITER_DONE)
+     (result = DeeType_CallMethodAttrKw(tp_self,iter,self,DeeString_STR(attr_name),hash,argc, argv, kw)) != ITER_DONE)
       goto done;
   if (iter->tp_getsets &&
      (result = DeeType_GetGetSetAttr(tp_self,iter,self,DeeString_STR(attr_name),hash)) != ITER_DONE)
@@ -2509,7 +2509,7 @@ again:
 do_iter_attr:
    getattr = iter->tp_attr->tp_getattr;
    if (getattr == &type_getattr)
-       return type_callattr_kw(self,attr_name,argc,argv,kw);
+       return type_callattr_kw(self,attr_name,argc, argv, kw);
    if (getattr == &super_getattr) {
     iter = DeeSuper_TYPE(self);
     self = DeeSuper_SELF(self);
@@ -2517,10 +2517,10 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
-       return DeeSeqEach_CallAttrKw(((SeqEachBase *)self)->se_seq,attr_name,argc,argv,kw);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
-       return DeeSeqEach_CallAttrKw(self,attr_name,argc,argv,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrKw(((SeqEachBase *)self)->se_seq,attr_name,argc, argv, kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrKw(self,attr_name,argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    result = (*getattr)(self,attr_name);
@@ -2535,7 +2535,7 @@ err:
 done_invoke:
  if likely(result) {
   DREF DeeObject *callback_result;
-  callback_result = DeeObject_CallKw(result,argc,argv,kw);
+  callback_result = DeeObject_CallKw(result,argc, argv, kw);
   Dee_Decref(result);
   result = callback_result;
  }
@@ -2555,7 +2555,7 @@ DeeObject_CallAttrStringHashKw(DeeObject *__restrict self,
  iter = tp_self = Dee_TYPE(self);
 again:
  if (iter->tp_attr) goto do_iter_attr;
- if ((result = DeeType_CallCachedAttrKw(iter,self,attr_name,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeType_CallCachedAttrKw(iter,self,attr_name,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
@@ -2571,11 +2571,11 @@ again:
     return DeeInstance_CallAttributeKw(desc,
                                        DeeInstance_DESC(desc,
                                                         self),
-                                       self,attr,argc,argv,kw);
+                                       self,attr,argc, argv, kw);
    }
   }
   if (iter->tp_methods &&
-     (result = DeeType_CallMethodAttrKw(tp_self,iter,self,attr_name,hash,argc,argv,kw)) != ITER_DONE)
+     (result = DeeType_CallMethodAttrKw(tp_self,iter,self,attr_name,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
   if (iter->tp_getsets &&
      (result = DeeType_GetGetSetAttr(tp_self,iter,self,attr_name,hash)) != ITER_DONE)
@@ -2591,7 +2591,7 @@ again:
 do_iter_attr:
    getattr = iter->tp_attr->tp_getattr;
    if (getattr == &type_getattr)
-       return DeeType_CallAttrStringKw((DeeTypeObject *)self,attr_name,hash,argc,argv,kw);
+       return DeeType_CallAttrStringKw((DeeTypeObject *)self,attr_name,hash,argc, argv, kw);
    if (getattr == &module_getattr) {
     result = DeeModule_GetAttrString((DeeModuleObject *)self,
                                       attr_name,
@@ -2605,10 +2605,10 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
-       return DeeSeqEach_CallAttrStringKw(((SeqEachBase *)self)->se_seq,attr_name,hash,argc,argv,kw);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
-       return DeeSeqEach_CallAttrStringKw(self,attr_name,hash,argc,argv,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrStringKw(((SeqEachBase *)self)->se_seq,attr_name,hash,argc, argv, kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrStringKw(self,attr_name,hash,argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewWithHash(attr_name,hash);
@@ -2626,7 +2626,7 @@ err:
 done_invoke:
  if likely(result) {
   DREF DeeObject *callback_result;
-  callback_result = DeeObject_CallKw(result,argc,argv,kw);
+  callback_result = DeeObject_CallKw(result,argc, argv, kw);
   Dee_Decref(result);
   result = callback_result;
  }
@@ -2647,7 +2647,7 @@ DeeObject_CallAttrStringLenHashKw(DeeObject *__restrict self,
  iter = tp_self = Dee_TYPE(self);
 again:
  if (iter->tp_attr) goto do_iter_attr;
- if ((result = DeeType_CallCachedAttrLenKw(iter,self,attr_name,attrlen,hash,argc,argv,kw)) != ITER_DONE)
+ if ((result = DeeType_CallCachedAttrLenKw(iter,self,attr_name,attrlen,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
@@ -2663,11 +2663,11 @@ again:
     return DeeInstance_CallAttributeKw(desc,
                                        DeeInstance_DESC(desc,
                                                         self),
-                                       self,attr,argc,argv,kw);
+                                       self,attr,argc, argv, kw);
    }
   }
   if (iter->tp_methods &&
-     (result = DeeType_CallMethodAttrLenKw(tp_self,iter,self,attr_name,attrlen,hash,argc,argv,kw)) != ITER_DONE)
+     (result = DeeType_CallMethodAttrLenKw(tp_self,iter,self,attr_name,attrlen,hash,argc, argv, kw)) != ITER_DONE)
       goto done;
   if (iter->tp_getsets &&
      (result = DeeType_GetGetSetAttrLen(tp_self,iter,self,attr_name,attrlen,hash)) != ITER_DONE)
@@ -2683,7 +2683,7 @@ again:
 do_iter_attr:
    getattr = iter->tp_attr->tp_getattr;
    if (getattr == &type_getattr)
-       return DeeType_CallAttrStringLenKw((DeeTypeObject *)self,attr_name,attrlen,hash,argc,argv,kw);
+       return DeeType_CallAttrStringLenKw((DeeTypeObject *)self,attr_name,attrlen,hash,argc, argv, kw);
    if (getattr == &module_getattr) {
     result = DeeModule_GetAttrStringLen((DeeModuleObject *)self,
                                          attr_name,
@@ -2698,10 +2698,10 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
-       return DeeSeqEach_CallAttrStringLenKw(((SeqEachBase *)self)->se_seq,attr_name,attrlen,hash,argc,argv,kw);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
-       return DeeSeqEach_CallAttrStringLenKw(self,attr_name,attrlen,hash,argc,argv,kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrStringLenKw(((SeqEachBase *)self)->se_seq,attr_name,attrlen,hash,argc, argv, kw);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrStringLenKw(self,attr_name,attrlen,hash,argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewSizedWithHash(attr_name,attrlen,hash);
@@ -2720,7 +2720,7 @@ err:
 done_invoke:
  if likely(result) {
   DREF DeeObject *callback_result;
-  callback_result = DeeObject_CallKw(result,argc,argv,kw);
+  callback_result = DeeObject_CallKw(result,argc, argv, kw);
   Dee_Decref(result);
   result = callback_result;
  }
@@ -2731,7 +2731,7 @@ done:
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
-                                /*String*/DeeObject *__restrict attr_name,
+                                /*String*/ DeeObject *__restrict attr_name,
                                 DeeObject *__restrict args) {
  DREF DeeObject *result; dhash_t hash;
  DeeTypeObject *iter,*tp_self;
@@ -2785,9 +2785,9 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
        return DeeSeqEach_CallAttrTuple(((SeqEachBase *)self)->se_seq,attr_name,args);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
        return DeeSeqEach_CallAttrTuple(self,attr_name,args);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
@@ -2813,7 +2813,7 @@ done:
 
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self,
-                                  /*String*/DeeObject *__restrict attr_name,
+                                  /*String*/ DeeObject *__restrict attr_name,
                                   DeeObject *__restrict args,
                                   DeeObject *kw) {
  DREF DeeObject *result; dhash_t hash;
@@ -2868,9 +2868,9 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
        return DeeSeqEach_CallAttrTupleKw(((SeqEachBase *)self)->se_seq,attr_name,args,kw);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
        return DeeSeqEach_CallAttrTupleKw(self,attr_name,args,kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
@@ -2896,7 +2896,7 @@ done:
 #else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
-                                /*String*/DeeObject *__restrict attr_name,
+                                /*String*/ DeeObject *__restrict attr_name,
                                 DeeObject *__restrict args) {
  return DeeObject_CallAttr(self,
                            attr_name,
@@ -2906,7 +2906,7 @@ PUBLIC DREF DeeObject *
 
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self,
-                                  /*String*/DeeObject *__restrict attr_name,
+                                  /*String*/ DeeObject *__restrict attr_name,
                                   DeeObject *__restrict args,
                                   DeeObject *kw) {
  return DeeObject_CallAttrKw(self,
@@ -3376,7 +3376,7 @@ DeeObject_CallAttrStringHash(DeeObject *__restrict self,
  iter = tp_self = Dee_TYPE(self);
 again:
  if (iter->tp_attr) goto do_iter_attr;
- if ((result = DeeType_CallCachedAttr(iter,self,attr_name,hash,argc,argv)) != ITER_DONE)
+ if ((result = DeeType_CallCachedAttr(iter,self,attr_name,hash,argc, argv)) != ITER_DONE)
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
@@ -3389,11 +3389,11 @@ again:
     return DeeInstance_CallAttribute(desc,
                                      DeeInstance_DESC(desc,
                                                       self),
-                                     self,attr,argc,argv);
+                                     self,attr,argc, argv);
    }
   }
   if (iter->tp_methods &&
-     (result = DeeType_CallMethodAttr(tp_self,iter,self,attr_name,hash,argc,argv)) != ITER_DONE)
+     (result = DeeType_CallMethodAttr(tp_self,iter,self,attr_name,hash,argc, argv)) != ITER_DONE)
       goto done;
   if (iter->tp_getsets &&
      (result = DeeType_GetGetSetAttr(tp_self,iter,self,attr_name,hash)) != ITER_DONE)
@@ -3409,7 +3409,7 @@ again:
 do_iter_attr:
    getattr = iter->tp_attr->tp_getattr;
    if (getattr == &type_getattr)
-       return DeeType_CallAttrString((DeeTypeObject *)self,attr_name,hash,argc,argv);
+       return DeeType_CallAttrString((DeeTypeObject *)self,attr_name,hash,argc, argv);
    if (getattr == &module_getattr) {
     result = DeeModule_GetAttrString((DeeModuleObject *)self,attr_name,hash);
     goto done_invoke;
@@ -3421,10 +3421,10 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
-       return DeeSeqEach_CallAttrString(((SeqEachBase *)self)->se_seq,attr_name,hash,argc,argv);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
-       return DeeSeqEach_CallAttrString(self,attr_name,hash,argc,argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrString(((SeqEachBase *)self)->se_seq,attr_name,hash,argc, argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrString(self,attr_name,hash,argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewWithHash(attr_name,hash);
@@ -3442,7 +3442,7 @@ err:
 done_invoke:
  if likely(result) {
   DREF DeeObject *callback_result;
-  callback_result = DeeObject_Call(result,argc,argv);
+  callback_result = DeeObject_Call(result,argc, argv);
   Dee_Decref(result);
   result = callback_result;
  }
@@ -3462,7 +3462,7 @@ DeeObject_CallAttrStringLenHash(DeeObject *__restrict self,
  iter = tp_self = Dee_TYPE(self);
 again:
  if (iter->tp_attr) goto do_iter_attr;
- if ((result = DeeType_CallCachedAttrLen(iter,self,attr_name,attrlen,hash,argc,argv)) != ITER_DONE)
+ if ((result = DeeType_CallCachedAttrLen(iter,self,attr_name,attrlen,hash,argc, argv)) != ITER_DONE)
       goto done;
  for (;;) {
   if (DeeType_IsClass(iter)) {
@@ -3475,11 +3475,11 @@ again:
     return DeeInstance_CallAttribute(desc,
                                      DeeInstance_DESC(desc,
                                                       self),
-                                     self,attr,argc,argv);
+                                     self,attr,argc, argv);
    }
   }
   if (iter->tp_methods &&
-     (result = DeeType_CallMethodAttrLen(tp_self,iter,self,attr_name,attrlen,hash,argc,argv)) != ITER_DONE)
+     (result = DeeType_CallMethodAttrLen(tp_self,iter,self,attr_name,attrlen,hash,argc, argv)) != ITER_DONE)
       goto done;
   if (iter->tp_getsets &&
      (result = DeeType_GetGetSetAttrLen(tp_self,iter,self,attr_name,attrlen,hash)) != ITER_DONE)
@@ -3495,7 +3495,7 @@ again:
 do_iter_attr:
    getattr = iter->tp_attr->tp_getattr;
    if (getattr == &type_getattr)
-       return DeeType_CallAttrStringLen((DeeTypeObject *)self,attr_name,attrlen,hash,argc,argv);
+       return DeeType_CallAttrStringLen((DeeTypeObject *)self,attr_name,attrlen,hash,argc, argv);
    if (getattr == &module_getattr) {
     result = DeeModule_GetAttrStringLen((DeeModuleObject *)self,attr_name,attrlen,hash);
     goto done_invoke;
@@ -3507,10 +3507,10 @@ do_iter_attr:
     goto again;
    }
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeach_getattr)
-       return DeeSeqEach_CallAttrStringLen(((SeqEachBase *)self)->se_seq,attr_name,attrlen,hash,argc,argv);
-   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&seqeachw_getattr)
-       return DeeSeqEach_CallAttrStringLen(self,attr_name,attrlen,hash,argc,argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeach_getattr)
+       return DeeSeqEach_CallAttrStringLen(((SeqEachBase *)self)->se_seq,attr_name,attrlen,hash,argc, argv);
+   if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&seqeachw_getattr)
+       return DeeSeqEach_CallAttrStringLen(self,attr_name,attrlen,hash,argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
    if (!getattr) break;
    attr_name_ob = DeeString_NewSizedWithHash(attr_name,attrlen,hash);
@@ -3529,7 +3529,7 @@ err:
 done_invoke:
  if likely(result) {
   DREF DeeObject *callback_result;
-  callback_result = DeeObject_Call(result,argc,argv);
+  callback_result = DeeObject_Call(result,argc, argv);
   Dee_Decref(result);
   result = callback_result;
  }
@@ -3568,21 +3568,21 @@ PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrString)(DeeObject *__restrict self,
                                  char const *__restrict attr_name,
                                  size_t argc, DeeObject **__restrict argv) {
- return DeeObject_CallAttrStringHash(self,attr_name,Dee_HashStr(attr_name),argc,argv);
+ return DeeObject_CallAttrStringHash(self,attr_name,Dee_HashStr(attr_name),argc, argv);
 }
 PUBLIC DREF DeeObject *
 (DCALL DeeObject_CallAttrStringKw)(DeeObject *__restrict self,
                                    char const *__restrict attr_name,
                                    size_t argc, DeeObject **__restrict argv,
                                    DeeObject *kw) {
- return DeeObject_CallAttrStringHashKw(self,attr_name,Dee_HashStr(attr_name),argc,argv,kw);
+ return DeeObject_CallAttrStringHashKw(self,attr_name,Dee_HashStr(attr_name),argc, argv, kw);
 }
 
 
 
 PUBLIC ATTR_SENTINEL DREF DeeObject *
 DeeObject_CallAttrPack(DeeObject *__restrict self,
-                       /*String*/DeeObject *__restrict attr_name,
+                       /*String*/ DeeObject *__restrict attr_name,
                        size_t argc, ...) {
  DREF DeeObject *result;
  va_list args;
@@ -3593,7 +3593,7 @@ DeeObject_CallAttrPack(DeeObject *__restrict self,
 }
 PUBLIC DREF DeeObject *DCALL
 DeeObject_VCallAttrf(DeeObject *__restrict self,
-                     /*String*/DeeObject *__restrict attr_name,
+                     /*String*/ DeeObject *__restrict attr_name,
                      char const *__restrict format, va_list args) {
  DREF DeeObject *result,*args_tuple;
  args_tuple = DeeTuple_VNewf(format,args);
@@ -3606,7 +3606,7 @@ DeeObject_VCallAttrf(DeeObject *__restrict self,
 }
 PUBLIC DREF DeeObject *
 DeeObject_CallAttrf(DeeObject *__restrict self,
-                    /*String*/DeeObject *__restrict attr_name,
+                    /*String*/ DeeObject *__restrict attr_name,
                     char const *__restrict format, ...) {
  DREF DeeObject *result;
  va_list args;

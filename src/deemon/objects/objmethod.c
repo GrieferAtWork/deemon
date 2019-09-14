@@ -226,7 +226,7 @@ objmethod_visit(DeeObjMethodObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- return DeeObjMethod_CallFunc(self->om_func,self->om_this,argc,argv);
+ return DeeObjMethod_CallFunc(self->om_func,self->om_this,argc, argv);
 }
 PRIVATE dhash_t DCALL
 objmethod_hash(DeeObjMethodObject *__restrict self) {
@@ -716,12 +716,12 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject,om_func) ==
 PRIVATE DREF DeeObject *DCALL
 kwobjmethod_call(DeeKwObjMethodObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
- return DeeKwObjMethod_CallFunc(self->om_func,self->om_this,argc,argv,NULL);
+ return DeeKwObjMethod_CallFunc(self->om_func,self->om_this,argc, argv,NULL);
 }
 PRIVATE DREF DeeObject *DCALL
 kwobjmethod_call_kw(DeeKwObjMethodObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- return DeeKwObjMethod_CallFunc(self->om_func,self->om_this,argc,argv,kw);
+ return DeeKwObjMethod_CallFunc(self->om_func,self->om_this,argc, argv, kw);
 }
 #define kwobjmethod_cmp objmethod_cmp
 PRIVATE DREF DeeObject *DCALL
@@ -1185,7 +1185,7 @@ DeeClsProperty_GetDoc(DeeObject *__restrict self) {
 }
 
 
-PUBLIC DREF /*ClsProperty*/DeeObject *DCALL
+PUBLIC DREF /*ClsProperty*/ DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
                    dgetmethod_t get,
                    ddelmethod_t del,
@@ -1248,7 +1248,7 @@ clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
                             ATTR_ACCESS_GET);
   goto err;
  }
- if (DeeArg_Unpack(argc,argv,"o:get",&thisarg))
+ if (DeeArg_Unpack(argc, argv,"o:get",&thisarg))
      goto err;
  /* Allow non-instance objects for generic types. */
  if (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
@@ -1269,9 +1269,9 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
                              ATTR_ACCESS_GET);
   goto err;
  }
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg))
+ if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:get",&thisarg))
      goto err;
- if (DeeArg_Unpack(argc,argv,"o:get",&thisarg))
+ if (DeeArg_Unpack(argc, argv,"o:get",&thisarg))
      goto err;
  /* Allow non-instance objects for generic types. */
  if (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
@@ -1290,7 +1290,7 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
   err_cant_access_attribute(&DeeClsProperty_Type,"delete",ATTR_ACCESS_GET);
   return NULL;
  }
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:delete",&thisarg) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:delete",&thisarg) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cp_type)))
@@ -1310,7 +1310,7 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
                              ATTR_ACCESS_GET);
   return NULL;
  }
- if (DeeArg_UnpackKw(argc,argv,kw,setter_kwlist,"oo:set",&thisarg,&value) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,setter_kwlist,"oo:set",&thisarg,&value) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cp_type)))
@@ -1488,7 +1488,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 
 
 /* Create a new unbound class property object. */
-PUBLIC DREF /*ClsMember*/DeeObject *DCALL
+PUBLIC DREF /*ClsMember*/ DeeObject *DCALL
 DeeClsMember_New(DeeTypeObject *__restrict type,
                  struct type_member const *__restrict desc) {
  DREF DeeClsMemberObject *result;
@@ -1527,7 +1527,7 @@ clsmember_get(DeeClsMemberObject *__restrict self,
               size_t argc, DeeObject **__restrict argv,
               DeeObject *kw) {
  DeeObject *thisarg;
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:get",&thisarg) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:get",&thisarg) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)))
@@ -1539,7 +1539,7 @@ clsmember_delete(DeeClsMemberObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
                  DeeObject *kw) {
  DeeObject *thisarg;
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"o:delete",&thisarg) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"o:delete",&thisarg) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)) ||
@@ -1552,7 +1552,7 @@ clsmember_set(DeeClsMemberObject *__restrict self,
               size_t argc, DeeObject **__restrict argv,
               DeeObject *kw) {
  DeeObject *thisarg,*value;
- if (DeeArg_UnpackKw(argc,argv,kw,getter_kwlist,"oo:set",&thisarg,&value) ||
+ if (DeeArg_UnpackKw(argc, argv, kw,getter_kwlist,"oo:set",&thisarg,&value) ||
        /* Allow non-instance objects for generic types. */
     (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
        DeeObject_AssertType(thisarg,self->cm_type)) ||
@@ -1712,7 +1712,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeCMethodObject,cm_func) ==
 PRIVATE DREF DeeObject *DCALL
 cmethod_call(DeeCMethodObject *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
- return DeeCMethod_CallFunc(self->cm_func,argc,argv);
+ return DeeCMethod_CallFunc(self->cm_func,argc, argv);
 }
 
 PRIVATE struct module_symbol *DCALL
@@ -2066,14 +2066,14 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeKwCMethodObject,cm_func) ==
 PRIVATE DREF DeeObject *DCALL
 kwcmethod_call(DeeKwCMethodObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- return DeeKwCMethod_CallFunc(self->cm_func,argc,argv,NULL);
+ return DeeKwCMethod_CallFunc(self->cm_func,argc, argv,NULL);
 }
 
 PRIVATE DREF DeeObject *DCALL
 kwcmethod_call_kw(DeeKwCMethodObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv,
                   DeeObject *kw) {
- return DeeKwCMethod_CallFunc(self->cm_func,argc,argv,kw);
+ return DeeKwCMethod_CallFunc(self->cm_func,argc, argv, kw);
 }
 
 #define kwcmethod_str     cmethod_str
@@ -2155,7 +2155,7 @@ DeeCMethod_CallFunc_d(dcmethod_t fun, size_t argc, DeeObject **__restrict argv) 
  DREF DeeObject *result;
  DeeThreadObject *caller = DeeThread_Self();
  uint16_t old_depth = caller->t_exceptsz;
- result = (*fun)(argc,argv);
+ result = (*fun)(argc, argv);
  if unlikely(result ? old_depth   != caller->t_exceptsz
                     : old_depth+1 != caller->t_exceptsz)
     fatal_invalid_except(result,old_depth+!result,(void *)fun);
@@ -2167,7 +2167,7 @@ DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *__restrict self,
  DREF DeeObject *result;
  DeeThreadObject *caller = DeeThread_Self();
  uint16_t old_depth = caller->t_exceptsz;
- result = (*fun)(self,argc,argv);
+ result = (*fun)(self,argc, argv);
  if unlikely(result ? old_depth   != caller->t_exceptsz
                     : old_depth+1 != caller->t_exceptsz)
     fatal_invalid_except(result,old_depth+!result,(void *)fun);
@@ -2180,7 +2180,7 @@ DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc,
  DREF DeeObject *result;
  DeeThreadObject *caller = DeeThread_Self();
  uint16_t old_depth = caller->t_exceptsz;
- result = (*fun)(argc,argv,kw);
+ result = (*fun)(argc, argv, kw);
  if unlikely(result ? old_depth   != caller->t_exceptsz
                     : old_depth+1 != caller->t_exceptsz)
     fatal_invalid_except(result,old_depth+!result,(void *)fun);
@@ -2192,7 +2192,7 @@ DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *__restrict self,
  DREF DeeObject *result;
  DeeThreadObject *caller = DeeThread_Self();
  uint16_t old_depth = caller->t_exceptsz;
- result = (*fun)(self,argc,argv,kw);
+ result = (*fun)(self,argc, argv, kw);
  if unlikely(result ? old_depth   != caller->t_exceptsz
                     : old_depth+1 != caller->t_exceptsz)
     fatal_invalid_except(result,old_depth+!result,(void *)fun);

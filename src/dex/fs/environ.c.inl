@@ -321,7 +321,7 @@ err_unknown_env_var_s(char const *__restrict name) {
 }
 
 INTERN bool DCALL
-fs_hasenv(/*String*/DeeObject *__restrict name) {
+fs_hasenv(/*String*/ DeeObject *__restrict name) {
  bool result;
  rwlock_read(&env_lock);
  DBG_ALIGNMENT_DISABLE();

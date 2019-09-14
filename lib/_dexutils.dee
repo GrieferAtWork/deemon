@@ -84,7 +84,7 @@ local converter_map: {string: (string,string,string) | string} = {
 		"\t{obj}_str = DeeString_AsUtf8((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t    goto err;\n",
-		("/*utf-8*/char const *","{}_str")),
+		("/*utf-8*/ char const *","{}_str")),
 	"c:wchar_t[]"  : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj},&DeeString_Type))\n"
 		"\t    goto err;\n"
@@ -233,7 +233,7 @@ function gii(name: string, value: string = none, libname: string = none, visi: s
 @@>	DeeObject *arg2;
 @@>	DeeObject *arg3 = NULL;
 @@>	bool arg4 = true;
-@@>	if (DeeArg_UnpackKw(argc,argv,kw,libfoo_bar_kwds,"oo|ob:bar",&arg1,&arg2,&arg3,&arg4))
+@@>	if (DeeArg_UnpackKw(argc, argv, kw,libfoo_bar_kwds,"oo|ob:bar",&arg1,&arg2,&arg3,&arg4))
 @@>	    goto err;
 @@>	if (DeeObject_AssertTypeExact(arg1,&DeeString_Type))
 @@>	    goto err;
@@ -431,9 +431,9 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		print ";";
 	}
 	if (kw && arg_data) {
-		print "\tif (DeeArg_UnpackKw(argc,argv,kw,{},\"".format({ kwlist_name }),;
+		print "\tif (DeeArg_UnpackKw(argc, argv, kw,{},\"".format({ kwlist_name }),;
 	} else {
-		print "\tif (DeeArg_Unpack(argc,argv,\"",;
+		print "\tif (DeeArg_Unpack(argc, argv,\"",;
 	}
 	local is_optional = false;
 	for (local x,y,z: arg_data) {

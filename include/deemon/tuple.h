@@ -20,9 +20,11 @@
 #define GUARD_DEEMON_TUPLE_H 1
 
 #include "api.h"
-#include "object.h"
-#include <stddef.h>
+
 #include <stdarg.h>
+#include <stddef.h>
+
+#include "object.h"
 
 DECL_BEGIN
 
@@ -30,63 +32,66 @@ DECL_BEGIN
 #define Dee_tuple_object   tuple_object
 #define DEFINE_TUPLE       Dee_DEFINE_TUPLE
 #define return_empty_tuple Dee_return_empty_tuple
-#endif
+#endif /* DEE_SOURCE */
 
 typedef struct Dee_tuple_object DeeTupleObject;
 
 struct Dee_tuple_object {
-    /* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
-    Dee_OBJECT_HEAD
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	Dee_OBJECT_HEAD
 #ifdef __INTELLISENSE__
-    size_t          t_size;       /* [const] Tuple size. */
-    DeeObject      *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
-#else
-    size_t          t_size;       /* [const] Tuple size. */
-    DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
-#endif
+	size_t          t_size;       /* [const] Tuple size. */
+	DeeObject      *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
+#else /* __INTELLISENSE__ */
+	size_t          t_size;       /* [const] Tuple size. */
+	DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
+#endif /* !__INTELLISENSE__ */
 };
 
 #define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject,t_elem) + (n_items) * sizeof(DREF DeeObject *))
 #define DeeTuple_IsEmpty(ob)     ((DeeObject *)Dee_REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
 #define DeeTuple_SIZE(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_size
 #define DeeTuple_ELEM(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem
-#define DeeTuple_GET(ob,i)       ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
-#define DeeTuple_SET(ob,i,v)     ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]=(v)
+#define DeeTuple_GET(ob, i)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
+#define DeeTuple_SET(ob, i, v)   ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (v)
 
 /* Define a statically allocated tuple:
  * >> PRIVATE DEFINE_TUPLE(my_tuple,2,{ Dee_EmptyString, Dee_EmptyString }); */
-#define Dee_DEFINE_TUPLE(name,elemc,...) \
-struct { \
-    Dee_OBJECT_HEAD \
-    size_t     t_size; \
-    DeeObject *t_elem[elemc]; \
-} name = { \
-    Dee_OBJECT_HEAD_INIT(&DeeTuple_Type), \
-    elemc, \
-    __VA_ARGS__ \
-}
+#define Dee_DEFINE_TUPLE(name, elemc, ...)    \
+	struct {                                  \
+		Dee_OBJECT_HEAD                       \
+		size_t     t_size;                    \
+		DeeObject *t_elem[elemc];             \
+	} name = {                                \
+		Dee_OBJECT_HEAD_INIT(&DeeTuple_Type), \
+		elemc,                                \
+		__VA_ARGS__                           \
+	}
 
 
 #ifdef GUARD_DEEMON_OBJECTS_TUPLE_C
-struct empty_tuple_object { Dee_OBJECT_HEAD size_t t_size; };
+struct empty_tuple_object {
+	Dee_OBJECT_HEAD
+	size_t t_size;
+};
 DDATDEF struct empty_tuple_object DeeTuple_Empty;
 #define Dee_EmptyTuple ((DeeObject *)&DeeTuple_Empty)
-#else
+#else /* GUARD_DEEMON_OBJECTS_TUPLE_C */
 DDATDEF DeeObject        DeeTuple_Empty;
 #define Dee_EmptyTuple (&DeeTuple_Empty)
-#endif
+#endif /* !GUARD_DEEMON_OBJECTS_TUPLE_C */
 #define Dee_return_empty_tuple  Dee_return_reference_(Dee_EmptyTuple)
 
 DDATDEF DeeTypeObject DeeTuple_Type;
-#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x,&DeeTuple_Type) /* `tuple' is final */
-#define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x,&DeeTuple_Type)
+#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x, &DeeTuple_Type) /* `tuple' is final */
+#define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeTuple_Type)
 
 
 /* Create new tuple objects. */
 DFUNDEF DREF DeeObject *DCALL DeeTuple_NewUninitialized(size_t n);
 DFUNDEF DREF DeeObject *DCALL DeeTuple_TryNewUninitialized(size_t n);
-DFUNDEF DREF DeeObject *DCALL DeeTuple_ResizeUninitialized(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t n);
-DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeTuple_TruncateUninitialized(/*inherit(always)*/DREF DeeObject *__restrict self, size_t n);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t n);
+DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t n);
 DFUNDEF void DCALL DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);
 
 /* Decrement the reference counter of a tuple object filled with symbolic references.
@@ -118,7 +123,7 @@ DFUNDEF DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*DREF*/ va_list 
 
 /* Create a new tuple from a given vector. */
 DFUNDEF DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
-DFUNDEF DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/DREF DeeObject *const *__restrict objv);
+DFUNDEF DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
 /* Similar to `Dee_Packf', but parse any number of formated values and
  * put them in a tuple, essentially doing the same as `Dee_Packf' when
@@ -129,19 +134,19 @@ DFUNDEF DREF DeeObject *DCALL DeeTuple_VNewf(char const *__restrict format, va_l
 /* Concat a tuple and some generic sequence,
  * inheriting a reference from `self' in the process. */
 DFUNDEF DREF DeeObject *DCALL
-DeeTuple_ConcatInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self,
+DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                          DeeObject *__restrict sequence);
 DFUNDEF DREF DeeObject *DCALL
-DeeTuple_ExtendInherited(/*inherit(on_success)*/DREF DeeObject *__restrict self, size_t argc,
-                         /*inherit(on_success)*/DREF DeeObject **__restrict argv);
+DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
+                         /*inherit(on_success)*/ DREF DeeObject **__restrict argv);
 
 /* Append all elements from an iterator to a tuple.
  * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */
 DFUNDEF DREF DeeObject *DCALL
-DeeTuple_AppendIterator(/*inherit(on_success)*/DREF DeeObject *__restrict self,
+DeeTuple_AppendIterator(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                         DeeObject *__restrict iterator);
 DFUNDEF DREF DeeObject *DCALL
-DeeTuple_Append(/*inherit(on_success)*/DREF DeeObject *__restrict self,
+DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                 DeeObject *__restrict item);
 
 

@@ -158,8 +158,8 @@ struct time_object {
 
 #ifdef CONFIG_BUILDING_LIBTIME
 INTDEF DeeTypeObject DeeTime_Type;
-#define DeeTime_Check(ob)      DeeObject_InstanceOf(ob,&DeeTime_Type)
-#define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob,&DeeTime_Type)
+#define DeeTime_Check(ob)      DeeObject_InstanceOf(ob, &DeeTime_Type)
+#define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTime_Type)
 
 EXPDEF DREF DeeObject *(DeeTime_New)(uint64_t microseconds);
 INTDEF DREF DeeObject *DCALL DeeTime_New_(dtime_t microseconds, uint16_t kind);

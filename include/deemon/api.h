@@ -44,17 +44,18 @@
 
 
 #include <hybrid/compiler.h>
-#include <hybrid/typecore.h>
-#include <hybrid/host.h>
-#include <hybrid/debug-alignment.h>
+
 #include <hybrid/__byteorder.h>
+#include <hybrid/debug-alignment.h>
+#include <hybrid/host.h>
+#include <hybrid/typecore.h>
 
 #ifdef __CC__
-#include <stddef.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 #if defined(_CRTDBG_MAP_ALLOC) && \
-   !defined(__KOS_SYSTEM_HEADERS__)
+!defined(__KOS_SYSTEM_HEADERS__)
 #include <crtdbg.h>
 #endif
 #endif /* __CC__ */
@@ -101,11 +102,11 @@ DECL_BEGIN
 
 #ifdef NDEBUG
 #define CONFIG_NO_BADREFCNT_CHECKS 1
-#else
+#else /* NDEBUG */
 #ifndef CONFIG_NO_TRACE_REFCHANGES
 #define CONFIG_TRACE_REFCHANGES    1
 #endif /* !CONFIG_NO_TRACE_REFCHANGES */
-#endif
+#endif /* !NDEBUG */
 
 
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -113,9 +114,9 @@ DECL_BEGIN
  * overhead required to properly track reference counts.
  * -> So just disable them! */
 #undef CONFIG_HAVE_EXEC_ASM
-#else
+#else /* CONFIG_TRACE_REFCHANGES */
 #define CONFIG_NO_TRACE_REFCHANGES 1
-#endif
+#endif /* !CONFIG_TRACE_REFCHANGES */
 
 
 #undef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
@@ -123,7 +124,7 @@ DECL_BEGIN
 #ifndef __OPTIMIZE_SIZE__
 #define CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS 1
 #define CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
-#endif
+#endif /* !__OPTIMIZE_SIZE__ */
 
 
 #if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
@@ -131,10 +132,10 @@ DECL_BEGIN
     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
     defined(_WIN32_WCE) || defined(WIN32_WCE)
 #define CONFIG_HOST_WINDOWS 1
-#endif
+#endif /* Windows... */
 #if defined(__unix__) || defined(__unix) || defined(unix)
 #define CONFIG_HOST_UNIX 1
-#endif
+#endif /* Unix... */
 
 
 #if (!defined(__i386__) && !defined(__x86_64__)) || \
@@ -147,9 +148,9 @@ DECL_BEGIN
 #ifdef CONFIG_HOST_WINDOWS
 #ifndef _WIN32_WINNT
 /* Limit windows headers to only provide XP stuff. */
-#   define _WIN32_WINNT _WIN32_WINNT_WINXP
+#define _WIN32_WINNT _WIN32_WINNT_WINXP
 #endif /* !_WIN32_WINNT */
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 
 
 #define CONFIG_HOST_ENDIAN  __BYTE_ORDER__
@@ -157,7 +158,7 @@ DECL_BEGIN
 #   define CONFIG_LITTLE_ENDIAN 1
 #elif CONFIG_HOST_ENDIAN == __ORDER_BIG_ENDIAN__
 #   define CONFIG_BIG_ENDIAN 1
-#endif
+#endif /* Endian... */
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -226,10 +227,10 @@ extern void (__debugbreak)(void);
 #ifdef CONFIG_BUILDING_DEEMON
 #   define DFUNDEF __EXPDEF
 #   define DDATDEF __EXPDEF
-#else
+#else /* CONFIG_BUILDING_DEEMON */
 #   define DFUNDEF __IMPDEF
 #   define DDATDEF __IMPDEF
-#endif
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 #ifdef __GNUC__
 /* Define if the compiler allows labels to be
@@ -237,7 +238,7 @@ extern void (__debugbreak)(void);
  * ... as well as such addresses to be used
  * by `goto': `void *ip = &&foo; goto *ip;' */
 #define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS 1
-#endif
+#endif /* __GNUC__ */
 
 #define DCALL    ATTR_STDCALL
 #define DREF     /* Annotation for pointer: transfer/storage of a reference.
@@ -267,15 +268,15 @@ extern int (ATTR_CDECL _CrtCheckMemory)(void);
 
 #ifdef __INTELLISENSE__
 extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
-#define DEE_REQUIRES_TYPE(T,x)  ____INTELLISENSE_req_type< T >(x)
+#define DEE_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
 #else
-#define DEE_REQUIRES_TYPE(T,x) (x)
+#define DEE_REQUIRES_TYPE(T, x) (x)
 #endif
 
 #ifndef NDEBUG
-#define DEE_DPRINT(message)       (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
-#define DEE_DPRINTF(...)          (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
-#define DEE_VDPRINTF(format,args) (_Dee_dprint_enabled ? _Dee_vdprintf(format,args) : (void)0)
+#define DEE_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
+#define DEE_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
+#define DEE_VDPRINTF(format, args) (_Dee_dprint_enabled ? _Dee_vdprintf(format, args) : (void)0)
 DDATDEF int _Dee_dprint_enabled;
 DFUNDEF void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF void (_Dee_dprintf)(char const *__restrict format, ...);
@@ -287,19 +288,19 @@ DFUNDEF void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
 #ifndef NDEBUG
 DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
-#define Dee_ASSERT(expr)      ((expr) || (_DeeAssert_Fail(#expr,__FILE__,__LINE__),BREAKPOINT(),0))
-#define Dee_ASSERTF(expr,...) ((expr) || (_DeeAssert_Failf(#expr,__FILE__,__LINE__,__VA_ARGS__),BREAKPOINT(),0))
+#define Dee_ASSERT(expr)       ((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), BREAKPOINT(), 0))
+#define Dee_ASSERTF(expr, ...) ((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), BREAKPOINT(), 0))
 #elif !defined(__NO_builtin_assume)
 #define Dee_ASSERT(expr)       __builtin_assume(expr)
-#define Dee_ASSERTF(expr,...)  __builtin_assume(expr)
+#define Dee_ASSERTF(expr, ...) __builtin_assume(expr)
 #else
-#define Dee_ASSERT(expr)      (void)0
-#define Dee_ASSERTF(expr,...) (void)0
+#define Dee_ASSERT(expr)       (void)0
+#define Dee_ASSERTF(expr, ...) (void)0
 #endif
 #endif /* !Dee_ASSERT */
 #ifndef Dee_ASSERTF
-#define Dee_ASSERTF(expr,...)  Dee_ASSERT(expr)
-#endif
+#define Dee_ASSERTF(expr, ...) Dee_ASSERT(expr)
+#endif /* !Dee_ASSERTF */
 
 #ifdef DEE_SOURCE
 #undef ASSERT
@@ -314,12 +315,12 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 #define DEE_DPRINT(message)       (void)0
 #define DEE_DPRINTF(...)          (void)0
 #define DEE_VDPRINTF(format,args) (void)0
-#endif
+#endif /* !DEE_DPRINT */
 
 #ifndef DEE_CHECKMEMORY
 #define DEE_NO_CHECKMEMORY         1
 #define DEE_CHECKMEMORY()         (void)0
-#endif
+#endif /* !DEE_CHECKMEMORY */
 
 #endif /* __CC__ */
 
@@ -587,14 +588,14 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 
 /* NOTE: This config option only affects internal documentation strings. */
 #ifndef CONFIG_NO_DOC
-#   define DOC(x)             x
-#   define DOC_DEF(name,x)    PRIVATE char const name[] = x
-#   define DOC_GET(name)      name
-#else
+#   define DOC(x)           x
+#   define DOC_DEF(name, x) PRIVATE char const name[] = x
+#   define DOC_GET(name)    name
+#else /* !CONFIG_NO_DOC */
 #   define DOC(x)           ((char *)NULL)
-#   define DOC_DEF(name,x)    /* nothing */
+#   define DOC_DEF(name, x) /* nothing */
 #   define DOC_GET(name)    ((char *)NULL)
-#endif
+#endif /* CONFIG_NO_DOC */
 
 DECL_END
 

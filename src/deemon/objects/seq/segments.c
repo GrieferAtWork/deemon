@@ -53,7 +53,7 @@ PRIVATE int DCALL
 segiter_init(SegmentsIterator *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  self->si_len = 1;
- if (DeeArg_Unpack(argc,argv,"o|Iu:_SeqSegmentsIterator",
+ if (DeeArg_Unpack(argc, argv,"o|Iu:_SeqSegmentsIterator",
                   &self->si_iter,&self->si_len))
      goto err;
  if unlikely(!self->si_len) {
@@ -276,7 +276,7 @@ PRIVATE int DCALL
 seg_init(Segments *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->s_len = 1;
- if (DeeArg_Unpack(argc,argv,"o|Iu:_SeqSegments",
+ if (DeeArg_Unpack(argc, argv,"o|Iu:_SeqSegments",
                   &self->s_seq,&self->s_len))
      goto err;
  if unlikely(!self->s_len) {

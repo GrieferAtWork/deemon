@@ -41,7 +41,7 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
 INTERN dssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
-                      /*utf-8*/char const *__restrict format_str,
+                      /*utf-8*/ char const *__restrict format_str,
                       size_t format_len) {
 #define ALIGN_LEFT   0
 #define ALIGN_RIGHT  1
@@ -219,7 +219,7 @@ err_bad_format_str:
 PRIVATE dssize_t DCALL
 object_format_impl(DeeObject *__restrict self,
                    dformatprinter printer, void *arg,
-                   /*utf-8*/char const *__restrict format_str,
+                   /*utf-8*/ char const *__restrict format_str,
                    size_t format_len, DeeObject *format_str_obj) {
  DeeTypeObject *tp_self;
  tp_self = Dee_TYPE(self);
@@ -279,7 +279,7 @@ call_format_function:
 PUBLIC dssize_t DCALL
 DeeObject_PrintFormatString(DeeObject *__restrict self,
                             dformatprinter printer, void *arg,
-                            /*utf-8*/char const *__restrict format_str,
+                            /*utf-8*/ char const *__restrict format_str,
                             size_t format_len) {
  return object_format_impl(self,printer,arg,format_str,format_len,NULL);
 }

@@ -20,7 +20,9 @@
 #define GUARD_DEEMON_CELL_H 1
 
 #include "api.h"
+
 #include "object.h"
+
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
@@ -34,19 +36,19 @@ DECL_BEGIN
 typedef struct Dee_cell_object DeeCellObject;
 
 struct Dee_cell_object {
-    Dee_OBJECT_HEAD /* GC Object. */
-    DREF DeeObject *c_item;  /* [0..1] The object contained within this Cell. */
+	Dee_OBJECT_HEAD /* GC Object. */
+	DREF DeeObject *c_item;  /* [0..1] The object contained within this Cell. */
 #ifndef CONFIG_NO_THREADS
-    Dee_rwlock_t    c_lock; /* Lock used for accessing this Cell. */
+	Dee_rwlock_t    c_lock; /* Lock used for accessing this Cell. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
 #define DeeCell_Item(x)  ((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_item
 #ifdef CONFIG_NO_THREADS
 #define DeeCell_Bound(x) (DeeCell_Item(x) != NULL)
-#else
-#define DeeCell_Bound(x) (__hybrid_atomic_load(DeeCell_Item(x),__ATOMIC_ACQUIRE) != NULL)
-#endif
+#else /* CONFIG_NO_THREADS */
+#define DeeCell_Bound(x) (__hybrid_atomic_load(DeeCell_Item(x), __ATOMIC_ACQUIRE) != NULL)
+#endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_THREADS
 #define DeeCell_LockReading(x)    Dee_rwlock_reading(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
@@ -61,7 +63,7 @@ struct Dee_cell_object {
 #define DeeCell_LockEndWrite(x)   Dee_rwlock_endwrite(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
 #define DeeCell_LockEndRead(x)    Dee_rwlock_endread(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
 #define DeeCell_LockEnd(x)        Dee_rwlock_end(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)
-#else
+#else /* !CONFIG_NO_THREADS */
 #define DeeCell_LockReading(x)          1
 #define DeeCell_LockWriting(x)          1
 #define DeeCell_LockTryread(x)          1
@@ -74,12 +76,12 @@ struct Dee_cell_object {
 #define DeeCell_LockEndWrite(x)   (void)0
 #define DeeCell_LockEndRead(x)    (void)0
 #define DeeCell_LockEnd(x)        (void)0
-#endif
+#endif /* CONFIG_NO_THREADS */
 
 
 DDATDEF DeeTypeObject DeeCell_Type;
-#define DeeCell_Check(x)      DeeObject_InstanceOf(x,&DeeCell_Type)
-#define DeeCell_CheckExact(x) DeeObject_InstanceOfExact(x,&DeeCell_Type)
+#define DeeCell_Check(x)      DeeObject_InstanceOf(x, &DeeCell_Type)
+#define DeeCell_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeCell_Type)
 
 
 DFUNDEF DREF DeeObject *DCALL DeeCell_New(DeeObject *__restrict item);

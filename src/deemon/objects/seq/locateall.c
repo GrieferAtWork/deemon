@@ -112,7 +112,7 @@ PRIVATE int DCALL
 locatoriter_init(LocatorIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  Locator *loc;
- if (DeeArg_Unpack(argc,argv,"o:_SeqLocatorIterator",&loc))
+ if (DeeArg_Unpack(argc, argv,"o:_SeqLocatorIterator",&loc))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)loc,&SeqLocator_Type))
      goto err;
@@ -315,7 +315,7 @@ PRIVATE int DCALL
 locator_init(Locator *__restrict self,
              size_t argc, DeeObject **__restrict argv) {
  self->l_pred = NULL;
- if (DeeArg_Unpack(argc,argv,"oo|o:_SeqLocator",&self->l_seq,&self->l_elem,&self->l_pred))
+ if (DeeArg_Unpack(argc, argv,"oo|o:_SeqLocator",&self->l_seq,&self->l_elem,&self->l_pred))
      goto err;
  if (self->l_pred) {
   self->l_elem = DeeObject_Call(self->l_pred,1,&self->l_elem);

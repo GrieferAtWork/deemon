@@ -657,38 +657,38 @@ instance_destructor(DeeObject *__restrict self) {
 /*IF_AUTOINITNB((func) == &instance_auto_nobase_ctor ? instance_auto_nobase_tctor(tp_self,self) :)*/ \
 /*IF_AUTOINITNB((func) == &instance_builtin_auto_nobase_ctor ? instance_builtin_auto_nobase_tctor(tp_self,self) :)*/ \
               (*(func))(self))
-#define DeeType_INVOKE_ANY_CTOR(func,tp_self,self,argc,argv) \
-               ((func) == &instance_builtin_init ? instance_builtin_tinit(tp_self,self,argc,argv) : \
-      IF_NOBASE((func) == &instance_builtin_nobase_init ? instance_builtin_nobase_tinit(tp_self,self,argc,argv) :) \
-                (func) == &instance_builtin_inherited_init ? instance_builtin_inherited_tinit(tp_self,self,argc,argv) : \
-                (func) == &instance_builtin_super_init ? instance_builtin_super_tinit(tp_self,self,argc,argv) : \
-                (func) == &instance_builtin_kwsuper_init ? instance_builtin_kwsuper_tinit(tp_self,self,argc,argv) : \
-                (func) == &instance_init ? instance_tinit(tp_self,self,argc,argv) : \
-      IF_NOBASE((func) == &instance_nobase_init ? instance_nobase_tinit(tp_self,self,argc,argv) :) \
-                (func) == &instance_inherited_init ? instance_inherited_tinit(tp_self,self,argc,argv) : \
-                (func) == &instance_super_init ? instance_super_tinit(tp_self,self,argc,argv) : \
-                (func) == &instance_kwsuper_init ? instance_kwsuper_tinit(tp_self,self,argc,argv) : \
-    IF_AUTOINIT((func) == &instance_auto_init ? instance_auto_tinit(tp_self,self,argc,argv) :) \
-    IF_AUTOINIT((func) == &instance_builtin_auto_init ? instance_builtin_auto_tinit(tp_self,self,argc,argv) :) \
-  IF_AUTOINITNB((func) == &instance_auto_nobase_init ? instance_auto_nobase_tinit(tp_self,self,argc,argv) :) \
-  IF_AUTOINITNB((func) == &instance_builtin_auto_nobase_init ? instance_builtin_auto_nobase_tinit(tp_self,self,argc,argv) :) \
-              (*(func))(self,argc,argv))
-#define DeeType_INVOKE_ANY_CTOR_KW(func,tp_self,self,argc,argv,kw) \
-               ((func) == &instance_builtin_initkw ? instance_builtin_tinitkw(tp_self,self,argc,argv,kw) : \
-      IF_NOBASE((func) == &instance_builtin_nobase_initkw ? instance_builtin_nobase_tinitkw(tp_self,self,argc,argv,kw) :) \
-                (func) == &instance_builtin_inherited_initkw ? instance_builtin_inherited_tinitkw(tp_self,self,argc,argv,kw) : \
-                (func) == &instance_builtin_super_initkw ? instance_builtin_super_tinitkw(tp_self,self,argc,argv,kw) : \
-                (func) == &instance_builtin_kwsuper_initkw ? instance_builtin_kwsuper_tinitkw(tp_self,self,argc,argv,kw) : \
-                (func) == &instance_initkw ? instance_tinitkw(tp_self,self,argc,argv,kw) : \
-      IF_NOBASE((func) == &instance_nobase_initkw ? instance_nobase_tinitkw(tp_self,self,argc,argv,kw) :) \
-                (func) == &instance_inherited_initkw ? instance_inherited_tinitkw(tp_self,self,argc,argv,kw) : \
-                (func) == &instance_super_initkw ? instance_super_tinitkw(tp_self,self,argc,argv,kw) : \
-                (func) == &instance_kwsuper_initkw ? instance_kwsuper_tinitkw(tp_self,self,argc,argv,kw) : \
-    IF_AUTOINIT((func) == &instance_auto_initkw ? instance_auto_tinitkw(tp_self,self,argc,argv,kw) :) \
-    IF_AUTOINIT((func) == &instance_builtin_auto_initkw ? instance_builtin_auto_tinitkw(tp_self,self,argc,argv,kw) :) \
-  IF_AUTOINITNB((func) == &instance_auto_nobase_initkw ? instance_auto_nobase_tinitkw(tp_self,self,argc,argv,kw) :) \
-  IF_AUTOINITNB((func) == &instance_builtin_auto_nobase_initkw ? instance_builtin_auto_nobase_tinitkw(tp_self,self,argc,argv,kw) :) \
-              (*(func))(self,argc,argv,kw))
+#define DeeType_INVOKE_ANY_CTOR(func,tp_self,self,argc, argv) \
+               ((func) == &instance_builtin_init ? instance_builtin_tinit(tp_self,self,argc, argv) : \
+      IF_NOBASE((func) == &instance_builtin_nobase_init ? instance_builtin_nobase_tinit(tp_self,self,argc, argv) :) \
+                (func) == &instance_builtin_inherited_init ? instance_builtin_inherited_tinit(tp_self,self,argc, argv) : \
+                (func) == &instance_builtin_super_init ? instance_builtin_super_tinit(tp_self,self,argc, argv) : \
+                (func) == &instance_builtin_kwsuper_init ? instance_builtin_kwsuper_tinit(tp_self,self,argc, argv) : \
+                (func) == &instance_init ? instance_tinit(tp_self,self,argc, argv) : \
+      IF_NOBASE((func) == &instance_nobase_init ? instance_nobase_tinit(tp_self,self,argc, argv) :) \
+                (func) == &instance_inherited_init ? instance_inherited_tinit(tp_self,self,argc, argv) : \
+                (func) == &instance_super_init ? instance_super_tinit(tp_self,self,argc, argv) : \
+                (func) == &instance_kwsuper_init ? instance_kwsuper_tinit(tp_self,self,argc, argv) : \
+    IF_AUTOINIT((func) == &instance_auto_init ? instance_auto_tinit(tp_self,self,argc, argv) :) \
+    IF_AUTOINIT((func) == &instance_builtin_auto_init ? instance_builtin_auto_tinit(tp_self,self,argc, argv) :) \
+  IF_AUTOINITNB((func) == &instance_auto_nobase_init ? instance_auto_nobase_tinit(tp_self,self,argc, argv) :) \
+  IF_AUTOINITNB((func) == &instance_builtin_auto_nobase_init ? instance_builtin_auto_nobase_tinit(tp_self,self,argc, argv) :) \
+              (*(func))(self,argc, argv))
+#define DeeType_INVOKE_ANY_CTOR_KW(func,tp_self,self,argc, argv, kw) \
+               ((func) == &instance_builtin_initkw ? instance_builtin_tinitkw(tp_self,self,argc, argv, kw) : \
+      IF_NOBASE((func) == &instance_builtin_nobase_initkw ? instance_builtin_nobase_tinitkw(tp_self,self,argc, argv, kw) :) \
+                (func) == &instance_builtin_inherited_initkw ? instance_builtin_inherited_tinitkw(tp_self,self,argc, argv, kw) : \
+                (func) == &instance_builtin_super_initkw ? instance_builtin_super_tinitkw(tp_self,self,argc, argv, kw) : \
+                (func) == &instance_builtin_kwsuper_initkw ? instance_builtin_kwsuper_tinitkw(tp_self,self,argc, argv, kw) : \
+                (func) == &instance_initkw ? instance_tinitkw(tp_self,self,argc, argv, kw) : \
+      IF_NOBASE((func) == &instance_nobase_initkw ? instance_nobase_tinitkw(tp_self,self,argc, argv, kw) :) \
+                (func) == &instance_inherited_initkw ? instance_inherited_tinitkw(tp_self,self,argc, argv, kw) : \
+                (func) == &instance_super_initkw ? instance_super_tinitkw(tp_self,self,argc, argv, kw) : \
+                (func) == &instance_kwsuper_initkw ? instance_kwsuper_tinitkw(tp_self,self,argc, argv, kw) : \
+    IF_AUTOINIT((func) == &instance_auto_initkw ? instance_auto_tinitkw(tp_self,self,argc, argv, kw) :) \
+    IF_AUTOINIT((func) == &instance_builtin_auto_initkw ? instance_builtin_auto_tinitkw(tp_self,self,argc, argv, kw) :) \
+  IF_AUTOINITNB((func) == &instance_auto_nobase_initkw ? instance_auto_nobase_tinitkw(tp_self,self,argc, argv, kw) :) \
+  IF_AUTOINITNB((func) == &instance_builtin_auto_nobase_initkw ? instance_builtin_auto_nobase_tinitkw(tp_self,self,argc, argv, kw) :) \
+              (*(func))(self,argc, argv, kw))
 
 
 INTERN int DCALL
@@ -700,7 +700,7 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
   if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
    int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict,DeeObject *);
    func = tp_self->tp_init.tp_alloc.tp_any_ctor_kw;
-   return DeeType_INVOKE_ANY_CTOR_KW(func,tp_self,self,argc,argv,kw);
+   return DeeType_INVOKE_ANY_CTOR_KW(func,tp_self,self,argc, argv, kw);
   }
   if (DeeKwds_Check(kw)) {
    if (DeeKwds_SIZE(kw) != 0)
@@ -716,7 +716,7 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
  if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
   int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict);
   func = tp_self->tp_init.tp_alloc.tp_any_ctor;
-  return DeeType_INVOKE_ANY_CTOR(func,tp_self,self,argc,argv);
+  return DeeType_INVOKE_ANY_CTOR(func,tp_self,self,argc, argv);
  }
  if (tp_self->tp_init.tp_alloc.tp_ctor && !argc) {
   int (DCALL *func)(DeeObject *__restrict);
@@ -729,7 +729,7 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
   func = tp_self->tp_init.tp_alloc.tp_copy_ctor;
   return DeeType_INVOKE_COPY(func,tp_self,self,argv[0]);
  }
- return err_unimplemented_constructor(tp_self,argc,argv);
+ return err_unimplemented_constructor(tp_self,argc, argv);
 err_no_keywords:
  return err_keywords_ctor_not_accepted(tp_self,kw);
 err:
@@ -1125,17 +1125,17 @@ instance_initsuper_as_init(DeeTypeObject *__restrict tp_super,
  if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
   int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict);
   func = tp_super->tp_init.tp_alloc.tp_any_ctor;
-  result = DeeType_INVOKE_ANY_CTOR(func,tp_super,self,argc,argv);
+  result = DeeType_INVOKE_ANY_CTOR(func,tp_super,self,argc, argv);
  } else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
   int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict,DeeObject*);
   func = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
-  result = DeeType_INVOKE_ANY_CTOR_KW(func,tp_super,self,argc,argv,NULL);
+  result = DeeType_INVOKE_ANY_CTOR_KW(func,tp_super,self,argc, argv,NULL);
  } else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
   int (DCALL *func)(DeeObject *__restrict);
   func = tp_super->tp_init.tp_alloc.tp_ctor;
   result = DeeType_INVOKE_CTOR(func,tp_super,self);
  } else {
-  result = err_unimplemented_constructor(tp_super,argc,argv);
+  result = err_unimplemented_constructor(tp_super,argc, argv);
  }
  return result;
 }
@@ -1157,7 +1157,7 @@ instance_initsuper_as_initkw(DeeTypeObject *__restrict tp_super,
  if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
   int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict,DeeObject*);
   func = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
-  result = DeeType_INVOKE_ANY_CTOR_KW(func,tp_super,self,argc,argv,kw);
+  result = DeeType_INVOKE_ANY_CTOR_KW(func,tp_super,self,argc, argv, kw);
  } else {
   if (kw) {
    if (DeeKwds_Check(kw)) {
@@ -1174,13 +1174,13 @@ instance_initsuper_as_initkw(DeeTypeObject *__restrict tp_super,
   if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
    int (DCALL *func)(DeeObject *__restrict,size_t,DeeObject **__restrict);
    func = tp_super->tp_init.tp_alloc.tp_any_ctor;
-   result = DeeType_INVOKE_ANY_CTOR(func,tp_super,self,argc,argv);
+   result = DeeType_INVOKE_ANY_CTOR(func,tp_super,self,argc, argv);
   } else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
    int (DCALL *func)(DeeObject *__restrict);
    func = tp_super->tp_init.tp_alloc.tp_ctor;
    result = DeeType_INVOKE_CTOR(func,tp_super,self);
   } else {
-   result = err_unimplemented_constructor(tp_super,argc,argv);
+   result = err_unimplemented_constructor(tp_super,argc, argv);
   }
  }
  return result;
@@ -1339,7 +1339,7 @@ instance_super_tinit(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_Call(func,argc,argv);
+ args = DeeObject_Call(func,argc, argv);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1367,7 +1367,7 @@ instance_super_tinit(DeeTypeObject *__restrict tp_self,
   goto err_args;
  }
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCall(func,self,argc,argv);
+ result = DeeObject_ThisCall(func,self,argc, argv);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(args);
@@ -1402,7 +1402,7 @@ instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_Call(func,argc,argv);
+ args = DeeObject_Call(func,argc, argv);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1440,7 +1440,7 @@ instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
  }
 
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCall(func,self,argc,argv);
+ result = DeeObject_ThisCall(func,self,argc, argv);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(args);
@@ -1477,7 +1477,7 @@ instance_super_tinitkw(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_CallKw(func,argc,argv,kw);
+ args = DeeObject_CallKw(func,argc, argv, kw);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1505,7 +1505,7 @@ instance_super_tinitkw(DeeTypeObject *__restrict tp_self,
   goto err_args;
  }
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCallKw(func,self,argc,argv,kw);
+ result = DeeObject_ThisCallKw(func,self,argc, argv, kw);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(args);
@@ -1540,7 +1540,7 @@ instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_CallKw(func,argc,argv,kw);
+ args = DeeObject_CallKw(func,argc, argv, kw);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1577,7 +1577,7 @@ instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
       goto err_args;
  }
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCallKw(func,self,argc,argv,kw);
+ result = DeeObject_ThisCallKw(func,self,argc, argv, kw);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(args);
@@ -1711,7 +1711,7 @@ instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_Call(func,argc,argv);
+ args = DeeObject_Call(func,argc, argv);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1754,7 +1754,7 @@ instance_builtin_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_Call(func,argc,argv);
+ args = DeeObject_Call(func,argc, argv);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1809,7 +1809,7 @@ instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_CallKw(func,argc,argv,kw);
+ args = DeeObject_CallKw(func,argc, argv, kw);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1852,7 +1852,7 @@ instance_builtin_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
  /* Figure out the arguments to-be passed to the super-constructor. */
  func = class_desc_get_known_operator(tp_self,desc,CLASS_OPERATOR_SUPERARGS);
  if unlikely(!func) goto err;
- args = DeeObject_CallKw(func,argc,argv,kw);
+ args = DeeObject_CallKw(func,argc, argv, kw);
  Dee_Decref(func);
  if unlikely(!args) goto err;
  /* Make sure that the super-arguments object is a tuple. */
@@ -1958,7 +1958,7 @@ instance_tinit(DeeTypeObject *__restrict tp_self,
       goto err_members;
  }
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCall(func,self,argc,argv);
+ result = DeeObject_ThisCall(func,self,argc, argv);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(func);
@@ -1996,7 +1996,7 @@ instance_tinitkw(DeeTypeObject *__restrict tp_self,
       goto err_members;
  }
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCallKw(func,self,argc,argv,kw);
+ result = DeeObject_ThisCallKw(func,self,argc, argv, kw);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(func);
@@ -2058,7 +2058,7 @@ instance_nobase_tinit(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCall(func,self,argc,argv);
+ result = DeeObject_ThisCall(func,self,argc, argv);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(func);
@@ -2087,7 +2087,7 @@ instance_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
  /* Invoke the user-defined class constructor. */
- result = DeeObject_ThisCallKw(func,self,argc,argv,kw);
+ result = DeeObject_ThisCallKw(func,self,argc, argv, kw);
  if unlikely(!result) goto err_super;
  Dee_Decref(result);
  Dee_Decref(func);
@@ -2122,7 +2122,7 @@ instance_inherited_tinit(DeeTypeObject *__restrict tp_self,
  /* Initialize the super-classes. */
  tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
-  if (instance_initsuper_as_init(tp_super,self,argc,argv))
+  if (instance_initsuper_as_init(tp_super,self,argc, argv))
       goto err_members;
  }
  /* Invoke the user-defined class constructor. (without any arguments) */
@@ -2159,7 +2159,7 @@ instance_inherited_tinitkw(DeeTypeObject *__restrict tp_self,
  /* Initialize the super-classes. */
  tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
-  if (instance_initsuper_as_initkw(tp_super,self,argc,argv,kw))
+  if (instance_initsuper_as_initkw(tp_super,self,argc, argv, kw))
       goto err_members;
  }
  /* Invoke the user-defined class constructor. (without any arguments) */
@@ -2210,7 +2210,7 @@ instance_builtin_tinit(DeeTypeObject *__restrict tp_self,
  struct instance_desc *instance = DeeInstance_DESC(desc,self);
  DeeTypeObject *tp_super;
  if unlikely(argc != 0) {
-  err_unimplemented_constructor(tp_self,argc,argv);
+  err_unimplemented_constructor(tp_self,argc, argv);
   goto err;
  }
  /* Default-initialize the members of this instance. */
@@ -2236,7 +2236,7 @@ instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self,
  struct instance_desc *instance = DeeInstance_DESC(desc,self);
  DeeTypeObject *tp_super;
  if unlikely(argc != 0) {
-  err_unimplemented_constructor(tp_self,argc,argv);
+  err_unimplemented_constructor(tp_self,argc, argv);
   goto err;
  }
  if unlikely(kw && !DeeKwds_Check(kw)) {
@@ -2283,7 +2283,7 @@ instance_builtin_nobase_tinit(DeeTypeObject *__restrict tp_self,
  struct class_desc *desc = DeeClass_DESC(tp_self);
  struct instance_desc *instance = DeeInstance_DESC(desc,self);
  if unlikely(argc != 0)
-    return err_unimplemented_constructor(tp_self,argc,argv);
+    return err_unimplemented_constructor(tp_self,argc, argv);
  /* Default-initialize the members of this instance. */
  rwlock_init(&instance->id_lock);
  MEMSET_PTR(instance->id_vtab,0,desc->cd_desc->cd_imemb_size);
@@ -2296,7 +2296,7 @@ instance_builtin_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
  struct class_desc *desc = DeeClass_DESC(tp_self);
  struct instance_desc *instance = DeeInstance_DESC(desc,self);
  if unlikely(argc != 0) {
-  err_unimplemented_constructor(tp_self,argc,argv);
+  err_unimplemented_constructor(tp_self,argc, argv);
   goto err;
  }
  if unlikely(kw && !DeeKwds_Check(kw)) {
@@ -2351,11 +2351,11 @@ instance_builtin_inherited_tinit(DeeTypeObject *__restrict tp_self,
  /* Initialize the super-classes. */
  tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
-  if (instance_initsuper_as_init(tp_super,self,argc,argv))
+  if (instance_initsuper_as_init(tp_super,self,argc, argv))
       goto err_members;
  } else if (argc != 0) {
   /* Without a custom base class, the constructor requires _no_ arguments! */
-  err_unimplemented_constructor(&DeeObject_Type,argc,argv);
+  err_unimplemented_constructor(&DeeObject_Type,argc, argv);
   goto err;
  }
  return 0;
@@ -2377,11 +2377,11 @@ instance_builtin_inherited_tinitkw(DeeTypeObject *__restrict tp_self,
  /* Initialize the super-classes. */
  tp_super = DeeType_Base(tp_self);
  if (tp_super && tp_super != &DeeObject_Type) {
-  if (instance_initsuper_as_initkw(tp_super,self,argc,argv,kw))
+  if (instance_initsuper_as_initkw(tp_super,self,argc, argv, kw))
       goto err_members;
  } else if (argc != 0) {
   /* Without a custom base class, the constructor requires _no_ arguments! */
-  err_unimplemented_constructor(&DeeObject_Type,argc,argv);
+  err_unimplemented_constructor(&DeeObject_Type,argc, argv);
   goto err;
  } else if (kw && !DeeKwds_Check(kw)) {
   size_t keyword_count;
@@ -2411,22 +2411,22 @@ instance_kwsuper_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_super_init(DeeObject *__restrict self,
                     size_t argc, DeeObject **__restrict argv) {
- return instance_super_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_super_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_kwsuper_init(DeeObject *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
- return instance_kwsuper_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_kwsuper_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_super_initkw(DeeObject *__restrict self, size_t argc,
                       DeeObject **__restrict argv, DeeObject *kw) {
- return instance_super_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_super_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_kwsuper_initkw(DeeObject *__restrict self, size_t argc,
                         DeeObject **__restrict argv, DeeObject *kw) {
- return instance_kwsuper_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_kwsuper_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_builtin_super_ctor(DeeObject *__restrict self) {
@@ -2439,22 +2439,22 @@ instance_builtin_kwsuper_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_builtin_super_init(DeeObject *__restrict self,
                             size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_super_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_super_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_kwsuper_init(DeeObject *__restrict self,
                               size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_kwsuper_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_kwsuper_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc,
                               DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_super_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_super_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_builtin_kwsuper_initkw(DeeObject *__restrict self, size_t argc,
                                 DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_kwsuper_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_kwsuper_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_ctor(DeeObject *__restrict self) {
@@ -2463,12 +2463,12 @@ instance_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_init(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- return instance_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_initkw(DeeObject *__restrict self, size_t argc,
                 DeeObject **__restrict argv, DeeObject *kw) {
- return instance_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN int DCALL
@@ -2478,23 +2478,23 @@ instance_nobase_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_nobase_init(DeeObject *__restrict self,
                      size_t argc, DeeObject **__restrict argv) {
- return instance_nobase_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_nobase_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_nobase_initkw(DeeObject *__restrict self, size_t argc,
                        DeeObject **__restrict argv, DeeObject *kw) {
- return instance_nobase_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_nobase_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTERN int DCALL
 instance_inherited_init(DeeObject *__restrict self,
                         size_t argc, DeeObject **__restrict argv) {
- return instance_inherited_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_inherited_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_inherited_initkw(DeeObject *__restrict self, size_t argc,
                           DeeObject **__restrict argv, DeeObject *kw) {
- return instance_inherited_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_inherited_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_builtin_ctor(DeeObject *__restrict self) {
@@ -2503,12 +2503,12 @@ instance_builtin_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_builtin_init(DeeObject *__restrict self,
                       size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_initkw(DeeObject *__restrict self, size_t argc,
                         DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN int DCALL
@@ -2518,12 +2518,12 @@ instance_builtin_nobase_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_builtin_nobase_init(DeeObject *__restrict self,
                              size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_nobase_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_nobase_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_nobase_initkw(DeeObject *__restrict self, size_t argc,
                                DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_nobase_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_nobase_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTERN int DCALL
@@ -2533,12 +2533,12 @@ instance_builtin_inherited_ctor(DeeObject *__restrict self) {
 INTERN int DCALL
 instance_builtin_inherited_init(DeeObject *__restrict self,
                                 size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_inherited_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_inherited_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_inherited_initkw(DeeObject *__restrict self, size_t argc,
                                   DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_inherited_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_inherited_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 
 
@@ -2605,7 +2605,7 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
  uint16_t next_table_index;
  DREF DeeObject *iterator,*elem,*data[2];
  if (!kw)
-     return instance_autoload_members(tp_self,desc,instance,self,argc,argv);
+     return instance_autoload_members(tp_self,desc,instance,self,argc, argv);
  next_table_index = 0;
  if (DeeKwds_Check(kw)) {
   size_t i,positional_argc;
@@ -2957,19 +2957,19 @@ err_members:
 
 INTERN int DCALL
 instance_auto_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
- return instance_auto_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_auto_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- return instance_auto_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_auto_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_builtin_auto_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_auto_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_auto_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_auto_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_auto_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 
 
@@ -3096,19 +3096,19 @@ err_members:
 
 INTERN int DCALL
 instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
- return instance_auto_nobase_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_auto_nobase_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- return instance_auto_nobase_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_auto_nobase_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 INTERN int DCALL
 instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
- return instance_builtin_auto_nobase_tinit(Dee_TYPE(self),self,argc,argv);
+ return instance_builtin_auto_nobase_tinit(Dee_TYPE(self),self,argc, argv);
 }
 INTERN int DCALL
 instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
- return instance_builtin_auto_nobase_tinitkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_builtin_auto_nobase_tinitkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #endif /* CLASS_TP_FAUTOINIT */
@@ -3553,7 +3553,7 @@ instance_tcall(DeeTypeObject *__restrict tp_self,
  DREF DeeObject *func,*result;
  func = DeeClass_GetOperator(tp_self,OPERATOR_CALL);
  if unlikely(!func) return NULL;
- result = DeeObject_ThisCall(func,self,argc,argv);
+ result = DeeObject_ThisCall(func,self,argc, argv);
  Dee_Decref(func);
  return result;
 }
@@ -3564,19 +3564,19 @@ instance_tcallkw(DeeTypeObject *__restrict tp_self,
  DREF DeeObject *func,*result;
  func = DeeClass_GetOperator(tp_self,OPERATOR_CALL);
  if unlikely(!func) return NULL;
- result = DeeObject_ThisCallKw(func,self,argc,argv,kw);
+ result = DeeObject_ThisCallKw(func,self,argc, argv, kw);
  Dee_Decref(func);
  return result;
 }
 INTERN DREF DeeObject *DCALL
 instance_call(DeeObject *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- return instance_tcall(Dee_TYPE(self),self,argc,argv);
+ return instance_tcall(Dee_TYPE(self),self,argc, argv);
 }
 INTERN DREF DeeObject *DCALL
 instance_callkw(DeeObject *__restrict self, size_t argc,
                 DeeObject **__restrict argv, DeeObject *kw) {
- return instance_tcallkw(Dee_TYPE(self),self,argc,argv,kw);
+ return instance_tcallkw(Dee_TYPE(self),self,argc, argv, kw);
 }
 
 INTERN dssize_t DCALL

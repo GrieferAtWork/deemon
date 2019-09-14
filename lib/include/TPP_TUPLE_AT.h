@@ -20,9 +20,9 @@
 #ifndef TPP_TUPLE_AT
 #include "__TPP_STDINC.h"
 
-#define __TPP_PRIVATE_TUPLE_AT_0(i,first,...) TPP_TUPLE_AT((__VA_ARGS__),i-1)
-#define __TPP_PRIVATE_TUPLE_AT_1(i,first,...) first
-#define __TPP_PRIVATE_TUPLE_AT(i,...)\
+#define __TPP_PRIVATE_TUPLE_AT_0(i,first, ...) TPP_TUPLE_AT((__VA_ARGS__),i-1)
+#define __TPP_PRIVATE_TUPLE_AT_1(i,first, ...) first
+#define __TPP_PRIVATE_TUPLE_AT(i, ...)\
 __TPP_BASIC_CAT(__TPP_PRIVATE_TUPLE_AT_,__TPP_EVAL((i) <= 0))(i,__VA_ARGS__)
 
 //////////////////////////////////////////////////////////////////////////

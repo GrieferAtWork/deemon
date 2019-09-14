@@ -65,15 +65,15 @@ DECL_BEGIN
 
 #ifdef OPTIMIZE_FASSUME
 struct ast_symbol_assume {
-    struct symbol      *sa_sym;   /* [0..1] The symbol on which assumptions are made. */
-    DREF DeeObject     *sa_value; /* [0..1][valid_if(sa_sym)] The assumed value of `sa_sym', or NULL if unknown. */
+	struct symbol      *sa_sym;   /* [0..1] The symbol on which assumptions are made. */
+	DREF DeeObject     *sa_value; /* [0..1][valid_if(sa_sym)] The assumed value of `sa_sym', or NULL if unknown. */
 };
 #define AST_SYMBOL_ASSUME_HASH(x) ((x)->sa_sym->s_name->k_id)
 
 struct ast_symbol_assumes {
-    size_t                    sa_size; /* Number of symbol assumptions. */
-    size_t                    sa_mask; /* Allocated hash-vector mask. */
-    struct ast_symbol_assume *sa_elem; /* [0..sa_mask + 1][owned] Hash-vector of symbol assumes. */
+	size_t                    sa_size; /* Number of symbol assumptions. */
+	size_t                    sa_mask; /* Allocated hash-vector mask. */
+	struct ast_symbol_assume *sa_elem; /* [0..sa_mask + 1][owned] Hash-vector of symbol assumes. */
 };
 #define AST_SYMBOL_ASSUMES_HASHST(self,hash)  ((hash) & (self)->sa_mask)
 #define AST_SYMBOL_ASSUMES_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
@@ -81,13 +81,13 @@ struct ast_symbol_assumes {
 #define AST_SYMBOL_ASSUMES_HASHIT(self,i)     ((self)->sa_elem+((i) & (self)->sa_mask))
 
 struct ast_assumes {
-    struct ast_assumes const *aa_prev; /* [0..1] When inside of a conditional branch, this points
-                                        *        to the set of assumptions made before the conditional
-                                        *        portion. */
-    struct ast_symbol_assumes aa_syms; /* Symbol assumptions. */
+	struct ast_assumes const *aa_prev; /* [0..1] When inside of a conditional branch, this points
+	                                    *        to the set of assumptions made before the conditional
+	                                    *        portion. */
+	struct ast_symbol_assumes aa_syms; /* Symbol assumptions. */
 #define AST_ASSUMES_FNORMAL   0x0000   /* Normal assumption flags. */
 #define AST_ASSUMES_FFUNCTION 0x0001   /* These assumptions represent the base of a function. */
-    uint16_t                  aa_flag; /* Assumption flags (Set of `AST_ASSUMES_F*'). */
+	uint16_t                  aa_flag; /* Assumption flags (Set of `AST_ASSUMES_F*'). */
 };
 
 
@@ -218,12 +218,12 @@ INTDEF int (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
 
 
 struct ast_optimize_stack {
-    struct ast_optimize_stack *os_prev;   /* [0..1] The ast from which the optimization originates. */
-    struct ast                *os_ast;    /* [1..1] The ast being optimized. */
+	struct ast_optimize_stack *os_prev;   /* [0..1] The ast from which the optimization originates. */
+	struct ast                *os_ast;    /* [1..1] The ast being optimized. */
 #ifdef OPTIMIZE_FASSUME
-    struct ast_assumes        *os_assume; /* [1..1] Valid assumptions within the current branch. */
+	struct ast_assumes        *os_assume; /* [1..1] Valid assumptions within the current branch. */
 #endif /* OPTIMIZE_FASSUME */
-    bool                       os_used;   /* True if this stack-branch is being used. */
+	bool                       os_used;   /* True if this stack-branch is being used. */
 };
 
 
@@ -367,19 +367,18 @@ INTDEF bool DCALL has_cast_constructor(DeeObject *__restrict type);
 #define ast_optimize_all(self,result_used)       __builtin_expect(ast_optimize_all(self,result_used),0)
 #define ast_assign(self,other)                   __builtin_expect(ast_assign(self,other),0)
 #define ast_graft_onto(self,other)               __builtin_expect(ast_graft_onto(self,other),0)
-#endif
-#endif
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 #if !defined(NDEBUG) && 1
 #define CONFIG_HAVE_OPTIMIZE_VERBOSE 1
 #define OPTIMIZE_VERBOSE(...)       ast_optimize_verbose(self,__VA_ARGS__)
-#define OPTIMIZE_VERBOSEAT(ast,...) ast_optimize_verbose(ast,__VA_ARGS__)
+#define OPTIMIZE_VERBOSEAT(ast, ...) ast_optimize_verbose(ast,__VA_ARGS__)
 INTDEF void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
-#else
+#else /* !NDEBUG */
 #define OPTIMIZE_VERBOSE(...)       (void)0
-#define OPTIMIZE_VERBOSEAT(ast,...) (void)0
-#endif
-
+#define OPTIMIZE_VERBOSEAT(ast, ...) (void)0
+#endif /* NDEBUG */
 
 #endif /* !CONFIG_BUILDING_DEEMON */
 

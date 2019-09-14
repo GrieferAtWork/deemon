@@ -319,7 +319,7 @@ function_init(size_t argc, DeeObject **__restrict argv) {
  DREF Function *result;
  DeeCodeObject *code = &empty_code;
  DeeObject *refs = Dee_EmptyTuple;
- if (DeeArg_Unpack(argc,argv,"|oo:Function",&code,&refs) ||
+ if (DeeArg_Unpack(argc, argv,"|oo:Function",&code,&refs) ||
      DeeObject_AssertTypeExact((DeeObject *)code,&DeeCode_Type))
      goto err;
  result = (DREF Function *)DeeObject_Malloc(offsetof(Function,fo_refv) +
@@ -1313,7 +1313,7 @@ PRIVATE int DCALL
 yfi_new(YFIterator *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  YFunction *func;
- if (DeeArg_Unpack(argc,argv,"o:YieldFunction.Iterator",&func))
+ if (DeeArg_Unpack(argc, argv,"o:YieldFunction.Iterator",&func))
      goto err;
  if (DeeObject_AssertType((DeeObject *)func,&DeeYieldFunction_Type))
      goto err;
@@ -1463,12 +1463,12 @@ again:
   end = (iter = self->yi_frame.cf_stack)+stack_size;
   for (; iter != end; ++iter) {
    if (*iter != this_arg && *iter != varargs &&
-       inplace_deepcopy_noarg(iter,argc,argv,refc,refv)) goto err;
+       inplace_deepcopy_noarg(iter,argc, argv,refc,refv)) goto err;
   }
   end = (iter = self->yi_frame.cf_frame)+code->co_localc;
   for (; iter != end; ++iter) {
    if (*iter != this_arg && *iter != varargs &&
-       inplace_deepcopy_noarg(iter,argc,argv,refc,refv)) goto err;
+       inplace_deepcopy_noarg(iter,argc, argv,refc,refv)) goto err;
   }
   /* WARNING: There are some thing that we don't copy, such as the this-argument.
    *          Similarly, we also don't copy function input arguments! */

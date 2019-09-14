@@ -108,7 +108,7 @@ PRIVATE int DCALL
 refaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_ReFindAllIterator",&reseq))
+ if (DeeArg_Unpack(argc, argv,"o:_ReFindAllIterator",&reseq))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)reseq,&ReFindAll_Type))
      goto err;
@@ -320,7 +320,7 @@ PRIVATE int DCALL
 relaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_ReLocateAllIterator",&reseq) ||
+ if (DeeArg_Unpack(argc, argv,"o:_ReLocateAllIterator",&reseq) ||
      DeeObject_AssertTypeExact((DeeObject *)reseq,&ReLocateAll_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
@@ -453,7 +453,7 @@ PRIVATE int DCALL
 respiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
  ReSequence *reseq;
- if (DeeArg_Unpack(argc,argv,"o:_ReSplitIterator",&reseq) ||
+ if (DeeArg_Unpack(argc, argv,"o:_ReSplitIterator",&reseq) ||
      DeeObject_AssertTypeExact((DeeObject *)reseq,&ReSplit_Type))
      goto err;
  memcpy(&self->re_data,&reseq->re_data,
@@ -606,7 +606,7 @@ PRIVATE int DCALL
 refa_init(ReSequence *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  String *rules = NULL;
- if (DeeArg_Unpack(argc,argv,"oo|o" /*":_ReFindAll"*/,
+ if (DeeArg_Unpack(argc, argv,"oo|o" /*":_ReFindAll"*/,
                    &self->re_data,&self->re_pattern,&rules) ||
      DeeObject_AssertTypeExact((DeeObject *)self->re_data,&DeeString_Type) ||
      DeeObject_AssertTypeExact((DeeObject *)self->re_pattern,&DeeString_Type))
@@ -895,7 +895,7 @@ resp_ctor(ReSequence *__restrict self) {
 PRIVATE int DCALL
 resp_init(ReSequence *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- int result = refa_init(self,argc,argv);
+ int result = refa_init(self,argc, argv);
  if (!self->re_args.re_datalen)
       self->re_args.re_dataptr = NULL;
  return result;

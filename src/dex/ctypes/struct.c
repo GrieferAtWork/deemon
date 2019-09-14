@@ -260,7 +260,7 @@ PRIVATE DREF DeeStructTypeObject *DCALL
 struct_type_init(size_t argc, DeeObject **__restrict argv) {
  DeeObject *fields_or_name,*fields = NULL;
  unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
- if (DeeArg_Unpack(argc,argv,"o|o:struct_type",&fields_or_name,&fields))
+ if (DeeArg_Unpack(argc, argv,"o|o:struct_type",&fields_or_name,&fields))
      return NULL;
  return fields
       ? (DeeObject_AssertTypeExact(fields_or_name,&DeeString_Type)
@@ -292,7 +292,7 @@ PRIVATE DREF DeeObject *DCALL
 struct_type_offsetof(DeeStructTypeObject *__restrict self,
                      size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb,hash; DeeObject *name;
- if (DeeArg_Unpack(argc,argv,"o:offsetof",&name))
+ if (DeeArg_Unpack(argc, argv,"o:offsetof",&name))
      goto err;
  if (DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
@@ -323,7 +323,7 @@ PRIVATE DREF DeeObject *DCALL
 struct_type_offsetafter(DeeStructTypeObject *__restrict self,
                         size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb,hash; DeeObject *name;
- if (DeeArg_Unpack(argc,argv,"o:offsetafter",&name))
+ if (DeeArg_Unpack(argc, argv,"o:offsetafter",&name))
      goto err;
  if (DeeObject_AssertTypeExact(name,&DeeString_Type))
      goto err;
@@ -356,7 +356,7 @@ PRIVATE DREF DeeObject *DCALL
 struct_type_typeof(DeeStructTypeObject *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
  dhash_t i,perturb,hash; DeeObject *name;
- if (DeeArg_Unpack(argc,argv,"o:typeof",&name) ||
+ if (DeeArg_Unpack(argc, argv,"o:typeof",&name) ||
      DeeObject_AssertTypeExact(name,&DeeString_Type))
      return NULL;
  hash = DeeString_Hash(name);
@@ -685,7 +685,7 @@ PRIVATE int DCALL
 struct_init(DeeStructTypeObject *__restrict tp_self,
             void *self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *value = Dee_None;
- if (DeeArg_Unpack(argc,argv,"|o:struct",&value))
+ if (DeeArg_Unpack(argc, argv,"|o:struct",&value))
      return -1;
  /* Do an initial assignment using the initializer. */
  return struct_assign(tp_self,self,value);

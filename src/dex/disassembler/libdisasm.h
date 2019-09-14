@@ -35,9 +35,9 @@ asm_nextinstr_sp(instruction_t const *__restrict ip,
                  uint16_t *__restrict pstacksz);
 DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
 asm_nextinstr_ef(instruction_t const *__restrict ip,
-                 /*in|out*/uint16_t *__restrict pstacksz,
-                 /*out*/uint16_t *__restrict psp_add,
-                 /*out*/uint16_t *__restrict psp_sub);
+                 /*in|out*/ uint16_t *__restrict pstacksz,
+                 /*out*/ uint16_t *__restrict psp_add,
+                 /*out*/ uint16_t *__restrict psp_sub);
 DFUNDEF bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
 
 

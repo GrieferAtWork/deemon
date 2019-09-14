@@ -47,25 +47,25 @@ typedef struct user_object DeeUserObject;
 typedef struct stat_object DeeStatObject;
 
 /* Get/Set the current working directory. */
-INTDEF DREF /*String*/DeeObject *DCALL fs_getcwd(void);
+INTDEF DREF /*String*/ DeeObject *DCALL fs_getcwd(void);
 INTDEF int DCALL fs_printcwd(struct unicode_printer *__restrict printer);
 INTDEF int DCALL fs_chdir(DeeObject *__restrict path);
 
 /* Return a temporary directory, such as `/tmp' */
-INTDEF DREF /*String*/DeeObject *DCALL fs_gettmp(void);
+INTDEF DREF /*String*/ DeeObject *DCALL fs_gettmp(void);
 
 /* Return a user-defined, global name for the hosting machine. */
-INTDEF DREF /*String*/DeeObject *DCALL fs_gethostname(void);
+INTDEF DREF /*String*/ DeeObject *DCALL fs_gethostname(void);
 
 /* System-specific environment variable implementation. */
-INTDEF DREF /*String*/DeeObject *DCALL fs_getenv(/*String*/DeeObject *__restrict name, bool try_get);
-INTDEF bool DCALL fs_hasenv(/*String*/DeeObject *__restrict name);
-INTDEF int DCALL fs_delenv(/*String*/DeeObject *__restrict name);
-INTDEF int DCALL fs_setenv(/*String*/DeeObject *__restrict name, /*String*/DeeObject *__restrict value);
+INTDEF DREF /*String*/ DeeObject *DCALL fs_getenv(/*String*/ DeeObject *__restrict name, bool try_get);
+INTDEF bool DCALL fs_hasenv(/*String*/ DeeObject *__restrict name);
+INTDEF int DCALL fs_delenv(/*String*/ DeeObject *__restrict name);
+INTDEF int DCALL fs_setenv(/*String*/ DeeObject *__restrict name, /*String*/ DeeObject *__restrict value);
 /* @return:  1: Failed to retrieve the home path and `try_get' was true.
  * @return:  0: Successfully printed the home path.
  * @return: -1: An error occurred. */
-INTDEF int DCALL fs_printenv(/*utf-8*/char const *__restrict name,
+INTDEF int DCALL fs_printenv(/*utf-8*/ char const *__restrict name,
                              struct unicode_printer *__restrict printer, bool try_get);
 
 /* The descriptor for a user account.

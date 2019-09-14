@@ -1123,9 +1123,9 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenSourceFileString(/*utf-8*/char const *__restrict source_pathname,
+DeeModule_OpenSourceFileString(/*utf-8*/ char const *__restrict source_pathname,
                                size_t source_pathsize,
-                               /*utf-8*/char const *module_name,
+                               /*utf-8*/ char const *module_name,
                                size_t module_namesize,
                                struct compiler_options *options,
                                bool throw_error) {
@@ -1262,9 +1262,9 @@ PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenSourceStreamString(DeeObject *__restrict source_stream,
                                  int start_line, int start_col,
                                  struct compiler_options *options,
-                                 /*utf-8*/char const *source_pathname,
+                                 /*utf-8*/ char const *source_pathname,
                                  size_t source_pathsize,
-                                 /*utf-8*/char const *module_name,
+                                 /*utf-8*/ char const *module_name,
                                  size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
@@ -1318,7 +1318,7 @@ err:
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenSourceMemory(/*utf-8*/char const *__restrict data, size_t data_size,
+DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                            int start_line, int start_col,
                            struct compiler_options *options,
                            DeeObject *source_pathname,
@@ -1337,12 +1337,12 @@ DeeModule_OpenSourceMemory(/*utf-8*/char const *__restrict data, size_t data_siz
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenSourceMemoryString(/*utf-8*/char const *__restrict data, size_t data_size,
+DeeModule_OpenSourceMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                  int start_line, int start_col,
                                  struct compiler_options *options,
-                                 /*utf-8*/char const *source_pathname,
+                                 /*utf-8*/ char const *source_pathname,
                                  size_t source_pathsize,
-                                 /*utf-8*/char const *module_name,
+                                 /*utf-8*/ char const *module_name,
                                  size_t module_namesize) {
  DREF DeeObject *result;
  DREF DeeObject *module_name_ob = NULL;
@@ -1379,8 +1379,8 @@ err:
 
 
 
-PUBLIC DREF /*Module*/DeeObject *DCALL
-DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen) {
+PUBLIC DREF /*Module*/ DeeObject *DCALL
+DeeModule_NewString(/*utf-8*/ char const *__restrict name, size_t namelen) {
  DREF DeeObject *name_object,*result;
  name_object = DeeString_NewUtf8(name,
                                  namelen,
@@ -1392,8 +1392,8 @@ DeeModule_NewString(/*utf-8*/char const *__restrict name, size_t namelen) {
 err:
  return NULL;
 }
-PUBLIC DREF /*Module*/DeeObject *DCALL
-DeeModule_New(/*String*/DeeObject *__restrict name) {
+PUBLIC DREF /*Module*/ DeeObject *DCALL
+DeeModule_New(/*String*/ DeeObject *__restrict name) {
  DeeModuleObject *result;
  ASSERT_OBJECT_TYPE_EXACT(name,&DeeString_Type);
  result = DeeGCObject_CALLOC(DeeModuleObject);
@@ -1483,7 +1483,7 @@ DeeModule_Get(DeeObject *__restrict module_name) {
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
+DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
                     size_t module_namesize) {
  return DeeModule_DoGet(module_name,
                         module_namesize,
@@ -1517,8 +1517,8 @@ DeeModule_GetString(/*utf-8*/char const *__restrict module_name,
 #define Dee_MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if  */
 
 LOCAL DREF DeeModuleObject *DCALL
-DeeModule_OpenInPathAbs(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
-                        /*utf-8*/char const *__restrict module_name, size_t module_namesize,
+DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
+                        /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                         DeeObject *module_global_name,
                         struct compiler_options *options,
                         unsigned int mode) {
@@ -2272,8 +2272,8 @@ err:
  * @return: ITER_DONE: The module could not be found (only when `Dee_MODULE_OPENINPATH_FTHROWERROR' isn't set)
  * @return: NULL:      An error occurred. */
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_pathsize,
-                     /*utf-8*/char const *__restrict module_name, size_t module_namesize,
+DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
+                     /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                      DeeObject *module_global_name,
                      struct compiler_options *options,
                      unsigned int mode) {
@@ -2318,7 +2318,7 @@ DeeModule_OpenInPath(/*utf-8*/char const *__restrict module_path, size_t module_
 #endif
  {
   /* Must make the given module path absolute. */
-  DREF DeeStringObject *abs_path; /*utf-8*/char *abs_utf8;
+  DREF DeeStringObject *abs_path; /*utf-8*/ char *abs_utf8;
   DREF DeeModuleObject *result;
   struct unicode_printer printer = UNICODE_PRINTER_INIT;
   if (print_pwd(&printer) < 0)
@@ -2361,7 +2361,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
  DREF DeeObject *path;
  DREF DeeModuleObject *result;
  DeeListObject *paths; size_t i;
- /*utf-8*/char const *module_namestr;
+ /*utf-8*/ char const *module_namestr;
  size_t module_namelen;
  ASSERT_OBJECT_TYPE_EXACT(module_name,&DeeString_Type);
  /* First off: Check if this is a request for the builtin `deemon' module.
@@ -2398,7 +2398,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
   Dee_Incref(path);
   DeeList_LockEndRead(paths);
   if (DeeString_Check(path)) {
-   /*utf-8*/char const *path_str;
+   /*utf-8*/ char const *path_str;
    path_str = DeeString_AsUtf8(path);
    if unlikely(!path_str) goto err_path;
    result = (DREF DeeModuleObject *)DeeModule_OpenInPath(path_str,
@@ -2432,7 +2432,7 @@ done:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenGlobalString(/*utf-8*/char const *__restrict module_name,
+DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
                            size_t module_namesize,
                            struct compiler_options *options,
                            bool throw_error) {
@@ -2451,11 +2451,11 @@ DeeModule_OpenGlobalString(/*utf-8*/char const *__restrict module_name,
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_OpenRelative(DeeObject *__restrict module_name,
-                       /*utf-8*/char const *__restrict module_pathname,
+                       /*utf-8*/ char const *__restrict module_pathname,
                        size_t module_pathsize,
                        struct compiler_options *options,
                        bool throw_error) {
- /*utf-8*/char *module_name_str;
+ /*utf-8*/ char *module_name_str;
  module_name_str = DeeString_AsUtf8(module_name);
  if unlikely(!module_name_str)
     goto err;
@@ -2473,8 +2473,8 @@ err:
  return NULL;
 }
 PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenRelativeString(/*utf-8*/char const *__restrict module_name, size_t module_namesize,
-                             /*utf-8*/char const *__restrict module_pathname, size_t module_pathsize,
+DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_t module_namesize,
+                             /*utf-8*/ char const *__restrict module_pathname, size_t module_pathsize,
                              struct compiler_options *options, bool throw_error) {
  /* Shouldn't happen: Not actually a relative module name. */
  if (!module_namesize || *module_name != '.')
@@ -2551,7 +2551,7 @@ err:
 
 PUBLIC DREF DeeObject *DCALL
 DeeModule_ImportRelString(DeeObject *__restrict basemodule,
-                          /*utf-8*/char const *__restrict module_name,
+                          /*utf-8*/ char const *__restrict module_name,
                           size_t module_namesize,
                           struct compiler_options *options,
                           bool throw_error) {
@@ -2742,7 +2742,7 @@ err:
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module or the module's root function used to describe the code
  * that is being executed. */
-PUBLIC /*Module*/DREF DeeObject *DCALL
+PUBLIC /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
                             unsigned int mode,
                             int start_line, int start_col,
@@ -3083,7 +3083,7 @@ PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
 
 #if !defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX)
 PRIVATE DREF DeeObject *DCALL
-unix_readlink(/*utf-8*/char const *__restrict path) {
+unix_readlink(/*utf-8*/ char const *__restrict path) {
  char *buffer,*new_buffer; int error;
  size_t bufsize,new_size; dssize_t req_size;
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -3223,7 +3223,7 @@ err:
 PRIVATE DEFINE_RWLOCK(deemon_home_lock);
 #endif
 PRIVATE DREF DeeStringObject *deemon_home = NULL;
-PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
+PUBLIC DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
  DREF DeeStringObject *result;
 #ifndef CONFIG_NO_THREADS
  rwlock_read(&deemon_home_lock);
@@ -3267,7 +3267,7 @@ PUBLIC DREF /*String*/DeeObject *DCALL DeeExec_GetHome(void) {
 }
 
 PUBLIC void DCALL
-DeeExec_SetHome(/*String*/DeeObject *new_home) {
+DeeExec_SetHome(/*String*/ DeeObject *new_home) {
  DREF DeeStringObject *old_home;
  ASSERT_OBJECT_TYPE_EXACT_OPT(new_home,&DeeString_Type);
  Dee_XIncref(new_home);

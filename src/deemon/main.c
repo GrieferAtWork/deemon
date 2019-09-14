@@ -617,9 +617,9 @@ PRIVATE struct cmd_option cmdline_options[] = {
     { CMD_FARG|CMD_FARGIMM, "C", NULL, { (void *)&cmd_C }, "[no-]<opt>\tEnable/disable a given compiler option <opt> (s.a. `--help compiler-options')" },
 
     /* Sub-option namespaces. */
-    { CMD_FGROUP, "Wp", NULL, { (void *)preprocessor_options }, ",...\tPreprocessor-specific options (s.a. `--help Wp')" },
-    { CMD_FGROUP, "Wa", NULL, { (void *)assembler_options }, ",...\tAssembler-specific options (s.a. `--help Wa')" },
-    { CMD_FGROUP, "Wl", NULL, { (void *)linker_options }, ",...\tLinker-specific options (s.a. `--help Wl')" },
+    { CMD_FGROUP, "Wp", NULL, { (void *)preprocessor_options }, ", ...\tPreprocessor-specific options (s.a. `--help Wp')" },
+    { CMD_FGROUP, "Wa", NULL, { (void *)assembler_options }, ", ...\tAssembler-specific options (s.a. `--help Wa')" },
+    { CMD_FGROUP, "Wl", NULL, { (void *)linker_options }, ", ...\tLinker-specific options (s.a. `--help Wl')" },
 
     /* Preprocessor-specific options that are promoted into the root commandline namespace. */
     { CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
@@ -1001,12 +1001,12 @@ int main(int argc, char *argv[]) {
  if (operation_mode == OPERATION_MODE_PRINTPP) {
   /* Print preprocessor output. */
   if unlikely(!argc) goto err_no_input;
-  result = operation_mode_printpp(argc,argv);
+  result = operation_mode_printpp(argc, argv);
   if unlikely(result) goto err;
  } else if (operation_mode == OPERATION_MODE_FORMAT) {
   /* Format [[[deemon]]] tags. */
   if unlikely(!argc) goto err_no_input;
-  result = operation_mode_format(argc,argv);
+  result = operation_mode_format(argc, argv);
   if unlikely(result) goto err;
  } else {
   DREF DeeModuleObject *user_module;

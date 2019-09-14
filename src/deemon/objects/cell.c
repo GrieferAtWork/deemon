@@ -81,7 +81,7 @@ cell_copy(Cell *__restrict self,
 PRIVATE int DCALL
 cell_init(Cell *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:Cell",&self->c_item))
+ if (DeeArg_Unpack(argc, argv,"o:Cell",&self->c_item))
      return -1;
  Dee_Incref(self->c_item);
 #ifndef CONFIG_NO_THREADS
@@ -301,7 +301,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_get(Cell *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *def = NULL,*result;
- if (DeeArg_Unpack(argc,argv,"|o:get",&def))
+ if (DeeArg_Unpack(argc, argv,"|o:get",&def))
      goto err;
  result = DeeCell_TryGet((DeeObject *)self);
  if (!result) {
@@ -320,7 +320,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_delete(Cell *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *oldval;
- if (DeeArg_Unpack(argc,argv,":delete"))
+ if (DeeArg_Unpack(argc, argv,":delete"))
      goto err;
  oldval = DeeCell_Xch((DeeObject *)self,NULL);
  if (!oldval) return_false;
@@ -334,7 +334,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_pop(Cell *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *oldval,*def = NULL;
- if (DeeArg_Unpack(argc,argv,"|o:pop",&def))
+ if (DeeArg_Unpack(argc, argv,"|o:pop",&def))
      goto err;
  oldval = DeeCell_Xch((DeeObject *)self,NULL);
  if (!oldval) {
@@ -352,7 +352,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_set(Cell *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *newval;
- if (DeeArg_Unpack(argc,argv,"o:set",&newval))
+ if (DeeArg_Unpack(argc, argv,"o:set",&newval))
      goto err;
  newval = DeeCell_Xch((DeeObject *)self,newval);
  if (!newval) return_false;
@@ -366,7 +366,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_xch(Cell *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *value,*def = NULL,*result;
- if (DeeArg_Unpack(argc,argv,"o|o:xch",&value,&def))
+ if (DeeArg_Unpack(argc, argv,"o|o:xch",&value,&def))
      goto err;
  if (def) {
   result = DeeCell_Xch((DeeObject *)self,value);
@@ -387,7 +387,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_cmpdel(Cell *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *oldval,*result;
- if (DeeArg_Unpack(argc,argv,"o:cmpdel",&oldval))
+ if (DeeArg_Unpack(argc, argv,"o:cmpdel",&oldval))
      goto err;
  result = DeeCell_CmpXch((DeeObject *)self,oldval,NULL);
  Dee_Decref(result);
@@ -400,7 +400,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_cmpxch(Cell *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *oldval,*newval = NULL,*def = NULL,*result;
- if (DeeArg_Unpack(argc,argv,"o|oo:cmpxch",&oldval,&newval,&def))
+ if (DeeArg_Unpack(argc, argv,"o|oo:cmpxch",&oldval,&newval,&def))
      goto err;
  if (newval) {
   result = DeeCell_CmpXch((DeeObject *)self,oldval,newval);
@@ -427,7 +427,7 @@ PRIVATE DREF DeeObject *DCALL
 cell_cmpset(Cell *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
  DeeObject *oldval,*newval = NULL,*result;
- if (DeeArg_Unpack(argc,argv,"o|o:cmpset",&oldval,&newval))
+ if (DeeArg_Unpack(argc, argv,"o|o:cmpset",&oldval,&newval))
      goto err;
  result = DeeCell_CmpXch((DeeObject *)self,oldval,newval);
  Dee_XDecref(result);

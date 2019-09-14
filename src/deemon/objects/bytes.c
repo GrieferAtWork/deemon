@@ -100,7 +100,7 @@ PRIVATE int DCALL
 bytesiter_init(BytesIterator *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
  Bytes *bytes;
- if (DeeArg_Unpack(argc,argv,"o:_BytesIterator",&bytes) ||
+ if (DeeArg_Unpack(argc, argv,"o:_BytesIterator",&bytes) ||
      DeeObject_AssertTypeExact((DeeObject *)bytes,&DeeBytes_Type))
      return -1;
  self->bi_bytes = bytes;
@@ -621,7 +621,7 @@ bytes_init(size_t argc, DeeObject **__restrict argv) {
   ob = argv[0];
   if (DeeInt_Check(ob)) {
    uint8_t init;
-   if (DeeObject_AsSize(ob,&start)) goto err;
+   if (DeeObject_AsSize(ob, &start)) goto err;
    if (DeeObject_AsUInt8(argv[1],&init)) goto err;
    return (DREF Bytes *)DeeBytes_NewBuffer(start,init);
   }
@@ -658,7 +658,7 @@ err_args:
   DREF Bytes *result;
   ob = argv[0];
   if (DeeInt_Check(ob)) {
-   if (DeeObject_AsSize(ob,&start)) goto err;
+   if (DeeObject_AsSize(ob, &start)) goto err;
    return (DREF Bytes *)DeeBytes_NewBufferUninitialized(start);
   }
   tp_iter = Dee_TYPE(ob);
@@ -675,7 +675,7 @@ err_args:
 #ifndef __INTELLISENSE__
     result->b_buffer.bb_put = buf->tp_putbuf;
 #endif
-    if unlikely((*buf->tp_getbuf)(ob,&result->b_buffer,Dee_BUFFER_FREADONLY))
+    if unlikely((*buf->tp_getbuf)(ob, &result->b_buffer,Dee_BUFFER_FREADONLY))
        goto err_r;
     if (start > result->b_buffer.bb_size)
         start = result->b_buffer.bb_size;
@@ -1067,7 +1067,7 @@ err:
 INTDEF dssize_t DCALL
 DeeString_CFormat(dformatprinter printer,
                   dformatprinter format_printer, void *arg,
-                  /*utf-8*/char const *__restrict format, size_t format_len,
+                  /*utf-8*/ char const *__restrict format, size_t format_len,
                   size_t argc, DeeObject **__restrict argv);
 
 PRIVATE DREF Bytes *DCALL
@@ -1521,7 +1521,7 @@ PRIVATE DREF Bytes *DCALL
 bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:fromseq",&seq))
+ if (DeeArg_Unpack(argc, argv,"o:fromseq",&seq))
      goto err;
  return (DREF Bytes *)DeeBytes_FromSequence(seq);
 err:
@@ -1533,7 +1533,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **__restrict argv) {
  DeeObject *hex_str; DREF Bytes *result; uint8_t *dst;
  union dcharptr iter,end; size_t length;
- if (DeeArg_Unpack(argc,argv,"o:fromhex",&hex_str) ||
+ if (DeeArg_Unpack(argc, argv,"o:fromhex",&hex_str) ||
      DeeObject_AssertTypeExact(hex_str,&DeeString_Type))
      goto err;
  SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(hex_str)) {

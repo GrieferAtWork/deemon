@@ -170,7 +170,7 @@ PRIVATE int DCALL
 sfi_init(StringFindIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  StringFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_StringFindIterator",&find) ||
+ if (DeeArg_Unpack(argc, argv,"o:_StringFindIterator",&find) ||
      DeeObject_AssertTypeExact((DeeObject *)find,&StringFind_Type))
      goto err;
  return sfi_setup(self,find);
@@ -181,7 +181,7 @@ PRIVATE int DCALL
 scfi_init(StringFindIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  StringFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_StringCaseFindIterator",&find) ||
+ if (DeeArg_Unpack(argc, argv,"o:_StringCaseFindIterator",&find) ||
      DeeObject_AssertTypeExact((DeeObject *)find,&StringCaseFind_Type))
      goto err;
  return sfi_setup(self,find);
@@ -477,7 +477,7 @@ sf_init(StringFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  self->sf_start = 0;
  self->sf_end   = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|IdId:_StringFind",
+ if (DeeArg_Unpack(argc, argv,"oo|IdId:_StringFind",
                   &self->sf_str,&self->sf_needle,
                   &self->sf_start,&self->sf_end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->sf_str,&DeeString_Type) ||

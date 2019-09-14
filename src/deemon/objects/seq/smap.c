@@ -171,7 +171,7 @@ done:
 PRIVATE int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SharedMapIterator",&self->si_seq) ||
+ if (DeeArg_Unpack(argc, argv,"o:_SharedMapIterator",&self->si_seq) ||
      DeeObject_AssertTypeExact((DeeObject *)self->si_seq,&SharedMap_Type))
      return -1;
  Dee_Incref(self->si_seq);
@@ -494,7 +494,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 smap_get(SharedMap *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *key,*def = Dee_None;
- if (DeeArg_Unpack(argc,argv,"o|o:get",&key,&def))
+ if (DeeArg_Unpack(argc, argv,"o|o:get",&key,&def))
      return NULL;
  return smap_nsi_getdefault(self,key,def);
 }

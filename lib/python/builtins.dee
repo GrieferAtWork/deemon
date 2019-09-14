@@ -83,7 +83,7 @@ final global function ord(s: string): int {
 }
 
 final global function reduce(func: Callable, iterable: Sequence, ...) {
-	return (iterable as Sequence).reduce(func,...);
+	return (iterable as Sequence).reduce(func, ...);
 }
 
 final global function super_(typ,ob) {

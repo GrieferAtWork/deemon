@@ -145,7 +145,7 @@ PRIVATE int DCALL
 super_init(Super *__restrict self,
            size_t argc, DeeObject **__restrict argv) {
  DeeObject *ob; DeeTypeObject *tp = NULL;
- if (DeeArg_Unpack(argc,argv,"o|o:Super",&ob,&tp))
+ if (DeeArg_Unpack(argc, argv,"o|o:Super",&ob, &tp))
      return -1;
  /* Special handling when the base-object is another super-object. */
  if (DeeSuper_Check(ob)) {
@@ -222,12 +222,12 @@ super_bool(Super *__restrict self) {
 }
 PRIVATE DREF DeeObject *DCALL
 super_call(Super *__restrict self, size_t argc, DeeObject **__restrict argv) {
- return DeeObject_TCall(self->s_type,self->s_self,argc,argv);
+ return DeeObject_TCall(self->s_type,self->s_self,argc, argv);
 }
 PRIVATE DREF DeeObject *DCALL
 super_call_kw(Super *__restrict self, size_t argc,
               DeeObject **__restrict argv, DeeObject *kw) {
- return DeeObject_TCallKw(self->s_type,self->s_self,argc,argv,kw);
+ return DeeObject_TCallKw(self->s_type,self->s_self,argc, argv, kw);
 }
 PRIVATE dhash_t DCALL
 super_hash(Super *__restrict self) {
@@ -544,17 +544,17 @@ super_iternext(Super *__restrict self) {
 
 INTERN DREF DeeObject *DCALL
 super_getattr(Super *__restrict self,
-              /*String*/DeeObject *__restrict name) {
+              /*String*/ DeeObject *__restrict name) {
  return DeeObject_TGetAttr(self->s_type,self->s_self,name);
 }
 INTERN int DCALL
 super_delattr(Super *__restrict self,
-              /*String*/DeeObject *__restrict name) {
+              /*String*/ DeeObject *__restrict name) {
  return DeeObject_TDelAttr(self->s_type,self->s_self,name);
 }
 INTERN int DCALL
 super_setattr(Super *__restrict self,
-              /*String*/DeeObject *__restrict name,
+              /*String*/ DeeObject *__restrict name,
               DeeObject *__restrict value) {
  return DeeObject_TSetAttr(self->s_type,self->s_self,name,value);
 }
@@ -565,9 +565,9 @@ super_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
 }
 
 PRIVATE struct type_attr super_attr = {
-    /* .tp_getattr  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&super_getattr,
-    /* .tp_delattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict))&super_delattr,
-    /* .tp_setattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/DeeObject *__restrict,DeeObject *__restrict))&super_setattr,
+    /* .tp_getattr  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&super_getattr,
+    /* .tp_delattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&super_delattr,
+    /* .tp_setattr  = */(int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict,DeeObject *__restrict))&super_setattr,
     /* .tp_enumattr = */(dssize_t(DCALL *)(DeeTypeObject *__restrict,DeeObject *__restrict,denum_t,void *))&super_enumattr
 };
 
@@ -607,7 +607,7 @@ PRIVATE DREF DeeObject *DCALL
 super_typeof(DeeObject *__restrict UNUSED(self),
              size_t argc, DeeObject **__restrict argv) {
  Super *super_object;
- if (DeeArg_Unpack(argc,argv,"o:typeof",&super_object) ||
+ if (DeeArg_Unpack(argc, argv,"o:typeof",&super_object) ||
      DeeObject_AssertTypeExact((DeeObject *)super_object,&DeeSuper_Type))
      return NULL;
  return_reference_((DeeObject *)super_object->s_type);
@@ -616,7 +616,7 @@ PRIVATE DREF DeeObject *DCALL
 super_selfof(DeeObject *__restrict UNUSED(self),
              size_t argc, DeeObject **__restrict argv) {
  Super *super_object;
- if (DeeArg_Unpack(argc,argv,"o:selfof",&super_object) ||
+ if (DeeArg_Unpack(argc, argv,"o:selfof",&super_object) ||
      DeeObject_AssertTypeExact((DeeObject *)super_object,&DeeSuper_Type))
      return NULL;
  return_reference_((DeeObject *)super_object->s_self);

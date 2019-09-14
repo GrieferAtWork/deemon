@@ -198,7 +198,7 @@ err:
 PRIVATE int DCALL
 suiter_init(SetUnionIterator *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SetUnionIterator",&self->sui_union))
+ if (DeeArg_Unpack(argc, argv,"o:_SetUnionIterator",&self->sui_union))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->sui_union,&SetUnion_Type))
      goto err;
@@ -540,7 +540,7 @@ su_init(SetUnion *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->su_a = Dee_EmptySet;
  self->su_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_SetUnion",&self->su_a,&self->su_b))
+ if (DeeArg_Unpack(argc, argv,"|oo:_SetUnion",&self->su_a,&self->su_b))
      goto err;
  Dee_Incref(self->su_a);
  Dee_Incref(self->su_b);
@@ -775,7 +775,7 @@ ssd_init(SetSymmetricDifference *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  self->ssd_a = Dee_EmptySet;
  self->ssd_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_SetSymmetricDifference",&self->ssd_a,&self->ssd_b))
+ if (DeeArg_Unpack(argc, argv,"|oo:_SetSymmetricDifference",&self->ssd_a,&self->ssd_b))
      return -1;
  Dee_Incref(self->ssd_a);
  Dee_Incref(self->ssd_b);
@@ -935,7 +935,7 @@ err:
 PRIVATE int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SetIntersectionIterator",&self->sii_intersect))
+ if (DeeArg_Unpack(argc, argv,"o:_SetIntersectionIterator",&self->sii_intersect))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->sii_intersect,&SetIntersection_Type))
      goto err;
@@ -1061,7 +1061,7 @@ si_init(SetIntersection *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->si_a = Dee_EmptySet;
  self->si_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_SetIntersection",&self->si_a,&self->si_b))
+ if (DeeArg_Unpack(argc, argv,"|oo:_SetIntersection",&self->si_a,&self->si_b))
      goto err;
  Dee_Incref(self->si_a);
  Dee_Incref(self->si_b);
@@ -1252,7 +1252,7 @@ sd_init(SetDifference *__restrict self,
         size_t argc, DeeObject **__restrict argv) {
  self->sd_a = Dee_EmptySet;
  self->sd_b = Dee_EmptySet;
- if (DeeArg_Unpack(argc,argv,"|oo:_SetDifference",&self->sd_a,&self->sd_b))
+ if (DeeArg_Unpack(argc, argv,"|oo:_SetDifference",&self->sd_a,&self->sd_b))
      goto err;
  Dee_Incref(self->sd_a);
  Dee_Incref(self->sd_b);

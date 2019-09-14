@@ -20,46 +20,54 @@
 #define GUARD_DEEMON_CXX_SUPER_H 1
 
 #include "api.h"
-#include "object.h"
+
 #include "../super.h"
+#include "object.h"
 
 DEE_CXX_BEGIN
 
 class Super: public Object {
 public:
-    static DeeTypeObject *classtype() DEE_CXX_NOTHROW { return &DeeSuper_Type; }
-    static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeSuper_Check(ob); }
-    static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW { return DeeSuper_CheckExact(ob); }
+	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
+		return &DeeSuper_Type;
+	}
+	static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+		return DeeSuper_Check(ob);
+	}
+	static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+		return DeeSuper_CheckExact(ob);
+	}
+
 public:
-    DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Super,Object)
-    Super(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self)
-        : Object(inherit(DeeSuper_New(tp_self,self))) {}
-    deemon::Type<Object> supertype() const;
-    Object const &superself() const {
-        if (DeeSuper_CheckExact(this->ptr()))
-            return *(Object const *)&DeeSuper_SELF(this->ptr());
-        return *this;
-    }
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Super, Object)
+	Super(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self)
+	    : Object(inherit(DeeSuper_New(tp_self, self))) {}
+	deemon::Type<Object> supertype() const;
+	Object const &superself() const {
+		if (DeeSuper_CheckExact(this->ptr()))
+			return *(Object const *)&DeeSuper_SELF(this->ptr());
+		return *this;
+	}
 };
 
 
 
 #ifdef GUARD_DEEMON_CXX_TYPE_H
 inline deemon::Type<Object> Super::supertype() const {
-    if (DeeSuper_CheckExact(this->ptr()))
-        return nonnull(DeeSuper_TYPE(this->ptr()));
-    return nonnull(Dee_TYPE(this->ptr()));
+	if (DeeSuper_CheckExact(this->ptr()))
+		return nonnull(DeeSuper_TYPE(this->ptr()));
+	return nonnull(Dee_TYPE(this->ptr()));
 }
 #endif /* GUARD_DEEMON_CXX_TYPE_H */
 
 inline deemon::Super Object::super() const {
-    return inherit(DeeSuper_Of(*this));
+	return inherit(DeeSuper_Of(*this));
 }
 inline deemon::Super Object::super(DeeTypeObject *__restrict super_type) const {
-    return inherit(DeeSuper_New(super_type,*this));
+	return inherit(DeeSuper_New(super_type, *this));
 }
 template<class T> inline deemon::Super Object::super() const {
-    return inherit(DeeSuper_New(T::classtype(),*this));
+	return inherit(DeeSuper_New(T::classtype(), *this));
 }
 
 

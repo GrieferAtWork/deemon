@@ -178,7 +178,7 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
  *                that must be freed using `Dee_Free', before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
-PUBLIC /*owned(Dee_Free)*/DREF DeeObject **DCALL
+PUBLIC /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict plength) {
  size_t i,fastsize,alloc_size;
@@ -249,7 +249,7 @@ err:
  return NULL;
 }
 
-PUBLIC /*owned(Dee_Free)*/DREF DeeObject **DCALL
+PUBLIC /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated) {
@@ -338,7 +338,7 @@ err:
  *                      no longer being valid! */
 PUBLIC size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                  /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                   /*in-out*/size_t *__restrict pallocated) {
  DeeObject **new_elemv,**elemv = *pvector;
  DREF DeeObject *iterator,*elem;
@@ -412,7 +412,7 @@ err:
  *    vector which may already contain other objects upon entry. */
 PUBLIC size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
-                                        /*in-out,owned(Dee_Free)*/DeeObject ***__restrict pvector,
+                                        /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                         /*in-out*/size_t *__restrict pallocated,
                                         /*in*/size_t offset) {
  DeeObject **new_elemv,**elemv = *pvector;

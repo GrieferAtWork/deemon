@@ -382,7 +382,7 @@ DeeString_NewSized(char const *__restrict str, size_t length) {
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_New(/*unsigned*/char const *__restrict str) {
+DeeString_New(/*unsigned*/ char const *__restrict str) {
  return DeeString_NewSized(str,strlen(str));
 }
 
@@ -395,7 +395,7 @@ string_new_empty(void) {
 PRIVATE DREF DeeObject *DCALL
 string_new(size_t argc, DeeObject **__restrict argv) {
  DeeObject *ob;
- if (DeeArg_Unpack(argc,argv,"o:string",&ob))
+ if (DeeArg_Unpack(argc, argv,"o:string",&ob))
      goto err;
  return DeeObject_Str(ob);
 err:
@@ -403,7 +403,7 @@ err:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeString_VNewf(/*utf-8*/char const *__restrict format, va_list args) {
+DeeString_VNewf(/*utf-8*/ char const *__restrict format, va_list args) {
  struct unicode_printer printer = UNICODE_PRINTER_INIT;
  if unlikely(unicode_printer_vprintf(&printer,format,args) < 0)
     goto err;
@@ -414,7 +414,7 @@ err:
 }
 
 PUBLIC DREF DeeObject *
-DeeString_Newf(/*utf-8*/char const *__restrict format, ...) {
+DeeString_Newf(/*utf-8*/ char const *__restrict format, ...) {
  va_list args;
  DREF DeeObject *result;
  va_start(args,format);
@@ -966,7 +966,7 @@ PRIVATE int DCALL
 stringiter_init(StringIterator *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
  String *str;
- if (DeeArg_Unpack(argc,argv,"o:string.Iterator",&str))
+ if (DeeArg_Unpack(argc, argv,"o:string.Iterator",&str))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)str,&DeeString_Type))
      goto err;
@@ -1327,7 +1327,7 @@ PRIVATE DREF DeeObject *DCALL
 string_class_chr(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **__restrict argv) {
  uint32_t ch;
- if (DeeArg_Unpack(argc,argv,"I32u:chr",&ch))
+ if (DeeArg_Unpack(argc, argv,"I32u:chr",&ch))
      goto err;
  return DeeString_Chr(ch);
 err:
@@ -1338,7 +1338,7 @@ PRIVATE DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *__restrict UNUSED(self),
                      size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq;
- if (DeeArg_Unpack(argc,argv,"o:fromseq",&seq))
+ if (DeeArg_Unpack(argc, argv,"o:fromseq",&seq))
      goto err;
  /* XXX: Fast-sequence optimizations? */
  {

@@ -553,9 +553,9 @@ use_printer:
 
 
 
-INTERN DREF /*Module*/DeeObject *FCALL
+INTERN DREF /*Module*/ DeeObject *FCALL
 JITLexer_EvalModule(JITLexer *__restrict self) {
- int error; DREF /*Module*/DeeObject *result;
+ int error; DREF /*Module*/ DeeObject *result;
  struct unicode_printer printer;
  unsigned char *name_start,*name_end;
  error = JITLexer_ParseModuleName(self,

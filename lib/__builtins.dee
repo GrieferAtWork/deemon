@@ -526,7 +526,7 @@ local __objects = deemon.List {
 	/* 0x01D2 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64decode */
 	/* 0x01D3 */ deemon.Sequence.Iterator(), /* _Dee_EmptyZipIterator */
 	/* 0x01D4 */ operators.moveassign, /* DeeBuiltinFunction___moveassign__ */
-	/* 0x01D5 */ [](x,...) -> x(...), /* DeeBuiltinFunction___callv__ */
+	/* 0x01D5 */ [](x, ...) -> x(...), /* DeeBuiltinFunction___callv__ */
 	/* 0x01D6 */ operators.hash, /* DeeBuiltinFunction___hash__ */
 	/* 0x01D7 */ deemon.__pooad, /* DeeBuiltinFunction___dual_posoradd__ */
 	/* 0x01D8 */ deemon.__neosb, /* DeeBuiltinFunction___dual_negorsub__ */

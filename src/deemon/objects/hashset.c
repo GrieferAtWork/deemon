@@ -51,7 +51,7 @@ PRIVATE struct hashset_item empty_set_items[1] = {
 #define dummy      (&DeeDict_Dummy)
 
 PUBLIC DREF DeeObject *DCALL
-DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/DREF DeeObject **__restrict items) {
+DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **__restrict items) {
  DREF Set *result;
  /* Allocate the set object. */
  result = DeeGCObject_MALLOC(Set);
@@ -1123,7 +1123,7 @@ INTERN int DCALL
 setiterator_init(SetIterator *__restrict self,
                  size_t argc, DeeObject **__restrict argv) {
  Set *set;
- if (DeeArg_Unpack(argc,argv,"o:_HashSetIterator",&set) ||
+ if (DeeArg_Unpack(argc, argv,"o:_HashSetIterator",&set) ||
      DeeObject_AssertType((DeeObject *)set,&DeeHashSet_Type))
      return -1;
  self->si_set = set;
@@ -1531,7 +1531,7 @@ PRIVATE int DCALL
 set_init(Set *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  DeeObject *seq; int error;
- if unlikely(DeeArg_Unpack(argc,argv,"o:HashSet",&seq))
+ if unlikely(DeeArg_Unpack(argc, argv,"o:HashSet",&seq))
     goto err;
  /* TODO: Support for initialization from `_roset' */
  /* TODO: Optimization for fast-sequence types. */
@@ -1548,7 +1548,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 set_pop(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  size_t i; DREF DeeObject *result;
- if (DeeArg_Unpack(argc,argv,":pop"))
+ if (DeeArg_Unpack(argc, argv,":pop"))
      goto err;
  DeeHashSet_LockWrite(self);
  for (i = 0; i <= self->s_mask; ++i) {
@@ -1572,7 +1572,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 set_doclear(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":clear"))
+ if (DeeArg_Unpack(argc, argv,":clear"))
      goto err;
  set_clear(self);
  return_none;
@@ -1583,7 +1583,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 set_insert(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item; int result;
- if (DeeArg_Unpack(argc,argv,"o:insert",&item))
+ if (DeeArg_Unpack(argc, argv,"o:insert",&item))
      goto err;
  result = DeeHashSet_Insert((DeeObject *)self,item);
  if unlikely(result < 0)
@@ -1596,7 +1596,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 set_unify(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item;
- if (DeeArg_Unpack(argc,argv,"o:unify",&item))
+ if (DeeArg_Unpack(argc, argv,"o:unify",&item))
      goto err;
  return DeeHashSet_Unify((DeeObject *)self,item);
 err:
@@ -1616,7 +1616,7 @@ insert_callback(Set *__restrict self, DeeObject *item) {
 PRIVATE DREF DeeObject *DCALL
 set_update(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *items; dssize_t result;
- if (DeeArg_Unpack(argc,argv,"o:update",&items))
+ if (DeeArg_Unpack(argc, argv,"o:update",&items))
      goto err;
  result = DeeObject_Foreach(items,(dforeach_t)&insert_callback,self);
  if unlikely(result < 0)
@@ -1629,7 +1629,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 set_remove(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
  DeeObject *item; int result;
- if (DeeArg_Unpack(argc,argv,"o:remove",&item))
+ if (DeeArg_Unpack(argc, argv,"o:remove",&item))
      goto err;
  result = DeeHashSet_Remove((DeeObject *)self,item);
  if unlikely(result < 0)
@@ -1643,7 +1643,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 hashset_sizeof(Set *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,":__sizeof__"))
+ if (DeeArg_Unpack(argc, argv,":__sizeof__"))
      goto err;
  return DeeInt_NewSize(sizeof(Set) +
                      ((self->s_mask + 1) *

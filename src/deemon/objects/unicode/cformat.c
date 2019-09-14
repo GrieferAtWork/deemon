@@ -113,7 +113,7 @@ print_repr_precision(DeeObject *__restrict self, size_t length,
 INTERN dssize_t DCALL
 DeeString_CFormat(dformatprinter printer,
                   dformatprinter format_printer, void *arg,
-                  /*utf-8*/char const *__restrict format, size_t format_len,
+                  /*utf-8*/ char const *__restrict format, size_t format_len,
                   size_t argc, DeeObject **__restrict argv){
  char *iter,*end,*flush_start; DeeObject *in_arg;
  dssize_t temp,result = 0;

@@ -51,7 +51,7 @@ rveciter_copy(RefVectorIterator *__restrict self,
 PRIVATE int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_RefVectorIterator",&self->rvi_vector) ||
+ if (DeeArg_Unpack(argc, argv,"o:_RefVectorIterator",&self->rvi_vector) ||
      DeeObject_AssertTypeExact((DeeObject *)self->rvi_vector,&RefVector_Type))
      return -1;
  Dee_Incref(self->rvi_vector);
@@ -457,7 +457,7 @@ rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
 }
 PRIVATE void DCALL
 rvec_nsi_setitem_fast(RefVector *__restrict self, size_t index,
-                      /*inherit(always)*/DREF DeeObject *__restrict value) {
+                      /*inherit(always)*/ DREF DeeObject *__restrict value) {
  DREF DeeObject *oldobj;
  ASSERT(index < self->rv_length);
 #ifndef CONFIG_NO_THREADS
@@ -1061,7 +1061,7 @@ err:
 PRIVATE int DCALL
 sveciter_init(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
- if (DeeArg_Unpack(argc,argv,"o:_SharedVectorIterator",&self->si_seq))
+ if (DeeArg_Unpack(argc, argv,"o:_SharedVectorIterator",&self->si_seq))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)self->si_seq,&SharedVector_Type))
      goto err;

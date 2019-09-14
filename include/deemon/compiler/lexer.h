@@ -25,10 +25,11 @@
 #define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "tpp.h"
-#include "ast.h"
-#include "../string.h"
 #include <stdbool.h>
+
+#include "../string.h"
+#include "ast.h"
+#include "tpp.h"
 
 DECL_BEGIN
 
@@ -66,19 +67,19 @@ INTDEF DREF struct ast *FCALL ast_parse_assign(unsigned int lookup_mode); /* NOT
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
-INTDEF DREF struct ast *FCALL ast_parse_prod_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_sum_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_shift_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_cmp_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_cmpeq_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_and_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_xor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_or_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_as_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_land_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_lor_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_cond_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
 
 /* Check if the given token qualifies for the associated operation parser function. */
 #define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
@@ -116,11 +117,11 @@ INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/DREF s
 
 /* Given a basic unary expression `ast', parse its unary
  * suffix (including attribute, call, range & item operators). */
-INTDEF DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/DREF struct ast *__restrict baseexpr);
+INTDEF DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/DREF struct ast *__restrict baseexpr);
+INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
@@ -292,10 +293,10 @@ INTDEF DREF struct ast *FCALL ast_parse_loopexpr(void);
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 INTDEF DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *decl);
 INTDEF DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *__restrict decl);
-#else
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 INTDEF DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
 INTDEF DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
-#endif
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 INTDEF DREF struct ast *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi);
 
 /* Parse everything following a `del' keyword in a statement, or expression:
@@ -384,23 +385,23 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression);
 
 /* Parse a primary and second expression in hybrid mode. */
 #define ast_parse_hybrid_primary(pwas_expression) \
-        ast_parse_statement_or_expression(pwas_expression)
+	ast_parse_statement_or_expression(pwas_expression)
 LOCAL DREF struct ast *FCALL
 ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
- DREF struct ast *result;
- switch (*pwas_expression) {
- case AST_PARSE_WASEXPR_NO:
-  result = ast_parse_statement(false);
-  break;
- case AST_PARSE_WASEXPR_YES:
-  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
-  break;
- case AST_PARSE_WASEXPR_MAYBE:
-  result = ast_parse_statement_or_expression(pwas_expression);
-  break;
- default: __builtin_unreachable();
- }
- return result;
+	DREF struct ast *result;
+	switch (*pwas_expression) {
+	case AST_PARSE_WASEXPR_NO:
+		result = ast_parse_statement(false);
+		break;
+	case AST_PARSE_WASEXPR_YES:
+		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		break;
+	case AST_PARSE_WASEXPR_MAYBE:
+		result = ast_parse_statement_or_expression(pwas_expression);
+		break;
+	default: __builtin_unreachable();
+	}
+	return result;
 }
 
 
@@ -441,11 +442,11 @@ import_module_symbol(struct module_object *__restrict module,
 
 
 struct astlist {
-    size_t              ast_c; /* Amount of branches in use. */
-    size_t              ast_a; /* [>= ast_c] Allocated amount of branches. */
-    DREF struct ast **ast_v; /* [1..1][0..ast_c|ALLOC(ast_a)][owned] Vector of branches. */
+	size_t              ast_c; /* Amount of branches in use. */
+	size_t              ast_a; /* [>= ast_c] Allocated amount of branches. */
+	DREF struct ast **ast_v; /* [1..1][0..ast_c|ALLOC(ast_a)][owned] Vector of branches. */
 };
-#define ASTLIST_INIT {0,0,NULL}
+#define ASTLIST_INIT { 0, 0, NULL }
 
 INTDEF void DCALL astlist_fini(struct astlist *__restrict self);
 INTDEF int DCALL astlist_upsize(struct astlist *__restrict self, size_t min_add);
@@ -456,75 +457,75 @@ INTDEF int DCALL astlist_appendall(struct astlist *__restrict self, struct astli
 
 
 struct ast_annotation {
-    /* AST Annotations can be used to transform the value generated by some declaration.
-     * Annotations are implemented through call invocations done at runtime, and
-     * function through one of 2 ways:
-     * >> @my_annotation
-     * >> function foo() {
-     * >> }
-     * >> @my_annotation("foobar")
-     * >> function bar() {
-     * >> }
-     * Compiled as:
-     * >> foo = my_annotation(function() {
-     * >> });
-     * >> bar = my_annotation(function() {
-     * >> },"foobar");
-     */
-    DREF struct ast       *aa_func;   /* [1..1] The expression invoked for the purposes of
-                                       *        transforming the annotated declaration. */
+	/* AST Annotations can be used to transform the value generated by some declaration.
+	 * Annotations are implemented through call invocations done at runtime, and
+	 * function through one of 2 ways:
+	 * >> @my_annotation
+	 * >> function foo() {
+	 * >> }
+	 * >> @my_annotation("foobar")
+	 * >> function bar() {
+	 * >> }
+	 * Compiled as:
+	 * >> foo = my_annotation(function() {
+	 * >> });
+	 * >> bar = my_annotation(function() {
+	 * >> },"foobar");
+	 */
+	DREF struct ast       *aa_func;   /* [1..1] The expression invoked for the purposes of
+	                                   *        transforming the annotated declaration. */
 #define AST_ANNOTATION_FNORMAL 0x0000 /* Normal annotation flags. */
 #define AST_ANNOTATION_FNOFUNC 0x0001 /* When set, don't try to insert the annotated object
-                                       * as an argument of an `OPERATOR_CALL' branch in `aa_func'
-                                       * Instead, always pack the annotated object as a single-
-                                       * element argument list, before using it to invoke `aa_func'
-                                       * and continuing to use the returned result. */
-    uint16_t               aa_flag;   /* Annotation flags (Set of `AST_ANNOTATION_F*') */
-    uint16_t               aa_pad[(sizeof(void *)-2)/2];
+	                                   * as an argument of an `OPERATOR_CALL' branch in `aa_func'
+	                                   * Instead, always pack the annotated object as a single-
+	                                   * element argument list, before using it to invoke `aa_func'
+	                                   * and continuing to use the returned result. */
+	uint16_t               aa_flag;   /* Annotation flags (Set of `AST_ANNOTATION_F*') */
+	uint16_t               aa_pad[(sizeof(void *)-2)/2];
 };
 
 struct ast_annotations {
-    size_t                 an_annoc; /* Amount of used annotations. */
-    size_t                 an_annoa; /* Amount of allocated annotations. */
-    struct ast_annotation *an_annov; /* [0..at_anno_c|ALLOC(at_anno_a)][owned]
-                                      * Amount of allocated annotations. */
+	size_t                 an_annoc; /* Amount of used annotations. */
+	size_t                 an_annoa; /* Amount of allocated annotations. */
+	struct ast_annotation *an_annov; /* [0..at_anno_c|ALLOC(at_anno_a)][owned]
+	                                  * Amount of allocated annotations. */
 };
 
 struct ast_tags_printers {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-    struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
+	struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-    struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
+	struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
 };
 
 struct ast_tags {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-    struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
+	struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-    struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
-    struct ast_annotations at_anno;         /* AST Annotations. */
-    uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
-    uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
-    uint16_t               at_code_flags;   /* Set of `CODE_F*' or'd to flags during creation of a new function. */
-    uint16_t               at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*' or'd to flags during creation of a new class attribute. */
+	struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
+	struct ast_annotations at_anno;         /* AST Annotations. */
+	uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
+	uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
+	uint16_t               at_code_flags;   /* Set of `CODE_F*' or'd to flags during creation of a new function. */
+	uint16_t               at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*' or'd to flags during creation of a new class attribute. */
 };
 
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-#define AST_TAGS_BACKUP_PRINTERS(buf) \
-   (memcpy(&(buf),&current_tags,2 * sizeof(struct unicode_printer)), \
-    memset(&current_tags,0,2 * sizeof(struct unicode_printer)))
-#define AST_TAGS_RESTORE_PRINTERS(buf) \
-   (unicode_printer_fini(&current_tags.at_decl), \
-    unicode_printer_fini(&current_tags.at_doc), \
-    memcpy(&current_tags,&(buf),2 * sizeof(struct unicode_printer)))
-#else
-#define AST_TAGS_BACKUP_PRINTERS(buf) \
-   (memcpy(&(buf),&current_tags,sizeof(struct unicode_printer)), \
-    memset(&current_tags,0,sizeof(struct unicode_printer)))
-#define AST_TAGS_RESTORE_PRINTERS(buf) \
-   (unicode_printer_fini(&current_tags.at_doc), \
-    memcpy(&current_tags,&(buf),sizeof(struct unicode_printer)))
-#endif
+#define AST_TAGS_BACKUP_PRINTERS(buf)                                   \
+	(memcpy(&(buf), &current_tags, 2 * sizeof(struct unicode_printer)), \
+	 memset(&current_tags, 0, 2 * sizeof(struct unicode_printer)))
+#define AST_TAGS_RESTORE_PRINTERS(buf)            \
+	(unicode_printer_fini(&current_tags.at_decl), \
+	 unicode_printer_fini(&current_tags.at_doc),  \
+	 memcpy(&current_tags, &(buf), 2 * sizeof(struct unicode_printer)))
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#define AST_TAGS_BACKUP_PRINTERS(buf)                               \
+	(memcpy(&(buf), &current_tags, sizeof(struct unicode_printer)), \
+	 memset(&current_tags, 0, sizeof(struct unicode_printer)))
+#define AST_TAGS_RESTORE_PRINTERS(buf)           \
+	(unicode_printer_fini(&current_tags.at_doc), \
+	 memcpy(&current_tags, &(buf), sizeof(struct unicode_printer)))
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 
 
 /* Current set of active AST tags.
@@ -539,9 +540,9 @@ INTDEF int (DCALL ast_tags_clear)(void);
 /* Pack together the current documentation string. */
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 INTDEF DREF DeeObject *DCALL ast_tags_doc(struct decl_ast const *decl);
-#else
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 INTDEF DREF DeeObject *DCALL ast_tags_doc(void);
-#endif
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 
 /* Add a new annotation to the current set of tags. */
 INTDEF int (DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t flag);
@@ -555,7 +556,7 @@ INTDEF int (DCALL ast_annotations_clear)(struct ast_annotations *__restrict self
 /* Apply & free annotations to the given `input' ast. */
 INTDEF DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
-                              /*inherit(always)*/DREF struct ast *__restrict input);
+                              /*inherit(always)*/ DREF struct ast *__restrict input);
 
 
 
@@ -576,8 +577,8 @@ INTDEF int DCALL parse_tags_block(void);
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define parse_tags()  __builtin_expect(parse_tags(),0)
-#endif
-#endif
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

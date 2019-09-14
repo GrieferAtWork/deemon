@@ -125,7 +125,7 @@ PRIVATE int DCALL
 bfi_init(BytesFindIterator *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
  BytesFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_BytesFindIterator",&find))
+ if (DeeArg_Unpack(argc, argv,"o:_BytesFindIterator",&find))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)find,&BytesFind_Type))
      goto err;
@@ -137,7 +137,7 @@ PRIVATE int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  BytesFind *find;
- if (DeeArg_Unpack(argc,argv,"o:_BytesCaseFindIterator",&find))
+ if (DeeArg_Unpack(argc, argv,"o:_BytesCaseFindIterator",&find))
      goto err;
  if (DeeObject_AssertTypeExact((DeeObject *)find,&BytesCaseFind_Type))
      goto err;
@@ -363,7 +363,7 @@ PRIVATE int DCALL
 bf_init(BytesFind *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
  size_t start = 0,end = (size_t)-1;
- if (DeeArg_Unpack(argc,argv,"oo|IdId:_BytesFind",
+ if (DeeArg_Unpack(argc, argv,"oo|IdId:_BytesFind",
                   &self->bf_bytes,&self->bf_other,
                   &start,&end) ||
      DeeObject_AssertTypeExact((DeeObject *)self->bf_bytes,&DeeBytes_Type) ||

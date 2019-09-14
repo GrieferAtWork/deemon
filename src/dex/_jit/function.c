@@ -99,7 +99,7 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
  * `self->jf_varargs' and `self->jf_varkwds' fields. */
 INTERN struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunction *__restrict self,
-                           /*utf-8*/char const *namestr,
+                           /*utf-8*/ char const *namestr,
                            size_t namelen) {
  dhash_t i,perturb;
  struct jit_object_entry *result_entry;
@@ -219,12 +219,12 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 
 
 INTERN DREF DeeObject *DCALL
-JITFunction_New(/*utf-8*/char const *name_start,
-                /*utf-8*/char const *name_end,
-                /*utf-8*/char const *params_start,
-                /*utf-8*/char const *params_end,
-                /*utf-8*/char const *__restrict source_start,
-                /*utf-8*/char const *__restrict source_end,
+JITFunction_New(/*utf-8*/ char const *name_start,
+                /*utf-8*/ char const *name_end,
+                /*utf-8*/ char const *params_start,
+                /*utf-8*/ char const *params_end,
+                /*utf-8*/ char const *__restrict source_start,
+                /*utf-8*/ char const *__restrict source_end,
                 JITObjectTable *parent_object_table,
                 DeeObject *__restrict source,
                 DeeModuleObject *impbase,

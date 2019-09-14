@@ -37,7 +37,7 @@ final global function extractFileDir(p: string): string {
 }
 final global extractFileDrive = fs.driveof;
 final global function extractShortPathName(p: string): string -> p; // I can't be bothered...
-final global function fileCreate(p,...): File -> File.open(p,"w+");
+final global function fileCreate(p, ...): File -> File.open(p,"w+");
 final global fileDelete = fs.unlink;
 final global function fileRead(fp: File, args...) {
 	if (#args == 1) {
@@ -59,7 +59,7 @@ final global function fileWrite(fp: File,args...) {
 final global function fileSeek(fp: File, off: int, origin: int) {
 	fp.seek(off,origin);
 }
-final global function fileOpen(p: string,...): File -> File.open(p,"r+");
+final global function fileOpen(p: string, ...): File -> File.open(p,"r+");
 final global function fileClose(fp: File) -> fp.close();
 final global fileExists = fs.stat.isreg;
 final global function diskFree(p: string): int -> 0; /* ' Can't be bothered! */
