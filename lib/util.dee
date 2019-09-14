@@ -129,8 +129,8 @@ function round(x: float): int {
 @@the origin Sequence in the original argument list
 @@HINT: The size of the returned list is ${(for (x: seqs) #x) < ...}
 @@>import zip from util;
-@@>print zip([10,20,30],[40,50,60])...;    /* "(10, 40) (20, 50) (30, 60)" */
-@@>print zip([10,20,30],[40,50,60,70])...; /* "(10, 40) (20, 50) (30, 60)" */
+@@>print zip([10, 20, 30], [40, 50, 60])...;     /* "(10, 40) (20, 50) (30, 60)" */
+@@>print zip([10, 20, 30], [40, 50, 60, 70])...; /* "(10, 40) (20, 50) (30, 60)" */
 @@>/* `70' is ignored because the shortest Sequence's length is used */
 function zip(seqs...: Sequence): {Sequence...} {
 	local iterators = [(
@@ -159,12 +159,12 @@ function zip(seqs...: Sequence): {Sequence...} {
 @@>    /* Item number 0 is 10 */
 @@>    /* Item number 1 is 20 */
 @@>    /* Item number 2 is 30 */
-@@>    print "Item number",index,"is",item;
+@@>    print "Item number", index, "is", item;
 @@>}
 function enumerate(seq: Sequence, start: int = 0): Sequence {
 	local index = start;
 	for (local item: seq) {
-		yield pack(index,item);
+		yield pack(index, item);
 		++index;
 	}
 }

@@ -19,7 +19,7 @@
 
 /* Functions from this module are referenced by the
  * compiler when addressing unbound operators:
- * >> local items = [10,30,20,7];
+ * >> local items = [10, 30, 20, 7];
  * >> items.sort(operator <); // Compiled as `items.sort(lo from operators)'
  */
 
@@ -28,22 +28,22 @@ import * from deemon;
 @@Bind a given @operator_function to execute the associated operator for a specific type @tp only:
 @@>import bind from operators;
 @@>import * from deemon;
-@@>local sequence_add = bind(Sequence,operator +);
-@@>local foo = [10,20,30];
-@@>local bar = [40,50,60];
+@@>local sequence_add = bind(Sequence, operator +);
+@@>local foo = [10, 20, 30];
+@@>local bar = [40, 50, 60];
 @@>// Invokes `(foo as Sequence).operator + (bar)'
-@@>print repr sequence_add(foo,bar);
+@@>print repr sequence_add(foo, bar);
 @@>// Invokes `foo.operator + (bar)'
-@@>print repr operator + (foo,bar);
+@@>print repr operator + (foo, bar);
 function bind(tp: Type, operator_function: Callable): Callable {
-	return [](x,args...) {
+	return [](x, args...) {
 		import Error from deemon;
 		if (x !is tp && !tp.isgeneric) {
 			throw Error.TypeError(
 				"Instance of {} is not derived from {}".
 				format({ type x, tp }));
 		}
-		return operator_function((x as tp),args...);
+		return operator_function((x as tp), args...);
 	};
 }
 
@@ -52,12 +52,12 @@ function bind(tp: Type, operator_function: Callable): Callable {
  * This module is _supposed_ to define symbols with those names! */
 #pragma warning("-Wno-reserved")
 
-function constructor(self,args...): none -> self.operator constructor(args...);
+function constructor(self, args...): none -> self.operator constructor(args...);
 function copy(self) -> copy self;
 function deepcopy(self) -> deepcopy self;
 function destructor(self): none -> self.operator destructor();
-function assign(self,other) -> self := other;
-function moveassign(self,other) -> self.operator = move (other);
+function assign(self, other) -> self := other;
+function moveassign(self, other) -> self.operator = move (other);
 function str(self): string -> str self;
 function repr(self): string -> repr self;
 function bool(self): bool from deemon -> !!self;
@@ -68,37 +68,37 @@ function float(self): float from deemon -> self.operator float();
 function inv(self) -> ~self;
 function pos(self) -> +self;
 function neg(self) -> -self;
-function add(self,other) -> self + other;
-function sub(self,other) -> self - other;
-function mul(self,other) -> self * other;
-function div(self,other) -> self / other;
-function mod(self,other) -> self % other;
-function shl(self,other) -> self << other;
-function shr(self,other) -> self >> other;
-function and(self,other) -> self & other;
-function or(self,other) -> self | other;
-function xor(self,other) -> self ^ other;
-function pow(self,other) -> self ** other;
+function add(self, other) -> self + other;
+function sub(self, other) -> self - other;
+function mul(self, other) -> self * other;
+function div(self, other) -> self / other;
+function mod(self, other) -> self % other;
+function shl(self, other) -> self << other;
+function shr(self, other) -> self >> other;
+function and(self, other) -> self & other;
+function or(self, other) -> self | other;
+function xor(self, other) -> self ^ other;
+function pow(self, other) -> self ** other;
 function inc(self) -> self.operator ++ ();
 function dec(self) -> self.operator -- ();
-function iadd(self,other) -> self.operator += (other);
-function isub(self,other) -> self.operator -= (other);
-function imul(self,other) -> self.operator *= (other);
-function idiv(self,other) -> self.operator /= (other);
-function imod(self,other) -> self.operator %= (other);
-function ishl(self,other) -> self.operator <<= (other);
-function ishr(self,other) -> self.operator >>= (other);
-function iand(self,other) -> self.operator &= (other);
-function ior(self,other) -> self.operator |= (other);
-function ixor(self,other) -> self.operator ^= (other);
-function ipow(self,other) -> self.operator **= (other);
+function iadd(self, other) -> self.operator += (other);
+function isub(self, other) -> self.operator -= (other);
+function imul(self, other) -> self.operator *= (other);
+function idiv(self, other) -> self.operator /= (other);
+function imod(self, other) -> self.operator %= (other);
+function ishl(self, other) -> self.operator <<= (other);
+function ishr(self, other) -> self.operator >>= (other);
+function iand(self, other) -> self.operator &= (other);
+function ior(self, other) -> self.operator |= (other);
+function ixor(self, other) -> self.operator ^= (other);
+function ipow(self, other) -> self.operator **= (other);
 function hash(self): int from deemon -> self.operator hash();
-function eq(self,other): bool from deemon | Object -> self == other;
-function ne(self,other): bool from deemon | Object -> self != other;
-function lo(self,other): bool from deemon | Object -> self < other;
-function le(self,other): bool from deemon | Object -> self <= other;
-function gr(self,other): bool from deemon | Object -> self > other;
-function ge(self,other): bool from deemon | Object -> self >= other;
+function eq(self, other): bool from deemon | Object -> self == other;
+function ne(self, other): bool from deemon | Object -> self != other;
+function lo(self, other): bool from deemon | Object -> self < other;
+function le(self, other): bool from deemon | Object -> self <= other;
+function gr(self, other): bool from deemon | Object -> self > other;
+function ge(self, other): bool from deemon | Object -> self >= other;
 function iter(self: Sequence | Object): Iterator | Object -> self.operator iter();
 function size(self: Sequence | Object): int from deemon | Object -> #self;
 function contains(self: Sequence | Object, item): bool from deemon | Object -> item in self;
@@ -143,7 +143,7 @@ function putc(self: File, c: int from deemon): int from deemon -> self.operator 
 
 @[gatw.doc("(a,b?)->")]
 @[gatw.doc("pos(a) or add(a,b)")]
-function __pooad(a,b...) {
+function __pooad(a, b...) {
 	__asm__({
 		push   arg @a
 		push   cmp eq, #arg @b, $0
@@ -163,7 +163,7 @@ function __pooad(a,b...) {
 
 @[gatw.doc("(a,b?)->")]
 @[gatw.doc("neg(a) or sub(a,b)")]
-function __neosb(a,b...) {
+function __neosb(a, b...) {
 	__asm__({
 		push   arg @a
 		push   cmp eq, #arg @b, $0
@@ -183,7 +183,7 @@ function __neosb(a,b...) {
 
 @[gatw.doc("(seq,index,opt?)->")]
 @[gatw.doc("getitem(seq,index) or setitem(seq,index,opt)")]
-function __giosi(seq,index,opt...) {
+function __giosi(seq, index, opt...) {
 	__asm__({
 		push   arg @seq
 		push   arg @index
@@ -205,7 +205,7 @@ function __giosi(seq,index,opt...) {
 
 @[gatw.doc("(seq,start,end,opt?)->")]
 @[gatw.doc("getrange(seq,start,end) or setrange(seq,start,end,opt)")]
-function __grosr(seq,start,end,opt...) {
+function __grosr(seq, start, end, opt...) {
 	__asm__({
 		push   arg @seq
 		push   arg @start
@@ -229,7 +229,7 @@ function __grosr(seq,start,end,opt...) {
 
 @[gatw.doc("(obj,attr,opt?)->")]
 @[gatw.doc("getattr(obj,attr) or setattr(obj,attr,opt)")]
-function __gaosa(obj,attr,opt...) {
+function __gaosa(obj, attr, opt...) {
 	__asm__({
 		push   arg @obj
 		push   arg @attr
@@ -250,29 +250,29 @@ function __gaosa(obj,attr,opt...) {
 }
 #else
 
-@@pos(a) or add(a,b)
-function __pooad(a,b?) {
-	return b !is bound ? pos(a) : add(a,b);
+@@pos(a) or add(a, b)
+function __pooad(a, b?) {
+	return b !is bound ? pos(a) : add(a, b);
 }
 
-@@neg(a) or sub(a,b)
-function __neosb(a,b?) {
-	return b !is bound ? neg(a) : sub(a,b);
+@@neg(a) or sub(a, b)
+function __neosb(a, b?) {
+	return b !is bound ? neg(a) : sub(a, b);
 }
 
-@@getitem(seq,index) or setitem(seq,index,opt)
-function __giosi(seq,index,opt?) {
-	return opt !is bound ? getitem(seq,index) : setitem(seq,index,opt);
+@@getitem(seq, index) or setitem(seq, index, opt)
+function __giosi(seq, index, opt?) {
+	return opt !is bound ? getitem(seq, index) : setitem(seq, index, opt);
 }
 
-@@getrange(seq,begin,end) or setrange(seq,begin,end,opt)
-function __grosr(seq,begin,end,opt?) {
-	return opt !is bound ? getrange(seq,begin,end) : setrange(seq,begin,end,opt);
+@@getrange(seq, begin, end) or setrange(seq, begin, end, opt)
+function __grosr(seq, begin, end, opt?) {
+	return opt !is bound ? getrange(seq, begin, end) : setrange(seq, begin, end, opt);
 }
 
-@@getattr(obj,attr) or setattr(obj,attr,opt)
-function __gaosa(obj,attr,opt?) {
-	return opt !is bound ? getattr(obj,attr) : setattr(obj,attr,opt);
+@@getattr(obj, attr) or setattr(obj, attr, opt)
+function __gaosa(obj, attr, opt?) {
+	return opt !is bound ? getattr(obj, attr) : setattr(obj, attr, opt);
 }
 #endif
 

@@ -33,11 +33,11 @@ global TypeRef;
 
 
 local function decode_name_content(name: string): string {
-	name = name.substr(1,#name - 1);
-	name = name.replace("\\\n","\n");
-	name = name.replace(r"-\>",r"->");
+	name = name.substr(1, #name - 1);
+	name = name.replace("\\\n", "\n");
+	name = name.replace(r"-\>", r"->");
 	for (local x: r"\?!{}|,()<>[]=")
-		name = name.replace(r"\" + x,x);
+		name = name.replace(r"\" + x, x);
 	return name;
 }
 
@@ -53,9 +53,9 @@ local function encode_name(name: string): string {
 	local result = name;
 	if (!result.issymbol()) {
 		for (local x: r"\?!{}|,()<>[]=")
-			result = result.replace(x,r"\" + x);
-		result = result.replace(r"->",r"-\>");
-		result = result.replace("\n","\\\n");
+			result = result.replace(x, r"\" + x);
+		result = result.replace(r"->", r"-\>");
+		result = result.replace("\n", "\\\n");
 		result = "{{{}}}".format({ result });
 	}
 	return result;
@@ -63,17 +63,17 @@ local function encode_name(name: string): string {
 
 @@Decode the contents of a custom user-text section
 local function decode_text(text: string): string {
-	text = text.replace("\\\n","\n");
-	text = text.replace("\n\\(","\n(");
-	text = text.replace(r"-\>",r"->");
-	text = text.replace(r"\\",r"\");
+	text = text.replace("\\\n", "\n");
+	text = text.replace("\n\\(", "\n(");
+	text = text.replace(r"-\>", r"->");
+	text = text.replace(r"\\", r"\");
 	return text;
 }
 
 @@Search for a given @ob within the export table of @mod, returning its name or :none if not found
 local function lookup_object_in_module(mod: Module, ob: Object): string | none {
 	/* Search the export table of this module! */
-	for (local name,obj: Module.__exports__(mod)) {
+	for (local name, obj: Module.__exports__(mod)) {
 		if (obj === ob)
 			return name;
 	}
@@ -90,7 +90,7 @@ local function encode_type(tp: deemon.Type): string {
 	local mod = deemon.Type.__module__(tp);
 	if (mod is none) /* Module could not be determined */
 		return "?U" + encode_name(tp.__name__);
-	local name = lookup_object_in_module(mod,tp);
+	local name = lookup_object_in_module(mod, tp);
 	if (name is none)
 		name = deemon.Type.__name__(tp);
 	if (mod === deemon)
@@ -98,14 +98,14 @@ local function encode_type(tp: deemon.Type): string {
 	return "?E{}:{}".format({
 		/* TODO: This only works for global modules! */
 		encode_name(Module.__name__(mod)),
-		encode_name(name),
+		encode_name(name)
 	});
 }
 
 @@Given a Doc-path in the form of $"<MODULE>/<ITEM>/<ATTR>/...", convert
 @@that path into the form of $"?A<ATTR>?A<ATTR>?E<MODULE>:<ITEM>"
 local function encode_type_from_path(path: string): string {
-	local a,none,b = path.strip("/").rpartition("/")...;
+	local a, none, b = path.strip("/").rpartition("/")...;
 	if (!b)
 		return "?M" + encode_name(a);
 	if ("/" !in a) {
@@ -151,7 +151,7 @@ local function encode_expr(ob: Object): string | none {
 local function get_generic_argument_name(n: int, d: Doc | none = none): string {
 	if (d !is none && d.object is bound) {
 		local ob = d.object;
-		if (hasattr(ob,"__kwds__")) {
+		if (hasattr(ob, "__kwds__")) {
 			local kwds = ob.__kwds__;
 			if (n < #kwds)
 				return kwds[n];
@@ -191,11 +191,11 @@ local function is_backslash_at(text: string, pos: int): bool {
 @@If @tofind could not be found, return ${-1} instead.
 local function find_nonescaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
-		local result = text.find(tofind,start,end);
+		local result = text.find(tofind, start, end);
 		if (result < 0)
 			break;
 		if (result && text[result - 1] == "\\" &&
-		    is_backslash_at(text,result - 1)) {
+		    is_backslash_at(text, result - 1)) {
 			start = result + 1;
 			continue;
 		}
@@ -207,7 +207,7 @@ local function find_nonescaped(text: string, tofind: string, start: int = 0, end
 @@Similar to :find_nonescaped, but search from the right
 local function rfind_nonescaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
-		local result = text.rfind(tofind,start,end);
+		local result = text.rfind(tofind, start, end);
 		if (result < 0)
 			break;
 		if (result && text[result - 1] == "\\") {
@@ -235,12 +235,12 @@ local function split_nonescaped(text: string, tofind: string): {string...} {
 		return;
 	local i = 0;
 	for (;;) {
-		local pos = find_nonescaped(text,tofind,i);
+		local pos = find_nonescaped(text, tofind, i);
 		if (pos < 0) {
 			yield text.substr(i);
 			break;
 		}
-		yield text.substr(i,pos);
+		yield text.substr(i, pos);
 		i = pos + #tofind;
 	}
 }
@@ -249,8 +249,8 @@ local function split_nonescaped(text: string, tofind: string): {string...} {
 @@Decode a <NAME>-like documentation name
 local function decode_name_end(name: string, start: int = 0): int {
 	local result;
-	if (name.startswith("{",start)) {
-		result = find_nonescaped(name,"}",start + 1);
+	if (name.startswith("{", start)) {
+		result = find_nonescaped(name, "}", start + 1);
 		if (result < 0)
 			result = #name;
 		return result;
@@ -360,7 +360,7 @@ local operator_sorting_weights: {string: int} = {
 @@the caller must determine the argument count and re-attempt the
 @@call while passing @argc as a value other than :none.
 local function operator_realname(name: string, argc: int | none = none): string | none {
-	local result = operator_names.get(name,name);
+	local result = operator_names.get(name, name);
 	if (result is none) {
 		if (argc is none)
 			return none;
@@ -391,20 +391,20 @@ local function get_qualified_typepath(docnode: WeakRef with Doc, qual: string): 
 		});
 	}	break;
 	case "E": {
-		local modend = find_nonescaped(qual,":",2);
+		local modend = find_nonescaped(qual, ":", 2);
 		return "/{}/{}".format({
-			decode_name(qual.substr(2,modend)),
+			decode_name(qual.substr(2, modend)),
 			decode_name(qual.substr(modend + 1)),
 		});
 	}	break;
 	case "A": {
-		local nameend = decode_name_end(qual,2);
-		local base = get_qualified_typepath(docnode,qual.substr(nameend));
+		local nameend = decode_name_end(qual, 2);
+		local base = get_qualified_typepath(docnode, qual.substr(nameend));
 		if (base is none)
 			return none;
 		return "{}/c:{}".format({
 			base,
-			decode_name(qual.substr(2,nameend)),
+			decode_name(qual.substr(2, nameend)),
 		});
 	}	break;
 	default:
@@ -440,11 +440,11 @@ local function qualify_legacy_typeref(docnode: WeakRef with Doc, s: string): str
 		node = node.parent;
 	} while (node !is none);
 	/* Search for known sub-classes of `Error' */
-	local result = find_error_by_name(Error,"?DError",s);
+	local result = find_error_by_name(Error, "?DError", s);
 	if (result !is none)
 		return result;
 	/* Search the deemon module itself. */
-	if (hasattr(deemon,s))
+	if (hasattr(deemon, s))
 		return "?D" + encode_name(s);
 	/* Fallback: Invalid encoding -> Encode an unknown */
 	return "?U" + encode_name(s);
@@ -462,19 +462,19 @@ local function qualify_typeref_string(docnode: WeakRef with Doc, s: string): str
 		}	break;
 		case "#": {
 			local node = docnode.value;
-			local len = decode_name_end(s,2);
+			local len = decode_name_end(s, 2);
 			if (node.ismodule) {
 				local mod = node.module;
 				return "?E{}:{}".format({
 					/* TODO: This only works for global modules! */
 					encode_name(Module.__name__(mod)),
-					s.substr(2,len)
+					s.substr(2, len)
 				});
 			}
 			if (!node.istype && node.parent !is none)
 				node = node.parent;
 			return "?A{}{}".format({
-				s.substr(2,len),
+				s.substr(2, len),
 				node.qualpath,
 			});
 		}	break;
@@ -488,19 +488,19 @@ local function qualify_typeref_string(docnode: WeakRef with Doc, s: string): str
 			return s;
 		case "A": {
 			local attr_end;
-			attr_end = find_nonescaped(s,"?",2);
+			attr_end = find_nonescaped(s, "?", 2);
 			if (attr_end < 0)
 				break;
 			local tail = s.substr(attr_end);
-			local newtail = qualify_typeref_string(docnode,tail);
+			local newtail = qualify_typeref_string(docnode, tail);
 			if (tail === newtail)
 				return s;
-			return s.substr(0,attr_end) + newtail;
+			return s.substr(0, attr_end) + newtail;
 		}	break;
 		default: break;
 		}
 	}
-	return qualify_legacy_typeref(docnode,s);
+	return qualify_legacy_typeref(docnode, s);
 }
 
 @@Return the type associated with a given fully qualified path
@@ -511,17 +511,17 @@ local function get_type_from_qualpath(docnode: WeakRef with Doc, qual: string): 
 		return none;
 	switch (qual[1]) {
 	case "A": {
-		local attrend = decode_name_end(qual,2);
-		local base = get_type_from_qualpath(docnode,qual.substr(attrend));
-		local result = base.operator . (qual.substr(2,attrend));
+		local attrend = decode_name_end(qual, 2);
+		local base = get_type_from_qualpath(docnode, qual.substr(attrend));
+		local result = base.operator . (qual.substr(2, attrend));
 		if (result is none) result = type none;
 		return result;
 	}	break;
 	case "E": {
-		local modend = find_nonescaped(qual,":");
+		local modend = find_nonescaped(qual, ":");
 		if (modend < 0)
 			break;
-		local modnam = decode_name(qual.substr(2,modend));
+		local modnam = decode_name(qual.substr(2, modend));
 		local symnam = decode_name(qual.substr(modend + 1));
 		local mod;
 		if (modnam.startswith(".")) {
@@ -559,7 +559,7 @@ class TypeRef: WeakRefAble {
 	public final property docstring: string = {
 		get(): string {
 			if (m_docstring !is string)
-				m_docstring = qualify_typeref_string(docnode,encode_type(m_docstring));
+				m_docstring = qualify_typeref_string(docnode, encode_type(m_docstring));
 			return m_docstring;
 		}
 	}
@@ -572,7 +572,7 @@ class TypeRef: WeakRefAble {
 		: docnode(d is WeakRef ? d : WeakRef(d))
 	{
 		if (ds is string) {
-			m_docstring = qualify_typeref_string(docnode,ds);
+			m_docstring = qualify_typeref_string(docnode, ds);
 		} else {
 			m_docstring = ds;
 			m_typ = ds;
@@ -581,7 +581,7 @@ class TypeRef: WeakRefAble {
 
 	@@Returns a string representation of how @this TypeRef can be created
 	operator repr(): string {
-		return "TypeRef({!r},{!r})".format({ docnode.lock(none), docstring });
+		return "TypeRef({!r}, {!r})".format({ docnode.lock(none), docstring });
 	}
 
 	@@The actual type object represented by @this TypeRef,
@@ -590,7 +590,7 @@ class TypeRef: WeakRefAble {
 		get(): deemon.Type | none {
 			if (m_typ !is bound) {
 				m_typ =
-					try get_type_from_qualpath(docnode,m_docstring)
+					try get_type_from_qualpath(docnode, m_docstring)
 					catch (...) none;
 				if (m_typ !is deemon.Type)
 					m_typ = none;
@@ -607,7 +607,7 @@ class TypeRef: WeakRefAble {
 	public final property path: string | none = {
 		get(): string | none {
 			if (m_path !is bound)
-				m_path = get_qualified_typepath(docnode,docstring);
+				m_path = get_qualified_typepath(docnode, docstring);
 			return m_path;
 		}
 	}
@@ -668,8 +668,8 @@ class TypeRef: WeakRefAble {
 	private getprettyname(qual): string {
 		if (#qual >= 2) switch (qual[1]) {
 		case "E": {
-			local modend = find_nonescaped(qual,":",2);
-			local modname = decode_name(qual.substr(2,modend));
+			local modend = find_nonescaped(qual, ":", 2);
+			local modname = decode_name(qual.substr(2, modend));
 			local modexp = decode_name(qual.substr(modend + 1));
 			local mymod = docnode.lock(none).module;
 			if (mymod !is none && modname == Module.__name__(mymod))
@@ -681,10 +681,10 @@ class TypeRef: WeakRefAble {
 		case "U":
 			return decode_name(qual.substr(2));
 		case "A": {
-			local namelen = decode_name_end(qual,2);
+			local namelen = decode_name_end(qual, 2);
 			return "{}.{}".format({
 				getprettyname(qual.substr(namelen)),
-				decode_name(qual.substr(2,namelen)),
+				decode_name(qual.substr(2, namelen)),
 			});
 		}
 		default:
@@ -720,23 +720,23 @@ again:
 	case "U":
 	case "G":
 		++result;
-		result = decode_name_end(s,result);
+		result = decode_name_end(s, result);
 		break;
 	case "E":
 		++result;
-		result = decode_name_end(s,result);
+		result = decode_name_end(s, result);
 		if (s[result] == ":") {
 			++result;
-			result = decode_name_end(s,result);
+			result = decode_name_end(s, result);
 		}
 		break;
 	case "A":
 		++result;
-		result = decode_name_end(s,result);
+		result = decode_name_end(s, result);
 		goto again;
 	case "C":
 		++result;
-		result = typeexpr_end(s,result);
+		result = typeexpr_end(s, result);
 		goto again;
 	case "T":
 	case "X": {
@@ -746,13 +746,13 @@ again:
 			++result;
 		local n = try int(s[n_start:result]) catch (...) 0;
 		for (none: [:n])
-			result = typeexpr_end(s,result);
+			result = typeexpr_end(s, result);
 	}	break;
 	case "S":
 		++result;
 		goto again;
 	case "Q": {
-		local end = find_nonescaped(s,"]",result + 1);
+		local end = find_nonescaped(s, "]", result + 1);
 		if (end < 0)
 			end = len - 1;
 		result = end + 1;
@@ -791,14 +791,14 @@ again:
 	case "G":
 	case "M":
 		++result;
-		result = decode_name_end(s,result);
+		result = decode_name_end(s, result);
 		break;
 	case "E":
 		++result;
-		result = decode_name_end(s,result);
+		result = decode_name_end(s, result);
 		if (s[result] == ":") {
 			++result;
-			result = decode_name_end(s,result);
+			result = decode_name_end(s, result);
 		}
 		break;
 	case "T":
@@ -811,7 +811,7 @@ again:
 			++result;
 		local n = try int(s[n_start:result]) catch (...) 0;
 		for (none: [:n])
-			result = deflexpr_end(s,result);
+			result = deflexpr_end(s, result);
 	}	break;
 	case "!":
 		++result;
@@ -829,7 +829,7 @@ again:
 			case "<": /* shl */
 			case ">": /* shr */
 				++result;
-				result = deflexpr_end(s,result);
+				result = deflexpr_end(s, result);
 				goto again;
 			default: break;
 			}
@@ -842,12 +842,12 @@ again:
 		case ">":
 		case "C":
 			++result;
-			result = deflexpr_end(s,result);
+			result = deflexpr_end(s, result);
 			goto again;
 		case "[":
 			++result;
-			result = deflexpr_end(s,result);
-			result = deflexpr_end(s,result);
+			result = deflexpr_end(s, result);
+			result = deflexpr_end(s, result);
 			goto again;
 		default:
 			break;
@@ -876,12 +876,12 @@ again:
 	case ">":
 	case "[":
 		++result;
-		result = deflexpr_end(s,result);
+		result = deflexpr_end(s, result);
 		goto again;
 	case "I": /* conditional expression */
 		++result;
-		result = deflexpr_end(s,result);
-		result = deflexpr_end(s,result);
+		result = deflexpr_end(s, result);
+		result = deflexpr_end(s, result);
 		goto again;
 	case "-":
 		++result;
@@ -952,7 +952,7 @@ class TypeExpr: WeakRefAble {
 	{
 		if (m_docstring !is string) {
 			m_kind = "E";
-			m_cache = TypeRef(docnode,m_docstring);
+			m_cache = TypeRef(docnode, m_docstring);
 			m_types = (m_docstring,);
 		}
 	}
@@ -966,7 +966,7 @@ class TypeExpr: WeakRefAble {
 	public final property isnone: bool = {
 		get(): bool {
 			if (m_docstring is string)
-				return m_docstring in ["?N","?Dnone","?Edeemon:none"];
+				return m_docstring in ["?N", "?Dnone", "?Edeemon:none"];
 			return m_docstring === type none;
 		}
 	}
@@ -980,7 +980,7 @@ class TypeExpr: WeakRefAble {
 			if (m_acceptsany !is bound) {
 				if (m_docstring !is string)
 					m_acceptsany = m_docstring === deemon.Object;
-				else if (m_docstring in ["?O","?Dobject","?Edeemon:Object"])
+				else if (m_docstring in ["?O", "?Dobject", "?Edeemon:Object"])
 					m_acceptsany = true;
 				else {
 					m_acceptsany = false;
@@ -1129,7 +1129,7 @@ check_elem:
 					m_kind = "E"; /* Legacy-like type name */
 				else {
 					m_kind = m_docstring[1];
-					if (m_kind in [".","N","O","#","D","U","G"/*,"E"*/,"A"])
+					if (m_kind in [".", "N", "O", "#", "D", "U", "G" /*, "E"*/, "A"])
 						m_kind = "E"; /* Fully qualifyable */
 				}
 			}
@@ -1140,12 +1140,12 @@ check_elem:
 
 
 	@@Cache of child-expressions / references
-	private member m_cache: TypeRef | TypeExpr | {TypeExpr...} | (TypeExpr,TypeExpr) | Expression;
+	private member m_cache: TypeRef | TypeExpr | {TypeExpr...} | (TypeExpr, TypeExpr) | Expression;
 	private loadC() {
-		local end = typeexpr_end(m_docstring,2);
+		local end = typeexpr_end(m_docstring, 2);
 		m_cache = (
-			TypeExpr(docdecl,m_docstring.substr(2,end)),
-			TypeExpr(docdecl,m_docstring.substr(end)),
+			TypeExpr(docdecl, m_docstring.substr(2, end)),
+			TypeExpr(docdecl, m_docstring.substr(end)),
 		);
 	}
 	private loadTX() {
@@ -1153,19 +1153,19 @@ check_elem:
 		while (pos < #m_docstring && m_docstring.isdigit(pos))
 			++pos;
 		local n = try int(m_docstring[2:pos]) catch (...) 0;
-		local result = List(n,none);
+		local result = List(n, none);
 		for (local i: [:n]) {
-			local end = typeexpr_end(m_docstring,pos);
-			result[i] = TypeExpr(docdecl,m_docstring.substr(pos,end));
+			local end = typeexpr_end(m_docstring, pos);
+			result[i] = TypeExpr(docdecl, m_docstring.substr(pos, end));
 			pos = end;
 		}
 		m_cache = Tuple(result);
 	}
 	private loadS() {
-		m_cache = TypeExpr(docdecl,m_docstring.substr(2));
+		m_cache = TypeExpr(docdecl, m_docstring.substr(2));
 	}
 	private loadQ() {
-		m_cache = Expression(docdecl,m_docstring[2:-1]);
+		m_cache = Expression(docdecl, m_docstring[2:-1]);
 	}
 
 
@@ -1174,7 +1174,7 @@ check_elem:
 	public final property Etyperef: TypeRef = {
 		get(): TypeRef {
 			if (m_cache !is bound)
-				m_cache = TypeRef(docnode,m_docstring);
+				m_cache = TypeRef(docnode, m_docstring);
 			return m_cache;
 		}
 	}
@@ -1300,7 +1300,7 @@ class Expression: WeakRefAble {
 
 	@@Returns a string representation of how @this Expression can be created
 	operator repr(): string {
-		return "Expression({!r},{!r})".format({ docdecl.lock(none), docstring });
+		return "Expression({!r}, {!r})".format({ docdecl.lock(none), docstring });
 	}
 
 	@@Enumerate a sequence of all the possible types that @this expression can take
@@ -1308,7 +1308,7 @@ class Expression: WeakRefAble {
 		get(): {TypeExpr...} {
 			switch (kind) {
 			case "C":
-				yield TypeExpr(docdecl,type Cvalue);
+				yield TypeExpr(docdecl, type Cvalue);
 				break;
 			case "A":
 				/* Alias the same types as seen in another argument. */
@@ -1318,7 +1318,7 @@ class Expression: WeakRefAble {
 				yield StypeExpr;
 				break;
 			default:
-				yield TypeExpr(docdecl,"?O");
+				yield TypeExpr(docdecl, "?O");
 				break;
 			}
 		}
@@ -1358,7 +1358,7 @@ class Expression: WeakRefAble {
 								m_docstring;
 					else if (":" in m_docstring) {
 						/* Assume external symbol. */
-						local mod,none,path = m_docstring.partition(":")...;
+						local mod, none, path = m_docstring.partition(":")...;
 						m_docstring = "!E{}:{}".format({
 							encode_name(mod),
 							encode_name(path),
@@ -1370,7 +1370,7 @@ class Expression: WeakRefAble {
 							"true" : true,
 							"false" : false,
 						};
-						m_cache = defl.get(m_docstring,m_docstring);
+						m_cache = defl.get(m_docstring, m_docstring);
 					}
 				} else if (#m_docstring < 2) {
 					m_kind = "C";
@@ -1383,13 +1383,13 @@ class Expression: WeakRefAble {
 					} else if (id == "-" && #m_docstring >= 2 &&
 					          (m_docstring.isdigit(2) || m_docstring[2] == ".")) {
 						m_kind = "C";
-					} else if (id in ["N","t","f"]) {
+					} else if (id in ["N", "t", "f"]) {
 						local map = { "N" : none, "t" : true, "f" : false };
 						m_kind = "C";
 						m_cache = map[id];
-					} else if (id in ["D","U","G","E","M"]) {
+					} else if (id in ["D", "U", "G", "E", "M"]) {
 						m_kind = "E";
-					} else if (id in ["T","L","S","H"]) {
+					} else if (id in ["T", "L", "S", "H"]) {
 						m_kind = "S";
 					} else if (id == "V" && #m_docstring >= 3 && m_docstring[2] == "A") {
 						m_kind = "A";
@@ -1456,27 +1456,27 @@ done:
 	private Edecode() {
 		switch (m_docstring[1]) {
 		case "D":
-			m_cache = (deemon,m_docstring.substr(2));
+			m_cache = (deemon, m_docstring.substr(2));
 			break;
 		case "U":
-			m_cache = (none,m_docstring.substr(2));
+			m_cache = (none, m_docstring.substr(2));
 			break;
 		case "G":
-			m_cache = (".",m_docstring.substr(2));
+			m_cache = (".", m_docstring.substr(2));
 			break;
 		case "E": {
-			local sep = find_nonescaped(m_docstring,":",2);
+			local sep = find_nonescaped(m_docstring, ":", 2);
 			if (sep < 0) {
-				m_cache = (m_docstring.substr(2),none);
+				m_cache = (m_docstring.substr(2), none);
 			} else {
-				m_cache = (m_docstring.substr(sep),m_docstring.substr(sep + 1));
+				m_cache = (m_docstring.substr(sep), m_docstring.substr(sep + 1));
 			}
 		}	break;
 		case "M":
-			m_cache = (m_docstring.substr(2),none);
+			m_cache = (m_docstring.substr(2), none);
 			break;
 		default:
-			m_cache = (none,m_docstring);
+			m_cache = (none, m_docstring);
 			break;
 		}
 	}
@@ -1502,7 +1502,7 @@ done:
 			local mod = Emodule;
 			if (mod is none)
 				return none;
-			return Doc(mod,Emoduleattr);
+			return Doc(mod, Emoduleattr);
 		}
 	}
 
@@ -1517,7 +1517,7 @@ done:
 					local base = docnode.value.module;
 					result = result == "."
 						? base
-						: import(result,base: base)
+						: import(result, base: base)
 						;
 				} else {
 					result = import(result);
@@ -1609,12 +1609,12 @@ done:
 				local pos = 3;
 				while (pos < #m_docstring && m_docstring.isdigit(pos))
 					++pos;
-				local count = try int(m_docstring.substr(2,pos)) catch (...) 0;
+				local count = try int(m_docstring.substr(2, pos)) catch (...) 0;
 				local items = List(count);
 				for (local i: [:count]) {
 					local start = pos;
-					pos = deflexpr_end(m_docstring,pos);
-					items[i] = Expression(docdecl,m_docstring.substr(start,pos));
+					pos = deflexpr_end(m_docstring, pos);
+					items[i] = Expression(docdecl, m_docstring.substr(start, pos));
 				}
 				m_cache = Tuple(items);
 			}
@@ -1647,7 +1647,7 @@ done:
 				"D" : "?Ddict",
 				"S" : "?Dhashset",
 			};
-			return TypeExpr(docdecl,map[m_docstring[1]]);
+			return TypeExpr(docdecl, map[m_docstring[1]]);
 		}
 	}
 
@@ -1703,7 +1703,7 @@ done:
 				File.Writer result;
 				result << "{ ";
 				local is_first = true;
-				for (local a,b: Sitems.segments(2)) {
+				for (local a, b: Sitems.segments(2)) {
 					if (!is_first)
 						result << ", ";
 					is_first = false;
@@ -1773,20 +1773,20 @@ class Parameter: WeakRefAble {
 			 * be clear that we're dealing with a new-style parameter. */
 			docstring = docstring.strip();
 			doclen = #docstring;
-			type_end = find_nonescaped(docstring," ");
+			type_end = find_nonescaped(docstring, " ");
 			if (type_end >= 0) {
-				m_typstring = docstring.substr(0,type_end);
+				m_typstring = docstring.substr(0, type_end);
 				m_namstring = docstring.substr(type_end + 1).lstrip();
 				/* Also check for a default argument. */
 				if ("=" in m_namstring) {
-					m_namstring,none,m_defstring = m_namstring.partition("=")...;
+					m_namstring, none, m_defstring = m_namstring.partition("=")...;
 					m_namstring = m_namstring.strip();
 					m_defstring = m_defstring.strip();
 				}
 				for (;;) {
 					if (m_namstring.endswith("...")) {
 						/* Old-style, typed varargs argument */
-						m_namstring = m_namstring.substr(0,#m_namstring - 3).rstrip();
+						m_namstring = m_namstring.substr(0, #m_namstring - 3).rstrip();
 						m_isvarargs = true;
 						m_iskwargs = m_isoptional = false;
 						continue;
@@ -1800,7 +1800,7 @@ class Parameter: WeakRefAble {
 					}
 					if (m_namstring.endswith("?")) {
 						/* Old-style, typed optional argument */
-						m_namstring = m_namstring.substr(0,#m_namstring - 1).rstrip();
+						m_namstring = m_namstring.substr(0, #m_namstring - 1).rstrip();
 						m_isoptional = true;
 						m_iskwargs = m_isvarargs = false;
 						continue;
@@ -1825,13 +1825,13 @@ class Parameter: WeakRefAble {
 					/* Old-style conventions also allowed
 					 * the ... to appear as part of the type. */
 					if (m_typstring.endswith("...")) {
-						m_typstring = m_typstring.substr(0,#m_typstring - 3).rstrip();
+						m_typstring = m_typstring.substr(0, #m_typstring - 3).rstrip();
 						m_isvarargs = true;
 						m_iskwargs = m_isoptional = false;
 						continue;
 					}
 					if (m_typstring.endswith("**")) {
-						m_typstring = m_typstring.substr(0,#m_typstring - 2).rstrip();
+						m_typstring = m_typstring.substr(0, #m_typstring - 2).rstrip();
 						m_iskwargs = true;
 						m_isvarargs = m_isoptional = false;
 						continue;
@@ -1843,8 +1843,8 @@ class Parameter: WeakRefAble {
 		}
 		if (!doclen) {
 			/* Try to extract the argument name from varkwds information */
-			m_namstring = get_generic_argument_name(docargi,
-				docdecl.value.docsect.value.docnode.value);
+			m_namstring = get_generic_argument_name(
+				docargi, docdecl.value.docsect.value.docnode.value);
 			return;
 		}
 		/* Decode the parameter string new-style. */
@@ -1855,19 +1855,19 @@ class Parameter: WeakRefAble {
 				if (!docstring.issymcont(name_end))
 					break;
 			}
-			m_namstring = docstring.substr(0,name_end);
+			m_namstring = docstring.substr(0, name_end);
 		} else if (docstring[0] == "{") {
 			/* Escaped argument name. */
-			name_end = find_nonescaped(docstring,"}",1);
+			name_end = find_nonescaped(docstring, "}", 1);
 			if (name_end < 0)
 				name_end = doclen;
-			m_namstring = decode_name_content(docstring.substr(1,name_end));
+			m_namstring = decode_name_content(docstring.substr(1, name_end));
 			if (name_end < doclen)
 				++name_end;
 		} else {
 			/* Parameter is unnamed. */
-			m_namstring = get_generic_argument_name(docargi,
-				docdecl.value.docsect.value.docnode.value);
+			m_namstring = get_generic_argument_name(
+				docargi, docdecl.value.docsect.value.docnode.value);
 			name_end = 0;
 		}
 		if (name_end >= doclen)
@@ -1893,10 +1893,10 @@ class Parameter: WeakRefAble {
 		if (docstring[name_end] == ":") {
 			/* Argument type */
 			++name_end;
-			local typend = find_nonescaped(docstring,"=",name_end);
+			local typend = find_nonescaped(docstring, "=", name_end);
 			if (typend >= 0) {
 				/* Default expression */
-				m_typstring = docstring.substr(name_end,typend);
+				m_typstring = docstring.substr(name_end, typend);
 				m_defstring = docstring.substr(typend + 1);
 			} else {
 				m_typstring = docstring.substr(name_end);
@@ -1929,7 +1929,7 @@ class Parameter: WeakRefAble {
 			}
 			return;
 		}
-		if (docstring.startswith("...",name_end)) {
+		if (docstring.startswith("...", name_end)) {
 			/* Old-style varargs suffing without explicit typing */
 			m_isvarargs = true;
 			m_iskwargs = m_isoptional = false;
@@ -1964,7 +1964,7 @@ class Parameter: WeakRefAble {
 				local typstr = typstring;
 				if (typstr is none)
 					typstr = "?O";
-				m_typ = TypeExpr(docdecl,typstr);
+				m_typ = TypeExpr(docdecl, typstr);
 			}
 			return m_typ;
 		}
@@ -2010,13 +2010,13 @@ class Parameter: WeakRefAble {
 								    docargi <  code.__argc_max__) {
 									/* Default argument is available. */
 									local val = code.__default__[docargi - argc_min];
-									m_defexpr = Expression(docdecl,false,val);
+									m_defexpr = Expression(docdecl, false, val);
 									goto done;
 								}
 							}
 						}
 					}
-					m_defexpr = Expression(docdecl,defstr);
+					m_defexpr = Expression(docdecl, defstr);
 				}
 			}
 done:
@@ -2074,7 +2074,7 @@ done:
 
 	@@Returns a string representation of how @this Parameter can be created
 	operator repr(): string {
-		return "Parameter({!r},{!r},{!r})".format({ docdecl.lock(none), docargi, docstring });
+		return "Parameter({!r}, {!r}, {!r})".format({ docdecl.lock(none), docargi, docstring });
 	}
 }
 
@@ -2116,21 +2116,21 @@ class Declaration: WeakRefAble {
 	@@Split #docstring into its individual segments
 	private split_decl_string() {
 		local ds = docstring;
-		local par_start = find_nonescaped(ds,"(");
+		local par_start = find_nonescaped(ds, "(");
 		local ret_start = ds.rfind("->");
 		m_parstring = m_namstring = m_retstring = none;
 		m_isdeleted = m_isinherited = m_explittype = false;
 		if (par_start >= 0) {
 			if (ret_start > 0 && ds[ret_start - 1] == ")")
-				m_parstring = ds.substr(par_start + 1,ret_start - 1);
+				m_parstring = ds.substr(par_start + 1, ret_start - 1);
 			else if (ds[#ds - 1] == ")")
-				m_parstring = ds.substr(par_start + 1,#ds - 1);
+				m_parstring = ds.substr(par_start + 1, #ds - 1);
 		}
 		if (par_start >= 0) {
 			if (par_start > 0)
-				m_namstring = ds.substr(0,par_start);
+				m_namstring = ds.substr(0, par_start);
 		} else if (ret_start > 0) {
-			m_namstring = ds.substr(0,ret_start);
+			m_namstring = ds.substr(0, ret_start);
 		}
 		if (ret_start >= 0) {
 			m_retstring = ds.substr(ret_start + 2);
@@ -2152,7 +2152,7 @@ class Declaration: WeakRefAble {
 					if (defl !is none) {
 						local rt = defl.rfind("->");
 						if (rt >= 0) {
-							m_parstring = defl.substr(1,rt - 1);
+							m_parstring = defl.substr(1, rt - 1);
 							if (!m_retstring)
 								m_retstring = defl.substr(rt + 2);;
 						}
@@ -2185,7 +2185,7 @@ class Declaration: WeakRefAble {
 					if (rt >= 0) {
 						/* Generate default declaration information for operators */
 						m_retstring = defl.substr(rt + 2);
-						m_parstring = defl.substr(1,rt - 1);
+						m_parstring = defl.substr(1, rt - 1);
 					}
 				}
 			}
@@ -2262,7 +2262,7 @@ class Declaration: WeakRefAble {
 					m_opname = operator_realname(name);
 					/* Check if also need argument count to deduce the real operator name */
 					if (m_opname is none)
-						m_opname = operator_realname(name,#parameters);
+						m_opname = operator_realname(name, #parameters);
 				}
 			}
 			return m_opname;
@@ -2295,7 +2295,7 @@ class Declaration: WeakRefAble {
 	public final property returnsnone: bool = {
 		get(): bool {
 			local retstr = m_retstring;
-			return retstr is none || retstr in ["?N","?Dnone","?Edeemon:none"];
+			return retstr is none || retstr in ["?N", "?Dnone", "?Edeemon:none"];
 		}
 	}
 
@@ -2308,11 +2308,11 @@ class Declaration: WeakRefAble {
 			if (m_typ !is bound) {
 				local retstr = retstring;
 				if (retstr is none)
-					m_typ = TypeExpr(this,"?N");
+					m_typ = TypeExpr(this, "?N");
 				else if (!retstr)
-					m_typ = TypeExpr(this,"?O");
+					m_typ = TypeExpr(this, "?O");
 				else {
-					m_typ = TypeExpr(this,retstr);
+					m_typ = TypeExpr(this, retstr);
 				}
 			}
 			return m_typ;
@@ -2328,14 +2328,14 @@ class Declaration: WeakRefAble {
 				if (parstr is none) {
 					local doc = docsect.value.docnode.value;
 					if (doc.isfunction)
-						m_parameters = [Parameter(this,0,"args!")];
+						m_parameters = [Parameter(this, 0, "args!")];
 					else {
 						m_parameters = none; /* No parameters */
 					}
 				} else {
 					m_parameters = Tuple(
-						for (local i,part: util.enumerate(split_nonescaped(parstr,",")))
-							Parameter(this,i,part));
+						for (local i, part: util.enumerate(split_nonescaped(parstr, ",")))
+							Parameter(this, i, part));
 				}
 			}
 			return m_parameters;
@@ -2398,7 +2398,7 @@ class Declaration: WeakRefAble {
 
 	@@Returns a string representation of how @this Declaration can be created
 	operator repr(): string {
-		return "Declaration({!r},{!r})".format({ docsect.lock(none), docstring });
+		return "Declaration({!r}, {!r})".format({ docsect.lock(none), docstring });
 	}
 }
 
@@ -2438,7 +2438,7 @@ class TextSegment: WeakRefAble {
 	 * >> @@This is done through use of @(min from util), re-using
 	 * >> @@its @int-typed return value to return from this function.
 	 * >> function myfunc(x: int, y: int): int {
-	 * >>     return util.min(x,y);
+	 * >>     return util.min(x, y);
 	 * >> }
 	 *
 	 * The idea here is that when the compiler generates the TextSegment-part
@@ -2455,7 +2455,7 @@ class TextSegment: WeakRefAble {
 	 *     >> @@@param y An integer value
 	 *     >> @@@return The lower of @x and @y
 	 *     >> function myfunc(x: int, y: int): int {
-	 *     >>     return util.min(x,y);
+	 *     >>     return util.min(x, y);
 	 *     >> }
 	 *   - This uglyness however has already become inadvertible ever-since
 	 *     the (still good & correct) decision was made to move from @"..."
@@ -2470,7 +2470,7 @@ class TextSegment: WeakRefAble {
 
 	@@Returns a string representation of how @this TextSegment can be created
 	operator repr(): string {
-		return "TextSegment({!r},{!r})".format({ docsect.lock(none), docstring });
+		return "TextSegment({!r}, {!r})".format({ docsect.lock(none), docstring });
 	}
 
 }
@@ -2479,37 +2479,37 @@ class TextSegment: WeakRefAble {
 @@Split the text of a :DocSection into a sequence of :{Declaration}s and :{TextSegment}s
 local function split_section(sect: DocSection, docstring: string): {Declaration | TextSegment...} {
 	local start = 0;
-	while (docstring.startswith("(",start)) {
+	while (docstring.startswith("(", start)) {
 		/* The first line is already is one that is special */
-		local newstart = find_nonescaped(docstring,"\n",start);
+		local newstart = find_nonescaped(docstring, "\n", start);
 		if (newstart < 0) newstart = #docstring;
-		yield Declaration(sect,docstring.substr(start,newstart));
+		yield Declaration(sect, docstring.substr(start, newstart));
 		start = newstart + 1;
 	}
 	for (;;) {
-		local i = docstring.find("\n(",start);
-		local j = docstring.find("->",start);
+		local i = docstring.find("\n(", start);
+		local j = docstring.find("->", start);
 		if (i < 0) {
 			if (j < 0)
 				break;
-			i = rfind_nonescaped(docstring,"\n",start,j);
+			i = rfind_nonescaped(docstring, "\n", start, j);
 			if (i < 0) i = start;
 		} else {
 			++i;
 			if (j >= 0 && j < i) {
-				i = rfind_nonescaped(docstring,"\n",start,j);
+				i = rfind_nonescaped(docstring, "\n", start, j);
 				if (i < 0) i = start;
 			}
 		}
 		if (i - 1 > start)
-			yield TextSegment(sect,decode_text(docstring.substr(start,i - 1)));
-		local line_end = find_nonescaped(docstring,"\n",i);
+			yield TextSegment(sect, decode_text(docstring.substr(start, i - 1)));
+		local line_end = find_nonescaped(docstring, "\n", i);
 		if (line_end < 0) line_end = #docstring;
-		yield Declaration(sect,docstring.substr(i,line_end));
+		yield Declaration(sect, docstring.substr(i, line_end));
 		start = line_end + 1;
 	}
 	if (start < #docstring)
-		yield TextSegment(sect,decode_text(docstring.substr(start)));
+		yield TextSegment(sect, decode_text(docstring.substr(start)));
 }
 
 
@@ -2546,16 +2546,17 @@ class DocSection: WeakRefAble {
 				result_segments.append(s);
 			}
 			if (#result_segments == #m_segments) {
-				yield (opname,this);
+				yield (opname, this);
 				return;
 			}
-			local result = DocSection(docnode,
+			local result = DocSection(
+				docnode,
 				"\n".join(
 					for (local x: result_segments)
 						x.docstring));
 			result.m_hasdecls = true;
 			result.m_segments = result_segments;
-			yield (opname,result);
+			yield (opname, result);
 		}
 	}
 
@@ -2582,7 +2583,8 @@ class DocSection: WeakRefAble {
 				yield this;
 				return;
 			}
-			local result = DocSection(docnode,
+			local result = DocSection(
+				docnode,
 				"\n".join(
 					for (local x: result_segments)
 						x.docstring));
@@ -2599,7 +2601,7 @@ class DocSection: WeakRefAble {
 
 	@@Returns a string representation of how @this DocSection can be created
 	operator repr(): string {
-		return "DocSection({!r},{!r})".format({ docnode.lock(none), docstring });
+		return "DocSection({!r}, {!r})".format({ docnode.lock(none), docstring });
 	}
 
 	@@Evalues to :true if @this DocSection contains declaration segments
@@ -2620,13 +2622,13 @@ class DocSection: WeakRefAble {
 	private member m_hasdecls: bool;
 
 	@@Split @this DocSection into segments of special doc-strings & human-text
-	@@The returned Tuple is (is_declaration,content), where is_declaration is
+	@@The returned Tuple is (is_declaration, content), where is_declaration is
 	@@a line applicable to contain either the "->" or the "<START_OF_LINE>("
 	@@pattern.
 	public final property segments: {Declaration | TextSegment...} = {
 		get() {
 			if (m_segments !is bound)
-				m_segments = Tuple(split_section(this,docstring));
+				m_segments = Tuple(split_section(this, docstring));
 			return m_segments;
 		}
 	}
@@ -2845,19 +2847,19 @@ class Doc: WeakRefAble {
 				if (isoperator) {
 					result = "{}.operator {}".format({
 						result,
-						pretty_operator_names.get(name,name)
+						pretty_operator_names.get(name, name)
 					});
 				} else {
 					result = "{}.{}".format({ result, name });
 				}
 				return result;
 			}
-			result = result.lstrip("/").replace("i:","").replace("c:","");
+			result = result.lstrip("/").replace("i:", "").replace("c:", "");
 			if (isoperator) {
 				result = result.rpartition("/")[0];
 				result = "{}.operator {}".format({
 					result,
-					pretty_operator_names.get(name,name)
+					pretty_operator_names.get(name, name)
 				});
 			}
 			return result.replace("/",".");
@@ -2872,7 +2874,7 @@ class Doc: WeakRefAble {
 				if (isoperator || parent is none)
 					m_attr = none;
 				else {
-					m_attr = Attribute(parent.object,name);
+					m_attr = Attribute(parent.object, name);
 				}
 			}
 			return m_attr;
@@ -2939,7 +2941,7 @@ load_type_input:
 					m_attr = none;
 					m_path = none;
 				} else {
-					m_attr = Attribute.lookup(type_module,name);
+					m_attr = Attribute.lookup(type_module, name);
 					if (m_attr is none) {
 						module; /* ??? */
 						m_parent = none;
@@ -2963,7 +2965,7 @@ load_type_input:
 					if (doc_parent_or_path.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
 						 * between stuff like `foo.c:field' and `foo.i:field' */
-						object = deemon.Type.getinstanceattr(parob,name);
+						object = deemon.Type.getinstanceattr(parob, name);
 					} else {
 						object = parob.operator . (name);
 					}
@@ -2985,7 +2987,7 @@ load_type_input:
 					ds = "";
 				docstring = ds.rstrip();
 				object = doc_parent_or_path;
-				if (deemon.hasattr(doc_parent_or_path,"__type__")) {
+				if (deemon.hasattr(doc_parent_or_path, "__type__")) {
 					local doc_type;
 					try {
 						doc_type = doc_parent_or_path.__type__;
@@ -3013,7 +3015,7 @@ do_throw_unknown_object_origin:
 				}
 				return;
 			}
-			local head,none,tail = doc_parent_or_path.strip("/ ").rpartition("/")...;
+			local head, none, tail = doc_parent_or_path.strip("/ ").rpartition("/")...;
 			if (!tail) {
 				/* Module documentation */
 				if (head.startswith(".")) {
@@ -3098,13 +3100,13 @@ err_unknown_attribute:
 			try {
 				if (attribute_name.startswith("i:")) {
 					fixed_attribute_name = attribute_name[2:];
-					my_attr = Attribute(doc_parent_or_path.object,fixed_attribute_name,"i");
+					my_attr = Attribute(doc_parent_or_path.object, fixed_attribute_name, "i");
 				} else if (attribute_name.startswith("c:")) {
 					fixed_attribute_name = attribute_name[2:];
-					my_attr = Attribute(doc_parent_or_path.object,fixed_attribute_name,"i","");
+					my_attr = Attribute(doc_parent_or_path.object, fixed_attribute_name, "i", "");
 				} else {
 					fixed_attribute_name = attribute_name;
-					my_attr = Attribute(doc_parent_or_path.object,fixed_attribute_name);
+					my_attr = Attribute(doc_parent_or_path.object, fixed_attribute_name);
 				}
 			} catch (Error.AttributeError) {
 				goto err_unknown_attribute;
@@ -3120,7 +3122,7 @@ err_unknown_attribute:
 					if (my_attr.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
 						 * between stuff like `foo.c:field' and `foo.i:field' */
-						object = deemon.Type.getinstanceattr(parob,fixed_attribute_name);
+						object = deemon.Type.getinstanceattr(parob, fixed_attribute_name);
 					} else {
 						try {
 							object = parob.operator . (fixed_attribute_name);
@@ -3152,7 +3154,7 @@ set_is_type:
 			}
 		}
 		local tp = my_attr.attrtype;
-		if (tp !is none && deemon.Type.derivedfrom(tp,deemon.Type))
+		if (tp !is none && deemon.Type.derivedfrom(tp, deemon.Type))
 			istype = true;
 		/* If we couldn't load a non-empty doc string from other places,
 		 * try to load the doc string from the attribute descriptor. */
@@ -3343,13 +3345,13 @@ set_is_type:
 		local ot_kind = other.kind;
 		if (my_kind != ot_kind) {
 			return
-				kind_sorting_weights.get(my_kind,0) <
-				kind_sorting_weights.get(ot_kind,0);
+				kind_sorting_weights.get(my_kind, 0) <
+				kind_sorting_weights.get(ot_kind, 0);
 		}
 		if (my_kind == "operator") {
 			return
-				operator_sorting_weights.get(name,0) <
-				operator_sorting_weights.get(other.name,0);
+				operator_sorting_weights.get(name, 0) <
+				operator_sorting_weights.get(other.name, 0);
 		}
 		return name < other.name;
 	}
@@ -3402,12 +3404,12 @@ set_is_type:
 	@@Check if one of @this doc's declarations accepts the given argument List.
 	@@>function foo(x: int | string, y: int | float) {
 	@@>}
-	@@>print Doc(foo).isaccepted(10,20);      /* true */
-	@@>print Doc(foo).isaccepted(10,1.0);     /* true */
-	@@>print Doc(foo).isaccepted(10,"foo");   /* false */
-	@@>print Doc(foo).isaccepted("bar",20);   /* true */
-	@@>print Doc(foo).isaccepted("bar",1.0);  /* true */
-	@@>print Doc(foo).isaccepted();           /* false */
+	@@>print Doc(foo).isaccepted(10, 20);      /* true */
+	@@>print Doc(foo).isaccepted(10, 1.0);     /* true */
+	@@>print Doc(foo).isaccepted(10,"foo");    /* false */
+	@@>print Doc(foo).isaccepted("bar", 20);   /* true */
+	@@>print Doc(foo).isaccepted("bar", 1.0);  /* true */
+	@@>print Doc(foo).isaccepted();            /* false */
 	public final isaccepted(args...: Object): bool {
 		return declfor(args...) !is none;
 	}
@@ -3426,11 +3428,10 @@ set_is_type:
 	@@>  return x;
 	@@> return str(x + y);
 	@@>}
-	@@>print repr Doc(foo).callwith(10,1.0).types; /* { int, string } */
+	@@>print repr Doc(foo).callwith(10, 1.0).types; /* { int, string } */
 	public final callwith(args...: Object): TypeExpr | none {
 		return declfor(args...).ret;
 	}
-
 
 	@@Returns a sequence of all sections found on the documenation of #docstring
 	public final property allsections: {DocSection...} = {
@@ -3438,7 +3439,7 @@ set_is_type:
 			if (m_allsections !is bound) {
 				m_allsections = [];
 				for (local x: split_doc_sections(docstring))
-					m_allsections.append(DocSection(this,x));
+					m_allsections.append(DocSection(this, x));
 			}
 			return m_allsections;
 		}
@@ -3449,7 +3450,7 @@ set_is_type:
 	private final autogenerate_opdecl(opname: string): {DocSection...} {
 		local defl = operator_defaults.get(opname);
 		if (defl !is none)
-			yield DocSection(this,opname + defl);
+			yield DocSection(this, opname + defl);
 	}
 
 	@@Autogenerate declarations for @this Doc node
@@ -3458,26 +3459,26 @@ set_is_type:
 			yield parent.autogenerate_opdecl(name)...;
 		} else if (object is bound && object is deemon.Function) {
 			File.Writer resdoc;
-			generate_function_params(resdoc,object);
+			generate_function_params(resdoc, object);
 			if (object.__code__.isconstructor) {
 				/* Constructors always return :none */
 			} else {
 				resdoc << "->";
 			}
-			yield DocSection(this,resdoc.string);
+			yield DocSection(this, resdoc.string);
 		} else {
 			local at = attr;
 			if (at !is none) {
 				local attr_type = at.attrtype;
 				if (at.cancall || Callable.baseof(attr_type))
-					yield DocSection(this,"(args!)->"); /* Some kind of function... */
+					yield DocSection(this, "(args!)->"); /* Some kind of function... */
 				else if (attr_type !is none)
-					yield DocSection(this,"->" + encode_type(attr_type));
+					yield DocSection(this, "->" + encode_type(attr_type));
 				else {
-					yield DocSection(this,"->");
+					yield DocSection(this, "->");
 				}
 			} else {
-				yield DocSection(this,"->");
+				yield DocSection(this, "->");
 			}
 		}
 	}
@@ -3526,19 +3527,19 @@ set_is_type:
 	@@Automatically generate documentation for native type constructors.
 	private autogenerate_native_constructor_desc(): {DocSection...} {
 		if (deemon.Type.__issuperconstructible__(object)) {
-			yield DocSection(this,"constructor->!S");
+			yield DocSection(this, "constructor->!S");
 		} else {
 			local hasany = false;
 			if (deemon.Type.__isnoargconstructible__(object)) {
-				yield DocSection(this,"constructor()->");
+				yield DocSection(this, "constructor()->");
 				hasany = true;
 			}
 			if (deemon.Type.__isvarargconstructible__(object)) {
-				yield DocSection(this,"constructor->");
+				yield DocSection(this, "constructor->");
 				hasany = true;
 			}
 			if (!hasany)
-				yield DocSection(this,"constructor->!D");
+				yield DocSection(this, "constructor->!D");
 		}
 	}
 
@@ -3577,24 +3578,24 @@ set_is_type:
 						if (fun is deemon.Function) {
 							File.Writer resdoc;
 							resdoc << opname;
-							generate_function_params(resdoc,fun);
+							generate_function_params(resdoc, fun);
 							resdoc << "->";
 							local defl = operator_defaults.get(opname);
 							if (defl !is none) {
-								local rt = find_nonescaped(defl,"->");
+								local rt = find_nonescaped(defl, "->");
 								resdoc << defl.substr(rt + 2);
 							}
-							yield DocSection(this,resdoc.string);
+							yield DocSection(this, resdoc.string);
 						} else {
 							yield autogenerate_opdecl(opname)...;
 						}
 					} else {
 						/* Deleted operator */
-						yield DocSection(this,opname + "->!D");
+						yield DocSection(this, opname + "->!D");
 					}
 				}
 			} else {
-				if (deemon.Type.hasprivateoperator(object,opname))
+				if (deemon.Type.hasprivateoperator(object, opname))
 					yield autogenerate_opdecl(opname)...;
 				else if (opname == "constructor") {
 					yield autogenerate_native_constructor_desc()...;
@@ -3607,7 +3608,7 @@ set_is_type:
 	private enumerate_operators_sections(): {string: {DocSection...}} {
 		local result: {string: {DocSection...}} = Dict();
 		for (local s: allsections) {
-			for (local name,opsec: s.enumerate_opsections()) {
+			for (local name, opsec: s.enumerate_opsections()) {
 				local lst: {DocSection...} = result.get(name);
 				if (lst is none)
 					result[name] = lst = [];
@@ -3621,27 +3622,27 @@ set_is_type:
 				local cls = deemon.Type.__class__(object);
 				local ops = cls.operators;
 				if (cls.hassuperconstructor && "constructor" !in result)
-					result["constructor"] = (DocSection(this,"constructor->!S"),);
-				for (local name,addr: ops) {
+					result["constructor"] = (DocSection(this, "constructor->!S"),);
+				for (local name, addr: ops) {
 					if (name !in result) {
 						if (ctab[addr] is bound) {
 							local fun = ctab[addr];
 							if (fun is deemon.Function) {
 								File.Writer resdoc;
 								resdoc << name;
-								generate_function_params(resdoc,fun);
+								generate_function_params(resdoc, fun);
 								resdoc << "->";
 								local defl = operator_defaults.get(name);
 								if (defl !is none) {
-									local rt = find_nonescaped(defl,"->");
+									local rt = find_nonescaped(defl, "->");
 									resdoc << defl.substr(rt + 2);
 								}
-								result[name] = (DocSection(this,resdoc.string),);
+								result[name] = (DocSection(this, resdoc.string),);
 							} else {
 								result[name] = Tuple(autogenerate_opdecl(name));
 							}
 						} else {
-							result[name] = (DocSection(this,name + "->!D"),);
+							result[name] = (DocSection(this, name + "->!D"),);
 						}
 					}
 				}
@@ -3672,8 +3673,8 @@ set_is_type:
 	private enumerate_operators(): {Doc...} {
 		if (m_operator_sections !is bound)
 			m_operator_sections = enumerate_operators_sections();
-		for (local name,sect: m_operator_sections)
-			yield Doc(this,"op:" + name,sect);
+		for (local name, sect: m_operator_sections)
+			yield Doc(this, "op:" + name, sect);
 		/* TODO: Enumerate operators implemented by the type,
 		 *       but not included in documentation strings
 		 *      (aka `x !in m_operator_sections.keys()') */
@@ -3693,10 +3694,10 @@ set_is_type:
 		    decl_object !is Module)
 			decl_object = type decl_object;
 		if (name.startswith("i:"))
-			return Attribute.exists(my_object,name[2:],"i",decl: decl_object);
+			return Attribute.exists(my_object, name[2:], "i", decl: decl_object);
 		if (name.startswith("c:"))
-			return Attribute.exists(my_object,name[2:],"i","",decl: decl_object);
-		return Attribute.exists(my_object,name,decl: decl_object);
+			return Attribute.exists(my_object, name[2:], "i", "", decl: decl_object);
+		return Attribute.exists(my_object, name, decl: decl_object);
 	}
 
 	@@Enumerate all child nodes of @this documentation node
@@ -3715,7 +3716,7 @@ set_is_type:
 		for (local x: enumattr(my_object)) {
 			if (x.decl !== decl_object)
 				break;
-			yield Doc(this,x);
+			yield Doc(this, x);
 		}
 	}
 
@@ -3729,7 +3730,7 @@ set_is_type:
 			print fp: "-"*80;
 			for (local seg: sec.segments) {
 				if (seg is Declaration) {
-					print fp: ">>",kind,"",;
+					print fp: ">>", kind, "",;
 				}
 				print fp: seg;
 			}

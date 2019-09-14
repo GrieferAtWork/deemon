@@ -74,7 +74,7 @@ class GenConfig {
 
 class PyAst {
 	@@The location of @this AST
-	public member location: (string,int,int);
+	public member location: (string, int, int);
 	this = default;
 
 	@@Enumerate the names of all of the symbols used by this AST
@@ -137,6 +137,7 @@ class PyAst {
 		out << "\n";
 	}
 }
+
 class PyAstComment: PyAst {
 	final public member text: string;
 	this = default;
@@ -177,6 +178,7 @@ class PyAstComment: PyAst {
 			--config.indent;
 	}
 }
+
 class PyAstMultiple: PyAst {
 	@@The content branches of @this ast
 	final public member branches: {PyAst...};
@@ -223,13 +225,13 @@ class PyAstMultiple: PyAst {
 			++config.out_line;
 			++config.indent;
 			for (local b: branches)
-				b.generate(out,config,false);
+				b.generate(out, config, false);
 			--config.indent;
 			out << "})";
 		} else {
 			local old_isbasescope;
 			if (!branches || branches.first.location !is bound)
-				this.generate_line_directive(out,config);
+				this.generate_line_directive(out, config);
 			old_isbasescope = config.isbasescope;
 			if (!old_isbasescope) {
 				out << "\t" * config.indent << "{\n";
@@ -238,7 +240,7 @@ class PyAstMultiple: PyAst {
 			}
 			config.isbasescope = false;
 			for (local b: branches)
-				b.generate(out,config,false);
+				b.generate(out, config, false);
 			config.isbasescope = old_isbasescope;
 			if (!old_isbasescope) {
 				--config.indent;
@@ -250,14 +252,14 @@ class PyAstMultiple: PyAst {
 }
 
 
-function need_space(a,b) {
+function need_space(a, b) {
 	final local singletok = { "(", ")", "[", "]", "{", "}", "\"", "\'" };
 	final local reqspace = { "=" };
 	if (a in singletok || b in singletok)
 		return false;
 	if (a in reqspace || b in reqspace)
 		return true;
-	if (a in [":",","])
+	if (a in [":", ","])
 		return true;
 	return a.issymcont() == b.issymcont();
 }
@@ -270,20 +272,20 @@ class PyAstExpression: PyAst {
 
 	public function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (!as_expression) {
-			this.generate_line_directive(out,config);
+			this.generate_line_directive(out, config);
 			out << "\t" * config.indent;
 		}
 		local last_string = "";
 		for (local x: parts) {
 			if (x !is string) {
 				File.Writer tempfp;
-				x.generate(tempfp,config,true);
+				x.generate(tempfp, config, true);
 				x = tempfp.string;
 			}
 			if (!x)
 				continue;
 			if (last_string &&
-			    need_space(last_string.last,x.first))
+			    need_space(last_string.last, x.first))
 				out << " ";
 			last_string = x;
 			out << x;
@@ -312,14 +314,14 @@ class PyAstFor: PyAst {
 	}
 
 	function generate(out: File, config: GenConfig, as_expression: bool) {
-		this.generate_line_directive(out,config);
+		this.generate_line_directive(out, config);
 		local ind = "\t" * config.indent;
 		out << ind << "for (";
 		if (as_expression)
 			out << "local ";
 		out << ",".join(used_symbols);
 		out << ": ";
-		iter.generate(out,config,true);
+		iter.generate(out, config, true);
 		out << ") ";
 		local o;
 		if (!as_expression) {
@@ -330,7 +332,7 @@ class PyAstFor: PyAst {
 			config.isbasescope = true;
 		}
 		if (loop is bound)
-			loop.generate(out,config,as_expression);
+			loop.generate(out, config, as_expression);
 		else if (as_expression)
 			out << "none";
 		if (!as_expression) {
@@ -362,17 +364,17 @@ class PyAstWhile: PyAst {
 			++config.out_line;
 			++config.indent;
 		}
-		this.generate_line_directive(out,config);
+		this.generate_line_directive(out, config);
 		local ind = "\t" * config.indent;
 		out << ind << "while (";
-		cond.generate(out,config,true);
+		cond.generate(out, config, true);
 		out << ") {\n";
 		++config.out_line;
 		++config.indent;
 		local o = config.isbasescope;
 		config.isbasescope = true;
 		if (loop is bound)
-			loop.generate(out,config,false);
+			loop.generate(out, config, false);
 		--config.indent;
 		out << "\t" * config.indent << "}\n";
 		++config.out_line;
@@ -404,33 +406,33 @@ class PyAstIf: PyAst {
 
 	function generate(out: File, config: GenConfig, as_expression: bool) {
 		if (as_expression) {
-			cond.generate(out,config,true);
+			cond.generate(out, config, true);
 			out << " ? ";
 			if (tt is bound)
-				tt.generate(out,config,true);
+				tt.generate(out, config, true);
 			else {
 				out << "none";
 			}
 			if (ff is bound) {
 				out << " : ";
-				ff.generate(out,config,true);
+				ff.generate(out, config, true);
 			}
 		} else {
-			this.generate_line_directive(out,config);
+			this.generate_line_directive(out, config);
 			local ind = "\t" * config.indent;
 			out << ind << "if (";
-			cond.generate(out,config,true);
+			cond.generate(out, config, true);
 			out << ") {\n";
 			++config.out_line;
 			++config.indent;
 			local o = config.isbasescope;
 			config.isbasescope = true;
 			if (tt is bound)
-				tt.generate(out,config,false);
+				tt.generate(out, config, false);
 			if (ff is bound) {
 				out << "\t" * (config.indent - 1) << "} else {\n";
 				++config.out_line;
-				ff.generate(out,config,false);
+				ff.generate(out, config, false);
 			}
 			--config.indent;
 			out << "\t" * config.indent << "}\n";
@@ -448,7 +450,7 @@ class PyAstDef: PyAst {
 	final public member argname_varargs: string;
 	@@Name of the varargs argument, or unbound if undefined
 	final public member argname_varkwds: string;
-	@@List of arguments as tuples (name,default-value-or-none)
+	@@List of arguments as tuples (name, default-value-or-none)
 	final public member arguments: {string: PyAst | none};
 	@@The body of the function
 	final public member body: PyAst;
@@ -461,7 +463,7 @@ class PyAstDef: PyAst {
 
 	public property child_branches: {PyAst...} = {
 		get(): {PyAst...} {
-			for (local none,d: arguments) {
+			for (local none, d: arguments) {
 				if (d !is none)
 					yield d;
 			}
@@ -470,7 +472,7 @@ class PyAstDef: PyAst {
 	}
 	public property child_branches_samefunc: {PyAst...} = {
 		get(): {PyAst...} {
-			for (local none,d: arguments) {
+			for (local none, d: arguments) {
 				if (d !is none)
 					yield d;
 			}
@@ -485,7 +487,7 @@ class PyAstDef: PyAst {
 	function generate(out: File, config: GenConfig, as_expression: bool) {
 		local need_semi = false;
 		if (!as_expression) {
-			this.generate_line_directive(out,config);
+			this.generate_line_directive(out, config);
 			out << "\t" * config.indent;
 		}
 		if (name is bound && !as_expression) {
@@ -501,7 +503,7 @@ class PyAstDef: PyAst {
 			out << "(";
 		}
 		local is_first = true;
-		for (local name,defl: arguments) {
+		for (local name, defl: arguments) {
 			if (!is_first) {
 				out << ", ";
 			}
@@ -509,7 +511,7 @@ class PyAstDef: PyAst {
 			out << name;
 			if (defl !is none) {
 				out << " = ";
-				defl.generate(out,config,true);
+				defl.generate(out, config, true);
 			}
 		}
 		if (argname_varargs is bound) {
@@ -548,7 +550,7 @@ skip_arguments:
 			out << ";\n";
 			++config.out_line;
 		}
-		body.generate(out,config,false);
+		body.generate(out, config, false);
 		--config.indent;
 		if (!as_expression)
 			out << "\t" * config.indent;
@@ -761,11 +763,11 @@ again_primary:
 			} else if (kwd in exceptions_list) {
 				kwd = "({} from python.exceptions)".format({ kwd });
 			} else {
-				kwd = builtins_map.get(kwd,kwd);
+				kwd = builtins_map.get(kwd, kwd);
 			}
 			parts.append(kwd);
 			next();
-			if (kwd !in ["str","repr","type"]) {
+			if (kwd !in ["str", "repr", "type"]) {
 				if (tok == "=" && inargs) {
 					/* Keyword label */
 					parts.append(":");
@@ -784,11 +786,11 @@ do_suffix:
 		switch (kind) {
 		case TOK_SINGLE:
 		case TOK_KEYWORD:
-			if (tok in ["+","-","*","/","<<",">>","<=",">=",
-			            "==","!=","<",">","===","!===","in",
-			            "is","%","&","^","|","&&","||","**",
-			            "+=","-=","*=","/=","%=","&=","|=",
-			            "^=","<<=",">>=","**="]) {
+			if (tok in ["+", "-", "*", "/", "<<", ">>", "<=", ">=",
+			            "==", "!=", "<", ">", "===", "!===", "in",
+			            "is", "%", "&", "^", "|", "&&", "||", "**",
+			            "+=", "-=", "*=", "/=", "%=", "&=", "|=",
+			            "^=", "<<=", ">>=", "**="]) {
 				parts.append(tok);
 				next();
 				goto again_primary;
@@ -909,7 +911,7 @@ done:
 				next();
 				defl = parse_expression();
 			}
-			yield (name,defl);
+			yield (name, defl);
 			if (tok != ",")
 				break;
 			next();
@@ -919,7 +921,7 @@ done:
 	final function parse_root_statements(): PyAst {
 		local asts = [];
 		while (tok) {
-			while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+			while (tok in [TOK_LF, TOK_INDENT, TOK_DEDENT])
 				next();
 			if (!tok)
 				break;
@@ -947,7 +949,7 @@ done:
 	final function parse_statement_block(): PyAst {
 		local loc = location;
 		local escape_indent = indent;
-		while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+		while (tok in [TOK_LF, TOK_INDENT, TOK_DEDENT])
 			next();
 		local asts = [];
 		if (tok == "pass") {
@@ -956,7 +958,7 @@ done:
 				next();
 			} else {
 				skip("\n");
-				while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+				while (tok in [TOK_LF, TOK_INDENT, TOK_DEDENT])
 					next();
 				if (indent > escape_indent)
 					err("Indentation too large after `pass'");
@@ -976,7 +978,7 @@ done:
 				else {
 					asts.append(st);
 				}
-				while (tok in [TOK_LF,TOK_INDENT,TOK_DEDENT])
+				while (tok in [TOK_LF, TOK_INDENT, TOK_DEDENT])
 					next();
 			}
 		}
@@ -1143,14 +1145,14 @@ again:
 		return result;
 	}
 
-	@@Return a triple (filename,line,column) (1-based)
+	@@Return a triple (filename, line, column) (1-based)
 	public final property location: (string,int,int) = {
-		get(): (string,int,int) {
-			local line_start = text.rfind("\n",0,tokstart);
+		get(): (string, int, int) {
+			local line_start = text.rfind("\n", 0, tokstart);
 			if (line_start < 0)
 				line_start = 0;
-			local lineno = text.count("\n",0,tokstart);
-			return (filename,lineno + 1,(tokstart - line_start) + 1);
+			local lineno = text.count("\n", 0, tokstart);
+			return (filename, lineno + 1, (tokstart - line_start) + 1);
 		}
 	}
 
@@ -1246,8 +1248,8 @@ again_scan_newline:
 		}
 		switch (ch) {
 		case "*":
-			local sub = text.substr(tokend + 1,tokend + 2);
-			if (sub in ["*","="]) {
+			local sub = text.substr(tokend + 1, tokend + 2);
+			if (sub in ["*", "="]) {
 				tok = "*" + sub;
 				kind = TOK_SINGLE;
 				tokend += 2;
@@ -1255,11 +1257,11 @@ again_scan_newline:
 			}
 			break;
 		case ">":
-			local sub = text.substr(tokend + 1,tokend + 2);
-			if (sub in [">","="]) {
+			local sub = text.substr(tokend + 1, tokend + 2);
+			if (sub in [">", "="]) {
 				tok = ">" + sub;
 				if (sub == ">") {
-					local sub2 = text.substr(tokend + 2,tokend + 3);
+					local sub2 = text.substr(tokend + 2, tokend + 3);
 					if (sub2 in ["="]) {
 						tok += sub2;
 						++tokend;
@@ -1271,11 +1273,11 @@ again_scan_newline:
 			}
 			break;
 		case "<":
-			local sub = text.substr(tokend + 1,tokend + 2);
-			if (sub in ["<","="]) {
+			local sub = text.substr(tokend + 1, tokend + 2);
+			if (sub in ["<", "="]) {
 				tok = "<" + sub;
 				if (sub == "<") {
-					local sub2 = text.substr(tokend + 2,tokend + 3);
+					local sub2 = text.substr(tokend + 2, tokend + 3);
 					if (sub2 in ["="]) {
 						tok += sub2;
 						++tokend;
@@ -1287,7 +1289,7 @@ again_scan_newline:
 			}
 			break;
 		case "=":
-			local sub = text.substr(tokend + 1,tokend + 2);
+			local sub = text.substr(tokend + 1, tokend + 2);
 			if (sub in ["="]) {
 				tok = "<" + sub;
 				kind = TOK_SINGLE;
@@ -1296,7 +1298,7 @@ again_scan_newline:
 			}
 			break;
 		case "!":
-			local sub = text.substr(tokend + 1,tokend + 2);
+			local sub = text.substr(tokend + 1, tokend + 2);
 			if (sub in ["="]) {
 				tok = "<" + sub;
 				kind = TOK_SINGLE;
@@ -1313,12 +1315,12 @@ again_scan_newline:
 		case "#": {
 			local line_end;
 			++tokend;
-			line_end = text.find("\n",tokend);
+			line_end = text.find("\n", tokend);
 			tokend = line_end + 1;
 			if (tokend == 0)
 				tokend = len;
 			tok = "//{}\n".format({
-				text[tokstart + 1:line_end].replace("\\\n","")
+				text[tokstart + 1:line_end].replace("\\\n", "")
 			});
 			kind = TOK_COMMENT;
 			goto done;
@@ -1336,7 +1338,7 @@ again_scan_newline:
 					++tokend;
 				++tokend;
 			}
-			tok = text[tokstart:tokend].replace("\\\n","");
+			tok = text[tokstart:tokend].replace("\\\n", "");
 			kind = TOK_STRING;
 			goto done;
 		default:
@@ -1351,7 +1353,7 @@ again_symbol:
 				++tokend;
 				goto again_symbol;
 			}
-			tok = text[tokstart:tokend].replace("\\\n","");
+			tok = text[tokstart:tokend].replace("\\\n", "");
 			kind = TOK_KEYWORD;
 			goto done;
 		}
@@ -1368,7 +1370,7 @@ again_numeric:
 				++tokend;
 				goto again_numeric;
 			}
-			tok = text[tokstart:tokend].replace("\\\n","");
+			tok = text[tokstart:tokend].replace("\\\n", "");
 			kind = TOK_NUMBER;
 			goto done;
 		}
@@ -1398,7 +1400,7 @@ done:
 @@Convert python source code into deemon
 function convert(input?: File | string, output?: File, filename?: string, emitline: bool = false): File | string {
 	if (input !is bound)
-		input = File.open(filename,"r");
+		input = File.open(filename, "r");
 	local t;
 	if (input is string) {
 do_load_string_input:
@@ -1417,11 +1419,11 @@ do_load_string_input:
 	local ast = t.parse_root_statements();
 	local conf = GenConfig(emitline: emitline);
 	if (output is bound) {
-		ast.generate(output,conf,false);
+		ast.generate(output, conf, false);
 		return output;
 	}
 	File.Writer tempfp;
-	ast.generate(tempfp,conf,false);
+	ast.generate(tempfp, conf, false);
 	return tempfp.string;
 }
 
@@ -1442,7 +1444,7 @@ do_load_string_input:
 @@>glob["bar"]();     /* prints `30' */
 function exec(input?: File | string | Bytes, filename?: string, args..., **kwds) {
 	if (input !is bound)
-		input = File.open(filename,"r");
+		input = File.open(filename, "r");
 	local t;
 	if (input is string) {
 do_load_string_input:
@@ -1461,10 +1463,10 @@ do_load_string_input:
 	local ast = t.parse_root_statements();
 	local conf = GenConfig(emitline: false);
 	File.Writer tempfp;
-	ast.generate(tempfp,conf,false);
+	ast.generate(tempfp, conf, false);
 	import deemon;
 	/* Execute the converted code as deemon */
-	return deemon.exec(tempfp.string,args...,**kwds);
+	return deemon.exec(tempfp.string, args..., **kwds);
 }
 
 
@@ -1479,9 +1481,9 @@ if (!args) {
 	return 0;
 }
 if (args[0] == "--help") {
-	print "Usage:",[...][0];
-	print "      ",[...][0],"INPUT";
-	print "      ",[...][0],"-o","OUTPUT","INPUT";
+	print "Usage:", [...][0];
+	print "      ", [...][0], "INPUT";
+	print "      ", [...][0], "-o", "OUTPUT", "INPUT";
 	print "Example: deemon lib/py2dee.dee test.py > test.dee && deemon test.dee";
 	print "         Convert a python script to deemon and execute it";
 	return 1;
@@ -1499,29 +1501,14 @@ if (args) {
 		return 1;
 	}
 	infilename = args[0];
-	infile = File.open(infilename,"r");
+	infile = File.open(infilename, "r");
 }
 local outfile = File.stdout;
 if (outfilename)
-	outfile = File.open(outfilename,"w");
+	outfile = File.open(outfilename, "w");
 convert(
 	input: infile,
 	output: outfile,
 	filename: infilename,
 	emitline: true);
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif /* __MAIN__ */

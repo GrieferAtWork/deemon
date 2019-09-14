@@ -56,7 +56,7 @@ function suspend_thread(t: Thread) {
 		sync.post();
 		/* Wait until we're allowed to resume again. */
 		key.wait();
-	},pack());
+	}, pack());
 
 	/* Wait for the interrupt to be acknowledged. */
 	sync.wait();
