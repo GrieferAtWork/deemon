@@ -24,14 +24,14 @@ import * from deemon;
 @@>
 @@>@Overload
 @@>function foobar(x) {
-@@> print "Called with 1 argument:",x;
+@@>	print "Called with 1 argument:", x;
 @@>}
 @@>@foobar.register
-@@>function foobar(x,y) {
-@@> print "Called with 2 arguments:",x,y;
+@@>function foobar(x, y) {
+@@>	print "Called with 2 arguments:", x, y;
 @@>}
-@@>foobar(10);    /* First variant */
-@@>foobar(10,20); /* Second variant */
+@@>foobar(10);     /* First variant */
+@@>foobar(10, 20); /* Second variant */
 class Overload: Callable {
 
 	private member primary: Callable;
@@ -75,9 +75,9 @@ class Overload: Callable {
 		__stack local max = code.__argc_max__;
 		__stack local count = #overloads;
 		if (max >= count) {
-			overloads.resize(max + 1,invalid_overload);
+			overloads.resize(max + 1, invalid_overload);
 			__stack local prim_code = primary.__code__;
-			overloads.fill(prim_code.__argc_min__,prim_code.__argc_max__ + 1,primary);
+			overloads.fill(prim_code.__argc_min__, prim_code.__argc_max__ + 1, primary);
 		}
 		for (__stack local i: [min:max + 1])
 			overloads[i] = func;
@@ -93,11 +93,11 @@ class Overload: Callable {
 @@>
 @@>@Deprecated
 @@>function mydepr() {
-@@> print "In mydepr()";
+@@>	print "In mydepr()";
 @@>}
 @@>@Deprecated("Don't call me!")
 @@>function mydepr2() {
-@@> print "In mydepr2()";
+@@>	print "In mydepr2()";
 @@>}
 @@>
 @@>mydepr();  /* ... : Deprecated function `mydepr' called */
@@ -116,7 +116,7 @@ class Deprecated: Callable {
 	}
 	operator repr(): string {
 		if (m_message is bound)
-			return "Deprecated({!r},{!r})".format({ m_func, m_message });
+			return "Deprecated({!r}, {!r})".format({ m_func, m_message });
 		return "Deprecated({!r})".format({ m_func });
 	}
 
@@ -145,7 +145,7 @@ class Deprecated: Callable {
 					<< "' called";
 			}
 			if (m_message is bound)
-				print File.stderr: ":",m_message,;
+				print File.stderr: ":", m_message,;
 			print File.stderr:;
 		}
 		return m_func(args...);
@@ -187,7 +187,7 @@ class Synchronized: Callable {
 		return str m_func;
 	}
 	operator repr(): string {
-		return "Synchronized({!r},{!r})".format({ m_func, m_lock });
+		return "Synchronized({!r}, {!r})".format({ m_func, m_lock });
 	}
 
 	operator enter(): none {
@@ -307,8 +307,8 @@ do_del_total:
  * >> function foo(x: int, y: int): int {
  * >>     return x + y;
  * >> }
- * >> foo(10,20);    // Ok
- * >> foo(10,"foo"); // Error: Argument `y' must be an `int', but is actually a `string'
+ * >> foo(10, 20);    // Ok
+ * >> foo(10, "foo"); // Error: Argument `y' must be an `int', but is actually a `string'
  * TODO: Also extend the Overload annotation to look at argument
  *       types and try to overload depending on the argument types
  *       being passed.

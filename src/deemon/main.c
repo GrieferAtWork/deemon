@@ -84,6 +84,8 @@ DECL_BEGIN
 #   define DEE_VC_VERSION " 12.0 (VS 2013)"
 #elif _MSC_VER <= 1900
 #   define DEE_VC_VERSION " 14.0 (VS 2015)"
+#elif _MSC_VER <= 1916
+#   define DEE_VC_VERSION " 14.16 (VS 2017)"
 #else
 #   define DEE_VC_VERSION ""
 #endif

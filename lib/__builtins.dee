@@ -152,7 +152,7 @@ local __objects = deemon.List {
 	/* 0x005c */ operators.getrange,
 	/* 0x005d */ operators.setrange,
 	/* 0x005e */ operators.delrange,
-	/* 0x005f */ [](x,y) -> x is y,
+	/* 0x005f */ [](x, y) -> x is y,
 	/* 0x0060 */ operators.contains,
 	/* 0x0061 */ operators.getattr,
 	/* 0x0062 */ operators.delattr,
@@ -218,7 +218,7 @@ local __objects = deemon.List {
 	/* 0x009e */ [](x) -> fs.environ[x],
 	/* 0x009f */ [](x) -> x in fs.environ,
 	/* 0x00a0 */ [](x) -> fs.environ.operator del[](x),
-	/* 0x00a1 */ [](x,y) -> fs.environ.operator [](x,y),
+	/* 0x00a1 */ [](x, y) -> fs.environ.operator [](x, y),
 	/* 0x00a2 */ fs.headof,
 	/* 0x00a3 */ fs.tailof,
 	/* 0x00a4 */ fs.fileof,
@@ -229,18 +229,18 @@ local __objects = deemon.List {
 	/* 0x00a9 */ fs.abspath,
 	/* 0x00aa */ fs.relpath,
 	/* 0x00ab */ fs.joinpath,
-	/* 0x00ac */ [](x) -> fs.expand(x,"h"),
-	/* 0x00ad */ [](x) -> fs.expand(x,"vV"),
+	/* 0x00ac */ [](x) -> fs.expand(x, "h"),
+	/* 0x00ad */ [](x) -> fs.expand(x, "vV"),
 	/* 0x00ae */ [](path) -> fs.stat(path).st_atime,
 	/* 0x00af */ [](path) -> fs.stat(path).st_mtime,
 	/* 0x00b0 */ [](path) -> fs.stat(path).st_ctime,
-	/* 0x00b1 */ [](path) { local st = fs.stat(path); return (st.st_atime,st.st_ctime,st.st_mtime); },
+	/* 0x00b1 */ [](path) { local st = fs.stat(path); return (st.st_atime, st.st_ctime, st.st_mtime); },
 	/* 0x00b2 */ fs.isabs,
 	/* 0x00b3 */ fs.stat.isreg,
 	/* 0x00b4 */ fs.stat.isdir,
 	/* 0x00b5 */ fs.stat.islnk,
-	/* 0x00b6 */ [](path) { path = fs.inctrail(fs.expand(path,"pc")); return fs.driveof(path) == path; },
-	/* 0x00b7 */ [](path) { path = fs.inctrail(fs.expand(path,"pc")); return fs.driveof(path) == path; },
+	/* 0x00b6 */ [](path) { path = fs.inctrail(fs.expand(path, "pc")); return fs.driveof(path) == path; },
+	/* 0x00b7 */ [](path) { path = fs.inctrail(fs.expand(path, "pc")); return fs.driveof(path) == path; },
 	/* 0x00b8 */ fs.stat.ishidden,
 	/* 0x00b9 */ fs.stat.exists,
 	/* 0x00ba */ fs.remove,
@@ -251,7 +251,7 @@ local __objects = deemon.List {
 	/* 0x00bf */ fs.rename,
 	/* 0x00c0 */ fs.symlink,
 	/* 0x00c1 */ fs.readlink,
-	/* 0x00c2 */ [](expr,msg) { deemon.__assert(msg); },
+	/* 0x00c2 */ [](expr, msg) { deemon.__assert(msg); },
 	/* 0x00c3 */ fs.dir, /* __builtin_fs_opendir */
 	/* 0x00c4 */ fs.dir.Iterator,
 	/* 0x00c5 */ ctypes.memcpy,
@@ -441,10 +441,10 @@ local __objects = deemon.List {
 	/* 0x017D */ deemon.Error.ValueError.IndexError,
 	/* 0x017E */ deemon.HashSet,
 	/* 0x017F */ deemon.HashSet.Iterator,
-	/* 0x0180 */ [](path,val) -> fs.chtime(path,val,none,none),
-	/* 0x0181 */ [](path,val) -> fs.chtime(path,none,none,val),
-	/* 0x0182 */ [](path,val) -> fs.chtime(path,none,val,none),
-	/* 0x0183 */ [](path,at = none,ct = none,mt = none) -> fs.chtime(path,at,mt,ct),
+	/* 0x0180 */ [](path, val) -> fs.chtime(path, val, none, none),
+	/* 0x0181 */ [](path, val) -> fs.chtime(path, none, none, val),
+	/* 0x0182 */ [](path, val) -> fs.chtime(path, none, val, none),
+	/* 0x0183 */ [](path, at = none, ct = none, mt = none) -> fs.chtime(path, at, mt, ct),
 	/* 0x0184 */ ctypes.ArrayType,
 	/* 0x0185 */ ctypes.Array.Iterator,
 	/* 0x0186 */ files.Joined,
@@ -513,7 +513,7 @@ local __objects = deemon.List {
 	/* 0x01C5 */ fs.chmod,
 	/* 0x01C6 */ [](path) -> fs.stat(path).st_mode,
 	/* 0x01C7 */ fs.chown,
-	/* 0x01C8 */ [](path) { __stack local st = fs.stat(path); return (st.st_uid,st.st_gid); },
+	/* 0x01C8 */ [](path) { __stack local st = fs.stat(path); return (st.st_uid, st.st_gid); },
 	/* 0x01C9 */ fs.User, /* DeeBuiltinFunction___builtin_fs_uidof */
 	/* 0x01CA */ fs.Group, /* DeeBuiltinFunction___builtin_fs_gidof */
 	/* 0x01CB */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; },
@@ -530,14 +530,14 @@ local __objects = deemon.List {
 	/* 0x01D6 */ operators.hash, /* DeeBuiltinFunction___hash__ */
 	/* 0x01D7 */ deemon.__pooad, /* DeeBuiltinFunction___dual_posoradd__ */
 	/* 0x01D8 */ deemon.__neosb, /* DeeBuiltinFunction___dual_negorsub__ */
-	/* 0x01D9 */ [](a,b?) { if (b !is bound) return a.ind; return a * b; }, /* DeeBuiltinFunction___dual_dereformul__ */
-	/* 0x01DA */ [](a,b?) { if (b !is bound) return a.ref; return a & b; }, /* DeeBuiltinFunction___dual_reforand__ */
-	/* 0x01DB */ [](seq,a,b?) { if (b !is bound) return seq[a]; return seq[a:b]; }, /* DeeBuiltinFunction___dual_getitemorgetrange__ */
-	/* 0x01DC */ [](seq,a,b?) { if (b !is bound) return seq.operator del[](a); return seq.operator del[:](a,b); }, /* DeeBuiltinFunction___dual_delitemordelrange__ */
-	/* 0x01DD */ [](seq,a,b,c?) { if (c !is bound) return seq.operator[]=(a,b); return seq.operator [:](a,b,c); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
+	/* 0x01D9 */ [](a, b?) { if (b !is bound) return a.ind; return a * b; }, /* DeeBuiltinFunction___dual_dereformul__ */
+	/* 0x01DA */ [](a, b?) { if (b !is bound) return a.ref; return a & b; }, /* DeeBuiltinFunction___dual_reforand__ */
+	/* 0x01DB */ [](seq, a, b?) { if (b !is bound) return seq[a]; return seq[a:b]; }, /* DeeBuiltinFunction___dual_getitemorgetrange__ */
+	/* 0x01DC */ [](seq, a, b?) { if (b !is bound) return seq.operator del[](a); return seq.operator del[:](a, b); }, /* DeeBuiltinFunction___dual_delitemordelrange__ */
+	/* 0x01DD */ [](seq, a, b, c?) { if (c !is bound) return seq.operator[]=(a, b); return seq.operator [:](a, b, c); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
 	/* 0x01DE */ deemon.import_, /* DeeBuiltinFunction___builtin_dex */
 	/* 0x01DF */ operators.bool, /* DeeBuiltinFunction___bool__ */
-	/* 0x01E0 */ [](f,n,t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
+	/* 0x01E0 */ [](f, n, t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
 	/* 0x01E1 */ none, /* TODO: Add closure support to ctypes -- DeeBuiltinFunction___builtin_ff_closure */
 	/* 0x01E2 */ compat_util_attr.enumattr, /* DeeBuiltinFunction___builtin_enumattr */
 	/* 0x01E3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */

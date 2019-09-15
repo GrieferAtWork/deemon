@@ -48,18 +48,18 @@ class FTPClient {
 
 	this(sock: socket = none, verbose: bool = false) {
 		if (sock is none)
-			sock = socket("INET","STREAM","TCP");
+			sock = socket("INET", "STREAM", "TCP");
 		m_socket = sock;
 		m_verbose = verbose;
 	}
 
 	CONNECT(addr: string, port: int = 21): FTPClient {
-		m_socket.connect(addr,port);
+		m_socket.connect(addr, port);
 		local resp = m_socket.recv();
 		if (!resp.startswith("220 "))
 			throw NetError("Not an FTP server: {!r}".format({ resp }));
 		if (m_verbose)
-			print "CONNECT:",repr resp;
+			print "CONNECT:", repr resp;
 		return this;
 	}
 
@@ -69,7 +69,7 @@ class FTPClient {
 		if (!resp.startswith("331 "))
 			throw NetError("FTP login failed: {!r}".format({ resp }));
 		if (m_verbose)
-			print "USER:",repr resp;
+			print "USER:", repr resp;
 		return this;
 	}
 
@@ -79,7 +79,7 @@ class FTPClient {
 		if (!resp.startswith("230 "))
 			throw NetError("FTP password rejected: {!r}".format({ resp }));
 		if (m_verbose)
-			print "PASS:",repr resp;
+			print "PASS:", repr resp;
 		return this;
 	}
 
@@ -88,10 +88,10 @@ class FTPClient {
 		local resp = m_socket.recv();
 		if (!resp.startswith("227 "))
 			throw NetError("FTP passive mode failed: {!r}".format({ resp }));
-		local a,b,c,d,e,f = resp[resp.index("(")+1:].scanf("%d,%d,%d,%d,%d,%d")...;
-		m_passv_address = sockaddr("INET",a,b,c,d,(e << 8) | f);
+		local a, b, c, d, e, f = resp[resp.index("(")+1:].scanf("%d,%d,%d,%d,%d,%d")...;
+		m_passv_address = sockaddr("INET", a, b, c, d, (e << 8) | f);
 		if (m_verbose)
-			print "PASV:",repr resp;
+			print "PASV:", repr resp;
 		return this;
 	}
 
@@ -101,7 +101,7 @@ class FTPClient {
 		if (!resp.startswith("250 "))
 			throw NetError("FTP CWD failed: {!r}".format({ resp }));
 		if (m_verbose)
-			print "CWD:",repr resp;
+			print "CWD:", repr resp;
 		return this;
 	}
 
@@ -109,30 +109,30 @@ class FTPClient {
 		if (m_passv_address !is bound)
 			PASV();
 		m_socket.send(command);
-		local passive_socket = socket("INET","STREAM","TCP");
+		local passive_socket = socket("INET", "STREAM", "TCP");
 		passive_socket.connect(m_passv_address);
 		del m_passv_address;
 		local resp = m_socket.recv();
 		if (!resp.startswith("150 "))
 			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
 		if (m_verbose)
-			print command_name + ":",repr resp;
+			print command_name + ":", repr resp;
 		local result = recv_all(passive_socket);
 		passive_socket.close();
 		local resp = m_socket.recv();
 		if (!resp.startswith("226 "))
 			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
 		if (m_verbose)
-			print command_name + ":",repr resp;
+			print command_name + ":", repr resp;
 		return result;
 	}
 
 	LIST(): {Bytes...} {
-		return receive("LIST","LIST\r\n").rstrip().splitlines();
+		return receive("LIST", "LIST\r\n").rstrip().splitlines();
 	}
 
 	RETR(filename: string): Bytes {
-		return receive("RETR","RETR {}\r\n".format({ filename }));
+		return receive("RETR", "RETR {}\r\n".format({ filename }));
 	}
 
 

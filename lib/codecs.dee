@@ -66,8 +66,8 @@ local class CpCodec {
 			/* Create a mapping for translating unicode
 			 * characters to their encoded ordinals. */
 			cp_rev = Dict(
-				for (local ord,ch: enumerate(cp.ordinals))
-					(ch,string.chr(ord)));
+				for (local ord, ch: enumerate(cp.ordinals))
+					(ch, string.chr(ord)));
 		}
 		File.Writer writer;
 		for (local ch: data) {
@@ -129,17 +129,17 @@ local user_codecs = Dict();
 local function load_codec_module(name) {
 	/* Load the codec from a module. */
 	local codec_module = import("._codecs." + name);
-	if (hasattr(codec_module,"cp"))
+	if (hasattr(codec_module, "cp"))
 		return CpCodec(codec_module.operator . ("cp"));
-	if (hasattr(codec_module,"encode")) {
+	if (hasattr(codec_module, "encode")) {
 		local encode_function = codec_module.operator . ("encode");
 		local decode_function = none;
-		if (hasattr(codec_module,"decode"))
+		if (hasattr(codec_module, "decode"))
 			decode_function = codec_module.operator . ("decode");
-		return CustomCodec(encode_function,decode_function);
+		return CustomCodec(encode_function, decode_function);
 	}
-	if (hasattr(codec_module,"decode"))
-		return CustomCodec(none,codec_module.operator . ("decode"));
+	if (hasattr(codec_module, "decode"))
+		return CustomCodec(none, codec_module.operator . ("decode"));
 	unknown_codec(name);
 }
 
@@ -155,7 +155,7 @@ local function get_codec(name) {
 	} catch (FileNotFound) {
 		unknown_codec(name);
 	}
-	local was,old = loaded_codecs.setnew_ex(name,result)...;
+	local was, old = loaded_codecs.setnew_ex(name, result)...;
 	if (!was)
 		result = old;
 	return result;
@@ -170,9 +170,9 @@ local function get_codec(name) {
 function __encode(data, name: string, errors: string = "strict") {
 	local codec = get_codec(sanitize_codec_name(name));
 	try {
-		return codec.encode(data,errors);
+		return codec.encode(data, errors);
 	} catch (AttributeError) {
-		if (!hasattr(codec,"encode"))
+		if (!hasattr(codec, "encode"))
 			decode_unsupported();
 		throw;
 	}
@@ -183,9 +183,9 @@ function __encode(data, name: string, errors: string = "strict") {
 function __decode(data, name: string, errors: string = "strict") {
 	local codec = get_codec(sanitize_codec_name(name));
 	try {
-		return codec.decode(data,errors);
+		return codec.decode(data, errors);
 	} catch (AttributeError) {
-		if (!hasattr(codec,"decode"))
+		if (!hasattr(codec, "decode"))
 			decode_unsupported();
 		throw;
 	}
@@ -198,7 +198,7 @@ function __decode(data, name: string, errors: string = "strict") {
 @@will cause a :ValueError to be thrown
 @@@throw KeyError A codec that is matching the given @name has already been defined
 function register(name: string, codec: Object) {
-	if (!user_codecs.setnew(name,codec))
+	if (!user_codecs.setnew(name, codec))
 		throw KeyError("Codec {!r} has already been defined".format({ name }));
 }
 
@@ -206,7 +206,7 @@ function register(name: string, codec: Object) {
 @@Normalize (_NOT_ sanitize) a given codec name, the same way the deemon
 @@core does when the encode/decode functions of :string or :Bytes are invoked.
 local function normalize_codec_name(name: string): string {
-	name = name.casefold().replace("_","-");
+	name = name.casefold().replace("_", "-");
 	if (name.startswith("iso-"))
 		name = "iso"+name[4:];
 	else if (name.startswith("cp-")) {
@@ -226,8 +226,8 @@ local function normalize_codec_name(name: string): string {
 @@@param errors One of $"strict", $"ignore" or $"replace"
 function decode(data, name: string, errors: string = "strict") {
 	if (data is string || data is Bytes)
-		return data.decode(name,errors);
-	return __decode(data,normalize_codec_name(name),errors);
+		return data.decode(name, errors);
+	return __decode(data, normalize_codec_name(name), errors);
 }
 
 @@Transform @data according to @name
@@ -240,8 +240,8 @@ function decode(data, name: string, errors: string = "strict") {
 @@@param errors One of $"strict", $"ignore" or $"replace"
 function encode(data, name: string, errors: string = "strict") {
 	if (data is string || data is Bytes)
-		return data.encode(name,errors);
-	return __encode(data,normalize_codec_name(name),errors);
+		return data.encode(name, errors);
+	return __encode(data, normalize_codec_name(name), errors);
 }
 
 

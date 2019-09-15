@@ -21,13 +21,13 @@
 /*[[[deemon
 import * from deemon;
 for (local l: File.open("../../include/deemon/asm.h")) {
-	local name,id;
+	local name, id;
 	try {
-		name,id = l.scanf(" # define ASM%[^ ] 0x%[^ /\r\n]")...;
+		name, id = l.scanf(" # define ASM%[^ ] 0x%[^ /\r\n]")...;
 	} catch (...) {
 		continue;
 	}
-	print "final global ASM" + name,"=","0x"+id+";";
+	print "final global ASM" + name, "=", "0x"+id+";";
 }
 ]]]*/
 final global ASM_RET_NONE = 0x00;
@@ -402,20 +402,20 @@ import * from deemon;
 @@>import * from rt;
 @@>import * from rt.bytecode;
 @@>local fun = Function(Code(
-@@> text: code {
-@@>  ASM_PUSH_CONST,0x00,
-@@>  ASM16_PUSH_CONST,0x01,0x00,
-@@>  ASM_ADD,
-@@>  ASM_RET,
-@@> },
-@@> nstack: 2,
-@@> statics: { "foo", "bar" }
+@@>	text: code {
+@@>		ASM_PUSH_CONST, 0x00,
+@@>		ASM16_PUSH_CONST, 0x01, 0x00,
+@@>		ASM_ADD,
+@@>		ASM_RET,
+@@>	},
+@@>	nstack: 2,
+@@>	statics: { "foo", "bar" }
 @@>));
 @@>print fun(); /* "foobar" */
 function code(data: {int...}): Bytes {
 	File.Writer w;
 	for (local d: data) {
-		local b = d.tobytes(d.bytecount,"little",false);
+		local b = d.tobytes(d.bytecount, "little", false);
 		b.reverse();
 		/* Really ugly hack
 		 * TODO: Add 2 new file types `file.bytereader' and

@@ -21,17 +21,17 @@
 
 #include <deemon/api.h>
 
-#define BUILTIN(name,object,flags)
+#define BUILTIN(name, object, flags)
 #include "builtins.def"
 
 DECL_BEGIN
 
 enum{
-    /* Global object ids for builtin objects, as exported by the `deemon' module. */
-#define BUILTIN(name,object,flags)    id_##name,
-#define BUILTIN_ALIAS(name,alt,flags) /* nothing */
+	/* Global object ids for builtin objects, as exported by the `deemon' module. */
+#define BUILTIN(name, object, flags)    id_##name,
+#define BUILTIN_ALIAS(name, alt, flags) /* nothing */
 #include "builtins.def"
-    num_builtins_obj
+	num_builtins_obj
 };
 
 DECL_END
