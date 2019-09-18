@@ -92,6 +92,12 @@
 #define items() values
 #define values() items
 
+/* After the big typename=CamelCase refactoring, allow for backwards-compatibility
+ * of old code using the all-lowercase spelling of builtin types */
+#define writer   Writer /* file.writer */
+#define reader   Reader /* file.reader */
+#define iterator Iterator
+
 
 
 #if 0 /* Would interfere with stuff like `x,y = pipe.new()...;' */
