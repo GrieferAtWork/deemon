@@ -268,8 +268,8 @@ err:
 }
 
 PRIVATE struct type_with sema_with = {
-	/* .tp_enter = */ (int(DCALL *)(DeeObject *__restrict))&sema_enter,
-	/* .tp_leave = */ (int(DCALL *)(DeeObject *__restrict))&sema_leave
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&sema_enter,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&sema_leave
 };
 
 
@@ -299,7 +299,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 				TYPE_FIXED_ALLOCATOR(Semaphore)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sema_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sema_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -521,7 +521,7 @@ INTERN DeeTypeObject DeeMutex_Type = {
 				TYPE_FIXED_ALLOCATOR(Mutex)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&mutex_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mutex_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},

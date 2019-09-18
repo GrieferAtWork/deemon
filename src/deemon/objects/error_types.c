@@ -43,59 +43,59 @@
 DECL_BEGIN
 
 
-#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags, tp_base,                                        \
-                          tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor,                          \
-                          T, tp_dtor, tp_str, tp_visit,                                              \
-                          tp_methods, tp_getsets, tp_members,                                        \
-                          tp_class_members)                                                          \
-	{                                                                                                \
-		OBJECT_HEAD_INIT(&DeeType_Type),                                                             \
-		/* .tp_name     = */ tp_name,                                                                \
-		/* .tp_doc      = */ DOC(tp_doc),                                                            \
-		/* .tp_flags    = */ tp_flags,                                                               \
-		/* .tp_weakrefs = */ 0,                                                                      \
-		/* .tp_features = */ TF_NONE,                                                                \
-		/* .tp_base     = */ tp_base,                                                                \
-		/* .tp_init = */ {                                                                           \
-			{                                                                                        \
-				/* .tp_alloc = */ {                                                                  \
-					/* .tp_ctor      = */ (void *)(tp_ctor),                                         \
-					/* .tp_copy_ctor = */ (void *)(tp_copy_ctor),                                    \
-					/* .tp_deep_ctor = */ (void *)(tp_deep_ctor),                                    \
-					/* .tp_any_ctor  = */ (void *)(tp_any_ctor),                                     \
-					TYPE_FIXED_ALLOCATOR(T)                                                          \
-				}                                                                                    \
-			},                                                                                       \
-			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))(tp_dtor),                 \
-			/* .tp_assign      = */ NULL,                                                            \
-			/* .tp_move_assign = */ NULL                                                             \
-		},                                                                                           \
-		/* .tp_cast = */ {                                                                           \
-			/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),             \
-			/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),             \
-			/* .tp_bool = */ NULL                                                                    \
-		},                                                                                           \
-		/* .tp_call          = */ NULL,                                                              \
-		/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))(tp_visit), \
-		/* .tp_gc            = */ NULL,                                                              \
-		/* .tp_math          = */ NULL,                                                              \
-		/* .tp_cmp           = */ NULL,                                                              \
-		/* .tp_seq           = */ NULL,                                                              \
-		/* .tp_iter_next     = */ NULL,                                                              \
-		/* .tp_attr          = */ NULL,                                                              \
-		/* .tp_with          = */ NULL,                                                              \
-		/* .tp_buffer        = */ NULL,                                                              \
-		/* .tp_methods       = */ tp_methods,                                                        \
-		/* .tp_getsets       = */ tp_getsets,                                                        \
-		/* .tp_members       = */ tp_members,                                                        \
-		/* .tp_class_methods = */ NULL,                                                              \
-		/* .tp_class_getsets = */ NULL,                                                              \
-		/* .tp_class_members = */ tp_class_members                                                   \
+#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags, tp_base,                                          \
+                          tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor,                            \
+                          T, tp_dtor, tp_str, tp_visit,                                                \
+                          tp_methods, tp_getsets, tp_members,                                          \
+                          tp_class_members)                                                            \
+	{                                                                                                  \
+		OBJECT_HEAD_INIT(&DeeType_Type),                                                               \
+		/* .tp_name     = */ tp_name,                                                                  \
+		/* .tp_doc      = */ DOC(tp_doc),                                                              \
+		/* .tp_flags    = */ tp_flags,                                                                 \
+		/* .tp_weakrefs = */ 0,                                                                        \
+		/* .tp_features = */ TF_NONE,                                                                  \
+		/* .tp_base     = */ tp_base,                                                                  \
+		/* .tp_init = */ {                                                                             \
+			{                                                                                          \
+				/* .tp_alloc = */ {                                                                    \
+					/* .tp_ctor      = */ (void *)(tp_ctor),                                           \
+					/* .tp_copy_ctor = */ (void *)(tp_copy_ctor),                                      \
+					/* .tp_deep_ctor = */ (void *)(tp_deep_ctor),                                      \
+					/* .tp_any_ctor  = */ (void *)(tp_any_ctor),                                       \
+					TYPE_FIXED_ALLOCATOR(T)                                                            \
+				}                                                                                      \
+			},                                                                                         \
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))(tp_dtor),                  \
+			/* .tp_assign      = */ NULL,                                                              \
+			/* .tp_move_assign = */ NULL                                                               \
+		},                                                                                             \
+		/* .tp_cast = */ {                                                                             \
+			/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
+			/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
+			/* .tp_bool = */ NULL                                                                      \
+		},                                                                                             \
+		/* .tp_call          = */ NULL,                                                                \
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))(tp_visit), \
+		/* .tp_gc            = */ NULL,                                                                \
+		/* .tp_math          = */ NULL,                                                                \
+		/* .tp_cmp           = */ NULL,                                                                \
+		/* .tp_seq           = */ NULL,                                                                \
+		/* .tp_iter_next     = */ NULL,                                                                \
+		/* .tp_attr          = */ NULL,                                                                \
+		/* .tp_with          = */ NULL,                                                                \
+		/* .tp_buffer        = */ NULL,                                                                \
+		/* .tp_methods       = */ tp_methods,                                                          \
+		/* .tp_getsets       = */ tp_getsets,                                                          \
+		/* .tp_members       = */ tp_members,                                                          \
+		/* .tp_class_methods = */ NULL,                                                                \
+		/* .tp_class_getsets = */ NULL,                                                                \
+		/* .tp_class_members = */ tp_class_members                                                     \
 	}
 
 
 #ifndef CONFIG_NO_OBJECT_SLABS
-LOCAL size_t DCALL get_slab_size(void(DCALL *tp_free)(void *__restrict ob)) {
+LOCAL size_t DCALL get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
 #define CHECK_SIZE(index, size)                 \
 	if (tp_free == &DeeObject_SlabFree##size || \
 	    tp_free == &DeeGCObject_SlabFree##size) \
@@ -346,7 +346,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 				/* .tp_any_ctor_kw = */ (void *)&error_init_kw,
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&error_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&error_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -356,7 +356,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

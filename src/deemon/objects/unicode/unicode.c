@@ -3609,7 +3609,7 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__re
 }
 
 
-LOCAL int(DCALL unicode_printer_putc8)(struct unicode_printer *__restrict self,
+LOCAL int (DCALL unicode_printer_putc8)(struct unicode_printer *__restrict self,
                                        uint8_t ch) {
 	size_t size_avail;
 	void *string = self->up_buffer;
@@ -3751,7 +3751,7 @@ done:
 	return result;
 }
 
-PUBLIC int(DCALL Dee_unicode_printer_putascii)(struct unicode_printer *__restrict self, char ch) {
+PUBLIC int (DCALL Dee_unicode_printer_putascii)(struct unicode_printer *__restrict self, char ch) {
 	ASSERTF((uint8_t)ch <= 0x7f,
 	        "The given ch (U+%.4I8x) is not an ASCII character",
 	        (uint8_t)ch);
@@ -3764,7 +3764,7 @@ PUBLIC int(DCALL Dee_unicode_printer_putascii)(struct unicode_printer *__restric
  * written data into a larger representation before appending `ch'.
  * @return:  0: Successfully appended the character.
  * @return: -1: An error occurred. */
-PUBLIC int(DCALL Dee_unicode_printer_putc)(struct unicode_printer *__restrict self, uint32_t ch) {
+PUBLIC int (DCALL Dee_unicode_printer_putc)(struct unicode_printer *__restrict self, uint32_t ch) {
 	void *string;
 	if (ch <= 0xff)
 		return unicode_printer_putc8(self, (uint8_t)ch);
@@ -3924,7 +3924,7 @@ err:
 }
 
 /* Append a given UTF-8 character. */
-PUBLIC int(DCALL Dee_unicode_printer_pututf8)(struct unicode_printer *__restrict self, uint8_t ch) {
+PUBLIC int (DCALL Dee_unicode_printer_pututf8)(struct unicode_printer *__restrict self, uint8_t ch) {
 	if (self->up_flags & UNICODE_PRINTER_FPENDING) {
 		/* Complete a pending UTF-8 multi-byte sequence. */
 		uint8_t curlen, reqlen;
@@ -3953,7 +3953,7 @@ PUBLIC int(DCALL Dee_unicode_printer_pututf8)(struct unicode_printer *__restrict
 	return unicode_printer_putc8(self, ch);
 }
 
-PUBLIC int(DCALL Dee_unicode_printer_pututf16)(struct unicode_printer *__restrict self, uint16_t ch) {
+PUBLIC int (DCALL Dee_unicode_printer_pututf16)(struct unicode_printer *__restrict self, uint16_t ch) {
 	if (self->up_flags & UNICODE_PRINTER_FPENDING) {
 		uint32_t ch32;
 		/* Complete a utf-16 surrogate pair. */
@@ -6074,7 +6074,7 @@ err_bytes_too_large:
 	goto err;
 }
 
-PUBLIC int(DCALL bytes_printer_putc)(struct bytes_printer *__restrict self, char ch) {
+PUBLIC int (DCALL bytes_printer_putc)(struct bytes_printer *__restrict self, char ch) {
 	/* Quick check: If the character is apart of the
 	 *              ASCII range, just append it as a byte. */
 	if likely((uint8_t)ch < 0x80)
@@ -6184,7 +6184,7 @@ err:
 
 
 /* Helper functions for manipulating strings that have already been created. */
-PUBLIC uint32_t(DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index) {
+PUBLIC uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index) {
 	union dcharptr str;
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -6208,7 +6208,7 @@ PUBLIC uint32_t(DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_
 	}
 }
 
-PUBLIC void(DCALL DeeString_SetChar)(DeeStringObject *__restrict self,
+PUBLIC void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self,
                                      size_t index, uint32_t value) {
 	union dcharptr str;
 	struct string_utf *utf;
@@ -6500,7 +6500,7 @@ check_1byte:
 	(ASSERT(WSTR_LENGTH(x)), --WSTR_LENGTH(x), \
 	 (x)[WSTR_LENGTH(x)] = 0)
 
-PUBLIC void(DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self) {
+PUBLIC void (DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self) {
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT(!DeeObject_IsShared(self));

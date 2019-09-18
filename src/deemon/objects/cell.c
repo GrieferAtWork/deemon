@@ -288,7 +288,7 @@ DEFINE_CELL_COMPARE(cell_ge, >=)
 #undef DEFINE_CELL_COMPARE
 
 PRIVATE struct type_cmp cell_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict)) NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict)) NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_lo,
@@ -530,7 +530,7 @@ PRIVATE struct type_method cell_methods[] = {
 };
 
 PRIVATE struct type_gc cell_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&cell_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cell_clear
 };
 
 PUBLIC DeeTypeObject DeeCell_Type = {
@@ -557,18 +557,18 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(Cell)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&cell_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cell_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int(DCALL *)(DeeObject *__restrict))&cell_deepload
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cell_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cell_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cell_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&cell_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cell_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cell_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cell_visit,
 	/* .tp_gc            = */ &cell_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &cell_cmp,

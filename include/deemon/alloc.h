@@ -281,9 +281,9 @@ DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void);                     \
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void);                  \
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void);                  \
-	DFUNDEF void(DCALL DeeSlab_Free##size)(void *__restrict ptr);                                     \
-	DFUNDEF void(DCALL DeeDbgSlab_Free##size)(void *__restrict ptr, char const *file, int line);      \
-	DFUNDEF void(DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
+	DFUNDEF void (DCALL DeeSlab_Free##size)(void *__restrict ptr);                                    \
+	DFUNDEF void (DCALL DeeDbgSlab_Free##size)(void *__restrict ptr, char const *file, int line);     \
+	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
 DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
 

@@ -237,17 +237,17 @@ INTERN DeeTypeObject USetIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(USetIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&usetiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&usetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&usetiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&usetiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&usetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&usetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &usetiterator_cmp,
@@ -1270,7 +1270,7 @@ PRIVATE struct type_method uset_methods[] = {
 };
 
 PRIVATE struct type_gc uset_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&uset_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&uset_clear
 };
 
 
@@ -1318,18 +1318,18 @@ INTERN DeeTypeObject USet_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeHashSetObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&USet_Fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&USet_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int(DCALL *)(DeeObject *__restrict))&uset_deepload
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&uset_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&uset_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&uset_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uset_visit,
 	/* .tp_gc            = */ &uset_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1456,17 +1456,17 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(URoSetIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&urosetiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urosetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&urosetiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&urosetiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urosetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urosetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &urosetiterator_cmp,

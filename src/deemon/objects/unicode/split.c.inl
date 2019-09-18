@@ -205,7 +205,7 @@ DEFINE_SPLITITER_CMP(splititer_ge, >=)
 #undef DEFINE_SPLITITER_CMP
 
 PRIVATE struct type_cmp splititer_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&splititer_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&splititer_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&splititer_lo,
@@ -252,14 +252,14 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&splititer_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&splititer_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
@@ -459,14 +459,14 @@ INTERN DeeTypeObject StringSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&split_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&split_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&split_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -511,7 +511,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&split_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -731,20 +731,20 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ (int(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&lineiter_copy,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&lineiter_copy,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(LineSplitIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
@@ -827,14 +827,14 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(LineSplit)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&linesplit_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&linesplit_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&linesplit_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&linesplit_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */

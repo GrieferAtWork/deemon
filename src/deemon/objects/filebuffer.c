@@ -1776,7 +1776,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 					TYPE_FIXED_ALLOCATOR(Buffer)
 				}
 			},
-			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&buffer_fini,
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&buffer_fini,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
 		},
@@ -1786,7 +1786,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 			/* .tp_bool = */ NULL
 		},
 		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&buffer_visit,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&buffer_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
@@ -1802,16 +1802,16 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&buffer_read,
-	/* .ft_write  = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&buffer_write,
-	/* .ft_seek   = */ (doff_t(DCALL *)(DeeFileObject *__restrict, doff_t, int))&buffer_seek,
-	/* .ft_sync   = */ (int(DCALL *)(DeeFileObject *__restrict))&buffer_sync,
-	/* .ft_trunc  = */ (int(DCALL *)(DeeFileObject *__restrict, dpos_t))&buffer_trunc,
-	/* .ft_close  = */ (int(DCALL *)(DeeFileObject *__restrict))&buffer_close,
+	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&buffer_read,
+	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&buffer_write,
+	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&buffer_seek,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_sync,
+	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&buffer_trunc,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_close,
 	/* .ft_pread  = */ NULL,
 	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ (int(DCALL *)(DeeFileObject *__restrict, dioflag_t))&buffer_getc,
-	/* .ft_ungetc = */ (int(DCALL *)(DeeFileObject *__restrict, int))&buffer_ungetc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&buffer_getc,
+	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&buffer_ungetc,
 	/* .ft_putc   = */ NULL
 };
 

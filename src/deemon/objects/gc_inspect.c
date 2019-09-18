@@ -130,14 +130,14 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int(DCALL *)(DeeObject *__restrict))&gcsetiterator_ctor,
-				/* .tp_copy_ctor = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&gcsetiterator_copy,
+				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&gcsetiterator_ctor,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&gcsetiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(GCSetIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&gcsetiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gcsetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -147,7 +147,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 		/* .tp_bool = */ NULL /* TODO */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcsetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcsetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL, /* TODO */
@@ -280,7 +280,7 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 				/* .tp_free      = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&gcset_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gcset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -288,10 +288,10 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&gcset_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&gcset_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

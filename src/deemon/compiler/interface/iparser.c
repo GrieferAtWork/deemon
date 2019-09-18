@@ -453,7 +453,7 @@ parser_setlfstmt(DeeCompilerWrapperObject *__restrict self,
 PRIVATE struct type_getset parser_getsets[] = {
 	{ "allowlfstatements",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&parser_getlfstmt, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&parser_setlfstmt,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&parser_setlfstmt,
 	  DOC("->?Dbool\n"
 	      "Get or set if line-feeds should be recognized as statement terminators "
 	      "(you must also enable line-feed token created in :Compiler.lexer.wantlf)\n"

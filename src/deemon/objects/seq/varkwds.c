@@ -210,7 +210,7 @@ INTERN DeeTypeObject BlackListVarkwdsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BlackListVarkwdsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&blvi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blvi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -220,7 +220,7 @@ INTERN DeeTypeObject BlackListVarkwdsIterator_Type = {
 		/* .tp_bool = */ NULL /* XXX: Could easily be implemented... */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blvi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blvi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &blvi_cmp,
@@ -915,7 +915,7 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
 				/* .tp_free      = */ (void *)NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&blv_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -923,10 +923,10 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&blv_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&blv_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blv_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blv_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1219,7 +1219,7 @@ INTERN DeeTypeObject BlackListMappingIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BlackListMappingIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&blmi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blmi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1229,7 +1229,7 @@ INTERN DeeTypeObject BlackListMappingIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blmi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blmi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &blmi_cmp,
@@ -1766,7 +1766,7 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 				/* .tp_free      = */ (void *)NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&blm_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blm_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1774,10 +1774,10 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&blm_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&blm_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blm_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blm_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

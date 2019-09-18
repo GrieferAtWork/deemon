@@ -251,7 +251,7 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ModuleExportsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&mei_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mei_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -261,7 +261,7 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mei_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mei_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &mei_cmp,
@@ -502,8 +502,8 @@ PRIVATE struct type_seq me_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&me_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_get,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_del,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&me_set
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_del,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&me_set
 };
 
 
@@ -545,17 +545,17 @@ INTERN DeeTypeObject ModuleExports_Type = {
 				TYPE_FIXED_ALLOCATOR(ModuleExports)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&me_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&me_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&me_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&me_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&me_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&me_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -716,7 +716,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ModuleGlobalsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&mgi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -726,7 +726,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mgi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mgi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &mgi_cmp,
@@ -854,8 +854,8 @@ PRIVATE struct type_seq mg_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mg_size,
 	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mg_get,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mg_del,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&mg_set
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mg_del,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&mg_set
 };
 
 PRIVATE struct type_member mg_class_members[] = {
@@ -881,17 +881,17 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 				TYPE_FIXED_ALLOCATOR(ModuleExports)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&mg_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&mg_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&mg_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mg_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mg_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

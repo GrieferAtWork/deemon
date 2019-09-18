@@ -249,7 +249,7 @@ INTERN DeeTypeObject SeqLocatorIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(LocatorIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&locatoriter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&locatoriter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -259,7 +259,7 @@ INTERN DeeTypeObject SeqLocatorIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&locatoriter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&locatoriter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &locatoriter_cmp,
@@ -422,7 +422,7 @@ INTERN DeeTypeObject SeqLocator_Type = {
 				TYPE_FIXED_ALLOCATOR(Locator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&locator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&locator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -432,7 +432,7 @@ INTERN DeeTypeObject SeqLocator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&locator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&locator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

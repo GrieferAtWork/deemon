@@ -998,8 +998,8 @@ deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 
 
 PRIVATE struct type_gc deq_gc = {
-	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict))&deq_clear,
-	/* .tp_pclear = */ (void(DCALL *)(DeeObject *__restrict, unsigned int))&deq_pclear
+	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&deq_clear,
+	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&deq_pclear
 };
 
 
@@ -1258,14 +1258,14 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_get,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_del,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&deq_set,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_del,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&deq_set,
 	/* XXX: range operators? (Also: Add a fallback delrange / setrange in `sequence' that calls
 	 *                              forward to member functions `insert(index:?Dint, ob)',
 	 *                             `erase(index:?Dint, count:?Dint = 1)') */
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_range_del = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_range_set = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
 	/* .tp_nsi       = */ &deq_nsi
 };
 
@@ -1573,18 +1573,18 @@ INTERN DeeTypeObject Deque_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(Deque)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&deq_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_assign,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_moveassign,
-		/* .tp_deepload    = */ (int(DCALL *)(DeeObject *__restrict))&deq_deepload
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deq_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_moveassign,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&deq_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&deq_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&deq_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deq_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deq_visit,
 	/* .tp_gc            = */ &deq_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1773,7 +1773,7 @@ PRIVATE struct type_getset deqiter_getsets[] = {
 	{ "index",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&deqiter_getindex_ob,
 	  NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deqiter_setindex_ob,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deqiter_setindex_ob,
 	  DOC("->?X2?Dint?N\n"
 	      "Get/set the index of @this iterator within its associated :Deque\n"
 	      "When :none, the iterator has been invalidated, possibly due to the "
@@ -1804,7 +1804,7 @@ INTERN DeeTypeObject DequeIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(DequeIteratorObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&deqiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deqiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1812,10 +1812,10 @@ INTERN DeeTypeObject DequeIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&deqiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&deqiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deqiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&deqiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ NULL,

@@ -1510,17 +1510,17 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SetIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&setiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&setiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&setiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&setiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&setiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&setiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &setiterator_cmp,
@@ -1874,7 +1874,7 @@ PRIVATE struct type_member set_class_members[] = {
 };
 
 PRIVATE struct type_gc set_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&set_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&set_clear
 };
 
 PUBLIC DeeTypeObject DeeHashSet_Type = {
@@ -1920,18 +1920,18 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(Set)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&set_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&set_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int(DCALL *)(DeeObject *__restrict))&set_deepload
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&set_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&set_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&set_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&set_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&set_visit,
 	/* .tp_gc            = */ &set_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

@@ -465,7 +465,7 @@ err:
 }
 
 PRIVATE struct type_cmp suiter_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_lo,
@@ -482,11 +482,11 @@ PRIVATE struct type_member suiter_members[] = {
 PRIVATE struct type_getset suiter_getsets[] = {
 	{ "__iter__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&suiter_get_iter, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_iter,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_iter,
 	  DOC("->?DIterator") },
 	{ "__in2nd__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&suiter_get_in2nd, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_in2nd,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_in2nd,
 	  DOC("->?Dbool") },
 	{ NULL }
 };
@@ -509,7 +509,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SetUnionIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&suiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&suiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -519,7 +519,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&suiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&suiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &suiter_cmp,
@@ -657,7 +657,7 @@ INTERN DeeTypeObject SetUnion_Type = {
 				TYPE_FIXED_ALLOCATOR(SetUnion)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -668,7 +668,7 @@ INTERN DeeTypeObject SetUnion_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -798,7 +798,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SetSymmetricDifferenceIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ssditer_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssditer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -808,7 +808,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssditer_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssditer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ssditer_cmp,
@@ -909,7 +909,7 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 				TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -920,7 +920,7 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1070,7 +1070,7 @@ DEFINE_SIITER_COMPARE(siiter_ge, DeeObject_CompareGeObject)
 #undef DEFINE_SIITER_COMPARE
 
 PRIVATE struct type_cmp siiter_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_lo,
@@ -1104,7 +1104,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SetIntersectionIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&siiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&siiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1114,7 +1114,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&siiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&siiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &siiter_cmp,
@@ -1220,7 +1220,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
 				TYPE_FIXED_ALLOCATOR(SetIntersection)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1231,7 +1231,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1309,7 +1309,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SetDifferenceIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sditer_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sditer_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1319,7 +1319,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sditer_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sditer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &sditer_cmp,
@@ -1424,7 +1424,7 @@ INTERN DeeTypeObject SetDifference_Type = {
 				TYPE_FIXED_ALLOCATOR(SetDifference)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1435,7 +1435,7 @@ INTERN DeeTypeObject SetDifference_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

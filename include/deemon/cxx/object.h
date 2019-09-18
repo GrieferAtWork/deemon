@@ -48,39 +48,39 @@ FORCELOCAL DREF DeeObject *(DCALL xincref)(DeeObject *obj) {
 	return obj;
 }
 
-FORCELOCAL void(DCALL decref)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (DCALL decref)(DREF DeeObject *__restrict obj) {
 	Dee_Decref(obj);
 }
 
-FORCELOCAL void(DCALL decref_likely)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (DCALL decref_likely)(DREF DeeObject *__restrict obj) {
 	Dee_Decref_likely(obj);
 }
 
-FORCELOCAL void(DCALL decref_unlikely)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (DCALL decref_unlikely)(DREF DeeObject *__restrict obj) {
 	Dee_Decref_unlikely(obj);
 }
 
-FORCELOCAL void(DCALL decref_nokill)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (DCALL decref_nokill)(DREF DeeObject *__restrict obj) {
 	Dee_DecrefNokill(obj);
 }
 
-FORCELOCAL void(DCALL decref_dokill)(DREF DeeObject *__restrict obj) {
+FORCELOCAL void (DCALL decref_dokill)(DREF DeeObject *__restrict obj) {
 	Dee_DecrefDokill(obj);
 }
 
-FORCELOCAL bool(DCALL decref_ifone)(DREF DeeObject *__restrict obj) {
+FORCELOCAL bool (DCALL decref_ifone)(DREF DeeObject *__restrict obj) {
 	return Dee_DecrefIfOne(obj);
 }
 
-FORCELOCAL bool(DCALL decref_ifnotone)(DREF DeeObject *__restrict obj) {
+FORCELOCAL bool (DCALL decref_ifnotone)(DREF DeeObject *__restrict obj) {
 	return Dee_DecrefIfNotOne(obj);
 }
 
-FORCELOCAL void(DCALL xdecref)(DREF DeeObject *obj) {
+FORCELOCAL void (DCALL xdecref)(DREF DeeObject *obj) {
 	Dee_XDecref(obj);
 }
 
-FORCELOCAL void(DCALL xdecref_nokill)(DREF DeeObject *obj) {
+FORCELOCAL void (DCALL xdecref_nokill)(DREF DeeObject *obj) {
 	Dee_XDecrefNokill(obj);
 }
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -115,24 +115,24 @@ FORCELOCAL DeeObject *(DCALL decref_nokill_traced)(DREF DeeObject *__restrict ob
 	return obj;
 }
 
-FORCELOCAL void(DCALL decref_dokill_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL void (DCALL decref_dokill_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
 	Dee_DecrefDokill_traced(obj, file, line);
 }
 
-FORCELOCAL bool(DCALL decref_ifone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL bool (DCALL decref_ifone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
 	return Dee_DecrefIfOne_traced(obj, file, line);
 }
 
-FORCELOCAL bool(DCALL decref_ifnotone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL bool (DCALL decref_ifnotone_traced)(DREF DeeObject *__restrict obj, char const *file, int line) {
 	return Dee_DecrefIfNotOne_traced(obj, file, line);
 }
 
-FORCELOCAL void(DCALL xdecref_traced)(DREF DeeObject *obj, char const *file, int line) {
+FORCELOCAL void (DCALL xdecref_traced)(DREF DeeObject *obj, char const *file, int line) {
 	if (obj)
 		Dee_Decref_traced(obj, file, line);
 }
 
-FORCELOCAL void(DCALL xdecref_nokill_traced)(DREF DeeObject *obj, char const *file, int line) {
+FORCELOCAL void (DCALL xdecref_nokill_traced)(DREF DeeObject *obj, char const *file, int line) {
 	if (obj)
 		Dee_DecrefNokill_traced(obj, file, line);
 }
@@ -159,40 +159,40 @@ inline ATTR_RETNONNULL DeeObject *(DCALL throw_if_null)(DeeObject *obj) {
 		throw_last_deemon_exception();
 	return obj;
 }
-inline unsigned int(DCALL throw_if_negative)(int x) {
+inline unsigned int (DCALL throw_if_negative)(int x) {
 	if unlikely(x < 0)
 		throw_last_deemon_exception();
 	return (unsigned int)x;
 }
-inline unsigned long(DCALL throw_if_negative)(long x) {
+inline unsigned long (DCALL throw_if_negative)(long x) {
 	if unlikely(x < 0l)
 		throw_last_deemon_exception();
 	return (unsigned long)x;
 }
 #ifdef __COMPILER_HAVE_LONGLONG
-inline unsigned long long(DCALL throw_if_negative)(long long x) {
+inline unsigned long long (DCALL throw_if_negative)(long long x) {
 	if unlikely(x < 0ll)
 		throw_last_deemon_exception();
 	return (unsigned long long)x;
 }
 #endif /* __COMPILER_HAVE_LONGLONG */
-inline unsigned int(DCALL throw_if_nonzero)(int x) {
+inline unsigned int (DCALL throw_if_nonzero)(int x) {
 	if unlikely(x != 0)
 		throw_last_deemon_exception();
 	return (unsigned int)x;
 }
-inline unsigned int(DCALL throw_if_minusone)(unsigned int x) {
+inline unsigned int (DCALL throw_if_minusone)(unsigned int x) {
 	if unlikely(x == (unsigned int)-1)
 		throw_last_deemon_exception();
 	return x;
 }
-inline unsigned long(DCALL throw_if_minusone)(unsigned long x) {
+inline unsigned long (DCALL throw_if_minusone)(unsigned long x) {
 	if unlikely(x == (unsigned long)-1l)
 		throw_last_deemon_exception();
 	return x;
 }
 #ifdef __COMPILER_HAVE_LONGLONG
-inline unsigned long long(DCALL throw_if_minusone)(unsigned long long x) {
+inline unsigned long long (DCALL throw_if_minusone)(unsigned long long x) {
 	if unlikely(x == (unsigned long long)-1ll)
 		throw_last_deemon_exception();
 	return x;

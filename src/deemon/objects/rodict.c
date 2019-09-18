@@ -272,24 +272,24 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int(DCALL *)(DeeObject *__restrict))&rodictiterator_ctor,
-				/* .tp_copy_ctor = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_copy,
+				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&rodictiterator_ctor,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int(DCALL *)(size_t, DeeObject **__restrict))&rodictiterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(size_t, DeeObject **__restrict))&rodictiterator_init,
 				TYPE_FIXED_ALLOCATOR(DictIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&rodictiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodictiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&rodictiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rodictiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodictiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodictiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &rodictiterator_cmp,
@@ -1004,7 +1004,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 				/* .tp_free      = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&rodict_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1012,10 +1012,10 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&rodict_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rodict_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

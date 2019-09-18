@@ -359,7 +359,7 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 				/* .tp_any_ctor_kw = */ &compiler_init,
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&compiler_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&compiler_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -369,7 +369,7 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&compiler_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&compiler_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

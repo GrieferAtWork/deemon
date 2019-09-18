@@ -287,14 +287,14 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&refaiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&refaiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&refaiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&refaiter_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -425,14 +425,14 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&relaiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&relaiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&relaiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&relaiter_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -574,14 +574,14 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&respiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&respiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&respiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&respiter_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -789,14 +789,14 @@ INTERN DeeTypeObject ReFindAll_Type = {
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&refa_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&refa_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&refa_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&refa_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -878,14 +878,14 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&rela_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rela_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&rela_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rela_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -1033,14 +1033,14 @@ INTERN DeeTypeObject ReSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&resp_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&resp_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&resp_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&resp_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */

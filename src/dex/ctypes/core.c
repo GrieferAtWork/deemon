@@ -339,7 +339,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeSTypeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&stype_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -411,7 +411,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeePointerTypeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ptype_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ptype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -421,7 +421,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -492,7 +492,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeLValueTypeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ltype_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ltype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -502,7 +502,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1772,7 +1772,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeArrayTypeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&atype_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&atype_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1782,7 +1782,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ptype_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1890,7 +1890,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 #ifdef CONFIG_NO_CFUNCTION
 		/* .tp_dtor        = */ NULL,
 #else /* CONFIG_NO_CFUNCTION */
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ftype_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ftype_fini,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
@@ -1904,7 +1904,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 #ifdef CONFIG_NO_CFUNCTION
 	/* .tp_visit         = */ NULL,
 #else /* CONFIG_NO_CFUNCTION */
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ftype_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ftype_visit,
 #endif /* !CONFIG_NO_CFUNCTION */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

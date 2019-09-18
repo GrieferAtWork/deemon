@@ -213,17 +213,17 @@ INTERN DeeTypeObject SeqTransformationIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(TransformationIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&transiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&transiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&transiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&transiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&transiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&transiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &transiter_cmp,
@@ -451,17 +451,17 @@ INTERN DeeTypeObject SeqTransformation_Type = {
 				TYPE_FIXED_ALLOCATOR(Transformation)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&trans_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&trans_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&trans_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&trans_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&trans_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&trans_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

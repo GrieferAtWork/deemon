@@ -509,7 +509,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *
 	                        : (DeeDbg_TryCalloc)(ITEMSIZE, file, line);
 }
 #undef DeeSlab_Free
-PUBLIC void(DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
+PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 	if (IS_SLAB_POINTER(ptr))
 		FUNC(DeeSlab_DoFree)(ptr);
 	else {
@@ -517,7 +517,7 @@ PUBLIC void(DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 	}
 }
 #undef DeeDbgSlab_Free
-PUBLIC void(DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr,
+PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr,
                                          char const *file, int line) {
 	if (IS_SLAB_POINTER(ptr))
 		FUNC(DeeSlab_DoFree)(ptr);
@@ -580,11 +580,11 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeSlab_Free),4),
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12),
                     ASSEMBLY_NAME(DeeDbg_Free,12));
 #else /* !__NO_DEFINE_ALIAS */
-PUBLIC void(DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
+PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 	(Dee_Free)(ptr);
 }
 
-PUBLIC void(DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file, int line) {
+PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file, int line) {
 	(DeeDbg_Free)(ptr, file, line);
 }
 #endif /* __NO_DEFINE_ALIAS */
@@ -599,11 +599,11 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free,4),
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
                     ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12));
 #else
-PUBLIC void(DCALL DeeObject_Free)(void *ptr) {
+PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 	(FUNC(DeeSlab_Free))(ptr);
 }
 
-PUBLIC void(DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
+PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	(FUNC(DeeDbgSlab_Free))(ptr, file, line);
 }
 #endif
@@ -614,11 +614,11 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free,4),
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
                     ASSEMBLY_NAME(DeeDbg_Free,12));
 #else
-PUBLIC void(DCALL DeeObject_Free)(void *ptr) {
+PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 	Dee_Free(ptr);
 }
 
-PUBLIC void(DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
+PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	DeeDbg_Free(ptr, file, line);
 }
 #endif

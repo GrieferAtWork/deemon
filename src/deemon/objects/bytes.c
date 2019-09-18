@@ -208,7 +208,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bytesiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytesiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -218,7 +218,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytesiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytesiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bytesiter_cmp,
@@ -1236,7 +1236,7 @@ PRIVATE struct type_math bytes_math = {
 };
 
 PRIVATE struct type_cmp bytes_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&bytes_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&bytes_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_lo,
@@ -1445,11 +1445,11 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_getitem,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_delitem,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_getrange,
-	/* .tp_range_del = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_delrange,
-	/* .tp_range_set = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setrange,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_delrange,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setrange,
 	/* .tp_nsi       = */ &bytes_nsi
 };
 
@@ -1550,16 +1550,16 @@ PRIVATE struct type_getset bytes_getsets[] = {
 	      "Alias for #iswritable, overriding :Sequence.ismutable") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_getfirst,
-	  (int(DCALL *)(DeeObject *__restrict))&bytes_delfirst,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setfirst,
+	  (int (DCALL *)(DeeObject *__restrict))&bytes_delfirst,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setfirst,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this Bytes object is empty\n"
 	      "@throw BufferError Attempted to modify the byte when @this Bytes object is not writable\n"
 	      "Access the first byte of @this Bytes object") },
 	{ DeeString_STR(&str_last),
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_getlast,
-	  (int(DCALL *)(DeeObject *__restrict))&bytes_dellast,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setlast,
+	  (int (DCALL *)(DeeObject *__restrict))&bytes_dellast,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setlast,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this Bytes object is empty\n"
 	      "@throw BufferError Attempted to modify the byte when @this Bytes object is not writable\n"
@@ -1588,7 +1588,7 @@ err_readonly:
 }
 
 PRIVATE struct type_buffer bytes_buffer = {
-	/* .tp_getbuf       = */ (int(DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&bytes_getbuf,
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&bytes_getbuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
@@ -2008,17 +2008,17 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 				/* .tp_free      = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bytes_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_assign,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytes_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_assign,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bytes_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bytes_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytes_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytes_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &bytes_math,
 	/* .tp_cmp           = */ &bytes_cmp,

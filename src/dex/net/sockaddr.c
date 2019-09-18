@@ -1772,7 +1772,7 @@ sockaddr_ne(DeeSockAddrObject *__restrict self,
 }
 
 PRIVATE struct type_cmp sockaddr_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&sockaddr_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&sockaddr_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sockaddr_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sockaddr_ne
 };

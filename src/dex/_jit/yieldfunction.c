@@ -304,7 +304,7 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 				/* .tp_free      = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&jy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -314,7 +314,7 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1959,7 +1959,7 @@ INTERN DeeTypeObject JITYieldFunctionIterator_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(JITYieldFunctionIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ji_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ji_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1969,7 +1969,7 @@ INTERN DeeTypeObject JITYieldFunctionIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ji_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ji_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

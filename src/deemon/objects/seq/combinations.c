@@ -343,7 +343,7 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&comiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -353,7 +353,7 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &comiter_cmp,
@@ -575,17 +575,17 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 				TYPE_FIXED_ALLOCATOR(Combinations)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&com_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&com_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&com_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&com_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -749,7 +749,7 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&comiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -759,7 +759,7 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &comiter_cmp,
@@ -826,17 +826,17 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 				TYPE_FIXED_ALLOCATOR(Combinations)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&com_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&com_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&com_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&com_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -989,7 +989,7 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&comiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -999,7 +999,7 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &comiter_cmp,
@@ -1070,17 +1070,17 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 				TYPE_FIXED_ALLOCATOR(Combinations)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&com_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&com_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&com_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&com_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

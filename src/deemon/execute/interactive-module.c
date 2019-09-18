@@ -1757,7 +1757,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(InteractiveModule)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&imod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&imod_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1767,7 +1767,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&imod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&imod_visit,
 	/* .tp_gc            = */ &imod_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

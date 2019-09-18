@@ -277,7 +277,7 @@ objmethod_ne(DeeObjMethodObject *__restrict self,
 }
 
 PRIVATE struct type_cmp objmethod_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&objmethod_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&objmethod_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&objmethod_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&objmethod_ne
 };
@@ -411,7 +411,7 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeObjMethodObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&objmethod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&objmethod_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -421,7 +421,7 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&objmethod_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&objmethod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&objmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &objmethod_cmp,
@@ -851,7 +851,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeKwObjMethodObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&kwobjmethod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwobjmethod_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -861,7 +861,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&kwobjmethod_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwobjmethod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwobjmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &kwobjmethod_cmp,
@@ -1023,7 +1023,7 @@ clsmethod_ge(DeeClsMethodObject *__restrict self,
 }
 
 PRIVATE struct type_cmp clsmethod_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&clsmethod_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsmethod_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_lo,
@@ -1114,7 +1114,7 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeClsMethodObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&clsmethod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsmethod_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1124,7 +1124,7 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&clsmethod_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &clsmethod_cmp,
@@ -1205,7 +1205,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeKwClsMethodObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&kwclsmethod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwclsmethod_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1215,7 +1215,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&kwclsmethod_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwclsmethod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwclsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &kwclsmethod_cmp,
@@ -1316,7 +1316,7 @@ clsproperty_ne(DeeClsPropertyObject *__restrict self,
 }
 
 PRIVATE struct type_cmp clsproperty_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&clsproperty_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsproperty_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsproperty_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsproperty_ne
 };
@@ -1557,7 +1557,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeClsPropertyObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&clsmethod_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsmethod_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1567,7 +1567,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&clsproperty_get_nokw,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &clsproperty_cmp,
@@ -1712,7 +1712,7 @@ DEFINE_CLSMEMBER_CMP(clsmember_ge, >=)
 #undef CLSMEMBER_CMP
 
 PRIVATE struct type_cmp clsmember_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&clsmember_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsmember_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_lo,
@@ -1782,7 +1782,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeClsMemberObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&clsmember_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clsmember_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1792,7 +1792,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&clsmember_get,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmember_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmember_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &clsmember_cmp,

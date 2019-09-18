@@ -1538,7 +1538,7 @@ INTERN DeeTypeObject ProcessThreadsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ProcessThreadsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&pti_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&pti_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -2046,40 +2046,40 @@ PRIVATE struct type_getset process_getsets[] = {
 #endif
 	{ "files", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_files },
 	{ "stdin", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_stdin,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_stdin,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_stdin,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdin,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_stdin,
 	  DOC("->?DFile\nGet or set the standard input stream used by the process") },
 	{ "stdout", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_stdout,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_stdout,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_stdout,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdout,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_stdout,
 	  DOC("->?DFile\nGet or set the standard output stream used by the process") },
 	{ "stderr", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_stderr,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_stderr,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_stderr,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_stderr,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_stderr,
 	  DOC("->?DFile\nGet or set the standard error stream used by the process") },
 	{ "pwd", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_pwd,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_pwd,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_pwd,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_pwd,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_pwd,
 	  DOC("->?DFile\nGet or set the process working directory used by the process") },
 	{ "exe", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_exe,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_exe,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_exe,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_exe,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_exe,
 	  DOC("->?Dstring\nThe filename of the image being executed by the process") },
 	{ "cmdline", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_cmdline,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_cmdline,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_cmdline,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_cmdline,
 	  DOC("->?Dstring\nThe commandline used to executed the process") },
 	{ "argv", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_argv,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_cmdline, /* Same thing! */
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_argv,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline, /* Same thing! */
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_argv,
 	  DOC("->?S?Dstring\nThe argument vector passed to the programms C-main() method") },
 	{ "cmd", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_cmdline,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_cmdline,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_cmdline,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_cmdline,
 	  DOC("->?Dstring\nDeprecated alias for #cmdline") },
 	{ "environ", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&process_get_environ,
-	  (int(DCALL *)(DeeObject *__restrict))&process_del_environ,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_environ,
+	  (int (DCALL *)(DeeObject *__restrict))&process_del_environ,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&process_set_environ,
 	  DOC("->?S?T2?Dstring?Dstring\nThe state of environment variables in the given process") },
 	/* Process environment control:
 	 * >> property memory -> file; // A file allowing read/write access to the process's VM
@@ -2175,7 +2175,7 @@ err_exe_noprinter:
 }
 
 PRIVATE struct type_gc process_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&process_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&process_clear
 };
 
 INTERN DeeTypeObject DeeProcess_Type = {
@@ -2208,7 +2208,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(Process)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&process_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&process_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -2218,7 +2218,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
 	/* .tp_gc            = */ &process_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

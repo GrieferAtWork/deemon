@@ -232,7 +232,7 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
 
 
 #define STACK_PACK_THRESHOLD 16
-INTERN int(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
+INTERN int (DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 	int32_t cid;
 	ASSERT_OBJECT(value);
 	if (DeeBool_Check(value)) {
@@ -880,7 +880,7 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_COLD int(DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
+PRIVATE ATTR_COLD int (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
 	ASSERT(sym->s_type == SYMBOL_TYPE_AMBIG);
 	return ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL, sym);
 }
@@ -1623,7 +1623,7 @@ err:
 	return -1;
 }
 
-INTERN int(DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
+INTERN int (DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
                                   struct ast *__restrict warn_ast) {
 	int32_t symid;
 	ASSERT(sym);

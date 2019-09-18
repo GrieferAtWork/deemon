@@ -243,7 +243,7 @@ DEFINE_WEAKREF_CMP(ob_weakref_ge, >=)
 #undef DEFINE_WEAKREF_CMP
 
 PRIVATE struct type_cmp ob_weakref_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&ob_weakref_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict))&ob_weakref_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_lo,
@@ -343,8 +343,8 @@ PRIVATE struct type_method ob_weakref_methods[] = {
 PRIVATE struct type_getset ob_weakref_getsets[] = {
 	{ "value",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ob_weakref_get,
-	  (int(DCALL *)(DeeObject *__restrict))&ob_weakref_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_set,
+	  (int (DCALL *)(DeeObject *__restrict))&ob_weakref_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_set,
 	  DOC("@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
 	      "@throw ValueError Attempted to set an object that does not support weak referencing\n"
 	      "Access to the referenced object") },
@@ -425,15 +425,15 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 				/* .tp_any_ctor_kw = */ (void *)&ob_weakref_init_kw
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_assign,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_moveassign,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ob_weakref_moveassign,
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&ob_weakref_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ob_weakref_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -507,9 +507,9 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 				TYPE_FIXED_ALLOCATOR(WeakRefAble)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&weakrefable_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&weakrefable_assign,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&weakrefable_moveassign,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&weakrefable_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&weakrefable_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&weakrefable_moveassign,
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {

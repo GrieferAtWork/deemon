@@ -3686,7 +3686,7 @@ err:
 	return NULL;
 }
 
-PUBLIC int(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
                                                dssize_t begin, DeeObject *__restrict end,
                                                DeeObject *__restrict value) {
 	LOAD_TP_SELF;
@@ -3723,7 +3723,7 @@ err:
 	return -1;
 }
 
-PUBLIC int(DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
                                              DeeObject *__restrict begin, dssize_t end,
                                              DeeObject *__restrict value) {
 	LOAD_TP_SELF;
@@ -3757,7 +3757,7 @@ err:
 	return -1;
 }
 
-PUBLIC int(DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self,
                                           dssize_t begin, dssize_t end,
                                           DeeObject *__restrict value) {
 	LOAD_TP_SELF;

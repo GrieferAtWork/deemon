@@ -300,7 +300,7 @@ PRIVATE struct type_seq scope_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_getitem,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_delitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_delitem,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
@@ -429,17 +429,17 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&scope_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&scope_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

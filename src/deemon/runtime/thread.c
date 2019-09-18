@@ -3386,8 +3386,8 @@ err:
 PRIVATE struct type_getset thread_getsets[] = {
 	{ "callback",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_callback_get,
-	  (int(DCALL *)(DeeObject *__restrict))&thread_callback_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callback_set,
+	  (int (DCALL *)(DeeObject *__restrict))&thread_callback_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callback_set,
 	  DOC("->?DCallable\n"
 	      "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
 	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3400,8 +3400,8 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "overwritten by sub-classes to provide an automatic and implicit thread-callback") },
 	{ "callargs",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_callargs_get,
-	  (int(DCALL *)(DeeObject *__restrict))&thread_callargs_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callargs_set,
+	  (int (DCALL *)(DeeObject *__restrict))&thread_callargs_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callargs_set,
 	  DOC("->?DTuple\n"
 	      "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
 	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3561,7 +3561,7 @@ DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE struct type_gc thread_gc = {
-	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict))&thread_clear
+	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&thread_clear
 };
 #endif
 
@@ -3608,7 +3608,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeThreadObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&thread_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&thread_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -3618,7 +3618,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
 	/* .tp_gc            = */ &thread_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

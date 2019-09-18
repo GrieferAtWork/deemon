@@ -215,14 +215,14 @@ INTERN struct type_getset compiler_getsets[] = {
 	      "Returns the parser (token to ast converter) of @this compiler") },
 	{ "scope",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_scope, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&compiler_set_scope,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&compiler_set_scope,
 	  DOC("->?AScope?Ert:Compiler\n"
 	      "@throw ValueError Attempted to set a scope who's compiler doesn't match @this\n"
 	      "@throw ReferenceError Attempted to set a scope not apart of the same base-scope as #basescope\n"
 	      "Get or set the current scope used for parsing new #{ast}s") },
 	{ "basescope",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_basescope, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&compiler_set_basescope,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&compiler_set_basescope,
 	  DOC("->?ABaseScope?Ert:Compiler\n"
 	      "@throw ValueError Attempted to set a scope who's compiler doesn't match @this\n"
 	      "@throw ReferenceError Attempted to set a scope not apart of the same root-scope as #rootscope\n"

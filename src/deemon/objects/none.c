@@ -166,19 +166,19 @@ PRIVATE struct type_math none_math = {
 	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_2,
 	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_2,
 	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_2,
-	/* .tp_inc         = */ (int(DCALL *)(DeeObject **__restrict))&none_i1,
-	/* .tp_dec         = */ (int(DCALL *)(DeeObject **__restrict))&none_i1,
-	/* .tp_inplace_add = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_sub = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_mul = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_div = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_mod = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_shl = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_shr = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_and = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_or  = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_xor = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_inplace_pow = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2
+	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&none_i1,
+	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&none_i1,
+	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_sub = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_div = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_mod = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_shl = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_shr = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&none_i2
 };
 
 PRIVATE struct type_cmp none_cmp = {
@@ -196,23 +196,23 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_2,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_2,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i3,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i3,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_3,
-	/* .tp_range_del = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i3,
-	/* .tp_range_set = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i4,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i3,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i4,
 };
 
 PRIVATE struct type_attr none_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_2,
-	/* .tp_delattr  = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2,
-	/* .tp_setattr  = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i3,
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&none_i3,
 	/* .tp_enumattr = */ &none_enumattr
 };
 
 PRIVATE struct type_with none_with = {
-	/* .tp_enter = */ (int(DCALL *)(DeeObject *__restrict))&none_i1,
-	/* .tp_leave = */ (int(DCALL *)(DeeObject *__restrict))&none_i1
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&none_i1,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&none_i1
 };
 
 PRIVATE int DCALL
@@ -322,8 +322,8 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 			}
 		},
 		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&none_i2
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ &none_str,

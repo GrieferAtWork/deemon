@@ -58,7 +58,7 @@ bool_bool(DeeObject *__restrict self) {
 }
 
 #if __SIZEOF_INT__ == __SIZEOF_POINTER__
-#define bool_hash (*(dhash_t(DCALL *)(DeeObject * __restrict))&bool_bool)
+#define bool_hash (*(dhash_t (DCALL *)(DeeObject * __restrict))&bool_bool)
 #else /* __SIZEOF_INT__ == __SIZEOF_POINTER__ */
 PRIVATE dhash_t DCALL
 bool_hash(DeeObject *__restrict self) {

@@ -417,14 +417,14 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringFindIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sfi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&sfi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sfi_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -462,14 +462,14 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringFindIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sfi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&scfi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&scfi_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -605,7 +605,7 @@ INTERN DeeTypeObject StringFind_Type = {
 				TYPE_FIXED_ALLOCATOR(StringFind)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -650,7 +650,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 				TYPE_FIXED_ALLOCATOR(StringFind)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},

@@ -402,19 +402,19 @@ PRIVATE struct type_math se_math = {
 	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_or,
 	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_xor,
 	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_pow,
-	/* .tp_inc         = */ (int(DCALL *)(DeeObject **__restrict))&se_inc,
-	/* .tp_dec         = */ (int(DCALL *)(DeeObject **__restrict))&se_dec,
-	/* .tp_inplace_add = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_add,
-	/* .tp_inplace_sub = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_sub,
-	/* .tp_inplace_mul = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_mul,
-	/* .tp_inplace_div = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_div,
-	/* .tp_inplace_mod = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_mod,
-	/* .tp_inplace_shl = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_shl,
-	/* .tp_inplace_shr = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_shr,
-	/* .tp_inplace_and = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_and,
-	/* .tp_inplace_or  = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_or,
-	/* .tp_inplace_xor = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_xor,
-	/* .tp_inplace_pow = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_pow
+	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&se_inc,
+	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&se_dec,
+	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_add,
+	/* .tp_inplace_sub = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_sub,
+	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_mul,
+	/* .tp_inplace_div = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_div,
+	/* .tp_inplace_mod = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_mod,
+	/* .tp_inplace_shl = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_shl,
+	/* .tp_inplace_shr = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_shr,
+	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_and,
+	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_or,
+	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_xor,
+	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_pow
 };
 
 PRIVATE struct type_cmp se_cmp = {
@@ -432,11 +432,11 @@ PRIVATE struct type_seq se_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_getitem,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_delitem,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_setitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_getrange,
-	/* .tp_range_del = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_delrange,
-	/* .tp_range_set = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_setrange
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_delrange,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_setrange
 };
 
 PRIVATE char const s_unhandled_leave_message[] = "Unhandled exception in `operator leave'";
@@ -496,8 +496,8 @@ err:
 }
 
 PRIVATE struct type_with se_with = {
-	/* .tp_enter = */ (int(DCALL *)(DeeObject *__restrict))&se_enter,
-	/* .tp_leave = */ (int(DCALL *)(DeeObject *__restrict))&se_leave
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&se_enter,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&se_leave
 };
 
 
@@ -547,9 +547,9 @@ se_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
 
 PRIVATE struct type_attr se_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&se_getattr,
-	/* .tp_delattr  = */ (int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&se_delattr,
-	/* .tp_setattr  = */ (int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict, DeeObject *__restrict))&se_setattr,
-	/* .tp_enumattr = */ (dssize_t(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&se_enumattr
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&se_delattr,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict, DeeObject *__restrict))&se_setattr,
+	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&se_enumattr
 };
 
 PRIVATE struct type_member se_members[] = {
@@ -576,17 +576,17 @@ INTERN DeeTypeObject SeqEach_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqEachBase)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&se_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_assign,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_moveassign
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&se_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_moveassign
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&se_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&se_bool
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&se_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &se_math,
 	/* .tp_cmp           = */ &se_cmp,
@@ -1000,19 +1000,19 @@ PRIVATE struct type_math seo_math = {
 	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_or,
 	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_xor,
 	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_pow,
-	/* .tp_inc         = */ (int(DCALL *)(DeeObject **__restrict))&seo_inc,
-	/* .tp_dec         = */ (int(DCALL *)(DeeObject **__restrict))&seo_dec,
-	/* .tp_inplace_add = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_add,
-	/* .tp_inplace_sub = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_sub,
-	/* .tp_inplace_mul = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_mul,
-	/* .tp_inplace_div = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_div,
-	/* .tp_inplace_mod = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_mod,
-	/* .tp_inplace_shl = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_shl,
-	/* .tp_inplace_shr = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_shr,
-	/* .tp_inplace_and = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_and,
-	/* .tp_inplace_or  = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_or,
-	/* .tp_inplace_xor = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_xor,
-	/* .tp_inplace_pow = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_pow
+	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&seo_inc,
+	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&seo_dec,
+	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_add,
+	/* .tp_inplace_sub = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_sub,
+	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_mul,
+	/* .tp_inplace_div = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_div,
+	/* .tp_inplace_mod = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_mod,
+	/* .tp_inplace_shl = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_shl,
+	/* .tp_inplace_shr = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_shr,
+	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_and,
+	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_or,
+	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_xor,
+	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_pow
 };
 
 PRIVATE struct type_cmp sew_cmp = {
@@ -1108,9 +1108,9 @@ DEFINE_SEW_BINARY(sew_getattr, OPERATOR_GETATTR)
 
 PRIVATE struct type_attr sew_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&sew_getattr,
-	/* .tp_delattr  = */ (int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&sew_delattr,
-	/* .tp_setattr  = */ (int(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict, DeeObject *__restrict))&sew_setattr,
-	/* .tp_enumattr = */ (dssize_t(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&sew_enumattr
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&sew_delattr,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict, DeeObject *__restrict))&sew_setattr,
+	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&sew_enumattr
 };
 
 
@@ -1253,17 +1253,17 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 				                       sizeof(SeqEachOperator))
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&seo_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_assign,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_moveassign
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_moveassign
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&sew_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&sew_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &seo_math,
 	/* .tp_cmp           = */ &sew_cmp,
@@ -1505,17 +1505,17 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqEachIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sewi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sewi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&sewi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sewi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sewi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sewi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &sewi_cmp,

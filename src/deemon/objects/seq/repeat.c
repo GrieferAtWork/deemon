@@ -315,11 +315,11 @@ err:
 PRIVATE struct type_getset repeatiter_getsets[] = {
 	{ "__iter__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&repeatiter_get_iter, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_iter,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_iter,
 	  DOC("->?DIterator") },
 	{ "__num__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&repeatiter_get_num, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_num,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_num,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -347,7 +347,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(RepeatIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&repeatiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -357,7 +357,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &repeatiter_cmp,
@@ -639,17 +639,17 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 				TYPE_FIXED_ALLOCATOR(Repeat)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&repeat_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeat_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&repeat_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&repeat_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeat_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeat_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -878,7 +878,7 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(RepeatItemIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&repeatitemiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatitemiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -888,7 +888,7 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatitemiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatitemiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &repeatitemiter_cmp,
@@ -1189,17 +1189,17 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
 				TYPE_FIXED_ALLOCATOR(RepeatItem)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&repeatitem_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatitem_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&repeatitem_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&repeatitem_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatitem_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatitem_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

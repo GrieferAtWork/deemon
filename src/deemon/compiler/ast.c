@@ -1231,7 +1231,7 @@ INTERN DeeTypeObject DeeAst_Type = {
 				TYPE_ALLOCATOR(&ast_tp_alloc, &ast_tp_free)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ast_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ast_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1241,7 +1241,7 @@ INTERN DeeTypeObject DeeAst_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ast_visit_impl,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ast_visit_impl,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

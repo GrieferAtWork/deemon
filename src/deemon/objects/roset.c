@@ -193,24 +193,24 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int(DCALL *)(DeeObject *__restrict))&rosetiterator_ctor,
-				/* .tp_copy_ctor = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_copy,
+				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&rosetiterator_ctor,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int(DCALL *)(size_t, DeeObject **__restrict))&rosetiterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(size_t, DeeObject **__restrict))&rosetiterator_init,
 				TYPE_FIXED_ALLOCATOR(SetIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&rosetiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rosetiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&rosetiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rosetiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rosetiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rosetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &rosetiterator_cmp,
@@ -706,7 +706,7 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 				/* .tp_free      = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&roset_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&roset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -714,10 +714,10 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&roset_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&roset_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&roset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&roset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

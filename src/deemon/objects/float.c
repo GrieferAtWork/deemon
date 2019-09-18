@@ -177,9 +177,9 @@ float_div(Float *__restrict self,
 }
 
 PRIVATE struct type_math float_math = {
-	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))NULL,
-	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))NULL,
-	/* .tp_double = */ (int(DCALL *)(DeeObject *__restrict, double *__restrict))&float_double,
+	/* .tp_int32  = */ (int (DCALL *)(DeeObject *__restrict, int32_t *__restrict))NULL,
+	/* .tp_int64  = */ (int (DCALL *)(DeeObject *__restrict, int64_t *__restrict))NULL,
+	/* .tp_double = */ (int (DCALL *)(DeeObject *__restrict, double *__restrict))&float_double,
 	/* .tp_int    = */ NULL,
 	/* .tp_inv    = */ NULL,
 	/* .tp_pos    = */ &DeeObject_NewRef,
@@ -243,7 +243,7 @@ DEFINE_FLOAT_CMP(float_ge, >=)
 #undef DEFINE_FLOAT_CMP
 
 PRIVATE struct type_cmp float_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&float_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&float_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_lo,
@@ -309,10 +309,10 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict))&float_init,
-				/* .tp_copy_ctor = */ (int(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
-				/* .tp_deep_ctor = */ (int(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
-				/* .tp_any_ctor  = */ (int(DCALL *)(DeeTypeObject *__restrict, size_t, DeeObject **__restrict))&float_ctor,
+				/* .tp_ctor      = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict))&float_init,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
+				/* .tp_deep_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeTypeObject *__restrict, size_t, DeeObject **__restrict))&float_ctor,
 				/* Float object use a cached allocator. */
 				TYPE_ALLOCATOR(&float_tp_alloc, &float_tp_free)
 			}
@@ -324,7 +324,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_str,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&float_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&float_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

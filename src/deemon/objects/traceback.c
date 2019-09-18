@@ -441,17 +441,17 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(TraceIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&traceiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&traceiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&traceiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &traceiter_cmp,
@@ -722,7 +722,7 @@ PRIVATE struct type_member traceback_class_members[] = {
 };
 
 PRIVATE struct type_gc traceback_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&traceback_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&traceback_clear
 };
 
 
@@ -773,7 +773,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 				/* .tp_any_ctor  = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&traceback_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&traceback_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -783,7 +783,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceback_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceback_visit,
 	/* .tp_gc            = */ &traceback_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

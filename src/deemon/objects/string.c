@@ -1226,14 +1226,14 @@ INTERN DeeTypeObject StringIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&stringiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringiter_fini,
 		/* .tp_assign      = */ NULL, /* TODO */
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&stringiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringiter_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1553,7 +1553,7 @@ err:
 }
 
 PRIVATE struct type_buffer string_buffer = {
-	/* .tp_getbuf       = */ (int(DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&string_getbuf,
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&string_getbuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FREADONLY
 };
@@ -1654,14 +1654,14 @@ PUBLIC DeeTypeObject DeeString_Type = {
 				/* .tp_any_ctor  = */ &string_new
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&string_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&string_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ &DeeObject_NewRef,
 		/* .tp_repr = */ &string_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&string_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&string_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

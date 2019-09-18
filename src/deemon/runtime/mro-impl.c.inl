@@ -4114,7 +4114,7 @@ N_len(type_method_hasattr)(struct membercache *__restrict cache,
 	return false;
 }
 
-INTERN bool(DCALL NLen(DeeType_HasInstanceMethodAttr))(DeeTypeObject *__restrict tp_invoker,
+INTERN bool (DCALL NLen(DeeType_HasInstanceMethodAttr))(DeeTypeObject *__restrict tp_invoker,
                                                        DeeTypeObject *__restrict tp_self,
                                                        ATTR_ARG, dhash_t hash) {
 	struct type_method *chain = tp_self->tp_methods;
@@ -4141,7 +4141,7 @@ N_len(type_getset_hasattr)(struct membercache *__restrict cache,
 	return false;
 }
 
-INTERN bool(DCALL NLen(DeeType_HasInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
+INTERN bool (DCALL NLen(DeeType_HasInstanceGetSetAttr))(DeeTypeObject *__restrict tp_invoker,
                                                        DeeTypeObject *__restrict tp_self,
                                                        ATTR_ARG,
                                                        dhash_t hash) {
@@ -4169,7 +4169,7 @@ N_len(type_member_hasattr)(struct membercache *__restrict cache,
 	return false;
 }
 
-INTERN bool(DCALL NLen(DeeType_HasInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
+INTERN bool (DCALL NLen(DeeType_HasInstanceMemberAttr))(DeeTypeObject *__restrict tp_invoker,
                                                        DeeTypeObject *__restrict tp_self,
                                                        ATTR_ARG,
                                                        dhash_t hash) {

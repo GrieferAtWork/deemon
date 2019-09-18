@@ -729,7 +729,7 @@ LOCAL bool (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
 	return true;
 }
 
-LOCAL bool(DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
+LOCAL bool (DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
 	Dee_ref_t refcnt;
 	do {
 		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
@@ -751,7 +751,7 @@ LOCAL bool (DCALL Dee_DecrefIfOne_untraced_d)(DeeObject *__restrict self,
 	return true;
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-LOCAL bool(DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
+LOCAL bool (DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
 	if (!__hybrid_atomic_cmpxch(self->ob_refcnt, 1, 0,
 	                            __ATOMIC_SEQ_CST,
 	                            __ATOMIC_SEQ_CST))

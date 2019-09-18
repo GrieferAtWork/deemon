@@ -160,7 +160,7 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeInverseSetObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&invset_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&invset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -170,7 +170,7 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -713,7 +713,7 @@ set_ge(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 
 
 PRIVATE struct type_cmp set_cmp = {
-		/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))NULL,
+		/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
 		/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&set_eq,
 		/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&set_ne,
 		/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&set_lo,

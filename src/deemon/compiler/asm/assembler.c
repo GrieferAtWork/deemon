@@ -1937,7 +1937,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeRelIntObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&relint_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&relint_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL

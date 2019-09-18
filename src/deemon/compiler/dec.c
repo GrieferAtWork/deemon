@@ -444,7 +444,7 @@ dec_section_empty(struct dec_section *__restrict self) {
 
 /* @return: 0: Successfully linked all DEC sections.
  * @return: *: One of `DECREL_*' that was truncated, causing linking to fail. */
-INTERN uint8_t(DCALL dec_link)(void) {
+INTERN uint8_t (DCALL dec_link)(void) {
 	DEC_FOREACH_SECTION_VARS;
 	struct dec_section *sec;
 	struct dec_rel *iter, *end;
@@ -523,7 +523,7 @@ INTERN void DCALL dec_setbases(void) {
  * using, meaning that `file_stream' should be derived from `DeeFile_Type'.
  * @return:  0: Successfully written the DEC file.
  * @return: -1: An error occurred while writing. */
-INTERN int(DCALL dec_write)(DeeObject *__restrict file_stream) {
+INTERN int (DCALL dec_write)(DeeObject *__restrict file_stream) {
 	DEC_FOREACH_SECTION_VARS;
 	struct dec_section *sec;
 	DEC_FOREACH_SECTION(sec) {

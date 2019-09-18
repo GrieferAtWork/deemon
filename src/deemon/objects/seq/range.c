@@ -340,8 +340,8 @@ ri_index_set(RangeIterator *__restrict self,
 PRIVATE struct type_getset ri_getsets[] = {
 	{ "index",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ri_index_get,
-	  (int(DCALL *)(DeeObject *__restrict))&ri_index_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ri_index_set },
+	  (int (DCALL *)(DeeObject *__restrict))&ri_index_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ri_index_set },
 	{ NULL }
 };
 
@@ -437,17 +437,17 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(RangeIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ri_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ri_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&ri_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ri_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ri_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ri_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &ri_cmp,
@@ -1049,17 +1049,17 @@ INTERN DeeTypeObject SeqRange_Type = {
 				TYPE_FIXED_ALLOCATOR(Range)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&range_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&range_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&range_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&range_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1248,17 +1248,17 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(IntRangeIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&iri_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iri_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&iri_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&iri_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iri_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iri_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &iri_cmp,
@@ -1551,7 +1551,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&intrange_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&intrange_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

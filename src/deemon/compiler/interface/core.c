@@ -116,7 +116,7 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
 				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -126,7 +126,7 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerItem_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerItem_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -161,7 +161,7 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -171,7 +171,7 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -213,7 +213,7 @@ INTERN DeeTypeObject DeeCompilerWrapper_Type = {
 				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&DeeCompilerWrapper_Fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerWrapper_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -223,7 +223,7 @@ INTERN DeeTypeObject DeeCompilerWrapper_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerWrapper_Visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerWrapper_Visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -370,7 +370,7 @@ DeeCompiler_GetItem(DeeTypeObject *__restrict type,
 	for (;; tp = tp->tp_base) {
 		if (!tp->tp_init.tp_dtor)
 			continue;
-		ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject * __restrict))&DeeCompilerItem_Fini,
+		ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject * __restrict))&DeeCompilerItem_Fini,
 		        "Expected an weakly linked compiler item type");
 		break;
 	}
@@ -386,7 +386,7 @@ DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
 	for (;; tp = tp->tp_base) {
 		if (!tp->tp_init.tp_dtor)
 			continue;
-		ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject * __restrict))&DeeCompilerObjItem_Fini,
+		ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject * __restrict))&DeeCompilerObjItem_Fini,
 		        "Expected an object-like compiler item type");
 		break;
 	}
@@ -416,7 +416,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 			for (;; tp = tp->tp_base) {
 				if (!tp->tp_init.tp_dtor)
 					continue;
-				ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject * __restrict))&DeeCompilerItem_Fini,
+				ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject * __restrict))&DeeCompilerItem_Fini,
 				        "Cannot delete compiler item of type %k, which has a custom, or object-finalizer",
 				        tp);
 				break;
@@ -446,7 +446,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	for (;; tp = tp->tp_base) {
 		if (!tp->tp_init.tp_dtor)
 			continue;
-		ASSERTF(tp->tp_init.tp_dtor == (void(DCALL *)(DeeObject * __restrict))&DeeCompilerItem_Fini,
+		ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject * __restrict))&DeeCompilerItem_Fini,
 		        "Cannot delete compiler items of type %k, which has a custom, or object-finalizer",
 		        tp);
 		break;

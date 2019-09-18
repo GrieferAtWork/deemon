@@ -201,7 +201,7 @@ err:
 	return -1;
 }
 
-INTERN int(DCALL ast_tags_clear)(void) {
+INTERN int (DCALL ast_tags_clear)(void) {
 	while (current_tags.at_anno.an_annoc) {
 		struct ast_annotation *anno;
 		anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
@@ -288,7 +288,7 @@ err:
 	return -1;
 }
 
-INTERN int(DCALL parse_tags)(void) {
+INTERN int (DCALL parse_tags)(void) {
 	if (tok == '@') {
 		/* Line-style documentation string (terminated by a line-feed) */
 		char *doc_start = token.t_end;

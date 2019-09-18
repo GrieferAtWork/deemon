@@ -249,7 +249,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 					TYPE_FIXED_ALLOCATOR(MemoryFile)
 				}
 			},
-			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&mf_fini,
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mf_fini,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
 		},
@@ -275,16 +275,16 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
+	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
 	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ (doff_t(DCALL *)(DeeFileObject *__restrict, doff_t, int))&mf_seek,
+	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&mf_seek,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
-	/* .ft_close  = */ (int(DCALL *)(DeeFileObject *__restrict))&mf_close,
-	/* .ft_pread  = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&mf_pread,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&mf_close,
+	/* .ft_pread  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&mf_pread,
 	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ (int(DCALL *)(DeeFileObject *__restrict, dioflag_t))&mf_getc,
-	/* .ft_ungetc = */ (int(DCALL *)(DeeFileObject *__restrict, int))&mf_ungetc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&mf_getc,
+	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&mf_ungetc,
 	/* .ft_putc   = */ NULL
 };
 
@@ -657,8 +657,8 @@ reader_init(Reader *__restrict self,
 
 PRIVATE struct type_getset reader_getsets[] = {
 	{ "owner", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&reader_getowner,
-	  (int(DCALL *)(DeeObject *__restrict))&reader_close,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&reader_setowner,
+	  (int (DCALL *)(DeeObject *__restrict))&reader_close,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&reader_setowner,
 	  DOC("Assign the object from which data is being read") },
 	{ NULL }
 };
@@ -688,7 +688,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 					TYPE_FIXED_ALLOCATOR(Reader)
 				}
 			},
-			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&reader_fini,
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&reader_fini,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
 		},
@@ -714,16 +714,16 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
+	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
 	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ (doff_t(DCALL *)(DeeFileObject *__restrict, doff_t, int))&reader_seek,
-	/* .ft_sync   = */ (int(DCALL *)(DeeFileObject *__restrict))&reader_sync,
+	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&reader_seek,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_sync,
 	/* .ft_trunc  = */ NULL,
-	/* .ft_close  = */ (int(DCALL *)(DeeFileObject *__restrict))&reader_close,
-	/* .ft_pread  = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&reader_pread,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_close,
+	/* .ft_pread  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&reader_pread,
 	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ (int(DCALL *)(DeeFileObject *__restrict, dioflag_t))&reader_getc,
-	/* .ft_ungetc = */ (int(DCALL *)(DeeFileObject *__restrict, int))&reader_ungetc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&reader_getc,
+	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&reader_ungetc,
 	/* .ft_putc   = */ NULL
 };
 
@@ -995,8 +995,8 @@ do_del_string:
 PRIVATE struct type_getset writer_getsets[] = {
 	{ DeeString_STR(&str_string),
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&DeeFileWriter_GetString,
-	  (int(DCALL *)(DeeObject *__restrict))&writer_delstring,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&writer_setstring,
+	  (int (DCALL *)(DeeObject *__restrict))&writer_delstring,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&writer_setstring,
 	  DOC("->?Dstring\n"
 	      "Get/set the currently written text string") },
 	{ NULL }
@@ -1685,7 +1685,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 					TYPE_FIXED_ALLOCATOR(Writer)
 				}
 			},
-			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&writer_fini,
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&writer_fini,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
 		},
@@ -1712,11 +1712,11 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_class_members = */ NULL
 	},
 	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ (dssize_t(DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&writer_write,
+	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&writer_write,
 	/* .ft_seek   = */ NULL,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
-	/* .ft_close  = */ (int(DCALL *)(DeeFileObject *__restrict))&writer_delstring,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&writer_delstring,
 	/* .ft_pread  = */ NULL,
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ NULL,

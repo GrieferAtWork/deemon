@@ -69,14 +69,14 @@ PRIVATE void DCALL free_reftracker(struct Dee_reftracker *__restrict self);
 
 typedef DeeTypeObject Type;
 
-PUBLIC int(DCALL DeeObject_AssertType)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeObject_AssertType)(DeeObject *__restrict self,
                                        DeeTypeObject *__restrict required_type) {
 	if (DeeObject_InstanceOf(self, required_type))
 		return 0;
 	return DeeObject_TypeAssertFailed(self, required_type);
 }
 
-PUBLIC int(DCALL DeeObject_AssertTypeExact)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeObject_AssertTypeExact)(DeeObject *__restrict self,
                                             DeeTypeObject *__restrict required_type) {
 	if (DeeObject_InstanceOfExact(self, required_type))
 		return 0;
@@ -252,10 +252,10 @@ again:
 }
 
 #ifdef __INTELLISENSE__
-PUBLIC void(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
+PUBLIC void (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
                                     struct weakref const *__restrict other)
 #else  /* __INTELLISENSE__ */
-PUBLIC void(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
+PUBLIC void (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
                                     struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
 {
@@ -294,10 +294,10 @@ again:
 }
 
 #ifdef __INTELLISENSE__
-PUBLIC void(DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
+PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
                                           struct weakref const *__restrict other)
 #else  /* __INTELLISENSE__ */
-PUBLIC void(DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
+PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
                                           struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
 {
@@ -723,9 +723,9 @@ PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 
 /* Return the state of a snapshot of `self' currently being bound. */
 #ifdef __INTELLISENSE__
-PUBLIC bool(DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
+PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
 #else  /* __INTELLISENSE__ */
-PUBLIC bool(DCALL Dee_weakref_bound)(struct weakref *__restrict self)
+PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DeeObject *curr;
@@ -1406,7 +1406,7 @@ object_sizeof(DeeObject *__restrict self,
 #ifndef CONFIG_NO_OBJECT_SLABS
 		/* Check for slab allocators. */
 		size_t slab_size;
-		void(DCALL * tp_free)(void *__restrict ob);
+		void (DCALL * tp_free)(void *__restrict ob);
 		tp_free = type->tp_init.tp_alloc.tp_free;
 #define CHECK_SIZE(index, size)                     \
 		if (tp_free == &DeeObject_SlabFree##size || \
@@ -4227,8 +4227,8 @@ PRIVATE struct type_attr type_attr_data = {
 };
 
 PRIVATE struct type_gc type_gc_data = {
-	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict))&type_clear,
-	/* .tp_pclear = */ (void(DCALL *)(DeeObject *__restrict, unsigned int))&type_pclear,
+	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&type_clear,
+	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&type_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_CLASS
 };
 
@@ -4261,7 +4261,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&DeeObject_New,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
 	/* .tp_gc            = */ &type_gc_data,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &type_cmp_data,
@@ -4615,55 +4615,55 @@ PUBLIC bool (DCALL Dee_DecrefWasOk_traced)(DeeObject *__restrict ob,
                                            int UNUSED(line)) {
 	return Dee_DecrefWasOk(ob);
 }
-DFUNDEF void(DCALL Dee_DumpReferenceLeaks)(void);
-PUBLIC void(DCALL Dee_DumpReferenceLeaks)(void) {
+DFUNDEF void (DCALL Dee_DumpReferenceLeaks)(void);
+PUBLIC void (DCALL Dee_DumpReferenceLeaks)(void) {
 }
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* Also export all the reference-control macros as functions. */
-DFUNDEF void(DCALL Dee_Incref)(DeeObject *__restrict ob);
-DFUNDEF void(DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n);
-DFUNDEF bool(DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob);
-DFUNDEF void(DCALL Dee_Decref)(DeeObject *__restrict ob);
-DFUNDEF void(DCALL Dee_DecrefDokill)(DeeObject *__restrict ob);
-DFUNDEF void(DCALL Dee_DecrefNokill)(DeeObject *__restrict ob);
-DFUNDEF bool(DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob);
-DFUNDEF bool(DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob);
-DFUNDEF bool(DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
+DFUNDEF void (DCALL Dee_Incref)(DeeObject *__restrict ob);
+DFUNDEF void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n);
+DFUNDEF bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob);
+DFUNDEF void (DCALL Dee_Decref)(DeeObject *__restrict ob);
+DFUNDEF void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob);
+DFUNDEF void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob);
+DFUNDEF bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob);
+DFUNDEF bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob);
+DFUNDEF bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
 
-PUBLIC void(DCALL Dee_Incref)(DeeObject *__restrict ob) {
+PUBLIC void (DCALL Dee_Incref)(DeeObject *__restrict ob) {
 	Dee_Incref_untraced(ob);
 }
 
-PUBLIC void(DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n) {
+PUBLIC void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n) {
 	Dee_Incref_n_untraced(ob, n);
 }
 
-PUBLIC bool(DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob) {
+PUBLIC bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob) {
 	return Dee_IncrefIfNotZero_untraced(ob);
 }
 
-PUBLIC void(DCALL Dee_Decref)(DeeObject *__restrict ob) {
+PUBLIC void (DCALL Dee_Decref)(DeeObject *__restrict ob) {
 	Dee_Decref_untraced(ob);
 }
 
-PUBLIC void(DCALL Dee_DecrefDokill)(DeeObject *__restrict ob) {
+PUBLIC void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob) {
 	Dee_DecrefDokill_untraced(ob);
 }
 
-PUBLIC void(DCALL Dee_DecrefNokill)(DeeObject *__restrict ob) {
+PUBLIC void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob) {
 	Dee_DecrefNokill_untraced(ob);
 }
 
-PUBLIC bool(DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob) {
+PUBLIC bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob) {
 	return Dee_DecrefIfOne_untraced(ob);
 }
 
-PUBLIC bool(DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob) {
+PUBLIC bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob) {
 	return Dee_DecrefIfNotOne_untraced(ob);
 }
 
-PUBLIC bool(DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob) {
+PUBLIC bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob) {
 	return Dee_DecrefWasOk_untraced(ob);
 }
 

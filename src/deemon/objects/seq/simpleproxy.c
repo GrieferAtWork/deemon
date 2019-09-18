@@ -573,17 +573,17 @@ INTERN DeeTypeObject SeqIds_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&proxy_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -618,17 +618,17 @@ INTERN DeeTypeObject SeqTypes_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&proxy_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -663,17 +663,17 @@ INTERN DeeTypeObject SeqClasses_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&proxy_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -898,17 +898,17 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&iter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&iter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&iter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &iter_cmp,
@@ -943,17 +943,17 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&iter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&iter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&iter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &iter_cmp,
@@ -988,17 +988,17 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&iter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&iter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&iter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &iter_cmp,

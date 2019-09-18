@@ -937,7 +937,7 @@ PRIVATE struct type_getset code_getsets[] = {
 };
 
 PRIVATE struct type_gc code_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&code_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&code_clear
 };
 
 PRIVATE dhash_t DCALL
@@ -1125,7 +1125,7 @@ code_ne(DeeCodeObject *__restrict self,
 }
 
 PRIVATE struct type_cmp code_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&code_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&code_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&code_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&code_ne
 };
@@ -1792,7 +1792,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 				/* .tp_free      = */ (void *)&code_init_kw
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&code_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1802,7 +1802,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
 	/* .tp_gc            = */ &code_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &code_cmp,

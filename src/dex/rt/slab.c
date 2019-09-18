@@ -110,7 +110,7 @@ DEFINE_SS_COMPARE(ss_ge, >=, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DAT
 #undef DEFINE_SS_COMPARE
 
 PRIVATE struct type_cmp ss_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&ss_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&ss_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ss_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ss_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ss_lo,
@@ -377,14 +377,14 @@ INTERN DeeTypeObject SlabStatIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SlabStatIteratorObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ssi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&ssi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ssi_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because only non-GC objects are reachable */
@@ -532,7 +532,7 @@ INTERN DeeTypeObject SlabInfo_Type = {
 				TYPE_FIXED_ALLOCATOR(SlabInfoObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&si_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&si_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},

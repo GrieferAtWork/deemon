@@ -2540,8 +2540,8 @@ PRIVATE struct type_math int_math = {
 	/* .tp_or          = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_or,
 	/* .tp_xor         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_xor,
 	/* .tp_pow         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_pow,
-	/* .tp_inc         = */ (int(DCALL *)(DeeObject **__restrict))&int_inc,
-	/* .tp_dec         = */ (int(DCALL *)(DeeObject **__restrict))&int_dec,
+	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&int_inc,
+	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&int_dec,
 	/* .tp_inplace_add = */ NULL,
 	/* .tp_inplace_sub = */ NULL,
 	/* .tp_inplace_mul = */ NULL,
@@ -2677,7 +2677,7 @@ int_cmp_ge(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 
 
 PRIVATE struct type_cmp int_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&int_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&int_hash,
 	/* .tp_eq   = */ &int_cmp_eq,
 	/* .tp_ne   = */ &int_cmp_ne,
 	/* .tp_lo   = */ &int_cmp_lo,

@@ -176,17 +176,17 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesSegmentsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bsegiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsegiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bsegiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bsegiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsegiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsegiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bsegiter_cmp,
@@ -369,17 +369,17 @@ INTERN DeeTypeObject BytesSegments_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesSegments)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bseg_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bseg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bseg_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bseg_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bseg_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bseg_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

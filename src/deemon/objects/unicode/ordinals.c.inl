@@ -179,14 +179,14 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringOrdinalsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&stringordinalsiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringordinalsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&stringordinalsiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringordinalsiter_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -319,14 +319,14 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 				TYPE_FIXED_ALLOCATOR(StringOrdinals)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&stringordinals_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringordinals_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&stringordinals_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringordinals_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */

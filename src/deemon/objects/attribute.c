@@ -130,7 +130,7 @@ err:
 }
 
 PRIVATE struct type_cmp attr_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&attr_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict))&attr_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&attr_eq
 };
 
@@ -709,7 +709,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 				/* .tp_any_ctor_kw = */ &attribute_init
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&attr_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&attr_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -719,7 +719,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&attr_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&attr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &attr_cmp,
@@ -934,7 +934,7 @@ enumattr_ne(EnumAttr *__restrict self,
 }
 
 PRIVATE struct type_cmp enumattr_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&enumattr_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict))&enumattr_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&enumattr_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&enumattr_ne
 };
@@ -977,7 +977,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 				TYPE_FIXED_ALLOCATOR(EnumAttr)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&enumattr_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattr_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -987,7 +987,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattr_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &enumattr_cmp,
@@ -1309,7 +1309,7 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(EnumAttrIter)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&enumattriter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattriter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1319,7 +1319,7 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattriter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&enumattriter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1443,7 +1443,7 @@ next_iter:
 		if (iter->tp_attr) {
 			dssize_t enum_error;
 			struct attribute_lookup_data data;
-			dssize_t(DCALL * enumattr)(DeeTypeObject * __restrict, DeeObject * __restrict, denum_t, void *);
+			dssize_t (DCALL * enumattr)(DeeTypeObject * __restrict, DeeObject * __restrict, denum_t, void *);
 do_iter_attr:
 			enumattr = iter->tp_attr->tp_enumattr;
 			if (!enumattr)

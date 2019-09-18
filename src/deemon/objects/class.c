@@ -733,7 +733,7 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
 	if (kw) {
 		if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
-			int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
+			int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
 			func = tp_self->tp_init.tp_alloc.tp_any_ctor_kw;
 			return DeeType_INVOKE_ANY_CTOR_KW(func, tp_self, self, argc, argv, kw);
 		}
@@ -749,18 +749,18 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 		}
 	}
 	if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
 		func = tp_self->tp_init.tp_alloc.tp_any_ctor;
 		return DeeType_INVOKE_ANY_CTOR(func, tp_self, self, argc, argv);
 	}
 	if (tp_self->tp_init.tp_alloc.tp_ctor && !argc) {
-		int(DCALL * func)(DeeObject * __restrict);
+		int (DCALL * func)(DeeObject * __restrict);
 		func = tp_self->tp_init.tp_alloc.tp_ctor;
 		return DeeType_INVOKE_CTOR(func, tp_self, self);
 	}
 	if (tp_self->tp_init.tp_alloc.tp_copy_ctor &&
 	    (argc == 1 && DeeObject_InstanceOf(argv[0], tp_self))) {
-		int(DCALL * func)(DeeObject * __restrict, DeeObject * __restrict);
+		int (DCALL * func)(DeeObject * __restrict, DeeObject * __restrict);
 		func = tp_self->tp_init.tp_alloc.tp_copy_ctor;
 		return DeeType_INVOKE_COPY(func, tp_self, self, argv[0]);
 	}
@@ -788,19 +788,19 @@ instance_initsuper_as_copy(DeeTypeObject *__restrict tp_super,
 	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_deep_ctor && deep_copy) {
-		int(DCALL * func)(DeeObject * __restrict, DeeObject * __restrict);
+		int (DCALL * func)(DeeObject * __restrict, DeeObject * __restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_deep_ctor;
 		result = DeeType_INVOKE_DEEPCOPY(func, tp_super, self, other);
 	} else if (tp_super->tp_init.tp_alloc.tp_copy_ctor) {
-		int(DCALL * func)(DeeObject * __restrict, DeeObject * __restrict);
+		int (DCALL * func)(DeeObject * __restrict, DeeObject * __restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_copy_ctor;
 		result = DeeType_INVOKE_COPY(func, tp_super, self, other);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, 1, (DeeObject **)&other);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, 1, (DeeObject **)&other, NULL);
 	} else {
@@ -1151,15 +1151,15 @@ instance_initsuper_as_ctor(DeeTypeObject *__restrict tp_super,
 	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_ctor) {
-		int(DCALL * func)(DeeObject * __restrict);
+		int (DCALL * func)(DeeObject * __restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_ctor;
 		result = DeeType_INVOKE_CTOR(func, tp_super, self);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, 0, NULL);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, 0, NULL, NULL);
 	} else {
@@ -1182,15 +1182,15 @@ instance_initsuper_as_init(DeeTypeObject *__restrict tp_super,
 	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, argc, argv, NULL);
 	} else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
-		int(DCALL * func)(DeeObject * __restrict);
+		int (DCALL * func)(DeeObject * __restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_ctor;
 		result = DeeType_INVOKE_CTOR(func, tp_super, self);
 	} else {
@@ -1214,7 +1214,7 @@ instance_initsuper_as_initkw(DeeTypeObject *__restrict tp_super,
 	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
+		int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, argc, argv, kw);
 	} else {
@@ -1231,11 +1231,11 @@ instance_initsuper_as_initkw(DeeTypeObject *__restrict tp_super,
 			}
 		}
 		if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-			int(DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
+			int (DCALL * func)(DeeObject * __restrict, size_t, DeeObject * *__restrict);
 			func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 			result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
 		} else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
-			int(DCALL * func)(DeeObject * __restrict);
+			int (DCALL * func)(DeeObject * __restrict);
 			func   = tp_super->tp_init.tp_alloc.tp_ctor;
 			result = DeeType_INVOKE_CTOR(func, tp_super, self);
 		} else {
@@ -4734,7 +4734,7 @@ err_custom_allocator:
 		result_class->cd_offset = base->tp_init.tp_alloc.tp_instance_size;
 		if (base->tp_init.tp_alloc.tp_free) {
 #ifndef CONFIG_NO_OBJECT_SLABS
-			void(DCALL * tp_free)(void *__restrict ob);
+			void (DCALL * tp_free)(void *__restrict ob);
 			size_t base_size;
 			tp_free = base->tp_init.tp_alloc.tp_free;
 			/* Figure out the slab size used by the base-class. */

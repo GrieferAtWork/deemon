@@ -47,7 +47,7 @@ typedef struct {
 #define get_needle(self, ob) __builtin_expect(get_needle(self, ob), 0)
 #endif /* !__NO_builtin_expect */
 
-PRIVATE int(DCALL get_needle)(Needle *__restrict self, DeeObject *__restrict ob) {
+PRIVATE int (DCALL get_needle)(Needle *__restrict self, DeeObject *__restrict ob) {
 	if (DeeString_Check(ob)) {
 		self->n_data = DeeString_AsBytes(ob, false);
 		if unlikely(!self->n_data)

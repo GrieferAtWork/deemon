@@ -277,17 +277,17 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bfi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bfi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bfi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bfi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bfi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bfi_cmp,
@@ -322,17 +322,17 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bfi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bfi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bcfi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bcfi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bfi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bfi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bfi_cmp,
@@ -478,7 +478,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesFind)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -488,7 +488,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 		/* .tp_bool = */ NULL  /* TODO: bytes.contains() */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -523,7 +523,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesFind)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -533,7 +533,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 		/* .tp_bool = */ NULL  /* TODO: bytes.contains() */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

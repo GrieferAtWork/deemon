@@ -807,7 +807,7 @@ err:
 }
 
 
-INTERN int(DCALL dec_putobjv)(uint16_t count, DeeObject **__restrict vec) {
+INTERN int (DCALL dec_putobjv)(uint16_t count, DeeObject **__restrict vec) {
 	uint16_t i;
 	if (dec_putw(count))
 		goto err; /* Dec_Objects.os_len */
@@ -854,7 +854,7 @@ PRIVATE struct dec_recursion_frame *dec_obj_recursion = NULL;
  * NOTE: This function must only be called
  *       before encoding any GC-able sequence object,
  *       such as a Cell, a List, a Set, or a Dict. */
-PRIVATE int(DCALL dec_recursion_check)(DeeObject *__restrict self) {
+PRIVATE int (DCALL dec_recursion_check)(DeeObject *__restrict self) {
 	struct dec_recursion_frame *iter;
 	for (iter = dec_obj_recursion; iter;
 	     iter = iter->drf_prev) {
@@ -871,7 +871,7 @@ err_recursion:
 
 
 
-INTERN int(DCALL dec_putobj)(DeeObject *self) {
+INTERN int (DCALL dec_putobj)(DeeObject *self) {
 	DeeTypeObject *tp_self;
 	/* Special handling for encoding various different types of objects. */
 	uint16_t builtin_id;

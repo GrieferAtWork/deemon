@@ -344,17 +344,17 @@ INTERN DeeTypeObject DictIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(DictIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&dictiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dictiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&dictiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&dictiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dictiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dictiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &dictiterator_cmp,
@@ -447,7 +447,7 @@ PRIVATE DeeTypeObject DictProxyIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(DictProxyIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&dictproxyiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dictproxyiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -457,7 +457,7 @@ PRIVATE DeeTypeObject DictProxyIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dictproxyiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dictproxyiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -794,17 +794,17 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
 				TYPE_FIXED_ALLOCATOR(DictProxy)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&proxy_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

@@ -848,7 +848,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
-			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sysfile_fini,
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sysfile_fini,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
 		},

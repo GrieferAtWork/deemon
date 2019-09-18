@@ -345,7 +345,7 @@ PRIVATE struct type_getset catiterator_getsets[] = {
 	  DOC("->?Ert:SeqConcat") },
 	{ "__curr__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&catiterator_curr_get, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_curr_set,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_curr_set,
 	  DOC("->?DIterator") },
 	{ NULL }
 };
@@ -374,17 +374,17 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(CatIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&catiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&catiterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&catiterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&catiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&catiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &catiterator_cmp,
@@ -769,17 +769,17 @@ INTERN DeeTypeObject SeqConcat_Type = {
 				/* .tp_free      = */ &cat_tp_free,
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&cat_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&cat_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cat_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

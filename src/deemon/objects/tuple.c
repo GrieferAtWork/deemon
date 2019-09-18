@@ -1217,14 +1217,14 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(TupleIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&tuple_iterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_iterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&tuple_iterator_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&tuple_iterator_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1858,7 +1858,7 @@ PRIVATE struct type_math tuple_math = {
 };
 
 PRIVATE struct type_cmp tuple_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&tuple_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&tuple_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tuple_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tuple_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tuple_lo,
@@ -1955,17 +1955,17 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&tuple_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tuple_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&tuple_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&tuple_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &tuple_math,
 	/* .tp_cmp           = */ &tuple_cmp,

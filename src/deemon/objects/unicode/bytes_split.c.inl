@@ -275,14 +275,14 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bsi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bsi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bsi_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
@@ -321,17 +321,17 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bsi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bsi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bsi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bsi_cmp,
@@ -516,17 +516,17 @@ INTERN DeeTypeObject BytesSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesSplit)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bs_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bs_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bs_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bs_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bs_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bs_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -561,17 +561,17 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesSplit)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bs_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bs_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bs_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bs_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bs_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bs_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -861,14 +861,14 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesLineSplitIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&blsi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blsi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&blsi_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&blsi_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
@@ -979,17 +979,17 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(BytesLineSplit)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&bls_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bls_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&bls_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bls_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bls_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bls_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

@@ -461,7 +461,7 @@ INTERN DeeTypeObject DeeStructType_Type = {
 				/* .tp_free      = */ NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&struct_type_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&struct_type_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -471,7 +471,7 @@ INTERN DeeTypeObject DeeStructType_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&struct_type_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&struct_type_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -628,9 +628,9 @@ err:
 
 PRIVATE struct stype_attr struct_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_getattr,
-	/* .st_delattr  = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_delattr,
-	/* .st_setattr  = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&struct_setattr,
-	/* .st_enumattr = */ (dssize_t(DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&struct_enumattr
+	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_delattr,
+	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&struct_setattr,
+	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&struct_enumattr
 };
 
 
@@ -846,8 +846,8 @@ INTERN DeeStructTypeObject DeeStruct_Type = {
 		/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
-		/* .st_init     = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&struct_init,
-		/* .st_assign   = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_assign,
+		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&struct_init,
+		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_assign,
 		/* .st_cast     = */ {
 			/* .st_str  = */ NULL,
 			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&struct_repr,

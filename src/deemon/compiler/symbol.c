@@ -600,7 +600,7 @@ INTERN DeeTypeObject DeeScope_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeScopeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&scope_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -610,7 +610,7 @@ INTERN DeeTypeObject DeeScope_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&scope_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&scope_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -664,7 +664,7 @@ INTERN DeeTypeObject DeeClassScope_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeClassScopeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&class_scope_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&class_scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -772,7 +772,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeBaseScopeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&base_scope_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&base_scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -782,7 +782,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&base_scope_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&base_scope_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -897,7 +897,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeRootScopeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&root_scope_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&root_scope_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -907,7 +907,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&root_scope_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&root_scope_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -926,7 +926,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 
 
 
-INTERN int(DCALL scope_push)(void) {
+INTERN int (DCALL scope_push)(void) {
 	DREF DeeScopeObject *new_scope;
 	new_scope = DeeObject_CALLOC(DeeScopeObject);
 	if unlikely(!new_scope)
@@ -954,7 +954,7 @@ INTERN void DCALL scope_pop(void) {
 	Dee_Decref(pop_scope);     /* Drop the reference previously stored in `current_scope' */
 }
 
-INTERN int(DCALL classscope_push)(void) {
+INTERN int (DCALL classscope_push)(void) {
 	DREF DeeClassScopeObject *new_scope;
 	struct symbol *this_sym;
 	new_scope = DeeObject_CALLOC(DeeClassScopeObject);
@@ -1011,7 +1011,7 @@ basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
 	current_basescope = scope;
 }
 
-INTERN int(DCALL basescope_push)(void) {
+INTERN int (DCALL basescope_push)(void) {
 	DREF DeeBaseScopeObject *new_scope;
 	new_scope = DeeObject_CALLOC(DeeBaseScopeObject);
 	if unlikely(!new_scope)

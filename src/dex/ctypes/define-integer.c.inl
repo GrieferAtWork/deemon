@@ -785,9 +785,9 @@ F(int_inplace_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 
 
 PRIVATE struct stype_math F(intmath) = {
-	/* .st_int32       = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&F(int_int32),
-	/* .st_int64       = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&F(int_int64),
-	/* .st_double      = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&F(int_double),
+	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&F(int_int32),
+	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&F(int_int64),
+	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&F(int_double),
 	/* .st_int         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_int),
 	/* .st_inv         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_inv),
 	/* .st_pos         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_pos),
@@ -807,19 +807,19 @@ PRIVATE struct stype_math F(intmath) = {
 	/* .st_or          = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_or),
 	/* .st_xor         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_xor),
 	/* .st_pow         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_pow),
-	/* .st_inc         = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_inc),
-	/* .st_dec         = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_dec),
-	/* .st_inplace_add = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_add),
-	/* .st_inplace_sub = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_sub),
-	/* .st_inplace_mul = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_mul),
-	/* .st_inplace_div = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_div),
-	/* .st_inplace_mod = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_mod),
-	/* .st_inplace_shl = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_shl),
-	/* .st_inplace_shr = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_shr),
-	/* .st_inplace_and = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_and),
-	/* .st_inplace_or  = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_or),
-	/* .st_inplace_xor = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_xor),
-	/* .st_inplace_pow = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_pow)
+	/* .st_inc         = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_inc),
+	/* .st_dec         = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&F(int_dec),
+	/* .st_inplace_add = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_add),
+	/* .st_inplace_sub = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_sub),
+	/* .st_inplace_mul = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_mul),
+	/* .st_inplace_div = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_div),
+	/* .st_inplace_mod = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_mod),
+	/* .st_inplace_shl = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_shl),
+	/* .st_inplace_shr = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_shr),
+	/* .st_inplace_and = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_and),
+	/* .st_inplace_or  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_or),
+	/* .st_inplace_xor = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_xor),
+	/* .st_inplace_pow = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(int_inplace_pow)
 };
 
 #define DEFINE_COMPARE_OPERATOR(name, op)                    \
@@ -1008,12 +1008,12 @@ INTERN DeeSTypeObject TYPE_NAME = {
 #else /* ALIGNOF */
 	/* .st_align    = */SIZEOF,
 #endif /* !ALIGNOF */
-	/* .st_init     = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&F(intinit),
-	/* .st_assign   = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(intass),
+	/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&F(intinit),
+	/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(intass),
 	/* .st_cast     = */ {
 		/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(intstr),
 		/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(intstr),
-		/* .st_bool = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&F_NOSIGN(intbool)
+		/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&F_NOSIGN(intbool)
 	},
 	/* .st_call     = */ NULL,
 	/* .st_math     = */ &F(intmath),

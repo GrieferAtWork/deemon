@@ -634,7 +634,7 @@ PRIVATE struct type_getset frame_getsets[] = {
 	      "The code object that is being executed") },
 	{ "__pc__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&frame_getpc, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&frame_setpc,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&frame_setpc,
 	  DOC("->?Dint\n"
 	      "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
 	      "@throw ValueError Attempted to set PC within a read-only Frame\n"
@@ -701,7 +701,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 				TYPE_FIXED_ALLOCATOR(Frame)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&frame_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frame_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -711,7 +711,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

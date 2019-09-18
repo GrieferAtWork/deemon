@@ -434,8 +434,8 @@ err:
 PRIVATE struct type_getset seqiterator_getsets[] = {
 	{ "__index__",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&seqiterator_index_get,
-	  (int(DCALL *)(DeeObject *__restrict))&seqiterator_index_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_index_set,
+	  (int (DCALL *)(DeeObject *__restrict))&seqiterator_index_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_index_set,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -474,7 +474,7 @@ INTERN DeeTypeObject DeeGenericIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(SeqIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&seqiterator_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seqiterator_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -484,7 +484,7 @@ INTERN DeeTypeObject DeeGenericIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seqiterator_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seqiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &seqiterator_cmp,

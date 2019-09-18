@@ -159,17 +159,17 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&aiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&aiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&aiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&aiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&aiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&aiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -624,11 +624,11 @@ PRIVATE struct stype_seq array_seq = {
 	/* .stp_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&array_size,
 	/* .stp_contains  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_contains,
 	/* .stp_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_get,
-	/* .stp_del       = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_del,
-	/* .stp_set       = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&array_set,
+	/* .stp_del       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_del,
+	/* .stp_set       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&array_set,
 	/* .stp_range_get = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&array_getrange,
-	/* .stp_range_del = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&array_delrange,
-	/* .stp_range_set = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&array_setrange
+	/* .stp_range_del = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&array_delrange,
+	/* .stp_range_set = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&array_setrange
 };
 
 
@@ -696,12 +696,12 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 		/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
-		/* .st_init     = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&array_init,
-		/* .st_assign   = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_assign,
+		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&array_init,
+		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_assign,
 		/* .st_cast     = */ {
 			/* .st_str  = */ NULL,
 			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&array_repr,
-			/* .st_bool = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&array_bool
+			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&array_bool
 		},
 		/* .st_call     = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&array_call,
 		/* .st_math     = */ &array_math,

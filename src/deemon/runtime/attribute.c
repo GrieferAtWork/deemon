@@ -3324,7 +3324,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int(DCALL * delattr)(DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL * delattr)(DeeObject * __restrict, DeeObject * __restrict);
 do_iter_attr:
 			delattr = iter->tp_attr->tp_delattr;
 			if (delattr == &type_delattr)
@@ -3407,7 +3407,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int(DCALL * delattr)(DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL * delattr)(DeeObject * __restrict, DeeObject * __restrict);
 do_iter_attr:
 			delattr = iter->tp_attr->tp_delattr;
 			if (delattr == &type_delattr)
@@ -3492,7 +3492,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int(DCALL * setattr)(DeeObject * __restrict, DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL * setattr)(DeeObject * __restrict, DeeObject * __restrict, DeeObject * __restrict);
 do_iter_attr:
 			setattr = iter->tp_attr->tp_setattr;
 			if (setattr == &type_setattr)
@@ -3576,7 +3576,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int(DCALL * setattr)(DeeObject * __restrict, DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL * setattr)(DeeObject * __restrict, DeeObject * __restrict, DeeObject * __restrict);
 do_iter_attr:
 			setattr = iter->tp_attr->tp_setattr;
 			if (setattr == &type_setattr)

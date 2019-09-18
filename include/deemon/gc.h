@@ -117,7 +117,7 @@ DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void);    \
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
-	DFUNDEF void(DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
+	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
 DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
 #define DeeGCObject_FMalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabMalloc, size, (), DeeGCObject_Malloc(size))

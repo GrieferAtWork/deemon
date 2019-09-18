@@ -847,7 +847,7 @@ err:
 	return (size_t)-1;
 }
 
-PUBLIC int(DCALL DeeList_Append)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeList_Append)(DeeObject *__restrict self,
                                  DeeObject *__restrict elem) {
 	int result = 0;
 	DeeObject **newvec;
@@ -886,7 +886,7 @@ retry:
 	return result;
 }
 
-PUBLIC int(DCALL DeeList_AppendVector)(DeeObject *__restrict self, size_t objc,
+PUBLIC int (DCALL DeeList_AppendVector)(DeeObject *__restrict self, size_t objc,
                                        DeeObject *const *__restrict objv) {
 	int result = 0;
 	DeeObject **newvec, **iter, **end;
@@ -927,7 +927,7 @@ retry:
 	return result;
 }
 
-PUBLIC int(DCALL DeeList_AppendIterator)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeList_AppendIterator)(DeeObject *__restrict self,
                                          DeeObject *__restrict iterator) {
 	DREF DeeObject *elem;
 	int error;
@@ -948,7 +948,7 @@ err:
 	return -1;
 }
 
-PUBLIC int(DCALL DeeList_AppendSequence)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeList_AppendSequence)(DeeObject *__restrict self,
                                          DeeObject *__restrict sequence) {
 	int error;
 	size_t fast_seqlen;
@@ -970,7 +970,7 @@ PUBLIC int(DCALL DeeList_AppendSequence)(DeeObject *__restrict self,
 	return error;
 }
 
-PUBLIC int(DCALL DeeList_Insert)(DeeObject *__restrict self, size_t index,
+PUBLIC int (DCALL DeeList_Insert)(DeeObject *__restrict self, size_t index,
                                  DeeObject *__restrict elem) {
 	List *me = (List *)self;
 	ASSERT_OBJECT(elem);
@@ -1012,7 +1012,7 @@ do_realloc:
 	return 0;
 }
 
-PUBLIC int(DCALL DeeList_InsertVector)(DeeObject *__restrict self,
+PUBLIC int (DCALL DeeList_InsertVector)(DeeObject *__restrict self,
                                        size_t index, size_t objc,
                                        DeeObject *const *__restrict objv) {
 	List *me = (List *)self;
@@ -1059,7 +1059,7 @@ do_realloc:
 	return 0;
 }
 
-PUBLIC int(DCALL DeeList_InsertIterator)(DeeObject *__restrict self, size_t index,
+PUBLIC int (DCALL DeeList_InsertIterator)(DeeObject *__restrict self, size_t index,
                                          DeeObject *__restrict iterator) {
 	DeeObject *elem;
 	int error;
@@ -1080,7 +1080,7 @@ err:
 	return -1;
 }
 
-PUBLIC int(DCALL DeeList_InsertSequence)(DeeObject *__restrict self, size_t index,
+PUBLIC int (DCALL DeeList_InsertSequence)(DeeObject *__restrict self, size_t index,
                                          DeeObject *__restrict sequence) {
 	DeeObject *iterator;
 	int result;
@@ -2251,11 +2251,11 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_getitem,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_delitem,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_setitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_getrange,
-	/* .tp_range_del = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_delrange,
-	/* .tp_range_set = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_setrange,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_delrange,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_setrange,
 	/* .tp_nsi       = */ &list_nsi
 };
 
@@ -2910,8 +2910,8 @@ err:
 PRIVATE struct type_getset list_getsets[] = {
 	{ "allocated",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&list_getallocated,
-	  (int(DCALL *)(DeeObject *__restrict))&list_delallocated,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_setallocated,
+	  (int (DCALL *)(DeeObject *__restrict))&list_delallocated,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_setallocated,
 	  DOC("->?Dint\n"
 	      "@throw ValueError Attmpted to set the List preallocation size to a value lower than ${#this}\n"
 	      "The number of allocated items\n"
@@ -2929,14 +2929,14 @@ PRIVATE struct type_getset list_getsets[] = {
 	      ">mylist.allocated = #mylist;") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&list_get_first,
-	  (int(DCALL *)(DeeObject *__restrict))&list_del_first,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_set_first,
+	  (int (DCALL *)(DeeObject *__restrict))&list_del_first,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_set_first,
 	  DOC("->\n"
 	      "@return The first item from @this List") },
 	{ DeeString_STR(&str_last),
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&list_get_last,
-	  (int(DCALL *)(DeeObject *__restrict))&list_del_last,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_set_last,
+	  (int (DCALL *)(DeeObject *__restrict))&list_del_last,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_set_last,
 	  DOC("->\n"
 	      "@return The last item from @this List") },
 	{ "frozen",
@@ -3099,7 +3099,7 @@ PRIVATE struct type_method list_methods[] = {
 };
 
 PRIVATE struct type_gc list_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&DeeList_Clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&DeeList_Clear
 };
 
 PRIVATE DREF List *DCALL
@@ -3250,9 +3250,9 @@ PRIVATE struct type_math list_math = {
 	/* .tp_pow         = */ NULL,
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
-	/* .tp_inplace_add = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&list_inplace_add,
+	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&list_inplace_add,
 	/* .tp_inplace_sub = */ NULL,
-	/* .tp_inplace_mul = */ (int(DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&list_inplace_mul,
+	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&list_inplace_mul,
 	/* .tp_inplace_div = */ NULL,
 	/* .tp_inplace_mod = */ NULL,
 	/* .tp_inplace_shl = */ NULL,
@@ -3865,18 +3865,18 @@ PUBLIC DeeTypeObject DeeList_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(List)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&list_fini,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_assign,
-		/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_moveassign,
-		/* .tp_deepload    = */ (int(DCALL *)(DeeObject *__restrict))&list_deepload
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&list_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&list_moveassign,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&list_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&list_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&list_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,
 	/* .tp_gc            = */ &list_gc,
 	/* .tp_math          = */ &list_math,
 	/* .tp_cmp           = */ &list_cmp,
@@ -4245,7 +4245,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ListIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&li_dtor,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&li_dtor,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -4253,10 +4253,10 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&li_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&li_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&li_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&li_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &li_cmp,

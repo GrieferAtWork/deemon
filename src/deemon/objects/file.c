@@ -642,8 +642,8 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 	DeeTypeObject *tp_self;
 	uint32_t features;
 	int ch;
-	int(DCALL * pgetc)(DeeFileObject * __restrict, dioflag_t);
-	int(DCALL * pungetc)(DeeFileObject * __restrict, int);
+	int (DCALL * pgetc)(DeeFileObject * __restrict, dioflag_t);
+	int (DCALL * pungetc)(DeeFileObject * __restrict, int);
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -657,7 +657,7 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 			pgetc   = ((DeeFileTypeObject *)tp_self)->ft_getc;
 			pungetc = ((DeeFileTypeObject *)tp_self)->ft_ungetc;
 			if (!pgetc && ((DeeFileTypeObject *)tp_self)->ft_read)
-				pgetc = (int(DCALL *)(DeeFileObject * __restrict, dioflag_t))&DeeFile_Getcf;
+				pgetc = (int (DCALL *)(DeeFileObject * __restrict, dioflag_t))&DeeFile_Getcf;
 			if likely(pgetc && pungetc)
 				goto got_read;
 			if (pgetc) {
@@ -734,7 +734,7 @@ DeeFile_ReadText(DeeObject *__restrict self,
                  size_t max_length, bool readall) {
 	uint32_t features;
 	DeeTypeObject *tp_self;
-	dssize_t(DCALL * pread)(DeeFileObject * __restrict, void *__restrict, size_t, dioflag_t);
+	dssize_t (DCALL * pread)(DeeFileObject * __restrict, void *__restrict, size_t, dioflag_t);
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -790,7 +790,7 @@ DeeFile_PReadText(DeeObject *__restrict self,
                   bool readall) {
 	uint32_t features;
 	DeeTypeObject *tp_self;
-	dssize_t(DCALL * ppread)(DeeFileObject * __restrict, void *__restrict, size_t, dpos_t, dioflag_t);
+	dssize_t (DCALL * ppread)(DeeFileObject * __restrict, void *__restrict, size_t, dpos_t, dioflag_t);
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -2021,7 +2021,7 @@ file_size(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		goto err;
 	while (DeeFileType_CheckExact(tp_self)) {
-		doff_t(DCALL * pseek)(DeeFileObject * __restrict self, doff_t off, int whence);
+		doff_t (DCALL * pseek)(DeeFileObject * __restrict self, doff_t off, int whence);
 		if (tp_self->tp_features & TF_HASFILEOPS) {
 			pseek = ((DeeFileTypeObject *)tp_self)->ft_seek;
 			if (pseek) {

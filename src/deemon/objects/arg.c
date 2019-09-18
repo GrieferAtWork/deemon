@@ -265,7 +265,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(KwdsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -273,10 +273,10 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&kwdsiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&kwdsiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwdsiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwdsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &kwdsiter_cmp,
@@ -341,7 +341,7 @@ done:
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
-INTERN int(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
+INTERN int (DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
                                  char const *__restrict name,
                                  size_t name_len, dhash_t hash) {
 	dhash_t i, perturb;
@@ -597,7 +597,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 				/* .tp_free      = */ (void *)NULL
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&kwds_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -605,7 +605,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwds_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&kwds_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&kwds_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -837,7 +837,7 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(KmapIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&kmapiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmapiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -845,10 +845,10 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&kmapiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&kmapiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kmapiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kmapiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &kmapiter_cmp,
@@ -1157,7 +1157,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 				TYPE_FIXED_ALLOCATOR(KwdsMapping)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&kmap_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1165,10 +1165,10 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&kmap_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&kmap_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kmap_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kmap_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

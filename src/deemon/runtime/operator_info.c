@@ -1577,7 +1577,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(TypeOperatorsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&toi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&toi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1587,7 +1587,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&toi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&toi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &toi_cmp,
@@ -1622,7 +1622,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 				TYPE_FIXED_ALLOCATOR(TypeOperators)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&to_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&to_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1632,7 +1632,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&to_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&to_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

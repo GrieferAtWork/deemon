@@ -413,7 +413,7 @@ again:
 
 INTERN int DCALL
 dex_initialize(DeeDexObject *__restrict self) {
-	int(DCALL * func)(DeeDexObject * __restrict self);
+	int (DCALL * func)(DeeDexObject * __restrict self);
 	ASSERT(self->d_dex);
 	func = self->d_dex->d_init;
 	if (func && (*func)(self))
@@ -536,7 +536,7 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeDexObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&dex_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dex_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -546,7 +546,7 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, // (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dex_visit,
+	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dex_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

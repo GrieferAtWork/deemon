@@ -1259,7 +1259,7 @@ uint32_t *(DCALL DeeDbgString_Truncate4ByteBuffer)(uint32_t *__restrict buffer, 
 	return (uint32_t *)result;
 }
 
-FORCELOCAL void(DCALL _DeeDbgString_FreeBuffer)(void *buffer, char const *file, int line) {
+FORCELOCAL void (DCALL _DeeDbgString_FreeBuffer)(void *buffer, char const *file, int line) {
 	if (buffer)
 		DeeDbg_Free((size_t *)buffer - 1, file, line);
 }
@@ -1327,7 +1327,7 @@ FORCELOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *(DCALL DeeDbgString_Tru
 	return (uint8_t *)result->s_str;
 }
 
-FORCELOCAL void(DCALL DeeDbgString_Free1ByteBuffer)(uint8_t *buffer, char const *file, int line) {
+FORCELOCAL void (DCALL DeeDbgString_Free1ByteBuffer)(uint8_t *buffer, char const *file, int line) {
 	if (buffer)
 		DeeDbgObject_Free(COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str), file, line);
 }
@@ -1844,7 +1844,7 @@ FORCELOCAL uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #define DeeUni_IsDecimalX(ch, x)                               \
 	(sizeof(ch) == 1 ? ((uint8_t)(ch) == (uint8_t)('0' + (x))) \
 	                 : ((ch) == '0' + (x) || _DeeUni_IsDecimalX(ch, x)))
-FORCELOCAL bool(DCALL _DeeUni_IsDecimalX)(uint32_t ch, uint8_t x) {
+FORCELOCAL bool (DCALL _DeeUni_IsDecimalX)(uint32_t ch, uint8_t x) {
 	struct Dee_unitraits *record = DeeUni_Descriptor(ch);
 	return (record->ut_flags & Dee_UNICODE_FDECIMAL) && record->ut_digit == x;
 }

@@ -246,7 +246,7 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ClassOperatorTableIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&coti_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&coti_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -413,14 +413,14 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 				TYPE_FIXED_ALLOCATOR(ClassOperatorTable)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&cot_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cot_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&cot_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cot_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
@@ -918,7 +918,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 				TYPE_FIXED_ALLOCATOR(ClassAttribute)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ca_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ca_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -963,7 +963,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ClassAttributeTableIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&cati_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cati_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1008,14 +1008,14 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 				TYPE_FIXED_ALLOCATOR(ClassAttributeTable)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&cat_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&cat_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cat_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
@@ -2034,7 +2034,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 				/* .tp_any_ctor_kw = */ &cd_init_kw,
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&cd_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cd_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -2280,8 +2280,8 @@ PRIVATE struct type_seq ot_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ot_size,
 	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ot_getitem,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ot_delitem,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&ot_setitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ot_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&ot_setitem,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
@@ -2408,17 +2408,17 @@ INTERN DeeTypeObject ObjectTable_Type = {
 				TYPE_FIXED_ALLOCATOR(ObjectTable)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ot_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ot_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_str,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&ot_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ot_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ot_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ot_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2703,7 +2703,7 @@ instancemember_eq(DeeInstanceMemberObject *__restrict self,
 }
 
 PRIVATE struct type_cmp instancemember_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&instancemember_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict))&instancemember_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&instancemember_eq
 };
 
@@ -2725,7 +2725,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 				TYPE_FIXED_ALLOCATOR(DeeInstanceMemberObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&instancemember_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&instancemember_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -2735,7 +2735,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&instancemember_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&instancemember_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &instancemember_cmp,

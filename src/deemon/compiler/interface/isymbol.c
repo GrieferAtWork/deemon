@@ -202,8 +202,8 @@ symbol_name(DeeCompilerSymbolObject *__restrict self) {
 PRIVATE struct type_getset symbol_getsets[] = {
 	{ "kind",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&symbol_getkind,
-	  (int(DCALL *)(DeeObject *__restrict))&symbol_delkind,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&symbol_setkind,
+	  (int (DCALL *)(DeeObject *__restrict))&symbol_delkind,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&symbol_setkind,
 	  DOC("->?Dstring\n"
 	      "@throw ValueError Attempted to set an invalid symbol type\n"
 	      "@throw TypeError Attempted to set the symbol type to one of "
@@ -444,7 +444,7 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_name,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&symbol_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&symbol_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

@@ -213,8 +213,8 @@ pointer_del_deref(struct pointer_object *__restrict self) {
 PRIVATE struct type_getset pointer_getsets[] = {
 	{ "ind",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&pointer_get_deref,
-	  (int(DCALL *)(DeeObject *__restrict))&pointer_del_deref,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&pointer_set_deref,
+	  (int (DCALL *)(DeeObject *__restrict))&pointer_del_deref,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&pointer_set_deref,
 	  DOC("->?GLValue\nGet/clear/set the dereferenced memory location of @this pointer") },
 	{ NULL }
 };
@@ -299,12 +299,12 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 		/* .st_ffitype  = */ &ffi_type_pointer,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
-		/* .st_init     = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&pointer_init,
-		/* .st_assign   = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&pointer_assign,
+		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&pointer_init,
+		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&pointer_assign,
 		/* .st_cast     = */ {
 			/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_str,
 			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_repr,
-			/* .st_bool = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_bool
+			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_bool
 		},
 		/* .st_call     = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&pointer_call,
 		/* .st_math     = */ &pointer_math0,
@@ -444,9 +444,9 @@ lvalue_enumattr(DeeLValueTypeObject *__restrict tp_self,
 
 
 PRIVATE struct stype_math lvalue_math = {
-	/* .st_int32       = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&lvalue_int32,
-	/* .st_int64       = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&lvalue_int64,
-	/* .st_double      = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&lvalue_double,
+	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&lvalue_int32,
+	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&lvalue_int64,
+	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&lvalue_double,
 	/* .st_int         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_int,
 	/* .st_inv         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_inv,
 	/* .st_pos         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_pos,
@@ -462,19 +462,19 @@ PRIVATE struct stype_math lvalue_math = {
 	/* .st_or          = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_or,
 	/* .st_xor         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_xor,
 	/* .st_pow         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_pow,
-	/* .st_inc         = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_inc,
-	/* .st_dec         = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_dec,
-	/* .st_inplace_add = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_add,
-	/* .st_inplace_sub = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_sub,
-	/* .st_inplace_mul = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_mul,
-	/* .st_inplace_div = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_div,
-	/* .st_inplace_mod = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_mod,
-	/* .st_inplace_shl = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_shl,
-	/* .st_inplace_shr = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_shr,
-	/* .st_inplace_and = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_and,
-	/* .st_inplace_or  = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_or,
-	/* .st_inplace_xor = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_xor,
-	/* .st_inplace_pow = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_pow
+	/* .st_inc         = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_inc,
+	/* .st_dec         = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_dec,
+	/* .st_inplace_add = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_add,
+	/* .st_inplace_sub = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_sub,
+	/* .st_inplace_mul = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_mul,
+	/* .st_inplace_div = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_div,
+	/* .st_inplace_mod = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_mod,
+	/* .st_inplace_shl = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_shl,
+	/* .st_inplace_shr = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_shr,
+	/* .st_inplace_and = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_and,
+	/* .st_inplace_or  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_or,
+	/* .st_inplace_xor = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_xor,
+	/* .st_inplace_pow = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_inplace_pow
 };
 
 PRIVATE struct stype_seq lvalue_seq = {
@@ -500,9 +500,9 @@ PRIVATE struct stype_cmp lvalue_cmp = {
 
 PRIVATE struct stype_attr lvalue_attr = {
 	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict))&lvalue_getattr,
-	/* .st_delattr  = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict))&lvalue_delattr,
-	/* .st_setattr  = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict, DeeObject *__restrict))&lvalue_setattr,
-	/* .st_enumattr = */ (dssize_t(DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&lvalue_enumattr
+	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict))&lvalue_delattr,
+	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict, DeeObject *__restrict))&lvalue_setattr,
+	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&lvalue_enumattr
 };
 
 PRIVATE DREF struct pointer_object *DCALL
@@ -633,7 +633,7 @@ lvalue_getbuf(struct lvalue_object *__restrict self,
 }
 
 PRIVATE struct type_buffer lvalue_buffer = {
-	/* .tp_getbuf       = */ (int(DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&lvalue_getbuf,
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&lvalue_getbuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
@@ -663,8 +663,8 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 					}
 				},
 				/* .tp_dtor        = */ NULL,
-				/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&lvalue_tp_assign,
-				/* .tp_move_assign = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&lvalue_tp_assign
+				/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&lvalue_tp_assign,
+				/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&lvalue_tp_assign
 			},
 			/* .tp_cast = */ {
 				/* .tp_str  = */ NULL,
@@ -700,11 +700,11 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_align    = */CONFIG_CTYPES_ALIGNOF_LVALUE,
 		/* .st_init     = */ NULL,
-		/* .st_assign   = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_assign,
+		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_assign,
 		/* .st_cast     = */ {
 			/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_str,
 			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_repr,
-			/* .st_bool = */ (int(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_bool
+			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_bool
 		},
 		/* .st_call     = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&lvalue_call,
 		/* .st_math     = */ &lvalue_math,

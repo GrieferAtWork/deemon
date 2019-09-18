@@ -27,7 +27,7 @@
 
 DECL_BEGIN
 
-INTERN int(DCALL asm_genclass)(struct ast *__restrict class_ast,
+INTERN int (DCALL asm_genclass)(struct ast *__restrict class_ast,
                                unsigned int gflags) {
 	size_t i;
 	ASSERT(class_ast->a_type == AST_CLASS);

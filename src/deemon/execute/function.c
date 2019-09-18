@@ -677,7 +677,7 @@ err:
 }
 
 PRIVATE struct type_cmp function_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&function_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&function_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&function_ne
 };
@@ -701,7 +701,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 				/* .tp_free      = */ NULL, /* XXX: Use the tuple-allocator? */
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&function_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -711,7 +711,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ &DeeFunction_Call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &function_cmp,
@@ -1002,7 +1002,7 @@ yf_ne(DeeYieldFunctionObject *__restrict self,
 }
 
 PRIVATE struct type_cmp yf_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&yf_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&yf_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&yf_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&yf_ne
 };
@@ -1129,7 +1129,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 				TYPE_FIXED_ALLOCATOR(YFunction)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&yf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1140,7 +1140,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &yf_cmp,
@@ -1897,7 +1897,7 @@ PRIVATE struct type_member yfi_members[] = {
 #endif /* CONFIG_NO_THREADS */
 
 PRIVATE struct type_gc yfi_gc = {
-	/* .tp_gc = */ (void(DCALL *)(DeeObject *__restrict))&yfi_clear
+	/* .tp_gc = */ (void (DCALL *)(DeeObject *__restrict))&yfi_clear
 };
 
 
@@ -1919,7 +1919,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(YFIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&yfi_dtor,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfi_dtor,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1930,7 +1930,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfi_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfi_visit,
 	/* .tp_gc            = */ &yfi_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

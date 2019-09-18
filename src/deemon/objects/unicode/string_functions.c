@@ -9086,7 +9086,7 @@ PRIVATE struct regex_rule_name const regex_rule_names[] = {
 };
 
 
-PRIVATE int(DCALL regex_get_rules)(char const *__restrict rules_str,
+PRIVATE int (DCALL regex_get_rules)(char const *__restrict rules_str,
                                    uint16_t *__restrict result) {
 	if (*rules_str == '.' || *rules_str == '\n' ||
 	    *rules_str == 'l' || *rules_str == 'c') {
@@ -9141,7 +9141,7 @@ err:
 }
 
 
-PRIVATE int(DCALL regex_getargs_generic)(String *__restrict self,
+PRIVATE int (DCALL regex_getargs_generic)(String *__restrict self,
                                          char const *__restrict function_name,
                                          size_t argc, DeeObject **__restrict argv,
                                          struct re_args *__restrict result) {
@@ -9280,7 +9280,7 @@ err:
 	return -1;
 }
 
-PRIVATE int(DCALL regex_getargs_generic_ex)(String *__restrict self,
+PRIVATE int (DCALL regex_getargs_generic_ex)(String *__restrict self,
                                             char const *__restrict function_name,
                                             size_t argc, DeeObject **__restrict argv,
                                             struct re_args_ex *__restrict result) {

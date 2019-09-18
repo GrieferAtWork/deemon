@@ -334,9 +334,9 @@ PRIVATE struct type_seq shlib_seq = {
 
 PRIVATE struct type_attr shlib_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&shlib_getattr,
-	/* .tp_delattr  = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_setattr  = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_enumattr = */ (dssize_t(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))NULL /* TODO */
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))NULL /* TODO */
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -418,7 +418,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 			}
 		},
 #ifndef CONFIG_NO_SHLIB
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&shlib_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&shlib_fini,
 #else /* !CONFIG_NO_SHLIB */
 		/* .tp_dtor        = */ NULL,
 #endif /* CONFIG_NO_SHLIB */
@@ -432,7 +432,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 	},
 	/* .tp_call          = */ NULL,
 #if !defined(CONFIG_NO_SHLIB) && !defined(CONFIG_NO_CFUNCTION)
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&shlib_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&shlib_visit,
 #else /* !CONFIG_NO_SHLIB && !CONFIG_NO_CFUNCTION */
 	/* .tp_visit         = */ NULL,
 #endif /* CONFIG_NO_SHLIB || CONFIG_NO_CFUNCTION */

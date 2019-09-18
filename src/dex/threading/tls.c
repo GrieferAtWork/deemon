@@ -635,8 +635,8 @@ PRIVATE int DCALL tls_bool(Tls *__restrict self) {
 
 PRIVATE struct type_getset tls_getsets[] = {
 	{ "value", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&tls_getvalue,
-	  (int(DCALL *)(DeeObject *__restrict))&tls_delvalue,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tls_setvalue,
+	  (int (DCALL *)(DeeObject *__restrict))&tls_delvalue,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tls_setvalue,
 	  DOC("@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
 	      "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
 	      "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
@@ -730,7 +730,7 @@ PRIVATE struct type_method tls_methods[] = {
 };
 
 PRIVATE struct type_cmp tls_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&tls_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&tls_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tls_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tls_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tls_lo,
@@ -766,17 +766,17 @@ INTERN DeeTypeObject DeeTls_Type = {
 				TYPE_FIXED_ALLOCATOR(Tls)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&tls_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tls_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&tls_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&tls_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tls_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tls_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &tls_cmp,

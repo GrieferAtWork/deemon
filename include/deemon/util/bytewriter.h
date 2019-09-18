@@ -68,16 +68,16 @@ err:
 
 
 /* Append a single byte/word/dword or qword, returning -1 on error and 0 on success */
-#define DEFINE_BYTEWRITER_PUTX(name, T, x)                            \
-	LOCAL int(DCALL name)(struct bytewriter * __restrict self, T x) { \
-		T *buf;                                                       \
-		buf = (T *)bytewriter_alloc(self, sizeof(T));                 \
-		if unlikely(!buf)                                             \
-			goto err;                                                 \
-		*buf = x;                                                     \
-		return 0;                                                     \
-	err:                                                              \
-		return -1;                                                    \
+#define DEFINE_BYTEWRITER_PUTX(name, T, x)                             \
+	LOCAL int (DCALL name)(struct bytewriter * __restrict self, T x) { \
+		T *buf;                                                        \
+		buf = (T *)bytewriter_alloc(self, sizeof(T));                  \
+		if unlikely(!buf)                                              \
+			goto err;                                                  \
+		*buf = x;                                                      \
+		return 0;                                                      \
+	err:                                                               \
+		return -1;                                                     \
 	}
 DEFINE_BYTEWRITER_PUTX(bytewriter_putb,uint8_t,byte)
 DEFINE_BYTEWRITER_PUTX(bytewriter_putw,uint16_t,word)

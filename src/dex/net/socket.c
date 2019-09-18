@@ -2852,14 +2852,14 @@ INTERN DeeTypeObject DeeSocket_Type = {
 				/* .tp_any_ctor_kw = */ (void *)&socket_ctor,
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&socket_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&socket_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_str,
 		/* .tp_repr = */ NULL, /* (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_repr, */
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&socket_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&socket_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

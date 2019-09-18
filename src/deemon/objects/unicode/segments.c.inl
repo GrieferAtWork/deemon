@@ -201,14 +201,14 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringSegmentsIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ssegiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssegiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&ssegiter_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ssegiter_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
@@ -445,14 +445,14 @@ INTERN DeeTypeObject StringSegments_Type = {
 				TYPE_FIXED_ALLOCATOR(StringSegments)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sseg_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sseg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&sseg_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sseg_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */

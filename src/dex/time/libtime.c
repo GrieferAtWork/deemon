@@ -1608,8 +1608,8 @@ PRIVATE struct type_getset time_getsets[] = {
 	      "handling no matter if daylight savings is active or not") },
 	{ "timepart",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_timepart_get,
-	  (int(DCALL *)(DeeObject *__restrict))&time_timepart_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_timepart_set,
+	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_timepart_set,
 	  DOC("->?GTime\n"
 	      "Read/write the time portion of @this time object, that is everything below the "
 	      "day-threshold, including #hour, #minute, #second, #millisecond and #microsecond\n"
@@ -1617,8 +1617,8 @@ PRIVATE struct type_getset time_getsets[] = {
 	      "number of microsecond since the day began") },
 	{ "datepart",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_datepart_get,
-	  (int(DCALL *)(DeeObject *__restrict))&time_datepart_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_datepart_set,
+	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_datepart_set,
 	  DOC("->?GTime\n"
 	      "@throw ValueError Attempted to assign a time value with a non-zero #timepart\n"
 	      "Read/write the date portion of @this time object, that is everything "
@@ -1686,18 +1686,18 @@ PRIVATE struct type_getset time_getsets[] = {
 	{ "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?GTime\nDeprecated alias for #mics / #milliseconds") },
 	{ "time",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_timepart_get,
-	  (int(DCALL *)(DeeObject *__restrict))&time_timepart_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_timepart_set,
+	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_timepart_set,
 	  DOC("->?GTime\nDeprecated alias for #timepart") },
 	{ "part",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_datepart_get,
-	  (int(DCALL *)(DeeObject *__restrict))&time_datepart_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_datepart_set,
+	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_datepart_set,
 	  DOC("->?GTime\nDeprecated alias for #datepart") },
 	{ "time_t",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_get_time_t,
-	  (int(DCALL *)(DeeObject *__restrict))&time_del_time_t,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_set_time_t,
+	  (int (DCALL *)(DeeObject *__restrict))&time_del_time_t,
+	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_set_time_t,
 	  DOC("->?Dint\nDeprecated") },
 	{ NULL }
 };
@@ -1889,8 +1889,8 @@ err:
 
 
 PRIVATE struct type_math time_math = {
-	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))&time_int32,
-	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))&time_int64,
+	/* .tp_int32  = */ (int (DCALL *)(DeeObject *__restrict, int32_t *__restrict))&time_int32,
+	/* .tp_int64  = */ (int (DCALL *)(DeeObject *__restrict, int64_t *__restrict))&time_int64,
 	/* .tp_double = */ NULL,
 	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_int,
 	/* .tp_inv    = */ NULL,
@@ -2399,7 +2399,7 @@ DEFINE_TIME_CMP(time_ge, >=)
 #undef DEFINE_TIME_CMP
 
 PRIVATE struct type_cmp time_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict self))&time_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict self))&time_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_lo,
@@ -2445,13 +2445,13 @@ INTERN DeeTypeObject DeeTime_Type = {
 			}
 		},
 		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ (int(DCALL *)(DeeObject *__restric, DeeObject *__restrict))&time_assign,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restric, DeeObject *__restrict))&time_assign,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&time_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&time_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

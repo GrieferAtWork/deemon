@@ -1006,7 +1006,7 @@ err:
 }
 
 
-PUBLIC int(DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
+PUBLIC int (DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	size_t i;
 	uint16_t flags;
@@ -1262,9 +1262,9 @@ err:
 
 PRIVATE struct type_attr module_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_getattr,
-	/* .tp_delattr  = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_delattr,
-	/* .tp_setattr  = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&module_setattr,
-	/* .tp_enumattr = */ (dssize_t(DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&module_enumattr
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_delattr,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&module_setattr,
+	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&module_enumattr
 };
 
 PRIVATE int DCALL
@@ -1538,8 +1538,8 @@ module_pclear(DeeModuleObject *__restrict self,
 
 
 INTERN struct type_gc module_gc = {
-	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict))&module_clear,
-	/* .tp_pclear = */ (void(DCALL *)(DeeObject *__restrict, unsigned int))&module_pclear,
+	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_clear,
+	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
 };
 
@@ -1569,7 +1569,7 @@ module_ne(DeeModuleObject *__restrict self,
 }
 
 PRIVATE struct type_cmp module_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&module_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&module_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_ne
 };
@@ -1592,7 +1592,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeModuleObject)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&module_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1602,7 +1602,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&module_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&module_visit,
 	/* .tp_gc            = */ &module_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &module_cmp,

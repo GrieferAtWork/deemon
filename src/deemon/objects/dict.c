@@ -1573,8 +1573,8 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_size,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dict_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dict_getitem,
-	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dict_delitem,
-	/* .tp_set       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&dict_setitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dict_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&dict_setitem,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
@@ -1989,7 +1989,7 @@ PRIVATE struct type_member dict_class_members[] = {
 };
 
 PRIVATE struct type_gc dict_gc = {
-	/* .tp_clear = */ (void(DCALL *)(DeeObject *__restrict))&dict_clear
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear
 };
 
 PUBLIC DeeTypeObject DeeDict_Type = {
@@ -2017,18 +2017,18 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(Dict)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&dict_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int(DCALL *)(DeeObject *__restrict))&dict_deepload
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&dict_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&dict_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
 	/* .tp_gc            = */ &dict_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

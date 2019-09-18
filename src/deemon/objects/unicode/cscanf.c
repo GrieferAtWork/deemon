@@ -539,7 +539,7 @@ DEFINE_SPLITITER_CMP(ssi_ge, >=)
 #undef DEFINE_SPLITITER_CMP
 
 PRIVATE struct type_cmp ssi_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ssi_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ssi_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ssi_lo,
@@ -587,7 +587,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringScanIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ssi_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -699,7 +699,7 @@ INTERN DeeTypeObject StringScan_Type = {
 				TYPE_FIXED_ALLOCATOR(StringScanner)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&ss_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ss_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},

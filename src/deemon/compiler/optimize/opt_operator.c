@@ -154,7 +154,7 @@ emulate_member_call(DeeObject *__restrict base,
 }
 
 
-INTERN int(DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
+INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
                                         struct ast *__restrict self, bool result_used) {
 	unsigned int opcount;
 	int temp;

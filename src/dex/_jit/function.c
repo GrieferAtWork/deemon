@@ -945,7 +945,7 @@ err:
 
 
 PRIVATE struct type_cmp jf_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&jf_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict))&jf_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&jf_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&jf_ne
 };
@@ -1106,7 +1106,7 @@ INTERN DeeTypeObject JITFunction_Type = {
 				TYPE_FIXED_ALLOCATOR(JITFunction)
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&jf_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jf_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1116,7 +1116,7 @@ INTERN DeeTypeObject JITFunction_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jf_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&jf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &jf_cmp,

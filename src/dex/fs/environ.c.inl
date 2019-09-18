@@ -295,7 +295,7 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&env_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&env_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

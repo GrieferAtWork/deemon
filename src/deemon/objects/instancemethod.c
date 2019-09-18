@@ -177,7 +177,7 @@ im_ne(InstanceMethod *__restrict self,
 }
 
 PRIVATE struct type_cmp im_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict))&im_hash,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&im_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&im_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&im_ne,
 };
@@ -372,7 +372,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 				/* .tp_any_ctor_kw = */ &im_init,
 			}
 		},
-		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&im_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -382,7 +382,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&im_call,
-	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &im_cmp,
