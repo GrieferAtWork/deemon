@@ -21,79 +21,81 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
+#include <deemon/object.h>
 
 DECL_BEGIN
 
-INTERN int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack,
-                                       struct ast *__restrict self, bool result_used) {
- ASSERT(self->a_type == AST_SWITCH);
- (void)result_used;
- if (ast_optimize(stack,self->a_switch.s_expr,true)) goto err;
+INTERN int(DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack,
+                                      struct ast *__restrict self, bool result_used) {
+	ASSERT(self->a_type == AST_SWITCH);
+	(void)result_used;
+	if (ast_optimize(stack, self->a_switch.s_expr, true))
+		goto err;
 #ifdef OPTIMIZE_FASSUME
- if (optimizer_flags & OPTIMIZE_FASSUME) {
-  /* Since execution may enter the switch block at any location,
-   * any assumption made within must implicitly be matched by an
-   * empty branch.
-   * XXX: Technically, we should optimize this as follows:
-   * >> switch (foo) {
-   * >> case 1:
-   * >>        a();
-   * >>        break;
-   * >> case 2:
-   * >>        b();
-   * >> case 3:
-   * >>        c();
-   * >>        break;
-   * >> }
-   * OPT:
-   * >> if (...) {
-   * >>     a();
-   * >> }
-   * >> if (...) {
-   * >>     if (...) {
-   * >>         b();
-   * >>     }
-   * >>     c();
-   * >> }
-   */
-  struct ast_assumes child_assumes;
-  struct ast_optimize_stack child_stack;
-  if (ast_assumes_initcond(&child_assumes,stack->os_assume))
-      goto err;
-  child_stack.os_prev   = stack;
-  child_stack.os_ast    = self->a_switch.s_block;
-  child_stack.os_assume = &child_assumes;
-  child_stack.os_used   = false;
-  if (ast_optimize(&child_stack,child_stack.os_ast,false)) {
-err_child_assumes:
-   ast_assumes_fini(&child_assumes);
-   goto err;
-  }
-  /* Merge assumptions made by the child-branch. */
-  if (ast_assumes_mergecond(&child_assumes,NULL))
-      goto err_child_assumes;
-  if (ast_assumes_merge(stack->os_assume,&child_assumes))
-      goto err_child_assumes;
-  ast_assumes_fini(&child_assumes);
- } else
-#endif
- {
-  if (ast_optimize(stack,self->a_switch.s_block,false)) goto err;
- }
- /* TODO: Delete constant cases shared with the default-case. */
- /* TODO: Looking at the type of the switch-expression, check if we can delete
-  *       some impossible cases. (e.g. integer cases with string-expression) */
- return 0;
+	if (optimizer_flags & OPTIMIZE_FASSUME) {
+		/* Since execution may enter the switch block at any location,
+		 * any assumption made within must implicitly be matched by an
+		 * empty branch.
+		 * XXX: Technically, we should optimize this as follows:
+		 * >> switch (foo) {
+		 * >> case 1:
+		 * >>        a();
+		 * >>        break;
+		 * >> case 2:
+		 * >>        b();
+		 * >> case 3:
+		 * >>        c();
+		 * >>        break;
+		 * >> }
+		 * OPT:
+		 * >> if (...) {
+		 * >>     a();
+		 * >> }
+		 * >> if (...) {
+		 * >>     if (...) {
+		 * >>         b();
+		 * >>     }
+		 * >>     c();
+		 * >> }
+		 */
+		struct ast_assumes child_assumes;
+		struct ast_optimize_stack child_stack;
+		if (ast_assumes_initcond(&child_assumes, stack->os_assume))
+			goto err;
+		child_stack.os_prev   = stack;
+		child_stack.os_ast    = self->a_switch.s_block;
+		child_stack.os_assume = &child_assumes;
+		child_stack.os_used   = false;
+		if (ast_optimize(&child_stack, child_stack.os_ast, false)) {
+		err_child_assumes:
+			ast_assumes_fini(&child_assumes);
+			goto err;
+		}
+		/* Merge assumptions made by the child-branch. */
+		if (ast_assumes_mergecond(&child_assumes, NULL))
+			goto err_child_assumes;
+		if (ast_assumes_merge(stack->os_assume, &child_assumes))
+			goto err_child_assumes;
+		ast_assumes_fini(&child_assumes);
+	} else
+#endif /* OPTIMIZE_FASSUME */
+	{
+		if (ast_optimize(stack, self->a_switch.s_block, false))
+			goto err;
+	}
+	/* TODO: Delete constant cases shared with the default-case. */
+	/* TODO: Looking at the type of the switch-expression, check if we can delete
+	 *       some impossible cases. (e.g. integer cases with string-expression) */
+	return 0;
 err:
- return -1;
+	return -1;
 /*
 did_optimize:
- ++optimizer_count;
- return 0;
+	++optimizer_count;
+	return 0;
 */
 }
 

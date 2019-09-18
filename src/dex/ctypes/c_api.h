@@ -20,57 +20,67 @@
 #define GUARD_DEX_CTYPES_C_API_H 1
 
 #include "libctypes.h"
+/**/
+
 #include <deemon/object.h>
 
 DECL_BEGIN
 
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-#define CTYPES_PROTECTED(action_libcall,action_inline,action_error) \
-        CTYPES_FAULTPROTECT(action_libcall,action_error)
-#else
-#define CTYPES_PROTECTED(action_libcall,action_inline,action_error) \
-        CTYPES_FAULTPROTECT(action_inline,action_error)
-#endif
-#else
-#define CTYPES_PROTECTED(action_libcall,action_inline,action_error) \
-        do{ action_libcall; }__WHILE0
-#endif
-#define CTYPES_PROTECTED_I(action_inline,action_error) \
-        CTYPES_PROTECTED(action_inline,action_inline,action_error)
+#define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
+	CTYPES_FAULTPROTECT(action_libcall, action_error)
+#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
+#define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
+	CTYPES_FAULTPROTECT(action_inline, action_error)
+#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
+#else  /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
+#define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
+	do {                                                              \
+		action_libcall;                                               \
+	}                                                                 \
+	__WHILE0
+#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
+#define CTYPES_PROTECTED_I(action_inline, action_error) \
+	CTYPES_PROTECTED(action_inline, action_inline, action_error)
 
 
-#define CTYPES_PROTECTED_STRLEN(result,str,action_error) \
-    CTYPES_PROTECTED(\
-        (result) = strlen(str),\
-        { \
-            char const *_p = (str); \
-            (result) = 0; \
-            while (*_p++) \
-                ++(result); \
-        },action_error)
-#define CTYPES_PROTECTED_STRNLEN(result,str,maxlen,action_error) \
-    CTYPES_PROTECTED(\
-        (result) = strnlen(str,maxlen),\
-        { \
-            char const *_p = (str); \
-            size_t _maxlen = (maxlen); \
-            (result) = 0; \
-            while (_maxlen-- && *_p++) \
-                ++(result); \
-        },action_error)
-#define CTYPES_PROTECTED_MEMCPY(dst,src,num_bytes,action_error) \
-    CTYPES_PROTECTED(\
-        memcpy(dst,src,num_bytes),\
-        { \
-            union pointer _dst_iter; \
-            union pointer _src_iter; \
-            size_t _num_bytes = (num_bytes); \
-            _dst_iter.ptr = (dst); \
-            _src_iter.ptr = (src); \
-            while (_num_bytes--) \
-                *_dst_iter.p8++ = *_src_iter.p8++; \
-        },action_error)
+#define CTYPES_PROTECTED_STRLEN(result, str, action_error) \
+	CTYPES_PROTECTED(                                      \
+	(result) = strlen(str),                                \
+	{                                                      \
+		char const *_p = (str);                            \
+		(result)       = 0;                                \
+		while (*_p++)                                      \
+			++(result);                                    \
+	},                                                     \
+	action_error)
+
+#define CTYPES_PROTECTED_STRNLEN(result, str, maxlen, action_error) \
+	CTYPES_PROTECTED(                                               \
+	(result) = strnlen(str, maxlen),                                \
+	{                                                               \
+		char const *_p = (str);                                     \
+		size_t _maxlen = (maxlen);                                  \
+		(result)       = 0;                                         \
+		while (_maxlen-- && *_p++)                                  \
+			++(result);                                             \
+	},                                                              \
+	action_error)
+
+#define CTYPES_PROTECTED_MEMCPY(dst, src, num_bytes, action_error) \
+	CTYPES_PROTECTED(                                              \
+	memcpy(dst, src, num_bytes),                                   \
+	{                                                              \
+		union pointer _dst_iter;                                   \
+		union pointer _src_iter;                                   \
+		size_t _num_bytes = (num_bytes);                           \
+		_dst_iter.ptr     = (dst);                                 \
+		_src_iter.ptr     = (src);                                 \
+		while (_num_bytes--)                                       \
+			*_dst_iter.p8++ = *_src_iter.p8++;                     \
+	},                                                             \
+	action_error)
 
 
 

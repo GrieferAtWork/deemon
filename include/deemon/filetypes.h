@@ -215,7 +215,7 @@ DDATDEF DeeFileTypeObject DeeMemoryFile_Type;
  * The returned file can be used to access said data in a read-only fashion,
  * however since the data isn't copied, before that data gets freed, you must
  * call `DeeFile_ReleaseMemory()' to inform the view of this happened, while
- * simultaniously decrementing its reference counter by ONE.
+ * simultaneously decrementing its reference counter by ONE.
  * `DeeFile_ReleaseMemory()' will automatically determine the proper course
  * of action, dependent on whether the file is being shared with some other
  * part of deemon. If it is, it will replace the view's data with a heap-allocated

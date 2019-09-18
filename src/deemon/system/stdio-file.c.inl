@@ -127,60 +127,60 @@ PRIVATE struct type_method debug_file_methods[] = {
 };
 
 PRIVATE DeeFileTypeObject DebugFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"debug_file",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL|TP_FVARIABLE,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_HASFILEOPS | TF_SINGLETON,
-		/* .tp_base     = */(DeeTypeObject *)&DeeFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "debug_file",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_HASFILEOPS | TF_SINGLETON,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_var = */{
-					/* .tp_ctor      = */&debugfile_get,
-					/* .tp_copy_ctor = */&DeeObject_NewRef,
-					/* .tp_deep_ctor = */&DeeObject_NewRef,
-					/* .tp_any_ctor  = */NULL
+				/* .tp_var = */ {
+					/* .tp_ctor      = */ &debugfile_get,
+					/* .tp_copy_ctor = */ &DeeObject_NewRef,
+					/* .tp_deep_ctor = */ &DeeObject_NewRef,
+					/* .tp_any_ctor  = */ NULL
 				}
 			},
-			/* .tp_dtor        = */NULL,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */debug_file_methods,
-		/* .tp_getsets       = */NULL,
-		/* .tp_members       = */NULL,
-		/* .tp_class_methods = */NULL,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */NULL,
-	/* .ft_write  = */&debugfile_write,
-	/* .ft_seek   = */NULL,
-	/* .ft_sync   = */NULL,
-	/* .ft_trunc  = */NULL,
-	/* .ft_close  = */NULL,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */NULL,
-	/* .ft_ungetc = */NULL,
-	/* .ft_putc   = */NULL
+	/* .ft_read   = */ NULL,
+	/* .ft_write  = */ &debugfile_write,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ NULL,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ NULL,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
 };
 #endif
 
@@ -294,12 +294,12 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 
 #ifdef CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
 PRIVATE SystemFile sysf_std[] = {
-    { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stdin },
-    { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stdout },
-    { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stderr }
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stdin },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stdout },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stderr }
 #ifdef CONFIG_HOST_WINDOWS
     ,
-    { FILE_OBJECT_HEAD_INIT(&DebugFile_Type), NULL }
+	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), NULL }
 #endif
 };
 PUBLIC ATTR_RETNONNULL
@@ -765,17 +765,17 @@ err:
 
 PRIVATE struct type_method sysfile_methods[] = {
 	{ STR_FILENO,
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & sysfile_fileno,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_fileno,
 	  DOC("->?Dint") },
 	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & sysfile_isatty,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_isatty,
 	  DOC("->?Dbool") },
 	{ "flush",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & sysfile_flush,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_flush,
 	  DOC("()\n"
 	      "An alias for #sync used for compatibility with :File.Buffer") },
 	{ "setbuf",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & sysfile_setbuf,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_setbuf,
 	  DOC("(string mode,size=!0)\n"
 	      "Set the buffering mode in a manner that is compatible with :File.Buffer.setbuf") },
 	{ NULL }
@@ -788,7 +788,7 @@ sysfile_getfile(SystemFile *__restrict self) {
 
 PRIVATE struct type_getset sysfile_getsets[] = {
 	{ "file",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & sysfile_getfile, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&sysfile_getfile, NULL, NULL,
 	  DOC("->?DFile\n"
 	      "Returns @this File, indicating the self-buffering "
 	      "behavior of system files on this host") },
@@ -830,119 +830,119 @@ PRIVATE struct type_method sysfile_class_methods[] = {
 
 
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"_SystemFile",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_HASFILEOPS,
-		/* .tp_base     = */(DeeTypeObject *)&DeeFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "_SystemFile",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_alloc = */{
-					/* .tp_ctor      = */NULL,
-					/* .tp_copy_ctor = */NULL,
-					/* .tp_deep_ctor = */NULL,
-					/* .tp_any_ctor  = */NULL,
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
-			/* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sysfile_fini,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sysfile_fini,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */sysfile_methods,
 		/* .tp_getsets       = */sysfile_getsets,
 		/* .tp_members       = */sysfile_members,
-		/* .tp_class_methods = */NULL,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */(dssize_t (DCALL *)(DeeFileObject *__restrict,void *__restrict,size_t,dioflag_t))&sysfile_read,
-	/* .ft_write  = */(dssize_t (DCALL *)(DeeFileObject *__restrict,void const *__restrict,size_t,dioflag_t))&sysfile_write,
-	/* .ft_seek   = */(doff_t (DCALL *)(DeeFileObject *__restrict,doff_t,int))&sysfile_seek,
-	/* .ft_sync   = */(int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
-	/* .ft_trunc  = */(int (DCALL *)(DeeFileObject *__restrict,dpos_t))&sysfile_trunc,
-	/* .ft_close  = */(int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */(int (DCALL *)(DeeFileObject *__restrict,dioflag_t))&sysfile_getc,
-	/* .ft_ungetc = */(int (DCALL *)(DeeFileObject *__restrict,int))&sysfile_ungetc,
-	/* .ft_putc   = */(int (DCALL *)(DeeFileObject *__restrict,int,dioflag_t))&sysfile_putc
+	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
+	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
+	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
+	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&sysfile_getc,
+	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&sysfile_ungetc,
+	/* .ft_putc   = */ (int (DCALL *)(DeeFileObject *__restrict, int, dioflag_t))&sysfile_putc
 };
 
 PUBLIC DeeFileTypeObject DeeFSFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"_FSFile",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_NONE,
-		/* .tp_base     = */(DeeTypeObject *)&DeeSystemFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "_FSFile",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_alloc = */{
-					/* .tp_ctor      = */NULL,
-					/* .tp_copy_ctor = */NULL,
-					/* .tp_deep_ctor = */NULL,
-					/* .tp_any_ctor  = */NULL,
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
-			/* .tp_dtor        = */NULL,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
-		/* .tp_methods       = */NULL,
-		/* .tp_getsets       = */NULL,
-		/* .tp_members       = */NULL,
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */sysfile_class_methods,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */NULL,
-	/* .ft_write  = */NULL,
-	/* .ft_seek   = */NULL,
-	/* .ft_sync   = */NULL,
-	/* .ft_trunc  = */NULL,
-	/* .ft_close  = */NULL,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */NULL,
-	/* .ft_ungetc = */NULL,
-	/* .ft_putc   = */NULL
+	/* .ft_read   = */ NULL,
+	/* .ft_write  = */ NULL,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ NULL,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ NULL,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
 };
 
 DECL_END

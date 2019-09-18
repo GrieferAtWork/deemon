@@ -128,12 +128,12 @@ print repr [[:8]...,4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
  * whatever expression it is following.
  * Its behavior then is to interpret that expression as a sequence
  * who's arguments are taken and re-interpreted as though they were
- * written as a list of comma-seperated expression at the same
+ * written as a list of comma-separated expression at the same
  * location as the expand modifier itself. */
 print repr((["a","b","c"]...)); /* Cast to tuple -- ("a", "b", "c") */
 print repr([("a","b","c")...]); /* Cast to list  -- ["a", "b", "c"] */
 
-/* Expand expressions can be used anywhere a comma-seperated list of
+/* Expand expressions can be used anywhere a comma-separated list of
  * expressions can be used, which includes argument lists, print statements, etc.
  * The only place where expand has special meaning is when it is used in
  * assignments (explained later) */

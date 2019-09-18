@@ -19,25 +19,24 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_FASTSEQ_C
 #define GUARD_DEEMON_OBJECTS_SEQ_FASTSEQ_C 1
 
-#include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/alloc.h>
-#include <deemon/seq.h>
-#include <deemon/tuple.h>
-#include <deemon/list.h>
-#include <deemon/none.h>
+#include <deemon/api.h>
+#include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
-#include <deemon/thread.h>
-#include <deemon/bytes.h>
+#include <deemon/list.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/seq.h>
 #include <deemon/string.h>
-
-#include "transform.h"
-#include "svec.h"
-#include "range.h"
-#include "subrange.h"
+#include <deemon/thread.h>
+#include <deemon/tuple.h>
 
 #include "../../runtime/runtime_error.h"
+#include "range.h"
+#include "subrange.h"
+#include "svec.h"
+#include "transform.h"
 
 DECL_BEGIN
 
@@ -61,20 +60,20 @@ STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST == (size_t)-1,
  * Sub-classes of these types are not fast-sequence-compatible. */
 PUBLIC size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self) {
- DeeTypeObject *tp_self;
- struct type_seq *seq;
- struct type_nsi *nsi;
- ASSERT_OBJECT(self);
- tp_self = Dee_TYPE(self);
- if ((seq = tp_self->tp_seq) != NULL &&
-     (nsi = seq->tp_nsi) != NULL &&
-     (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) &&
-     (nsi->nsi_seqlike.nsi_getsize_fast)) {
-  ASSERT(nsi->nsi_seqlike.nsi_getitem ||
-         nsi->nsi_seqlike.nsi_getitem_fast);
-  return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
- }
- return DEE_FASTSEQ_NOTFAST;
+	DeeTypeObject *tp_self;
+	struct type_seq *seq;
+	struct type_nsi *nsi;
+	ASSERT_OBJECT(self);
+	tp_self = Dee_TYPE(self);
+	if ((seq = tp_self->tp_seq) != NULL &&
+	    (nsi = seq->tp_nsi) != NULL &&
+	    (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) &&
+	    (nsi->nsi_seqlike.nsi_getsize_fast)) {
+		ASSERT(nsi->nsi_seqlike.nsi_getitem ||
+		       nsi->nsi_seqlike.nsi_getitem_fast);
+		return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
+	}
+	return DEE_FASTSEQ_NOTFAST;
 }
 
 
@@ -84,90 +83,96 @@ DeeFastSeq_GetSize(DeeObject *__restrict self) {
  * WARNING: These function may _ONLY_ be used if `DeeFastSeq_Check(self)' is true. */
 PUBLIC DREF DeeObject *DCALL
 DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
- DeeTypeObject *tp_self;
- struct type_seq *seq;
- struct type_nsi *nsi;
- ASSERT_OBJECT(self);
- tp_self = Dee_TYPE(self);
- seq = tp_self->tp_seq;
- ASSERT(seq);
- nsi = seq->tp_nsi;
- ASSERT(nsi);
- ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
- if (nsi->nsi_seqlike.nsi_getitem_fast) {
-  DREF DeeObject *result;
-  result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,index);
-  ASSERT(result != ITER_DONE);
-  if unlikely(!result)
-     err_unbound_index(self,index);
-  return result;
- }
- ASSERT(nsi->nsi_seqlike.nsi_getitem);
- return (*nsi->nsi_seqlike.nsi_getitem)(self,index);
+	DeeTypeObject *tp_self;
+	struct type_seq *seq;
+	struct type_nsi *nsi;
+	ASSERT_OBJECT(self);
+	tp_self = Dee_TYPE(self);
+	seq     = tp_self->tp_seq;
+	ASSERT(seq);
+	nsi = seq->tp_nsi;
+	ASSERT(nsi);
+	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
+	if (nsi->nsi_seqlike.nsi_getitem_fast) {
+		DREF DeeObject *result;
+		result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, index);
+		ASSERT(result != ITER_DONE);
+		if
+			unlikely(!result)
+		err_unbound_index(self, index);
+		return result;
+	}
+	ASSERT(nsi->nsi_seqlike.nsi_getitem);
+	return (*nsi->nsi_seqlike.nsi_getitem)(self, index);
 }
 
 /* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE an error
  * occurred, and `NULL' if the item has been marked as unbound. */
 PUBLIC DREF DeeObject *DCALL
 DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
- DREF DeeObject *result;
- DeeTypeObject *tp_self;
- struct type_seq *seq;
- struct type_nsi *nsi;
- ASSERT_OBJECT(self);
- tp_self = Dee_TYPE(self);
- seq = tp_self->tp_seq;
- ASSERT(seq);
- nsi = seq->tp_nsi;
- ASSERT(nsi);
- ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
- if (nsi->nsi_seqlike.nsi_getitem_fast) {
-  result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self,index);
-  ASSERT(result != ITER_DONE);
-  return result;
- }
- ASSERT(nsi->nsi_seqlike.nsi_getitem);
- result = (*nsi->nsi_seqlike.nsi_getitem)(self,index);
- if unlikely(!result) {
-  if (!DeeError_Catch(&DeeError_UnboundItem))
-       result = ITER_DONE;
- }
- return result;
+	DREF DeeObject *result;
+	DeeTypeObject *tp_self;
+	struct type_seq *seq;
+	struct type_nsi *nsi;
+	ASSERT_OBJECT(self);
+	tp_self = Dee_TYPE(self);
+	seq     = tp_self->tp_seq;
+	ASSERT(seq);
+	nsi = seq->tp_nsi;
+	ASSERT(nsi);
+	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
+	if (nsi->nsi_seqlike.nsi_getitem_fast) {
+		result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, index);
+		ASSERT(result != ITER_DONE);
+		return result;
+	}
+	ASSERT(nsi->nsi_seqlike.nsi_getitem);
+	result = (*nsi->nsi_seqlike.nsi_getitem)(self, index);
+	if
+		unlikely(!result)
+	{
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			result = ITER_DONE;
+	}
+	return result;
 }
 
 
 
 PUBLIC size_t DCALL
 DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
- DeeTypeObject *tp_self;
- ASSERT_OBJECT(self);
- tp_self = Dee_TYPE(self);
- if (tp_self == &DeeTuple_Type)
-     return DeeTuple_SIZE(self);
- if (tp_self == &SharedVector_Type)
-     return ((SharedVector *)self)->sv_length;
- return DEE_FASTSEQ_NOTFAST;
+	DeeTypeObject *tp_self;
+	ASSERT_OBJECT(self);
+	tp_self = Dee_TYPE(self);
+	if (tp_self == &DeeTuple_Type)
+		return DeeTuple_SIZE(self);
+	if (tp_self == &SharedVector_Type)
+		return ((SharedVector *)self)->sv_length;
+	return DEE_FASTSEQ_NOTFAST;
 }
+
 PUBLIC ATTR_RETNONNULL DREF DeeObject *DCALL
 DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
- DeeTypeObject *tp_self;
- DREF DeeObject *result;
- ASSERT_OBJECT(self);
- tp_self = Dee_TYPE(self);
- if (tp_self == &DeeTuple_Type) {
-  result = DeeTuple_GET(self,index);
-  return_reference_(result);
- }
- ASSERT(tp_self == &SharedVector_Type);
- rwlock_read(&((SharedVector *)self)->sv_lock);
- if unlikely(index >= ((SharedVector *)self)->sv_length) {
-  rwlock_endread(&((SharedVector *)self)->sv_lock);
-  return_none;
- }
- result = ((SharedVector *)self)->sv_vector[index];
- Dee_Incref(result);
- rwlock_endread(&((SharedVector *)self)->sv_lock);
- return result;
+	DeeTypeObject *tp_self;
+	DREF DeeObject *result;
+	ASSERT_OBJECT(self);
+	tp_self = Dee_TYPE(self);
+	if (tp_self == &DeeTuple_Type) {
+		result = DeeTuple_GET(self, index);
+		return_reference_(result);
+	}
+	ASSERT(tp_self == &SharedVector_Type);
+	rwlock_read(&((SharedVector *)self)->sv_lock);
+	if
+		unlikely(index >= ((SharedVector *)self)->sv_length)
+	{
+		rwlock_endread(&((SharedVector *)self)->sv_lock);
+		return_none;
+	}
+	result = ((SharedVector *)self)->sv_vector[index];
+	Dee_Incref(result);
+	rwlock_endread(&((SharedVector *)self)->sv_lock);
+	return result;
 }
 
 
@@ -181,140 +186,174 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 PUBLIC /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict plength) {
- size_t i,fastsize,alloc_size;
- DREF DeeObject **result,*iter,*elem,**new_result;
- fastsize = DeeFastSeq_GetSize(self);
- if (fastsize != DEE_FASTSEQ_NOTFAST) {
-  /* Optimization for fast-sequence-compatible objects. */
-  *plength = fastsize;
-  result = (DREF DeeObject **)Dee_Malloc(fastsize*sizeof(DREF DeeObject *));
-  if unlikely(!result) goto err;
-  for (i = 0; i < fastsize; ++i) {
-   elem = DeeFastSeq_GetItem(self,i);
-   if unlikely(!elem) goto err_r_i;
-   result[i] = elem;
-  }
-  goto done;
- }
- /* Must use iterators. */
- iter = DeeObject_IterSelf(self);
- if unlikely(!iter) goto err;
- alloc_size = 16,i = 0;
- result = (DREF DeeObject **)Dee_TryMalloc(alloc_size*sizeof(DREF DeeObject *));
- if unlikely(!result) {
-  alloc_size = 1;
-  result = (DREF DeeObject **)Dee_Malloc(alloc_size*sizeof(DREF DeeObject *));
-  goto err_r_iter;
- }
- /* Iterate items. */
- while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-  ASSERT(i <= alloc_size);
-  if unlikely(i >= alloc_size) {
-   /* Must allocate more memory. */
-   size_t new_alloc_size = alloc_size * 2;
-   new_result = (DREF DeeObject **)Dee_TryRealloc(result,new_alloc_size*sizeof(DREF DeeObject *));
-   if unlikely(!new_result) {
-    new_alloc_size = i+1;
-    new_result = (DREF DeeObject **)Dee_Realloc(result,new_alloc_size*sizeof(DREF DeeObject *));
-    if unlikely(!new_result) goto err_r_iter_elem;
-   }
-   result     = new_result;
-   alloc_size = new_alloc_size;
-  }
-  result[i++] = elem; /* Inherit reference. */
-  if (DeeThread_CheckInterrupt())
-      goto err_r_iter;
- }
- if unlikely(!elem) goto err_r_iter;
- Dee_Decref(iter);
- ASSERT(i <= alloc_size);
- /* Free unused memory. */
- if (i != alloc_size) {
-  new_result = (DREF DeeObject **)Dee_TryRealloc(result,i*sizeof(DREF DeeObject *));
-  if likely(new_result) result = new_result;
- }
- /* Save the resulting length. */
- *plength = i;
+	size_t i, fastsize, alloc_size;
+	DREF DeeObject **result, *iter, *elem, **new_result;
+	fastsize = DeeFastSeq_GetSize(self);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		/* Optimization for fast-sequence-compatible objects. */
+		*plength = fastsize;
+		result   = (DREF DeeObject **)Dee_Malloc(fastsize * sizeof(DREF DeeObject *));
+		if
+			unlikely(!result)
+		goto err;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(self, i);
+			if
+				unlikely(!elem)
+			goto err_r_i;
+			result[i] = elem;
+		}
+		goto done;
+	}
+	/* Must use iterators. */
+	iter = DeeObject_IterSelf(self);
+	if
+		unlikely(!iter)
+	goto err;
+	alloc_size = 16, i = 0;
+	result = (DREF DeeObject **)Dee_TryMalloc(alloc_size * sizeof(DREF DeeObject *));
+	if
+		unlikely(!result)
+	{
+		alloc_size = 1;
+		result     = (DREF DeeObject **)Dee_Malloc(alloc_size * sizeof(DREF DeeObject *));
+		goto err_r_iter;
+	}
+	/* Iterate items. */
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		ASSERT(i <= alloc_size);
+		if
+			unlikely(i >= alloc_size)
+		{
+			/* Must allocate more memory. */
+			size_t new_alloc_size = alloc_size * 2;
+			new_result            = (DREF DeeObject **)Dee_TryRealloc(result, new_alloc_size * sizeof(DREF DeeObject *));
+			if
+				unlikely(!new_result)
+			{
+				new_alloc_size = i + 1;
+				new_result     = (DREF DeeObject **)Dee_Realloc(result, new_alloc_size * sizeof(DREF DeeObject *));
+				if
+					unlikely(!new_result)
+				goto err_r_iter_elem;
+			}
+			result     = new_result;
+			alloc_size = new_alloc_size;
+		}
+		result[i++] = elem; /* Inherit reference. */
+		if (DeeThread_CheckInterrupt())
+			goto err_r_iter;
+	}
+	if
+		unlikely(!elem)
+	goto err_r_iter;
+	Dee_Decref(iter);
+	ASSERT(i <= alloc_size);
+	/* Free unused memory. */
+	if (i != alloc_size) {
+		new_result = (DREF DeeObject **)Dee_TryRealloc(result, i * sizeof(DREF DeeObject *));
+		if
+			likely(new_result)
+		result = new_result;
+	}
+	/* Save the resulting length. */
+	*plength = i;
 done:
- return result;
+	return result;
 err_r_iter_elem:
- Dee_Decref(elem);
+	Dee_Decref(elem);
 err_r_iter:
- Dee_Decref(iter);
+	Dee_Decref(iter);
 err_r_i:
- while (i--)
-     Dee_Decref(result[i]);
- Dee_Free(result);
+	while (i--)
+		Dee_Decref(result[i]);
+	Dee_Free(result);
 err:
- return NULL;
+	return NULL;
 }
 
 PUBLIC /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated) {
- size_t i,fastsize,alloc_size;
- DREF DeeObject **result,*iter,*elem,**new_result;
- fastsize = DeeFastSeq_GetSize(self);
- if (fastsize != DEE_FASTSEQ_NOTFAST) {
-  /* Optimization for fast-sequence-compatible objects. */
-  *plength = *pallocated = fastsize;
-  result = (DREF DeeObject **)Dee_Malloc(fastsize*sizeof(DREF DeeObject *));
-  if unlikely(!result) goto err;
-  for (i = 0; i < fastsize; ++i) {
-   elem = DeeFastSeq_GetItem(self,i);
-   if unlikely(!elem) goto err_r_i;
-   result[i] = elem;
-  }
-  goto done;
- }
- /* Must use iterators. */
- iter = DeeObject_IterSelf(self);
- if unlikely(!iter) goto err;
- alloc_size = 16,i = 0;
- result = (DREF DeeObject **)Dee_TryMalloc(alloc_size*sizeof(DREF DeeObject *));
- if unlikely(!result) {
-  alloc_size = 1;
-  result = (DREF DeeObject **)Dee_Malloc(alloc_size*sizeof(DREF DeeObject *));
-  goto err_r_iter;
- }
- /* Iterate items. */
- while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-  ASSERT(i <= alloc_size);
-  if unlikely(i >= alloc_size) {
-   /* Must allocate more memory. */
-   size_t new_alloc_size = alloc_size * 2;
-   new_result = (DREF DeeObject **)Dee_TryRealloc(result,new_alloc_size*sizeof(DREF DeeObject *));
-   if unlikely(!new_result) {
-    new_alloc_size = i+1;
-    new_result = (DREF DeeObject **)Dee_Realloc(result,new_alloc_size*sizeof(DREF DeeObject *));
-    if unlikely(!new_result) goto err_r_iter_elem;
-   }
-   result     = new_result;
-   alloc_size = new_alloc_size;
-  }
-  result[i++] = elem; /* Inherit reference. */
-  if (DeeThread_CheckInterrupt())
-      goto err_r_iter;
- }
- if unlikely(!elem) goto err_r_iter;
- Dee_Decref(iter);
- ASSERT(i <= alloc_size);
- /* Save the resulting length, and allocation. */
- *pallocated = alloc_size;
- *plength    = i;
+	size_t i, fastsize, alloc_size;
+	DREF DeeObject **result, *iter, *elem, **new_result;
+	fastsize = DeeFastSeq_GetSize(self);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		/* Optimization for fast-sequence-compatible objects. */
+		*plength = *pallocated = fastsize;
+		result                 = (DREF DeeObject **)Dee_Malloc(fastsize * sizeof(DREF DeeObject *));
+		if
+			unlikely(!result)
+		goto err;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(self, i);
+			if
+				unlikely(!elem)
+			goto err_r_i;
+			result[i] = elem;
+		}
+		goto done;
+	}
+	/* Must use iterators. */
+	iter = DeeObject_IterSelf(self);
+	if
+		unlikely(!iter)
+	goto err;
+	alloc_size = 16, i = 0;
+	result = (DREF DeeObject **)Dee_TryMalloc(alloc_size * sizeof(DREF DeeObject *));
+	if
+		unlikely(!result)
+	{
+		alloc_size = 1;
+		result     = (DREF DeeObject **)Dee_Malloc(alloc_size * sizeof(DREF DeeObject *));
+		goto err_r_iter;
+	}
+	/* Iterate items. */
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		ASSERT(i <= alloc_size);
+		if
+			unlikely(i >= alloc_size)
+		{
+			/* Must allocate more memory. */
+			size_t new_alloc_size = alloc_size * 2;
+			new_result            = (DREF DeeObject **)Dee_TryRealloc(result, new_alloc_size * sizeof(DREF DeeObject *));
+			if
+				unlikely(!new_result)
+			{
+				new_alloc_size = i + 1;
+				new_result     = (DREF DeeObject **)Dee_Realloc(result, new_alloc_size * sizeof(DREF DeeObject *));
+				if
+					unlikely(!new_result)
+				goto err_r_iter_elem;
+			}
+			result     = new_result;
+			alloc_size = new_alloc_size;
+		}
+		result[i++] = elem; /* Inherit reference. */
+		if (DeeThread_CheckInterrupt())
+			goto err_r_iter;
+	}
+	if
+		unlikely(!elem)
+	goto err_r_iter;
+	Dee_Decref(iter);
+	ASSERT(i <= alloc_size);
+	/* Save the resulting length, and allocation. */
+	*pallocated = alloc_size;
+	*plength    = i;
 done:
- return result;
+	return result;
 err_r_iter_elem:
- Dee_Decref(elem);
+	Dee_Decref(elem);
 err_r_iter:
- Dee_Decref(iter);
+	Dee_Decref(iter);
 err_r_i:
- while (i--)
-     Dee_Decref(result[i]);
- Dee_Free(result);
+	while (i--)
+		Dee_Decref(result[i]);
+	Dee_Free(result);
 err:
- return NULL;
+	return NULL;
 }
 
 
@@ -339,68 +378,84 @@ err:
 PUBLIC size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                  /*in-out*/size_t *__restrict pallocated) {
- DeeObject **new_elemv,**elemv = *pvector;
- DREF DeeObject *iterator,*elem;
- size_t elema = *pallocated;
- size_t elemc,i;
- ASSERT(!elema || elemv);
- elemc = DeeFastSeq_GetSize(self);
- if (elemc != DEE_FASTSEQ_NOTFAST) {
-  /* Fast sequence optimizations. */
-  if (elemc > elema) {
-   new_elemv = (DeeObject **)Dee_Realloc(elemv,elemc * sizeof(DeeObject *));
-   if unlikely(!new_elemv) goto err;
-   *pvector    = elemv = new_elemv;
-   *pallocated = elemc;
-  }
-  for (i = 0; i < elemc; ++i) {
-   elem = DeeFastSeq_GetItem(self,i);
-   if unlikely(!elem) goto err_i;
-   elemv[i] = elem; /* Inherit reference. */
-  }
- } else {
-  /* Use iterators. */
-  iterator = DeeObject_IterSelf(self);
-  if unlikely(!iterator) goto err;
-  elemc = 0;
-  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-   ASSERT(elemc <= elema);
-   if (elemc >= elema) {
-    /* Allocate more memory. */
-    size_t new_elema = elema * 2;
-    if unlikely(new_elema < 16) new_elema = 16;
-    new_elemv = (DeeObject **)Dee_TryRealloc(elemv,new_elema *
-                                             sizeof(DeeObject *));
-    if unlikely(!new_elemv) {
-     new_elema = elemc + 1;
-     new_elemv = (DeeObject **)Dee_Realloc(elemv,new_elema *
-                                           sizeof(DeeObject *));
-     if unlikely(!new_elemv) goto err_iterator_elemc;
-    }
-    elemv = new_elemv;
-    elema = new_elema;
-   }
-   elemv[elemc] = elem; /* Inherit reference. */
-   ++elemc;
-  }
-  *pvector    = elemv;
-  *pallocated = elema;
-  if unlikely(!elem) goto err_iterator;
-  Dee_Decref(iterator);
- }
- return elemc;
+                                  /*in-out*/ size_t *__restrict pallocated) {
+	DeeObject **new_elemv, **elemv = *pvector;
+	DREF DeeObject *iterator, *elem;
+	size_t elema = *pallocated;
+	size_t elemc, i;
+	ASSERT(!elema || elemv);
+	elemc = DeeFastSeq_GetSize(self);
+	if (elemc != DEE_FASTSEQ_NOTFAST) {
+		/* Fast sequence optimizations. */
+		if (elemc > elema) {
+			new_elemv = (DeeObject **)Dee_Realloc(elemv, elemc * sizeof(DeeObject *));
+			if
+				unlikely(!new_elemv)
+			goto err;
+			*pvector = elemv = new_elemv;
+			*pallocated      = elemc;
+		}
+		for (i = 0; i < elemc; ++i) {
+			elem = DeeFastSeq_GetItem(self, i);
+			if
+				unlikely(!elem)
+			goto err_i;
+			elemv[i] = elem; /* Inherit reference. */
+		}
+	} else {
+		/* Use iterators. */
+		iterator = DeeObject_IterSelf(self);
+		if
+			unlikely(!iterator)
+		goto err;
+		elemc = 0;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+			ASSERT(elemc <= elema);
+			if (elemc >= elema) {
+				/* Allocate more memory. */
+				size_t new_elema = elema * 2;
+				if
+					unlikely(new_elema < 16)
+				new_elema = 16;
+				new_elemv = (DeeObject **)Dee_TryRealloc(elemv, new_elema *
+				                                                sizeof(DeeObject *));
+				if
+					unlikely(!new_elemv)
+				{
+					new_elema = elemc + 1;
+					new_elemv = (DeeObject **)Dee_Realloc(elemv, new_elema *
+					                                             sizeof(DeeObject *));
+					if
+						unlikely(!new_elemv)
+					goto err_iterator_elemc;
+				}
+				elemv = new_elemv;
+				elema = new_elema;
+			}
+			elemv[elemc] = elem; /* Inherit reference. */
+			++elemc;
+		}
+		*pvector    = elemv;
+		*pallocated = elema;
+		if
+			unlikely(!elem)
+		goto err_iterator;
+		Dee_Decref(iterator);
+	}
+	return elemc;
 err_iterator_elemc:
- while (elemc--) Dee_Decref(elemv[elemc]);
- *pvector    = elemv;
- *pallocated = elema;
+	while (elemc--)
+		Dee_Decref(elemv[elemc]);
+	*pvector    = elemv;
+	*pallocated = elema;
 err_iterator:
- Dee_Decref(iterator);
- goto err;
+	Dee_Decref(iterator);
+	goto err;
 err_i:
- while (i--) Dee_Decref(elemv[i]);
+	while (i--)
+		Dee_Decref(elemv[i]);
 err:
- return (size_t)-1;
+	return (size_t)-1;
 }
 
 
@@ -413,72 +468,88 @@ err:
 PUBLIC size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                        /*in-out*/size_t *__restrict pallocated,
-                                        /*in*/size_t offset) {
- DeeObject **new_elemv,**elemv = *pvector;
- DREF DeeObject *iterator,*elem;
- size_t elema = *pallocated;
- size_t elemc,i;
- ASSERT(elema >= offset);
- ASSERT(!elema || elemv);
- elemc = DeeFastSeq_GetSize(self);
- if (elemc != DEE_FASTSEQ_NOTFAST) {
-  /* Fast sequence optimizations. */
-  if (elemc > (elema - offset)) {
-   new_elemv = (DeeObject **)Dee_Realloc(elemv,
-                                        (offset + elemc) *
-                                         sizeof(DeeObject *));
-   if unlikely(!new_elemv) goto err;
-   *pvector    = elemv = new_elemv;
-   *pallocated = offset + elemc;
-  }
-  for (i = 0; i < elemc; ++i) {
-   elem = DeeFastSeq_GetItem(self,i);
-   if unlikely(!elem) goto err_i;
-   elemv[offset + i] = elem; /* Inherit reference. */
-  }
- } else {
-  /* Use iterators. */
-  iterator = DeeObject_IterSelf(self);
-  if unlikely(!iterator) goto err;
-  elemc = 0;
-  while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-   ASSERT(elemc <= (elema - offset));
-   if (elemc >= (elema - offset)) {
-    /* Allocate more memory. */
-    size_t new_elema = elema * 2;
-    if unlikely(new_elema < 16) new_elema = 16;
-    new_elemv = (DeeObject **)Dee_TryRealloc(elemv,new_elema *
-                                             sizeof(DeeObject *));
-    if unlikely(!new_elemv) {
-     new_elema = offset + elemc + 1;
-     new_elemv = (DeeObject **)Dee_Realloc(elemv,new_elema *
-                                           sizeof(DeeObject *));
-     if unlikely(!new_elemv) goto err_iterator_elemc;
-    }
-    elemv = new_elemv;
-    elema = new_elema;
-   }
-   elemv[offset + elemc] = elem; /* Inherit reference. */
-   ++elemc;
-  }
-  *pvector    = elemv;
-  *pallocated = elema;
-  if unlikely(!elem) goto err_iterator;
-  Dee_Decref(iterator);
- }
- return elemc;
+                                        /*in-out*/ size_t *__restrict pallocated,
+                                        /*in*/ size_t offset) {
+	DeeObject **new_elemv, **elemv = *pvector;
+	DREF DeeObject *iterator, *elem;
+	size_t elema = *pallocated;
+	size_t elemc, i;
+	ASSERT(elema >= offset);
+	ASSERT(!elema || elemv);
+	elemc = DeeFastSeq_GetSize(self);
+	if (elemc != DEE_FASTSEQ_NOTFAST) {
+		/* Fast sequence optimizations. */
+		if (elemc > (elema - offset)) {
+			new_elemv = (DeeObject **)Dee_Realloc(elemv,
+			                                      (offset + elemc) *
+			                                      sizeof(DeeObject *));
+			if
+				unlikely(!new_elemv)
+			goto err;
+			*pvector = elemv = new_elemv;
+			*pallocated      = offset + elemc;
+		}
+		for (i = 0; i < elemc; ++i) {
+			elem = DeeFastSeq_GetItem(self, i);
+			if
+				unlikely(!elem)
+			goto err_i;
+			elemv[offset + i] = elem; /* Inherit reference. */
+		}
+	} else {
+		/* Use iterators. */
+		iterator = DeeObject_IterSelf(self);
+		if
+			unlikely(!iterator)
+		goto err;
+		elemc = 0;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+			ASSERT(elemc <= (elema - offset));
+			if (elemc >= (elema - offset)) {
+				/* Allocate more memory. */
+				size_t new_elema = elema * 2;
+				if
+					unlikely(new_elema < 16)
+				new_elema = 16;
+				new_elemv = (DeeObject **)Dee_TryRealloc(elemv, new_elema *
+				                                                sizeof(DeeObject *));
+				if
+					unlikely(!new_elemv)
+				{
+					new_elema = offset + elemc + 1;
+					new_elemv = (DeeObject **)Dee_Realloc(elemv, new_elema *
+					                                             sizeof(DeeObject *));
+					if
+						unlikely(!new_elemv)
+					goto err_iterator_elemc;
+				}
+				elemv = new_elemv;
+				elema = new_elema;
+			}
+			elemv[offset + elemc] = elem; /* Inherit reference. */
+			++elemc;
+		}
+		*pvector    = elemv;
+		*pallocated = elema;
+		if
+			unlikely(!elem)
+		goto err_iterator;
+		Dee_Decref(iterator);
+	}
+	return elemc;
 err_iterator_elemc:
- while (elemc--) Dee_Decref(elemv[offset + elemc]);
- *pvector    = elemv;
- *pallocated = elema;
+	while (elemc--)
+		Dee_Decref(elemv[offset + elemc]);
+	*pvector    = elemv;
+	*pallocated = elema;
 err_iterator:
- Dee_Decref(iterator);
- goto err;
+	Dee_Decref(iterator);
+	goto err;
 err_i:
- while (i--) Dee_Decref(elemv[offset + i]);
+	while (i--)
+		Dee_Decref(elemv[offset + i]);
 err:
- return (size_t)-1;
+	return (size_t)-1;
 }
 
 

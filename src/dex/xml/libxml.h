@@ -24,8 +24,8 @@
 #include <deemon/object.h>
 #include <deemon/util/rwlock.h>
 
-#include <hybrid/list/list.h>
 #include <hybrid/atomic.h>
+#include <hybrid/list/list.h>
 
 DECL_BEGIN
 
@@ -34,36 +34,36 @@ typedef struct xml_node_object XMLNodeObject;
 typedef struct xml_node_attributes_proxy XMLNodeAttributesProxy;
 
 struct xml_node_attr {
-    /*utf-8*/ char const *na_name_str;    /* [0..1] Starting address of the name (`NULL' for sentinel entries / `ITER_DONE' for deleted ones) */
-    size_t               na_name_size;   /* Name size (in bytes). */
-    dhash_t              na_name_hash;   /* Name hash. */
-    /*utf-8*/ char const *na_value_start; /* [1..na_value_size] Attribute value starting pointer. */
-    size_t               na_value_size;  /* Value size (in bytes). */
-    DREF DeeObject      *na_owner;       /* [1..1] Some object holding references to the owner
-                                          * objects for `na_name_str' and `na_value_start'. */
+	/*utf-8*/ char const *na_name_str;    /* [0..1] Starting address of the name (`NULL' for sentinel entries / `ITER_DONE' for deleted ones) */
+	size_t                na_name_size;   /* Name size (in bytes). */
+	dhash_t               na_name_hash;   /* Name hash. */
+	/*utf-8*/ char const *na_value_start; /* [1..na_value_size] Attribute value starting pointer. */
+	size_t                na_value_size;  /* Value size (in bytes). */
+	DREF DeeObject       *na_owner;       /* [1..1] Some object holding references to the owner
+	                                       * objects for `na_name_str' and `na_value_start'. */
 };
 
 struct xml_node_attributes {
-    size_t                nas_mask; /* Allocated hash-mask of node attributes. */
-    size_t                nas_size; /* Number of entires with `na_name_str != NULL'. */
-    size_t                nas_used; /* Number of entires with `na_name_str != NULL && na_name_str != (char *)ITER_DONE'. */
-    struct xml_node_attr *nas_list; /* [0..nas_mask + 1][owned] Hash-vector of XML Node attributes. */
-#define XMLNodeAttributes_NEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+	size_t                nas_mask; /* Allocated hash-mask of node attributes. */
+	size_t                nas_size; /* Number of entires with `na_name_str != NULL'. */
+	size_t                nas_used; /* Number of entires with `na_name_str != NULL && na_name_str != (char *)ITER_DONE'. */
+	struct xml_node_attr *nas_list; /* [0..nas_mask + 1][owned] Hash-vector of XML Node attributes. */
+#define XMLNodeAttributes_NEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 };
 
 struct xml_node_child {
-    DREF XMLNode          *nc_child; /* [0..1] The child node (`NULL' for sentinel entries / `ITER_DONE' for deleted ones)
-                                      * NOTE: For this purpose, the node's kind is used as accessor & hash */
+	DREF XMLNode          *nc_child; /* [0..1] The child node (`NULL' for sentinel entries / `ITER_DONE' for deleted ones)
+	                                  * NOTE: For this purpose, the node's kind is used as accessor & hash */
 };
 
 struct xml_node_children {
-    size_t                 ncs_mask; /* Allocated hash-mask of node children. */
-    size_t                 ncs_size; /* Number of entires with `nc_child != NULL'. */
-    size_t                 ncs_used; /* Number of entires with `nc_child != NULL && nc_child != ITER_DONE'. */
-    struct xml_node_child *ncs_list; /* [0..nas_mask + 1][owned] Hash-vector of XML Node attributes. */
-    XMLNode               *ncs_head; /* [0..1] The first child node. */
-    XMLNode               *ncs_tail; /* [0..1] The last child node. */
-#define XMLNodeChildren_NEXT(i,perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+	size_t                 ncs_mask; /* Allocated hash-mask of node children. */
+	size_t                 ncs_size; /* Number of entires with `nc_child != NULL'. */
+	size_t                 ncs_used; /* Number of entires with `nc_child != NULL && nc_child != ITER_DONE'. */
+	struct xml_node_child *ncs_list; /* [0..nas_mask + 1][owned] Hash-vector of XML Node attributes. */
+	XMLNode               *ncs_head; /* [0..1] The first child node. */
+	XMLNode               *ncs_tail; /* [0..1] The last child node. */
+#define XMLNodeChildren_NEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 };
 
 
@@ -102,51 +102,53 @@ struct xml_node_children {
  */
 
 struct xml_node {
-    ATOMIC_DATA Dee_ref_t   xn_refcnt;     /* Reference counter. */
+	ATOMIC_DATA Dee_ref_t    xn_refcnt;    /* Reference counter. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t                xn_lock;       /* Lock for modifications made to this node. */
-#endif
-    DREF LIST_HEAD(XMLNode) xn_changes;    /* [0..1][lock(xn_lock)] Chain of modified XML child Nodes. */
-    DREF LIST_NODE(XMLNode) xn_changed;    /* [lock(:xno_parent->xno_node->xn_lock)]
-                                            * [CHAIN(:xno_parent->xno_node->xn_changes)]
-                                            * [1..1] Chain of changed XML Nodes. */
-    XMLNode                *xn_sib_prev;   /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Previous sibling node. */
-    XMLNode                *xn_sib_next;   /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Next sibling node. */
-    DREF DeeObject         *xn_kind_obj;   /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_kind_str' */
-    /*utf-8*/ char const    *xn_kind_str;   /* [1..1][lock(xn_lock)] XML kind name start pointer.
-                                            * >> <foo bar="baz">content</foo>
-                                            *     ^
-                                            * NOTE: When `xn_parent' is `NULL', this field cannot be accessed, or set. */
-    /*utf-8*/ char const    *xn_kind_end;   /* [1..1][lock(xn_lock)] XML kind name end pointer.
-                                            * >> <foo bar="baz">content</foo>
-                                            *        ^ */
-    dhash_t                 xn_kind_hash;  /* [lock(xn_lock)] Hash for `xn_kind_str'. */
-    struct xml_node_attributes xn_attr;    /* [lock(xn_lock)] Set of cached node attributes. */
-    DREF DeeObject         *xn_attr_obj;   /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_attr_str' */
-    /*utf-8*/ char const    *xn_attr_str;   /* [1..1][lock(xn_lock)] XML attribute start pointer.
-                                            * >> <foo bar="baz">content</foo>
-                                            *         ^ */
-    /*utf-8*/ char const    *xn_attr_end;   /* [1..1][lock(xn_lock)] XML attribute end pointer.
-                                            * >> <foo bar="baz">content</foo>
-                                            *                  ^ */
-    /*utf-8*/ char const    *xn_attr_next;  /* [1..1][lock(xn_lock)] Pointer to the next attribute that hasn't been loaded.
-                                            * This pointer is located between `xn_attr_str..xn_attr_end'
-                                            * NOTE: This pointer can only be incremented, and not past `xn_attr_end'.
-                                            *       Once equal to `xn_attr_end', all attributes have been loaded. */
-    struct xml_node_children xn_children;  /* [lock(xn_lock)] Set of loaded XML child nodes. */
-    DREF DeeObject         *xn_text_obj;   /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_text_str' */
-    /*utf-8*/ char const    *xn_text_str;   /* [1..1][lock(xn_lock)] XML text start pointer.
-                                            * >> <foo bar="baz">content</foo>
-                                            *                   ^ */
-    /*utf-8*/ char const    *xn_text_end;   /* [1..1][lock(xn_lock)] XML text end pointer.
-                                            * >> <foo bar="baz">content</foo>
-                                            *                          ^ */
-    /*utf-8*/ char const    *xn_text_next;  /* [1..1][lock(xn_lock)] Pointer before the next child node that hasn't been loaded.
-                                            * NOTE: This pointer can only be incremented, and not past `xn_attr_end'.
-                                            *       Once equal to `xn_attr_end', all attributes have been loaded. */
+	rwlock_t                 xn_lock;      /* Lock for modifications made to this node. */
+#endif /* !CONFIG_NO_THREADS */
+	DREF LIST_HEAD(XMLNode)  xn_changes;   /* [0..1][lock(xn_lock)] Chain of modified XML child Nodes. */
+	DREF LIST_NODE(XMLNode)  xn_changed;   /* [lock(:xno_parent->xno_node->xn_lock)]
+	                                        * [CHAIN(:xno_parent->xno_node->xn_changes)]
+	                                        * [1..1] Chain of changed XML Nodes. */
+	XMLNode                 *xn_sib_prev;  /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Previous sibling node. */
+	XMLNode                 *xn_sib_next;  /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Next sibling node. */
+	DREF DeeObject          *xn_kind_obj;  /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_kind_str' */
+	/*utf-8*/ char const    *xn_kind_str;  /* [1..1][lock(xn_lock)] XML kind name start pointer.
+	                                        * >> <foo bar="baz">content</foo>
+	                                        *     ^
+	                                        * NOTE: When `xn_parent' is `NULL', this field cannot be accessed, or set. */
+	/*utf-8*/ char const    *xn_kind_end;  /* [1..1][lock(xn_lock)] XML kind name end pointer.
+	                                        * >> <foo bar="baz">content</foo>
+	                                        *        ^ */
+	dhash_t                  xn_kind_hash; /* [lock(xn_lock)] Hash for `xn_kind_str'. */
+	struct xml_node_attributes xn_attr;    /* [lock(xn_lock)] Set of cached node attributes. */
+	DREF DeeObject          *xn_attr_obj;  /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_attr_str' */
+	/*utf-8*/ char const    *xn_attr_str;  /* [1..1][lock(xn_lock)] XML attribute start pointer.
+	                                        * >> <foo bar="baz">content</foo>
+	                                        *         ^ */
+	/*utf-8*/ char const    *xn_attr_end;  /* [1..1][lock(xn_lock)] XML attribute end pointer.
+	                                        * >> <foo bar="baz">content</foo>
+	                                        *                  ^ */
+	/*utf-8*/ char const    *xn_attr_next; /* [1..1][lock(xn_lock)] Pointer to the next attribute that hasn't been loaded.
+	                                        * This pointer is located between `xn_attr_str..xn_attr_end'
+	                                        * NOTE: This pointer can only be incremented, and not past `xn_attr_end'.
+	                                        *       Once equal to `xn_attr_end', all attributes have been loaded. */
+	struct xml_node_children xn_children;  /* [lock(xn_lock)] Set of loaded XML child nodes. */
+	DREF DeeObject          *xn_text_obj;  /* [1..1][lock(xn_lock)] Custom data owner for a modified `xn_text_str' */
+	/*utf-8*/ char const    *xn_text_str;  /* [1..1][lock(xn_lock)] XML text start pointer.
+	                                        * >> <foo bar="baz">content</foo>
+	                                        *                   ^ */
+	/*utf-8*/ char const    *xn_text_end;  /* [1..1][lock(xn_lock)] XML text end pointer.
+	                                        * >> <foo bar="baz">content</foo>
+	                                        *                          ^ */
+	/*utf-8*/ char const    *xn_text_next; /* [1..1][lock(xn_lock)] Pointer before the next child node that hasn't been loaded.
+	                                        * NOTE: This pointer can only be incremented, and not past `xn_attr_end'.
+	                                        *       Once equal to `xn_attr_end', all attributes have been loaded. */
 };
+
 #define XMLNode_Incref(x) (ATOMIC_FETCHINC((x)->xn_refcnt))
 #define XMLNode_Decref(x) (ATOMIC_DECFETCH((x)->xn_refcnt))
+
 INTDEF void DCALL XMLNode_Destroy(XMLNode *__restrict self);
 #define XMLNode_Alloc()    DeeSlab_MALLOC(XMLNode)
 #define XMLNode_TryAlloc() DeeSlab_TRYMALLOC(XMLNode)
@@ -175,15 +177,15 @@ XMLNode_InitFromString(XMLNode *__restrict self,
  * @return: ITER_DONE: The requested node does not exist. */
 INTDEF DREF XMLNode *DCALL XMLNode_GetPrev(XMLNode *__restrict self, XMLNode *__restrict parent);
 INTDEF DREF XMLNode *DCALL XMLNode_GetNext(XMLNode *self, XMLNode *__restrict parent);
-#define XMLNode_GetFirst(self) XMLNode_GetNext(NULL,self)
+#define XMLNode_GetFirst(self) XMLNode_GetNext(NULL, self)
 
 
 
 typedef struct xml_node_object XMLNodeObject;
 struct xml_node_object {
-    OBJECT_HEAD
-    DREF XMLNodeObject *xno_parent; /* [0..1][const] Parent node. */
-    DREF XMLNode       *xno_node;   /* [1..1][const] The node being referenced. */
+	OBJECT_HEAD
+	DREF XMLNodeObject *xno_parent; /* [0..1][const] Parent node. */
+	DREF XMLNode       *xno_node;   /* [1..1][const] The node being referenced. */
 };
 
 INTDEF DeeTypeObject XMLNodeObject_Type;

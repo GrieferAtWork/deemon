@@ -22,16 +22,18 @@
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
-#include <hybrid/typecore.h>
+
 #include <hybrid/list/list.h>
+#include <hybrid/typecore.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_CFUNCTION
 #include <ffi.h>
 #include <ffitarget.h>
-#endif
+#endif /* !CONFIG_NO_CFUNCTION */
 
 
 DECL_BEGIN
@@ -48,36 +50,72 @@ DECL_BEGIN
 #ifdef _MSC_VER
 #define CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT 1
 #define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
-#define CTYPES_FAULTPROTECT(expr,error) \
- do{ __try { expr; } \
-     __except(ctypes_seh_guard((struct _EXCEPTION_POINTERS *)_exception_info())) \
-     { error; } \
- }__WHILE0
+#define CTYPES_FAULTPROTECT(expr, error)                                                 \
+	do {                                                                                 \
+		__try {                                                                          \
+			expr;                                                                        \
+		} __except (ctypes_seh_guard((struct _EXCEPTION_POINTERS *)_exception_info())) { \
+			error;                                                                       \
+		}                                                                                \
+	} __WHILE0
 
 #define CONFIG_HAVE_CTYPES_SEH_GUARD 1
 struct _EXCEPTION_POINTERS;
 void *__cdecl _exception_info(void);
 INTDEF int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info);
 
+#elif defined(__KOS__) && (__KOS_VERSION__ >= 400)
+DECL_END
+#include <kos/except.h>
+
+/* XXX: Mark libctypes as exception-aware? */
+
+#if defined(TRY) && defined(EXCEPT)
+#ifdef E_SEGFAULT
+INTDEF void ctypes_kos_guard(void);
+
+#define CONFIG_HAVE_CTYPES_KOS_GUARD 1
+#define CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT 1
+#define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
+#define CTYPES_FAULTPROTECT(expr, error) \
+	do {                                 \
+		TRY {                            \
+			expr;                        \
+		} EXCEPT {                       \
+			ctypes_kos_guard();          \
+			error;                       \
+		}                                \
+	} __WHILE0
+#endif /* E_SEGFAULT */
+#endif /* TRY && EXCEPT */
+
+
+DECL_BEGIN
 #elif defined(__KOS__) && (__KOS_VERSION__ >= 300) && 0
+
 /* TODO: Make use of the new <except.h> system. */
 #define CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT 1
 #define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
 #define FAULTPROTECT_VAR  EXCEPT_VAR
+
 #else
+
 //#define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
-/* TODO: handle #PF (PAGEFAULT) interrupts within `__VA_ARGS__'
+/* TODO: handle #PF (PAGEFAULT) interrupts within `expr'
  * This could highly efficiently be done using a signal handler
  * alongside storing the begin/end addresses of all protected
  * ranges in a special section that we search when a SEGFAULT
  * occurs.
  * The only problem would be to prevent GCC from modifying the
  * stack-pointer within these ranges, as well as require the
- * handler entry address to use the same depth assumption. */
-#define CTYPES_FAULTPROTECT(expr,error) expr
+ * handler entry address to use the same depth assumption.
+ * NOTE: This can only work properly under very specific
+ *       circumstances, requiring c++ exceptions, as well
+ *       as -fnon-call-exceptions. */
+#define CTYPES_FAULTPROTECT(expr, error) expr
 #endif
 #else
-#define CTYPES_FAULTPROTECT(expr,error) expr
+#define CTYPES_FAULTPROTECT(expr, error) expr
 #endif
 
 #ifndef FAULTPROTECT_VAR
@@ -85,11 +123,11 @@ INTDEF int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info);
 #endif /* !FAULTPROTECT_VAR */
 
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-#define CTYPES_RECURSIVE_FAULTPROTECT(expr,error) \
-        CTYPES_FAULTPROTECT(expr,error)
-#else
-#define CTYPES_RECURSIVE_FAULTPROTECT(expr,error) expr
-#endif
+#define CTYPES_RECURSIVE_FAULTPROTECT(expr, error) \
+	CTYPES_FAULTPROTECT(expr, error)
+#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
+#define CTYPES_RECURSIVE_FAULTPROTECT(expr, error) expr
+#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 
 
 typedef struct stype_object DeeSTypeObject;
@@ -99,92 +137,92 @@ typedef struct array_type_object DeeArrayTypeObject;
 typedef struct cfunction_type_object DeeCFunctionTypeObject;
 
 struct stype_cast {
-    /* Structured casting operators. */
-    DREF DeeObject *(DCALL *st_str)(DeeSTypeObject *__restrict tp_self, void *self);
-    DREF DeeObject *(DCALL *st_repr)(DeeSTypeObject *__restrict tp_self, void *self);
-    int             (DCALL *st_bool)(DeeSTypeObject *__restrict tp_self, void *self);
+	/* Structured casting operators. */
+	DREF DeeObject *(DCALL *st_str)(DeeSTypeObject *__restrict tp_self, void *self);
+	DREF DeeObject *(DCALL *st_repr)(DeeSTypeObject *__restrict tp_self, void *self);
+	int             (DCALL *st_bool)(DeeSTypeObject *__restrict tp_self, void *self);
 };
 struct stype_math {
-    /* Structured math operators. */
-    int             (DCALL *st_int32)(DeeSTypeObject *__restrict tp_self, void *self, int32_t *__restrict result);
-    int             (DCALL *st_int64)(DeeSTypeObject *__restrict tp_self, void *self, int64_t *__restrict result);
-    int             (DCALL *st_double)(DeeSTypeObject *__restrict tp_self, void *self, double *__restrict result);
-    DREF DeeObject *(DCALL *st_int)(DeeSTypeObject *__restrict tp_self, void *self); /* Cast to `int' */
-    DREF DeeObject *(DCALL *st_inv)(DeeSTypeObject *__restrict tp_self, void *self);
-    DREF DeeObject *(DCALL *st_pos)(DeeSTypeObject *__restrict tp_self, void *self);
-    DREF DeeObject *(DCALL *st_neg)(DeeSTypeObject *__restrict tp_self, void *self);
-    DREF DeeObject *(DCALL *st_add)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_sub)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_mul)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_div)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_mod)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_shl)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_shr)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_and)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_or)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_xor)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_pow)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inc)(DeeSTypeObject *__restrict tp_self, void *self);
-    int             (DCALL *st_dec)(DeeSTypeObject *__restrict tp_self, void *self);
-    int             (DCALL *st_inplace_add)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_sub)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_mul)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_div)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_mod)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_shl)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_shr)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_and)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_or)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_xor)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    int             (DCALL *st_inplace_pow)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	/* Structured math operators. */
+	int             (DCALL *st_int32)(DeeSTypeObject *__restrict tp_self, void *self, int32_t *__restrict result);
+	int             (DCALL *st_int64)(DeeSTypeObject *__restrict tp_self, void *self, int64_t *__restrict result);
+	int             (DCALL *st_double)(DeeSTypeObject *__restrict tp_self, void *self, double *__restrict result);
+	DREF DeeObject *(DCALL *st_int)(DeeSTypeObject *__restrict tp_self, void *self); /* Cast to `int' */
+	DREF DeeObject *(DCALL *st_inv)(DeeSTypeObject *__restrict tp_self, void *self);
+	DREF DeeObject *(DCALL *st_pos)(DeeSTypeObject *__restrict tp_self, void *self);
+	DREF DeeObject *(DCALL *st_neg)(DeeSTypeObject *__restrict tp_self, void *self);
+	DREF DeeObject *(DCALL *st_add)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_sub)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_mul)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_div)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_mod)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_shl)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_shr)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_and)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_or)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_xor)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_pow)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inc)(DeeSTypeObject *__restrict tp_self, void *self);
+	int             (DCALL *st_dec)(DeeSTypeObject *__restrict tp_self, void *self);
+	int             (DCALL *st_inplace_add)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_sub)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_mul)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_div)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_mod)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_shl)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_shr)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_and)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_or)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_xor)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	int             (DCALL *st_inplace_pow)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
 };
 
 struct stype_cmp {
-    /* Structured compare operators. */
-    DREF DeeObject *(DCALL *st_eq)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_ne)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_lo)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_le)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_gr)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *st_ge)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	/* Structured compare operators. */
+	DREF DeeObject *(DCALL *st_eq)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_ne)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_lo)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_le)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_gr)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *st_ge)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
 };
 
 struct stype_seq {
-    /* Structured sequence operators. */
-    DREF DeeObject *(DCALL *stp_iter_self)(DeeSTypeObject *__restrict tp_self, void *self);
-    DREF DeeObject *(DCALL *stp_size)(DeeSTypeObject *__restrict tp_self, void *self);
-    DREF DeeObject *(DCALL *stp_contains)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-    DREF DeeObject *(DCALL *stp_get)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
-    int             (DCALL *stp_del)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
-    int             (DCALL *stp_set)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index, DeeObject *__restrict value);
-    DREF DeeObject *(DCALL *stp_range_get)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
-    int             (DCALL *stp_range_del)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
-    int             (DCALL *stp_range_set)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *__restrict value);
+	/* Structured sequence operators. */
+	DREF DeeObject *(DCALL *stp_iter_self)(DeeSTypeObject *__restrict tp_self, void *self);
+	DREF DeeObject *(DCALL *stp_size)(DeeSTypeObject *__restrict tp_self, void *self);
+	DREF DeeObject *(DCALL *stp_contains)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+	DREF DeeObject *(DCALL *stp_get)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
+	int             (DCALL *stp_del)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
+	int             (DCALL *stp_set)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index, DeeObject *__restrict value);
+	DREF DeeObject *(DCALL *stp_range_get)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
+	int             (DCALL *stp_range_del)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
+	int             (DCALL *stp_range_set)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *__restrict value);
 };
 
 struct stype_attr {
-    /* Structured attribute operators. */
-    DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name);
-    int             (DCALL *st_delattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name);
-    int             (DCALL *st_setattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name, DeeObject *__restrict value);
-    dssize_t        (DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
+	/* Structured attribute operators. */
+	DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name);
+	int             (DCALL *st_delattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name);
+	int             (DCALL *st_setattr)(DeeSTypeObject *__restrict tp_self, void *self, /*String*/ DeeObject *__restrict name, DeeObject *__restrict value);
+	dssize_t        (DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
 };
 
 
 struct stype_array {
-    size_t               sa_size; /* Amount of cached array types. */
-    size_t               sa_mask; /* Allocated map mask. */
-    DeeArrayTypeObject **sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
-                                   * As hash for indexing this map, use `at_count'. */
+	size_t               sa_size; /* Amount of cached array types. */
+	size_t               sa_mask; /* Allocated map mask. */
+	DeeArrayTypeObject **sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
+	                               * As hash for indexing this map, use `at_count'. */
 };
-#define STYPE_ARRAY_INIT       {0,0,NULL}
+#define STYPE_ARRAY_INIT { 0, 0, NULL }
 
 #ifndef CONFIG_NO_CFUNCTION
 struct stype_cfunction {
-    size_t                   sf_size; /* Amount of cached function types. */
-    size_t                   sf_mask; /* Allocated map mask. */
-    DeeCFunctionTypeObject **sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
-                                       * As hash for indexing this map, use `ft_hash'. */
+	size_t                   sf_size; /* Amount of cached function types. */
+	size_t                   sf_mask; /* Allocated map mask. */
+	DeeCFunctionTypeObject **sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
+	                                   * As hash for indexing this map, use `ft_hash'. */
 };
 #define STYPE_CFUNCTION_INIT       {0,0,NULL}
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -192,54 +230,54 @@ struct stype_cfunction {
 
 
 struct stype_object {
-    DeeTypeObject           st_base;      /* The underlying type object. */
+	DeeTypeObject           st_base;      /* The underlying type object. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t                st_cachelock; /* Lock for cached derived types. */
-#endif
-    DeePointerTypeObject   *st_pointer;   /* [0..1][lock(st_cachelock)] A weak pointer to the pointer-type of this structured type. */
-    DeeLValueTypeObject    *st_lvalue;    /* [0..1][lock(st_cachelock)] A weak pointer to the lvalue-type of this structured type. */
-    struct stype_array      st_array;     /* [lock(st_cachelock)] Derived array sub-types. */
+	rwlock_t                st_cachelock; /* Lock for cached derived types. */
+#endif /* !CONFIG_NO_THREADS */
+	DeePointerTypeObject   *st_pointer;   /* [0..1][lock(st_cachelock)] A weak pointer to the pointer-type of this structured type. */
+	DeeLValueTypeObject    *st_lvalue;    /* [0..1][lock(st_cachelock)] A weak pointer to the lvalue-type of this structured type. */
+	struct stype_array      st_array;     /* [lock(st_cachelock)] Derived array sub-types. */
 #ifndef CONFIG_NO_CFUNCTION
-    struct stype_cfunction  st_cfunction; /* [lock(st_cachelock)] Derived function sub-types. */
-    ffi_type               *st_ffitype;   /* [0..1][owned][lock(WRITE_ONCE)] The type used by FFI to represent this type. */
+	struct stype_cfunction  st_cfunction; /* [lock(st_cachelock)] Derived function sub-types. */
+	ffi_type               *st_ffitype;   /* [0..1][owned][lock(WRITE_ONCE)] The type used by FFI to represent this type. */
 #endif /* !CONFIG_NO_CFUNCTION */
-    size_t                  st_align;     /* [const] Alignment required by this type. */
-    int             (DCALL *st_init)(DeeSTypeObject *__restrict tp_self, void *self,
-                                     size_t argc, DeeObject **__restrict argv);
-    int             (DCALL *st_assign)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict value);
-    struct stype_cast       st_cast;      /* Type casting operators. */
-    DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *__restrict tp_self, void *self,
-                                     size_t argc, DeeObject **__restrict argv);
-    struct stype_math      *st_math;      /* [0..1] Math related operators. */
-    struct stype_cmp       *st_cmp;       /* [0..1] Compare operators. */
-    struct stype_seq       *st_seq;       /* [0..1] Sequence operators. */
-    struct stype_attr      *st_attr;      /* [0..1] Attribute access operators. */
+	size_t                  st_align;     /* [const] Alignment required by this type. */
+	int             (DCALL *st_init)(DeeSTypeObject *__restrict tp_self, void *self,
+	                                  size_t argc, DeeObject **__restrict argv);
+	int             (DCALL *st_assign)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict value);
+	struct stype_cast       st_cast;      /* Type casting operators. */
+	DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *__restrict tp_self, void *self,
+	                                 size_t argc, DeeObject **__restrict argv);
+	struct stype_math      *st_math;      /* [0..1] Math related operators. */
+	struct stype_cmp       *st_cmp;       /* [0..1] Compare operators. */
+	struct stype_seq       *st_seq;       /* [0..1] Sequence operators. */
+	struct stype_attr      *st_attr;      /* [0..1] Attribute access operators. */
 };
 
 struct pointer_type_object {
-    DeeSTypeObject          pt_base;      /* The underlying type object. */
-    DREF DeeSTypeObject    *pt_orig;      /* [1..1][const] The dereferenced type of a pointer. */
-    size_t                  pt_size;      /* [== DeeSType_Sizeof(pt_orig)] The size of the pointed-to type. */
+	DeeSTypeObject          pt_base;      /* The underlying type object. */
+	DREF DeeSTypeObject    *pt_orig;      /* [1..1][const] The dereferenced type of a pointer. */
+	size_t                  pt_size;      /* [== DeeSType_Sizeof(pt_orig)] The size of the pointed-to type. */
 };
 struct lvalue_type_object {
-    DeeSTypeObject          lt_base;      /* The underlying type object. */
-    DREF DeeSTypeObject    *lt_orig;      /* [1..1][const] The dereferenced type of an l-value. */
+	DeeSTypeObject          lt_base;      /* The underlying type object. */
+	DREF DeeSTypeObject    *lt_orig;      /* [1..1][const] The dereferenced type of an l-value. */
 };
 
 
 /* The type for all structured types (aka. `DeeSTypeObject' objects)
  * (such as C-integer types, or C-style struct/union-declarations). */
 INTDEF DeeTypeObject DeeSType_Type;
-#define DeeSType_Check(ob)     DeeObject_InstanceOf((DeeObject *)(ob),&DeeSType_Type)
-#define DeeSType_Sizeof(x)  (((DeeSTypeObject *)(x))->st_base.tp_init.tp_alloc.tp_instance_size-sizeof(DeeObject))
+#define DeeSType_Check(ob)  DeeObject_InstanceOf((DeeObject *)(ob),&DeeSType_Type)
+#define DeeSType_Sizeof(x)  (((DeeSTypeObject *)(x))->st_base.tp_init.tp_alloc.tp_instance_size - sizeof(DeeObject))
 #define DeeSType_Alignof(x) (((DeeSTypeObject *)(x))->st_align)
 
 /* The types for all pointer/l-value types (aka. `DeePointerTypeObject' / `DeeLValueTypeObject' objects)
  * NOTE: These types are derived from `DeeSType_Type' */
 INTDEF DeeTypeObject DeePointerType_Type;
 INTDEF DeeTypeObject DeeLValueType_Type;
-#define DeePointerType_Check(ob) DeeObject_InstanceOfExact((DeeObject *)(ob),&DeePointerType_Type) /* `pointer_type' is final. */
-#define DeeLValueType_Check(ob)  DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeLValueType_Type)  /* `lvalue_type' is final. */
+#define DeePointerType_Check(ob) DeeObject_InstanceOfExact((DeeObject *)(ob), &DeePointerType_Type) /* `pointer_type' is final. */
+#define DeeLValueType_Check(ob)  DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeLValueType_Type)   /* `lvalue_type' is final. */
 
 /* Return (and create if missing) the pointer/l-value
  * type associated with a given structured type. */
@@ -275,31 +313,38 @@ INTDEF DeeSTypeObject DeeStructured_Type;
 
 
 union pointer {
-    uintptr_t       uint;
-    intptr_t        sint;
-    void           *ptr;
-    uint8_t        *p8;
-    uint16_t       *p16;
-    uint32_t       *p32;
-    uint64_t       *p64;
-    int8_t         *ps8;
-    int16_t        *ps16;
-    int32_t        *ps32;
-    int64_t        *ps64;
-    void           *pvoid;
-    char           *pchar;
-    signed char    *pschar;
-    unsigned char  *puchar;
-    short          *pshort;
-    unsigned short *pushort;
-    int            *pint;
-    unsigned int   *puint;
-    long           *plong;
-    unsigned long  *pulong;
+	uintptr_t       uint;
+	intptr_t        sint;
+	void           *ptr;
+	uint8_t        *p8;
+	uint16_t       *p16;
+	uint32_t       *p32;
+	uint64_t       *p64;
+	int8_t         *ps8;
+	int16_t        *ps16;
+	int32_t        *ps32;
+	int64_t        *ps64;
+	void           *pvoid;
+	char           *pchar;
+	signed char    *pschar;
+	unsigned char  *puchar;
+	short          *pshort;
+	unsigned short *pushort;
+	int            *pint;
+	unsigned int   *puint;
+	long           *plong;
+	unsigned long  *pulong;
 };
 
-struct pointer_object { OBJECT_HEAD union pointer p_ptr; };
-struct lvalue_object { OBJECT_HEAD union pointer l_ptr; };
+struct pointer_object {
+	OBJECT_HEAD
+	union pointer p_ptr;
+};
+
+struct lvalue_object {
+	OBJECT_HEAD
+	union pointer l_ptr;
+};
 
 
 /* Derived from `DeeStructured_Type', these types are the base
@@ -309,6 +354,7 @@ struct lvalue_object { OBJECT_HEAD union pointer l_ptr; };
  *          another l-value object, but rather a copy of the pointed-to object. */
 INTDEF DeePointerTypeObject DeePointer_Type;
 INTDEF DeeLValueTypeObject DeeLValue_Type;
+
 #if 1 /* Both would work, but this one takes constant armored time. */
 #define DeePointer_Check(ob) DeePointerType_Check(Dee_TYPE(ob))
 #define DeeLValue_Check(ob)  DeeLValueType_Check(Dee_TYPE(ob))
@@ -340,9 +386,9 @@ INTDEF DREF DeeObject *DCALL
 DeePointer_NewFor(DeeSTypeObject *__restrict pointer_type,
                   void *pointer_value);
 #define DeePointer_NewVoid(pointer_value) \
-        DeePointer_NewFor(&DeeCVoid_Type,pointer_value)
+	DeePointer_NewFor(&DeeCVoid_Type, pointer_value)
 #define DeePointer_NewChar(pointer_value) \
-        DeePointer_NewFor(&DeeCChar_Type,pointer_value)
+	DeePointer_NewFor(&DeeCChar_Type, pointer_value)
 
 
 /* The main functions for the new `ref' (`&self') and `ind' (`*self')
@@ -417,9 +463,10 @@ INTDEF dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self, den
 
 #ifdef __SIZEOF_BOOL__
 #define CONFIG_CTYPES_SIZEOF_BOOL  __SIZEOF_BOOL__
-#else
+#else /* __SIZEOF_BOOL__ */
 #define CONFIG_CTYPES_SIZEOF_BOOL  1
-#endif
+#endif /* !__SIZEOF_BOOL__ */
+
 #ifdef __SIZEOF_WCHAR_T__
 #define CONFIG_CTYPES_SIZEOF_WCHAR __SIZEOF_WCHAR_T__
 #elif defined(CONFIG_HOST_WINDOWS)
@@ -427,23 +474,28 @@ INTDEF dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self, den
 #else
 #define CONFIG_CTYPES_SIZEOF_WCHAR 4
 #endif
+
 #define CONFIG_CTYPES_SIZEOF_CHAR16 2
 #define CONFIG_CTYPES_SIZEOF_CHAR32 4
+
 #ifdef __SIZEOF_CHAR__
 #define CONFIG_CTYPES_SIZEOF_CHAR  __SIZEOF_CHAR__
-#else
+#else /* __SIZEOF_CHAR__ */
 #define CONFIG_CTYPES_SIZEOF_CHAR  1
-#endif
+#endif /* !__SIZEOF_CHAR__ */
+
 #ifdef __SIZEOF_SHORT__
 #define CONFIG_CTYPES_SIZEOF_SHORT __SIZEOF_SHORT__
-#else
+#else /* __SIZEOF_SHORT__ */
 #define CONFIG_CTYPES_SIZEOF_SHORT 2
-#endif
+#endif /* !__SIZEOF_SHORT__ */
+
 #ifdef __SIZEOF_INT__
 #define CONFIG_CTYPES_SIZEOF_INT   __SIZEOF_INT__
-#else
+#else /* __SIZEOF_INT__ */
 #define CONFIG_CTYPES_SIZEOF_INT   4
-#endif
+#endif /* !__SIZEOF_INT__ */
+
 #ifdef __SIZEOF_LONG__
 #define CONFIG_CTYPES_SIZEOF_LONG  __SIZEOF_LONG__
 #elif defined(CONFIG_HOST_WINDOWS)
@@ -451,6 +503,7 @@ INTDEF dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self, den
 #else
 #define CONFIG_CTYPES_SIZEOF_LONG  __SIZEOF_POINTER__
 #endif
+
 #ifdef __SIZEOF_LONG_LONG__
 #define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LONG_LONG__
 #elif defined(__SIZEOF_LLONG__)
@@ -461,10 +514,12 @@ INTDEF dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self, den
 
 #ifdef __CHAR_UNSIGNED__
 #define CONFIG_CTYPES_CHAR_UNSIGNED   1
-#endif
+#endif /* __CHAR_UNSIGNED__ */
+
 #ifdef __WCHAR_UNSIGNED__
 #define CONFIG_CTYPES_WCHAR_UNSIGNED  1
-#endif
+#endif /* __WCHAR_UNSIGNED__ */
+
 #define CONFIG_CTYPES_CHAR16_UNSIGNED 1
 #define CONFIG_CTYPES_CHAR32_UNSIGNED 1
 
@@ -519,6 +574,7 @@ typedef long double long_double;
 #else
 #define CONFIG_CTYPES_LDOUBLE_TYPE  long_double
 #endif
+
 INTDEF DeeSTypeObject  DeeCFloat_Type;
 INTDEF DeeSTypeObject  DeeCDouble_Type;
 INTDEF DeeSTypeObject  DeeCLDouble_Type;
@@ -526,13 +582,13 @@ INTDEF DeeSTypeObject  DeeCLDouble_Type;
 /* Alignment requirements of the host's C floating point types. */
 #ifndef CONFIG_ALIGNOF_FLOAT
 #define CONFIG_ALIGNOF_FLOAT   COMPILER_ALIGNOF(float)
-#endif
+#endif /* !CONFIG_ALIGNOF_FLOAT */
 #ifndef CONFIG_ALIGNOF_DOUBLE
 #define CONFIG_ALIGNOF_DOUBLE  COMPILER_ALIGNOF(double)
-#endif
+#endif /* !CONFIG_ALIGNOF_DOUBLE */
 #ifndef CONFIG_ALIGNOF_LDOUBLE
 #define CONFIG_ALIGNOF_LDOUBLE COMPILER_ALIGNOF(long_double)
-#endif
+#endif /* !CONFIG_ALIGNOF_LDOUBLE */
 
 
 
@@ -679,16 +735,16 @@ INTDEF DeeSTypeObject   DeeCULong_Type;
 
 /* Array types, and foreign-function types. */
 struct array_type_object {
-    DeeSTypeObject                at_base;  /* The underlying structured type descriptor. */
-    DREF DeeSTypeObject          *at_orig;  /* [1..1][const] The array's element type. */
-    LIST_NODE(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
-    size_t                        at_count; /* The total number of items. */
+	DeeSTypeObject                at_base;  /* The underlying structured type descriptor. */
+	DREF DeeSTypeObject          *at_orig;  /* [1..1][const] The array's element type. */
+	LIST_NODE(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
+	size_t                        at_count; /* The total number of items. */
 };
 
 
 INTDEF DeeTypeObject DeeArrayType_Type;
-#define DeeArrayType_Check(ob)     \
-   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeArrayType_Type) /* `array_type' is final */
+#define DeeArrayType_Check(ob) \
+	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeArrayType_Type) /* `array_type' is final */
 
 /* Base classes for all C array types. */
 INTDEF DeeArrayTypeObject DeeArray_Type;
@@ -713,12 +769,12 @@ typedef ffi_abi cc_t;
 #define CC_MTYPE     ((cc_t)0x7fff) /* MASK: The actual FFI type. */
 #define CC_FVARARGS  ((cc_t)0x8000) /* FLAG: Variable-length argument list. */
 #define CC_INVALID   ((cc_t)-1)
-#else
+#else /* !CONFIG_NO_CFUNCTION */
 typedef int cc_t;
 #define CC_DEFAULT     0
 #define CC_INVALID   (-1)
 #define CC_FVARARGS  ((cc_t)0x8000) /* FLAG: Variable-length argument list. */
-#endif
+#endif /* CONFIG_NO_CFUNCTION */
 
 /* Convert a calling convention to/from its name.
  * @return: CC_INVALID: The given `name' was not recognized.
@@ -729,33 +785,33 @@ INTDEF char const *DCALL cc_getname(cc_t cc);
 
 
 struct cfunction_type_object {
-    DeeSTypeObject                    ft_base;    /* The underlying structured type descriptor. */
+	DeeSTypeObject                    ft_base;    /* The underlying structured type descriptor. */
 #ifndef CONFIG_NO_CFUNCTION
-    DREF DeeSTypeObject              *ft_orig;    /* [1..1][const] The function's return type. */
-    LIST_NODE(DeeCFunctionTypeObject) ft_chain;   /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
-    dhash_t                           ft_hash;    /* [const] A pre-calculated hash used by `struct stype_cfunction' */
-    size_t                            ft_argc;    /* [const] Amount of function argument types. */
-    DREF DeeSTypeObject             **ft_argv;    /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
-    cc_t                              ft_cc;      /* [const] The calling convention used by this function. */
-    ffi_type                         *ft_ffi_return_type; /* [1..1] Raw return type. */
-    ffi_type                        **ft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
-    ffi_cif                           ft_ffi_cif;         /* cif object to call the function. */
-    /* WBuffer layout:
-     *  1. return value memory
-     *  2. argument memory...
-     *  3. argument pointers... */
-    size_t                            ft_wsize;
-    size_t                            ft_woff_argmem;
-    union {
-        size_t                        ft_woff_argptr;
-        size_t                        ft_woff_variadic_argmem;
-    };
+	DREF DeeSTypeObject              *ft_orig;    /* [1..1][const] The function's return type. */
+	LIST_NODE(DeeCFunctionTypeObject) ft_chain;   /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
+	dhash_t                           ft_hash;    /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	size_t                            ft_argc;    /* [const] Amount of function argument types. */
+	DREF DeeSTypeObject             **ft_argv;    /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
+	cc_t                              ft_cc;      /* [const] The calling convention used by this function. */
+	ffi_type                         *ft_ffi_return_type; /* [1..1] Raw return type. */
+	ffi_type                        **ft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
+	ffi_cif                           ft_ffi_cif;         /* cif object to call the function. */
+	/* WBuffer layout:
+	 *  1. return value memory
+	 *  2. argument memory...
+	 *  3. argument pointers... */
+	size_t                            ft_wsize;
+	size_t                            ft_woff_argmem;
+	union {
+		size_t                        ft_woff_argptr;
+		size_t                        ft_woff_variadic_argmem;
+	};
 #endif /* !CONFIG_NO_CFUNCTION */
 };
 
 INTDEF DeeTypeObject DeeCFunctionType_Type;
 #define DeeCFunctionType_Check(ob) \
-   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeCFunctionType_Type) /* `array_type' is final */
+	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeCFunctionType_Type) /* `array_type' is final */
 
 INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
 
@@ -785,7 +841,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 #ifdef CONFIG_NO_CFUNCTION
 /* Throw a NotImplemented error explaining that cfunctions have been disabled. */
 INTDEF ATTR_COLD void DCALL err_no_cfunction(void);
-#endif
+#endif /* CONFIG_NO_CFUNCTION */
 
 
 
@@ -798,27 +854,27 @@ INTDEF ATTR_COLD void DCALL err_no_cfunction(void);
 typedef struct struct_type_object DeeStructTypeObject;
 struct string_object;
 struct struct_field {
-    DREF struct string_object *sf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
-    dhash_t                    sf_hash;   /* [valid_if(sf_name)][const][== DeeString_Hash(sf_name)] */
-    uintptr_t                  sf_offset; /* [valid_if(sf_name)] Offset of the field (from `DeeStruct_Data()') */
-    DREF DeeLValueTypeObject  *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
+	DREF struct string_object *sf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
+	dhash_t                    sf_hash;   /* [valid_if(sf_name)][const][== DeeString_Hash(sf_name)] */
+	uintptr_t                  sf_offset; /* [valid_if(sf_name)] Offset of the field (from `DeeStruct_Data()') */
+	DREF DeeLValueTypeObject  *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
 };
 struct struct_type_object {
-    DeeSTypeObject          st_base;      /* The underlying type object. */
-    size_t                  st_fmsk;      /* [const] Field-vector mask. */
-    struct struct_field     st_fvec[1];   /* [1..st_fmsk+1][const] Hash-vector of field names. */
+	DeeSTypeObject          st_base;      /* The underlying type object. */
+	size_t                  st_fmsk;      /* [const] Field-vector mask. */
+	struct struct_field     st_fvec[1];   /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 
-#define STRUCT_TYPE_HASHST(self,hash)  ((hash) & ((DeeStructTypeObject *)(self))->st_fmsk)
-#define STRUCT_TYPE_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define STRUCT_TYPE_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define STRUCT_TYPE_HASHIT(self,i)     (((DeeStructTypeObject *)(self))->st_fvec+((i) & ((DeeStructTypeObject *)(self))->st_fmsk))
+#define STRUCT_TYPE_HASHST(self, hash)  ((hash) & ((DeeStructTypeObject *)(self))->st_fmsk)
+#define STRUCT_TYPE_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
+#define STRUCT_TYPE_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define STRUCT_TYPE_HASHIT(self, i)     (((DeeStructTypeObject *)(self))->st_fvec + ((i) & ((DeeStructTypeObject *)(self))->st_fmsk))
 
 
 INTDEF DeeTypeObject DeeStructType_Type;
 INTDEF DeeStructTypeObject DeeStruct_Type;
 #define DeeStructType_Check(ob) \
-   DeeObject_InstanceOfExact((DeeObject *)(ob),&DeeStructType_Type) /* `struct_type' is final */
+	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeStructType_Type) /* `struct_type' is final */
 
 /* Construct a new struct-type from `fields', which
  * is a `sequence<pair<string,structured_type>>' */

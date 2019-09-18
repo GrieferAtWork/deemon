@@ -31,11 +31,11 @@ DECL_BEGIN
 
 #define PRIVATE_EXPAND_OVERLOADS(...)   __VA_ARGS__
 #if ASM_MAX_INSTRUCTION_OPERANDS == 4
-#define PRIVATE_UNPACK_ARGS_0         {0,0},{0,0},{0,0},{0,0}
-#define PRIVATE_UNPACK_ARGS_1(...)    { __VA_ARGS__ },{0,0},{0,0},{0,0}
-#define PRIVATE_UNPACK_ARGS_21(...)   { __VA_ARGS__ },{0,0},{0,0}
+#define PRIVATE_UNPACK_ARGS_0         {0, 0}, {0, 0}, {0, 0}, {0, 0}
+#define PRIVATE_UNPACK_ARGS_1(...)    { __VA_ARGS__ }, {0, 0}, {0, 0}, {0, 0}
+#define PRIVATE_UNPACK_ARGS_21(...)   { __VA_ARGS__ }, {0, 0}, {0, 0}
 #define PRIVATE_UNPACK_ARGS_2(...)    { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_21
-#define PRIVATE_UNPACK_ARGS_31(...)   { __VA_ARGS__ },{0,0}
+#define PRIVATE_UNPACK_ARGS_31(...)   { __VA_ARGS__ }, {0, 0}
 #define PRIVATE_UNPACK_ARGS_32(...)   { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_31
 #define PRIVATE_UNPACK_ARGS_3(...)    { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_32
 #define PRIVATE_UNPACK_ARGS_41(...)   { __VA_ARGS__ }
@@ -43,14 +43,14 @@ DECL_BEGIN
 #define PRIVATE_UNPACK_ARGS_43(...)   { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_42
 #define PRIVATE_UNPACK_ARGS_4(...)    { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_43
 #elif ASM_MAX_INSTRUCTION_OPERANDS == 5
-#define PRIVATE_UNPACK_ARGS_0         {0,0},{0,0},{0,0},{0,0},{0,0}
-#define PRIVATE_UNPACK_ARGS_1(...)    { __VA_ARGS__ },{0,0},{0,0},{0,0},{0,0}
-#define PRIVATE_UNPACK_ARGS_21(...)   { __VA_ARGS__ },{0,0},{0,0},{0,0}
+#define PRIVATE_UNPACK_ARGS_0         {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}
+#define PRIVATE_UNPACK_ARGS_1(...)    { __VA_ARGS__ }, {0, 0}, {0, 0}, {0, 0}, {0, 0}
+#define PRIVATE_UNPACK_ARGS_21(...)   { __VA_ARGS__ }, {0, 0}, {0, 0}, {0, 0}
 #define PRIVATE_UNPACK_ARGS_2(...)    { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_21
-#define PRIVATE_UNPACK_ARGS_31(...)   { __VA_ARGS__ },{0,0},{0,0}
+#define PRIVATE_UNPACK_ARGS_31(...)   { __VA_ARGS__ }, {0, 0}, {0, 0}
 #define PRIVATE_UNPACK_ARGS_32(...)   { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_31
 #define PRIVATE_UNPACK_ARGS_3(...)    { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_32
-#define PRIVATE_UNPACK_ARGS_41(...)   { __VA_ARGS__ },{0,0}
+#define PRIVATE_UNPACK_ARGS_41(...)   { __VA_ARGS__ }, {0, 0}
 #define PRIVATE_UNPACK_ARGS_42(...)   { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_41
 #define PRIVATE_UNPACK_ARGS_43(...)   { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_42
 #define PRIVATE_UNPACK_ARGS_4(...)    { __VA_ARGS__ }, PRIVATE_UNPACK_ARGS_43
@@ -69,11 +69,11 @@ DECL_BEGIN
 
 /* Figure out the number of overloads for each instruction. */
 enum{
-#define INSTR(name,overloads) \
-    MNEMONIC_SIZE_IDENTIFIER = 0 PRIVATE_EXPAND_OVERLOADS overloads,
-#define OVERLOAD(instr_id,flags,n_args,args) +1
+#define INSTR(name, overloads) \
+	MNEMONIC_SIZE_IDENTIFIER = 0 PRIVATE_EXPAND_OVERLOADS overloads,
+#define OVERLOAD(instr_id, flags, n_args, args) +1
 #include "userdb.def"
-    _trailing_unused_01
+	_trailing_unused_01
 };
 
 
@@ -81,38 +81,37 @@ enum{
 #pragma pack(push,1)
 #endif /* __COMPILER_HAVE_PRAGMA_PACK */
 struct __ATTR_PACKED mnemonic_db {
-#define INSTR(name,overloads) \
-    struct { \
-        char n[ASM_MNEMONIC_MAXNAME]; \
-        uint16_t c; \
-        struct asm_overload o[MNEMONIC_SIZE_IDENTIFIER]; \
-    } MNEMONIC_STRUCT_IDENTIFIER;
+#define INSTR(name,overloads)                            \
+	struct {                                             \
+		char                n[ASM_MNEMONIC_MAXNAME];     \
+		uint16_t            c;                           \
+		struct asm_overload o[MNEMONIC_SIZE_IDENTIFIER]; \
+	} MNEMONIC_STRUCT_IDENTIFIER;
 #include "userdb.def"
-    char     sentinel_name[ASM_MNEMONIC_MAXNAME];
-    uint16_t sentinel_zero;
+	char     sentinel_name[ASM_MNEMONIC_MAXNAME];
+	uint16_t sentinel_zero;
 };
 
 
 INTDEF struct mnemonic_db const asm_mnemonics;
 INTERN struct mnemonic_db const asm_mnemonics = {
 #define INSTR(name,overloads) \
-    { name, MNEMONIC_SIZE_IDENTIFIER, { PRIVATE_EXPAND_OVERLOADS overloads } },
+	{ name, MNEMONIC_SIZE_IDENTIFIER, { PRIVATE_EXPAND_OVERLOADS overloads } },
 #if (ASM_MAX_INSTRUCTION_OPERANDS % 2) == 0
 #define OVERLOAD(instr_id,flags,n_args,args) \
-    { instr_id, flags, n_args, { PRIVATE_UNPACK_ARGS(n_args,args) }, 0 },
-#else
+	{ instr_id, flags, n_args, { PRIVATE_UNPACK_ARGS(n_args,args) }, 0 },
+#else /* (ASM_MAX_INSTRUCTION_OPERANDS % 2) == 0 */
 #define OVERLOAD(instr_id,flags,n_args,args) \
-    { instr_id, flags, n_args, { PRIVATE_UNPACK_ARGS(n_args,args) } },
-#endif
+	{ instr_id, flags, n_args, { PRIVATE_UNPACK_ARGS(n_args,args) } },
+#endif /* (ASM_MAX_INSTRUCTION_OPERANDS % 2) != 0 */
 #include "userdb.def"
-    /* Sentinel. */
-    { 0, },0
+	/* Sentinel. */
+	{ 0, },0
 };
 INTDEF size_t const asm_mnemonics_size;
 INTDEF size_t const asm_mnemonics_count;
 
-INTERN size_t const asm_mnemonics_size =
-    offsetof(struct mnemonic_db,sentinel_name);
+INTERN size_t const asm_mnemonics_size  = offsetof(struct mnemonic_db, sentinel_name);
 INTERN size_t const asm_mnemonics_count = 0
 #define INSTR(name,overloads) +1
 #include "userdb.def"

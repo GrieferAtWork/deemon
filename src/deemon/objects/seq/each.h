@@ -52,36 +52,38 @@ DECL_BEGIN
 
 struct string_object;
 
-#define SEQ_EACH_HEAD  \
-    OBJECT_HEAD \
-    DREF DeeObject *se_seq; /* [1..1][const] The sequence being accessed. */
+#define SEQ_EACH_HEAD \
+	OBJECT_HEAD       \
+	DREF DeeObject *se_seq; /* [1..1][const] The sequence being accessed. */
 
 typedef struct {
-    /* `seq.each' -- The root wrapper descriptor which
-     * has yet to be bound to any specific operation. */
-    SEQ_EACH_HEAD
+	/* `seq.each' -- The root wrapper descriptor which
+		* has yet to be bound to any specific operation. */
+	SEQ_EACH_HEAD
 } SeqEachBase;
 
 typedef struct {
-    /* Iterator for any of the sequence-each wrappers. */
-    OBJECT_HEAD
-    DREF SeqEachBase *ei_each; /* [1..1][const] The sequence-each descriptor that is being used. */
-    DREF DeeObject   *ei_iter; /* [1..1][const] The underlying iterator who's elements are being transformed. */
+	/* Iterator for any of the sequence-each wrappers. */
+	OBJECT_HEAD
+	DREF SeqEachBase *ei_each; /* [1..1][const] The sequence-each descriptor that is being used. */
+	DREF DeeObject   *ei_iter; /* [1..1][const] The underlying iterator who's elements are being transformed. */
 } SeqEachIterator;
 
 
 /* General purpose operator proxy. */
 typedef struct {
-    SEQ_EACH_HEAD
-    uint16_t        so_opname;    /* [const] Name of the operator that should be applied */
-    uint16_t        so_opargc;    /* [const] Number of arguments to pass to the operator. */
+	SEQ_EACH_HEAD
+	uint16_t        so_opname;    /* [const] Name of the operator that should be applied */
+	uint16_t        so_opargc;    /* [const] Number of arguments to pass to the operator. */
 #if __SIZEOF_POINTER__ > 4
-    uint16_t        so_pad[(__SIZEOF_POINTER__ - 4) / 2]; /* ... */
-#endif
-    DREF DeeObject *so_opargv[2]; /* [1..1][const][0..so_opargc] Vector of arguments passed to the operator. */
+	uint16_t        so_pad[(__SIZEOF_POINTER__ - 4) / 2]; /* ... */
+#endif /* __SIZEOF_POINTER__ > 4 */
+	DREF DeeObject *so_opargv[2]; /* [1..1][const][0..so_opargc] Vector of arguments passed to the operator. */
 } SeqEachOperator;
-#define SeqEachOperator_MALLOC(argc) \
- ((DREF SeqEachOperator *)DeeObject_FMalloc(COMPILER_OFFSETOF(SeqEachOperator,so_opargv) + (argc) * sizeof(DREF DeeObject *)))
+
+#define SeqEachOperator_MALLOC(argc)                                                           \
+	((DREF SeqEachOperator *)DeeObject_FMalloc(COMPILER_OFFSETOF(SeqEachOperator, so_opargv) + \
+	                                           (argc) * sizeof(DREF DeeObject *)))
 
 
 #define CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS 1
@@ -96,21 +98,21 @@ typedef struct {
 
 /* Special proxies for commonly used operators. */
 typedef struct {
-    SEQ_EACH_HEAD
-    DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
+	SEQ_EACH_HEAD
+	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
 } SeqEachGetAttr;
 typedef struct {
-    SEQ_EACH_HEAD
-    DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
-    size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
-    DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
+	SEQ_EACH_HEAD
+	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
+	size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
+	DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
 } SeqEachCallAttr;
 typedef struct {
-    SEQ_EACH_HEAD
-    DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
-    DREF DeeObject            *sg_kw;         /* [1..1][const] Additional keyword to pass during invocation. */
-    size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
-    DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
+	SEQ_EACH_HEAD
+	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
+	DREF DeeObject            *sg_kw;         /* [1..1][const] Additional keyword to pass during invocation. */
+	size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
+	DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
 } SeqEachCallAttrKw;
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 

@@ -21,49 +21,53 @@
 #define DEE_SOURCE 1
 
 #include "libjit.h"
+/**/
+
 #include <deemon/alloc.h>
-#include <deemon/object.h>
 #include <deemon/module.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 
 DECL_BEGIN
 
 INTERN struct jit_object_entry jit_empty_object_list[1] = {
-    {
-        /* .oe_namestr = */NULL,
-        /* .oe_namelen = */0,
-        /* .oe_namehsh = */0,
-        /* .oe_value   = */NULL
-    }
+	{
+		/* .oe_namestr = */ NULL,
+		/* .oe_namelen = */ 0,
+		/* .oe_namehsh = */ 0,
+		/* .oe_value   = */ NULL
+	}
 };
 
 /* Initialize `dst' as a copy of `src' */
 INTERN int DCALL
 JITObjectTable_Copy(JITObjectTable *__restrict dst,
                     JITObjectTable const *__restrict src) {
- struct jit_object_entry *old_table;
- struct jit_object_entry *new_table;
- size_t i;
- dst->ot_mask = src->ot_mask;
- dst->ot_size = src->ot_size;
- dst->ot_used = src->ot_used;
- old_table = src->ot_list;
- if (old_table == jit_empty_object_list) {
-  dst->ot_list = jit_empty_object_list;
- } else {
-  size_t size = (dst->ot_mask + 1) * sizeof(struct jit_object_entry);
-  new_table = (struct jit_object_entry *)Dee_Calloc(size);
-  if unlikely(!new_table) return -1;
-  dst->ot_list = new_table;
-  memcpy(new_table,src->ot_list,size);
-  for (i = 0; i <= dst->ot_mask; ++i) {
-   if (!ITER_ISOK(new_table[i].oe_namestr))
-        continue;
-   Dee_XIncref(new_table[i].oe_value);
-  }
- }
- return 0;
+	struct jit_object_entry *old_table;
+	struct jit_object_entry *new_table;
+	size_t i;
+	dst->ot_mask = src->ot_mask;
+	dst->ot_size = src->ot_size;
+	dst->ot_used = src->ot_used;
+	old_table    = src->ot_list;
+	if (old_table == jit_empty_object_list) {
+		dst->ot_list = jit_empty_object_list;
+	} else {
+		size_t size = (dst->ot_mask + 1) * sizeof(struct jit_object_entry);
+		new_table   = (struct jit_object_entry *)Dee_Calloc(size);
+		if
+			unlikely(!new_table)
+		return -1;
+		dst->ot_list = new_table;
+		memcpy(new_table, src->ot_list, size);
+		for (i = 0; i <= dst->ot_mask; ++i) {
+			if (!ITER_ISOK(new_table[i].oe_namestr))
+				continue;
+			Dee_XIncref(new_table[i].oe_value);
+		}
+	}
+	return 0;
 }
 
 /* Insert all elements from `src' into `dst'
@@ -71,90 +75,93 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 INTERN int DCALL
 JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
                            JITObjectTable const *__restrict src) {
- size_t i;
- struct jit_object_entry *old_table;
- old_table = src->ot_list;
- for (i = 0; i <= src->ot_mask; ++i) {
-  if (!ITER_ISOK(old_table[i].oe_namestr))
-       continue;
-  if (JITObjectTable_Update(dst,
-                            old_table[i].oe_namestr,
-                            old_table[i].oe_namelen,
-                            old_table[i].oe_namehsh,
-                            old_table[i].oe_value,
-                            false))
-      goto err;
- }
- return 0;
+	size_t i;
+	struct jit_object_entry *old_table;
+	old_table = src->ot_list;
+	for (i = 0; i <= src->ot_mask; ++i) {
+		if (!ITER_ISOK(old_table[i].oe_namestr))
+			continue;
+		if (JITObjectTable_Update(dst,
+		                          old_table[i].oe_namestr,
+		                          old_table[i].oe_namelen,
+		                          old_table[i].oe_namehsh,
+		                          old_table[i].oe_value,
+		                          false))
+			goto err;
+	}
+	return 0;
 err:
- return -1;
+	return -1;
 }
 
 
 
 INTERN void DCALL
 JITObjectTable_Fini(JITObjectTable *__restrict self) {
- size_t i;
- if (self->ot_list == jit_empty_object_list)
-     return;
- for (i = 0; i <= self->ot_mask; ++i) {
-  if (!ITER_ISOK(self->ot_list[i].oe_namestr))
-       continue;
-  Dee_XDecref(self->ot_list[i].oe_value);
- }
- Dee_Free(self->ot_list);
+	size_t i;
+	if (self->ot_list == jit_empty_object_list)
+		return;
+	for (i = 0; i <= self->ot_mask; ++i) {
+		if (!ITER_ISOK(self->ot_list[i].oe_namestr))
+			continue;
+		Dee_XDecref(self->ot_list[i].oe_value);
+	}
+	Dee_Free(self->ot_list);
 }
+
 INTERN void DCALL
 JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) {
- size_t i;
- if (self->ot_list == jit_empty_object_list)
-     return;
- for (i = 0; i <= self->ot_mask; ++i) {
-  if (!ITER_ISOK(self->ot_list[i].oe_namestr))
-       continue;
-  Dee_XVisit(self->ot_list[i].oe_value);
- }
+	size_t i;
+	if (self->ot_list == jit_empty_object_list)
+		return;
+	for (i = 0; i <= self->ot_mask; ++i) {
+		if (!ITER_ISOK(self->ot_list[i].oe_namestr))
+			continue;
+		Dee_XVisit(self->ot_list[i].oe_value);
+	}
 }
 
 
 INTERN bool DCALL
 JITObjectTable_TryRehash(JITObjectTable *__restrict self,
                          size_t new_mask) {
- size_t i,j,perturb;
- struct jit_object_entry *new_table;
- ASSERT(new_mask >= self->ot_used);
- ASSERT(new_mask != 0);
- new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
-                                                       sizeof(struct jit_object_entry));
- if unlikely(!new_table) return false;
- if (self->ot_list != jit_empty_object_list) {
-  struct jit_object_entry *old_table;
-  old_table = self->ot_list;
-  for (i = 0; i <= self->ot_mask; ++i) {
-   struct jit_object_entry *old_entry,*new_entry;
-   old_entry = &old_table[i];
-   if (!ITER_ISOK(old_entry->oe_namestr))
-        continue; /* Unused or deleted. */
-   perturb = j = old_entry->oe_namehsh & new_mask;
-   for (;; JITObjectTable_NEXT(j,perturb)) {
-    new_entry = &new_table[j & new_mask];
-    if (!new_entry->oe_namestr)
-         break;
-   }
-   /* Copy into the new entry. */
-   memcpy(new_entry,old_entry,sizeof(struct jit_object_entry));
-  }
-  Dee_Free(old_table);
-  /* Indicate that all deleted entries have been removed. */
-  self->ot_used = self->ot_size;
- } else {
-  ASSERT(self->ot_used == 0);
-  ASSERT(self->ot_size == 0);
-  ASSERT(self->ot_mask == 0);
- }
- self->ot_list = new_table;
- self->ot_mask = new_mask;
- return true;
+	size_t i, j, perturb;
+	struct jit_object_entry *new_table;
+	ASSERT(new_mask >= self->ot_used);
+	ASSERT(new_mask != 0);
+	new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
+	                                                     sizeof(struct jit_object_entry));
+	if
+		unlikely(!new_table)
+	return false;
+	if (self->ot_list != jit_empty_object_list) {
+		struct jit_object_entry *old_table;
+		old_table = self->ot_list;
+		for (i = 0; i <= self->ot_mask; ++i) {
+			struct jit_object_entry *old_entry, *new_entry;
+			old_entry = &old_table[i];
+			if (!ITER_ISOK(old_entry->oe_namestr))
+				continue; /* Unused or deleted. */
+			perturb = j = old_entry->oe_namehsh & new_mask;
+			for (;; JITObjectTable_NEXT(j, perturb)) {
+				new_entry = &new_table[j & new_mask];
+				if (!new_entry->oe_namestr)
+					break;
+			}
+			/* Copy into the new entry. */
+			memcpy(new_entry, old_entry, sizeof(struct jit_object_entry));
+		}
+		Dee_Free(old_table);
+		/* Indicate that all deleted entries have been removed. */
+		self->ot_used = self->ot_size;
+	} else {
+		ASSERT(self->ot_used == 0);
+		ASSERT(self->ot_size == 0);
+		ASSERT(self->ot_mask == 0);
+	}
+	self->ot_list = new_table;
+	self->ot_mask = new_mask;
+	return true;
 }
 
 
@@ -172,84 +179,91 @@ JITObjectTable_Update(JITObjectTable *__restrict self,
                       size_t namelen, dhash_t namehsh,
                       DeeObject *value,
                       bool override_existing) {
- dhash_t i,perturb;
- struct jit_object_entry *result_entry;
+	dhash_t i, perturb;
+	struct jit_object_entry *result_entry;
 again:
- result_entry = NULL;
- perturb = i = namehsh & self->ot_mask;
- for (;; JITObjectTable_NEXT(i,perturb)) {
-  struct jit_object_entry *entry;
-  entry = &self->ot_list[i & self->ot_mask];
-  if (entry->oe_namestr == (char *)ITER_DONE) {
-   /* Re-use deleted entries. */
-   if (!result_entry)
-        result_entry = entry;
-   continue;
-  }
-  if (!entry->oe_namestr) {
-   if (!result_entry) {
-    /* Check if we must re-hash the table. */
-    if (self->ot_size + 1 >= (self->ot_mask*2)/3) {
-     size_t new_mask;
-     new_mask = (self->ot_mask << 1) | 1;
-     if (self->ot_used < self->ot_size)
-         new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
-     if (new_mask < 7) new_mask = 7;
-     if likely(JITObjectTable_TryRehash(self,new_mask))
-        goto again;
-     if (self->ot_size == self->ot_mask) {
-      new_mask = (self->ot_mask << 1) | 1;
-      if (self->ot_used < self->ot_size)
-          new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
-      for (;;) {
-       if likely(JITObjectTable_TryRehash(self,new_mask))
-          goto again;
-       if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-          return -1;
-      }
-     }
-    }
-    ++self->ot_size;
-    result_entry = entry;
-   }
-   break;
-  }
-  if (entry->oe_namehsh != namehsh) continue;
-  if (entry->oe_namelen != namelen) continue;
-  if (memcmp(entry->oe_namestr,namestr,namelen * sizeof(char)) != 0) continue;
-  /* Existing entry! */
-  if (override_existing) {
+	result_entry = NULL;
+	perturb = i = namehsh & self->ot_mask;
+	for (;; JITObjectTable_NEXT(i, perturb)) {
+		struct jit_object_entry *entry;
+		entry = &self->ot_list[i & self->ot_mask];
+		if (entry->oe_namestr == (char *)ITER_DONE) {
+			/* Re-use deleted entries. */
+			if (!result_entry)
+				result_entry = entry;
+			continue;
+		}
+		if (!entry->oe_namestr) {
+			if (!result_entry) {
+				/* Check if we must re-hash the table. */
+				if (self->ot_size + 1 >= (self->ot_mask * 2) / 3) {
+					size_t new_mask;
+					new_mask = (self->ot_mask << 1) | 1;
+					if (self->ot_used < self->ot_size)
+						new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
+					if (new_mask < 7)
+						new_mask = 7;
+					if
+						likely(JITObjectTable_TryRehash(self, new_mask))
+					goto again;
+					if (self->ot_size == self->ot_mask) {
+						new_mask = (self->ot_mask << 1) | 1;
+						if (self->ot_used < self->ot_size)
+							new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
+						for (;;) {
+							if
+								likely(JITObjectTable_TryRehash(self, new_mask))
+							goto again;
+							if
+								unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+							return -1;
+						}
+					}
+				}
+				++self->ot_size;
+				result_entry = entry;
+			}
+			break;
+		}
+		if (entry->oe_namehsh != namehsh)
+			continue;
+		if (entry->oe_namelen != namelen)
+			continue;
+		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+			continue;
+		/* Existing entry! */
+		if (override_existing) {
 #if 1
-   DREF DeeObject *value;
-   value = entry->oe_value;
-   Dee_XIncref(value);
-   entry->oe_value = value;
-   COMPILER_BARRIER();
-   Dee_XDecref(value);
+			DREF DeeObject *value;
+			value = entry->oe_value;
+			Dee_XIncref(value);
+			entry->oe_value = value;
+			COMPILER_BARRIER();
+			Dee_XDecref(value);
 #else
-   DREF DeeObject *name,*value;
-   name  = entry->oe_nameobj;
-   value = entry->oe_value;
-   Dee_Incref(nameobj);
-   Dee_XIncref(value);
-   entry->oe_nameobj = nameobj;
-   entry->oe_namestr = namestr;
-   entry->oe_value   = value;
-   COMPILER_BARRIER();
-   /* Cleanup the old values. */
-   Dee_Decref_unlikely(name);
-   Dee_XDecref(value);
+			DREF DeeObject *name, *value;
+			name  = entry->oe_nameobj;
+			value = entry->oe_value;
+			Dee_Incref(nameobj);
+			Dee_XIncref(value);
+			entry->oe_nameobj = nameobj;
+			entry->oe_namestr = namestr;
+			entry->oe_value   = value;
+			COMPILER_BARRIER();
+			/* Cleanup the old values. */
+			Dee_Decref_unlikely(name);
+			Dee_XDecref(value);
 #endif
-  }
-  return 1;
- }
- ++self->ot_used;
- result_entry->oe_namestr = namestr;
- result_entry->oe_namelen = namelen;
- result_entry->oe_namehsh = namehsh;
- result_entry->oe_value = value;
- Dee_XIncref(value);
- return 0;
+		}
+		return 1;
+	}
+	++self->ot_used;
+	result_entry->oe_namestr = namestr;
+	result_entry->oe_namelen = namelen;
+	result_entry->oe_namehsh = namehsh;
+	result_entry->oe_value   = value;
+	Dee_XIncref(value);
+	return 0;
 }
 
 /* Delete an existing entry for an object with the given name
@@ -259,31 +273,36 @@ INTERN bool DCALL
 JITObjectTable_Delete(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
- dhash_t i,perturb;
- perturb = i = namehsh & self->ot_mask;
- for (;; JITObjectTable_NEXT(i,perturb)) {
-  struct jit_object_entry *entry;
-  DREF DeeObject *value;
-  entry = &self->ot_list[i & self->ot_mask];
-  if (entry->oe_namestr == (char *)ITER_DONE) continue;
-  if (!entry->oe_namestr) break;
-  if (entry->oe_namehsh != namehsh) continue;
-  if (entry->oe_namelen != namelen) continue;
-  if (memcmp(entry->oe_namestr,namestr,namelen * sizeof(char)) != 0) continue;
-  /* Found it! */
-  value = entry->oe_value;
-  entry->oe_namestr = (char *)ITER_DONE;
-  ASSERT(self->ot_size);
-  ASSERT(self->ot_used);
-  --self->ot_used;
-  COMPILER_BARRIER();
-  if (self->ot_used < self->ot_mask/3)
-      JITObjectTable_TryRehash(self,self->ot_mask >> 1);
-  COMPILER_BARRIER();
-  Dee_XDecref(value);
-  return true;
- }
- return false;
+	dhash_t i, perturb;
+	perturb = i = namehsh & self->ot_mask;
+	for (;; JITObjectTable_NEXT(i, perturb)) {
+		struct jit_object_entry *entry;
+		DREF DeeObject *value;
+		entry = &self->ot_list[i & self->ot_mask];
+		if (entry->oe_namestr == (char *)ITER_DONE)
+			continue;
+		if (!entry->oe_namestr)
+			break;
+		if (entry->oe_namehsh != namehsh)
+			continue;
+		if (entry->oe_namelen != namelen)
+			continue;
+		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+			continue;
+		/* Found it! */
+		value             = entry->oe_value;
+		entry->oe_namestr = (char *)ITER_DONE;
+		ASSERT(self->ot_size);
+		ASSERT(self->ot_used);
+		--self->ot_used;
+		COMPILER_BARRIER();
+		if (self->ot_used < self->ot_mask / 3)
+			JITObjectTable_TryRehash(self, self->ot_mask >> 1);
+		COMPILER_BARRIER();
+		Dee_XDecref(value);
+		return true;
+	}
+	return false;
 }
 
 
@@ -294,19 +313,24 @@ INTERN struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
- dhash_t i,perturb;
- perturb = i = namehsh & self->ot_mask;
- for (;; JITObjectTable_NEXT(i,perturb)) {
-  struct jit_object_entry *entry;
-  entry = &self->ot_list[i & self->ot_mask];
-  if (entry->oe_namestr == (char *)ITER_DONE) continue;
-  if (!entry->oe_namestr) break;
-  if (entry->oe_namehsh != namehsh) continue;
-  if (entry->oe_namelen != namelen) continue;
-  if (memcmp(entry->oe_namestr,namestr,namelen * sizeof(char)) != 0) continue;
-  return entry;
- }
- return NULL;
+	dhash_t i, perturb;
+	perturb = i = namehsh & self->ot_mask;
+	for (;; JITObjectTable_NEXT(i, perturb)) {
+		struct jit_object_entry *entry;
+		entry = &self->ot_list[i & self->ot_mask];
+		if (entry->oe_namestr == (char *)ITER_DONE)
+			continue;
+		if (!entry->oe_namestr)
+			break;
+		if (entry->oe_namehsh != namehsh)
+			continue;
+		if (entry->oe_namelen != namelen)
+			continue;
+		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+			continue;
+		return entry;
+	}
+	return NULL;
 }
 
 /* Lookup or create an entry for a given name within `self'
@@ -316,60 +340,67 @@ INTERN struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
- dhash_t i,perturb;
- struct jit_object_entry *result_entry;
+	dhash_t i, perturb;
+	struct jit_object_entry *result_entry;
 again:
- result_entry = NULL;
- perturb = i = namehsh & self->ot_mask;
- for (;; JITObjectTable_NEXT(i,perturb)) {
-  struct jit_object_entry *entry;
-  entry = &self->ot_list[i & self->ot_mask];
-  if (entry->oe_namestr == (char *)ITER_DONE) {
-   /* Re-use deleted entries. */
-   if (!result_entry)
-        result_entry = entry;
-   continue;
-  }
-  if (!entry->oe_namestr) {
-   if (!result_entry) {
-    /* Check if we must re-hash the table. */
-    if (self->ot_size + 1 >= (self->ot_mask*2)/3) {
-     size_t new_mask;
-     new_mask = (self->ot_mask << 1) | 1;
-     if (self->ot_used < self->ot_size)
-         new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
-     if (new_mask < 7) new_mask = 7;
-     if likely(JITObjectTable_TryRehash(self,new_mask))
-        goto again;
-     if (self->ot_size == self->ot_mask) {
-      new_mask = (self->ot_mask << 1) | 1;
-      if (self->ot_used < self->ot_size)
-          new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
-      for (;;) {
-       if likely(JITObjectTable_TryRehash(self,new_mask))
-          goto again;
-       if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-          return NULL;
-      }
-     }
-    }
-    ++self->ot_size;
-    result_entry = entry;
-   }
-   break;
-  }
-  if (entry->oe_namehsh != namehsh) continue;
-  if (entry->oe_namelen != namelen) continue;
-  if (memcmp(entry->oe_namestr,namestr,namelen * sizeof(char)) != 0) continue;
-  /* Existing entry! */
-  return entry;
- }
- ++self->ot_used;
- result_entry->oe_namestr = namestr;
- result_entry->oe_namelen = namelen;
- result_entry->oe_namehsh = namehsh;
- result_entry->oe_value   = NULL;
- return result_entry;
+	result_entry = NULL;
+	perturb = i = namehsh & self->ot_mask;
+	for (;; JITObjectTable_NEXT(i, perturb)) {
+		struct jit_object_entry *entry;
+		entry = &self->ot_list[i & self->ot_mask];
+		if (entry->oe_namestr == (char *)ITER_DONE) {
+			/* Re-use deleted entries. */
+			if (!result_entry)
+				result_entry = entry;
+			continue;
+		}
+		if (!entry->oe_namestr) {
+			if (!result_entry) {
+				/* Check if we must re-hash the table. */
+				if (self->ot_size + 1 >= (self->ot_mask * 2) / 3) {
+					size_t new_mask;
+					new_mask = (self->ot_mask << 1) | 1;
+					if (self->ot_used < self->ot_size)
+						new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
+					if (new_mask < 7)
+						new_mask = 7;
+					if
+						likely(JITObjectTable_TryRehash(self, new_mask))
+					goto again;
+					if (self->ot_size == self->ot_mask) {
+						new_mask = (self->ot_mask << 1) | 1;
+						if (self->ot_used < self->ot_size)
+							new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
+						for (;;) {
+							if
+								likely(JITObjectTable_TryRehash(self, new_mask))
+							goto again;
+							if
+								unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+							return NULL;
+						}
+					}
+				}
+				++self->ot_size;
+				result_entry = entry;
+			}
+			break;
+		}
+		if (entry->oe_namehsh != namehsh)
+			continue;
+		if (entry->oe_namelen != namelen)
+			continue;
+		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+			continue;
+		/* Existing entry! */
+		return entry;
+	}
+	++self->ot_used;
+	result_entry->oe_namestr = namestr;
+	result_entry->oe_namelen = namelen;
+	result_entry->oe_namehsh = namehsh;
+	result_entry->oe_value   = NULL;
+	return result_entry;
 }
 
 

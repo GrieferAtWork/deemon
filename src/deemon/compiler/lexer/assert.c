@@ -20,9 +20,9 @@
 #define GUARD_DEEMON_COMPILER_LEXER_ASSERT_C 1
 
 #include <deemon/api.h>
-#include <deemon/compiler/tpp.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
+#include <deemon/compiler/tpp.h>
 
 DECL_BEGIN
 
@@ -31,131 +31,161 @@ DECL_BEGIN
 
 INTERN DREF struct ast *FCALL
 ast_parse_assert(bool needs_parenthesis) {
- DREF struct ast *result,*message,*merge;
+	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
- struct ast_loc loc;
+	struct ast_loc loc;
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
- ASSERT(tok == KWD_assert);
+	ASSERT(tok == KWD_assert);
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
- loc_here(&loc);
+	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
- if unlikely(yield() < 0) goto err;
- message = NULL;
- if (tok == '(') {
-  /* Special case: We must be able to handle both of these:
-   * >> assert (foo == bar), "Error";
-   * >> ASSERT(foo == bar, "Error");
-   */
-  result = ast_parse_unary(LOOKUP_SYM_NORMAL);
-  if unlikely(!result) goto err;
-  if (!needs_parenthesis) {
-   result = ast_parse_postexpr(result);
-   if unlikely(!result) goto err;
-  }
-  if (!needs_parenthesis && tok == ',') {
-   /* The message was passed individually. */
-   if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_expr(LOOKUP_SYM_NORMAL);
-   if unlikely(!message) goto err_r;
-  } else if (result->a_type == AST_MULTIPLE &&
-             result->a_flag == AST_FMULTIPLE_TUPLE &&
-             result->a_multiple.m_astc >= 2) {
-   /* Steal the last expression and use it as message. */
-   message = result->a_multiple.m_astv[--result->a_multiple.m_astc];
-   if (result->a_multiple.m_astc == 1) {
-    merge = result->a_multiple.m_astv[0];
-    ast_incref(merge);
-    ast_decref(result);
-    result = merge;
-   }
-  }
- } else {
-  if (needs_parenthesis &&
-      WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
-      goto err;
-  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
-  if unlikely(!result) goto err;
-  if (tok == ',') {
-   if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_expr(LOOKUP_SYM_NORMAL);
-   if unlikely(!message) goto err_r;
-  }
- }
- /* Create the assert branch. */
- merge = ast_setddi(message ? ast_action2(AST_FACTION_ASSERT_M,result,message)
-                            : ast_action1(AST_FACTION_ASSERT,result),
+	if
+		unlikely(yield() < 0)
+	goto err;
+	message = NULL;
+	if (tok == '(') {
+		/* Special case: We must be able to handle both of these:
+		 * >> assert (foo == bar), "Error";
+		 * >> ASSERT(foo == bar, "Error");
+		 */
+		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+		if
+			unlikely(!result)
+		goto err;
+		if (!needs_parenthesis) {
+			result = ast_parse_postexpr(result);
+			if
+				unlikely(!result)
+			goto err;
+		}
+		if (!needs_parenthesis && tok == ',') {
+			/* The message was passed individually. */
+			if
+				unlikely(yield() < 0)
+			goto err_r;
+			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			if
+				unlikely(!message)
+			goto err_r;
+		} else if (result->a_type == AST_MULTIPLE &&
+		           result->a_flag == AST_FMULTIPLE_TUPLE &&
+		           result->a_multiple.m_astc >= 2) {
+			/* Steal the last expression and use it as message. */
+			message = result->a_multiple.m_astv[--result->a_multiple.m_astc];
+			if (result->a_multiple.m_astc == 1) {
+				merge = result->a_multiple.m_astv[0];
+				ast_incref(merge);
+				ast_decref(result);
+				result = merge;
+			}
+		}
+	} else {
+		if (needs_parenthesis &&
+		    WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
+			goto err;
+		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		if
+			unlikely(!result)
+		goto err;
+		if (tok == ',') {
+			if
+				unlikely(yield() < 0)
+			goto err_r;
+			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			if
+				unlikely(!message)
+			goto err_r;
+		}
+	}
+	/* Create the assert branch. */
+	merge = ast_setddi(message ? ast_action2(AST_FACTION_ASSERT_M, result, message)
+	                           : ast_action1(AST_FACTION_ASSERT, result),
 #ifdef CONFIG_ASSERT_DDI_USES_EXPRESSION
-                   &result->a_ddi
-#else /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
-                   &loc
+	                   &result->a_ddi
+#else  /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
+	                   &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-                   );
- ast_xdecref(message);
- ast_decref(result);
- return merge;
-err_r: ast_decref(result);
-err:   return NULL;
+	);
+	ast_xdecref(message);
+	ast_decref(result);
+	return merge;
+err_r:
+	ast_decref(result);
+err:
+	return NULL;
 }
 
 
 INTERN DREF struct ast *FCALL
 ast_parse_assert_hybrid(unsigned int *pwas_expression) {
- DREF struct ast *result,*message,*merge;
+	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
- struct ast_loc loc;
+	struct ast_loc loc;
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
- ASSERT(tok == KWD_assert);
+	ASSERT(tok == KWD_assert);
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
- loc_here(&loc);
+	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
- if unlikely(yield() < 0) goto err;
- message = NULL;
- if (tok == '(') {
-  /* Special case: We must be able to handle both of these:
-   * >> assert (foo == bar), "Error";
-   * >> ASSERT(foo == bar, "Error");
-   */
-  result = ast_parse_unary(LOOKUP_SYM_NORMAL);
-  if unlikely(!result) goto err;
-  if (result->a_type == AST_MULTIPLE &&
-      result->a_flag == AST_FMULTIPLE_TUPLE &&
-      result->a_multiple.m_astc >= 2) {
-   /* Steal the last expression and use it as message. */
-   message = result->a_multiple.m_astv[--result->a_multiple.m_astc];
-   if (result->a_multiple.m_astc == 1) {
-    merge = result->a_multiple.m_astv[0];
-    ast_incref(merge);
-    ast_decref(result);
-    result = merge;
-   }
-  }
-  if (pwas_expression)
-     *pwas_expression = AST_PARSE_WASEXPR_MAYBE;
- } else {
-  result = ast_parse_expr(LOOKUP_SYM_NORMAL);
-  if unlikely(!result) goto err;
-  if (tok == ',') {
-   if unlikely(yield() < 0) goto err_r;
-   message = ast_parse_expr(LOOKUP_SYM_NORMAL);
-   if unlikely(!message) goto err_r;
-  }
-  if (pwas_expression)
-     *pwas_expression = AST_PARSE_WASEXPR_NO;
- }
- /* Create the assert branch. */
- merge = ast_setddi(message ? ast_action2(AST_FACTION_ASSERT_M,result,message)
-                            : ast_action1(AST_FACTION_ASSERT,result),
+	if
+		unlikely(yield() < 0)
+	goto err;
+	message = NULL;
+	if (tok == '(') {
+		/* Special case: We must be able to handle both of these:
+		 * >> assert (foo == bar), "Error";
+		 * >> ASSERT(foo == bar, "Error");
+		 */
+		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+		if
+			unlikely(!result)
+		goto err;
+		if (result->a_type == AST_MULTIPLE &&
+		    result->a_flag == AST_FMULTIPLE_TUPLE &&
+		    result->a_multiple.m_astc >= 2) {
+			/* Steal the last expression and use it as message. */
+			message = result->a_multiple.m_astv[--result->a_multiple.m_astc];
+			if (result->a_multiple.m_astc == 1) {
+				merge = result->a_multiple.m_astv[0];
+				ast_incref(merge);
+				ast_decref(result);
+				result = merge;
+			}
+		}
+		if (pwas_expression)
+			*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
+	} else {
+		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		if
+			unlikely(!result)
+		goto err;
+		if (tok == ',') {
+			if
+				unlikely(yield() < 0)
+			goto err_r;
+			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			if
+				unlikely(!message)
+			goto err_r;
+		}
+		if (pwas_expression)
+			*pwas_expression = AST_PARSE_WASEXPR_NO;
+	}
+	/* Create the assert branch. */
+	merge = ast_setddi(message ? ast_action2(AST_FACTION_ASSERT_M, result, message)
+	                           : ast_action1(AST_FACTION_ASSERT, result),
 #ifdef CONFIG_ASSERT_DDI_USES_EXPRESSION
-                   &result->a_ddi
-#else /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
-                   &loc
+	                   &result->a_ddi
+#else  /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
+	                   &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-                   );
- ast_xdecref(message);
- ast_decref(result);
- return merge;
-err_r: ast_decref(result);
-err:   return NULL;
+	                   );
+	ast_xdecref(message);
+	ast_decref(result);
+	return merge;
+err_r:
+	ast_decref(result);
+err:
+	return NULL;
 }
 
 

@@ -28,23 +28,23 @@ DECL_BEGIN
 
 INTERN bool DCALL
 ast_chk_multiple_hasexpand(struct ast *__restrict self) {
- struct ast **iter,**end;
- ASSERT_AST(self);
- ASSERT(self->a_type == AST_MULTIPLE);
- end = (iter = self->a_multiple.m_astv)+
-               self->a_multiple.m_astc;
- for (; iter != end; ++iter) {
-  if ((*iter)->a_type == AST_EXPAND)
-        return true;
- }
- return false;
+	struct ast **iter, **end;
+	ASSERT_AST(self);
+	ASSERT(self->a_type == AST_MULTIPLE);
+	end = (iter = self->a_multiple.m_astv) +
+	      self->a_multiple.m_astc;
+	for (; iter != end; ++iter) {
+		if ((*iter)->a_type == AST_EXPAND)
+			return true;
+	}
+	return false;
 }
 
 // INTERN bool DCALL
 // ast_chk_maythrow(struct ast *__restrict self,
 //                  bool result_used,
 //                  DeeTypeObject *exception_type) {
-// 
+//
 // }
 
 

@@ -57,29 +57,29 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
     defined(_WIN32_WCE) || defined(WIN32_WCE) || defined(_MSC_VER)
 #define CONFIG_HOST_WINDOWS 1
-#endif
+#endif /* Windows... */
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #ifndef __USER_LABEL_PREFIX__
 #ifdef CONFIG_HOST_WINDOWS
 #   define __USER_LABEL_PREFIX__ _
-#else
+#else /* CONFIG_HOST_WINDOWS */
 #   define __USER_LABEL_PREFIX__ /* nothing */
-#endif
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !__USER_LABEL_PREFIX__ */
 
 
 #ifdef __ELF__
 #define END(x)   .size x, . - x
-#else
+#else /* __ELF__ */
 #define END(x)   /* nothing */
-#endif
+#endif /* !__ELF__ */
 
 #ifdef CONFIG_NO_THREADS
 #define LOCK_PREFIX  /* nothing */
-#else
+#else /* CONFIG_NO_THREADS */
 #define LOCK_PREFIX  lock
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 /* Reminder: Optimization:
  * >>	testl %eax, %eax
@@ -101,16 +101,16 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 
 #ifdef __ELF__
 #define CONFIG_USE_CFI 1
-#endif
+#endif /* __ELF__ */
 
 
 #ifdef CONFIG_USE_CFI
 #define IF_USE_CFI(...)             __VA_ARGS__
 #ifdef CODE_IS_REGISTER
 #define ADJUST_CFA_OFFSET(offset)   .cfi_adjust_cfa_offset  offset;
-#else
+#else /* CODE_IS_REGISTER */
 #define ADJUST_CFA_OFFSET(offset)   /* nothing */
-#endif
+#endif /* !CODE_IS_REGISTER */
 #else /* CONFIG_USE_CFI */
 #define IF_USE_CFI(...)             /* nothing */
 #define ADJUST_CFA_OFFSET(offset)   /* nothing */
@@ -137,7 +137,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define WASSERT_ABOVE_EQUAL(w,a,b) /* nothing */
 #define WASSERT_EQUAL(w,a,b)       /* nothing */
 #define WASSERT_NOT_EQUAL(w,a,b)   /* nothing */
-#else
+#else /* NDEBUG */
 #define ASSERT_LOWER(x,y)          cmp y, x; assert l;
 #define ASSERT_LOWER_EQUAL(x,y)    cmp y, x; assert le;
 #define ASSERT_BELOW(x,y)          cmp y, x; assert b;
@@ -161,7 +161,8 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 	int $3
 991:
 .endm
-#endif
+#endif /* !NDEBUG */
+
 #define ASSERT_NONZERO(register) \
 	ASSERT(test register, register)
 
@@ -169,9 +170,9 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define ERROR_PRINT_DOHANDLE   1
 #ifdef CONFIG_NO_THREADS
 #define ERROR_PRINT_HANDLEINTR ERROR_PRINT_DOHANDLE
-#else
+#else /* CONFIG_NO_THREADS */
 #define ERROR_PRINT_HANDLEINTR 2
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #define DEE_STDIN  0
 #define DEE_STDOUT 1
@@ -216,7 +217,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define TP_FINTERRUPT    0x0004
 #define TP_FVARIABLE     0x0010
 #define TP_FGC           0x0020
-#define TP_FINTERHITABLE (TP_FINTERRUPT|TP_FVARIABLE|TP_FGC)
+#define TP_FINTERHITABLE (TP_FINTERRUPT | TP_FVARIABLE | TP_FGC)
 #define TP_FMOVEANY      0x0040
 #define TP_FINHERITCTOR  0x1000
 #define TP_FNAMEOBJECT   0x2000
@@ -236,7 +237,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 
 #ifdef CONFIG_TRACE_REFCHANGES
 #error "This assembly implementation cannot be used when references are being tracked"
-#endif
+#endif /* CONFIG_TRACE_REFCHANGES */
 
 
 
@@ -427,7 +428,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define CODE_OR_EAX    CODE
 #define CODE_OR_ECX    CODE
 #define CODE_OR_EDX    CODE
-#define TEST_CODE_FLAG(flag,scratch) \
+#define TEST_CODE_FLAG(flag, scratch) \
 	testw flag, co_flags(CODE);
 #else
 #define CODE_OR_LOC    L_CODE
@@ -435,16 +436,16 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define CODE_OR_EAX    %eax
 #define CODE_OR_ECX    %ecx
 #define CODE_OR_EDX    %edx
-#define TEST_CODE_FLAG(flag,scratch) \
+#define TEST_CODE_FLAG(flag, scratch) \
 	movl  L_CODE, scratch; \
 	testw flag, co_flags(scratch);
 #endif
 
 
-#define SYM3(x,y) x ## y
-#define SYM2(x,y) SYM3(x,y)
-#define SYM(x)    SYM2(__USER_LABEL_PREFIX__,x)
-#define fSYM(x,s) ASSEMBLY_NAME(x,s)
+#define SYM3(x, y) x##y
+#define SYM2(x, y) SYM3(x, y)
+#define SYM(x)     SYM2(__USER_LABEL_PREFIX__, x)
+#define fSYM(x, s) ASSEMBLY_NAME(x, s)
 
 .text
 

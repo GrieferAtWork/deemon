@@ -21,28 +21,29 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
 /* Set proxy types used to implement set operations on the C-level. */
 
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *su_a; /* [1..1][const] The first set of the union. */
-    DREF DeeObject *su_b; /* [1..1][const] The second set of the union. */
+	OBJECT_HEAD
+	DREF DeeObject *su_a; /* [1..1][const] The first set of the union. */
+	DREF DeeObject *su_b; /* [1..1][const] The second set of the union. */
 } SetUnion;
 
 typedef struct {
-    OBJECT_HEAD
-    DREF SetUnion   *sui_union; /* [1..1][const] The underlying union-set. */
-    DREF DeeObject  *sui_iter;  /* [1..1][lock(sui_lock)] The current iterator. */
+	OBJECT_HEAD
+	DREF SetUnion   *sui_union; /* [1..1][const] The underlying union-set. */
+	DREF DeeObject  *sui_iter;  /* [1..1][lock(sui_lock)] The current iterator. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t         sui_lock;  /* Lock for `sui_iter' and `sui_in2nd' */
-#endif
-    bool             sui_in2nd; /* [lock(sui_lock)] The second set is being iterated. */
+	rwlock_t         sui_lock;  /* Lock for `sui_iter' and `sui_in2nd' */
+#endif /* !CONFIG_NO_THREADS */
+	bool             sui_in2nd; /* [lock(sui_lock)] The second set is being iterated. */
 } SetUnionIterator;
 
 INTDEF DeeTypeObject SetUnion_Type;

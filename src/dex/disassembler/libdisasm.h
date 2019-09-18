@@ -20,9 +20,9 @@
 #define GUARD_DEX_FS_LIBDISASM_H 1
 
 #include <deemon/api.h>
+#include <deemon/code.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
-#include <deemon/code.h>
 
 DECL_BEGIN
 
@@ -49,15 +49,15 @@ DFUNDEF bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
 #define TEXTBYTE_LABELCLASS_JMP          0x04 /* The target of a `jmp', `jf', `jt' or `foreach' instruction.
                                                * `tl_name' is the address of the jump-like instruction. */
 struct textlabel {
-    code_addr_t tl_addr;   /* The absolute address of this text label. */
-    uint8_t     tl_class;  /* The type of special text location. */
-    uint8_t    _tl_pad[3]; /* ... */
-    uint32_t    tl_name;   /* The name of this label (dependent on `tl_class') */
+	code_addr_t tl_addr;   /* The absolute address of this text label. */
+	uint8_t     tl_class;  /* The type of special text location. */
+	uint8_t    _tl_pad[3]; /* ... */
+	uint32_t    tl_name;   /* The name of this label (dependent on `tl_class') */
 };
 
 typedef struct {
-    size_t            d_labelc; /* The number of special text labels. */
-    struct textlabel *d_labelv; /* [0..d_labelc][owned] Vector of special text labels. */
+	size_t            d_labelc; /* The number of special text labels. */
+	struct textlabel *d_labelv; /* [0..d_labelc][owned] Vector of special text labels. */
 } Disassembler;
 
 

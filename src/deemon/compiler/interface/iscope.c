@@ -20,40 +20,42 @@
 #define GUARD_DEEMON_COMPILER_INTERFACE_ISCOPE_C 1
 #define _KOS_SOURCE 1
 
+#include <deemon/compiler/compiler.h>
+
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/object.h>
-#include <deemon/format.h>
-#include <deemon/none.h>
-#include <deemon/error.h>
 #include <deemon/bool.h>
+#include <deemon/compiler/ast.h>
+#include <deemon/compiler/interface.h>
+#include <deemon/compiler/symbol.h>
+#include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
 #include <deemon/util/cache.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/symbol.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/interface.h>
 
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
 
-DECLARE_OBJECT_CACHE(compiler_item,DeeCompilerItemObject)
+DECLARE_OBJECT_CACHE(compiler_item, DeeCompilerItemObject)
 typedef DeeCompilerScopeObject Scope;
 
 INTERN DREF DeeObject *DCALL
 DeeCompiler_GetScope(struct scope_object *__restrict scope) {
- DeeTypeObject *result_type;
- if (Dee_TYPE(scope) == &DeeScope_Type) {
-  result_type = &DeeCompilerScope_Type;
- } else if (Dee_TYPE(scope) == &DeeBaseScope_Type) {
-  result_type = &DeeCompilerBaseScope_Type;
- } else {
-  ASSERT(Dee_TYPE(scope) == &DeeRootScope_Type);
-  result_type = &DeeCompilerRootScope_Type;
- }
- return DeeCompiler_GetObjItem(result_type,(DeeObject *)scope);
+	DeeTypeObject *result_type;
+	if (Dee_TYPE(scope) == &DeeScope_Type) {
+		result_type = &DeeCompilerScope_Type;
+	} else if (Dee_TYPE(scope) == &DeeBaseScope_Type) {
+		result_type = &DeeCompilerBaseScope_Type;
+	} else {
+		/* TODO: Support for DeeClassScope_Type! */
+		ASSERT(Dee_TYPE(scope) == &DeeRootScope_Type);
+		result_type = &DeeCompilerRootScope_Type;
+	}
+	return DeeCompiler_GetObjItem(result_type, (DeeObject *)scope);
 }
 
 
@@ -61,229 +63,259 @@ DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 INTERN int DCALL
 set_astloc_from_obj(DeeObject *obj,
                     struct ast *__restrict result) {
- if unlikely(get_astloc_from_obj(obj,&result->a_ddi))
-    return -1;
- if likely(result->a_ddi.l_file)
-    TPPFile_Incref(result->a_ddi.l_file);
- return 0;
+	if
+		unlikely(get_astloc_from_obj(obj, &result->a_ddi))
+	return -1;
+	if
+		likely(result->a_ddi.l_file)
+	TPPFile_Incref(result->a_ddi.l_file);
+	return 0;
 }
 
 INTERN int DCALL
 get_astloc_from_obj(DeeObject *obj,
                     struct ast_loc *__restrict result) {
- DREF DeeObject *args[3];
- if (!obj) { loc_here(result); goto done; }
- if (DeeNone_Check(obj)) { result->l_file = NULL; goto done; }
- if (DeeObject_Unpack(obj,3,args)) goto err;
- if (DeeNone_Check(args[0])) {
-  result->l_file = NULL;
- } else {
-  if (DeeObject_AsInt(args[2],&result->l_col))
-      goto err_args_2;
-  Dee_Decref(args[2]);
-  if (DeeObject_AsInt(args[1],&result->l_line))
-      goto err_args_1;
-  Dee_Decref(args[1]);
-  if (DeeObject_AssertTypeExact(args[0],&DeeCompilerFile_Type))
-      goto err_args_0;
-  if (((DeeCompilerItemObject *)args[0])->ci_compiler != DeeCompiler_Current) {
-   err_invalid_file_compiler((DeeCompilerItemObject *)args[0]);
-   goto err_args_0;
-  }
-  if unlikely(!((DeeCompilerItemObject *)args[0])->ci_value) {
-   err_compiler_item_deleted((DeeCompilerItemObject *)args[0]);
-   goto err_args_0;
-  }
-  result->l_file = (struct TPPFile *)((DeeCompilerItemObject *)args[0])->ci_value;
-  TPPFile_Incref(result->l_file);
- }
- Dee_Decref(args[0]);
+	DREF DeeObject *args[3];
+	if (!obj) {
+		loc_here(result);
+		goto done;
+	}
+	if (DeeNone_Check(obj)) {
+		result->l_file = NULL;
+		goto done;
+	}
+	if (DeeObject_Unpack(obj, 3, args))
+		goto err;
+	if (DeeNone_Check(args[0])) {
+		result->l_file = NULL;
+	} else {
+		if (DeeObject_AsInt(args[2], &result->l_col))
+			goto err_args_2;
+		Dee_Decref(args[2]);
+		if (DeeObject_AsInt(args[1], &result->l_line))
+			goto err_args_1;
+		Dee_Decref(args[1]);
+		if (DeeObject_AssertTypeExact(args[0], &DeeCompilerFile_Type))
+			goto err_args_0;
+		if (((DeeCompilerItemObject *)args[0])->ci_compiler != DeeCompiler_Current) {
+			err_invalid_file_compiler((DeeCompilerItemObject *)args[0]);
+			goto err_args_0;
+		}
+		if
+			unlikely(!((DeeCompilerItemObject *)args[0])->ci_value)
+		{
+			err_compiler_item_deleted((DeeCompilerItemObject *)args[0]);
+			goto err_args_0;
+		}
+		result->l_file = (struct TPPFile *)((DeeCompilerItemObject *)args[0])->ci_value;
+		TPPFile_Incref(result->l_file);
+	}
+	Dee_Decref(args[0]);
 done:
- return 0;
+	return 0;
 err_args_2:
- Dee_Decref(args[2]);
+	Dee_Decref(args[2]);
 err_args_1:
- Dee_Decref(args[1]);
+	Dee_Decref(args[1]);
 err_args_0:
- Dee_Decref(args[0]);
+	Dee_Decref(args[0]);
 err:
- return -1;
+	return -1;
 }
 
 INTERN int DCALL
 get_scope_lookupmode(DeeObject *__restrict value,
                      unsigned int *__restrict presult) {
- if (value == Dee_EmptyString) { *presult = 0; return 0; }
- if (DeeString_Check(value)) {
-  /* TODO */
- }
- return DeeObject_AsUInt(value,presult);
+	if (value == Dee_EmptyString) {
+		*presult = 0;
+		return 0;
+	}
+	if (DeeString_Check(value)) {
+		/* TODO */
+	}
+	return DeeObject_AsUInt(value, presult);
 }
 
 
 
 PRIVATE DREF DeeObject *DCALL
 scope_getbase(DeeCompilerScopeObject *__restrict self) {
- DREF DeeObject *result;
- COMPILER_BEGIN(self->ci_compiler);
- result = DeeCompiler_GetScope((DeeScopeObject *)self->ci_value->s_base);
- COMPILER_END();
- return result;
+	DREF DeeObject *result;
+	COMPILER_BEGIN(self->ci_compiler);
+	result = DeeCompiler_GetScope((DeeScopeObject *)self->ci_value->s_base);
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_getprev(DeeCompilerScopeObject *__restrict self) {
- DREF DeeObject *result;
- COMPILER_BEGIN(self->ci_compiler);
- if (!self->ci_value->s_prev) {
-  result = Dee_None;
-  Dee_Incref(result);
- } else {
-  result = DeeCompiler_GetScope(self->ci_value->s_prev);
- }
- COMPILER_END();
- return result;
+	DREF DeeObject *result;
+	COMPILER_BEGIN(self->ci_compiler);
+	if (!self->ci_value->s_prev) {
+		result = Dee_None;
+		Dee_Incref(result);
+	} else {
+		result = DeeCompiler_GetScope(self->ci_value->s_prev);
+	}
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
- return_bool(DeeScope_IsClassScope(self->ci_value));
+	return_bool(DeeScope_IsClassScope(self->ci_value));
 }
 
 
 PRIVATE struct type_getset scope_getsets[] = {
-    { "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getbase, NULL, NULL,
-      DOC("->?ABaseScope?Ert:Compiler\n"
-          "Returns the nearest base-scope that @this scope is apart of") },
-    { "prev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getprev, NULL, NULL,
-      DOC("->?X2?AScope?Ert:Compiler?N\n"
-          "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
-    { "isclassscope",
-      (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL, NULL,
-      DOC("->?Dbool\n"
-          "Check if @this scope is a class-scope\n"
-          "Class scopes are somewhat special, in that they prolong the full linkage of "
-          "symbol lookup going beyond their range, up to the point where the scope is "
-          "removed from the scope-stack\n"
-          "This in turn allows for so-called `fwd' (forward; s.a.: #symbol.kind) symbols "
-          "to be used like any other general-purpose symbol, but only be fully linked once "
-          "it is known if the surrounding class defines a symbol of the same name, thus "
-          "allowing member functions that havn't actually been declared, to already be used "
-          "ahead of time") },
-    { NULL }
+	{ "base", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & scope_getbase, NULL, NULL,
+	  DOC("->?ABaseScope?Ert:Compiler\n"
+	      "Returns the nearest base-scope that @this scope is apart of") },
+	{ "prev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & scope_getprev, NULL, NULL,
+	  DOC("->?X2?AScope?Ert:Compiler?N\n"
+	      "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
+	{ "isclassscope",
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & scope_get_isclassscope, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Check if @this scope is a class-scope\n"
+	      "Class scopes are somewhat special, in that they prolong the full linkage of "
+	      "symbol lookup going beyond their range, up to the point where the scope is "
+	      "removed from the scope-stack\n"
+	      "This in turn allows for so-called `fwd' (forward; s.a.: #symbol.kind) symbols "
+	      "to be used like any other general-purpose symbol, but only be fully linked once "
+	      "it is known if the surrounding class defines a symbol of the same name, thus "
+	      "allowing member functions that havn't actually been declared, to already be used "
+	      "ahead of time") },
+	{ NULL }
 };
 
 INTERN int DCALL
 print_scope_repr(DeeScopeObject *__restrict self,
                  struct unicode_printer *__restrict printer) {
- dssize_t error;
- error = unicode_printer_printf(printer,"<scope at %p>",self);
- return unlikely(error < 0) ? -1 : 0;
+	dssize_t error;
+	error = unicode_printer_printf(printer, "<scope at %p>", self);
+	return unlikely(error < 0)
+	? -1 : 0;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_str(DeeCompilerScopeObject *__restrict self) {
- return DeeString_Newf("<scope at %p>",self->ci_value);
+	return DeeString_Newf("<scope at %p>", self->ci_value);
 }
 
 
 PRIVATE int DCALL
 scope_bool(DeeCompilerScopeObject *__restrict self) {
- int result;
- COMPILER_BEGIN(self->ci_compiler);
- result = self->ci_value->s_mapc != 0;
- COMPILER_END();
- return result;
+	int result;
+	COMPILER_BEGIN(self->ci_compiler);
+	result = self->ci_value->s_mapc != 0;
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_iter(DeeCompilerScopeObject *__restrict self) {
- (void)self; /* TODO */
- DERROR_NOTIMPLEMENTED();
- return NULL;
+	(void)self; /* TODO */
+	DERROR_NOTIMPLEMENTED();
+	return NULL;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_size(DeeCompilerScopeObject *__restrict self) {
- DREF DeeObject *result;
- COMPILER_BEGIN(self->ci_compiler);
- result = DeeInt_NewSize(self->ci_value->s_mapc);
- COMPILER_END();
- return result;
+	DREF DeeObject *result;
+	COMPILER_BEGIN(self->ci_compiler);
+	result = DeeInt_NewSize(self->ci_value->s_mapc);
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_contains(DeeCompilerScopeObject *__restrict self,
                DeeObject *__restrict elem) {
- DREF DeeObject *result;
- COMPILER_BEGIN(self->ci_compiler);
- if (DeeObject_InstanceOfExact(elem,&DeeCompilerSymbol_Type)) {
-  result = DeeBool_For((((DeeCompilerSymbolObject *)elem)->ci_compiler == self->ci_compiler &&
-                        ((DeeCompilerSymbolObject *)elem)->ci_value != NULL &&
-                        ((DeeCompilerSymbolObject *)elem)->ci_value->s_scope == self->ci_value));
- } else if (DeeString_Check(elem)) {
-  char *utf8 = DeeString_AsUtf8(elem);
-  if unlikely(!utf8) { result = NULL; goto done; }
-  result = DeeBool_For(scope_lookup_str(self->ci_value,utf8,WSTR_LENGTH(utf8)) != NULL);
- } else {
-  result = Dee_False;
- }
- Dee_Incref(result);
+	DREF DeeObject *result;
+	COMPILER_BEGIN(self->ci_compiler);
+	if (DeeObject_InstanceOfExact(elem, &DeeCompilerSymbol_Type)) {
+		result = DeeBool_For((((DeeCompilerSymbolObject *)elem)->ci_compiler == self->ci_compiler &&
+		                      ((DeeCompilerSymbolObject *)elem)->ci_value != NULL &&
+		                      ((DeeCompilerSymbolObject *)elem)->ci_value->s_scope == self->ci_value));
+	} else if (DeeString_Check(elem)) {
+		char *utf8 = DeeString_AsUtf8(elem);
+		if
+			unlikely(!utf8)
+		{
+			result = NULL;
+			goto done;
+		}
+		result = DeeBool_For(scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8)) != NULL);
+	} else {
+		result = Dee_False;
+	}
+	Dee_Incref(result);
 done:
- COMPILER_END();
- return result;
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE DREF DeeObject *DCALL
 scope_getitem(DeeCompilerScopeObject *__restrict self,
               DeeObject *__restrict elem) {
- DREF DeeObject *result; struct symbol *sym; char *utf8;
- if (DeeObject_AssertTypeExact(elem,&DeeString_Type) ||
-    (utf8 = DeeString_AsUtf8(elem)) == NULL)
-     return NULL;
- COMPILER_BEGIN(self->ci_compiler);
- sym = scope_lookup_str(self->ci_value,utf8,WSTR_LENGTH(utf8));
- if unlikely(!sym) {
-  err_item_not_found((DeeObject *)self,elem);
-  result = NULL;
- } else {
-  result = DeeCompiler_GetSymbol(sym);
- }
- COMPILER_END();
- return result;
+	DREF DeeObject *result;
+	struct symbol *sym;
+	char *utf8;
+	if (DeeObject_AssertTypeExact(elem, &DeeString_Type) ||
+	    (utf8 = DeeString_AsUtf8(elem)) == NULL)
+		return NULL;
+	COMPILER_BEGIN(self->ci_compiler);
+	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
+	if
+		unlikely(!sym)
+	{
+		err_item_not_found((DeeObject *)self, elem);
+		result = NULL;
+	}
+	else {
+		result = DeeCompiler_GetSymbol(sym);
+	}
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE int DCALL
 scope_delitem(DeeCompilerScopeObject *__restrict self,
               DeeObject *__restrict elem) {
- int result; struct symbol *sym; char *utf8;
- if (DeeObject_AssertTypeExact(elem,&DeeString_Type) ||
-    (utf8 = DeeString_AsUtf8(elem)) == NULL)
-     return -1;
- COMPILER_BEGIN(self->ci_compiler);
- sym = scope_lookup_str(self->ci_value,utf8,WSTR_LENGTH(utf8));
- if unlikely(!sym) {
-  err_item_not_found((DeeObject *)self,elem);
-  result = -1;
- } else {
-  /* Delete the symbol. */
-  del_local_symbol(sym);
-  result = 0;
- }
- COMPILER_END();
- return result;
+	int result;
+	struct symbol *sym;
+	char *utf8;
+	if (DeeObject_AssertTypeExact(elem, &DeeString_Type) ||
+	    (utf8 = DeeString_AsUtf8(elem)) == NULL)
+		return -1;
+	COMPILER_BEGIN(self->ci_compiler);
+	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
+	if
+		unlikely(!sym)
+	{
+		err_item_not_found((DeeObject *)self, elem);
+		result = -1;
+	}
+	else {
+		/* Delete the symbol. */
+		del_local_symbol(sym);
+		result = 0;
+	}
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE struct type_seq scope_seq = {
-    /* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_iter,
-    /* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_size,
-    /* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&scope_contains,
-    /* .tp_get       = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&scope_getitem,
-    /* .tp_del       = */(int(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&scope_delitem,
-    /* .tp_set       = */NULL,
-    /* .tp_range_get = */NULL,
-    /* .tp_range_del = */NULL,
-    /* .tp_range_set = */NULL
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_iter,
+	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_size,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_getitem,
+	/* .tp_del       = */ (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&scope_delitem,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL
 };
 
 PRIVATE struct type_member scope_class_members[] = {
@@ -343,7 +375,7 @@ done:
 }
 
 PRIVATE struct type_method scope_methods[] = {
-    { "newanon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_newanon,
+	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&scope_newanon,
       DOC("->?ASymbol?Ert:Compiler\n"
           "Construct a new anonymous symbol, and add it as part of @this scope\n"
           "The symbol isn't given a name (when queried it will have an empty name), and "
@@ -352,7 +384,7 @@ PRIVATE struct type_method scope_methods[] = {
           "meaning that this is the type of symbol that should be used to hold hidden "
           "values, as used by $with-statements\n"
           "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
-    { "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict,size_t,DeeObject **__restrict))&scope_newlocal,
+	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&scope_newlocal,
       DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
           "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
           "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"
@@ -361,169 +393,168 @@ PRIVATE struct type_method scope_methods[] = {
           "symbol when @requirenew is :false, or throw a :ValueError otherwise\n"
           "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)"),
       TYPE_METHOD_FKWDS },
-    { NULL }
+	{ NULL }
 };
 
 
 INTERN DeeTypeObject DeeCompilerScope_Type = {
-    OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_Scope",
-    /* .tp_doc      = */DOC("Access the symbols declared within a scope during ast parsing\n"
-                            "\n"
-                            "iter->\n"
-                            "Returns an iterator for enumerating all symbols within @this scope\n"
-                            "\n"
-                            "#->\n"
-                            "Returns the number of symbols found within @this scope\n"
-                            "\n"
-                            "bool->\n"
-                            "Returns :true if @this scope is non-empty\n"
-                            "\n"
-                            "repr->\n"
-                            "Returns a unique, human-readable representation of @this scope\n"
-                            "\n"
-                            "contains(name:?Dstring)->?Dbool\n"
-                            "contains(sym:?ASymbol?Ert:Compiler)->?Dbool\n"
-                            "Returns :true if @this scope contains a given symbol @sym, "
-                            "or some symbol with a name matching the given @name\n"
-                            "\n"
-                            "[](string name)->symbol\n"
-                            "@throw ValueError No symbol matching @name is contained within @this scope\n"
-                            "Returns the symbol associated with @name\n"
-                            "\n"
-                            "del[](string name)->\n"
-                            "@throw ValueError No symbol matching @name is contained within @this scope\n"
-                            "Delete the symbol associated with @name, adding it to the set of deleted symbols"
-                            ),
-    /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeMapping_Type,
-    /* .tp_init = */{
-        {
-            /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
-            }
-        },
-        /* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
-    },
-    /* .tp_cast = */{
-        /* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
-        /* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
-        /* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&scope_bool
-    },
-    /* .tp_call          = */NULL,
-    /* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&DeeCompilerObjItem_Visit,
-    /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
-    /* .tp_seq           = */&scope_seq,
-    /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */NULL,
-    /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */scope_methods,
-    /* .tp_getsets       = */scope_getsets,
-    /* .tp_members       = */NULL,
-    /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */scope_class_members
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_Scope",
+	/* .tp_doc      = */ DOC("Access the symbols declared within a scope during ast parsing\n"
+	                         "\n"
+	                         "iter->\n"
+	                         "Returns an iterator for enumerating all symbols within @this scope\n"
+	                         "\n"
+	                         "#->\n"
+	                         "Returns the number of symbols found within @this scope\n"
+	                         "\n"
+	                         "bool->\n"
+	                         "Returns :true if @this scope is non-empty\n"
+	                         "\n"
+	                         "repr->\n"
+	                         "Returns a unique, human-readable representation of @this scope\n"
+	                         "\n"
+	                         "contains(name:?Dstring)->?Dbool\n"
+	                         "contains(sym:?ASymbol?Ert:Compiler)->?Dbool\n"
+	                         "Returns :true if @this scope contains a given symbol @sym, "
+	                         "or some symbol with a name matching the given @name\n"
+	                         "\n"
+	                         "[](string name)->symbol\n"
+	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"
+	                         "Returns the symbol associated with @name\n"
+	                         "\n"
+	                         "del[](string name)->\n"
+	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"
+	                         "Delete the symbol associated with @name, adding it to the set of deleted symbols"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
+				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+			}
+		},
+		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
+		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&scope_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &scope_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ scope_methods,
+	/* .tp_getsets       = */ scope_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ scope_class_members
 };
 
 INTERN DeeTypeObject DeeCompilerBaseScope_Type = {
-    OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_BaseScope",
-    /* .tp_doc      = */NULL,
-    /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeCompilerScope_Type,
-    /* .tp_init = */{
-        {
-            /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
-            }
-        },
-        /* .tp_dtor        = */NULL,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
-    },
-    /* .tp_cast = */{
-        /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL
-    },
-    /* .tp_call          = */NULL,
-    /* .tp_visit         = */NULL,
-    /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
-    /* .tp_seq           = */NULL,
-    /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */NULL,
-    /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
-    /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_BaseScope",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCompilerScope_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
+				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
 
 INTERN DeeTypeObject DeeCompilerRootScope_Type = {
-    OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"_RootScope",
-    /* .tp_doc      = */NULL,
-    /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeCompilerBaseScope_Type,
-    /* .tp_init = */{
-        {
-            /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */NULL,
-                TYPE_ALLOCATOR(&compiler_item_tp_alloc,&compiler_item_tp_free)
-            }
-        },
-        /* .tp_dtor        = */NULL,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
-    },
-    /* .tp_cast = */{
-        /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL
-    },
-    /* .tp_call          = */NULL,
-    /* .tp_visit         = */NULL,
-    /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
-    /* .tp_seq           = */NULL,
-    /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */NULL,
-    /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */NULL,
-    /* .tp_getsets       = */NULL,
-    /* .tp_members       = */NULL,
-    /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RootScope",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCompilerBaseScope_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
+				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
 
 

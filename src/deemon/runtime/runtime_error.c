@@ -726,6 +726,7 @@ PRIVATE char const access_names[4][4] = {
 	/* [ATTR_ACCESS_SET] = */ "set",
 	/* [?]               = */ "",
 };
+
 INTERN ATTR_COLD int DCALL
 err_unknown_attribute(DeeTypeObject *__restrict tp,
                       char const *__restrict name,

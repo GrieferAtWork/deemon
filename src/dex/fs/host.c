@@ -30,13 +30,13 @@
 
 /* Select the host-specific filesystem implementation. */
 #ifdef CONFIG_HOST_WINDOWS
-#   include "windows.c.inl"
+#include "windows.c.inl"
 #elif defined(CONFIG_HOST_UNIX)
-#   include "unix.c.inl"
+#include "unix.c.inl"
 #elif !defined(CONFIG_NO_STDIO)
-#   include "stdio.c.inl"
+#include "stdio.c.inl"
 #else
-#   include "generic.c.inl"
+#include "generic.c.inl"
 #endif
 
 

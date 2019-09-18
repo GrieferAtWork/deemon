@@ -38,8 +38,8 @@ local class LinkedListNode {
 	//	print "    >>",m_prev;
 	//	print "    >>",m_next;
 	//}
-	operator str() -> "({},{},{})".format({ m_prev, m_value, m_next });
-	operator repr() -> "LinkedListNode({!r},{!r},{!r})".format({ m_prev, m_next, m_value });
+	operator str() -> "({}, {}, {})".format({ m_prev, m_value, m_next });
+	operator repr() -> "LinkedListNode({!r}, {!r}, {!r})".format({ m_prev, m_next, m_value });
 };
 
 

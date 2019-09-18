@@ -25,15 +25,15 @@
 DECL_BEGIN
 
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *ti_iter; /* [1..1][const] The iterator who's elements are being transformed. */
-    DREF DeeObject *ti_func; /* [1..1][const] The function used for transforming. */
+	OBJECT_HEAD
+	DREF DeeObject *ti_iter; /* [1..1][const] The iterator who's elements are being transformed. */
+	DREF DeeObject *ti_func; /* [1..1][const] The function used for transforming. */
 } TransformationIterator;
 
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *t_seq;   /* [1..1][const] The sequence being transformed. */
-    DREF DeeObject *t_fun;   /* [1..1][const] The function used for transforming. */
+	OBJECT_HEAD
+	DREF DeeObject *t_seq;   /* [1..1][const] The sequence being transformed. */
+	DREF DeeObject *t_fun;   /* [1..1][const] The function used for transforming. */
 } Transformation;
 
 INTDEF DeeTypeObject SeqTransformation_Type;

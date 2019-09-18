@@ -959,7 +959,7 @@ class TypeExpr: WeakRefAble {
 
 	@@Returns a string representation of how @this TypeExpr can be created
 	operator repr(): string {
-		return "TypeExpr({!r},{!r})".format({ docdecl.lock(none), docstring });
+		return "TypeExpr({!r}, {!r})".format({ docdecl.lock(none), docstring });
 	}
 
 	@@Returns true if @this Type expression referrs to :none
@@ -2698,7 +2698,7 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 @@The main interface for accessing the documentation API provided by deemon
 @@Documentation text is addressed using unambiguos paths structures as follows:
 @@
-@@The string is split into segments seperated by ${"/"}
+@@The string is split into segments separated by ${"/"}
 @@
 @@Dangling leading and trailing slashes are ignored.
 @@

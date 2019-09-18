@@ -87,21 +87,21 @@ typedef struct {
 
 PRIVATE FUNC(Slab) FUNC(slab) = {
 #ifndef CONFIG_NO_THREADS
-	/* .s_lock = */RWLOCK_INIT,
+	/* .s_lock = */ RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .s_free = */SLAB_PAGE_INVALID,
 	/* .s_full = */SLAB_PAGE_INVALID,
 	/* .s_tail = */SLAB_PAGE_INVALID
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
 	,
-	/* .s_num_free      = */0,
-	/* .s_max_free      = */0,
-	/* .s_num_alloc     = */0,
-	/* .s_max_alloc     = */0,
-	/* .s_num_fullpages = */0,
-	/* .s_max_fullpages = */0,
-	/* .s_num_freepages = */0,
-	/* .s_max_freepages = */0
+	/* .s_num_free      = */ 0,
+	/* .s_max_free      = */ 0,
+	/* .s_num_alloc     = */ 0,
+	/* .s_max_alloc     = */ 0,
+	/* .s_num_fullpages = */ 0,
+	/* .s_max_fullpages = */ 0,
+	/* .s_num_freepages = */ 0,
+	/* .s_max_freepages = */ 0
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 };
 
@@ -451,6 +451,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
 	else INIT_DEBUG(result);
 	return result;
 }
+
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
@@ -459,6 +460,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Malloc))(char const *fil
 	else INIT_DEBUG(result);
 	return result;
 }
+
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
@@ -467,6 +469,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	else INIT_DEBUG(result);
 	return result;
 }
+
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
@@ -580,6 +583,7 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12),
 PUBLIC void(DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 	(Dee_Free)(ptr);
 }
+
 PUBLIC void(DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file, int line) {
 	(DeeDbg_Free)(ptr, file, line);
 }
@@ -598,6 +602,7 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
 PUBLIC void(DCALL DeeObject_Free)(void *ptr) {
 	(FUNC(DeeSlab_Free))(ptr);
 }
+
 PUBLIC void(DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	(FUNC(DeeDbgSlab_Free))(ptr, file, line);
 }
@@ -612,6 +617,7 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
 PUBLIC void(DCALL DeeObject_Free)(void *ptr) {
 	Dee_Free(ptr);
 }
+
 PUBLIC void(DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	DeeDbg_Free(ptr, file, line);
 }

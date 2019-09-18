@@ -23,9 +23,9 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1
-#else
+#else /* CONFIG_HOST_WINDOWS */
 #define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1 /* XXX: TODO */
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 
 #include <deemon/dex.h>
 #include <deemon/object.h>
@@ -33,7 +33,7 @@
 
 #ifndef CONFIG_HOST_WINDOWS
 #include <sys/stat.h>
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 
 #include <stdbool.h>
 
@@ -75,9 +75,9 @@ INTDEF int DCALL fs_printenv(/*utf-8*/ char const *__restrict name,
 INTDEF DeeTypeObject DeeUser_Type;
 #ifdef CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE
 #define DeeGroup_Type DeeUser_Type
-#else
+#else /* CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE */
 INTDEF DeeTypeObject  DeeGroup_Type;
-#endif
+#endif /* !CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE */
 
 /* Lookup the home folder / name of the current user.
  * Same as `fs.user.home' / `fs.user.name' */
@@ -109,7 +109,7 @@ INTDEF int DCALL nt_printhome_process(struct unicode_printer *__restrict printer
 #   define STAT_ISUID  0004000 /* Set user ID on execution. */
 #   define STAT_ISGID  0002000 /* Set group ID on execution. */
 #   define STAT_ISVTX  0001000 /* Save swapped text after use (sticky). */
-#else
+#else /* CONFIG_HOST_WINDOWS */
 #ifdef __S_IFMT
 #   define STAT_IFMT   __S_IFMT
 #elif defined(S_IFMT)
@@ -187,7 +187,7 @@ INTDEF int DCALL nt_printhome_process(struct unicode_printer *__restrict printer
 #else
 #   define STAT_ISVTX  0001000 /* Save swapped text after use (sticky). */
 #endif
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 
 #define STAT_IRUSR  0000400 /* Read by owner. */
 #define STAT_IWUSR  0000200 /* Write by owner. */
@@ -302,7 +302,7 @@ INTDEF DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, uint16_t 
 #define FS_EXPAND_FCASE   0x0040 /* `c': Force all parts of the path to share the same casing when the host filesystem is case-insensitive. */
 #define FS_EXPAND_FNOFAIL 0x1000 /* `f': Skip expansion when a variable isn't known, or the home path cannot be determined. */
 #define EXPAND_DEFAULT_OPTIONS \
-    (FS_EXPAND_FHOME|FS_EXPAND_FVARS|FS_EXPAND_FPATH|FS_EXPAND_FNOFAIL)
+	(FS_EXPAND_FHOME | FS_EXPAND_FVARS | FS_EXPAND_FPATH | FS_EXPAND_FNOFAIL)
 
 
 /* New error classes added for the filesystem. */

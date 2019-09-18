@@ -23,11 +23,11 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 
 #include <deemon/dex.h>
-#include <deemon/object.h>
 #include <deemon/file.h>
+#include <deemon/object.h>
 
 DECL_BEGIN
 
@@ -73,8 +73,8 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
  * >> function id() -> int;
  *    Return the process's pid
  * >> function join() -> int;
- * >> function tryjoin() -> (bool,int);
- * >> function timedjoin(timeout_in_microseconds:?Dint) -> (bool,int);
+ * >> function tryjoin() -> (bool, int);
+ * >> function timedjoin(timeout_in_microseconds:?Dint) -> (bool, int);
  * >> function detach(): bool;
  *    Returns false if the process already was detached.
  * >> function terminate(int exit_code = 0): bool;
@@ -128,7 +128,7 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags);
 /* Work around problems with windows permissions. */
 INTDEF BOOL DCALL nt_GetExitCodeProcess(DWORD dwProcessId, HANDLE hProcess, LPDWORD lpExitCode);
 
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 
 DECL_END
 

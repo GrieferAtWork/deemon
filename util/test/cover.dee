@@ -166,7 +166,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 			assert !(a == b);
 			assert a != b;
 			assert !(a > b),
-				"{}: {},{} -- {},{}".format({
+				"{}: {}, {} -- {}, {}".format({
 					try repr(x) catch (...) "NO REPR",
 					type(a),
 					type(b),

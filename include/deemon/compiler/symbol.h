@@ -217,7 +217,7 @@ struct class_attribute;
  * documentation text (in user-code written as @@TEXT<LF> or @"TEXT"), which is then escaped as described
  * above by the section of character escaping only done in certain situations.
  * These sections of prototype docs are separated from each other by 2 consecutive line-feeds, such that
- * these sections can simply be seperated from each other with `__doc__.unifylines().split("\n\n")'
+ * these sections can simply be separated from each other with `__doc__.unifylines().split("\n\n")'
  *
  * NOTE:
  *   - Sections may also appear without any associated declaration pattern, in which case
@@ -255,7 +255,7 @@ struct class_attribute;
  *                         This type of encoding is used to represent `WeakRef with object',
  *                        `Tls with object' or `Cell with object'
  *   ?T<N>(<TYPE> * N) --- A Tuple expression containing <N> (encoded as a decimal) other types
- *                         e.g.: `?T2?Dstring?Dint' --- `(string,int)'
+ *                         e.g.: `?T2?Dstring?Dint' --- `(string, int)'
  *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
  *                         e.g.: `?S?Dstring' --- `{string...}'
  *   ?S<TYPE>          --- A generic Sequence expression for <TYPE>

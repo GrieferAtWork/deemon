@@ -178,119 +178,119 @@ PRIVATE struct type_method sysfile_class_methods[] = {
 };
 
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"_SystemFile",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_HASFILEOPS,
-		/* .tp_base     = */(DeeTypeObject *)&DeeFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "_SystemFile",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_alloc = */{
-					/* .tp_ctor      = */NULL,
-					/* .tp_copy_ctor = */NULL,
-					/* .tp_deep_ctor = */NULL,
-					/* .tp_any_ctor  = */NULL,
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
 					TYPE_FIXED_ALLOCATOR(DeeFileObject)
 				}
 			},
-			/* .tp_dtor        = */NULL,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */sysfile_methods,
-		/* .tp_getsets       = */NULL,
-		/* .tp_members       = */NULL,
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */sysfile_class_methods,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */&sysfile_read,
-	/* .ft_write  = */&sysfile_write,
-	/* .ft_seek   = */&sysfile_seek,
-	/* .ft_sync   = */&sysfile_sync,
-	/* .ft_trunc  = */&sysfile_trunc,
-	/* .ft_close  = */&sysfile_close,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */&sysfile_getc,
-	/* .ft_ungetc = */&sysfile_ungetc,
-	/* .ft_putc   = */&sysfile_putc
+	/* .ft_read   = */ &sysfile_read,
+	/* .ft_write  = */ &sysfile_write,
+	/* .ft_seek   = */ &sysfile_seek,
+	/* .ft_sync   = */ &sysfile_sync,
+	/* .ft_trunc  = */ &sysfile_trunc,
+	/* .ft_close  = */ &sysfile_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ &sysfile_getc,
+	/* .ft_ungetc = */ &sysfile_ungetc,
+	/* .ft_putc   = */ &sysfile_putc
 };
 
 PUBLIC DeeFileTypeObject DeeFSFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"_FSFile",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_NONE,
-		/* .tp_base     = */(DeeTypeObject *)&DeeSystemFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "_FSFile",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_alloc = */{
-					/* .tp_ctor      = */NULL,
-					/* .tp_copy_ctor = */NULL,
-					/* .tp_deep_ctor = */NULL,
-					/* .tp_any_ctor  = */NULL,
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
 					TYPE_FIXED_ALLOCATOR(DeeFileObject)
 				}
 			},
-			/* .tp_dtor        = */NULL,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
-		/* .tp_methods       = */NULL,
-		/* .tp_getsets       = */NULL,
-		/* .tp_members       = */NULL,
-		/* .tp_class_methods = */NULL,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */NULL,
-	/* .ft_write  = */NULL,
-	/* .ft_seek   = */NULL,
-	/* .ft_sync   = */NULL,
-	/* .ft_trunc  = */NULL,
-	/* .ft_close  = */NULL,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */NULL,
-	/* .ft_ungetc = */NULL,
-	/* .ft_putc   = */NULL
+	/* .ft_read   = */ NULL,
+	/* .ft_write  = */ NULL,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ NULL,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ NULL,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
 };
 
 DECL_END

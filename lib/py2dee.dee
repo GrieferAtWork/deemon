@@ -1146,7 +1146,7 @@ again:
 	}
 
 	@@Return a triple (filename, line, column) (1-based)
-	public final property location: (string,int,int) = {
+	public final property location: (string, int, int) = {
 		get(): (string, int, int) {
 			local line_start = text.rfind("\n", 0, tokstart);
 			if (line_start < 0)

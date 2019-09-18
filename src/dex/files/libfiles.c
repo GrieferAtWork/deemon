@@ -22,6 +22,7 @@
 #define _KOS_SOURCE 1
 
 #include "libfiles.h"
+/**/
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
@@ -29,13 +30,13 @@
 DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "Joined", (DeeObject *)&Joined_Type },
-    //{ "decoder", (DeeObject *)&Decoder_Type }, /* TODO */
-    { NULL }
+	{ "Joined", (DeeObject *)&Joined_Type },
+	//{ "decoder", (DeeObject *)&Decoder_Type }, /* TODO */
+	{ NULL }
 };
 
 PUBLIC struct dex DEX = {
-    /* .d_symbols = */symbols
+	/* .d_symbols = */ symbols
 };
 
 DECL_END

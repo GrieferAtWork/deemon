@@ -44,7 +44,7 @@ class a_class {
 		return 42;
 	}
 
-	operator str() -> "a_class({},{},{})".format({ m_x, m_y, m_z });
+	operator str() -> "a_class({}, {}, {})".format({ m_x, m_y, m_z });
 	
 	operator for() {
 		yield m_x;

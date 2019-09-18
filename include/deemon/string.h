@@ -153,6 +153,7 @@ FORCELOCAL ATTR_CONST unsigned int DCALL
 _Dee_string_width_common(unsigned int x, unsigned int y) {
 	return x >= y ? x : y;
 }
+
 FORCELOCAL ATTR_CONST unsigned int DCALL
 _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 	return x >= y ? (x >= z ? x : z) : (y >= z ? y : z);
@@ -480,6 +481,7 @@ _DeeString_WStr(DeeStringObject *__restrict x) {
 		return x->s_data->u_data[x->s_data->u_width];
 	return (size_t *)x->s_str;
 }
+
 FORCELOCAL ATTR_PURE void *DCALL
 _DeeString_WEnd(DeeStringObject *__restrict x) {
 	struct Dee_string_utf *utf;
@@ -504,12 +506,14 @@ _DeeString_WEnd(DeeStringObject *__restrict x) {
 	}
 	return x->s_str + x->s_len;
 }
+
 FORCELOCAL ATTR_PURE size_t DCALL
 _DeeString_WLen(DeeStringObject *__restrict x) {
 	if (x->s_data)
 		return x->s_data->u_data[x->s_data->u_width][-1];
 	return x->s_len;
 }
+
 FORCELOCAL ATTR_PURE size_t DCALL
 _DeeString_WSiz(DeeStringObject *__restrict x) {
 	if (x->s_data) {

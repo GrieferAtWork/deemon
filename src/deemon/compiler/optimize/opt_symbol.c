@@ -21,126 +21,127 @@
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
-#include <deemon/module.h>
-#include <deemon/error.h>
-#include <deemon/none.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
+#include <deemon/error.h>
+#include <deemon/module.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
 
 DECL_BEGIN
 
-INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack,
-                                       struct ast *__restrict self, bool result_used) {
- struct symbol *sym;
- DREF DeeObject *symval;
- ASSERT(self->a_type == AST_SYM);
- (void)stack;
- sym = self->a_sym;
- /* If the symbol is being written to, then we can't optimize for external constants. */
+INTERN int(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack,
+                                      struct ast *__restrict self, bool result_used) {
+	struct symbol *sym;
+	DREF DeeObject *symval;
+	ASSERT(self->a_type == AST_SYM);
+	(void)stack;
+	sym = self->a_sym;
+	/* If the symbol is being written to, then we can't optimize for external constants. */
 #ifdef CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
- if (symbol_get_haseffect(sym,self->a_scope))
-     goto done;
-#endif
- if (self->a_flag) {
+	if (symbol_get_haseffect(sym, self->a_scope))
+		goto done;
+#endif /* CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
+	if (self->a_flag) {
 #ifndef CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
-  if (symbol_set_haseffect(sym,self->a_scope))
-      goto done;
-#endif
+		if (symbol_set_haseffect(sym, self->a_scope))
+			goto done;
+#endif /* !CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
 #ifdef OPTIMIZE_FASSUME
-  /* Generic write with unknown value.
-   * -> Remove assumptions made on the symbol. */
-  if (optimizer_flags & OPTIMIZE_FASSUME) {
-   return ast_assumes_setsymval(stack->os_assume,
-                                self->a_sym,
-                                NULL);
-  }
-#endif
-  goto done;
- }
+		/* Generic write with unknown value.
+		 * -> Remove assumptions made on the symbol. */
+		if (optimizer_flags & OPTIMIZE_FASSUME) {
+			return ast_assumes_setsymval(stack->os_assume,
+			                             self->a_sym,
+			                             NULL);
+		}
+#endif /* OPTIMIZE_FASSUME */
+		goto done;
+	}
 #ifndef CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
- if (symbol_get_haseffect(sym,self->a_scope))
-     goto done;
-#endif
- if (!result_used) {
-  OPTIMIZE_VERBOSE("Remove unused read from symbol `%$s'\n",
-                   sym->s_name->k_size,sym->s_name->k_name);
-  SYMBOL_DEC_NREAD(sym);
-  self->a_type = AST_CONSTEXPR;
-  self->a_constexpr = Dee_None;
-  Dee_Incref(Dee_None);
-  goto did_optimize;
- }
- SYMBOL_INPLACE_UNWIND_ALIAS(sym);
- ASSERT(sym->s_nread);
- /* Optimize constant, extern symbols. */
- if (sym->s_type == SYMBOL_TYPE_EXTERN &&
-    (sym->s_extern.e_symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FCONSTEXPR)) == MODSYM_FCONSTEXPR) {
-  /* The symbol is allowed to be expanded at compile-time. */
-  int error;
-  DeeModuleObject *symmod;
-  symmod = SYMBOL_EXTERN_MODULE(sym);
-  error  = DeeModule_RunInit((DeeObject *)symmod);
-  if unlikely(error < 0) goto err;
-  if (error == 0) {
-   /* The module is not initialized. */
-   ASSERT(sym->s_extern.e_symbol->ss_index <
-          symmod->mo_globalc);
-#ifndef CONFIG_NO_THREADS
-   rwlock_read(&symmod->mo_lock);
-#endif
-   symval = symmod->mo_globalv[sym->s_extern.e_symbol->ss_index];
-   Dee_XIncref(symval);
-#ifndef CONFIG_NO_THREADS
-   rwlock_endread(&symmod->mo_lock);
-#endif
-   /* Make sure that the symbol value is allowed
-    * to be expanded in constant expression. */
-   if likely(symval) {
-    int allowed;
-set_constant_expression:
-    allowed = allow_constexpr(symval);
-    if (allowed == CONSTEXPR_USECOPY) {
-     if (DeeObject_InplaceDeepCopy(&symval)) {
-      DeeError_Handled(ERROR_HANDLED_RESTORE);
-      goto done_set_constexpr;
-     }
-    } else if (allowed != CONSTEXPR_ALLOWED) {
-     goto done_set_constexpr;
-    }
-    /* Set the value as a constant expression. */
-    SYMBOL_DEC_NREAD(self->a_sym); /* Trace read references. */
-    self->a_constexpr = symval; /* Inherit */
-    self->a_type      = AST_CONSTEXPR;
-    OPTIMIZE_VERBOSE("Inline constant symbol expression: `%r'\n",symval);
-    goto did_optimize;
-   }
-done_set_constexpr:
-   Dee_Decref(symval);
-  }
- } else if (sym->s_type == SYMBOL_TYPE_CONST) {
-  /* Check for symbols that are actually constant expression. */
-  symval = sym->s_const;
-  Dee_Incref(symval);
-  goto set_constant_expression;
- }
+	if (symbol_get_haseffect(sym, self->a_scope))
+		goto done;
+#endif /* !CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
+	if (!result_used) {
+		OPTIMIZE_VERBOSE("Remove unused read from symbol `%$s'\n",
+		                 sym->s_name->k_size, sym->s_name->k_name);
+		SYMBOL_DEC_NREAD(sym);
+		self->a_type      = AST_CONSTEXPR;
+		self->a_constexpr = Dee_None;
+		Dee_Incref(Dee_None);
+		goto did_optimize;
+	}
+	SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+	ASSERT(sym->s_nread);
+	/* Optimize constant, extern symbols. */
+	if (sym->s_type == SYMBOL_TYPE_EXTERN &&
+	    (sym->s_extern.e_symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FCONSTEXPR)) == MODSYM_FCONSTEXPR) {
+		/* The symbol is allowed to be expanded at compile-time. */
+		int error;
+		DeeModuleObject *symmod;
+		symmod = SYMBOL_EXTERN_MODULE(sym);
+		error  = DeeModule_RunInit((DeeObject *)symmod);
+		if
+			unlikely(error < 0)
+		goto err;
+		if (error == 0) {
+			/* The module is not initialized. */
+			ASSERT(sym->s_extern.e_symbol->ss_index <
+			       symmod->mo_globalc);
+			rwlock_read(&symmod->mo_lock);
+			symval = symmod->mo_globalv[sym->s_extern.e_symbol->ss_index];
+			Dee_XIncref(symval);
+			rwlock_endread(&symmod->mo_lock);
+			/* Make sure that the symbol value is allowed
+			 * to be expanded in constant expression. */
+			if
+				likely(symval)
+			{
+				int allowed;
+			set_constant_expression:
+				allowed = allow_constexpr(symval);
+				if (allowed == CONSTEXPR_USECOPY) {
+					if (DeeObject_InplaceDeepCopy(&symval)) {
+						DeeError_Handled(ERROR_HANDLED_RESTORE);
+						goto done_set_constexpr;
+					}
+				} else if (allowed != CONSTEXPR_ALLOWED) {
+					goto done_set_constexpr;
+				}
+				/* Set the value as a constant expression. */
+				SYMBOL_DEC_NREAD(self->a_sym); /* Trace read references. */
+				self->a_constexpr = symval;    /* Inherit */
+				self->a_type      = AST_CONSTEXPR;
+				OPTIMIZE_VERBOSE("Inline constant symbol expression: `%r'\n", symval);
+				goto did_optimize;
+			}
+		done_set_constexpr:
+			Dee_Decref(symval);
+		}
+	} else if (sym->s_type == SYMBOL_TYPE_CONST) {
+		/* Check for symbols that are actually constant expression. */
+		symval = sym->s_const;
+		Dee_Incref(symval);
+		goto set_constant_expression;
+	}
 
 #ifdef OPTIMIZE_FASSUME
- /* Check on symbol assumptions to see if we can optimize
-  * this variable away, and into a constant expression. */
- if (optimizer_flags & OPTIMIZE_FASSUME) {
-  symval = ast_assumes_getsymval(stack->os_assume,sym);
-  if (symval) goto set_constant_expression;
- }
+	/* Check on symbol assumptions to see if we can optimize
+	 * this variable away, and into a constant expression. */
+	if (optimizer_flags & OPTIMIZE_FASSUME) {
+		symval = ast_assumes_getsymval(stack->os_assume, sym);
+		if (symval)
+			goto set_constant_expression;
+	}
 #endif
 done:
- return 0;
+	return 0;
 err:
- return -1;
+	return -1;
 did_optimize:
- ++optimizer_count;
- goto done;
+	++optimizer_count;
+	goto done;
 }
 
 

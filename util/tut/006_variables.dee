@@ -431,7 +431,7 @@ print barfoo;
 
 }
 
-/* Using an expand expression when assigning to a comma-seperated
+/* Using an expand expression when assigning to a comma-separated
  * List of variables, that expression is unpacked to match the number
  * of target expressions, allowing for multiple return values in
  * functions (explained later) */

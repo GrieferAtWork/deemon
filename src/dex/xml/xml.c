@@ -168,6 +168,7 @@ XMLNode_GetPrev(XMLNode *self,
  rwlock_endread(&parent->xn_lock);
  return (DREF XMLNode *)ITER_DONE;
 }
+
 INTERN DREF XMLNode *DCALL
 XMLNode_GetNext(XMLNode *self,
                 XMLNode *__restrict parent) {
@@ -342,7 +343,7 @@ set_end_of_text_scan:
      }
      ++iter;
      continue;
-    }
+	}
    }
    if (marker == '/') {
     --recursion;
@@ -430,56 +431,56 @@ node_visit(XMLNodeObject *__restrict self,
 
 
 PRIVATE struct type_getset node_getsets[] = {
-    { NULL }
+	{ NULL }
 };
 
 PRIVATE struct type_method node_methods[] = {
-    { NULL }
+	{ NULL }
 };
 
 INTERN DeeTypeObject XMLNodeObject_Type = {
-    OBJECT_HEAD_INIT(&DeeType_Type),
-    /* .tp_name     = */"Node",
-    /* .tp_doc      = */NULL,
-    /* .tp_flags    = */TP_FNORMAL,
-    /* .tp_weakrefs = */0,
-    /* .tp_features = */TF_NONE,
-    /* .tp_base     = */&DeeObject_Type,
-    /* .tp_init = */{
-        {
-            /* .tp_alloc = */{
-                /* .tp_ctor      = */NULL,
-                /* .tp_copy_ctor = */NULL,
-                /* .tp_deep_ctor = */NULL,
-                /* .tp_any_ctor  = */(void *)&node_init,
-                TYPE_FIXED_ALLOCATOR(XMLNodeObject)
-            }
-        },
-        /* .tp_dtor        = */(void (DCALL *)(DeeObject *__restrict))&node_fini,
-        /* .tp_assign      = */NULL,
-        /* .tp_move_assign = */NULL
-    },
-    /* .tp_cast = */{
-        /* .tp_str  = */NULL,
-        /* .tp_repr = */NULL,
-        /* .tp_bool = */NULL
-    },
-    /* .tp_call          = */NULL,
-    /* .tp_visit         = */(void (DCALL *)(DeeObject *__restrict,dvisit_t,void*))&node_visit,
-    /* .tp_gc            = */NULL,
-    /* .tp_math          = */NULL,
-    /* .tp_cmp           = */NULL,
-    /* .tp_seq           = */NULL,
-    /* .tp_iter_next     = */NULL,
-    /* .tp_attr          = */NULL,
-    /* .tp_with          = */NULL,
-    /* .tp_buffer        = */NULL,
-    /* .tp_methods       = */node_methods,
-    /* .tp_getsets       = */node_getsets,
-    /* .tp_members       = */NULL,
-    /* .tp_class_methods = */NULL,
-    /* .tp_class_getsets = */NULL,
-    /* .tp_class_members = */NULL
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "Node",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ (void *)&node_init,
+				TYPE_FIXED_ALLOCATOR(XMLNodeObject)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&node_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&node_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */node_methods,
+	/* .tp_getsets       = */node_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
 
 

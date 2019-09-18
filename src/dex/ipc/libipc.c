@@ -29,17 +29,17 @@
 DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "Process", (DeeObject *)&DeeProcess_Type },
-    { "enumproc", (DeeObject *)&DeeProcEnum_Type },
-    { "Pipe", (DeeObject *)&DeePipe_Type },
-    { NULL }
+	{ "Process", (DeeObject *)&DeeProcess_Type },
+	{ "enumproc", (DeeObject *)&DeeProcEnum_Type },
+	{ "Pipe", (DeeObject *)&DeePipe_Type },
+	{ NULL }
 };
 
 PUBLIC struct dex DEX = {
-    /* .d_symbols      = */symbols,
-    /* .d_init         = */NULL,
-    /* .d_fini         = */NULL,
-    /* .d_import_names = */{ NULL }
+	/* .d_symbols      = */ symbols,
+	/* .d_init         = */ NULL,
+	/* .d_fini         = */ NULL,
+	/* .d_import_names = */ { NULL }
 };
 
 DECL_END

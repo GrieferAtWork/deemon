@@ -59,20 +59,20 @@ DECL_BEGIN
 #if !CONFIG_INT_CACHE_MAXSIZE
 #undef CONFIG_INT_CACHE_MAXCOUNT
 #define CONFIG_INT_CACHE_MAXCOUNT 0
-#endif
+#endif /* !CONFIG_INT_CACHE_MAXSIZE */
 
 
 #ifdef NDEBUG
 INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
-#else
+#else /* NDEBUG */
 INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line);
 #define DeeInt_Alloc(n_digits)  DeeInt_Alloc_dbg(n_digits,__FILE__,__LINE__)
-#endif
+#endif /* !NDEBUG */
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 INTDEF void DCALL DeeInt_Free(DeeIntObject *__restrict self);
-#else
+#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 #define DeeInt_Free(self) DeeObject_Free(self)
-#endif
+#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
 INTDEF DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);
 INTDEF DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v);

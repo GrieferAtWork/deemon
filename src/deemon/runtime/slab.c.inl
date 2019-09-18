@@ -122,7 +122,7 @@ PRIVATE SlabConfig slab_config = {
 #undef INIT_REGION
 		}
 	},
-	/* .sc_heap_end = */0
+	/* .sc_heap_end = */ 0
 };
 
 #define IS_SLAB_POINTER(p)                          \
@@ -256,6 +256,7 @@ DECL_BEGIN
 INTERN void DCALL DeeSlab_Finalize(void) {
 	/* nothing */
 }
+
 INTERN void DCALL DeeSlab_Initialize(void) {
 	/* nothing */
 }

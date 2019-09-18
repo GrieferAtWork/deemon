@@ -28,12 +28,12 @@ DECL_BEGIN
 
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "Node", (DeeObject *)&XMLNodeObject_Type },
-    { NULL }
+	{ "Node", (DeeObject *)&XMLNodeObject_Type },
+	{ NULL }
 };
 
 PUBLIC struct dex DEX = {
-    /* .d_symbols = */symbols
+	/* .d_symbols = */ symbols
 };
 
 DECL_END

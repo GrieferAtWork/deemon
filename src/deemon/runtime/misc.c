@@ -1612,31 +1612,38 @@ PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Malloc)(n_bytes);
 }
+
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Calloc)(n_bytes);
 }
+
 PUBLIC void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Realloc)(ptr, n_bytes);
 }
+
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_TryMalloc)(n_bytes);
 }
+
 PUBLIC ATTR_MALLOC void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_TryCalloc)(n_bytes);
 }
+
 PUBLIC void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes,
                           char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_TryRealloc)(ptr, n_bytes);
 }
+
 PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Free)(ptr);
 }
+
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
 	return ptr;
@@ -1866,6 +1873,7 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 
 #ifdef NDEBUG
 PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line), char const *UNUSED(format), ...) {}
+
 PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line)) {}
 #else
 PRIVATE void assert_vprintf(char const *format, va_list args) {

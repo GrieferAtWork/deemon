@@ -35,30 +35,30 @@ DECL_BEGIN
  * are only created when the associated attribute is accessed. */
 
 typedef struct {
-    OBJECT_HEAD
-    /* Some sequence of objects somehow derived from, or related to a target, such as:
-     *  - <referred to by X>, <reachable from X>
-     *  - <GC objects referred to by X>, <GC objects reachable from X>
-     *  - <GC objects referring to X> */
-    size_t          gs_size;    /* [const] Number of objects apart of the hash-vector. */
-    size_t          gs_mask;    /* [const] Mask of hash-vector. */
-    DREF DeeObject *gs_elem[1]; /* [0..1][const][gs_mask+1] Hash-vector. */
+	OBJECT_HEAD
+	/* Some sequence of objects somehow derived from, or related to a target, such as:
+	 *  - <referred to by X>, <reachable from X>
+	 *  - <GC objects referred to by X>, <GC objects reachable from X>
+	 *  - <GC objects referring to X> */
+	size_t          gs_size;    /* [const] Number of objects apart of the hash-vector. */
+	size_t          gs_mask;    /* [const] Mask of hash-vector. */
+	DREF DeeObject *gs_elem[1]; /* [0..1][const][gs_mask+1] Hash-vector. */
 } GCSet;
 INTDEF DeeTypeObject DeeGCSet_Type;
 INTDEF GCSet DeeGCSet_Empty;
 
-#define GCSET_HASHOBJ(x)         Dee_HashPointer(x)
-#define GCSET_HASHNXT(i,perturb) ((i) = ((i) << 2) + (i) + (perturb) + 1,(perturb) >>= 5)
+#define GCSET_HASHOBJ(x)          Dee_HashPointer(x)
+#define GCSET_HASHNXT(i, perturb) ((i) = ((i) << 2) + (i) + (perturb) + 1, (perturb) >>= 5)
 
 typedef struct {
-    GCSet           *gs_set;  /* [0..1] The set being constructed. */
-    size_t           gs_err;  /* When non-zero, an error occurred after the
-                               * runtime failed to allocate this many bytes.
-                               * Once everything has been unlocked, try to collect
-                               * this much memory, then restart. */
+	GCSet           *gs_set;  /* [0..1] The set being constructed. */
+	size_t           gs_err;  /* When non-zero, an error occurred after the
+	                           * runtime failed to allocate this many bytes.
+	                           * Once everything has been unlocked, try to collect
+	                           * this much memory, then restart. */
 } GCSetMaker;
 
-#define GCSETMAKER_INIT {NULL,0}
+#define GCSETMAKER_INIT { NULL, 0 }
 
 /* Finalize the given GC-set maker. */
 INTDEF void DCALL GCSetMaker_Fini(GCSetMaker *__restrict self);
@@ -91,7 +91,7 @@ INTDEF int DCALL DeeGC_CollectGCReferred(GCSetMaker *__restrict self, DeeObject 
 
 /* Returns `true' if `target' is referred to by `source' */
 INTDEF bool DCALL DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target);
-#define DeeGC_IsReachable(object,from) DeeGC_ReferredBy(from,object)
+#define DeeGC_IsReachable(object, from) DeeGC_ReferredBy(from, object)
 
 
 DECL_END

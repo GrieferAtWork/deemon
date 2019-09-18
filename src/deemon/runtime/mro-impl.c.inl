@@ -1204,12 +1204,14 @@ N_len(err_classmember_requires_1_argument)(ATTR_ARG) {
 	                       "classmember `%" IF_LEN("$") "s' must be called with exactly 1 argument",
 	                       IF_LEN(attrlen, ) attr);
 }
+
 PRIVATE ATTR_COLD int DCALL
 N_len(err_classproperty_requires_1_argument)(ATTR_ARG) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "classproperty `%" IF_LEN("$") "s' must be called with exactly 1 argument",
 	                       IF_LEN(attrlen, ) attr);
 }
+
 PRIVATE ATTR_COLD int DCALL
 N_len(err_classmethod_requires_at_least_1_argument)(ATTR_ARG) {
 	return DeeError_Throwf(&DeeError_TypeError,

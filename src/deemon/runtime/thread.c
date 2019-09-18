@@ -209,7 +209,9 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 #define fini_tls_data(data)             (*_DeeThread_TlsCallbacks.tc_fini)(data)
 #define visit_tls_data(data, proc, arg) (*_DeeThread_TlsCallbacks.tc_visit)(data, proc, arg)
 PRIVATE void DCALL stub_tc_fini(void *__restrict UNUSED(data)) {}
+
 PRIVATE void DCALL stub_tc_visit(void *__restrict UNUSED(data), dvisit_t UNUSED(proc), void *UNUSED(arg)) {}
+
 PUBLIC struct tls_callback_hooks _DeeThread_TlsCallbacks = {
 	/* .tc_fini  = */ &stub_tc_fini,
 	/* .tc_visit = */ &stub_tc_visit,
@@ -431,41 +433,41 @@ PUBLIC
 #endif
 DeeThreadObject DeeThread_Main = {
 	OBJECT_HEAD_INIT(&DeeThread_Type),
-	/* .t_exec       = */NULL,
-	/* .t_except     = */NULL,
-	/* .t_exceptsz   = */0,
-	/* .t_execsz     = */0,
+	/* .t_exec       = */ NULL,
+	/* .t_except     = */ NULL,
+	/* .t_exceptsz   = */ 0,
+	/* .t_execsz     = */ 0,
 #if __SIZEOF_POINTER__ > 4
-	/* .t_padding    = */{ 0 },
+	/* .t_padding    = */ { 0 },
 #endif
-	/* .t_str_curr   = */NULL,
-	/* .t_repr_curr  = */NULL,
-	/* .t_deepassoc  = */{
-		/* .da_used = */0,
-		/* .da_mask = */0,
+	/* .t_str_curr   = */ NULL,
+	/* .t_repr_curr  = */ NULL,
+	/* .t_deepassoc  = */ {
+		/* .da_used = */ 0,
+		/* .da_mask = */ 0,
 		/* .da_list = */empty_deep_assoc
 	}
 #ifndef CONFIG_NO_THREADS
 	,
-	/* .t_globlpself = */NULL,
-	/* .t_globalnext = */NULL,
-	/* .t_threadname = */(DeeStringObject *)&main_thread_name,
+	/* .t_globlpself = */ NULL,
+	/* .t_globalnext = */ NULL,
+	/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
 	/* .t_state      = */THREAD_STATE_STARTED,
-	/* .t_padding2   = */0,
+	/* .t_padding2   = */ 0,
 #ifndef CONFIG_NO_THREADID
-	/* .t_threadid   = */0,
+	/* .t_threadid   = */ 0,
 #endif /* !CONFIG_NO_THREADID */
-	/* .t_thread     = */0,
-	/* .t_suspended  = */0,
-	/* .t_interrupt  = */{
-		/* .ti_next = */NULL,
-		/* .ti_intr = */NULL,
-		/* .ti_args = */NULL
+	/* .t_thread     = */ 0,
+	/* .t_suspended  = */ 0,
+	/* .t_interrupt  = */ {
+		/* .ti_next = */ NULL,
+		/* .ti_intr = */ NULL,
+		/* .ti_args = */ NULL
 	},
-	/* .t_threadmain = */NULL,
-	/* .t_threadargs = */(DeeTupleObject *)Dee_EmptyTuple,
-	/* .t_threadres  = */NULL,
-	/* .t_tlsdata    = */NULL
+	/* .t_threadmain = */ NULL,
+	/* .t_threadargs = */ (DeeTupleObject *)Dee_EmptyTuple,
+	/* .t_threadres  = */ NULL,
+	/* .t_tlsdata    = */ NULL
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -475,6 +477,7 @@ PRIVATE uint64_t performance_freq = 0;
 PRIVATE uint64_t performance_freq_div_1000000 = 0;
 PRIVATE uint64_t performance_1000000_div_freq = 0;
 PRIVATE WCHAR const kernel32[] = {'K','E','R','N','E','L','3','2',0};
+
 PRIVATE ULONGLONG (WINAPI *lp_GetTickCount64)(void) = NULL;
 #endif
 
@@ -777,7 +780,7 @@ again_locked:
 				goto next_thread;
 		} while (!ATOMIC_CMPXCH(iter->ob_refcnt, refcnt, refcnt + 1));
 		goto handle_iter;
-	next_thread:
+next_thread:
 		iter = iter->t_globalnext;
 	}
 	/* Once all threads have been interrupted, move
@@ -787,7 +790,7 @@ again_locked:
 		goto again_locked;
 	}
 	if (iter) {
-	handle_iter:
+handle_iter:
 		if (!interrupt_phase) {
 			/* Pop this thread from the global chain when running the 2nd phase. */
 			if ((*iter->t_globlpself = iter->t_globalnext) != NULL)
@@ -1660,7 +1663,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 			error = pthread_attr_init(&attr);
 			if likely(error == 0) {
 				error = pthread_create(&me->t_thread, &attr,
-				                       (void *(*)(void *)) & thread_entry, self);
+				                       (void *(*)(void *))&thread_entry, self);
 				pthread_attr_destroy(&attr);
 			}
 		}
@@ -2751,6 +2754,7 @@ thread_started(DeeObject *__restrict self,
 		return NULL;
 	return_bool(DeeThread_HasStarted(self));
 }
+
 PRIVATE DREF DeeObject *DCALL
 thread_detached(DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
@@ -2758,6 +2762,7 @@ thread_detached(DeeObject *__restrict self,
 		return NULL;
 	return_bool(DeeThread_WasDetached(self));
 }
+
 PRIVATE DREF DeeObject *DCALL
 thread_terminated(DeeObject *__restrict self,
                   size_t argc, DeeObject **__restrict argv) {
@@ -2765,6 +2770,7 @@ thread_terminated(DeeObject *__restrict self,
 		return NULL;
 	return_bool(DeeThread_HasTerminated(self));
 }
+
 PRIVATE DREF DeeObject *DCALL
 thread_interrupted(DeeObject *__restrict self,
                    size_t argc, DeeObject **__restrict argv) {
@@ -2772,6 +2778,7 @@ thread_interrupted(DeeObject *__restrict self,
 		return NULL;
 	return_bool(DeeThread_WasInterrupted(self));
 }
+
 PRIVATE DREF DeeObject *DCALL
 thread_crashed(DeeObject *__restrict self,
                size_t argc, DeeObject **__restrict argv) {
@@ -2953,11 +2960,11 @@ PRIVATE struct type_method thread_methods[] = {
 	{ "timed_join", &thread_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
 	      "Old, deprecated name for #timedjoin") },
-	{ "crash_error", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & thread_crash_error,
+	{ "crash_error", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&thread_crash_error,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
-	{ "crash_traceback", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & thread_crash_traceback,
+	{ "crash_traceback", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&thread_crash_traceback,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
@@ -3051,7 +3058,7 @@ err:
 
 PRIVATE struct type_getset thread_class_getsets[] = {
 	{ "current",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & thread_current_get, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_current_get, NULL, NULL,
 	  DOC("->?.\n"
 	      "Returns a thread descriptor for the calling thread") },
 	/* TODO: enumerate -> {thread...} 
@@ -3380,9 +3387,9 @@ err:
 
 PRIVATE struct type_getset thread_getsets[] = {
 	{ "callback",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & thread_callback_get,
-	  (int(DCALL *)(DeeObject *__restrict)) & thread_callback_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & thread_callback_set,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_callback_get,
+	  (int(DCALL *)(DeeObject *__restrict))&thread_callback_del,
+	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callback_set,
 	  DOC("->?DCallable\n"
 	      "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
 	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3394,9 +3401,9 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "the getter will attempt to return the instance attribute $run which can be "
 	      "overwritten by sub-classes to provide an automatic and implicit thread-callback") },
 	{ "callargs",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & thread_callargs_get,
-	  (int(DCALL *)(DeeObject *__restrict)) & thread_callargs_del,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & thread_callargs_set,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_callargs_get,
+	  (int(DCALL *)(DeeObject *__restrict))&thread_callargs_del,
+	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callargs_set,
 	  DOC("->?DTuple\n"
 	      "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
 	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3406,14 +3413,14 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "The callback arguments that are passed to #callback when the thread is started\n"
 	      "Deleting this member or setting :none is the same as setting an empty tuple") },
 	{ "result",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & thread_result_get, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_result_get, NULL, NULL,
 	  DOC("@throw ValueError @this thread has not terminated yet\n"
 	      "Return the result value of @this thread once it has terminated\n"
 	      "This is similar to what is returned by #join, but in the event that "
 	      "the thread terminated because it crashed, :none is returned rather "
 	      "than all the errors that caused the thread to crash being encapsulated and propagated") },
 	{ "crashinfo",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & thread_crashinfo, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&thread_crashinfo, NULL, NULL,
 	  DOC("->?S?T2?O?DTraceback\n"
 	      "@throw ValueEror @this thread hasn't terminated yet\n"
 	      "Returns a sequence of 2-element tuples describing the errors that were "
@@ -3556,15 +3563,15 @@ DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE struct type_gc thread_gc = {
-	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict)) & thread_clear
+	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict))&thread_clear
 };
 #endif
 
 
 PUBLIC DeeTypeObject DeeThread_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */DeeString_STR(&str_Thread),
-	/* .tp_doc      = */DOC("The core object type for enabling parallel computation\n"
+	/* .tp_name     = */ DeeString_STR(&str_Thread),
+	/* .tp_doc      = */ DOC("The core object type for enabling parallel computation\n"
 							"\n"
 							"()\n"
 							"(name:?Dstring)\n"
@@ -3588,69 +3595,69 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 							">  return 42;\n"
 							"> }\n"
 							">}"),
-	/* .tp_flags    = */TP_FNORMAL|TP_FGC|TP_FNAMEOBJECT,
-	/* .tp_weakrefs = */0,
-	/* .tp_features = */TF_NONE,
-	/* .tp_base     = */&DeeObject_Type,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
 #ifndef CONFIG_NO_THREADS
-	/* .tp_init = */{
+	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */{
-				/* .tp_ctor      = */NULL,
-				/* .tp_copy_ctor = */NULL,
-				/* .tp_deep_ctor = */NULL,
-				/* .tp_any_ctor  = */&thread_ctor,
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ &thread_ctor,
 				TYPE_FIXED_ALLOCATOR_GC(DeeThreadObject)
 			}
 		},
-		/* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&thread_fini,
-		/* .tp_assign      = */NULL,
-		/* .tp_move_assign = */NULL
+		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&thread_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
 	},
-	/* .tp_cast = */{
-		/* .tp_str  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_str,
-		/* .tp_repr = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_repr,
-		/* .tp_bool = */NULL
+	/* .tp_cast = */ {
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_repr,
+		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */NULL,
-	/* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&thread_visit,
-	/* .tp_gc            = */&thread_gc,
-	/* .tp_math          = */NULL,
-	/* .tp_cmp           = */NULL,
-	/* .tp_seq           = */NULL,
-	/* .tp_iter_next     = */NULL,
-	/* .tp_attr          = */NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
+	/* .tp_gc            = */ &thread_gc,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
 #else /* !CONFIG_NO_THREADS */
-	/* .tp_init = */{
+	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */{
-				/* .tp_ctor      = */NULL,
-				/* .tp_copy_ctor = */NULL,
-				/* .tp_deep_ctor = */NULL,
-				/* .tp_any_ctor  = */NULL,
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(DeeThreadObject)
 			}
 		},
-		/* .tp_dtor        = */NULL,
-		/* .tp_assign      = */NULL,
-		/* .tp_move_assign = */NULL
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
 	},
-	/* .tp_cast = */{
-		/* .tp_str  = */NULL,
-		/* .tp_repr = */NULL,
-		/* .tp_bool = */NULL
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */NULL,
-	/* .tp_visit         = */NULL,
-	/* .tp_gc            = */NULL,
-	/* .tp_math          = */NULL,
-	/* .tp_cmp           = */NULL,
-	/* .tp_seq           = */NULL,
-	/* .tp_iter_next     = */NULL,
-	/* .tp_attr          = */NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
 #endif /* CONFIG_NO_THREADS */
-	/* .tp_with          = */NULL,
-	/* .tp_buffer        = */NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */thread_methods,
 	/* .tp_getsets       = */thread_getsets,
 	/* .tp_members       = */thread_members,

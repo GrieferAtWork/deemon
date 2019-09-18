@@ -22,11 +22,13 @@
 #define _KOS_SOURCE 1
 
 #include "libctypes.h"
+/**/
+
 #include <deemon/alloc.h>
-#include <deemon/none.h>
+#include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
-#include <deemon/arg.h>
+#include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 
@@ -69,15 +71,15 @@
 /* `char' */
 #ifndef CONFIG_CTYPES_CHAR_UNSIGNED
 #define SIGNED             1
-#endif
+#endif  /* !CONFIG_CTYPES_CHAR_UNSIGNED */
 #define NAME               "char"
 #define FORMAT_STR         "%c"
 #define FORMAT_TYP         int
 #ifdef CONFIG_CTYPES_CHAR_UNSIGNED
 #define FFI_TYPE           ffi_type_uchar
-#else
+#else /* CONFIG_CTYPES_CHAR_UNSIGNED */
 #define FFI_TYPE           ffi_type_schar
-#endif
+#endif /* !CONFIG_CTYPES_CHAR_UNSIGNED */
 #define SIZEOF             CONFIG_CTYPES_SIZEOF_CHAR
 #define ALIGNOF            CONFIG_CTYPES_ALIGNOF_CHAR
 #define TYPE_NAME          DeeCChar_Type
@@ -88,7 +90,7 @@
 /* `wchar_t' */
 #ifndef CONFIG_CTYPES_WCHAR_UNSIGNED
 #define SIGNED                1
-#endif
+#endif /* !CONFIG_CTYPES_WCHAR_UNSIGNED */
 #define NAME                  "wchar_t"
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_WCHAR
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_WCHAR
@@ -100,7 +102,7 @@
 /* `char16_t' */
 #ifndef CONFIG_CTYPES_CHAR16_UNSIGNED
 #define SIGNED                1
-#endif
+#endif /* !CONFIG_CTYPES_CHAR16_UNSIGNED */
 #define NAME                  "char16_t"
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR16
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR16
@@ -112,7 +114,7 @@
 /* `char32_t' */
 #ifndef CONFIG_CTYPES_CHAR32_UNSIGNED
 #define SIGNED                1
-#endif
+#endif /* !CONFIG_CTYPES_CHAR32_UNSIGNED */
 #define NAME                  "char32_t"
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR32
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR32
@@ -156,7 +158,7 @@
 #define SIGNED_TYPE_NAME      DeeCSChar_Type
 #define UNSIGNED_TYPE_NAME    DeeCUChar_Type
 #include "define-integer.c.inl"
-#endif
+#endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
 /* `signed short' */
@@ -182,7 +184,7 @@
 #define SIGNED_TYPE_NAME      DeeCShort_Type
 #define UNSIGNED_TYPE_NAME    DeeCUShort_Type
 #include "define-integer.c.inl"
-#endif
+#endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
 /* `signed int' */
@@ -208,7 +210,7 @@
 #define SIGNED_TYPE_NAME      DeeCInt_Type
 #define UNSIGNED_TYPE_NAME    DeeCUInt_Type
 #include "define-integer.c.inl"
-#endif
+#endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 /* `signed long' */
@@ -234,7 +236,7 @@
 #define SIGNED_TYPE_NAME      DeeCLong_Type
 #define UNSIGNED_TYPE_NAME    DeeCULong_Type
 #include "define-integer.c.inl"
-#endif
+#endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
 /* `signed long long' */
@@ -258,7 +260,7 @@
 #define SIGNED_TYPE_NAME      DeeCLLong_Type
 #define UNSIGNED_TYPE_NAME    DeeCULLong_Type
 #include "define-integer.c.inl"
-#endif
+#endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 
 /* Floating point types. */
 #define NAME       "float"
@@ -276,93 +278,93 @@
 #define T          CONFIG_CTYPES_LDOUBLE_TYPE
 #include "define-float.c.inl"
 
-#endif
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
-PRIVATE DEFINE_STRING(str_void,"void");
+PRIVATE DEFINE_STRING(str_void, "void");
 
 PRIVATE DREF DeeObject *DCALL
 void_str(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
- return_reference_((DeeObject *)&str_void);
+	return_reference_((DeeObject *)&str_void);
 }
 
 PRIVATE int DCALL
 void_init(DeeSTypeObject *__restrict UNUSED(tp_self),
           void *UNUSED(self), size_t UNUSED(argc),
           DeeObject **__restrict UNUSED(argv)) {
- /* Emulate void-casting, which simply discards its operand. */
- return 0;
+	/* Emulate void-casting, which simply discards its operand. */
+	return 0;
 }
 
 INTERN DeeSTypeObject DeeCVoid_Type = {
-    /* .st_base = */{
-        OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
-        /* .tp_name     = */DeeString_STR(&str_void),
-        /* .tp_doc      = */NULL,
-        /* .tp_flags    = */TP_FNORMAL|TP_FTRUNCATE|TP_FNAMEOBJECT|TP_FINHERITCTOR,
-        /* .tp_weakrefs = */0,
-        /* .tp_features = */TF_NONE,
-        /* .tp_base     = */(DeeTypeObject *)&DeeStructured_Type,
-        /* .tp_init = */{
-            {
-                /* .tp_alloc = */{
-                    /* .tp_ctor      = */NULL,
-                    /* .tp_copy_ctor = */NULL,
-                    /* .tp_deep_ctor = */NULL,
-                    /* .tp_any_ctor  = */NULL,
-                    TYPE_FIXED_ALLOCATOR_S(DeeObject)
-                }
-            },
-            /* .tp_dtor        = */NULL,
-            /* .tp_assign      = */NULL,
-            /* .tp_move_assign = */NULL
-        },
-        /* .tp_cast = */{
-            /* .tp_str  = */NULL,
-            /* .tp_repr = */NULL,
-            /* .tp_bool = */NULL
-        },
-        /* .tp_call          = */NULL,
-        /* .tp_visit         = */NULL,
-        /* .tp_gc            = */NULL,
-        /* .tp_math          = */NULL,
-        /* .tp_cmp           = */NULL,
-        /* .tp_seq           = */NULL,
-        /* .tp_iter_next     = */NULL,
-        /* .tp_attr          = */NULL,
-        /* .tp_with          = */NULL,
-        /* .tp_buffer        = */NULL,
-        /* .tp_methods       = */NULL,
-        /* .tp_getsets       = */NULL,
-        /* .tp_members       = */NULL,
-        /* .tp_class_methods = */NULL,
-        /* .tp_class_getsets = */NULL,
-        /* .tp_class_members = */NULL
-    },
+	/* .st_base = */ {
+		OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
+		/* .tp_name     = */ DeeString_STR(&str_void),
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FNAMEOBJECT | TP_FINHERITCTOR,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+		/* .tp_init = */ {
+			{
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
+					TYPE_FIXED_ALLOCATOR_S(DeeObject)
+				}
+			},
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
+		},
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
+		},
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
+	},
 #ifndef CONFIG_NO_THREADS
-    /* .st_cachelock = */RWLOCK_INIT,
-#endif
-    /* .st_pointer  = */NULL,
-    /* .st_lvalue   = */NULL,
-    /* .st_array    = */STYPE_ARRAY_INIT,
+	/* .st_cachelock = */ RWLOCK_INIT,
+#endif /* !CONFIG_NO_THREADS */
+	/* .st_pointer  = */ NULL,
+	/* .st_lvalue   = */ NULL,
+	/* .st_array    = */ STYPE_ARRAY_INIT,
 #ifndef CONFIG_NO_CFUNCTION
-    /* .st_cfunction= */STYPE_CFUNCTION_INIT,
-    /* .st_ffitype  = */&ffi_type_void,
+	/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
+	/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
-    /* .st_align    = */0,
-    /* .st_init     = */&void_init,
-    /* .st_assign   = */NULL,
-    /* .st_cast     = */{
-        /* .st_str  = */&void_str,
-        /* .st_repr = */&void_str,
-        /* .st_bool = */NULL
-    },
-    /* .st_call     = */NULL,
-    /* .st_math     = */NULL,
-    /* .st_cmp      = */NULL,
-    /* .st_seq      = */NULL,
-    /* .st_attr     = */NULL
+	/* .st_align    = */ 0,
+	/* .st_init     = */ &void_init,
+	/* .st_assign   = */ NULL,
+	/* .st_cast     = */ {
+		/* .st_str  = */ &void_str,
+		/* .st_repr = */ &void_str,
+		/* .st_bool = */ NULL
+	},
+	/* .st_call     = */ NULL,
+	/* .st_math     = */ NULL,
+	/* .st_cmp      = */ NULL,
+	/* .st_seq      = */ NULL,
+	/* .st_attr     = */ NULL
 };
 
 DECL_END

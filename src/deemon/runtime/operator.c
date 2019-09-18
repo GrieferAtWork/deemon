@@ -1033,10 +1033,10 @@ do_invoke_alloc_copy:
 			goto err;
 		DeeObject_Init(result, tp_self);
 		if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
-		do_invoke_alloc_any_ctor:
+do_invoke_alloc_any_ctor:
 			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor)(result, 1, (DeeObject **)&self);
 		} else if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
-		do_invoke_alloc_any_ctor_kw:
+do_invoke_alloc_any_ctor_kw:
 			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor_kw)(result, 1, (DeeObject **)&self, NULL);
 		} else {
 			DeeObject_FreeTracker(result);
@@ -1716,6 +1716,7 @@ DeeObject_VCallf(DeeObject *__restrict self,
 	Dee_Decref(args_tuple);
 	return result;
 }
+
 PUBLIC DREF DeeObject *DCALL
 DeeObject_VThisCallf(DeeObject *__restrict self,
                      DeeObject *__restrict this_arg,
@@ -1741,6 +1742,7 @@ DeeObject_CallPack(DeeObject *__restrict self, size_t argc, ...) {
 	va_end(args);
 	return result;
 }
+
 PUBLIC DREF DeeObject *
 DeeObject_Callf(DeeObject *__restrict self,
                 char const *__restrict format, ...) {
@@ -1751,6 +1753,7 @@ DeeObject_Callf(DeeObject *__restrict self,
 	va_end(args);
 	return result;
 }
+
 PUBLIC DREF DeeObject *
 DeeObject_ThisCallf(DeeObject *__restrict self,
                     DeeObject *__restrict this_arg,
@@ -2202,7 +2205,7 @@ PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
 				if (error == INT_SIGNED) {
 					if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
 						if (tp_self->tp_flags & TP_FTRUNCATE) {
-						return_trunc64:
+return_trunc64:
 							*result = (int32_t)val64;
 							return 0;
 						}
@@ -2376,6 +2379,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 }
+
 PUBLIC int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
                                       dint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, result);
@@ -2383,6 +2387,7 @@ PUBLIC int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
 		return err_integer_overflow(self, 128, true);
 	return 0;
 }
+
 PUBLIC int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
                                        duint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, (dint128_t *)result);
@@ -2481,6 +2486,7 @@ DeeObject_GetInt8(DeeObject *__restrict self,
 	}
 	return error;
 }
+
 PUBLIC int DCALL
 DeeObject_GetInt16(DeeObject *__restrict self,
                    int16_t *__restrict result) {
@@ -2525,6 +2531,7 @@ return_value:
 	*result = (int8_t)val32;
 	return error;
 }
+
 PUBLIC int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
                                      int16_t *__restrict result) {
 	int32_t val32;
@@ -2540,6 +2547,7 @@ return_value:
 	*result = (int8_t)val32;
 	return 0;
 }
+
 PUBLIC int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
                                      uint8_t *__restrict result) {
 	uint32_t val32;
@@ -2555,6 +2563,7 @@ return_value:
 	*result = (uint8_t)val32;
 	return error;
 }
+
 PUBLIC int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
                                       uint16_t *__restrict result) {
 	uint32_t val32;
@@ -3374,6 +3383,7 @@ DeeObject_CompareNe(DeeObject *__restrict self,
 		}                                          \
 		return true;                               \
 	}
+
 INTERN bool DCALL
 type_inherit_iternext(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
@@ -3620,6 +3630,7 @@ PUBLIC DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *__restric
 err:
 	return NULL;
 }
+
 PUBLIC DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *__restrict self,
                                                           DeeObject *__restrict begin, dssize_t end) {
 	LOAD_TP_SELF;
@@ -3682,6 +3693,7 @@ PUBLIC DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict sel
 err:
 	return NULL;
 }
+
 PUBLIC int(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
                                                dssize_t begin, DeeObject *__restrict end,
                                                DeeObject *__restrict value) {
@@ -3718,6 +3730,7 @@ PUBLIC int(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
 err:
 	return -1;
 }
+
 PUBLIC int(DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
                                              DeeObject *__restrict begin, dssize_t end,
                                              DeeObject *__restrict value) {
@@ -3751,6 +3764,7 @@ PUBLIC int(DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
 err:
 	return -1;
 }
+
 PUBLIC int(DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self,
                                           dssize_t begin, dssize_t end,
                                           DeeObject *__restrict value) {
@@ -4855,7 +4869,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, /*String*/ DeeObject * __restrict);
-		do_iter_attr:
+do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
 				return type_callattr(self, attr_name, argc, argv);
@@ -4864,9 +4878,9 @@ DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
 				return DeeObject_TCallAttr(DeeSuper_TYPE(self), DeeSuper_SELF(self), attr_name, argc, argv);
 #endif /* !DEFINE_TYPE_OPERATORS */
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject * (DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict)) & seqeach_getattr)
+			if (getattr == (DREF DeeObject * (DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
 				return DeeSeqEach_CallAttr(((SeqEachBase *)self)->se_seq, attr_name, argc, argv);
-			if (getattr == (DREF DeeObject * (DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict)) & seqeachw_getattr)
+			if (getattr == (DREF DeeObject * (DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
 				return DeeSeqEach_CallAttr(self, attr_name, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)

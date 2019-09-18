@@ -728,6 +728,7 @@ LOCAL bool (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
 	                                      __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
 	return true;
 }
+
 LOCAL bool(DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
 	Dee_ref_t refcnt;
 	do {

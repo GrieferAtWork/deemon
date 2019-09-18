@@ -195,7 +195,7 @@ typedef struct PACKED {
 } Dec_DDIRegStart;
 
 typedef struct PACKED {
-	uint16_t  dx_size;    /* Data size (when (uint16_t)-1, the a uint32_t containing the actual size follows immediatly) */
+	uint16_t  dx_size;    /* Data size (when (uint16_t)-1, the a uint32_t containing the actual size follows immediately) */
 	uint8_t   dx_data[1]; /* [dx_size] DDI extension data. */
 } Dec_DDIExdat;
 

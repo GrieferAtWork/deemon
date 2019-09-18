@@ -337,7 +337,9 @@ end:
 
 
 PRIVATE uint8_t const null8[]   = { '(', 'n', 'u', 'l', 'l', ')', 0 };
+
 PRIVATE uint16_t const null16[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
+
 PRIVATE uint32_t const null32[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
 
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -25,29 +25,29 @@
 #elif STAT_IFMT == 1
 #define libfs_S_IFMT DeeInt_One
 #elif STAT_IFMT <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFMT,STAT_IFMT);
+DEFINE_UINT15(libfs_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFMT,STAT_IFMT);
+DEFINE_UINT30(libfs_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFMT,STAT_IFMT);
+DEFINE_UINT45(libfs_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFMT,STAT_IFMT);
+DEFINE_UINT60(libfs_S_IFMT, STAT_IFMT);
 #else
-DEFINE_UINT75(libfs_S_IFMT,STAT_IFMT);
+DEFINE_UINT75(libfs_S_IFMT, STAT_IFMT);
 #endif
 #else /*  STAT_IFMT >= 0 */
 #if STAT_IFMT == -1
 #define libfs_S_IFMT DeeInt_MinusOne
 #elif STAT_IFMT >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFMT,STAT_IFMT);
+DEFINE_INT15(libfs_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFMT,STAT_IFMT);
+DEFINE_INT30(libfs_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFMT,STAT_IFMT);
+DEFINE_INT45(libfs_S_IFMT, STAT_IFMT);
 #elif STAT_IFMT >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFMT,STAT_IFMT);
+DEFINE_INT60(libfs_S_IFMT, STAT_IFMT);
 #else
-DEFINE_INT75(libfs_S_IFMT,STAT_IFMT);
+DEFINE_INT75(libfs_S_IFMT, STAT_IFMT);
 #endif
 #endif /*  STAT_IFMT < 0 */
 #define LIBFS_S_IFDIR_DEF \
@@ -58,29 +58,29 @@ DEFINE_INT75(libfs_S_IFMT,STAT_IFMT);
 #elif STAT_IFDIR == 1
 #define libfs_S_IFDIR DeeInt_One
 #elif STAT_IFDIR <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_UINT15(libfs_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_UINT30(libfs_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_UINT45(libfs_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_UINT60(libfs_S_IFDIR, STAT_IFDIR);
 #else
-DEFINE_UINT75(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_UINT75(libfs_S_IFDIR, STAT_IFDIR);
 #endif
 #else /*  STAT_IFDIR >= 0 */
 #if STAT_IFDIR == -1
 #define libfs_S_IFDIR DeeInt_MinusOne
 #elif STAT_IFDIR >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_INT15(libfs_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_INT30(libfs_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_INT45(libfs_S_IFDIR, STAT_IFDIR);
 #elif STAT_IFDIR >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_INT60(libfs_S_IFDIR, STAT_IFDIR);
 #else
-DEFINE_INT75(libfs_S_IFDIR,STAT_IFDIR);
+DEFINE_INT75(libfs_S_IFDIR, STAT_IFDIR);
 #endif
 #endif /*  STAT_IFDIR < 0 */
 #define LIBFS_S_IFCHR_DEF \
@@ -91,29 +91,29 @@ DEFINE_INT75(libfs_S_IFDIR,STAT_IFDIR);
 #elif STAT_IFCHR == 1
 #define libfs_S_IFCHR DeeInt_One
 #elif STAT_IFCHR <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_UINT15(libfs_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_UINT30(libfs_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_UINT45(libfs_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_UINT60(libfs_S_IFCHR, STAT_IFCHR);
 #else
-DEFINE_UINT75(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_UINT75(libfs_S_IFCHR, STAT_IFCHR);
 #endif
 #else /*  STAT_IFCHR >= 0 */
 #if STAT_IFCHR == -1
 #define libfs_S_IFCHR DeeInt_MinusOne
 #elif STAT_IFCHR >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_INT15(libfs_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_INT30(libfs_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_INT45(libfs_S_IFCHR, STAT_IFCHR);
 #elif STAT_IFCHR >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_INT60(libfs_S_IFCHR, STAT_IFCHR);
 #else
-DEFINE_INT75(libfs_S_IFCHR,STAT_IFCHR);
+DEFINE_INT75(libfs_S_IFCHR, STAT_IFCHR);
 #endif
 #endif /*  STAT_IFCHR < 0 */
 #define LIBFS_S_IFBLK_DEF \
@@ -124,29 +124,29 @@ DEFINE_INT75(libfs_S_IFCHR,STAT_IFCHR);
 #elif STAT_IFBLK == 1
 #define libfs_S_IFBLK DeeInt_One
 #elif STAT_IFBLK <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_UINT15(libfs_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_UINT30(libfs_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_UINT45(libfs_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_UINT60(libfs_S_IFBLK, STAT_IFBLK);
 #else
-DEFINE_UINT75(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_UINT75(libfs_S_IFBLK, STAT_IFBLK);
 #endif
 #else /*  STAT_IFBLK >= 0 */
 #if STAT_IFBLK == -1
 #define libfs_S_IFBLK DeeInt_MinusOne
 #elif STAT_IFBLK >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_INT15(libfs_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_INT30(libfs_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_INT45(libfs_S_IFBLK, STAT_IFBLK);
 #elif STAT_IFBLK >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_INT60(libfs_S_IFBLK, STAT_IFBLK);
 #else
-DEFINE_INT75(libfs_S_IFBLK,STAT_IFBLK);
+DEFINE_INT75(libfs_S_IFBLK, STAT_IFBLK);
 #endif
 #endif /*  STAT_IFBLK < 0 */
 #define LIBFS_S_IFREG_DEF \
@@ -157,29 +157,29 @@ DEFINE_INT75(libfs_S_IFBLK,STAT_IFBLK);
 #elif STAT_IFREG == 1
 #define libfs_S_IFREG DeeInt_One
 #elif STAT_IFREG <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFREG,STAT_IFREG);
+DEFINE_UINT15(libfs_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFREG,STAT_IFREG);
+DEFINE_UINT30(libfs_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFREG,STAT_IFREG);
+DEFINE_UINT45(libfs_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFREG,STAT_IFREG);
+DEFINE_UINT60(libfs_S_IFREG, STAT_IFREG);
 #else
-DEFINE_UINT75(libfs_S_IFREG,STAT_IFREG);
+DEFINE_UINT75(libfs_S_IFREG, STAT_IFREG);
 #endif
 #else /*  STAT_IFREG >= 0 */
 #if STAT_IFREG == -1
 #define libfs_S_IFREG DeeInt_MinusOne
 #elif STAT_IFREG >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFREG,STAT_IFREG);
+DEFINE_INT15(libfs_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFREG,STAT_IFREG);
+DEFINE_INT30(libfs_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFREG,STAT_IFREG);
+DEFINE_INT45(libfs_S_IFREG, STAT_IFREG);
 #elif STAT_IFREG >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFREG,STAT_IFREG);
+DEFINE_INT60(libfs_S_IFREG, STAT_IFREG);
 #else
-DEFINE_INT75(libfs_S_IFREG,STAT_IFREG);
+DEFINE_INT75(libfs_S_IFREG, STAT_IFREG);
 #endif
 #endif /*  STAT_IFREG < 0 */
 #define LIBFS_S_IFIFO_DEF \
@@ -190,29 +190,29 @@ DEFINE_INT75(libfs_S_IFREG,STAT_IFREG);
 #elif STAT_IFIFO == 1
 #define libfs_S_IFIFO DeeInt_One
 #elif STAT_IFIFO <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_UINT15(libfs_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_UINT30(libfs_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_UINT45(libfs_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_UINT60(libfs_S_IFIFO, STAT_IFIFO);
 #else
-DEFINE_UINT75(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_UINT75(libfs_S_IFIFO, STAT_IFIFO);
 #endif
 #else /*  STAT_IFIFO >= 0 */
 #if STAT_IFIFO == -1
 #define libfs_S_IFIFO DeeInt_MinusOne
 #elif STAT_IFIFO >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_INT15(libfs_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_INT30(libfs_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_INT45(libfs_S_IFIFO, STAT_IFIFO);
 #elif STAT_IFIFO >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_INT60(libfs_S_IFIFO, STAT_IFIFO);
 #else
-DEFINE_INT75(libfs_S_IFIFO,STAT_IFIFO);
+DEFINE_INT75(libfs_S_IFIFO, STAT_IFIFO);
 #endif
 #endif /*  STAT_IFIFO < 0 */
 #define LIBFS_S_IFLNK_DEF \
@@ -223,29 +223,29 @@ DEFINE_INT75(libfs_S_IFIFO,STAT_IFIFO);
 #elif STAT_IFLNK == 1
 #define libfs_S_IFLNK DeeInt_One
 #elif STAT_IFLNK <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_UINT15(libfs_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_UINT30(libfs_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_UINT45(libfs_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_UINT60(libfs_S_IFLNK, STAT_IFLNK);
 #else
-DEFINE_UINT75(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_UINT75(libfs_S_IFLNK, STAT_IFLNK);
 #endif
 #else /*  STAT_IFLNK >= 0 */
 #if STAT_IFLNK == -1
 #define libfs_S_IFLNK DeeInt_MinusOne
 #elif STAT_IFLNK >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_INT15(libfs_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_INT30(libfs_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_INT45(libfs_S_IFLNK, STAT_IFLNK);
 #elif STAT_IFLNK >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_INT60(libfs_S_IFLNK, STAT_IFLNK);
 #else
-DEFINE_INT75(libfs_S_IFLNK,STAT_IFLNK);
+DEFINE_INT75(libfs_S_IFLNK, STAT_IFLNK);
 #endif
 #endif /*  STAT_IFLNK < 0 */
 #define LIBFS_S_IFSOCK_DEF \
@@ -256,29 +256,29 @@ DEFINE_INT75(libfs_S_IFLNK,STAT_IFLNK);
 #elif STAT_IFSOCK == 1
 #define libfs_S_IFSOCK DeeInt_One
 #elif STAT_IFSOCK <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_UINT15(libfs_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_UINT30(libfs_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_UINT45(libfs_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_UINT60(libfs_S_IFSOCK, STAT_IFSOCK);
 #else
-DEFINE_UINT75(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_UINT75(libfs_S_IFSOCK, STAT_IFSOCK);
 #endif
 #else /*  STAT_IFSOCK >= 0 */
 #if STAT_IFSOCK == -1
 #define libfs_S_IFSOCK DeeInt_MinusOne
 #elif STAT_IFSOCK >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_INT15(libfs_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_INT30(libfs_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_INT45(libfs_S_IFSOCK, STAT_IFSOCK);
 #elif STAT_IFSOCK >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_INT60(libfs_S_IFSOCK, STAT_IFSOCK);
 #else
-DEFINE_INT75(libfs_S_IFSOCK,STAT_IFSOCK);
+DEFINE_INT75(libfs_S_IFSOCK, STAT_IFSOCK);
 #endif
 #endif /*  STAT_IFSOCK < 0 */
 #define LIBFS_S_ISUID_DEF \
@@ -289,29 +289,29 @@ DEFINE_INT75(libfs_S_IFSOCK,STAT_IFSOCK);
 #elif STAT_ISUID == 1
 #define libfs_S_ISUID DeeInt_One
 #elif STAT_ISUID <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_ISUID,STAT_ISUID);
+DEFINE_UINT15(libfs_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_ISUID,STAT_ISUID);
+DEFINE_UINT30(libfs_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_ISUID,STAT_ISUID);
+DEFINE_UINT45(libfs_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_ISUID,STAT_ISUID);
+DEFINE_UINT60(libfs_S_ISUID, STAT_ISUID);
 #else
-DEFINE_UINT75(libfs_S_ISUID,STAT_ISUID);
+DEFINE_UINT75(libfs_S_ISUID, STAT_ISUID);
 #endif
 #else /*  STAT_ISUID >= 0 */
 #if STAT_ISUID == -1
 #define libfs_S_ISUID DeeInt_MinusOne
 #elif STAT_ISUID >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_ISUID,STAT_ISUID);
+DEFINE_INT15(libfs_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_ISUID,STAT_ISUID);
+DEFINE_INT30(libfs_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_ISUID,STAT_ISUID);
+DEFINE_INT45(libfs_S_ISUID, STAT_ISUID);
 #elif STAT_ISUID >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_ISUID,STAT_ISUID);
+DEFINE_INT60(libfs_S_ISUID, STAT_ISUID);
 #else
-DEFINE_INT75(libfs_S_ISUID,STAT_ISUID);
+DEFINE_INT75(libfs_S_ISUID, STAT_ISUID);
 #endif
 #endif /*  STAT_ISUID < 0 */
 #define LIBFS_S_ISGID_DEF \
@@ -322,29 +322,29 @@ DEFINE_INT75(libfs_S_ISUID,STAT_ISUID);
 #elif STAT_ISGID == 1
 #define libfs_S_ISGID DeeInt_One
 #elif STAT_ISGID <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_ISGID,STAT_ISGID);
+DEFINE_UINT15(libfs_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_ISGID,STAT_ISGID);
+DEFINE_UINT30(libfs_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_ISGID,STAT_ISGID);
+DEFINE_UINT45(libfs_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_ISGID,STAT_ISGID);
+DEFINE_UINT60(libfs_S_ISGID, STAT_ISGID);
 #else
-DEFINE_UINT75(libfs_S_ISGID,STAT_ISGID);
+DEFINE_UINT75(libfs_S_ISGID, STAT_ISGID);
 #endif
 #else /*  STAT_ISGID >= 0 */
 #if STAT_ISGID == -1
 #define libfs_S_ISGID DeeInt_MinusOne
 #elif STAT_ISGID >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_ISGID,STAT_ISGID);
+DEFINE_INT15(libfs_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_ISGID,STAT_ISGID);
+DEFINE_INT30(libfs_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_ISGID,STAT_ISGID);
+DEFINE_INT45(libfs_S_ISGID, STAT_ISGID);
 #elif STAT_ISGID >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_ISGID,STAT_ISGID);
+DEFINE_INT60(libfs_S_ISGID, STAT_ISGID);
 #else
-DEFINE_INT75(libfs_S_ISGID,STAT_ISGID);
+DEFINE_INT75(libfs_S_ISGID, STAT_ISGID);
 #endif
 #endif /*  STAT_ISGID < 0 */
 #define LIBFS_S_ISVTX_DEF \
@@ -355,29 +355,29 @@ DEFINE_INT75(libfs_S_ISGID,STAT_ISGID);
 #elif STAT_ISVTX == 1
 #define libfs_S_ISVTX DeeInt_One
 #elif STAT_ISVTX <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_UINT15(libfs_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_UINT30(libfs_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_UINT45(libfs_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_UINT60(libfs_S_ISVTX, STAT_ISVTX);
 #else
-DEFINE_UINT75(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_UINT75(libfs_S_ISVTX, STAT_ISVTX);
 #endif
 #else /*  STAT_ISVTX >= 0 */
 #if STAT_ISVTX == -1
 #define libfs_S_ISVTX DeeInt_MinusOne
 #elif STAT_ISVTX >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_INT15(libfs_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_INT30(libfs_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_INT45(libfs_S_ISVTX, STAT_ISVTX);
 #elif STAT_ISVTX >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_INT60(libfs_S_ISVTX, STAT_ISVTX);
 #else
-DEFINE_INT75(libfs_S_ISVTX,STAT_ISVTX);
+DEFINE_INT75(libfs_S_ISVTX, STAT_ISVTX);
 #endif
 #endif /*  STAT_ISVTX < 0 */
 #define LIBFS_S_IRUSR_DEF \
@@ -388,29 +388,29 @@ DEFINE_INT75(libfs_S_ISVTX,STAT_ISVTX);
 #elif STAT_IRUSR == 1
 #define libfs_S_IRUSR DeeInt_One
 #elif STAT_IRUSR <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_UINT15(libfs_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_UINT30(libfs_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_UINT45(libfs_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_UINT60(libfs_S_IRUSR, STAT_IRUSR);
 #else
-DEFINE_UINT75(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_UINT75(libfs_S_IRUSR, STAT_IRUSR);
 #endif
 #else /*  STAT_IRUSR >= 0 */
 #if STAT_IRUSR == -1
 #define libfs_S_IRUSR DeeInt_MinusOne
 #elif STAT_IRUSR >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_INT15(libfs_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_INT30(libfs_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_INT45(libfs_S_IRUSR, STAT_IRUSR);
 #elif STAT_IRUSR >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_INT60(libfs_S_IRUSR, STAT_IRUSR);
 #else
-DEFINE_INT75(libfs_S_IRUSR,STAT_IRUSR);
+DEFINE_INT75(libfs_S_IRUSR, STAT_IRUSR);
 #endif
 #endif /*  STAT_IRUSR < 0 */
 #define LIBFS_S_IWUSR_DEF \
@@ -421,29 +421,29 @@ DEFINE_INT75(libfs_S_IRUSR,STAT_IRUSR);
 #elif STAT_IWUSR == 1
 #define libfs_S_IWUSR DeeInt_One
 #elif STAT_IWUSR <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_UINT15(libfs_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_UINT30(libfs_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_UINT45(libfs_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_UINT60(libfs_S_IWUSR, STAT_IWUSR);
 #else
-DEFINE_UINT75(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_UINT75(libfs_S_IWUSR, STAT_IWUSR);
 #endif
 #else /*  STAT_IWUSR >= 0 */
 #if STAT_IWUSR == -1
 #define libfs_S_IWUSR DeeInt_MinusOne
 #elif STAT_IWUSR >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_INT15(libfs_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_INT30(libfs_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_INT45(libfs_S_IWUSR, STAT_IWUSR);
 #elif STAT_IWUSR >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_INT60(libfs_S_IWUSR, STAT_IWUSR);
 #else
-DEFINE_INT75(libfs_S_IWUSR,STAT_IWUSR);
+DEFINE_INT75(libfs_S_IWUSR, STAT_IWUSR);
 #endif
 #endif /*  STAT_IWUSR < 0 */
 #define LIBFS_S_IXUSR_DEF \
@@ -454,29 +454,29 @@ DEFINE_INT75(libfs_S_IWUSR,STAT_IWUSR);
 #elif STAT_IXUSR == 1
 #define libfs_S_IXUSR DeeInt_One
 #elif STAT_IXUSR <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_UINT15(libfs_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_UINT30(libfs_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_UINT45(libfs_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_UINT60(libfs_S_IXUSR, STAT_IXUSR);
 #else
-DEFINE_UINT75(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_UINT75(libfs_S_IXUSR, STAT_IXUSR);
 #endif
 #else /*  STAT_IXUSR >= 0 */
 #if STAT_IXUSR == -1
 #define libfs_S_IXUSR DeeInt_MinusOne
 #elif STAT_IXUSR >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_INT15(libfs_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_INT30(libfs_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_INT45(libfs_S_IXUSR, STAT_IXUSR);
 #elif STAT_IXUSR >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_INT60(libfs_S_IXUSR, STAT_IXUSR);
 #else
-DEFINE_INT75(libfs_S_IXUSR,STAT_IXUSR);
+DEFINE_INT75(libfs_S_IXUSR, STAT_IXUSR);
 #endif
 #endif /*  STAT_IXUSR < 0 */
 #define LIBFS_S_IRGRP_DEF \
@@ -487,29 +487,29 @@ DEFINE_INT75(libfs_S_IXUSR,STAT_IXUSR);
 #elif STAT_IRGRP == 1
 #define libfs_S_IRGRP DeeInt_One
 #elif STAT_IRGRP <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_UINT15(libfs_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_UINT30(libfs_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_UINT45(libfs_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_UINT60(libfs_S_IRGRP, STAT_IRGRP);
 #else
-DEFINE_UINT75(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_UINT75(libfs_S_IRGRP, STAT_IRGRP);
 #endif
 #else /*  STAT_IRGRP >= 0 */
 #if STAT_IRGRP == -1
 #define libfs_S_IRGRP DeeInt_MinusOne
 #elif STAT_IRGRP >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_INT15(libfs_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_INT30(libfs_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_INT45(libfs_S_IRGRP, STAT_IRGRP);
 #elif STAT_IRGRP >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_INT60(libfs_S_IRGRP, STAT_IRGRP);
 #else
-DEFINE_INT75(libfs_S_IRGRP,STAT_IRGRP);
+DEFINE_INT75(libfs_S_IRGRP, STAT_IRGRP);
 #endif
 #endif /*  STAT_IRGRP < 0 */
 #define LIBFS_S_IWGRP_DEF \
@@ -520,29 +520,29 @@ DEFINE_INT75(libfs_S_IRGRP,STAT_IRGRP);
 #elif STAT_IWGRP == 1
 #define libfs_S_IWGRP DeeInt_One
 #elif STAT_IWGRP <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_UINT15(libfs_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_UINT30(libfs_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_UINT45(libfs_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_UINT60(libfs_S_IWGRP, STAT_IWGRP);
 #else
-DEFINE_UINT75(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_UINT75(libfs_S_IWGRP, STAT_IWGRP);
 #endif
 #else /*  STAT_IWGRP >= 0 */
 #if STAT_IWGRP == -1
 #define libfs_S_IWGRP DeeInt_MinusOne
 #elif STAT_IWGRP >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_INT15(libfs_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_INT30(libfs_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_INT45(libfs_S_IWGRP, STAT_IWGRP);
 #elif STAT_IWGRP >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_INT60(libfs_S_IWGRP, STAT_IWGRP);
 #else
-DEFINE_INT75(libfs_S_IWGRP,STAT_IWGRP);
+DEFINE_INT75(libfs_S_IWGRP, STAT_IWGRP);
 #endif
 #endif /*  STAT_IWGRP < 0 */
 #define LIBFS_S_IXGRP_DEF \
@@ -553,29 +553,29 @@ DEFINE_INT75(libfs_S_IWGRP,STAT_IWGRP);
 #elif STAT_IXGRP == 1
 #define libfs_S_IXGRP DeeInt_One
 #elif STAT_IXGRP <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_UINT15(libfs_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_UINT30(libfs_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_UINT45(libfs_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_UINT60(libfs_S_IXGRP, STAT_IXGRP);
 #else
-DEFINE_UINT75(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_UINT75(libfs_S_IXGRP, STAT_IXGRP);
 #endif
 #else /*  STAT_IXGRP >= 0 */
 #if STAT_IXGRP == -1
 #define libfs_S_IXGRP DeeInt_MinusOne
 #elif STAT_IXGRP >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_INT15(libfs_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_INT30(libfs_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_INT45(libfs_S_IXGRP, STAT_IXGRP);
 #elif STAT_IXGRP >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_INT60(libfs_S_IXGRP, STAT_IXGRP);
 #else
-DEFINE_INT75(libfs_S_IXGRP,STAT_IXGRP);
+DEFINE_INT75(libfs_S_IXGRP, STAT_IXGRP);
 #endif
 #endif /*  STAT_IXGRP < 0 */
 #define LIBFS_S_IROTH_DEF \
@@ -586,29 +586,29 @@ DEFINE_INT75(libfs_S_IXGRP,STAT_IXGRP);
 #elif STAT_IROTH == 1
 #define libfs_S_IROTH DeeInt_One
 #elif STAT_IROTH <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IROTH,STAT_IROTH);
+DEFINE_UINT15(libfs_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IROTH,STAT_IROTH);
+DEFINE_UINT30(libfs_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IROTH,STAT_IROTH);
+DEFINE_UINT45(libfs_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IROTH,STAT_IROTH);
+DEFINE_UINT60(libfs_S_IROTH, STAT_IROTH);
 #else
-DEFINE_UINT75(libfs_S_IROTH,STAT_IROTH);
+DEFINE_UINT75(libfs_S_IROTH, STAT_IROTH);
 #endif
 #else /*  STAT_IROTH >= 0 */
 #if STAT_IROTH == -1
 #define libfs_S_IROTH DeeInt_MinusOne
 #elif STAT_IROTH >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IROTH,STAT_IROTH);
+DEFINE_INT15(libfs_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IROTH,STAT_IROTH);
+DEFINE_INT30(libfs_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IROTH,STAT_IROTH);
+DEFINE_INT45(libfs_S_IROTH, STAT_IROTH);
 #elif STAT_IROTH >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IROTH,STAT_IROTH);
+DEFINE_INT60(libfs_S_IROTH, STAT_IROTH);
 #else
-DEFINE_INT75(libfs_S_IROTH,STAT_IROTH);
+DEFINE_INT75(libfs_S_IROTH, STAT_IROTH);
 #endif
 #endif /*  STAT_IROTH < 0 */
 #define LIBFS_S_IWOTH_DEF \
@@ -619,29 +619,29 @@ DEFINE_INT75(libfs_S_IROTH,STAT_IROTH);
 #elif STAT_IWOTH == 1
 #define libfs_S_IWOTH DeeInt_One
 #elif STAT_IWOTH <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_UINT15(libfs_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_UINT30(libfs_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_UINT45(libfs_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_UINT60(libfs_S_IWOTH, STAT_IWOTH);
 #else
-DEFINE_UINT75(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_UINT75(libfs_S_IWOTH, STAT_IWOTH);
 #endif
 #else /*  STAT_IWOTH >= 0 */
 #if STAT_IWOTH == -1
 #define libfs_S_IWOTH DeeInt_MinusOne
 #elif STAT_IWOTH >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_INT15(libfs_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_INT30(libfs_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_INT45(libfs_S_IWOTH, STAT_IWOTH);
 #elif STAT_IWOTH >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_INT60(libfs_S_IWOTH, STAT_IWOTH);
 #else
-DEFINE_INT75(libfs_S_IWOTH,STAT_IWOTH);
+DEFINE_INT75(libfs_S_IWOTH, STAT_IWOTH);
 #endif
 #endif /*  STAT_IWOTH < 0 */
 #define LIBFS_S_IXOTH_DEF \
@@ -652,28 +652,28 @@ DEFINE_INT75(libfs_S_IWOTH,STAT_IWOTH);
 #elif STAT_IXOTH == 1
 #define libfs_S_IXOTH DeeInt_One
 #elif STAT_IXOTH <= 0x7fffull /* 15-bit */
-DEFINE_UINT15(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_UINT15(libfs_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH <= 0x3fffffffull /* 30-bit */
-DEFINE_UINT30(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_UINT30(libfs_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH <= 0x1fffffffffffull /* 45-bit */
-DEFINE_UINT45(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_UINT45(libfs_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH <= 0xfffffffffffffffull /* 60-bit */
-DEFINE_UINT60(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_UINT60(libfs_S_IXOTH, STAT_IXOTH);
 #else
-DEFINE_UINT75(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_UINT75(libfs_S_IXOTH, STAT_IXOTH);
 #endif
 #else /*  STAT_IXOTH >= 0 */
 #if STAT_IXOTH == -1
 #define libfs_S_IXOTH DeeInt_MinusOne
 #elif STAT_IXOTH >= -0x4000ll /* 15-bit */
-DEFINE_INT15(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_INT15(libfs_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH >= -0x20000000ll /* 30-bit */
-DEFINE_INT30(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_INT30(libfs_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH >= -0x100000000000ll /* 45-bit */
-DEFINE_INT45(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_INT45(libfs_S_IXOTH, STAT_IXOTH);
 #elif STAT_IXOTH >= -0x800000000000000ll /* 60-bit */
-DEFINE_INT60(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_INT60(libfs_S_IXOTH, STAT_IXOTH);
 #else
-DEFINE_INT75(libfs_S_IXOTH,STAT_IXOTH);
+DEFINE_INT75(libfs_S_IXOTH, STAT_IXOTH);
 #endif
 #endif /*  STAT_IXOTH < 0 */

@@ -57,6 +57,7 @@ f_builtin_hasattr(size_t argc, DeeObject **__restrict argv) {
 err:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(builtin_hasattr, &f_builtin_hasattr);
 
 PRIVATE DREF DeeObject *DCALL
@@ -72,6 +73,7 @@ f_builtin_hasitem(size_t argc, DeeObject **__restrict argv) {
 err:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(builtin_hasitem, &f_builtin_hasitem);
 
 PRIVATE DREF DeeObject *DCALL
@@ -97,6 +99,7 @@ f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
 err:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(builtin_boundattr, &f_builtin_boundattr);
 
 PRIVATE DREF DeeObject *DCALL
@@ -113,6 +116,7 @@ f_builtin_bounditem(size_t argc, DeeObject **__restrict argv) {
 err:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(builtin_bounditem, &f_builtin_bounditem);
 
 PRIVATE DREF DeeObject *DCALL
@@ -141,6 +145,7 @@ err_r:
 err:
 	return NULL;
 }
+
 INTERN DEFINE_KWCMETHOD(builtin_import, &f_builtin_import);
 
 PRIVATE DREF DeeObject *DCALL
@@ -325,6 +330,7 @@ fallback:
 err:
 	return NULL;
 }
+
 INTERN DEFINE_KWCMETHOD(builtin_exec, &f_builtin_exec);
 
 
@@ -451,6 +457,7 @@ f_rt_assert(size_t argc, DeeObject **__restrict argv) {
 err:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert);
 
 
@@ -566,6 +573,7 @@ f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
 done:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall);
 
 
@@ -589,6 +597,7 @@ f_rt_roloc(size_t argc, DeeObject **__restrict argv) {
 done:
 	return NULL;
 }
+
 INTERN DEFINE_CMETHOD(rt_roloc, &f_rt_roloc);
 
 

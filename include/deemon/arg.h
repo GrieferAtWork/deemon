@@ -119,7 +119,7 @@ struct dee_kwds_object {
 	 * WARNING: A Kwds object in itself (while also being mapping-like)
 	 *          isn't actually a mapping for the objects bound to keywords,
 	 *          but rather for the non-positional argument indices used by
-	 *          those keywords. - It's actually {(string,int)...}-like
+	 *          those keywords. - It's actually {(string, int)...}-like
 	 *          However, you can easily construct a {(string,object)...}-like
 	 *          mapping by calling `DeeKwdsMapping_New()' (see below) */
 	Dee_OBJECT_HEAD

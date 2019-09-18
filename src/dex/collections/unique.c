@@ -28,9 +28,8 @@ INTERN struct udict_item empty_dict_items[1] = { { NULL, NULL } };
 #ifdef __INTELLISENSE__
 INTERN struct uset_item empty_set_items[1] = { { NULL } };
 #else
-#define empty_set_items    ((struct uset_item *)empty_dict_items)
+#define empty_set_items ((struct uset_item *)empty_dict_items)
 #endif
-
 
 DECL_END
 

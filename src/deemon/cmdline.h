@@ -58,35 +58,35 @@ struct cmd_option {
                                           * >> `-Wl,-fopt-a,-fopt-b,-fopt-c=foo\,bar'
                                           *    Group:       `Wl' (short name)
                                           *    Sub-options: `-fopt-a', `-fopt-b', `-fopt-c=foo,bar' */
-    uint16_t    co_flags;                /* Command options (Set of `CMD_F*') */
-    char        co_shortnam[6];          /* Short argument name (NUL-terminated string; empty when not set) */
-    char const *co_longname;             /* [0..1] Long argument name, or NULL when not set.
-                                          *  To be accepted as a long argument name, the commandline option
-                                          *  must feature 2 leading dashes (e.g.: `--long-option')
-                                          *  However, when `CMD_FLONG1DASH' is set, a single leading dash is accepted as well. */
-    union {
-        void       *co_hook;
-        int (DCALL *co_func)(char *arg); /* [0..1][valid_if(!CMD_FGROUP)] Function called when the argument is encountered.
-                                          *  When NULL, the command acts as a terminating sentinel.
-                                          *  @param: arg: The NUL-terminated argument passed to the command,
-                                          *               or NULL when `CMD_FARG' isn't set, or `CMD_FARGOPT'
-                                          *               is and no argument was given.
-                                          *  @return: -1: An error occurred.
-                                          *  @return:  0: Successfully executed the command function.
-                                          *  HINT: The given `arg' will not be re-allocated, freed, or modified
-                                          *        anywhere until deemon exits, meaning that the pointer can be
-                                          *        weakly referenced for any purpose, as well as be modified by
-                                          *        this function itself.
-                                          */
-        struct cmd_option *co_group;     /* [0..1][valid_if(CMD_FGROUP)] A sub-group of commandline options:
-                                          * >> `-Wl,-fopt-a,-fopt-b,-fopt-c=foo\,bar'
-                                          *    Group:       `Wl' (short name)
-                                          *    Sub-options: `-fopt-a', `-fopt-b', `-fopt-c=foo,bar'
-                                          */
-    };
-    char const *co_doc;                  /* [0..1] An optional documentation string for this command. */
+	uint16_t    co_flags;                /* Command options (Set of `CMD_F*') */
+	char        co_shortnam[6];          /* Short argument name (NUL-terminated string; empty when not set) */
+	char const *co_longname;             /* [0..1] Long argument name, or NULL when not set.
+	                                      *  To be accepted as a long argument name, the commandline option
+	                                      *  must feature 2 leading dashes (e.g.: `--long-option')
+	                                      *  However, when `CMD_FLONG1DASH' is set, a single leading dash is accepted as well. */
+	union {
+		void       *co_hook;
+		int (DCALL *co_func)(char *arg); /* [0..1][valid_if(!CMD_FGROUP)] Function called when the argument is encountered.
+		                                  *  When NULL, the command acts as a terminating sentinel.
+		                                  *  @param: arg: The NUL-terminated argument passed to the command,
+		                                  *               or NULL when `CMD_FARG' isn't set, or `CMD_FARGOPT'
+		                                  *               is and no argument was given.
+		                                  *  @return: -1: An error occurred.
+		                                  *  @return:  0: Successfully executed the command function.
+		                                  *  HINT: The given `arg' will not be re-allocated, freed, or modified
+		                                  *        anywhere until deemon exits, meaning that the pointer can be
+		                                  *        weakly referenced for any purpose, as well as be modified by
+		                                  *        this function itself.
+		                                  */
+		struct cmd_option *co_group;     /* [0..1][valid_if(CMD_FGROUP)] A sub-group of commandline options:
+		                                  * >> `-Wl,-fopt-a,-fopt-b,-fopt-c=foo\,bar'
+		                                  *    Group:       `Wl' (short name)
+		                                  *    Sub-options: `-fopt-a', `-fopt-b', `-fopt-c=foo,bar'
+		                                  */
+	};
+	char const *co_doc;                  /* [0..1] An optional documentation string for this command. */
 };
-#define CMD_OPTION_SENTINEL    { CMD_FNORMAL, "", NULL, { NULL }, NULL }
+#define CMD_OPTION_SENTINEL      { CMD_FNORMAL, "", NULL, { NULL }, NULL }
 #define CMD_OPTION_ISSENTINEL(x) ((x)->co_func == NULL)
 
 /* Parse commandline options:

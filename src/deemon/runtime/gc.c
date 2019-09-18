@@ -735,7 +735,7 @@ PUBLIC size_t DCALL DeeGC_Collect(size_t max_objects) {
 	GCLOCK_ACQUIRE();
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 	if (gc_pending_front != NULL) {
-	collect_restart_with_pending_hint:
+collect_restart_with_pending_hint:
 		rwlock_write(&gc_pending_lock);
 		/* Transfer pending GC objects, so we can try to collect them immediately. */
 		COMPILER_READ_BARRIER();
@@ -855,7 +855,7 @@ INTERN size_t DCALL DeeExec_KillUserCode(void) {
 	GCLOCK_ACQUIRE();
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 	if (gc_pending_front != NULL) {
-	collect_restart_with_pending_hint:
+collect_restart_with_pending_hint:
 		rwlock_write(&gc_pending_lock);
 		/* Transfer pending GC objects, so we can try to collect them immediately. */
 		COMPILER_READ_BARRIER();
@@ -1114,47 +1114,47 @@ PRIVATE struct type_member gciter_members[] = {
 
 PRIVATE DeeTypeObject GCIter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */"_GCIter",
-	/* .tp_doc      = */NULL,
-	/* .tp_flags    = */TP_FNORMAL|TP_FFINAL,
-	/* .tp_weakrefs = */0,
-	/* .tp_features = */TF_NONE,
-	/* .tp_base     = */&DeeIterator_Type,
-	/* .tp_init = */{
+	/* .tp_name     = */ "_GCIter",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */{
-				/* .tp_ctor      = */NULL,
-				/* .tp_copy_ctor = */NULL,
-				/* .tp_deep_ctor = */NULL,
-				/* .tp_any_ctor  = */NULL,
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(GCIter)
 			}
 		},
-		/* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&gciter_fini,
-		/* .tp_assign      = */NULL,
-		/* .tp_move_assign = */NULL
+		/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&gciter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
 	},
-	/* .tp_cast = */{
-		/* .tp_str  = */NULL,
-		/* .tp_repr = */NULL,
-		/* .tp_bool = */(int(DCALL *)(DeeObject *__restrict))&gciter_bool
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&gciter_bool
 	},
-	/* .tp_call          = */NULL,
-	/* .tp_visit         = */(void(DCALL *)(DeeObject *__restrict,dvisit_t,void*))&gciter_visit,
-	/* .tp_gc            = */NULL,
-	/* .tp_math          = */NULL,
-	/* .tp_cmp           = */NULL,
-	/* .tp_seq           = */NULL,
-	/* .tp_iter_next     = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gciter_next,
-	/* .tp_attr          = */NULL,
-	/* .tp_with          = */NULL,
-	/* .tp_buffer        = */NULL,
-	/* .tp_methods       = */NULL,
-	/* .tp_getsets       = */NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void(DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gciter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gciter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */gciter_members,
-	/* .tp_class_methods = */NULL,
-	/* .tp_class_getsets = */NULL,
-	/* .tp_class_members = */NULL
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
 
 
@@ -1215,9 +1215,9 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 }
 
 PRIVATE struct type_seq gcenum_seq = {
-	/* .tp_iter_self = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_iter,
-	/* .tp_size      = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_size,
-	/* .tp_contains  = */(DREF DeeObject *(DCALL *)(DeeObject *__restrict,DeeObject *__restrict))&gcenum_contains
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_iter,
+	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_size,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&gcenum_contains
 };
 
 PRIVATE struct type_member gcenum_class_members[] = {
@@ -1311,7 +1311,7 @@ PRIVATE struct type_method gcenum_methods[] = {
 	      "Note that more than @max objects may be collected if sufficiently large reference cycles exist") },
 	{ "referred", &gcenum_referred,
 	  DOC("(start)->?Dset\n"
-	      "Returns a set of objects that are immediatly referred to by @start") },
+	      "Returns a set of objects that are immediately referred to by @start") },
 	{ "referredgc", &gcenum_referredgc,
 	  DOC("(start)->?Dset\n"
 	      "Same as #referred, but only include gc-objects (s.a. :Type.__isgc__)") },
@@ -1332,46 +1332,46 @@ PRIVATE struct type_method gcenum_methods[] = {
 
 PRIVATE DeeTypeObject GCEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */DeeString_STR(&str_gc),
-	/* .tp_doc      = */NULL,
-	/* .tp_flags    = */TP_FNORMAL|TP_FFINAL|TP_FNAMEOBJECT,
-	/* .tp_weakrefs = */0,
-	/* .tp_features = */TF_SINGLETON,
-	/* .tp_base     = */&DeeSeq_Type,
-	/* .tp_init = */{
+	/* .tp_name     = */ DeeString_STR(&str_gc),
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_SINGLETON,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */{
-				/* .tp_ctor      = */NULL,
-				/* .tp_copy_ctor = */NULL,
-				/* .tp_deep_ctor = */NULL,
-				/* .tp_any_ctor  = */NULL,
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},
-		/* .tp_dtor        = */NULL,
-		/* .tp_assign      = */NULL,
-		/* .tp_move_assign = */NULL
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
 	},
-	/* .tp_cast = */{
-		/* .tp_str  = */NULL,
-		/* .tp_repr = */NULL,
-		/* .tp_bool = */NULL
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */NULL,
-	/* .tp_visit         = */NULL,
-	/* .tp_gc            = */NULL,
-	/* .tp_math          = */NULL,
-	/* .tp_cmp           = */NULL,
-	/* .tp_seq           = */&gcenum_seq,
-	/* .tp_iter_next     = */NULL,
-	/* .tp_attr          = */NULL,
-	/* .tp_with          = */NULL,
-	/* .tp_buffer        = */NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &gcenum_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */gcenum_methods,
-	/* .tp_getsets       = */NULL,
-	/* .tp_members       = */NULL,
-	/* .tp_class_methods = */NULL,
-	/* .tp_class_getsets = */NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */gcenum_class_members
 };
 

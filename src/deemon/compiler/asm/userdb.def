@@ -29,14 +29,14 @@
 #endif
 
 #ifndef OVERLOAD
-#define OVERLOAD(instr_id,flags,n_args,args)
+#define OVERLOAD(instr_id, flags, n_args, args)
 #endif
-#define O0(instr_id,flags)      OVERLOAD(instr_id,flags,0,)
-#define O1(instr_id,flags,args) OVERLOAD(instr_id,flags,1,args)
-#define O2(instr_id,flags,args) OVERLOAD(instr_id,flags,2,args)
-#define O3(instr_id,flags,args) OVERLOAD(instr_id,flags,3,args)
-#define O4(instr_id,flags,args) OVERLOAD(instr_id,flags,4,args)
-#define O5(instr_id,flags,args) OVERLOAD(instr_id,flags,5,args)
+#define O0(instr_id, flags)      OVERLOAD(instr_id, flags, 0, )
+#define O1(instr_id, flags, args) OVERLOAD(instr_id, flags, 1, args)
+#define O2(instr_id, flags, args) OVERLOAD(instr_id, flags, 2, args)
+#define O3(instr_id, flags, args) OVERLOAD(instr_id, flags, 3, args)
+#define O4(instr_id, flags, args) OVERLOAD(instr_id, flags, 4, args)
+#define O5(instr_id, flags, args) OVERLOAD(instr_id, flags, 5, args)
 
 #undef MIN
 #undef MAX
@@ -52,16 +52,20 @@ fs.chdir(fs.path.head(__FILE__));
 local names = [];
 local longest_name = 0;
 for (local l: file.open("../../../../include/deemon/compiler/assembler.h")) {
-    local name;
-    try name = l.scanf(" # define OPERAND_CLASS_%[^ ]")...;
-    catch (...) continue;
-    if ("(" in name) continue;
-    names.append(name);
-    if (longest_name < #name)
-        longest_name = #name;
+	local name;
+	try {
+		name = l.scanf(" # define OPERAND_CLASS_%[^ ]")...;
+	} catch (...) {
+		continue;
+	}
+	if ("(" in name)
+		continue;
+	names.append(name);
+	if (longest_name < #name)
+		longest_name = #name;
 }
 for (local x: names) {
-    print "#define",x," "*(longest_name-#x),"OPERAND_CLASS_"+x;
+	print "#define", x, " " * (longest_name - #x), "OPERAND_CLASS_" + x;
 }
 ]]]*/
 #define FMASK           OPERAND_CLASS_FMASK
@@ -206,34 +210,34 @@ for (local x: names) {
 
 
 /* CONSTRAINTS: `ret <ps>' */
-INSTR("ret",(
-    O0(ASM_RET_NONE,FNORMAL)                  /* `ret' */
-    O1(ASM_RET_NONE,FRET,        (NONE))      /* `ret none' */
-    O1(ASM_RET,     FRET,        (POP))       /* `ret pop' */
-    O1(ASM_RET,     FRET|FPREFIX_RO,(PREFIX)) /* `ret PREFIX' */
-    O0(ASM_RET,     FRET|FPREFIX|FPREFIX_RO)  /* `PREFIX: ret' */
+INSTR("ret", (
+    O0(ASM_RET_NONE, FNORMAL)                   /* `ret' */
+    O1(ASM_RET_NONE, FRET,            (NONE))   /* `ret none' */
+    O1(ASM_RET,      FRET,            (POP))    /* `ret pop' */
+    O1(ASM_RET,      FRET|FPREFIX_RO, (PREFIX)) /* `ret PREFIX' */
+    O0(ASM_RET,      FRET|FPREFIX|FPREFIX_RO)   /* `PREFIX: ret' */
 ))
 
 /* CONSTRAINTS: `yield <ps>' */
-INSTR("yield",(
-    O2(ASM_YIELDALL,FYLD,                   (FOREACH)(POP))    /* `yield foreach, pop' */
-    O1(ASM_YIELD,   FYLD,                   (POP))             /* `yield pop' */
-    O1(ASM_YIELD,   FYLD|FPREFIX_RO,        (PREFIX))          /* `yield PREFIX' */
-    O2(ASM_YIELDALL,FYLD|FPREFIX_RO,        (FOREACH)(PREFIX)) /* `yield foreach, PREFIX' */
-    O0(ASM_YIELD,   FYLD|FPREFIX|FPREFIX_RO)                   /* `PREFIX: yield' */
-    O1(ASM_YIELDALL,FYLD|FPREFIX|FPREFIX_RO,(FOREACH))         /* `PREFIX: yield foreach' */
+INSTR("yield", (
+    O2(ASM_YIELDALL, FYLD,                   (FOREACH)(POP))    /* `yield foreach, pop' */
+    O1(ASM_YIELD,    FYLD,                   (POP))             /* `yield pop' */
+    O1(ASM_YIELD,    FYLD|FPREFIX_RO,        (PREFIX))          /* `yield PREFIX' */
+    O2(ASM_YIELDALL, FYLD|FPREFIX_RO,        (FOREACH)(PREFIX)) /* `yield foreach, PREFIX' */
+    O0(ASM_YIELD,    FYLD|FPREFIX|FPREFIX_RO)                   /* `PREFIX: yield' */
+    O1(ASM_YIELDALL, FYLD|FPREFIX|FPREFIX_RO,(FOREACH))         /* `PREFIX: yield foreach' */
 ))
 
 /* CONSTRAINTS: `throw <ps>' */
-INSTR("throw",(
-    O1(ASM_RETHROW,FNORMAL,(EXCEPT))    /* `throw except' */
-    O1(ASM_THROW,  FNORMAL,(POP))       /* `throw pop' */
-    O1(ASM_THROW,  FPREFIX_RO,(PREFIX)) /* `throw PREFIX' */
-    O0(ASM_THROW,  FPREFIX|FPREFIX_RO)  /* `PREFIX: throw' */
+INSTR("throw", (
+    O1(ASM_RETHROW, FNORMAL,    (EXCEPT)) /* `throw except' */
+    O1(ASM_THROW,   FNORMAL,    (POP))    /* `throw pop' */
+    O1(ASM_THROW,   FPREFIX_RO, (PREFIX)) /* `throw PREFIX' */
+    O0(ASM_THROW,   FPREFIX|FPREFIX_RO)   /* `PREFIX: throw' */
 ))
 
 /* CONSTRAINTS: `end ...' */
-INSTR("end",(
+INSTR("end", (
     O1(ASM_ENDCATCH,    FNORMAL,(CATCH))                         /* `end catch' */
     O2(ASM_ENDCATCH,    FNORMAL,(CATCH)(FSTACKFLAG|DISP_EQ_0))   /* `end catch, #0' */
     O2(ASM_ENDCATCH_N,  FNORMAL,(CATCH)(SPIMM8,-1))              /* `end catch, #<imm8> + 1' */
@@ -243,14 +247,14 @@ INSTR("end",(
 ))
 
 /* CONSTRAINTS: `bound b' / `bound egl' */
-INSTR("bound",(
+INSTR("bound", (
     O1(ASM_PUSH_BND_EXTERN,FF0|FPUSH,(EXTERN)) /* push bound extern <imm8/16>:<imm8/16> */
     O1(ASM_PUSH_BND_GLOBAL,FF0|FPUSH,(GLOBAL)) /* push bound global <imm8/16> */
     O1(ASM_PUSH_BND_LOCAL, FF0|FPUSH,(LOCAL))  /* push bound local <imm8/16> */
 ))
 
 /* CONSTRAINTS: `jf <ps>, ...' */
-INSTR("jf",(
+INSTR("jf", (
     O2(ASM_JF,  FRELDSP,                   (POP)(SDISP8,-1))     /* `jf pop, <Sdisp8> + 1' */
     O2(ASM_JF16,FRELDSP,                   (POP)(SDISP16,-2))    /* `jf pop, <Sdisp16> + 2' */
     O2(ASM_JF,  FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP8,-1))  /* `jf PREFIX, <Sdisp8> + 1' */
@@ -260,7 +264,7 @@ INSTR("jf",(
 ))
 
 /* CONSTRAINTS: `jt <ps>, ...' */
-INSTR("jt",(
+INSTR("jt", (
     O2(ASM_JT,  FRELDSP,                   (POP)(SDISP8,-1))     /* `jt pop, <Sdisp8> + 1' */
     O2(ASM_JT16,FRELDSP,                   (POP)(SDISP16,-2))    /* `jt pop, <Sdisp16> + 2' */
     O2(ASM_JT,  FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP8,-1))  /* `jt PREFIX, <Sdisp8> + 1' */
@@ -270,7 +274,7 @@ INSTR("jt",(
 ))
 
 /* CONSTRAINTS: `jmp ...' */
-INSTR("jmp",(
+INSTR("jmp", (
     O1(ASM_JMP,        FRELDSP,(SDISP8,-1))  /* `jmp <Sdisp8> + 1' */
     O1(ASM_JMP16,      FRELDSP,(SDISP16,-2)) /* `jmp <Sdisp16> + 2' */
     O1(ASM32_JMP,      FRELDSP,(SDISP32,-4)) /* `jmp <Sdisp32> + 4' */
@@ -279,7 +283,7 @@ INSTR("jmp",(
 ))
 
 /* CONSTRAINTS: `foreach <ps>, ...' */
-INSTR("foreach",(
+INSTR("foreach", (
     O2(ASM_FOREACH,  FRELDSP,                   (TOP)(SDISP8,-1))     /* `foreach top, <Sdisp8> + 1' */
     O2(ASM_FOREACH16,FRELDSP,                   (TOP)(SDISP16,-2))    /* `foreach top, <Sdisp16> + 2' */
     O2(ASM_FOREACH,  FRELDSP|FPREFIX_RO,        (PREFIX)(SDISP8,-1))  /* `foreach PREFIX, <Sdisp8> + 1' */
@@ -291,7 +295,7 @@ INSTR("foreach",(
 /* CONSTRAINTS: `call <egls>, ...' */
 /* CONSTRAINTS: `call <egls>, <QsQm>' */
 /* CONSTRAINTS: `call <s>, <a>, <a>' */
-INSTR("call",(
+INSTR("call", (
     O2(ASM_CALL,           FSTKABS,          (TOP)(SPIMM8))               /* call top, #imm8 */
     O2(ASM_CALL_TUPLE,     FNORMAL,          (TOP)(POP|FDOTSFLAG))        /* call top, pop... */
     O3(ASM_THISCALL_TUPLE, FNORMAL,          (TOP)(POP)(POP|FDOTSFLAG))   /* call top, pop, pop... */
@@ -307,7 +311,7 @@ INSTR("call",(
 
 /* CONSTRAINTS: `op <ps>, ..., ...' */
 /* CONSTRAINTS: `op <ps>, ..., <s>' */
-INSTR("op",(
+INSTR("op", (
     O3(ASM_OPERATOR,        FSTKABS,              (TOP)(IMM8)(SPIMM8))            /* `operator top, <imm8>, #<imm8>' */
     O3(ASM_OPERATOR_TUPLE,  FNORMAL,              (TOP)(IMM8)(POP|FDOTSFLAG))     /* `operator top, <imm8>, pop...' */
     O3(ASM16_OPERATOR,      FSTKABS,              (TOP)(IMM16)(SPIMM8))           /* `operator top, <imm16>, #<imm8>' */
@@ -323,7 +327,7 @@ INSTR("op",(
 ))
 
 /* CONSTRAINTS: `op <gl>' */
-INSTR("del",(
+INSTR("del", (
     O1(ASM_DEL_GLOBAL,FF0,(GLOBAL)) /* `del global <imm8/16>' */
     O1(ASM_DEL_LOCAL, FF0,(LOCAL))  /* `del local <imm8/16>' */
 ))
@@ -332,7 +336,7 @@ INSTR("del",(
 /* CONSTRAINTS: `swap <s>, <s>' */
 /* CONSTRAINTS: `swap <p>, <s>' */
 /* CONSTRAINTS: `swap <s>, <p>' */
-INSTR("swap",(
+INSTR("swap", (
     O0(ASM_SWAP,FNORMAL)                                  /* swap */
     /* All the different spellings for `swap FIRST, SECOND' and `swap SECOND, FIRST' */
     O2(ASM_SWAP,FNORMAL,(SPSUBIMM_EQ_2)(TOP))             /* swap #SP - 2, top */
@@ -356,7 +360,7 @@ INSTR("swap",(
 
 /* CONSTRAINTS: `lrot ...' */
 /* CONSTRAINTS: `lrot ..., <p>' */
-INSTR("lrot",(
+INSTR("lrot", (
     O1(ASM_DELOP, FNORMAL,(FSTACKFLAG|DISP_EQ_1))         /* `lrot #1' */
     O1(ASM_SWAP,  FNORMAL,(FSTACKFLAG|DISP_EQ_2))         /* `lrot #2' */
     O1(ASM_LROT,  FSTKABS,(SPIMM8,-3))                    /* `lrot #<imm8> + 3' */
@@ -377,7 +381,7 @@ INSTR("lrot",(
 
 /* CONSTRAINTS: `rrot ...' */
 /* CONSTRAINTS: `rrot ..., <p>' */
-INSTR("rrot",(
+INSTR("rrot", (
     O1(ASM_DELOP, FNORMAL,(FSTACKFLAG|DISP_EQ_1))         /* `rrot #1' */
     O1(ASM_SWAP,  FNORMAL,(FSTACKFLAG|DISP_EQ_2))         /* `rrot #2' */
     O1(ASM_RROT,  FSTKABS,(SPIMM8,-3))                    /* `rrot #<imm8> + 3' */
@@ -397,7 +401,7 @@ INSTR("rrot",(
 ))
 
 /* CONSTRAINTS: `dup <s>' */
-INSTR("dup",(
+INSTR("dup", (
     O0(ASM_DUP,    FNORMAL)                         /* `dup' */
     O1(ASM_DUP,    FNORMAL,(TOP))                   /* `dup top' */
     O1(ASM_DUP,    FNORMAL,(SPSUBIMM_EQ_1))         /* `dup #SP - 1' */
@@ -413,7 +417,7 @@ INSTR("dup",(
 ))
 
 /* CONSTRAINTS: `push <P>' / `push <nEmTiTmTfracCseglTTFFTcI64N64SR>' */
-INSTR("push",(
+INSTR("push", (
     O1(ASM_DUP,               FNORMAL,                  (TOP))                         /* `push top' */
     O1(ASM_DUP,               FNORMAL,                  (SPSUBIMM_EQ_1))               /* `push #SP - 1' */
     O1(ASM_DUP,               FNORMAL,                  (SPADDIMM_EQ_N1))              /* `push #SP + -1' */
@@ -468,7 +472,7 @@ INSTR("push",(
 
 /* CONSTRAINTS: `pop' */
 /* CONSTRAINTS: `pop <p>' */
-INSTR("pop",(
+INSTR("pop", (
     O0(ASM_POP,       FNORMAL)                                     /* `pop' */
     O1(ASM_POP,       FNORMAL,                   (TOP))            /* `pop top' */
     O1(ASM_POP,       FNORMAL,                   (SPSUBIMM_EQ_1))  /* `pop #SP - 1' */
@@ -492,7 +496,7 @@ INSTR("pop",(
 ))
 
 /* CONSTRAINTS: `adjstack ...' */
-INSTR("adjstack",(
+INSTR("adjstack", (
     O1(ASM_POP,       FNORMAL,(SPADDIMM_EQ_N1)) /* `adjstack #SP - 1' --> `pop' */
     O1(ASM_POP,       FNORMAL,(SPSUBIMM_EQ_1))  /* `adjstack #SP - 1' --> `pop' */
     O1(ASM_DELOP,     FNORMAL,(SPADDIMM_EQ_0))  /* `adjstack #SP + 0' --> `---' */
@@ -505,13 +509,13 @@ INSTR("adjstack",(
 
 /* CONSTRAINTS: `super <s>, <s>' */
 /* CONSTRAINTS: `super <Ti>, <r>' */
-INSTR("super",(
+INSTR("super", (
     O2(ASM_SUPER,       FNORMAL,  (TOP)(POP))   /* `super top, pop' */
     O2(ASM_SUPER_THIS_R,FPUSH|FF0,(THIS)(REF))  /* `push super this, ref <imm8/16>' */
 ))
 
 /* CONSTRAINTS: `cast <s>, ...' */
-INSTR("cast",(
+INSTR("cast", (
     O2(ASM_CAST_TUPLE,  FNORMAL,(TOP)(TUPLE))   /* `cast top, Tuple' */
     O2(ASM_CAST_LIST,   FNORMAL,(TOP)(LIST))    /* `cast top, List' */
     O2(ASM_CAST_DICT,   FNORMAL,(TOP)(DICT))    /* `cast top, Dict' */
@@ -521,7 +525,7 @@ INSTR("cast",(
 ))
 
 /* CONSTRAINTS: `pack ..., ...' */
-INSTR("pack",(
+INSTR("pack", (
     O2(ASM_PACK_TUPLE,    FPUSH|FSTKABS,(TUPLE)(SPIMM8))                /* `push pack Tuple, #<imm8>' */
     O2(ASM16_PACK_TUPLE,  FPUSH|FSTKABS,(TUPLE)(SPIMM16))               /* `push pack Tuple, #<imm16>' */
     O2(ASM_PACK_LIST,     FPUSH|FSTKABS,(LIST)(SPIMM8))                 /* `push pack List, #<imm8>' */
@@ -533,7 +537,7 @@ INSTR("pack",(
 ))
 
 /* CONSTRAINTS: `unpack <ps>, ...' */
-INSTR("unpack",(
+INSTR("unpack", (
     O2(ASM_UNPACK,        FSTKABS,                   (POP)(SPIMM8))     /* `unpack pop, #<imm8>' */
     O2(ASM16_UNPACK,      FSTKABS,                   (POP)(SPIMM16))    /* `unpack pop, #<imm16>' */
     O2(ASM_VARARGS_UNPACK,FSTKABS,                   (VARARGS)(SPIMM8)) /* `unpack varargs, #<imm8>' */
@@ -544,59 +548,59 @@ INSTR("unpack",(
 ))
 
 /* CONSTRAINTS: `concat <s>, <s>' */
-INSTR("concat",(O2(ASM_CONCAT,FNORMAL,(TOP)(POP))))          /* `concat top, pop' */
+INSTR("concat", (O2(ASM_CONCAT,FNORMAL,(TOP)(POP))))          /* `concat top, pop' */
 
 /* CONSTRAINTS: `extend <s>, ...' */
-INSTR("extend",(O2(ASM_EXTEND,FSTKABS,(TOP)(SPIMM8))))       /* `extend top, #<imm8>' */
+INSTR("extend", (O2(ASM_EXTEND,FSTKABS,(TOP)(SPIMM8))))       /* `extend top, #<imm8>' */
 
 /* CONSTRAINTS: `typeof <s>' */
-INSTR("typeof",(O1(ASM_TYPEOF,FNORMAL,(TOP))))               /* `typeof top' */
+INSTR("typeof", (O1(ASM_TYPEOF,FNORMAL,(TOP))))               /* `typeof top' */
 
 /* CONSTRAINTS: `classof <s>' */
-INSTR("classof",(O1(ASM_CLASSOF,FNORMAL,(TOP))))             /* `classof top' */
+INSTR("classof", (O1(ASM_CLASSOF,FNORMAL,(TOP))))             /* `classof top' */
 
 /* CONSTRAINTS: `superof <s>' */
-INSTR("superof",(O1(ASM_SUPEROF,FNORMAL,(TOP))))             /* `superof top' */
+INSTR("superof", (O1(ASM_SUPEROF,FNORMAL,(TOP))))             /* `superof top' */
 
 /* CONSTRAINTS: `instanceof <s>, <ns>' */
-INSTR("instanceof",(
+INSTR("instanceof", (
     O2(ASM_INSTANCEOF,FNORMAL,(TOP)(POP))                    /* `instanceof top, pop' */
     O2(ASM_ISNONE,    FNORMAL,(TOP)(NONE))                   /* `instanceof top, none' */
 ))
 
 /* CONSTRAINTS: `str <s>' */
-INSTR("str",(O1(ASM_STR,FNORMAL,(TOP))))                     /* `str top' */
+INSTR("str", (O1(ASM_STR,FNORMAL,(TOP))))                     /* `str top' */
 
 /* CONSTRAINTS: `repr <s>' */
-INSTR("repr",(O1(ASM_REPR,FNORMAL,(TOP))))                   /* `repr top' */
+INSTR("repr", (O1(ASM_REPR,FNORMAL,(TOP))))                   /* `repr top' */
 
 /* CONSTRAINTS: `bool <s>' */
-INSTR("bool",(
+INSTR("bool", (
     O1(ASM_BOOL,           FNORMAL,(TOP))                    /* `bool top' */
     O1(ASM_PUSH_VARKWDS_NE,FPUSH,  (VARKWDS))                /* `push bool varkwds' */
 ))
 
 /* CONSTRAINTS: `not <s>' */
-INSTR("not",(O1(ASM_NOT,FNORMAL,(TOP))))                     /* `not top' */
+INSTR("not", (O1(ASM_NOT,FNORMAL,(TOP))))                     /* `not top' */
 
 /* CONSTRAINTS: `assign <s>, <s>' */
-INSTR("assign",(
+INSTR("assign", (
     O2(ASM_ASSIGN,     FNORMAL,(POP)(POP))                   /* `assign pop, pop' */
     O3(ASM_MOVE_ASSIGN,FNORMAL,(MOVE)(POP)(POP))             /* `assign move, pop, pop' */
 ))
 
 /* CONSTRAINTS: `copy <s>' */
-INSTR("copy",(
+INSTR("copy", (
     O1(ASM_COPY,FNORMAL,(TOP))                               /* `copy top' */
 ))
 
 /* CONSTRAINTS: `deepcopy <s>' */
-INSTR("deepcopy",(
+INSTR("deepcopy", (
     O1(ASM_DEEPCOPY,FNORMAL,(TOP))                           /* `deepcopy top' */
 ))
 
 /* CONSTRAINTS: `cmp ..., <s>, <s>' */
-INSTR("cmp",(
+INSTR("cmp", (
     O3(ASM_CMP_EQ,           FNORMAL,(EQ)(TOP)(POP))                     /* `cmp eq, top, pop' */
     O3(ASM_CMP_NE,           FNORMAL,(NE)(TOP)(POP))                     /* `cmp ne, top, pop' */
     O3(ASM_CMP_LO,           FNORMAL,(LO)(TOP)(POP))                     /* `cmp lo, top, pop' */
@@ -619,7 +623,7 @@ INSTR("cmp",(
 
 /* CONSTRAINTS: `class <s>, <cs>' */
 /* CONSTRAINTS: `class <ge>, <c>' */
-INSTR("class",(
+INSTR("class", (
     O2(ASM_CLASS,   FNORMAL,  (TOP)(POP))      /* `class top, pop' */
     O2(ASM_CLASS_C, FF0,      (TOP)(CONST))    /* `class top, const <imm8/16>' */
     O2(ASM_CLASS_GC,FF0|FPUSH,(GLOBAL)(CONST)) /* `push class global <imm8/16>, const <imm8/16>' */
@@ -627,27 +631,27 @@ INSTR("class",(
 ))
 
 /* CONSTRAINTS: `defcmember <s>, ..., <s>' */
-INSTR("defcmember",(
+INSTR("defcmember", (
     O3(ASM_DEFCMEMBER,  FRELABS,(TOP)(IMM8)(POP))  /* `defcmember top, $<imm8>, pop' */
     O3(ASM16_DEFCMEMBER,FRELABS,(TOP)(IMM16)(POP)) /* `defcmember top, $<imm16>, pop' */
 ))
 
 /* CONSTRAINTS: `getcmember <r>, ...' */
 /* CONSTRAINTS: `getcmember <s>, ...' */
-INSTR("getcmember",(
+INSTR("getcmember", (
     O2(ASM_GETCMEMBER_R,FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM8))  /* `push getcmember ref <imm8/16>, $<imm8>' */
     O2(ASM_GETCMEMBER_R,FRELABS|FPUSH|FF0|FF0_IMM,(REF)(IMM16)) /* `push getcmember ref <imm8/16>, $<imm16>' */
     O2(ASM16_GETCMEMBER,FRELABS,                  (TOP)(IMM16)) /* `getcmember top, $<imm16>' */
 ))
 
 /* CONSTRAINTS: `callcmember <Ti>, <r>, ...' */
-INSTR("callcmember",(
+INSTR("callcmember", (
     O4(ASM_CALLCMEMBER_THIS_R,FRELABS|FPUSH|FF0|FF0_IMM,(THIS)(REF)(IMM8)(SPIMM8))  /* `push callcmember this, ref <imm8/16>, $<imm8>, #<imm8>' */
     O4(ASM_CALLCMEMBER_THIS_R,FRELABS|FPUSH|FF0|FF0_IMM,(THIS)(REF)(IMM16)(SPIMM8)) /* `push callcmember this, ref <imm8/16>, $<imm8>, #<imm8>' */
 ))
 
 /* CONSTRAINTS: `function <c>, ...' */
-INSTR("function",(
+INSTR("function", (
     O2(ASM_FUNCTION_C,   FPUSH|FF0|FSTKABS,  (CONST)(SPIMM8,-1))  /* `push function const <imm8/16>, #<imm8>+1' */
     O2(ASM_FUNCTION_C_16,FPUSH|FF0|FSTKABS,  (CONST)(SPIMM16,-1)) /* `push function const <imm8/16>, #<imm16>+1' */
     O2(ASM_FUNCTION_C,   FPREFIX|FF0|FSTKABS,(CONST)(SPIMM8,-1))  /* `PREFIX: function const <imm8/16>, #<imm8>+1' */
@@ -655,24 +659,24 @@ INSTR("function",(
 ))
 
 /* CONSTRAINTS: `inv <s>' */
-INSTR("inv",(
+INSTR("inv", (
     O1(ASM_INV,FNORMAL,(TOP))  /* `inv top' */
 ))
 
 /* CONSTRAINTS: `pos <s>' */
-INSTR("pos",(
+INSTR("pos", (
     O1(ASM_POS,FNORMAL,(TOP))  /* `pos top' */
 ))
 
 /* CONSTRAINTS: `neg <s>' */
-INSTR("neg",(
+INSTR("neg", (
     O1(ASM_NEG,FNORMAL,(TOP))  /* `neg top' */
 ))
 
 /* CONSTRAINTS: `add <s>, <I8N32s>' */
 /* CONSTRAINTS: `<p>: add <I8N32s>' */
 /* CONSTRAINTS: `add <p>, <I8N32s>' // WARNING: Ambiguous with `add <s>' for stack-top' */
-INSTR("add",(
+INSTR("add", (
     O2(ASM_ADD,      FNORMAL,        (TOP)(POP))             /* `add top, pop' */
     O2(ASM_ADD_SIMM8,FRELABS,        (TOP)(SIMM8))           /* `add top, $<Simm8>' */
     O2(ASM_ADD_IMM32,FRELABS,        (TOP)(IMM32))           /* `add top, $<imm32>' */
@@ -687,7 +691,7 @@ INSTR("add",(
 /* CONSTRAINTS: `sub <s>, <I8N32s>' */
 /* CONSTRAINTS: `<p>: sub <I8N32s>' */
 /* CONSTRAINTS: `sub <p>, <I8N32s>' // WARNING: Ambiguous with `sub <s>' for stack-top' */
-INSTR("sub",(
+INSTR("sub", (
     O2(ASM_SUB,      FNORMAL,        (TOP)(POP))             /* `sub top, pop' */
     O2(ASM_SUB_SIMM8,FRELABS,        (TOP)(SIMM8))           /* `sub top, $<Simm8>' */
     O2(ASM_SUB_IMM32,FRELABS,        (TOP)(IMM32))           /* `sub top, $<imm32>' */
@@ -702,7 +706,7 @@ INSTR("sub",(
 /* CONSTRAINTS: `mul <s>, <I8s>' */
 /* CONSTRAINTS: `<p>: mul <I8s>' */
 /* CONSTRAINTS: `mul <p>, <I8s>' // WARNING: Ambiguous with `mul <s>' for stack-top' */
-INSTR("mul",(
+INSTR("mul", (
     O2(ASM_MUL,      FNORMAL,        (TOP)(POP))             /* `mul top, pop' */
     O2(ASM_MUL_SIMM8,FRELABS,        (TOP)(SIMM8))           /* `mul top, $<Simm8>' */
     O1(ASM_MUL,      FPREFIX,        (POP))                  /* `PREFIX: mul pop' */
@@ -714,7 +718,7 @@ INSTR("mul",(
 /* CONSTRAINTS: `div <s>, <I8s>' */
 /* CONSTRAINTS: `<p>: div <I8s>' */
 /* CONSTRAINTS: `div <p>, <I8s>' // WARNING: Ambiguous with `div <s>' for stack-top' */
-INSTR("div",(
+INSTR("div", (
     O2(ASM_DIV,      FNORMAL,        (TOP)(POP))             /* `div top, pop' */
     O2(ASM_DIV_SIMM8,FRELABS,        (TOP)(SIMM8))           /* `div top, $<Simm8>' */
     O1(ASM_DIV,      FPREFIX,        (POP))                  /* `PREFIX: div pop' */
@@ -726,7 +730,7 @@ INSTR("div",(
 /* CONSTRAINTS: `mod <s>, <I8s>' */
 /* CONSTRAINTS: `<p>: mod <I8s>' */
 /* CONSTRAINTS: `mod <p>, <I8s>' // WARNING: Ambiguous with `mod <s>' for stack-top' */
-INSTR("mod",(
+INSTR("mod", (
     O2(ASM_MOD,      FNORMAL,        (TOP)(POP))             /* `mod top, pop' */
     O2(ASM_MOD_SIMM8,FRELABS,        (TOP)(SIMM8))           /* `mod top, $<Simm8>' */
     O1(ASM_MOD,      FPREFIX,        (POP))                  /* `PREFIX: mod pop' */
@@ -738,7 +742,7 @@ INSTR("mod",(
 /* CONSTRAINTS: `shl <s>, <N8s>' */
 /* CONSTRAINTS: `<p>: shl <N8s>' */
 /* CONSTRAINTS: `shl <p>, <N8s>' // WARNING: Ambiguous with `shl <s>' for stack-top' */
-INSTR("shl",(
+INSTR("shl", (
     O2(ASM_SHL,     FNORMAL,        (TOP)(POP))              /* `shl top, pop' */
     O2(ASM_SHL_IMM8,FRELABS,        (TOP)(IMM8))             /* `shl top, $<imm8>' */
     O1(ASM_SHL,     FPREFIX,        (POP))                   /* `PREFIX: shl pop' */
@@ -750,7 +754,7 @@ INSTR("shl",(
 /* CONSTRAINTS: `shr <s>, <N8s>' */
 /* CONSTRAINTS: `<p>: shr <N8s>' */
 /* CONSTRAINTS: `shr <p>, <N8s>' // WARNING: Ambiguous with `shr <s>' for stack-top' */
-INSTR("shr",(
+INSTR("shr", (
     O2(ASM_SHR,     FNORMAL,        (TOP)(POP))              /* `shr top, pop' */
     O2(ASM_SHR_IMM8,FRELABS,        (TOP)(IMM8))             /* `shr top, $<imm8>' */
     O1(ASM_SHR,     FPREFIX,        (POP))                   /* `PREFIX: shr pop' */
@@ -762,7 +766,7 @@ INSTR("shr",(
 /* CONSTRAINTS: `and <s>, <N32s>' */
 /* CONSTRAINTS: `<p>: and <N32s>' */
 /* CONSTRAINTS: `and <p>, <N32s>' // WARNING: Ambiguous with `and <s>' for stack-top' */
-INSTR("and",(
+INSTR("and", (
     O2(ASM_AND,      FNORMAL,        (TOP)(POP))             /* `and top, pop' */
     O2(ASM_AND_IMM32,FRELABS,        (TOP)(IMM32))           /* `and top, $<imm32>' */
     O1(ASM_AND,      FPREFIX,        (POP))                  /* `PREFIX: and pop' */
@@ -774,7 +778,7 @@ INSTR("and",(
 /* CONSTRAINTS: `or <s>, <N32s>' */
 /* CONSTRAINTS: `<p>: or <N32s>' */
 /* CONSTRAINTS: `or <p>, <N32s>' // WARNING: Ambiguous with `or <s>' for stack-top' */
-INSTR("or",(
+INSTR("or", (
     O2(ASM_OR,      FNORMAL,        (TOP)(POP))              /* `or top, pop' */
     O2(ASM_OR_IMM32,FRELABS,        (TOP)(IMM32))            /* `or top, $<imm32>' */
     O1(ASM_OR,      FPREFIX,        (POP))                   /* `PREFIX: or pop' */
@@ -786,7 +790,7 @@ INSTR("or",(
 /* CONSTRAINTS: `xor <s>, <N32s>' */
 /* CONSTRAINTS: `<p>: xor <N32s>' */
 /* CONSTRAINTS: `xor <p>, <N32s>' // WARNING: Ambiguous with `xor <s>' for stack-top' */
-INSTR("xor",(
+INSTR("xor", (
     O2(ASM_XOR,      FNORMAL,        (TOP)(POP))             /* `xor top, pop' */
     O2(ASM_XOR_IMM32,FRELABS,        (TOP)(IMM32))           /* `xor top, $<imm32>' */
     O1(ASM_XOR,      FPREFIX,        (POP))                  /* `PREFIX: xor pop' */
@@ -798,7 +802,7 @@ INSTR("xor",(
 /* CONSTRAINTS: `pow <s>, <s>' */
 /* CONSTRAINTS: `<p>: pow <s>' */
 /* CONSTRAINTS: `pow <p>, <s>' // WARNING: Ambiguous with `pow <s>' for stack-top' */
-INSTR("pow",(
+INSTR("pow", (
     O2(ASM_POW,FNORMAL,(TOP)(POP))                           /* `pow top, pop' */
     O1(ASM_POW,FPREFIX,(POP))                                /* `PREFIX: pow pop' */
     O2(ASM_POW,FNORMAL,(PREFIX)(POP))                        /* `pow prefix, pop' */
@@ -806,7 +810,7 @@ INSTR("pow",(
 
 /* CONSTRAINTS: `inc <p>' */
 /* CONSTRAINTS: `push inc <p>' */
-INSTR("inc",(
+INSTR("inc", (
     O0(ASM_INC,    FPREFIX)                                  /* `PREFIX: inc' */
     O0(ASM_INCPOST,FPREFIX|FPUSH)                            /* `PREFIX: push inc' */
     O1(ASM_INC,    FNORMAL,(PREFIX))                         /* `inc PREFIX' */
@@ -815,7 +819,7 @@ INSTR("inc",(
 
 /* CONSTRAINTS: `dec <p>' */
 /* CONSTRAINTS: `push dec <p>' */
-INSTR("dec",(
+INSTR("dec", (
     O0(ASM_DEC,    FPREFIX)                                  /* `PREFIX: dec' */
     O0(ASM_DECPOST,FPREFIX|FPUSH)                            /* `PREFIX: push dec' */
     O1(ASM_DEC,    FNORMAL,(PREFIX))                         /* `dec PREFIX' */
@@ -824,7 +828,7 @@ INSTR("dec",(
 
 /* CONSTRAINTS: `nop' */
 /* CONSTRAINTS: `nop <p>' */
-INSTR("nop",(
+INSTR("nop", (
     O0(ASM_NOP,FNORMAL)                                      /* `nop' */
     O0(ASM_NOP,FPREFIX|FPREFIX_RO)                           /* `PREFIX: nop' */
     O1(ASM_NOP,FPREFIX_RO,(PREFIX))                          /* `nop PREFIX' */
@@ -832,7 +836,7 @@ INSTR("nop",(
 
 /* CONSTRAINTS: `nop16' */
 /* CONSTRAINTS: `nop16 <p>' */
-INSTR("nop16",(
+INSTR("nop16", (
     O0(ASM16_NOP,FNORMAL)                                    /* `nop16' */
     O0(ASM16_NOP,FPREFIX|FPREFIX_RO)                         /* `PREFIX: nop16' */
     O1(ASM16_NOP,FPREFIX_RO,(PREFIX))                        /* `nop16 PREFIX' */
@@ -846,7 +850,7 @@ INSTR("nop16",(
 /* CONSTRAINTS: `print <s>, <cp>' */
 /* CONSTRAINTS: `print <s>, <cp>, sp' */
 /* CONSTRAINTS: `print <s>, <cp>, nl' */
-INSTR("print",(
+INSTR("print", (
     O1(ASM_PRINT,       FNORMAL,(POP))                       /* `print pop' */
     O2(ASM_PRINT_SP,    FNORMAL,(POP)(SP))                   /* `print pop, sp' */
     O2(ASM_PRINT_NL,    FNORMAL,(POP)(NL))                   /* `print pop, nl' */
@@ -874,7 +878,7 @@ INSTR("print",(
 /* CONSTRAINTS: `push range <Iz>, <I32>' */
 /* CONSTRAINTS: `push range default, <I32s>' */
 /* CONSTRAINTS: `push range default, <I32s>, <s>' */
-INSTR("range",(
+INSTR("range", (
     O2(ASM_RANGE,         FNORMAL,      (TOP)(POP))          /* `range top, pop' */
     O3(ASM_RANGE_STEP,    FNORMAL,      (TOP)(POP)(POP))     /* `range top, pop, pop' */
     O2(ASM_RANGE_0_I16,   FPUSH|FRELABS,(IMM_EQ_0)(IMM16))   /* `range $0, $<imm16>' */
@@ -886,29 +890,29 @@ INSTR("range",(
 ))
 
 /* CONSTRAINTS: `enter <s>' */
-INSTR("enter",(
+INSTR("enter", (
     O1(ASM_ENTER,FNORMAL,(TOP))                            /* `enter pop' */
 ))
 
 /* CONSTRAINTS: `leave <s>' */
-INSTR("leave",(
+INSTR("leave", (
     O1(ASM_LEAVE,FNORMAL,(POP))                            /* `leave pop' */
 ))
 
 /* CONSTRAINTS: `getsize <s>' */
-INSTR("getsize",(
+INSTR("getsize", (
     O1(ASM_GETSIZE,        FNORMAL,(TOP))                  /* `getsize top' */
     O1(ASM_VARARGS_GETSIZE,FPUSH,  (VARARGS))              /* `push getsize varargs' */
 ))
 
 /* CONSTRAINTS: `contains <s>, <s>' */
-INSTR("contains",(
+INSTR("contains", (
     O2(ASM_CONTAINS,  FNORMAL,  (TOP)(POP))                /* `contains top, pop' */
     O2(ASM_CONTAINS_C,FF0|FPUSH,(CONST)(POP))              /* `push contains const <imm8/16>, pop' */
 ))
 
 /* CONSTRAINTS: `getitem <s>, <I16cs>' */
-INSTR("getitem",(
+INSTR("getitem", (
     O2(ASM_GETITEM,          FNORMAL,(TOP)(POP))           /* `getitem top, pop' */
     O2(ASM_GETITEM,          FRELABS,(TOP)(SIMM16))        /* `getitem top, $<Simm16>' */
     O2(ASM_GETITEM,          FF0,    (TOP)(CONST))         /* `getitem top, const <imm8/16>' */
@@ -917,19 +921,19 @@ INSTR("getitem",(
 ))
 
 /* CONSTRAINTS: `setitem <s>, <I16cs>, <s>' */
-INSTR("setitem",(
+INSTR("setitem", (
     O3(ASM_SETITEM,FNORMAL,(POP)(POP)(POP))                /* `setitem pop, pop, pop' */
     O3(ASM_SETITEM,FRELABS,(POP)(SIMM16)(POP))             /* `setitem pop, $<Simm16>, pop' */
     O3(ASM_SETITEM,FF0,    (POP)(CONST)(POP))              /* `setitem pop, const <imm8/16>, pop' */
 ))
 
 /* CONSTRAINTS: `delitem <s>, <s>' */
-INSTR("delitem",(
+INSTR("delitem", (
     O2(ASM_DELITEM,FNORMAL,(POP)(POP))                     /* `delitem pop, pop' */
 ))
 
 /* CONSTRAINTS: `iterself <s>' */
-INSTR("iterself",(
+INSTR("iterself", (
     O1(ASM_ITERSELF,FNORMAL,(TOP))                         /* `iterself top' */
 ))
 
@@ -939,7 +943,7 @@ INSTR("iterself",(
 /* CONSTRAINTS: `getrange <s>, <I16s>, <I16>' */
 /* CONSTRAINTS: `getrange <s>, <I16>, <I16n>' */
 /* CONSTRAINTS: `getrange <s>, <I16n>, <I16>' */
-INSTR("getrange",(
+INSTR("getrange", (
     O3(ASM_GETRANGE,   FNORMAL,(TOP)(POP)(POP))            /* `getrange top, pop, pop' */
     O3(ASM_GETRANGE_PN,FNORMAL,(TOP)(POP)(NONE))           /* `getrange top, pop, none' */
     O3(ASM_GETRANGE_NP,FNORMAL,(TOP)(NONE)(POP))           /* `getrange top, none, pop' */
@@ -951,7 +955,7 @@ INSTR("getrange",(
 ))
 
 /* CONSTRAINTS: `delrange <s>, <s>, <s>' */
-INSTR("delrange",(
+INSTR("delrange", (
     O3(ASM_DELRANGE,   FNORMAL,(TOP)(POP)(POP))            /* `delrange pop, pop, pop' */
 ))
 
@@ -961,7 +965,7 @@ INSTR("delrange",(
 /* CONSTRAINTS: `getrange <s>, <I16s>, <I16>, <s>' */
 /* CONSTRAINTS: `getrange <s>, <I16>, <I16n>, <s>' */
 /* CONSTRAINTS: `getrange <s>, <I16n>, <I16>, <s>' */
-INSTR("setrange",(
+INSTR("setrange", (
     O4(ASM_SETRANGE,   FNORMAL,(POP)(POP)(POP)(POP))       /* `setrange pop, pop, pop, pop' */
     O4(ASM_SETRANGE_PN,FNORMAL,(POP)(POP)(NONE)(POP))      /* `setrange pop, pop, none, pop' */
     O4(ASM_SETRANGE_NP,FNORMAL,(POP)(NONE)(POP)(POP))      /* `setrange pop, none, pop, pop' */
@@ -973,19 +977,19 @@ INSTR("setrange",(
 ))
 
 /* CONSTRAINTS: `debug break' */
-INSTR("debug",(
+INSTR("debug", (
     O1(ASM_BREAKPOINT, FNORMAL,(BREAK)) /* `debug break' */
 ))
 
 /* CONSTRAINTS: `ud' */
-INSTR("ud",(
+INSTR("ud", (
     O0(ASM_UD,FNORMAL) /* ud' */
 ))
 
 /* CONSTRAINTS: `getattr <s>, <cs>' */
 /* CONSTRAINTS: `getattr <Ti>, <c>' */
 /* CONSTRAINTS: `getattr <Ti>, <R>, <c>' */
-INSTR("getattr",(
+INSTR("getattr", (
     O2(ASM_GETATTR,               FNORMAL,             (TOP)(POP))         /* `getattr top, pop' */
     O2(ASM_GETATTR_C,             FF0,                 (TOP)(CONST))       /* `getattr top, const <imm8/16>' */
     O2(ASM_GETATTR_THIS_C,        FF0|FPUSH,           (THIS)(CONST))      /* `getattr this, const <imm8/16>' */
@@ -994,18 +998,18 @@ INSTR("getattr",(
 ))
 
 /* CONSTRAINTS: `boundattr <s>, <s>' */
-INSTR("boundattr",(
+INSTR("boundattr", (
     O2(ASM_BOUNDATTR,     FNORMAL,  (TOP)(POP))              /* `boundattr top, pop' */
 ))
 
 /* CONSTRAINTS: `bounditem <s>, <s>' */
-INSTR("bounditem",(
+INSTR("bounditem", (
     O2(ASM_BOUNDITEM,     FNORMAL,  (TOP)(POP))              /* `bounditem top, pop' */
 ))
 
 /* CONSTRAINTS: `delattr <s>, <cs>' */
 /* CONSTRAINTS: `delattr <Ti>, <c>' */
-INSTR("delattr",(
+INSTR("delattr", (
     O2(ASM_DELATTR,               FNORMAL,       (POP)(POP))         /* `delattr pop, pop' */
     O2(ASM_DELATTR_C,             FF0,           (POP)(CONST))       /* `delattr pop, const <imm8/16>' */
     O2(ASM_DELATTR_THIS_C,        FF0,           (THIS)(CONST))      /* `delattr this, const <imm8/16>' */
@@ -1013,7 +1017,7 @@ INSTR("delattr",(
 
 /* CONSTRAINTS: `setattr <s>, <cs>, <s>' */
 /* CONSTRAINTS: `setattr <Ti>, <c>, <s>' */
-INSTR("setattr",(
+INSTR("setattr", (
     O3(ASM_SETATTR,               FNORMAL,       (POP)(POP)(POP))         /* `setattr pop, pop, pop' */
     O3(ASM_SETATTR_C,             FF0,           (POP)(CONST)(POP))       /* `setattr pop, const <imm8/16>, pop' */
     O3(ASM_SETATTR_THIS_C,        FF0,           (THIS)(CONST)(POP))      /* `setattr this, const <imm8/16>, pop' */
@@ -1024,7 +1028,7 @@ INSTR("setattr",(
 /* CONSTRAINTS: `callattr <s>, <c>, <QlQr>' */
 /* CONSTRAINTS: `callattr <Ti>, <c>, ...' */
 /* CONSTRAINTS: `callattr <Ti>, <R>, <c>, ...' */
-INSTR("callattr",(
+INSTR("callattr", (
     O3(ASM_CALLATTR,               FSTKABS,             (TOP)(POP)(SPIMM8))                 /* `callattr top, pop, #<imm8>' */
     O3(ASM_CALLATTR_TUPLE,         FNORMAL,             (TOP)(POP)(POP|FDOTSFLAG))          /* `callattr top, pop, pop...' */
     O3(ASM_CALLATTR_C,             FF0|FSTKABS,         (TOP)(CONST)(SPIMM8))               /* `callattr top, const <imm8/16>, #<imm8>' */
@@ -1042,7 +1046,7 @@ INSTR("callattr",(
 ))
 
 /* CONSTRAINTS: `push getmember <Ti>, <rs>, ...' */
-INSTR("getmember",(
+INSTR("getmember", (
     O3(ASM_GETMEMBER,       FRELABS,                  (TOP)(POP)(IMM8))   /* `getmember top, pop, $<imm8>' */
     O3(ASM16_GETMEMBER,     FRELABS,                  (TOP)(POP)(IMM16))  /* `getmember top, pop, $<imm16>' */
     O3(ASM_GETMEMBER_THIS,  FPUSH|FRELABS,            (THIS)(POP)(IMM8))  /* `push getmember this, pop, $<imm8>' */
@@ -1052,7 +1056,7 @@ INSTR("getmember",(
 ))
 
 /* CONSTRAINTS: `delmember <Ti>, <rs>, ...' */
-INSTR("delmember",(
+INSTR("delmember", (
     O3(ASM_DELMEMBER,       FRELABS,            (POP)(POP)(IMM8))        /* `delmember pop, pop, $<imm8>' */
     O3(ASM16_DELMEMBER,     FRELABS,            (POP)(POP)(IMM16))       /* `delmember pop, pop, $<imm16>' */
     O3(ASM_DELMEMBER_THIS,  FRELABS,            (THIS)(POP)(IMM8))       /* `delmember this, pop, $<imm8>' */
@@ -1062,7 +1066,7 @@ INSTR("delmember",(
 ))
 
 /* CONSTRAINTS: `setmember <Ti>, <rs>, ..., <s>' */
-INSTR("setmember",(
+INSTR("setmember", (
     O4(ASM_SETMEMBER,       FRELABS,            (POP)(POP)(IMM8)(POP))   /* `setmember pop, pop, $<imm8>, pop' */
     O4(ASM16_SETMEMBER,     FRELABS,            (POP)(POP)(IMM16)(POP))  /* `setmember pop, pop, $<imm16>, pop' */
     O4(ASM_SETMEMBER_THIS,  FRELABS,            (THIS)(POP)(IMM8)(POP))  /* `setmember this, pop, $<imm8>, pop' */
@@ -1072,7 +1076,7 @@ INSTR("setmember",(
 ))
 
 /* CONSTRAINTS: `reduce <s>, ...' */
-INSTR("reduce",(
+INSTR("reduce", (
     O2(ASM_REDUCE_MIN,FNORMAL,(TOP)(MIN)) /* `reduce top, min' */
     O2(ASM_REDUCE_MAX,FNORMAL,(TOP)(MAX)) /* `reduce top, max' */
     O2(ASM_REDUCE_SUM,FNORMAL,(TOP)(SUM)) /* `reduce top, sum' */
@@ -1081,7 +1085,7 @@ INSTR("reduce",(
 ))
 
 /* CONSTRAINTS: `mov <p>, <P>' / `mov <eglCsS>, <nEmTiTmTfracCseglTTFFTcI64N64SR>' */
-INSTR("mov",(
+INSTR("mov", (
     O2(ASM_DUP,               FNORMAL,(PREFIX)(TOP))              /* `mov PREFIX, top' */
     O2(ASM_DUP,               FNORMAL,(PREFIX)(SPSUBIMM_EQ_1))    /* `mov PREFIX, #SP - 1' */
     O2(ASM_DUP,               FNORMAL,(PREFIX)(SPADDIMM_EQ_N1))   /* `mov PREFIX, #SP + -1' */

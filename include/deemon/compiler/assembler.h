@@ -1933,7 +1933,7 @@ INTDEF int (DCALL asm_gmov_ast_sym)(struct ast *__restrict dst,
  *                       of each iteration, and jumped to by `continue' ([0..1])
  * @param: block:        The main loop block executed in each iteration ([0..1])
  * @param: ddi_ast:      A branch used for debug information.
- * @return: * :         `loop_break' -- This symbol must be defined immediatly
+ * @return: * :         `loop_break' -- This symbol must be defined immediately
  *                       after the loop, however after variables allocated by
  *                       the scope have been disposed of. */
 INTDEF struct asm_sym *

@@ -25,15 +25,15 @@
 DECL_BEGIN
 
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *fi_iter; /* [1..1][const] The iterator who's elements are being filtered. */
-    DREF DeeObject *fi_func; /* [1..1][const] The function used for filtering. */
+	OBJECT_HEAD
+	DREF DeeObject *fi_iter; /* [1..1][const] The iterator who's elements are being filtered. */
+	DREF DeeObject *fi_func; /* [1..1][const] The function used for filtering. */
 } FilterIterator;
 
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *f_seq;   /* [1..1][const] The sequence being filtered. */
-    DREF DeeObject *f_fun;   /* [1..1][const] The function used for filtering. */
+	OBJECT_HEAD
+	DREF DeeObject *f_seq;   /* [1..1][const] The sequence being filtered. */
+	DREF DeeObject *f_fun;   /* [1..1][const] The function used for filtering. */
 } Filter;
 
 INTDEF DeeTypeObject SeqFilter_Type;

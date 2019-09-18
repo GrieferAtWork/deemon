@@ -26,8 +26,8 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
-#include <deemon/object.h>
 #include <deemon/file.h>
+#include <deemon/object.h>
 
 #ifdef CONFIG_NO_IO_H
 #undef CONFIG_HAVE_IO_H
@@ -323,7 +323,6 @@
 #define HAVE_GETGID 1 /* XXX: Add checks */
 #define HAVE_GETEGID 1 /* XXX: Add checks */
 
-
 #endif 
 
 
@@ -342,7 +341,8 @@
 #else
 #define O_BINARY 0
 #endif
-#endif
+#endif /* !O_BINARY */
+
 #ifndef O_SHORT_LIVED
 #ifdef __O_SHORT_LIVED
 #define O_SHORT_LIVED __O_SHORT_LIVED
@@ -351,7 +351,8 @@
 #else
 #define O_SHORT_LIVED 0
 #endif
-#endif
+#endif /* !O_SHORT_LIVED */
+
 #ifndef O_SEQUENTIAL
 #ifdef __O_SEQUENTIAL
 #define O_SEQUENTIAL __O_SEQUENTIAL
@@ -360,7 +361,8 @@
 #else
 #define O_SEQUENTIAL 0
 #endif
-#endif
+#endif /* !O_SEQUENTIAL */
+
 #ifndef O_RANDOM
 #ifdef __O_RANDOM
 #define O_RANDOM __O_RANDOM
@@ -369,7 +371,8 @@
 #else
 #define O_RANDOM 0
 #endif
-#endif
+#endif /* !O_RANDOM */
+
 #ifndef O_PATH
 #ifdef __O_PATH
 #define O_PATH __O_PATH
@@ -378,7 +381,8 @@
 #else
 #define O_PATH 0
 #endif
-#endif
+#endif /* !O_PATH */
+
 #ifndef O_NOATIME
 #ifdef __O_NOATIME
 #define O_NOATIME __O_NOATIME
@@ -387,7 +391,7 @@
 #else
 #define O_NOATIME 0
 #endif
-#endif
+#endif /* !O_NOATIME */
 
 #ifndef O_NOCTTY
 #ifdef __O_NOCTTY
@@ -397,7 +401,7 @@
 #else
 #define O_NOCTTY 0
 #endif
-#endif
+#endif /* !O_NOCTTY */
 
 
 #ifndef O_TEXT
@@ -406,7 +410,7 @@
 #elif defined(_O_TEXT)
 #define O_TEXT _O_TEXT
 #endif
-#endif
+#endif /* !O_TEXT */
 
 #ifndef O_WTEXT
 #ifdef __O_WTEXT
@@ -414,7 +418,7 @@
 #elif defined(_O_WTEXT)
 #define O_WTEXT _O_WTEXT
 #endif
-#endif
+#endif /* !O_WTEXT */
 
 #ifndef O_U16TEXT
 #ifdef __O_U16TEXT
@@ -422,7 +426,7 @@
 #elif defined(_O_U16TEXT)
 #define O_U16TEXT _O_U16TEXT
 #endif
-#endif
+#endif /* !O_U16TEXT */
 
 #ifndef O_U8TEXT
 #ifdef __O_U8TEXT
@@ -430,7 +434,7 @@
 #elif defined(_O_U8TEXT)
 #define O_U8TEXT _O_U8TEXT
 #endif
-#endif
+#endif /* !O_U8TEXT */
 
 #ifndef O_TEMPORARY
 #ifdef __O_TEMPORARY
@@ -438,7 +442,7 @@
 #elif defined(_O_TEMPORARY)
 #define O_TEMPORARY _O_TEMPORARY
 #endif
-#endif
+#endif /* !O_TEMPORARY */
 
 #ifndef O_OBTAIN_DIR
 #ifdef __O_OBTAIN_DIR
@@ -446,7 +450,7 @@
 #elif defined(_O_OBTAIN_DIR)
 #define O_OBTAIN_DIR _O_OBTAIN_DIR
 #endif
-#endif
+#endif /* !O_OBTAIN_DIR */
 
 #ifndef O_CREAT
 #ifdef __O_CREAT
@@ -454,7 +458,7 @@
 #elif defined(_O_CREAT)
 #define O_CREAT _O_CREAT
 #endif
-#endif
+#endif /* !O_CREAT */
 
 #ifndef O_TRUNC
 #ifdef __O_TRUNC
@@ -462,7 +466,7 @@
 #elif defined(_O_TRUNC)
 #define O_TRUNC _O_TRUNC
 #endif
-#endif
+#endif /* !O_TRUNC */
 
 #ifndef O_RDONLY
 #ifdef __O_RDONLY
@@ -470,7 +474,7 @@
 #elif defined(_O_RDONLY)
 #define O_RDONLY _O_RDONLY
 #endif
-#endif
+#endif /* !O_RDONLY */
 
 #ifndef O_WRONLY
 #ifdef __O_WRONLY
@@ -478,7 +482,7 @@
 #elif defined(_O_WRONLY)
 #define O_WRONLY _O_WRONLY
 #endif
-#endif
+#endif /* !O_WRONLY */
 
 #ifndef O_RDWR
 #ifdef __O_RDWR
@@ -486,7 +490,7 @@
 #elif defined(_O_RDWR)
 #define O_RDWR _O_RDWR
 #endif
-#endif
+#endif /* !O_RDWR */
 
 #ifndef O_ACCMODE
 #ifdef __O_ACCMODE
@@ -496,7 +500,7 @@
 #elif 0 /* The combination might overlap with something else... */
 #define O_ACCMODE (O_RDONLY|O_WRONLY|O_RDWR)
 #endif
-#endif
+#endif /* !O_ACCMODE */
 
 #ifndef O_CLOEXEC
 #ifdef __O_NOINHERIT
@@ -510,7 +514,7 @@
 #elif defined(_O_CLOEXEC)
 #define O_CLOEXEC _O_CLOEXEC
 #endif
-#endif
+#endif /* !O_CLOEXEC */
 
 #ifndef O_EXCL
 #ifdef __O_EXCL
@@ -518,7 +522,7 @@
 #elif defined(_O_EXCL)
 #define O_EXCL _O_EXCL
 #endif
-#endif
+#endif /* !O_EXCL */
 
 #ifndef O_APPEND
 #ifdef __O_APPEND
@@ -526,7 +530,7 @@
 #elif defined(_O_APPEND)
 #define O_APPEND _O_APPEND
 #endif
-#endif
+#endif /* !O_APPEND */
 
 #ifndef O_NONBLOCK
 #ifdef __O_NONBLOCK
@@ -540,7 +544,7 @@
 #elif defined(O_NDELAY)
 #define O_NONBLOCK O_NDELAY
 #endif
-#endif
+#endif /* !O_NONBLOCK */
 
 #ifndef O_RSYNC
 #ifdef __O_RSYNC
@@ -548,7 +552,7 @@
 #elif defined(_O_RSYNC)
 #define O_RSYNC _O_RSYNC
 #endif
-#endif
+#endif /* !O_RSYNC */
 
 #ifndef O_SYNC
 #ifdef __O_SYNC
@@ -556,7 +560,7 @@
 #elif defined(_O_SYNC)
 #define O_SYNC _O_SYNC
 #endif
-#endif
+#endif /* !O_SYNC */
 
 #ifndef O_DSYNC
 #ifdef __O_DSYNC
@@ -564,7 +568,7 @@
 #elif defined(_O_DSYNC)
 #define O_DSYNC _O_DSYNC
 #endif
-#endif
+#endif /* !O_DSYNC */
 
 #ifndef O_ASYNC
 #ifdef __O_ASYNC
@@ -572,7 +576,7 @@
 #elif defined(_O_ASYNC)
 #define O_ASYNC _O_ASYNC
 #endif
-#endif
+#endif /* !O_ASYNC */
 
 #ifndef O_DIRECT
 #ifdef __O_DIRECT
@@ -580,7 +584,7 @@
 #elif defined(_O_DIRECT)
 #define O_DIRECT _O_DIRECT
 #endif
-#endif
+#endif /* O_DIRECT */
 
 #ifndef O_LARGEFILE
 #ifdef __O_LARGEFILE
@@ -588,7 +592,7 @@
 #elif defined(_O_LARGEFILE)
 #define O_LARGEFILE _O_LARGEFILE
 #endif
-#endif
+#endif /* !O_LARGEFILE */
 
 #ifndef O_DIRECTORY
 #ifdef __O_DIRECTORY
@@ -596,7 +600,7 @@
 #elif defined(_O_DIRECTORY)
 #define O_DIRECTORY _O_DIRECTORY
 #endif
-#endif
+#endif /* !O_DIRECTORY */
 
 #ifndef O_NOFOLLOW
 #ifdef __O_NOFOLLOW
@@ -604,7 +608,7 @@
 #elif defined(_O_NOFOLLOW)
 #define O_NOFOLLOW _O_NOFOLLOW
 #endif
-#endif
+#endif /* !O_NOFOLLOW */
 
 #ifndef O_TMPFILE
 #ifdef __O_TMPFILE
@@ -612,7 +616,7 @@
 #elif defined(_O_TMPFILE)
 #define O_TMPFILE _O_TMPFILE
 #endif
-#endif
+#endif /* !O_TMPFILE */
 
 #ifndef O_CLOFORK
 #ifdef __O_CLOFORK
@@ -620,7 +624,7 @@
 #elif defined(_O_CLOFORK)
 #define O_CLOFORK _O_CLOFORK
 #endif
-#endif
+#endif /* !O_CLOFORK */
 
 #ifndef O_SYMLINK
 #ifdef __O_SYMLINK
@@ -628,7 +632,7 @@
 #elif defined(_O_SYMLINK)
 #define O_SYMLINK _O_SYMLINK
 #endif
-#endif
+#endif /* !O_SYMLINK */
 
 #ifndef O_DOSPATH
 #ifdef __O_DOSPATH
@@ -638,7 +642,7 @@
 #elif defined(_MSC_VER)
 #define O_DOSPATH 0
 #endif
-#endif
+#endif /* !O_DOSPATH */
 
 #ifndef O_SHLOCK
 #ifdef __O_SHLOCK
@@ -646,7 +650,7 @@
 #elif defined(_O_SHLOCK)
 #define O_SHLOCK _O_SHLOCK
 #endif
-#endif
+#endif /* !O_SHLOCK */
 
 #ifndef O_EXLOCK
 #ifdef __O_EXLOCK
@@ -654,7 +658,7 @@
 #elif defined(_O_EXLOCK)
 #define O_EXLOCK _O_EXLOCK
 #endif
-#endif
+#endif /* !O_EXLOCK */
 
 #ifndef O_XATTR
 #ifdef __O_XATTR
@@ -662,7 +666,7 @@
 #elif defined(_O_XATTR)
 #define O_XATTR _O_XATTR
 #endif
-#endif
+#endif /* !O_XATTR */
 
 #ifndef O_EXEC
 #ifdef __O_EXEC
@@ -670,7 +674,7 @@
 #elif defined(_O_EXEC)
 #define O_EXEC _O_EXEC
 #endif
-#endif
+#endif /* !O_EXEC */
 
 #ifndef O_SEARCH
 #ifdef __O_SEARCH
@@ -678,7 +682,7 @@
 #elif defined(_O_SEARCH)
 #define O_SEARCH _O_SEARCH
 #endif
-#endif
+#endif /* !O_SEARCH */
 
 #ifndef O_TTY_INIT
 #ifdef __O_TTY_INIT
@@ -686,7 +690,7 @@
 #elif defined(_O_TTY_INIT)
 #define O_TTY_INIT _O_TTY_INIT
 #endif
-#endif
+#endif /* !O_TTY_INIT */
 
 #ifndef O_NOLINKS
 #ifdef __O_NOLINKS
@@ -694,16 +698,16 @@
 #elif defined(_O_NOLINKS)
 #define O_NOLINKS _O_NOLINKS
 #endif
-#endif
+#endif /* !O_NOLINKS */
 
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
-#endif
+#endif /* !EXIT_SUCCESS */
 
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1
-#endif
+#endif /* !EXIT_FAILURE */
 
 DECL_BEGIN
 

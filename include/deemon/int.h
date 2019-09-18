@@ -530,7 +530,7 @@ struct Dee_int_object {
 
 DDATDEF DeeTypeObject DeeInt_Type;
 
-/* Builtin constant for special (oftenly used) values. */
+/* Builtin constant for special (often used) values. */
 #ifdef GUARD_DEEMON_OBJECTS_INT_C
 DDATDEF DeeIntObject  DeeInt_Zero;
 DDATDEF DeeIntObject  DeeInt_One;

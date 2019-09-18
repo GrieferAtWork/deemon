@@ -181,30 +181,30 @@ done:
 
 #if OPEN_FCREAT == O_CREAT
 #define PRIVATE_NOSHAR_FLAGS_1   PRIVATE_NOSHAR_FLAGS_0
-#define PRIVATE_SHARED_FLAGS_1   PRIVATE_SHARED_FLAGS_0|OPEN_FCREAT
+#define PRIVATE_SHARED_FLAGS_1   PRIVATE_SHARED_FLAGS_0 | OPEN_FCREAT
 #else
-#define PRIVATE_NOSHAR_FLAGS_1   PRIVATE_NOSHAR_FLAGS_0|OPEN_FCREAT
+#define PRIVATE_NOSHAR_FLAGS_1   PRIVATE_NOSHAR_FLAGS_0 | OPEN_FCREAT
 #define PRIVATE_SHARED_FLAGS_1   PRIVATE_SHARED_FLAGS_0
 #endif
 #if OPEN_FEXCL == O_EXCL
 #define PRIVATE_NOSHAR_FLAGS_2   PRIVATE_NOSHAR_FLAGS_1
-#define PRIVATE_SHARED_FLAGS_2   PRIVATE_SHARED_FLAGS_1|OPEN_FEXCL
+#define PRIVATE_SHARED_FLAGS_2   PRIVATE_SHARED_FLAGS_1 | OPEN_FEXCL
 #else
-#define PRIVATE_NOSHAR_FLAGS_2   PRIVATE_NOSHAR_FLAGS_1|OPEN_FEXCL
+#define PRIVATE_NOSHAR_FLAGS_2   PRIVATE_NOSHAR_FLAGS_1 | OPEN_FEXCL
 #define PRIVATE_SHARED_FLAGS_2   PRIVATE_SHARED_FLAGS_1
 #endif
 #if OPEN_FTRUNC == O_TRUNC
 #define PRIVATE_NOSHAR_FLAGS_3   PRIVATE_NOSHAR_FLAGS_2
-#define PRIVATE_SHARED_FLAGS_3   PRIVATE_SHARED_FLAGS_2|OPEN_FTRUNC
+#define PRIVATE_SHARED_FLAGS_3   PRIVATE_SHARED_FLAGS_2 | OPEN_FTRUNC
 #else
-#define PRIVATE_NOSHAR_FLAGS_3   PRIVATE_NOSHAR_FLAGS_2|OPEN_FTRUNC
+#define PRIVATE_NOSHAR_FLAGS_3   PRIVATE_NOSHAR_FLAGS_2 | OPEN_FTRUNC
 #define PRIVATE_SHARED_FLAGS_3   PRIVATE_SHARED_FLAGS_2
 #endif
 #if OPEN_FAPPEND == O_APPEND
 #define PRIVATE_NOSHAR_FLAGS_4   PRIVATE_NOSHAR_FLAGS_3
-#define PRIVATE_SHARED_FLAGS_4   PRIVATE_SHARED_FLAGS_3|OPEN_FAPPEND
+#define PRIVATE_SHARED_FLAGS_4   PRIVATE_SHARED_FLAGS_3 | OPEN_FAPPEND
 #else
-#define PRIVATE_NOSHAR_FLAGS_4   PRIVATE_NOSHAR_FLAGS_3|OPEN_FAPPEND
+#define PRIVATE_NOSHAR_FLAGS_4   PRIVATE_NOSHAR_FLAGS_3 | OPEN_FAPPEND
 #define PRIVATE_SHARED_FLAGS_4   PRIVATE_SHARED_FLAGS_3
 #endif
 
@@ -691,10 +691,10 @@ err:
 
 PRIVATE struct type_method sysfile_methods[] = {
 	{ STR_FILENO,
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & sysfile_fileno,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_fileno,
 	  DOC("->?Dint") },
 	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & sysfile_isatty,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_isatty,
 	  DOC("->?Dbool") },
 	/* TODO: dup_np() */
 	/* TODO: dup2_np() */
@@ -741,119 +741,119 @@ PRIVATE struct type_method sysfile_class_methods[] = {
 };
 
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"_SystemFile",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_HASFILEOPS,
-		/* .tp_base     = */(DeeTypeObject *)&DeeFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "_SystemFile",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_alloc = */{
-					/* .tp_ctor      = */NULL,
-					/* .tp_copy_ctor = */NULL,
-					/* .tp_deep_ctor = */NULL,
-					/* .tp_any_ctor  = */NULL,
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
-			/* .tp_dtor        = */(void(DCALL *)(DeeObject *__restrict))&sysfile_fini,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ (void(DCALL *)(DeeObject *__restrict))&sysfile_fini,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */sysfile_methods,
 		/* .tp_getsets       = */sysfile_getsets,
-		/* .tp_members       = */NULL,
+		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */sysfile_class_methods,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */(dssize_t (DCALL *)(DeeFileObject *__restrict,void *__restrict,size_t,dioflag_t))&sysfile_read,
-	/* .ft_write  = */(dssize_t (DCALL *)(DeeFileObject *__restrict,void const *__restrict,size_t,dioflag_t))&sysfile_write,
-	/* .ft_seek   = */(doff_t (DCALL *)(DeeFileObject *__restrict,doff_t,int))&sysfile_seek,
-	/* .ft_sync   = */(int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
-	/* .ft_trunc  = */(int (DCALL *)(DeeFileObject *__restrict,dpos_t))&sysfile_trunc,
-	/* .ft_close  = */(int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */NULL,
-	/* .ft_ungetc = */NULL,
-	/* .ft_putc   = */NULL
+	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
+	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
+	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
+	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
 };
 
 PUBLIC DeeFileTypeObject DeeFSFile_Type = {
-	/* .ft_base = */{
+	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */"_FSFile",
-		/* .tp_doc      = */NULL,
-		/* .tp_flags    = */TP_FNORMAL,
-		/* .tp_weakrefs = */0,
-		/* .tp_features = */TF_NONE,
-		/* .tp_base     = */(DeeTypeObject *)&DeeSystemFile_Type,
-		/* .tp_init = */{
+		/* .tp_name     = */ "_FSFile",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
+		/* .tp_init = */ {
 			{
-				/* .tp_alloc = */{
-					/* .tp_ctor      = */NULL,
-					/* .tp_copy_ctor = */NULL,
-					/* .tp_deep_ctor = */NULL,
-					/* .tp_any_ctor  = */NULL,
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ NULL,
+					/* .tp_copy_ctor = */ NULL,
+					/* .tp_deep_ctor = */ NULL,
+					/* .tp_any_ctor  = */ NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
-			/* .tp_dtor        = */NULL,
-			/* .tp_assign      = */NULL,
-			/* .tp_move_assign = */NULL
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
 		},
-		/* .tp_cast = */{
-			/* .tp_str  = */NULL,
-			/* .tp_repr = */NULL,
-			/* .tp_bool = */NULL
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
 		},
-		/* .tp_call          = */NULL,
-		/* .tp_visit         = */NULL,
-		/* .tp_gc            = */NULL,
-		/* .tp_math          = */NULL,
-		/* .tp_cmp           = */NULL,
-		/* .tp_seq           = */NULL,
-		/* .tp_iter_next     = */NULL,
-		/* .tp_attr          = */NULL,
-		/* .tp_with          = */NULL,
-		/* .tp_buffer        = */NULL,
-		/* .tp_methods       = */NULL,
-		/* .tp_getsets       = */NULL,
-		/* .tp_members       = */NULL,
-		/* .tp_class_methods = */NULL,
-		/* .tp_class_getsets = */NULL,
-		/* .tp_class_members = */NULL
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */NULL,
-	/* .ft_write  = */NULL,
-	/* .ft_seek   = */NULL,
-	/* .ft_sync   = */NULL,
-	/* .ft_trunc  = */NULL,
-	/* .ft_close  = */NULL,
-	/* .ft_pread  = */NULL,
-	/* .ft_pwrite = */NULL,
-	/* .ft_getc   = */NULL,
-	/* .ft_ungetc = */NULL,
-	/* .ft_putc   = */NULL
+	/* .ft_read   = */ NULL,
+	/* .ft_write  = */ NULL,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ NULL,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ NULL,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
 };
 
 DECL_END

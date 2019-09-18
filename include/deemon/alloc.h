@@ -904,6 +904,7 @@ LOCAL void (DCALL Dee_AFree)(void *p) {
 	if (DEE_AMALLOC_MUSTFREE(p))
 		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_AMALLOC_ALIGN));
 }
+
 LOCAL void (DCALL Dee_XAFree)(void *p) {
 	if (p && DEE_AMALLOC_MUSTFREE(p))
 		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_AMALLOC_ALIGN));

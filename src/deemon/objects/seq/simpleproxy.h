@@ -25,12 +25,12 @@
 DECL_BEGIN
 
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *sp_seq;  /* [1..1][const] The underlying sequence. */
+	OBJECT_HEAD
+	DREF DeeObject *sp_seq;  /* [1..1][const] The underlying sequence. */
 } SeqSimpleProxy;
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject *si_iter; /* [1..1][const] The underlying iterator. */
+	OBJECT_HEAD
+	DREF DeeObject *si_iter; /* [1..1][const] The underlying iterator. */
 } SeqSimpleProxyIterator;
 
 

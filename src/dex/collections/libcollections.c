@@ -22,6 +22,7 @@
 #define _KOS_SOURCE 1
 
 #include "libcollections.h"
+/**/
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
@@ -31,48 +32,49 @@ DECL_BEGIN
 
 INTERN ATTR_COLD int DCALL
 err_changed_sequence(DeeObject *__restrict seq) {
- ASSERT_OBJECT(seq);
- return DeeError_Throwf(&DeeError_RuntimeError,
-                        "A sequence `%k' has changed while being iterated: `%k'",
-                        Dee_TYPE(seq),seq);
+	ASSERT_OBJECT(seq);
+	return DeeError_Throwf(&DeeError_RuntimeError,
+	                       "A sequence `%k' has changed while being iterated: `%k'",
+	                       Dee_TYPE(seq), seq);
 }
+
 INTERN ATTR_COLD int DCALL
 err_empty_sequence(DeeObject *__restrict seq) {
- ASSERT_OBJECT(seq);
- return DeeError_Throwf(&DeeError_ValueError,
-                        "Empty sequence of type `%k' encountered",
-                        Dee_TYPE(seq));
+	ASSERT_OBJECT(seq);
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Empty sequence of type `%k' encountered",
+	                       Dee_TYPE(seq));
 }
 
 INTERN ATTR_COLD int DCALL
 err_index_out_of_bounds(DeeObject *__restrict self,
                         size_t index, size_t size) {
- ASSERT_OBJECT(self);
- ASSERT(index >= size);
- return DeeError_Throwf(&DeeError_IndexError,
-                        "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
-                        index,size,Dee_TYPE(self));
+	ASSERT_OBJECT(self);
+	ASSERT(index >= size);
+	return DeeError_Throwf(&DeeError_IndexError,
+	                       "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
+	                       index, size, Dee_TYPE(self));
 }
 
 INTERN ATTR_COLD int DCALL
 err_unbound_index(DeeObject *__restrict self, size_t index) {
- ASSERT_OBJECT(self);
- return DeeError_Throwf(&DeeError_UnboundItem,
-                        "Index `%Iu' of instance of `%k': %k has not been bound",
-                        index,Dee_TYPE(self),self);
+	ASSERT_OBJECT(self);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Index `%Iu' of instance of `%k': %k has not been bound",
+	                       index, Dee_TYPE(self), self);
 }
 
 
 PRIVATE struct dex_symbol symbols[] = {
-    { "Deque", (DeeObject *)&Deque_Type },
-    { "FixedList", (DeeObject *)&FixedList_Type },
-//TODO:    { "UniqueDict", (DeeObject *)&UDict_Type },
-    { "UniqueSet", (DeeObject *)&USet_Type },
-    { NULL }
+	{ "Deque", (DeeObject *)&Deque_Type },
+	{ "FixedList", (DeeObject *)&FixedList_Type },
+	//TODO:    { "UniqueDict", (DeeObject *)&UDict_Type },
+	{ "UniqueSet", (DeeObject *)&USet_Type },
+	{ NULL }
 };
 
 PUBLIC struct dex DEX = {
-    /* .d_symbols = */symbols
+	/* .d_symbols = */ symbols
 };
 
 DECL_END

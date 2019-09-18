@@ -22,9 +22,10 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -33,27 +34,27 @@ DECL_BEGIN
  * global objects of modules, or their imports, as well as static variables of
  * code objects, etc. etc. etc... */
 typedef struct {
-    OBJECT_HEAD
-    DREF DeeObject  *rv_owner;    /* [1..1] The object that is actually owning the vector. */
-    size_t           rv_length;   /* [const] The number of items in this vector. */
-    DREF DeeObject **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
-                                   * The vector of objects that is being referenced.
-                                   * NOTE: Elements of this vector must not be changed. */
+	OBJECT_HEAD
+	DREF DeeObject  *rv_owner;    /* [1..1] The object that is actually owning the vector. */
+	size_t           rv_length;   /* [const] The number of items in this vector. */
+	DREF DeeObject **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
+	                               * The vector of objects that is being referenced.
+	                               * NOTE: Elements of this vector must not be changed. */
 #ifndef CONFIG_NO_THREADS
-    rwlock_t        *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
-                                   * Also: when non-NULL, items of the vector can be modified. */
+	rwlock_t        *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
+	                               * Also: when non-NULL, items of the vector can be modified. */
 #define RefVector_IsWritable(self) ((self)->rv_plock != NULL)
-#else
-    bool             rv_writable; /* [const] Set to true if items of the vector can be modified. */
+#else /* !CONFIG_NO_THREADS */
+	bool             rv_writable; /* [const] Set to true if items of the vector can be modified. */
 #define RefVector_IsWritable(self) ((self)->rv_writable)
-#endif
+#endif /* CONFIG_NO_THREADS */
 } RefVector;
 
 typedef struct {
-    OBJECT_HEAD
-    DREF RefVector  *rvi_vector; /* [1..1][const] The underlying vector being iterated. */
-    DREF DeeObject **rvi_pos;    /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
-                                  * The current iterator position. */
+	OBJECT_HEAD
+	DREF RefVector  *rvi_vector; /* [1..1][const] The underlying vector being iterated. */
+	DREF DeeObject **rvi_pos;    /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
+	                              * The current iterator position. */
 } RefVectorIterator;
 
 
@@ -62,25 +63,25 @@ INTDEF DeeTypeObject RefVectorIterator_Type;
 
 
 typedef struct {
-    OBJECT_HEAD
+	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-    rwlock_t         sv_lock;   /* Lock for this shared-vector. */
-#endif
-    size_t           sv_length; /* [lock(sv_lock)] The number of items in this vector. */
-    DREF DeeObject **sv_vector; /* [1..1][const][0..sv_length][lock(sv_lock)][owned]
-                                 * The vector of objects that is being referenced.
-                                 * NOTE: Elements of this vector must not be changed. */
+	rwlock_t         sv_lock;   /* Lock for this shared-vector. */
+#endif /* !CONFIG_NO_THREADS */
+	size_t           sv_length; /* [lock(sv_lock)] The number of items in this vector. */
+	DREF DeeObject **sv_vector; /* [1..1][const][0..sv_length][lock(sv_lock)][owned]
+	                             * The vector of objects that is being referenced.
+	                             * NOTE: Elements of this vector must not be changed. */
 } SharedVector;
 
 INTDEF DeeTypeObject SharedVector_Type;
 
 
 typedef struct {
-    OBJECT_HEAD
-    DREF SharedVector *si_seq;   /* [1..1][const] The shared-vector that is being iterated. */
-    size_t             si_index; /* [atomic] The current sequence index.
-                                  * Should this value be `>= si_seq->sv_length',
-                                  * then the iterator has been exhausted. */
+	OBJECT_HEAD
+	DREF SharedVector *si_seq;   /* [1..1][const] The shared-vector that is being iterated. */
+	size_t             si_index; /* [atomic] The current sequence index.
+	                              * Should this value be `>= si_seq->sv_length',
+	                              * then the iterator has been exhausted. */
 } SharedVectorIterator;
 
 INTDEF DeeTypeObject SharedVectorIterator_Type;
