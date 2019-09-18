@@ -924,8 +924,7 @@ seq_repr(DeeObject *__restrict self) {
 						goto done;
 					}
 					break;
-				}
-				else {
+				} else {
 					goto err;
 				}
 			}

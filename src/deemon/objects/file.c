@@ -1532,8 +1532,7 @@ again:
 		Dee_Incref(mod);
 		files_module = mod;
 		rwlock_endwrite(&files_module_lock);
-	}
-	else {
+	} else {
 		Dee_Incref(mod);
 		rwlock_endread(&files_module_lock);
 	}

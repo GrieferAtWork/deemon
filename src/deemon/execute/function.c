@@ -1242,8 +1242,7 @@ exec_finally:
 		{
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
-		}
-		else {
+		} else {
 			/* Default case: Execute from a fast yield-function-iterator frame. */
 			result = DeeCode_ExecFrameFast(&self->yi_frame);
 		}
@@ -1391,8 +1390,7 @@ yfi_iter_next(YFIterator *__restrict self) {
 		/* Special case: Always be indicative of an exhausted iterator
 		 * when default-constructed, or after being cleared. */
 		result = ITER_DONE;
-	}
-	else {
+	} else {
 		ASSERT_OBJECT_TYPE(self->yi_func, &DeeYieldFunction_Type);
 		ASSERT_OBJECT_TYPE(self->yi_frame.cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(self->yi_frame.cf_func->fo_code, &DeeCode_Type);
@@ -1419,8 +1417,7 @@ yfi_iter_next(YFIterator *__restrict self) {
 		{
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
-		}
-		else {
+		} else {
 			/* Default case: Execute from a fast yield-function-iterator frame. */
 			result = DeeCode_ExecFrameFast(&self->yi_frame);
 		}

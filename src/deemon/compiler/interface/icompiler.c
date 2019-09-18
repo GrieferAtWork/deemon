@@ -274,8 +274,7 @@ ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
 		{
 			ast_free(result);
 			result = NULL;
-		}
-		else {
+		} else {
 #ifdef CONFIG_AST_IS_STRUCT
 			result->a_refcnt = 1;
 #else /* CONFIG_AST_IS_STRUCT */

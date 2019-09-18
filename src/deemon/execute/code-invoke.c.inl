@@ -316,8 +316,7 @@ err_ex_frame:
 			if (frame.cf_stacksz)
 				Dee_Free(frame.cf_stack);
 			frame.cf_sp = frame.cf_frame + code->co_localc;
-		}
-		else {
+		} else {
 			result = DeeCode_ExecFrameFast(&frame);
 			/* Delete remaining stack objects. */
 			while (frame.cf_sp != frame.cf_stack)

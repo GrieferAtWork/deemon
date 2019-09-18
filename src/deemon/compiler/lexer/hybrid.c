@@ -328,8 +328,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				if
 					unlikely(yield() < 0)
 				goto err_r;
-			}
-			else {
+			} else {
 				if
 					unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 				goto err_r;

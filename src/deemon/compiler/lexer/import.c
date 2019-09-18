@@ -114,8 +114,7 @@ module_opened:
 			goto err;
 		result = &empty_module;
 		Dee_Incref(result);
-	}
-	else {
+	} else {
 		/* Check for recursive dependency. */
 		if (!(result->mo_flags & MODULE_FDIDLOAD) &&
 		    result != current_rootscope->rs_module) {
@@ -299,8 +298,7 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 			extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
 			extern_symbol->s_module = module; /* Inherit reference. */
 		}
-	}
-	else {
+	} else {
 		/* Setup this symbol as an external reference. */
 		extern_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 		extern_symbol->s_extern.e_module = module; /* Inherit reference. */
@@ -728,8 +726,7 @@ do_reassign_new_alias:
 				/* Add another ambiguous symbol declaration location. */
 				symbol_addambig(sym, loc);
 			}
-		}
-		else {
+		} else {
 			sym = new_local_symbol(name, loc);
 			if
 				unlikely(!sym)
@@ -797,8 +794,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 			if (WARNAT(&item->ii_import_loc, W_IMPORT_ALIAS_IS_ALREADY_DEFINED, item->ii_symbol_name))
 				goto err;
 		}
-	}
-	else {
+	} else {
 		import_symbol = new_local_symbol(item->ii_symbol_name,
 		                                 &item->ii_import_loc);
 		if
@@ -857,8 +853,7 @@ ast_import_module(struct import_item *__restrict item) {
 				goto err_module;
 		}
 		Dee_Decref(module);
-	}
-	else {
+	} else {
 		import_symbol = new_local_symbol(item->ii_symbol_name,
 		                                 &item->ii_import_loc);
 		if

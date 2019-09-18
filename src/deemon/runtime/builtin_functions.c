@@ -588,8 +588,7 @@ f_rt_roloc(size_t argc, DeeObject **__restrict argv) {
 		struct code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
 		err_readonly_local(code, frame->cf_ip, lid);
-	}
-	else {
+	} else {
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Cannot modify read-only local variable %I16u",
 		                lid);

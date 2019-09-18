@@ -485,8 +485,7 @@ next_expr:
 			{
 				if (WARN(W_VARIABLE_ALREADY_EXISTS, token.t_kwd))
 					goto err_current;
-			}
-			else {
+			} else {
 				/* Create a new symbol for the initialized variable. */
 				var_symbol = new_local_symbol(token.t_kwd, NULL);
 				if
@@ -909,8 +908,7 @@ done_expression_nomerge:
 				if (yieldnbif(mode & AST_COMMA_ALLOWNONBLOCK) < 0)
 					goto err_clear_current_only;
 			} while (tok == '\n');
-		}
-		else {
+		} else {
 			if
 				unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
 			{

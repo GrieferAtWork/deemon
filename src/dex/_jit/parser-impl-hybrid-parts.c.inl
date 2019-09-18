@@ -140,8 +140,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 				likely(self->jl_tok == '(')
 			{
 				JITLexer_Yield(self);
-			}
-			else {
+			} else {
 				syn_try_expected_lparen_after_catch(self);
 				goto err_r;
 			}
@@ -269,8 +268,7 @@ err_handle_catch_except:
 				likely(self->jl_tok == '(')
 			{
 				JITLexer_Yield(self);
-			}
-			else {
+			} else {
 				syn_try_expected_lparen_after_catch(self);
 				goto err;
 			}
@@ -309,8 +307,7 @@ do_if_statement:
 		likely(self->jl_tok == '(')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_if_expected_lparen_after_if(self);
 		goto err;
 	}
@@ -328,8 +325,7 @@ do_if_statement:
 		likely(self->jl_tok == ')')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_if_expected_rparen_after_if(self);
 		goto err_scope_r;
 	}
@@ -426,8 +422,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 		likely(self->jl_tok == '(')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_for_expected_lparen_after_for(self);
 		goto err;
 	}
@@ -468,8 +463,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 				likely(self->jl_tok == ')')
 			{
 				JITLexer_Yield(self);
-			}
-			else {
+			} else {
 				syn_for_expected_rparen_after_foreach(self);
 				goto err_seq;
 			}
@@ -590,8 +584,7 @@ do_normal_for_noinit:
 						likely(self->jl_tok == ')')
 					{
 						JITLexer_Yield(self);
-					}
-					else {
+					} else {
 err_missing_rparen_after_for:
 						syn_for_expected_rparen_after_for(self);
 						goto err_scope;
@@ -612,8 +605,7 @@ err_missing_rparen_after_for:
 					likely(self->jl_tok == ')')
 				{
 					JITLexer_Yield(self);
-				}
-				else {
+				} else {
 					goto err_missing_rparen_after_for;
 				}
 			}
@@ -739,8 +731,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 		likely(self->jl_tok == '(')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_foreach_expected_lparen_after_foreach(self);
 		goto err;
 	}
@@ -789,8 +780,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 			likely(self->jl_tok == ')')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_foreach_expected_rparen_after_foreach(self);
 err_iter:
 			Dee_Decref(iterator);
@@ -896,8 +886,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 		likely(self->jl_tok == '(')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_while_expected_lparen_after_while(self);
 		goto err;
 	}
@@ -986,8 +975,7 @@ do_check_while_condition:
 		{
 			self->jl_tokend = block_end;
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			self->jl_tokend = block_start;
 			JITLexer_Yield(self);
 			if (JITLexer_SkipStatement(self))
@@ -1190,8 +1178,7 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 		likely(self->jl_tok == '(')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_with_expected_lparen_after_with(self);
 		goto err;
 	}
@@ -1210,8 +1197,7 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 		likely(self->jl_tok == ')')
 	{
 		JITLexer_Yield(self);
-	}
-	else {
+	} else {
 		syn_with_expected_rparen_after_with(self);
 		goto err_with_obj;
 	}

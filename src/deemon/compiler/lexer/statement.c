@@ -1047,8 +1047,7 @@ handle_post_label:
 					if
 						unlikely(!label_ast)
 					goto err_r;
-				}
-				else {
+				} else {
 					label_ast = ast_setddi(ast_label(label_flags, def_label, current_basescope), &loc);
 					if
 						unlikely(!label_ast)
@@ -1139,8 +1138,7 @@ err_label_ast:
 				{
 					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;
-				}
-				else if unlikely(current_basescope->bs_swdefl)
+				} else if unlikely(current_basescope->bs_swdefl)
 				{
 					/* Warn if another default label had already been defined. */
 					if (WARN(W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED))

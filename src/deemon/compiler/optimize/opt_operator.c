@@ -318,8 +318,7 @@ cleanup_operands:
 						Dee_Clear(operator_result);
 					}
 				}
-			}
-			else {
+			} else {
 				operator_result = emulate_method_call(argv[0],
 				                                      DeeTuple_SIZE(argv[1]),
 				                                      DeeTuple_ELEM(argv[1]));

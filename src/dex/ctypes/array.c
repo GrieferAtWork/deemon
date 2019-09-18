@@ -395,8 +395,7 @@ array_delrange(DeeArrayTypeObject *__restrict tp_self, void *base,
 		         (size_t)begin >= (size_t)end)
 	{
 		/* Empty range . */
-	}
-	else {
+	} else {
 		size_t item_size;
 		uint8_t *del_begin;
 		size_t del_size;
@@ -455,8 +454,7 @@ array_setrange(DeeArrayTypeObject *__restrict tp_self, void *base,
 		         (size_t)begin >= (size_t)end)
 	{
 		/* Empty range. */
-	}
-	else {
+	} else {
 		size_t item_size;
 		union pointer array_iter, array_end;
 		if

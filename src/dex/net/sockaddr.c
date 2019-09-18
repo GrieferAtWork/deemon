@@ -1089,8 +1089,7 @@ retry_addrinfo:
 			                "Count not find any address for %q using port %q",
 			                host, port);
 			error = -1;
-		}
-		else if (protocol != 0 &&
+		} else if (protocol != 0 &&
 		         protocol != info->ai_protocol) {
 			/* If an explicit protocol was specified, ensure that it is being used. */
 			int real_proto = info->ai_protocol;
@@ -1103,8 +1102,7 @@ retry_addrinfo:
 			                host, port,
 			                sock_getprotonameorid(real_proto),
 			                sock_getprotonameorid(protocol));
-		}
-		else if unlikely(info->ai_addrlen > sizeof(SockAddr))
+		} else if unlikely(info->ai_addrlen > sizeof(SockAddr))
 		{
 			sa_family_t info_family = info->ai_addr->sa_family;
 			socklen_t info_len      = (socklen_t)info->ai_addrlen;
@@ -1119,8 +1117,7 @@ retry_addrinfo:
 			                sock_getafnameorid(info_family),
 			                host, port, info_len, sizeof(SockAddr));
 			error = -1;
-		}
-		else {
+		} else {
 			memset(self, 0, sizeof(SockAddr));
 			memcpy(self, info->ai_addr, info->ai_addrlen);
 			DBG_ALIGNMENT_DISABLE();

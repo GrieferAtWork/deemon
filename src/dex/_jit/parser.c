@@ -337,8 +337,7 @@ err_empty_string:
 			likely(self->jl_tok == ']')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 err_rbrck_after_lbrck:
 			syn_bracket_expected_rbracket_after_lbracket(self);
 			goto err_trace;

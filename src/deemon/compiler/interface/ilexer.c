@@ -963,8 +963,7 @@ is_empty_file:
 			unlikely(!file_ob)
 		{
 			result = NULL;
-		}
-		else {
+		} else {
 			TPPFile_LCAt(file, &lc, pointer);
 			result = DeeTuple_Newf("odd", file_ob, lc.lc_line, lc.lc_col);
 			Dee_Decref_unlikely(file_ob);
@@ -1001,8 +1000,7 @@ is_empty_file:
 			unlikely(!file_ob)
 		{
 			result = NULL;
-		}
-		else {
+		} else {
 			TPPFile_LCAt(file, &lc, pointer);
 			result = DeeTuple_Newf("odd", file_ob, lc.lc_line, lc.lc_col);
 			Dee_Decref_unlikely(file_ob);
@@ -1030,8 +1028,7 @@ lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 			unlikely(!file_ob)
 		{
 			result = NULL;
-		}
-		else {
+		} else {
 			result = DeeTuple_Newf("odd", file_ob, lc.lc_line, lc.lc_col);
 			Dee_Decref(file_ob);
 		}
@@ -1058,8 +1055,7 @@ lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 			unlikely(!file_ob)
 		{
 			result = NULL;
-		}
-		else {
+		} else {
 			result = DeeTuple_Newf("odd", file_ob, lc.lc_line, lc.lc_col);
 			Dee_Decref(file_ob);
 		}
@@ -2144,8 +2140,7 @@ lexer_getkwd(DeeCompilerWrapperObject *__restrict self,
 			result = Dee_None;
 			Dee_Incref(Dee_None);
 		}
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetKeyword(kwd);
 	}
 	COMPILER_END();
@@ -2188,8 +2183,7 @@ lexer_getxkwd(DeeCompilerWrapperObject *__restrict self,
 			result = Dee_None;
 			Dee_Incref(Dee_None);
 		}
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetKeyword(kwd);
 	}
 	COMPILER_END();
@@ -2218,8 +2212,7 @@ lexer_getkwdid(DeeCompilerWrapperObject *__restrict self,
 	{
 		result = Dee_None;
 		Dee_Incref(result);
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetKeyword(kwd);
 	}
 	COMPILER_END();

@@ -637,8 +637,7 @@ again_hashset:
 		{
 			self->s_mask = 0;
 			self->s_elem = (struct uset_item *)empty_set_items;
-		}
-		else {
+		} else {
 			size_t i;
 			self->s_mask = src->rs_mask;
 			self->s_elem = (struct uset_item *)Dee_Calloc((src->rs_mask + 1) *
@@ -671,8 +670,7 @@ again_hashset:
 		{
 			self->s_mask = 0;
 			self->s_elem = (struct uset_item *)empty_set_items;
-		}
-		else {
+		} else {
 			self->s_mask = src->rs_mask;
 			self->s_elem = (struct uset_item *)Dee_Calloc((src->rs_mask + 1) *
 			                                              sizeof(struct uset_item));

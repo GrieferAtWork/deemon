@@ -277,8 +277,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 			if (!(chrattr[(uint8_t)*iter] & chflags))
 				break;
 			++iter, ++name_size;
-		}
-	else
+		} else
 		for (;;) {
 			while (SKIP_WRAPLF(iter, end))
 				;

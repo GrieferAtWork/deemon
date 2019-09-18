@@ -1649,13 +1649,11 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		me->t_join = CreateSemaphoreW(NULL, 0, 0x7fffffff, NULL);
 		if unlikely(me->t_join == NULL) {
 			error = GetLastError();
-		}
-		else
+		} else
 #elif !defined(CONFIG_NO_SEMAPHORE_H)
 		if unlikely(sem_init(&me->t_join, 0, 0)) {
 			error = errno;
-		}
-		else
+		} else
 #endif
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
 		{

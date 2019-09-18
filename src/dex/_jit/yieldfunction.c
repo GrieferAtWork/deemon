@@ -397,8 +397,7 @@ JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 				likely(self->jl_tok == '(')
 			{
 				JITLexer_Yield(self);
-			}
-			else {
+			} else {
 				syn_try_expected_lparen_after_catch(self);
 				goto err;
 			}
@@ -1045,8 +1044,7 @@ parse_again_same_statement:
 					likely(self->ji_lex.jl_tok == '(')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_if_expected_lparen_after_if(&self->ji_lex);
 					goto err;
 				}
@@ -1064,8 +1062,7 @@ parse_again_same_statement:
 					likely(self->ji_lex.jl_tok == ')')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_if_expected_rparen_after_if(&self->ji_lex);
 					goto err_scope;
 				}
@@ -1167,8 +1164,7 @@ parse_else_after_if:
 					likely(self->ji_lex.jl_tok == '(')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_for_expected_lparen_after_for(&self->ji_lex);
 					goto err;
 				}
@@ -1211,8 +1207,7 @@ err_elem_lvalue_scope:
 						likely(self->ji_lex.jl_tok == ')')
 					{
 						JITLexer_Yield(&self->ji_lex);
-					}
-					else {
+					} else {
 						syn_for_expected_rparen_after_foreach(&self->ji_lex);
 						Dee_Decref(result);
 						goto err_elem_lvalue_scope;
@@ -1313,8 +1308,7 @@ do_normal_for_noinit:
 								likely(self->ji_lex.jl_tok == ')')
 							{
 								JITLexer_Yield(&self->ji_lex);
-							}
-							else {
+							} else {
 err_missing_rparen_after_for:
 								syn_for_expected_rparen_after_for(&self->ji_lex);
 								goto err_scope;
@@ -1337,8 +1331,7 @@ err_missing_rparen_after_for:
 							likely(self->ji_lex.jl_tok == ')')
 						{
 							JITLexer_Yield(&self->ji_lex);
-						}
-						else {
+						} else {
 							goto err_missing_rparen_after_for;
 						}
 					}
@@ -1371,8 +1364,7 @@ err_missing_rparen_after_for:
 					likely(self->ji_lex.jl_tok == '(')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_with_expected_lparen_after_with(&self->ji_lex);
 					goto err;
 				}
@@ -1385,8 +1377,7 @@ err_missing_rparen_after_for:
 					likely(self->ji_lex.jl_tok == ')')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_with_expected_rparen_after_with(&self->ji_lex);
 err_obj_scope:
 					Dee_Decref(obj);
@@ -1424,8 +1415,7 @@ err_obj_scope:
 					likely(self->ji_lex.jl_tok == ';')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_yield_expected_semi_after_yield(&self->ji_lex);
 					goto err_r;
 				}
@@ -1442,8 +1432,7 @@ err_obj_scope:
 					likely(self->ji_lex.jl_tok == '(')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_while_expected_lparen_after_while(&self->ji_lex);
 					goto err;
 				}
@@ -1458,8 +1447,7 @@ err_obj_scope:
 					likely(self->ji_lex.jl_tok == ')')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					Dee_Decref(value);
 					syn_while_expected_rparen_after_while(&self->ji_lex);
 					goto err_scope;
@@ -1517,8 +1505,7 @@ err_obj_scope:
 					likely(self->ji_lex.jl_tok == '(')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_foreach_expected_lparen_after_foreach(&self->ji_lex);
 					goto err;
 				}
@@ -1566,8 +1553,7 @@ err_elem_lvalue_scope_2:
 					likely(self->ji_lex.jl_tok == ')')
 				{
 					JITLexer_Yield(&self->ji_lex);
-				}
-				else {
+				} else {
 					syn_foreach_expected_rparen_after_foreach(&self->ji_lex);
 					Dee_Decref(result);
 					goto err_elem_lvalue_scope_2;
@@ -1753,8 +1739,7 @@ service_exception_handlers:
 								likely(self->ji_lex.jl_tok == '(')
 							{
 								JITLexer_Yield(&self->ji_lex);
-							}
-							else {
+							} else {
 								syn_try_expected_lparen_after_catch(&self->ji_lex);
 								goto err;
 							}

@@ -988,8 +988,7 @@ JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
 		unlikely(!pwas_expression)
 	{
 		result = JITLexer_EvalHybrid(self, pwas_expression);
-	}
-	else {
+	} else {
 		switch (*pwas_expression) {
 
 		case AST_PARSE_WASEXPR_NO:
@@ -1018,8 +1017,7 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
 		unlikely(!pwas_expression)
 	{
 		result = JITLexer_SkipHybrid(self, pwas_expression);
-	}
-	else {
+	} else {
 		switch (*pwas_expression) {
 
 		case AST_PARSE_WASEXPR_NO:

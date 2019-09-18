@@ -689,8 +689,7 @@ handle_compiler_warning(struct ast_loc *loc,
 			error->ce_locs.cl_file = NULL;
 			error->ce_locs.cl_prev = NULL;
 			error->ce_loc          = &error->ce_locs;
-		}
-		else {
+		} else {
 			error->ce_loc = NULL;
 			if
 				unlikely(capture_compiler_location(file, &error->ce_locs,

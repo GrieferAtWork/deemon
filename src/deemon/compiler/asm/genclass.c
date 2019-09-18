@@ -114,8 +114,7 @@ INTERN int(DCALL asm_genclass)(struct ast *__restrict class_ast,
 				goto err;
 			if (asm_gdefcmember(member->cm_index))
 				goto err;
-		}
-		else {
+		} else {
 			if (ast_genasm_one(member->cm_ast, ASM_G_FNORMAL))
 				goto err;
 		}

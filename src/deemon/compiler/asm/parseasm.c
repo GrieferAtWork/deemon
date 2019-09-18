@@ -904,8 +904,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 			         DeeString_STR(module->mo_name)))
 				goto err_module;
 			*pgid = 0;
-		}
-		else {
+		} else {
 			*pgid = modsym->ss_index;
 		}
 	} else {
@@ -1939,8 +1938,7 @@ read_mnemonic_name:
 		{
 			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, name->k_name))
 				goto err;
-		}
-		else {
+		} else {
 			/* Define the symbol here. */
 			uasm_defsym(sym);
 		}

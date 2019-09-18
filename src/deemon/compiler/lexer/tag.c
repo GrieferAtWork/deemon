@@ -451,8 +451,7 @@ again_compiler_subtag:
 						if
 							unlikely(yield() < 0)
 						goto err;
-					}
-					else {
+					} else {
 						if (is_optional)
 							goto do_next_compiler_tag;
 						if
@@ -468,8 +467,7 @@ again_compiler_subtag:
 						if
 							unlikely(append_decl_string())
 						goto err;
-					}
-					else {
+					} else {
 						if
 							unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
 						goto err;

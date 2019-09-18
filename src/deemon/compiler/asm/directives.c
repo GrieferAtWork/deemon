@@ -238,8 +238,7 @@ uasm_parse_directive(void) {
 		{
 			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name))
 				goto err;
-		}
-		else {
+		} else {
 			uasm_defsym(label);
 		}
 		goto done_continue;
@@ -363,8 +362,7 @@ do_handle_reloc:
 			if
 				unlikely(yield() < 0)
 			goto err;
-		}
-		else {
+		} else {
 			struct asm_intexpr expr;
 			if (WARN(W_UASM_RELOC_NEED_DOT))
 				goto err;

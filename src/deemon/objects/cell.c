@@ -183,8 +183,7 @@ DeeCell_XchNonNull(DeeObject *__restrict self,
 	{
 		DeeCell_LockEndWrite(self);
 		Dee_DecrefNokill(value);
-	}
-	else {
+	} else {
 		DeeCell_Item(self) = value;
 		DeeCell_LockEndWrite(self);
 	}

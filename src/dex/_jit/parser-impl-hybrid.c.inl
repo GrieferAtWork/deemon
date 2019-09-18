@@ -48,8 +48,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 			likely(self->jl_tok == '}')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 err_rbrace_missing:
 			syn_brace_expected_rbrace(self);
 			goto err_r;
@@ -89,8 +88,7 @@ parse_remainder_after_comma_popscope:
 					likely(self->jl_tok == '}')
 				{
 					JITLexer_Yield(self);
-				}
-				else {
+				} else {
 					goto err_rbrace_missing;
 				}
 				if (pwas_expression)
@@ -102,8 +100,7 @@ parse_remainder_after_comma_popscope:
 			{
 parse_remainder_before_rbrace_popscope_wrap:
 				JITLexer_Yield(self);
-			}
-			else {
+			} else {
 				goto err_rbrace_missing;
 			}
 			/* Wrap the result as a single sequence. */
@@ -387,8 +384,7 @@ parse_remainder_after_colon_popscope:
 				likely(self->jl_tok == ';')
 			{
 				JITLexer_Yield(self);
-			}
-			else {
+			} else {
 				syn_expr_expected_semi_after_expr(self);
 				goto err_r;
 			}

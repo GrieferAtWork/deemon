@@ -1004,8 +1004,7 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 				ch32 = (ch & 0x0f) << 12;
 				ch32 |= (str[i + 1] & 0x3f) << 6;
 				ch32 |= (str[i + 2] & 0x3f);
-			}
-			else {
+			} else {
 				ch32 = '?';
 			}
 			i += 3;
@@ -1021,8 +1020,7 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 1] & 0x3f) << 12;
 				ch32 |= (str[i + 2] & 0x3f) << 6;
 				ch32 |= (str[i + 3] & 0x3f);
-			}
-			else {
+			} else {
 				ch32 = '?';
 			}
 			i += 4;
@@ -1040,8 +1038,7 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 2] & 0x3f) << 12;
 				ch32 |= (str[i + 3] & 0x3f) << 6;
 				ch32 |= (str[i + 4] & 0x3f);
-			}
-			else {
+			} else {
 				ch32 = '?';
 			}
 			i += 5;
@@ -1061,8 +1058,7 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 3] & 0x3f) << 12;
 				ch32 |= (str[i + 4] & 0x3f) << 6;
 				ch32 |= (str[i + 5] & 0x3f);
-			}
-			else {
+			} else {
 				ch32 = '?';
 			}
 			i += 6;
@@ -1083,8 +1079,7 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 4] & 0x3f) << 12;
 				ch32 |= (str[i + 5] & 0x3f) << 6;
 				ch32 |= (str[i + 6] & 0x3f);
-			}
-			else {
+			} else {
 				ch32 = '?';
 			}
 			i += 7;
@@ -1107,8 +1102,7 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 5] & 0x3f) << 12;
 				ch32 |= (str[i + 6] & 0x3f) << 6;
 				ch32 |= (str[i + 7] & 0x3f);
-			}
-			else {
+			} else {
 				ch32 = '?';
 			}
 			i += 8;
@@ -1186,8 +1180,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 1] & 0x3f) << 6;
 				ch32 |= (str[i + 2] & 0x3f);
 				*dst++ = ch32;
-			}
-			else {
+			} else {
 				*dst++ = '?';
 			}
 			i += 3;
@@ -1203,8 +1196,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 2] & 0x3f) << 6;
 				ch32 |= (str[i + 3] & 0x3f);
 				*dst++ = ch32;
-			}
-			else {
+			} else {
 				*dst++ = '?';
 			}
 			i += 4;
@@ -1222,8 +1214,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 3] & 0x3f) << 6;
 				ch32 |= (str[i + 4] & 0x3f);
 				*dst++ = ch32;
-			}
-			else {
+			} else {
 				*dst++ = '?';
 			}
 			i += 5;
@@ -1243,8 +1234,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 4] & 0x3f) << 6;
 				ch32 |= (str[i + 5] & 0x3f);
 				*dst++ = ch32;
-			}
-			else {
+			} else {
 				*dst++ = '?';
 			}
 			i += 6;
@@ -1265,8 +1255,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 5] & 0x3f) << 6;
 				ch32 |= (str[i + 6] & 0x3f);
 				*dst++ = ch32;
-			}
-			else {
+			} else {
 				*dst++ = '?';
 			}
 			i += 7;
@@ -1289,8 +1278,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 				ch32 |= (str[i + 6] & 0x3f) << 6;
 				ch32 |= (str[i + 7] & 0x3f);
 				*dst++ = ch32;
-			}
-			else {
+			} else {
 				*dst++ = '?';
 			}
 			i += 8;
@@ -3546,8 +3534,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 		{
 			self->up_length = num_chars;
 			self->up_flags |= (unsigned char)width;
-		}
-		else {
+		} else {
 			width = (unsigned int)STRING_WIDTH_COMMON((unsigned int)(self->up_flags & UNICODE_PRINTER_FWIDTH),
 			                                          width);
 			self->up_length += num_chars;
@@ -3765,8 +3752,7 @@ allocate_initial_normally:
 				likely(buffer)
 			{
 				buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
-			}
-			else {
+			} else {
 				buffer = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 				                                             (1 + 1) * sizeof(char));
 				if
@@ -3789,8 +3775,7 @@ allocate_initial_normally:
 			likely(buffer)
 		{
 			buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
-		}
-		else {
+		} else {
 			buffer = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 			                                             (1 + 1) * sizeof(char));
 			if
@@ -5116,8 +5101,7 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 		init_buffer->s_len = initial_alloc;
 		self->up_buffer    = init_buffer;
 		self->up_length    = num_chars;
-	}
-	else {
+	} else {
 		size_t size_avail = WSTR_LENGTH(str);
 		size_t new_length = self->up_length + num_chars;
 		if (new_length > size_avail) {

@@ -1260,8 +1260,7 @@ clear_argv:
 				/* Shouldn't really happen, but is allowed by the specs... */
 				Dee_Free(argv);
 				argv = NULL;
-			}
-			else {
+			} else {
 				MEMCPY_PTR(argv, me->kmo_argv, argc);
 				for (i = 0; i < argc; ++i)
 					Dee_Incref(argv[i]);

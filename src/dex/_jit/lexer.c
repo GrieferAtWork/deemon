@@ -79,8 +79,7 @@ raw_again:
 					iter = start;
 					break;
 				}
-			}
-			else {
+			} else {
 				if (!(DeeUni_Flags(ch) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL))) {
 					if (ch == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
@@ -384,8 +383,7 @@ raw_again:
 		{
 			self->jl_tokstart = (unsigned char *)"\"\"";
 			self->jl_tokend   = self->jl_tokstart + 2;
-		}
-		else do {
+		} else do {
 			unsigned char ch2 = *iter++;
 			if (ch2 == ch)
 				break;
@@ -410,8 +408,7 @@ raw_again:
 				{
 					self->jl_tokstart = (unsigned char *)"r\"\"";
 					self->jl_tokend   = self->jl_tokstart + 3;
-				}
-				else {
+				} else {
 					while (iter < self->jl_end && *iter++ != ch)
 						;
 				}

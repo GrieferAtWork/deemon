@@ -296,8 +296,7 @@ tls_getvalue(Tls *__restrict self) {
 			COMPILER_READ_BARRIER();
 			Dee_Decref(result);
 			result = new_result; /* Inherit reference. */
-		}
-		else {
+		} else {
 			/* Save the factory return value in the TLS variable slot. */
 			Dee_Incref(result);
 			*presult = result; /* Inherit reference. */
@@ -535,8 +534,7 @@ tls_getvalue(Tls *__restrict self) {
 			COMPILER_READ_BARRIER();
 			Dee_Decref(result);
 			result = new_result; /* Inherit reference. */
-		}
-		else {
+		} else {
 			/* Save the factory return value in the TLS variable slot. */
 			Dee_Incref(result);
 			self->t_value = result; /* Inherit reference. */

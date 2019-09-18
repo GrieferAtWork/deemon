@@ -376,8 +376,7 @@ do_get_local:
 			likely(result)
 		{
 			Dee_Incref(result);
-		}
-		else {
+		} else {
 			err_unbound_local(code, frame->cf_ip, imm_val);
 		}
 		break;
@@ -1827,8 +1826,7 @@ do_push_arg:
 					{
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
-					}
-					else {
+					} else {
 						frame->cf_kw->fk_varkwds = varkwds;
 					}
 #else /* CONFIG_NO_THREADS */
@@ -5509,8 +5507,7 @@ do_pack_dict:
 							{
 								VARKWDS_DECREF(value);
 								value = oldval;
-							}
-							else {
+							} else {
 								frame->cf_kw->fk_varkwds = value;
 							}
 #else /* CONFIG_NO_THREADS */
@@ -7092,8 +7089,7 @@ do_prefix_push_arg:
 							{
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;
-							}
-							else {
+							} else {
 								frame->cf_kw->fk_varkwds = varkwds;
 							}
 #else /* CONFIG_NO_THREADS */

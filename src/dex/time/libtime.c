@@ -1168,8 +1168,7 @@ print_number_2:
 						repr_value = (repr_mode == 'S'
 						              ? GETSTRING_WDAY_FULL(attribval)
 						              : GETSTRING_WDAY_ABBR(attribval));
-					}
-					else {
+					} else {
 						DeeError_Throwf(&DeeError_ValueError,
 						                "Cannot use attribute %$q with 's'/'S' in '%%[%#$q]'",
 						                (size_t)(tag_end - tag_begin), tag_begin,

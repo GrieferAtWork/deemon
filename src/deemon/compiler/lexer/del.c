@@ -82,8 +82,7 @@ ast_parse_del_single(unsigned int lookup_mode) {
 			new_result = ast_operator1(new_operator,
 			                           result->a_operator.o_exflag,
 			                           result->a_operator.o_op0);
-		}
-		else if unlikely(result->a_operator.o_op3)
+		} else if unlikely(result->a_operator.o_op3)
 		{
 			new_result = ast_operator4(new_operator,
 			                           result->a_operator.o_exflag,
@@ -91,15 +90,13 @@ ast_parse_del_single(unsigned int lookup_mode) {
 			                           result->a_operator.o_op1,
 			                           result->a_operator.o_op2,
 			                           result->a_operator.o_op3);
-		}
-		else if (result->a_operator.o_op2) {
+		} else if (result->a_operator.o_op2) {
 			new_result = ast_operator3(new_operator,
 			                           result->a_operator.o_exflag,
 			                           result->a_operator.o_op0,
 			                           result->a_operator.o_op1,
 			                           result->a_operator.o_op2);
-		}
-		else {
+		} else {
 create_2:
 			new_result = ast_operator2(new_operator,
 			                           result->a_operator.o_exflag,

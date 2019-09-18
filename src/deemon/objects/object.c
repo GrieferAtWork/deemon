@@ -292,8 +292,7 @@ again:
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
 			ATOMIC_WRITE(*self->wr_pself, self);
-		}
-		else {
+		} else {
 			ATOMIC_WRITE(other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			self->wr_obj = NULL;
 		}
@@ -402,8 +401,7 @@ again:
 			WEAKREF_UNLOCK(other);
 			ATOMIC_WRITE(self->wr_next, other);
 			ATOMIC_WRITE(*self->wr_pself, self);
-		}
-		else {
+		} else {
 			ATOMIC_WRITE(other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			Dee_weakref_clear(self);
 		}
@@ -524,8 +522,7 @@ again:
 				ATOMIC_WRITE(*self->wr_pself, self);
 			}
 			/*WEAKREF_UNLOCK(other);*/
-		}
-		else {
+		} else {
 			/*WEAKREF_UNLOCK(other);*/
 			self->wr_obj = NULL;
 		}
@@ -576,8 +573,7 @@ again:
 				ATOMIC_WRITE(*dst->wr_pself, dst);
 			}
 			/*WEAKREF_UNLOCK(src);*/
-		}
-		else {
+		} else {
 			/*WEAKREF_UNLOCK(src);*/
 			dst->wr_obj = NULL;
 		}
@@ -698,8 +694,7 @@ again:
 	{
 		/* Still the same object. */
 		WEAKREF_UNLOCK(self);
-	}
-	else {
+	} else {
 		/* Delete a previously assigned object. */
 		if (self->wr_obj) {
 			if
@@ -844,8 +839,7 @@ again:
 				unlikely(!old_ob)
 			{
 				WEAKREF_UNLOCK(self);
-			}
-			else {
+			} else {
 				struct weakref *next;
 				/* Delete a previously assigned object. */
 				if
@@ -888,12 +882,10 @@ again:
 				WEAKREF_UNLOCK(self);
 				/* Weak referencing is not supported. */
 				return ITER_DONE;
-			}
-			else if unlikely(old_ob == new_ob)
+			} else if unlikely(old_ob == new_ob)
 			{
 				WEAKREF_UNLOCK(self);
-			}
-			else {
+			} else {
 				struct weakref *next;
 				/* Delete a previously assigned object. */
 				if (old_ob) {
@@ -2852,8 +2844,7 @@ unpack_init_info(DeeObject *__restrict info,
 		Dee_XIncref(*pinit_fields);
 		Dee_Incref(*pinit_args);
 		Dee_XIncref(*pinit_kw);
-	}
-	else {
+	} else {
 		size_t fast_size;
 		/* Use the fast-sequence iterface. */
 		fast_size = DeeFastSeq_GetSize(info);

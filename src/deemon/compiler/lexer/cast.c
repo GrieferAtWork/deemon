@@ -161,8 +161,7 @@ not_a_cast:
 					{
 						ast_decref(merge->a_multiple.m_astv[0]);
 						merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
-					}
-					else {
+					} else {
 						DREF struct ast *other;
 						exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
 						if

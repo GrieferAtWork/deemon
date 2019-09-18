@@ -562,8 +562,7 @@ read_through:
 		}
 		self->fb_base = new_buffer;
 		self->fb_size = initial_bufsize;
-	}
-	else if (bufsize >= self->fb_size) {
+	} else if (bufsize >= self->fb_size) {
 		/* The caller want's at least as much as this buffer could even handle.
 		 * Upscale the buffer, or use load data using read-through mode. */
 		if (self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))
@@ -1076,8 +1075,7 @@ read_through:
 		}
 		self->fb_base = new_buffer;
 		self->fb_size = FILE_BUFSIZ_MIN;
-	}
-	else {
+	} else {
 		if (self->fb_size < FILE_BUFSIZ_MIN &&
 		    !(self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))) {
 			/* Upscale the buffer. */

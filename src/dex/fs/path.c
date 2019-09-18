@@ -1066,8 +1066,7 @@ print_env:
 				    !DeeError_Catch(&DeeError_KeyError))
 					goto err;
 				flush_start = env_start;
-			}
-			else {
+			} else {
 				dssize_t temp;
 				/* Print the item in place of the variable reference. */
 				temp = unicode_printer_printobject(&printer, item);

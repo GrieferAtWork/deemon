@@ -306,8 +306,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			dec_curr = symtab;
 			if (dec_putptr(addr))
 				goto err; /* Dec_GlbSym.s_nam */
-		}
-		else {
+		} else {
 			size_t name_len;
 			/* Write information for this symbol. */
 			if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)))
@@ -1275,8 +1274,7 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		 * >> We can encode it as a single-byte DTYPE. */
 		if (dec_putb(DEC_BUILTINID_IDOF(builtin_id)))
 			goto err;
-	}
-	else {
+	} else {
 		/* Not apart of the main object set.
 		 * >> Must be encoded as an extended object-set builtin. */
 		uint8_t *buffer = dec_alloc(3);
@@ -1989,8 +1987,7 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 		if
 			unlikely(dec_putcode(self->mo_root))
 		goto err;
-	}
-	else {
+	} else {
 		/* Shouldn't happen, but the specs allow `mo_root' to be NULL. */
 		if
 			unlikely(dec_putcode(&empty_code))

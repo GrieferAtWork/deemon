@@ -149,8 +149,7 @@ err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 		return DeeError_Throwf(&DeeError_TypeError,
 		                       "Cannot invoke inplace `operator %s' (`__%s__') without l-value",
 		                       info->oi_uname, info->oi_sname);
-	}
-	else {
+	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
 		                       "Cannot invoke inplace operator #%X without l-value",
 		                       opname);
@@ -555,8 +554,7 @@ not_a_cast:
 			likely(self->jl_tok == ')')
 		{
 			JITLexer_Yield(self);
-		}
-		else if (self->jl_tok == TOK_POW) {
+		} else if (self->jl_tok == TOK_POW) {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			{
@@ -616,8 +614,7 @@ not_a_cast:
 			result = 0;
 #endif /* !JIT_EVAL */
 			break;
-		}
-		else {
+		} else {
 err_missing_rparen:
 			syn_paren_expected_rparen_after_lparen(self);
 			goto err_merge;
@@ -1052,8 +1049,7 @@ done_y1:
 			likely(self->jl_tok == ')')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_paren_expected_rparen_after_lparen(self);
 			goto err_r;
 		}
@@ -1394,8 +1390,7 @@ skip_rbrck_and_done:
 			likely(self->jl_tok == ']')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_bracket_expected_rbracket_after_lbracket(self);
 			goto err_r;
 		}
@@ -1414,8 +1409,7 @@ skip_rbrck_and_done:
 			likely(self->jl_tok == '}')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_brace_expected_rbrace(self);
 			goto err_r;
 		}
@@ -1590,8 +1584,7 @@ skip_rbrck_and_done:
 						likely(self->jl_tok == ')')
 					{
 						JITLexer_Yield(self);
-					}
-					else {
+					} else {
 						syn_pack_expected_rparen_after_lparen(self);
 						goto err_r;
 					}

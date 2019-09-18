@@ -5004,8 +5004,7 @@ type_inherit_buffer(DeeTypeObject *__restrict self) {
 	if unlikely(self->tp_buffer) {
 		memcpy(self->tp_buffer, base_buffer,
 		       sizeof(struct type_buffer));
-	}
-	else {
+	} else {
 		self->tp_buffer = base_buffer;
 	}
 	return true;

@@ -309,8 +309,7 @@ DeeList_NewHint(size_t n_prealloc) {
 		if
 			unlikely(!result->l_elem)
 		result->l_alloc = 0;
-	}
-	else {
+	} else {
 		result->l_elem = NULL;
 	}
 	DeeGC_Track((DeeObject *)result);

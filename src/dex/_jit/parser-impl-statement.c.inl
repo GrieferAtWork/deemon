@@ -92,8 +92,7 @@ JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
 			likely(self->jl_tok == JIT_KEYWORD)
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_asm_expected_keyword_after_lbracket(self);
 			goto err;
 		}
@@ -101,8 +100,7 @@ JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
 			likely(self->jl_tok == ']')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_asm_expected_rbracket_after_lbracket(self);
 			goto err;
 		}
@@ -367,8 +365,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 						likely(self->jl_tok == ';')
 					{
 						JITLexer_Yield(self);
-					}
-					else {
+					} else {
 						syn_throw_expected_semi_after_throw(self);
 						goto err_r;
 					}
@@ -402,8 +399,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					likely(self->jl_tok == ';')
 				{
 					JITLexer_Yield(self);
-				}
-				else {
+				} else {
 					syn_yield_expected_semi_after_yield(self);
 					goto err_r;
 				}
@@ -424,8 +420,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					likely(self->jl_tok == ';')
 				{
 					JITLexer_Yield(self);
-				}
-				else {
+				} else {
 					syn_break_expected_semi_after_break(self);
 					goto err;
 				}
@@ -467,8 +462,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 						likely(self->jl_tok == ';')
 					{
 						JITLexer_Yield(self);
-					}
-					else {
+					} else {
 						syn_return_expected_semi_after_return(self);
 						goto err_r;
 					}
@@ -701,8 +695,7 @@ check_trailing_asm_semicollon:
 					likely(self->jl_tok == ';')
 				{
 					JITLexer_Yield(self);
-				}
-				else {
+				} else {
 					syn_continue_expected_semi_after_continue(self);
 					goto err;
 				}

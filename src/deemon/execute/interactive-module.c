@@ -354,8 +354,7 @@ do_exec_code:
 			if (*iter != ASM_UD)
 				goto done_exec;
 		}
-	}
-	else {
+	} else {
 		/* Strip trailing ASM_UD instructions. */
 		while (preexisting_codesize &&
 		       current_code->co_code[preexisting_codesize - 1] == ASM_UD)
@@ -402,8 +401,7 @@ do_exec_code:
 		recursive_rwlock_endwrite(&self->im_lock);
 		recursive_rwlock_endwrite(&self->im_exec_lock);
 		return result;
-	}
-	else {
+	} else {
 		/* Parse a statement in accordance to the interaction mode. */
 		statement_ast = imod_parse_statement(self, self->im_mode);
 	}
@@ -649,8 +647,7 @@ gencode_failed:
 			result = NULL;
 			if (is_reusing_code_object)
 				goto recover_old_code_object;
-		}
-		else {
+		} else {
 			ASSERT(current_rootscope->rs_code == current_code);
 			current_rootscope->rs_code = current_code->co_next;
 			Dee_DecrefNokill(current_code); /* Stolen from `current_rootscope->rs_code' */

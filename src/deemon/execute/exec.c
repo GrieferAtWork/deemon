@@ -519,8 +519,7 @@ Dee_RunAtExit(uint16_t flags) {
 					rwlock_endwrite(&atexit_lock);
 					return -1;
 				}
-			}
-			else {
+			} else {
 				Dee_Decref(temp);
 			}
 		}

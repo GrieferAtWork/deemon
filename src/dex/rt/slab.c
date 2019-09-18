@@ -69,8 +69,7 @@ do_realloc_result:
 		if
 			unlikely(reqsize > oldsize)
 		goto do_realloc_result;
-	}
-	else if unlikely(reqsize <
+	} else if unlikely(reqsize <
 	                 COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
 	                 (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)))
 	{

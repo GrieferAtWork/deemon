@@ -759,8 +759,7 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 				Dee_Clear(result);
 				goto handle_error;
 			}
-		}
-		else load_return_value: if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+		} else load_return_value: if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
 			if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
 				result = context.jc_retval;
 			} else {
@@ -770,8 +769,7 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 				lexer.jl_errpos = lexer.jl_tokstart;
 				goto handle_error;
 			}
-		}
-		else {
+		} else {
 			if (!lexer.jl_errpos)
 				lexer.jl_errpos = lexer.jl_tokstart;
 handle_error:

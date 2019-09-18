@@ -328,8 +328,7 @@ ast_getmultiple(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_MULTIPLE);
 		result = NULL;
-	}
-	else {
+	} else {
 		size_t i;
 		DREF DeeObject *temp;
 		/* No proxy-sequence for this one. This function just isn't used that much! */
@@ -364,8 +363,7 @@ ast_delmultiple(Ast *__restrict self) {
 		unlikely(me->a_type != AST_MULTIPLE)
 	{
 		result = err_invalid_ast_type(self, AST_MULTIPLE);
-	}
-	else {
+	} else {
 		/* Assign the new branch vector. */
 		for (i = 0; i < me->a_multiple.m_astc; ++i)
 			Dee_Decref(me->a_multiple.m_astv[i]);
@@ -390,16 +388,14 @@ ast_setmultiple(Ast *__restrict self, DeeObject *__restrict value) {
 		unlikely(me->a_type != AST_MULTIPLE)
 	{
 		result = err_invalid_ast_type(self, AST_MULTIPLE);
-	}
-	else {
+	} else {
 		new_astv = (DREF DeeCompilerAstObject **)DeeSeq_AsHeapVector(value, &new_astc);
 		if
 			unlikely(!new_astv)
 		{
 err:
 			result = -1;
-		}
-		else {
+		} else {
 #ifdef CONFIG_AST_IS_STRUCT
 #error "This loop doesn't work when asts are structs"
 #endif
@@ -454,8 +450,7 @@ ast_getmultiple_typing(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_MULTIPLE);
 		result = NULL;
-	}
-	else {
+	} else {
 		switch (me->a_flag) {
 
 		case AST_FMULTIPLE_TUPLE:
@@ -498,8 +493,7 @@ ast_setmultiple_typing(Ast *__restrict self,
 		unlikely(me->a_type != AST_MULTIPLE)
 	{
 		result = err_invalid_ast_type(self, AST_MULTIPLE);
-	}
-	else {
+	} else {
 		uint16_t new_flags;
 		new_flags = get_ast_multiple_typing(value);
 		if (new_flags == (uint16_t)-1)
@@ -523,12 +517,10 @@ ast_getreturnast(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_RETURN);
 		result = NULL;
-	}
-	else if (!me->a_return) {
+	} else if (!me->a_return) {
 		err_unbound_attribute(Dee_TYPE(self), "returnast");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_return);
 	}
 	COMPILER_END();
@@ -546,12 +538,10 @@ ast_delreturnast(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_RETURN);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_return) {
+	} else if (!me->a_return) {
 		result = err_unbound_attribute(Dee_TYPE(self), "returnast");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_return);
 		me->a_return = NULL;
 	}
@@ -572,17 +562,13 @@ ast_setreturnast(Ast *__restrict self,
 		unlikely(me->a_type != AST_RETURN)
 	{
 		result = err_invalid_ast_type(self, AST_RETURN);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast      = me->a_return;
@@ -604,8 +590,7 @@ ast_getyieldast(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_YIELD);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_yield);
 	}
 	COMPILER_END();
@@ -623,17 +608,13 @@ ast_setyieldast(Ast *__restrict self,
 		unlikely(me->a_type != AST_YIELD)
 	{
 		result = err_invalid_ast_type(self, AST_YIELD);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast     = me->a_yield;
@@ -655,12 +636,10 @@ ast_getthrowast(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_THROW);
 		result = NULL;
-	}
-	else if (!me->a_throw) {
+	} else if (!me->a_throw) {
 		err_unbound_attribute(Dee_TYPE(self), "throwast");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_throw);
 	}
 	COMPILER_END();
@@ -678,12 +657,10 @@ ast_delthrowast(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_THROW);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_throw) {
+	} else if (!me->a_throw) {
 		result = err_unbound_attribute(Dee_TYPE(self), "throwast");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_throw);
 		me->a_throw = NULL;
 	}
@@ -704,17 +681,13 @@ ast_setthrowast(Ast *__restrict self,
 		unlikely(me->a_type != AST_THROW)
 	{
 		result = err_invalid_ast_type(self, AST_THROW);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast     = me->a_throw;
@@ -736,8 +709,7 @@ ast_gettryguard(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_TRY);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_try.t_guard);
 	}
 	COMPILER_END();
@@ -755,17 +727,13 @@ ast_settryguard(Ast *__restrict self,
 		unlikely(me->a_type != AST_TRY)
 	{
 		result = err_invalid_ast_type(self, AST_TRY);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_try.t_guard;
@@ -788,8 +756,7 @@ ast_gettryhandlers(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_TRY);
 		result = NULL;
-	}
-	else {
+	} else {
 		size_t i;
 		result = DeeTuple_NewUninitialized(me->a_try.t_catchc);
 		if
@@ -874,8 +841,7 @@ ast_settryhandlers(Ast *__restrict self,
 		unlikely(me->a_type != AST_TRY)
 	{
 		result = err_invalid_ast_type(self, AST_TRY);
-	}
-	else {
+	} else {
 		struct catch_expr *new_handv;
 		size_t new_handc;
 		struct catch_expr *old_handv;
@@ -911,8 +877,7 @@ ast_getloopisforeach(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FLOOP_FOREACH);
 		Dee_Incref(result);
 	}
@@ -935,15 +900,13 @@ ast_setloopisforeach(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (newval) {
+	} else if (newval) {
 		if (!me->a_loop.l_iter) {
 			result = err_unbound_attribute(Dee_TYPE(self), "loopiter");
 		} else {
 			me->a_flag |= AST_FLOOP_FOREACH;
 		}
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FLOOP_FOREACH;
 	}
 	COMPILER_END();
@@ -961,8 +924,7 @@ ast_getloopispostcond(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FLOOP_POSTCOND);
 		Dee_Incref(result);
 	}
@@ -985,11 +947,9 @@ ast_setloopispostcond(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag |= AST_FLOOP_POSTCOND;
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FLOOP_POSTCOND;
 	}
 	COMPILER_END();
@@ -1007,8 +967,7 @@ ast_getloopisunlikely(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FLOOP_POSTCOND);
 		Dee_Incref(result);
 	}
@@ -1031,11 +990,9 @@ ast_setloopisunlikely(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag |= AST_FLOOP_UNLIKELY;
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FLOOP_UNLIKELY;
 	}
 	COMPILER_END();
@@ -1053,8 +1010,7 @@ ast_getloopflags(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else {
+	} else {
 		bool is_first                  = true;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FLOOP_FOREACH) {
@@ -1112,8 +1068,7 @@ ast_setloopflags(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else {
+	} else {
 		if ((new_flags & AST_FLOOP_FOREACH) && !me->a_loop.l_iter) {
 			result = err_unbound_attribute(Dee_TYPE(self), "loopiter");
 		} else {
@@ -1151,16 +1106,13 @@ ast_getloopcond(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		err_is_a_foreach_loop(self);
 		result = NULL;
-	}
-	else if (!me->a_loop.l_cond) {
+	} else if (!me->a_loop.l_cond) {
 		err_unbound_attribute(Dee_TYPE(self), "loopcond");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_cond);
 	}
 	COMPILER_END();
@@ -1177,16 +1129,13 @@ ast_delloopcond(Ast *__restrict self) {
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_loop.l_cond) {
+	} else if (!me->a_loop.l_cond) {
 		result = err_unbound_attribute(Dee_TYPE(self), "loopcond");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_loop.l_cond);
 		me->a_loop.l_cond = NULL;
 	}
@@ -1207,20 +1156,15 @@ ast_setloopcond(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_cond;
@@ -1242,16 +1186,13 @@ ast_getloopnext(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		err_is_a_foreach_loop(self);
 		result = NULL;
-	}
-	else if (!me->a_loop.l_next) {
+	} else if (!me->a_loop.l_next) {
 		err_unbound_attribute(Dee_TYPE(self), "loopnext");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_next);
 	}
 	COMPILER_END();
@@ -1268,16 +1209,13 @@ ast_delloopnext(Ast *__restrict self) {
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_loop.l_next) {
+	} else if (!me->a_loop.l_next) {
 		result = err_unbound_attribute(Dee_TYPE(self), "loopnext");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_loop.l_next);
 		me->a_loop.l_next = NULL;
 	}
@@ -1298,20 +1236,15 @@ ast_setloopnext(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_next;
@@ -1333,16 +1266,13 @@ ast_getloopelem(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		err_not_a_foreach_loop(self);
 		result = NULL;
-	}
-	else if (!me->a_loop.l_elem) {
+	} else if (!me->a_loop.l_elem) {
 		err_unbound_attribute(Dee_TYPE(self), "loopelem");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_elem);
 	}
 	COMPILER_END();
@@ -1359,16 +1289,13 @@ ast_delloopelem(Ast *__restrict self) {
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		result = err_not_a_foreach_loop(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_loop.l_elem) {
+	} else if (!me->a_loop.l_elem) {
 		result = err_unbound_attribute(Dee_TYPE(self), "loopelem");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_loop.l_elem);
 		me->a_loop.l_elem = NULL;
 	}
@@ -1389,20 +1316,15 @@ ast_setloopelem(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		result = err_not_a_foreach_loop(self);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_elem;
@@ -1424,12 +1346,10 @@ ast_getloopiter(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		err_not_a_foreach_loop(self);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_iter);
 	}
 	COMPILER_END();
@@ -1447,20 +1367,15 @@ ast_setloopiter(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
+	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		result = err_not_a_foreach_loop(self);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_iter;
@@ -1483,12 +1398,10 @@ ast_getlooploop(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (!me->a_loop.l_loop) {
+	} else if (!me->a_loop.l_loop) {
 		err_unbound_attribute(Dee_TYPE(self), "looploop");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_loop);
 	}
 	COMPILER_END();
@@ -1506,12 +1419,10 @@ ast_dellooploop(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_loop.l_loop) {
+	} else if (!me->a_loop.l_loop) {
 		result = err_unbound_attribute(Dee_TYPE(self), "looploop");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_loop.l_loop);
 		me->a_loop.l_loop = NULL;
 	}
@@ -1532,17 +1443,13 @@ ast_setlooploop(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_loop;
@@ -1565,12 +1472,10 @@ ast_getloopelemcond(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (!me->a_loop.l_elem) {
+	} else if (!me->a_loop.l_elem) {
 		err_unbound_attribute(Dee_TYPE(self), "loopelemcond");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_elem);
 	}
 	COMPILER_END();
@@ -1588,12 +1493,10 @@ ast_delloopelemcond(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_loop.l_elem) {
+	} else if (!me->a_loop.l_elem) {
 		result = err_unbound_attribute(Dee_TYPE(self), "loopelemcond");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_loop.l_elem);
 		me->a_loop.l_elem = NULL;
 	}
@@ -1614,17 +1517,13 @@ ast_setloopelemcond(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_elem;
@@ -1646,12 +1545,10 @@ ast_getloopiternext(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
-	}
-	else if (!me->a_loop.l_iter) {
+	} else if (!me->a_loop.l_iter) {
 		err_unbound_attribute(Dee_TYPE(self), "loopiternext");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_iter);
 	}
 	COMPILER_END();
@@ -1668,16 +1565,13 @@ ast_delloopiternext(Ast *__restrict self) {
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (me->a_flag & AST_FLOOP_FOREACH) {
+	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_cant_access_attribute(Dee_TYPE(self), "loopiternext", ATTR_ACCESS_DEL);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_loop.l_iter) {
+	} else if (!me->a_loop.l_iter) {
 		result = err_unbound_attribute(Dee_TYPE(self), "loopiternext");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_loop.l_iter);
 		me->a_loop.l_iter = NULL;
 	}
@@ -1698,17 +1592,13 @@ ast_setloopiternext(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast           = me->a_loop.l_iter;
@@ -1730,8 +1620,7 @@ ast_getloopctlisbreak(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_LOOPCTL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(!(me->a_flag & AST_FLOOPCTL_CON));
 		Dee_Incref(result);
 	}
@@ -1754,11 +1643,9 @@ ast_setloopctlisbreak(Ast *__restrict self,
 		unlikely(me->a_type != AST_LOOP)
 	{
 		result = err_invalid_ast_type(self, AST_LOOP);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag &= ~AST_FLOOPCTL_CON;
-	}
-	else {
+	} else {
 		me->a_flag |= AST_FLOOPCTL_CON;
 	}
 	COMPILER_END();
@@ -1776,8 +1663,7 @@ ast_getconditionalcond(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_cond);
 	}
 	COMPILER_END();
@@ -1795,17 +1681,13 @@ ast_setconditionalcond(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast                  = me->a_conditional.c_cond;
@@ -1827,12 +1709,10 @@ ast_getconditionaltt(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else if (!me->a_conditional.c_tt) {
+	} else if (!me->a_conditional.c_tt) {
 		err_unbound_attribute(Dee_TYPE(self), "conditionaltt");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_tt);
 	}
 	COMPILER_END();
@@ -1850,12 +1730,10 @@ ast_delconditionaltt(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_conditional.c_tt) {
+	} else if (!me->a_conditional.c_tt) {
 		result = err_unbound_attribute(Dee_TYPE(self), "conditionaltt");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_conditional.c_tt);
 		me->a_conditional.c_tt = NULL;
 	}
@@ -1876,17 +1754,13 @@ ast_setconditionaltt(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast                = me->a_conditional.c_tt;
@@ -1908,12 +1782,10 @@ ast_getconditionalff(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else if (!me->a_conditional.c_ff) {
+	} else if (!me->a_conditional.c_ff) {
 		err_unbound_attribute(Dee_TYPE(self), "conditionalff");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_ff);
 	}
 	COMPILER_END();
@@ -1931,12 +1803,10 @@ ast_delconditionalff(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_conditional.c_ff) {
+	} else if (!me->a_conditional.c_ff) {
 		result = err_unbound_attribute(Dee_TYPE(self), "conditionalff");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_conditional.c_ff);
 		me->a_conditional.c_ff = NULL;
 	}
@@ -1957,17 +1827,13 @@ ast_setconditionalff(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast                = me->a_conditional.c_ff;
@@ -1990,8 +1856,7 @@ ast_getconditionalflags(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else {
+	} else {
 		bool is_first                  = true;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FCOND_BOOL) {
@@ -2049,8 +1914,7 @@ ast_setconditionalflags(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else {
+	} else {
 		me->a_flag = new_flags;
 	}
 	COMPILER_END();
@@ -2071,8 +1935,7 @@ ast_getconditionalisbool(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FCOND_BOOL);
 		Dee_Incref(result);
 	}
@@ -2095,11 +1958,9 @@ ast_setconditionalisbool(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag |= AST_FCOND_BOOL;
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FCOND_BOOL;
 	}
 	COMPILER_END();
@@ -2117,8 +1978,7 @@ ast_getconditionalislikely(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FCOND_LIKELY);
 		Dee_Incref(result);
 	}
@@ -2141,11 +2001,9 @@ ast_setconditionalislikely(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag |= AST_FCOND_LIKELY;
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FCOND_LIKELY;
 	}
 	COMPILER_END();
@@ -2163,8 +2021,7 @@ ast_getconditionalisunlikely(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FCOND_UNLIKELY);
 		Dee_Incref(result);
 	}
@@ -2187,11 +2044,9 @@ ast_setconditionalisunlikely(Ast *__restrict self,
 		unlikely(me->a_type != AST_CONDITIONAL)
 	{
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag |= AST_FCOND_UNLIKELY;
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FCOND_UNLIKELY;
 	}
 	COMPILER_END();
@@ -2209,8 +2064,7 @@ ast_getboolast(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_BOOL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_bool);
 	}
 	COMPILER_END();
@@ -2228,17 +2082,13 @@ ast_setboolast(Ast *__restrict self,
 		unlikely(me->a_type != AST_BOOL)
 	{
 		result = err_invalid_ast_type(self, AST_BOOL);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast    = me->a_bool;
@@ -2260,8 +2110,7 @@ ast_getboolisnegated(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_BOOL);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_flag & AST_FBOOL_NEGATE);
 		Dee_Incref(result);
 	}
@@ -2284,11 +2133,9 @@ ast_setboolisnegated(Ast *__restrict self,
 		unlikely(me->a_type != AST_BOOL)
 	{
 		result = err_invalid_ast_type(self, AST_BOOL);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_flag |= AST_FBOOL_NEGATE;
-	}
-	else {
+	} else {
 		me->a_flag &= ~AST_FBOOL_NEGATE;
 	}
 	COMPILER_END();
@@ -2306,8 +2153,7 @@ ast_getexpandast(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_EXPAND);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_expand);
 	}
 	COMPILER_END();
@@ -2325,17 +2171,13 @@ ast_setexpandast(Ast *__restrict self,
 		unlikely(me->a_type != AST_EXPAND)
 	{
 		result = err_invalid_ast_type(self, AST_EXPAND);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast      = me->a_expand;
@@ -2357,8 +2199,7 @@ ast_getfunctioncode(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_FUNCTION);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_function.f_code);
 	}
 	COMPILER_END();
@@ -2376,14 +2217,11 @@ ast_setfunctioncode(Ast *__restrict self,
 		unlikely(me->a_type != AST_EXPAND)
 	{
 		result = err_invalid_ast_type(self, AST_EXPAND);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else {
+	} else {
 		DeeBaseScopeObject *code_scope;
 		code_scope = value->ci_value->a_scope->s_base;
 		if
@@ -2441,8 +2279,7 @@ ast_getoperatorfuncname(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = get_operator_name(me->a_flag);
 	}
 	COMPILER_END();
@@ -2460,8 +2297,7 @@ ast_setoperatorfuncname(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR_FUNC)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-	}
-	else {
+	} else {
 		uint16_t new_id;
 		result = get_operator_id(value, &new_id);
 		if
@@ -2483,12 +2319,10 @@ ast_getoperatorfuncbinding(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 		result = NULL;
-	}
-	else if (!me->a_operator_func.of_binding) {
+	} else if (!me->a_operator_func.of_binding) {
 		err_unbound_attribute(Dee_TYPE(self), "operatorfuncbinding");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_operator_func.of_binding);
 	}
 	COMPILER_END();
@@ -2506,12 +2340,10 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_operator_func.of_binding) {
+	} else if (!me->a_operator_func.of_binding) {
 		result = err_unbound_attribute(Dee_TYPE(self), "operatorfuncbinding");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_operator_func.of_binding);
 		me->a_operator_func.of_binding = NULL;
 	}
@@ -2532,17 +2364,13 @@ ast_setoperatorfuncbinding(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR_FUNC)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast                        = me->a_operator_func.of_binding;
@@ -2565,8 +2393,7 @@ ast_getoperatorname(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = get_operator_name(me->a_flag);
 	}
 	COMPILER_END();
@@ -2584,8 +2411,7 @@ ast_setoperatorname(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else {
+	} else {
 		uint16_t new_id;
 		result = get_operator_id(value, &new_id);
 		if
@@ -2608,8 +2434,7 @@ ast_getoperatora(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op0);
 	}
 	COMPILER_END();
@@ -2627,17 +2452,13 @@ ast_setoperatora(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast              = me->a_operator.o_op0;
@@ -2660,12 +2481,10 @@ ast_getoperatorb(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else if (!me->a_operator.o_op1) {
+	} else if (!me->a_operator.o_op1) {
 		err_unbound_attribute(Dee_TYPE(self), "operatorb");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op1);
 	}
 	COMPILER_END();
@@ -2683,12 +2502,10 @@ ast_deloperatorb(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_operator.o_op1) {
+	} else if (!me->a_operator.o_op1) {
 		result = err_unbound_attribute(Dee_TYPE(self), "operatorb");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_operator.o_op1);
 		me->a_operator.o_op1 = NULL;
 	}
@@ -2709,17 +2526,13 @@ ast_setoperatorb(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast              = me->a_operator.o_op1;
@@ -2741,12 +2554,10 @@ ast_getoperatorc(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else if (!me->a_operator.o_op2) {
+	} else if (!me->a_operator.o_op2) {
 		err_unbound_attribute(Dee_TYPE(self), "operatorc");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op2);
 	}
 	COMPILER_END();
@@ -2764,12 +2575,10 @@ ast_deloperatorc(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_operator.o_op2) {
+	} else if (!me->a_operator.o_op2) {
 		result = err_unbound_attribute(Dee_TYPE(self), "operatorc");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_operator.o_op2);
 		me->a_operator.o_op2 = NULL;
 	}
@@ -2790,17 +2599,13 @@ ast_setoperatorc(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast              = me->a_operator.o_op2;
@@ -2822,12 +2627,10 @@ ast_getoperatord(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else if (!me->a_operator.o_op3) {
+	} else if (!me->a_operator.o_op3) {
 		err_unbound_attribute(Dee_TYPE(self), "operatord");
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op3);
 	}
 	COMPILER_END();
@@ -2845,12 +2648,10 @@ ast_deloperatord(Ast *__restrict self) {
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	}
-	else if (!me->a_operator.o_op3) {
+	} else if (!me->a_operator.o_op3) {
 		result = err_unbound_attribute(Dee_TYPE(self), "operatord");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
-	}
-	else {
+	} else {
 		ast_decref(me->a_operator.o_op3);
 		me->a_operator.o_op3 = NULL;
 	}
@@ -2871,17 +2672,13 @@ ast_setoperatord(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast              = me->a_operator.o_op3;
@@ -2904,8 +2701,7 @@ ast_getoperatorflags(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		bool is_first                  = true;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (me->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
@@ -2971,8 +2767,7 @@ ast_setoperatorflags(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else {
+	} else {
 		me->a_operator.o_exflag = new_flags;
 	}
 	COMPILER_END();
@@ -2992,8 +2787,7 @@ ast_getoperatorispost(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FPOSTOP);
 		Dee_Incref(result);
 	}
@@ -3016,11 +2810,9 @@ ast_setoperatorispost(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FPOSTOP;
-	}
-	else {
+	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FPOSTOP;
 	}
 	COMPILER_END();
@@ -3038,8 +2830,7 @@ ast_getoperatorisvarargs(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FVARARGS);
 		Dee_Incref(result);
 	}
@@ -3062,11 +2853,9 @@ ast_setoperatorisvarargs(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FVARARGS;
-	}
-	else {
+	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FVARARGS;
 	}
 	COMPILER_END();
@@ -3084,8 +2873,7 @@ ast_getoperatorismaybeprefix(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX);
 		Dee_Incref(result);
 	}
@@ -3108,11 +2896,9 @@ ast_setoperatorismaybeprefix(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FMAYBEPFX;
-	}
-	else {
+	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FMAYBEPFX;
 	}
 	COMPILER_END();
@@ -3130,8 +2916,7 @@ ast_getoperatorisdontoptimize(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeBool_For(me->a_operator.o_exflag & AST_OPERATOR_FDONTOPT);
 		Dee_Incref(result);
 	}
@@ -3154,11 +2939,9 @@ ast_setoperatorisdontoptimize(Ast *__restrict self,
 		unlikely(me->a_type != AST_OPERATOR)
 	{
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	}
-	else if (newval) {
+	} else if (newval) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FDONTOPT;
-	}
-	else {
+	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FDONTOPT;
 	}
 	COMPILER_END();
@@ -3176,8 +2959,7 @@ ast_getactionname(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
-	}
-	else {
+	} else {
 		char const *name = get_action_name(me->a_flag);
 		result           = name ? DeeString_New(name) : DeeInt_NewU16(me->a_flag);
 	}
@@ -3196,11 +2978,9 @@ ast_setactionname(Ast *__restrict self,
 		unlikely(me->a_type != AST_ACTION)
 	{
 		result = err_invalid_ast_type(self, AST_ACTION);
-	}
-	else if (DeeObject_AssertType(value, &DeeString_Type)) {
+	} else if (DeeObject_AssertType(value, &DeeString_Type)) {
 		result = -1;
-	}
-	else {
+	} else {
 		int32_t new_id;
 		new_id = get_action_by_name(DeeString_STR(value));
 		if
@@ -3209,12 +2989,10 @@ ast_setactionname(Ast *__restrict self,
 		else if (AST_FACTION_ARGC_GT(new_id) ==
 		         AST_FACTION_ARGC_GT(me->a_flag)) {
 			me->a_flag = (uint16_t)new_id;
-		}
-		else if ((uint16_t)new_id == AST_FACTION_ASSERT &&
+		} else if ((uint16_t)new_id == AST_FACTION_ASSERT &&
 		         AST_FACTION_ARGC_GT(me->a_flag) == 2) {
 			me->a_flag = AST_FACTION_ASSERT_M;
-		}
-		else {
+		} else {
 			result = DeeError_Throwf(&DeeError_ValueError,
 			                         "Attempted to set a new action %q taking %u "
 			                         "arguments, when the old action only uses %u",
@@ -3238,12 +3016,10 @@ ast_getactiona(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
-	}
-	else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
+	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
 		err_unknown_attribute(Dee_TYPE(self), "actiona", ATTR_ACCESS_GET);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act0);
 	}
 	COMPILER_END();
@@ -3261,20 +3037,15 @@ ast_setactiona(Ast *__restrict self,
 		unlikely(me->a_type != AST_ACTION)
 	{
 		result = err_invalid_ast_type(self, AST_ACTION);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
+	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
 		result = err_unknown_attribute(Dee_TYPE(self), "actiona", ATTR_ACCESS_SET);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast             = me->a_action.a_act0;
@@ -3296,12 +3067,10 @@ ast_getactionb(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
-	}
-	else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
+	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
 		err_unknown_attribute(Dee_TYPE(self), "actionb", ATTR_ACCESS_GET);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act1);
 	}
 	COMPILER_END();
@@ -3319,20 +3088,15 @@ ast_setactionb(Ast *__restrict self,
 		unlikely(me->a_type != AST_ACTION)
 	{
 		result = err_invalid_ast_type(self, AST_ACTION);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
+	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
 		result = err_unknown_attribute(Dee_TYPE(self), "actionb", ATTR_ACCESS_SET);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast             = me->a_action.a_act1;
@@ -3354,12 +3118,10 @@ ast_getactionc(Ast *__restrict self) {
 	{
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
-	}
-	else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
+	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
 		err_unknown_attribute(Dee_TYPE(self), "actionc", ATTR_ACCESS_GET);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act2);
 	}
 	COMPILER_END();
@@ -3377,20 +3139,15 @@ ast_setactionc(Ast *__restrict self,
 		unlikely(me->a_type != AST_ACTION)
 	{
 		result = err_invalid_ast_type(self, AST_ACTION);
-	}
-	else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
+	} else if (DeeObject_AssertTypeExact(value, &DeeCompilerAst_Type)) {
 		result = -1;
-	}
-	else if (value->ci_compiler != DeeCompiler_Current) {
+	} else if (value->ci_compiler != DeeCompiler_Current) {
 		result = err_invalid_ast_compiler(value);
-	}
-	else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
+	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
-	}
-	else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
+	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
 		result = err_unknown_attribute(Dee_TYPE(self), "actionc", ATTR_ACCESS_SET);
-	}
-	else {
+	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
 		old_ast             = me->a_action.a_act2;

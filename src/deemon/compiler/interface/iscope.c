@@ -272,8 +272,7 @@ scope_getitem(DeeCompilerScopeObject *__restrict self,
 	{
 		err_item_not_found((DeeObject *)self, elem);
 		result = NULL;
-	}
-	else {
+	} else {
 		result = DeeCompiler_GetSymbol(sym);
 	}
 	COMPILER_END();
@@ -296,8 +295,7 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 	{
 		err_item_not_found((DeeObject *)self, elem);
 		result = -1;
-	}
-	else {
+	} else {
 		/* Delete the symbol. */
 		del_local_symbol(sym);
 		result = 0;

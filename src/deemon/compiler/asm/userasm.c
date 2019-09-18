@@ -2553,8 +2553,7 @@ create_assembly_file:
 				}
 				if (ast_genasm(operand, ASM_G_FNORMAL))
 					goto err;
-			}
-			else {
+			} else {
 				/* Pop the stack-top expression into this operand. */
 				uint16_t expected = current_assembler.a_stackcur - 1;
 				if (asm_gpop_expr(operand))

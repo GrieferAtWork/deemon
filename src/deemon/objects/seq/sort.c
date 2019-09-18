@@ -303,8 +303,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 			result = key
 			         ? insertsort_impl_p(dst, src, objc, key)
 			         : insertsort_impl(dst, src, objc);
-		}
-		else {
+		} else {
 			result = key
 			         ? mergesort_impl_p(dst, temp, src, objc, key)
 			         : mergesort_impl(dst, temp, src, objc);

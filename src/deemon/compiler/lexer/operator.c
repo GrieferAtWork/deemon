@@ -718,8 +718,7 @@ parse_string:
 				{
 					if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
-				}
-				else if unlikely(tok != TOK_COLLON_EQUAL)
+				} else if unlikely(tok != TOK_COLLON_EQUAL)
 				{
 					if (WARN(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
 						goto err;

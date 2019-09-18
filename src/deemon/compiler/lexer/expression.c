@@ -1336,8 +1336,7 @@ err_begin_expr:
 				likely(sym)
 			{
 				result = ast_sym(sym);
-			}
-			else {
+			} else {
 				if (WARN(W_UNKNOWN_NTH_SYMBOL, nth_symbol))
 					goto err;
 				result = ast_constexpr(Dee_None);

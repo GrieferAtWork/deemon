@@ -2296,8 +2296,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->rhs_len)
 			{
 				args->rhs_len = 0;
-			}
-			else {
+			} else {
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
@@ -2314,8 +2313,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->rhs_len)
 			{
 				args->rhs_len = 0;
-			}
-			else {
+			} else {
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
@@ -2326,8 +2324,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->lhs_len)
 			{
 				args->lhs_len = 0;
-			}
-			else {
+			} else {
 				args->lhs_ptr += temp;
 				args->lhs_len -= temp;
 			}
@@ -2360,8 +2357,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->rhs_len)
 			{
 				args->rhs_len = 0;
-			}
-			else {
+			} else {
 				if (temp2 > args->rhs_len)
 					temp2 = args->rhs_len;
 				args->rhs_ptr += temp;
@@ -2382,8 +2378,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->rhs_len)
 			{
 				args->rhs_len = 0;
-			}
-			else {
+			} else {
 				if (temp2 > args->rhs_len)
 					temp2 = args->rhs_len;
 				args->rhs_ptr += temp;
@@ -2396,8 +2391,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->lhs_len)
 			{
 				args->lhs_len = 0;
-			}
-			else {
+			} else {
 				args->lhs_ptr += temp;
 				args->lhs_len -= temp;
 			}
@@ -2410,8 +2404,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->rhs_len)
 			{
 				args->rhs_len = 0;
-			}
-			else {
+			} else {
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
@@ -2422,8 +2415,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->lhs_len)
 			{
 				args->lhs_len = 0;
-			}
-			else {
+			} else {
 				args->lhs_ptr += temp;
 				args->lhs_len -= temp;
 			}
@@ -2439,8 +2431,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->rhs_len)
 			{
 				args->rhs_len = 0;
-			}
-			else {
+			} else {
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
@@ -2481,8 +2472,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->lhs_len)
 			{
 				args->lhs_len = 0;
-			}
-			else {
+			} else {
 				args->lhs_ptr += temp;
 				args->lhs_len -= temp;
 			}
@@ -2506,8 +2496,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->lhs_len)
 			{
 				args->lhs_len = 0;
-			}
-			else {
+			} else {
 				args->lhs_ptr += temp;
 				args->lhs_len -= temp;
 			}
@@ -2536,8 +2525,7 @@ get_bcompare_args(Bytes *__restrict self,
 				unlikely(temp >= args->lhs_len)
 			{
 				args->lhs_len = 0;
-			}
-			else {
+			} else {
 				if (temp2 > args->lhs_len)
 					temp2 = args->lhs_len;
 				args->lhs_ptr += temp;

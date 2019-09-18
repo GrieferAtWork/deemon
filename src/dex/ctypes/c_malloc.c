@@ -210,8 +210,7 @@ capi_trycalloc(size_t argc, DeeObject **__restrict argv) {
 		         count && num_bytes)
 	{
 		ptr = NULL;
-	}
-	else {
+	} else {
 		ptr = Dee_TryCalloc(total);
 	}
 	if

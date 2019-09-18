@@ -419,8 +419,7 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 			if
 				unlikely(error < 0)
 			goto err_r;
-		}
-		else {
+		} else {
 			++elem_count;
 		}
 		if (DeeThread_CheckInterrupt())

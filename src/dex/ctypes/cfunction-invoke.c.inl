@@ -373,8 +373,7 @@ def_var_data:
 			/* This can happen when the user creates their own
 			 * classes that are derived from structured types. */
 			result = (DeeObject *)DeeGCObject_Malloc(datasize);
-		}
-		else {
+		} else {
 			result = (DeeObject *)DeeObject_Malloc(datasize);
 		}
 		if

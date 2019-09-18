@@ -101,8 +101,7 @@ mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
 		unlikely(pos >= (dpos_t)result)
 	{
 		result = 0;
-	}
-	else {
+	} else {
 		result = result - (size_t)pos;
 		if (result > bufsize)
 			result = bufsize;
@@ -211,8 +210,7 @@ mf_getc(MemoryFile *__restrict self, dioflag_t UNUSED(flags)) {
 		unlikely(self->mf_ptr >= self->mf_end)
 	{
 		result = GETC_EOF;
-	}
-	else {
+	} else {
 		result = *self->mf_ptr++;
 	}
 	DeeFile_LockEndWrite(self);
@@ -228,8 +226,7 @@ mf_ungetc(MemoryFile *__restrict self, int ch) {
 		unlikely(self->mf_ptr == self->mf_begin)
 	{
 		result = GETC_EOF;
-	}
-	else {
+	} else {
 #if 0
 		if (self->mf_ptr[-1] != (char)ch) {
 			DeeFile_LockEndWrite(self);
@@ -363,8 +360,7 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
 			((MemoryFile *)self)->mf_end   = (char *)data_copy + (((MemoryFile *)self)->mf_end - ((MemoryFile *)self)->mf_begin);
 			((MemoryFile *)self)->mf_ptr   = (char *)data_copy + (((MemoryFile *)self)->mf_ptr - ((MemoryFile *)self)->mf_begin);
 			((MemoryFile *)self)->mf_begin = (char *)data_copy;
-		}
-		else {
+		} else {
 			/* Failed to copy data. - Fallback by deleting the
 			 * stream's data so it becomes weak undefined behavior... */
 			((MemoryFile *)self)->mf_begin = NULL;
@@ -428,8 +424,7 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 		unlikely(pos >= (dpos_t)result)
 	{
 		result = 0;
-	}
-	else {
+	} else {
 		result = result - (size_t)pos;
 		if (result > bufsize)
 			result = bufsize;
@@ -621,8 +616,7 @@ reader_getc(Reader *__restrict self, dioflag_t UNUSED(flags)) {
 		unlikely(self->r_ptr >= self->r_end)
 	{
 		result = GETC_EOF;
-	}
-	else {
+	} else {
 		result = *self->r_ptr++;
 	}
 	DeeFile_LockEndWrite(self);
@@ -646,8 +640,7 @@ reader_ungetc(Reader *__restrict self,
 		unlikely(self->r_ptr == self->r_begin)
 	{
 		result = GETC_EOF;
-	}
-	else {
+	} else {
 #if 0
 		if (self->r_ptr[-1] != (char)ch) {
 			DeeFile_LockEndWrite(self);

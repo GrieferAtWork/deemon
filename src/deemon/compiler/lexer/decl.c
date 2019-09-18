@@ -1017,8 +1017,7 @@ err_type_expr:
 				goto err_type_expr;
 			self->da_type = DAST_NONE;
 			self->da_flag = DAST_FNORMAL;
-		}
-		else {
+		} else {
 			self->da_type = DAST_CONST;
 			self->da_flag = DAST_FNORMAL;
 			Dee_Incref(self->da_const);
@@ -1231,8 +1230,7 @@ err_nth:
 				self->da_flag   = DAST_FNORMAL;
 				self->da_symbol = sym;
 				symbol_incref(sym);
-			}
-			else {
+			} else {
 				if (WARN(W_UNKNOWN_NTH_SYMBOL, nth_symbol))
 					goto err;
 				self->da_type = DAST_NONE;
@@ -1322,8 +1320,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 				if (WARN(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,
 				         token.t_kwd->k_name, self->da_const))
 					goto err_r;
-			}
-			else {
+			} else {
 				Dee_Decref(self->da_const);
 				self->da_const = attrib; /* Inherit reference. */
 			}
@@ -1347,8 +1344,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 				symbol_incref(new_symbol);
 				symbol_decref(self->da_symbol);
 				self->da_symbol = new_symbol;
-			}
-			else {
+			} else {
 				if (WARN(W_MODULE_IMPORT_NOT_FOUND, token.t_kwd->k_name,
 				         DeeString_STR(self->da_symbol->s_module->mo_name)))
 					goto err_r;
@@ -1478,8 +1474,7 @@ decl_ast_parse_for_symbol(struct symbol *__restrict self) {
 		if
 			unlikely(decl_ast_parse(&self->s_decltype))
 		goto err;
-	}
-	else {
+	} else {
 		struct decl_ast decl;
 		if
 			unlikely(decl_ast_parse(&decl))

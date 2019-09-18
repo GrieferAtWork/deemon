@@ -522,8 +522,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 			       name->k_size, name->k_name);
 			goto err;
 		}
-	}
-	else {
+	} else {
 		/* Create a new local symbol for this member. */
 		result = new_local_symbol(name, loc);
 		if
@@ -1977,8 +1976,7 @@ yield_semi_after_operator:
 				if
 					unlikely(yield() < 0)
 				goto err;
-			}
-			else {
+			} else {
 				if unlikely(likely(tok == KWD_this ||
 				                   (TPP_ISKEYWORD(tok) && token.t_kwd == name))
 				            ? (yield() < 0)

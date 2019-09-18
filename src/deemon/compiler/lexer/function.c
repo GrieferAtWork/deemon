@@ -36,8 +36,7 @@ PRIVATE int DCALL skip_argument_name(void) {
 	{
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
-	}
-	else {
+	} else {
 		if (tok != KWD_none) {
 			if (has_local_symbol(token.t_kwd)) {
 				if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
@@ -65,8 +64,7 @@ PRIVATE struct symbol *DCALL parse_argument_name(void) {
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 		result = new_unnamed_symbol();
-	}
-	else {
+	} else {
 		if (tok == KWD_none) {
 			/* Special case: Allow `none' to be used for placeholder/pending arguments. */
 create_anon_argument:

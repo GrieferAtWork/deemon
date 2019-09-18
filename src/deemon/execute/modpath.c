@@ -1370,8 +1370,7 @@ found_existing_module:
 	{
 		DeeModule_FailLoading(result);
 		Dee_Clear(result);
-	}
-	else {
+	} else {
 		DeeModule_DoneLoading(result);
 	}
 done:

@@ -551,8 +551,7 @@ range_contains(Range *__restrict self,
 			if (error != 0) /* if true-or-error */
 				goto err_or_false;
 		}
-	}
-	else {
+	} else {
 		ASSERT(self->r_step);
 		/* if (self->r_start < index) return false; */
 		error = DeeObject_CompareLo(self->r_start, index);

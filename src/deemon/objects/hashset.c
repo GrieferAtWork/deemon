@@ -66,8 +66,7 @@ DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeO
 		result->s_size = 0;
 		result->s_used = 0;
 		result->s_elem = empty_set_items;
-	}
-	else {
+	} else {
 		size_t min_mask = 16 - 1, mask;
 		/* Figure out how large the mask of the set is going to be. */
 		while ((num_items & min_mask) != num_items)

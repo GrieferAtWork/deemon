@@ -394,8 +394,7 @@ err_currrent_var_symbol:
 						likely(self->jl_tok == ')')
 					{
 						JITLexer_Yield(self);
-					}
-					else {
+					} else {
 						syn_call_expected_rparen_after_call(self);
 						DECREF(args);
 						goto err_currrent_var_symbol;
@@ -814,8 +813,7 @@ done_expression_nomerge:
 			likely(self->jl_tok == ';')
 		{
 			JITLexer_Yield(self);
-		}
-		else {
+		} else {
 			syn_expr_expected_semi_after_expr(self);
 			/*err_clear_current_only:*/
 			DECREF(current);

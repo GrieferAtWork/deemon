@@ -967,8 +967,7 @@ parse_ch:
 			{
 				*pz = (digit)c;
 				++result->ob_size;
-			}
-			else {
+			} else {
 				DREF DeeIntObject *tmp;
 				ASSERT((size_t)result->ob_size == size_z);
 				tmp = DeeInt_Alloc(size_z + 1);

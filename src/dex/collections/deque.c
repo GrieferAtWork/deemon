@@ -1711,8 +1711,7 @@ deqiter_deep(DequeIteratorObject *__restrict self,
 		unlikely(index >= self->di_deq->d_size)
 	{
 		--self->di_ver;
-	}
-	else {
+	} else {
 		DequeIterator_InitAt(&self->di_iter,
 		                     self->di_deq,
 		                     index);

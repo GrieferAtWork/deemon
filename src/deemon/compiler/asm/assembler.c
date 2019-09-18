@@ -2068,8 +2068,7 @@ asm_newrelint(struct asm_sym *sym,
 		likely(sym)
 	{
 		obj = DeeRelInt_New(sym, addend, mode);
-	}
-	else {
+	} else {
 		obj = DeeInt_NewS64(addend);
 	}
 	if
@@ -2980,8 +2979,7 @@ asm_lsymid(struct symbol *__restrict sym) {
 		 * we can safely generate binding checks to ensure that it doesn't
 		 * get re-assigned accidentally. */
 		new_index = asm_newlocal_noreuse();
-	}
-	else {
+	} else {
 		/* Allocate a new local variable index for the given symbol. */
 		new_index = asm_newlocal();
 	}
