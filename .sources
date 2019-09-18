@@ -44,10 +44,12 @@ IF(NOT CONFIG_NDEBUG)
 	DEFOPT(CONFIG_DEBUG)
 FI
 
-IF(TARGET_WINDOWS)
-	IF($TARGET_CPU == i?86)
-		DEFOPTAS(CROSS_PREFIX,"i686-w64-mingw32-")
-		//DEFOPTAS(CROSS_PREFIX,"i686-pc-cygwin-")
+IF(NOT CROSS_PREFIX)
+	IF(TARGET_WINDOWS)
+		IF($TARGET_CPU == i?86)
+			DEFOPTAS(CROSS_PREFIX,"i686-w64-mingw32-")
+			//DEFOPTAS(CROSS_PREFIX,"i686-pc-cygwin-")
+		FI
 	FI
 FI
 
@@ -66,7 +68,11 @@ IF(NOT CONFIG_DEBUG)
 	C_FLAGS("-DNDEBUG")
 FI
 INCLUDE("/include")
-INCLUDE("/include/deemon/kos-headers")
+
+IF(NOT WITHOUT_KOS_HEADERS)
+	INCLUDE("/include/deemon/kos-headers")
+FI
+
 C_FLAGS("-Wall")
 C_FLAGS("-Wextra")
 C_FLAGS("-Wno-address")

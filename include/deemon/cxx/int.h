@@ -62,7 +62,6 @@ public:
 #ifdef __CHAR_UNSIGNED__
 	int_ const &getval(char &value) const {
 		throw_if_nonzero(DeeInt_Check(this->ptr())
-
 		                 ? DeeInt_AsU(__SIZEOF_CHAR__, *this, &value)
 		                 : DeeObject_AsChar(*this, &value));
 		return *this;

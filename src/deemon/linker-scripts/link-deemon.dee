@@ -25,7 +25,10 @@
 
 fs.chdir(fs.path.head(__FILE__));
 
-local proc = process("cmd", ["/c", "dumpbin", "/exports", "../../../deemon.exe"]);
+local proc = process("cmd", ["/c", "dumpbin", "/exports",
+	"E:\\c\\dexmon\\deemon\\deemon.exe"
+	//"../../../deemon.exe"
+]);
 local r, w = pipe.new()...;
 proc.stdout = w;
 proc.start();
@@ -34,8 +37,11 @@ w.close();
 local symbols = [];
 for (local l: r) {
 	local name;
-	try none, none, none, name = l.scanf(" %[^ ] %[^ ] %[^ ] %[^ ]")...;
-	catch (...) continue;
+	try {
+		none, none, none, name = l.scanf(" %[^ ] %[^ ] %[^ ] %[^ ]")...;
+	} catch (...) {
+		continue;
+	}
 	name = name.strip();
 	if ("@" !in name) continue;
 	if (!name.startswith("_")) continue;
