@@ -65,8 +65,9 @@ splititer_next(StringSplitIterator *__restrict self) {
 			if (!result_end)
 				result_end = self->s_end,
 				next_ptr   = NULL;
-			else
+			else {
 				next_ptr = result_end + self->s_sepsz * 1;
+			}
 			result_len = (size_t)((uint8_t *)result_end - (uint8_t *)result_start);
 			break;
 
@@ -74,11 +75,12 @@ splititer_next(StringSplitIterator *__restrict self) {
 			result_end = (uint8_t *)memmemw((uint16_t *)result_start,
 			                                (uint16_t *)self->s_end - (uint16_t *)result_start,
 			                                (uint16_t *)self->s_sep, self->s_sepsz);
-			if (!result_end)
-				result_end = self->s_end,
+			if (!result_end) {
+				result_end = self->s_end;
 				next_ptr   = NULL;
-			else
+			} else {
 				next_ptr = result_end + self->s_sepsz * 2;
+			}
 			result_len = (size_t)((uint16_t *)result_end - (uint16_t *)result_start);
 			break;
 
@@ -86,11 +88,12 @@ splititer_next(StringSplitIterator *__restrict self) {
 			result_end = (uint8_t *)memmeml((uint32_t *)result_start,
 			                                (uint32_t *)self->s_end - (uint32_t *)result_start,
 			                                (uint32_t *)self->s_sep, self->s_sepsz);
-			if (!result_end)
-				result_end = self->s_end,
+			if (!result_end) {
+				result_end = self->s_end;
 				next_ptr   = NULL;
-			else
+			} else {
 				next_ptr = result_end + self->s_sepsz * 4;
+			}
 			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
 			break;
 		}

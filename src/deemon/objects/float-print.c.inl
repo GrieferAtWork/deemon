@@ -73,8 +73,9 @@ do_special_float:
 				buf[0] = '-';
 			else if (flags & DEEFLOAT_PRINT_FSIGN)
 				buf[0] = '+';
-			else
+			else {
 				buf[0] = ' ';
+			}
 			temp = (*printer)(arg, buf, 4);
 		} else {
 			temp = (*printer)(arg, buf + 1, 3);

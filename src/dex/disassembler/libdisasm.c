@@ -96,8 +96,9 @@ parse_asm_flags(char *__restrict str,
 					/* Found it! (update the resulting set of flags) */
 					if (remove_flag ^ disasm_flags[i].invert)
 						*presult &= ~disasm_flags[i].flag;
-					else
+					else {
 						*presult |= disasm_flags[i].flag;
+					}
 					goto next_opt;
 				}
 			}

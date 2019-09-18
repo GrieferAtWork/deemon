@@ -267,14 +267,15 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	chflags |= CH_ISDIGIT;
 	++iter;
 	/* keyword: scan until a non-alnum character is found. */
-	if (HAVE_EXTENSION_DOLLAR_IS_ALPHA)
+	if (HAVE_EXTENSION_DOLLAR_IS_ALPHA) {
 		for (;;) {
 			while (SKIP_WRAPLF(iter, end))
 				;
 			if (!(chrattr[(uint8_t)*iter] & chflags))
 				break;
 			++iter, ++name_size;
-		} else
+		}
+	} else {
 		for (;;) {
 			while (SKIP_WRAPLF(iter, end))
 				;
@@ -282,6 +283,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 				break;
 			++iter, ++name_size;
 		}
+	}
 	/* Lookup/generate the token id of this keyword. */
 	name_escapesize = (size_t)(iter - tok_begin);
 	if (name_size == name_escapesize) {

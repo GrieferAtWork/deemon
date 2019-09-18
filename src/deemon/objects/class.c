@@ -3866,12 +3866,13 @@ instance_enumattr(DeeTypeObject *__restrict tp_self,
 	              DeeObject *__restrict self) {                                 \
 		DREF DeeObject *func, *result;                                          \
 		func = DeeClass_GetOperator(tp_self, op);                               \
-		if                                                                      \
-			unlikely(!func)                                                     \
-		return NULL;                                                            \
+		if unlikely(!func)                                                      \
+			goto err;                                                           \
 		result = DeeObject_ThisCall(func, self, 0, NULL);                       \
 		Dee_Decref(func);                                                       \
 		return result;                                                          \
+	err:                                                                        \
+		return NULL;                                                            \
 	}                                                                           \
 	INTERN DREF DeeObject *DCALL                                                \
 	instance_xxx(DeeObject *__restrict self) {                                  \
@@ -3911,9 +3912,8 @@ instance_next(DeeObject *__restrict self) {
 	              DeeObject *__restrict other) {                                 \
 		DREF DeeObject *func, *result;                                           \
 		func = DeeClass_GetOperator(tp_self, op);                                \
-		if                                                                       \
-			unlikely(!func)                                                      \
-		goto err;                                                                \
+		if unlikely(!func)                                                       \
+			goto err;                                                            \
 		result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);        \
 		Dee_Decref(func);                                                        \
 		return result;                                                           \
@@ -3946,27 +3946,30 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetitem, instance_getitem, OPE
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetattr, instance_getattr, OPERATOR_GETATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION
 
-#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op)                         \
-	INTERN DREF DeeObject *DCALL                                                                          \
-	instance_txxx(DeeTypeObject *__restrict tp_self,                                                      \
-	              DeeObject *__restrict self,                                                             \
-	              DeeObject *__restrict other,                                                            \
-	              DeeObject *__restrict other2) {                                                         \
-		DREF DeeObject *func, *result;                                                                    \
-		DeeObject *argv[2];                                                                               \
-		func = DeeClass_GetOperator(tp_self, op);                                                         \
-		if                                                                                                \
-			unlikely(!func)                                                                               \
-		return NULL;                                                                                      \
-		argv[0] = other;                                                                                  \
-		argv[1] = other2;                                                                                 \
-		result  = DeeObject_ThisCall(func, self, 2, argv);                                                \
-		Dee_Decref(func);                                                                                 \
-		return result;                                                                                    \
-	}                                                                                                     \
-	INTERN DREF DeeObject *DCALL                                                                          \
-	instance_xxx(DeeObject *__restrict self, DeeObject *__restrict other, DeeObject *__restrict other2) { \
-		return instance_txxx(Dee_TYPE(self), self, other, other2);                                        \
+#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
+	INTERN DREF DeeObject *DCALL                                                  \
+	instance_txxx(DeeTypeObject *__restrict tp_self,                              \
+	              DeeObject *__restrict self,                                     \
+	              DeeObject *__restrict other,                                    \
+	              DeeObject *__restrict other2) {                                 \
+		DREF DeeObject *func, *result;                                            \
+		DeeObject *argv[2];                                                       \
+		func = DeeClass_GetOperator(tp_self, op);                                 \
+		if unlikely(!func)                                                        \
+			goto err;                                                             \
+		argv[0] = other;                                                          \
+		argv[1] = other2;                                                         \
+		result  = DeeObject_ThisCall(func, self, 2, argv);                        \
+		Dee_Decref(func);                                                         \
+		return result;                                                            \
+	err:                                                                          \
+		return NULL;                                                              \
+	}                                                                             \
+	INTERN DREF DeeObject *DCALL                                                  \
+	instance_xxx(DeeObject *__restrict self,                                      \
+	             DeeObject *__restrict other,                                     \
+	             DeeObject *__restrict other2) {                                  \
+		return instance_txxx(Dee_TYPE(self), self, other, other2);                \
 	}
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, OPERATOR_GETRANGE)
 #undef DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION
@@ -3977,14 +3980,12 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, 
 	              DeeObject *__restrict self) {                                     \
 		DeeObject *func, *result;                                                   \
 		func = DeeClass_GetOperator(tp_self, op);                                   \
-		if                                                                          \
-			unlikely(!func)                                                         \
-		goto err;                                                                   \
+		if unlikely(!func)                                                          \
+			goto err;                                                               \
 		result = DeeObject_ThisCall(func, self, 0, NULL);                           \
 		Dee_Decref(func);                                                           \
-		if                                                                          \
-			unlikely(!result)                                                       \
-		goto err;                                                                   \
+		if unlikely(!result)                                                        \
+			goto err;                                                               \
 		Dee_Decref(result);                                                         \
 		return 0;                                                                   \
 	err:                                                                            \
@@ -4005,14 +4006,12 @@ DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPER
 	              DeeObject *__restrict other) {                                     \
 		DeeObject *func, *result;                                                    \
 		func = DeeClass_GetOperator(tp_self, op);                                    \
-		if                                                                           \
-			unlikely(!func)                                                          \
-		goto err;                                                                    \
+		if unlikely(!func)                                                           \
+			goto err;                                                                \
 		result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);            \
 		Dee_Decref(func);                                                            \
-		if                                                                           \
-			unlikely(!result)                                                        \
-		goto err;                                                                    \
+		if unlikely(!result)                                                         \
+			goto err;                                                                \
 		Dee_Decref(result);                                                          \
 		return 0;                                                                    \
 	err:                                                                             \
@@ -4029,33 +4028,33 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelitem, instance_delitem,
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr, OPERATOR_DELATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
-#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op)                     \
-	INTERN int DCALL                                                                                      \
-	instance_txxx(DeeTypeObject *__restrict tp_self,                                                      \
-	              DeeObject *__restrict self,                                                             \
-	              DeeObject *__restrict other,                                                            \
-	              DeeObject *__restrict other2) {                                                         \
-		DREF DeeObject *func, *result;                                                                    \
-		DeeObject *argv[2];                                                                               \
-		func = DeeClass_GetOperator(tp_self, op);                                                         \
-		if                                                                                                \
-			unlikely(!func)                                                                               \
-		goto err;                                                                                         \
-		argv[0] = other;                                                                                  \
-		argv[1] = other2;                                                                                 \
-		result  = DeeObject_ThisCall(func, self, 2, argv);                                                \
-		Dee_Decref(func);                                                                                 \
-		if                                                                                                \
-			unlikely(!result)                                                                             \
-		goto err;                                                                                         \
-		Dee_Decref(result);                                                                               \
-		return 0;                                                                                         \
-	err:                                                                                                  \
-		return -1;                                                                                        \
-	}                                                                                                     \
-	INTERN int DCALL                                                                                      \
-	instance_xxx(DeeObject *__restrict self, DeeObject *__restrict other, DeeObject *__restrict other2) { \
-		return instance_txxx(Dee_TYPE(self), self, other, other2);                                        \
+#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
+	INTERN int DCALL                                                                  \
+	instance_txxx(DeeTypeObject *__restrict tp_self,                                  \
+	              DeeObject *__restrict self,                                         \
+	              DeeObject *__restrict other,                                        \
+	              DeeObject *__restrict other2) {                                     \
+		DREF DeeObject *func, *result;                                                \
+		DeeObject *argv[2];                                                           \
+		func = DeeClass_GetOperator(tp_self, op);                                     \
+		if unlikely(!func)                                                            \
+			goto err;                                                                 \
+		argv[0] = other;                                                              \
+		argv[1] = other2;                                                             \
+		result  = DeeObject_ThisCall(func, self, 2, argv);                            \
+		Dee_Decref(func);                                                             \
+		if unlikely(!result)                                                          \
+			goto err;                                                                 \
+		Dee_Decref(result);                                                           \
+		return 0;                                                                     \
+	err:                                                                              \
+		return -1;                                                                    \
+	}                                                                                 \
+	INTERN int DCALL                                                                  \
+	instance_xxx(DeeObject *__restrict self,                                          \
+	             DeeObject *__restrict other,                                         \
+	             DeeObject *__restrict other2) {                                      \
+		return instance_txxx(Dee_TYPE(self), self, other, other2);                    \
 	}
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetitem, instance_setitem, OPERATOR_SETITEM)
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelrange, instance_delrange, OPERATOR_DELRANGE)
@@ -4072,17 +4071,15 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetattr, instance_setattr
 		DREF DeeObject *func, *result;                                                \
 		DeeObject *argv[3];                                                           \
 		func = DeeClass_GetOperator(tp_self, op);                                     \
-		if                                                                            \
-			unlikely(!func)                                                           \
-		goto err;                                                                     \
+		if unlikely(!func)                                                            \
+			goto err;                                                                 \
 		argv[0] = other;                                                              \
 		argv[1] = other2;                                                             \
 		argv[2] = other3;                                                             \
 		result  = DeeObject_ThisCall(func, self, 3, argv);                            \
 		Dee_Decref(func);                                                             \
-		if                                                                            \
-			unlikely(!result)                                                         \
-		goto err;                                                                     \
+		if unlikely(!result)                                                          \
+			goto err;                                                                 \
 		Dee_Decref(result);                                                           \
 		return 0;                                                                     \
 	err:                                                                              \
@@ -4104,14 +4101,12 @@ DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetrange, instance_setran
 	              DeeObject **__restrict pself) {                                       \
 		DREF DeeObject *func, *result;                                                  \
 		func = DeeClass_GetOperator(tp_self, op);                                       \
-		if                                                                              \
-			unlikely(!func)                                                             \
-		goto err;                                                                       \
+		if unlikely(!func)                                                              \
+			goto err;                                                                   \
 		result = DeeObject_ThisCall(func, *pself, 0, NULL);                             \
 		Dee_Decref(func);                                                               \
-		if                                                                              \
-			unlikely(!result)                                                           \
-		goto err;                                                                       \
+		if unlikely(!result)                                                            \
+			goto err;                                                                   \
 		Dee_Decref(*pself);                                                             \
 		*pself = result;                                                                \
 		return 0;                                                                       \
@@ -4133,14 +4128,12 @@ DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tdec, instance_dec, OPER
 	              DeeObject *__restrict other) {                                         \
 		DREF DeeObject *func, *result;                                                   \
 		func = DeeClass_GetOperator(tp_self, op);                                        \
-		if                                                                               \
-			unlikely(!func)                                                              \
-		goto err;                                                                        \
+		if unlikely(!func)                                                               \
+			goto err;                                                                    \
 		result = DeeObject_ThisCall(func, *pself, 1, (DeeObject **)&other);              \
 		Dee_Decref(func);                                                                \
-		if                                                                               \
-			unlikely(!result)                                                            \
-		goto err;                                                                        \
+		if unlikely(!result)                                                             \
+			goto err;                                                                    \
 		Dee_Decref(*pself);                                                              \
 		*pself = result;                                                                 \
 		return 0;                                                                        \

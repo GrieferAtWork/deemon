@@ -27,8 +27,9 @@ function walk(p) {
 			x = joinpath(p,x);
 			if (stat.isdir(x))
 				yield walk(x)...;
-			else
+			else {
 				yield x;
+			}
 		}
 	} catch (Error.SystemError) {
 	}

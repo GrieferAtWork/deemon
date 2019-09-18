@@ -1436,8 +1436,9 @@ imod_ctor(InteractiveModule *__restrict self,
 			imod_argv = argv[1];
 		else if (DeeString_Check(argv[1]))
 			imod_path = argv[1];
-		else
+		else {
 			imod_syms = argv[1];
+		}
 		break;
 
 	case 3:
@@ -1456,8 +1457,9 @@ imod_ctor(InteractiveModule *__restrict self,
 				imod_argv = argv[2];
 			else if (DeeString_Check(argv[2]))
 				imod_name = argv[2];
-			else
+			else {
 				imod_syms = argv[2];
+			}
 		}
 		break;
 

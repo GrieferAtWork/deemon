@@ -1076,8 +1076,9 @@ process_id(Process *__restrict self,
 		COMPILER_READ_BARRIER();
 		if (self->p_id == (DWORD)-1)
 			self->p_id = pid;
-		else
+		else {
 			pid = self->p_id;
+		}
 		rwlock_endwrite(&self->p_lock);
 	} else {
 		rwlock_endread(&self->p_lock);
@@ -1376,13 +1377,14 @@ pt_iter(ProcessThreads *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	if (!Thread32First(result->pti_handle, &result->pti_entry))
 		result->pti_entry.dwSize = 0;
-	else
+	else {
 		while (!result->pti_entry.dwSize) {
 			if (!Thread32Next(result->pti_handle, &result->pti_entry)) {
 				result->pti_entry.dwSize = 0;
 				break;
 			}
 		}
+	}
 	DBG_ALIGNMENT_ENABLE();
 	result->pti_id = self->pt_id;
 	rwlock_init(&result->pti_lock);

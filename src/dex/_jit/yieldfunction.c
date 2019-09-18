@@ -400,8 +400,9 @@ JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 				goto err;
 			if (JITLexer_SkipStatement(self))
 				goto err;
-		} else
+		} else {
 			break;
+		}
 	}
 	return 0;
 err:
@@ -1732,8 +1733,9 @@ service_exception_handlers:
 							JITContext_PopScope(&self->ji_ctx);
 							if (JITLexer_SkipStatement(&self->ji_lex))
 								goto err;
-						} else
+						} else {
 							break;
+						}
 					}
 					goto again_check_try_statements;
 				}

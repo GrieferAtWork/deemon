@@ -2204,8 +2204,9 @@ done:
 	memset(result->s_data, 0, sizeof(struct string_utf));
 	if (mbcs_length <= length)
 		result->s_data->u_width = STRING_WIDTH_1BYTE;
-	else
+	else {
 		result->s_data->u_width = STRING_WIDTH_2BYTE;
+	}
 	result->s_data->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
 	result->s_data->u_flags                    = STRING_UTF_FNORMAL;
 	result->s_data->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data. */

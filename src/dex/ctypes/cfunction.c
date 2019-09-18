@@ -244,7 +244,7 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
 	if (!argc) {
 		if (ASCII_PRINTER_PRINT(&printer, "void") < 0)
 			goto err;
-	} else
+	} else {
 		for (i = 0; i < argc; ++i) {
 			if (i != 0 && ASCII_PRINTER_PRINT(&printer, ", ") < 0)
 				goto err;
@@ -253,6 +253,7 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
 			                    &printer) < 0)
 				goto err;
 		}
+	}
 	if (ASCII_PRINTER_PRINT(&printer, ")") < 0)
 		goto err;
 	return ascii_printer_pack(&printer);

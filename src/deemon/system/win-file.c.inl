@@ -519,10 +519,11 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	if (oflags & OPEN_FCREAT) {
 		if (oflags & OPEN_FEXCL)
 			dwCreationDisposition = CREATE_NEW;
-		else
+		else {
 			dwCreationDisposition = ((oflags & OPEN_FTRUNC)
 			                         ? CREATE_ALWAYS
 			                         : OPEN_ALWAYS);
+		}
 		if (!(mode & 0444))
 			dwFlagsAndAttributes |= FILE_ATTRIBUTE_READONLY;
 	} else {

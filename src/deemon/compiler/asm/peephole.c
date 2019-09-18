@@ -1689,8 +1689,9 @@ do_unused_operand_optimization_ex:
 					total_adjustment -= 1;
 				else if (next_instruction[0] == ASM_ADJSTACK)
 					total_adjustment += *(int8_t *)(next_instruction + 1);
-				else
+				else {
 					total_adjustment += (int16_t)UNALIGNED_GETLE16((uint16_t *)(next_instruction + 2));
+				}
 				/* Delete existing assembly. */
 				continue_after = asm_nextinstr(next_instruction);
 				delete_assembly((code_addr_t)(iter - sc_main.sec_begin),

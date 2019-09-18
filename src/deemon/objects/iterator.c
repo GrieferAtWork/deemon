@@ -167,13 +167,11 @@ err:
 		if (self == other)                                          \
 			if_same;                                                \
 		mylen = get_remaining_iterations(self);                     \
-		if                                                          \
-			unlikely(mylen < 0)                                     \
-		return NULL;                                                \
+		if unlikely(mylen < 0)                                      \
+			return NULL;                                            \
 		otlen = get_remaining_iterations(other);                    \
-		if                                                          \
-			unlikely(otlen < 0)                                     \
-		return NULL;                                                \
+		if unlikely(otlen < 0)                                      \
+			return NULL;                                            \
 		return_bool_(otlen op mylen);                               \
 	}
 DEFINE_ITERATOR_COMPARE(iterator_eq, ==, return_true)

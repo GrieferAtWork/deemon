@@ -1389,7 +1389,7 @@ encode_hex:
 					encoded_text[2]   = c_hex[(ch & 0x000000f0) >> 4];
 					encoded_text[3]   = c_hex[ch & 0x0000000f];
 					encoded_text_size = 4;
-				} else
+				} else {
 encode_uni:
 					if (ch <= 0xffff) {
 						encoded_text[1]   = 'u';
@@ -1410,6 +1410,7 @@ encode_uni:
 						encoded_text[9]   = c_hex[ch & 0x0000000f];
 						encoded_text_size = 10;
 					}
+				}
 print_encoded:
 				print(encoded_text, encoded_text_size);
 				goto next;
@@ -1603,7 +1604,7 @@ encode_hex:
 					encoded_text[2]   = c_hex[(ch & 0x000000f0) >> 4];
 					encoded_text[3]   = c_hex[ch & 0x0000000f];
 					encoded_text_size = 4;
-				} else
+				} else {
 encode_uni:
 					if (ch <= 0xffff) {
 						encoded_text[1]   = 'u';
@@ -1624,6 +1625,7 @@ encode_uni:
 						encoded_text[9]   = c_hex[ch & 0x0000000f];
 						encoded_text_size = 10;
 					}
+				}
 print_encoded:
 				print(encoded_text, encoded_text_size);
 				goto next;

@@ -79,10 +79,10 @@ err:
 	err:                                                               \
 		return -1;                                                     \
 	}
-DEFINE_BYTEWRITER_PUTX(bytewriter_putb,uint8_t,byte)
-DEFINE_BYTEWRITER_PUTX(bytewriter_putw,uint16_t,word)
-DEFINE_BYTEWRITER_PUTX(bytewriter_putl,uint32_t,dword)
-DEFINE_BYTEWRITER_PUTX(bytewriter_putq,uint64_t,qword)
+DEFINE_BYTEWRITER_PUTX(bytewriter_putb, uint8_t, byte)
+DEFINE_BYTEWRITER_PUTX(bytewriter_putw, uint16_t, word)
+DEFINE_BYTEWRITER_PUTX(bytewriter_putl, uint32_t, dword)
+DEFINE_BYTEWRITER_PUTX(bytewriter_putq, uint64_t, qword)
 #undef DEFINE_BYTEWRITER_PUTX
 
 #ifndef __INTELLISENSE__

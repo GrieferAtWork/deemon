@@ -2338,9 +2338,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 			uint32_t ch;                                                \
 			if (DeeObject_AsSize(argv[0], &start))                      \
 				goto err;                                               \
-			if                                                          \
-				unlikely(start >= DeeString_WLEN(self))                 \
-			{                                                           \
+			if unlikely(start >= DeeString_WLEN(self)) {                \
 				err_index_out_of_bounds((DeeObject *)self,              \
 				                        start,                          \
 				                        DeeString_WLEN(self));          \
@@ -6315,16 +6313,18 @@ string_vercompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = dee_strverscmpb(my_str.cp8, my_len,
 		                         ot_str.cp8, ot_len);
 		break;
@@ -6342,16 +6342,18 @@ string_vercompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = dee_strverscmpw(my_str.cp16, my_len,
 		                         ot_str.cp16, ot_len);
 		break;
@@ -6369,16 +6371,18 @@ string_vercompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = dee_strverscmpl(my_str.cp32, my_len,
 		                         ot_str.cp32, ot_len);
 		break;
@@ -6409,16 +6413,18 @@ string_casevercompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = dee_strcaseverscmpb(my_str.cp8, my_len,
 		                             ot_str.cp8, ot_len);
 		break;
@@ -6436,16 +6442,18 @@ string_casevercompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = dee_strcaseverscmpw(my_str.cp16, my_len,
 		                             ot_str.cp16, ot_len);
 		break;
@@ -6463,16 +6471,18 @@ string_casevercompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = dee_strcaseverscmpl(my_str.cp32, my_len,
 		                             ot_str.cp32, ot_len);
 		break;
@@ -6503,16 +6513,18 @@ string_fuzzycompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = fuzzy_compareb(my_str.cp8, my_len,
 		                        ot_str.cp8, ot_len);
 		break;
@@ -6530,16 +6542,18 @@ string_fuzzycompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = fuzzy_comparew(my_str.cp16, my_len,
 		                        ot_str.cp16, ot_len);
 		break;
@@ -6557,16 +6571,18 @@ string_fuzzycompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = fuzzy_comparel(my_str.cp32, my_len,
 		                        ot_str.cp32, ot_len);
 		break;
@@ -6599,16 +6615,18 @@ string_casefuzzycompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = fuzzy_casecompareb(my_str.cp8, my_len,
 		                            ot_str.cp8, ot_len);
 		break;
@@ -6626,16 +6644,18 @@ string_casefuzzycompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = fuzzy_casecomparew(my_str.cp16, my_len,
 		                            ot_str.cp16, ot_len);
 		break;
@@ -6653,16 +6673,18 @@ string_casefuzzycompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = fuzzy_casecomparel(my_str.cp32, my_len,
 		                            ot_str.cp32, ot_len);
 		break;
@@ -6694,16 +6716,18 @@ string_common(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		while (ot_len && my_len) {
 			uint8_t a = *my_str.cp8;
 			uint8_t b = *ot_str.cp8;
@@ -6730,16 +6754,18 @@ string_common(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		while (ot_len && my_len) {
 			uint16_t a = *my_str.cp16;
 			uint16_t b = *ot_str.cp16;
@@ -6766,16 +6792,18 @@ string_common(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		while (ot_len && my_len) {
 			uint32_t a = *my_str.cp32;
 			uint32_t b = *ot_str.cp32;
@@ -6814,16 +6842,18 @@ string_rcommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		while (ot_len && my_len) {
 			uint8_t a;
 			uint8_t b;
@@ -6852,16 +6882,18 @@ string_rcommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		while (ot_len && my_len) {
 			uint16_t a;
 			uint16_t b;
@@ -6890,16 +6922,18 @@ string_rcommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		while (ot_len && my_len) {
 			uint32_t a;
 			uint32_t b;
@@ -6945,16 +6979,18 @@ string_casecommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
 		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
 		while (!unicode_foldreader_empty(my_reader.b) &&
@@ -6979,16 +7015,18 @@ string_casecommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
 		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
 		while (!unicode_foldreader_empty(my_reader.w) &&
@@ -7013,16 +7051,18 @@ string_casecommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
 		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
 		while (!unicode_foldreader_empty(my_reader.l) &&
@@ -7064,16 +7104,18 @@ string_casercommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
 		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
 		while (!unicode_foldreader_empty(my_reader.b) &&
@@ -7098,16 +7140,18 @@ string_casercommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
 		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
 		while (!unicode_foldreader_empty(my_reader.w) &&
@@ -7132,16 +7176,18 @@ string_casercommon(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
 		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
 		while (!unicode_foldreader_empty(my_reader.l) &&
@@ -7180,16 +7226,18 @@ string_wildcompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = wildcompareb(my_str.cp8, my_len,
 		                      ot_str.cp8, ot_len);
 		break;
@@ -7207,16 +7255,18 @@ string_wildcompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = wildcomparew(my_str.cp16, my_len,
 		                      ot_str.cp16, ot_len);
 		break;
@@ -7234,16 +7284,18 @@ string_wildcompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = wildcomparel(my_str.cp32, my_len,
 		                      ot_str.cp32, ot_len);
 		break;
@@ -7274,16 +7326,18 @@ string_wmatch(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = wildcompareb(my_str.cp8, my_len,
 		                      ot_str.cp8, ot_len) == 0;
 		break;
@@ -7301,16 +7355,18 @@ string_wmatch(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = wildcomparew(my_str.cp16, my_len,
 		                      ot_str.cp16, ot_len) == 0;
 		break;
@@ -7328,16 +7384,18 @@ string_wmatch(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		result = wildcomparel(my_str.cp32, my_len,
 		                      ot_str.cp32, ot_len) == 0;
 		break;
@@ -7373,16 +7431,18 @@ string_casewildcompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
 		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
 		result = wildcasecompareb(&my_reader.b, &ot_reader.b);
@@ -7401,16 +7461,18 @@ string_casewildcompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
 		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
 		result = wildcasecomparew(&my_reader.w, &ot_reader.w);
@@ -7429,16 +7491,18 @@ string_casewildcompare(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
 		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
 		result = wildcasecomparel(&my_reader.l, &ot_reader.l);
@@ -7475,16 +7539,18 @@ string_casewmatch(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp8 += args.my_start,
+		else {
+			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp8 += args.ot_start,
+		else {
+			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.b, my_str.cp8, my_len);
 		unicode_foldreader_init(ot_reader.b, ot_str.cp8, ot_len);
 		result = wildcasecompareb(&my_reader.b, &ot_reader.b);
@@ -7503,16 +7569,18 @@ string_casewmatch(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp16 += args.my_start,
+		else {
+			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp16 += args.ot_start,
+		else {
+			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.w, my_str.cp16, my_len);
 		unicode_foldreader_init(ot_reader.w, ot_str.cp16, ot_len);
 		result = wildcasecomparew(&my_reader.w, &ot_reader.w);
@@ -7531,16 +7599,18 @@ string_casewmatch(String *__restrict self,
 			args.my_end = my_len;
 		if (args.my_end <= args.my_start)
 			my_len = 0;
-		else
-			my_str.cp32 += args.my_start,
+		else {
+			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
+		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
 		if (args.ot_end <= args.ot_start)
 			ot_len = 0;
-		else
-			ot_str.cp32 += args.ot_start,
+		else {
+			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
+		}
 		unicode_foldreader_init(my_reader.l, my_str.cp32, my_len);
 		unicode_foldreader_init(ot_reader.l, ot_str.cp32, ot_len);
 		result = wildcasecomparel(&my_reader.l, &ot_reader.l);
@@ -9108,7 +9178,7 @@ PRIVATE int (DCALL regex_get_rules)(char const *__restrict rules_str,
 				goto err;
 			}
 		}
-	} else
+	} else {
 		for (;;) {
 			/* Comma-mode */
 			char *name_start = (char *)rules_str;
@@ -9135,6 +9205,7 @@ got_rule_name:
 				break;
 			++rules_str;
 		}
+	}
 	return 0;
 err:
 	return -1;

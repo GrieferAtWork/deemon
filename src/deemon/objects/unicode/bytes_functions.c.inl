@@ -826,9 +826,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 			uint8_t ch;                                                 \
 			if (DeeObject_AsSize(argv[0], &start))                      \
 				goto err;                                               \
-			if                                                          \
-				unlikely(start >= DeeBytes_SIZE(self))                  \
-			{                                                           \
+			if unlikely(start >= DeeBytes_SIZE(self)) {                 \
 				err_index_out_of_bounds((DeeObject *)self,              \
 				                        start,                          \
 				                        DeeBytes_SIZE(self));           \

@@ -292,8 +292,9 @@ ob_weakref_lock(WeakRef *__restrict self,
 	if (!result) {
 		if ((result = alt) == NULL)
 			err_cannot_lock_weakref();
-		else
+		else {
 			Dee_Incref(result);
+		}
 	}
 	return result;
 }

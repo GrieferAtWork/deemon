@@ -440,8 +440,9 @@ INTERN void DCALL assembler_fini(void) {
 	for (i = 0; i < SECTION_COUNT; ++i) {
 		if (current_assembler.a_sect[i].sec_code)
 			DeeGCObject_Free(current_assembler.a_sect[i].sec_code);
-		else
+		else {
 			Dee_Free(current_assembler.a_sect[i].sec_begin);
+		}
 		Dee_Free(current_assembler.a_sect[i].sec_relv);
 	}
 	/* Free up symbols. */
@@ -1414,8 +1415,9 @@ INTERN struct except_handler *DCALL asm_pack_exceptv(void) {
 		                                                           sizeof(struct except_handler));
 		if (exceptv)
 			current_assembler.a_exceptv = (struct asm_exc *)exceptv;
-		else
+		else {
 			exceptv = (struct except_handler *)current_assembler.a_exceptv;
+		}
 	}
 #endif /* CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
 	dst  = exceptv + current_assembler.a_exceptc;
@@ -2010,8 +2012,9 @@ PRIVATE int DCALL fix_relint(DeeObject **__restrict pobj) {
 	value = relint->ri_add;
 	if (relint->ri_mode == RELINT_MODE_FADDR)
 		value += relint->ri_sym->as_addr;
-	else
+	else {
 		value += relint->ri_sym->as_stck;
+	}
 	intob = DeeInt_NewS64(value);
 	if unlikely(!intob)
 		return -1;

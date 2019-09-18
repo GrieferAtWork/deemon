@@ -82,11 +82,12 @@ JITLexer_ScanForHead(JITLexer *__restrict self) {
 	if (self->jl_tok == ':') {
 		JITLexer_Yield(self);
 		JITLexer_ScanExpression(self, true);
-	} else
+	} else {
 		while (self->jl_tok == ';') {
 			JITLexer_Yield(self);
 			JITLexer_ScanExpression(self, true);
 		}
+	}
 	if (has_paren && self->jl_tok == ')')
 		JITLexer_Yield(self);
 }

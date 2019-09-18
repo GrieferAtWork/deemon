@@ -160,8 +160,9 @@ print_ddi(struct ascii_printer *__restrict printer,
 			name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
 			if (!state.rs_regs.dr_path--)
 				path = NULL;
-			else
+			else {
 				path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
+			}
 			print_error = ascii_printer_printf(printer,
 			                                   "%s%s%s(%d,%d) : %s+%.4I32X",
 			                                   path ? path : "",

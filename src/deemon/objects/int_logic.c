@@ -211,15 +211,17 @@ int_sub(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	if (a->ob_size < 0) {
 		if (b->ob_size < 0)
 			z = x_sub(a, b);
-		else
+		else {
 			z = x_add(a, b);
+		}
 		if (z != NULL /* && z->ob_size != 0*/)
 			z->ob_size = -z->ob_size;
 	} else {
 		if (b->ob_size < 0)
 			z = x_add(a, b);
-		else
+		else {
 			z = x_sub(a, b);
+		}
 	}
 done:
 	Dee_Decref(b);
@@ -846,15 +848,17 @@ DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
 	if (a->ob_size < 0) {
 		if (b < 0)
 			z = x_sub_int(a, (digit)-b);
-		else
+		else {
 			z = x_add_int(a, (digit)b);
+		}
 		if (z != NULL /* && z->ob_size != 0*/)
 			z->ob_size = -z->ob_size;
 	} else {
 		if (b < 0)
 			z = x_add_int(a, (digit)-b);
-		else
+		else {
 			z = x_sub_int(a, (digit)b);
+		}
 	}
 	return (DeeObject *)z;
 }
@@ -1427,8 +1431,9 @@ l_divmod(DeeIntObject *__restrict v,
 	}
 	if (pdiv != NULL)
 		*pdiv = div;
-	else
+	else {
 		Dee_Decref(div);
+	}
 	if (pmod != NULL)
 		*pmod = mod;
 	else {
@@ -1558,8 +1563,9 @@ INTERN DREF DeeObject *DCALL int_shl(DeeIntObject *__restrict a, DeeIntObject *_
 	}
 	if (remshift)
 		z->ob_digit[newsize - 1] = (digit)accum;
-	else
+	else {
 		ASSERT(!accum);
+	}
 	z = int_normalize(z);
 	return (DeeObject *)maybe_small_int(z);
 }

@@ -681,8 +681,9 @@ err_restart_collect:
 			if (iter == copy)
 				i     = self->d_head_idx,
 				count = self->d_head_use;
-			else
+			else {
 				i = 0, count = self->d_bucket_sz;
+			}
 			while (count--) {
 				Dee_Decref(iter->db_items[i]);
 				++i;
@@ -1739,8 +1740,9 @@ deqiter_next(DequeIteratorObject *__restrict self) {
 		Dee_Incref(result);
 		if (DequeIterator_HasNext(&self->di_iter, self->di_deq))
 			DequeIterator_Next(&self->di_iter, self->di_deq);
-		else
+		else {
 			--self->di_ver; /* Invalidate the version number. */
+		}
 	}
 	Deque_LockEndRead(self->di_deq);
 	rwlock_endread(&self->di_lock);

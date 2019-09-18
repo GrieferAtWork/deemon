@@ -1008,8 +1008,9 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 				radix = 16, ++begin;
 			else if (*begin == 'b' || *begin == 'B')
 				radix = 2, ++begin;
-			else
+			else {
 				radix = 8;
+			}
 		} else {
 			begin = old_begin;
 			radix = 10;

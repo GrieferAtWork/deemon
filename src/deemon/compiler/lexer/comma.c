@@ -320,8 +320,9 @@ next_expr:
 				/* Use the default mode appropriate for the current scope. */
 				if (current_scope == &current_rootscope->rs_scope.bs_scope)
 					symbol_mode |= LOOKUP_SYM_VGLOBAL;
-				else
+				else {
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
+				}
 			}
 		}
 		current = ast_setddi(ast_parse_class(class_flags, class_name,
@@ -352,8 +353,9 @@ next_expr:
 				/* Use the default mode appropriate for the current scope. */
 				if (current_scope == &current_rootscope->rs_scope.bs_scope)
 					symbol_mode |= LOOKUP_SYM_VGLOBAL;
-				else
+				else {
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
+				}
 			}
 			/* Create the symbol that will be used by the function. */
 			function_symbol = lookup_symbol(symbol_mode, function_name, &loc);

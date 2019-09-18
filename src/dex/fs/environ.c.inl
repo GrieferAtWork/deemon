@@ -199,8 +199,9 @@ iter_done:
 	valstart = strrchr(result, '=');
 	if (!valstart)
 		valstart = strend(result);
-	else
+	else {
 		--valstart;
+	}
 allocate_name:
 	name = DeeString_TryNewSized(result, (size_t)(valstart - result));
 	if unlikely(!name) {

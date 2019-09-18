@@ -234,8 +234,9 @@ err_handle_catch_except:
 				if (SKIP_SECONDARY(self, &was_expression))
 					goto err_r;
 			}
-		} else
+		} else {
 			break;
+		}
 	}
 #else /* JIT_EVAL */
 	ASSERT(JITLexer_ISKWD(self, "try"));
@@ -270,8 +271,9 @@ err_handle_catch_except:
 			result = SKIP_SECONDARY(self, &was_expression);
 			if (ISERR(result))
 				goto err;
-		} else
+		} else {
 			break;
+		}
 	}
 #endif /* !JIT_EVAL */
 	IF_HYBRID(if (pwas_expression) *pwas_expression = was_expression;)

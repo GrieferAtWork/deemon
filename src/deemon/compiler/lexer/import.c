@@ -87,8 +87,9 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 #endif /* CONFIG_HOST_WINDOWS */
 			if (path_start)
 				++path_start;
-			else
+			else {
 				path_start = (char *)filename;
+			}
 			filename_length = (size_t)(path_start - filename);
 			/* Interpret the module name relative to the path of the current source file. */
 			result = (DREF DeeModuleObject *)DeeModule_OpenRelative((DeeObject *)module_name,

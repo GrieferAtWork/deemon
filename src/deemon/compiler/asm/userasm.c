@@ -482,8 +482,9 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 		         OPERAND_CLASS_ISDISP(iop->io_class))
 			;
 #endif
-		else
+		else {
 			goto nope;
+		}
 	}
 	imm_val = iop->io_intexpr.ie_val;
 	imm_rel = iop->io_intexpr.ie_rel;
@@ -1088,8 +1089,9 @@ do_emit_instruction:
 			if (emit_sym16 ? asm_put_data16((uint16_t)cid)
 			               : asm_put_data8((uint8_t)cid))
 				goto err;
-		} else
+		} else {
 			switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
+
 				/* Symbol operands. */
 			case OPERAND_CLASS_EXTERN:
 				if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_extern.io_modid)
@@ -1152,6 +1154,7 @@ do_emit_instruction:
 
 			default: break;
 			}
+		}
 	}
 /*done_instruction:*/
 	/* Save the last-written instruction. */
@@ -1586,8 +1589,9 @@ abs_stack_any:
 			goto next_option;
 		if (mode == OPTION_MODE_INPUT)
 			sid = asm_ssymid_for_read(sym, self);
-		else
+		else {
 			sid = asm_ssymid(sym);
+		}
 		if unlikely(sid < 0)
 			goto err;
 		result = DeeString_Newf("static %I16u", (uint16_t)sid);
@@ -1618,8 +1622,9 @@ abs_stack_any:
 			goto next_option;
 		if (mode == OPTION_MODE_INPUT)
 			gid = asm_gsymid_for_read(sym, self);
-		else
+		else {
 			gid = asm_gsymid(sym);
+		}
 		if unlikely(gid < 0)
 			goto err;
 		result = DeeString_Newf("global %I16u", (uint16_t)gid);
@@ -1637,8 +1642,9 @@ abs_stack_any:
 write_regular_local:
 		if (mode == OPTION_MODE_INPUT)
 			lid = asm_lsymid_for_read(sym, self);
-		else
+		else {
 			lid = asm_lsymid(sym);
+		}
 		if unlikely(lid < 0)
 			goto err;
 		result = DeeString_Newf("local %I16u", (uint16_t)lid);

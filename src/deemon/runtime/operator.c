@@ -3306,9 +3306,8 @@ DEFINE_COMPARE_OPERATOR(CompareGeObject, ge, le, OPERATOR_GE, DeeType_INVOKE_GE,
 		DeeObject *val;                                \
 		int result;                                    \
 		val = name##Object(self, some_object);         \
-		if                                             \
-			unlikely(!val)                             \
-		return -1;                                     \
+		if unlikely(!val)                              \
+			return -1;                                 \
 		result = DeeObject_Bool(val);                  \
 		Dee_Decref(val);                               \
 		return result;                                 \

@@ -425,14 +425,16 @@ has_length:
 			/* Signed integer. */
 			if (length > 4)
 				result = DeeInt_NewS64(data.i64);
-			else
+			else {
 				result = DeeInt_NewS32(data.i32);
+			}
 		} else {
 			/* Unsigned integer. */
 			if (length > 4)
 				result = DeeInt_NewU64(data.u64);
-			else
+			else {
 				result = DeeInt_NewU32(data.u32);
+			}
 		}
 	}	break;
 

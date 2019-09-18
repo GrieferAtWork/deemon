@@ -652,8 +652,9 @@ again:
 		self->fb_ptr += bufavail;
 		if (self->fb_cnt >= bufavail)
 			self->fb_cnt -= bufavail;
-		else
+		else {
 			self->fb_cnt = 0;
+		}
 		/* When operating in line-buffered mode, check
 		 * if there was a linefeed in what we just wrote. */
 		if ((self->fb_flag & FILE_BUFFER_FLNBUF) &&
@@ -806,8 +807,9 @@ buffer_seek_nolock(Buffer *__restrict self,
 			size_t skipsz = (size_t)(new_pos - self->fb_ptr);
 			if (self->fb_cnt >= skipsz)
 				self->fb_cnt -= skipsz;
-			else
+			else {
 				self->fb_cnt = 0;
+			}
 		}
 		self->fb_ptr = new_pos;
 		return (doff_t)new_abspos;

@@ -122,8 +122,9 @@ fs_pathfile(DeeObject *__restrict path) {
 #endif /* !CONFIG_HOST_WINDOWS */
 	if (tailsep)
 		++tailsep;
-	else
+	else {
 		tailsep = DeeString_STR(path);
+	}
 	tailsize = (size_t)(DeeString_END(path) - tailsep);
 	extpos   = (char *)memrchr(tailsep, '.', tailsize * sizeof(char));
 	if (extpos)

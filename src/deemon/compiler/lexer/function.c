@@ -241,8 +241,9 @@ parse_varargs_suffix:
 					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 						goto err;
 					symbol_flags |= SYMBOL_FVARYING;
-				} else
+				} else {
 					break;
+				}
 				if (yield() < 0)
 					goto err;
 			}

@@ -733,8 +733,9 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 			dec_filestart = (char *)memrchr(dec_filestr, SEP, dec_filelen);
 			if (dec_filestart)
 				++dec_filestart;
-			else
+			else {
 				dec_filestart = dec_filestr;
+			}
 			pathlen = (size_t)(dec_filestart - dec_filestr);
 			dst     = DeeString_STR(dec_filename);
 			memcpy(dst, dec_filestr, pathlen * sizeof(char));

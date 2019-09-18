@@ -774,8 +774,9 @@ range_getrange(Range *__restrict self,
 		goto err;
 	/* if (start < 0)
 	 *     new_start = mylen + start;
-	 * else
+	 * else {
 	 *     new_start = start;
+	 * }
 	 */
 	error = DeeObject_CompareLo(start, &DeeInt_Zero);
 	if (error != 0) {
@@ -808,8 +809,9 @@ return_empty_seq_mylen_ns:
 	} else {
 		/* if (end < 0)
 		 *     new_end = mylen + end;
-		 * else
+		 * else {
 		 *     new_end = end;
+		 * }
 		 */
 		error = DeeObject_CompareLo(end, &DeeInt_Zero);
 		if (error != 0) {
@@ -1317,8 +1319,9 @@ intrange_size(IntRange *__restrict self) {
 	result = (self->ir_end - self->ir_start) + self->ir_step;
 	if (self->ir_step >= 0)
 		--result;
-	else
+	else {
 		++result;
+	}
 	result /= self->ir_step;
 	if (result < 0)
 		result = 0;
@@ -1332,8 +1335,9 @@ intrange_nsi_getsize(IntRange *__restrict self) {
 	result = (self->ir_end - self->ir_start) + self->ir_step;
 	if (self->ir_step >= 0)
 		--result;
-	else
+	else {
 		++result;
+	}
 	result /= self->ir_step;
 	if (result < 0)
 		result = 0;

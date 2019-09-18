@@ -83,9 +83,8 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 		/* TODO: Make use of operator inheritance. */                                                           \
 		while (DeeFileType_CheckExact(tp_self)) {                                                               \
 			if (tp_self->tp_features & TF_HASFILEOPS) {                                                         \
-				if                                                                                              \
-					unlikely(!((DeeFileTypeObject *)tp_self)->ft_read)                                          \
-				break;                                                                                          \
+				if unlikely(!((DeeFileTypeObject *)tp_self)->ft_read)                                           \
+					break;                                                                                      \
 				return (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self UNPACK_ARGS(n, param)); \
 			}                                                                                                   \
 			tp_self = DeeType_Base(tp_self);                                                                    \
@@ -365,8 +364,9 @@ DeeFile_PRead(DeeObject *__restrict self,
 				result = (dssize_t)(*((DeeFileTypeObject *)tp_self)->ft_seek)((DeeFileObject *)self, pos, SEEK_SET);
 				if (result >= 0)
 					result = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-			} else
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -397,8 +397,9 @@ DeeFile_PReadf(DeeObject *__restrict self,
 				result = (dssize_t)(*((DeeFileTypeObject *)tp_self)->ft_seek)((DeeFileObject *)self, pos, SEEK_SET);
 				if (result >= 0)
 					result = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self, buffer, bufsize, flags);
-			} else
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -429,8 +430,9 @@ DeeFile_PWrite(DeeObject *__restrict self,
 				result = (dssize_t)(*((DeeFileTypeObject *)tp_self)->ft_seek)((DeeFileObject *)self, pos, SEEK_SET);
 				if (result >= 0)
 					result = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-			} else
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -461,8 +463,9 @@ DeeFile_PWritef(DeeObject *__restrict self,
 				result = (dssize_t)(*((DeeFileTypeObject *)tp_self)->ft_seek)((DeeFileObject *)self, pos, SEEK_SET);
 				if (result >= 0)
 					result = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self, buffer, bufsize, flags);
-			} else
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -1537,9 +1540,7 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 	file_class_del_##stdxxx(DeeObject *__restrict self) {         \
 		DREF DeeObject *old_stream;                               \
 		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);            \
-		if                                                        \
-			unlikely(!old_stream)                                 \
-		{                                                         \
+		if unlikely(!old_stream) {                                \
 			err_unbound_attribute(Dee_TYPE(self), #stdxxx);       \
 			return -1;                                            \
 		}                                                         \

@@ -2897,12 +2897,11 @@ ast_setactionc(Ast *__restrict self,
 #define PRINT_FALSE() print(DeeString_STR(&str_false), 5)
 #define PRINT_NONE() print(DeeString_STR(&str_none), 4)
 
-#define DO(x)                 \
-	do                        \
-		if                    \
-			unlikely((x) < 0) \
-	goto err;                 \
-	__WHILE0
+#define DO(x)                \
+	do {                     \
+		if unlikely((x) < 0) \
+			goto err;        \
+	} __WHILE0
 #define print(p, s) DO((*printer)(arg, p, s))
 #define printf(...) DO(DeeFormat_Printf(printer, arg, __VA_ARGS__))
 
@@ -3128,8 +3127,9 @@ print_function_atargs(struct ast *__restrict self,
 			DeeObject *defl = function_scope->bs_default[i - function_scope->bs_argc_min];
 			if (defl)
 				printf(" = %r", defl);
-			else
+			else {
 				PRINT("?");
+			}
 		}
 	}
 	PRINT(") ");
@@ -3286,7 +3286,7 @@ force_scope:
 				goto force_scope;
 			if (!self->a_multiple.m_astc) {
 				PRINT("none;");
-			} else
+			} else {
 				for (i = 0; i < self->a_multiple.m_astc; ++i) {
 					DO(print_ast_code(self->a_multiple.m_astv[i], printer, arg, false, self->a_scope, indent));
 					if (i < self->a_multiple.m_astc - 1) {
@@ -3294,6 +3294,7 @@ force_scope:
 						DO(DeeFormat_Repeat(printer, arg, '\t', indent));
 					}
 				}
+			}
 			need_semicolon = false;
 			break;
 		}
