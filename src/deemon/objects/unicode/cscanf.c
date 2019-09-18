@@ -33,6 +33,8 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 
+#include <hybrid/atomic.h>
+
 #include <string.h>
 
 #include "../../runtime/runtime_error.h"

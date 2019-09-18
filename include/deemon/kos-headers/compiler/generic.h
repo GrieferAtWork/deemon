@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,6 +19,33 @@
 #define __GCC_VERSION(a,b,c) 0
 #ifndef __option
 #define __option(x) 0
+#endif
+
+#ifndef __has_builtin
+#define __NO_has_builtin 1
+#define __has_builtin(x) 0
+#endif
+#ifndef __has_feature
+#define __NO_has_builtin 1
+#define __has_feature(x) 0
+#endif
+#ifndef __has_attribute
+#define __NO_has_attribute 1
+#define __has_attribute(x) 0
+#endif
+#ifndef __has_extension
+#ifndef __NO_has_feature
+#define __NO_has_extension 1
+#endif
+#define __has_extension  __has_feature
+#endif
+#ifndef __has_declspec_attribute
+#define __NO_has_declspec_attribute 1
+#define __has_declspec_attribute(x) 0
+#endif
+#ifndef __has_cpp_attribute
+#define __NO_has_cpp_attribute 1
+#define __has_cpp_attribute(x) 0
 #endif
 
 #if __has_builtin(__builtin_expect) || \
@@ -201,6 +228,18 @@
 #   define __NO_ATTR_CDECL       1
 #   define __ATTR_CDECL          /* Nothing */
 #endif
+#if __has_attribute(__clrcall__)
+#   define __ATTR_CLRCALL        __attribute__((__clrcall__))
+#else
+#   define __NO_ATTR_CLRCALL     1
+#   define __ATTR_CLRCALL        /* Nothing */
+#endif
+#if __has_attribute(__thiscall__)
+#   define __ATTR_THISCALL       __attribute__((__thiscall__))
+#else
+#   define __NO_ATTR_THISCALL    1
+#   define __ATTR_THISCALL       /* Nothing */
+#endif
 #if __has_attribute(__ms_abi__) || defined(__TINYC__)
 #   define __ATTR_MSABI          __attribute__((__ms_abi__))
 #else
@@ -213,10 +252,18 @@
 #   define __NO_ATTR_SYSVABI     1
 #   define __ATTR_SYSVABI        /* Nothing */
 #endif
+#if __has_attribute(__leaf__)
+#   define __ATTR_LEAF           __attribute__((__leaf__))
+#else
+#   define __NO_ATTR_LEAF        1
+#   define __ATTR_LEAF           /* Nothing */
+#endif
 #if __has_attribute(__pure__)
 #   define __ATTR_PURE           __attribute__((__pure__))
 #elif __has_declspec_attribute(noalias)
 #   define __ATTR_PURE           __declspec(noalias)
+#elif !defined(__NO_ATTR_LEAF)
+#   define __ATTR_PURE           __ATTR_LEAF
 #else
 #   define __NO_ATTR_PURE        1
 #   define __ATTR_PURE           /* Nothing */
@@ -225,9 +272,17 @@
 #   define __ATTR_CONST          __attribute__((__const__))
 #elif !defined(__NO_ATTR_PURE)
 #   define __ATTR_CONST          __ATTR_PURE
+#elif !defined(__NO_ATTR_LEAF)
+#   define __ATTR_CONST          __ATTR_LEAF
 #else
 #   define __NO_ATTR_CONST       1
 #   define __ATTR_CONST          /* Nothing */
+#endif
+#if __has_attribute(__flatten__)
+#   define __ATTR_FLATTEN        __attribute__((__flatten__))
+#else
+#   define __NO_ATTR_FLATTEN     1
+#   define __ATTR_FLATTEN        /* Nothing */
 #endif
 #if __has_attribute(__malloc__)
 #   define __ATTR_MALLOC         __attribute__((__malloc__))
@@ -469,16 +524,16 @@
 #   define __ATTR_DLLEXPORT      /* Nothing */
 #endif
 #if __has_attribute(__nonnull__)
-#   define __NONNULL(ppars)      __attribute__((__nonnull__ ppars))
+#   define __ATTR_NONNULL(ppars)      __attribute__((__nonnull__ ppars))
 #else
-#   define __NO_NONNULL          1
-#   define __NONNULL(ppars)      /* Nothing */
+#   define __NO_ATTR_NONNULL          1
+#   define __ATTR_NONNULL(ppars)      /* Nothing */
 #endif
 #if __has_attribute(__warn_unused_result__)
-#   define __WUNUSED             __attribute__((__warn_unused_result__))
+#   define __ATTR_WUNUSED             __attribute__((__warn_unused_result__))
 #else
-#   define __NO_WUNUSED          1
-#   define __WUNUSED             /* Nothing */
+#   define __NO_ATTR_WUNUSED          1
+#   define __ATTR_WUNUSED             /* Nothing */
 #endif
 #if __has_attribute(__transparent_union__)
 #   define __ATTR_TRANSPARENT_UNION __attribute__((__transparent_union__))
@@ -495,7 +550,7 @@
 #   define __XRETURN             /* Nothing */
 #endif
 #define __DEFINE_PRIVATE_ALIAS(new,old)      /* Nothing */
-#define __DEFINE_PUBLIC_ALIAS_RAW(new,old)   /* Nothing */
+#define __DEFINE_PUBLIC_ALIAS(new,old)       /* Nothing */
 #define __DEFINE_INTERN_ALIAS(new,old)       /* Nothing */
 #define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) /* Nothing */
 #define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  /* Nothing */
@@ -510,8 +565,14 @@
 #   define __pragma(...) /* Nothing */
 #endif
 #if !__has_builtin(__builtin_assume)
+#if 0
+#   define __builtin_assume_has_sideeffects 1
+#   define __builtin_assume(x)  (!(x) ? __builtin_unreachable() : (void)0)
+#else
+#   undef __builtin_assume_has_sideeffects
 #   define __NO_builtin_assume   1
 #   define __builtin_assume(x)  (void)0
+#endif
 #endif
 #if !__has_builtin(__builtin_unreachable) && !defined(__TINYC__)
 #   define __NO_builtin_unreachable 1
@@ -530,8 +591,8 @@
        defined(__DCC_VERSION__) || defined(__TINYC__)
 #   define __COMPILER_ALIGNOF __alignof__
 #elif defined(__cplusplus)
-namespace __int { template<class T> struct __compiler_alignof { char __x; T __y; }; }
-#   define __COMPILER_ALIGNOF(T) (sizeof(::__int::__compiler_alignof< T >)-sizeof(T))
+namespace __intern { template<class T> struct __compiler_alignof { char __x; T __y; }; }
+#   define __COMPILER_ALIGNOF(T) (sizeof(::__intern::__compiler_alignof< T >)-sizeof(T))
 #else
 #   define __COMPILER_ALIGNOF(T) ((__SIZE_TYPE__)&((struct{ char __x; T __y; } *)0)->__y)
 #endif
@@ -590,7 +651,7 @@ namespace __int { template<class T> struct __compiler_alignof { char __x; T __y;
 #else
 #   define __restrict_arr /* Not supported.  */
 #endif
-#define __empty_arr(T,x) T x[1]
+#define __COMPILER_FLEXIBLE_ARRAY(T,x) T x[1024]
 
 #ifdef __cplusplus
 #if __cplusplus >= 201703L /* C++17 */
@@ -706,5 +767,3 @@ extern void (__va_end)(__builtin_va_list ap);
 #define __builtin_va_arg(ap,T)      (*(T *)((ap += __VA_SIZEOF(T))-__VA_SIZEOF(T)))
 #define __builtin_va_end(ap)        (void)0
 #endif
-
-

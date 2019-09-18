@@ -23,7 +23,7 @@
 #include <deemon/dex.h>
 #include <deemon/object.h>
 
-#include <hybrid/list/list.h>
+#include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
 #ifndef CONFIG_NO_THREADS
@@ -735,10 +735,10 @@ INTDEF DeeSTypeObject   DeeCULong_Type;
 
 /* Array types, and foreign-function types. */
 struct array_type_object {
-	DeeSTypeObject                at_base;  /* The underlying structured type descriptor. */
-	DREF DeeSTypeObject          *at_orig;  /* [1..1][const] The array's element type. */
-	LIST_NODE(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
-	size_t                        at_count; /* The total number of items. */
+	DeeSTypeObject                 at_base;  /* The underlying structured type descriptor. */
+	DREF DeeSTypeObject           *at_orig;  /* [1..1][const] The array's element type. */
+	LLIST_NODE(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
+	size_t                         at_count; /* The total number of items. */
 };
 
 
@@ -785,26 +785,26 @@ INTDEF char const *DCALL cc_getname(cc_t cc);
 
 
 struct cfunction_type_object {
-	DeeSTypeObject                    ft_base;    /* The underlying structured type descriptor. */
+	DeeSTypeObject                     ft_base;    /* The underlying structured type descriptor. */
 #ifndef CONFIG_NO_CFUNCTION
-	DREF DeeSTypeObject              *ft_orig;    /* [1..1][const] The function's return type. */
-	LIST_NODE(DeeCFunctionTypeObject) ft_chain;   /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
-	dhash_t                           ft_hash;    /* [const] A pre-calculated hash used by `struct stype_cfunction' */
-	size_t                            ft_argc;    /* [const] Amount of function argument types. */
-	DREF DeeSTypeObject             **ft_argv;    /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
-	cc_t                              ft_cc;      /* [const] The calling convention used by this function. */
-	ffi_type                         *ft_ffi_return_type; /* [1..1] Raw return type. */
-	ffi_type                        **ft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
-	ffi_cif                           ft_ffi_cif;         /* cif object to call the function. */
+	DREF DeeSTypeObject               *ft_orig;    /* [1..1][const] The function's return type. */
+	LLIST_NODE(DeeCFunctionTypeObject) ft_chain;   /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
+	dhash_t                            ft_hash;    /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	size_t                             ft_argc;    /* [const] Amount of function argument types. */
+	DREF DeeSTypeObject              **ft_argv;    /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
+	cc_t                               ft_cc;      /* [const] The calling convention used by this function. */
+	ffi_type                          *ft_ffi_return_type; /* [1..1] Raw return type. */
+	ffi_type                         **ft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
+	ffi_cif                            ft_ffi_cif;         /* cif object to call the function. */
 	/* WBuffer layout:
 	 *  1. return value memory
 	 *  2. argument memory...
 	 *  3. argument pointers... */
-	size_t                            ft_wsize;
-	size_t                            ft_woff_argmem;
+	size_t                             ft_wsize;
+	size_t                             ft_woff_argmem;
 	union {
-		size_t                        ft_woff_argptr;
-		size_t                        ft_woff_variadic_argmem;
+		size_t                         ft_woff_argptr;
+		size_t                         ft_woff_variadic_argmem;
 	};
 #endif /* !CONFIG_NO_CFUNCTION */
 };

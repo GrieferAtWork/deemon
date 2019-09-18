@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,7 +19,7 @@
 #ifndef __GUARD_HYBRID_HOST_H
 #define __GUARD_HYBRID_HOST_H 1
 
-#include <__stdinc.h>
+#include "../__stdinc.h"
 
 #if !defined(__x86_64__) && \
     (defined(__amd64__) || defined(__amd64) || \
@@ -53,5 +53,17 @@
     (defined(_M_ARM) || defined(_M_ARMT) || defined(_M_ARM_NT))
 #define __arm__ 1
 #endif
+
+#undef __ARCH_STACK_GROWS_DOWNWARDS
+#undef __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS
+#if defined(__i386__) || defined(__x86_64__)
+#define __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS 1
+#define __ARCH_STACK_GROWS_DOWNWARDS 1
+#elif defined(__arm__)
+#define __ARCH_STACK_GROWS_DOWNWARDS 1
+#else
+#define __ARCH_STACK_GROWS_DOWNWARDS 1
+#endif
+
 
 #endif /* !__GUARD_HYBRID_HOST_H */

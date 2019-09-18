@@ -240,10 +240,19 @@ extern void (__debugbreak)(void);
 #define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS 1
 #endif /* __GNUC__ */
 
-#define DCALL    ATTR_STDCALL
-#define DREF     /* Annotation for pointer: transfer/storage of a reference.
-                  * NOTE: When returned by a function, a return value
-                  *       of NULL indicates a newly raised exception. */
+#define DCALL        ATTR_STDCALL
+#define DREF         /* Annotation for pointer: transfer/storage of a reference.
+                      * NOTE: When returned by a function, a return value
+                      *       of NULL indicates a newly raised exception. */
+#define ATOMIC_DATA  /* Annotation for data that is accessed atomically. */
+
+
+#ifdef __NO_ATTR_FASTCALL
+#define FCALL /* nothing */
+#else /* __NO_ATTR_FASTCALL */
+#define FCALL __ATTR_FASTCALL
+#endif /* !__NO_ATTR_FASTCALL */
+
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4201)

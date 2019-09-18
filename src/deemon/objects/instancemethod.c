@@ -32,6 +32,8 @@
 #include <deemon/super.h>
 #include <deemon/util/cache.h>
 
+#include <hybrid/atomic.h>
+
 #include "../runtime/strings.h"
 
 DECL_BEGIN

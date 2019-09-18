@@ -324,7 +324,7 @@ LOCAL int DCALL
 object_vector_extend(struct object_vector *__restrict self,
                      DeeObject *__restrict ob) {
 	int result = 0;
-	REF DeeObject *elem, *iter;
+	DREF DeeObject *elem, *iter;
 	iter = DeeObject_IterSelf(ob);
 	if unlikely(!iter)
 		return -1;

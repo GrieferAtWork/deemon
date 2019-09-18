@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -20,30 +20,88 @@
 #define __GUARD_HYBRID_LIMITS_H 1
 
 #include "host.h"
+#include "__limits.h"
 
-#if defined(__i386__) || \
-    defined(__x86_64__) || \
-    defined(__arm__)
-#   define __PAGESIZE        4096
-#endif
-#if defined(__i386__) || defined(__x86_64__)
-#   define __CACHELINE       64
-#elif 0
-#   define __CACHELINE       64 /* Just guess... */
-#endif
-
-#ifdef __GUARD_HYBRID_COMPILER_H
 #ifndef PAGESIZE
-#ifdef __PAGESIZE
-#   define PAGESIZE          __PAGESIZE
-#endif
+#ifdef __SIZEOF_PAGE__
+#define PAGESIZE __SIZEOF_PAGE__
+#endif /* __SIZEOF_PAGE__ */
 #endif /* !PAGESIZE */
-#ifdef __CACHELINE
-#   define CACHELINE         __CACHELINE
-#   define CACHELINE_ALIGNED ATTR_ALIGNED(CACHELINE)
+
+#ifndef PAGEALIGN
+#define PAGEALIGN  PAGESIZE
+#endif
+
+#ifndef PAGESHIFT
+#if PAGESIZE == 0x1
+#   define PAGESHIFT  0
+#elif PAGESIZE == 0x2
+#   define PAGESHIFT  1
+#elif PAGESIZE == 0x4
+#   define PAGESHIFT  2
+#elif PAGESIZE == 0x8
+#   define PAGESHIFT  3
+#elif PAGESIZE == 0x10
+#   define PAGESHIFT  4
+#elif PAGESIZE == 0x20
+#   define PAGESHIFT  5
+#elif PAGESIZE == 0x40
+#   define PAGESHIFT  6
+#elif PAGESIZE == 0x80
+#   define PAGESHIFT  7
+#elif PAGESIZE == 0x100
+#   define PAGESHIFT  8
+#elif PAGESIZE == 0x200
+#   define PAGESHIFT  9
+#elif PAGESIZE == 0x400
+#   define PAGESHIFT  10
+#elif PAGESIZE == 0x800
+#   define PAGESHIFT  11
+#elif PAGESIZE == 0x1000
+#   define PAGESHIFT  12
+#elif PAGESIZE == 0x2000
+#   define PAGESHIFT  13
+#elif PAGESIZE == 0x4000
+#   define PAGESHIFT  14
+#elif PAGESIZE == 0x8000
+#   define PAGESHIFT  15
+#elif PAGESIZE == 0x10000
+#   define PAGESHIFT  16
+#elif PAGESIZE == 0x20000
+#   define PAGESHIFT  17
+#elif PAGESIZE == 0x40000
+#   define PAGESHIFT  18
+#elif PAGESIZE == 0x80000
+#   define PAGESHIFT  19
+#elif PAGESIZE == 0x100000
+#   define PAGESHIFT  20
+#elif PAGESIZE == 0x200000
+#   define PAGESHIFT  21
+#elif PAGESIZE == 0x400000
+#   define PAGESHIFT  22
+#elif PAGESIZE == 0x800000
+#   define PAGESHIFT  23
+#elif PAGESIZE == 0x1000000
+#   define PAGESHIFT  24
+#elif PAGESIZE == 0x2000000
+#   define PAGESHIFT  25
+#elif PAGESIZE == 0x4000000
+#   define PAGESHIFT  26
+#elif PAGESIZE == 0x8000000
+#   define PAGESHIFT  27
+#elif PAGESIZE == 0x10000000
+#   define PAGESHIFT  28
+#elif PAGESIZE == 0x20000000
+#   define PAGESHIFT  29
+#elif PAGESIZE == 0x40000000
+#   define PAGESHIFT  30
+#elif PAGESIZE == 0x80000000
+#   define PAGESHIFT  31
 #else
-#   define CACHELINE_ALIGNED /* Nothing */
+#   error "Unsupported PAGESIZE"
 #endif
 #endif
+
+#define ATTR_CACHELINE_ALIGNED __ATTR_CACHELINE_ALIGNED
 
 #endif /* !__GUARD_HYBRID_LIMITS_H */

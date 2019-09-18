@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -49,22 +49,28 @@
 #endif
 
 
-#ifndef __PE__
 #ifdef __ASSEMBLER__
 #define __DEFINE_PRIVATE_ALIAS(new,old)      .local new; .set new, old;
+#define __DEFINE_PUBLIC_ALIAS(new,old)       .global new; .set new, old;
 #define __DEFINE_INTERN_ALIAS(new,old)       .global new; .hidden new; .set new, old;
 #define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) .weak new; .local new; .set new, old;
-#define __DEFINE_INTERN_WEAK_ALIAS(new,old)  .weak new; .global new; .hidden new; .set new, old;
-#define __DEFINE_PUBLIC_ALIAS(new,old)       .global new; .set new, old;
 #define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  .weak new; .global new; .set new, old;
+#define __DEFINE_INTERN_WEAK_ALIAS(new,old)  .weak new; .global new; .hidden new; .set new, old;
 #elif defined(__LINKER__)
-#define __DEFINE_PRIVATE_ALIAS(new,old)         __DEFINE_INTERN_ALIAS(new,old)
-#define __DEFINE_PRIVATE_WEAK_ALIAS(new,old)    __DEFINE_INTERN_ALIAS(new,old)
-#define __DEFINE_INTERN_WEAK_ALIAS(new,old)     __DEFINE_INTERN_ALIAS(new,old)
-#define __DEFINE_PUBLIC_ALIAS(new,old)          PROVIDE(new = ABSOLUTE(old))
-#define __DEFINE_INTERN_ALIAS(new,old)          PROVIDE_HIDDEN(new = ABSOLUTE(old))
+#define __DEFINE_PRIVATE_ALIAS(new,old)      __DEFINE_INTERN_ALIAS(new,old)
+#define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) __DEFINE_INTERN_ALIAS(new,old)
+#define __DEFINE_INTERN_WEAK_ALIAS(new,old)  __DEFINE_INTERN_ALIAS(new,old)
+#define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  __DEFINE_PUBLIC_ALIAS(new,old)
+#define __DEFINE_PUBLIC_ALIAS(new,old)       PROVIDE(new = ABSOLUTE(old))
+#define __DEFINE_INTERN_ALIAS(new,old)       PROVIDE_HIDDEN(new = ABSOLUTE(old))
+#else
+#define __DEFINE_PRIVATE_ALIAS(new,old)      /* nothing */
+#define __DEFINE_PRIVATE_WEAK_ALIAS(new,old) /* nothing */
+#define __DEFINE_INTERN_WEAK_ALIAS(new,old)  /* nothing */
+#define __DEFINE_PUBLIC_WEAK_ALIAS(new,old)  /* nothing */
+#define __DEFINE_PUBLIC_ALIAS(new,old)       /* nothing */
+#define __DEFINE_INTERN_ALIAS(new,old)       /* nothing */
 #endif
-#endif /* !__PE__ */
 
 
 #define __GCC_VERSION(a,b,c)   0
@@ -109,6 +115,10 @@
 #define __NO_ATTR_PURE           1
 #define __ATTR_CONST             /* Nothing */
 #define __NO_ATTR_CONST          1
+#define __ATTR_LEAF              /* Nothing */
+#define __NO_ATTR_LEAF           1
+#define __ATTR_FLATTEN           /* Nothing */
+#define __NO_ATTR_FLATTEN        1
 #define __ATTR_MALLOC            /* Nothing */
 #define __NO_ATTR_MALLOC         1
 #define __ATTR_HOT               /* Nothing */
@@ -175,10 +185,10 @@
 #define __NO_ATTR_DLLIMPORT      1
 #define __ATTR_DLLEXPORT         /* nothing */
 #define __NO_ATTR_DLLEXPORT      1
-#define __NONNULL(ppars)         /* Nothing */
-#define __NO_NONNULL             1
-#define __WUNUSED                /* Nothing */
-#define __NO_WUNUSED             1
+#define __ATTR_NONNULL(ppars)         /* Nothing */
+#define __NO_ATTR_NONNULL             1
+#define __ATTR_WUNUSED                /* Nothing */
+#define __NO_ATTR_WUNUSED             1
 #define __ATTR_TRANSPARENT_UNION /* nothing */
 #define __NO_ATTR_TRANSPARENT_UNION 1
 #define __ATTR_INLINE            /* nothing */
@@ -191,6 +201,7 @@
 #define __NO_builtin_choose_expr 1
 #define __NO_builtin_types_compatible_p   1
 #define __builtin_types_compatible_p(...) 0
+#undef __builtin_assume_has_sideeffects
 #define __builtin_assume(x)      /* nothing */
 #define __builtin_unreachable()  /* nothing */
 #define __LOCAL                  /* nothing */
@@ -202,7 +213,10 @@
 #define __builtin_constant_p(x)  0
 #endif
 #define __restrict_arr           /* nothing */
-#define __empty_arr(T,x)         /* nothing */
+#define __COMPILER_FLEXIBLE_ARRAY(T,x) /* nothing */
+
+#define __NO_COMPILER_IGNORE_UNINITIALIZED 1
+#define __COMPILER_IGNORE_UNINITIALIZED(var) var
 
 #define __COMPILER_BARRIER()       /* nothing */
 #define __COMPILER_READ_BARRIER()  /* nothing */

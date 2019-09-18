@@ -35,6 +35,8 @@
 #include <deemon/string.h>
 #include <hybrid/overflow.h>
 
+#include <hybrid/atomic.h>
+
 #ifndef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
@@ -784,10 +786,10 @@ again:
 		for (; biter != bend; ++biter) {
 			iter = *biter;
 			while (iter) {
-				next = iter->at_chain.le_next;
+				next = LLIST_NEXT(iter, at_chain);
 				dst  = &new_map[iter->at_count & new_mask];
 				/* Insert the entry into the new hash-map. */
-				LIST_INSERT(*dst, iter, at_chain);
+				LLIST_INSERT(*dst, iter, at_chain);
 				iter = next;
 			}
 		}
@@ -812,7 +814,7 @@ DeeSType_Array(DeeSTypeObject *__restrict self,
 	if (self->st_array.sa_size) {
 		result = self->st_array.sa_list[num_items & self->st_array.sa_mask];
 		while (result && result->at_count != num_items)
-			result = result->at_chain.le_next;
+			result = LLIST_NEXT(result, at_chain);
 		/* Check if we can re-use an existing type. */
 		if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
 			rwlock_endread(&self->st_cachelock);
@@ -832,7 +834,7 @@ register_type:
 	if (self->st_array.sa_size) {
 		new_result = self->st_array.sa_list[num_items & self->st_array.sa_mask];
 		while (new_result && new_result->at_count != num_items)
-			new_result = new_result->at_chain.le_next;
+			new_result = LLIST_NEXT(new_result, at_chain);
 		/* Check if we can re-use an existing type. */
 		if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {
 			rwlock_endread(&self->st_cachelock);
@@ -856,7 +858,7 @@ register_type:
 	}
 	/* Insert the new array type into the hash-map. */
 	pbucket = &self->st_array.sa_list[num_items & self->st_array.sa_mask];
-	LIST_INSERT(*pbucket, result, at_chain); /* Weak reference. */
+	LLIST_INSERT(*pbucket, result, at_chain); /* Weak reference. */
 	rwlock_endwrite(&self->st_cachelock);
 done:
 	return result;

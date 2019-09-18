@@ -26,6 +26,8 @@
 #include <deemon/alloc.h>
 #include <deemon/seq.h>
 
+#include <hybrid/atomic.h>
+
 DECL_BEGIN
 
 typedef struct {

@@ -25,6 +25,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 
+#include <hybrid/atomic.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/sched/yield.h>
 #endif /* !CONFIG_NO_THREADS */

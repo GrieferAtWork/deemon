@@ -31,6 +31,8 @@
 #include <deemon/object.h>
 #include <deemon/util/cache.h>
 
+#include <hybrid/atomic.h>
+
 DECL_BEGIN
 
 typedef DeeCompilerItemObject CompilerItem;

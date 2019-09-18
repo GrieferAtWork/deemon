@@ -25,7 +25,7 @@
 #include <deemon/util/rwlock.h>
 
 #include <hybrid/atomic.h>
-#include <hybrid/list/list.h>
+#include <hybrid/sequence/list.h>
 
 DECL_BEGIN
 
@@ -106,8 +106,8 @@ struct xml_node {
 #ifndef CONFIG_NO_THREADS
 	rwlock_t                 xn_lock;      /* Lock for modifications made to this node. */
 #endif /* !CONFIG_NO_THREADS */
-	DREF LIST_HEAD(XMLNode)  xn_changes;   /* [0..1][lock(xn_lock)] Chain of modified XML child Nodes. */
-	DREF LIST_NODE(XMLNode)  xn_changed;   /* [lock(:xno_parent->xno_node->xn_lock)]
+	DREF LLIST(XMLNode)      xn_changes;   /* [0..1][lock(xn_lock)] Chain of modified XML child Nodes. */
+	DREF LLIST_NODE(XMLNode) xn_changed;   /* [lock(:xno_parent->xno_node->xn_lock)]
 	                                        * [CHAIN(:xno_parent->xno_node->xn_changes)]
 	                                        * [1..1] Chain of changed XML Nodes. */
 	XMLNode                 *xn_sib_prev;  /* [0..1][lock(:xno_parent->xno_node->xn_lock)] Previous sibling node. */

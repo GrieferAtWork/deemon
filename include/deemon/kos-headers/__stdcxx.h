@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -26,11 +26,36 @@
 #endif
 
 /* TODO: Determine support for these */
+#define __COMPILER_HAVE_CXX_TEMPLATE_USING 1
+//#define __COMPILER_HAVE_CXX_TEMPLATE_CONSTEXPR 1
 #define __COMPILER_HAVE_CXX_RVALUE_REFERENCE 1
 #define __COMPILER_HAVE_CXX_PARTIAL_TPL_SPEC 1
 #define __COMPILER_HAVE_CXX_DECLTYPE 1
 #define __COMPILER_HAVE_CXX_NULLPTR 1
+#define __COMPILER_HAVE_CXX_VARIABLE_TEMPLATES 1
+#define __COMPILER_HAVE_CXX_ENUM_CLASSES 1
 #define __CXX_DEDUCE_TYPENAME typename
+
+
+
+
+#ifndef __CXX_FORCEINLINE
+#ifdef __ATTR_FORCEINLINE
+#define __CXX_FORCEINLINE __ATTR_FORCEINLINE
+#else
+#define __CXX_FORCEINLINE __CXX_CLASSMEMBER
+#endif
+#endif /* !__CXX_FORCEINLINE */
+
+#ifndef __CXX_INLINE_CONSTEXPR
+#ifdef __COMPILER_HAVE_CXX11_CONSTEXPR
+#define __CXX_INLINE_CONSTEXPR __CXX11_CONSTEXPR
+#elif defined(__ATTR_FORCEINLINE)
+#define __CXX_INLINE_CONSTEXPR __ATTR_FORCEINLINE
+#else
+#define __CXX_INLINE_CONSTEXPR __CXX_CLASSMEMBER
+#endif
+#endif /* !__CXX_INLINE_CONSTEXPR */
 
 #if __has_feature(defaulted_functions) || \
    (defined(__cplusplus) && defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 180020827) || \
@@ -51,6 +76,19 @@
 #   define __CXX_DEFAULT_CTOR_NOEXCEPT(T)        T() __CXX_NOEXCEPT {}
 #   define __CXX_DEFAULT_DTOR_NOEXCEPT(T)        ~T() __CXX_NOEXCEPT {}
 #endif
+
+#ifndef __CXX_STATIC_CONST
+#ifdef __COMPILER_HAVE_CXX11_CONSTEXPR
+#define __CXX_HAVE_STATIC_CONST 1
+#define __CXX_STATIC_CONST(T,decl)   static __CXX11_CONSTEXPR T decl
+#elif 1 /* XXX: What compilers support this? */
+#define __CXX_HAVE_STATIC_CONST 1
+#define __CXX_STATIC_CONST(T,decl)   static T const decl
+#else
+#define __CXX_STATIC_CONST(T,decl)   enum{decl}
+#endif
+#endif /* !__CXX_STATIC_CONST */
+
 
 #if __has_feature(deleted_functions) || \
    (defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 180020827) || \
@@ -77,8 +115,10 @@
 /* 4522: Incorrect warning about multiple assignment
  *       operators after `__CXX_DELETE_COPY_ASSIGN()' */
 #define __CXXDECL_BEGIN __pragma(warning(push)) \
-                        __pragma(warning(disable: 4522))
-#define __CXXDECL_END   __pragma(warning(pop))
+                        __pragma(warning(disable: 4522)) \
+                        extern "C++" {
+#define __CXXDECL_END   } \
+                        __pragma(warning(pop))
 #endif
 
 #ifdef __COMPILER_HAVE_CXX11_NOEXCEPT
@@ -89,17 +129,15 @@
 #   define __CXX_THROWS(...) throw(__VA_ARGS__)
 #endif
 
-#define __CXX_ADDROF(x) (&(x)) /* TODO: It's more complicated that this... */
-
 #ifndef __CXXDECL_BEGIN
-#define __CXXDECL_BEGIN
-#define __CXXDECL_END
+#define __CXXDECL_BEGIN  extern "C++" {
+#define __CXXDECL_END    }
 #endif
 
 #include <features.h>
-#undef __USE_GLIBCXX
-#ifdef __CRT_GLC
-#define __USE_GLIBCXX 1
-#endif
+
+/* __USE_ISOCXX11 */
+/* __USE_ISOCXX14 */
+/* __USE_ISOCXX17 */
 
 #endif /* !___STDCXX_H */

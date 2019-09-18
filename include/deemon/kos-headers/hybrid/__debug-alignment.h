@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,7 +19,7 @@
 #ifndef __GUARD_HYBRID___DEBUG_ALIGNMENT_H
 #define __GUARD_HYBRID___DEBUG_ALIGNMENT_H 1
 
-#include <__stdinc.h>
+#include "../__stdinc.h"
 #include "host.h"
 
 
@@ -30,13 +30,7 @@
  * because GCC tends to leave the PLT unaligned, meaning that any access
  * to an imported symbol could lead to an error being thrown wrongly! */
 #elif defined(__x86_64__)
-#if !defined(_MSC_VER) || defined(_DEBUG)
-/* Only MSVC has been tested for this purpose thus far.
- * Additionally, it has been proven that VC's runtime checks
- * (as enabled by passing `/RTC1' to `cl.exe') generate code
- * that does unaligned memory accesses, preventing this type
- * of checks where they would actually make the most sense. */
-#elif defined(_MSC_VER)
+#ifdef _MSC_VER
 __NAMESPACE_INT_BEGIN
 __SYSDECL_BEGIN
 unsigned __int64 __readeflags(void);
@@ -53,14 +47,14 @@ __NAMESPACE_INT_END
 __NAMESPACE_INT_BEGIN
 __SYSDECL_BEGIN
 __LOCAL void __impl_hybrid_dbg_alignment_enable(void) {
- __asm__("pushf{q}\n\t"
-         "or{q $0x40000, 0(%%rsp)| QWORD PTR [RSP], 0x40000}\n\t"
-         "popf{q}" : );
+	__asm__("pushf{q}\n\t"
+	        "or{q $0x40000, 0(%%rsp)| QWORD PTR [RSP], 0x40000}\n\t"
+	        "popf{q}" : );
 }
 __LOCAL void __impl_hybrid_dbg_alignment_disable(void) {
- __asm__("pushf{q}\n\t"
-         "and{q $~0x40000, 0(%%rsp)| QWORD PTR [RSP], ~0x40000}\n\t"
-         "popf{q}" : );
+	__asm__("pushf{q}\n\t"
+	        "and{q $~0x40000, 0(%%rsp)| QWORD PTR [RSP], ~0x40000}\n\t"
+	        "popf{q}" : );
 }
 __SYSDECL_END
 __NAMESPACE_INT_END
@@ -84,38 +78,38 @@ __NAMESPACE_INT_END
 __NAMESPACE_INT_BEGIN
 __SYSDECL_BEGIN
 __LOCAL void *
-(__LIBCCALL __impl_dbg_alignment_memcpy)(void *__restrict __dst, void const *__restrict __src, __SIZE_TYPE__ __num_bytes) {
- void *__res;
- __hybrid_dbg_alignment_disable();
- __res = memcpy(__dst,__src,__num_bytes);
- __hybrid_dbg_alignment_enable();
- return __res;
+(__impl_dbg_alignment_memcpy)(void *__restrict __dst, void const *__restrict __src, __SIZE_TYPE__ __num_bytes) {
+	void *__res;
+	__hybrid_dbg_alignment_disable();
+	__res = memcpy(__dst,__src,__num_bytes);
+	__hybrid_dbg_alignment_enable();
+	return __res;
 }
 __LOCAL void *
-(__LIBCCALL __impl_dbg_alignment_memmove)(void *__dst, void const *__src, __SIZE_TYPE__ __num_bytes) {
- void *__res;
- __hybrid_dbg_alignment_disable();
- __res = memmove(__dst,__src,__num_bytes);
- __hybrid_dbg_alignment_enable();
- return __res;
+(__impl_dbg_alignment_memmove)(void *__dst, void const *__src, __SIZE_TYPE__ __num_bytes) {
+	void *__res;
+	__hybrid_dbg_alignment_disable();
+	__res = memmove(__dst,__src,__num_bytes);
+	__hybrid_dbg_alignment_enable();
+	return __res;
 }
 __LOCAL void *
-(__LIBCCALL __impl_dbg_alignment_memset)(void *__restrict __dst, int __val, __SIZE_TYPE__ __num_bytes) {
- void *__res;
- __hybrid_dbg_alignment_disable();
- __res = memset(__dst,__val,__num_bytes);
- __hybrid_dbg_alignment_enable();
- return __res;
+(__impl_dbg_alignment_memset)(void *__restrict __dst, int __val, __SIZE_TYPE__ __num_bytes) {
+	void *__res;
+	__hybrid_dbg_alignment_disable();
+	__res = memset(__dst,__val,__num_bytes);
+	__hybrid_dbg_alignment_enable();
+	return __res;
 }
 __LOCAL int
-(__LIBCCALL __impl_dbg_alignment_memcmp)(void const *__restrict __a,
-                                         void const *__restrict __b,
-                                         __SIZE_TYPE__ __num_bytes) {
- int __res;
- __hybrid_dbg_alignment_disable();
- __res = memcmp(__a,__b,__num_bytes);
- __hybrid_dbg_alignment_enable();
- return __res;
+(__impl_dbg_alignment_memcmp)(void const *__restrict __a,
+                              void const *__restrict __b,
+                              __SIZE_TYPE__ __num_bytes) {
+	int __res;
+	__hybrid_dbg_alignment_disable();
+	__res = memcmp(__a,__b,__num_bytes);
+	__hybrid_dbg_alignment_enable();
+	return __res;
 }
 __SYSDECL_END
 __NAMESPACE_INT_END

@@ -39,6 +39,8 @@
 
 #include <string.h>
 
+#include <hybrid/atomic.h>
+
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

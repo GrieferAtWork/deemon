@@ -39,6 +39,9 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
+
 DECL_BEGIN
 
 /* Dummy key object. */

@@ -34,6 +34,8 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 
+#include <hybrid/atomic.h>
+
 DECL_BEGIN
 
 

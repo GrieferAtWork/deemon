@@ -39,6 +39,9 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
+
 #include <string.h>
 #include <tlhelp32.h>
 #include <wchar.h>

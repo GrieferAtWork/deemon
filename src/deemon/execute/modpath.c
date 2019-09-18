@@ -35,6 +35,9 @@
 #include <deemon/stringutils.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
+
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
@@ -81,6 +84,7 @@
 #include <dlfcn.h>
 #endif /* Unix... */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 

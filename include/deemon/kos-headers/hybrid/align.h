@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,17 +19,17 @@
 #ifndef __GUARD_HYBRID_ALIGN_H
 #define __GUARD_HYBRID_ALIGN_H 1
 
-#include "compiler.h"
+#include "../__stdinc.h"
 
-DECL_BEGIN
+__DECL_BEGIN
 
-#define IS_ALIGNED(x,align)  (!((x)%(align)))
-#define CEIL_ALIGN(x,align)   (((x)+((align)-1))&~((align)-1))
-#define FLOOR_ALIGN(x,align)                ((x)&~((align)-1))
+#define IS_ALIGNED(x, align) (!((x) % (align)))
+#define IS_POWER_OF_TWO(x) (((x) & ((x)-1)) == 0)
+#define CEIL_ALIGN(x, align) (((x) + ((align)-1)) & ~((align)-1))
+#define FLOOR_ALIGN(x, align) ((x) & ~((align)-1))
+#define FLOORDIV(x, y) ((x) / (y))
+#define CEILDIV(x, y) (((x) + (y)-1) / (y))
 
-#define FLOORDIV(x,y)          ((x)/(y))
-#define CEILDIV(x,y)          (((x)+(y)-1)/(y))
-
-DECL_END
+__DECL_END
 
 #endif /* !__GUARD_HYBRID_ALIGN_H */

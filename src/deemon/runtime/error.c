@@ -30,6 +30,9 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
+
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

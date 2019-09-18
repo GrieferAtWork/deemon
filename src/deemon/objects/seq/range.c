@@ -33,7 +33,7 @@
 #include <deemon/string.h>
 #include <deemon/util/rwlock.h>
 
-#include <hybrid/__unaligned.h>
+#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"

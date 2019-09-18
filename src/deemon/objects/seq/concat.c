@@ -34,6 +34,7 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
+#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"

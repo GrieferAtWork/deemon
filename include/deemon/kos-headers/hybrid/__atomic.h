@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,7 +19,7 @@
 #ifndef __GUARD_HYBRID___ATOMIC_H
 #define __GUARD_HYBRID___ATOMIC_H 1
 
-#include <__stdinc.h>
+#include "../__stdinc.h"
 #include "typecore.h"
 
 #ifdef __CC__
@@ -65,11 +65,10 @@
 
 #ifdef _MSC_VER
 #ifdef __cplusplus
-#pragma warning(push)          /* Keep `4197' disabled in C because of its use in macros. */
-#endif /* !__cplusplus */
+#pragma warning(push) /* Keep `4197' disabled in C because of its use in macros. */
+#endif /* __cplusplus */
 #pragma warning(disable: 4197) /* Casting away `volatile' */
 #pragma warning(disable: 4047) /* Differing number of dereferences. */
-#pragma warning(disable: 4310) /* Truncation of constant value. */
 
 #include "__atomic-msvc.h"
 #endif
@@ -78,30 +77,14 @@ __SYSDECL_BEGIN
 
 #if defined(__CC__) || defined(__DEEMON__)
 
-#if __has_extension(c_atomic) || __has_extension(cxx_atomic) /* clang */
-#define __hybrid_atomic_load(x,order)                          __c11_atomic_load(&(x),order)
-#define __hybrid_atomic_store(x,v,order)                       __c11_atomic_store(&(x),v,order)
-#define __hybrid_atomic_xch(x,v,order)                         __c11_atomic_exchange(&(x),v,order)
-#define __hybrid_atomic_cmpxch(x,oldv,newv,succ,fail)          __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __c11_atomic_compare_exchange_strong(&(x),&__oldv,newv,fail,succ); })
-#define __hybrid_atomic_cmpxch_weak(x,oldv,newv,succ,fail)     __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __c11_atomic_compare_exchange_weak(&(x),&__oldv,newv,fail,succ); })
-#define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail)      __XBLOCK({ __typeof__(x) __oldv=(oldv); __c11_atomic_compare_exchange_strong(&(x),&__oldv,newv,fail,succ); __XRETURN __oldv; })
-#define __hybrid_atomic_cmpxch_val_weak(x,oldv,newv,succ,fail) __XBLOCK({ __typeof__(x) __oldv=(oldv); __c11_atomic_compare_exchange_weak(&(x),&__oldv,newv,fail,succ); __XRETURN __oldv; })
-#define __hybrid_atomic_fetchadd(x,v,order)                    __c11_atomic_fetch_add(&(x),v,order)
-#define __hybrid_atomic_fetchsub(x,v,order)                    __c11_atomic_fetch_sub(&(x),v,order)
-#define __hybrid_atomic_fetchand(x,v,order)                    __c11_atomic_fetch_and(&(x),v,order)
-#define __hybrid_atomic_fetchor(x,v,order)                     __c11_atomic_fetch_or(&(x),v,order)
-#define __hybrid_atomic_fetchxor(x,v,order)                    __c11_atomic_fetch_xor(&(x),v,order)
-#define __hybrid_atomic_thread_fence(order)                    __c11_atomic_thread_fence(order)
-#define __hybrid_atomic_signal_fence(order)                    __c11_atomic_signal_fence(order)
-#define __hybrid_atomic_lockfree(x)                            __atomic_is_lock_free(sizeof(x),&(x))
-#elif __GCC_VERSION(4,7,0)
+#if __GCC_VERSION(4,7,0) || defined(____INTELLISENSE_STDINC_COMMON_H)
 #define __hybrid_atomic_load(x,order)                          __atomic_load_n(&(x),order)
 #define __hybrid_atomic_store(x,v,order)                       __atomic_store_n(&(x),v,order)
 #define __hybrid_atomic_xch(x,v,order)                         __atomic_exchange_n(&(x),v,order)
-#define __hybrid_atomic_cmpxch(x,oldv,newv,succ,fail)          __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __atomic_compare_exchange_n(&(x),&__oldv,newv,0,fail,succ); })
-#define __hybrid_atomic_cmpxch_weak(x,oldv,newv,succ,fail)     __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __atomic_compare_exchange_n(&(x),&__oldv,newv,1,fail,succ); })
-#define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail)      __XBLOCK({ __typeof__(x) __oldv=(oldv); __atomic_compare_exchange_n(&(x),&__oldv,newv,0,fail,succ); __XRETURN __oldv; })
-#define __hybrid_atomic_cmpxch_val_weak(x,oldv,newv,succ,fail) __XBLOCK({ __typeof__(x) __oldv=(oldv); __atomic_compare_exchange_n(&(x),&__oldv,newv,1,fail,succ); __XRETURN __oldv; })
+#define __hybrid_atomic_cmpxch(x,oldv,newv,succ,fail)          __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __atomic_compare_exchange_n(&(x),&__oldv,newv,0,succ,fail); })
+#define __hybrid_atomic_cmpxch_weak(x,oldv,newv,succ,fail)     __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __atomic_compare_exchange_n(&(x),&__oldv,newv,1,succ,fail); })
+#define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail)      __XBLOCK({ __typeof__(x) __oldv=(oldv); __atomic_compare_exchange_n(&(x),&__oldv,newv,0,succ,fail); __XRETURN __oldv; })
+#define __hybrid_atomic_cmpxch_val_weak(x,oldv,newv,succ,fail) __XBLOCK({ __typeof__(x) __oldv=(oldv); __atomic_compare_exchange_n(&(x),&__oldv,newv,1,succ,fail); __XRETURN __oldv; })
 #define __hybrid_atomic_addfetch(x,v,order)                    __atomic_add_fetch(&(x),v,order)
 #define __hybrid_atomic_subfetch(x,v,order)                    __atomic_sub_fetch(&(x),v,order)
 #define __hybrid_atomic_andfetch(x,v,order)                    __atomic_and_fetch(&(x),v,order)
@@ -116,6 +99,22 @@ __SYSDECL_BEGIN
 #define __hybrid_atomic_fetchnand(x,v,order)                   __atomic_fetch_nand(&(x),v,order)
 #define __hybrid_atomic_thread_fence(order)                    __atomic_thread_fence(order)
 #define __hybrid_atomic_signal_fence(order)                    __atomic_signal_fence(order)
+#define __hybrid_atomic_lockfree(x)                            __atomic_is_lock_free(sizeof(x),&(x))
+#elif __has_extension(c_atomic) || __has_extension(cxx_atomic) /* clang */
+#define __hybrid_atomic_load(x,order)                          __c11_atomic_load(&(x),order)
+#define __hybrid_atomic_store(x,v,order)                       __c11_atomic_store(&(x),v,order)
+#define __hybrid_atomic_xch(x,v,order)                         __c11_atomic_exchange(&(x),v,order)
+#define __hybrid_atomic_cmpxch(x,oldv,newv,succ,fail)          __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __c11_atomic_compare_exchange_strong(&(x),&__oldv,newv,succ,fail); })
+#define __hybrid_atomic_cmpxch_weak(x,oldv,newv,succ,fail)     __XBLOCK({ __typeof__(x) __oldv=(oldv); __XRETURN __c11_atomic_compare_exchange_weak(&(x),&__oldv,newv,succ,fail); })
+#define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail)      __XBLOCK({ __typeof__(x) __oldv=(oldv); __c11_atomic_compare_exchange_strong(&(x),&__oldv,newv,succ,fail); __XRETURN __oldv; })
+#define __hybrid_atomic_cmpxch_val_weak(x,oldv,newv,succ,fail) __XBLOCK({ __typeof__(x) __oldv=(oldv); __c11_atomic_compare_exchange_weak(&(x),&__oldv,newv,succ,fail); __XRETURN __oldv; })
+#define __hybrid_atomic_fetchadd(x,v,order)                    __c11_atomic_fetch_add(&(x),v,order)
+#define __hybrid_atomic_fetchsub(x,v,order)                    __c11_atomic_fetch_sub(&(x),v,order)
+#define __hybrid_atomic_fetchand(x,v,order)                    __c11_atomic_fetch_and(&(x),v,order)
+#define __hybrid_atomic_fetchor(x,v,order)                     __c11_atomic_fetch_or(&(x),v,order)
+#define __hybrid_atomic_fetchxor(x,v,order)                    __c11_atomic_fetch_xor(&(x),v,order)
+#define __hybrid_atomic_thread_fence(order)                    __c11_atomic_thread_fence(order)
+#define __hybrid_atomic_signal_fence(order)                    __c11_atomic_signal_fence(order)
 #define __hybrid_atomic_lockfree(x)                            __atomic_is_lock_free(sizeof(x),&(x))
 #else /* Modern GCC... */
 
@@ -158,49 +157,49 @@ __SYSDECL_BEGIN
  __XBLOCK({ register __BOOL __xb_res; \
             int const __order = __MAX(succ,fail); \
             if (__order >= __ATOMIC_SEQ_CST) { \
-                __xb_res = __impl_hybrid_atomic_cmpxch_seqcst(x,oldv,newv); \
+            	__xb_res = __impl_hybrid_atomic_cmpxch_seqcst(x,oldv,newv); \
             } else {\
-                if (__order == __ATOMIC_ACQUIRE || \
-                    __order >= __ATOMIC_ACQ_REL) \
-                    __COMPILER_READ_BARRIER(); \
-                __xb_res = (x) == (oldv); \
-                if (__xb_res) { \
-                  (x) = (newv); \
-                  if ((succ) >= __ATOMIC_RELEASE) \
-                       __COMPILER_WRITE_BARRIER(); \
-                } else { \
-                  if ((fail) >= __ATOMIC_ACQUIRE) \
-                       __COMPILER_READ_BARRIER(); \
-                } \
+            	if (__order == __ATOMIC_ACQUIRE || \
+            		__order >= __ATOMIC_ACQ_REL) \
+            		__COMPILER_READ_BARRIER(); \
+            	__xb_res = (x) == (oldv); \
+            	if (__xb_res) { \
+            		(x) = (newv); \
+            		if ((succ) >= __ATOMIC_RELEASE) \
+            			__COMPILER_WRITE_BARRIER(); \
+            	} else { \
+            		if ((fail) >= __ATOMIC_ACQUIRE) \
+            			__COMPILER_READ_BARRIER(); \
+            	} \
             } \
             __XRETURN __xb_res; \
  })
 #else /* !__NO_XBLOCK */
 #define __DEFINE_WRAPPER(n) \
 __FORCELOCAL __BOOL \
-__NOTHROW((__impl_hybrid_atomic_cmpxch##n)(void *__x, \
-                                           __UINT##n##_TYPE__ __oldv, \
-                                           __UINT##n##_TYPE__ __newv, \
-                                           int __succ, int __fail)) { \
-    register __BOOL __res; \
-    int const __order = __MAX(__succ,__fail); \
-    if (__order >= __ATOMIC_SEQ_CST) { \
-        __res = __impl_hybrid_atomic_cmpxch_seqcst(*(__UINT##n##_TYPE__ *)__x,__oldv,__newv); \
-    } else {\
-        if (__order == __ATOMIC_ACQUIRE || \
-            __order >= __ATOMIC_ACQ_REL) \
-            __COMPILER_READ_BARRIER(); \
-        __res = *(__UINT##n##_TYPE__ *)__x == __oldv; \
-        if (__res) { \
-          *(__UINT##n##_TYPE__ *)__x = __newv; \
-          if (__succ >= __ATOMIC_RELEASE) \
-              __COMPILER_WRITE_BARRIER(); \
-        } else { \
-          if (__fail >= __ATOMIC_ACQUIRE) \
-              __COMPILER_READ_BARRIER(); \
-        } \
-    } \
-    return __res; \
+__NOTHROW_NCX(__impl_hybrid_atomic_cmpxch##n)(void *__x, \
+                                              __UINT##n##_TYPE__ __oldv, \
+                                              __UINT##n##_TYPE__ __newv, \
+                                              int __succ, int __fail) { \
+	register __BOOL __res; \
+	int const __order = __MAX(__succ,__fail); \
+	if (__order >= __ATOMIC_SEQ_CST) { \
+		__res = __impl_hybrid_atomic_cmpxch_seqcst(*(__UINT##n##_TYPE__ *)__x,__oldv,__newv); \
+	} else {\
+		if (__order == __ATOMIC_ACQUIRE || \
+		    __order >= __ATOMIC_ACQ_REL) \
+			__COMPILER_READ_BARRIER(); \
+		__res = *(__UINT##n##_TYPE__ *)__x == __oldv; \
+		if (__res) { \
+			*(__UINT##n##_TYPE__ *)__x = __newv; \
+			if (__succ >= __ATOMIC_RELEASE) \
+				__COMPILER_WRITE_BARRIER(); \
+		} else { \
+			if (__fail >= __ATOMIC_ACQUIRE) \
+				__COMPILER_READ_BARRIER(); \
+		} \
+	} \
+	return __res; \
 }
 __NAMESPACE_INT_BEGIN
 __DEFINE_WRAPPER(8)
@@ -212,18 +211,18 @@ __NAMESPACE_INT_END
 #ifdef __cplusplus
 extern "C++" { template<class __T, class __OV, class __NV>
 #define __hybrid_atomic_cmpxch  __hybrid_atomic_cmpxch
-__FORCELOCAL __BOOL __NOTHROW((__hybrid_atomic_cmpxch)(__T &__x, __OV __oldv, __NV __newv, int __succ, int __fail)) {
-    __STATIC_IF(sizeof(__T) == 1) { return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch8((void *)&__x,(__UINT8_TYPE__)__oldv,(__UINT8_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 1) {
-    __STATIC_IF(sizeof(__T) == 2) { return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch16((void *)&__x,(__UINT16_TYPE__)__oldv,(__UINT16_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 2) {
-    __STATIC_IF(sizeof(__T) == 4) { return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch32((void *)&__x,(__UINT32_TYPE__)__oldv,(__UINT32_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 4) {
-    return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch64((void *)&__x,(__UINT64_TYPE__)__oldv,(__UINT64_TYPE__)__newv,__succ,__fail);
+__FORCELOCAL __BOOL __NOTHROW_NCX(__hybrid_atomic_cmpxch)(__T &__x, __OV __oldv, __NV __newv, int __succ, int __fail) {
+	__STATIC_IF(sizeof(__T) == 1) { return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch8((void *)&__x,(__UINT8_TYPE__)__oldv,(__UINT8_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 1) {
+	__STATIC_IF(sizeof(__T) == 2) { return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch16((void *)&__x,(__UINT16_TYPE__)__oldv,(__UINT16_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 2) {
+	__STATIC_IF(sizeof(__T) == 4) { return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch32((void *)&__x,(__UINT32_TYPE__)__oldv,(__UINT32_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 4) {
+	return __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch64((void *)&__x,(__UINT64_TYPE__)__oldv,(__UINT64_TYPE__)__newv,__succ,__fail);
 } } } } }
 #else
 #define __hybrid_atomic_cmpxch(x,oldv,newv,succ,fail) \
- (sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(newv),succ,fail) : \
-  sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(newv),succ,fail) : \
-  sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(newv),succ,fail) : \
-                   __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(newv),succ,fail))
+	(sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(newv),succ,fail) : \
+	 sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(newv),succ,fail) : \
+	 sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(newv),succ,fail) : \
+	                  __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(newv),succ,fail))
 #endif
 #endif /* __NO_XBLOCK */
 #endif
@@ -236,49 +235,49 @@ __FORCELOCAL __BOOL __NOTHROW((__hybrid_atomic_cmpxch)(__T &__x, __OV __oldv, __
  __XBLOCK({ __typeof__(x) __xv_res; \
             int const __order = __MAX(succ,fail); \
             if (__order >= __ATOMIC_SEQ_CST) { \
-                __xv_res = (__typeof__(__xv_res))__impl_hybrid_atomic_cmpxch_val_seqcst(x,oldv,newv); \
+            	__xv_res = (__typeof__(__xv_res))__impl_hybrid_atomic_cmpxch_val_seqcst(x,oldv,newv); \
             } else {\
-                if (__order == __ATOMIC_ACQUIRE || \
-                    __order >= __ATOMIC_ACQ_REL) \
-                    __COMPILER_READ_BARRIER(); \
-                __xv_res = (x); \
-                if (__xv_res == (oldv)) { \
-                  (x) = (newv); \
-                  if ((succ) >= __ATOMIC_RELEASE) \
-                       __COMPILER_WRITE_BARRIER(); \
-                } else { \
-                  if ((fail) >= __ATOMIC_ACQUIRE) \
-                       __COMPILER_READ_BARRIER(); \
-                } \
+            	if (__order == __ATOMIC_ACQUIRE || \
+            	    __order >= __ATOMIC_ACQ_REL) \
+            		__COMPILER_READ_BARRIER(); \
+            	__xv_res = (x); \
+            	if (__xv_res == (oldv)) { \
+            		(x) = (newv); \
+            		if ((succ) >= __ATOMIC_RELEASE) \
+            			__COMPILER_WRITE_BARRIER(); \
+            	} else { \
+            		if ((fail) >= __ATOMIC_ACQUIRE) \
+            			__COMPILER_READ_BARRIER(); \
+            	} \
             } \
             __XRETURN __xv_res; \
  })
 #else /* !__NO_XBLOCK && __COMPILER_HAVE_TYPEOF */
 #define __DEFINE_WRAPPER(n) \
 __FORCELOCAL __UINT##n##_TYPE__ \
-__NOTHROW((__impl_hybrid_atomic_cmpxch_val##n)(void *__x, \
-                                               __UINT##n##_TYPE__ __oldv, \
-                                               __UINT##n##_TYPE__ __newv, \
-                                               int __succ, int __fail)) { \
-    register __UINT##n##_TYPE__ __res; \
-    int const __order = __MAX(__succ,__fail); \
-    if (__order >= __ATOMIC_SEQ_CST) { \
-        __res = (__UINT##n##_TYPE__)__impl_hybrid_atomic_cmpxch_val_seqcst(*(__UINT##n##_TYPE__ *)__x,__oldv,__newv); \
-    } else {\
-        if (__order == __ATOMIC_ACQUIRE || \
-            __order >= __ATOMIC_ACQ_REL) \
-            __COMPILER_READ_BARRIER(); \
-        __res = *(__UINT##n##_TYPE__ *)__x; \
-        if (__res == __oldv) { \
-          *(__UINT##n##_TYPE__ *)__x = __newv; \
-          if (__succ >= __ATOMIC_RELEASE) \
-              __COMPILER_WRITE_BARRIER(); \
-        } else { \
-          if (__fail >= __ATOMIC_ACQUIRE) \
-              __COMPILER_READ_BARRIER(); \
-        } \
-    } \
-    return __res; \
+__NOTHROW_NCX(__impl_hybrid_atomic_cmpxch_val##n)(void *__x, \
+                                                  __UINT##n##_TYPE__ __oldv, \
+                                                  __UINT##n##_TYPE__ __newv, \
+                                                  int __succ, int __fail) { \
+	register __UINT##n##_TYPE__ __res; \
+	int const __order = __MAX(__succ,__fail); \
+	if (__order >= __ATOMIC_SEQ_CST) { \
+		__res = (__UINT##n##_TYPE__)__impl_hybrid_atomic_cmpxch_val_seqcst(*(__UINT##n##_TYPE__ *)__x,__oldv,__newv); \
+	} else {\
+		if (__order == __ATOMIC_ACQUIRE || \
+		    __order >= __ATOMIC_ACQ_REL) \
+			__COMPILER_READ_BARRIER(); \
+		__res = *(__UINT##n##_TYPE__ *)__x; \
+		if (__res == __oldv) { \
+			*(__UINT##n##_TYPE__ *)__x = __newv; \
+			if (__succ >= __ATOMIC_RELEASE) \
+				__COMPILER_WRITE_BARRIER(); \
+		} else { \
+			if (__fail >= __ATOMIC_ACQUIRE) \
+				__COMPILER_READ_BARRIER(); \
+		} \
+	} \
+	return __res; \
 }
 __NAMESPACE_INT_BEGIN
 __DEFINE_WRAPPER(8)
@@ -290,18 +289,18 @@ __NAMESPACE_INT_END
 #ifdef __cplusplus
 extern "C++" { template<class __T, class __OV, class __NV>
 #define __hybrid_atomic_cmpxch_val __hybrid_atomic_cmpxch_val
-__FORCELOCAL __T __NOTHROW((__hybrid_atomic_cmpxch_val)(__T &__x, __OV __oldv, __NV __newv, int __succ, int __fail)) {
-    __STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&__x,(__UINT8_TYPE__)__oldv,(__UINT8_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 1) {
-    __STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&__x,(__UINT16_TYPE__)__oldv,(__UINT16_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 2) {
-    __STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&__x,(__UINT32_TYPE__)__oldv,(__UINT32_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 4) {
-    return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&__x,(__UINT64_TYPE__)__oldv,(__UINT64_TYPE__)__newv,__succ,__fail);
+__FORCELOCAL __T __NOTHROW_NCX(__hybrid_atomic_cmpxch_val)(__T &__x, __OV __oldv, __NV __newv, int __succ, int __fail) {
+	__STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&__x,(__UINT8_TYPE__)__oldv,(__UINT8_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 1) {
+	__STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&__x,(__UINT16_TYPE__)__oldv,(__UINT16_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 2) {
+	__STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&__x,(__UINT32_TYPE__)__oldv,(__UINT32_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 4) {
+	return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&__x,(__UINT64_TYPE__)__oldv,(__UINT64_TYPE__)__newv,__succ,__fail);
 } } } } }
 #else /* __cplusplus */
 #define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail) \
- __ATOMIC_RECAST(x,sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(newv),succ,fail) : \
-                   sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(newv),succ,fail) : \
-                   sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(newv),succ,fail) : \
-                                    __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(newv),succ,fail))
+	__ATOMIC_RECAST(x,sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(newv),succ,fail) : \
+	                  sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(newv),succ,fail) : \
+	                  sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(newv),succ,fail) : \
+	                                   __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(newv),succ,fail))
 #endif /* !__cplusplus */
 #endif /* __NO_XBLOCK || !__COMPILER_HAVE_TYPEOF */
 #endif
@@ -327,29 +326,31 @@ __FORCELOCAL __T __NOTHROW((__hybrid_atomic_cmpxch_val)(__T &__x, __OV __oldv, _
 #if !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_TYPEOF)
 #define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail) \
  __XBLOCK({ register __typeof__(x) __xv_res; \
-            do { __COMPILER_READ_BARRIER(); \
-                 __xv_res = (x); /* __ATOMIC_ACQUIRE */ \
-                 if (__hybrid_atomic_cmpxch(x,__xv_res,__xv_res == (oldv) \
-                                            ? (newv) : __xv_res,succ,fail)) \
-                     break;  \
+            do { \
+            	__COMPILER_READ_BARRIER(); \
+            	__xv_res = (x); /* __ATOMIC_ACQUIRE */ \
+            	if (__hybrid_atomic_cmpxch(x,__xv_res,__xv_res == (oldv) \
+            	                           ? (newv) : __xv_res,succ,fail)) \
+            		break;  \
             } __WHILE1; \
             __XRETURN __xv_res; \
  })
 #else /* __NO_XBLOCK */
 #define __DEFINE_WRAPPER(n) \
 __FORCELOCAL __UINT##n##_TYPE__ \
-__NOTHROW((__impl_hybrid_atomic_cmpxch_val##n)(void *__x, \
-                                               __UINT##n##_TYPE__ __oldv, \
-                                               __UINT##n##_TYPE__ __newv, \
-                                               int __succ, int __fail)) { \
-    register __UINT##n##_TYPE__ __res; \
-    do { __COMPILER_READ_BARRIER(); \
-         __res = *(__UINT##n##_TYPE__ *)__x; /* __ATOMIC_ACQUIRE */ \
-         if (__hybrid_atomic_cmpxch(*(__UINT##n##_TYPE__ *)__x,__res,__res == __oldv \
-                                    ? __newv : __res,__succ,__fail)) \
-             break;  \
-    } __WHILE1; \
-    return __res; \
+__NOTHROW_NCX(__impl_hybrid_atomic_cmpxch_val##n)(void *__x, \
+                                                  __UINT##n##_TYPE__ __oldv, \
+                                                  __UINT##n##_TYPE__ __newv, \
+                                                  int __succ, int __fail) { \
+	register __UINT##n##_TYPE__ __res; \
+	do { \
+		__COMPILER_READ_BARRIER(); \
+		__res = *(__UINT##n##_TYPE__ *)__x; /* __ATOMIC_ACQUIRE */ \
+		if (__hybrid_atomic_cmpxch(*(__UINT##n##_TYPE__ *)__x,__res,__res == __oldv \
+		                           ? __newv : __res,__succ,__fail)) \
+			break;  \
+	} __WHILE1; \
+	return __res; \
 }
 __NAMESPACE_INT_BEGIN
 __DEFINE_WRAPPER(8)
@@ -360,18 +361,18 @@ __NAMESPACE_INT_END
 #undef __DEFINE_WRAPPER
 #ifdef __cplusplus
 extern "C++" { template<class __T, class __V>
-__FORCELOCAL __T __NOTHROW((__hybrid_atomic_cmpxch_val)(__T &__x, __V __oldv, __V __newv, int __succ, int __fail)) {
-    __STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&__x,(__UINT8_TYPE__)__oldv,(__UINT8_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 1) {
-    __STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&__x,(__UINT16_TYPE__)__oldv,(__UINT16_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 2) {
-    __STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&__x,(__UINT32_TYPE__)__oldv,(__UINT32_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 4) {
-    return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&__x,(__UINT64_TYPE__)__oldv,(__UINT64_TYPE__)__newv,__succ,__fail);
+__FORCELOCAL __T __NOTHROW_NCX(__hybrid_atomic_cmpxch_val)(__T &__x, __V __oldv, __V __newv, int __succ, int __fail) {
+	__STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&__x,(__UINT8_TYPE__)__oldv,(__UINT8_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 1) {
+	__STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&__x,(__UINT16_TYPE__)__oldv,(__UINT16_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 2) {
+	__STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&__x,(__UINT32_TYPE__)__oldv,(__UINT32_TYPE__)__newv,__succ,__fail); } __STATIC_ELSE(sizeof(__T) == 4) {
+	return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&__x,(__UINT64_TYPE__)__oldv,(__UINT64_TYPE__)__newv,__succ,__fail);
 } } } } }
 #else /* __cplusplus */
 #define __hybrid_atomic_cmpxch_val(x,oldv,newv,succ,fail) \
- __ATOMIC_RECAST(x,sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(newv),succ,fail) : \
-                   sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(newv),succ,fail) : \
-                   sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(newv),succ,fail) : \
-                                    __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(newv),succ,fail))
+	__ATOMIC_RECAST(x,sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(newv),succ,fail) : \
+	                  sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(newv),succ,fail) : \
+	                  sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(newv),succ,fail) : \
+	                                   __NAMESPACE_INT_SYM __impl_hybrid_atomic_cmpxch_val64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(oldv),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(newv),succ,fail))
 #endif /* __cplusplus */
 #endif /* !__NO_XBLOCK */
 #endif /* !__hybrid_atomic_cmpxch_val */
@@ -403,33 +404,33 @@ __FORCELOCAL __T __NOTHROW((__hybrid_atomic_cmpxch_val)(__T &__x, __V __oldv, __
 #define __hybrid_atomic_load(x,order) \
  __XBLOCK({ register __typeof__(x) __ld_res; \
             if ((order) >= __ATOMIC_SEQ_CST) \
-                __ld_res = __impl_hybrid_atomic_load_seqcst(x); \
+            	__ld_res = __impl_hybrid_atomic_load_seqcst(x); \
             else { \
-                if ((order) == __ATOMIC_ACQUIRE || \
-                    (order) == __ATOMIC_ACQ_REL) \
-                    __COMPILER_READ_BARRIER(); \
-                __ld_res = (x); \
-                if ((order) >= __ATOMIC_RELEASE) \
-                    __COMPILER_WRITE_BARRIER(); \
+            	if ((order) == __ATOMIC_ACQUIRE || \
+            	    (order) == __ATOMIC_ACQ_REL) \
+            		__COMPILER_READ_BARRIER(); \
+            	__ld_res = (x); \
+            	if ((order) >= __ATOMIC_RELEASE) \
+            		__COMPILER_WRITE_BARRIER(); \
             } \
             __XRETURN __ld_res; \
  })
 #else /* !__NO_XBLOCK && __COMPILER_HAVE_TYPEOF */
 #define __DEFINE_WRAPPER(n) \
 __FORCELOCAL __UINT##n##_TYPE__ \
-__NOTHROW((__impl_hybrid_atomic_load##n)(void *__x, int __order)) { \
-    register __UINT##n##_TYPE__ __res; \
-    if (__order >= __ATOMIC_SEQ_CST) \
-        __res = (__UINT##n##_TYPE__)__impl_hybrid_atomic_load_seqcst(*(__UINT##n##_TYPE__ *)__x); \
-    else { \
-        if (__order == __ATOMIC_ACQUIRE || \
-            __order == __ATOMIC_ACQ_REL) \
-            __COMPILER_READ_BARRIER(); \
-        __res = *(__UINT##n##_TYPE__ *)__x; \
-        if (__order >= __ATOMIC_RELEASE) \
-            __COMPILER_WRITE_BARRIER(); \
-    } \
-    return __res; \
+__NOTHROW_NCX(__impl_hybrid_atomic_load##n)(void *__x, int __order) { \
+	register __UINT##n##_TYPE__ __res; \
+	if (__order >= __ATOMIC_SEQ_CST) \
+		__res = (__UINT##n##_TYPE__)__impl_hybrid_atomic_load_seqcst(*(__UINT##n##_TYPE__ *)__x); \
+	else { \
+		if (__order == __ATOMIC_ACQUIRE || \
+		    __order == __ATOMIC_ACQ_REL) \
+			__COMPILER_READ_BARRIER(); \
+		__res = *(__UINT##n##_TYPE__ *)__x; \
+		if (__order >= __ATOMIC_RELEASE) \
+			__COMPILER_WRITE_BARRIER(); \
+	} \
+	return __res; \
 }
 __NAMESPACE_INT_BEGIN
 __DEFINE_WRAPPER(8)
@@ -441,18 +442,18 @@ __NAMESPACE_INT_END
 #ifdef __cplusplus
 extern "C++" { template<class __T>
 #define __hybrid_atomic_load __hybrid_atomic_load
-__FORCELOCAL __T __NOTHROW((__hybrid_atomic_load)(__T &__x, int __order)) {
-    __STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load8((void *)&__x,__order); } __STATIC_ELSE(sizeof(__T) == 1) {
-    __STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load16((void *)&__x,__order); } __STATIC_ELSE(sizeof(__T) == 2) {
-    __STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load32((void *)&__x,__order); } __STATIC_ELSE(sizeof(__T) == 4) {
-    return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load64((void *)&__x,__order);
+__FORCELOCAL __T __NOTHROW_NCX(__hybrid_atomic_load)(__T &__x, int __order) {
+	__STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load8((void *)&__x,__order); } __STATIC_ELSE(sizeof(__T) == 1) {
+	__STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load16((void *)&__x,__order); } __STATIC_ELSE(sizeof(__T) == 2) {
+	__STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load32((void *)&__x,__order); } __STATIC_ELSE(sizeof(__T) == 4) {
+	return (__T)__NAMESPACE_INT_SYM __impl_hybrid_atomic_load64((void *)&__x,__order);
 } } } } }
 #else /* __cplusplus */
 #define __hybrid_atomic_load(x,order) \
- __ATOMIC_RECAST(x,sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_load8((void *)&(x),order) : \
-                   sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_load16((void *)&(x),order) : \
-                   sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_load32((void *)&(x),order) : \
-                                    __NAMESPACE_INT_SYM __impl_hybrid_atomic_load64((void *)&(x),order))
+	__ATOMIC_RECAST(x,sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_load8((void *)&(x),order) : \
+	                  sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_load16((void *)&(x),order) : \
+	                  sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_load32((void *)&(x),order) : \
+	                                   __NAMESPACE_INT_SYM __impl_hybrid_atomic_load64((void *)&(x),order))
 #endif /* !__cplusplus */
 #endif /* __NO_XBLOCK || !__COMPILER_HAVE_TYPEOF */
 #endif /* !__hybrid_atomic_load */
@@ -468,31 +469,31 @@ __FORCELOCAL __T __NOTHROW((__hybrid_atomic_load)(__T &__x, int __order)) {
 #ifndef __NO_XBLOCK
 #define __hybrid_atomic_store(x,v,order) \
  __XBLOCK({ if ((order) >= __ATOMIC_SEQ_CST) \
-                __impl_hybrid_atomic_store_seqcst(x,v); \
+            	__impl_hybrid_atomic_store_seqcst(x,v); \
             else { \
-                if ((order) == __ATOMIC_ACQUIRE || \
-                    (order) == __ATOMIC_ACQ_REL) \
-                    __COMPILER_READ_BARRIER(); \
-                (x) = (v); \
-                if ((order) >= __ATOMIC_RELEASE) \
-                    __COMPILER_WRITE_BARRIER(); \
+            	if ((order) == __ATOMIC_ACQUIRE || \
+            	    (order) == __ATOMIC_ACQ_REL) \
+            		__COMPILER_READ_BARRIER(); \
+            	(x) = (v); \
+            	if ((order) >= __ATOMIC_RELEASE) \
+            		__COMPILER_WRITE_BARRIER(); \
             } \
             (void)0; \
  })
 #else /* !__NO_XBLOCK */
 #define __DEFINE_WRAPPER(n) \
 __FORCELOCAL void \
-__NOTHROW((__impl_hybrid_atomic_store##n)(void *__x, __UINT##n##_TYPE__ __v, int __order)) {\
-    if (__order >= __ATOMIC_SEQ_CST) \
-        __impl_hybrid_atomic_store_seqcst(*(__UINT##n##_TYPE__ *)__x,__v); \
-    else { \
-        if (__order == __ATOMIC_ACQUIRE || \
-            __order == __ATOMIC_ACQ_REL) \
-            __COMPILER_READ_BARRIER(); \
-        *(__UINT##n##_TYPE__ *)__x = __v; \
-        if (__order >= __ATOMIC_RELEASE) \
-            __COMPILER_WRITE_BARRIER(); \
-    } \
+__NOTHROW_NCX(__impl_hybrid_atomic_store##n)(void *__x, __UINT##n##_TYPE__ __v, int __order) {\
+	if (__order >= __ATOMIC_SEQ_CST) \
+		__impl_hybrid_atomic_store_seqcst(*(__UINT##n##_TYPE__ *)__x,__v); \
+	else { \
+		if (__order == __ATOMIC_ACQUIRE || \
+		    __order == __ATOMIC_ACQ_REL) \
+			__COMPILER_READ_BARRIER(); \
+		*(__UINT##n##_TYPE__ *)__x = __v; \
+		if (__order >= __ATOMIC_RELEASE) \
+			__COMPILER_WRITE_BARRIER(); \
+	} \
 }
 __NAMESPACE_INT_BEGIN
 __DEFINE_WRAPPER(8)
@@ -504,18 +505,18 @@ __NAMESPACE_INT_END
 #ifdef __cplusplus
 extern "C++" { template<class __T, class __V>
 #define __hybrid_atomic_store __hybrid_atomic_store
-__FORCELOCAL void __NOTHROW((__hybrid_atomic_store)(__T &__x, __V __v, int __order)) {
-    __STATIC_IF(sizeof(__T) == 1) { __NAMESPACE_INT_SYM __impl_hybrid_atomic_store8((void *)&__x,(__UINT8_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 1) {
-    __STATIC_IF(sizeof(__T) == 2) { __NAMESPACE_INT_SYM __impl_hybrid_atomic_store16((void *)&__x,(__UINT16_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 2) {
-    __STATIC_IF(sizeof(__T) == 4) { __NAMESPACE_INT_SYM __impl_hybrid_atomic_store32((void *)&__x,(__UINT32_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 4) {
-    __NAMESPACE_INT_SYM __impl_hybrid_atomic_store64((void *)&__x,(__UINT64_TYPE__)__v,__order);
+__FORCELOCAL void __NOTHROW_NCX(__hybrid_atomic_store)(__T &__x, __V __v, int __order) {
+	__STATIC_IF(sizeof(__T) == 1) { __NAMESPACE_INT_SYM __impl_hybrid_atomic_store8((void *)&__x,(__UINT8_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 1) {
+	__STATIC_IF(sizeof(__T) == 2) { __NAMESPACE_INT_SYM __impl_hybrid_atomic_store16((void *)&__x,(__UINT16_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 2) {
+	__STATIC_IF(sizeof(__T) == 4) { __NAMESPACE_INT_SYM __impl_hybrid_atomic_store32((void *)&__x,(__UINT32_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 4) {
+	__NAMESPACE_INT_SYM __impl_hybrid_atomic_store64((void *)&__x,(__UINT64_TYPE__)__v,__order);
 } } } } }
 #else /* __cplusplus */
 #define __hybrid_atomic_store(x,v,order) \
- (sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_store8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(v),order) : \
-  sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_store16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(v),order) : \
-  sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_store32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(v),order) : \
-                   __NAMESPACE_INT_SYM __impl_hybrid_atomic_store64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(v),order))
+	(sizeof(x) == 1 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_store8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(v),order) : \
+	 sizeof(x) == 2 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_store16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(v),order) : \
+	 sizeof(x) == 4 ? __NAMESPACE_INT_SYM __impl_hybrid_atomic_store32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(v),order) : \
+	                  __NAMESPACE_INT_SYM __impl_hybrid_atomic_store64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(v),order))
 #endif /* !__cplusplus */
 #endif /* __NO_XBLOCK */
 #endif /* !__hybrid_atomic_store */
@@ -547,101 +548,103 @@ __FORCELOCAL void __NOTHROW((__hybrid_atomic_store)(__T &__x, __V __v, int __ord
  __XBLOCK({ register __typeof__(x) __sc_res; \
             do __sc_res = (x); \
             while (!__hybrid_atomic_cmpxch_weak(x,__sc_res, \
-                  (__typeof__(__sc_res))opfun(__sc_res,v),__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)); \
+                  (__typeof__(__sc_res))opfun(__sc_res,v), \
+                   __ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)); \
             __XRETURN __sc_res; \
  })
 #define __XBLOCK_hybrid_atomic_fetchop(opfun,seqcst,x,v,order) \
  __XBLOCK({ register __typeof__(x) __fo_res; \
             if ((order) >= __ATOMIC_SEQ_CST) { \
-                __fo_res = seqcst(x,v); \
+            	__fo_res = seqcst(x,v); \
             } else { \
-                if ((order) == __ATOMIC_ACQUIRE || \
-                    (order) == __ATOMIC_ACQ_REL) \
-                    __COMPILER_READ_BARRIER(); \
-                __fo_res = (x); \
-                (x) = (__typeof__(__fo_res))opfun(__fo_res,v); \
-                if ((order) >= __ATOMIC_RELEASE) \
-                    __COMPILER_WRITE_BARRIER(); \
+            	if ((order) == __ATOMIC_ACQUIRE || \
+            	    (order) == __ATOMIC_ACQ_REL) \
+            		__COMPILER_READ_BARRIER(); \
+            	__fo_res = (x); \
+            	(x) = (__typeof__(__fo_res))opfun(__fo_res,v); \
+            	if ((order) >= __ATOMIC_RELEASE) \
+            		__COMPILER_WRITE_BARRIER(); \
             } \
             __XRETURN __fo_res; \
  })
 #else /* !__NO_XBLOCK && __COMPILER_HAVE_TYPEOF */
 #define __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,n,opfun) \
 __FORCELOCAL __UINT##n##_TYPE__ \
-__NOTHROW((name##n##_seqcst)(void *__x, __UINT##n##_TYPE__ __v)) { \
-    register __UINT##n##_TYPE__ __res; \
-    do { __COMPILER_READ_BARRIER(); \
-         __res = *(__UINT##n##_TYPE__ *)__x; \
-    } while (!__hybrid_atomic_cmpxch_weak(*(__UINT##n##_TYPE__ *)__x,__res,\
-            (__UINT##n##_TYPE__)opfun(__res,__v),__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)); \
-    return __res; \
+__NOTHROW_NCX(name##n##_seqcst)(void *__x, __UINT##n##_TYPE__ __v) { \
+	register __UINT##n##_TYPE__ __res; \
+	do { \
+		__COMPILER_READ_BARRIER(); \
+		__res = *(__UINT##n##_TYPE__ *)__x; \
+	} while (!__hybrid_atomic_cmpxch_weak(*(__UINT##n##_TYPE__ *)__x,__res, \
+	        (__UINT##n##_TYPE__)opfun(__res,__v),__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)); \
+	return __res; \
 }
 #define __DECL_INLINE_hybrid_atomic_fetchop(name,name_seqcst,n,opfun) \
 __FORCELOCAL __UINT##n##_TYPE__ \
-__NOTHROW((name##n)(void *__x, __UINT##n##_TYPE__ __v, int __order)) { \
-    register __UINT##n##_TYPE__ __res; \
-    if (__order >= __ATOMIC_SEQ_CST) { \
-        __res = name_seqcst(*(__UINT##n##_TYPE__ *)__x,__v); \
-    } else { \
-        if (__order == __ATOMIC_ACQUIRE || \
-            __order == __ATOMIC_ACQ_REL) \
-            __COMPILER_READ_BARRIER(); \
-        __res = *(__UINT##n##_TYPE__ *)__x; \
-        *(__UINT##n##_TYPE__ *)__x = (__UINT##n##_TYPE__)opfun(__res,__v); \
-        if (__order >= __ATOMIC_RELEASE) \
-            __COMPILER_WRITE_BARRIER(); \
-    } \
-    return __res; \
+__NOTHROW_NCX(name##n)(void *__x, __UINT##n##_TYPE__ __v, int __order) { \
+	register __UINT##n##_TYPE__ __res; \
+	if (__order >= __ATOMIC_SEQ_CST) { \
+		__res = name_seqcst(*(__UINT##n##_TYPE__ *)__x,__v); \
+	} else { \
+		if (__order == __ATOMIC_ACQUIRE || \
+		    __order == __ATOMIC_ACQ_REL) \
+			__COMPILER_READ_BARRIER(); \
+		__res = *(__UINT##n##_TYPE__ *)__x; \
+		*(__UINT##n##_TYPE__ *)__x = (__UINT##n##_TYPE__)opfun(__res,__v); \
+		if (__order >= __ATOMIC_RELEASE) \
+			__COMPILER_WRITE_BARRIER(); \
+	} \
+	return __res; \
 }
 #ifndef __cplusplus
 #define __INLINE_hybrid_atomic_fetchop_seqcst(name,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,8,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,16,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,32,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,64,opfun)
+	__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,8,opfun) \
+	__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,16,opfun) \
+	__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,32,opfun) \
+	__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,64,opfun)
 #define __CALL_hybrid_atomic_fetchop_seqcst(name,x,v) \
- __ATOMIC_RECAST(x,sizeof(x) == 1 ? name##8_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(v)) : \
-                   sizeof(x) == 2 ? name##16_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(v)) : \
-                   sizeof(x) == 4 ? name##32_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(v)) : \
-                                    name##64_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(v)))
+	__ATOMIC_RECAST(x,sizeof(x) == 1 ? name##8_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(v)) : \
+	                  sizeof(x) == 2 ? name##16_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(v)) : \
+	                  sizeof(x) == 4 ? name##32_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(v)) : \
+	                                   name##64_seqcst((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(v)))
 #define __INLINE_hybrid_atomic_fetchop(name,name_seqcst,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,8,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,16,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,32,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,64,opfun)
+	__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,8,opfun) \
+	__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,16,opfun) \
+	__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,32,opfun) \
+	__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,64,opfun)
 #define __CALL_hybrid_atomic_fetchop(name,x,v,order) \
- __ATOMIC_RECAST(x,sizeof(x) == 1 ? __impl_##name##8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(v),order) : \
-                   sizeof(x) == 2 ? __impl_##name##16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(v),order) : \
-                   sizeof(x) == 4 ? __impl_##name##32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(v),order) : \
-                                    __impl_##name##64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(v),order))
+	__ATOMIC_RECAST(x,sizeof(x) == 1 ? __impl_##name##8((void *)&(x),__ATOMIC_DOWNCAST(__UINT8_TYPE__)(v),order) : \
+	                  sizeof(x) == 2 ? __impl_##name##16((void *)&(x),__ATOMIC_DOWNCAST(__UINT16_TYPE__)(v),order) : \
+	                  sizeof(x) == 4 ? __impl_##name##32((void *)&(x),__ATOMIC_DOWNCAST(__UINT32_TYPE__)(v),order) : \
+	                                   __impl_##name##64((void *)&(x),__ATOMIC_DOWNCAST(__UINT64_TYPE__)(v),order))
 #else /* !__cplusplus */
 #define __INLINE_hybrid_atomic_fetchop_seqcst(name,opfun) \
- __NAMESPACE_INT_BEGIN \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,8,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,16,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,32,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,64,opfun) \
- __NAMESPACE_INT_END \
+	__NAMESPACE_INT_BEGIN \
+		__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,8,opfun) \
+		__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,16,opfun) \
+		__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,32,opfun) \
+		__DECL_INLINE_hybrid_atomic_fetchop_seqcst(name,64,opfun) \
+	__NAMESPACE_INT_END \
 extern "C++" { template<class __T, class __V> \
-__FORCELOCAL __T __NOTHROW((name##_seqcst)(__T &__x, __V __v)) { \
-    __STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM name##8_seqcst((void *)&__x,(__UINT8_TYPE__)__v); } __STATIC_ELSE(sizeof(__T) == 1) { \
-    __STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM name##16_seqcst((void *)&__x,(__UINT16_TYPE__)__v); } __STATIC_ELSE(sizeof(__T) == 2) { \
-    __STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM name##32_seqcst((void *)&__x,(__UINT64_TYPE__)__v); } __STATIC_ELSE(sizeof(__T) == 4) { \
-    return (__T)__NAMESPACE_INT_SYM name##64_seqcst((void *)&__x,(__UINT64_TYPE__)__v); \
+__FORCELOCAL __T __NOTHROW_NCX(name##_seqcst)(__T &__x, __V __v) { \
+	__STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM name##8_seqcst((void *)&__x,(__UINT8_TYPE__)__v); } __STATIC_ELSE(sizeof(__T) == 1) { \
+	__STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM name##16_seqcst((void *)&__x,(__UINT16_TYPE__)__v); } __STATIC_ELSE(sizeof(__T) == 2) { \
+	__STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM name##32_seqcst((void *)&__x,(__UINT64_TYPE__)__v); } __STATIC_ELSE(sizeof(__T) == 4) { \
+	return (__T)__NAMESPACE_INT_SYM name##64_seqcst((void *)&__x,(__UINT64_TYPE__)__v); \
 } } } } }
 #define __INLINE_hybrid_atomic_fetchop(name,name_seqcst,opfun) \
- __NAMESPACE_INT_BEGIN \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,8,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,16,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,32,opfun) \
- __DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,64,opfun) \
- __NAMESPACE_INT_END \
+	__NAMESPACE_INT_BEGIN \
+		__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,8,opfun) \
+		__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,16,opfun) \
+		__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,32,opfun) \
+		__DECL_INLINE_hybrid_atomic_fetchop(__impl_##name,name_seqcst,64,opfun) \
+	__NAMESPACE_INT_END \
 extern "C++" { template<class __T, class __V> \
-__FORCELOCAL __T __NOTHROW((name)(__T &__x, __V __v, int __order)) { \
-    __STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_##name##8((void *)&__x,(__UINT8_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 1) { \
-    __STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_##name##16((void *)&__x,(__UINT16_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 2) { \
-    __STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_##name##32((void *)&__x,(__UINT64_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 4) { \
-    return (__T)__NAMESPACE_INT_SYM __impl_##name##64((void *)&__x,(__UINT64_TYPE__)__v,__order); \
+__FORCELOCAL __T __NOTHROW_NCX(name)(__T &__x, __V __v, int __order) { \
+	__STATIC_IF(sizeof(__T) == 1) { return (__T)__NAMESPACE_INT_SYM __impl_##name##8((void *)&__x,(__UINT8_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 1) { \
+	__STATIC_IF(sizeof(__T) == 2) { return (__T)__NAMESPACE_INT_SYM __impl_##name##16((void *)&__x,(__UINT16_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 2) { \
+	__STATIC_IF(sizeof(__T) == 4) { return (__T)__NAMESPACE_INT_SYM __impl_##name##32((void *)&__x,(__UINT64_TYPE__)__v,__order); } __STATIC_ELSE(sizeof(__T) == 4) { \
+	return (__T)__NAMESPACE_INT_SYM __impl_##name##64((void *)&__x,(__UINT64_TYPE__)__v,__order); \
 } } } } }
 #endif /* __cplusplus */
 #endif /* __NO_XBLOCK || !__COMPILER_HAVE_TYPEOF */
@@ -652,15 +655,15 @@ function atomic_operation(name,opname) {
     print "#ifdef __XBLOCK_hybrid_atomic_fetchop";
     print "#ifndef __impl_hybrid_atomic_"+name+"_seqcst";
     print "#define __impl_hybrid_atomic_"+name+"_seqcst(x,v) \\";
-    print " __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_"+opname+",x,v)";
+    print "	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_"+opname+",x,v)";
     print "#endif /" "* __impl_hybrid_atomic_"+name+"_seqcst *" "/";
     print "#define __hybrid_atomic_"+name+"(x,v,order) \\";
-    print "  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_"+opname+",__impl_hybrid_atomic_"+name+"_seqcst,x,v,order)";
+    print "	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_"+opname+",__impl_hybrid_atomic_"+name+"_seqcst,x,v,order)";
     print "#else /" "* __XBLOCK_hybrid_atomic_fetchop *" "/";
     print "#ifndef __impl_hybrid_atomic_"+name+"_seqcst";
     print "#ifdef __CALL_hybrid_atomic_fetchop_seqcst";
     print "#define __impl_hybrid_atomic_"+name+"_seqcst(x,v)  \\";
-    print "  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_"+name+",x,v)";
+    print "	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_"+name+",x,v)";
     print "#else /" "* __CALL_hybrid_atomic_fetchop_seqcst *" "/";
     print "#define __impl_hybrid_atomic_"+name+"_seqcst  __impl_hybrid_atomic_"+name+"_seqcst";
     print "#endif /" "* !__CALL_hybrid_atomic_fetchop_seqcst *" "/";
@@ -669,7 +672,7 @@ function atomic_operation(name,opname) {
     print "__INLINE_hybrid_atomic_fetchop(__hybrid_atomic_"+name+",__impl_hybrid_atomic_"+name+"_seqcst,__hybrid_opfun_"+opname+")";
     print "#ifdef __CALL_hybrid_atomic_fetchop";
     print "#define __hybrid_atomic_"+name+"(x,v,order) \\";
-    print "  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_"+name+",x,v,order)";
+    print "	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_"+name+",x,v,order)";
     print "#else /" "* __CALL_hybrid_atomic_fetchop *" "/";
     print "#define __hybrid_atomic_"+name+" __hybrid_atomic_"+name;
     print "#endif /" "* !__CALL_hybrid_atomic_fetchop *" "/";
@@ -689,15 +692,15 @@ atomic_operation("fetchnand","nand");
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_xch_seqcst
 #define __impl_hybrid_atomic_xch_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_xch,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_xch,x,v)
 #endif /* __impl_hybrid_atomic_xch_seqcst */
 #define __hybrid_atomic_xch(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_xch,__impl_hybrid_atomic_xch_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_xch,__impl_hybrid_atomic_xch_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_xch_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_xch_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_xch,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_xch,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_xch_seqcst  __impl_hybrid_atomic_xch_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -706,7 +709,7 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_xch,__hybrid_opfun_xc
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_xch,__impl_hybrid_atomic_xch_seqcst,__hybrid_opfun_xch)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_xch(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_xch,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_xch,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_xch __hybrid_atomic_xch
 #endif /* !__CALL_hybrid_atomic_fetchop */
@@ -717,15 +720,15 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_xch,__impl_hybrid_atomic_xch_seqc
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_fetchadd_seqcst
 #define __impl_hybrid_atomic_fetchadd_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_add,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_add,x,v)
 #endif /* __impl_hybrid_atomic_fetchadd_seqcst */
 #define __hybrid_atomic_fetchadd(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_add,__impl_hybrid_atomic_fetchadd_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_add,__impl_hybrid_atomic_fetchadd_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_fetchadd_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_fetchadd_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchadd,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchadd,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_fetchadd_seqcst  __impl_hybrid_atomic_fetchadd_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -734,7 +737,7 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchadd,__hybrid_opf
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchadd,__impl_hybrid_atomic_fetchadd_seqcst,__hybrid_opfun_add)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_fetchadd(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchadd,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchadd,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_fetchadd __hybrid_atomic_fetchadd
 #endif /* !__CALL_hybrid_atomic_fetchop */
@@ -745,15 +748,15 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchadd,__impl_hybrid_atomic_fet
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_fetchsub_seqcst
 #define __impl_hybrid_atomic_fetchsub_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_sub,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_sub,x,v)
 #endif /* __impl_hybrid_atomic_fetchsub_seqcst */
 #define __hybrid_atomic_fetchsub(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_sub,__impl_hybrid_atomic_fetchsub_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_sub,__impl_hybrid_atomic_fetchsub_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_fetchsub_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_fetchsub_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchsub,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchsub,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_fetchsub_seqcst  __impl_hybrid_atomic_fetchsub_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -762,7 +765,7 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchsub,__hybrid_opf
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchsub,__impl_hybrid_atomic_fetchsub_seqcst,__hybrid_opfun_sub)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_fetchsub(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchsub,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchsub,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_fetchsub __hybrid_atomic_fetchsub
 #endif /* !__CALL_hybrid_atomic_fetchop */
@@ -773,15 +776,15 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchsub,__impl_hybrid_atomic_fet
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_fetchand_seqcst
 #define __impl_hybrid_atomic_fetchand_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_and,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_and,x,v)
 #endif /* __impl_hybrid_atomic_fetchand_seqcst */
 #define __hybrid_atomic_fetchand(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_and,__impl_hybrid_atomic_fetchand_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_and,__impl_hybrid_atomic_fetchand_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_fetchand_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_fetchand_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchand,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchand,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_fetchand_seqcst  __impl_hybrid_atomic_fetchand_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -790,7 +793,7 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchand,__hybrid_opf
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchand,__impl_hybrid_atomic_fetchand_seqcst,__hybrid_opfun_and)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_fetchand(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchand,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchand,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_fetchand __hybrid_atomic_fetchand
 #endif /* !__CALL_hybrid_atomic_fetchop */
@@ -801,15 +804,15 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchand,__impl_hybrid_atomic_fet
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_fetchor_seqcst
 #define __impl_hybrid_atomic_fetchor_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_or,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_or,x,v)
 #endif /* __impl_hybrid_atomic_fetchor_seqcst */
 #define __hybrid_atomic_fetchor(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_or,__impl_hybrid_atomic_fetchor_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_or,__impl_hybrid_atomic_fetchor_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_fetchor_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_fetchor_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchor,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchor,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_fetchor_seqcst  __impl_hybrid_atomic_fetchor_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -818,7 +821,7 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchor,__hybrid_opfu
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchor,__impl_hybrid_atomic_fetchor_seqcst,__hybrid_opfun_or)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_fetchor(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchor,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchor,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_fetchor __hybrid_atomic_fetchor
 #endif /* !__CALL_hybrid_atomic_fetchop */
@@ -829,15 +832,15 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchor,__impl_hybrid_atomic_fetc
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_fetchxor_seqcst
 #define __impl_hybrid_atomic_fetchxor_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_xor,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_xor,x,v)
 #endif /* __impl_hybrid_atomic_fetchxor_seqcst */
 #define __hybrid_atomic_fetchxor(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_xor,__impl_hybrid_atomic_fetchxor_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_xor,__impl_hybrid_atomic_fetchxor_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_fetchxor_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_fetchxor_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchxor,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchxor,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_fetchxor_seqcst  __impl_hybrid_atomic_fetchxor_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -846,7 +849,7 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchxor,__hybrid_opf
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchxor,__impl_hybrid_atomic_fetchxor_seqcst,__hybrid_opfun_xor)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_fetchxor(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchxor,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchxor,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_fetchxor __hybrid_atomic_fetchxor
 #endif /* !__CALL_hybrid_atomic_fetchop */
@@ -857,15 +860,15 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchxor,__impl_hybrid_atomic_fet
 #ifdef __XBLOCK_hybrid_atomic_fetchop
 #ifndef __impl_hybrid_atomic_fetchnand_seqcst
 #define __impl_hybrid_atomic_fetchnand_seqcst(x,v) \
- __XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_nand,x,v)
+	__XBLOCK_hybrid_atomic_fetchop_seqcst(__hybrid_opfun_nand,x,v)
 #endif /* __impl_hybrid_atomic_fetchnand_seqcst */
 #define __hybrid_atomic_fetchnand(x,v,order) \
-  __XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_nand,__impl_hybrid_atomic_fetchnand_seqcst,x,v,order)
+	__XBLOCK_hybrid_atomic_fetchop(__hybrid_opfun_nand,__impl_hybrid_atomic_fetchnand_seqcst,x,v,order)
 #else /* __XBLOCK_hybrid_atomic_fetchop */
 #ifndef __impl_hybrid_atomic_fetchnand_seqcst
 #ifdef __CALL_hybrid_atomic_fetchop_seqcst
 #define __impl_hybrid_atomic_fetchnand_seqcst(x,v)  \
-  __CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchnand,x,v)
+	__CALL_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchnand,x,v)
 #else /* __CALL_hybrid_atomic_fetchop_seqcst */
 #define __impl_hybrid_atomic_fetchnand_seqcst  __impl_hybrid_atomic_fetchnand_seqcst
 #endif /* !__CALL_hybrid_atomic_fetchop_seqcst */
@@ -874,13 +877,12 @@ __INLINE_hybrid_atomic_fetchop_seqcst(__impl_hybrid_atomic_fetchnand,__hybrid_op
 __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchnand,__impl_hybrid_atomic_fetchnand_seqcst,__hybrid_opfun_nand)
 #ifdef __CALL_hybrid_atomic_fetchop
 #define __hybrid_atomic_fetchnand(x,v,order) \
-  __CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchnand,x,v,order)
+	__CALL_hybrid_atomic_fetchop(__hybrid_atomic_fetchnand,x,v,order)
 #else /* __CALL_hybrid_atomic_fetchop */
 #define __hybrid_atomic_fetchnand __hybrid_atomic_fetchnand
 #endif /* !__CALL_hybrid_atomic_fetchop */
 #endif /* !__XBLOCK_hybrid_atomic_fetchop */
 #endif /* !__hybrid_atomic_fetchnand */
-
 //[[[end]]]
 
 #undef __DECL_INLINE_hybrid_atomic_fetchop
@@ -963,14 +965,14 @@ __INLINE_hybrid_atomic_fetchop(__hybrid_atomic_fetchnand,__impl_hybrid_atomic_fe
 #define __hybrid_atomic_signal_fence(order) \
        (__NAMESPACE_INT_SYM __impl_hybrid_atomic_signal_fence(order))
 __NAMESPACE_INT_BEGIN
-__FORCELOCAL void __NOTHROW((__impl_hybrid_atomic_signal_fence)(int __order)) {
- /* Fallback: Emit compiler barriers to implement atomic signal fencing.
-  * HINT: If available, compiler barriers are implemented using intrinsic
-  *       signal fences, meaning that they are literally the same thing.
-  * e.g.: When hosted by msvc, stuff like `_ReadWriteBarrier()' will appear below. */
- /* */if (__order >= __ATOMIC_ACQ_REL) __COMPILER_BARRIER();
- else if (__order >= __ATOMIC_RELEASE) __COMPILER_WRITE_BARRIER();
- else if (__order >= __ATOMIC_ACQUIRE) __COMPILER_READ_BARRIER();
+__FORCELOCAL void __NOTHROW_NCX(__impl_hybrid_atomic_signal_fence)(int __order) {
+	/* Fallback: Emit compiler barriers to implement atomic signal fencing.
+	 * HINT: If available, compiler barriers are implemented using intrinsic
+	 *       signal fences, meaning that they are literally the same thing.
+	 * e.g.: When hosted by msvc, stuff like `_ReadWriteBarrier()' will appear below. */
+	/* */if (__order >= __ATOMIC_ACQ_REL) __COMPILER_BARRIER();
+	else if (__order >= __ATOMIC_RELEASE) __COMPILER_WRITE_BARRIER();
+	else if (__order >= __ATOMIC_ACQUIRE) __COMPILER_READ_BARRIER();
 }
 #endif /* !__COMPILER_BARRIERS_ALL_IDENTICAL */
 __NAMESPACE_INT_END

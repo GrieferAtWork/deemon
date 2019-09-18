@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,42 +19,25 @@
 #ifndef __GUARD_HYBRID_WORDBITS_H
 #define __GUARD_HYBRID_WORDBITS_H 1
 
-#include "compiler.h"
-#include "__byteorder.h"
-
-DECL_BEGIN
+#include "__wordbits.h"
 
 /* Return the ith byte/word/dword of a given 16/32/64-bit integer. */
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define INT16_I8(x,i)                 (((x) >> (i)*8) & 0xff)
-#define INT32_I8(x,i)                 (((x) >> (i)*8) & 0xff)
-#define INT64_I8(x,i)                 (((x) >> (i)*8) & 0xff)
-#define INT32_I16(x,i)                (((x) >> (i)*16) & 0xffff)
-#define INT64_I16(x,i)                (((x) >> (i)*16) & 0xffff)
-#define INT64_I32(x,i)                (((x) >> (i)*32) & 0xffffffff)
-#define ENCODE_INT16(a,b)              ((b)<<8|(a))
-#define ENCODE_INT32(a,b,c,d)          ((d)<<24|(c)<<16|(b)<<8|(a))
-#define ENCODE_INT64(a,b,c,d,e,f,g,h)  ((h)<<56|(g)<<48|(f)<<40|(e)<<32|(d)<<24|(c)<<16|(b)<<8|(a))
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define INT16_I8(x,i)                 (((x) >> (8-(i)*8)) & 0xff)
-#define INT32_I8(x,i)                 (((x) >> (24-(i)*8)) & 0xff)
-#define INT64_I8(x,i)                 (((x) >> (56-(i)*8)) & 0xff)
-#define INT32_I16(x,i)                (((x) >> (16-(i)*16)) & 0xffff)
-#define INT64_I16(x,i)                (((x) >> (48-(i)*16)) & 0xffff)
-#define INT64_I32(x,i)                (((x) >> (32-(i)*32)) & 0xffffffff)
-#define ENCODE_INT16(a,b)              ((b)|(a)<<8)
-#define ENCODE_INT32(a,b,c,d)          ((d)|(c)<<8|(b)<<16|(a)<<24)
-#define ENCODE_INT64(a,b,c,d,e,f,g,h)  ((h)|(g)<<8|(f)<<16|(e)<<24|(d)<<32|(c)<<40|(b)<<48|(a)<<56)
-#endif
+#define INT16_I8(x,i)                 __INT16_I8(x,i)
+#define INT32_I8(x,i)                 __INT32_I8(x,i)
+#define INT64_I8(x,i)                 __INT64_I8(x,i)
+#define INT32_I16(x,i)                __INT32_I16(x,i)
+#define INT64_I16(x,i)                __INT64_I16(x,i)
+#define INT64_I32(x,i)                __INT64_I32(x,i)
+#define ENCODE_INT16(a,b)             __ENCODE_INT16(a,b)
+#define ENCODE_INT32(a,b,c,d)         __ENCODE_INT32(a,b,c,d)
+#define ENCODE_INT64(a,b,c,d,e,f,g,h) __ENCODE_INT64(a,b,c,d,e,f,g,h)
 
 /* Commonly used aliases. */
-#define INT16_BYTE(x,i)  INT16_I8(x,i)
-#define INT32_BYTE(x,i)  INT32_I8(x,i)
-#define INT64_BYTE(x,i)  INT64_I8(x,i)
-#define INT32_WORD(x,i)  INT32_I16(x,i)
-#define INT64_WORD(x,i)  INT64_I16(x,i)
-#define INT64_DWORD(x,i) INT64_I32(x,i)
-
-DECL_END
+#define INT16_BYTE(x,i)  __INT16_BYTE(x,i)
+#define INT32_BYTE(x,i)  __INT32_BYTE(x,i)
+#define INT64_BYTE(x,i)  __INT64_BYTE(x,i)
+#define INT32_WORD(x,i)  __INT32_WORD(x,i)
+#define INT64_WORD(x,i)  __INT64_WORD(x,i)
+#define INT64_DWORD(x,i) __INT64_DWORD(x,i)
 
 #endif /* !__GUARD_HYBRID_WORDBITS_H */

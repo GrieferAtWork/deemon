@@ -39,6 +39,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/atomic.h>
+
 DECL_BEGIN
 
 typedef DeeSocketObject Socket;

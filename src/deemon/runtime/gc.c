@@ -43,6 +43,8 @@
 
 #include <deemon/util/string.h>
 
+#include <hybrid/atomic.h>
+
 #include <stddef.h>
 #include <stdint.h>
 

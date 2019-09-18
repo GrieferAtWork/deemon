@@ -38,6 +38,8 @@
 #include <deemon/thread.h>
 #include <deemon/util/string.h>
 
+#include <hybrid/atomic.h>
+
 /*
 #include <deemon/HashSet.h>
 #include <deemon/instancemethod.h>

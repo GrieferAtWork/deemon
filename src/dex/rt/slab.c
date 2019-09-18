@@ -29,6 +29,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 
+#include <hybrid/atomic.h>
+
 #include "librt.h"
 
 DECL_BEGIN

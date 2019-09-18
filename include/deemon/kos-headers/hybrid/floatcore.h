@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,8 +19,8 @@
 #ifndef __GUARD_HYBRID_FLOATCORE_H
 #define __GUARD_HYBRID_FLOATCORE_H 1
 
-#include <__stdinc.h>
-//#include <hybrid/typecore.h>
+#include "../__stdinc.h"
+//#include "typecore.h"
 
 #ifndef __FLT_EVAL_METHOD__
 #if defined(_M_FP_FAST)

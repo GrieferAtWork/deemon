@@ -431,10 +431,10 @@ again:
 		for (; biter != bend; ++biter) {
 			iter = *biter;
 			while (iter) {
-				next = iter->ft_chain.le_next;
+				next = LLIST_NEXT(iter, ft_chain);
 				dst  = &new_map[iter->ft_hash & new_mask];
 				/* Insert the entry into the new hash-map. */
-				LIST_INSERT(*dst, iter, ft_chain);
+				LLIST_INSERT(*dst, iter, ft_chain);
 				iter = next;
 			}
 		}
@@ -509,7 +509,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 		while (result &&
 		       (result->ft_hash != hash ||
 		        !cfunction_equals(result, return_type, calling_convention, argc, argv)))
-			result = result->ft_chain.le_next;
+			result = LLIST_NEXT(result, ft_chain);
 		/* Check if we can re-use an existing type. */
 		if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
 			rwlock_endread(&return_type->st_cachelock);
@@ -534,7 +534,7 @@ register_type:
 		while (new_result &&
 		       (new_result->ft_hash != hash ||
 		        !cfunction_equals(new_result, return_type, calling_convention, argc, argv)))
-			new_result = new_result->ft_chain.le_next;
+			new_result = LLIST_NEXT(new_result, ft_chain);
 		/* Check if we can re-use an existing type. */
 		if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {
 			rwlock_endread(&return_type->st_cachelock);
@@ -558,7 +558,7 @@ register_type:
 	}
 	/* Insert the new cfunction type into the hash-map. */
 	pbucket = &return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
-	LIST_INSERT(*pbucket, result, ft_chain); /* Weak reference. */
+	LLIST_INSERT(*pbucket, result, ft_chain); /* Weak reference. */
 	rwlock_endwrite(&return_type->st_cachelock);
 done:
 	return result;

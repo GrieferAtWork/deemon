@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,7 +19,7 @@
 #ifndef __GUARD_HYBRID___ATOMIC_GASM_H
 #define __GUARD_HYBRID___ATOMIC_GASM_H 1
 
-#include <__stdinc.h>
+#include "../__stdinc.h"
 #include "host.h"
 #include "typecore.h"
 
@@ -38,34 +38,34 @@ __DECL_BEGIN
 #if defined(__x86_64__)
 #define __impl_hybrid_atomic_cmpxch_val_seqcst(x,oldv,newv) \
  __XBLOCK({ register __typeof__(x) __ix_res; \
-            if (sizeof(__ix_res) == 1) { \
-                __asm__ __volatile__("lock; cmpxchgb %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
-            } else if (sizeof(__ix_res) == 2) { \
-                __asm__ __volatile__("lock; cmpxchgw %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
-            } else if (sizeof(__ix_res) == 4) { \
-                __asm__ __volatile__("lock; cmpxchgl %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            if __untraced(sizeof(__ix_res) == 1) { \
+            	__asm__ __volatile__("lock; cmpxchgb %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            } else if __untraced(sizeof(__ix_res) == 2) { \
+            	__asm__ __volatile__("lock; cmpxchgw %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            } else if __untraced(sizeof(__ix_res) == 4) { \
+            	__asm__ __volatile__("lock; cmpxchgl %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
             } else { \
-                __asm__ __volatile__("lock; cmpxchgq %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            	__asm__ __volatile__("lock; cmpxchgq %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
             } \
             __XRETURN __ix_res; \
  })
 #elif defined(__i386__)
 #define __impl_hybrid_atomic_cmpxch_val_seqcst(x,oldv,newv) \
  __XBLOCK({ register __typeof__(x) __ix_res; \
-            if (sizeof(__ix_res) == 1) { \
-                __asm__ __volatile__("lock; cmpxchgb %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
-            } else if (sizeof(__ix_res) == 2) { \
-                __asm__ __volatile__("lock; cmpxchgw %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
-            } else if (sizeof(__ix_res) == 4) { \
-                __asm__ __volatile__("lock; cmpxchgl %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            if __untraced(sizeof(__ix_res) == 1) { \
+            	__asm__ __volatile__("lock; cmpxchgb %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            } else if __untraced(sizeof(__ix_res) == 2) { \
+            	__asm__ __volatile__("lock; cmpxchgw %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
+            } else if __untraced(sizeof(__ix_res) == 4) { \
+            	__asm__ __volatile__("lock; cmpxchgl %2, %0\n" : "+g" (x), "=a" (__ix_res) : "r" (newv), "1" (oldv) : "memory"); \
             } else { \
-                __asm__ __volatile__("lock; cmpxchg8b %0\n" \
-                                     : "+m" (x) \
-                                     , "=A" (__ix_res) \
-                                     : "A" (oldv) \
-                                     , "c" ((__UINT32_TYPE__)((__UINT64_TYPE__)(newv) >> 32)) \
-                                     , "b" ((__UINT32_TYPE__) (__UINT64_TYPE__)(newv)) \
-                                     : "memory"); \
+            	__asm__ __volatile__("lock; cmpxchg8b %0\n" \
+            	                     : "+m" (x) \
+            	                     , "=A" (__ix_res) \
+            	                     : "A" (oldv) \
+            	                     , "c" ((__UINT32_TYPE__)((__UINT64_TYPE__)(newv) >> 32)) \
+            	                     , "b" ((__UINT32_TYPE__) (__UINT64_TYPE__)(newv)) \
+            	                     : "memory"); \
             } \
             __XRETURN __ix_res; \
  })

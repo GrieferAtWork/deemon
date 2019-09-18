@@ -35,6 +35,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/string.h>
 
+#include <hybrid/atomic.h>
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "svec.h"

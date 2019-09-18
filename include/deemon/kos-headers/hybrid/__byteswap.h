@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,7 +19,7 @@
 #ifndef __GUARD_HYBRID___BYTESWAP_H
 #define __GUARD_HYBRID___BYTESWAP_H 1
 
-#include <__stdinc.h>
+#include "../__stdinc.h"
 #include "typecore.h"
 #include "__byteorder.h"
 
@@ -52,7 +52,7 @@ extern unsigned __int64 (_byteswap_uint64)(unsigned __int64 x);
 #else
 __LOCAL __ATTR_CONST __UINT16_TYPE__
 __NOTHROW(__impl_hybrid_bswap16(__UINT16_TYPE__ __x)) {
- return __hybrid_bswap16_c(__x);
+	return __hybrid_bswap16_c(__x);
 }
 #endif
 #if defined(__GNUC__) || __has_builtin(__builtin_bswap32)
@@ -60,8 +60,8 @@ __NOTHROW(__impl_hybrid_bswap16(__UINT16_TYPE__ __x)) {
 #else
 __LOCAL __ATTR_CONST __UINT32_TYPE__
 __NOTHROW(__impl_hybrid_bswap32(__UINT32_TYPE__ __x)) {
- return ((__UINT32_TYPE__)__impl_hybrid_bswap16((__UINT16_TYPE__)__x) << 16) |
-         (__UINT32_TYPE__)__impl_hybrid_bswap16((__UINT16_TYPE__)((__x) >> 16));
+	return ((__UINT32_TYPE__)__impl_hybrid_bswap16((__UINT16_TYPE__)__x) << 16) |
+	        (__UINT32_TYPE__)__impl_hybrid_bswap16((__UINT16_TYPE__)((__x) >> 16));
 }
 #endif
 #ifdef __UINT64_TYPE__
@@ -70,8 +70,8 @@ __NOTHROW(__impl_hybrid_bswap32(__UINT32_TYPE__ __x)) {
 #else
 __LOCAL __ATTR_CONST __UINT64_TYPE__
 __NOTHROW(__impl_hybrid_bswap64(__UINT64_TYPE__ __x)) {
- return ((__UINT64_TYPE__)__impl_hybrid_bswap32((__UINT32_TYPE__)__x) << 32) |
-         (__UINT64_TYPE__)__impl_hybrid_bswap32((__UINT32_TYPE__)((__x) >> 32));
+	return ((__UINT64_TYPE__)__impl_hybrid_bswap32((__UINT32_TYPE__)__x) << 32) |
+	        (__UINT64_TYPE__)__impl_hybrid_bswap32((__UINT32_TYPE__)((__x) >> 32));
 }
 #endif
 #endif /* __UINT64_TYPE__ */
@@ -83,14 +83,22 @@ __NOTHROW(__impl_hybrid_bswap64(__UINT64_TYPE__ __x)) {
 #else
 __LOCAL __ATTR_CONST __UINT128_TYPE__
 __NOTHROW(__impl_hybrid_bswap128(__UINT128_TYPE__ __x)) {
- return ((__UINT128_TYPE__)__impl_hybrid_bswap64((__UINT64_TYPE__)__x) << 64) |
-         (__UINT128_TYPE__)__impl_hybrid_bswap64((__UINT64_TYPE__)((__x) >> 64));
+	return ((__UINT128_TYPE__)__impl_hybrid_bswap64((__UINT64_TYPE__)__x) << 64) |
+	        (__UINT128_TYPE__)__impl_hybrid_bswap64((__UINT64_TYPE__)((__x) >> 64));
 }
 #endif
 #endif /* __UINT128_TYPE__ */
 
-#if !defined(__NO_builtin_choose_expr) && \
-    !defined(__NO_builtin_constant_p)
+#ifndef __CC__
+#define __hybrid_bswap16(x)  __hybrid_bswap16_c(x)
+#define __hybrid_bswap32(x)  __hybrid_bswap32_c(x)
+#ifdef __UINT64_TYPE__
+#define __hybrid_bswap64(x)  __hybrid_bswap64_c(x)
+#ifdef __UINT128_TYPE__
+#define __hybrid_bswap128(x) __hybrid_bswap128_c(x)
+#endif /* __UINT128_TYPE__ */
+#endif /* __UINT64_TYPE__ */
+#elif !defined(__NO_builtin_choose_expr) && !defined(__NO_builtin_constant_p)
 #define __hybrid_bswap16(x)  __builtin_choose_expr(__builtin_constant_p(x),__hybrid_bswap16_c(x),__impl_hybrid_bswap16(x))
 #define __hybrid_bswap32(x)  __builtin_choose_expr(__builtin_constant_p(x),__hybrid_bswap32_c(x),__impl_hybrid_bswap32(x))
 #ifdef __UINT64_TYPE__
@@ -111,7 +119,47 @@ __NOTHROW(__impl_hybrid_bswap128(__UINT128_TYPE__ __x)) {
 #endif /* ... */
 
 
+#ifdef ____INTELLISENSE_ENDIAN
+#define __hybrid_leswap16         __intern::__intellisense_leswap16
+#define __hybrid_leswap32         __intern::__intellisense_leswap32
+#define __hybrid_beswap16         __intern::__intellisense_beswap16
+#define __hybrid_beswap32         __intern::__intellisense_beswap32
+#ifdef __UINT64_TYPE__
+#define __hybrid_leswap64         __intern::__intellisense_leswap64
+#define __hybrid_beswap64         __intern::__intellisense_beswap64
+#ifdef __UINT128_TYPE__
+#define __hybrid_leswap128        __intern::__intellisense_leswap128
+#define __hybrid_beswap128        __intern::__intellisense_beswap128
+#endif /* __UINT128_TYPE__ */
+#endif /* __UINT64_TYPE__ */
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define __hybrid_leswap16_c(x)  ((__UINT16_TYPE__)(x))
+#define __hybrid_leswap32_c(x)  ((__UINT32_TYPE__)(x))
+#define __hybrid_beswap16_c(x)    __hybrid_bswap16_c(x)
+#define __hybrid_beswap32_c(x)    __hybrid_bswap32_c(x)
+#ifdef __UINT64_TYPE__
+#define __hybrid_leswap64_c(x)  ((__UINT64_TYPE__)(x))
+#define __hybrid_beswap64_c(x)    __hybrid_bswap64_c(x)
+#ifdef __UINT128_TYPE__
+#define __hybrid_leswap128_c(x) ((__UINT128_TYPE__)(x))
+#define __hybrid_beswap128_c(x)   __hybrid_bswap128_c(x)
+#endif /* __UINT128_TYPE__ */
+#endif /* __UINT64_TYPE__ */
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define __hybrid_leswap16_c(x)    __hybrid_bswap16_c(x)
+#define __hybrid_leswap32_c(x)    __hybrid_bswap32_c(x)
+#define __hybrid_beswap16_c(x)  ((__UINT16_TYPE__)(x))
+#define __hybrid_beswap32_c(x)  ((__UINT32_TYPE__)(x))
+#ifdef __UINT64_TYPE__
+#define __hybrid_leswap64_c(x)    __hybrid_bswap64_c(x)
+#define __hybrid_beswap64_c(x)  ((__UINT64_TYPE__)(x))
+#ifdef __UINT128_TYPE__
+#define __hybrid_leswap128_c(x)   __hybrid_bswap128_c(x)
+#define __hybrid_beswap128_c(x) ((__UINT128_TYPE__)(x))
+#endif /* __UINT128_TYPE__ */
+#endif /* __UINT64_TYPE__ */
+#endif
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __hybrid_leswap16(x)    ((__UINT16_TYPE__)(x))
 #define __hybrid_leswap16_c(x)  ((__UINT16_TYPE__)(x))
 #define __hybrid_leswap32(x)    ((__UINT32_TYPE__)(x))

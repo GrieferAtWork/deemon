@@ -41,6 +41,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/atomic.h>
+
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

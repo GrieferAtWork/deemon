@@ -37,6 +37,8 @@
 #include <deemon/super.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/atomic.h>
+
 #include "../objects/gc_inspect.h"
 #include "runtime_error.h"
 

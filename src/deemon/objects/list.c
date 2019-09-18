@@ -37,6 +37,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/string.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 

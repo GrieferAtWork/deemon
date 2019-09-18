@@ -39,6 +39,7 @@
 #endif /* !CONFIG_NO_DEC */
 
 #include <deemon/module.h>
+#include <hybrid/atomic.h>
 
 #include <string.h>
 

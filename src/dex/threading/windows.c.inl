@@ -31,6 +31,8 @@
 #include <deemon/none.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
+
 #include <Windows.h>
 
 #include "libthreading.h"

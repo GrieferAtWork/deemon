@@ -66,11 +66,11 @@ XMLNode_Destroy(XMLNode *__restrict self) {
 #ifndef NDEBUG
 	ASSERT(self->xn_sib_prev == NULL);
 	ASSERT(self->xn_sib_next == NULL);
-	ASSERT(self->xn_changed.le_pself == NULL);
+	ASSERT(!LLIST_ISBOUND(self, xn_changed));
 #endif /* !NDEBUG */
 	iter = self->xn_changes;
 	while (iter) {
-		next = iter->xn_changed.le_next;
+		next = LLIST_NEXT(iter, xn_changed);
 		XMLNode_Decref(iter);
 		iter = next;
 	}
@@ -244,8 +244,8 @@ find_block_start:
 	}
 	result->xn_refcnt = 1;
 	rwlock_init(&result->xn_lock);
-	result->xn_changes          = NULL;
-	result->xn_changed.le_pself = NULL;
+	result->xn_changes = NULL;
+	LLIST_UNBIND(result, xn_changed);
 	if ((result->xn_sib_prev = self) != NULL) {
 		self->xn_sib_next = result;
 	} else {

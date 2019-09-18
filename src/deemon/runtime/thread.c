@@ -110,6 +110,8 @@
 #include <deemon/util/cache.h>
 #include <deemon/util/string.h>
 
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
 #include <hybrid/overflow.h>
 
 #ifndef CONFIG_NO_THREADS

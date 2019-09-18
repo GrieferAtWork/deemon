@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,39 +19,13 @@
 #ifndef __GUARD_HYBRID_ATOMIC_H
 #define __GUARD_HYBRID_ATOMIC_H 1
 
-#include "compiler.h"
+#include "../__stdinc.h"
 #include "__atomic.h"
 #include "host.h"
 
-DECL_BEGIN
+__DECL_BEGIN
 
 #ifdef __CC__
-
-#if 0
-#ifndef __std_memory_order_defined
-#define __std_memory_order_defined 1
-__NAMESPACE_STD_BEGIN
-typedef enum {
-    memory_order_relaxed = __ATOMIC_RELAXED,
-    memory_order_consume = __ATOMIC_CONSUME,
-    memory_order_acquire = __ATOMIC_ACQUIRE,
-    memory_order_release = __ATOMIC_RELEASE,
-    memory_order_acq_rel = __ATOMIC_ACQ_REL,
-    memory_order_seq_cst = __ATOMIC_SEQ_CST
-} memory_order;
-__NAMESPACE_STD_END
-#endif
-#ifndef __memory_order_defined
-#define __memory_order_defined 1
-__NAMESPACE_STD_USING(memory_order_relaxed)
-__NAMESPACE_STD_USING(memory_order_consume)
-__NAMESPACE_STD_USING(memory_order_acquire)
-__NAMESPACE_STD_USING(memory_order_release)
-__NAMESPACE_STD_USING(memory_order_acq_rel)
-__NAMESPACE_STD_USING(memory_order_seq_cst)
-__NAMESPACE_STD_USING(memory_order)
-#endif /* !__memory_order_defined */
-#endif
 
 #define OATOMIC_LOAD(x,order)                          __hybrid_atomic_load(x,order)
 #define OATOMIC_STORE(x,v,order)                       __hybrid_atomic_store(x,v,order)
@@ -101,61 +75,54 @@ __NAMESPACE_STD_USING(memory_order)
 #define ATOMIC_FETCHINC(x)                  OATOMIC_FETCHINC(x,__ATOMIC_SEQ_CST)
 #define ATOMIC_FETCHDEC(x)                  OATOMIC_FETCHDEC(x,__ATOMIC_SEQ_CST)
 
-
-#if (!defined(__NO_XBLOCK) & defined(__COMPILER_HAVE_TYPEOF)) && \
-    ((defined(__KERNEL__) && defined(CONFIG_NO_SMP)) || \
-     (defined(__i386__) || defined(__x86_64__)))
-/*  On platforms with UMA, compiler barriers are sufficient to
- *  ensure that single-direction memory accesses are atomic
- * (UMA == Uniform Memory Access, meaning that any memory write access
- *  is guarantied to become visible to every cpu sooner or later, so
- *  all we need to do is force the compiler to not omit memory accesses
- *  by caching variables in registers, which can easily be done using
- *  read/write barriers)
- *  XXX: OMP has ways to force write-back/read-through for only
- *       specific variables. - Our barriers however force it for all.
- *       Maybe figure out a way to only clobber certain variables? */
-#define ATOMIC_READ(x) \
- XBLOCK({ __typeof__(x) __temp = (x); \
-          COMPILER_READ_BARRIER(); \
-          XRETURN __temp; })
-#define ATOMIC_WRITE(x,v) ((x) = (v),COMPILER_WRITE_BARRIER())
-#else
+/* Simplified atomic read/write functions that only guaranty correct ordering
+ * of reads/writes respectively, as well as that reads and writes are always
+ * completed as a whole (i.e. reading a 64-bit value is always done in a single
+ * instruction, preventing the possibility of some part of a value changing
+ * after it had already been read, but before all other parts were read as well) */
 #define ATOMIC_READ(x)     OATOMIC_LOAD(x,__ATOMIC_ACQUIRE)
 #define ATOMIC_WRITE(x,v)  OATOMIC_STORE(x,v,__ATOMIC_RELEASE)
-#endif
 
+#if 0
 #define ATOMIC_INCIFNONZERO(x) \
- XBLOCK({ register __typeof__(x) __temp; \
-          do { __temp = ATOMIC_READ(x); \
-               if (!__temp) break; \
-          } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp+1)); \
-          XRETURN __temp != 0; \
+ __XBLOCK({ register __typeof__(x) __temp; \
+            do { \
+            	__temp = ATOMIC_READ(x); \
+            	if (!__temp) break; \
+            } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp+1)); \
+            __XRETURN __temp != 0; \
  })
 #define ATOMIC_DECIFNOTONE(x) \
- XBLOCK({ register __typeof__(x) __temp; \
-          do { __temp = ATOMIC_READ(x); \
-               if (__temp == 1) break; \
-          } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp-1)); \
-          XRETURN __temp != 1; \
+ __XBLOCK({ register __typeof__(x) __temp; \
+            do { \
+            	__temp = ATOMIC_READ(x); \
+            	if (__temp == 1) \
+            		break; \
+            } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp-1)); \
+            __XRETURN __temp != 1; \
  })
 #define ATOMIC_DECIFNOTZERO(x) \
- XBLOCK({ register __typeof__(x) __temp; \
-          do { __temp = ATOMIC_READ(x); \
-               if (__temp == 0) break; \
-          } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp-1)); \
-          XRETURN __temp != 0; \
+ __XBLOCK({ register __typeof__(x) __temp; \
+            do { \
+            	__temp = ATOMIC_READ(x); \
+            	if (__temp == 0) \
+            		break; \
+            } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp-1)); \
+            __XRETURN __temp != 0; \
  })
 #define ATOMIC_DECIFONE(x) \
- XBLOCK({ register __typeof__(x) __temp; \
-          do { __temp = ATOMIC_READ(x); \
-               if (__temp != 1) break; \
-          } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp-1)); \
-          XRETURN __temp == 1; \
+ __XBLOCK({ register __typeof__(x) __temp; \
+            do { \
+            	__temp = ATOMIC_READ(x); \
+            	if (__temp != 1) \
+            		break; \
+            } while (!ATOMIC_CMPXCH_WEAK(x,__temp,__temp-1)); \
+            __XRETURN __temp == 1; \
  })
+#endif
 
 #endif /* __CC__ */
 
-DECL_END
+__DECL_END
 
 #endif /* !__GUARD_HYBRID_ATOMIC_H */

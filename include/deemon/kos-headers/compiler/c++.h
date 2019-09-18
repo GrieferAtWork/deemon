@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -22,12 +22,16 @@
 #define __P(x) x
 #endif
 
+/* TODO: Support for `#define ATTR_WUNUSED [[nodiscard]]' */
+
 #ifndef __has_feature
 #define __NO_has_feature 1
 #define __has_feature(x) 0
 #endif
 #ifndef __has_extension
+#ifndef __NO_has_feature
 #define __NO_has_extension 1
+#endif
 #define __has_extension  __has_feature
 #endif
 
@@ -65,38 +69,83 @@
 #   define __CXX14_CONSTEXPR_OR_CONST const
 #endif
 
+
+#if 0
+#   define __COMPILER_HAVE_CXX17_CONSTEXPR 1
+#   define __CXX17_CONSTEXPR          constexpr
+#   define __CXX17_CONSTEXPR_OR_CONST constexpr
+#else
+#   define __CXX17_CONSTEXPR          /* Nothing */
+#   define __CXX17_CONSTEXPR_OR_CONST const
+#endif
+
 #if __has_feature(cxx_noexcept) || \
    (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GCC_VERSION(4,6,0) && !defined(__INTELLISENSE__)) || \
    (defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190021730)
 #   define __COMPILER_HAVE_CXX11_NOEXCEPT 1
-#   define __CXX_NOEXCEPT noexcept
+#   define __CXX_NOEXCEPT            noexcept
+#   define __CXX_NOEXCEPT_IF(expr)   noexcept(expr)
+#   define __CXX_NOEXCEPT_IS(expr)   noexcept(expr)
+#   define __CXX_NOEXCEPT_IFNX(expr) noexcept(noexcept(expr))
 #else
-#   define __CXX_NOEXCEPT throw()
+#   define __CXX_NOEXCEPT            throw()
+#   define __CXX_NOEXCEPT_IF(expr)   /* nothing */
+#   define __CXX_NOEXCEPT_IS(expr)   0
+#   define __CXX_NOEXCEPT_IFNX(expr) /* nothing */
 #endif
 
 #if !defined(__INTELLISENSE__) && !defined(__KERNEL__)
 #define __COMPILER_PREFERR_ENUMS 1
 #endif
 
+#ifndef __ELF__
+#   define __CXX_CLASSMEMBER inline
+#elif defined(__NO_ATTR_VISIBILITY)
+#   define __CXX_CLASSMEMBER __ATTR_FORCEINLINE
+#else
+#   define __CXX_CLASSMEMBER inline __ATTR_VISIBILITY("hidden")
+#endif
+
+#ifdef __NO_NAMESPACE_STD
+#define __NAMESPACE_STD_BEGIN    /* nothing */
+#define __NAMESPACE_STD_END      /* nothing */
+#define __NAMESPACE_STD_SYM      /* nothing */
+#define __NAMESPACE_STD_USING(x) /* nothing */
+#define __NAMESPACE_GLB_USING(x) /* nothing */
+#else /* __NO_NAMESPACE_STD */
 #define __NAMESPACE_STD_BEGIN    namespace std {
 #define __NAMESPACE_STD_END      }
 #define __NAMESPACE_STD_SYM      ::std::
 #define __NAMESPACE_STD_USING(x) using ::std::x;
-#define __NAMESPACE_INT_BEGIN    namespace __int {
+#define __NAMESPACE_GLB_USING(x) using ::x;
+#endif /* !__NO_NAMESPACE_STD */
+
+#define __NAMESPACE_INT_BEGIN    namespace __intern {
 #define __NAMESPACE_INT_END      }
-#define __NAMESPACE_INT_SYM      ::__int::
-#define __NAMESPACE_INT_USING(x) using ::__int::x;
+#define __NAMESPACE_INT_SYM      ::__intern::
+#define __NAMESPACE_INT_LSYM       __intern::
+#define __NAMESPACE_INT_USING(x) using ::__intern::x;
 #define __BOOL                   bool
+#define __DFL(expr)              = expr
+
+#ifdef __INTELLISENSE__
+#define __register               /* nothing */
+#elif 1
+#define __register               register
+#else
+#define __register               /* nothing */
+#endif
 
 __NAMESPACE_INT_BEGIN
 extern "C++" {
 class __any_ptr {
-    void *__m_p;
+	void *__m_p;
 public:
-    __CXX11_CONSTEXPR __ATTR_INLINE __any_ptr(void *__p) __CXX_NOEXCEPT: __m_p(__p) {}
-    template<class __T> __CXX11_CONSTEXPR __ATTR_INLINE
-    operator __T *(void) __CXX_NOEXCEPT { return (__T *)this->__m_p; }
-}; }
+	__CXX11_CONSTEXPR __ATTR_INLINE __any_ptr(void *__p) __CXX_NOEXCEPT: __m_p(__p) {}
+	template<class __T> __CXX11_CONSTEXPR __ATTR_INLINE
+	operator __T *() __CXX_NOEXCEPT { return (__T *)this->__m_p; }
+};
+}
 __NAMESPACE_INT_END
 #define __COMPILER_UNIPOINTER(p) \
         __NAMESPACE_INT_SYM __any_ptr((void *)(__UINTPTR_TYPE__)(p))

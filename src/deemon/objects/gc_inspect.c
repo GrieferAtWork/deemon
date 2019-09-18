@@ -30,6 +30,8 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 
+#include <hybrid/atomic.h>
+
 DECL_BEGIN
 
 /* GC inspection provides things such as sequences implemented using the `tp_visit'

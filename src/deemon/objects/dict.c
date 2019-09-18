@@ -40,6 +40,9 @@
 #include <deemon/tuple.h>
 #include <deemon/util/string.h>
 
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
+
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

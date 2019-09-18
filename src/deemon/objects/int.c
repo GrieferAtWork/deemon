@@ -43,6 +43,7 @@
 #include <deemon/stringutils.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/sched/yield.h>
 
 #include <limits.h>
 #include <math.h>

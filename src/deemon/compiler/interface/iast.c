@@ -37,6 +37,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
+#include <hybrid/atomic.h>
+
 #include "../../runtime/builtin.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"

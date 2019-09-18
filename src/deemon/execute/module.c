@@ -36,6 +36,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/atomic.h>
+
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */

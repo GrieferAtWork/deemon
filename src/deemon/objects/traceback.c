@@ -34,6 +34,8 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/atomic.h>
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>

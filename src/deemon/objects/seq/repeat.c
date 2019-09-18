@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"

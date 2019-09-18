@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -31,9 +31,14 @@
 #define __PRIVATE_MIN_U(s)  __PRIVATE_MIN2_U(s)
 #define __PRIVATE_MAX_U(s)  __PRIVATE_MAX2_U(s)
 
-#ifdef _CHAR_UNSIGNED
-#undef __CHAR_UNSIGNED__
+#ifdef __CHAR_MIN__
+#if __CHAR_MIN__ == 0 && !defined(__CHAR_UNSIGNED__)
 #define __CHAR_UNSIGNED__ 1
+#endif
+#elif defined(_CHAR_UNSIGNED) || defined(_CHAR_IS_UNSIGNED)
+#ifndef __CHAR_UNSIGNED__
+#define __CHAR_UNSIGNED__ 1
+#endif /* !__CHAR_UNSIGNED__ */
 #endif
 
 #ifndef __CHAR_BIT__

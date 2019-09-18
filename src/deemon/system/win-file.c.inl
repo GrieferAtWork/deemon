@@ -36,6 +36,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/limits.h>
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>

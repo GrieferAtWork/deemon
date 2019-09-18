@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,24 +19,8 @@
 #ifndef __GUARD_HYBRID_ALLOCA_H
 #define __GUARD_HYBRID_ALLOCA_H 1
 
-#include <__stdinc.h>
-
-#if defined(__GNUC__) || __has_builtin(__builtin_alloca)
-#define __ALLOCA(s)  __builtin_alloca((s))
-#else /* ... */
-#include "typecore.h"
-__SYSDECL_BEGIN
-#ifdef _MSC_VER
-__NAMESPACE_INT_BEGIN
-extern __WUNUSED __ATTR_ALLOC_SIZE((1)) void *(__LIBCCALL _alloca)(__SIZE_TYPE__ __n_bytes);
-#pragma intrinsic(_alloca)
-__NAMESPACE_INT_END
-#define __ALLOCA(s)  __NAMESPACE_INT_SYM _alloca((s))
-#else /* _MSC_VER */
-extern __WUNUSED __ATTR_ALLOC_SIZE((1)) void *(__LIBCCALL alloca)(__SIZE_TYPE__ __n_bytes);
-#define __ALLOCA(s)  (alloca)((s))
-#endif /* !_MSC_VER */
-__SYSDECL_END
-#endif /* ... */
+#include "__alloca.h"
+#define ALLOCA(x)     __hybrid_alloca(x)
+#define __ALLOCA(x)   __hybrid_alloca(x)
 
 #endif /* !__GUARD_HYBRID_ALLOCA_H */

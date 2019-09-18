@@ -42,11 +42,11 @@ typedef int Dee_recursive_rwlock_t;
 #else /* CONFIG_NO_THREADS */
 #include <hybrid/sync/atomic-owner-rwlock.h>
 
-typedef atomic_owner_rwlock_t Dee_recursive_rwlock_t;
+typedef struct atomic_owner_rwlock Dee_recursive_rwlock_t;
 #define Dee_RECURSIVE_RWLOCK_INIT             ATOMIC_OWNER_RWLOCK_INIT
 #define Dee_recursive_rwlock_cinit(self)      atomic_owner_rwlock_cinit(self)
 #define Dee_recursive_rwlock_init(self)       atomic_owner_rwlock_init(self)
-#define Dee_DEFINE_RECURSIVE_RWLOCK(name)     DEFINE_ATOMIC_OWNER_RWLOCK(name)
+#define Dee_DEFINE_RECURSIVE_RWLOCK(name)     Dee_recursive_rwlock_t name = Dee_RECURSIVE_RWLOCK_INIT
 #define Dee_recursive_rwlock_reading(x)       atomic_owner_rwlock_reading(x)
 #define Dee_recursive_rwlock_writing(x)       atomic_owner_rwlock_writing(x)
 #define Dee_recursive_rwlock_tryread(self)    atomic_owner_rwlock_tryread(self)

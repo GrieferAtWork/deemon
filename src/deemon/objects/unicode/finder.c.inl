@@ -23,6 +23,8 @@
 #include "string_functions.c"
 #endif /* __INTELLISENSE__ */
 
+#include <hybrid/atomic.h>
+
 #include <deemon/seq.h>
 
 DECL_BEGIN

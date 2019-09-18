@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -16,25 +16,37 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef __GUARD_HYBRID_BITSET_H
-#define __GUARD_HYBRID_BITSET_H 1
+#ifndef __GUARD_HYBRID___ASM_H
+#define __GUARD_HYBRID___ASM_H 1
 
-#include "compiler.h"
-#include "types.h"
-#include "atomic.h"
+#include "../__stdinc.h"
 
-DECL_BEGIN
 
-#define BIT_MASK(i)          (1 << ((i) % 8))
-#define BIT_BYTE(set,i)      ((byte_t *)(set))[(i)/8]
-#define BIT_GT(set,i)        (BIT_BYTE(set,i) & BIT_MASK(i))
-#define BIT_ST(set,i)        (BIT_BYTE(set,i) |= BIT_MASK(i))
-#define BIT_CL(set,i)        (BIT_BYTE(set,i) &= ~BIT_MASK(i))
+#if defined(__CC__) && defined(__COMPILER_HAVE_GCC_ASM) && \
+   !defined(__INTELLISENSE__)
+#define __ASM_BEGIN      __asm__(
+#define __ASM_END        );
+#if defined(__TPP_VERSION__)
+#define __ASM_ARG(x)     x
+#else
+/* CPP doesn't seem to escape this backslash when using PP_STR()?
+ * Don't know if that's a bug, but I do know TPP does escape it.
+ * So... Add the second slash manually to work around that. */
+#define __ASM_ARG(x)     \x
+#endif
+#define __ASM_LINE2(...) #__VA_ARGS__ "\n\t"
+#define __ASM_L(...)     __ASM_LINE2(__VA_ARGS__)
+#elif defined(__ASSEMBLY__)
+#define __ASM_BEGIN      /* nothing */
+#define __ASM_END        /* nothing */
+#define __ASM_ARG(x)     x
+#define __ASM_L(...)     __VA_ARGS__ ;
+#else
+#define __ASM_BEGIN      /* nothing */
+#define __ASM_END        /* nothing */
+#define __ASM_ARG(x)     /* nothing */
+#define __ASM_L(...)     /* nothing */
+#endif
 
-/* Atomically set/clear, returning ZERO(0) if it wasn't set before, or non-ZERO(0) if it was. */
-#define BIT_ATOMIC_ST(set,i) XBLOCK({ byte_t const _mask = BIT_MASK(i); XRETURN ATOMIC_FETCHOR(BIT_BYTE(set,i),_mask)&_mask; })
-#define BIT_ATOMIC_CL(set,i) XBLOCK({ byte_t const _mask = BIT_MASK(i); XRETURN ATOMIC_FETCHAND(BIT_BYTE(set,i),~_mask)&_mask; })
 
-DECL_END
-
-#endif /* !__GUARD_HYBRID_BITSET_H */
+#endif /* !__GUARD_HYBRID___ASM_H */

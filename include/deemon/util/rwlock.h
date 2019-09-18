@@ -41,7 +41,7 @@ typedef int Dee_rwlock_t;
 #else /* CONFIG_NO_THREADS */
 #include <hybrid/sync/atomic-rwlock.h>
 
-typedef atomic_rwlock_t Dee_rwlock_t;
+typedef struct atomic_rwlock Dee_rwlock_t;
 #define Dee_RWLOCK_INIT             ATOMIC_RWLOCK_INIT
 #define Dee_rwlock_cinit(self)      atomic_rwlock_cinit(self)
 #define Dee_rwlock_init(self)       atomic_rwlock_init(self)

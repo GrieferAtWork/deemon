@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -24,6 +24,10 @@
 #define __PREPROCESSOR_HAVE_CAT     1
 #define __PREPROCESSOR_HAVE_STR     1
 #define __PREPROCESSOR_HAVE_VA_ARGS 1
+#endif
+#if !defined(__INTELLISENSE__) && \
+    (defined(__TPP_VERSION__) || defined(__GNUC__))
+#define __PREPROCESSOR_HAVE_INCLUDE_NEXT 1
 #endif
 
 

@@ -64,6 +64,8 @@
 #include <deemon/tuple.h>
 #include <deemon/weakref.h>
 
+#include <hybrid/atomic.h>
+
 DECL_BEGIN
 
 /* !!! THIS MODULE IS NON-STANDARD AND MEANT TO EXPOSE IMPLEMENTATION-INTERNALS !!!

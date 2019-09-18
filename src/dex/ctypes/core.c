@@ -1737,8 +1737,8 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->at_orig;
 	/* Delete the weak-link to the original type. */
 	rwlock_write(&orig->st_cachelock);
-	ASSERT(!LIST_ISUNBOUND(self, at_chain));
-	LIST_REMOVE(self, at_chain);
+	ASSERT(LLIST_ISBOUND(self, at_chain));
+	LLIST_REMOVE(self, at_chain);
 	rwlock_endwrite(&orig->st_cachelock);
 	Dee_Decref((DeeObject *)orig);
 }
@@ -1816,8 +1816,8 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->ft_orig;
 	/* Delete the weak-link to the original type. */
 	rwlock_write(&orig->st_cachelock);
-	ASSERT(!LIST_ISUNBOUND(self, ft_chain));
-	LIST_REMOVE(self, ft_chain);
+	ASSERT(LLIST_ISBOUND(self, ft_chain));
+	LLIST_REMOVE(self, ft_chain);
 	rwlock_endwrite(&orig->st_cachelock);
 	Dee_Decref((DeeObject *)orig);
 	for (i = 0; i < self->ft_argc; ++i)

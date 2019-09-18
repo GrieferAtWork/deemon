@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -20,21 +20,9 @@
 #define __GUARD_HYBRID_MINMAX_H 1
 
 #include <__stdinc.h>
+#include "__minmax.h"
 
-__SYSDECL_BEGIN
-
-#if defined(__DCC_VERSION__) || \
-   (__has_builtin(__builtin_min) && __has_builtin(__builtin_max))
-#   define MIN(a,b) __builtin_min(a,b)
-#   define MAX(a,b) __builtin_max(a,b)
-#elif defined(__COMPILER_HAVE_TYPEOF) && !defined(__NO_XBLOCK)
-#   define MIN(a,b) __XBLOCK({ __typeof__(a) _a = (a),_b = (b); __XRETURN _a < _b ? _a : _b; })
-#   define MAX(a,b) __XBLOCK({ __typeof__(a) _a = (a),_b = (b); __XRETURN _b < _a ? _a : _b; })
-#else
-#   define MIN(a,b) ((a) < (b) ? (a) : (b))
-#   define MAX(a,b) ((b) < (a) ? (a) : (b))
-#endif
-
-__SYSDECL_END
+#define MIN(a,b) __hybrid_min(a,b)
+#define MAX(a,b) __hybrid_max(a,b)
 
 #endif /* !__GUARD_HYBRID_MINMAX_H */

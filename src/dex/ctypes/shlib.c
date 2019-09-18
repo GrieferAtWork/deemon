@@ -32,6 +32,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 
+#include <hybrid/atomic.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */

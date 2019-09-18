@@ -37,6 +37,8 @@
 #include <deemon/thread.h>
 #include <deemon/util/rwlock.h>
 
+#include <hybrid/atomic.h>
+
 #include "runtime_error.h"
 #include "strings.h"
 

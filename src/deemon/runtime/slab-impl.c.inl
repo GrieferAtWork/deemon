@@ -21,9 +21,13 @@
 #define SIZE 10
 //#define NEXT_LARGER  5
 #endif
+
+#include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #define FUNC3(x, y) x##y
 #define FUNC2(x, y) FUNC3(x, y)
@@ -141,18 +145,18 @@ PRIVATE FUNC(Slab) FUNC(slab) = {
 #define MY_REGION_START slab_config.sc_regions[INDEX].sr_start
 #ifdef NEXT_LARGER
 #define MY_REGION_END   slab_config.sc_regions[INDEX + 1].sr_start
-#else
+#else /* NEXT_LARGER */
 #define MY_REGION_END   slab_config.sc_heap_end
-#endif
+#endif /* !NEXT_LARGER */
 
 
 #ifdef NDEBUG
 #define INIT_DEBUG(ptr) (void)0
 #define FINI_DEBUG(ptr) (void)0
-#else
+#else /* NDEBUG */
 #define INIT_DEBUG(ptr) memset(ptr, 0xcc, ITEMSIZE)
 #define FINI_DEBUG(ptr) memset(ptr, 0xde, ITEMSIZE)
-#endif
+#endif /* !NDEBUG */
 
 
 
@@ -317,7 +321,7 @@ again:
 	/* Initialize the new page, and add it as a free one. */
 #if SLAB_INUSE_BITSET_LENGTH > 1
 	MEMSET_PTR(page->sp_inuse + 1, 0, SLAB_INUSE_BITSET_LENGTH - 1);
-#endif
+#endif /* SLAB_INUSE_BITSET_LENGTH > 1 */
 	/* Set up the page such that we've already allocated its the first item. */
 	page->sp_inuse[0] = 0x0001;
 	page->sp_free     = SLAB_PAGECOUNT - 1;
@@ -338,7 +342,7 @@ again:
 	ADD_MAXPAIR(FUNC(slab).s_num_free,
 	            FUNC(slab).s_max_free,
 	            SLAB_PAGECOUNT - 1);
-#endif
+#endif /* SLAB_PAGECOUNT >= 2 */
 	return &page->sp_items[0];
 }
 
@@ -349,7 +353,7 @@ FORCELOCAL void
 #else
 #ifdef NEXT_LARGER
 	if ((uintptr_t)ptr < MY_REGION_END)
-#endif
+#endif /* NEXT_LARGER */
 	{
 		FUNC(SlabPage) * page;
 		unsigned int index, i;
@@ -487,6 +491,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Calloc))(void) {
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
 	                        : (Dee_Calloc)ITEMSIZE;
 }
+
 #undef DeeSlab_TryCalloc
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryCalloc))(void) {
 	void *result;
@@ -494,6 +499,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryCalloc))(void) {
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
 	                        : (Dee_TryCalloc)ITEMSIZE;
 }
+
 #undef DeeDbgSlab_Calloc
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Calloc))(char const *file, int line) {
 	void *result;
@@ -501,6 +507,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Calloc))(char const *fil
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
 	                        : (DeeDbg_Calloc)(ITEMSIZE, file, line);
 }
+
 #undef DeeDbgSlab_TryCalloc
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *file, int line) {
 	void *result;
@@ -508,6 +515,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
 	                        : (DeeDbg_TryCalloc)(ITEMSIZE, file, line);
 }
+
 #undef DeeSlab_Free
 PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 	if (IS_SLAB_POINTER(ptr))
@@ -516,6 +524,7 @@ PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 		(Dee_Free)(ptr);
 	}
 }
+
 #undef DeeDbgSlab_Free
 PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr,
                                          char const *file, int line) {
@@ -541,6 +550,7 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr,
 #undef SLAB_PAGECOUNT
 
 #else /* !CONFIG_NO_OBJECT_SLABS */
+
 #define MY_SLAB_IS_DISABLED 1
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
 	return (Dee_Malloc)ITEMSIZE;
@@ -575,10 +585,10 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *
 }
 
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeSlab_Free),4),
-                    ASSEMBLY_NAME(Dee_Free,4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12),
-                    ASSEMBLY_NAME(DeeDbg_Free,12));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4),
+                    ASSEMBLY_NAME(Dee_Free, 4));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12),
+                    ASSEMBLY_NAME(DeeDbg_Free, 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 	(Dee_Free)(ptr);
@@ -594,11 +604,11 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file
 #if SIZE == Dee_SLAB_MINSIZE
 #ifndef MY_SLAB_IS_DISABLED
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free,4),
-                    ASSEMBLY_NAME(FUNC(DeeSlab_Free),4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
-                    ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free),12));
-#else
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free, 4),
+                    ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free, 12),
+                    ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12));
+#else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 	(FUNC(DeeSlab_Free))(ptr);
 }
@@ -606,14 +616,14 @@ PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	(FUNC(DeeDbgSlab_Free))(ptr, file, line);
 }
-#endif
+#endif /* __NO_DEFINE_ALIAS */
 #else /* !MY_SLAB_IS_DISABLED */
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free,4),
-                    ASSEMBLY_NAME(Dee_Free,4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free,12),
-                    ASSEMBLY_NAME(DeeDbg_Free,12));
-#else
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free, 4),
+                    ASSEMBLY_NAME(Dee_Free, 4));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free, 12),
+                    ASSEMBLY_NAME(DeeDbg_Free, 12));
+#else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 	Dee_Free(ptr);
 }
@@ -621,7 +631,7 @@ PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	DeeDbg_Free(ptr, file, line);
 }
-#endif
+#endif /* __NO_DEFINE_ALIAS */
 #endif /* MY_SLAB_IS_DISABLED */
 #endif /* SIZE == Dee_SLAB_MINSIZE */
 

@@ -86,7 +86,9 @@ typedef struct {
 	                                           (argc) * sizeof(DREF DeeObject *)))
 
 
+#if 0
 #define CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS 1
+#endif
 #ifndef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #if !defined(__OPTIMIZE_SIZE__) && \
     !defined(CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS)

@@ -38,6 +38,7 @@
 #include <deemon/super.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/minmax.h>
 
 #include <string.h>

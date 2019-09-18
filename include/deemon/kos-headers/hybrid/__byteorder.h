@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2019 Griefer@Work                                            *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -19,7 +19,7 @@
 #ifndef __GUARD_HYBRID___BYTEORDER_H
 #define __GUARD_HYBRID___BYTEORDER_H 1
 
-#include <__stdinc.h>
+#include "../__stdinc.h"
 
 #ifndef __ORDER_LITTLE_ENDIAN__
 #define __ORDER_LITTLE_ENDIAN__ 1234
@@ -54,5 +54,13 @@
 #endif
 #endif
 #endif /* !__BYTE_ORDER__ */
+
+#ifndef __FLOAT_WORD_ORDER__
+#ifdef __FLOAT_WORD_ORDER
+#define __FLOAT_WORD_ORDER__ __FLOAT_WORD_ORDER
+#else
+#define __FLOAT_WORD_ORDER__ __BYTE_ORDER__
+#endif
+#endif /* !__FLOAT_WORD_ORDER__ */
 
 #endif /* !__GUARD_HYBRID___BYTEORDER_H */

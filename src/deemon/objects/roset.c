@@ -32,6 +32,8 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
+
 #include "../runtime/runtime_error.h"
 
 DECL_BEGIN

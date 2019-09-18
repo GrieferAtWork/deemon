@@ -35,6 +35,8 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
+
 #ifndef CONFIG_NO_STDIO
 #ifndef NDEBUG
 #include <stdlib.h>

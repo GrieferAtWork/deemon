@@ -57,7 +57,7 @@ DECL_BEGIN
 
 #define DVERSION_CUR  0 /* The currently active version of the DEC file format. */
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t  e_ident[DI_NIDENT]; /* Identification bytes. (See `DI_*') */
 	uint8_t  e_builtinset;       /* Set of builtin object (One of `DBUILTINS_*') */
 	uint8_t  e_size;             /* Absolute size of the header (`Dec_Ehdr').
@@ -93,14 +93,14 @@ typedef struct PACKED {
 
 
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t i_len;    /* Number of string pointers.
 	                    * NOTE: When (uint16_t)-1, a `uint32_t' follows with the actual size. */
 	uint8_t  i_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
 	                    * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'. */
 } Dec_Strmap;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
 	uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
 	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
@@ -113,7 +113,7 @@ typedef struct PACKED {
 	                         * NOTE: Only exists when `s_doclen' evaluates to non-zero. */
 } Dec_GlbSym;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
 	uint16_t   s_addr;      /* Symbol address, or module import index, or getter symbol index. */
 	uint16_t   s_addr2;     /* [exists_if(s_flg & MODSYM_FEXTERN)] External module symbol index. */
@@ -128,7 +128,7 @@ typedef struct PACKED {
 	                         * NOTE: Only exists when `s_doclen' evaluates to non-zero. */
 } Dec_GlbExt;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   g_cnt;    /* Number of global variables. */
 	uint16_t   g_len;    /* Number of global symbols. */
 	Dec_GlbSym g_map[1]; /* [g_cnt] Vector of global variable descriptors. */
@@ -136,7 +136,7 @@ typedef struct PACKED {
 } Dec_Glbmap;
 
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t    cs_type;    /* Type code (One of `DTYPE_*') */
 	uint8_t    cs_data[1]; /* Type data (depends on `DTYPE_*'; may not actually exist)
 	                        * NOTE: If or not `DTYPE_NULL' is allowed depends on the usage context. */
@@ -144,14 +144,14 @@ typedef struct PACKED {
 
 
 /* Code controller data structures. */
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   os_len;    /* Number of objects. */
 	Dec_Object os_vec[1]; /* Vector of objects.
 	                       * NOTE: Whether or not `DTYPE_NULL' is allowed
 	                       *       depends on the usage context. */
 } Dec_Objects;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   ce_flags;  /* Set of `EXCEPTION_HANDLER_F*' */
 	uint32_t   ce_begin;  /* [<= ce_end] Exception handler protection start address. */
 	uint32_t   ce_end;    /* [>= ce_begin] Exception handler protection end address. */
@@ -160,12 +160,12 @@ typedef struct PACKED {
 	Dec_Object ce_mask;   /* Exception handler mask. (NOTE: `DTYPE_NULL' is allowed) */
 } Dec_CodeExcept;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t       ces_len;    /* Amount of exception descriptors. */
 	Dec_CodeExcept ces_vec[1]; /* [ces_len] Vector of exception descriptors. */
 } Dec_CodeExceptions;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   ce_flags;  /* Set of `EXCEPTION_HANDLER_F*' */
 	uint16_t   ce_begin;  /* [<= ce_end] Exception handler protection start address. */
 	uint16_t   ce_end;    /* [>= ce_begin] Exception handler protection end address. */
@@ -174,12 +174,12 @@ typedef struct PACKED {
 	Dec_Object ce_mask;   /* Exception handler mask. (NOTE: `DTYPE_NULL' is allowed) */
 } Dec_8BitCodeExcept;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t            ces_len;    /* Amount of exception descriptors. */
 	Dec_8BitCodeExcept ces_vec[1]; /* [ces_len] Vector of exception descriptors. */
 } Dec_8BitCodeExceptions;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	/* All uint8_t[1]-fields in this structure are tightly packed
 	 * integers decodable using `READ_SLEB()' or `READ_ULEB()'
 	 * The actual length and member-offsets within this
@@ -194,12 +194,12 @@ typedef struct PACKED {
 	uint8_t      rs_lno[1];  /* [DECODE(READ_SLEB)] Initial Line number (0-based). */
 } Dec_DDIRegStart;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t  dx_size;    /* Data size (when (uint16_t)-1, the a uint32_t containing the actual size follows immediately) */
 	uint8_t   dx_data[1]; /* [dx_size] DDI extension data. */
 } Dec_DDIExdat;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint32_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
 	uint32_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
 	uint32_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
@@ -208,7 +208,7 @@ typedef struct PACKED {
 	Dec_DDIRegStart cd_regs;    /* The initial register state. */
 } Dec_CodeDDI;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t        cd_strings; /* Absolute pointer to a `Dec_Strmap' structure describing DDI string. */
 	uint16_t        cd_ddixdat; /* Absolute pointer to a `Dec_DDIExdat' structure, or 0. */
 	uint16_t        cd_ddiaddr; /* Absolute offset into the file to a block of `cd_ddisize' bytes of text describing DDI code (s.a.: `DDI_*'). */
@@ -217,23 +217,23 @@ typedef struct PACKED {
 	Dec_DDIRegStart cd_regs;    /* The initial register state. */
 } Dec_8BitCodeDDI;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t     ck_len[1]; /* Length of the keyword (excluding any trailing \0 character) */
 	uint8_t     ck_off[1]; /* [exists_if(ck_len != 0)] Offset into string table to where the keyword's name is written. */
 } Dec_CodeKwd;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	Dec_CodeKwd ck_map[1]; /* Vector of code keywords.
 	                        * NOTE: The length of this vector is `co_argc_max' */
 } Dec_CodeKwds;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t  ck_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
 	                     * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
 	                     * NOTE: The length of this vector is `co_argc_max' */
 } Dec_8BitCodeKwds;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
 	                           * NOTE: When set, this data structure must be
 	                           *       interpreted as an `Dec_8BitCode' object */
@@ -257,7 +257,7 @@ typedef struct PACKED {
 	uint32_t   co_textoff;    /* Absolute file offset to the assembly text that will be executed by this code. */
 } Dec_Code;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
 	                           * NOTE: This data structure must only (and always) be used
 	                           *       when the `DEC_CODE_F8BIT' flag is set. */
@@ -295,7 +295,7 @@ typedef struct PACKED {
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
-typedef union PACKED {
+typedef union ATTR_PACKED {
 	double d;
 	struct {
 #ifdef CONFIG_BIG_ENDIAN
@@ -338,7 +338,7 @@ typedef union PACKED {
 	} ieee_nan;
 } Dec_host_ieee754_double;
 
-typedef union PACKED {
+typedef union ATTR_PACKED {
 	struct {
 		unsigned int mantissa1 : 32;
 		unsigned int mantissa0 : 20;
@@ -355,13 +355,13 @@ typedef union PACKED {
 } Dec_ieee754_double;
 
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t           co_name; /* Name of the operator (one of `OPERATOR_*') */
 	uint16_t           co_addr; /* [<= :cd_cmemb_size] Index into the class member
 	                             * table, to where the operator callback can be bound. */
 } Dec_ClassOperator;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t           ca_addr;          /* Address of the attribute (behavior depends on flags) */
 	uint16_t           ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
 	uint8_t            ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
@@ -373,7 +373,7 @@ typedef struct PACKED {
 	                                      * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_ClassAttribute;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint16_t           cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
 	uint8_t            cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
 	                                      * NOTE: Decode using `Dec_DecodePointer()' */
@@ -392,13 +392,13 @@ typedef struct PACKED {
 	Dec_ClassAttribute cd_iattr_list[1]; /* [cd_iattr_count] List of instance attributes. */
 } Dec_ClassDescriptor;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t                co_name; /* Name of the operator (one of `OPERATOR_*') */
 	uint8_t                co_addr; /* [<= :cd_cmemb_size] Index into the class member
 	                                 * table, to where the operator callback can be bound. */
 } Dec_8BitClassOperator;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t                ca_addr;          /* Address of the attribute (behavior depends on flags) */
 	uint8_t                ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
 	uint8_t                ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
@@ -410,7 +410,7 @@ typedef struct PACKED {
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_8BitClassAttribute;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t                cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
 	uint8_t                cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
@@ -430,12 +430,12 @@ typedef struct PACKED {
 } Dec_8BitClassDescriptor;
 
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t       kwe_nam[1];    /* Name of the keyword (Pointer to a ZERO-terminated string within the `e_stroff' string table)
 	                              * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_KwdsEntry;
 
-typedef struct PACKED {
+typedef struct ATTR_PACKED {
 	uint8_t       kw_siz;        /* The amount of keyword entries. */
 	Dec_KwdsEntry kw_members[1]; /* [kw_siz] One entry for each member.
 	                              * NOTE: The keyword index (`struct kwds_entry::ke_index')
