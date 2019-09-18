@@ -3682,8 +3682,9 @@ DeeList_LoI(List *__restrict lhs,
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-			return unlikely(!rhs_elem)
-		? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
 		if (result == 0) { /* *lhs < *rhs : false */
 			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
@@ -3701,8 +3702,9 @@ DeeList_LoI(List *__restrict lhs,
 	}
 	DeeList_LockEndRead(lhs);
 	if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-		return unlikely(!rhs_elem)
-	? -1 : 0; /* size:equal */
+		return (unlikely(!rhs_elem))
+		       ? -1
+		       : 0; /* size:equal */
 	Dee_Decref(rhs_elem);
 	return 1; /* size:lower */
 }
@@ -3836,8 +3838,9 @@ DeeList_LeI(List *__restrict lhs,
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-			return unlikely(!rhs_elem)
-		? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
 		if (result == 0) { /* *lhs < *rhs : false */
 			result = DeeObject_CompareLo(rhs_elem, lhs_elem);

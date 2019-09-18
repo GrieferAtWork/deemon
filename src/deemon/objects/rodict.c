@@ -327,9 +327,9 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 		unlikely(!self)
 	return NULL;
 	length_hint = DeeFastSeq_GetSize(self);
-	result      = likely(length_hint != DEE_FASTSEQ_NOTFAST)
-	? DeeRoDict_FromIteratorWithHint(self, length_hint)
-	: DeeRoDict_FromIterator(self);
+	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
+	         ? DeeRoDict_FromIteratorWithHint(self, length_hint)
+	         : DeeRoDict_FromIterator(self);
 	Dee_Decref(self);
 	return result;
 }

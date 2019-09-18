@@ -1293,8 +1293,9 @@ dict_delitem(Dict *__restrict self,
 	DREF DeeObject *pop_item;
 	pop_item = dict_popitem(self, key, NULL);
 	Dee_XDecref(pop_item);
-	return likely(pop_item)
-	? 0 : -1;
+	return (likely(pop_item))
+	       ? 0
+	       : -1;
 }
 
 PRIVATE int DCALL

@@ -154,9 +154,10 @@ ast_parse_try(bool is_statement) {
 		if
 			likely(catchc == catcha)
 		{
-			size_t new_catcha = unlikely(catcha)
-			? catcha + ((catcha + 2) / 3) : 1;
-do_realloc_catchv:
+			size_t new_catcha = (unlikely(catcha))
+			                    ? catcha + ((catcha + 2) / 3)
+			                    : 1;
+		do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
 			if
@@ -382,9 +383,10 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 		if
 			likely(catchc == catcha)
 		{
-			size_t new_catcha = unlikely(catcha)
-			? catcha + ((catcha + 2) / 3) : 1;
-do_realloc_catchv:
+			size_t new_catcha = (unlikely(catcha))
+			                    ? catcha + ((catcha + 2) / 3)
+			                    : 1;
+		do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
 			if

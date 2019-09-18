@@ -602,9 +602,9 @@ range_bool(Range *__restrict self) {
 	 * >>     return self->r_start > self->r_end;
 	 * >> }
 	 */
-	return likely(!self->r_rev)
-	? DeeObject_CompareLo(self->r_start, self->r_end)
-	: DeeObject_CompareGr(self->r_start, self->r_end);
+	return (likely(!self->r_rev))
+	       ? DeeObject_CompareLo(self->r_start, self->r_end)
+	       : DeeObject_CompareGr(self->r_start, self->r_end);
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -635,9 +635,9 @@ range_size(Range *__restrict self) {
 			unlikely(!temp)
 		goto err_r;
 		Dee_Decref(result);
-		error = likely(!self->r_rev)
-		? DeeObject_Dec(&temp)
-		: DeeObject_Inc(&temp);
+		error = (likely(!self->r_rev))
+		        ? DeeObject_Dec(&temp)
+		        : DeeObject_Inc(&temp);
 		if
 			unlikely(error)
 		goto err_temp;

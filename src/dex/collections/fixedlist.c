@@ -931,8 +931,9 @@ PRIVATE int DCALL
 fli_ctor(FixedListIterator *__restrict self) {
 	self->li_iter = 0;
 	self->li_list = fl_ctor();
-	return likely(self->li_list)
-	? 0 : -1;
+	return (likely(self->li_list))
+	       ? 0
+	       : -1;
 }
 
 PRIVATE int DCALL

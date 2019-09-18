@@ -856,8 +856,9 @@ PRIVATE int DCALL print_sp(DeeObject *__restrict self) {
 PUBLIC int DCALL
 DeeFile_PrintNl(DeeObject *__restrict self) {
 	dssize_t result = DeeFile_WriteAll(self, "\n", sizeof(char));
-	return unlikely(result < 0)
-	? (int)result : 0;
+	return (unlikely(result < 0))
+	       ? (int)result
+	       : 0;
 }
 
 #define print_ob_str(self, ob) \

@@ -1671,9 +1671,9 @@ deqiter_getindex(DequeIteratorObject *__restrict self) {
 	size_t result;
 	rwlock_read(&self->di_lock);
 	Deque_LockRead(self->di_deq);
-	result = unlikely(self->di_ver != self->di_deq->d_version)
-	? (size_t)-1
-	: DequeIterator_GetIndex(&self->di_iter, self->di_deq);
+	result = (unlikely(self->di_ver != self->di_deq->d_version))
+	         ? (size_t)-1
+	         : DequeIterator_GetIndex(&self->di_iter, self->di_deq);
 	Deque_LockEndRead(self->di_deq);
 	rwlock_endread(&self->di_lock);
 	return result;

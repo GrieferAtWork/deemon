@@ -2921,8 +2921,9 @@ token_bool(DeeCompilerWrapperObject *__restrict self) {
 PRIVATE int(TPPCALL unicode_printer_tppappend)(char const *__restrict buf, size_t bufsize, void *arg) {
 	dssize_t result;
 	result = unicode_printer_print((struct unicode_printer *)arg, buf, bufsize);
-	return unlikely(result < 0)
-	? -1 : 0;
+	return (unlikely(result < 0))
+	       ? -1
+	       : 0;
 }
 
 PRIVATE DREF DeeObject *DCALL
@@ -2945,8 +2946,9 @@ PRIVATE int(TPPCALL unicode_printer_tppappend_escape)(char const *__restrict buf
 	dssize_t result;
 	result = DeeFormat_Quote(&unicode_printer_print,
 	                         arg, buf, bufsize, FORMAT_QUOTE_FPRINTRAW);
-	return unlikely(result < 0)
-	? -1 : 0;
+	return (unlikely(result < 0))
+	       ? -1
+	       : 0;
 }
 
 

@@ -2714,8 +2714,9 @@ done:
 PRIVATE int DCALL
 if_ctor(IteratorFuture *__restrict self) {
 	self->if_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	return likely(self->if_iter)
-	? 0 : -1;
+	return (likely(self->if_iter))
+	       ? 0
+	       : -1;
 }
 
 PRIVATE int DCALL

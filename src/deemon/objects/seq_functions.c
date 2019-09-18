@@ -629,8 +629,9 @@ DeeSeq_Parity(DeeObject *__restrict self) {
 			goto err_iter;
 	}
 	Dee_Decref(iterator);
-	return unlikely(!elem)
-	? -1 : result;
+	return (unlikely(!elem))
+	       ? -1
+	       : result;
 err_iter:
 	Dee_Decref(iterator);
 err:
@@ -978,8 +979,9 @@ DeeSeq_Contains(DeeObject *__restrict self,
 		Dee_Decref(elem);
 	}
 	Dee_Decref(iter);
-	return likely(elem)
-	? 0 : -1;
+	return (likely(elem))
+	       ? 0
+	       : -1;
 }
 
 
@@ -1660,15 +1662,17 @@ DeeIter_Lo(DeeObject *__restrict lhs,
 			if unlikely(!lhs_elem)
 				goto err;
 			if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-				return unlikely(!rhs_elem)
-			? -1 : 0; /* size:equal */
+				return (unlikely(!rhs_elem))
+				       ? -1
+				       : 0; /* size:equal */
 			Dee_Decref(rhs_elem);
 			return 1; /* size:lower */
 		}
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs))) {
 			Dee_Decref(lhs_elem);
-			return unlikely(!rhs_elem)
-			? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		}
 		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
 		if (result == 0) { /* *lhs < *rhs : false */
@@ -1699,12 +1703,14 @@ DeeIter_Le(DeeObject *__restrict lhs,
 	ASSERT_OBJECT(rhs);
 	do {
 		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs)))
-			return unlikely(!lhs_elem)
-		? -1 : 1; /* size:equal_or_lower */
+			return (unlikely(!lhs_elem))
+			       ? -1
+			       : 1; /* size:equal_or_lower */
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs))) {
 			Dee_Decref(lhs_elem);
-			return unlikely(!rhs_elem)
-			? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		}
 		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
 		if (result == 0) { /* *lhs < *rhs : false */
@@ -1738,15 +1744,17 @@ DeeIter_Eq(DeeObject *__restrict lhs,
 			if unlikely(!lhs_elem)
 				goto err;
 			if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-				return unlikely(!rhs_elem)
-			? -1 : 1; /* size:equal */
+				return (unlikely(!rhs_elem))
+				       ? -1
+				       : 1; /* size:equal */
 			Dee_Decref(rhs_elem);
 			return 0; /* size:lower */
 		}
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs))) {
 			Dee_Decref(lhs_elem);
-			return unlikely(!rhs_elem)
-			? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		}
 		result = DeeObject_CompareEq(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
@@ -1905,8 +1913,9 @@ DeeSeq_LoVI(DeeObject **__restrict lhsv, size_t lhsc,
 	size_t i;
 	for (i = 0; i < lhsc; ++i) {
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-			return unlikely(!rhs_elem)
-		? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		result = DeeObject_CompareLo(lhsv[i], rhs_elem);
 		if (result == 0) { /* *lhs < *rhs : false */
 			result = DeeObject_CompareLo(rhs_elem, lhsv[i]);
@@ -1920,8 +1929,9 @@ DeeSeq_LoVI(DeeObject **__restrict lhsv, size_t lhsc,
 			return result;
 	}
 	if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-		return unlikely(!rhs_elem)
-	? -1 : 0; /* size:equal */
+		return (unlikely(!rhs_elem))
+		       ? -1
+		       : 0; /* size:equal */
 	Dee_Decref(rhs_elem);
 	return 1; /* size:lower */
 }
@@ -2002,8 +2012,9 @@ DeeSeq_LeVI(DeeObject **__restrict lhsv, size_t lhsc,
 	size_t i;
 	for (i = 0; i < lhsc; ++i) {
 		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-			return unlikely(!rhs_elem)
-		? -1 : 0; /* size:greater */
+			return (unlikely(!rhs_elem))
+			       ? -1
+			       : 0; /* size:greater */
 		result = DeeObject_CompareLo(lhsv[i], rhs_elem);
 		if (result == 0) { /* *lhs < *rhs : false */
 			result = DeeObject_CompareLo(rhs_elem, lhsv[i]);

@@ -194,8 +194,9 @@ print_scope_repr(DeeScopeObject *__restrict self,
                  struct unicode_printer *__restrict printer) {
 	dssize_t error;
 	error = unicode_printer_printf(printer, "<scope at %p>", self);
-	return unlikely(error < 0)
-	? -1 : 0;
+	return (unlikely(error < 0))
+	       ? -1
+	       : 0;
 }
 
 PRIVATE DREF DeeObject *DCALL

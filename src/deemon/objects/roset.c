@@ -248,9 +248,9 @@ DeeRoSet_FromSequence(DeeObject *__restrict self) {
 	goto err;
 	/* TODO: Use the fast-sequence interface directly! */
 	length_hint = DeeFastSeq_GetSize(self);
-	result      = likely(length_hint != DEE_FASTSEQ_NOTFAST)
-	? DeeRoSet_FromIteratorWithHint(self, length_hint)
-	: DeeRoSet_FromIterator(self);
+	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
+	         ? DeeRoSet_FromIteratorWithHint(self, length_hint)
+	         : DeeRoSet_FromIterator(self);
 	Dee_Decref(self);
 	return result;
 err:
