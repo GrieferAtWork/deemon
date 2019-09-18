@@ -645,42 +645,46 @@ DeeSeq_Min_k(DeeObject *__restrict self,
 	int temp;
 	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
 		goto done;
-	while
-		ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
-			if (!result)
-				result = elem;
-			else {
-				DREF DeeObject *key_elem;
-				if (!key_result) {
-					key_result = DeeObject_Call(key, 1, &result);
-					if unlikely(!key_result)
-						goto err_r_iter_elem;
-				}
-				key_elem = DeeObject_Call(key, 1, &elem);
-				if unlikely(!key_elem)
-					goto err_r_iter_elem;
-				temp = DeeObject_CompareLo(key_result, key_elem);
-				if (temp <= 0) {
-					if unlikely(temp < 0) {
-						Dee_Decref(key_elem);
-						goto err_r_iter_elem;
-					}
-					Dee_Decref(key_result);
-					Dee_Decref(result);
-					/* Continue working with `elem' after
-					 * `result < elem' evaluated to `false' */
-					result     = elem;
-					key_result = key_elem;
-				} else {
-					Dee_Decref(key_elem);
-					Dee_Decref(elem);
-				}
+	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+		if (!result)
+			result = elem;
+		else {
+			DREF DeeObject *key_elem;
+			if (!key_result) {
+				key_result = DeeObject_Call(key, 1, &result);
+				if
+					unlikely(!key_result)
+				goto err_r_iter_elem;
 			}
-			if (DeeThread_CheckInterrupt())
-				goto err_r_iter;
+			key_elem = DeeObject_Call(key, 1, &elem);
+			if
+				unlikely(!key_elem)
+			goto err_r_iter_elem;
+			temp = DeeObject_CompareLo(key_result, key_elem);
+			if (temp <= 0) {
+				if
+					unlikely(temp < 0)
+				{
+					Dee_Decref(key_elem);
+					goto err_r_iter_elem;
+				}
+				Dee_Decref(key_result);
+				Dee_Decref(result);
+				/* Continue working with `elem' after
+					 * `result < elem' evaluated to `false' */
+				result     = elem;
+				key_result = key_elem;
+			} else {
+				Dee_Decref(key_elem);
+				Dee_Decref(elem);
+			}
 		}
-	if unlikely(!elem)
-		goto err_r_iter;
+		if (DeeThread_CheckInterrupt())
+			goto err_r_iter;
+	}
+	if
+		unlikely(!elem)
+	goto err_r_iter;
 	Dee_Decref(iterator);
 	/* Return `none' when the sequence was empty. */
 	if (!result) {
@@ -707,40 +711,43 @@ DeeSeq_Max_k(DeeObject *__restrict self,
 	int temp;
 	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
 		goto done;
-	while
-		ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
-			if (!result)
-				result = elem;
-			else {
-				DREF DeeObject *key_elem;
-				if (!key_result) {
-					key_result = DeeObject_Call(key, 1, &result);
-					if unlikely(!key_result)
-						goto err_r_iter_elem;
-				}
-				key_elem = DeeObject_Call(key, 1, &elem);
-				if unlikely(!key_elem)
-					goto err_r_iter_elem;
-				temp = DeeObject_CompareLo(key_result, key_elem);
-				if (temp <= 0) {
-					if unlikely(temp < 0) {
-						Dee_Decref(key_elem);
-						goto err_r_iter_elem;
-					}
-					Dee_Decref(key_elem);
-					Dee_Decref(elem);
-				} else {
-					Dee_Decref(key_result);
-					Dee_Decref(result);
-					/* Continue working with `elem' after
-					 * `result < elem' evaluated to `false' */
-					result     = elem;
-					key_result = key_elem;
-				}
+	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+		if (!result)
+			result = elem;
+		else {
+			DREF DeeObject *key_elem;
+			if (!key_result) {
+				key_result = DeeObject_Call(key, 1, &result);
+				if
+					unlikely(!key_result)
+				goto err_r_iter_elem;
 			}
-			if (DeeThread_CheckInterrupt())
-				goto err_r_iter;
+			key_elem = DeeObject_Call(key, 1, &elem);
+			if
+				unlikely(!key_elem)
+			goto err_r_iter_elem;
+			temp = DeeObject_CompareLo(key_result, key_elem);
+			if (temp <= 0) {
+				if
+					unlikely(temp < 0)
+				{
+					Dee_Decref(key_elem);
+					goto err_r_iter_elem;
+				}
+				Dee_Decref(key_elem);
+				Dee_Decref(elem);
+			} else {
+				Dee_Decref(key_result);
+				Dee_Decref(result);
+				/* Continue working with `elem' after
+				 * `result < elem' evaluated to `false' */
+				result     = elem;
+				key_result = key_elem;
+			}
 		}
+		if (DeeThread_CheckInterrupt())
+			goto err_r_iter;
+	}
 	if unlikely(!elem)
 		goto err_r_iter;
 	Dee_Decref(iterator);
@@ -769,26 +776,25 @@ DeeSeq_Min(DeeObject *__restrict self, DeeObject *key) {
 		return DeeSeq_Min_k(self, key);
 	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
 		goto done;
-	while
-		ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
-			if (!result)
+	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+		if (!result)
+			result = elem;
+		else {
+			temp = DeeObject_CompareLo(result, elem);
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_r_iter_elem;
+				Dee_Decref(result);
+				/* Continue working with `elem' after
+				 * `result < elem' evaluated to `false' */
 				result = elem;
-			else {
-				temp = DeeObject_CompareLo(result, elem);
-				if (temp <= 0) {
-					if unlikely(temp < 0)
-						goto err_r_iter_elem;
-					Dee_Decref(result);
-					/* Continue working with `elem' after
-					 * `result < elem' evaluated to `false' */
-					result = elem;
-				} else {
-					Dee_Decref(elem);
-				}
+			} else {
+				Dee_Decref(elem);
 			}
-			if (DeeThread_CheckInterrupt())
-				goto err_r_iter;
 		}
+		if (DeeThread_CheckInterrupt())
+			goto err_r_iter;
+	}
 	if unlikely(!elem)
 		goto err_r_iter;
 	Dee_Decref(iterator);
@@ -815,26 +821,26 @@ DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
 		return DeeSeq_Max_k(self, key);
 	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
 		goto done;
-	while
-		ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
-			if (!result)
+	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+		if (!result)
+			result = elem;
+		else {
+			temp = DeeObject_CompareLo(result, elem);
+			if (temp <= 0) {
+				if
+					unlikely(temp < 0)
+				goto err_r_iter_elem;
+				Dee_Decref(elem);
+			} else {
+				Dee_Decref(result);
+				/* Continue working with `elem' after
+				 * `result < elem' evaluated to `false' */
 				result = elem;
-			else {
-				temp = DeeObject_CompareLo(result, elem);
-				if (temp <= 0) {
-					if unlikely(temp < 0)
-						goto err_r_iter_elem;
-					Dee_Decref(elem);
-				} else {
-					Dee_Decref(result);
-					/* Continue working with `elem' after
-					 * `result < elem' evaluated to `false' */
-					result = elem;
-				}
 			}
-			if (DeeThread_CheckInterrupt())
-				goto err_r_iter;
 		}
+		if (DeeThread_CheckInterrupt())
+			goto err_r_iter;
+	}
 	if unlikely(!elem)
 		goto err_r_iter;
 	Dee_Decref(iterator);

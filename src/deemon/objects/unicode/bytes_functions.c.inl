@@ -1588,24 +1588,21 @@ bytes_join(Bytes *__restrict self,
 			if
 				unlikely(!iterator)
 			goto err_printer;
-			while
-				ITER_ISOK(elem = DeeObject_IterNext(iterator)) {
-					if
-						unlikely(!is_first &&
-						         bytes_printer_append(&printer,
-						                              DeeBytes_DATA(self),
-						                              DeeBytes_SIZE(self)) < 0)
+			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+				if unlikely(!is_first &&
+				            bytes_printer_append(&printer,
+				                                 DeeBytes_DATA(self),
+				                                 DeeBytes_SIZE(self)) < 0)
 					goto err_elem;
-					/* NOTE: `bytes_printer_printobject()' automatically
-					 *        optimizes for other bytes objects being printed. */
-					if
-						unlikely(bytes_printer_printobject(&printer, elem) < 0)
+				/* NOTE: `bytes_printer_printobject()' automatically
+				 *        optimizes for other bytes objects being printed. */
+				if unlikely(bytes_printer_printobject(&printer, elem) < 0)
 					goto err_elem;
-					Dee_Decref(elem);
-					is_first = false;
-					if (DeeThread_CheckInterrupt())
-						goto err_iter;
-				}
+				Dee_Decref(elem);
+				is_first = false;
+				if (DeeThread_CheckInterrupt())
+					goto err_iter;
+			}
 			if
 				unlikely(!elem)
 			goto err_iter;
