@@ -234,7 +234,7 @@ ast_incwriteonly(struct ast *__restrict self) {
 		      self->a_multiple.m_astc;
 		for (; iter != end; ++iter)
 			ast_incwriteonly(*iter);
-	} break;
+	}	break;
 	default: break;
 	}
 }
@@ -257,7 +257,7 @@ ast_decwrite(struct ast *__restrict self) {
 		      self->a_multiple.m_astc;
 		for (; iter != end; ++iter)
 			ast_decwrite(*iter);
-	} break;
+	}	break;
 	default: break;
 	}
 }
@@ -278,7 +278,7 @@ ast_decwriteonly(struct ast *__restrict self) {
 		      self->a_multiple.m_astc;
 		for (; iter != end; ++iter)
 			ast_decwriteonly(*iter);
-	} break;
+	}	break;
 	default: break;
 	}
 }
@@ -1049,7 +1049,7 @@ ast_fini_contents(struct ast *__restrict self) {
 		if (self->a_class.c_supersym &&
 		    !(self->a_flag & AST_FCLASS_NOWRITESUPER))
 			SYMBOL_DEC_NWRITE(self->a_class.c_supersym);
-	} break;
+	}	break;
 
 	case AST_OPERATOR:
 		if (OPERATOR_ISINPLACE(self->a_flag))
@@ -1089,7 +1089,7 @@ do_xdecref_3:
 		for (; iter != end; ++iter)
 			ast_decref(*iter);
 		Dee_Free(self->a_multiple.m_astv);
-	} break;
+	}	break;
 
 	case AST_TRY: {
 		struct catch_expr *iter, *end;
@@ -1101,7 +1101,7 @@ do_xdecref_3:
 			ast_decref(iter->ce_code);
 		}
 		Dee_Free(self->a_try.t_catchv);
-	} break;
+	}	break;
 
 	case AST_SYM:
 		ASSERTF(!self->a_flag, "At least some write-wrappers havn't been unwound.");
@@ -1162,7 +1162,7 @@ do_xdecref_3:
 #ifndef CONFIG_LANGUAGE_NO_ASM
 		TPPString_Decref(self->a_assembly.as_text.at_text);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-	} break;
+	}	break;
 
 	//case AST_LOOPCTL:
 	default: break;
@@ -1182,7 +1182,7 @@ ast_visit_impl(struct ast *__restrict self,
 		if (self->a_class.c_base)
 			ast_visit(self->a_class.c_base);
 		ast_visit(self->a_class.c_desc);
-	} break;
+	}	break;
 
 	case AST_OPERATOR:
 		if (self->a_operator.o_op3)
@@ -1224,7 +1224,7 @@ do_xvisit_3:
 		      self->a_multiple.m_astc;
 		for (; iter != end; ++iter)
 			ast_visit(*iter);
-	} break;
+	}	break;
 
 	case AST_TRY: {
 		struct catch_expr *iter, *end;
@@ -1236,7 +1236,7 @@ do_xvisit_3:
 				ast_visit(iter->ce_mask);
 			ast_visit(iter->ce_code);
 		}
-	} break;
+	}	break;
 
 	case AST_GOTO:
 	case AST_LABEL:
@@ -1256,7 +1256,7 @@ do_xvisit_3:
 		       self->a_assembly.as_num_i);
 		for (; iter != end; ++iter)
 			ast_visit(iter->ao_expr);
-	} break;
+	}	break;
 
 	default: break;
 	}

@@ -3563,7 +3563,7 @@ force_scope:
 			need_semicolon = false;
 			break;
 		}
-	} break;
+	}	break;
 
 	case AST_RETURN:
 		if (!is_scope && is_expression)
@@ -3665,7 +3665,7 @@ got_except_symbol:
 				                  self->a_scope, indent));
 			}
 		}
-	} break;
+	}	break;
 
 	case AST_LOOP:
 		if (!is_scope && is_expression)
@@ -3874,7 +3874,7 @@ got_except_symbol:
 			printf("%I16u", self->a_flag);
 			PRINT(")");
 		}
-	} break;
+	}	break;
 
 	case AST_OPERATOR: {
 		struct opinfo *info;
@@ -4240,7 +4240,7 @@ operator_fallback:
 				PRINT(")");
 			break;
 		}
-	} break;
+	}	break;
 
 	case AST_ACTION:
 		switch (self->a_flag & AST_FACTION_KINDMASK) {
@@ -4692,7 +4692,7 @@ class_member_in_class:
 		}
 		DO(DeeFormat_Repeat(printer, arg, '\t', indent - 1));
 		PRINT("}");
-	} break;
+	}	break;
 
 	case AST_LABEL:
 		if (self->a_flag & AST_FLABEL_CASE) {
@@ -4987,7 +4987,7 @@ print_ast_repr(struct ast *__restrict self,
 		} else {
 			PRINT_NONE();
 		}
-	} break;
+	}	break;
 
 	case AST_RETURN:
 		PRINT("makereturn(expr: ");
@@ -5040,7 +5040,7 @@ print_single_expr:
 			PRINT(")");
 		}
 		PUTC('}');
-	} break;
+	}	break;
 
 	case AST_LOOP: {
 		bool first_flag;
@@ -5091,7 +5091,7 @@ print_single_expr:
 		} else {
 			PRINT_NONE();
 		}
-	} break;
+	}	break;
 
 	case AST_LOOPCTL:
 		PRINT("makeloopctl(isbreak: ");
@@ -5141,7 +5141,7 @@ print_single_expr:
 			first_flag = false;
 		}
 		PUTC('\"');
-	} break;
+	}	break;
 
 	case AST_BOOL:
 		PRINT("makebool(expr: ");
@@ -5226,7 +5226,7 @@ print_single_expr:
 			first_flag = false;
 		}
 		PUTC('\"');
-	} break;
+	}	break;
 
 	case AST_ACTION:
 		PRINT("makeaction(name: ");

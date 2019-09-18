@@ -537,7 +537,7 @@ yield_done:
 		else {
 			result->ie_val = -result->ie_val;
 		}
-	} break;
+	}	break;
 
 	default:
 		if ((features & UASM_INTEXPR_FHASSP) &&
@@ -1302,7 +1302,7 @@ allocate_constant:
 		goto err;
 		result->io_class = OPERAND_CLASS_CONST;
 		result->io_symid = (uint16_t)symid;
-	} break;
+	}	break;
 
 	case AST_SYM: {
 		struct symbol *sym;
@@ -1559,7 +1559,7 @@ parse_ref_operand:
 		goto err;
 		result->io_class = OPERAND_CLASS_REF;
 		result->io_symid = (uint16_t)val;
-	} break;
+	}	break;
 
 parse_arg_operand:
 	{
@@ -1581,7 +1581,7 @@ parse_arg_operand:
 			result->io_class = OPERAND_CLASS_ARG;
 			result->io_symid = (uint16_t)val;
 		}
-	} break;
+	}	break;
 
 parse_const_operand:
 	{
@@ -1595,7 +1595,7 @@ parse_const_operand:
 		goto err;
 		result->io_class = OPERAND_CLASS_CONST;
 		result->io_symid = (uint16_t)val;
-	} break;
+	}	break;
 
 	case KWD_static:
 parse_static_operand:
@@ -1610,7 +1610,7 @@ parse_static_operand:
 		goto err;
 		result->io_class = OPERAND_CLASS_STATIC;
 		result->io_symid = (uint16_t)val;
-	} break;
+	}	break;
 
 parse_module_operand:
 	{
@@ -1624,7 +1624,7 @@ parse_module_operand:
 		goto err;
 		result->io_class = OPERAND_CLASS_MODULE;
 		result->io_symid = (uint16_t)val;
-	} break;
+	}	break;
 
 parse_extern_operand:
 	{
@@ -1637,7 +1637,7 @@ parse_extern_operand:
 			                                  &result->io_extern.io_symid))
 		goto err;
 		result->io_class = OPERAND_CLASS_EXTERN;
-	} break;
+	}	break;
 
 	case KWD_global:
 parse_global_operand:
@@ -1652,7 +1652,7 @@ parse_global_operand:
 		goto err;
 		result->io_class = OPERAND_CLASS_GLOBAL;
 		result->io_symid = (uint16_t)val;
-	} break;
+	}	break;
 
 	case KWD_local:
 parse_local_operand:
@@ -1667,7 +1667,7 @@ parse_local_operand:
 		goto err;
 		result->io_class = OPERAND_CLASS_LOCAL;
 		result->io_symid = (uint16_t)val;
-	} break;
+	}	break;
 
 	default:
 		if (TPP_ISKEYWORD(tok)) {

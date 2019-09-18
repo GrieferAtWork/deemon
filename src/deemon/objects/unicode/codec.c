@@ -204,7 +204,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 				return DeeString_Pack1ByteBuffer(dest);
 			}
 			goto return_self;
-		} break;
+		}	break;
 
 		CASE_WIDTH_2BYTE: {
 			uint16_t *data;
@@ -233,7 +233,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 				return DeeString_Pack1ByteBuffer(dest);
 			}
 			goto return_self;
-		} break;
+		}	break;
 
 		CASE_WIDTH_4BYTE: {
 			uint32_t *data;
@@ -261,7 +261,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 				return result;
 			}
 			goto return_self;
-		} break;
+		}	break;
 		}
 	}
 	err_expected_string_or_bytes(self);
@@ -311,7 +311,7 @@ convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_deco
 				return result;
 			}
 			goto return_self;
-		} break;
+		}	break;
 
 		CASE_WIDTH_4BYTE: {
 			uint32_t *data;
@@ -339,7 +339,7 @@ convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_deco
 				return result;
 			}
 			goto return_self;
-		} break;
+		}	break;
 		}
 	}
 	err_expected_string_or_bytes(self);

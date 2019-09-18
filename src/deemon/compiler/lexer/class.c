@@ -2000,7 +2000,7 @@ yield_semi_after_operator:
 			goto err;
 			operator_name = OPERATOR_DEEPCOPY;
 			goto define_operator;
-		} break;
+		}	break;
 
 		default: {
 			struct TPPKeyword *member_name;
@@ -2557,7 +2557,7 @@ do_yield_semicollon:
 				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
 					goto err;
 			}
-		} break;
+		}	break;
 		}
 	}
 done_class_modal:

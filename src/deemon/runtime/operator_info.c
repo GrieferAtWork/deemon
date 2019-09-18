@@ -1044,7 +1044,7 @@ invoke_operator(DeeObject *__restrict self,
 		                                : Dee_BUFFER_FREADONLY,
 		                       start,
 		                       end);
-	} break;
+	}	break;
 
 	default: break;
 	}

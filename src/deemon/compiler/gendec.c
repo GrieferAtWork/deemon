@@ -1527,7 +1527,7 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 					if (dec_putl(string_offset))
 						goto err;
 				}
-			} break;
+			}	break;
 			default:
 defl_xdat:
 				buf = dec_alloc(1 + opsize);

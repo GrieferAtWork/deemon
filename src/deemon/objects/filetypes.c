@@ -1228,7 +1228,7 @@ writer_tryappend8(Writer *__restrict self,
 		self->w_printer.up_length += bufsize;
 		for (i = 0; i < bufsize; ++i)
 			*dst++ = buffer[i];
-	} break;
+	}	break;
 
 	CASE_WIDTH_4BYTE: {
 		uint32_t *dst;
@@ -1255,7 +1255,7 @@ writer_tryappend8(Writer *__restrict self,
 		self->w_printer.up_length += bufsize;
 		for (i = 0; i < bufsize; ++i)
 			*dst++ = buffer[i];
-	} break;
+	}	break;
 	}
 ok:
 	return true;

@@ -1470,7 +1470,7 @@ abs_stack_any:
 			unlikely(mid < 0)
 		goto err;
 		result = DeeString_Newf("module %I16u", (uint16_t)mid);
-	} break;
+	}	break;
 
 	case ASM_OP_THIS:
 		if (self->a_type != AST_SYM)
@@ -1518,7 +1518,7 @@ abs_stack_any:
 			unlikely(rid < 0)
 		goto err;
 		result = DeeString_Newf("ref %I16u", (uint16_t)rid);
-	} break;
+	}	break;
 
 	case ASM_OP_REF_GEN: {
 		int32_t rid;
@@ -1544,7 +1544,7 @@ abs_stack_any:
 			unlikely(rid < 0)
 		goto err;
 		result = DeeString_Newf("ref %I16u", (uint16_t)rid);
-	} break;
+	}	break;
 
 	case ASM_OP_ARG:
 		if (self->a_type != AST_SYM)
@@ -1597,7 +1597,7 @@ abs_stack_any:
 			unlikely(cid < 0)
 		goto err;
 		result = DeeString_Newf("const %I16u", (uint16_t)cid);
-	} break;
+	}	break;
 
 	case ASM_OP_STATIC: {
 		int32_t sid;
@@ -1616,7 +1616,7 @@ abs_stack_any:
 			unlikely(sid < 0)
 		goto err;
 		result = DeeString_Newf("static %I16u", (uint16_t)sid);
-	} break;
+	}	break;
 
 	case ASM_OP_EXTERN: {
 		int32_t eid;
@@ -1633,7 +1633,7 @@ abs_stack_any:
 		goto err;
 		result = DeeString_Newf("extern %I16u:%I16u", (uint16_t)eid,
 		                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
-	} break;
+	}	break;
 
 	case ASM_OP_GLOBAL: {
 		int32_t gid;
@@ -1650,7 +1650,7 @@ abs_stack_any:
 			unlikely(gid < 0)
 		goto err;
 		result = DeeString_Newf("global %I16u", (uint16_t)gid);
-	} break;
+	}	break;
 
 	case ASM_OP_LOCAL: {
 		int32_t lid;
@@ -1670,7 +1670,7 @@ write_regular_local:
 			unlikely(lid < 0)
 		goto err;
 		result = DeeString_Newf("local %I16u", (uint16_t)lid);
-	} break;
+	}	break;
 
 	case ASM_OP_LOCAL_GEN: {
 		int32_t lid;
@@ -1695,7 +1695,7 @@ write_regular_local:
 			cleanup->cm_kind = CLEANUP_MODE_FLOCAL_POP;
 		cleanup->cm_value = (uint16_t)lid;
 		result            = DeeString_Newf("local %I16u", (uint16_t)lid);
-	} break;
+	}	break;
 
 	case ASM_OP_TRUE:
 		if (self->a_type != AST_CONSTEXPR)
@@ -1726,7 +1726,7 @@ write_regular_local:
 		if (value != 0)
 			goto next_option;
 		result = DeeString_New("$0");
-	} break;
+	}	break;
 
 	case ASM_OP_SEQ_MAP:
 		if (self->a_type == AST_MULTIPLE &&

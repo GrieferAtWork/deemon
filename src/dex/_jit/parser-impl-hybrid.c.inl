@@ -282,12 +282,12 @@ parse_remainder_after_semicolon_hybrid_popscope:
 			if (name == ENCODE4('c', 'o', 'n', 't') &&
 			    nam2 == ENCODE4('i', 'n', 'u', 'e'))
 				goto is_a_statement;
-		} break;
+		}	break;
 
 		default: break;
 		}
 		goto default_case;
-	} break;
+	}	break;
 
 
 	case '@':
@@ -410,7 +410,7 @@ parse_remainder_after_statement:
 		IF_EVAL(JITContext_PopScope(self->jl_context));
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_NO;
-	} break;
+	}	break;
 	}
 	return result;
 #ifdef JIT_EVAL
@@ -576,12 +576,12 @@ is_a_statement:
 			if (name == ENCODE4('c', 'o', 'n', 't') &&
 			    nam2 == ENCODE4('i', 'n', 'u', 'e'))
 				goto is_a_statement;
-		} break;
+		}	break;
 
 		default: break;
 		}
 		goto default_case;
-	} break;
+	}	break;
 
 
 
@@ -626,7 +626,7 @@ is_a_statement:
 			if (pwas_expression)
 				*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
 		}
-	} break;
+	}	break;
 	}
 done:
 	return result;

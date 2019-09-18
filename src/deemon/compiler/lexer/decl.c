@@ -79,7 +79,7 @@ decl_ast_copy(struct decl_ast *__restrict self,
 			}
 		}
 		self->da_alt.a_altv = new_vec;
-	} break;
+	}	break;
 
 	{
 		struct decl_ast *inner;
@@ -127,7 +127,7 @@ err_with_inner:
 			goto err_with_inner;
 		}
 		self->da_with.w_cell = inner;
-	} break;
+	}	break;
 
 	default: break;
 	}
@@ -157,7 +157,7 @@ decl_ast_fini(struct decl_ast *__restrict self) {
 		for (i = 0; i < self->da_alt.a_altc; ++i)
 			decl_ast_fini(&self->da_alt.a_altv[i]);
 		Dee_Free(self->da_alt.a_altv);
-	} break;
+	}	break;
 
 	case DAST_WITH:
 		decl_ast_fini(&self->da_with.w_cell[1]);
@@ -322,7 +322,7 @@ decl_ast_isempty(struct decl_ast const *__restrict self) {
 		Dee_Decref_unlikely((DeeObject *)scope);
 		/* The argument count can be determined without the doc,
 		 * so we can simply consider this decl ast as empty. */
-	} break;
+	}	break;
 
 	default: break;
 	}
@@ -535,7 +535,7 @@ switch_symbol_type:
 						goto err;
 				}
 			}
-		} break;
+		}	break;
 
 #if 0 /* TODO: This can sometimes be implemented through `?#' */
 		case SYMBOL_TYPE_CATTR:
@@ -569,7 +569,7 @@ switch_symbol_type:
 			}
 			sym = self->da_symbol;
 			goto print_undefined_symbol_name;
-		} break;
+		}	break;
 
 		default:
 			/* Fallback: emit the name of the symbol as private/undefined */
@@ -582,7 +582,7 @@ print_undefined_symbol_name:
 				goto err;
 			return 0;
 		}
-	} break;
+	}	break;
 
 	case DAST_CONST:
 		return decl_ast_print_const_type(self->da_const, printer);
@@ -596,7 +596,7 @@ print_undefined_symbol_name:
 				unlikely(decl_ast_print_type(&self->da_alt.a_altv[i], printer))
 			goto err;
 		}
-	} break;
+	}	break;
 
 	case DAST_TUPLE: {
 		size_t i;
@@ -607,7 +607,7 @@ print_undefined_symbol_name:
 				unlikely(decl_ast_print_type(&self->da_tuple.t_itemv[i], printer))
 			goto err;
 		}
-	} break;
+	}	break;
 
 	case DAST_SEQ:
 		if (UNICODE_PRINTER_PRINT(printer, "?S") < 0)
@@ -632,7 +632,7 @@ print_undefined_symbol_name:
 		if
 			unlikely(decl_ast_print_type(self->da_attr.a_base, printer))
 		goto err;
-	} break;
+	}	break;
 
 	case DAST_WITH:
 		if
@@ -1023,7 +1023,7 @@ err_type_expr:
 			Dee_Incref(self->da_const);
 		}
 		ast_decref(type_expr);
-	} break;
+	}	break;
 #endif
 
 	case '(': {
@@ -1116,7 +1116,7 @@ err_elemv:
 			decl_ast_fini(&elemv[elemc]);
 		Dee_Free(elemv);
 		goto err_flags;
-	} break;
+	}	break;
 
 	case '{': {
 		int error;
@@ -1179,7 +1179,7 @@ err_elemv_0:
 		self->da_type = DAST_SEQ;
 		self->da_flag = DAST_FNORMAL;
 		self->da_seq  = decl_seq;
-	} break;
+	}	break;
 
 
 	case KWD___nth: {
@@ -1246,7 +1246,7 @@ err_nth:
 			self->da_type = DAST_NONE;
 			self->da_flag = DAST_FNORMAL;
 		}
-	} break;
+	}	break;
 
 	default:
 		if (TPP_ISKEYWORD(tok)) {
@@ -1567,7 +1567,7 @@ decl_ast_equal(struct decl_ast const *__restrict a,
 			goto nope;
 		found_alt:;
 		}
-	} break;
+	}	break;
 
 	case DAST_TUPLE: {
 		size_t i;
@@ -1578,7 +1578,7 @@ decl_ast_equal(struct decl_ast const *__restrict a,
 			                    &b->da_tuple.t_itemv[i]))
 				goto nope;
 		}
-	} break;
+	}	break;
 
 	case DAST_SEQ:
 		return decl_ast_equal(a->da_seq, b->da_seq);

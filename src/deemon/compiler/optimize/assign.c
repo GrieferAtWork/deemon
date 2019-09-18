@@ -88,7 +88,7 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
 			       sizeof(struct class_member));
 			ast_incref(dst[i].cm_ast);
 		}
-	} break;
+	}	break;
 
 	case AST_OPERATOR:
 		if (OPERATOR_ISINPLACE(temp->a_flag))
@@ -145,7 +145,7 @@ do_xcopy_3:
 			*dst = *iter;
 			ast_incref(*dst);
 		}
-	} break;
+	}	break;
 
 	case AST_TRY: {
 		struct catch_expr *iter, *end, *dst;
@@ -164,7 +164,7 @@ do_xcopy_3:
 			ast_xincref(dst->ce_mask);
 			ast_incref(dst->ce_code);
 		}
-	} break;
+	}	break;
 
 	case AST_SYM:
 		ASSERT(other->a_sym);

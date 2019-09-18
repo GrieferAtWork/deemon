@@ -963,7 +963,7 @@ INTERN bool DCALL asm_minjmp(void) {
 				iter->ar_type = R_DMN_DISP8; /* Change the relocation into an 8-bit disposition. */
 				result        = true;        /* Indicate that we managed to optimize something. */
 			}
-		} break;
+		}	break;
 
 		case R_DMN_STCKA16:
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
@@ -1029,7 +1029,7 @@ INTERN bool DCALL asm_minjmp(void) {
 				asm_reldel(iter); /* Delete this relocation. */
 				result = true;
 			}
-		} break;
+		}	break;
 
 		default:
 			break;
@@ -1293,7 +1293,7 @@ INTERN int DCALL asm_linkstack(void) {
 				target_end = asm_nextinstr(target_end);
 			/* Delete affected instructions. */
 			memset(target, ASM_DELOP, (size_t)(target_end - target));
-		} break;
+		}	break;
 
 		default: continue;
 		}
@@ -1417,7 +1417,7 @@ INTERN int DCALL asm_linktext(void) {
 				target_end = asm_nextinstr(target_end);
 			/* Delete affected instructions. */
 			memset(target, ASM_DELOP, (size_t)(target_end - target));
-		} break;
+		}	break;
 
 		default: break;
 		}
@@ -2523,7 +2523,7 @@ INTERN int (DCALL asm_gjmp)(instruction_t instr,
 		goto err;
 		asm_defsym(temp);
 		++current_assembler.a_stackcur;
-	} break;
+	}	break;
 
 	case ASM_FOREACH: {
 		struct asm_sym *temp1;
@@ -2564,7 +2564,7 @@ INTERN int (DCALL asm_gjmp)(instruction_t instr,
 		current_assembler.a_stackcur += 2; /* Conversely to above, ASM_FOREACH pushes an element. */
 		asm_defsym(temp2);
 		--current_assembler.a_stackcur;
-	} break;
+	}	break;
 
 	}
 	return 0;

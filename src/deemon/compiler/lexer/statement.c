@@ -635,7 +635,7 @@ err_loop:
 		ast_xdecref(elem_or_cond);
 		ast_xdecref(iter_or_next);
 		goto err;
-	} break;
+	}	break;
 
 	case KWD_foreach: {
 		DREF struct ast *foreach_elem;
@@ -689,7 +689,7 @@ err_foreach_iter:
 err_foreach_elem:
 		ast_decref(foreach_elem);
 		goto err_flags;
-	} break;
+	}	break;
 
 	case KWD_assert:
 		result = ast_parse_assert(false);
@@ -749,7 +749,7 @@ err_foreach_elem:
 		            ? (yield_semicollonnbif(allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_DOWHILE))
 			goto err_r;
-	} break;
+	}	break;
 
 	case KWD_while: {
 		DREF struct ast *loop;
@@ -788,7 +788,7 @@ err_foreach_elem:
 		goto err;
 		scope_pop();
 		result = merge;
-	} break;
+	}	break;
 
 	case KWD_break:
 	case KWD_continue:
@@ -906,7 +906,7 @@ err_foreach_elem:
 		            ? (yield_semicollonnbif(allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_GOTO))
 			goto err_r;
-	} break;
+	}	break;
 
 	case KWD_switch: {
 		uint16_t old_scope_flags;
@@ -997,7 +997,7 @@ err_r_switch:
 		cleanup_switch_cases(switch_cases,
 		                     switch_default);
 		goto err_r;
-	} break;
+	}	break;
 
 	default:
 		if (TPP_ISKEYWORD(tok)) {

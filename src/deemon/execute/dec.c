@@ -1245,7 +1245,7 @@ set_none_result:
 		buffer.data = UNALIGNED_GETLE64((uint64_t *)reader), reader += 8;
 		/* XXX: Special decoding when `double' doesn't conform to ieee754 */
 		result = DeeFloat_New(buffer.value);
-	} break;
+	}	break;
 
 	/* Variable-length integers. */
 	case DTYPE_SLEB: result = DeeInt_NewSleb(&reader); break;
@@ -1273,7 +1273,7 @@ set_none_result:
 			/* Create the new string. */
 			result = DeeString_NewUtf8(str, len, STRING_ERROR_FSTRICT);
 		}
-	} break;
+	}	break;
 
 	/* Another code object. */
 	case DTYPE_CODE:
@@ -1321,7 +1321,7 @@ err_function_code:
 		}
 		((DREF DeeFunctionObject *)result)->fo_code = code; /* Inherit reference. */
 		DeeObject_Init(result, &DeeFunction_Type);
-	} break;
+	}	break;
 
 	case DTYPE_TUPLE: {
 		uint32_t i, length;
@@ -1351,7 +1351,7 @@ err_function_code:
 			/* Save the item within the tuple. */
 			DeeTuple_SET(result, i, item);
 		}
-	} break;
+	}	break;
 
 	case DTYPE_LIST: {
 		uint32_t i, length;
@@ -1383,7 +1383,7 @@ err_function_code:
 		}
 		/* Start tracking the new list now that it's been initialized. */
 		DeeGC_Track((DeeObject *)result);
-	} break;
+	}	break;
 
 	case DTYPE_CLASSDESC: {
 		uint8_t flags, cmemb_size, imemb_size, i;
@@ -1592,7 +1592,7 @@ err_function_code:
 			entry->ca_flag = flags;
 		}
 #undef descriptor
-	} break;
+	}	break;
 
 	case DTYPE_KWDS: {
 		uint32_t i, count;
@@ -1626,7 +1626,7 @@ err_function_code:
 				                        Dee_HashPtr(name, name_len)))
 			goto err_r;
 		}
-	} break;
+	}	break;
 
 
 	case DTYPE_EXTENDED:
@@ -1667,7 +1667,7 @@ err_function_code:
 					unlikely(error)
 				goto err_r;
 			}
-		} break;
+		}	break;
 
 		case DTYPE16_ROSET & 0xff: {
 			uint32_t num_items;
@@ -1700,7 +1700,7 @@ err_function_code:
 					unlikely(error)
 				goto err_r;
 			}
-		} break;
+		}	break;
 
 		case DTYPE16_DICT & 0xff: {
 			uint32_t num_items;
@@ -1746,7 +1746,7 @@ err_function_code:
 					unlikely(error)
 				goto err_r;
 			}
-		} break;
+		}	break;
 
 		case DTYPE16_RODICT & 0xff: {
 			uint32_t num_items;
@@ -1792,7 +1792,7 @@ err_function_code:
 					unlikely(error)
 				goto err_r;
 			}
-		} break;
+		}	break;
 
 		case DTYPE16_CLASSDESC & 0xff: {
 			uint16_t flags, op_count, opbind_mask;
@@ -2014,7 +2014,7 @@ err_function_code:
 				entry->ca_flag = flags;
 			}
 #undef descriptor
-		} break;
+		}	break;
 
 		case DTYPE16_CELL & 0xff:
 			if (*reader == DTYPE_NULL) {

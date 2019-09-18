@@ -678,7 +678,7 @@ invalid_argc2:
 			unlikely(temp < 0)
 		return temp;
 		*va_arg(pargs->vl_ap, bool *) = !!temp;
-	} break;
+	}	break;
 
 	/* Int */
 	{

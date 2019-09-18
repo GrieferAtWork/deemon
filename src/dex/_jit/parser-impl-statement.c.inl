@@ -708,12 +708,12 @@ check_trailing_asm_semicollon:
 #endif /* !JIT_EVAL */
 				goto done;
 			}
-		} break;
+		}	break;
 
 		default: break;
 		}
 		goto parse_expr;
-	} break;
+	}	break;
 
 	default:
 parse_expr:

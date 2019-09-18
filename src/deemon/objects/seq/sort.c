@@ -96,7 +96,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 		} else if (s2) {
 			MEMCPY_PTR(dst, iter2, s2);
 		}
-	} break;
+	}	break;
 	}
 	return 0;
 err:
@@ -191,7 +191,7 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 		} else if (s2) {
 			MEMCPY_PTR(dst, iter2, s2);
 		}
-	} break;
+	}	break;
 	}
 	return 0;
 err:
@@ -290,7 +290,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 			dst[0] = src[1];
 			dst[1] = src[0];
 		}
-	} break;
+	}	break;
 
 	default: {
 		DeeObject **temp;
@@ -309,7 +309,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 			         : mergesort_impl(dst, temp, src, objc);
 			Dee_Free(temp);
 		}
-	} break;
+	}	break;
 	}
 	return result;
 err:
@@ -351,7 +351,7 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
 			dst[0] = src[1];
 			dst[1] = src[0];
 		}
-	} break;
+	}	break;
 
 	default:
 		result = key

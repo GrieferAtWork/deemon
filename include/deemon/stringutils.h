@@ -161,21 +161,21 @@ DFUNDEF void (DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self);
 				end  = (char *)_str_ + _len_;                 \
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
-			} break;                                          \
+			}	break;                                        \
 			Dee_CASE_WIDTH_2BYTE: {                           \
 				uint16_t *iter, *end;                         \
 				iter = (uint16_t *)_str_;                     \
 				end  = (uint16_t *)_str_ + _len_;             \
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
-			} break;                                          \
+			}	break;                                        \
 			Dee_CASE_WIDTH_4BYTE: {                           \
 				uint32_t *iter, *end;                         \
 				iter = (uint32_t *)_str_;                     \
 				end  = (uint32_t *)_str_ + _len_;             \
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
-			} break;                                          \
+			}	break;                                        \
 			}                                                 \
 		}                                                     \
 	} __WHILE0

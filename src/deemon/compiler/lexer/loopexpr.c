@@ -112,7 +112,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		ast_decref(other);
 		ast_decref(result);
 		result = merge;
-	} break;
+	}	break;
 
 	case KWD_do:
 		loc_here(&loc);
@@ -264,7 +264,7 @@ err_for_loop:
 		ast_xdecref(elem_or_cond);
 		ast_xdecref(init);
 		goto err;
-	} break;
+	}	break;
 
 	case KWD_foreach: {
 		DREF struct ast *foreach_elem;
@@ -318,7 +318,7 @@ err_foreach_elem:
 err_foreach_elem_flags:
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		goto err_foreach_elem;
-	} break;
+	}	break;
 
 	default:
 		/* Fallback: parse a brace expression and wrap it inside a yield-statement. */

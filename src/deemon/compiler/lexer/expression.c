@@ -462,7 +462,7 @@ create_constexpr:
 			goto err;
 		resval = DeeInt_NewS64(value);
 		goto create_constexpr;
-	} break;
+	}	break;
 
 	case TOK_STRING: {
 		DREF DeeObject *resval;
@@ -474,7 +474,7 @@ decode_string:
 		goto err;
 		result = ast_setddi(ast_constexpr(resval), &loc);
 		Dee_Decref(resval);
-	} break;
+	}	break;
 
 	case TOK_FLOAT: {
 		tfloat_t value;
@@ -494,7 +494,7 @@ decode_string:
 		if
 			unlikely(yield() < 0)
 		goto err_r;
-	} break;
+	}	break;
 
 	case KWD_none: {
 		DeeObject *constval;
@@ -742,7 +742,7 @@ do_else_branch:
 		ast_xdecref(tt_branch);
 		ast_xdecref(result);
 		result = merge;
-	} break;
+	}	break;
 
 	case KWD_assert:
 		result = ast_parse_assert(true);
@@ -770,7 +770,7 @@ do_else_branch:
 		                            NULL
 #endif
 		);
-	} break;
+	}	break;
 
 	{
 		struct TPPKeyword *class_name;
@@ -886,7 +886,7 @@ do_create_class:
 			}
 #endif
 		}
-	} break;
+	}	break;
 
 	case KWD_import:
 		result = ast_sethere(ast_sym_import_from_deemon());
@@ -1035,7 +1035,7 @@ do_create_class:
 			ast_decref(result);
 			result = merge;
 		}
-	} break;
+	}	break;
 
 	case '{':
 		/* Brace initializer. */
@@ -1132,7 +1132,7 @@ do_create_class:
 			unlikely(!merge)
 		goto err;
 		result = ast_setddi(merge, &loc);
-	} break;
+	}	break;
 
 
 	case '[': /* List */
@@ -1263,7 +1263,7 @@ err_begin_expr:
 		if
 			unlikely(yield() < 0)
 		goto err_r;
-	} break;
+	}	break;
 
 	case KWD_super: {
 		struct symbol *this_sym;
@@ -1294,7 +1294,7 @@ err_begin_expr:
 		if
 			unlikely(yield() < 0)
 		goto err_r;
-	} break;
+	}	break;
 
 	case KWD___nth:
 		if
@@ -1616,7 +1616,7 @@ do_range:
 				unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_GETITEM))
 			goto err_r;
 			ast_setddi(result, &loc);
-		} break;
+		}	break;
 
 		case '{': /* Brace initializers. */
 			loc_here(&loc);
@@ -1702,7 +1702,7 @@ err_other:
 				unlikely(!merge)
 			goto err;
 			result = merge;
-		} break;
+		}	break;
 
 			case '(': {
 			DREF struct ast *kw_labels;
@@ -1742,7 +1742,7 @@ err_other:
 			if
 				unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
 			goto err_r;
-		} break;
+		}	break;
 
 		{
 			uint16_t opid;

@@ -318,7 +318,7 @@ do_yield_suffix:
 		}
 		if (allow_cast)
 			goto again;
-	} break;
+	}	break;
 
 	case '[':
 		JITLexer_Yield(self);
@@ -600,7 +600,7 @@ do_handle_for:
 				JITLexer_QuickSkipModuleName(self);
 			}
 		}
-	} break;
+	}	break;
 
 	default: return;
 	}
@@ -959,7 +959,7 @@ continue_skip_asm_operand:
 			if (name == ENCODE4('c', 'o', 'n', 't') &&
 			    nam2 == ENCODE4('i', 'n', 'u', 'e'))
 				goto do_yield_semi;
-		} break;
+		}	break;
 
 		default: break;
 		}

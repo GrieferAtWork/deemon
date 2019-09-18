@@ -722,7 +722,7 @@ load_2byte_width:
 			 * so we can simply re-use it as the utf-16 variant. */
 		ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, str);
 		return (uint16_t *)utf->u_utf16;
-	} break;
+	}	break;
 
 	CASE_WIDTH_4BYTE: {
 		size_t i, length, result_length;
@@ -786,7 +786,7 @@ load_2byte_width:
 		}
 		Dee_UntrackAlloc((size_t *)result - 1);
 		return result;
-	} break;
+	}	break;
 
 	default: __builtin_unreachable();
 	}
@@ -1846,7 +1846,7 @@ read_text_i:
 			Dee_UntrackAlloc((size_t *)buffer - 1);
 			ASSERT(character_count < WSTR_LENGTH(text));
 			utf16_to_utf8_char32(text, length, (uint8_t *)result->s_str, buffer);
-		} break;
+		}	break;
 
 		default: __builtin_unreachable();
 		}
@@ -1994,7 +1994,7 @@ continue_at_i:
 			Dee_UntrackAlloc((size_t *)buffer - 1);
 			ASSERT(character_count < WSTR_LENGTH(text));
 			utf16_to_utf8_char16(text, length, (uint8_t *)result->s_str, buffer);
-		} break;
+		}	break;
 
 		case 2: {
 			uint32_t *buffer;
@@ -2010,7 +2010,7 @@ continue_at_i:
 			Dee_UntrackAlloc((size_t *)buffer - 1);
 			ASSERT(character_count < WSTR_LENGTH(text));
 			utf16_to_utf8_char32(text, length, (uint8_t *)result->s_str, buffer);
-		} break;
+		}	break;
 		default: __builtin_unreachable();
 		}
 	}
@@ -3697,7 +3697,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					unlikely(!new_buffer)
 				goto err;
 				self->up_buffer = new_buffer;
-			} break;
+			}	break;
 			}
 		}
 	}
@@ -4426,7 +4426,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 		self->up_length += textlen;
 		while (textlen--)
 			*dst++ = *text++;
-	} break;
+	}	break;
 
 	CASE_WIDTH_4BYTE: {
 		uint32_t *dst;
@@ -4453,7 +4453,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 		self->up_length += textlen;
 		while (textlen--)
 			*dst++ = *text++;
-	} break;
+	}	break;
 	}
 done:
 	return result;
@@ -4565,7 +4565,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 		self->up_length += num_chars;
 		while (num_chars--)
 			*dst++ = (uint16_t)(uint8_t)ch;
-	} break;
+	}	break;
 
 	CASE_WIDTH_4BYTE: {
 		uint32_t *dst;
@@ -4592,7 +4592,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 		self->up_length += num_chars;
 		while (num_chars--)
 			*dst++ = (uint32_t)(uint8_t)ch;
-	} break;
+	}	break;
 	}
 done:
 	return result;
@@ -4692,7 +4692,7 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 		self->up_length += textlen;
 		while (textlen--)
 			*dst++ = (uint8_t)*text++;
-	} break;
+	}	break;
 
 	CASE_WIDTH_2BYTE:
 append_2byte:
@@ -4744,7 +4744,7 @@ append_2byte:
 		self->up_length += textlen;
 		while (textlen--)
 			*dst++ = *text++;
-	} break;
+	}	break;
 	}
 done:
 	return result;
@@ -4858,7 +4858,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 		self->up_length += textlen;
 		while (textlen--)
 			*dst++ = (uint8_t)*text++;
-	} break;
+	}	break;
 
 	CASE_WIDTH_2BYTE: {
 		uint16_t *dst;
@@ -4901,7 +4901,7 @@ append_2byte:
 		self->up_length += textlen;
 		while (textlen--)
 			*dst++ = (uint16_t)*text++;
-	} break;
+	}	break;
 
 	CASE_WIDTH_4BYTE:
 append_4byte:
@@ -5022,7 +5022,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 				goto err;
 				result += temp;
 			}
-		} break;
+		}	break;
 
 		CASE_WIDTH_2BYTE: {
 			size_t i;
@@ -5054,7 +5054,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 				goto err;
 				result += temp;
 			}
-		} break;
+		}	break;
 
 		CASE_WIDTH_4BYTE: {
 			size_t i;
@@ -5112,7 +5112,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 				goto err;
 				result += temp;
 			}
-		} break;
+		}	break;
 		}
 	}
 	return result;
@@ -6211,7 +6211,7 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
 			}
 			if (unicode_printer_putc(printer, digit_value))
 				goto err;
-		} break;
+		}	break;
 
 		case 'a':
 			ch = (char)0x07;

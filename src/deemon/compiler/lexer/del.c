@@ -109,7 +109,7 @@ create_2:
 		ast_setddi(new_result, &result->a_ddi);
 		ast_decref(result);
 		result = new_result;
-	} break;
+	}	break;
 
 	default:
 	default_case:

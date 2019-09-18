@@ -151,7 +151,7 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 			if (pwas_expression)
 				*pwas_expression = AST_PARSE_WASEXPR_YES;
 		}
-	} break;
+	}	break;
 	}
 done:
 	return result;
@@ -612,7 +612,7 @@ parse_remainder_after_statement:
 		scope_pop();
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_NO;
-	} break;
+	}	break;
 	}
 	return result;
 err_r_remainder:

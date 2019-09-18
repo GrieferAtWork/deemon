@@ -85,7 +85,7 @@ check_symbol:
 		sym->s_type = SYMBOL_TYPE_LOCAL;
 		sym->s_flag |= SYMBOL_FALLOC;
 		sym->s_symid = (uint16_t)lid;
-	} break;
+	}	break;
 
 	default: break;
 	}

@@ -117,7 +117,7 @@ ast_predict_type(struct ast *__restrict self) {
 		ff_type = self->a_conditional.c_ff ? ast_predict_type(self->a_conditional.c_ff) : &DeeNone_Type;
 		if (tt_type == ff_type)
 			return tt_type;
-	} break;
+	}	break;
 
 	case AST_SYM: {
 		struct symbol *sym;
@@ -153,11 +153,11 @@ ast_predict_type(struct ast *__restrict self) {
 			if (DeeBaseScope_IsVarkwds(bscope, sym))
 				return &DeeMapping_Type; /* {string: Object} */
 #endif
-		} break;
+		}	break;
 
 		default: break;
 		}
-	} break;
+	}	break;
 
 	case AST_BOOL:
 		return &DeeBool_Type;
@@ -193,7 +193,7 @@ ast_predict_type(struct ast *__restrict self) {
 				return &DeeInt_Type;
 			if (predict == &DeeNone_Type)
 				return &DeeNone_Type;
-		} break;
+		}	break;
 
 		case OPERATOR_INV:
 		case OPERATOR_POS:
@@ -251,14 +251,14 @@ ast_predict_type(struct ast *__restrict self) {
 					return &DeeBool_Type;
 				return &DeeNone_Type;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_CONTAINS: {
 			DeeTypeObject *sequence_type;
 			sequence_type = ast_predict_type(self->a_operator.o_op0);
 			if (is_generic_sequence_type(sequence_type))
 				return &DeeBool_Type;
-		} break;
+		}	break;
 
 		case OPERATOR_SETITEM:
 		case OPERATOR_SETATTR:
@@ -273,7 +273,7 @@ ast_predict_type(struct ast *__restrict self) {
 			sequence_type = ast_predict_type(self->a_operator.o_op0);
 			if (sequence_type == &DeeString_Type)
 				return &DeeString_Type;
-		} break;
+		}	break;
 
 		default: break;
 		}
@@ -371,7 +371,7 @@ ast_has_sideeffects(struct ast *__restrict self) {
 				return true;
 		}
 		return false;
-	} break;
+	}	break;
 
 	case AST_CONDITIONAL:
 		/* AST_CONDITIONAL (with none of the branches having side-effects) */
@@ -472,7 +472,7 @@ ast_doesnt_return(struct ast *__restrict self,
 		if (has_noreturn)
 			goto doesnt_return;
 		goto does_return;
-	} break;
+	}	break;
 
 	case AST_OPERATOR: {
 		size_t i;
@@ -493,7 +493,7 @@ ast_doesnt_return(struct ast *__restrict self,
 		if (has_noreturn)
 			goto doesnt_return;
 		goto does_return;
-	} break;
+	}	break;
 
 	case AST_ACTION:
 		/* Actions behave similar to operators, but mustn't necessarily follow
@@ -567,7 +567,7 @@ ast_doesnt_return(struct ast *__restrict self,
 		if (has_noreturn)
 			goto doesnt_return;
 		goto does_return;
-	} break;
+	}	break;
 
 	case AST_THROW:
 		/* In a catch-all statement, a throw expression always returns. */
@@ -651,7 +651,7 @@ ast_doesnt_return(struct ast *__restrict self,
 				goto doesnt_return;
 		}
 		goto does_return;
-	} break;
+	}	break;
 
 	case AST_SWITCH: {
 		bool has_noreturn;
@@ -680,7 +680,7 @@ ast_doesnt_return(struct ast *__restrict self,
 		if (has_noreturn)
 			goto doesnt_return;
 		goto does_return;
-	} break;
+	}	break;
 
 	case AST_GOTO:
 		/* The simple never-return-branches */
@@ -710,7 +710,7 @@ ast_doesnt_return(struct ast *__restrict self,
 		if (self->a_flag & AST_FASSEMBLY_NORETURN)
 			goto doesnt_return; /* If the user-assembly states that it doesn't return, then this ast doesn't either! */
 		goto does_return;
-	} break;
+	}	break;
 
 	case AST_CONDITIONAL:
 		/* Simple case: If the condition doesn't return, neither
@@ -828,7 +828,7 @@ ast_is_nothrow(struct ast *__restrict self, bool result_used) {
 
 		default: break;
 		}
-	} break;
+	}	break;
 
 	case AST_BOUND:
 		/* Checking if a symbol is bound is nothrow. */
@@ -850,7 +850,7 @@ ast_is_nothrow(struct ast *__restrict self, bool result_used) {
 				goto is_not_nothrow;
 		}
 		goto is_nothrow;
-	} break;
+	}	break;
 
 	case AST_RETURN:
 		if (!self->a_return)
@@ -870,7 +870,7 @@ ast_is_nothrow(struct ast *__restrict self, bool result_used) {
 		for (i = 0; i < self->a_try.t_catchc; ++i) {
 			self->a_try.t_catchv[i].ce_code;
 		}
-	} break;
+	}	break;
 #endif
 
 	default: break;
@@ -931,7 +931,7 @@ ast_uses_symbol(struct ast *__restrict self,
 			if (ast_uses_symbol(self->a_multiple.m_astv[i], sym))
 				goto yup;
 		}
-	} break;
+	}	break;
 
 	case AST_TRY: {
 		struct catch_expr *iter, *end;
@@ -973,7 +973,7 @@ ast_uses_symbol(struct ast *__restrict self,
 			if (ast_uses_symbol(self->a_class.c_memberv[i].cm_ast, sym))
 				goto yup;
 		}
-	} break;
+	}	break;
 
 	case AST_OPERATOR:
 		if (self->a_operator.o_op3 &&
@@ -1009,7 +1009,7 @@ ast_uses_symbol(struct ast *__restrict self,
 			if (ast_uses_symbol(iter->ao_expr, sym))
 				goto yup;
 		}
-	} break;
+	}	break;
 
 	default: break;
 	}
@@ -1101,7 +1101,7 @@ ast_equal_impl(struct ast *__restrict a,
 			unlikely(temp < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return temp > 0;
-	} break;
+	}	break;
 
 	case AST_SYM:
 	case AST_UNBIND:
@@ -1130,7 +1130,7 @@ ast_equal_impl(struct ast *__restrict a,
 				goto ne;
 		}
 		goto eq;
-	} break;
+	}	break;
 
 	case AST_RETURN:
 	case AST_THROW:
@@ -1166,7 +1166,7 @@ ast_equal_impl(struct ast *__restrict a,
 					goto ne;
 			}
 		}
-	} break;
+	}	break;
 
 	case AST_LOOPCTL:
 		if (a->a_flag != b->a_flag)
@@ -1240,7 +1240,7 @@ no:
 				goto yes;
 		}
 		goto no;
-	} break;
+	}	break;
 
 	case AST_LOOP:
 		if (self->a_loop.l_cond &&

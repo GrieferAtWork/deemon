@@ -283,7 +283,7 @@ again:
 			if (this_origin == sym_base) /* Unbound this-symbol (valid in any kind of this-call) */
 				return (this_origin->bs_flags & CODE_FTHISCALL) != 0;
 		} while ((this_origin = this_origin->bs_prev) != NULL);
-	} break;
+	}	break;
 
 	case SYMBOL_TYPE_STACK:
 	case SYMBOL_TYPE_EXCEPT:
@@ -319,7 +319,7 @@ again:
 			if (this_origin == sym_base)
 				return true;
 		} while ((this_origin = this_origin->bs_prev) != NULL);
-	} break;
+	}	break;
 	}
 	return false;
 }
@@ -482,7 +482,7 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
 				TPPFile_Decref(self->s_ambig.a_declv[i].l_file);
 		}
 		Dee_Free(self->s_ambig.a_declv);
-	} break;
+	}	break;
 
 	case SYMBOL_TYPE_CONST:
 		Dee_Decref(self->s_const);

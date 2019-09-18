@@ -135,35 +135,35 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 			temp = get_sleb((uint8_t **)&ip);
 			if (!(regs->dr_flags & DDI_REGS_FSECOND))
 				regs->dr_lno += temp;
-		} break;
+		}	break;
 
 		case DDI_SETCOL: {
 			int temp;
 			temp = get_sleb((uint8_t **)&ip);
 			if (!(regs->dr_flags & DDI_REGS_FSECOND))
 				regs->dr_col = temp;
-		} break;
+		}	break;
 
 		case DDI_SETPATH: {
 			uint16_t temp;
 			temp = (uint16_t)get_uleb((uint8_t **)&ip);
 			if (!(regs->dr_flags & DDI_REGS_FSECOND))
 				regs->dr_path = temp;
-		} break;
+		}	break;
 
 		case DDI_SETFILE: {
 			uint16_t temp;
 			temp = (uint16_t)get_uleb((uint8_t **)&ip);
 			if (!(regs->dr_flags & DDI_REGS_FSECOND))
 				regs->dr_file = temp;
-		} break;
+		}	break;
 
 		case DDI_SETNAME: {
 			uint16_t temp;
 			temp = (uint16_t)get_uleb((uint8_t **)&ip);
 			if (!(regs->dr_flags & DDI_REGS_FSECOND))
 				regs->dr_name = temp;
-		} break;
+		}	break;
 
 		case DDI_INCUSP:
 			++regs->dr_usp;
@@ -206,7 +206,7 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 
 			default: break;
 			}
-		} break;
+		}	break;
 
 		default:
 			regs->dr_uip += DDI_GENERIC_IP(op);
@@ -312,7 +312,7 @@ next_ip:
 				for (i = 0; i < clr_cnt; ++i)
 					self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp + i] = DDI_REGS_UNBOUND_NAME;
 			}
-		} break;
+		}	break;
 
 		case DDI_DEFSPNAME: {
 			uint16_t address;
@@ -327,7 +327,7 @@ next_ip:
 			    ddi_xrealloc_sp(&self->rs_xregs, self->rs_regs.dr_usp, flags))
 				goto err;
 			self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp - 1] = address;
-		} break;
+		}	break;
 
 		case DDI_DEFLCNAME: {
 			uint16_t index, address;
@@ -347,7 +347,7 @@ next_ip:
 				/* Bind a local-symbol. */
 				self->rs_xregs.dx_lcnamv[index] = address;
 			}
-		} break;
+		}	break;
 
 		case DDI_DELLCNAME: {
 			unsigned int index;
@@ -363,7 +363,7 @@ next_ip:
 				/* Unbind a local-symbol. */
 				self->rs_xregs.dx_lcnamv[index] = DDI_REGS_UNBOUND_NAME;
 			}
-		} break;
+		}	break;
 
 		case DDI_EXTENDED: {
 			unsigned int cmd;
@@ -455,7 +455,7 @@ err_save_lc:
 err_save:
 				Dee_Free(save);
 				goto err;
-			} break;
+			}	break;
 
 			case DDI_X_POPSTATE: {
 				struct ddi_saved *save;
@@ -468,11 +468,11 @@ err_save:
 				       sizeof(struct ddi_xregs) - offsetof(struct ddi_xregs, dx_base.dr_flags));
 				self->rs_save = save->s_prev;
 				Dee_Free(save);
-			} break;
+			}	break;
 
 			default: break;
 			}
-		} break;
+		}	break;
 
 		default:
 			self->rs_regs.dr_uip += DDI_GENERIC_IP(op);

@@ -113,7 +113,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				if (DeeObject_AsDouble(arg, &temp))
 					goto err_wbuf;
 				iter->f = (float)temp;
-			} break;
+			}	break;
 
 			case FFI_TYPE_DOUBLE:
 				if (DeeObject_AsDouble(arg, &iter->d))
@@ -126,7 +126,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				if (DeeObject_AsDouble(arg, &temp))
 					goto err_wbuf;
 				iter->ld = (long double)temp;
-			} break;
+			}	break;
 #endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
 
 			case FFI_TYPE_UINT8:
@@ -188,7 +188,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 					                        (union pointer *)&iter->p))
 						goto err_wbuf;
 				}
-			} break;
+			}	break;
 
 			default: iter->u64 = 0; break;
 			}

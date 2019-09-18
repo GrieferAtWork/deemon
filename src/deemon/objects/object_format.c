@@ -195,7 +195,7 @@ print_self_raw:
 			unlikely(temp < 0)
 		goto err_temp;
 		result += temp;
-	} break;
+	}	break;
 
 	case ALIGN_ZFILL: {
 		char *my_str;
@@ -234,7 +234,7 @@ print_self_raw:
 			unlikely(temp < 0)
 		goto err_temp;
 		result += temp;
-	} break;
+	}	break;
 
 	default:
 		__builtin_unreachable();

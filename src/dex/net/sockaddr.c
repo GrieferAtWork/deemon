@@ -1486,7 +1486,7 @@ do_generic_string_2:
 			                sock_getafnameorid(family), argc);
 			break;
 		}
-	} break;
+	}	break;
 
 #ifdef AF_UNIX
 	case AF_UNIX:
@@ -1535,7 +1535,7 @@ do_generic_string_2:
 			                argc);
 			goto err;
 		}
-	} break;
+	}	break;
 #endif /* AF_NETLINK */
 
 #ifdef AF_BLUETOOTH
@@ -1562,7 +1562,7 @@ do_generic_string_2:
 			if
 				unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_l2.l2_bdaddr))
 			goto err;
-		} break;
+		}	break;
 
 		case BTPROTO_RFCOMM: {
 			if
@@ -1584,7 +1584,7 @@ do_generic_string_2:
 			if
 				unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_rc.rc_bdaddr))
 			goto err;
-		} break;
+		}	break;
 
 		case BTPROTO_HCI: {
 			if
@@ -1609,7 +1609,7 @@ do_generic_string_2:
 			if (DeeObject_AsUINT(argv[0], &self->bt_hci.hci_dev))
 				goto err;
 #endif /* !__NetBSD__ && !__DragonFly__ */
-		} break;
+		}	break;
 
 #if !defined(__FreeBSD__)
 		case BTPROTO_SCO: {
@@ -1630,7 +1630,7 @@ do_generic_string_2:
 			if
 				unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_sco.sco_bdaddr))
 			goto err;
-		} break;
+		}	break;
 #endif /* !__FreeBSD__ */
 
 		default:
@@ -1643,7 +1643,7 @@ do_generic_string_2:
 			                sock_getprotonameorid(protocol));
 			goto err;
 		}
-	} break;
+	}	break;
 #endif /* AF_BLUETOOTH */
 
 	default:

@@ -406,7 +406,7 @@ switch_on_opcode:
 			next = follow_jmp(iter, NULL);
 			ASSERT(next >= iter); /* The caller is required to ensure this. */
 			iter = next;
-		} break;
+		}	break;
 
 		default:
 			iter = asm_nextinstr_sp(iter, &stacksz);
@@ -629,7 +629,7 @@ do_adjstack_optimization:
 					SET_RESULTF(iter, "Trip 16-bit adjstack to 8-bit");
 					goto do_adjstack_optimization;
 				}
-			} break;
+			}	break;
 
 			case ASM16_EXTERN & 0xff:
 				after_prefix = iter + 6;
@@ -948,7 +948,7 @@ do_noreturn_optimization:
 			stacksz = nearest_symbol->as_stck;
 			validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
 			goto continue_at_iter;
-		} break;
+		}	break;
 
 		default: break;
 		}
@@ -1218,7 +1218,7 @@ delete_bool_before_jft:
 done_opt_bool:
 			iter = iiter;
 			goto continue_at_iter;
-		} break;
+		}	break;
 
 
 #if 1
@@ -1282,7 +1282,7 @@ do_optimize_conditional_jump:
 				            ((opcode & ~1) == ASM_JT) ? 't' : 'f');
 				iter = iiter; /* Continue by parsing the newly overwritten instruction. */
 			}
-		} break;
+		}	break;
 #endif
 
 		case ASM16_EXTERN:
@@ -1411,7 +1411,7 @@ do_optimize_popmov_8bit:
 						SET_RESULTF(iter, "Construct mov-instruction from push+pop stack");
 						goto continue_at_iter;
 					}
-				} break;
+				}	break;
 
 				case ASM_EXTENDED1:
 					switch (next_instruction[1]) {
@@ -1456,7 +1456,7 @@ do_optimize_popmov_16bit:
 						memcpy(iter, temp, 4 + (next_instruction - iter));
 						SET_RESULTF(iter, "Construct 16-bit mov-instruction from push+pop stack");
 						goto continue_at_iter;
-					} break;
+					}	break;
 
 
 					default: break;
@@ -1604,7 +1604,7 @@ do_optimize_dupmov_8bit:
 							SET_RESULTF(iter, "Construct mov-instruction from dup+pop stack");
 							goto continue_at_iter;
 						}
-					} break;
+					}	break;
 
 					case ASM_EXTENDED1:
 						switch (next_instruction[1]) {
@@ -1655,7 +1655,7 @@ do_optimize_dupmov_16bit:
 								SET_RESULTF(iter, "Construct 16-bit mov-instruction from dup+pop stack");
 							}
 							goto continue_at_iter;
-						} break;
+						}	break;
 
 						default: break;
 						}

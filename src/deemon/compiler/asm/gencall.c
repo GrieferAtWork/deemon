@@ -373,7 +373,7 @@ check_small_constargs_symbol:
 					if (asm_gcall_extern((uint16_t)symid, modsym->ss_index, argc))
 						goto err;
 					goto pop_unused;
-				} break;
+				}	break;
 
 				case SYMBOL_TYPE_GLOBAL:
 					/* Direct call to symbol. */
@@ -591,7 +591,7 @@ got_small_method:
 					if (asm_gcall(argc))
 						goto err; /* result */
 					goto pop_unused;
-				} break;
+				}	break;
 
 				case SYMBOL_TYPE_MYFUNC:
 					if (funsym->s_scope->s_base != current_basescope)
@@ -741,7 +741,7 @@ check_getattr_base_symbol_class_small:
 							if (asm_gcall_extern((uint16_t)module_id, modsym->ss_index, argc))
 								goto err;
 							goto pop_unused;
-						} break;
+						}	break;
 
 						default: break;
 						}
@@ -1614,7 +1614,7 @@ got_method:
 			if (asm_gcall(argc))
 				goto err; /* result */
 			goto pop_unused;
-		} break;
+		}	break;
 
 		case SYMBOL_TYPE_MYFUNC:
 			if (funsym->s_scope->s_base != current_basescope)
@@ -1768,7 +1768,7 @@ check_getattr_base_symbol_class_argv:
 					if (asm_gcall_extern((uint16_t)module_id, modsym->ss_index, argc))
 						goto err;
 					goto pop_unused;
-				} break;
+				}	break;
 
 				default:
 					break;

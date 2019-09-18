@@ -246,7 +246,7 @@ again:
 				goto did_optimize;
 			}
 		}
-	} break;
+	}	break;
 
 	case AST_EXPAND:
 		if (ast_optimize(stack, self->a_expand, result_used))
@@ -335,7 +335,7 @@ again:
 			if (ast_optimize(stack, self->a_class.c_memberv[i].cm_ast, true))
 				goto err;
 		}
-	} break;
+	}	break;
 
 	case AST_ASSEMBLY: {
 		struct asm_operand *iter, *end;
@@ -371,7 +371,7 @@ again:
 					goto err;
 			}
 		}
-	} break;
+	}	break;
 
 	default: break;
 	}

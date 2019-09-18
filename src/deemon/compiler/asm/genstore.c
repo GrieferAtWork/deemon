@@ -316,7 +316,7 @@ check_getattr_sym:
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gpush_global((uint16_t)symid);
-			} break;
+			}	break;
 
 			case SYMBOL_TYPE_MODULE: {
 				struct module_symbol *modsym;
@@ -343,7 +343,7 @@ check_getattr_sym:
 				return modsym->ss_flags & MODSYM_FPROPERTY
 				       ? asm_gcall_extern((uint16_t)module_id, modsym->ss_index + MODULE_PROPERTY_GET, 0)
 				       : asm_gpush_extern((uint16_t)module_id, modsym->ss_index);
-			} break;
+			}	break;
 
 			default: break;
 			}
@@ -496,7 +496,7 @@ check_boundattr_sym:
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gpush_bnd_global((uint16_t)symid);
-			} break;
+			}	break;
 
 			case SYMBOL_TYPE_MODULE: {
 				struct module_symbol *modsym;
@@ -523,7 +523,7 @@ check_boundattr_sym:
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gpush_bnd_extern((uint16_t)module_id, modsym->ss_index);
-			} break;
+			}	break;
 
 			default: break;
 			}
@@ -621,7 +621,7 @@ check_delattr_sym:
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gdel_global((uint16_t)symid);
-			} break;
+			}	break;
 
 			default: break;
 			}
@@ -1037,7 +1037,7 @@ check_base_symbol_class:
 				if (PUSH_RESULT && asm_gdup())
 					goto err;
 				return asm_gpop_global((uint16_t)symid);
-			} break;
+			}	break;
 
 			case SYMBOL_TYPE_MODULE: {
 				struct module_symbol *modsym;
@@ -1073,7 +1073,7 @@ check_base_symbol_class:
 					return asm_gpop();
 				}
 				return asm_gpop_extern((uint16_t)module_id, modsym->ss_index);
-			} break;
+			}	break;
 
 			default:
 				break;
@@ -1523,7 +1523,7 @@ INTERN int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
 				goto err;
 			return asm_gpush_const_p((uint16_t)cid);
 		}
-	} break;
+	}	break;
 
 	default:
 		break;
@@ -1769,7 +1769,7 @@ check_dst_sym_class_hybrid:
 				}
 			}
 		}
-	} break;
+	}	break;
 
 
 	case AST_CONSTEXPR:

@@ -818,7 +818,7 @@ nextfmt:
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
-	} break;
+	}	break;
 
 	case 'f':
 	case 'F':

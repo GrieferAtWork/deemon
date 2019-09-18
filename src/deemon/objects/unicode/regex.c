@@ -1079,7 +1079,7 @@ has_infinite_submatch:
 		if (!match.mc_min)
 			goto next; /* No match is ok. */
 		goto nope;     /* Miss-matching expression. */
-	} break;
+	}	break;
 
 	case '|':
 		if (context & REGEX_CONTEXT_FINPAREN)
@@ -1314,7 +1314,7 @@ match_unicode_trait:
 					goto next; /* The next character is an ALNUM */
 			}
 			goto nope;
-		} break;
+		}	break;
 
 		case 'a':
 			ch = 0x07;
@@ -1382,7 +1382,7 @@ match_unicode_trait:
 		}
 		DO_CHARACTERWISE_MATCH(is_in_range(range_start, range_end, data_ch, data) ^
 		                       invert_range);
-	} break;
+	}	break;
 
 	case '.':
 		piter = parse_match_count(piter, pend, &match);

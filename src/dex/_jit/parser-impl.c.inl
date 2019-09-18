@@ -665,7 +665,7 @@ err_missing_rparen:
 #else  /* JIT_EVAL */
 		result = 0;
 #endif /* JIT_EVAL */
-	} break;
+	}	break;
 #endif
 
 
@@ -1057,7 +1057,7 @@ done_y1:
 			/* C-style cast expression (only for single-parenthesis expressions) */
 			result = CALL_SECONDARY(CastOperand, result);
 		}
-	} break;
+	}	break;
 
 	case '[':
 		JITLexer_Yield(self);
@@ -1765,7 +1765,7 @@ skip_rbrck_and_done:
 			}
 #endif /* !JIT_EVAL */
 		}
-	} break;
+	}	break;
 
 	default:
 		syn_expr_unexpected_token(self);
@@ -1843,7 +1843,7 @@ err_result_copy:
 			Dee_Decref(lhs);
 			lhs = result_copy; /* Inherit reference. */
 #endif /* JIT_EVAL */
-		} break;
+		}	break;
 
 
 		case '.':
@@ -2140,7 +2140,7 @@ err_start_expr:
 				lhs = call_result;
 			}
 #endif /* JIT_EVAL */
-		} break;
+		}	break;
 
 		case JIT_KEYWORD:
 			if (JITLexer_ISTOK(self, "pack")) {

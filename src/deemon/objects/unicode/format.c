@@ -468,7 +468,7 @@ err_bad_index_expression:
 		result = new_result;
 		++fmt_start; /* Skip the trailing `]' character. */
 		goto next_suffix;
-	} break;
+	}	break;
 
 	case '.': {
 		DREF DeeObject *attr;
@@ -497,7 +497,7 @@ err_bad_index_expression:
 		Dee_Decref(result);
 		result = new_result;
 		goto next_suffix;
-	} break;
+	}	break;
 
 	case '(': {
 		DREF DeeObject *arg;
@@ -641,7 +641,7 @@ parse_second_argument:
 		Dee_Decref(result);
 		result = new_result;
 		goto next_suffix;
-	} break;
+	}	break;
 
 		case '?': {
 		DREF DeeObject *tt, *ff;
@@ -709,7 +709,7 @@ parse_second_argument:
 			Dee_Decref(tt);
 		}
 		goto next_suffix;
-	} break;
+	}	break;
 
 	default: break;
 	}

@@ -355,7 +355,7 @@ do_integer_scan:
 			/* Construct a string from all matched data. */
 			result = DeeString_NewSized(spec_data_start,
 			                            (size_t)(data - spec_data_start));
-		} break;
+		}	break;
 
 		case 'n':
 			/* Return the number of bytes already consumed. */
@@ -391,7 +391,7 @@ do_integer_scan:
 			                self->si_scanner->ss_format);
 			goto err;
 		}
-	} break;
+	}	break;
 
 	case ' ':
 		/* Skip space characters in `data' */

@@ -534,7 +534,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 		if (asm_gpush_symbol(sym, self))
 			goto err;
 		goto pop_unused;
-	} break;
+	}	break;
 
 	case AST_UNBIND: {
 		struct symbol *sym;
@@ -554,7 +554,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 done_push_none:
 		if (PUSH_RESULT && asm_gpush_none())
 			goto err;
-	} break;
+	}	break;
 
 	case AST_BOUND: {
 		struct symbol *sym;
@@ -691,7 +691,7 @@ done_push_none:
 				}
 			}
 		}
-	} break;
+	}	break;
 
 	case AST_RETURN:
 		if (!self->a_return ||
@@ -814,7 +814,7 @@ done_fake_none:
 		if (PUSH_RESULT && asm_gpush_none())
 			goto err;
 		goto done_noalign;
-	} break;
+	}	break;
 
 	case AST_LOOPCTL: {
 		struct asm_sym *loopsym;
@@ -872,7 +872,7 @@ done_fake_none:
 		}
 		current_assembler.a_stackcur = old_stack;
 		goto done_fake_none;
-	} break;
+	}	break;
 
 	case AST_CONDITIONAL: {
 		bool invert_condition;
@@ -1220,7 +1220,7 @@ done_fake_none:
 				asm_defsym(after_existing);
 			}
 		}
-	} break;
+	}	break;
 
 	case AST_BOOL: {
 		instruction_t instr;
@@ -1249,7 +1249,7 @@ done_fake_none:
 		if (asm_put(instr))
 			goto err;
 		goto pop_unused;
-	} break;
+	}	break;
 
 	case AST_EXPAND:
 		if (PUSH_RESULT) {
@@ -1460,7 +1460,7 @@ pop_unused:
 					goto err;
 				goto pop_unused;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_GETRANGE: {
 			struct ast *begin, *end;
@@ -1637,7 +1637,7 @@ pop_unused:
 					goto err;
 				goto pop_unused;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_INPLACE_ADD:
 		case OPERATOR_INPLACE_SUB: {
@@ -1680,7 +1680,7 @@ push_a_if_used:
 					goto err;
 				goto push_a_if_used;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_MUL:
 		case OPERATOR_DIV:
@@ -1703,7 +1703,7 @@ push_a_if_used:
 					goto err;
 				goto pop_unused;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_INPLACE_MUL:
 		case OPERATOR_INPLACE_DIV:
@@ -1731,7 +1731,7 @@ push_a_if_used:
 					goto err;
 				goto push_a_if_used;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_AND:
 		case OPERATOR_OR:
@@ -1753,7 +1753,7 @@ push_a_if_used:
 					goto err;
 				goto pop_unused;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_INPLACE_AND:
 		case OPERATOR_INPLACE_OR:
@@ -1780,7 +1780,7 @@ push_a_if_used:
 					goto err;
 				goto push_a_if_used;
 			}
-		} break;
+		}	break;
 
 		case OPERATOR_ENTER: {
 			struct ast *enter_expr;
@@ -1928,7 +1928,7 @@ push_a_if_used:
 			if (self->a_flag == OPERATOR_NE && asm_gbool(true))
 				goto err;
 			goto done;
-		} break;
+		}	break;
 
 		case OPERATOR_CONTAINS:
 			if
@@ -2232,7 +2232,7 @@ operator_without_prefix:
 		}
 		goto pop_unused;
 	}
-	} break;
+	}	break;
 
 	case AST_ACTION: {
 		uint16_t action_type;
@@ -2589,7 +2589,7 @@ action_in_without_const:
 		default:
 			ASSERTF(0, "Invalid action type: %x", (unsigned int)action_type);
 		}
-	} break;
+	}	break;
 
 	case AST_CLASS:
 		if

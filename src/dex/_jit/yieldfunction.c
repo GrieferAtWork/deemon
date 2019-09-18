@@ -592,7 +592,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			goto err;
 		/* ITER_DONE... */
 		goto do_pop_state_scope;
-	} break;
+	}	break;
 
 	case JIT_STATE_KIND_FOREACH2: {
 		DREF DeeObject *elem;
@@ -618,7 +618,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			goto err;
 		/* ITER_DONE... */
 		goto do_pop_state_scope;
-	} break;
+	}	break;
 
 	case JIT_STATE_KIND_SKIPELSE:
 		/* Check for `else' and `elif' */
@@ -1607,7 +1607,7 @@ err_iter_scope_lvalue_2:
 		default: break;
 		}
 		goto parse_generic_statement;
-	} break;
+	}	break;
 
 	default:
 parse_generic_statement:

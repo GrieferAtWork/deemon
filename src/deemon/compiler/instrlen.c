@@ -1278,7 +1278,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 			*psp_add = 0;
 			*psp_sub = (uint16_t)-effect;
 		}
-	} break;
+	}	break;
 
 	case ASM_LROT:
 	case ASM_RROT:
@@ -1391,7 +1391,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 				*psp_add = 0;
 				*psp_sub = (uint16_t)-effect;
 			}
-		} break;
+		}	break;
 
 		case ASM16_LROT & 0xff:
 		case ASM16_RROT & 0xff:

@@ -901,7 +901,7 @@ got_attribute_value:
 			if (asm_grrot(argc))
 				goto err; /* func, args... */
 			return asm_gcall(argc);
-		} break;
+		}	break;
 
 		default: break;
 		}
@@ -1015,7 +1015,7 @@ check_sym_class:
 		}
 		offset = (current_assembler.a_stackcur - 1) - absolute_stack_addr;
 		return offset == 0 ? asm_gdup() : asm_gdup_n(offset - 1);
-	} break;
+	}	break;
 
 	case SYMBOL_TYPE_ARG:
 		return asm_gpush_varg(sym->s_symid);
@@ -1142,7 +1142,7 @@ check_sym_class:
 			return asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2);
 		}
 		return 0;
-	} break;
+	}	break;
 
 	case SYMBOL_TYPE_MODULE:
 		symid = asm_msymid(sym);
@@ -1482,7 +1482,7 @@ check_sym_class:
 		if (defl)
 			goto fallback; /* Non-optional arguments are always bound. */
 		return asm_gpush_bnd_arg(sym->s_symid);
-	} break;
+	}	break;
 
 	case SYMBOL_TYPE_EXTERN:
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
@@ -1690,7 +1690,7 @@ got_attribute_value:
 				goto err;
 		}
 		return 0;
-	} break;
+	}	break;
 
 	case SYMBOL_TYPE_AMBIG:
 		if (asm_warn_ambiguous_symbol(sym))
@@ -1784,7 +1784,7 @@ check_sym_class:
 					goto err;
 				return asm_gdelattr_const((uint16_t)cid);
 			}
-		} break;
+		}	break;
 
 		case SYMBOL_TYPE_STACK:
 			if
@@ -1963,7 +1963,7 @@ pop_unused_result:
 					goto err;
 			}
 			return 0;
-		} break;
+		}	break;
 
 		case SYMBOL_TYPE_GETSET:
 			if (!sym->s_getset.gs_del)
@@ -2303,7 +2303,7 @@ pop_unused_result:
 					goto err; /* - */
 			}
 			return 0;
-		} break;
+		}	break;
 
 		case SYMBOL_TYPE_GETSET:
 			if (!sym->s_getset.gs_set) {

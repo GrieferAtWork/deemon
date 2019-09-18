@@ -587,7 +587,7 @@ err_subprinter:
 				result += temp;
 				unicode_printer_fini(&subprinter);
 			}
-		} break;
+		}	break;
 
 		case 'c': {
 			uint32_t uch;
@@ -622,7 +622,7 @@ err_subprinter:
 				goto err;
 				result += temp;
 			}
-		} break;
+		}	break;
 
 		/* Print native objects. */
 		case 'R': ch = 'r'; ATTR_FALLTHROUGH
@@ -724,7 +724,7 @@ F_HASPREC == DEEFLOAT_PRINT_FPRECISION
 				unlikely(temp < 0)
 			goto err;
 			result += temp;
-		} break;
+		}	break;
 
 		default:
 			if ((ch >= '0' && ch <= '9') &&

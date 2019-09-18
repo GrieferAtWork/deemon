@@ -2105,7 +2105,7 @@ do_print_adjstack:
 		printf("%c %I32d",
 		       val < 0 ? '-' : '+',
 		       val < 0 ? (int32_t)-val : (int32_t)val);
-	} break;
+	}	break;
 
 	case ASM16_OPERATOR: {
 		struct opinfo *info;
@@ -2122,7 +2122,7 @@ do_print_operator:
 			printf("%I16u, " PREFIX_STACKEFFECT "%I8u",
 			       imm, READ_imm8(iter));
 		}
-	} break;
+	}	break;
 
 	case ASM16_OPERATOR_TUPLE: {
 		struct opinfo *info;
@@ -2137,7 +2137,7 @@ do_print_operator_tuple:
 		} else {
 			printf("%I16u, pop", imm);
 		}
-	} break;
+	}	break;
 
 	case ASM_DEFCMEMBER:
 	case ASM_SETMEMBER:

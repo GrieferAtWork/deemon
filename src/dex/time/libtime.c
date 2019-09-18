@@ -691,7 +691,7 @@ time_setint(DeeTimeObject *__restrict self,
 		month_day += month_day;
 		newval = (((newval / MICROSECONDS_PER_DAY) + month_day) * MICROSECONDS_PER_DAY) +
 		         (newval % MICROSECONDS_PER_DAY);
-	} break;
+	}	break;
 
 	{
 		dtime_half_t arg, year, days;
@@ -734,7 +734,7 @@ do_set_year:
 		new_days += (dtime_half_t)value;
 		newval = ((newval % MICROSECONDS_PER_DAY) +
 		          (dtime_t)new_days * MICROSECONDS_PER_DAY);
-	} break;
+	}	break;
 
 	case TIME_REPR_MDAY: {
 		dtime_half_t months;
@@ -753,7 +753,7 @@ do_set_year:
 		new_days += (dtime_half_t)value; /* Add given offset. */
 		newval = ((newval % MICROSECONDS_PER_DAY) +
 		          (dtime_t)new_days * MICROSECONDS_PER_DAY);
-	} break;
+	}	break;
 
 	case TIME_REPR_MWEK: {
 		dtime_half_t new_weeks;
@@ -794,7 +794,7 @@ do_set_year:
 		newval = (((dtime_t)newval % MICROSECONDS_PER_WEEK) +
 		          ((dtime_t)days * MICROSECONDS_PER_DAY) +
 		          ((dtime_t)new_weeks * MICROSECONDS_PER_WEEK));
-	} break;
+	}	break;
 
 	case TIME_REPR_YWEK: {
 		dtime_half_t year;
@@ -814,7 +814,7 @@ do_set_year:
 		newval = (((dtime_t)newval % MICROSECONDS_PER_WEEK) + /* Sub-week time. */
 		          ((dtime_t)days * MICROSECONDS_PER_DAY) +    /* Year start */
 		          ((dtime_t)value * MICROSECONDS_PER_WEEK));  /* Year week */
-	} break;
+	}	break;
 
 	case TIME_REPR_MICS:
 		newval = value;
@@ -866,7 +866,7 @@ do_set_year:
 		newval -= (dtime_t)month_start * MICROSECONDS_PER_DAY;                    /* Strip year + month. */
 		newval += time_yer2day(year);                                             /* Add start of year. */
 		newval += month_info[time_isleapyear(year)][(unsigned int)value].m_start; /* Add start of month. */
-	} break;
+	}	break;
 
 	default: __builtin_unreachable();
 	}
@@ -1177,7 +1177,7 @@ print_number_2:
 						goto err_m1;
 					}
 					print(repr_value, strlen(repr_value));
-				} break;
+				}	break;
 
 				default: {
 					PRIVATE char const _suffix_values[] = "st"
@@ -1201,10 +1201,10 @@ print_number_2:
 						size_t suffix_offset = (attribval >= 3 ? (size_t)3 : (size_t)attribval) * 2;
 						print(_suffix_values + suffix_offset, 2);
 					}
-				} break;
+				}	break;
 
 				}
-			} break;
+			}	break;
 
 			default:
 				print(format - 2, 2);

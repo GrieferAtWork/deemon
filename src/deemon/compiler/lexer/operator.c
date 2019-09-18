@@ -852,7 +852,7 @@ unknown:
 			goto err;
 		result = (int32_t)0; /* Default to whatever operator #0 is. */
 		goto done;
-	} break;
+	}	break;
 	}
 
 done_y1:

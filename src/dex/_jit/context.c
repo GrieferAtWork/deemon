@@ -344,7 +344,7 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		*self->lv_ptr = NULL;
 		Dee_XDecref(old_value);
 		result = 0;
-	} break;
+	}	break;
 
 	case JIT_LVALUE_OBJENT: {
 		DREF DeeObject *old_value;
@@ -355,7 +355,7 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		self->lv_objent.lo_ent->oe_value = NULL;
 		Dee_XDecref(old_value);
 		result = 0;
-	} break;
+	}	break;
 
 	case JIT_LVALUE_EXTERN:
 		result = DeeModule_DelAttrSymbol(self->lv_extern.lx_mod,
@@ -433,7 +433,7 @@ JITLValue_SetValue(JITLValue *__restrict self,
 		Dee_Incref(value);
 		Dee_XDecref(old_value);
 		result = 0;
-	} break;
+	}	break;
 
 	case JIT_LVALUE_OBJENT: {
 		DREF DeeObject *old_value;
@@ -445,7 +445,7 @@ JITLValue_SetValue(JITLValue *__restrict self,
 		self->lv_objent.lo_ent->oe_value = value;
 		Dee_XDecref(old_value);
 		result = 0;
-	} break;
+	}	break;
 
 	case JIT_LVALUE_EXTERN:
 		result = DeeModule_SetAttrSymbol(self->lv_extern.lx_mod,
