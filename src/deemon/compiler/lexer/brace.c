@@ -46,8 +46,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 		goto err;
 	elema = 1, elemc = 0;
 	elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-	if unlikely(!elemv)
-		{
+	if unlikely(!elemv) {
 		ast_decref(item);
 		goto err;
 	}
@@ -104,8 +103,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 do_realloc_dict:
 			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, (new_elema * 2) *
 			                                                      sizeof(DREF struct ast *));
-			if unlikely(!new_elemv)
-				{
+			if unlikely(!new_elemv) {
 				if (new_elema != elemc + 1) {
 					new_elema = elemc + 1;
 					goto do_realloc_dict;
@@ -185,8 +183,7 @@ parse_list_item:
 do_realloc_list:
 			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, new_elema *
 			                                                      sizeof(DREF struct ast *));
-			if unlikely(!new_elemv)
-				{
+			if unlikely(!new_elemv) {
 				if (new_elema != elemc + 1) {
 					new_elema = elemc + 1;
 					goto do_realloc_list;

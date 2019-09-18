@@ -1447,15 +1447,13 @@ class_attribute_init(struct class_attribute *__restrict self,
 		if unlikely(!iter)
 			goto err;
 		addr = DeeObject_IterNext(iter);
-		if unlikely(!ITER_ISOK(addr))
-			{
+		if unlikely(!ITER_ISOK(addr)) {
 			if (addr == ITER_DONE)
 				err_invalid_unpack_size_minmax(data, 2, 3, 0);
 			goto err_iter;
 		}
 		flags = DeeObject_IterNext(iter);
-		if unlikely(!ITER_ISOK(flags))
-			{
+		if unlikely(!ITER_ISOK(flags)) {
 			if (flags == ITER_DONE)
 				err_invalid_unpack_size_minmax(data, 2, 3, 1);
 			goto err_iter_addr;
@@ -1468,8 +1466,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 			if unlikely(!doc)
 				goto err_iter_addr_flags;
 			tail = DeeObject_IterNext(iter);
-			if unlikely(tail != ITER_DONE)
-				{
+			if unlikely(tail != ITER_DONE) {
 				if (tail) {
 					Dee_Decref(tail);
 					err_invalid_unpack_iter_size_minmax(data, iter, 2, 3);
@@ -1492,8 +1489,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 			size_t flag_len;
 			next     = strchr(pos, ',');
 			flag_len = next ? (size_t)(next - pos) : strlen(pos);
-			if likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name))
-				{
+			if likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name)) {
 				unsigned int i;
 				for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
 					if (class_attribute_flags_db[i].fe_name[flag_len] != '\0')
@@ -1814,8 +1810,7 @@ cd_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 				size_t flag_len;
 				next     = strchr(pos, ',');
 				flag_len = next ? (size_t)(next - pos) : strlen(pos);
-				if likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name))
-					{
+				if likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name)) {
 					unsigned int i;
 					for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
 						if (class_flags_db[i].fe_name[flag_len] != '\0')
@@ -3764,8 +3759,7 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		         : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
-		if likely(result)
-			{
+		if likely(result) {
 			Dee_Decref(result);
 			return 1;
 		}

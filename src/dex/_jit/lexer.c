@@ -38,8 +38,7 @@ JITLexer_Yield(JITLexer *__restrict self) {
 	iter = self->jl_tokend;
 raw_again:
 	self->jl_tokstart = iter;
-	if unlikely(iter >= self->jl_end)
-		{
+	if unlikely(iter >= self->jl_end) {
 		self->jl_tok    = TOK_EOF;
 		self->jl_tokend = iter;
 		return;
@@ -61,8 +60,7 @@ raw_again:
 		self->jl_tok = TOK_INT;
 		while (iter < self->jl_end) {
 			ch = *iter++;
-			if unlikely(ch > 0x7f)
-				{
+			if unlikely(ch > 0x7f) {
 				unsigned char *start;
 				/* UTF-8 sequence. */
 				--iter;
@@ -91,8 +89,7 @@ raw_again:
 		break;
 
 	case '<':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -114,8 +111,7 @@ raw_again:
 		break;
 
 	case '>':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -146,8 +142,7 @@ raw_again:
 		goto do_single;
 
 	case '&':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '&') {
 				++iter;
@@ -164,8 +159,7 @@ raw_again:
 		break;
 
 	case '|':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '|') {
 				++iter;
@@ -182,8 +176,7 @@ raw_again:
 		break;
 
 	case '/':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -260,8 +253,7 @@ raw_again:
 		goto do_single;
 
 	case '+':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '+') {
 				++iter;
@@ -277,8 +269,7 @@ raw_again:
 		self->jl_tok = '+';
 		break;
 	case '-':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '>') {
 				++iter;
@@ -300,8 +291,7 @@ raw_again:
 		break;
 
 	case '*':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -323,8 +313,7 @@ raw_again:
 		break;
 
 	case '^':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -336,8 +325,7 @@ raw_again:
 		break;
 
 	case '%':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -349,8 +337,7 @@ raw_again:
 		break;
 
 	case ':':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
@@ -379,14 +366,12 @@ raw_again:
 		break;
 
 	case 'r':
-		if likely(iter < self->jl_end)
-			{
+		if likely(iter < self->jl_end) {
 			ch = *iter;
 			if (ch == '\'' || ch == '\"') {
 				/* Raw string literal. */
 				++iter;
-				if unlikely(iter >= self->jl_end)
-					{
+				if unlikely(iter >= self->jl_end) {
 					self->jl_tokstart = (unsigned char *)"r\"\"";
 					self->jl_tokend   = self->jl_tokstart + 3;
 				} else {
@@ -401,8 +386,7 @@ raw_again:
 
 
 	default:
-		if unlikely(ch > 0x7f)
-			{
+		if unlikely(ch > 0x7f) {
 			/* UTF-8 sequence. */
 			--iter;
 			ch32 = utf8_readchar((char const **)&iter,

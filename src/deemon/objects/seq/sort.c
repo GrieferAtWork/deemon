@@ -72,8 +72,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 		iter2 = temp + s1;
 		while (s1 && s2) {
 			error = DeeObject_CompareLo(*iter1, *iter2);
-			if unlikely(error < 0)
-				{
+			if unlikely(error < 0) {
 				if (!DeeError_Catch(&DeeError_TypeError) &&
 				    !DeeError_Catch(&DeeError_NotImplemented))
 					goto err;
@@ -283,8 +282,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 		DeeObject **temp;
 		/* Default case: Do an actual merge-sort. */
 		temp = (DeeObject **)Dee_TryMalloc(objc * sizeof(DeeObject *));
-		if unlikely(!temp)
-			{
+		if unlikely(!temp) {
 			/* Use a fallback sorting function */
 			result = key
 			         ? insertsort_impl_p(dst, src, objc, key)

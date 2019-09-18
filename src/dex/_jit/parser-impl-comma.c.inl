@@ -352,8 +352,7 @@ err_currrent_var_symbol:
 #ifdef JIT_EVAL
 				LOAD_LVALUE(args, err_currrent_var_symbol);
 				merge = DeeTuple_PackSymbolic(1, args);
-				if unlikely(!merge)
-					{
+				if unlikely(!merge) {
 					Dee_Decref(args);
 					goto err_currrent_var_symbol;
 				}
@@ -382,8 +381,7 @@ err_currrent_var_symbol:
 					LOAD_LVALUE(args, err_currrent_var_symbol);
 				}
 				if (has_paren) {
-					if likely(self->jl_tok == ')')
-						{
+					if likely(self->jl_tok == ')') {
 						JITLexer_Yield(self);
 					} else {
 						syn_call_expected_rparen_after_call(self);
@@ -556,8 +554,7 @@ err_current_lvalue:
 				ASSERT(current_lvalue.lv_kind != JIT_LVALUE_NONE);
 				error = JITLValueList_Append(&expr_comma,
 				                             &current_lvalue);
-				if unlikely(error)
-					{
+				if unlikely(error) {
 err_store_source_current_lvalue:
 					Dee_Decref(store_source);
 					goto err_current_lvalue;
@@ -565,8 +562,7 @@ err_store_source_current_lvalue:
 			} else {
 				ASSERT(current_lvalue.lv_kind == JIT_LVALUE_NONE);
 				error = JITLValueList_AppendRValue(&expr_comma, current);
-				if unlikely(error)
-					{
+				if unlikely(error) {
 					/*err_store_source_current:*/
 					Dee_Decref(store_source);
 					goto err_current;
@@ -581,8 +577,7 @@ err_store_source_current_lvalue:
 				size_t i;
 				expand_count = expr_comma.ll_size;
 				buf          = objectlist_alloc(&expr_batch, expand_count);
-				if unlikely(!buf)
-					{
+				if unlikely(!buf) {
 err_store_source:
 					Dee_Decref(store_source);
 					goto err;
@@ -590,8 +585,7 @@ err_store_source:
 				error = DeeObject_Unpack(store_source,
 				                         expand_count,
 				                         buf);
-				if unlikely(error)
-					{
+				if unlikely(error) {
 					expr_batch.ol_size -= expand_count;
 					goto err_store_source;
 				}
@@ -774,8 +768,7 @@ done_expression_nomerge:
 			*pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi) {
 		/* Consume a `;' token as part of the expression. */
-		if likely(self->jl_tok == ';')
-			{
+		if likely(self->jl_tok == ';') {
 			JITLexer_Yield(self);
 		} else {
 			syn_expr_expected_semi_after_expr(self);

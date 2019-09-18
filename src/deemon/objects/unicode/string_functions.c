@@ -615,8 +615,7 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
 			                           (size_t)(iter.cp8 - flush_start.cp8)) < 0)
 				goto err;
 			/* Replace with white-space. */
-			if likely(tab_width)
-				{
+			if likely(tab_width) {
 				line_inset = tab_width - (line_inset % tab_width);
 				if (unicode_printer_repeatascii(&printer, UNICODE_SPACE, line_inset) < 0)
 					goto err;
@@ -650,8 +649,7 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
 			                            (size_t)(iter.cp16 - flush_start.cp16)) < 0)
 				goto err;
 			/* Replace with white-space. */
-			if likely(tab_width)
-				{
+			if likely(tab_width) {
 				line_inset = tab_width - (line_inset % tab_width);
 				if (unicode_printer_repeatascii(&printer, UNICODE_SPACE, line_inset) < 0)
 					goto err;
@@ -685,8 +683,7 @@ DeeString_ExpandTabs(DeeObject *__restrict self, size_t tab_width) {
 			                            (size_t)(iter.cp32 - flush_start.cp32)) < 0)
 				goto err;
 			/* Replace with white-space. */
-			if likely(tab_width)
-				{
+			if likely(tab_width) {
 				line_inset = tab_width - (line_inset % tab_width);
 				if (unicode_printer_repeatascii(&printer, UNICODE_SPACE, line_inset) < 0)
 					goto err;
@@ -2286,8 +2283,7 @@ string_ord(String *__restrict self,
 			                        DeeString_WLEN(self));
 			goto err;
 		}
-	} else if unlikely(DeeString_WLEN(self) != 1)
-	{
+	} else if unlikely(DeeString_WLEN(self) != 1) {
 		err_expected_single_character_string((DeeObject *)self);
 		goto err;
 	}
@@ -2417,8 +2413,7 @@ string_asnumber(String *__restrict self,
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asnumber", &index, &defl))
 			goto err;
-		if unlikely(index >= DeeString_WLEN(self))
-			{
+		if unlikely(index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeString_WLEN(self));
 			goto err;
@@ -2456,8 +2451,7 @@ string_asdigit(String *__restrict self,
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asdigit", &index, &defl))
 			goto err;
-		if unlikely(index >= DeeString_WLEN(self))
-			{
+		if unlikely(index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeString_WLEN(self));
 			goto err;
@@ -2495,8 +2489,7 @@ string_asdecimal(String *__restrict self,
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asdecimal", &index, &defl))
 			goto err;
-		if unlikely(index >= DeeString_WLEN(self))
-			{
+		if unlikely(index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeString_WLEN(self));
 			goto err;
@@ -3871,8 +3864,7 @@ string_segments(String *__restrict self,
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:segments", &substring_length))
 		return NULL;
-	if unlikely(!substring_length)
-		{
+	if unlikely(!substring_length) {
 		err_invalid_segment_size(substring_length);
 		return NULL;
 	}
@@ -3886,8 +3878,7 @@ string_distribute(String *__restrict self,
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &substring_count))
 		return NULL;
-	if unlikely(!substring_count)
-		{
+	if unlikely(!substring_count) {
 		err_invalid_distribution_count(substring_count);
 		return NULL;
 	}

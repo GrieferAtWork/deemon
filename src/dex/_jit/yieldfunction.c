@@ -390,8 +390,7 @@ JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 		} else if (JITLexer_ISKWD(self, "catch")) {
 			/* Simply skip catch statements. */
 			JITLexer_Yield(self);
-			if likely(self->jl_tok == '(')
-				{
+			if likely(self->jl_tok == '(') {
 				JITLexer_Yield(self);
 			} else {
 				syn_try_expected_lparen_after_catch(self);
@@ -626,8 +625,7 @@ do_skip_else:
 		goto do_pop_state_scope;
 
 	case JIT_STATE_KIND_WITH:
-		if unlikely(DeeObject_Leave(st->js_with.w_obj))
-			{
+		if unlikely(DeeObject_Leave(st->js_with.w_obj)) {
 			/* Still pop the state upon error! */
 			self->ji_state = st->js_prev;
 			jit_state_destroy(st);
@@ -1007,8 +1005,7 @@ parse_again_same_statement:
 				DREF DeeObject *value;
 				int temp;
 				JITLexer_Yield(&self->ji_lex);
-				if likely(self->ji_lex.jl_tok == '(')
-					{
+				if likely(self->ji_lex.jl_tok == '(') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_if_expected_lparen_after_if(&self->ji_lex);
@@ -1022,8 +1019,7 @@ parse_again_same_statement:
 				Dee_Decref(value);
 				if unlikely(temp < 0)
 					goto err_scope;
-				if likely(self->ji_lex.jl_tok == ')')
-					{
+				if likely(self->ji_lex.jl_tok == ')') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_if_expected_rparen_after_if(&self->ji_lex);
@@ -1118,8 +1114,7 @@ parse_else_after_if:
 			    tok_begin[2] == 'r') {
 				struct jit_state *st;
 				JITLexer_Yield(&self->ji_lex);
-				if likely(self->ji_lex.jl_tok == '(')
-					{
+				if likely(self->ji_lex.jl_tok == '(') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_for_expected_lparen_after_for(&self->ji_lex);
@@ -1152,14 +1147,12 @@ parse_else_after_if:
 					JITLexer_Yield(&self->ji_lex);
 					/* Parse the sequence expression. */
 					result = JITLexer_EvalRValue(&self->ji_lex);
-					if unlikely(!result)
-						{
+					if unlikely(!result) {
 err_elem_lvalue_scope:
 						JITLValue_Fini(&elem_lvalue);
 						goto err_scope;
 					}
-					if likely(self->ji_lex.jl_tok == ')')
-						{
+					if likely(self->ji_lex.jl_tok == ')') {
 						JITLexer_Yield(&self->ji_lex);
 					} else {
 						syn_for_expected_rparen_after_foreach(&self->ji_lex);
@@ -1191,8 +1184,7 @@ err_elem_lvalue_scope:
 					                          &self->ji_ctx,
 					                          result);
 					Dee_Decref(result);
-					if unlikely(temp)
-						{
+					if unlikely(temp) {
 err_iter_scope_lvalue:
 						Dee_Decref(iter);
 						goto err_elem_lvalue_scope;
@@ -1252,8 +1244,7 @@ do_normal_for_noinit:
 							if (self->ji_lex.jl_tok != ')' &&
 							    JITLexer_SkipExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL))
 								goto err;
-							if likely(self->ji_lex.jl_tok == ')')
-								{
+							if likely(self->ji_lex.jl_tok == ')') {
 								JITLexer_Yield(&self->ji_lex);
 							} else {
 err_missing_rparen_after_for:
@@ -1274,8 +1265,7 @@ err_missing_rparen_after_for:
 						next_start = self->ji_lex.jl_tokstart;
 						if (JITLexer_SkipExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL))
 							goto err_scope;
-						if likely(self->ji_lex.jl_tok == ')')
-							{
+						if likely(self->ji_lex.jl_tok == ')') {
 							JITLexer_Yield(&self->ji_lex);
 						} else {
 							goto err_missing_rparen_after_for;
@@ -1305,8 +1295,7 @@ err_missing_rparen_after_for:
 				struct jit_state *st;
 				DREF DeeObject *obj;
 				JITLexer_Yield(&self->ji_lex);
-				if likely(self->ji_lex.jl_tok == '(')
-					{
+				if likely(self->ji_lex.jl_tok == '(') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_with_expected_lparen_after_with(&self->ji_lex);
@@ -1316,8 +1305,7 @@ err_missing_rparen_after_for:
 				obj = JITLexer_EvalRValueDecl(&self->ji_lex);
 				if unlikely(!obj)
 					goto err_scope;
-				if likely(self->ji_lex.jl_tok == ')')
-					{
+				if likely(self->ji_lex.jl_tok == ')') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_with_expected_rparen_after_with(&self->ji_lex);
@@ -1329,8 +1317,7 @@ err_obj_scope:
 				if unlikely(!st)
 					goto err_obj_scope;
 				/* Invoke `operator enter()' on the with-object */
-				if unlikely(DeeObject_Enter(obj))
-					{
+				if unlikely(DeeObject_Enter(obj)) {
 					jit_state_free(st);
 					goto err_obj_scope;
 				}
@@ -1351,8 +1338,7 @@ err_obj_scope:
 				JITLexer_Yield(&self->ji_lex);
 				result = JITLexer_EvalRValue(&self->ji_lex);
 				/* Consume the trailing `;' that is required for yield statements. */
-				if likely(self->ji_lex.jl_tok == ';')
-					{
+				if likely(self->ji_lex.jl_tok == ';') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_yield_expected_semi_after_yield(&self->ji_lex);
@@ -1367,8 +1353,7 @@ err_obj_scope:
 				DREF DeeObject *value;
 				int temp;
 				JITLexer_Yield(&self->ji_lex);
-				if likely(self->ji_lex.jl_tok == '(')
-					{
+				if likely(self->ji_lex.jl_tok == '(') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_while_expected_lparen_after_while(&self->ji_lex);
@@ -1380,8 +1365,7 @@ err_obj_scope:
 				value      = JITLexer_EvalRValueDecl(&self->ji_lex);
 				if unlikely(!value)
 					goto err_scope;
-				if likely(self->ji_lex.jl_tok == ')')
-					{
+				if likely(self->ji_lex.jl_tok == ')') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					Dee_Decref(value);
@@ -1435,8 +1419,7 @@ err_obj_scope:
 				JITLValue elem_lvalue;
 				DREF DeeObject *iter;
 				JITLexer_Yield(&self->ji_lex);
-				if likely(self->ji_lex.jl_tok == '(')
-					{
+				if likely(self->ji_lex.jl_tok == '(') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_foreach_expected_lparen_after_foreach(&self->ji_lex);
@@ -1474,14 +1457,12 @@ err_obj_scope:
 				JITLexer_Yield(&self->ji_lex);
 				/* Parse the sequence expression. */
 				iter = JITLexer_EvalRValue(&self->ji_lex);
-				if unlikely(!iter)
-					{
+				if unlikely(!iter) {
 err_elem_lvalue_scope_2:
 					JITLValue_Fini(&elem_lvalue);
 					goto err_scope;
 				}
-				if likely(self->ji_lex.jl_tok == ')')
-					{
+				if likely(self->ji_lex.jl_tok == ')') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_foreach_expected_rparen_after_foreach(&self->ji_lex);
@@ -1509,8 +1490,7 @@ err_elem_lvalue_scope_2:
 				                          &self->ji_ctx,
 				                          result);
 				Dee_Decref(result);
-				if unlikely(temp)
-					{
+				if unlikely(temp) {
 err_iter_scope_lvalue_2:
 					Dee_Decref(iter);
 					goto err_elem_lvalue_scope_2;
@@ -1658,8 +1638,7 @@ service_exception_handlers:
 							size_t symbol_size;
 							/* Simply skip catch statements. */
 							JITLexer_Yield(&self->ji_lex);
-							if likely(self->ji_lex.jl_tok == '(')
-								{
+							if likely(self->ji_lex.jl_tok == '(') {
 								JITLexer_Yield(&self->ji_lex);
 							} else {
 								syn_try_expected_lparen_after_catch(&self->ji_lex);
@@ -1699,8 +1678,7 @@ service_exception_handlers:
 								old_except_sz = ts->t_exceptsz;
 								handler_start = self->ji_lex.jl_tokstart;
 								result        = JITLexer_EvalStatement(&self->ji_lex);
-								if unlikely(!result)
-									{
+								if unlikely(!result) {
 									if (self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)
 										goto err_scope;
 									JITContext_PopScope(&self->ji_ctx);

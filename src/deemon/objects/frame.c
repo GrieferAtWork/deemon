@@ -243,8 +243,7 @@ frame_getddi(Frame *__restrict self,
 	code_addr_t startip;
 	DREF DeeCodeObject *code;
 	rwlock_read(&self->f_lock);
-	if unlikely(!self->f_frame)
-		{
+	if unlikely(!self->f_frame) {
 		rwlock_endread(&self->f_lock);
 		return (DREF DeeCodeObject *)ITER_DONE;
 	}
@@ -432,8 +431,7 @@ PRIVATE DREF DeeObject *DCALL
 frame_getfunc(Frame *__restrict self) {
 	DREF DeeFunctionObject *result;
 	rwlock_read(&self->f_lock);
-	if unlikely(!self->f_frame)
-		{
+	if unlikely(!self->f_frame) {
 		rwlock_endread(&self->f_lock);
 		return_none;
 	}
@@ -525,8 +523,7 @@ frame_getsp(Frame *__restrict self) {
 	uint16_t flags = ATOMIC_READ(self->f_flags);
 	if (!(flags & DEEFRAME_FUNDEFSP)) {
 		rwlock_read(&self->f_lock);
-		if unlikely(!self->f_frame)
-			{
+		if unlikely(!self->f_frame) {
 			rwlock_endread(&self->f_lock);
 			return -2;
 		}

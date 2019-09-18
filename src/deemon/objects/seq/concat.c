@@ -651,8 +651,7 @@ check_temp_for_errors:
 	temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min),
 	                    start, (size_t)-1, keyed_search_item, key);
 check_final_temp_from_first:
-	if likely(temp != (size_t)-2)
-		{
+	if likely(temp != (size_t)-2) {
 		if (temp != (size_t)-1) {
 add_start_offset:
 			if (OVERFLOW_UADD(temp, start_offset, &temp))
@@ -741,8 +740,7 @@ PRIVATE DREF Cat *DCALL
 cat_deepcopy(Cat *__restrict self) {
 	DREF Cat *result;
 	result = (DREF Cat *)tuple_deepcopy((Tuple *)self);
-	if likely(result)
-		{
+	if likely(result) {
 		Dee_Incref(&SeqConcat_Type);
 		result->ob_type = &SeqConcat_Type;
 		Dee_DecrefNokill(&DeeTuple_Type);

@@ -238,8 +238,7 @@ JITLValue_GetValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_POINTER:
 		result = *self->lv_ptr;
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 err_unbound:
 			DeeError_Throwf(&DeeError_UnboundLocal,
 			                "Unbound local variable");
@@ -263,8 +262,7 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_GLOBAL:
-		if unlikely(!context->jc_globals)
-			{
+		if unlikely(!context->jc_globals) {
 			err_unknown_global((DeeObject *)self->lv_global);
 			goto err;
 		}
@@ -273,8 +271,7 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
-		if unlikely(!context->jc_globals)
-			{
+		if unlikely(!context->jc_globals) {
 			err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
 			                           self->lv_globalstr.lg_namelen);
 			goto err;
@@ -527,8 +524,7 @@ JITLValueList_Append(JITLValueList *__restrict self,
 		new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
 		                                       new_alloc *
 		                                       sizeof(JITLValue));
-		if unlikely(!new_list)
-			{
+		if unlikely(!new_list) {
 			new_alloc = self->ll_size + 1;
 			new_list = (JITLValue *)Dee_Realloc(self->ll_list,
 			                                    new_alloc *
@@ -561,8 +557,7 @@ JITLValueList_AppendRValue(JITLValueList *__restrict self,
 		new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
 		                                       new_alloc *
 		                                       sizeof(JITLValue));
-		if unlikely(!new_list)
-			{
+		if unlikely(!new_list) {
 			new_alloc = self->ll_size + 1;
 			new_list = (JITLValue *)Dee_Realloc(self->ll_list,
 			                                    new_alloc *
@@ -655,8 +650,7 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 		goto err;
 	for (; i < self->ll_size; ++i) {
 		elem = DeeObject_IterNext(iterator);
-		if unlikely(!ITER_ISOK(elem))
-			{
+		if unlikely(!ITER_ISOK(elem)) {
 			if (elem)
 				err_invalid_unpack_size(values, self->ll_size, i);
 			goto err_iter;
@@ -670,8 +664,7 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 	}
 	/* Check to make sure that the iterator actually ends here. */
 	elem = DeeObject_IterNext(iterator);
-	if unlikely(elem != ITER_DONE)
-		{
+	if unlikely(elem != ITER_DONE) {
 		if (elem)
 			err_invalid_unpack_iter_size(values, iterator, self->ll_size);
 		goto err_iter;

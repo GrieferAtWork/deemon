@@ -262,10 +262,8 @@ ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
 #else /* !NDEBUG */
 	result = ast_alloc();
 #endif /* NDEBUG */
-	if likely(result)
-		{
-		if unlikely(set_astloc_from_obj(loc, result))
-			{
+	if likely(result) {
+		if unlikely(set_astloc_from_obj(loc, result)) {
 			ast_free(result);
 			result = NULL;
 		} else {
@@ -289,8 +287,7 @@ get_scope(DeeCompilerScopeObject *scope) {
 		return current_scope;
 	if (DeeObject_AssertType((DeeObject *)scope, &DeeCompilerScope_Type))
 		goto err;
-	if unlikely(scope->ci_compiler != DeeCompiler_Current)
-		{
+	if unlikely(scope->ci_compiler != DeeCompiler_Current) {
 		err_invalid_scope_compiler(scope);
 		goto err;
 	}
@@ -344,20 +341,17 @@ ast_makesym(DeeCompilerObject *__restrict self,
 		goto done;
 	if (DeeObject_AssertTypeExact((DeeObject *)sym, &DeeCompilerSymbol_Type))
 		goto done;
-	if unlikely(sym->ci_compiler != self)
-		{
+	if unlikely(sym->ci_compiler != self) {
 		err_invalid_symbol_compiler(sym);
 		goto done;
 	}
-	if unlikely(!sym->ci_value)
-		{
+	if unlikely(!sym->ci_value) {
 		err_compiler_item_deleted((DeeCompilerItemObject *)sym);
 		goto done;
 	}
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value))
-		{
+	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value)) {
 		err_symbol_not_reachable(ast_scope, sym->ci_value);
 		goto done;
 	}
@@ -390,20 +384,17 @@ ast_makeunbind(DeeCompilerObject *__restrict self,
 		goto done;
 	if (DeeObject_AssertTypeExact((DeeObject *)sym, &DeeCompilerSymbol_Type))
 		goto done;
-	if unlikely(sym->ci_compiler != self)
-		{
+	if unlikely(sym->ci_compiler != self) {
 		err_invalid_symbol_compiler(sym);
 		goto done;
 	}
-	if unlikely(!sym->ci_value)
-		{
+	if unlikely(!sym->ci_value) {
 		err_compiler_item_deleted((DeeCompilerItemObject *)sym);
 		goto done;
 	}
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value))
-		{
+	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value)) {
 		err_symbol_not_reachable(ast_scope, sym->ci_value);
 		goto done;
 	}
@@ -435,20 +426,17 @@ ast_makebound(DeeCompilerObject *__restrict self,
 		goto done;
 	if (DeeObject_AssertTypeExact((DeeObject *)sym, &DeeCompilerSymbol_Type))
 		goto done;
-	if unlikely(sym->ci_compiler != self)
-		{
+	if unlikely(sym->ci_compiler != self) {
 		err_invalid_symbol_compiler(sym);
 		goto done;
 	}
-	if unlikely(!sym->ci_value)
-		{
+	if unlikely(!sym->ci_value) {
 		err_compiler_item_deleted((DeeCompilerItemObject *)sym);
 		goto done;
 	}
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value))
-		{
+	if unlikely(!scope_reaches_symbol(ast_scope, sym->ci_value)) {
 		err_symbol_not_reachable(ast_scope, sym->ci_value);
 		goto done;
 	}
@@ -525,8 +513,7 @@ ast_makemultiple(DeeCompilerObject *__restrict self,
 		/* Load the ast objects from each of the branches. */
 		if (DeeObject_AssertTypeExact((DeeObject *)branch_v[i], &DeeCompilerAst_Type))
 			goto err_branch_v;
-		if unlikely(branch_v[i]->ci_compiler != self)
-			{
+		if unlikely(branch_v[i]->ci_compiler != self) {
 			err_invalid_ast_compiler(branch_v[i]);
 			goto err_branch_v;
 		}
@@ -580,13 +567,11 @@ ast_makereturn(DeeCompilerObject *__restrict self,
 	if (!DeeNone_Check(expr)) {
 		if (DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerSymbol_Type))
 			goto done;
-		if unlikely(expr->ci_compiler != self)
-			{
+		if unlikely(expr->ci_compiler != self) {
 			err_invalid_ast_compiler(expr);
 			goto done;
 		}
-		if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(expr, ast_scope->s_base);
 			goto done;
 		}
@@ -624,13 +609,11 @@ ast_makeyield(DeeCompilerObject *__restrict self,
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(expr->ci_compiler != self)
-		{
+	if unlikely(expr->ci_compiler != self) {
 		err_invalid_ast_compiler(expr);
 		goto done;
 	}
-	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base)
-		{
+	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
 		err_invalid_ast_basescope(expr, ast_scope->s_base);
 		goto done;
 	}
@@ -665,13 +648,11 @@ ast_makethrow(DeeCompilerObject *__restrict self,
 	if (!DeeNone_Check(expr)) {
 		if (DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerSymbol_Type))
 			goto done;
-		if unlikely(expr->ci_compiler != self)
-			{
+		if unlikely(expr->ci_compiler != self) {
 			err_invalid_ast_compiler(expr);
 			goto done;
 		}
-		if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(expr, ast_scope->s_base);
 			goto done;
 		}
@@ -738,26 +719,22 @@ unpack_catch_expression(DeeObject *__restrict triple,
 	if (!DeeNone_Check(args[1])) {
 		if (DeeObject_AssertTypeExact((DeeObject *)args[1], &DeeCompilerAst_Type))
 			goto err;
-		if unlikely(args[1]->ci_compiler != DeeCompiler_Current)
-			{
+		if unlikely(args[1]->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(args[1]);
 			goto err;
 		}
-		if unlikely(args[1]->ci_value->a_scope->s_base != base_scope)
-			{
+		if unlikely(args[1]->ci_value->a_scope->s_base != base_scope) {
 			err_invalid_ast_basescope(args[1], base_scope);
 			goto err;
 		}
 	}
 	if (DeeObject_AssertTypeExact((DeeObject *)args[2], &DeeCompilerAst_Type))
 		goto err;
-	if unlikely(args[2]->ci_compiler != DeeCompiler_Current)
-		{
+	if unlikely(args[2]->ci_compiler != DeeCompiler_Current) {
 		err_invalid_ast_compiler(args[2]);
 		goto err;
 	}
-	if unlikely(args[2]->ci_value->a_scope->s_base != base_scope)
-		{
+	if unlikely(args[2]->ci_value->a_scope->s_base != base_scope) {
 		err_invalid_ast_basescope(args[2], base_scope);
 		goto err;
 	}
@@ -834,8 +811,7 @@ err_fast:
 				new_catch_a = 2;
 			new_catch_v = (struct catch_expr *)Dee_TryRealloc(catch_v, new_catch_a *
 			                                                           sizeof(struct catch_expr));
-			if unlikely(!new_catch_v)
-				{
+			if unlikely(!new_catch_v) {
 				new_catch_a = catch_c + 1;
 				new_catch_v = (struct catch_expr *)Dee_Realloc(catch_v, new_catch_a *
 				                                                        sizeof(struct catch_expr));
@@ -891,13 +867,11 @@ ast_maketry(DeeCompilerObject *__restrict self,
 		goto done;
 	if (DeeObject_AssertTypeExact((DeeObject *)guard, &DeeCompilerSymbol_Type))
 		goto done;
-	if unlikely(guard->ci_compiler != self)
-		{
+	if unlikely(guard->ci_compiler != self) {
 		err_invalid_ast_compiler(guard);
 		goto done;
 	}
-	if unlikely(guard->ci_value->a_scope->s_base != ast_scope->s_base)
-		{
+	if unlikely(guard->ci_value->a_scope->s_base != ast_scope->s_base) {
 		err_invalid_ast_basescope(guard, ast_scope->s_base);
 		goto done;
 	}
@@ -908,8 +882,7 @@ ast_maketry(DeeCompilerObject *__restrict self,
 	result_ast->a_try.t_catchv = unpack_catch_expressions(handlers,
 	                                                      &result_ast->a_try.t_catchc,
 	                                                      ast_scope->s_base);
-	if unlikely(!result_ast->a_try.t_catchv)
-		{
+	if unlikely(!result_ast->a_try.t_catchv) {
 		Dee_DecrefNokill(ast_scope);
 		Dee_DecrefNokill(&DeeAst_Type);
 		ast_free(result_ast);
@@ -978,8 +951,7 @@ ast_makeloop(DeeCompilerObject *__restrict self,
 	DeeCompilerAstObject *loop = (DeeCompilerAstObject *)Dee_None;
 	/* "(flags:?Dstring,ast elem=!N,ast iter,ast loop=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
 	 * "(flags:?Dstring,ast cond=!N,ast next=!N,ast loop=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
-	if unlikely(!argc)
-		{
+	if unlikely(!argc) {
 		err_invalid_argc("makeloop", argc, 1, 5);
 		goto done2;
 	}
@@ -1004,13 +976,11 @@ check_next:
 		/* The next (iter) operand is mandatory in foreach loop branches. */
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)next, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(next->ci_compiler != DeeCompiler_Current)
-			{
+		if unlikely(next->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(next);
 			goto done;
 		}
-		if unlikely(next->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(next->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(next, ast_scope->s_base);
 			goto done;
 		}
@@ -1026,13 +996,11 @@ check_next:
 	if (!DeeNone_Check(cond)) {
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)cond, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(cond->ci_compiler != DeeCompiler_Current)
-			{
+		if unlikely(cond->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(cond);
 			goto done;
 		}
-		if unlikely(cond->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(cond->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(cond, ast_scope->s_base);
 			goto done;
 		}
@@ -1040,13 +1008,11 @@ check_next:
 	if (!DeeNone_Check(loop)) {
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)loop, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(loop->ci_compiler != DeeCompiler_Current)
-			{
+		if unlikely(loop->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(loop);
 			goto done;
 		}
-		if unlikely(loop->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(loop->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(loop, ast_scope->s_base);
 			goto done;
 		}
@@ -1177,31 +1143,26 @@ ast_makeconditional(DeeCompilerObject *__restrict self,
 	}
 	if unlikely(DeeObject_AssertTypeExact((DeeObject *)cond, &DeeCompilerAst_Type))
 		goto done;
-	if unlikely(cond->ci_compiler != self)
-		{
+	if unlikely(cond->ci_compiler != self) {
 		err_invalid_ast_compiler(cond);
 		goto done;
 	}
-	if unlikely(cond->ci_value->a_scope->s_base != ast_scope->s_base)
-		{
+	if unlikely(cond->ci_value->a_scope->s_base != ast_scope->s_base) {
 		err_invalid_ast_basescope(cond, ast_scope->s_base);
 		goto done;
 	}
 	if (!DeeNone_Check(tt)) {
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)tt, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(tt->ci_compiler != self)
-			{
+		if unlikely(tt->ci_compiler != self) {
 			err_invalid_ast_compiler(tt);
 			goto done;
 		}
-		if unlikely(tt->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(tt->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(tt, ast_scope->s_base);
 			goto done;
 		}
-	} else if unlikely(DeeNone_Check(ff))
-	{
+	} else if unlikely(DeeNone_Check(ff)) {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Both the true-, as well as the false-branch have been given as `none'");
 		goto done;
@@ -1209,13 +1170,11 @@ ast_makeconditional(DeeCompilerObject *__restrict self,
 	if (!DeeNone_Check(ff)) {
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)ff, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(ff->ci_compiler != self)
-			{
+		if unlikely(ff->ci_compiler != self) {
 			err_invalid_ast_compiler(ff);
 			goto done;
 		}
-		if unlikely(ff->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(ff->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(ff, ast_scope->s_base);
 			goto done;
 		}
@@ -1264,13 +1223,11 @@ ast_makebool(DeeCompilerObject *__restrict self,
 		goto done;
 	if unlikely(DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerAst_Type))
 		goto done;
-	if unlikely(expr->ci_compiler != self)
-		{
+	if unlikely(expr->ci_compiler != self) {
 		err_invalid_ast_compiler(expr);
 		goto done;
 	}
-	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base)
-		{
+	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
 		err_invalid_ast_basescope(expr, ast_scope->s_base);
 		goto done;
 	}
@@ -1305,13 +1262,11 @@ ast_makeexpand(DeeCompilerObject *__restrict self,
 		goto done;
 	if unlikely(DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerAst_Type))
 		goto done;
-	if unlikely(expr->ci_compiler != self)
-		{
+	if unlikely(expr->ci_compiler != self) {
 		err_invalid_ast_compiler(expr);
 		goto done;
 	}
-	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base)
-		{
+	if unlikely(expr->ci_value->a_scope->s_base != ast_scope->s_base) {
 		err_invalid_ast_basescope(expr, ast_scope->s_base);
 		goto done;
 	}
@@ -1331,8 +1286,7 @@ done:
 INTERN int DCALL
 check_function_code_scope(DeeBaseScopeObject *code_scope,
                           DeeBaseScopeObject *ast_base_scope) {
-	if unlikely(code_scope == ast_base_scope)
-		{
+	if unlikely(code_scope == ast_base_scope) {
 		return DeeError_Throwf(&DeeError_ReferenceError,
 		                       "Function code cannot be located in the same "
 		                       "base-scope as the function initializer");
@@ -1343,8 +1297,7 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 		code_scope = code_scope->bs_prev;
 		if (code_scope == ast_base_scope)
 			break;
-		if unlikely(!code_scope)
-			{
+		if unlikely(!code_scope) {
 			return DeeError_Throwf(&DeeError_ReferenceError,
 			                       "Function initializer scope is not "
 			                       "reachable from function code");
@@ -1373,8 +1326,7 @@ ast_makefunction(DeeCompilerObject *__restrict self,
 		goto done;
 	if unlikely(DeeObject_AssertTypeExact((DeeObject *)code, &DeeCompilerAst_Type))
 		goto done;
-	if unlikely(code->ci_compiler != self)
-		{
+	if unlikely(code->ci_compiler != self) {
 		err_invalid_ast_compiler(code);
 		goto done;
 	}
@@ -1473,13 +1425,11 @@ ast_makeoperatorfunc(DeeCompilerObject *__restrict self,
 	if (!DeeNone_Check(binding)) {
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)binding, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(binding->ci_compiler != self)
-			{
+		if unlikely(binding->ci_compiler != self) {
 			err_invalid_ast_compiler(binding);
 			goto done;
 		}
-		if unlikely(binding->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(binding->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(binding, ast_scope->s_base);
 			goto done;
 		}
@@ -1574,52 +1524,44 @@ ast_makeoperator(DeeCompilerObject *__restrict self,
 	}
 	if unlikely(DeeObject_AssertTypeExact((DeeObject *)a, &DeeCompilerAst_Type))
 		goto done;
-	if unlikely(a->ci_compiler != self)
-		{
+	if unlikely(a->ci_compiler != self) {
 		err_invalid_ast_compiler(a);
 		goto done;
 	}
-	if unlikely(a->ci_value->a_scope->s_base != ast_scope->s_base)
-		{
+	if unlikely(a->ci_value->a_scope->s_base != ast_scope->s_base) {
 		err_invalid_ast_basescope(a, ast_scope->s_base);
 		goto done;
 	}
 	if (!DeeNone_Check(b)) {
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)b, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(b->ci_compiler != self)
-			{
+		if unlikely(b->ci_compiler != self) {
 			err_invalid_ast_compiler(b);
 			goto done;
 		}
-		if unlikely(b->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(b->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(b, ast_scope->s_base);
 			goto done;
 		}
 		if (!DeeNone_Check(c)) {
 			if unlikely(DeeObject_AssertTypeExact((DeeObject *)c, &DeeCompilerAst_Type))
 				goto done;
-			if unlikely(c->ci_compiler != self)
-				{
+			if unlikely(c->ci_compiler != self) {
 				err_invalid_ast_compiler(c);
 				goto done;
 			}
-			if unlikely(c->ci_value->a_scope->s_base != ast_scope->s_base)
-				{
+			if unlikely(c->ci_value->a_scope->s_base != ast_scope->s_base) {
 				err_invalid_ast_basescope(c, ast_scope->s_base);
 				goto done;
 			}
 			if (!DeeNone_Check(d)) {
 				if unlikely(DeeObject_AssertTypeExact((DeeObject *)d, &DeeCompilerAst_Type))
 					goto done;
-				if unlikely(d->ci_compiler != self)
-					{
+				if unlikely(d->ci_compiler != self) {
 					err_invalid_ast_compiler(d);
 					goto done;
 				}
-				if unlikely(d->ci_value->a_scope->s_base != ast_scope->s_base)
-					{
+				if unlikely(d->ci_value->a_scope->s_base != ast_scope->s_base) {
 					err_invalid_ast_basescope(d, ast_scope->s_base);
 					goto done;
 				}
@@ -1906,13 +1848,11 @@ ast_makeaction(DeeCompilerObject *__restrict self,
 		opc = 1;
 		if unlikely(DeeObject_AssertTypeExact((DeeObject *)a, &DeeCompilerAst_Type))
 			goto done;
-		if unlikely(a->ci_compiler != self)
-			{
+		if unlikely(a->ci_compiler != self) {
 			err_invalid_ast_compiler(a);
 			goto done;
 		}
-		if unlikely(a->ci_value->a_scope->s_base != ast_scope->s_base)
-			{
+		if unlikely(a->ci_value->a_scope->s_base != ast_scope->s_base) {
 			err_invalid_ast_basescope(a, ast_scope->s_base);
 			goto done;
 		}
@@ -1920,13 +1860,11 @@ ast_makeaction(DeeCompilerObject *__restrict self,
 			opc = 2;
 			if unlikely(DeeObject_AssertTypeExact((DeeObject *)b, &DeeCompilerAst_Type))
 				goto done;
-			if unlikely(b->ci_compiler != self)
-				{
+			if unlikely(b->ci_compiler != self) {
 				err_invalid_ast_compiler(b);
 				goto done;
 			}
-			if unlikely(b->ci_value->a_scope->s_base != ast_scope->s_base)
-				{
+			if unlikely(b->ci_value->a_scope->s_base != ast_scope->s_base) {
 				err_invalid_ast_basescope(b, ast_scope->s_base);
 				goto done;
 			}
@@ -1934,13 +1872,11 @@ ast_makeaction(DeeCompilerObject *__restrict self,
 				opc = 3;
 				if unlikely(DeeObject_AssertTypeExact((DeeObject *)c, &DeeCompilerAst_Type))
 					goto done;
-				if unlikely(c->ci_compiler != self)
-					{
+				if unlikely(c->ci_compiler != self) {
 					err_invalid_ast_compiler(c);
 					goto done;
 				}
-				if unlikely(c->ci_value->a_scope->s_base != ast_scope->s_base)
-					{
+				if unlikely(c->ci_value->a_scope->s_base != ast_scope->s_base) {
 					err_invalid_ast_basescope(c, ast_scope->s_base);
 					goto done;
 				}

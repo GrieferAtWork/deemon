@@ -964,8 +964,7 @@ DeeFile_PrintAllSp(DeeObject *__restrict self,
 	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
 		result = DeeFile_PrintObjectSp(self, elem);
 		Dee_Decref(elem);
-		if unlikely(result)
-			{
+		if unlikely(result) {
 			Dee_Decref(ob);
 			return result;
 		}
@@ -1254,8 +1253,7 @@ found_option:
 	}
 	/* Actually open the file. */
 	result = DeeFile_Open(path, oflags, mode);
-	if unlikely(!ITER_ISOK(result))
-		{
+	if unlikely(!ITER_ISOK(result)) {
 		if unlikely(!result)
 			goto err;
 		/* Handle file-not-found / file-already-exists errors. */
@@ -1387,8 +1385,7 @@ create_std_buffer(unsigned int id) {
 	rwlock_write(&dee_std_lock);
 	/* Save the newly created buffer in the standard stream vector. */
 	new_result = dee_std[id];
-	if unlikely(new_result != ITER_DONE)
-		{
+	if unlikely(new_result != ITER_DONE) {
 		Dee_XIncref(new_result);
 		rwlock_endwrite(&dee_std_lock);
 		Dee_Decref(result);
@@ -1413,8 +1410,7 @@ DeeFile_GetStd(unsigned int id) {
 	ASSERT(id < DEE_STDCNT);
 	rwlock_read(&dee_std_lock);
 	result = dee_std[id];
-	if unlikely(!ITER_ISOK(result))
-		{
+	if unlikely(!ITER_ISOK(result)) {
 		rwlock_endread(&dee_std_lock);
 		/* When the stream is `ITER_DONE', lazily create the STD stream. */
 		if (result == ITER_DONE)
@@ -1435,8 +1431,7 @@ DeeFile_TryGetStd(unsigned int id) {
 	ASSERT(id < DEE_STDCNT);
 	rwlock_read(&dee_std_lock);
 	result = dee_std[id];
-	if unlikely(!ITER_ISOK(result))
-		{
+	if unlikely(!ITER_ISOK(result)) {
 		rwlock_endread(&dee_std_lock);
 		/* When the stream is `ITER_DONE', lazily create the STD stream. */
 		if (result == ITER_DONE) {
@@ -1480,20 +1475,17 @@ get_files_object(DeeObject *__restrict name) {
 again:
 	rwlock_read(&files_module_lock);
 	mod = files_module;
-	if unlikely(!mod)
-		{
+	if unlikely(!mod) {
 		rwlock_endread(&files_module_lock);
 		mod = DeeModule_OpenGlobal(&str_files, NULL, true);
 		if unlikely(!mod)
 			return NULL;
-		if unlikely(DeeModule_RunInit(mod) < 0)
-			{
+		if unlikely(DeeModule_RunInit(mod) < 0) {
 			Dee_Decref(mod);
 			return NULL;
 		}
 		rwlock_write(&files_module_lock);
-		if unlikely(ATOMIC_READ(files_module))
-			{
+		if unlikely(ATOMIC_READ(files_module)) {
 			rwlock_endwrite(&files_module_lock);
 			Dee_Decref(mod);
 			goto again;
@@ -1698,8 +1690,7 @@ PUBLIC dpos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, &str_size, 0, NULL);
-	if likely(result)
-		{
+	if likely(result) {
 		dpos_t resval;
 		int error;
 		error = DeeObject_AsUInt64(result, &resval);
@@ -1707,8 +1698,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 		if unlikely(error)
 			goto err;
 		/* Ensure that the file isn't too large. */
-		if unlikely(resval == (dpos_t)-1)
-			{
+		if unlikely(resval == (dpos_t)-1) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Failed %k is too large (%I64u is bigger than 2^63 bytes)",
 			                self, resval);
@@ -2295,8 +2285,7 @@ file_shr(DeeObject *__restrict self,
 	DeeObject_PutBuf(some_object, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result < 0)
 		goto err;
-	if unlikely((size_t)result < buffer.bb_size)
-		{
+	if unlikely((size_t)result < buffer.bb_size) {
 		DeeError_Throwf(&DeeError_FSError,
 		                "Failed to fill the entire buffer of %Iu bytes when only %Iu were read",
 		                buffer.bb_size, (size_t)result);

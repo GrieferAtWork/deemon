@@ -113,8 +113,7 @@ ast_genasm_set(struct ast *__restrict self,
 		DREF DeeObject *inner_set;
 		int result;
 		inner_set = DeeRoSet_FromSequence(self->a_constexpr);
-		if unlikely(!inner_set)
-			{
+		if unlikely(!inner_set) {
 restore_error:
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 			goto push_generic;

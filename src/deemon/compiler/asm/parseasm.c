@@ -118,8 +118,7 @@ PRIVATE bool FCALL symtab_rehash(void) {
 	new_size *= 2;
 rehash_realloc:
 	new_map = (struct asm_sym **)Dee_TryCalloc(new_size * sizeof(struct asm_sym *));
-	if unlikely(!new_map)
-		{
+	if unlikely(!new_map) {
 		if (new_size != 1) {
 			new_size = 1;
 			goto rehash_realloc;
@@ -250,8 +249,7 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 			presult = &result->as_uhnxt;
 		}
 	}
-	if unlikely(return_back_symbol)
-		{
+	if unlikely(return_back_symbol) {
 		/* If the symbol doesn't already exist,
 		 * backward referencing is illegal. */
 		DeeError_Throwf(&DeeError_CompilerError,
@@ -847,8 +845,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		if unlikely(!symbol_name)
 			goto err_module;
 		modsym = import_module_symbol(module, symbol_name);
-		if unlikely(!modsym)
-			{
+		if unlikely(!modsym) {
 			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 			         symbol_name->k_name,
 			         DeeString_STR(module->mo_name)))
@@ -975,8 +972,7 @@ PRIVATE int32_t FCALL do_parse_constexpr(void) {
 	if unlikely(!imm_const)
 		goto err;
 	/* Optimize the constant branch to allow for constant propagation. */
-	if unlikely(ast_optimize_all(imm_const, true))
-		{
+	if unlikely(ast_optimize_all(imm_const, true)) {
 err_imm_const:
 		ast_decref(imm_const);
 		goto err;
@@ -1816,8 +1812,7 @@ read_mnemonic_name:
 		struct asm_sym *sym = uasm_symbol(name);
 		if unlikely(!sym)
 			goto err;
-		if unlikely(ASM_SYM_DEFINED(sym))
-			{
+		if unlikely(ASM_SYM_DEFINED(sym)) {
 			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, name->k_name))
 				goto err;
 		} else {
@@ -1955,8 +1950,7 @@ do_stack_prefix:
 	/* All right! got the name of the instruction.
 	 * Now use it to lookup a mnemonic. */
 	mnemonic = asm_mnemonic_lookup(name);
-	if unlikely(!mnemonic)
-		{
+	if unlikely(!mnemonic) {
 		if (WARN(W_UASM_UNKNOWN_MNEMONIC, name))
 			goto err;
 		/* Unknown mnemonic... (Discard the remainder of the line) */
@@ -2028,8 +2022,7 @@ continue_line:
 		    unlikely(yield() < 0))
 			goto err;
 		/* Warn if this didn't go anywhere. */
-		if unlikely(old_num == token.t_num)
-			{
+		if unlikely(old_num == token.t_num) {
 			if (WARN(W_UASM_PARSING_FAILED))
 				goto err;
 			if unlikely(yield() < 0)

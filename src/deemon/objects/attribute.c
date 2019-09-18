@@ -394,8 +394,7 @@ string_to_attrflags(char const *__restrict str,
 		char ch = *str++;
 		unsigned int i;
 		for (i = 0; attr_flags[i] != ch; ++i) {
-			if unlikely(i >= COMPILER_LENOF(attr_flags))
-				{
+			if unlikely(i >= COMPILER_LENOF(attr_flags)) {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Unknown attribute flag %:1q",
 				                str - 1);
@@ -470,8 +469,7 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
 		err_unknown_attribute_lookup(Dee_TYPE(search_self), rules.alr_name);
 		goto err;
 	}
-	if likely(!lookup_error)
-		{
+	if likely(!lookup_error) {
 		self->a_name = DeeString_STR(argv[1]);
 		self->a_info.a_perm |= ATTR_NAMEOBJ;
 		Dee_Incref(argv[1]);
@@ -762,8 +760,7 @@ save_attr(DeeObject *__restrict declarator,
 do_realloc:
 		new_vector = (DREF Attr **)Dee_TryRealloc(self->al_v, new_alloc *
 		                                                      sizeof(DREF Attr *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_alloc != self->al_c + 1) {
 				new_alloc = self->al_c + 1;
 				goto do_realloc;
@@ -1141,8 +1138,7 @@ enumattr_start(EnumAttrIter *__restrict self) {
                                     self->ei_seq->ea_obj,
                                     (denum_t)&enumattr_longjmp, self);
 	/* -1 indicates an internal error, rather than stop-enumeration (with is -2). */
-	if unlikely(enum_error == -1)
-		{
+	if unlikely(enum_error == -1) {
 		/* Discard all unyielded attributes and enter an error state. */
 		while (self->ei_bufpos != self->ei_buffer) {
 			--self->ei_bufpos;

@@ -267,8 +267,7 @@ F(float_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	if (DeeObject_AsDouble(some_object, &other_value))
 		return NULL;
-	if unlikely(!other_value)
-		{
+	if unlikely(!other_value) {
 		F(float_divzero)
 		(value, some_object);
 		return NULL;
@@ -312,8 +311,7 @@ F(float_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
 		return -1;
-	if unlikely(!other_value)
-		{
+	if unlikely(!other_value) {
 		T value;
 		CTYPES_FAULTPROTECT(value = *self, return -1);
 		F(float_divzero)

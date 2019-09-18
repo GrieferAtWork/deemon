@@ -376,8 +376,7 @@ next_ip:
 				struct ddi_saved *save;
 				/* Save the current register state. */
 				save = (struct ddi_saved *)Dee_TryMalloc(sizeof(struct ddi_saved));
-				if unlikely(!save)
-					{
+				if unlikely(!save) {
 					if (flags & DDI_STATE_FNOTHROW)
 						goto next_ip;
 					save = (struct ddi_saved *)Dee_Malloc(sizeof(struct ddi_saved));
@@ -395,8 +394,7 @@ next_ip:
 				else {
 					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc *
 					                                                   sizeof(uint16_t));
-					if unlikely(!save->s_save.dx_lcnamv)
-						{
+					if unlikely(!save->s_save.dx_lcnamv) {
 						if (flags & DDI_STATE_FNOTHROW) {
 							Dee_Free(save);
 							goto next_ip;
@@ -423,8 +421,7 @@ next_ip:
 				else {
 					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMalloc(save->s_save.dx_spnama *
 					                                                   sizeof(uint16_t));
-					if unlikely(!save->s_save.dx_spnamv)
-						{
+					if unlikely(!save->s_save.dx_spnamv) {
 						if (flags & DDI_STATE_FNOTHROW) {
 							Dee_Free(save->s_save.dx_lcnamv);
 							Dee_Free(save);
@@ -500,8 +497,7 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	else {
 		self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc *
 		                                                     sizeof(uint16_t));
-		if unlikely(!self->rs_xregs.dx_lcnamv)
-			{
+		if unlikely(!self->rs_xregs.dx_lcnamv) {
 			if (flags & DDI_STATE_FNOTHROW)
 				self->rs_xregs.dx_lcnamc = 0;
 			else {

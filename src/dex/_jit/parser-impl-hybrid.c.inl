@@ -44,8 +44,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 		result = FUNC(BraceItems)(self);
 		if (ISERR(result))
 			goto err;
-		if likely(self->jl_tok == '}')
-			{
+		if likely(self->jl_tok == '}') {
 			JITLexer_Yield(self);
 		} else {
 err_rbrace_missing:
@@ -83,8 +82,7 @@ parse_remainder_after_comma_popscope:
 				result = CALL_SECONDARY(CommaListOperand, result);
 				if (ISERR(result))
 					goto err;
-				if likely(self->jl_tok == '}')
-					{
+				if likely(self->jl_tok == '}') {
 					JITLexer_Yield(self);
 				} else {
 					goto err_rbrace_missing;
@@ -93,8 +91,7 @@ parse_remainder_after_comma_popscope:
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
-			if likely(self->jl_tok == '}')
-				{
+			if likely(self->jl_tok == '}') {
 parse_remainder_before_rbrace_popscope_wrap:
 				JITLexer_Yield(self);
 			} else {
@@ -373,8 +370,7 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
-			if likely(self->jl_tok == ';')
-				{
+			if likely(self->jl_tok == ';') {
 				JITLexer_Yield(self);
 			} else {
 				syn_expr_expected_semi_after_expr(self);

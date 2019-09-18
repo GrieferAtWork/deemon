@@ -984,8 +984,7 @@ LOCAL DREF DeeObject *FCALL
 JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
                              unsigned int *pwas_expression) {
 	DREF DeeObject *result;
-	if unlikely(!pwas_expression)
-		{
+	if unlikely(!pwas_expression) {
 		result = JITLexer_EvalHybrid(self, pwas_expression);
 	} else {
 		switch (*pwas_expression) {
@@ -1012,8 +1011,7 @@ LOCAL int FCALL
 JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
                              unsigned int *pwas_expression) {
 	int result;
-	if unlikely(!pwas_expression)
-		{
+	if unlikely(!pwas_expression) {
 		result = JITLexer_SkipHybrid(self, pwas_expression);
 	} else {
 		switch (*pwas_expression) {

@@ -56,8 +56,7 @@ segiter_init(SegmentsIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegmentsIterator",
 	                  &self->si_iter, &self->si_len))
 		goto err;
-	if unlikely(!self->si_len)
-		{
+	if unlikely(!self->si_len) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid length passed to `_SeqSegmentsIterator'");
 		goto err;
@@ -288,8 +287,7 @@ seg_init(Segments *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegments",
 	                  &self->s_seq, &self->s_len))
 		goto err;
-	if unlikely(!self->s_len)
-		{
+	if unlikely(!self->s_len) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid length passed to `_SeqSegments'");
 		goto err;
@@ -371,8 +369,7 @@ seg_nsi_getitem(Segments *__restrict self, size_t index) {
 	for (i = 0; i < len; ++i) {
 		DREF DeeObject *temp;
 		temp = DeeObject_GetItemIndex(self->s_seq, start + i);
-		if unlikely(!temp)
-			{
+		if unlikely(!temp) {
 			if (DeeError_Catch(&DeeError_IndexError))
 				return DeeTuple_TruncateUninitialized(result, i);
 			goto err_r;

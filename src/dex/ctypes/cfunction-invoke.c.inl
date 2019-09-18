@@ -365,8 +365,7 @@ def_var_data:
 		size_t datasize;
 		DeeSTypeObject *orig_type = tp_self->ft_orig;
 		datasize                  = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
-		if unlikely(orig_type->st_base.tp_flags & TP_FGC)
-			{
+		if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
 			/* This can happen when the user creates their own
 			 * classes that are derived from structured types. */
 			result = (DeeObject *)DeeGCObject_Malloc(datasize);

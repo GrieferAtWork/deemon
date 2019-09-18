@@ -127,8 +127,7 @@ ss_nsi_getsize(SlabStatObject *__restrict self) {
 PRIVATE DREF SlabInfoObject *DCALL
 ss_nsi_getitem(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
-	if unlikely(index >= self->st_stat.st_slabcount)
-		{
+	if unlikely(index >= self->st_stat.st_slabcount) {
 		DeeError_Throwf(&DeeError_IndexError,
 		                "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
 		                index, self->st_stat.st_slabcount, Dee_TYPE(self));

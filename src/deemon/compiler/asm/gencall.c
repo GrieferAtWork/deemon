@@ -1527,8 +1527,7 @@ invoke_cattr_funsym_argv:
 				/* Access to an instance member function (must produce a bound method). */
 				if (asm_gpush_symbol(this_sym, func))
 					goto err; /* func, this */
-				if unlikely(argc != (uint8_t)-1)
-					{
+				if unlikely(argc != (uint8_t)-1) {
 					for (i = 0; i < argc; ++i)
 						if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 							goto err;

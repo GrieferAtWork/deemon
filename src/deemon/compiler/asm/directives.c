@@ -224,8 +224,7 @@ uasm_parse_directive(void) {
 		if unlikely(!label)
 			goto err;
 		/* Make sure that the symbol hasn't already been defined. */
-		if unlikely(ASM_SYM_DEFINED(label))
-			{
+		if unlikely(ASM_SYM_DEFINED(label)) {
 			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name))
 				goto err;
 		} else {
@@ -345,8 +344,7 @@ do_handle_code:
 		uint16_t reloc_value;
 do_handle_reloc:
 		/* `.reloc ., <name> [, <symbol> [, <value>]]'  */
-		if likely(tok == '.')
-			{
+		if likely(tok == '.') {
 			if unlikely(yield() < 0)
 				goto err;
 		} else {
@@ -363,8 +361,7 @@ do_handle_reloc:
 		reloc_value = 0;
 		reloc_type  = get_reloc_by_name(reloc_name->k_name);
 		/* Check if the relocation name could be determined. */
-		if unlikely(reloc_type == R_DMN_COUNT)
-			{
+		if unlikely(reloc_type == R_DMN_COUNT) {
 			if (WARN(W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name))
 				goto err;
 			reloc_type = R_DMN_NONE;
@@ -467,8 +464,7 @@ except_unknown_tag:
 					Dee_Incref(mask);
 				}
 				if unlikely(DeeObject_AssertType(mask, &DeeType_Type) ||
-					         (likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN)))
-				{
+					         (likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN))) {
 					Dee_Decref(mask);
 					goto except_err;
 				}
@@ -786,8 +782,7 @@ do_handle_adjstack:
 		    !(current_userasm.ua_mode & USER_ASM_FSTKINV))
 			goto done;
 		/* Warn if the previous instruction does actually return. */
-		if unlikely(!asm_isnoreturn(current_userasm.ua_lasti, current_basescope->bs_flags))
-			{
+		if unlikely(!asm_isnoreturn(current_userasm.ua_lasti, current_basescope->bs_flags)) {
 			if (WARN(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT))
 				goto err;
 #if 1

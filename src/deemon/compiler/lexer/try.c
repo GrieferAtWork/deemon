@@ -72,8 +72,7 @@ INTERN DREF struct ast *DCALL ast_parse_catchmask(void) {
 do_realloc:
 				new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, new_expra *
 				                                                      sizeof(DREF struct ast *));
-				if unlikely(!new_exprv)
-					{
+				if unlikely(!new_exprv) {
 					if (new_expra != exprc + 1) {
 						new_expra = exprc + 1;
 						goto do_realloc;
@@ -141,16 +140,14 @@ ast_parse_try(bool is_statement) {
 		/* Most of the time a try-statement only has a single handler,
 		 * meaning that the following check will succeed most of the time. */
 		handler = catchv;
-		if likely(catchc == catcha)
-			{
+		if likely(catchc == catcha) {
 			size_t new_catcha = (unlikely(catcha))
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
 		do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
-			if unlikely(!handler)
-				{
+			if unlikely(!handler) {
 				if (new_catcha != catchc + 1) {
 					new_catcha = catchc + 1;
 					goto do_realloc_catchv;
@@ -231,15 +228,13 @@ parse_catch_mask:
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as' in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
-				if unlikely(tok == TOK_ARROW || tok == KWD_as)
-					{
+				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
 					if unlikely(tok == TOK_ARROW &&
 						         WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 					goto err_try_flags;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
-					if unlikely(!TPP_ISKEYWORD(tok))
-						{
+					if unlikely(!TPP_ISKEYWORD(tok)) {
 						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
 							goto err_try_flags;
 						goto end_catch_handler;
@@ -340,16 +335,14 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 		/* Most of the time a try-statement only has a single handler,
 		 * meaning that the following check will succeed most of the time. */
 		handler = catchv;
-		if likely(catchc == catcha)
-			{
+		if likely(catchc == catcha) {
 			size_t new_catcha = (unlikely(catcha))
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
 		do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
-			if unlikely(!handler)
-				{
+			if unlikely(!handler) {
 				if (new_catcha != catchc + 1) {
 					new_catcha = catchc + 1;
 					goto do_realloc_catchv;
@@ -428,15 +421,13 @@ parse_catch_mask:
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as' in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
-				if unlikely(tok == TOK_ARROW || tok == KWD_as)
-					{
+				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
 					if unlikely(tok == TOK_ARROW &&
 						         WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 					goto err_try_flags;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
-					if unlikely(!TPP_ISKEYWORD(tok))
-						{
+					if unlikely(!TPP_ISKEYWORD(tok)) {
 						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
 							goto err_try_flags;
 						goto end_catch_handler;

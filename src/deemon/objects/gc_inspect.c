@@ -543,8 +543,7 @@ DeeGC_CollectReferred(GCSetMaker *__restrict self,
 again:
 	self->gs_err = 0;
 	DeeObject_Visit(start, (dvisit_t)&visit_referr_func, self);
-	if unlikely(self->gs_err)
-		{
+	if unlikely(self->gs_err) {
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
 		return -1;
@@ -558,8 +557,7 @@ DeeGC_CollectReachable(GCSetMaker *__restrict self,
 again:
 	self->gs_err = 0;
 	DeeObject_Visit(start, (dvisit_t)&visit_reachable_func, self);
-	if unlikely(self->gs_err)
-		{
+	if unlikely(self->gs_err) {
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
 		return -1;

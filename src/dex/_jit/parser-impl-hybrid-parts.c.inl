@@ -136,8 +136,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			/* Skip catch statements. */
 			JITLexer_Yield(self);
-			if likely(self->jl_tok == '(')
-				{
+			if likely(self->jl_tok == '(') {
 				JITLexer_Yield(self);
 			} else {
 				syn_try_expected_lparen_after_catch(self);
@@ -182,8 +181,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 					result = EVAL_SECONDARY(self, &was_expression);
 					if (result == JIT_LVALUE)
 						result = JITLexer_PackLValue(self);
-					if unlikely(!result)
-						{
+					if unlikely(!result) {
 						if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
 							goto err_popscope;
 						goto err_handle_catch_except;
@@ -261,8 +259,7 @@ err_handle_catch_except:
 				goto err;
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			JITLexer_Yield(self);
-			if likely(self->jl_tok == '(')
-				{
+			if likely(self->jl_tok == '(') {
 				JITLexer_Yield(self);
 			} else {
 				syn_try_expected_lparen_after_catch(self);
@@ -299,8 +296,7 @@ H_FUNC(If)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "if"));
 do_if_statement:
 	JITLexer_Yield(self);
-	if likely(self->jl_tok == '(')
-		{
+	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
 		syn_if_expected_lparen_after_if(self);
@@ -316,8 +312,7 @@ do_if_statement:
 	if (ISERR(result))
 		goto err_scope;
 	LOAD_LVALUE(result, err);
-	if likely(self->jl_tok == ')')
-		{
+	if likely(self->jl_tok == ')') {
 		JITLexer_Yield(self);
 	} else {
 		syn_if_expected_rparen_after_if(self);
@@ -410,8 +405,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 	result = FUNC(For)(self, true);
 #else /* JIT_HYBRID */
 	JITLexer_Yield(self);
-	if likely(self->jl_tok == '(')
-		{
+	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
 		syn_for_expected_lparen_after_for(self);
@@ -448,16 +442,14 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 			seq = JITLexer_EvalRValue(self);
 			if unlikely(!seq)
 				goto err_scope;
-			if likely(self->jl_tok == ')')
-				{
+			if likely(self->jl_tok == ')') {
 				JITLexer_Yield(self);
 			} else {
 				syn_for_expected_rparen_after_foreach(self);
 				goto err_seq;
 			}
 			iterator = DeeObject_IterSelf(seq);
-			if unlikely(!iterator)
-				{
+			if unlikely(!iterator) {
 				goto err_seq;
 err_iter:
 				Dee_Decref(iterator);
@@ -485,8 +477,7 @@ err_seq:
 				}
 				is_first_loop = false;
 				result        = JITLexer_EvalStatement(self);
-				if unlikely(!result)
-					{
+				if unlikely(!result) {
 					/* Handle special loop signal codes. */
 					if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 						self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
@@ -562,8 +553,7 @@ do_normal_for_noinit:
 					if (self->jl_tok != ')' &&
 					    JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 						goto err_scope;
-					if likely(self->jl_tok == ')')
-						{
+					if likely(self->jl_tok == ')') {
 						JITLexer_Yield(self);
 					} else {
 err_missing_rparen_after_for:
@@ -582,8 +572,7 @@ err_missing_rparen_after_for:
 				next_start = self->jl_tokstart;
 				if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 					goto err_scope;
-				if likely(self->jl_tok == ')')
-					{
+				if likely(self->jl_tok == ')') {
 					JITLexer_Yield(self);
 				} else {
 					goto err_missing_rparen_after_for;
@@ -594,8 +583,7 @@ err_missing_rparen_after_for:
 			for (;;) {
 				unsigned char *block_end;
 				result = JITLexer_EvalStatement(self);
-				if unlikely(!result)
-					{
+				if unlikely(!result) {
 					/* Handle special loop signal codes. */
 					if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 						self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
@@ -703,8 +691,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 	result = FUNC(Foreach)(self, true);
 #else /* JIT_HYBRID */
 	JITLexer_Yield(self);
-	if likely(self->jl_tok == '(')
-		{
+	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
 		syn_foreach_expected_lparen_after_foreach(self);
@@ -749,8 +736,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 		iterator = JITLexer_EvalRValue(self);
 		if unlikely(!iterator)
 			goto err_scope;
-		if likely(self->jl_tok == ')')
-			{
+		if likely(self->jl_tok == ')') {
 			JITLexer_Yield(self);
 		} else {
 			syn_foreach_expected_rparen_after_foreach(self);
@@ -776,8 +762,7 @@ err_iter:
 			}
 			is_first_loop = false;
 			result        = JITLexer_EvalStatement(self);
-			if unlikely(!result)
-				{
+			if unlikely(!result) {
 				/* Handle special loop signal codes. */
 				if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 					self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
@@ -851,8 +836,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 	result = FUNC(While)(self, true);
 #else /* JIT_HYBRID */
 	JITLexer_Yield(self);
-	if likely(self->jl_tok == '(')
-		{
+	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
 		syn_while_expected_lparen_after_while(self);
@@ -934,8 +918,7 @@ do_check_while_condition:
 			goto do_eval_while_loop;
 		}
 		/* Stop looping and jump to the end of the while-block. */
-		if likely(block_end)
-			{
+		if likely(block_end) {
 			self->jl_tokend = block_end;
 			JITLexer_Yield(self);
 		} else {
@@ -995,8 +978,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 		/* Parse the block for the first time. */
 do_parse_block:
 		result = JITLexer_EvalStatement(self);
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			/* Check for special signal codes. */
 			if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 				/* `break' */
@@ -1134,8 +1116,7 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 #endif /* JIT_EVAL */
 	ASSERT(JITLexer_ISKWD(self, "with"));
 	JITLexer_Yield(self);
-	if likely(self->jl_tok == '(')
-		{
+	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
 		syn_with_expected_lparen_after_with(self);
@@ -1150,8 +1131,7 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 	if unlikely(result)
 		goto err;
 #endif /* !JIT_EVAL */
-	if likely(self->jl_tok == ')')
-		{
+	if likely(self->jl_tok == ')') {
 		JITLexer_Yield(self);
 	} else {
 		syn_with_expected_rparen_after_with(self);

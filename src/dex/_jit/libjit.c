@@ -167,8 +167,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	}
 	if likely(result) {
 		ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-		if unlikely(lexer.jl_tok != TOK_EOF)
-			{
+		if unlikely(lexer.jl_tok != TOK_EOF) {
 			DeeError_Throwf(&DeeError_SyntaxError,
 			                "Expected EOF but got `%$s'",
 			                (size_t)(lexer.jl_end - lexer.jl_tokstart),

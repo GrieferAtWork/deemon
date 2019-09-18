@@ -150,8 +150,7 @@ nt_SetCurrentDirectory(DeeObject *__restrict lpPathName) {
 		if unlikely(!lpPathName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpPathName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpPathName);
 			goto err;
 		}
@@ -193,8 +192,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpFileName);
 			goto err;
 		}
@@ -233,8 +231,7 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpFileName);
 			goto err;
 		}
@@ -275,8 +272,7 @@ nt_SetFileAttributes(DeeObject *__restrict lpFileName,
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpFileName);
 			goto err;
 		}
@@ -316,8 +312,7 @@ nt_CreateDirectory(DeeObject *__restrict lpPathName,
 		if unlikely(!lpPathName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpPathName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpPathName);
 			goto err;
 		}
@@ -356,8 +351,7 @@ nt_RemoveDirectory(DeeObject *__restrict lpPathName) {
 		if unlikely(!lpPathName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpPathName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpPathName);
 			goto err;
 		}
@@ -396,8 +390,7 @@ nt_DeleteFile(DeeObject *__restrict lpFileName) {
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
-		if unlikely(!wname)
-			{
+		if unlikely(!wname) {
 			Dee_Decref(lpFileName);
 			goto err;
 		}

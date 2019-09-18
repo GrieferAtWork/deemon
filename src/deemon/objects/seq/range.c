@@ -261,8 +261,7 @@ again:
 			goto err_r;
 		/* Save the new index object. */
 		rwlock_write(&self->ri_lock);
-		if unlikely(self->ri_index != old_index || self->ri_first)
-			{
+		if unlikely(self->ri_index != old_index || self->ri_first) {
 			rwlock_endwrite(&self->ri_lock);
 			Dee_Decref(new_index);
 			goto again;
@@ -504,8 +503,7 @@ range_contains(Range *__restrict self,
                DeeObject *__restrict index) {
 	DREF DeeObject *temp, *temp2, *temp3;
 	int error;
-	if likely(!self->r_rev)
-		{
+	if likely(!self->r_rev) {
 		/* if (!(self->r_start <= index)) return false; */
 		error = DeeObject_CompareLe(self->r_start, index);
 		if (error <= 0) /* if false-or-error */
@@ -629,8 +627,7 @@ range_size(Range *__restrict self) {
 		Dee_Decref(temp);
 	}
 	error = DeeObject_CompareLo(result, &DeeInt_Zero);
-	if unlikely(error != 0)
-		{
+	if unlikely(error != 0) {
 		if unlikely(error < 0)
 			goto err_r;
 		temp = DeeObject_NewDefault(Dee_TYPE(result));
@@ -685,8 +682,7 @@ do_compare_positive:
 			goto do_compare_positive;
 		error = DeeObject_CompareLe(result, self->r_end);
 	}
-	if unlikely(error != 0)
-		{
+	if unlikely(error != 0) {
 		if unlikely(error < 0)
 			goto err;
 		goto oob;
@@ -1519,8 +1515,7 @@ intrange_init(IntRange *__restrict self,
 	                  &self->ir_end,
 	                  &self->ir_step))
 		goto err;
-	if unlikely(self->ir_step == 0)
-		{
+	if unlikely(self->ir_step == 0) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot used `0' as step for _SeqIntRange");
 	}
@@ -1654,8 +1649,7 @@ DeeRange_New(DeeObject *__restrict begin,
 			if (step) {
 				if (!DeeInt_Check(step) || !DeeInt_TryAsSSize(step, &i_step))
 					goto do_object_range;
-				if unlikely(!step)
-					{
+				if unlikely(!step) {
 					if (i_begin >= i_end)
 						return_reference_(Dee_EmptySeq);
 					return DeeSeq_RepeatItemForever(begin);

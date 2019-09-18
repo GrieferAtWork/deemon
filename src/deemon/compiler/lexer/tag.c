@@ -52,8 +52,7 @@ INTERN DREF struct ast *
 				goto err_input;
 			expr_v[0] = input; /* Inherit reference. */
 			args      = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, expr_v), &func->a_ddi);
-			if unlikely(!args)
-				{
+			if unlikely(!args) {
 				Dee_Free(expr_v);
 				goto err_input;
 			}
@@ -96,8 +95,7 @@ INTERN DREF struct ast *
 			expr_v[0] = input; /* Inherit reference. */
 			expr_v[1] = merge; /* Inherit reference. */
 			args      = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 2, expr_v), &func->a_ddi);
-			if unlikely(!args)
-				{
+			if unlikely(!args) {
 				Dee_Free(expr_v);
 				goto err_input_merge;
 			}
@@ -183,8 +181,7 @@ INTERN int (DCALL ast_annotations_add)(struct ast *__restrict func,
 		new_anno = (struct ast_annotation *)Dee_TryRealloc(current_tags.at_anno.an_annov,
 		                                                   new_alloc *
 		                                                   sizeof(struct ast_annotation));
-		if unlikely(!new_anno)
-			{
+		if unlikely(!new_anno) {
 			new_alloc = current_tags.at_anno.an_annoc + 1;
 			new_anno = (struct ast_annotation *)Dee_Realloc(current_tags.at_anno.an_annov,
 			                                                new_alloc *
@@ -281,8 +278,7 @@ err:
 LOCAL int DCALL
 convert_dot_tag_namespace(size_t tag_name_len,
                           char const *__restrict tag_name_str) {
-	if unlikely(tok == ':' || tok == TOK_COLLON_COLLON)
-		{
+	if unlikely(tok == ':' || tok == TOK_COLLON_COLLON) {
 		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, tag_name_len, tag_name_str))
 			goto err;
 		tok = '.';
@@ -420,8 +416,7 @@ again_compiler_subtag:
 				} else if (IS_TAG("doc")) {
 					if unlikely(yield() < 0)
 						goto err;
-					if likely(tok == '(')
-						{
+					if likely(tok == '(') {
 						if unlikely(yield() < 0)
 							goto err;
 					} else {

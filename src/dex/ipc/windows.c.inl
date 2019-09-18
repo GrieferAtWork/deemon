@@ -309,15 +309,13 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 			if unlikely(!result)
 				goto err;
 			fixed_result = (DREF DeeStringObject *)nt_FixUncPath((DeeObject *)result);
-			if unlikely(!fixed_result)
-				{
+			if unlikely(!fixed_result) {
 err_result:
 				Dee_DecrefDokill(result);
 				goto err;
 			}
 			pathname = (LPWSTR)DeeString_AsWide((DeeObject *)fixed_result);
-			if unlikely(!pathname)
-				{
+			if unlikely(!pathname) {
 				Dee_Decref(fixed_result);
 				goto err_result;
 			}
@@ -480,8 +478,7 @@ nt_CreateProcessPath(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
 	LPWSTR pathStr;
 	BOOL bFixUnc = FALSE;
 	path         = (DREF DeeStringObject *)nt_GetEnvironmentVariable(wPathStr);
-	if unlikely(!ITER_ISOK(path))
-		{
+	if unlikely(!ITER_ISOK(path)) {
 		if (!path)
 			goto err_nopath;
 		goto done_nopath;
@@ -512,8 +509,7 @@ again:
 		if unlikely(!appnameBuffer)
 			goto err_pathext;
 		iter = (LPWSTR)DeeString_AsWide((DeeObject *)pathext);
-		if unlikely(!iter)
-			{
+		if unlikely(!iter) {
 			Dee_Free(appnameBuffer);
 			goto err_pathext;
 		}
@@ -527,12 +523,10 @@ again:
 			/* Append extensions from $PATHEXT */
 			extLength     = (SIZE_T)(next - iter);
 			appnameLength = szApplicationNameLength + extLength;
-			if unlikely(appnameLength > appnameBufferSize)
-				{
+			if unlikely(appnameLength > appnameBufferSize) {
 				/* More-than-4-character extension. */
 				newAppnameBuffer = (LPWSTR)Dee_Realloc(appnameBuffer, (appnameLength + 1) * sizeof(WCHAR));
-				if unlikely(!newAppnameBuffer)
-					{
+				if unlikely(!newAppnameBuffer) {
 					Dee_Free(appnameBuffer);
 					goto err_pathext;
 				}
@@ -647,8 +641,7 @@ process_start(Process *__restrict self,
 again:
 	rwlock_read(&self->p_lock);
 	/* Check if the process had already been started. */
-	if unlikely(self->p_state & PROCESS_FSTARTED)
-		{
+	if unlikely(self->p_state & PROCESS_FSTARTED) {
 		rwlock_endread(&self->p_lock);
 		return_false;
 	}
@@ -661,8 +654,7 @@ again:
 	}
 	exe     = self->p_exe;
 	cmdline = self->p_cmdline;
-	if unlikely(!exe || !cmdline)
-		{
+	if unlikely(!exe || !cmdline) {
 		/* Shouldn't happen because processes without these
 		 * attributes should have the `PROCESS_FSTARTED'
 		 * flag set. */
@@ -802,8 +794,7 @@ save_final_exe:
 			if unlikely(!final_exe)
 				goto done_cmdline_copy;
 			wExe = (LPWSTR)DeeString_AsWide((DeeObject *)final_exe);
-			if unlikely(!wExe)
-				{
+			if unlikely(!wExe) {
 				Dee_Decref(final_exe);
 				goto done_cmdline_copy;
 			}

@@ -308,8 +308,7 @@ object_vector_append(struct object_vector *__restrict self,
 			new_count = 4;
 		new_vector = (DREF DeeObject **)Dee_Realloc(self->ov_vec, new_count *
 		                                                          sizeof(DREF DeeObject *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			/* Always inherit a reference. */
 			Dee_Decref(ob);
 			return -1;
@@ -421,8 +420,7 @@ next_suffix:
 				++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 			index2 = Formatter_GetExpr(self, &fmt_start, do_eval);
-			if unlikely(!index2)
-				{
+			if unlikely(!index2) {
 				Dee_Decref(index);
 				goto err_r;
 			}
@@ -430,8 +428,7 @@ next_suffix:
 			while (DeeUni_IsSpace(*fmt_start))
 				++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
-			if unlikely(*fmt_start != ']')
-				{
+			if unlikely(*fmt_start != ']') {
 				Dee_Decref(index2);
 err_bad_index_expression:
 				DeeError_Throwf(&DeeError_ValueError,
@@ -530,8 +527,7 @@ err_bad_index_expression:
 					fmt_start = after_dots + 1; /* Skip `,' */
 					goto parse_second_argument;
 				}
-				if unlikely(after_dots[0] != ')')
-					{
+				if unlikely(after_dots[0] != ')') {
 					fmt_start = after_dots;
 					goto err_expected_rparen_arg;
 				}
@@ -660,8 +656,7 @@ parse_second_argument:
 				Dee_Incref(ff);
 			} else {
 				ff = Formatter_GetExpr(self, &fmt_start, do_eval && is_true == 0);
-				if unlikely(!ff)
-					{
+				if unlikely(!ff) {
 					Dee_Decref(tt);
 					goto err_r;
 				}
@@ -786,8 +781,7 @@ format_impl(struct formatter *__restrict self,
 					                          &unicode_printer_print,
 					                          &format_string_printer);
 					self->f_seqiter = inner_formatter.f_seqiter;
-					if unlikely(print_error < 0)
-						{
+					if unlikely(print_error < 0) {
 						unicode_printer_fini(&format_string_printer);
 						goto err_arg;
 					}
@@ -952,8 +946,7 @@ format_bytes_impl(struct formatter *__restrict self,
 					                                &unicode_printer_print,
 					                                &format_string_printer);
 					self->f_seqiter = inner_formatter.f_seqiter;
-					if unlikely(print_error < 0)
-						{
+					if unlikely(print_error < 0) {
 						unicode_printer_fini(&format_string_printer);
 						goto err_arg;
 					}

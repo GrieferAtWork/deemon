@@ -143,8 +143,7 @@ err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 		typetype = Dee_TYPE(typetype);
 	}
 	info = Dee_OperatorInfo(typetype, opname);
-	if likely(info)
-		{
+	if likely(info) {
 		return DeeError_Throwf(&DeeError_TypeError,
 		                       "Cannot invoke inplace `operator %s' (`__%s__') without l-value",
 		                       info->oi_uname, info->oi_sname);
@@ -400,8 +399,7 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 		unsigned char *name = self->jl_tokstart;
 		size_t size         = (size_t)(self->jl_tokend - name);
 		JITLexer_Yield(self);
-		if unlikely(self->jl_tok != ':')
-			{
+		if unlikely(self->jl_tok != ':') {
 			JITLexer_YieldAt(self, name);
 			goto done;
 		}
@@ -426,8 +424,7 @@ skip_keyword_label:
 		if (self->jl_tok == JIT_KEYWORD) {
 			unsigned char *start = self->jl_tokstart;
 			JITLexer_Yield(self);
-			if unlikely(self->jl_tok != ':')
-				{
+			if unlikely(self->jl_tok != ':') {
 				JITLexer_YieldAt(self, start);
 				goto done;
 			}
@@ -540,8 +537,7 @@ not_a_cast:
 			goto err_lhs;
 		LOAD_LVALUE(merge, err_lhs);
 		IF_EVAL(ASSERT(DeeTuple_Check(merge));)
-		if likely(self->jl_tok == ')')
-			{
+		if likely(self->jl_tok == ')') {
 			JITLexer_Yield(self);
 		} else if (self->jl_tok == TOK_POW) {
 			JITLexer_Yield(self);
@@ -569,8 +565,7 @@ not_a_cast:
 			size_t label_size = (size_t)(self->jl_tokend - label_name);
 #endif /* JIT_EVAL */
 			JITLexer_Yield(self);
-			if unlikely(self->jl_tok != ':')
-				{
+			if unlikely(self->jl_tok != ':') {
 				JITLexer_YieldAt(self, label_name);
 				goto err_missing_rparen;
 			}
@@ -635,8 +630,7 @@ err_missing_rparen:
 				/* New argument expression. */
 				Dee_Decref(merge);
 				merge = DeeTuple_PackSymbolic(1, result);
-				if unlikely(!merge)
-					{
+				if unlikely(!merge) {
 					Dee_Decref(result);
 					goto err_lhs;
 				}
@@ -983,8 +977,7 @@ done_y1:
 					} else {
 						DREF DeeObject *tuple;
 						tuple = DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(merge));
-						if unlikely(!tuple)
-							{
+						if unlikely(!tuple) {
 							Dee_Decref(merge);
 							goto err_r;
 						}
@@ -1018,8 +1011,7 @@ done_y1:
 			if (out_mode & AST_COMMA_OUT_FMULTIPLE)
 				allow_cast = false; /* Don't allow comma-lists for cast expressions. */
 		}
-		if likely(self->jl_tok == ')')
-			{
+		if likely(self->jl_tok == ')') {
 			JITLexer_Yield(self);
 		} else {
 			syn_paren_expected_rparen_after_lparen(self);
@@ -1257,8 +1249,7 @@ skip_brace_lambda:
 					DREF DeeObject *start;
 					DREF DeeObject *range = NULL;
 					start                 = DeeObject_NewDefault(Dee_TYPE(result));
-					if likely(start)
-						{
+					if likely(start) {
 						range = DeeRange_New(start, result, step);
 						Dee_Decref(start);
 					}
@@ -1351,8 +1342,7 @@ skip_brace_lambda:
 #endif /* JIT_EVAL */
 		}
 skip_rbrck_and_done:
-		if likely(self->jl_tok == ']')
-			{
+		if likely(self->jl_tok == ']') {
 			JITLexer_Yield(self);
 		} else {
 			syn_bracket_expected_rbracket_after_lbracket(self);
@@ -1369,8 +1359,7 @@ skip_rbrck_and_done:
 		result = FUNC(BraceItems)(self);
 		if (ISERR(result))
 			goto err;
-		if likely(self->jl_tok == '}')
-			{
+		if likely(self->jl_tok == '}') {
 			JITLexer_Yield(self);
 		} else {
 			syn_brace_expected_rbrace(self);
@@ -1540,8 +1529,7 @@ skip_rbrck_and_done:
 #endif /* !JIT_EVAL */
 				}
 				if (has_paren) {
-					if likely(self->jl_tok == ')')
-						{
+					if likely(self->jl_tok == ')') {
 						JITLexer_Yield(self);
 					} else {
 						syn_pack_expected_rparen_after_lparen(self);
@@ -1688,8 +1676,7 @@ skip_rbrck_and_done:
 				                                      symbol_name,
 				                                      symbol_size,
 				                                      Dee_HashUtf8(symbol_name, symbol_size));
-				if unlikely(!symbol)
-					{
+				if unlikely(!symbol) {
 					DeeError_Throwf(&DeeError_SymbolError,
 					                "Symbol `%$s' could not be found in module `%k'",
 					                symbol_size, symbol_name, module);
@@ -1776,8 +1763,7 @@ DEFINE_SECONDARY(UnaryOperand) {
 			error = cmd == TOK_INC
 			        ? DeeObject_Inc((DeeObject **)&lhs)
 			        : DeeObject_Dec((DeeObject **)&lhs);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 err_result_copy:
 				Dee_Decref(result_copy);
 				goto err_r;
@@ -3229,8 +3215,7 @@ err_lvalue:
 			LOAD_LVALUE(rhs, err_lvalue);
 			/* Load the L-value expression target object. */
 			lhs = JITLValue_GetValue(&lhs_lvalue, self->jl_context);
-			if unlikely(!lhs)
-				{
+			if unlikely(!lhs) {
 				Dee_Decref(rhs);
 				self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 				goto err_lvalue;
@@ -3283,8 +3268,7 @@ err_lvalue:
 
 			default: __builtin_unreachable();
 			}
-			if unlikely(error)
-				{
+			if unlikely(error) {
 				JITLValue_Fini(&lhs_lvalue);
 				goto err_invoke;
 			}
@@ -3395,8 +3379,7 @@ DEFINE_SECONDARY(CommaListOperand) {
 	RETURN_TYPE result;
 #ifdef JIT_EVAL
 	result = DeeList_New();
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		Dee_Decref(lhs);
 		return NULL;
 	}
@@ -3465,8 +3448,7 @@ DEFINE_SECONDARY(CommaDictOperand) {
 	RETURN_TYPE value;
 #ifdef JIT_EVAL
 	result = DeeDict_New();
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		Dee_Decref(lhs);
 		return NULL;
 	}

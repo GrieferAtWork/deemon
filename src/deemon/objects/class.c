@@ -350,12 +350,10 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 	if (name < CLASS_OPERATOR_USERCOUNT) {
 		struct class_optable *table;
 		table = self->cd_ops[name / CLASS_HEADER_OPC2];
-		if likely(table)
-			{
+		if likely(table) {
 			rwlock_read(&self->cd_lock);
 			result = table->co_operators[name % CLASS_HEADER_OPC2];
-			if likely(result)
-				{
+			if likely(result) {
 				Dee_Incref(result);
 				rwlock_endread(&self->cd_lock);
 				return result;
@@ -376,8 +374,7 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
 		rwlock_read(&self->cd_lock);
 		result = self->cd_members[entry->co_addr];
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			rwlock_endread(&self->cd_lock);
 			err_unimplemented_operator(tp_self, name);
 			return NULL;
@@ -410,12 +407,10 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		if (name < CLASS_OPERATOR_USERCOUNT) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
-			if likely(table)
-				{
+			if likely(table) {
 				rwlock_read(&iter_class->cd_lock);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
-				if likely(result)
-					{
+				if likely(result) {
 					Dee_Incref(result);
 					rwlock_endread(&iter_class->cd_lock);
 					/* Inherit the base's operator locally, by caching it. */
@@ -441,8 +436,7 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
 			rwlock_read(&iter_class->cd_lock);
 			result = iter_class->cd_members[entry->co_addr];
-			if unlikely(!result)
-				{
+			if unlikely(!result) {
 				rwlock_endread(&iter_class->cd_lock);
 				goto done; /* Deleted operator. */
 			}
@@ -479,12 +473,10 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		if (name < CLASS_OPERATOR_USERCOUNT) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
-			if likely(table)
-				{
+			if likely(table) {
 				rwlock_read(&iter_class->cd_lock);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
-				if likely(result)
-					{
+				if likely(result) {
 					Dee_Incref(result);
 					rwlock_endread(&iter_class->cd_lock);
 					/* Inherit the base's operator locally, by caching it. */
@@ -510,8 +502,7 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
 			rwlock_read(&iter_class->cd_lock);
 			result = iter_class->cd_members[entry->co_addr];
-			if unlikely(!result)
-				{
+			if unlikely(!result) {
 				rwlock_endread(&iter_class->cd_lock);
 				return NULL; /* Deleted operator. */
 			}
@@ -553,8 +544,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
 		rwlock_read(&self_class->cd_lock);
 		result = self_class->cd_members[entry->co_addr];
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			rwlock_endread(&self_class->cd_lock);
 			break; /* Deleted operator. */
 		}
@@ -2356,8 +2346,7 @@ instance_builtin_tinit(DeeTypeObject *__restrict tp_self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
-	if unlikely(argc != 0)
-		{
+	if unlikely(argc != 0) {
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
 	}
@@ -2384,19 +2373,16 @@ instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
-	if unlikely(argc != 0)
-		{
+	if unlikely(argc != 0) {
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
 	}
-	if unlikely(kw && !DeeKwds_Check(kw))
-		{
+	if unlikely(kw && !DeeKwds_Check(kw)) {
 		size_t keyword_count;
 		keyword_count = DeeObject_Size(kw);
 		if unlikely(keyword_count == (size_t)-1)
 			goto err;
-		if unlikely(keyword_count != 0)
-			{
+		if unlikely(keyword_count != 0) {
 			err_keywords_ctor_not_accepted(tp_self, kw);
 			goto err;
 		}
@@ -2450,19 +2436,16 @@ instance_builtin_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
                                 DeeObject **__restrict argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	if unlikely(argc != 0)
-		{
+	if unlikely(argc != 0) {
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
 	}
-	if unlikely(kw && !DeeKwds_Check(kw))
-		{
+	if unlikely(kw && !DeeKwds_Check(kw)) {
 		size_t keyword_count;
 		keyword_count = DeeObject_Size(kw);
 		if unlikely(keyword_count == (size_t)-1)
 			goto err;
-		if unlikely(keyword_count != 0)
-			{
+		if unlikely(keyword_count != 0) {
 			err_keywords_ctor_not_accepted(tp_self, kw);
 			goto err;
 		}
@@ -2805,8 +2788,7 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 		for (i = 0; i < positional_argc; ++i) {
 			struct class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
-			if unlikely(!at)
-				{
+			if unlikely(!at) {
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
@@ -2824,15 +2806,13 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 			at = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
 			                                                       DeeString_STR(kw->kw_map[i].ke_name),
 			                                                       kw->kw_map[i].ke_hash);
-			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
-				{
+			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
 				err_unknown_attribute(tp_self,
 				                      DeeString_STR(kw->kw_map[i].ke_name),
 				                      ATTR_ACCESS_SET);
 				goto err;
 			}
-			if unlikely(at->ca_addr < next_table_index)
-				{
+			if unlikely(at->ca_addr < next_table_index) {
 				/* Member had already been initialized via a positional argument! */
 				err_keywords_shadows_positional(DeeString_STR(kw->kw_map[i].ke_name));
 				goto err;
@@ -2850,8 +2830,7 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 		for (i = 0; i < argc; ++i) {
 			struct class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
-			if unlikely(!at)
-				{
+			if unlikely(!at) {
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
@@ -2873,15 +2852,13 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 			if (DeeObject_AssertTypeExact(data[0], &DeeString_Type))
 				goto err_iter_data;
 			at = DeeClassDesc_QueryInstanceAttribute(desc, data[0]);
-			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
-				{
+			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
 				err_unknown_attribute(tp_self,
 				                      DeeString_STR(data[0]),
 				                      ATTR_ACCESS_SET);
 				goto err_iter_data;
 			}
-			if unlikely(at->ca_addr < next_table_index)
-				{
+			if unlikely(at->ca_addr < next_table_index) {
 				/* Member had already been initialized via a positional argument! */
 				err_keywords_shadows_positional(DeeString_STR(data[0]));
 				goto err_iter_data;
@@ -4712,8 +4689,7 @@ DeeClass_New(DeeTypeObject *__restrict base,
 		result_type_type = &DeeType_Type; /* No base class. */
 	} else {
 		/* Make sure that the given base-object is actually a type. */
-		if unlikely(!DeeType_IsInherited(&DeeType_Type, (DeeTypeObject *)result_type_type))
-			{
+		if unlikely(!DeeType_IsInherited(&DeeType_Type, (DeeTypeObject *)result_type_type)) {
 			DeeObject_TypeAssertFailed((DeeObject *)base, &DeeType_Type);
 			goto err;
 		}
@@ -4802,14 +4778,12 @@ err_custom_allocator:
 	Dee_Incref(desc);
 	rwlock_cinit(&result_class->cd_lock);
 
-	if likely(desc->cd_name)
-		{
+	if likely(desc->cd_name) {
 		result->tp_name = DeeString_STR(desc->cd_name);
 		result->tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(desc->cd_name);
 	}
-	if likely(desc->cd_doc)
-		{
+	if likely(desc->cd_doc) {
 		result->tp_doc = DeeString_STR(desc->cd_doc);
 		result->tp_flags |= TP_FDOCOBJECT;
 		Dee_Incref(desc->cd_doc);

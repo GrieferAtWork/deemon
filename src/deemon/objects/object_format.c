@@ -192,8 +192,7 @@ print_self_raw:
 		if (alignment_width <= self_len)
 			goto print_self_raw;
 		my_str = DeeString_AsUtf8(self_str);
-		if unlikely(!my_str)
-			{
+		if unlikely(!my_str) {
 			temp = -1;
 			goto err_temp;
 		}
@@ -260,8 +259,7 @@ object_format_impl(DeeObject *__restrict self,
 			if (!tp_self->tp_attr->tp_getattr)
 				break;
 			format_function = (*tp_self->tp_attr->tp_getattr)(self, &str___format__);
-			if unlikely(!format_function)
-				{
+			if unlikely(!format_function) {
 check_attribute_error:
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))

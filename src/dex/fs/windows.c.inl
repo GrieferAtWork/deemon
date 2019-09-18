@@ -702,8 +702,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	self->e_strings = GetEnvironmentStringsW();
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!self->e_strings)
-		{
+	if unlikely(!self->e_strings) {
 		if (Dee_CollectMemory(42)) /* ??? */
 			goto again;
 		return -1;
@@ -903,8 +902,7 @@ fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	LPWSTR wname;
 	bool result;
 	wname = (LPWSTR)DeeString_AsWide(name);
-	if unlikely(!wname)
-		{
+	if unlikely(!wname) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return false;
 	}
@@ -975,8 +973,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetEnvironmentVariableW((LPCWSTR)name, buffer, bufsize + 1);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!new_bufsize)
-		{
+	if unlikely(!new_bufsize) {
 		if (!try_get) {
 			DeeError_Throwf(&DeeError_KeyError,
 			                "Unknown environment variable `%I16s'",
@@ -1025,8 +1022,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetEnvironmentVariableW(wname, buffer, bufsize + 1);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!new_bufsize)
-		{
+	if unlikely(!new_bufsize) {
 		if (!try_get) {
 			DeeError_Throwf(&DeeError_KeyError,
 			                "Unknown environment variable `%s'",
@@ -1326,8 +1322,7 @@ fs_printcwd(struct unicode_printer *__restrict printer) {
 again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
-	if unlikely(!new_bufsize)
-		{
+	if unlikely(!new_bufsize) {
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -1435,8 +1430,7 @@ again:
 	if (DeeString_WLEN(path) == 0)
 		goto done;
 	result = nt_SetCurrentDirectory(path);
-	if unlikely(result != 0)
-		{
+	if unlikely(result != 0) {
 		DWORD dwError;
 		if unlikely(result < 0)
 			goto err;
@@ -1752,8 +1746,7 @@ nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess,
 	int result;
 	HANDLE hProcessToken;
 	DBG_ALIGNMENT_DISABLE();
-	if unlikely(!OpenProcessToken((HANDLE)hProcess, TOKEN_QUERY, &hProcessToken))
-		{
+	if unlikely(!OpenProcessToken((HANDLE)hProcess, TOKEN_QUERY, &hProcessToken)) {
 		DWORD dwError;
 		DBG_ALIGNMENT_ENABLE();
 		if (bTryGet)
@@ -2568,8 +2561,7 @@ DeeTime_NewFiletime(FILETIME const *__restrict val) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOVOLSERIAL)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNOVOLSERIAL) {
 		err_no_dev_info();
 		return NULL;
 	}
@@ -2578,8 +2570,7 @@ stat_get_dev(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_ino(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOFILEID)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNOFILEID) {
 		err_no_ino_info();
 		return NULL;
 	}
@@ -2630,8 +2621,7 @@ stat_get_mode(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNONLINK)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNONLINK) {
 		err_no_link_info();
 		return NULL;
 	}
@@ -2640,8 +2630,7 @@ stat_get_nlink(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_uid(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
-		{
+	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) {
 		err_no_uid_info();
 		return NULL;
 	}
@@ -2650,8 +2639,7 @@ stat_get_uid(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_gid(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
-		{
+	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) {
 		err_no_gid_info();
 		return NULL;
 	}
@@ -2666,8 +2654,7 @@ stat_get_rdev(DeeStatObject *__restrict UNUSED(self)) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE) {
 		err_no_size_info();
 		return NULL;
 	}
@@ -2677,8 +2664,7 @@ stat_get_size(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
 		err_no_time_info();
 		return NULL;
 	}
@@ -2687,8 +2673,7 @@ stat_get_atime(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
 		err_no_time_info();
 		return NULL;
 	}
@@ -2697,8 +2682,7 @@ stat_get_mtime(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
-		{
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
 		err_no_time_info();
 		return NULL;
 	}
@@ -3372,8 +3356,7 @@ again:
 	                    DeeNone_Check(mtime) ? NULL : &ftMtime);
 	if (result)
 		CloseHandle(hnd);
-	if unlikely(!error)
-		{
+	if unlikely(!error) {
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -4277,8 +4260,7 @@ read_filename:
 		goto read_filename;
 	}
 	result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t) + 4 + length * 2);
-	if unlikely(!result_string)
-		{
+	if unlikely(!result_string) {
 		rwlock_endwrite(&self->d_lock);
 		if (Dee_CollectMemory(sizeof(size_t) + 4 + length * 2))
 			goto again;
@@ -4294,8 +4276,7 @@ read_filename:
 		HANDLE hnd;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if unlikely(dwError != ERROR_NO_MORE_FILES)
-			{
+		if unlikely(dwError != ERROR_NO_MORE_FILES) {
 			rwlock_endwrite(&self->d_lock);
 			if (nt_IsBadAlloc(dwError)) {
 				if (Dee_CollectMemory(1))
@@ -4376,8 +4357,7 @@ dir_iter(Dir *__restrict self) {
 	                                 FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	if unlikely(result->d_hnd == INVALID_HANDLE_VALUE)
-		{
+	if unlikely(result->d_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
@@ -4652,8 +4632,7 @@ read_filename:
 		goto read_filename;
 	}
 	result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t) + 4 + length * 2);
-	if unlikely(!result_string)
-		{
+	if unlikely(!result_string) {
 		rwlock_endwrite(&self->q_iter.d_lock);
 		if (Dee_CollectMemory(sizeof(size_t) + 4 + length * 2))
 			goto again;
@@ -4669,8 +4648,7 @@ read_filename:
 		HANDLE hnd;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if unlikely(dwError != ERROR_NO_MORE_FILES)
-			{
+		if unlikely(dwError != ERROR_NO_MORE_FILES) {
 			rwlock_endwrite(&self->q_iter.d_lock);
 			if (nt_IsBadAlloc(dwError)) {
 				if (Dee_CollectMemory(1))
@@ -4800,8 +4778,7 @@ again_wname:
 	                                        FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	if unlikely(result->q_iter.d_hnd == INVALID_HANDLE_VALUE)
-		{
+	if unlikely(result->q_iter.d_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();

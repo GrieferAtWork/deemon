@@ -165,8 +165,7 @@ ast_build_operator(uint16_t name, uint16_t flags,
 	    DeeTuple_Check(args->a_constexpr)) {
 		/* Another special case: The argument AST is a constant-expression tuple. */
 		size_t argc = DeeTuple_SIZE(args->a_constexpr);
-		if likely(argc < 4 && argc != 0)
-			{
+		if likely(argc < 4 && argc != 0) {
 			DeeObject *tuple        = args->a_constexpr;
 			DREF struct ast *result = NULL, *argv[4] = { NULL, NULL, NULL, NULL };
 			if (!convert_operator_name(&name, argc))
@@ -274,8 +273,7 @@ ast_build_bound_operator(uint16_t name, uint16_t flags,
 	    DeeTuple_Check(args->a_constexpr)) {
 		/* Another special case: The argument AST is a constant-expression tuple. */
 		size_t argc = DeeTuple_SIZE(args->a_constexpr);
-		if likely(argc < 4)
-			{
+		if likely(argc < 4) {
 			DeeObject *tuple        = args->a_constexpr;
 			DREF struct ast *result = NULL, *argv[3] = { NULL, NULL, NULL };
 			if (!convert_operator_name(&name, 1 + argc))
@@ -319,8 +317,7 @@ do_generic:
 		argv[1] = args;
 		ast_incref(self);
 		new_args = ast_multiple(AST_FMULTIPLE_TUPLE, 2, argv);
-		if unlikely(!new_args)
-			{
+		if unlikely(!new_args) {
 			ast_decref(self);
 			Dee_Free(argv);
 			goto err_args;
@@ -567,8 +564,7 @@ do_operator_gr:
 		if unlikely(result < 0)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(tok != ')')
-			{
+		if unlikely(tok != ')') {
 			if (WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err;
 			goto done;
@@ -623,8 +619,7 @@ parse_string:
 					goto err_flags;
 			}
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(tok != ']')
-				{
+			if unlikely(tok != ']') {
 				if (WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 					goto err;
 				goto done;
@@ -632,8 +627,7 @@ parse_string:
 			goto done_y1;
 		}
 		result = OPERATOR_DELATTR;
-		if unlikely(tok != '.')
-			{
+		if unlikely(tok != '.') {
 			if (WARN(W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME))
 				goto err;
 			goto done;
@@ -689,12 +683,10 @@ parse_string:
 				if unlikely(yield() < 0)
 					goto err;
 				result = OPERATOR_MOVEASSIGN;
-				if unlikely(tok == '=')
-					{
+				if unlikely(tok == '=') {
 					if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
-				} else if unlikely(tok != TOK_COLLON_EQUAL)
-				{
+				} else if unlikely(tok != TOK_COLLON_EQUAL) {
 					if (WARN(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
 						goto err;
 					goto done;

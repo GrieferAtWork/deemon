@@ -108,8 +108,7 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 			return (int32_t)(iter - vector);
 	}
 	/* Ensure that we're not already at the limit. */
-	if unlikely(size == max_size)
-		{
+	if unlikely(size == max_size) {
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many paths/files for DDI");
 		return -1;
@@ -300,8 +299,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 	               current_assembler.a_sect[0].sec_begin) *
 	              3;
 	result = (DeeDDIObject *)DeeObject_TryCalloc(offsetof(DeeDDIObject, d_ddi) + 1 + result_size);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		result_size = 0;
 		result      = (DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) + 1 + result_size);
 		if unlikely(!result)
@@ -515,8 +513,7 @@ do_realloc_bind:
 						ASSERT(new_alloc);
 						ASSERT(old_alloc != new_alloc);
 						new_result = (DeeDDIObject *)DeeObject_TryRealloc(result, offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
-						if unlikely(!new_result)
-							{
+						if unlikely(!new_result) {
 							size_t min_alloc = bind_size + (size_t)(code_iter - result->d_ddi);
 							if (new_alloc != min_alloc) {
 								new_alloc = min_alloc;
@@ -582,8 +579,7 @@ do_realloc:
 				ASSERT(old_alloc != new_alloc);
 				new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,
 				                                                  offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
-				if unlikely(!new_result)
-					{
+				if unlikely(!new_result) {
 					size_t min_alloc = text_size + (size_t)(code_iter - result->d_ddi);
 					if (new_alloc != min_alloc) {
 						new_alloc = min_alloc;

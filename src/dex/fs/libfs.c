@@ -79,8 +79,7 @@ fs_copyfile(DeeObject *__restrict existing_file,
 	dpos_t file_size = 0, total = 0;
 	/* Open a source and a destination stream. */
 	src = open_file_for_copy(existing_file, OPEN_FRDONLY, 0);
-	if unlikely(!ITER_ISOK(src))
-		{
+	if unlikely(!ITER_ISOK(src)) {
 		if (src)
 			DeeError_Throwf(&DeeError_FileNotFound,
 			                "File `%k' could not be found",
@@ -88,8 +87,7 @@ fs_copyfile(DeeObject *__restrict existing_file,
 		goto err;
 	}
 	dst = open_file_for_copy(new_file, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FEXCL | OPEN_FTRUNC, 0644);
-	if unlikely(!ITER_ISOK(dst))
-		{
+	if unlikely(!ITER_ISOK(dst)) {
 		if (dst)
 			DeeError_Throwf(&DeeError_FileExists,
 			                "File `%k' already exists",
@@ -102,8 +100,7 @@ fs_copyfile(DeeObject *__restrict existing_file,
 	if (!DeeNone_Check(progress_callback)) {
 		/* Determine the full size of the source data stream. */
 		file_size = DeeFile_GetSize(src);
-		if unlikely(file_size == (dpos_t)-1)
-			{
+		if unlikely(file_size == (dpos_t)-1) {
 			/* Failed to determine stream size.
 			 * If this is because the source stream doesn't implement
 			 * seeking, ignore the error and proceed to copy file data. */

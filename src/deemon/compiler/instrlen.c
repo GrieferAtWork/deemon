@@ -1195,8 +1195,7 @@ asm_nextinstr(instruction_t const *__restrict ip) {
 	uint8_t length;
 again:
 	length = intr_len[*ip];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		/* Prefix instruction. */
 		if (*ip >= ASM_PREFIXMIN) {
 			ip += prefix_length[*ip - ASM_PREFIXMIN];

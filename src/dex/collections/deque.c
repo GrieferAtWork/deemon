@@ -402,8 +402,7 @@ INTERN DREF DeeObject *DCALL
 Deque_PopFront(Deque *__restrict self) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
-	if unlikely(!self->d_size)
-		{
+	if unlikely(!self->d_size) {
 		Deque_LockEndWrite(self);
 		err_empty_sequence((DeeObject *)self);
 		return NULL;
@@ -417,8 +416,7 @@ INTERN DREF DeeObject *DCALL
 Deque_PopBack(Deque *__restrict self) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
-	if unlikely(!self->d_size)
-		{
+	if unlikely(!self->d_size) {
 		Deque_LockEndWrite(self);
 		err_empty_sequence((DeeObject *)self);
 		return NULL;
@@ -463,8 +461,7 @@ again:
 	if (result > num_items)
 		result = num_items;
 	pop_objv = (DREF DeeObject **)Dee_ATryMalloc(result * sizeof(DREF DeeObject *));
-	if unlikely(!pop_objv)
-		{
+	if unlikely(!pop_objv) {
 		Deque_LockEndWrite(self);
 		if (Dee_CollectMemory(result * sizeof(DREF DeeObject *)))
 			goto again;
@@ -492,8 +489,7 @@ INTERN DREF DeeObject *DCALL
 Deque_Pop(Deque *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
-	if unlikely(index >= self->d_size)
-		{
+	if unlikely(index >= self->d_size) {
 		index = self->d_size;
 		if (!index) {
 			Deque_LockEndWrite(self);
@@ -512,8 +508,7 @@ Deque_Pops(Deque *__restrict self, dssize_t index) {
 	Deque_LockWrite(self);
 	if unlikely(index < 0)
 		index += self->d_size;
-	if unlikely((size_t)index >= self->d_size)
-		{
+	if unlikely((size_t)index >= self->d_size) {
 		index = self->d_size;
 		if (!index) {
 			Deque_LockEndWrite(self);
@@ -529,8 +524,7 @@ Deque_Pops(Deque *__restrict self, dssize_t index) {
 INTERN int DCALL
 Deque_llrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
-	if unlikely(num_objects > self->d_size)
-		{
+	if unlikely(num_objects > self->d_size) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
@@ -545,8 +539,7 @@ Deque_llrot(Deque *__restrict self, size_t num_objects) {
 INTERN int DCALL
 Deque_lrrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
-	if unlikely(num_objects > self->d_size)
-		{
+	if unlikely(num_objects > self->d_size) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
@@ -561,8 +554,7 @@ Deque_lrrot(Deque *__restrict self, size_t num_objects) {
 INTERN int DCALL
 Deque_rlrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
-	if unlikely(num_objects > self->d_size)
-		{
+	if unlikely(num_objects > self->d_size) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
@@ -577,8 +569,7 @@ Deque_rlrot(Deque *__restrict self, size_t num_objects) {
 INTERN int DCALL
 Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
-	if unlikely(num_objects > self->d_size)
-		{
+	if unlikely(num_objects > self->d_size) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
@@ -796,8 +787,7 @@ deq_init(Deque *__restrict self,
 	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 	if (DeeArg_Unpack(argc, argv, "|oIu:Deque", &init, &self->d_bucket_sz))
 		return -1;
-	if unlikely(!self->d_bucket_sz)
-		{
+	if unlikely(!self->d_bucket_sz) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid bucket size: 0");
 		return -1;
@@ -1678,8 +1668,7 @@ deqiter_deep(DequeIteratorObject *__restrict self,
 	index = deqiter_getindex(other);
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;
-	if unlikely(index >= self->di_deq->d_size)
-		{
+	if unlikely(index >= self->di_deq->d_size) {
 		--self->di_ver;
 	} else {
 		DequeIterator_InitAt(&self->di_iter,

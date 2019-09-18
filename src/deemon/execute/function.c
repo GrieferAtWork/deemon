@@ -1210,8 +1210,7 @@ exec_finally:
 		 * assigned, so we simply fake that by pre-assigning `none'. */
 		self->yi_frame.cf_result = Dee_None;
 		Dee_Incref(Dee_None);
-		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY)
-			{
+		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY) {
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -1303,8 +1302,7 @@ yfi_clear(YFIterator *__restrict self) {
 	recursive_rwlock_write(&self->yi_lock);
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
-	if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
-		{
+	if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
 		/* Can't clear a frame currently being executed. */
 		recursive_rwlock_endwrite(&self->yi_lock);
 		return;
@@ -1354,8 +1352,7 @@ PRIVATE DREF DeeObject *DCALL
 yfi_iter_next(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		/* Special case: Always be indicative of an exhausted iterator
 		 * when default-constructed, or after being cleared. */
 		result = ITER_DONE;
@@ -1373,15 +1370,13 @@ yfi_iter_next(YFIterator *__restrict self) {
 		        self->yi_frame.cf_func->fo_code->co_code,
 		        self->yi_frame.cf_func->fo_code->co_code +
 		        self->yi_frame.cf_func->fo_code->co_codebytes);
-		if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
-			{
+		if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
 			DeeError_Throwf(&DeeError_SegFault, "Stack frame is already being executed");
 			result = NULL;
 			goto done;
 		}
 		self->yi_frame.cf_result = NULL;
-		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY)
-			{
+		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY) {
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -1631,8 +1626,7 @@ PRIVATE DREF Function *DCALL
 yfi_getfunc(YFIterator *__restrict self) {
 	DREF Function *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__func__");
 		return NULL;
@@ -1647,8 +1641,7 @@ PRIVATE DREF DeeCodeObject *DCALL
 yfi_getcode(YFIterator *__restrict self) {
 	DREF DeeCodeObject *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__code__");
 		return NULL;
@@ -1664,8 +1657,7 @@ yfi_getrefs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__refs__");
 		return NULL;
@@ -1683,8 +1675,7 @@ yfi_getkwds(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type,
 		                      DeeString_STR(&str___kwds__));
@@ -1702,8 +1693,7 @@ PRIVATE DREF DeeObject *DCALL
 yfi_getargs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__args__");
 		return NULL;
@@ -1719,8 +1709,7 @@ yfi_get_func_reference(YFIterator *__restrict self,
                        char const *__restrict attr_name) {
 	DREF YFunction *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if unlikely(!self->yi_func)
-		{
+	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, attr_name);
 		return NULL;

@@ -284,8 +284,7 @@ subrange_iter(SubRange *__restrict self) {
 	while (begin_index--) {
 		DREF DeeObject *discard;
 		discard = DeeObject_IterNext(iterator);
-		if unlikely(!ITER_ISOK(discard))
-			{
+		if unlikely(!ITER_ISOK(discard)) {
 			if (!discard)
 				goto err_iterator_r;
 			/* Empty iterator (the base iterator was exhausted during the discard-phase) */
@@ -333,8 +332,7 @@ err:
 PRIVATE size_t DCALL
 subrange_nsi_getsize(SubRange *__restrict self) {
 	size_t inner_size = DeeObject_Size(self->sr_seq);
-	if unlikely(inner_size != (size_t)-1)
-		{
+	if unlikely(inner_size != (size_t)-1) {
 		if (self->sr_start >= inner_size)
 			return 0;
 		inner_size -= self->sr_start;
@@ -347,8 +345,7 @@ subrange_nsi_getsize(SubRange *__restrict self) {
 PRIVATE size_t DCALL
 subrange_nsi_getsize_fast(SubRange *__restrict self) {
 	size_t inner_size = DeeFastSeq_GetSize(self->sr_seq);
-	if unlikely(inner_size != (size_t)-1)
-		{
+	if unlikely(inner_size != (size_t)-1) {
 		if (self->sr_start >= inner_size)
 			return 0;
 		inner_size -= self->sr_start;
@@ -640,8 +637,7 @@ PRIVATE size_t DCALL
 subrangen_nsi_getsize(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->sr_seq);
-	if likely(result != (size_t)-1)
-		{
+	if likely(result != (size_t)-1) {
 		if (result <= self->sr_start)
 			result = 0;
 		else {
@@ -655,8 +651,7 @@ PRIVATE size_t DCALL
 subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeFastSeq_GetSize(self->sr_seq);
-	if likely(result != (size_t)-1)
-		{
+	if likely(result != (size_t)-1) {
 		if (result <= self->sr_start)
 			result = 0;
 		else {

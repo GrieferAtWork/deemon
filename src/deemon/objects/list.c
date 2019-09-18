@@ -103,8 +103,7 @@ list_assign(List *__restrict self,
 	self->l_size  = elemc == (size_t)-1 ? 0 : elemc;
 	self->l_alloc = elema;
 	DeeList_LockEndWrite(self);
-	if unlikely(old_elemv)
-		{
+	if unlikely(old_elemv) {
 		/* Free the list state that got created while we loaded `other' */
 		while (old_elemc--)
 			Dee_Decref(old_elemv[old_elemc]);
@@ -170,8 +169,7 @@ again:
 	self->l_alloc = self->l_size = other->l_size;
 	self->l_elem                 = (DREF DeeObject **)Dee_TryMalloc(self->l_alloc *
                                                     sizeof(DREF DeeObject *));
-	if unlikely(!self->l_elem)
-		{
+	if unlikely(!self->l_elem) {
 		DeeList_LockEndRead(other);
 		if (Dee_CollectMemory(self->l_alloc * sizeof(DREF DeeObject *)))
 			goto again;
@@ -245,8 +243,7 @@ list_init_iterator(List *__restrict self,
 do_realloc:
 			new_vector = (DREF DeeObject **)Dee_TryRealloc(vector, new_alloc *
 			                                                       sizeof(DREF DeeObject *));
-			if unlikely(!new_vector)
-				{
+			if unlikely(!new_vector) {
 				if (new_alloc != size + 1) {
 					new_alloc = size + 1;
 					goto do_realloc;
@@ -293,8 +290,7 @@ DeeList_NewHint(size_t n_prealloc) {
 	result->l_size  = 0;
 	weakref_support_init(result);
 	rwlock_init(&result->l_lock);
-	if likely(n_prealloc)
-		{
+	if likely(n_prealloc) {
 		result->l_elem = (DREF DeeObject **)Dee_TryMalloc(n_prealloc *
 		                                                  sizeof(DREF DeeObject *));
 		if unlikely(!result->l_elem)
@@ -498,8 +494,7 @@ DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 do_realloc_vector:
 			new_vector = (DREF DeeObject **)Dee_TryRealloc(result->l_elem, new_alloc *
 			                                                               sizeof(DREF DeeObject *));
-			if unlikely(!new_vector)
-				{
+			if unlikely(!new_vector) {
 				if (new_alloc != req_alloc) {
 					new_alloc = req_alloc;
 					goto do_realloc_vector;
@@ -523,8 +518,7 @@ allocate_new_vector:
 		if unlikely(!new_vector)
 			goto err;
 		DeeList_LockRead(self);
-		if unlikely(DeeList_SIZE(self) != list_size)
-			{
+		if unlikely(DeeList_SIZE(self) != list_size) {
 			list_size = DeeList_SIZE(self);
 			DeeList_LockEndRead(self);
 			Dee_Free(new_vector);
@@ -537,8 +531,7 @@ allocate_new_vector:
 		DeeList_LockEndRead(self);
 		/* Create the new list descriptor. */
 		result = DeeGCObject_MALLOC(List);
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			while (i--)
 				Dee_Decref(new_vector[i]);
 			Dee_Free(new_vector);
@@ -566,8 +559,7 @@ DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
 	DeeList_LockWrite(self);
 	if unlikely(index < 0)
 		index += DeeList_SIZE(self);
-	if unlikely((size_t)index >= DeeList_SIZE(self))
-		{
+	if unlikely((size_t)index >= DeeList_SIZE(self)) {
 		size_t list_size = DeeList_SIZE(self);
 		DeeList_LockEndWrite(self);
 		err_index_out_of_bounds(self, (size_t)index, list_size);
@@ -592,8 +584,7 @@ DeeList_Erase(DeeObject *__restrict self,
 	ASSERT(DeeList_Check(self));
 again:
 	DeeList_LockWrite(self);
-	if unlikely(index >= DeeList_SIZE(self))
-		{
+	if unlikely(index >= DeeList_SIZE(self)) {
 		DeeList_LockEndWrite(self);
 		return 0;
 	}
@@ -601,8 +592,7 @@ again:
 	if (index + count > DeeList_SIZE(self))
 		delete_count = DeeList_SIZE(self) - index;
 	delobv = (DREF DeeObject **)Dee_ATryMalloc(delete_count * sizeof(DREF DeeObject *));
-	if unlikely(!delobv)
-		{
+	if unlikely(!delobv) {
 		DeeList_LockEndWrite(self);
 		if (!Dee_CollectMemory(delete_count * sizeof(DREF DeeObject *)))
 			return (size_t)-1;
@@ -874,14 +864,12 @@ retry:
 		newcap *= 2; /* Must increase the list's capacity. */
 		newvec = (DeeObject **)Dee_TryRealloc(DeeList_ELEM(self),
 		                                      newcap * sizeof(DeeObject *));
-		if unlikely(!newvec)
-			{
+		if unlikely(!newvec) {
 			/* Try again, but only attempt to allocate for a single object. */
 			newcap = DeeList_SIZE(self) + 1;
 			newvec = (DeeObject **)Dee_TryRealloc(DeeList_ELEM(self),
 			                                      newcap * sizeof(DeeObject *));
-			if unlikely(!newvec)
-				{
+			if unlikely(!newvec) {
 				DeeList_LockEndWrite(self);
 				/* Try to collect some memory, then try again. */
 				if (Dee_CollectMemory(sizeof(DeeObject *)))
@@ -915,14 +903,12 @@ retry:
 			newcap *= 2;
 		newvec = (DeeObject **)Dee_TryRealloc(DeeList_ELEM(self),
 		                                      newcap * sizeof(DeeObject *));
-		if unlikely(!newvec)
-			{
+		if unlikely(!newvec) {
 			/* Try again, but only attempt to allocate what we need. */
 			newcap = DeeList_SIZE(self) + objc;
 			newvec = (DeeObject **)Dee_TryRealloc(DeeList_ELEM(self),
 			                                      newcap * sizeof(DeeObject *));
-			if unlikely(!newvec)
-				{
+			if unlikely(!newvec) {
 				DeeList_LockEndWrite(self);
 				/* Try to collect some memory, then try again. */
 				if (Dee_CollectMemory(objc * sizeof(DeeObject *)))
@@ -1001,8 +987,7 @@ PUBLIC int(DCALL DeeList_Insert)(DeeObject *__restrict self, size_t index,
 do_realloc:
 		new_vector = (DREF DeeObject **)Dee_TryRealloc(me->l_elem, new_alloc *
 		                                                           sizeof(DREF DeeObject *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_alloc != me->l_size + 1) {
 				new_alloc = me->l_size + 1;
 				goto do_realloc;
@@ -1046,8 +1031,7 @@ PUBLIC int(DCALL DeeList_InsertVector)(DeeObject *__restrict self,
 do_realloc:
 		new_vector = (DREF DeeObject **)Dee_TryRealloc(me->l_elem, new_alloc *
 		                                                           sizeof(DREF DeeObject *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_alloc != me->l_size + objc) {
 				new_alloc = me->l_size + objc;
 				goto do_realloc;
@@ -1328,8 +1312,7 @@ list_getitem(List *__restrict self,
 	if (DeeObject_AsSize(index, &i))
 		return NULL;
 	DeeList_LockRead(self);
-	if unlikely(i >= DeeList_SIZE(self))
-		{
+	if unlikely(i >= DeeList_SIZE(self)) {
 		size_t list_size = DeeList_SIZE(self);
 		DeeList_LockEndRead(self);
 		err_index_out_of_bounds((DeeObject *)self, i, list_size);
@@ -1365,8 +1348,7 @@ again:
 	end -= begin;
 	ASSERT(end != 0);
 	new_vector = (DREF DeeObject **)Dee_TryMalloc((size_t)end * sizeof(DREF DeeObject *));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		DeeList_LockEndRead(self);
 		if (Dee_CollectMemory((size_t)end * sizeof(DREF DeeObject *)))
 			goto again;
@@ -1409,8 +1391,7 @@ again:
 	DeeList_LockRead(self);
 	if unlikely(begin < 0)
 		begin += self->l_size;
-	if unlikely((size_t)begin >= self->l_size)
-		{
+	if unlikely((size_t)begin >= self->l_size) {
 		/* Empty list. */
 		DeeList_LockEndRead(self);
 		return DeeList_New();
@@ -1419,8 +1400,7 @@ again:
 	ASSERT(new_size != 0);
 	new_vector = (DREF DeeObject **)Dee_TryMalloc((size_t)new_size *
 	                                              sizeof(DREF DeeObject *));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		DeeList_LockEndRead(self);
 		if (Dee_CollectMemory((size_t)new_size *
 		                      sizeof(DREF DeeObject *)))
@@ -1476,8 +1456,7 @@ list_delitem_index(List *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	ASSERT(DeeList_Check(self));
 	DeeList_LockWrite(self);
-	if unlikely(index >= DeeList_SIZE(self))
-		{
+	if unlikely(index >= DeeList_SIZE(self)) {
 		size_t list_size = DeeList_SIZE(self);
 		DeeList_LockEndWrite(self);
 		err_index_out_of_bounds((DeeObject *)self, index, list_size);
@@ -1509,8 +1488,7 @@ list_setitem_index(List *__restrict self,
                    DeeObject *__restrict value) {
 	DREF DeeObject *old_item;
 	DeeList_LockWrite(self);
-	if unlikely(index >= DeeList_SIZE(self))
-		{
+	if unlikely(index >= DeeList_SIZE(self)) {
 		size_t list_size = DeeList_SIZE(self);
 		DeeList_LockEndWrite(self);
 		err_index_out_of_bounds((DeeObject *)self, index, list_size);
@@ -1574,8 +1552,7 @@ again:
 	count  = (size_t)end_index - (size_t)start_index;
 	delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)count *
 	                                           sizeof(DREF DeeObject *));
-	if unlikely(!delobv)
-		{
+	if unlikely(!delobv) {
 		DeeList_LockEndWrite(self);
 		if (Dee_CollectMemory((size_t)count * sizeof(DREF DeeObject *)))
 			goto again;
@@ -1622,8 +1599,7 @@ again:
 	count  = DeeList_SIZE(self) - (size_t)start_index;
 	delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)count *
 	                                           sizeof(DREF DeeObject *));
-	if unlikely(!delobv)
-		{
+	if unlikely(!delobv) {
 		DeeList_LockEndWrite(self);
 		if (Dee_CollectMemory((size_t)count * sizeof(DREF DeeObject *)))
 			goto again;
@@ -1687,13 +1663,11 @@ again:
 			while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
-			if unlikely(!new_elem)
-				{
+			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
 				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
                                                                            sizeof(DREF DeeObject *));
-				if unlikely(!new_elem)
-					{
+				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
 					if (Dee_CollectMemory(new_alloc * sizeof(DREF DeeObject *)))
@@ -1718,8 +1692,7 @@ again:
 	} else {
 		delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)delete_count *
 		                                           sizeof(DREF DeeObject *));
-		if unlikely(!delobv)
-			{
+		if unlikely(!delobv) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory((size_t)delete_count * sizeof(DREF DeeObject *)))
 				goto again;
@@ -1786,13 +1759,11 @@ again:
 			while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
-			if unlikely(!new_elem)
-				{
+			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
 				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
                                                                            sizeof(DREF DeeObject *));
-				if unlikely(!new_elem)
-					{
+				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
 					if (Dee_CollectMemory(new_alloc * sizeof(DREF DeeObject *)))
@@ -1817,8 +1788,7 @@ again:
 	} else {
 		delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)delete_count *
 		                                           sizeof(DREF DeeObject *));
-		if unlikely(!delobv)
-			{
+		if unlikely(!delobv) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory((size_t)delete_count * sizeof(DREF DeeObject *)))
 				goto again;
@@ -1862,8 +1832,7 @@ list_setrange_i(List *__restrict self,
 	insertv = DeeSeq_AsHeapVector(items, &insert_count);
 	if unlikely(!insertv)
 		goto err;
-	if unlikely(!insert_count)
-		{
+	if unlikely(!insert_count) {
 		Dee_Free(insertv);
 		return list_delrange_i(self, start, end);
 	}
@@ -1911,13 +1880,11 @@ again:
 			while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
-			if unlikely(!new_elem)
-				{
+			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
 				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
                                                                            sizeof(DREF DeeObject *));
-				if unlikely(!new_elem)
-					{
+				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
 					if (Dee_CollectMemory(new_alloc * sizeof(DREF DeeObject *)))
@@ -1943,8 +1910,7 @@ again:
 	} else {
 		delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)delete_count *
 		                                           sizeof(DREF DeeObject *));
-		if unlikely(!delobv)
-			{
+		if unlikely(!delobv) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory((size_t)delete_count * sizeof(DREF DeeObject *)))
 				goto again;
@@ -2003,8 +1969,7 @@ list_setrange_in(List *__restrict self,
 	insertv = DeeSeq_AsHeapVector(items, &insert_count);
 	if unlikely(!insertv)
 		goto err;
-	if unlikely(!insert_count)
-		{
+	if unlikely(!insert_count) {
 		Dee_Free(insertv);
 		return list_delrange_in(self, start);
 	}
@@ -2044,13 +2009,11 @@ again:
 			while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
-			if unlikely(!new_elem)
-				{
+			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
 				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
                                                                            sizeof(DREF DeeObject *));
-				if unlikely(!new_elem)
-					{
+				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
 					if (Dee_CollectMemory(new_alloc * sizeof(DREF DeeObject *)))
@@ -2076,8 +2039,7 @@ again:
 	} else {
 		delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)delete_count *
 		                                           sizeof(DREF DeeObject *));
-		if unlikely(!delobv)
-			{
+		if unlikely(!delobv) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory((size_t)delete_count * sizeof(DREF DeeObject *)))
 				goto again;
@@ -2159,8 +2121,7 @@ list_nsi_getitem(List *__restrict self,
                  size_t index) {
 	DREF DeeObject *result;
 	DeeList_LockRead(self);
-	if unlikely(index >= DeeList_SIZE(self))
-		{
+	if unlikely(index >= DeeList_SIZE(self)) {
 		size_t list_size = DeeList_SIZE(self);
 		DeeList_LockEndRead(self);
 		err_index_out_of_bounds((DeeObject *)self, index, list_size);
@@ -2552,8 +2513,7 @@ again:
 	DeeList_LockWrite(self);
 	count = DeeList_SIZE(self);
 	result = DeeTuple_TryNewUninitialized(count);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		DeeList_LockEndWrite(self);
 		if (Dee_CollectMemory(DeeTuple_SIZEOF(count)))
 			goto again;
@@ -2588,8 +2548,7 @@ list_do_shrink(List *__restrict self) {
 		DREF DeeObject **new_elem;
 		new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, self->l_size *
 		                                                           sizeof(DREF DeeObject *));
-		if likely(new_elem)
-			{
+		if likely(new_elem) {
 			self->l_elem  = new_elem;
 			self->l_alloc = self->l_size;
 		}
@@ -2614,8 +2573,7 @@ list_setallocated(List *__restrict self,
 	ASSERT(self->l_alloc >= self->l_size);
 	if (new_alloc != self->l_alloc) {
 		/* Make sure that the new allocation isn't too low */
-		if unlikely(new_alloc < self->l_size)
-			{
+		if unlikely(new_alloc < self->l_size) {
 			size_t my_size = self->l_size;
 			DeeList_LockEndWrite(self);
 			DeeError_Throwf(&DeeError_ValueError,
@@ -2681,8 +2639,7 @@ list_reserve(List *__restrict self,
 		DREF DeeObject **new_elem;
 		new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, size *
 		                                                           sizeof(DREF DeeObject *));
-		if likely(new_elem)
-			{
+		if likely(new_elem) {
 			self->l_elem  = new_elem;
 			self->l_alloc = size;
 		}
@@ -2740,8 +2697,7 @@ DeeList_Sort(DeeObject *__restrict self, DeeObject *key) {
 		goto err;
 again:
 	DeeList_LockRead(self);
-	if unlikely(DeeList_SIZE(self) > objc)
-		{
+	if unlikely(DeeList_SIZE(self) > objc) {
 		DeeObject **new_objv;
 		objc = DeeList_SIZE(self);
 		DeeList_LockEndRead(self);
@@ -2798,8 +2754,7 @@ DeeList_Sorted(DeeObject *__restrict self, DeeObject *key) {
 		goto err;
 again:
 	DeeList_LockRead(self);
-	if unlikely(DeeList_SIZE(self) > objc)
-		{
+	if unlikely(DeeList_SIZE(self) > objc) {
 		DeeObject **new_objv;
 		objc = DeeList_SIZE(self);
 		DeeList_LockEndRead(self);
@@ -2882,8 +2837,7 @@ again:
 			DREF DeeObject **new_elem;
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, newsize *
 			                                                           sizeof(DREF DeeObject *));
-			if unlikely(!new_elem)
-				{
+			if unlikely(!new_elem) {
 				DeeList_LockEndWrite(self);
 				if (Dee_CollectMemory(newsize * sizeof(DREF DeeObject *)))
 					goto again;
@@ -2933,8 +2887,7 @@ again:
 		size_t num_del;
 		num_del = self->l_size - newsize;
 		old_obj = (DREF DeeObject **)Dee_ATryMalloc(num_del * sizeof(DREF DeeObject *));
-		if unlikely(!old_obj)
-			{
+		if unlikely(!old_obj) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory(newsize * sizeof(DREF DeeObject *)))
 				goto again;
@@ -3185,8 +3138,7 @@ again:
 		goto err;
 	}
 	elemv = (DREF DeeObject **)Dee_TryMalloc(result_length * sizeof(DREF DeeObject *));
-	if unlikely(!elemv)
-		{
+	if unlikely(!elemv) {
 		DeeList_LockEndRead(self);
 		if (Dee_CollectMemory(result_length * sizeof(DREF DeeObject *)))
 			goto again;
@@ -3230,8 +3182,7 @@ list_inplace_mul(List **__restrict pself,
 	size_t i, my_length, result_length, multiplier;
 	if (DeeObject_AsSize(other, &multiplier))
 		goto err;
-	if unlikely(!multiplier)
-		{
+	if unlikely(!multiplier) {
 		DeeList_Clear((DeeObject *)self);
 		goto done;
 	}
@@ -3250,8 +3201,7 @@ again:
 	if (result_length > self->l_alloc) {
 		elemv = (DREF DeeObject **)Dee_TryRealloc(elemv, result_length *
 		                                                 sizeof(DREF DeeObject *));
-		if unlikely(!elemv)
-			{
+		if unlikely(!elemv) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory(result_length * sizeof(DREF DeeObject *)))
 				goto again;
@@ -3368,8 +3318,7 @@ DeeList_EqF(List *__restrict lhs,
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
 		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem)
-			{
+		if unlikely(!rhs_elem) {
 			Dee_Decref(lhs_elem);
 			return -1;
 		}
@@ -3463,8 +3412,7 @@ DeeList_LoV(List *__restrict lhs,
 		DeeList_LockEndRead(lhs);
 		temp = DeeObject_CompareLo(lhs_elem, rhsv[i]);
 		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				{
+			if unlikely(temp < 0) {
 				Dee_Decref(lhs_elem);
 				return temp;
 			}
@@ -3502,15 +3450,13 @@ DeeList_LoF(List *__restrict lhs,
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
 		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem)
-			{
+		if unlikely(!rhs_elem) {
 			Dee_Decref(lhs_elem);
 			return -1;
 		}
 		temp = DeeObject_CompareLo(lhs_elem, rhs_elem);
 		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				{
+			if unlikely(temp < 0) {
 				Dee_Decref(rhs_elem);
 				Dee_Decref(lhs_elem);
 				return temp;
@@ -3613,8 +3559,7 @@ DeeList_LeV(List *__restrict lhs,
 		DeeList_LockEndRead(lhs);
 		temp = DeeObject_CompareLo(lhs_elem, rhsv[i]);
 		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				{
+			if unlikely(temp < 0) {
 				Dee_Decref(lhs_elem);
 				return temp;
 			}
@@ -3652,15 +3597,13 @@ DeeList_LeF(List *__restrict lhs,
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
 		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem)
-			{
+		if unlikely(!rhs_elem) {
 			Dee_Decref(lhs_elem);
 			return -1;
 		}
 		temp = DeeObject_CompareLo(lhs_elem, rhs_elem);
 		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				{
+			if unlikely(temp < 0) {
 				Dee_Decref(rhs_elem);
 				Dee_Decref(lhs_elem);
 				return temp;

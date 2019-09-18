@@ -257,8 +257,7 @@ capi_trystrdup(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	CTYPES_PROTECTED_STRNLEN(len, str.pchar, maxlen, goto err);
 	resptr = Dee_TryMalloc((len + 1) * sizeof(char));
-	if likely(resptr)
-		{
+	if likely(resptr) {
 		CTYPES_PROTECTED_MEMCPY(resptr, str.pchar, len * sizeof(char), goto err_r);
 		((char *)resptr)[len] = '\0';
 	}

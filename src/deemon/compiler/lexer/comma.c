@@ -66,8 +66,7 @@ astlist_upsize(struct astlist *__restrict self,
 do_realloc:
 	new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v, new_alloc *
 	                                                             sizeof(DREF struct ast *));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		if (new_alloc != self->ast_c + min_add) {
 			new_alloc = self->ast_c + min_add;
 			goto do_realloc;
@@ -463,8 +462,7 @@ next_expr:
 			}
 			loc_here(&symbol_name_loc);
 			var_symbol = get_local_symbol(token.t_kwd);
-			if unlikely(var_symbol)
-				{
+			if unlikely(var_symbol) {
 				if (WARN(W_VARIABLE_ALREADY_EXISTS, token.t_kwd))
 					goto err_current;
 			} else {
@@ -559,8 +557,7 @@ next_expr:
 				/* Create a multi-branch AST for the assigned expression. */
 				/* TODO: Add support for applying annotations here! */
 				args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv), &equal_loc);
-				if unlikely(!args)
-					{
+				if unlikely(!args) {
 					ast_decref(exprv[0]);
 					Dee_Free(exprv);
 					goto err_current;
@@ -571,8 +568,7 @@ next_expr:
 				bool has_paren = tok == '(';
 				old_flags      = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if unlikely(yield() < 0)
-					{
+				if unlikely(yield() < 0) {
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
 				}
@@ -589,8 +585,7 @@ next_expr:
 				if unlikely(!args)
 					goto err_current;
 				if (has_paren) {
-					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
-						{
+					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:
 						ast_decref(args);
 						goto err_current;
@@ -721,8 +716,7 @@ continue_at_comma:
 			/* Append the last expression (in the example above, that is `c') */
 			error = astlist_append(&expr_comma, current);
 			ast_decref(current);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 err_store_source:
 				ast_decref(store_source);
 				goto err;
@@ -757,8 +751,7 @@ err_store_source:
 			/* Second case: assign `store_source' to `current' after
 			 *              flushing everything from the comma-list. */
 			error = astlist_appendall(&expr_batch, &expr_comma);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 				ast_decref(store_source);
 				goto err_current;
 			}
@@ -831,8 +824,7 @@ done_expression:
 				goto err_current;
 			astv[0] = current;
 			result  = ast_multiple(flags, 1, astv);
-			if unlikely(!result)
-				{
+			if unlikely(!result) {
 				Dee_Free(astv);
 				goto err_current;
 			}
@@ -845,15 +837,13 @@ done_expression_nomerge:
 			*pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
 		/* Consume a `;' token as part of the expression. */
-		if likely(tok == ';' || tok == '\n')
-			{
+		if likely(tok == ';' || tok == '\n') {
 			do {
 				if (yieldnbif(mode & AST_COMMA_ALLOWNONBLOCK) < 0)
 					goto err_clear_current_only;
 			} while (tok == '\n');
 		} else {
-			if unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
-				{
+			if unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION)) {
 err_clear_current_only:
 				ast_decref(current);
 				current = NULL;

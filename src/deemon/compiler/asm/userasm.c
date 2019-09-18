@@ -1170,8 +1170,7 @@ do_emit_instruction:
 		goto err;
 	}
 
-	if unlikely(sp_sub > old_sp)
-		{
+	if unlikely(sp_sub > old_sp) {
 		/* Negative stack offset? */
 #if 1
 		DeeError_Throwf(&DeeError_CompilerError,
@@ -1743,8 +1742,7 @@ write_regular_local:
 				DeeDict_LockRead(d);
 			}
 			DeeDict_LockEndRead(d);
-			if unlikely(length > UINT8_MAX)
-				{
+			if unlikely(length > UINT8_MAX) {
 				/* Shouldn't really happen, but is required due to race conditions.
 				 * Peephole optimization should be able to get rid of this later... */
 				length *= 2;
@@ -1775,8 +1773,7 @@ write_regular_local:
 			size_t length;
 			/* Check the length of the sequence. */
 			length = DeeObject_Size(self->a_constexpr);
-			if unlikely(length == (size_t)-1)
-				{
+			if unlikely(length == (size_t)-1) {
 				if (DeeError_Catch(&DeeError_NotImplemented))
 					goto next_option;
 				goto err;
@@ -1784,8 +1781,7 @@ write_regular_local:
 			if (length > UINT8_MAX)
 				goto next_option;
 			iter = DeeObject_IterSelf(self->a_constexpr);
-			if unlikely(!iter)
-				{
+			if unlikely(!iter) {
 				if (DeeError_Catch(&DeeError_NotImplemented))
 					goto next_option;
 				goto err;
@@ -1796,8 +1792,7 @@ write_regular_local:
 				int error;
 				error = asm_gpush_constexpr(elem);
 				Dee_Decref(elem);
-				if unlikely(!error)
-					{
+				if unlikely(!error) {
 					elem = NULL;
 					break;
 				}
@@ -1806,8 +1801,7 @@ write_regular_local:
 			Dee_Decref(iter);
 			if unlikely(!elem)
 				goto err;
-			if unlikely(length > UINT8_MAX)
-				{
+			if unlikely(length > UINT8_MAX) {
 				/* Shouldn't really happen, but is required due to race conditions.
 				 * Peephole optimization should be able to get rid of this later... */
 				while (length--)
@@ -2114,8 +2108,7 @@ next:
 				while (DeeUni_IsSymCont(ch));
 				/* Lookup the name of the operand. */
 				name = TPPLexer_LookupKeyword(name_start, (size_t)(iter - name_start) - 1, 0);
-				if unlikely(!name)
-					{
+				if unlikely(!name) {
 err_unknown_operand:
 					DeeError_Throwf(&DeeError_CompilerError,
 					                "No operand known under the name %$q",
@@ -2151,8 +2144,7 @@ has_operand:
 					opno += DeeUni_AsDigit(ch);
 					ch = *iter++;
 				}
-				if unlikely(opno > self->af_ast->a_assembly.as_opc)
-					{
+				if unlikely(opno > self->af_ast->a_assembly.as_opc) {
 					DeeError_Throwf(&DeeError_CompilerError,
 					                "Expected `]' after `%[' in user-assembly text");
 					goto err;
@@ -2487,8 +2479,7 @@ create_assembly_file:
 
 		case CLEANUP_MODE_FSTACK:
 			operand = self->a_assembly.as_opv[count].ao_expr;
-			if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur)
-				{
+			if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
 				/* The user broke stack alignment (just evaluate the operand). */
 				if (self->a_assembly.as_opv[count].ao_name) {
 					if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,

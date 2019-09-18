@@ -94,8 +94,7 @@ INTERN int(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stac
 			rwlock_endread(&symmod->mo_lock);
 			/* Make sure that the symbol value is allowed
 			 * to be expanded in constant expression. */
-			if likely(symval)
-				{
+			if likely(symval) {
 				int allowed;
 set_constant_expression:
 				allowed = allow_constexpr(symval);

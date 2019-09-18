@@ -391,8 +391,7 @@ INTERN int (DCALL ast_genasm_one)(struct ast *__restrict self,
 	wnt_sp = old_sp;
 	if (gflags & ASM_G_FPUSHRES)
 		++wnt_sp;
-	if unlikely(current_assembler.a_stackcur != wnt_sp)
-		{
+	if unlikely(current_assembler.a_stackcur != wnt_sp) {
 		/* Emit a warning and forcefully re-align the stack. */
 		result = WARNAST(self, W_ASM_MISSALIGNED_STACK);
 		if (result)
@@ -413,8 +412,7 @@ INTERN int (DCALL ast_genasm_set_one)(struct ast *__restrict self,
 	wnt_sp = old_sp;
 	if (gflags & ASM_G_FPUSHRES)
 		++wnt_sp;
-	if unlikely(current_assembler.a_stackcur != wnt_sp)
-		{
+	if unlikely(current_assembler.a_stackcur != wnt_sp) {
 		/* Emit a warning and forcefully re-align the stack. */
 		result = WARNAST(self, W_ASM_MISSALIGNED_STACK);
 		if (result)

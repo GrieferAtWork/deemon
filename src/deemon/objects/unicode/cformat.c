@@ -557,8 +557,7 @@ do_length_integer:
 				                            : FORMAT_QUOTE_FNORMAL
 #endif /* F_PREFIX != FORMAT_QUOTE_FPRINTRAW */
 				                            );
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 err_subprinter:
 					unicode_printer_fini(&subprinter);
 					goto err;
@@ -629,8 +628,7 @@ err_subprinter:
 				       : DeeObject_Print(in_arg,
 				                         &unicode_printer_print,
 				                         &preprinter);
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 err_preprinter:
 					unicode_printer_fini(&preprinter);
 					goto err;
@@ -730,8 +728,7 @@ missing_argument:
 		flush_start = iter;
 	}
 	/* Error if arguments remained unused. */
-	if unlikely(argc)
-		{
+	if unlikely(argc) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "%Iu arguments were unused", argc);
 		goto err_m1;

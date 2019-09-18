@@ -372,11 +372,9 @@ err_no_keyword_for_argument:
 							new_arga = arga * 2;
 							if unlikely(!new_arga)
 								new_arga = 2;
-							if unlikely(new_arga < arga)
-								{
+							if unlikely(new_arga < arga) {
 								new_arga = result->jf_argc_max + 1;
-								if unlikely(new_arga < arga)
-									{
+								if unlikely(new_arga < arga) {
 									DeeError_Throwf(&DeeError_SyntaxError,
 									                "Too many arguments");
 									goto err_r;
@@ -384,8 +382,7 @@ err_no_keyword_for_argument:
 							}
 							new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
 							                                    new_arga * sizeof(size_t));
-							if unlikely(!new_argv)
-								{
+							if unlikely(!new_argv) {
 								new_arga = result->jf_argc_max + 1;
 								new_argv = (size_t *)Dee_Realloc(result->jf_argv,
 								                                 new_arga * sizeof(size_t));
@@ -709,11 +706,9 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 			                            &context);
 			JITLValue_Fini(&lexer.jl_lvalue);
 		}
-		if likely(result)
-			{
+		if likely(result) {
 			ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-			if unlikely(lexer.jl_tok != TOK_EOF)
-				{
+			if unlikely(lexer.jl_tok != TOK_EOF) {
 				DeeError_Throwf(&DeeError_SyntaxError,
 				                "Expected EOF but got `%$s'",
 				                (size_t)(lexer.jl_end - lexer.jl_tokstart),

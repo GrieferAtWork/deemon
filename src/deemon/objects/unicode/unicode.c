@@ -213,8 +213,7 @@ PUBLIC DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch) {
 			return NULL;
 		result->s_str[0] = (char)ch;
 		rwlock_write(&latin1_chars_lock);
-		if unlikely(latin1_chars[ch] != NULL)
-			{
+		if unlikely(latin1_chars[ch] != NULL) {
 			DREF String *new_result = latin1_chars[ch];
 			/* Special case: The string has been created in the mean time.
 			 * This can even happen when threading is disabled, in case
@@ -253,8 +252,7 @@ again:
 		Dee_UntrackAlloc(utf);
 	}
 	ASSERT(utf->u_width <= STRING_WIDTH_2BYTE);
-	if likely(!utf->u_data[STRING_WIDTH_2BYTE])
-		{
+	if likely(!utf->u_data[STRING_WIDTH_2BYTE]) {
 		uint16_t *result;
 		size_t i, length;
 		uint8_t *data;
@@ -268,8 +266,7 @@ again:
 		for (i = 0; i < length; ++i)
 			result[i] = data[i];
 		result[length] = 0;
-		if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_2BYTE], NULL, result))
-			{
+		if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_2BYTE], NULL, result)) {
 			Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
@@ -300,8 +297,7 @@ again:
 		Dee_UntrackAlloc(utf);
 	}
 	ASSERT(utf->u_width <= STRING_WIDTH_4BYTE);
-	if likely(!utf->u_data[STRING_WIDTH_4BYTE])
-		{
+	if likely(!utf->u_data[STRING_WIDTH_4BYTE]) {
 		uint32_t *result;
 		size_t i, length;
 		ASSERT(utf->u_width != STRING_WIDTH_4BYTE);
@@ -327,8 +323,7 @@ again:
 				result[i] = data[i];
 		}
 		result[length] = 0;
-		if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE], NULL, result))
-			{
+		if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE], NULL, result)) {
 			Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
@@ -1286,8 +1281,7 @@ nt_MultiByteToWideChar(DWORD codepage, uint8_t *__restrict str, size_t length) {
 	                                                   (int)(DWORD)length,
 	                                                   (LPWSTR)result,
 	                                                   (int)(DWORD)length);
-	if unlikely(!result_length || result_length > length)
-		{
+	if unlikely(!result_length || result_length > length) {
 		size_t new_length;
 		result_length = (size_t)(DWORD)MultiByteToWideChar(codepage,
 		                                                   0,
@@ -1295,8 +1289,7 @@ nt_MultiByteToWideChar(DWORD codepage, uint8_t *__restrict str, size_t length) {
 		                                                   (int)(DWORD)length,
 		                                                   NULL,
 		                                                   0);
-		if unlikely(!result_length)
-			{
+		if unlikely(!result_length) {
 			size_t i;
 fallback:
 			/* Fallback: Simply up-cast the string. */
@@ -1316,8 +1309,7 @@ fallback:
 		                                                   (int)(DWORD)length,
 		                                                   (LPWSTR)result,
 		                                                   (int)(DWORD)new_length);
-		if unlikely(!result_length || result_length > new_length)
-			{
+		if unlikely(!result_length || result_length > new_length) {
 			/* ... What?!? */
 			new_result = DeeString_ResizeWideBuffer(result, length);
 			if unlikely(!new_result)
@@ -1328,8 +1320,7 @@ fallback:
 		length = new_length; /* For the comparison below... */
 	}
 	result[result_length] = 0;
-	if unlikely(result_length != length)
-		{
+	if unlikely(result_length != length) {
 		new_result = DeeString_TryResizeWideBuffer(result, result_length);
 		if likely(new_result)
 			result = new_result;
@@ -1532,8 +1523,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	struct string_utf *utf;
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -1588,8 +1578,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	struct string_utf *utf;
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -1650,8 +1639,7 @@ DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
 	               * 2: UTF-16 w surrogates that produce character > 0xffff */
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -1668,8 +1656,7 @@ read_text_i:
 		    ch <= UTF16_HIGH_SURROGATE_MAX) {
 			uint16_t low_value;
 			/* Surrogate pair. */
-			if unlikely(i >= length - 1)
-				{
+			if unlikely(i >= length - 1) {
 				/* Missing high surrogate. */
 				if (error_mode & STRING_ERROR_FREPLAC) {
 					text[i] = '?';
@@ -1830,8 +1817,7 @@ DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	               * 2: UTF-16 w surrogates that produce character > 0xffff */
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -1848,8 +1834,7 @@ continue_at_i:
 		    ch <= UTF16_HIGH_SURROGATE_MAX) {
 			uint16_t low_value;
 			/* Surrogate pair. */
-			if unlikely(i >= length - 1)
-				{
+			if unlikely(i >= length - 1) {
 				/* Missing high surrogate. */
 				text[i] = 0;
 				--length;
@@ -1983,8 +1968,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	struct string_utf *utf;
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -2064,8 +2048,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	struct string_utf *utf;
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -2137,8 +2120,7 @@ DeeString_PackWideBuffer(/*inherit(always)*/ dwchar_t *__restrict text,
 	static DWORD wincall_flags = WC_ERR_INVALID_CHARS;
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
-	if unlikely(!length)
-		{
+	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
 		return_empty_string;
 	}
@@ -2171,8 +2153,7 @@ restart:
 		                                                 0,
 		                                                 NULL,
 		                                                 NULL);
-		if unlikely(!mbcs_length)
-			{
+		if unlikely(!mbcs_length) {
 			DWORD error;
 handle_decode_error:
 			error = GetLastError();
@@ -2208,8 +2189,7 @@ handle_decode_error:
 		if unlikely(!mbcs_length)
 			goto handle_decode_error;
 	}
-	if unlikely(mbcs_length < length)
-		{
+	if unlikely(mbcs_length < length) {
 		new_result = (DREF String *)DeeObject_TryRealloc(result,
 		                                                 COMPILER_OFFSETOF(String, s_str) +
 		                                                 (length + 1) * sizeof(char));
@@ -2296,8 +2276,7 @@ case STRING_ENCODING_-- - MBCS: {
 	data->u_width                    = STRING_WIDTH_2BYTE;
 	data->u_data[STRING_WIDTH_2BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
 	                                                          DeeString_SIZE(self));
-	if unlikely(!data->u_data[STRING_WIDTH_2BYTE])
-		{
+	if unlikely(!data->u_data[STRING_WIDTH_2BYTE]) {
 		utf_free(data);
 		goto err;
 	}
@@ -2305,8 +2284,7 @@ case STRING_ENCODING_-- - MBCS: {
 	data->u_width                    = STRING_WIDTH_4BYTE;
 	data->u_data[STRING_WIDTH_4BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
 	                                                          DeeString_SIZE(self));
-	if unlikely(!data->u_data[STRING_WIDTH_4BYTE])
-		{
+	if unlikely(!data->u_data[STRING_WIDTH_4BYTE]) {
 		utf_free(data);
 		goto err;
 	}
@@ -2344,8 +2322,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 			continue;
 		}
 		seqlen = utf8_sequence_len[ch];
-		if unlikely(!seqlen || iter + seqlen > end)
-			{
+		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
 				*iter = '?';
@@ -2363,8 +2340,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 			goto err_r;
 		}
 		ch32 = utf8_getchar(iter, seqlen);
-		if unlikely(ch32 <= 0x7f)
-			{
+		if unlikely(ch32 <= 0x7f) {
 			*iter = (uint8_t)ch32;
 			memmove(iter + 1,
 			        iter + seqlen,
@@ -2393,8 +2369,7 @@ use_buffer32:
 					continue;
 				}
 				seqlen = utf8_sequence_len[ch];
-				if unlikely(!seqlen || iter + seqlen > end)
-					{
+				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
 						*iter++  = '?';
@@ -2453,8 +2428,7 @@ err_buffer32:
 					continue;
 				}
 				seqlen = utf8_sequence_len[ch];
-				if unlikely(!seqlen || iter + seqlen > end)
-					{
+				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
 						*iter++  = '?';
@@ -2474,8 +2448,7 @@ err_buffer16:
 					goto err_r;
 				}
 				ch32 = utf8_getchar(iter, seqlen);
-				if unlikely(ch32 > 0xffff)
-					{
+				if unlikely(ch32 > 0xffff) {
 					iter += seqlen;
 					/* Must upgrade to use a 4-byte buffer. */
 					buffer32 = DeeString_New4ByteBuffer((dst16 - buffer16) + 1 + (end - iter));
@@ -2547,8 +2520,7 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 			continue;
 		}
 		seqlen = utf8_sequence_len[ch];
-		if unlikely(!seqlen || iter + seqlen > end)
-			{
+		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
 				*iter = '?';
@@ -2566,8 +2538,7 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 			goto err_r;
 		}
 		ch32 = utf8_getchar(iter, seqlen);
-		if unlikely(ch32 <= 0x7f)
-			{
+		if unlikely(ch32 <= 0x7f) {
 			*iter = (uint8_t)ch32;
 			memmove(iter + 1,
 			        iter + seqlen,
@@ -2596,8 +2567,7 @@ use_buffer32:
 					continue;
 				}
 				seqlen = utf8_sequence_len[ch];
-				if unlikely(!seqlen || iter + seqlen > end)
-					{
+				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
 						*iter++  = '?';
@@ -2656,8 +2626,7 @@ err_buffer32:
 					continue;
 				}
 				seqlen = utf8_sequence_len[ch];
-				if unlikely(!seqlen || iter + seqlen > end)
-					{
+				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
 						*iter++  = '?';
@@ -2677,8 +2646,7 @@ err_buffer16:
 					goto err_r;
 				}
 				ch32 = utf8_getchar(iter, seqlen);
-				if unlikely(ch32 > 0xffff)
-					{
+				if unlikely(ch32 > 0xffff) {
 					iter += seqlen;
 					/* Must upgrade to use a 4-byte buffer. */
 					buffer32 = DeeString_New4ByteBuffer((dst16 - buffer16) + 1 + (end - iter));
@@ -2748,16 +2716,14 @@ DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 			continue;
 		}
 		seqlen = utf8_sequence_len[ch];
-		if unlikely(!seqlen || iter + seqlen > end)
-			{
+		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			--end;
 			memmove(iter, iter + 1, (end - iter) * sizeof(char));
 			continue;
 		}
 		ch32 = utf8_getchar(iter, seqlen);
-		if unlikely(ch32 <= 0x7f)
-			{
+		if unlikely(ch32 <= 0x7f) {
 			*iter = (uint8_t)ch32;
 			memmove(iter + 1,
 			        iter + seqlen,
@@ -2786,8 +2752,7 @@ use_buffer32:
 					continue;
 				}
 				seqlen = utf8_sequence_len[ch];
-				if unlikely(!seqlen || iter + seqlen > end)
-					{
+				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
 					memmove(iter, iter + 1, (end - iter) * sizeof(char));
@@ -2806,8 +2771,7 @@ use_buffer32:
 					buffer32 = new_buffer32;
 			}
 			utf = utf_tryalloc();
-			if unlikely(!utf)
-				{
+			if unlikely(!utf) {
 				DeeString_Free4ByteBuffer(buffer32);
 				goto err_r;
 			}
@@ -2836,21 +2800,18 @@ use_buffer32:
 					continue;
 				}
 				seqlen = utf8_sequence_len[ch];
-				if unlikely(!seqlen || iter + seqlen > end)
-					{
+				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
 					memmove(iter, iter + 1, (end - iter) * sizeof(char));
 					continue;
 				}
 				ch32 = utf8_getchar(iter, seqlen);
-				if unlikely(ch32 > 0xffff)
-					{
+				if unlikely(ch32 > 0xffff) {
 					iter += seqlen;
 					/* Must upgrade to use a 4-byte buffer. */
 					buffer32 = DeeString_TryNew4ByteBuffer((dst16 - buffer16) + 1 + (end - iter));
-					if unlikely(!buffer32)
-						{
+					if unlikely(!buffer32) {
 err_buffer16:
 						DeeString_Free2ByteBuffer(buffer16);
 						goto err_r;
@@ -3463,8 +3424,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 	if (!self->up_buffer) {
 		/* Allocate an initial buffer. */
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
-		if likely(!self->up_length)
-			{
+		if likely(!self->up_length) {
 			self->up_length = num_chars;
 			self->up_flags |= (unsigned char)width;
 		} else {
@@ -3671,8 +3631,7 @@ allocate_initial_normally:
 			ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 			buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 			                                                (UNICODE_PRINTER_INITIAL_BUFSIZE + 1) * sizeof(char));
-			if likely(buffer)
-				{
+			if likely(buffer) {
 				buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
 			} else {
 				buffer = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
@@ -3692,8 +3651,7 @@ allocate_initial_normally:
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 		buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                                (UNICODE_PRINTER_INITIAL_BUFSIZE + 1) * sizeof(char));
-		if likely(buffer)
-			{
+		if likely(buffer) {
 			buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
 		} else {
 			buffer = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
@@ -3710,14 +3668,12 @@ allocate_initial_normally:
 	}
 	size_avail = WSTR_LENGTH(string);
 	ASSERT(size_avail >= self->up_length);
-	if unlikely(size_avail == self->up_length)
-		{
+	if unlikely(size_avail == self->up_length) {
 		/* Must allocate more memory. */
 		string = DeeString_TryResizeWidthBuffer(string,
 		                                        size_avail * 2,
 		                                        self->up_flags & UNICODE_PRINTER_FWIDTH);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_ResizeWidthBuffer(self->up_buffer,
 			                                     size_avail + 1,
 			                                     self->up_flags & UNICODE_PRINTER_FWIDTH);
@@ -3828,11 +3784,9 @@ PUBLIC int(DCALL Dee_unicode_printer_putc)(struct unicode_printer *__restrict se
 		if (ch <= 0xffff) {
 allocate_initial_as_16:
 			string = DeeString_TryNew2ByteBuffer(initial_length);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
-				if unlikely(!string)
-					{
+				if unlikely(!string) {
 					string = DeeString_New2ByteBuffer(1);
 					if unlikely(!string)
 						goto err;
@@ -3843,11 +3797,9 @@ allocate_initial_as_16:
 		} else {
 allocate_initial_as_32:
 			string = DeeString_TryNew4ByteBuffer(initial_length);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryNew4ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
-				if unlikely(!string)
-					{
+				if unlikely(!string) {
 					string = DeeString_New4ByteBuffer(1);
 					if unlikely(!string)
 						goto err;
@@ -3863,8 +3815,7 @@ allocate_initial_as_32:
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 		if (ch <= 0xffff) {
 			string = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_New2ByteBuffer(1);
 				if unlikely(!string)
 					goto err;
@@ -3873,8 +3824,7 @@ allocate_initial_as_32:
 			self->up_flags |= STRING_WIDTH_2BYTE;
 		} else {
 			string = DeeString_TryNew4ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_New4ByteBuffer(1);
 				if unlikely(!string)
 					goto err;
@@ -3926,8 +3876,7 @@ append_2byte:
 				/* Must allocate more memory. */
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)string,
 				                                        WSTR_LENGTH(string) * 2);
-				if unlikely(!string)
-					{
+				if unlikely(!string) {
 					string = DeeString_Resize2ByteBuffer((uint16_t *)self->up_buffer,
 					                                     self->up_length + 1);
 					if unlikely(!string)
@@ -3956,8 +3905,7 @@ append_4byte:
 			/* Must allocate more memory. */
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string,
 			                                        WSTR_LENGTH(string) * 2);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_Resize4ByteBuffer((uint32_t *)self->up_buffer,
 				                                     self->up_length + 1);
 				if unlikely(!string)
@@ -4190,8 +4138,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +
 		                                            (initial_alloc + 1) * sizeof(char));
-		if unlikely(!base_string)
-			{
+		if unlikely(!base_string) {
 			initial_alloc = textlen;
 			base_string = (String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
 			                                         (initial_alloc + 1) * sizeof(char));
@@ -4219,8 +4166,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 			                                            COMPILER_OFFSETOF(String, s_str) +
 			                                            (new_alloc + 1) * sizeof(char));
-			if unlikely(!new_string)
-				{
+			if unlikely(!new_string) {
 				new_alloc  = self->up_length + textlen;
 				new_string = (String *)DeeObject_Realloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 				                                         COMPILER_OFFSETOF(String, s_str) +
@@ -4246,8 +4192,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
 				                                        self->up_length + textlen);
 				if unlikely(!string)
@@ -4271,8 +4216,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
 				                                        self->up_length + textlen);
 				if unlikely(!string)
@@ -4321,8 +4265,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +
 		                                            (initial_alloc + 1) * sizeof(char));
-		if unlikely(!base_string)
-			{
+		if unlikely(!base_string) {
 			initial_alloc = num_chars;
 			base_string = (String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
 			                                         (initial_alloc + 1) * sizeof(char));
@@ -4350,8 +4293,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 			                                            COMPILER_OFFSETOF(String, s_str) +
 			                                            (new_alloc + 1) * sizeof(char));
-			if unlikely(!new_string)
-				{
+			if unlikely(!new_string) {
 				new_alloc  = self->up_length + num_chars;
 				new_string = (String *)DeeObject_Realloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 				                                         COMPILER_OFFSETOF(String, s_str) +
@@ -4376,8 +4318,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + num_chars);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
 				                                        self->up_length + num_chars);
 				if unlikely(!string)
@@ -4401,8 +4342,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + num_chars);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
 				                                        self->up_length + num_chars);
 				if unlikely(!string)
@@ -4450,8 +4390,7 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		/* Allocate the initial buffer. */
 		string = DeeString_TryNew2ByteBuffer(initial_alloc);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_New2ByteBuffer(textlen);
 			if unlikely(!string)
 				goto err;
@@ -4495,8 +4434,7 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResizeWidthBuffer(string, new_alloc,
 			                                        self->up_flags & UNICODE_PRINTER_FWIDTH);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_ResizeWidthBuffer(self->up_buffer, self->up_length + textlen,
 				                                     self->up_flags & UNICODE_PRINTER_FWIDTH);
 				if unlikely(!string)
@@ -4520,8 +4458,7 @@ append_2byte:
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
 				                                        self->up_length + textlen);
 				if unlikely(!string)
@@ -4543,8 +4480,7 @@ append_2byte:
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
 				                                        self->up_length + textlen);
 				if unlikely(!string)
@@ -4593,8 +4529,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		/* Allocate the initial buffer. */
 		string = DeeString_TryNew4ByteBuffer(initial_alloc);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_New4ByteBuffer(textlen);
 			if unlikely(!string)
 				goto err;
@@ -4650,8 +4585,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResizeWidthBuffer(string, new_alloc,
 			                                        self->up_flags & UNICODE_PRINTER_FWIDTH);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_ResizeWidthBuffer(self->up_buffer, self->up_length + textlen,
 				                                     self->up_flags & UNICODE_PRINTER_FWIDTH);
 				if unlikely(!string)
@@ -4690,8 +4624,7 @@ append_2byte:
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
 				                                        self->up_length + textlen);
 				if unlikely(!string)
@@ -4715,8 +4648,7 @@ append_4byte:
 				new_alloc *= 2;
 			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
 				                                        self->up_length + textlen);
 				if unlikely(!string)
@@ -4789,8 +4721,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 			while (iter < end) {
 				uint8_t ut8_encoded[2];
 				uint8_t ch = (uint8_t)*iter;
-				if likely(ch < 0x80)
-					{
+				if likely(ch < 0x80) {
 					++iter;
 					continue;
 				}
@@ -4919,8 +4850,7 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
                             size_t num_chars) {
 	size_t result = self->up_length;
 	void *str     = self->up_buffer;
-	if unlikely(!str)
-		{
+	if unlikely(!str) {
 		String *init_buffer;
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
@@ -4941,8 +4871,7 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		init_buffer = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +
 		                                            (initial_alloc + 1) * sizeof(char));
-		if unlikely(!init_buffer)
-			{
+		if unlikely(!init_buffer) {
 			initial_alloc = num_chars;
 			init_buffer = (String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
 			                                         (initial_alloc + 1) * sizeof(char));
@@ -4963,8 +4892,7 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 			while (new_size < new_length);
 			str = DeeString_TryResizeWidthBuffer(str, new_size,
 			                                     self->up_flags & UNICODE_PRINTER_FWIDTH);
-			if unlikely(!str)
-				{
+			if unlikely(!str) {
 				str = DeeString_ResizeWidthBuffer(str, new_length,
 				                                  self->up_flags & UNICODE_PRINTER_FWIDTH);
 				if unlikely(!str)
@@ -5086,8 +5014,7 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +
 		                                            (initial_alloc + 1) * sizeof(char));
-		if unlikely(!base_string)
-			{
+		if unlikely(!base_string) {
 			initial_alloc = length;
 			base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +
 			                                            (initial_alloc + 1) * sizeof(char));
@@ -5121,8 +5048,7 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 			                                            COMPILER_OFFSETOF(String, s_str) +
 			                                            (new_alloc + 1) * sizeof(char));
-			if unlikely(!new_string)
-				{
+			if unlikely(!new_string) {
 				new_alloc  = self->up_length + length;
 				new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 				                                            COMPILER_OFFSETOF(String, s_str) +
@@ -5182,8 +5108,7 @@ Dee_unicode_printer_tryresize_utf8(struct unicode_printer *__restrict self,
 		                                                                  String,
 		                                                                  s_str),
 		                                            (old_alloc + 1) * sizeof(char));
-		if unlikely(!new_buffer)
-			{
+		if unlikely(!new_buffer) {
 			old_alloc  = new_alloc;
 			new_buffer = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->up_buffer,
 			                                                                  String,
@@ -5460,8 +5385,7 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 #endif /* STRING_WIDTH_1BYTE != 0 */
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		string = DeeString_TryNew2ByteBuffer(initial_alloc);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_TryNew2ByteBuffer(length);
 			if unlikely(!string)
 				goto err;
@@ -5489,8 +5413,7 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 				new_alloc *= 2;
 			} while (new_alloc < self->up_length + length);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)string, self->up_length + length);
 				if unlikely(!string)
 					goto err;
@@ -5541,8 +5464,7 @@ Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
 		} while (old_alloc < new_alloc);
 		/* Reallocate the buffer to fit the requested size. */
 		string = DeeString_TryResize2ByteBuffer(string, old_alloc);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_TryResize2ByteBuffer(string, new_alloc);
 			if unlikely(!string)
 				goto err;
@@ -5730,8 +5652,7 @@ PUBLIC uint32_t *(DCALL Dee_unicode_printer_tryalloc_utf32)(struct unicode_print
 #endif /* STRING_WIDTH_1BYTE != 0 */
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		string = DeeString_TryNew4ByteBuffer(initial_alloc);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_TryNew4ByteBuffer(length);
 			if unlikely(!string)
 				goto err;
@@ -5754,8 +5675,7 @@ PUBLIC uint32_t *(DCALL Dee_unicode_printer_tryalloc_utf32)(struct unicode_print
 				new_alloc *= 2;
 			while (new_alloc < self->up_length + length);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
-			if unlikely(!string)
-				{
+			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)string, self->up_length + length);
 				if unlikely(!string)
 					goto err;
@@ -5802,8 +5722,7 @@ PUBLIC uint32_t *(DCALL Dee_unicode_printer_tryresize_utf32)(struct unicode_prin
 		while (old_alloc < new_alloc);
 		/* Reallocate the buffer to fit the requested size. */
 		string = DeeString_TryResize4ByteBuffer(string, old_alloc);
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = DeeString_TryResize4ByteBuffer(string, new_alloc);
 			if unlikely(!string)
 				goto err;

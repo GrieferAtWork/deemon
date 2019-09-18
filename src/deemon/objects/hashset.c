@@ -57,8 +57,7 @@ DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeO
 	result = DeeGCObject_MALLOC(Set);
 	if unlikely(!result)
 		goto done;
-	if unlikely(!num_items)
-		{
+	if unlikely(!num_items) {
 		/* Special case: allocate an empty set. */
 		result->s_mask = 0;
 		result->s_size = 0;
@@ -72,8 +71,7 @@ DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeO
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
 		result->s_elem = (struct hashset_item *)Dee_TryCalloc((mask + 1) * sizeof(struct hashset_item));
-		if unlikely(!result->s_elem)
-			{
+		if unlikely(!result->s_elem) {
 			/* Try one level less if that failed. */
 			mask           = min_mask;
 			result->s_elem = (struct hashset_item *)Dee_Calloc((mask + 1) * sizeof(struct hashset_item));
@@ -268,8 +266,7 @@ again:
 	self->s_used = other->s_used;
 	if ((self->s_elem = other->s_elem) != empty_set_items) {
 		self->s_elem = (struct hashset_item *)Dee_TryMalloc((other->s_mask + 1) * sizeof(struct hashset_item));
-		if unlikely(!self->s_elem)
-			{
+		if unlikely(!self->s_elem) {
 			DeeHashSet_LockEndRead(other);
 			if (Dee_CollectMemory((other->s_mask + 1) * sizeof(struct hashset_item)))
 				goto again;
@@ -455,8 +452,7 @@ set_rehash(Set *__restrict self, int sizedir) {
 		if unlikely(new_mask == 1)
 			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if unlikely(!self->s_used)
-			{
+		if unlikely(!self->s_used) {
 			ASSERT(!self->s_used);
 			/* Special case: delete the vector. */
 			if (self->s_size) {
@@ -808,13 +804,11 @@ again:
 		Dee_XDecref(result);
 		return existing_key; /* Already exists. */
 	}
-	if likely(!result)
-		{
+	if likely(!result) {
 		/* Create the actual string that's going to get stored. */
 		result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (search_item_length + 1) * sizeof(char));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			DeeHashSet_LockEndRead(me);
 			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) + (search_item_length + 1) * sizeof(char)))
 				goto again_lock;
@@ -905,13 +899,11 @@ again:
 		Dee_XDecref(new_item);
 		return 0; /* Already exists. */
 	}
-	if likely(!new_item)
-		{
+	if likely(!new_item) {
 		/* Create the actual string that's going to get stored. */
 		new_item = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                       (search_item_length + 1) * sizeof(char));
-		if unlikely(!new_item)
-			{
+		if unlikely(!new_item) {
 			DeeHashSet_LockEndRead(me);
 			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) + (search_item_length + 1) * sizeof(char)))
 				goto again_lock;

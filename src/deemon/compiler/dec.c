@@ -133,8 +133,7 @@ INTERN uint8_t *DCALL dec_alloc(size_t n_bytes) {
 	struct dec_section *sec = dec_curr;
 	uint8_t *result         = sec->ds_iter;
 	size_t req_size, new_size;
-	if likely(result + n_bytes <= sec->ds_end)
-		{
+	if likely(result + n_bytes <= sec->ds_end) {
 		/* Fast path: the section already has enough buffer memory allocated. */
 		sec->ds_iter = result + n_bytes;
 		goto end;
@@ -148,8 +147,7 @@ INTERN uint8_t *DCALL dec_alloc(size_t n_bytes) {
 do_realloc:
 	/* Allocate more memory. */
 	result = (uint8_t *)Dee_TryRealloc(sec->ds_begin, new_size);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		if (new_size != req_size) {
 			new_size = req_size;
 			goto do_realloc;
@@ -358,8 +356,7 @@ done:
  *       with an assertion error. */
 INTERN struct dec_sym *DCALL dec_newsym(void) {
 	struct dec_sym *result = sym_alloc();
-	if likely(result)
-		{
+	if likely(result) {
 		/* Keep track of the newly allocated symbol. */
 		result->ds_next        = current_dec.dw_symbols;
 		current_dec.dw_symbols = result;
@@ -385,8 +382,7 @@ INTERN struct dec_rel *DCALL dec_newrel(void) {
 do_realloc:
 		result = (struct dec_rel *)Dee_TryRealloc(sec->ds_relv, new_alloc *
 		                                                        sizeof(struct dec_rel));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			if (new_alloc != sec->ds_relc + 1) {
 				new_alloc = sec->ds_relc + 1;
 				goto do_realloc;
@@ -629,11 +625,9 @@ again:
 	dec_setbases();
 
 	/* Link all DEC data. */
-	if unlikely(dec_link() != DECREL_NONE)
-		{
+	if unlikely(dec_link() != DECREL_NONE) {
 		/* Relocation was truncated. - Set the `DEC_WRITE_FBIGFILE' flag and try again. */
-		if unlikely(current_dec.dw_flags & DEC_WRITE_FBIGFILE)
-			{
+		if unlikely(current_dec.dw_flags & DEC_WRITE_FBIGFILE) {
 			/* This is bad... (and shouldn't actually happen!) */
 			DeeError_Throwf(&DeeError_NotImplemented,
 			                "DEC relocation was truncated");

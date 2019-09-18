@@ -107,8 +107,7 @@ JIT_GetOperatorFunction(uint16_t opname) {
 		/* Fallback: Invoke `operator(id)' to generate the default callback. */
 		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, "operator",
 		                                     Dee_HashPtr("operator", COMPILER_STRLEN("operator")));
-		if likely(result)
-			{
+		if likely(result) {
 			DREF DeeObject *callback_result;
 			callback_result = DeeObject_Callf(result, "I16u", opname);
 			Dee_Decref(result);
@@ -300,8 +299,7 @@ do_operator_gr:
 		result = JITLexer_ParseOperatorName(self, features);
 		if unlikely(result < 0)
 			goto err;
-		if unlikely(self->jl_tok != ')')
-			{
+		if unlikely(self->jl_tok != ')') {
 			syn_paren_expected_rparen_after_lparen(self);
 			goto err_trace;
 		}
@@ -329,8 +327,7 @@ err_empty_string:
 			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
 			JITLexer_Yield(self);
 		}
-		if likely(self->jl_tok == ']')
-			{
+		if likely(self->jl_tok == ']') {
 			JITLexer_Yield(self);
 		} else {
 err_rbrck_after_lbrck:
@@ -393,8 +390,7 @@ err_rbrck_after_lbrck:
 						goto done_y1;
 					}
 					result = OPERATOR_DELATTR;
-					if unlikely(self->jl_tok != '.')
-						{
+					if unlikely(self->jl_tok != '.') {
 						syn_operator_expected_lbracket_or_dot_after_del(self);
 						goto err_trace;
 					}
@@ -752,8 +748,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 			result = DeeModule_OpenGlobal(str, NULL, true);
 		} else {
 			DeeModuleObject *base = self->jl_context->jc_impbase;
-			if unlikely(!base)
-				{
+			if unlikely(!base) {
 				DeeError_Throwf(&DeeError_CompilerError,
 				                "Cannot import relative module %r",
 				                str);
@@ -769,8 +764,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		                                    true);
 	} else {
 		DeeModuleObject *base = self->jl_context->jc_impbase;
-		if unlikely(!base)
-			{
+		if unlikely(!base) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Cannot import relative module %$q",
 			                (size_t)(name_end - name_start),

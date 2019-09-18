@@ -217,8 +217,7 @@ again:
 		}
 		result = curfile->f_begin + (result - file_begin);
 		/* If the file was extended, search for the next token again. */
-		if likely(extend_error)
-			{
+		if likely(extend_error) {
 			if unlikely(extend_error < 0)
 				return NULL;
 			goto again;
@@ -567,8 +566,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		              1 +                               /* /  (Optional, but always allocated) */
 		              COMPILER_STRLEN(include_prefix) + /* include/ */
 		              filename_size);                   /* baz.dee */
-		if unlikely(req_length > buflen)
-			{
+		if unlikely(req_length > buflen) {
 			/* Need a larger buffer. */
 			new_buffer = (DeeStringObject *)DeeObject_Realloc(buffer, offsetof(DeeStringObject, s_str) +
 			                                                          (req_length + 1) * sizeof(char));
@@ -634,8 +632,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		if (buffer->s_len != buflen) {
 			new_buffer = (DeeStringObject *)DeeObject_TryRealloc(buffer, offsetof(DeeStringObject, s_str) +
 			                                                             (buffer->s_len + 1) * sizeof(char));
-			if likely(new_buffer)
-				{
+			if likely(new_buffer) {
 				buffer = new_buffer;
 				buflen = buffer->s_len;
 			}
@@ -649,8 +646,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			/* Use the stream to open a new TPP file descriptor. */
 			result = TPPFile_OpenStream((stream_t)stream, DeeString_STR(buffer));
 			Dee_Decref(buffer); /* Drop our own reference to the buffer. */
-			if unlikely(!result)
-				{
+			if unlikely(!result) {
 				/* Failed to create the TPP descriptor. */
 				Dee_Decref(stream);
 				goto err;

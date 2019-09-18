@@ -136,8 +136,7 @@ LOCAL DREF DeeObject *DCALL
 module_it_getattr_symbol(DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {
 	DREF DeeObject *result;
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
-		{
+	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
@@ -187,8 +186,7 @@ again:
 			symbol = &module->mo_bucketv[new_index];
 			if (symbol->ss_name) {
 				result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
-				if unlikely(!result_name)
-					{
+				if unlikely(!result_name) {
 					DeeModule_UnlockSymbols(module);
 					return NULL;
 				}
@@ -217,8 +215,7 @@ continue_symbol_search:
 	Dee_Incref(result_name);
 	DeeModule_UnlockSymbols(module);
 	result = DeeTuple_PackSymbolic(2, result_name, result_value);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		Dee_Decref_unlikely(result_name);
 		Dee_Decref_unlikely(result_value);
 	}
@@ -355,16 +352,14 @@ module_my_getattr_symbol(ModuleExports *__restrict exports_map,
                          DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {
 	DREF DeeObject *result;
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
-		{
+	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index];
 		Dee_XIncref(result);
 		rwlock_endread(&self->mo_lock);
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
 				err_unknown_key((DeeObject *)exports_map,
 				                (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name, DeeStringObject, s_str));
@@ -381,8 +376,7 @@ read_symbol:
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->mo_lock);
-		if unlikely(!callback)
-			{
+		if unlikely(!callback) {
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
 				err_unknown_key((DeeObject *)exports_map,
 				                (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name, DeeStringObject, s_str));
@@ -414,8 +408,7 @@ me_get(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol)
-		{
+	if unlikely(!symbol) {
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -442,8 +435,7 @@ me_get_f(ModuleExports *__restrict self,
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol)
-		{
+	if unlikely(!symbol) {
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -470,8 +462,7 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol)
-		{
+	if unlikely(!symbol) {
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -495,8 +486,7 @@ me_set(ModuleExports *__restrict self,
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol)
-		{
+	if unlikely(!symbol) {
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -816,8 +806,7 @@ mg_get(ModuleGlobals *__restrict self,
 	}
 	rwlock_read(&module->mo_lock);
 	result = module->mo_globalv[index];
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		rwlock_endread(&module->mo_lock);
 		DeeModule_UnlockSymbols(module);
 		err_unbound_index((DeeObject *)self, index);

@@ -166,8 +166,7 @@ fs_pathdrive(DeeObject *__restrict path) {
 		++drive_start;
 		drive_length = (size_t)(drive_start - DeeString_STR(path));
 		result       = DeeString_NewBuffer(drive_length + 1);
-		if likely(result)
-			{
+		if likely(result) {
 			char *dst = DeeString_STR(result);
 			memcpy(dst, DeeString_STR(path), drive_length * sizeof(char));
 			/* Alway follow up with a slash. */
@@ -930,8 +929,7 @@ next:
 			user_ob = DeeObject_Newf(&DeeUser_Type, "$s",
 			                         (size_t)(iter - name_start),
 			                         name_start);
-			if unlikely(!user_ob)
-				{
+			if unlikely(!user_ob) {
 				if ((options & FS_EXPAND_FNOFAIL) &&
 				    (DeeError_Catch(&DeeError_SystemError) ||
 				     DeeError_Catch(&DeeError_ValueError)))
@@ -940,8 +938,7 @@ next:
 			}
 			homepath = DeeObject_GetAttrString(user_ob, "home");
 			Dee_Decref(user_ob);
-			if unlikely(!homepath)
-				{
+			if unlikely(!homepath) {
 				if ((options & FS_EXPAND_FNOFAIL) &&
 				    (DeeError_Catch(&DeeError_SystemError) ||
 				     DeeError_Catch(&DeeError_ValueError)))
@@ -1032,8 +1029,7 @@ print_env:
 			item = DeeObject_GetItemStringLen(environ_mapping, name_start,
 			                                  (size_t)(name_end - name_start),
 			                                  Dee_HashUtf8(name_start, (size_t)(name_end - name_start)));
-			if unlikely(!item)
-				{
+			if unlikely(!item) {
 				/* When the item wasn't found, try to handle `KeyError'. */
 				if (!(options & FS_EXPAND_FNOFAIL) ||
 				    !DeeError_Catch(&DeeError_KeyError))

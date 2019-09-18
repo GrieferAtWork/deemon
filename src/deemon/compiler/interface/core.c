@@ -53,8 +53,7 @@ DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	Dee_Decref(com);
 #else /* CONFIG_NO_THREADS */
-	if unlikely(!Dee_DecrefIfNotOne(com))
-		{
+	if unlikely(!Dee_DecrefIfNotOne(com)) {
 		recursive_rwlock_write(&DeeCompiler_Lock);
 		Dee_Decref(com);
 		recursive_rwlock_endwrite(&DeeCompiler_Lock);
@@ -318,8 +317,7 @@ again:
 			new_mask = 16 - 1;
 		new_map = (DeeCompilerItemObject **)Dee_TryCalloc((new_mask + 1) *
 		                                                  sizeof(DeeCompilerItemObject *));
-		if unlikely(!new_map && !self->cp_items.ci_list)
-			{
+		if unlikely(!new_map && !self->cp_items.ci_list) {
 			rwlock_endwrite(&self->cp_items.ci_lock);
 			compiler_item_free(result);
 			goto again;
@@ -404,8 +402,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 		return false;
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 	rwlock_write(&com->cp_items.ci_lock);
-	if unlikely(!com->cp_items.ci_list)
-		{
+	if unlikely(!com->cp_items.ci_list) {
 		rwlock_endwrite(&com->cp_items.ci_lock);
 		return false;
 	}

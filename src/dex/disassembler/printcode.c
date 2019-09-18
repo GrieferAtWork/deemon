@@ -126,8 +126,7 @@ textjumps_add(struct textjumps *__restrict self,
 			newalloc = 4;
 		newvec = (struct textjump *)Dee_TryRealloc(self->tj_vec, newalloc *
 		                                                         sizeof(struct textjump));
-		if unlikely(!newvec)
-			{
+		if unlikely(!newvec) {
 			newalloc = self->tj_cnt + 1;
 			newvec   = (struct textjump *)Dee_Realloc(self->tj_vec, newalloc *
                                                                   sizeof(struct textjump));
@@ -1086,8 +1085,7 @@ prefix_except_prefix:
 			                        line_prefix ? line_prefix : "",
 			                        i,
 			                        kind);
-			if likely(temp >= 0)
-				{
+			if likely(temp >= 0) {
 				char *inner_prefix;
 				result += temp;
 				inner_prefix = (char *)Dee_Malloc((prefix_len + 5) * sizeof(char));
@@ -1103,8 +1101,7 @@ prefix_except_prefix:
 					                           inner_prefix,
 					                           flags);
 					DBG_ALIGNMENT_ENABLE();
-					if likely(temp >= 0)
-						{
+					if likely(temp >= 0) {
 						temp = DeeFormat_Printf(printer, arg, "%s}\n", line_prefix ? line_prefix : "");
 						if likely(temp >= 0)
 							result += temp;

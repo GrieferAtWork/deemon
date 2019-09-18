@@ -333,8 +333,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 		if unlikely(new_mask == 1)
 			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if unlikely(!self->s_used)
-			{
+		if unlikely(!self->s_used) {
 			ASSERT(!self->s_used);
 			/* Special case: delete the vector. */
 			if (self->s_size) {
@@ -596,8 +595,7 @@ again_hashset:
 			self->s_mask = src->s_mask;
 			self->s_elem = (struct uset_item *)Dee_TryCalloc((src->s_mask + 1) *
 			                                                 sizeof(struct uset_item));
-			if unlikely(!self->s_elem)
-				{
+			if unlikely(!self->s_elem) {
 				DeeHashSet_LockEndRead(src);
 				if (Dee_CollectMemory((self->s_mask + 1) * sizeof(struct uset_item)))
 					goto again_hashset;
@@ -622,8 +620,7 @@ again_hashset:
 		rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
 		self->s_used = self->s_size = src->rs_size;
-		if unlikely(!self->s_size)
-			{
+		if unlikely(!self->s_size) {
 			self->s_mask = 0;
 			self->s_elem = (struct uset_item *)empty_set_items;
 		} else {
@@ -653,8 +650,7 @@ again_hashset:
 		rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
 		self->s_used = self->s_size = src->rs_size;
-		if unlikely(!self->s_size)
-			{
+		if unlikely(!self->s_size) {
 			self->s_mask = 0;
 			self->s_elem = (struct uset_item *)empty_set_items;
 		} else {
@@ -688,8 +684,7 @@ again_hashset:
 			/* Prefer using a mask of one greater level to improve performance. */
 			mask         = (min_mask << 1) | 1;
 			self->s_elem = (struct uset_item *)Dee_TryCalloc((mask + 1) * sizeof(struct uset_item));
-			if unlikely(!self->s_elem)
-				{
+			if unlikely(!self->s_elem) {
 				/* Try one level less if that failed. */
 				mask         = min_mask;
 				self->s_elem = (struct uset_item *)Dee_Calloc((mask + 1) * sizeof(struct uset_item));
@@ -703,16 +698,14 @@ again_hashset:
 			for (i = 0; i < fastsize; ++i) {
 				DREF DeeObject *key;
 				key = DeeFastSeq_GetItemUnbound(sequence, i);
-				if unlikely(!ITER_ISOK(key))
-					{
+				if unlikely(!ITER_ISOK(key)) {
 					if unlikely(key == ITER_DONE)
 						goto err_elem;
 					ASSERT(self->s_size);
 					ASSERT(self->s_used);
 					--self->s_size;
 					--self->s_used;
-					if unlikely(!self->s_size)
-						{
+					if unlikely(!self->s_size) {
 						Dee_Free(self->s_elem);
 						self->s_elem = empty_set_items;
 						ASSERT(self->s_used == 0);
@@ -806,8 +799,7 @@ again:
 	if ((self->s_elem = other->s_elem) != empty_set_items) {
 		self->s_elem = (struct uset_item *)Dee_TryMalloc((other->s_mask + 1) *
 		                                                 sizeof(struct uset_item));
-		if unlikely(!self->s_elem)
-			{
+		if unlikely(!self->s_elem) {
 			DeeHashSet_LockEndRead(other);
 			if (Dee_CollectMemory((self->s_mask + 1) * sizeof(struct uset_item)))
 				goto again;

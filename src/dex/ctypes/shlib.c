@@ -108,15 +108,13 @@ shlib_init(Shlib *__restrict self, size_t argc,
 			if unlikely(!name)
 				goto err;
 			wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
-			if unlikely(!wname)
-				{
+			if unlikely(!wname) {
 				Dee_Decref(name);
 				goto err;
 			}
 			self->sh_lib = LoadLibraryW(wname);
 			Dee_Decref(name);
-			if unlikely(!self->sh_lib)
-				{
+			if unlikely(!self->sh_lib) {
 				DWORD error = GetLastError();
 				if (nt_IsFileNotFound(error)) {
 					DeeError_SysThrowf(&DeeError_FileNotFound, error,
@@ -254,8 +252,7 @@ shlib_getitem(Shlib *__restrict self,
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	symaddr = shlib_dlsym(self, DeeString_STR(name));
-	if unlikely(!symaddr)
-		{
+	if unlikely(!symaddr) {
 		DeeError_Throwf(&DeeError_KeyError,
 		                "No export named %r", name);
 		goto err;
@@ -282,8 +279,7 @@ shlib_getattr(Shlib *__restrict self,
 	DREF DeeSTypeObject *result_type;
 	void *symaddr;
 	symaddr = shlib_dlsym(self, DeeString_STR(name));
-	if unlikely(!symaddr)
-		{
+	if unlikely(!symaddr) {
 		DeeError_Throwf(&DeeError_AttributeError,
 		                "No export named %r", name);
 		goto err;
@@ -293,8 +289,7 @@ shlib_getattr(Shlib *__restrict self,
 	if unlikely(!result_type)
 		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		Dee_Decref((DeeObject *)result_type);
 		goto err;
 	}

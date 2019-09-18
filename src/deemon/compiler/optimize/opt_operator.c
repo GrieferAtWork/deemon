@@ -281,8 +281,7 @@ cleanup_operands:
 			}
 			if (temp == CONSTEXPR_USECOPY) {
 				operand = DeeObject_DeepCopy(operand);
-				if unlikely(!operand)
-					{
+				if unlikely(!operand) {
 					DeeError_Handled(ERROR_HANDLED_RESTORE);
 					goto cleanup_operands;
 				}
@@ -297,11 +296,9 @@ cleanup_operands:
 				goto not_allowed;
 			if (!DeeTuple_Check(argv[1]))
 				goto not_allowed;
-			if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP)
-				{
+			if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
 				operator_result = DeeObject_Copy(argv[0]);
-				if likely(operator_result)
-					{
+				if likely(operator_result) {
 					DREF DeeObject *real_result;
 					real_result = emulate_method_call(argv[0],
 					                                  DeeTuple_SIZE(argv[1]),
@@ -326,8 +323,7 @@ not_allowed:
 		} else if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
 			/* Return a copy of the original operand. */
 			operator_result = DeeObject_Copy(argv[0]);
-			if likely(operator_result)
-				{
+			if likely(operator_result) {
 				DREF DeeObject *real_result;
 				real_result = DeeObject_InvokeOperator(argv[0], self->a_flag, opcount - 1, argv + 1);
 				if likely(real_result)
@@ -357,8 +353,7 @@ not_allowed:
 	}
 	/* If the operator failed, don't do any propagation. */
 set_operator_result:
-	if unlikely(!operator_result)
-		{
+	if unlikely(!operator_result) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		goto generic_operator_optimizations;
 	}

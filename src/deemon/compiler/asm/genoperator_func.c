@@ -89,8 +89,7 @@ ast_gen_operator_func(struct ast *binding,
 	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(&str_operators,
 	                                                                inner_compiler_options,
 	                                                                false);
-	if unlikely(!ITER_ISOK(operators_module))
-		{
+	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
 			if (WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators))
 				goto err;
@@ -101,8 +100,7 @@ ast_gen_operator_func(struct ast *binding,
 	if (symbol_name) {
 		/* Lookup a symbol matching the operator's name. */
 		temp = bind_module_symbol(operators_module, &opmod_id, &opsym_id, symbol_name);
-		if unlikely(temp != 0)
-			{
+		if unlikely(temp != 0) {
 			if (temp < 0)
 				goto err;
 			if (WARNAST(ddi_ast, W_NO_OPERATOR_SYMBOL, symbol_name))
@@ -133,8 +131,7 @@ generic_operator:
 		                          &opmod_id,
 		                          &opsym_id,
 		                          DeeString_STR(&str_operator));
-		if unlikely(temp != 0)
-			{
+		if unlikely(temp != 0) {
 			if (temp < 0)
 				goto err;
 			if (WARNAST(ddi_ast, W_NO_OPERATOR_FALLBACK_FUNCTION))

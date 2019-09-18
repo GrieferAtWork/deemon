@@ -1559,8 +1559,7 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 					ASSERT(m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add);
 					error = (*m->tp_inplace_add)(&new_self, &DeeInt_MinusOne);
 				}
-				if unlikely(error)
-					{
+				if unlikely(error) {
 err_new_self:
 					Dee_Decref(new_self);
 					goto err;
@@ -1695,8 +1694,7 @@ do_prev_with_rewind_iterator:
 				if unlikely(!new_copy)
 					goto err_new_self;
 				temp = DeeObject_IterNext(new_copy);
-				if unlikely(!ITER_ISOK(temp))
-					{
+				if unlikely(!ITER_ISOK(temp)) {
 					Dee_Decref(new_copy);
 					Dee_Decref(new_self);
 					if unlikely(!temp)
@@ -1799,8 +1797,7 @@ INTERN int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
 			if unlikely(!temp)
 				goto err;
 			temp2 = DeeObject_CallAttr(temp, &str_rewind, 0, NULL);
-			if unlikely(!temp2)
-				{
+			if unlikely(!temp2) {
 				Dee_Decref(temp);
 				goto err;
 			}

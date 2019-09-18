@@ -144,8 +144,7 @@ DeeSocket_GetSockName(DeeSocketObject *__restrict self,
 again:
 	socket_read(self);
 	state = self->s_state;
-	if unlikely(!(state & (SOCKET_FBOUND | SOCKET_FCONNECTED | SOCKET_FOPENED)))
-		{
+	if unlikely(!(state & (SOCKET_FBOUND | SOCKET_FCONNECTED | SOCKET_FOPENED))) {
 		socket_endread(self);
 		if (state & (SOCKET_FBINDING | SOCKET_FCONNECTING)) {
 			/* Socket is currently binding/connecting (wait a bit more) */
@@ -171,8 +170,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		error = getsockname(self->s_socket, &result->sa, &addrlen);
 		DBG_ALIGNMENT_ENABLE();
-		if unlikely(error < 0)
-			{
+		if unlikely(error < 0) {
 			socket_endread(self);
 			if (throw_error) {
 				DBG_ALIGNMENT_DISABLE();
@@ -228,8 +226,7 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 	}
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if unlikely(ok && throw_error)
-		{
+	if unlikely(ok && throw_error) {
 		neterrno_t err;
 		DBG_ALIGNMENT_DISABLE();
 		err = GET_NET_ERROR();
@@ -350,8 +347,7 @@ again_shutdown:
 		}
 		/* We'll have to do the shutdown. */
 		error = socket_do_shutdown(self, mode);
-		if unlikely(error < 0)
-			{
+		if unlikely(error < 0) {
 			DBG_ALIGNMENT_DISABLE();
 			error = GET_NET_ERROR();
 			DBG_ALIGNMENT_ENABLE();
@@ -419,8 +415,7 @@ again_shutdown:
 		}
 		/* Actually do the shutdown. */
 		error = socket_do_shutdown(self, mode);
-		if unlikely(error < 0)
-			{
+		if unlikely(error < 0) {
 			DBG_ALIGNMENT_DISABLE();
 			error = GET_NET_ERROR();
 			DBG_ALIGNMENT_ENABLE();
@@ -486,8 +481,7 @@ again:
 	/* Do the bind system call. */
 	error = bind(self->s_socket, (struct sockaddr *)addr, (socklen_t)SockAddr_Sizeof(addr->sa.sa_family, self->s_proto));
 	DBG_ALIGNMENT_ENABLE();
-	if likely(error >= 0)
-		{
+	if likely(error >= 0) {
 		/* Save the (now) active socket address. */
 		memcpy(&self->s_sockaddr, addr, sizeof(SockAddr));
 		COMPILER_WRITE_BARRIER();
@@ -638,8 +632,7 @@ restart_select:
 				DBG_ALIGNMENT_DISABLE();
 				error = select(self->s_socket + 1, NULL, &wfds, NULL, &timeout);
 				DBG_ALIGNMENT_ENABLE();
-				if unlikely(error <= 0)
-					{
+				if unlikely(error <= 0) {
 					if (error == 0)
 						goto restart_select;
 					DBG_ALIGNMENT_DISABLE();
@@ -1376,8 +1369,7 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to send data. */
 			result = socket_configure_send(self);
-			if unlikely(result)
-				{
+			if unlikely(result) {
 				socket_endwrite(self);
 				err_configure_send(self);
 				goto err;
@@ -1396,8 +1388,7 @@ again:
 	result = send(self->s_socket, buf, bufsize, flags);
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if unlikely(result < 0)
-		{
+	if unlikely(result < 0) {
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1479,8 +1470,7 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to receive data. */
 			result = socket_configure_recv(self);
-			if unlikely(result)
-				{
+			if unlikely(result) {
 				socket_endwrite(self);
 				err_configure_recv(self);
 				goto err;
@@ -1499,8 +1489,7 @@ again:
 	result = recv(self->s_socket, buf, bufsize, flags);
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if unlikely(result < 0)
-		{
+	if unlikely(result < 0) {
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1590,8 +1579,7 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to send data. */
 			result = socket_configure_send(self);
-			if unlikely(result)
-				{
+			if unlikely(result) {
 				socket_endwrite(self);
 				err_configure_send(self);
 				goto err;
@@ -1611,8 +1599,7 @@ again:
 	                SockAddr_Sizeof(target->sa.sa_family, self->s_proto));
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if unlikely(result < 0)
-		{
+	if unlikely(result < 0) {
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1718,8 +1705,7 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to receive data. */
 			result = socket_configure_recv(self);
-			if unlikely(result)
-				{
+			if unlikely(result) {
 				socket_endwrite(self);
 				err_configure_recv(self);
 				goto err;
@@ -1738,8 +1724,7 @@ again:
 	result = recvfrom(self->s_socket, buf, bufsize, flags, &source->sa, &length);
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if unlikely(result < 0)
-		{
+	if unlikely(result < 0) {
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1870,8 +1855,7 @@ err_printer:
 	                     : DeeSocket_Recv(self, timeout_microseconds,
 	                                      DeeBytes_DATA(result),
 	                                      max_bufsize, flags);
-	if unlikely(recv_length < 0)
-		{
+	if unlikely(recv_length < 0) {
 		Dee_DecrefDokill(result);
 		if (recv_length == -2)
 			return ITER_DONE; /* Timeout. */
@@ -2248,8 +2232,7 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
 	} else {
 		DREF DeeObject *result_size_ob;
 		result_size_ob = DeeInt_NewSize((size_t)result_size);
-		if unlikely(!result_size_ob)
-			{
+		if unlikely(!result_size_ob) {
 			DeeTuple_FreeUninitialized(result);
 			goto err_addr;
 		}
@@ -2307,8 +2290,7 @@ socket_send(Socket *__restrict self, size_t argc,
 	                        buffer.bb_size,
 	                        flags);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
-	if unlikely(result < 0)
-		{
+	if unlikely(result < 0) {
 		if (result != -2)
 			goto err;
 		result = 0;
@@ -2380,8 +2362,7 @@ socket_sendto(Socket *__restrict self, size_t argc,
 	                          flags,
 	                          &target_addr);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
-	if unlikely(result < 0)
-		{
+	if unlikely(result < 0) {
 		if (result != -2)
 			goto err;
 		result = 0;

@@ -169,8 +169,7 @@ PRIVATE DREF DeeObject *DCALL
 ids_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
-	if likely(elem)
-		{
+	if likely(elem) {
 		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
 		Dee_Decref(elem);
 	}
@@ -181,8 +180,7 @@ PRIVATE DREF DeeObject *DCALL
 types_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
-	if likely(elem)
-		{
+	if likely(elem) {
 		result = (DREF DeeObject *)Dee_TYPE(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -194,8 +192,7 @@ PRIVATE DREF DeeObject *DCALL
 classes_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
-	if likely(elem)
-		{
+	if likely(elem) {
 		result = (DREF DeeObject *)DeeObject_Class(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -208,8 +205,7 @@ PRIVATE DREF DeeObject *DCALL
 ids_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
-	if likely(elem)
-		{
+	if likely(elem) {
 		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
 		Dee_Decref(elem);
 	}
@@ -220,8 +216,7 @@ PRIVATE DREF DeeObject *DCALL
 types_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
-	if likely(elem)
-		{
+	if likely(elem) {
 		result = (DREF DeeObject *)Dee_TYPE(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -233,8 +228,7 @@ PRIVATE DREF DeeObject *DCALL
 classes_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
-	if likely(elem)
-		{
+	if likely(elem) {
 		result = (DREF DeeObject *)DeeObject_Class(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -249,8 +243,7 @@ ids_getrange(SeqSimpleProxy *__restrict self,
              DeeObject *__restrict end) {
 	DREF DeeObject *result, *subrange;
 	result = subrange = DeeObject_GetRange(self->sp_seq, start, end);
-	if likely(subrange)
-		{
+	if likely(subrange) {
 		result = SeqIds_New(subrange);
 		Dee_Decref(subrange);
 	}
@@ -263,8 +256,7 @@ types_getrange(SeqSimpleProxy *__restrict self,
                DeeObject *__restrict end) {
 	DREF DeeObject *result, *subrange;
 	result = subrange = DeeObject_GetRange(self->sp_seq, start, end);
-	if likely(subrange)
-		{
+	if likely(subrange) {
 		result = SeqTypes_New(subrange);
 		Dee_Decref(subrange);
 	}
@@ -277,8 +269,7 @@ classes_getrange(SeqSimpleProxy *__restrict self,
                  DeeObject *__restrict end) {
 	DREF DeeObject *result, *subrange;
 	result = subrange = DeeObject_GetRange(self->sp_seq, start, end);
-	if likely(subrange)
-		{
+	if likely(subrange) {
 		result = SeqClasses_New(subrange);
 		Dee_Decref(subrange);
 	}

@@ -134,8 +134,7 @@ PRIVATE DEFINE_STRING(str_Iterator, "Iterator");
 LOCAL DREF DeeObject *DCALL
 get_type_of(DREF DeeObject *ob) {
 	DREF DeeObject *result = NULL;
-	if likely(ob)
-		{
+	if likely(ob) {
 		result = (DeeObject *)Dee_TYPE(ob);
 		Dee_Incref(result);
 		Dee_Decref_unlikely(ob);
@@ -146,8 +145,7 @@ get_type_of(DREF DeeObject *ob) {
 LOCAL DREF DeeObject *DCALL
 get_iterator_of(DREF DeeObject *ob) {
 	DREF DeeObject *result = NULL;
-	if likely(ob)
-		{
+	if likely(ob) {
 		result = DeeObject_GetAttr((DeeObject *)ob,
 		                           (DeeObject *)STR_ITERATOR);
 		Dee_Decref_unlikely(ob);
@@ -565,8 +563,7 @@ LOCAL DREF DeeObject *DCALL
 librt_get_sequence_mutation_type(char const *__restrict name) {
 	DREF DeeObject *ob, *result = NULL;
 	ob = DeeTuple_Pack(2, Dee_None, Dee_None);
-	if likely(ob)
-		{
+	if likely(ob) {
 		DeeObject *argv[] = { &DeeInt_One };
 		result            = get_type_of(DeeObject_CallAttrString(ob, name, 1, argv));
 		Dee_Decref(ob);
@@ -842,8 +839,7 @@ LOCAL DREF DeeObject *DCALL
 librt_get_SeqEachOperator_stub_instance(void) {
 	DREF DeeObject *result;
 	result = librt_get_SeqEach_stub_instance();
-	if likely(result)
-		{
+	if likely(result) {
 		DREF DeeObject *temp;
 		temp = DeeObject_Pos(result);
 		Dee_Decref(result);
@@ -856,8 +852,7 @@ LOCAL DREF DeeObject *DCALL
 librt_get_SeqEachGetAttr_stub_instance(void) {
 	DREF DeeObject *result;
 	result = librt_get_SeqEach_stub_instance();
-	if likely(result)
-		{
+	if likely(result) {
 		DREF DeeObject *temp;
 		temp = DeeObject_GetAttr(result, (DeeObject *)STR_ITERATOR);
 		Dee_Decref(result);
@@ -870,8 +865,7 @@ LOCAL DREF DeeObject *DCALL
 librt_get_SeqEachCallAttr_stub_instance(void) {
 	DREF DeeObject *result;
 	result = librt_get_SeqEach_stub_instance();
-	if likely(result)
-		{
+	if likely(result) {
 		DREF DeeObject *temp;
 		temp = DeeObject_CallAttr(result, (DeeObject *)STR_ITERATOR, 0, NULL);
 		Dee_Decref(result);
@@ -884,8 +878,7 @@ LOCAL DREF DeeObject *DCALL
 librt_get_SeqEachCallAttrKw_stub_instance(void) {
 	DREF DeeObject *result;
 	result = librt_get_SeqEach_stub_instance();
-	if likely(result)
-		{
+	if likely(result) {
 		DREF DeeObject *temp;
 		temp = DeeObject_CallAttrKw(result, (DeeObject *)STR_ITERATOR,
 		                            0,
@@ -962,8 +955,7 @@ librt_get_SetUnion_impl_f(void) {
 	if unlikely(!a)
 		return NULL;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		{
+	if unlikely(!b) {
 		Dee_Decref(a);
 		return NULL;
 	}
@@ -980,8 +972,7 @@ librt_get_SetSymmetricDifference_impl_f(void) {
 	if unlikely(!a)
 		return NULL;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		{
+	if unlikely(!b) {
 		Dee_Decref(a);
 		return NULL;
 	}
@@ -998,8 +989,7 @@ librt_get_SetIntersection_impl_f(void) {
 	if unlikely(!a)
 		return NULL;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		{
+	if unlikely(!b) {
 		Dee_Decref(a);
 		return NULL;
 	}
@@ -1016,8 +1006,7 @@ librt_get_SetDifference_impl_f(void) {
 	if unlikely(!a)
 		return NULL;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		{
+	if unlikely(!b) {
 		Dee_Decref(a);
 		return NULL;
 	}
@@ -1074,8 +1063,7 @@ PRIVATE DREF DeeObject *DCALL
 librt_get_SharedVector_impl_f(void) {
 	DREF DeeObject *ob, *result = NULL;
 	ob = DeeSharedVector_NewShared(0, NULL);
-	if likely(ob)
-		{
+	if likely(ob) {
 		result = (DREF DeeObject *)Dee_TYPE(ob);
 		Dee_Incref(result);
 		DeeSharedVector_Decref(ob);
@@ -1098,8 +1086,7 @@ PRIVATE DREF DeeObject *DCALL
 librt_get_SharedMap_impl_f(void) {
 	DREF DeeObject *ob, *result = NULL;
 	ob = DeeSharedMap_NewShared(0, NULL);
-	if likely(ob)
-		{
+	if likely(ob) {
 		result = (DREF DeeObject *)Dee_TYPE(ob);
 		Dee_Incref(result);
 		DeeSharedMap_Decref(ob);

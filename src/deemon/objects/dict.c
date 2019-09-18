@@ -81,8 +81,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
 		result->d_elem = (struct dict_item *)Dee_TryCalloc((mask + 1) * sizeof(struct dict_item));
-		if unlikely(!result->d_elem)
-			{
+		if unlikely(!result->d_elem) {
 			/* Try one level less if that failed. */
 			mask           = min_mask;
 			result->d_elem = (struct dict_item *)Dee_Calloc((mask + 1) * sizeof(struct dict_item));
@@ -169,8 +168,7 @@ dict_init_iterator(Dict *__restrict self,
 	rwlock_init(&self->d_lock);
 #endif /* !CONFIG_NO_THREADS */
 	weakref_support_init(self);
-	if unlikely(dict_insert_iterator(self, iterator))
-		{
+	if unlikely(dict_insert_iterator(self, iterator)) {
 		dict_fini(self);
 		return -1;
 	}
@@ -297,8 +295,7 @@ again:
 	self->d_size = other->d_size;
 	if ((self->d_elem = other->d_elem) != empty_dict_items) {
 		self->d_elem = (struct dict_item *)Dee_TryMalloc((other->d_mask + 1) * sizeof(struct dict_item));
-		if unlikely(!self->d_elem)
-			{
+		if unlikely(!self->d_elem) {
 			DeeDict_LockEndRead(other);
 			if (Dee_CollectMemory((other->d_mask + 1) * sizeof(struct dict_item)))
 				goto again;
@@ -511,8 +508,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 		if unlikely(new_mask == 1)
 			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if unlikely(!self->d_used)
-			{
+		if unlikely(!self->d_used) {
 			ASSERT(!self->d_used);
 			/* Special case: delete the vector. */
 			if (self->d_size) {
@@ -1724,8 +1720,7 @@ dict_popsomething(DeeDictObject *__restrict self,
 	if unlikely(!result)
 		goto err;
 	DeeDict_LockWrite(self);
-	if unlikely(!self->d_used)
-		{
+	if unlikely(!self->d_used) {
 		DeeDict_LockEndWrite(self);
 		DeeTuple_FreeUninitialized(result);
 		err_empty_sequence((DeeObject *)self);

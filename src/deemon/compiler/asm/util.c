@@ -162,8 +162,7 @@ again:
 	ASSERT(end != 0);
 	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject, t_elem) +
 	                                                    (size_t)end * sizeof(DREF DeeObject *));
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		DeeList_LockEndRead(self);
 		if (Dee_CollectMemory(offsetof(DeeTupleObject, t_elem) +
 		                      (size_t)end * sizeof(DREF DeeObject *)))
@@ -468,8 +467,7 @@ check_dict_again:
 			ro_mask = (ro_mask << 1) | 1;
 		ro_mask = (ro_mask << 1) | 1;
 		rodict  = (DREF DeeRoDictObject *)DeeObject_TryCalloc(SIZEOF_RODICT(ro_mask));
-		if unlikely(!rodict)
-			{
+		if unlikely(!rodict) {
 			DeeDict_LockEndRead(value);
 			if (Dee_CollectMemory(SIZEOF_RODICT(ro_mask)))
 				goto check_dict_again;
@@ -570,8 +568,7 @@ check_set_again:
 			ro_mask = (ro_mask << 1) | 1;
 		ro_mask = (ro_mask << 1) | 1;
 		roset   = (DREF DeeRoSetObject *)DeeObject_TryCalloc(SIZEOF_ROSET(ro_mask));
-		if unlikely(!roset)
-			{
+		if unlikely(!roset) {
 			DeeHashSet_LockEndRead(value);
 			if (Dee_CollectMemory(SIZEOF_ROSET(ro_mask)))
 				goto check_set_again;
@@ -842,8 +839,7 @@ check_function_class:
 			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 				/* Access to an instance member function (must produce a bound method). */
 				/* args..., func */
-				if unlikely(argc != (uint8_t)-1)
-					{
+				if unlikely(argc != (uint8_t)-1) {
 					if (asm_grrot(argc))
 						goto err; /* func, args... */
 					if (asm_gpush_symbol(this_sym, warn_ast))
@@ -950,8 +946,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_STACK: {
 		uint16_t offset, absolute_stack_addr;
-		if unlikely(!(sym->s_flag & SYMBOL_FALLOC))
-			{
+		if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
 			if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED, sym))
 				goto err;
 			return asm_gpush_none();
@@ -1254,8 +1249,7 @@ check_sym_class:
 		symid = asm_lsymid(sym);
 		if unlikely(symid < 0)
 			goto err;
-		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 			if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 				goto err;
 			if (asm_gcheck_final_local_bound((uint16_t)symid))
@@ -1264,8 +1258,7 @@ check_sym_class:
 		return asm_plocal((uint16_t)symid);
 
 	case SYMBOL_TYPE_STATIC:
-		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 			if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
@@ -1275,8 +1268,7 @@ check_sym_class:
 		return asm_pstatic((uint16_t)symid);
 
 	case SYMBOL_TYPE_STACK:
-		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 			if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
@@ -1644,8 +1636,7 @@ check_sym_class:
 			goto check_sym_class;
 
 		case SYMBOL_TYPE_GLOBAL:
-			if unlikely(sym->s_flag & SYMBOL_FFINAL)
-				{
+			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
@@ -1657,8 +1648,7 @@ check_sym_class:
 			return asm_gdel_global((uint16_t)symid);
 
 		case SYMBOL_TYPE_LOCAL:
-			if unlikely(sym->s_flag & SYMBOL_FFINAL)
-				{
+			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
@@ -1705,8 +1695,7 @@ check_sym_class:
 		}	break;
 
 		case SYMBOL_TYPE_STACK:
-			if unlikely(sym->s_flag & SYMBOL_FFINAL)
-				{
+			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
@@ -1932,8 +1921,7 @@ check_sym_class:
 			symid = asm_gsymid(sym);
 			if unlikely(symid < 0)
 				goto err;
-			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-				{
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
 				symid = asm_newconst_string(sym->s_name->k_name,
@@ -1951,8 +1939,7 @@ check_sym_class:
 			symid = asm_lsymid(sym);
 			if unlikely(symid < 0)
 				goto err;
-			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-				{
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
 				if (asm_gcheck_final_local_bound((uint16_t)symid))
@@ -1964,8 +1951,7 @@ check_sym_class:
 			symid = asm_ssymid(sym);
 			if unlikely(symid < 0)
 				goto err;
-			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-				{
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 				if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 					goto err;
 			}
@@ -1973,13 +1959,11 @@ check_sym_class:
 
 		case SYMBOL_TYPE_STACK:
 			ASSERT(current_assembler.a_stackcur);
-			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-				{
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 				if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 					goto err;
 			}
-			if unlikely(!(sym->s_flag & SYMBOL_FALLOC))
-				{
+			if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
 				/* This is where the magic of lazy stack initialization happens! */
 				if (current_assembler.a_flag & ASM_FSTACKDISP) {
 					if (current_assembler.a_scope != SYMBOL_SCOPE(sym)) {

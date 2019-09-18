@@ -75,8 +75,7 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
 			child_stack.os_assume = &tt_assumes;
 			child_stack.os_ast    = self->a_conditional.c_tt;
 			child_stack.os_used   = result_used;
-			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
-				{
+			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used)) {
 err_tt_assumes:
 				ast_assumes_fini(&tt_assumes);
 				goto err;
@@ -87,8 +86,7 @@ err_tt_assumes:
 			child_stack.os_assume = &ff_assumes;
 			child_stack.os_ast    = self->a_conditional.c_ff;
 			child_stack.os_used   = result_used;
-			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
-				{
+			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used)) {
 err_ff_tt_assumes:
 				ast_assumes_fini(&ff_assumes);
 				goto err_tt_assumes;
@@ -201,8 +199,7 @@ err_ff_tt_assumes:
 			if (self->a_flag & AST_FCOND_BOOL) {
 				DREF struct ast *merge;
 				merge = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL, eval_branch), self);
-				if unlikely(!merge)
-					{
+				if unlikely(!merge) {
 					Dee_Free(elemv);
 					goto err;
 				}

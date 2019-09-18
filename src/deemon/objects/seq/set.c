@@ -239,8 +239,7 @@ read_from_iter:
 	Dee_Decref(iter);
 	if (is_second)
 		goto done;
-	if unlikely(result != ITER_DONE)
-		{
+	if unlikely(result != ITER_DONE) {
 		if (result) {
 			int temp;
 			/* Check if the found item is also part of the second set.
@@ -250,8 +249,7 @@ read_from_iter:
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 					result = NULL;
 					goto done;
 				}
@@ -276,8 +274,7 @@ read_from_iter:
 		goto done;
 	rwlock_write(&self->sui_lock);
 	/* Check for another race condition. */
-	if unlikely(self->sui_iter != iter)
-		{
+	if unlikely(self->sui_iter != iter) {
 		rwlock_endwrite(&self->sui_lock);
 		Dee_Decref(result);
 		goto again;
@@ -718,8 +715,7 @@ read_from_iter:
 	Dee_Decref(iter);
 	if (is_second)
 		goto done;
-	if unlikely(result != ITER_DONE)
-		{
+	if unlikely(result != ITER_DONE) {
 		if (result) {
 			int temp;
 			/* Only yield the item if it's not contained in the other set. */
@@ -730,8 +726,7 @@ read_from_iter:
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 					result = NULL;
 					goto done;
 				}
@@ -756,8 +751,7 @@ read_from_iter:
 		goto done;
 	rwlock_write(&self->ssd_lock);
 	/* Check for another race condition. */
-	if unlikely(self->ssd_iter != iter)
-		{
+	if unlikely(self->ssd_iter != iter) {
 		rwlock_endwrite(&self->ssd_lock);
 		Dee_Decref(result);
 		goto again;

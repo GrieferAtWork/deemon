@@ -104,8 +104,7 @@ INTERN int(DCALL asm_genclass)(struct ast *__restrict class_ast,
 	for (i = 0; i < class_ast->a_class.c_memberc; ++i) {
 		struct class_member *member;
 		member = &class_ast->a_class.c_memberv[i];
-		if likely(member->cm_index != (uint16_t)-1)
-			{
+		if likely(member->cm_index != (uint16_t)-1) {
 			if (ast_genasm_one(member->cm_ast, ASM_G_FPUSHRES))
 				goto err;
 			if (asm_putddi(class_ast))

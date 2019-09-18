@@ -662,8 +662,7 @@ DeeSeq_Min_k(DeeObject *__restrict self,
 				goto err_r_iter_elem;
 			temp = DeeObject_CompareLo(key_result, key_elem);
 			if (temp <= 0) {
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 					Dee_Decref(key_elem);
 					goto err_r_iter_elem;
 				}
@@ -724,8 +723,7 @@ DeeSeq_Max_k(DeeObject *__restrict self,
 				goto err_r_iter_elem;
 			temp = DeeObject_CompareLo(key_result, key_elem);
 			if (temp <= 0) {
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 					Dee_Decref(key_elem);
 					goto err_r_iter_elem;
 				}

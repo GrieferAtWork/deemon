@@ -52,8 +52,7 @@ repeatiter_ctor(RepeatIterator *__restrict self) {
 	if unlikely(!self->ri_rep)
 		return -1;
 	self->ri_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	if unlikely(!self->ri_iter)
-		{ Dee_Decref(self->ri_rep); }
+	if unlikely(!self->ri_iter) { Dee_Decref(self->ri_rep); }
 	rwlock_init(&self->ri_lock);
 	self->ri_num = 0;
 	return 0;
@@ -247,8 +246,7 @@ done:
 		return NULL;
 	COMPILER_READ_BARRIER();
 	rwlock_write(&self->ri_lock);
-	if unlikely(!self->ri_num)
-		{
+	if unlikely(!self->ri_num) {
 		rwlock_endwrite(&self->ri_lock);
 		Dee_Decref(iter);
 		ASSERT(result == ITER_DONE);
@@ -411,8 +409,7 @@ repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqRepeat", &self->r_seq, &self->r_num))
 		return -1;
-	if unlikely(!self->r_num)
-		{
+	if unlikely(!self->r_num) {
 		self->r_seq = Dee_EmptySeq;
 		self->r_num = 1;
 	}
@@ -486,8 +483,7 @@ repeat_get(Repeat *__restrict self,
 	seq_size = DeeObject_Size(self->r_seq);
 	if unlikely(seq_size == (size_t)-1)
 		return NULL;
-	if unlikely(index >= seq_size * self->r_num)
-		{
+	if unlikely(index >= seq_size * self->r_num) {
 		err_index_out_of_bounds((DeeObject *)self, index,
 		                        seq_size * self->r_num);
 		return NULL;
@@ -528,8 +524,7 @@ repeat_nsi_getitem(Repeat *__restrict self, size_t index) {
 	seq_size = DeeObject_Size(self->r_seq);
 	if unlikely(seq_size == (size_t)-1)
 		return NULL;
-	if unlikely(index >= seq_size * self->r_num)
-		{
+	if unlikely(index >= seq_size * self->r_num) {
 		err_index_out_of_bounds((DeeObject *)self, index,
 		                        seq_size * self->r_num);
 		return NULL;
@@ -996,8 +991,7 @@ repeatitem_get(RepeatItem *__restrict self,
 		return NULL;
 	if (index < 0)
 		index += self->ri_num;
-	if unlikely((size_t)index >= self->ri_num)
-		{
+	if unlikely((size_t)index >= self->ri_num) {
 		err_index_out_of_bounds((DeeObject *)self,
 		                        (size_t)index,
 		                        self->ri_num);
@@ -1047,8 +1041,7 @@ repeatitem_nsi_getsize_fast(RepeatItem *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 repeatitem_nsi_getitem(RepeatItem *__restrict self, size_t index) {
-	if unlikely(index >= self->ri_num)
-		{
+	if unlikely(index >= self->ri_num) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->ri_num);
 		return NULL;
 	}

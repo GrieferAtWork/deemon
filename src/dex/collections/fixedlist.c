@@ -153,8 +153,7 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 	itemc = 2, itema = 4;
 	result = (DREF FixedList *)DeeGCObject_TryMalloc(offsetof(FixedList, fl_elem) +
 	                                                 (4 * sizeof(DREF DeeObject *)));
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		itema  = 2;
 		result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
 		                                              (2 * sizeof(DREF DeeObject *)));
@@ -170,8 +169,7 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 			new_result = (DREF FixedList *)DeeGCObject_TryRealloc(result,
 			                                                      offsetof(FixedList, fl_elem) +
 			                                                      (itema * sizeof(DREF DeeObject *)));
-			if unlikely(!new_result)
-				{
+			if unlikely(!new_result) {
 				itema      = itemc + 1;
 				new_result = (DREF FixedList *)DeeGCObject_Realloc(result,
 				                                                   offsetof(FixedList, fl_elem) +
@@ -227,8 +225,7 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
 			goto err_r;
 		elem = (*getitem)(sequence, index_ob);
 		Dee_Decref(index_ob);
-		if unlikely(!elem)
-			{
+		if unlikely(!elem) {
 			if (!DeeError_Catch(&DeeError_UnboundItem))
 				goto err_r;
 		}
@@ -390,8 +387,7 @@ fl_moveassign(FixedList *__restrict self,
 	size_t i;
 	if (self == other)
 		return 0;
-	if unlikely(self->fl_size != other->fl_size)
-		{
+	if unlikely(self->fl_size != other->fl_size) {
 		return DeeError_Throwf(&DeeError_UnpackError,
 		                       "Expected a fixed list containing %Iu object%s when one containing %Iu was given",
 		                       self->fl_size, self->fl_size > 1 ? "s" : "", other->fl_size);
@@ -532,15 +528,13 @@ fl_size(FixedList *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 fl_nsi_getitem(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	if unlikely(index >= self->fl_size)
-		{
+	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	rwlock_read(&self->fl_lock);
 	result = self->fl_elem[index];
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		rwlock_endread(&self->fl_lock);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
@@ -566,16 +560,14 @@ fl_nsi_getitem_fast(FixedList *__restrict self, size_t index) {
 PRIVATE int DCALL
 fl_nsi_delitem(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
-	if unlikely(index >= self->fl_size)
-		{
+	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	rwlock_read(&self->fl_lock);
 	oldval = self->fl_elem[index];
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!oldval)
-		{
+	if unlikely(!oldval) {
 		rwlock_endread(&self->fl_lock);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
@@ -597,8 +589,7 @@ PRIVATE int DCALL
 fl_nsi_setitem(FixedList *__restrict self, size_t index,
                DeeObject *__restrict value) {
 	DREF DeeObject *oldval;
-	if unlikely(index >= self->fl_size)
-		{
+	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
@@ -617,15 +608,13 @@ PRIVATE DREF DeeObject *DCALL
 fl_nsi_xchitem(FixedList *__restrict self, size_t index,
                DeeObject *__restrict value) {
 	DREF DeeObject *result;
-	if unlikely(index >= self->fl_size)
-		{
+	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
 	rwlock_read(&self->fl_lock);
 	result = self->fl_elem[index];
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		rwlock_endread(&self->fl_lock);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;

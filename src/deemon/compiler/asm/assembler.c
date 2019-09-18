@@ -164,8 +164,7 @@ INTERN struct ddi_checkpoint *DCALL asm_newddi(void) {
 do_realloc:
 		result = (struct ddi_checkpoint *)Dee_TryRealloc(result, new_alloc *
 		                                                         sizeof(struct ddi_checkpoint));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			result = current_assembler.a_ddi.da_checkv;
 			if (new_alloc != current_assembler.a_ddi.da_checkc + 1) {
 				new_alloc = current_assembler.a_ddi.da_checkc + 1;
@@ -225,8 +224,7 @@ ddi_newfile(char const *__restrict filename,
 	result->f_kind = TPPFILE_KIND_TEXT;
 #endif
 	result->f_name = (char *)Dee_Malloc((filename_length + 1) * sizeof(char));
-	if unlikely(!result->f_name)
-		{
+	if unlikely(!result->f_name) {
 		Dee_Free(result);
 		goto err;
 	}
@@ -308,8 +306,7 @@ PRIVATE struct ddi_binding *DCALL asm_alloc_ddi_binding(void) {
 		}
 		new_vec = (struct ddi_binding *)Dee_TryRealloc(current_assembler.a_ddi.da_bndv,
 		                                               new_alloc * sizeof(struct ddi_binding));
-		if unlikely(!new_vec)
-			{
+		if unlikely(!new_vec) {
 			new_alloc = current_assembler.a_ddi.da_bndc + 1;
 			new_vec = (struct ddi_binding *)Dee_Realloc(current_assembler.a_ddi.da_bndv,
 			                                            new_alloc * sizeof(struct ddi_binding));
@@ -545,10 +542,8 @@ PRIVATE int DCALL asm_realloc_exc(void) {
 	new_alloc  = current_assembler.a_excepta * 2;
 	if (!new_alloc)
 		new_alloc = 1;
-	if unlikely(new_alloc < current_assembler.a_excepta)
-		{
-		if unlikely(current_assembler.a_exceptc == UINT16_MAX)
-			{
+	if unlikely(new_alloc < current_assembler.a_excepta) {
+		if unlikely(current_assembler.a_exceptc == UINT16_MAX) {
 			return DeeError_Throwf(&DeeError_CompilerError,
 			                       "Too many exception handlers");
 		}
@@ -557,8 +552,7 @@ PRIVATE int DCALL asm_realloc_exc(void) {
 	/* Must allocate more exception handlers. */
 do_realloc:
 	new_vector = (struct asm_exc *)Dee_TryRealloc(new_vector, new_alloc * sizeof(struct asm_exc));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		if (new_alloc != current_assembler.a_exceptc + 1) {
 			new_alloc = current_assembler.a_exceptc + 1;
 			goto do_realloc;
@@ -1111,8 +1105,7 @@ INTERN int DCALL asm_mergestatic(void) {
 	 * placing the static ones after the constant ones. */
 	static_offset = current_assembler.a_constc;
 	total_count   = static_offset + current_assembler.a_staticc;
-	if unlikely(total_count < static_offset)
-		{
+	if unlikely(total_count < static_offset) {
 		/* Too many variables. */
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many constant/static variables");
@@ -1487,8 +1480,7 @@ INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
 	 * compatible with `struct except_handler'. */
 	if (current_assembler.a_exceptc) {
 		exceptv = asm_pack_exceptv();
-		if unlikely(!exceptv)
-			{
+		if unlikely(!exceptv) {
 err_ddi:
 			Dee_Decref(ddi);
 			return NULL; /* Well... $h1t. */
@@ -1515,8 +1507,7 @@ err_ddi:
 				nameob = (DREF DeeStringObject *)DeeString_NewUtf8(name->k_name,
 				                                                   name->k_size,
 				                                                   STRING_ERROR_FIGNORE);
-				if unlikely(!nameob)
-					{
+				if unlikely(!nameob) {
 					while (i--)
 						Dee_Decref(kwds[i]);
 					Dee_Free(kwds);
@@ -1599,8 +1590,7 @@ INTERN struct asm_rel *(FCALL asm_allocrel)(void) {
 do_realloc:
 		result = (struct asm_rel *)Dee_TryRealloc(current_assembler.a_curr->sec_relv,
 		                                          new_rela * sizeof(struct asm_rel));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			if (new_rela != current_assembler.a_curr->sec_relc + 1) {
 				new_rela = current_assembler.a_curr->sec_relc + 1;
 				goto do_realloc;
@@ -1621,8 +1611,7 @@ INTERN instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
 	size_t min_size, new_size;
 	ASSERT(current_assembler.a_curr);
 	result = current_assembler.a_curr->sec_iter;
-	if likely(result + n_bytes <= current_assembler.a_curr->sec_end)
-		{
+	if likely(result + n_bytes <= current_assembler.a_curr->sec_end) {
 		/* Fast path: the section already has enough buffer memory allocated. */
 		current_assembler.a_curr->sec_iter = result + n_bytes;
 		goto end;
@@ -1641,8 +1630,7 @@ INTERN instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
 		result = (instruction_t *)DeeGCObject_TryRealloc(current_assembler.a_curr->sec_code,
 		                                                 offsetof(DeeCodeObject, co_code) +
 		                                                 new_size * sizeof(instruction_t));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			if (new_size != min_size) {
 				new_size = min_size;
 				goto realloc_instr;
@@ -1658,8 +1646,7 @@ INTERN instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
 	realloc_instr: /* Directly re-allocate code. */
 		result = (instruction_t *)Dee_TryRealloc(current_assembler.a_curr->sec_begin,
 		                                         new_size * sizeof(instruction_t));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			if (new_size != min_size) {
 				new_size = min_size;
 				goto realloc_instr;
@@ -1763,8 +1750,7 @@ err:
 
 INTERN int (DCALL asm_putimm8)(instruction_t instr, uint8_t imm8) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 1);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0)            = instr;
 		*(uint8_t *)(result + 1) = imm8;
 		return 0;
@@ -1774,8 +1760,7 @@ INTERN int (DCALL asm_putimm8)(instruction_t instr, uint8_t imm8) {
 
 INTERN int (DCALL asm_putimm8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 2);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0)            = instr;
 		*(uint8_t *)(result + 1) = imm8_1;
 		*(uint8_t *)(result + 2) = imm8_2;
@@ -1786,8 +1771,7 @@ INTERN int (DCALL asm_putimm8_8)(instruction_t instr, uint8_t imm8_1, uint8_t im
 
 INTERN int (DCALL asm_putimm8_8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2, uint8_t imm8_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0)            = instr;
 		*(uint8_t *)(result + 1) = imm8_1;
 		*(uint8_t *)(result + 2) = imm8_2;
@@ -1799,8 +1783,7 @@ INTERN int (DCALL asm_putimm8_8_8)(instruction_t instr, uint8_t imm8_1, uint8_t 
 
 INTERN int (DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, uint16_t imm16_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0)            = instr;
 		*(uint8_t *)(result + 1) = imm8_1;
 		UNALIGNED_SETLE16((uint16_t *)(result + 2), imm16_2);
@@ -1811,8 +1794,7 @@ INTERN int (DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, uint16_t 
 
 INTERN int (DCALL asm_putimm16)(instruction_t instr, uint16_t imm16) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 2);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16);
 		return 0;
@@ -1822,8 +1804,7 @@ INTERN int (DCALL asm_putimm16)(instruction_t instr, uint16_t imm16) {
 
 INTERN int (DCALL asm_putimm16_8)(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
 		*(uint8_t *)(result + 3) = imm8_2;
@@ -1834,8 +1815,7 @@ INTERN int (DCALL asm_putimm16_8)(instruction_t instr, uint16_t imm16_1, uint8_t
 
 INTERN int (DCALL asm_putimm16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 4);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
 		UNALIGNED_SETLE16((uint16_t *)(result + 3), imm16_2);
@@ -1846,8 +1826,7 @@ INTERN int (DCALL asm_putimm16_16)(instruction_t instr, uint16_t imm16_1, uint16
 
 INTERN int (DCALL asm_putimm16_8_16)(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2, uint16_t imm16_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 5);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
 		*(uint8_t *)(result + 3) = imm8_2;
@@ -1859,8 +1838,7 @@ INTERN int (DCALL asm_putimm16_8_16)(instruction_t instr, uint16_t imm16_1, uint
 
 INTERN int (DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint8_t imm8_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 5);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
 		UNALIGNED_SETLE16((uint16_t *)(result + 3), imm16_2);
@@ -1872,8 +1850,7 @@ INTERN int (DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16_1, uint
 
 INTERN int (DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 6);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
 		UNALIGNED_SETLE16((uint16_t *)(result + 3), imm16_2);
@@ -1885,8 +1862,7 @@ INTERN int (DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm16_1, uin
 
 INTERN int (DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 4);
-	if likely(result)
-		{
+	if likely(result) {
 		*(result + 0) = instr;
 		UNALIGNED_SETLE32((uint32_t *)(result + 1), imm32);
 		return 0;
@@ -1896,8 +1872,7 @@ INTERN int (DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
 
 INTERN int (DCALL asm_putsid16)(uint16_t instr, uint16_t sid) {
 	instruction_t *result = asm_alloc(sizeof(uint16_t) + 2);
-	if likely(result)
-		{
+	if likely(result) {
 		struct asm_rel *rel = asm_allocrel();
 		if unlikely(!rel)
 			return -1;
@@ -2011,8 +1986,7 @@ asm_newrelint(struct asm_sym *sym,
               tint_t addend, uint16_t mode) {
 	DREF DeeObject *obj;
 	int32_t result;
-	if likely(sym)
-		{
+	if likely(sym) {
 		obj = DeeRelInt_New(sym, addend, mode);
 	} else {
 		obj = DeeInt_NewS64(addend);
@@ -2122,8 +2096,7 @@ asm_do_gjmp(instruction_t instr,
 		goto err;
 	rel->ar_sym = target, ++target->as_used;
 	/* Let's get big-code assembly mode out of the way! */
-	if unlikely(current_assembler.a_flag & ASM_FBIGCODE)
-		{
+	if unlikely(current_assembler.a_flag & ASM_FBIGCODE) {
 		if (instr == ASM_JMP) {
 			if unlikely((data = asm_alloc(6)) == NULL)
 				goto err;
@@ -2214,8 +2187,7 @@ asm_do_gjcc(struct ast *__restrict cond,
 		goto err;
 	rel->ar_sym = target, ++target->as_used;
 	/* Let's get big-code assembly mode out of the way! */
-	if unlikely(current_assembler.a_flag & ASM_FBIGCODE)
-		{
+	if unlikely(current_assembler.a_flag & ASM_FBIGCODE) {
 		/* >>    jnX   1f     // 2
 		 * >>    jmp32 target // 6
 		 * >>1:
@@ -2492,11 +2464,9 @@ PRIVATE int DCALL check_resize_constants(void) {
 		DREF DeeObject **new_vector;
 		if (!new_consta)
 			new_consta = 1;
-		if unlikely(new_consta < current_assembler.a_constc)
-			{
+		if unlikely(new_consta < current_assembler.a_constc) {
 			new_consta = current_assembler.a_constc + 1;
-			if unlikely(new_consta < current_assembler.a_constc)
-				{
+			if unlikely(new_consta < current_assembler.a_constc) {
 				return DeeError_Throwf(&DeeError_CompilerError,
 				                       "Too many constant variables");
 			}
@@ -2504,8 +2474,7 @@ PRIVATE int DCALL check_resize_constants(void) {
 do_realloc:
 		new_vector = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_constv,
 		                                               new_consta * sizeof(DREF DeeObject *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_consta != current_assembler.a_constc + 1) {
 				new_consta = current_assembler.a_constc + 1;
 				goto do_realloc;
@@ -2591,11 +2560,9 @@ asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym) {
 		struct asm_symbol_static *new_vector;
 		if (!new_statica)
 			new_statica = 1;
-		if unlikely(new_statica < current_assembler.a_staticc)
-			{
+		if unlikely(new_statica < current_assembler.a_staticc) {
 			new_statica = current_assembler.a_staticc + 1;
-			if unlikely(new_statica < current_assembler.a_staticc)
-				{
+			if unlikely(new_statica < current_assembler.a_staticc) {
 				return DeeError_Throwf(&DeeError_CompilerError,
 				                       "Too many static variables");
 			}
@@ -2604,8 +2571,7 @@ do_realloc:
 		new_vector = (struct asm_symbol_static *)Dee_TryRealloc(current_assembler.a_staticv,
 		                                                        new_statica *
 		                                                        sizeof(struct asm_symbol_static));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_statica != current_assembler.a_staticc + 1) {
 				new_statica = current_assembler.a_staticc + 1;
 				goto do_realloc;
@@ -2650,8 +2616,7 @@ INTERN int32_t DCALL asm_newlocal_noreuse(void) {
 			new_size = UINT16_MAX;
 do_realloc:
 		new_bitset = (uint8_t *)Dee_TryRealloc(current_assembler.a_localuse, new_size);
-		if unlikely(!new_bitset)
-			{
+		if unlikely(!new_bitset) {
 			uint16_t minsize = (result + 1) / 8;
 			if (new_size != minsize) {
 				new_size = minsize;
@@ -2803,8 +2768,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 	/* All right! This is a new one, so we have to do all the
 	 * work of creating and adding a new `module_symbol'... */
 	result = current_rootscope->rs_globalc;
-	if unlikely(result == UINT16_MAX)
-		{
+	if unlikely(result == UINT16_MAX) {
 		/* Make sure not to exceed what can actually be done. */
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many global variables");
@@ -2866,8 +2830,7 @@ asm_lsymid(struct symbol *__restrict sym) {
 	ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-	if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-		{
+	if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 		/* Must ensure that variable doesn't share its storage location, so
 		 * we can safely generate binding checks to ensure that it doesn't
 		 * get re-assigned accidentally. */
@@ -2966,8 +2929,7 @@ asm_rsymid(struct symbol *__restrict sym) {
 	    current_assembler.a_refv[sym->s_refid].sr_sym == sym)
 		return sym->s_refid;
 	ASSERT(result <= current_assembler.a_refa);
-	if unlikely(result == UINT16_MAX)
-		{
+	if unlikely(result == UINT16_MAX) {
 		return DeeError_Throwf(&DeeError_CompilerError,
 		                       "Too many reference variables");
 	}
@@ -2984,8 +2946,7 @@ asm_rsymid(struct symbol *__restrict sym) {
 do_realloc:
 		new_vector = (struct asm_symbol_ref *)Dee_TryRealloc(current_assembler.a_refv, new_size *
 		                                                                               sizeof(struct asm_symbol_ref));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;
 				goto do_realloc;
@@ -3025,8 +2986,7 @@ asm_asymid_r(struct symbol *__restrict sym) {
 	/* Allocate a new argref */
 	result = current_assembler.a_argrefc;
 	ASSERT(result <= current_assembler.a_argrefa);
-	if unlikely(result == UINT16_MAX)
-		{
+	if unlikely(result == UINT16_MAX) {
 		return DeeError_Throwf(&DeeError_CompilerError,
 		                       "Too many reference-through-argument variables");
 	}
@@ -3043,8 +3003,7 @@ asm_asymid_r(struct symbol *__restrict sym) {
 do_realloc:
 		new_vector = (struct symbol **)Dee_TryRealloc(current_assembler.a_argrefv,
 		                                              new_size * sizeof(struct symbol *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;
 				goto do_realloc;
@@ -3081,8 +3040,7 @@ asm_newmodule(DeeModuleObject *__restrict mod) {
 	ASSERT(current_rootscope->rs_importc <=
 	       current_rootscope->rs_importa);
 	result = current_rootscope->rs_importc;
-	if unlikely(result == UINT16_MAX)
-		{
+	if unlikely(result == UINT16_MAX) {
 		/* Make sure not to exceed what can actually be done. */
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many imported modules");
@@ -3102,8 +3060,7 @@ do_realloc:
 		new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
 		                                                     new_size *
 		                                                     sizeof(DREF DeeModuleObject *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;
 				goto do_realloc;
@@ -3231,8 +3188,7 @@ INTERN int DCALL asm_check_user_labels_defined(void) {
 				continue; /* Label was never instantiated. */
 			if (!sym->as_used)
 				continue; /* Label isn't being used. */
-			if unlikely(!ASM_SYM_DEFINED(sym))
-				{
+			if unlikely(!ASM_SYM_DEFINED(sym)) {
 				/* Error: User-defined label was never defined. */
 				return DeeError_Throwf(&DeeError_CompilerError,
 				                       "Label `%s' has never been defined",
@@ -3404,13 +3360,11 @@ do_savearg:
 
 	/* Link together the text, resolving relocations. */
 	link_error = asm_linktext();
-	if unlikely(link_error != 0)
-		{
+	if unlikely(link_error != 0) {
 err_link:
 		if unlikely(link_error < 0)
 			goto err;
-		if unlikely(current_assembler.a_flag & ASM_FBIGCODE)
-			{
+		if unlikely(current_assembler.a_flag & ASM_FBIGCODE) {
 			/* Already in bigcode mode? - That's not good... */
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Failed to link final code: Relocation target is out of bounds");

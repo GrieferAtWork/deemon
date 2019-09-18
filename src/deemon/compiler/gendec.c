@@ -283,8 +283,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		}
 		++symcount; /* Track the total number of symbols. */
 		dec_curr = symtab;
-		if unlikely(!symiter)
-			{
+		if unlikely(!symiter) {
 			/* No symbol exist do describe this global variable. */
 			if (dec_putw(0))
 				goto err; /* Dec_GlbSym.s_flg */
@@ -311,8 +310,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			dec_curr = symtab;
 			if (dec_putptr(addr))
 				goto err; /* Dec_GlbSym.s_nam */
-			if likely(name_len)
-				{
+			if likely(name_len) {
 				char const *doc_str;
 				size_t doc_len;
 				if (!symiter->ss_doc || (current_dec.dw_flags & DEC_WRITE_FNODOC)) {
@@ -367,8 +365,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 				dec_curr = exttab;
 				if (dec_putptr(addr))
 					goto err; /* Dec_GlbExt.s_nam */
-				if likely(name_len)
-					{
+				if likely(name_len) {
 					/* Write the length of the doc, and potentially the doc, too. */
 					char const *doc_str;
 					size_t doc_len;
@@ -423,8 +420,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			dec_curr = exttab;
 			if (dec_putptr(addr))
 				goto err; /* Dec_GlbExt.s_nam */
-			if likely(name_len)
-				{
+			if likely(name_len) {
 				/* Write the length of the doc, and potentially the doc, too. */
 				char const *doc_str;
 				size_t doc_len;
@@ -978,8 +974,7 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 			/* Emit the list item. */
 			error = dec_putobj(obj);
 			Dee_Decref(obj);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
@@ -1015,16 +1010,14 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 				continue;
 			Dee_Incref(obj);
 			DeeHashSet_LockEndRead(me);
-			if unlikely(written >= length)
-				{
+			if unlikely(written >= length) {
 				Dee_Decref(obj);
 				break;
 			}
 			/* Emit the set item. */
 			error = dec_putobj(obj);
 			Dee_Decref(obj);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
@@ -1070,8 +1063,7 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 			Dee_Incref(key);
 			Dee_Incref(value);
 			DeeDict_LockEndRead(me);
-			if unlikely(written >= length)
-				{
+			if unlikely(written >= length) {
 				Dee_Decref(value);
 				Dee_Decref(key);
 				break;
@@ -1082,8 +1074,7 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 				error = dec_putobj(value);
 			Dee_Decref(value);
 			Dee_Decref(key);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
@@ -1905,8 +1896,7 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 
 	/* Emit the root code object. */
 	dec_curr = SC_ROOT;
-	if likely(self->mo_root)
-		{
+	if likely(self->mo_root) {
 		if unlikely(dec_putcode(self->mo_root))
 			goto err;
 	} else {

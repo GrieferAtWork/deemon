@@ -119,8 +119,7 @@ blvi_next(BlackListVarkwdsIterator *__restrict self) {
 	if (!ent)
 		return ITER_DONE;
 	rwlock_read(&self->ki_map->vk_lock);
-	if unlikely(!self->ki_map->vk_argv)
-		{
+	if unlikely(!self->ki_map->vk_argv) {
 		rwlock_endread(&self->ki_map->vk_lock);
 		return ITER_DONE;
 	}
@@ -149,8 +148,7 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 	if (!ent)
 		return ITER_DONE;
 	rwlock_read(&self->ki_map->vk_lock);
-	if unlikely(!self->ki_map->vk_argv)
-		{
+	if unlikely(!self->ki_map->vk_argv) {
 		rwlock_endread(&self->ki_map->vk_lock);
 		return ITER_DONE;
 	}
@@ -525,8 +523,7 @@ BlackListVarkwds_GetItem(BlackListVarkwds *__restrict self,
 	if unlikely(BlackListVarkwds_IsBlackListed(self, name))
 		goto missing;
 	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv)
-		{
+	if unlikely(!self->vk_argv) {
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -550,8 +547,7 @@ BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self,
 	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
 		goto missing;
 	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv)
-		{
+	if unlikely(!self->vk_argv) {
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -576,8 +572,7 @@ BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self,
 	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
 		goto missing;
 	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv)
-		{
+	if unlikely(!self->vk_argv) {
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -602,8 +597,7 @@ BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self,
 	if unlikely(BlackListVarkwds_IsBlackListed(self, name))
 		goto missing;
 	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv)
-		{
+	if unlikely(!self->vk_argv) {
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -629,8 +623,7 @@ BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self,
 	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
 		goto missing;
 	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv)
-		{
+	if unlikely(!self->vk_argv) {
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -657,8 +650,7 @@ BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self,
 	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
 		goto missing;
 	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv)
-		{
+	if unlikely(!self->vk_argv) {
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -764,8 +756,7 @@ blv_contains(BlackListVarkwds *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 blv_getitem(BlackListVarkwds *__restrict self,
             DeeObject *__restrict key) {
-	if unlikely(!DeeString_Check(key))
-		{
+	if unlikely(!DeeString_Check(key)) {
 		err_unknown_key((DeeObject *)self, key);
 		return NULL;
 	}
@@ -776,8 +767,7 @@ PRIVATE DREF DeeObject *DCALL
 blv_getdefault(BlackListVarkwds *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict def) {
-	if unlikely(!DeeString_Check(key))
-		{
+	if unlikely(!DeeString_Check(key)) {
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
@@ -965,8 +955,7 @@ BlackListVarkwds_New(struct code_object *__restrict code,
                      DeeObject **__restrict argv) {
 	DREF BlackListVarkwds *result;
 	size_t argc, mask;
-	if unlikely(!DeeKwds_SIZE(kwds))
-		{
+	if unlikely(!DeeKwds_SIZE(kwds)) {
 		/* No keywords --> Return an empty mapping.
 		 * -> This can happen depending on how keyword arguments
 		 *    have been routed throughout the runtime. */
@@ -1023,8 +1012,7 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 	/* Must transform the object such that it can continue to exist without causing problems. */
 	kwdc = DeeKwds_SIZE(me->vk_kwds);
 	argv = (DREF DeeObject **)Dee_TryMalloc(kwdc * sizeof(DREF DeeObject *));
-	if likely(argv)
-		{
+	if likely(argv) {
 		size_t i;
 		/* Initialize the argument vector copy. */
 		MEMCPY_PTR(argv, me->vk_argv, kwdc);
@@ -1656,8 +1644,7 @@ PRIVATE DREF DeeObject *DCALL
 blm_getdefault(BlackListMapping *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict def) {
-	if unlikely(!DeeString_Check(key))
-		{
+	if unlikely(!DeeString_Check(key)) {
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;

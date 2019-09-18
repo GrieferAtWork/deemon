@@ -101,8 +101,7 @@ ast_parse_argument_list(uint16_t mode,
 						new_alloc = 2;
 					new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
 					                                              new_alloc * sizeof(DREF struct ast *));
-					if unlikely(!new_astv)
-						{
+					if unlikely(!new_astv) {
 						new_alloc = result->a_multiple.m_astc + 1;
 						new_astv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
 						                                           new_alloc * sizeof(DREF struct ast *));

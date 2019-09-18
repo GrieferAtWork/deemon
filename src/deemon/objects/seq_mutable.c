@@ -1452,8 +1452,7 @@ erase_remainder:
 						return 0;
 					}
 					index_ob = DeeInt_NewSize(start);
-					if unlikely(!index_ob)
-						{
+					if unlikely(!index_ob) {
 						Dee_Decref(elem);
 						goto err_valiter;
 					}
@@ -1600,8 +1599,7 @@ DeeSeq_Insert(DeeObject *__restrict self, size_t index,
 			if unlikely(!index_ob)
 				goto err;
 			value_seq = DeeTuple_Pack(1, value);
-			if unlikely(!value_seq)
-				{
+			if unlikely(!value_seq) {
 				Dee_Decref(index_ob);
 				goto err;
 			}
@@ -1911,8 +1909,7 @@ DeeSeq_Append(DeeObject *__restrict self,
 			if unlikely(!index_ob)
 				goto err;
 			value_seq = DeeTuple_Pack(1, value);
-			if unlikely(!value_seq)
-				{
+			if unlikely(!value_seq) {
 				Dee_Decref(index_ob);
 				goto err;
 			}
@@ -2474,8 +2471,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 				if unlikely(!start_index)
 					goto err;
 				end_index = DeeInt_NewSize(index + count);
-				if unlikely(!end_index)
-					{
+				if unlikely(!end_index) {
 					Dee_Decref(start_index);
 					goto err;
 				}
@@ -2557,14 +2553,12 @@ DeeSeq_PopItem(DeeObject *__restrict self,
 							goto err;
 						if (index < 0)
 							index += mylen;
-						else if unlikely((size_t)index >= mylen)
-						{
+						else if unlikely((size_t)index >= mylen) {
 							err_index_out_of_bounds(self, (size_t)index, mylen);
 							goto err;
 						}
 						result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, (size_t)index);
-						if unlikely(!result)
-							{
+						if unlikely(!result) {
 							err_unbound_index(self, (size_t)index);
 							goto err;
 						}
@@ -2594,14 +2588,12 @@ DeeSeq_PopItem(DeeObject *__restrict self,
 							goto err;
 						if (index < 0)
 							index += mylen;
-						else if unlikely((size_t)index >= mylen)
-						{
+						else if unlikely((size_t)index >= mylen) {
 							err_index_out_of_bounds(self, (size_t)index, mylen);
 							goto err;
 						}
 						result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, (size_t)index);
-						if unlikely(!result)
-							{
+						if unlikely(!result) {
 							err_unbound_index(self, (size_t)index);
 							goto err;
 						}
@@ -2631,14 +2623,12 @@ DeeSeq_PopItem(DeeObject *__restrict self,
 							goto err;
 						if (index < 0)
 							index += mylen;
-						else if unlikely((size_t)index >= mylen)
-						{
+						else if unlikely((size_t)index >= mylen) {
 							err_index_out_of_bounds(self, (size_t)index, mylen);
 							goto err;
 						}
 						result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, (size_t)index);
-						if unlikely(!result)
-							{
+						if unlikely(!result) {
 							err_unbound_index(self, (size_t)index);
 							goto err;
 						}
@@ -2660,8 +2650,7 @@ DeeSeq_PopItem(DeeObject *__restrict self,
 				if unlikely(!index_ob)
 					goto err;
 				result = DeeObject_GetItem(self, index_ob);
-				if unlikely(!result)
-					{
+				if unlikely(!result) {
 					Dee_Decref(index_ob);
 					goto err;
 				}
@@ -2684,14 +2673,12 @@ DeeSeq_PopItem(DeeObject *__restrict self,
 				if unlikely(!index_ob)
 					goto err;
 				result = DeeObject_GetItem(self, index_ob);
-				if unlikely(!result)
-					{
+				if unlikely(!result) {
 					Dee_Decref(index_ob);
 					goto err;
 				}
 				index_plus1_ob = DeeInt_NewSize((size_t)index + 1);
-				if unlikely(!index_plus1_ob)
-					{
+				if unlikely(!index_plus1_ob) {
 					Dee_Decref(index_ob);
 					goto err_r;
 				}
@@ -2810,8 +2797,7 @@ do_delete_i:
 						if unlikely(!index_ob)
 							goto err_keyed_search_item;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
 						}
@@ -2830,8 +2816,7 @@ do_delete_i:
 						if unlikely(!index_ob)
 							goto err;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_del:
 							Dee_Decref(index_ob);
 							goto err;
@@ -2876,8 +2861,7 @@ do_tp_del_i:
 					if unlikely(!index_ob)
 						goto err_erase_func_keyed_search_item;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 						Dee_Decref(index_ob);
 						goto err_erase_func_keyed_search_item;
 					}
@@ -2896,8 +2880,7 @@ do_tp_del_i:
 					if unlikely(!index_ob)
 						goto err_erase_func;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 err_index_ob:
 						Dee_Decref(index_ob);
 						goto err_erase_func;
@@ -2938,8 +2921,7 @@ do_erase_func_i:
 					if unlikely(!index_ob)
 						goto err_keyed_search_item;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 						Dee_Decref(index_ob);
 						goto err_keyed_search_item;
 					}
@@ -2958,8 +2940,7 @@ do_erase_func_i:
 					if unlikely(!index_ob)
 						goto err;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 err_index_ob_delrange:
 						Dee_Decref(index_ob);
 						goto err;
@@ -3108,8 +3089,7 @@ do_delete_i:
 							if unlikely(!index_ob)
 								goto err_keyed_search_item;
 							item = DeeObject_GetItem(self, index_ob);
-							if unlikely(!item)
-								{
+							if unlikely(!item) {
 								Dee_Decref(index_ob);
 								goto err_keyed_search_item;
 							}
@@ -3129,8 +3109,7 @@ do_delete_i:
 							if unlikely(!index_ob)
 								goto err;
 							item = DeeObject_GetItem(self, index_ob);
-							if unlikely(!item)
-								{
+							if unlikely(!item) {
 err_index_ob_del:
 								Dee_Decref(index_ob);
 								goto err;
@@ -3178,8 +3157,7 @@ do_tp_del_i:
 						if unlikely(!index_ob)
 							goto err_erase_func_keyed_search_item;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 							Dee_Decref(index_ob);
 							goto err_erase_func_keyed_search_item;
 						}
@@ -3199,8 +3177,7 @@ do_tp_del_i:
 						if unlikely(!index_ob)
 							goto err_erase_func;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob:
 							Dee_Decref(index_ob);
 							goto err_erase_func;
@@ -3244,8 +3221,7 @@ do_erase_func_i:
 						if unlikely(!index_ob)
 							goto err_keyed_search_item;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
 						}
@@ -3265,8 +3241,7 @@ do_erase_func_i:
 						if unlikely(!index_ob)
 							goto err;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_delrange:
 							Dee_Decref(index_ob);
 							goto err;
@@ -3337,8 +3312,7 @@ ria_visit(RemoveIfAllWrapper *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF DeeObject *DCALL
 ria_call(RemoveIfAllWrapper *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *result, *key_elem;
-	if unlikely(argc != 1)
-		{
+	if unlikely(argc != 1) {
 		err_invalid_argc("_SeqRemoveIfAllWrapper", argc, 1, 1);
 		return NULL;
 	}
@@ -3610,15 +3584,13 @@ DeeSeq_RemoveAll(DeeObject *__restrict self,
 				if unlikely(!removeif_argv[0])
 					goto err;
 				removeif_argv[1] = DeeInt_NewSize(start);
-				if unlikely(!removeif_argv[1])
-					{
+				if unlikely(!removeif_argv[1]) {
 err_removeif_argv_0:
 					Dee_Decref(removeif_argv[0]);
 					goto err;
 				}
 				removeif_argv[2] = DeeInt_NewSize(end);
-				if unlikely(!removeif_argv[2])
-					{ /*err_removeif_argv_1:*/
+				if unlikely(!removeif_argv[2]) { /*err_removeif_argv_1:*/
 					Dee_Decref(removeif_argv[1]);
 					goto err_removeif_argv_0;
 				}
@@ -3657,8 +3629,7 @@ err_removeif_argv_0:
 					goto err_erase_func;
 				while (end > start) {
 					remove_argv[2] = DeeInt_NewSize(end);
-					if unlikely(!remove_argv[2])
-						{
+					if unlikely(!remove_argv[2]) {
 err_remove_argv:
 						Dee_Decref(remove_argv[1]);
 						goto err_erase_func;
@@ -3674,8 +3645,7 @@ err_remove_argv:
 							goto err_remove_argv;
 						break;
 					}
-					if unlikely(count == (size_t)-2)
-						{
+					if unlikely(count == (size_t)-2) {
 						Dee_Decref(remove_argv[1]);
 						Dee_Decref(erase_func);
 						goto err_overflow;
@@ -3706,8 +3676,7 @@ err_remove_argv:
 						if unlikely(!index_ob)
 							goto err_keyed_search_item;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_del_key:
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
@@ -3720,8 +3689,7 @@ err_index_ob_del_key:
 							error = (*seq->tp_del)(self, index_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_del_key;
-							if unlikely(count == (size_t)-2)
-								{
+							if unlikely(count == (size_t)-2) {
 								Dee_Decref(index_ob);
 								goto err_overflow_keyed_search_item;
 							}
@@ -3737,8 +3705,7 @@ err_index_ob_del_key:
 						if unlikely(!index_ob)
 							goto err;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_del:
 							Dee_Decref(index_ob);
 							goto err;
@@ -3751,8 +3718,7 @@ err_index_ob_del:
 							error = (*seq->tp_del)(self, index_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_del;
-							if unlikely(count == (size_t)-2)
-								{
+							if unlikely(count == (size_t)-2) {
 								Dee_Decref(index_ob);
 								goto err_overflow;
 							}
@@ -3788,8 +3754,7 @@ err_index_ob_del:
 						if unlikely(!index_ob)
 							goto err_erase_func_keyed_search_item;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_key:
 							Dee_Decref(index_ob);
 							goto err_erase_func_keyed_search_item;
@@ -3803,8 +3768,7 @@ err_index_ob_key:
 							if unlikely(!callback_result)
 								goto err_index_ob_key;
 							Dee_Decref(callback_result);
-							if unlikely(count == (size_t)-2)
-								{
+							if unlikely(count == (size_t)-2) {
 								Dee_Decref(index_ob);
 								Dee_Decref(erase_func);
 								goto err_overflow_keyed_search_item;
@@ -3821,8 +3785,7 @@ err_index_ob_key:
 						if unlikely(!index_ob)
 							goto err_erase_func;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob:
 							Dee_Decref(index_ob);
 							goto err_erase_func;
@@ -3836,8 +3799,7 @@ err_index_ob:
 							if unlikely(!callback_result)
 								goto err_index_ob;
 							Dee_Decref(callback_result);
-							if unlikely(count == (size_t)-2)
-								{
+							if unlikely(count == (size_t)-2) {
 								Dee_Decref(index_ob);
 								Dee_Decref(erase_func);
 								goto err_overflow;
@@ -3869,8 +3831,7 @@ err_index_ob:
 						if unlikely(!index_ob)
 							goto err_keyed_search_item;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_delrange_key:
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
@@ -3888,8 +3849,7 @@ err_index_ob_delrange_key:
 							Dee_Decref(index_plus1_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_delrange_key;
-							if unlikely(count == (size_t)-2)
-								{
+							if unlikely(count == (size_t)-2) {
 								Dee_Decref(index_ob);
 								goto err_overflow_keyed_search_item;
 							}
@@ -3905,8 +3865,7 @@ err_index_ob_delrange_key:
 						if unlikely(!index_ob)
 							goto err;
 						item = DeeObject_GetItem(self, index_ob);
-						if unlikely(!item)
-							{
+						if unlikely(!item) {
 err_index_ob_delrange:
 							Dee_Decref(index_ob);
 							goto err;
@@ -3924,8 +3883,7 @@ err_index_ob_delrange:
 							Dee_Decref(index_plus1_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_delrange;
-							if unlikely(count == (size_t)-2)
-								{
+							if unlikely(count == (size_t)-2) {
 								Dee_Decref(index_ob);
 								goto err_overflow;
 							}
@@ -4090,8 +4048,7 @@ DeeSeq_RemoveIf(DeeObject *__restrict self,
 					goto err_erase_func;
 				while (end > start) {
 					remove_argv[2] = DeeInt_NewSize(end);
-					if unlikely(!remove_argv[2])
-						{
+					if unlikely(!remove_argv[2]) {
 err_remove_argv_wraper:
 						Dee_Decref(remove_argv[1]);
 						goto err_erase_func;
@@ -4107,8 +4064,7 @@ err_remove_argv_wraper:
 							goto err_remove_argv_wraper;
 						break;
 					}
-					if unlikely(count == (size_t)-2)
-						{
+					if unlikely(count == (size_t)-2) {
 						Dee_Decref(remove_argv[1]);
 						Dee_Decref(erase_func);
 						goto err_overflow;
@@ -4136,15 +4092,13 @@ err_remove_argv_wraper:
 					if unlikely(!index_ob)
 						goto err;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 err_index_ob_del:
 						Dee_Decref(index_ob);
 						goto err;
 					}
 					callback_result = DeeObject_Call(should, 1, &item);
-					if unlikely(!callback_result)
-						{
+					if unlikely(!callback_result) {
 						Dee_Decref(item);
 						goto err_index_ob_del;
 					}
@@ -4157,8 +4111,7 @@ err_index_ob_del:
 						error = (*seq->tp_del)(self, index_ob);
 						if unlikely(error < 0)
 							goto err_index_ob_del;
-						if unlikely(count == (size_t)-2)
-							{
+						if unlikely(count == (size_t)-2) {
 							Dee_Decref(index_ob);
 							goto err_overflow;
 						}
@@ -4190,15 +4143,13 @@ err_index_ob_del:
 					if unlikely(!index_ob)
 						goto err_erase_func;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 err_index_ob:
 						Dee_Decref(index_ob);
 						goto err_erase_func;
 					}
 					callback_result = DeeObject_Call(should, 1, &item);
-					if unlikely(!callback_result)
-						{
+					if unlikely(!callback_result) {
 						Dee_Decref(item);
 						goto err_index_ob;
 					}
@@ -4212,8 +4163,7 @@ err_index_ob:
 						if unlikely(!callback_result)
 							goto err_index_ob;
 						Dee_Decref(callback_result);
-						if unlikely(count == (size_t)-2)
-							{
+						if unlikely(count == (size_t)-2) {
 							Dee_Decref(index_ob);
 							Dee_Decref(erase_func);
 							goto err_overflow;
@@ -4241,15 +4191,13 @@ err_index_ob:
 					if unlikely(!index_ob)
 						goto err;
 					item = DeeObject_GetItem(self, index_ob);
-					if unlikely(!item)
-						{
+					if unlikely(!item) {
 err_index_ob_delrange:
 						Dee_Decref(index_ob);
 						goto err;
 					}
 					callback_result = DeeObject_Call(should, 1, &item);
-					if unlikely(!callback_result)
-						{
+					if unlikely(!callback_result) {
 						Dee_Decref(item);
 						goto err_index_ob_delrange;
 					}
@@ -4265,13 +4213,11 @@ err_index_ob_delrange:
 							goto err_index_ob_delrange;
 						error = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
 						Dee_Decref(index_plus1_ob);
-						if unlikely(error < 0)
-							{
+						if unlikely(error < 0) {
 							Dee_Decref(index_ob);
 							goto err_index_ob_delrange;
 						}
-						if unlikely(count == (size_t)-2)
-							{
+						if unlikely(count == (size_t)-2) {
 							Dee_Decref(index_ob);
 							goto err_overflow;
 						}
@@ -4343,15 +4289,13 @@ DeeSeq_Fill(DeeObject *__restrict self,
 					DREF DeeObject *start_ob;
 					DREF DeeObject *end_ob;
 					start_ob = DeeInt_NewSize(start);
-					if unlikely(!start_ob)
-						{
+					if unlikely(!start_ob) {
 err_repeated_value:
 						Dee_Decref(repeated_value);
 						goto err;
 					}
 					end_ob = DeeInt_NewSize(end);
-					if unlikely(!end_ob)
-						{
+					if unlikely(!end_ob) {
 						Dee_Decref(start_ob);
 						goto err_repeated_value;
 					}

@@ -353,8 +353,7 @@ DeeRoSet_Insert(DREF DeeObject **__restrict pself,
 	Set *me = (Set *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
-	if unlikely(me->rs_size * 2 > me->rs_mask)
-		{
+	if unlikely(me->rs_size * 2 > me->rs_mask) {
 		size_t old_size = me->rs_size;
 		size_t new_mask = (me->rs_mask << 1) | 1;
 		me              = rehash(me, me->rs_mask, new_mask);
@@ -392,8 +391,7 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 		if (elem_count * 2 > mask) {
 			size_t new_mask = (mask << 1) | 1;
 			new_result      = rehash(result, mask, new_mask);
-			if unlikely(!new_result)
-				{
+			if unlikely(!new_result) {
 				Dee_Decref(elem);
 				goto err_r;
 			}
@@ -402,8 +400,7 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 		}
 		/* Insert the key-value pair into the resulting set. */
 		error = insert(result, mask, elem);
-		if unlikely(error != 0)
-			{
+		if unlikely(error != 0) {
 			if unlikely(error < 0)
 				goto err_r;
 		} else {

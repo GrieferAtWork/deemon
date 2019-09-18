@@ -83,8 +83,7 @@ operand_list_add(struct operand_list *__restrict self,
 do_realloc:
 		result = (struct asm_operand *)Dee_TryRealloc(self->ol_v, new_alloc *
 		                                                          sizeof(struct asm_operand));
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			if (new_alloc != self->ol_c + 1) {
 				new_alloc = self->ol_c + 1;
 				goto do_realloc;
@@ -308,8 +307,7 @@ PRIVATE int
 alloc_again:
 		string = (struct TPPString *)Dee_TryMalloc(offsetof(struct TPPString, s_text) +
 		                                           (alloc_size + 1) * sizeof(char));
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			if (alloc_size != bufsize) {
 				alloc_size = bufsize;
 				goto alloc_again;
@@ -328,15 +326,13 @@ alloc_again:
 	alloc_size = string->s_size;
 	ASSERT(alloc_size >= self->sp_length);
 	alloc_size -= self->sp_length;
-	if unlikely(alloc_size < bufsize)
-		{
+	if unlikely(alloc_size < bufsize) {
 		size_t min_alloc = self->sp_length + bufsize;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
 		string = (struct TPPString *)Dee_TryRealloc(string, offsetof(struct TPPString, s_text) +
 		                                                    (alloc_size + 1) * sizeof(char));
-		if unlikely(!string)
-			{
+		if unlikely(!string) {
 			string = self->sp_string;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
@@ -371,8 +367,7 @@ PRIVATE /*REF*/ struct TPPString *
 	if unlikely(!result)
 		return TPPString_NewEmpty();
 	/* Deallocate unused memory. */
-	if likely(self->sp_length != result->s_size)
-		{
+	if likely(self->sp_length != result->s_size) {
 		DREF struct TPPString *reloc;
 		reloc = (DREF struct TPPString *)Dee_TryRealloc(result, offsetof(struct TPPString, s_text) +
 		                                                        (self->sp_length + 1) * sizeof(char));

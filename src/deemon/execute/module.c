@@ -230,8 +230,7 @@ DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
 	DREF DeeObject *result;
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
-		{
+	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
@@ -249,8 +248,7 @@ read_symbol:
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->mo_lock);
-		if unlikely(!callback)
-			{
+		if unlikely(!callback) {
 			err_module_cannot_read_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			return NULL;
 		}
@@ -270,8 +268,7 @@ DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
                           struct module_symbol *__restrict symbol) {
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
-		{
+	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 		bool result;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
@@ -292,8 +289,7 @@ read_symbol:
 		/* Invoke the property callback. */
 		callback_result = DeeObject_Call(callback, 0, NULL);
 		Dee_Decref(callback);
-		if likely(callback_result)
-			{
+		if likely(callback_result) {
 			Dee_Decref(callback_result);
 			return 1;
 		}
@@ -454,8 +450,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 	DREF DeeObject *old_value;
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if unlikely(symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FEXTERN | MODSYM_FPROPERTY))
-		{
+	if unlikely(symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FEXTERN | MODSYM_FPROPERTY)) {
 		if (symbol->ss_flags & MODSYM_FREADONLY)
 			return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 		if (symbol->ss_flags & MODSYM_FPROPERTY) {
@@ -483,8 +478,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 	self->mo_globalv[symbol->ss_index] = NULL;
 	rwlock_endwrite(&self->mo_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!old_value)
-		{
+	if unlikely(!old_value) {
 		err_unbound_global(self, symbol->ss_index);
 		return -1;
 	}
@@ -555,10 +549,8 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 	DREF DeeObject *temp;
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if unlikely(symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FEXTERN))
-		{
-		if unlikely(symbol->ss_flags & MODSYM_FEXTERN)
-			{
+	if unlikely(symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FEXTERN)) {
+		if unlikely(symbol->ss_flags & MODSYM_FEXTERN) {
 			ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 			self = self->mo_importv[symbol->ss_extern.ss_impid];
 		}
@@ -569,8 +561,7 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 			rwlock_write(&self->mo_lock);
 			/* Make sure not to allow write-access to global variables that
 			 * have already been assigned, but are marked as read-only. */
-			if unlikely(self->mo_globalv[symbol->ss_index] != NULL)
-				{
+			if unlikely(self->mo_globalv[symbol->ss_index] != NULL) {
 				rwlock_endwrite(&self->mo_lock);
 err_is_readonly:
 				return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
@@ -1031,8 +1022,7 @@ PUBLIC int(DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 	    DeeInteractiveModule_Check(self))
 		return 0;
 	/* Make sure the module has been loaded. */
-	if unlikely(!(flags & MODULE_FDIDLOAD))
-		{
+	if unlikely(!(flags & MODULE_FDIDLOAD)) {
 		/* The module hasn't been loaded yet. */
 		err_module_not_loaded(me);
 		return -1;

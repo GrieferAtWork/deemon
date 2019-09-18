@@ -210,8 +210,7 @@ again:
 					goto err;
 				elemv[0] = self->a_bool;
 				elemv[1] = ast_setscope_and_ddi(ast_constexpr(DeeBool_For(ast_value)), self);
-				if unlikely(!elemv[1])
-					{
+				if unlikely(!elemv[1]) {
 					Dee_Free(elemv);
 					goto err;
 				}

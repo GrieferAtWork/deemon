@@ -659,8 +659,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 INTDEF DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE DREF DeeObject *DCALL
 map_iterself(DeeObject *__restrict self) {
-	if unlikely(Dee_TYPE(self) == &DeeMapping_Type)
-		{
+	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
 		return new_empty_sequence_iterator();
@@ -1112,8 +1111,7 @@ DeeMap_DelLast(DeeObject *__restrict self) {
 		key = next;
 	}
 	Dee_Decref(iter);
-	if unlikely(!next)
-		{
+	if unlikely(!next) {
 		Dee_Decref(key);
 		goto err;
 	}

@@ -148,8 +148,7 @@ not_a_cast:
 					ast_decref(result);
 				} else {
 					/* New argument expression. */
-					if likely(!ast_shared(merge))
-						{
+					if likely(!ast_shared(merge)) {
 						ast_decref(merge->a_multiple.m_astv[0]);
 						merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
 					} else {
@@ -159,8 +158,7 @@ not_a_cast:
 							goto err_merge_r;
 						exprv[0] = result; /* Inherit */
 						other    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
-						if unlikely(!other)
-							{
+						if unlikely(!other) {
 							Dee_Free(exprv);
 							goto err_merge_r;
 						}

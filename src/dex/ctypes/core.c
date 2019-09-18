@@ -621,8 +621,7 @@ DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 	if (!result) {
 		/* Lazily construct missing types. */
 		result = pointertype_new(self);
-		if likely(result)
-			{
+		if likely(result) {
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_pointer &&
@@ -653,8 +652,7 @@ DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	if (!result) {
 		/* Lazily construct missing types. */
 		result = lvaluetype_new(self);
-		if likely(result)
-			{
+		if likely(result) {
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_lvalue &&

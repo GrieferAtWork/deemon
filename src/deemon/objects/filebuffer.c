@@ -130,8 +130,7 @@ PRIVATE void atexit_flushall(void) {
 		buf_write(buffer);
 		error = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
 		buf_endwrite(buffer);
-		if unlikely(error)
-			{
+		if unlikely(error) {
 			DeeError_Print("Failed to synchronize tty during exit\n",
 			               ERROR_PRINT_HANDLEINTR);
 		}
@@ -445,8 +444,7 @@ buffer_read_nolock(Buffer *__restrict self,
 		goto err_closed;
 again:
 	bufavail = self->fb_cnt;
-	if likely(bufavail)
-		{
+	if likely(bufavail) {
 read_from_buffer:
 		if (bufavail > bufsize)
 			bufavail = bufsize;
@@ -495,8 +493,7 @@ read_from_buffer:
 	/* Determine where the next block of data is. */
 	next_data = self->fb_fblk + (self->fb_ptr - self->fb_base);
 
-	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
-		{
+	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
 		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
 		file = self->fb_file;
@@ -524,8 +521,7 @@ read_through:
 		goto done;
 	}
 	/* If no buffer had been allocated, allocate one now. */
-	if unlikely(!self->fb_size)
-		{
+	if unlikely(!self->fb_size) {
 		/* Start out with the smallest size. */
 		size_t initial_bufsize;
 		if (bufsize >= FILE_BUFSIZ_MAX)
@@ -534,8 +530,7 @@ read_through:
 		if (initial_bufsize < FILE_BUFSIZ_MIN)
 			initial_bufsize = FILE_BUFSIZ_MIN;
 		new_buffer = buffer_tryrealloc_nolock(self, initial_bufsize);
-		if unlikely(!new_buffer)
-			{
+		if unlikely(!new_buffer) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
@@ -630,8 +625,7 @@ again_checkfile:
 again:
 	/* Fill available buffer. */
 	bufavail = (self->fb_base + self->fb_size) - self->fb_ptr;
-	if likely(bufavail)
-		{
+	if likely(bufavail) {
 		if (bufavail > bufsize)
 			bufavail = bufsize;
 		if unlikely(!bufavail)
@@ -733,8 +727,7 @@ do_writethrough:
 	if (new_bufsize < FILE_BUFSIZ_MIN)
 		new_bufsize = FILE_BUFSIZ_MIN;
 	new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
-	if unlikely(!new_buffer)
-		{
+	if unlikely(!new_buffer) {
 		/* Buffer relocation failed. - sync() + operate in write-through mode as fallback. */
 		if ((self->fb_flag & FILE_BUFFER_FISATTY) &&
 		    DeeFileBuffer_SyncTTYs())
@@ -786,8 +779,7 @@ buffer_seek_nolock(Buffer *__restrict self,
 		else {
 			new_abspos = old_abspos + off;
 		}
-		if unlikely(new_abspos >= INT64_MAX)
-			{
+		if unlikely(new_abspos >= INT64_MAX) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid seek offset");
 			goto err;
@@ -867,8 +859,7 @@ buffer_sync_nolock(Buffer *__restrict self, uint16_t mode) {
 	dssize_t temp;
 	DREF DeeObject *file;
 again:
-	if unlikely(!self->fb_file)
-		{
+	if unlikely(!self->fb_file) {
 		/* The buffer has been closed. */
 		if (!(mode & BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto done;
@@ -986,8 +977,7 @@ read_from_buffer:
 	/* Determine where the next block of data is. */
 	next_data = self->fb_fblk + (self->fb_ptr - self->fb_base);
 
-	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
-		{
+	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
 		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
 		file = self->fb_file;
@@ -1017,12 +1007,10 @@ read_through:
 	}
 
 	/* If no buffer had been allocated, allocate one now. */
-	if unlikely(!self->fb_size)
-		{
+	if unlikely(!self->fb_size) {
 		/* Start out with the smallest size. */
 		new_buffer = buffer_tryrealloc_nolock(self, FILE_BUFSIZ_MIN);
-		if unlikely(!new_buffer)
-			{
+		if unlikely(!new_buffer) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
@@ -1125,13 +1113,11 @@ again:
 		inc_size = (size_t)self->fb_fblk;
 	new_bufsize = self->fb_size + inc_size;
 	new_buffer  = buffer_tryrealloc_nolock(self, new_bufsize);
-	if unlikely(!new_buffer)
-		{
+	if unlikely(!new_buffer) {
 		inc_size    = 1;
 		new_bufsize = self->fb_size + 1;
 		new_buffer  = buffer_tryrealloc_nolock(self, new_bufsize);
-		if unlikely(!new_buffer)
-			{
+		if unlikely(!new_buffer) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
@@ -1440,8 +1426,7 @@ buffer_fini(Buffer *__restrict self) {
 		buffer_ttys_lock_leave();
 	}
 	/* Synchronize the buffer one last time. */
-	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL))
-		{
+	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL)) {
 		DeeError_Print("Discarding error in buffer synchronization in finalization\n",
 		               ERROR_PRINT_DOHANDLE);
 	}

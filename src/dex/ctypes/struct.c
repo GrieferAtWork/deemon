@@ -131,8 +131,7 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 			field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
 			field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
 			Dee_Decref(field_name_and_type[1]);
-			if unlikely(!field->sf_type)
-				{
+			if unlikely(!field->sf_type) {
 				Dee_Decref(field_name_and_type[0]);
 				field->sf_name = NULL;
 				goto err_r;
@@ -226,8 +225,7 @@ DeeStructType_FromSequence(DeeObject *name,
 				field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
 				field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
 				Dee_Decref(field_name_and_type[1]);
-				if unlikely(!field->sf_type)
-					{
+				if unlikely(!field->sf_type) {
 					Dee_Decref(field_name_and_type[0]);
 					field->sf_name = NULL;
 					goto err_r;

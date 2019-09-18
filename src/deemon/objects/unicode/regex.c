@@ -485,8 +485,7 @@ parse_u8(char **ppiter, char *pend,
 		*result += trt->ut_digit;
 		is_first = false;
 	}
-	if unlikely(is_first)
-		{
+	if unlikely(is_first) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Expected a decimal for digit range");
 		goto err;
@@ -511,8 +510,7 @@ parse_digit_range(char *piter, char *pend,
 			} else {
 				if (parse_u8(&piter, pend, phigh))
 					goto err;
-				if unlikely(!*phigh)
-					{
+				if unlikely(!*phigh) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Invalid digit matching rule: `<0'");
 					goto err;
@@ -531,8 +529,7 @@ parse_digit_range(char *piter, char *pend,
 			} else {
 				if (parse_u8(&piter, pend, plow))
 					goto err;
-				if unlikely(*plow == 0xff)
-					{
+				if unlikely(*plow == 0xff) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Invalid digit matching rule: `>255'");
 					goto err;
@@ -552,8 +549,7 @@ parse_digit_range(char *piter, char *pend,
 		break;
 	}
 	ASSERT(piter <= pend);
-	if unlikely(piter < pend)
-		{
+	if unlikely(piter < pend) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Bad digit matching range string %$q",
 		                (size_t)(pend - piter), piter);
@@ -743,8 +739,7 @@ next:
 				goto nope;
 
 			case '=':
-				if unlikely(!match.mc_min)
-					{
+				if unlikely(!match.mc_min) {
 					/* Don't allow optional matches, which would mean that the entire lookahead
 					 * was optional in itself. And considering that it's not meant to consume any
 					 * data, it would become a no-op altogether! */
@@ -902,8 +897,7 @@ err_lookahead_must_be_nonzero:
 			} else {
 				backup_a = 4;
 				backup_v = (struct match_backup *)Dee_TryMalloc(backup_a * sizeof(struct match_backup));
-				if unlikely(!backup_v)
-					{
+				if unlikely(!backup_v) {
 					backup_a = 1;
 					backup_v = (struct match_backup *)Dee_Malloc(backup_a * sizeof(struct match_backup));
 					if unlikely(!backup_v)
@@ -938,8 +932,7 @@ err_lookahead_must_be_nonzero:
 				                         /* Pass EMPTYOK, because we check for that case
 				                          * explicitly by jumping to `has_infinite_submatch'. */
 				                         REGEX_CONTEXT_FEMPTYOK);
-				if unlikely(error < 0)
-					{
+				if unlikely(error < 0) {
 err_backup_v:
 					Dee_Free(backup_v);
 					goto err;
@@ -995,14 +988,12 @@ save_variant_match:
 				if (match.mc_greedy) {
 					/* Save the new match entry, so we can undo our greediness if necessary. */
 					ASSERT(match_count <= backup_a);
-					if unlikely(match_count >= backup_a)
-						{
+					if unlikely(match_count >= backup_a) {
 						size_t new_alloc = backup_a * 2;
 						struct match_backup *new_vec;
 						new_vec = (struct match_backup *)Dee_TryRealloc(backup_v, new_alloc *
 						                                                          sizeof(struct match_backup));
-						if unlikely(!new_vec)
-							{
+						if unlikely(!new_vec) {
 							new_alloc = match_count + 1;
 							new_vec = (struct match_backup *)Dee_Realloc(backup_v, new_alloc *
 							                                                       sizeof(struct match_backup));
@@ -1080,8 +1071,7 @@ has_infinite_submatch:
 
 		/* Character trait matching */
 	case '\\':
-		if unlikely(piter == pend)
-			{
+		if unlikely(piter == pend) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Missing character after `\\' in regular expression");
 			goto err;

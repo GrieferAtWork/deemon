@@ -163,8 +163,7 @@ do_realloc_errors:
 	new_vector = (DREF DeeCompilerErrorObject **)Dee_TryRealloc(current_parser_errors.pe_errorv,
 	                                                            new_alloc *
 	                                                            sizeof(DREF DeeCompilerErrorObject *));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		if (new_alloc != current_parser_errors.pe_errorc + 1) {
 			new_alloc = current_parser_errors.pe_errorc + 1;
 			goto do_realloc_errors;
@@ -356,8 +355,7 @@ handle_master:
 			new_vector = (DREF DeeCompilerErrorObject **)Dee_TryRealloc(current_parser_errors.pe_errorv,
 			                                                            current_parser_errors.pe_errorc *
 			                                                            sizeof(DREF DeeCompilerErrorObject *));
-			if likely(new_vector)
-				{
+			if likely(new_vector) {
 				current_parser_errors.pe_errorv = new_vector;
 				current_parser_errors.pe_errora = current_parser_errors.pe_errorc;
 			}
@@ -394,8 +392,7 @@ handle_master:
 		/* Nothing went wrong?
 		 * Whatever... Let's just throw an anonymous compiler error... */
 		error = DeeObject_NewDefault(&DeeError_CompilerError);
-		if likely(error)
-			{
+		if likely(error) {
 			DeeError_Throw(error);
 			Dee_Decref(error);
 		}
@@ -533,8 +530,7 @@ err:
 			extension = (struct compiler_error_loc *)Dee_Malloc(sizeof(struct compiler_error_loc));
 			if unlikely(!extension)
 				goto err;
-			if unlikely(capture_compiler_location(next_file, extension, pmain_loc))
-				{
+			if unlikely(capture_compiler_location(next_file, extension, pmain_loc)) {
 				Dee_Free(extension);
 				goto err;
 			}

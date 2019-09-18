@@ -378,8 +378,7 @@ again:
 	                      dwCreationDisposition,
 	                      dwFlagsAndAttributes,
 	                      hTemplateFile);
-	if unlikely(hResult == INVALID_HANDLE_VALUE)
-		{
+	if unlikely(hResult == INVALID_HANDLE_VALUE) {
 		if (GetLastError() == ERROR_OPERATION_ABORTED) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
@@ -768,8 +767,7 @@ again:
 	                          lDistanceToMoveLow,
 	                          &lDistanceToMoveHigh,
 	                          dwMoveMethod);
-	if unlikely(dwResult == INVALID_SET_FILE_POINTER)
-		{
+	if unlikely(dwResult == INVALID_SET_FILE_POINTER) {
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (error != NO_ERROR) {

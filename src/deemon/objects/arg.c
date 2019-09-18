@@ -731,8 +731,7 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	}
 #endif
 	rwlock_read(&self->ki_map->kmo_lock);
-	if unlikely(!self->ki_map->kmo_argv)
-		{
+	if unlikely(!self->ki_map->kmo_argv) {
 		rwlock_endread(&self->ki_map->kmo_lock);
 		return ITER_DONE;
 	}
@@ -807,8 +806,7 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 	}
 #endif
 	rwlock_read(&self->ki_map->kmo_lock);
-	if unlikely(!self->ki_map->kmo_argv)
-		{
+	if unlikely(!self->ki_map->kmo_argv) {
 		rwlock_endread(&self->ki_map->kmo_lock);
 		return ITER_DONE;
 	}
@@ -1077,8 +1075,7 @@ kmap_nsi_getdefault(KwdsMapping *__restrict self,
 	if (index == (size_t)-1)
 		goto nope;
 	rwlock_read(&self->kmo_lock);
-	if unlikely(!self->kmo_argv)
-		{
+	if unlikely(!self->kmo_argv) {
 		rwlock_endread(&self->kmo_lock);
 		goto nope;
 	}
@@ -1234,8 +1231,7 @@ clear_argv:
 			if unlikely(!argv)
 				goto clear_argv;
 			rwlock_write(&me->kmo_lock);
-			if unlikely(!me->kmo_argv)
-				{
+			if unlikely(!me->kmo_argv) {
 				/* Shouldn't really happen, but is allowed by the specs... */
 				Dee_Free(argv);
 				argv = NULL;
@@ -1313,15 +1309,13 @@ DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if unlikely(index == (size_t)-1)
-		{
+	if unlikely(index == (size_t)-1) {
 no_such_key:
 		err_unknown_key_str((DeeObject *)self, name);
 		return NULL;
 	}
 	rwlock_read(&me->kmo_lock);
-	if unlikely(!me->kmo_argv)
-		{
+	if unlikely(!me->kmo_argv) {
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1343,16 +1337,14 @@ DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if unlikely(index == (size_t)-1)
-		{
+	if unlikely(index == (size_t)-1) {
 no_such_key:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
 	}
 	rwlock_read(&me->kmo_lock);
-	if unlikely(!me->kmo_argv)
-		{
+	if unlikely(!me->kmo_argv) {
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1374,15 +1366,13 @@ DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if unlikely(index == (size_t)-1)
-		{
+	if unlikely(index == (size_t)-1) {
 no_such_key:
 		err_unknown_key_str_len((DeeObject *)self, name, namesize);
 		return NULL;
 	}
 	rwlock_read(&me->kmo_lock);
-	if unlikely(!me->kmo_argv)
-		{
+	if unlikely(!me->kmo_argv) {
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1405,16 +1395,14 @@ DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if unlikely(index == (size_t)-1)
-		{
+	if unlikely(index == (size_t)-1) {
 no_such_key:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
 	}
 	rwlock_read(&me->kmo_lock);
-	if unlikely(!me->kmo_argv)
-		{
+	if unlikely(!me->kmo_argv) {
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1438,8 +1426,7 @@ DeeArg_GetKw(size_t *__restrict pargc,
 	if (DeeKwds_Check(kw)) {
 		size_t num_keywords;
 		num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > *pargc)
-			{
+		if unlikely(num_keywords > *pargc) {
 			/* Argument list is too short of the given keywords */
 			err_keywords_bad_for_argc(*pargc, num_keywords);
 			return NULL;
@@ -1476,15 +1463,13 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > argc)
-			{
+		if unlikely(num_keywords > argc) {
 			/* Argument list is too short of the given keywords */
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
 		kw_index = kwds_findstr((Kwds *)kw, name, hash);
-		if unlikely(kw_index == (size_t)-1)
-			{
+		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(name);
 			return NULL;
 		}
@@ -1504,15 +1489,13 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > argc)
-			{
+		if unlikely(num_keywords > argc) {
 			/* Argument list is too short of the given keywords */
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
 		kw_index = kwds_findstr_len((Kwds *)kw, name, namelen, hash);
-		if unlikely(kw_index == (size_t)-1)
-			{
+		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(name);
 			return NULL;
 		}

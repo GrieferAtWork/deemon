@@ -144,8 +144,7 @@ ast_parse_statements_until(uint16_t flags, tok_t end_token) {
 do_realloc:
 			new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, new_expra *
 			                                                      sizeof(DREF struct ast *));
-			if unlikely(!new_exprv)
-				{
+			if unlikely(!new_exprv) {
 				if (new_expra != exprc + 1) {
 					new_expra = exprc + 1;
 					goto do_realloc;
@@ -270,8 +269,7 @@ again:
 			goto err_tt_branch;
 		if unlikely(skip_lf())
 			goto err_tt_branch;
-		if unlikely(parse_tags_block())
-			{
+		if unlikely(parse_tags_block()) {
 err_tt_branch:
 			ast_decref(tt_branch);
 			goto err_r;
@@ -542,8 +540,7 @@ do_else_branch:
 		ast_xdecref(elem_or_cond);
 		if (init) {
 			DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-			if unlikely(!exprv)
-				{
+			if unlikely(!exprv) {
 err_loop_init:
 				ast_decref(init);
 				goto err_r;
@@ -552,8 +549,7 @@ err_loop_init:
 			exprv[0] = init;   /* Inherit reference. */
 			exprv[1] = result; /* Inherit reference. */
 			merge    = ast_multiple(AST_FMULTIPLE_KEEPLAST, 2, exprv);
-			if unlikely(!merge)
-				{
+			if unlikely(!merge) {
 				Dee_Free(exprv);
 				goto err_loop_init;
 			}
@@ -917,8 +913,7 @@ err_r_switch:
 handle_post_label:
 				if unlikely(skip_lf())
 					goto err;
-				if unlikely(tok == '}')
-					{
+				if unlikely(tok == '}') {
 					/* Emit a warning and when the next token is a `}' */
 					if unlikely(WARN(W_MISSING_STATEMENT_AFTER_LABEL))
 						goto err;
@@ -934,8 +929,7 @@ handle_post_label:
 						goto err;
 					/* Parse the statement that is prefixed by the label. */
 					result = ast_parse_statement(allow_nonblock);
-					if unlikely(!result)
-						{
+					if unlikely(!result) {
 						ast_decref(label_ast);
 						goto err;
 					}
@@ -958,8 +952,7 @@ handle_post_label:
 					/* Create a new MULTIPLE-ast */
 					DREF struct ast **elemv;
 					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-					if unlikely(!elemv)
-						{
+					if unlikely(!elemv) {
 err_label_ast:
 						ast_decref(label_ast);
 						goto err_r;
@@ -967,8 +960,7 @@ err_label_ast:
 					elemv[0] = label_ast; /* Inherit reference. */
 					elemv[1] = result;    /* Inherit reference. */
 					merge    = ast_multiple(AST_FMULTIPLE_KEEPLAST, 2, elemv);
-					if unlikely(!merge)
-						{
+					if unlikely(!merge) {
 						Dee_Free(elemv);
 						goto err_label_ast;
 					}
@@ -976,8 +968,7 @@ err_label_ast:
 				}
 				break;
 	case KWD_case:
-				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
-					{
+				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;
 				}
@@ -990,8 +981,7 @@ err_label_ast:
 					goto err;
 				if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_CASE))
 					goto err_r;
-				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
-					{
+				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					ast_decref(result);
 					goto again;
 				}
@@ -1003,12 +993,10 @@ err_label_ast:
 				label_flags = AST_FLABEL_CASE;
 				goto handle_post_label;
 	case KWD_default:
-				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
-					{
+				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;
-				} else if unlikely(current_basescope->bs_swdefl)
-				{
+				} else if unlikely(current_basescope->bs_swdefl) {
 					/* Warn if another default label had already been defined. */
 					if (WARN(W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED))
 						goto err;

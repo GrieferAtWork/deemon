@@ -211,8 +211,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		 * If one was, then simply wrap everything in a multi-branch AST. */
 		if (init) {
 			DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-			if unlikely(!exprv)
-				{
+			if unlikely(!exprv) {
 err_loop_init:
 				ast_decref(init);
 				goto err_r;
@@ -221,8 +220,7 @@ err_loop_init:
 			exprv[0] = init;   /* Inherit reference. */
 			exprv[1] = result; /* Inherit reference. */
 			merge    = ast_multiple(AST_FMULTIPLE_KEEPLAST, 2, exprv);
-			if unlikely(!merge)
-				{
+			if unlikely(!merge) {
 				Dee_Free(exprv);
 				goto err_loop_init;
 			}

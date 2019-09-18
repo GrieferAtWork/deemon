@@ -148,8 +148,7 @@ LOCAL DIR *(opendir)(char const *name) {
 	query[namelen + 2] = '\0';
 	result->d_isfirst  = 1;
 	result->d_hnd      = _findfirst32(query, (struct _finddata32_t *)&result->d_ent.d_attrib);
-	if unlikely(result->d_hnd == -1)
-		{
+	if unlikely(result->d_hnd == -1) {
 		free(result);
 		result = 0;
 	}
@@ -541,8 +540,7 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
 				goto err;
 		} else {
 			fd = (int)DeeFile_Fileno(path);
-			if unlikely(fd == (int)DSYSFD_INVALID)
-				{
+			if unlikely(fd == (int)DSYSFD_INVALID) {
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))
 					goto try_filename;
@@ -592,8 +590,7 @@ try_filename:
 #ifdef HAVE_FCHDIR
 check_error:
 #endif /* HAVE_FCHDIR */
-	if unlikely(error)
-		{
+	if unlikely(error) {
 		error = errno;
 		if (error == EACCES) {
 			err_path_no_access(error, path);
@@ -742,8 +739,7 @@ Stat_Init(STRUCT_STAT *__restrict self,
 				goto err;
 		} else {
 			fd = (int)DeeFile_Fileno(path);
-			if unlikely(fd == (int)DSYSFD_INVALID)
-				{
+			if unlikely(fd == (int)DSYSFD_INVALID) {
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented)) {
 					/* Try the file's filename. */
@@ -784,8 +780,7 @@ Stat_Init(STRUCT_STAT *__restrict self,
 		DBG_ALIGNMENT_ENABLE();
 #endif /* !_WIO_DEFINED */
 	}
-	if unlikely(error)
-		{
+	if unlikely(error) {
 		error = errno;
 		if (error == EACCES) {
 			err_path_no_access(error, path);
@@ -1411,8 +1406,7 @@ fs_mkdir(DeeObject *__restrict path,
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* !_WDIRECT_DEFINED */
-	if unlikely(error)
-		{
+	if unlikely(error) {
 		error = errno;
 		if (error == EACCES) {
 			err_path_no_write_access(error, path);
@@ -1603,8 +1597,7 @@ fs_unlink(DeeObject *__restrict path) {
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif
-	if unlikely(error)
-		{
+	if unlikely(error) {
 		handle_unlink_error(errno, path);
 		goto err;
 	}
@@ -1894,8 +1887,7 @@ fs_symlink(DeeObject *__restrict target_text,
 	DBG_ALIGNMENT_DISABLE();
 	error = symlink(utarget_text, ulink_path);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(error)
-		{
+	if unlikely(error) {
 		DBG_ALIGNMENT_DISABLE();
 		error = errno;
 		DBG_ALIGNMENT_ENABLE();
@@ -1951,8 +1943,7 @@ fs_readlink(DeeObject *__restrict path) {
 			STRUCT_STAT st;
 			DBG_ALIGNMENT_DISABLE();
 			req_size = readlink(utf8, buffer, bufsize + 1);
-			if unlikely(req_size < 0)
-				{
+			if unlikely(req_size < 0) {
 handle_error:
 				error = errno;
 				DBG_ALIGNMENT_ENABLE();
@@ -2064,8 +2055,7 @@ read_filename:
 	if (!ent) {
 		/* End of directory / error. */
 		int error = errno;
-		if likely(error == 0)
-			{
+		if likely(error == 0) {
 			DIR *dfd = self->d_hnd;
 			/* End of directory. */
 			self->d_hnd = NULL;
@@ -2095,8 +2085,7 @@ read_filename:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite(&self->d_lock);
 #endif
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		Dee_BadAlloc(offsetof(DeeStringObject, s_str) +
 		             (result_length + 1) * sizeof(char));
 		goto err;
@@ -2137,8 +2126,7 @@ dir_iter(Dir *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	result->d_hnd = opendir(utf8);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!result->d_hnd)
-		{
+	if unlikely(!result->d_hnd) {
 		err_handle_opendir((DeeObject *)self->d_path);
 		goto err_r;
 	}
@@ -2468,8 +2456,7 @@ query_iter(Dir *__restrict self) {
 		}
 		++query_start;
 	}
-	if unlikely(!result->q_iter.d_hnd)
-		{
+	if unlikely(!result->q_iter.d_hnd) {
 		err_handle_opendir((DeeObject *)self->d_path);
 		goto err_r;
 	}

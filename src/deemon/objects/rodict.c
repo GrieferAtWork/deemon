@@ -440,8 +440,7 @@ DeeRoDict_Insert(DREF DeeObject **__restrict pself,
 	Dict *me = (Dict *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
 	ASSERT(!DeeObject_IsShared(me));
-	if unlikely(me->rd_size * 2 > me->rd_mask)
-		{
+	if unlikely(me->rd_size * 2 > me->rd_mask) {
 		size_t old_size = me->rd_size;
 		size_t new_mask = (me->rd_mask << 1) | 1;
 		me              = rehash(me, me->rd_mask, new_mask);
@@ -480,8 +479,7 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 		if (elem_count * 2 > mask) {
 			size_t new_mask = (mask << 1) | 1;
 			new_result      = rehash(result, mask, new_mask);
-			if unlikely(!new_result)
-				{
+			if unlikely(!new_result) {
 				Dee_Decref(key_and_value[1]);
 				Dee_Decref(key_and_value[0]);
 				goto err_r;
@@ -959,8 +957,7 @@ rodict_deepcopy(Dict *__restrict self) {
 		if unlikely(!key_copy)
 			goto err;
 		value_copy = DeeObject_DeepCopy(self->rd_elem[i].di_value);
-		if unlikely(!value_copy)
-			{
+		if unlikely(!value_copy) {
 			Dee_Decref(key_copy);
 			goto err;
 		}

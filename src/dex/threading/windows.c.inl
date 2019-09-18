@@ -373,8 +373,7 @@ mutex_leave(Mutex *__restrict self) {
 	caller = GetCurrentThreadId();
 	DBG_ALIGNMENT_ENABLE();
 	/* Check if the caller is actually the owner. */
-	if unlikely(caller != self->m_owner)
-		{
+	if unlikely(caller != self->m_owner) {
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Mutex is not owned by the calling thread");
 		goto err;
@@ -383,8 +382,7 @@ mutex_leave(Mutex *__restrict self) {
 		/* Last lock (must clear the owner-field and post the semaphore) */
 		self->m_owner = (DWORD)-1;
 		DBG_ALIGNMENT_DISABLE();
-		if unlikely(!ReleaseSemaphore(self->m_sema, 1, NULL))
-			{
+		if unlikely(!ReleaseSemaphore(self->m_sema, 1, NULL)) {
 			DBG_ALIGNMENT_ENABLE();
 			err_post_failed();
 			goto err;

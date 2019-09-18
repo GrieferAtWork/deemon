@@ -270,8 +270,7 @@ array_get(DeeArrayTypeObject *__restrict tp_self, void *base,
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
 	/* Check bounds. */
-	if unlikely(index >= tp_self->at_count)
-		{
+	if unlikely(index >= tp_self->at_count) {
 		DeeError_Throwf(&DeeError_IndexError,
 		                "Index `%Iu' lies outside the valid bounds `0...%Iu'",
 		                index, tp_self->at_count);
@@ -436,8 +435,7 @@ array_setrange(DeeArrayTypeObject *__restrict tp_self, void *base,
 		while (array_iter.uint < array_end.uint) {
 			int error;
 			elem = DeeObject_IterNext(iter);
-			if unlikely(!ITER_ISOK(elem))
-				{
+			if unlikely(!ITER_ISOK(elem)) {
 				if (elem) { /* Unexpected end of sequence. */
 					size_t given_count = array_iter.uint - ((uintptr_t)base + (size_t)begin * item_size);
 					if (item_size)
@@ -460,8 +458,7 @@ array_setrange(DeeArrayTypeObject *__restrict tp_self, void *base,
 	}
 	/* Ensure that the given sequence ends here. */
 	elem = DeeObject_IterNext(iter);
-	if unlikely(elem != ITER_DONE)
-		{
+	if unlikely(elem != ITER_DONE) {
 		if (elem != NULL) {
 			Dee_Decref(elem);
 			DeeError_Throwf(&DeeError_UnpackError,
@@ -772,8 +769,7 @@ stype_array_rehash(DeeSTypeObject *__restrict self,
 again:
 	new_map = (DeeArrayTypeObject **)Dee_TryCalloc((new_mask + 1) *
 	                                               sizeof(DeeArrayTypeObject *));
-	if unlikely(!new_map)
-		{
+	if unlikely(!new_map) {
 		/* Try again with a 1-element mask. */
 		if (!self->st_array.sa_list && new_mask != 0) {
 			new_mask = 1;

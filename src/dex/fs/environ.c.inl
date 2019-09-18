@@ -81,8 +81,7 @@ env_init(Env *__restrict self) {
 	self->e_iter    = environ;
 	self->e_version = env_version;
 	rwlock_endread(&env_lock);
-	if unlikely(!self->e_iter)
-		{
+	if unlikely(!self->e_iter) {
 		self->e_iter = empty_env;
 		return -1;
 	}
@@ -135,8 +134,7 @@ iter_done:
 		valstart = strend(result);
 allocate_value:
 	value = DeeString_TryNewSized(valstart, strlen(valstart));
-	if unlikely(!value)
-		{
+	if unlikely(!value) {
 		/* Collect memory and try again. */
 		rwlock_endread(&env_lock);
 		if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
@@ -151,8 +149,7 @@ allocate_value:
 		--valstart;
 allocate_name:
 	name = DeeString_TryNewSized(result, (size_t)(valstart - result));
-	if unlikely(!name)
-		{
+	if unlikely(!name) {
 		/* Collect memory and try again. */
 		rwlock_endread(&env_lock);
 		if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
@@ -206,8 +203,7 @@ iter_done:
 		--valstart;
 allocate_name:
 	name = DeeString_TryNewSized(result, (size_t)(valstart - result));
-	if unlikely(!name)
-		{
+	if unlikely(!name) {
 		/* Collect memory and try again. */
 		rwlock_endread(&env_lock);
 		if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
@@ -250,8 +246,7 @@ iter_done:
 	} else {
 allocate_value:
 		value = DeeString_TryNewSized(valstart, strlen(valstart));
-		if unlikely(!value)
-			{
+		if unlikely(!value) {
 			/* Collect memory and try again. */
 			rwlock_endread(&env_lock);
 			if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
@@ -365,8 +360,7 @@ again:
 	}
 	valsiz = strlen(strval);
 	result = DeeString_TryNewSized(strval, valsiz);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		rwlock_endread(&env_lock);
 		/* Collect memory and try again. */
 		if (!try_get) {
@@ -409,8 +403,7 @@ again:
 		goto err;
 	rwlock_read(&env_lock);
 	/* Check if the environment changed in the mean time. */
-	if unlikely(env_ver != env_version)
-		{
+	if unlikely(env_ver != env_version) {
 		rwlock_endread(&env_lock);
 		unicode_printer_free_utf8(printer, buf);
 		goto again;

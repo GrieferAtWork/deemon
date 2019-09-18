@@ -73,8 +73,7 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 			return_reference_(current_rootscope->rs_module);
 		}
 		filename = TPPFile_Filename(token.t_file, &filename_length);
-		if likely(filename)
-			{
+		if likely(filename) {
 			char *path_start; /* Relative module import. */
 			path_start = (char *)memrchr(filename, '/', filename_length);
 #ifdef CONFIG_HOST_WINDOWS
@@ -103,8 +102,7 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 	                                                      inner_compiler_options,
 	                                                      false);
 module_opened:
-	if unlikely(!ITER_ISOK(result))
-		{
+	if unlikely(!ITER_ISOK(result)) {
 		if unlikely(!result)
 			goto err;
 		if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
@@ -272,8 +270,7 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 		goto err_module;
 	/* Lookup the symbol which we're importing. */
 	modsym = import_module_symbol(module, import_name);
-	if unlikely(!modsym)
-		{
+	if unlikely(!modsym) {
 		if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 		         import_name->k_name,
 		         DeeString_STR(module->mo_name)))
@@ -477,8 +474,7 @@ complete_module_name:
 			/* - `.foo.bar as foobar' */
 			if unlikely(yield() < 0)
 				goto err_name;
-			if unlikely(!TPP_ISKEYWORD(tok))
-				{
+			if unlikely(!TPP_ISKEYWORD(tok)) {
 				if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
 					goto err_name;
 				goto autogenerate_symbol_name;
@@ -577,8 +573,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 		if unlikely(!name)
 			goto err;
 		sym = get_local_symbol(name);
-		if unlikely(sym)
-			{
+		if unlikely(sym) {
 			/* Re-importing a different symbol that would collide with another
 			 * weak symbol will create an ambiguity when that symbol is used.
 			 * Instead of producing an error here and now, only do so if the
@@ -736,8 +731,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 		}
 	}
 	import_symbol = get_local_symbol(item->ii_symbol_name);
-	if unlikely(import_symbol)
-		{
+	if unlikely(import_symbol) {
 		if (SYMBOL_IS_WEAK(import_symbol)) {
 			SYMBOL_CLEAR_WEAK(import_symbol);
 			goto init_import_symbol;
@@ -790,8 +784,7 @@ ast_import_module(struct import_item *__restrict item) {
 	if unlikely(!module)
 		goto err;
 	import_symbol = get_local_symbol(item->ii_symbol_name);
-	if unlikely(import_symbol)
-		{
+	if unlikely(import_symbol) {
 		if (SYMBOL_IS_WEAK(import_symbol)) {
 			SYMBOL_CLEAR_WEAK(import_symbol);
 			goto init_import_symbol;
@@ -923,8 +916,7 @@ parse_module_import_list:
 	} else if (tok == ',') {
 		item_a = 4;
 		item_v = (struct import_item *)Dee_TryMalloc(4 * sizeof(struct import_item));
-		if unlikely(!item_v)
-			{
+		if unlikely(!item_v) {
 			item_a = 2;
 			item_v = (struct import_item *)Dee_Malloc(2 * sizeof(struct import_item));
 			if unlikely(!item_v)
@@ -960,8 +952,7 @@ import_parse_list:
 						new_item_a = 2;
 					new_item_v = (struct import_item *)Dee_TryRealloc(item_v, new_item_a *
 					                                                          sizeof(struct import_item));
-					if unlikely(!new_item_v)
-						{
+					if unlikely(!new_item_v) {
 						new_item_a = item_c + 1;
 						new_item_v = (struct import_item *)Dee_Realloc(item_v, new_item_a *
 						                                                       sizeof(struct import_item));
@@ -1017,8 +1008,7 @@ import_parse_list:
 			Dee_Decref(module);
 		} else {
 			size_t i;
-			if unlikely(!allow_modules)
-				{
+			if unlikely(!allow_modules) {
 				/* Warn if there is a `from' missing following a symbol import list. */
 				if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
 					goto err_item_v;

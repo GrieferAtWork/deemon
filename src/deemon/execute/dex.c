@@ -145,8 +145,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		char **names = (char **)descriptor->d_import_names;
 		while (*names)
 			++impcount, ++names;
-		if unlikely(impcount > UINT16_MAX)
-			{
+		if unlikely(impcount > UINT16_MAX) {
 			DeeError_Throwf(&DeeError_RuntimeError,
 			                "Dex extension %r has too many imports",
 			                input_file);
@@ -164,8 +163,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 			                                    strlen(names[i]),
 			                                    NULL,
 			                                    true);
-			if unlikely(!import)
-				{
+			if unlikely(!import) {
 				while (i--)
 					Dee_Decref(imports[i]);
 				goto err_imp;
@@ -189,8 +187,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		}
 	}
 	glbcount += symcount;
-	if unlikely(glbcount > UINT16_MAX)
-		{
+	if unlikely(glbcount > UINT16_MAX) {
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Dex extension %r is too large",
 		                input_file);

@@ -98,8 +98,7 @@ im_deepcopy(InstanceMethod *__restrict self,
 	if unlikely(!self->im_this)
 		return -1;
 	self->im_func = DeeObject_DeepCopy(other->im_func);
-	if unlikely(!self->im_func)
-		{
+	if unlikely(!self->im_func) {
 		Dee_Decref(self->im_this);
 		return -1;
 	}
@@ -254,8 +253,7 @@ instancemethod_get_name(InstanceMethod *__restrict self) {
 return_attr: {
 	DREF DeeObject *result;
 	result = DeeObject_GetAttr(self->im_func, &str___name__);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_AttributeError) ||
 		    DeeError_Catch(&DeeError_NotImplemented))
 			return_none;
@@ -276,8 +274,7 @@ instancemethod_get_doc(InstanceMethod *__restrict self) {
 return_attr: {
 	DREF DeeObject *result;
 	result = DeeObject_GetAttr(self->im_func, &str___doc__);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_AttributeError) ||
 		    DeeError_Catch(&DeeError_NotImplemented))
 			return_none;
@@ -290,8 +287,7 @@ PRIVATE DREF DeeObject *DCALL
 instancemethod_get_kwds(InstanceMethod *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_GetAttr(self->im_func, &str___kwds__);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_AttributeError) ||
 		    DeeError_Catch(&DeeError_NotImplemented))
 			return_none;

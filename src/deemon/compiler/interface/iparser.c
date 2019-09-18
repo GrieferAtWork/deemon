@@ -174,8 +174,7 @@ parser_parse_stmt(DeeCompilerWrapperObject *__restrict self,
 		goto done;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	result_ast   = ast_parse_statement(nonblocking);
-	if unlikely(!result_ast)
-		{
+	if unlikely(!result_ast) {
 		if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
 			result = Dee_None;
 			Dee_Incref(result);
@@ -210,8 +209,7 @@ parser_parse_allstmt(DeeCompilerWrapperObject *__restrict self,
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	result_ast   = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,
                                             end_token);
-	if unlikely(!result_ast)
-		{
+	if unlikely(!result_ast) {
 		if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
 			result = Dee_None;
 			Dee_Incref(result);

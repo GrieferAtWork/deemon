@@ -742,8 +742,7 @@ PRIVATE DREF DeeObject *DCALL libcodecs_get(void) {
 	}
 	rwlock_endread(&libcodecs_lock);
 	result = DeeModule_OpenGlobal(&str_codecs, NULL, true);
-	if likely(result)
-		{
+	if likely(result) {
 		rwlock_write(&libcodecs_lock);
 		ASSERT(!libcodecs || libcodecs == result);
 		if (!libcodecs) {
@@ -847,8 +846,7 @@ DeeCodec_Decode(DeeObject *__restrict self,
 	if (result != ITER_DONE)
 		goto done;
 	libcodecs = libcodecs_get();
-	if unlikely(!libcodecs)
-		{
+	if unlikely(!libcodecs) {
 		if (DeeError_Catch(&DeeError_FileNotFound))
 			goto err_unknown; /* Codec library not found */
 		goto err_name;
@@ -861,8 +859,7 @@ DeeCodec_Decode(DeeObject *__restrict self,
 	                                error_module_names[error_mode]);
 	Dee_Decref(libcodecs);
 #if 0
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		/* Translate any kind of value error into an unknown-codec error.
 		 * This includes things such as key-errors thrown by the codec library,
 		 * as is likely to be the case when a Dict is used by the implementation. */
@@ -905,8 +902,7 @@ DeeCodec_Encode(DeeObject *__restrict self,
 	{ result = encode_utf32_le(self); goto done; },
 	{ result = encode_utf8(self); goto done; });
 	libcodecs = libcodecs_get();
-	if unlikely(!libcodecs)
-		{
+	if unlikely(!libcodecs) {
 		if (DeeError_Catch(&DeeError_FileNotFound))
 			goto err_unknown; /* Codec library not found */
 		goto err_name;
@@ -919,8 +915,7 @@ DeeCodec_Encode(DeeObject *__restrict self,
 	                                error_module_names[error_mode]);
 	Dee_Decref(libcodecs);
 #if 0
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		/* Translate any kind of value error into an unknown-codec error.
 		 * This includes things such as key-errors thrown by the codec library,
 		 * as is likely to be the case when a Dict is used by the implementation. */

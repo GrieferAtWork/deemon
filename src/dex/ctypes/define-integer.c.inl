@@ -562,8 +562,7 @@ F(int_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
 	if (OBJECT_AS_T(some_object, &other_value))
 		return NULL;
-	if unlikely(!other_value)
-		{
+	if unlikely(!other_value) {
 		F(int_divzero)
 		(value, some_object);
 		return NULL;
@@ -578,8 +577,7 @@ F(int_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
 	if (OBJECT_AS_T(some_object, &other_value))
 		return NULL;
-	if unlikely(!other_value)
-		{
+	if unlikely(!other_value) {
 		F(int_divzero)
 		(value, some_object);
 		return NULL;
@@ -687,8 +685,7 @@ F(int_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	T other_value;
 	if (OBJECT_AS_T(some_object, &other_value))
 		return -1;
-	if unlikely(!other_value)
-		{
+	if unlikely(!other_value) {
 		T value;
 		CTYPES_FAULTPROTECT(value = GET(self), return -1);
 		F(int_divzero)
@@ -705,8 +702,7 @@ F(int_inplace_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	T other_value;
 	if (OBJECT_AS_T(some_object, &other_value))
 		return -1;
-	if unlikely(!other_value)
-		{
+	if unlikely(!other_value) {
 		T value;
 		CTYPES_FAULTPROTECT(value = GET(self), return -1);
 		F(int_divzero)

@@ -101,8 +101,7 @@ err_lookahead_assumptions:
 		if unlikely(ast_assumes_initcond(&entry_assumptions, stack->os_assume))
 			goto err_lookahead_assumptions;
 		/* Merge assumptions upon entry (0 iterations) with those made up exit (>= 1 iterations) */
-		if unlikely(ast_assumes_mergecond(&entry_assumptions, &lookahead_assumptions))
-			{
+		if unlikely(ast_assumes_mergecond(&entry_assumptions, &lookahead_assumptions)) {
 			ast_assumes_fini(&entry_assumptions);
 			goto err_lookahead_assumptions;
 		}
@@ -186,8 +185,7 @@ err_entry_assumptions:
 				if unlikely(!elemv)
 					goto err;
 				none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None), self);
-				if unlikely(!none_ast)
-					{
+				if unlikely(!none_ast) {
 					Dee_Free(elemv);
 					goto err;
 				}
@@ -255,8 +253,7 @@ err_entry_assumptions:
 				if unlikely(!elemv)
 					goto err;
 				none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None), self);
-				if unlikely(!none_ast)
-					{
+				if unlikely(!none_ast) {
 					Dee_Free(elemv);
 					goto err;
 				}

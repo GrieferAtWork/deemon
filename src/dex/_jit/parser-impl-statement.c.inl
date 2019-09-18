@@ -88,15 +88,13 @@ LOCAL WUNUSED int FCALL
 JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
 	if (self->jl_tok == '[') {
 		JITLexer_Yield(self);
-		if likely(self->jl_tok == JIT_KEYWORD)
-			{
+		if likely(self->jl_tok == JIT_KEYWORD) {
 			JITLexer_Yield(self);
 		} else {
 			syn_asm_expected_keyword_after_lbracket(self);
 			goto err;
 		}
-		if likely(self->jl_tok == ']')
-			{
+		if likely(self->jl_tok == ']') {
 			JITLexer_Yield(self);
 		} else {
 			syn_asm_expected_rbracket_after_lbracket(self);
@@ -354,8 +352,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					if (ISERR(result))
 						goto err;
 					LOAD_LVALUE(result, err);
-					if likely(self->jl_tok == ';')
-						{
+					if likely(self->jl_tok == ';') {
 						JITLexer_Yield(self);
 					} else {
 						syn_throw_expected_semi_after_throw(self);
@@ -387,8 +384,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				JITLexer_Yield(self);
 				if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 					goto err;
-				if likely(self->jl_tok == ';')
-					{
+				if likely(self->jl_tok == ';') {
 					JITLexer_Yield(self);
 				} else {
 					syn_yield_expected_semi_after_yield(self);
@@ -407,8 +403,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			if (name == ENCODE4('b', 'r', 'e', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'k') {
 				JITLexer_Yield(self);
-				if likely(self->jl_tok == ';')
-					{
+				if likely(self->jl_tok == ';') {
 					JITLexer_Yield(self);
 				} else {
 					syn_break_expected_semi_after_break(self);
@@ -448,8 +443,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					if (ISERR(result))
 						goto err;
 					LOAD_LVALUE(result, err);
-					if likely(self->jl_tok == ';')
-						{
+					if likely(self->jl_tok == ';') {
 						JITLexer_Yield(self);
 					} else {
 						syn_return_expected_semi_after_return(self);
@@ -674,8 +668,7 @@ check_trailing_asm_semicollon:
 			if (name == ENCODE4('c', 'o', 'n', 't') &&
 			    nam2 == ENCODE4('i', 'n', 'u', 'e')) {
 				JITLexer_Yield(self);
-				if likely(self->jl_tok == ';')
-					{
+				if likely(self->jl_tok == ';') {
 					JITLexer_Yield(self);
 				} else {
 					syn_continue_expected_semi_after_continue(self);

@@ -689,8 +689,7 @@ seo_init(SeqEachOperator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
-	if unlikely(DeeTuple_SIZE(args) > COMPILER_LENOF(self->so_opargv))
-		{
+	if unlikely(DeeTuple_SIZE(args) > COMPILER_LENOF(self->so_opargv)) {
 		DeeError_Throwf(&DeeError_UnpackError,
 		                "Too many operator arguments (%Iu > %Iu)",
 		                (size_t)DeeTuple_SIZE(args),
@@ -699,8 +698,7 @@ seo_init(SeqEachOperator *__restrict self,
 	}
 	if (DeeString_Check(name)) {
 		self->so_opname = Dee_OperatorFromName(NULL, DeeString_STR(name));
-		if unlikely(self->so_opname == (uint16_t)-1)
-			{
+		if unlikely(self->so_opname == (uint16_t)-1) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unknown operator %q",
 			                DeeString_STR(name));

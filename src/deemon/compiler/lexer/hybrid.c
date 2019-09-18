@@ -299,8 +299,7 @@ parse_remainder_after_comma_popscope:
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
-			if likely(tok == '}')
-				{
+			if likely(tok == '}') {
 parse_remainder_before_rbrace_popscope_wrap:
 				if unlikely(yield() < 0)
 					goto err_r;
@@ -314,8 +313,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				goto err_r;
 			new_elemv[0] = result; /* Inherit reference. */
 			remainder    = ast_multiple(AST_FMULTIPLE_GENERIC, 1, new_elemv);
-			if unlikely(!remainder)
-				{
+			if unlikely(!remainder) {
 				Dee_Free(new_elemv);
 				goto err_r;
 			}
@@ -540,8 +538,7 @@ parse_remainder_after_statement:
 				new_elemv[0] = result;    /* Inherit reference. */
 				new_elemv[1] = remainder; /* Inherit reference. */
 				remainder    = ast_multiple(AST_FMULTIPLE_KEEPLAST, 2, new_elemv);
-				if unlikely(!remainder)
-					{
+				if unlikely(!remainder) {
 					ast_decref(new_elemv[1]);
 					ast_decref(new_elemv[0]);
 					Dee_Free(new_elemv);

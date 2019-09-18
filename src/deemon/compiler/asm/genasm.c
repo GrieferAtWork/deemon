@@ -311,8 +311,7 @@ empty_operand:
 		} else if (print_expression->a_type == AST_CONSTEXPR) {
 			DREF DeeObject *items, **iter, **end;
 			items = DeeTuple_FromSequence(print_expression->a_constexpr);
-			if unlikely(!items)
-				{
+			if unlikely(!items) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
 				goto fallback;
 			}
@@ -571,8 +570,7 @@ done_push_none:
 		int error;
 		end = (iter = self->a_multiple.m_astv) +
 		      self->a_multiple.m_astc;
-		if unlikely(iter == end)
-			{
+		if unlikely(iter == end) {
 			/* Special case: empty multiple list. */
 			if (!PUSH_RESULT)
 				goto done;
@@ -644,8 +642,7 @@ done_push_none:
 				active_size        = 0;
 			} else {
 				if (need_all) {
-					if unlikely(active_size == UINT16_MAX)
-						{
+					if unlikely(active_size == UINT16_MAX) {
 						PERRAST(self, W_ASM_SEQUENCE_TOO_LONG);
 						goto err;
 					}
@@ -807,8 +804,7 @@ done_fake_none:
 #else /* AST_FLOOPCTL_BRK == ASM_LOOPCTL_BRK && AST_FLOOPCTL_CON == ASM_LOOPCTL_CON */
 		loopsym = current_assembler.a_loopctl[self->a_flag == AST_FLOOPCTL_BRK ? ASM_LOOPCTL_BRK : ASM_LOOPCTL_CON];
 #endif /* AST_FLOOPCTL_BRK != ASM_LOOPCTL_BRK || AST_FLOOPCTL_CON != ASM_LOOPCTL_CON */
-		if unlikely(!loopsym)
-			{
+		if unlikely(!loopsym) {
 			if (WARNAST(self, W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED))
 				goto err;
 			goto done_push_none;
@@ -1298,8 +1294,7 @@ done_fake_none:
 		/* Probably one of the most important AST types: The operator AST. */
 		operator_name = self->a_flag;
 		/* Special case: The arguments of the operator are variadic. */
-		if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
-			{
+		if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			struct symbol *prefix_symbol;
 			struct opinfo *info;
 			info = Dee_OperatorInfo(NULL, operator_name);
@@ -1892,15 +1887,13 @@ push_a_if_used:
 				DREF DeeObject *push_seq;
 				int32_t cid;
 				push_seq = DeeRoSet_FromSequence(self->a_operator.o_op0->a_constexpr);
-				if unlikely(!push_seq)
-					{
+				if unlikely(!push_seq) {
 					if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
 						goto err;
 					push_seq = self->a_operator.o_op0->a_constexpr;
 					Dee_Incref(push_seq);
 				}
-				if unlikely(!asm_allowconst(push_seq))
-					{
+				if unlikely(!asm_allowconst(push_seq)) {
 					Dee_Decref_likely(push_seq);
 					goto action_in_without_const;
 				}
@@ -2384,15 +2377,13 @@ do_this_as_typesym_ref:
 					DREF DeeObject *push_seq;
 					int32_t cid;
 					push_seq = DeeRoSet_FromSequence(self->a_action.a_act1->a_constexpr);
-					if unlikely(!push_seq)
-						{
+					if unlikely(!push_seq) {
 						if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
 							goto err;
 						push_seq = self->a_action.a_act1->a_constexpr;
 						Dee_Incref(push_seq);
 					}
-					if unlikely(!asm_allowconst(push_seq))
-						{
+					if unlikely(!asm_allowconst(push_seq)) {
 						Dee_Decref_likely(push_seq);
 						goto action_in_without_const;
 					}
@@ -2551,8 +2542,7 @@ action_in_without_const:
 				goto err;
 			label->tl_asym = sym;
 		}
-		if unlikely(ASM_SYM_DEFINED(sym))
-			{
+		if unlikely(ASM_SYM_DEFINED(sym)) {
 			/* Warn if the label had already been defined. */
 			if (WARNAST(self, W_ASM_LABEL_ALREADY_DEFINED,
 			            self->a_flag & AST_FLABEL_CASE ? (label->tl_expr ? "case" : "default") : label->tl_name->k_name))

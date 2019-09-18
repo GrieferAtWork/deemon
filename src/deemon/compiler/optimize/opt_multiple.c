@@ -304,8 +304,7 @@ continue_inline_at_iter:
 				struct ast *expand = *iter;
 				size_t move_count;
 				vec = DeeSeq_AsHeapVector(inner->a_constexpr, &len);
-				if unlikely(!vec)
-					{
+				if unlikely(!vec) {
 					DeeError_Handled(ERROR_HANDLED_RESTORE);
 					continue;
 				}
@@ -321,8 +320,7 @@ continue_inline_at_iter:
 				new_astv = (DREF struct ast **)Dee_Realloc(self->a_multiple.m_astv,
 				                                           (self->a_multiple.m_astc - 1 + len) *
 				                                           sizeof(DREF struct ast *));
-				if unlikely(!new_astv)
-					{
+				if unlikely(!new_astv) {
 err_expand_vec:
 					while (len--)
 						Dee_Decref(vec[len]);
@@ -342,8 +340,7 @@ err_expand_vec:
 				for (i = 0; i < len; ++i) {
 					DREF struct ast *constant_ast;
 					constant_ast = ast_setddi(ast_constexpr(vec[i]), &inner->a_ddi);
-					if unlikely(!constant_ast)
-						{
+					if unlikely(!constant_ast) {
 						MEMMOVE_PTR(iter + i + len,
 						            iter + i + 1,
 						            move_count - i);

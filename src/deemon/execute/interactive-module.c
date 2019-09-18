@@ -329,8 +329,7 @@ do_exec_code:
 	if unlikely(!current_code)
 		goto done_exec;
 	preexisting_codesize = current_code->co_codebytes;
-	if likely(current_traceback)
-		{
+	if likely(current_traceback) {
 		instruction_t *iter, *end;
 		if unlikely(!current_traceback->tb_numframes)
 			goto done_exec;
@@ -360,8 +359,7 @@ do_exec_code:
 		goto done_exec;
 
 	recursive_rwlock_write(&self->im_lock);
-	if unlikely(!self->im_compiler)
-		{
+	if unlikely(!self->im_compiler) {
 		result = ITER_DONE;
 		goto done_compiler;
 	}
@@ -570,11 +568,9 @@ do_exec_code:
 
 	/* Link together the text, resolving relocations. */
 	link_error = asm_linktext();
-	if unlikely(link_error != 0)
-		{
+	if unlikely(link_error != 0) {
 err_link:
-		if unlikely(link_error >= 0)
-			{
+		if unlikely(link_error >= 0) {
 			/* Already in bigcode mode? - That's not good... */
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Failed to link final code: Relocation target is out of bounds");
@@ -619,8 +615,7 @@ done_assembler_fini:
 		}
 
 		current_code = asm_gencode();
-		if unlikely(!current_code)
-			{
+		if unlikely(!current_code) {
 gencode_failed:
 			result = NULL;
 			if (is_reusing_code_object)
@@ -689,8 +684,7 @@ gencode_failed:
 				Dee_Incref(Dee_EmptyTuple);
 				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)current_code);
 				Dee_DecrefNokill(current_code);
-				if unlikely(!new_self_func)
-					{
+				if unlikely(!new_self_func) {
 					Dee_DecrefNokill(Dee_EmptyTuple);
 					result = NULL;
 					if (is_reusing_code_object)
@@ -1204,8 +1198,7 @@ imod_init(InteractiveModule *__restrict self,
 		root_scope->rs_scope.bs_scope.s_del = dots;
 
 		root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
-		if unlikely(!root_scope->rs_scope.bs_argv)
-			{
+		if unlikely(!root_scope->rs_scope.bs_argv) {
 			sym_free(dots);
 			goto err_compiler;
 		}
@@ -1242,8 +1235,7 @@ imod_init(InteractiveModule *__restrict self,
 do_create_used_name:
 			used_name = TPPString_New(DeeString_STR(self->im_options.co_filename),
 			                          DeeString_SIZE(self->im_options.co_filename));
-			if unlikely(!used_name)
-				{
+			if unlikely(!used_name) {
 				if (Dee_CollectMemory(offsetof(struct TPPString, s_text) +
 				                      (DeeString_SIZE(self->im_options.co_filename) + 1) * sizeof(char)))
 					goto do_create_used_name;
@@ -1263,8 +1255,7 @@ do_create_used_name:
 do_create_base_name:
 			module_base_scope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(self->im_options.co_rootname),
 			                                                    DeeString_SIZE(self->im_options.co_rootname), 1);
-			if unlikely(!module_base_scope->bs_name)
-				{
+			if unlikely(!module_base_scope->bs_name) {
 				if (Dee_CollectMemory(offsetof(struct TPPKeyword, k_name) +
 				                      (DeeString_SIZE(self->im_options.co_rootname) + 1) * sizeof(char)))
 					goto do_create_base_name;
@@ -1291,8 +1282,7 @@ do_create_base_name:
 					modsym = &self->im_module.mo_bucketv[i];
 					if (!modsym->ss_name)
 						continue;
-					if unlikely((sym = sym_alloc()) == NULL)
-						{
+					if unlikely((sym = sym_alloc()) == NULL) {
 err_compiler_basefile:
 						COMPILER_END();
 						goto err_basefile;

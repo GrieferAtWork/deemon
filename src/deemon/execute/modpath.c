@@ -160,8 +160,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!new_bufsize)
-		{
+	if unlikely(!new_bufsize) {
 		nt_ThrowLastError();
 		goto err_release;
 	}
@@ -574,8 +573,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 		if (options->co_setup) {
 			/* Run a custom setup protocol. */
 			result = (*options->co_setup)(options->co_setup_arg);
-			if unlikely(result < 0)
-				{
+			if unlikely(result < 0) {
 				DeeCompiler_End();
 				Dee_Decref(compiler);
 				recursive_rwlock_endwrite(&DeeCompiler_Lock);
@@ -809,8 +807,7 @@ PRIVATE bool DCALL rehash_file_modules(void) {
 		new_size = 4;
 do_alloc_new_vector:
 	new_vector = (struct module_bucket *)Dee_TryCalloc(new_size * sizeof(struct module_bucket));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		if (modules_a != 0)
 			return true; /* Don't actually need to rehash. */
 		if (new_size != 1) {
@@ -860,8 +857,7 @@ PRIVATE bool DCALL rehash_glob_modules(void) {
 		new_size = 4;
 do_alloc_new_vector:
 	new_vector = (struct module_bucket *)Dee_TryCalloc(new_size * sizeof(struct module_bucket));
-	if unlikely(!new_vector)
-		{
+	if unlikely(!new_vector) {
 		if (modules_glob_a != 0)
 			return true; /* Don't actually need to rehash. */
 		if (new_size != 1) {
@@ -1033,8 +1029,7 @@ got_result_modulepath:
 
 	/* Open the module's source file stream. */
 	input_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY, 0);
-	if unlikely(!ITER_ISOK(input_stream))
-		{
+	if unlikely(!ITER_ISOK(input_stream)) {
 		result = (DREF DeeModuleObject *)input_stream;
 		if (input_stream == ITER_DONE && throw_error)
 			err_file_not_found_ob((DeeObject *)module_path_ob),
@@ -1109,8 +1104,7 @@ set_file_module_global:
 		existing_module = find_file_module(module_path_ob, hash);
 		if likely(!existing_module)
 			existing_module = find_glob_module(module_name_ob);
-		if unlikely(existing_module)
-			{
+		if unlikely(existing_module) {
 			Dee_Incref(existing_module);
 			rwlock_endwrite(&modules_glob_lock);
 			rwlock_endwrite(&modules_lock);
@@ -1137,8 +1131,7 @@ set_file_module_global:
 set_file_module:
 		rwlock_write(&modules_lock);
 		existing_module = find_file_module(module_path_ob, hash);
-		if unlikely(existing_module)
-			{
+		if unlikely(existing_module) {
 			Dee_Incref(existing_module);
 			rwlock_endwrite(&modules_lock);
 			Dee_DecrefDokill(result);
@@ -1150,8 +1143,7 @@ try_load_module_after_failure:
 			goto got_result;
 		}
 		/* Add the module to the file-cache. */
-		if unlikely(!add_file_module(result))
-			{
+		if unlikely(!add_file_module(result)) {
 			rwlock_endwrite(&modules_lock);
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
@@ -1172,8 +1164,7 @@ load_module_after_failure:
 		                                     options,
 		                                     module_path_ob);
 		Dee_Decref(input_stream);
-		if unlikely(error)
-			{
+		if unlikely(error) {
 			DeeModule_FailLoading(result);
 			goto err_inputstream_r;
 		}
@@ -1292,8 +1283,7 @@ DeeModule_OpenSourceStream(DeeObject *__restrict source_stream,
 set_global_module:
 		rwlock_write(&modules_glob_lock);
 		existing_module = find_glob_module((DeeStringObject *)module_name);
-		if unlikely(existing_module)
-			{
+		if unlikely(existing_module) {
 			/* The module got created in the mean time. */
 			Dee_Incref(existing_module);
 			rwlock_endwrite(&modules_glob_lock);
@@ -1302,8 +1292,7 @@ set_global_module:
 			goto found_existing_module;
 		}
 		/* Add the module to the global cache. */
-		if unlikely(!add_glob_module(result))
-			{
+		if unlikely(!add_glob_module(result)) {
 			rwlock_endwrite(&modules_glob_lock);
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
@@ -1325,8 +1314,7 @@ found_existing_module:
 	                                          (DeeStringObject *)source_pathname);
 	/* Depending on a load error having occurred, either signify
 	 * that the module has been loaded, or failed to be loaded. */
-	if unlikely(load_error)
-		{
+	if unlikely(load_error) {
 		DeeModule_FailLoading(result);
 		Dee_Clear(result);
 	} else {
@@ -1703,8 +1691,7 @@ again_search_fs_modules:
 				continue;
 #endif
 			utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
-			if unlikely(!utf8_path)
-				{
+			if unlikely(!utf8_path) {
 				Dee_Incref(result);
 				rwlock_endread(&modules_lock);
 				utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
@@ -1743,8 +1730,7 @@ got_result_set_global:
 again_find_existing_global_module:
 				rwlock_write(&modules_glob_lock);
 				COMPILER_READ_BARRIER();
-				if likely(result->mo_globpself == NULL)
-					{
+				if likely(result->mo_globpself == NULL) {
 					/* TODO: Must change `result->mo_name' to `module_global_name'
 					 * ${LIBPATH}/foo/bar.dee:
 					 * >> global helper = import(".bar");
@@ -1770,8 +1756,7 @@ again_find_existing_global_module:
 					 */
 
 					existing_module = find_glob_module(result->mo_name);
-					if unlikely(existing_module)
-						{
+					if unlikely(existing_module) {
 						Dee_Incref(existing_module);
 						rwlock_endwrite(&modules_glob_lock);
 						Dee_Decref_likely(result);
@@ -1822,8 +1807,7 @@ again_find_existing_global_module:
 					continue;
 #endif
 				utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
-				if unlikely(!utf8_path)
-					{
+				if unlikely(!utf8_path) {
 					Dee_Incref(result);
 					rwlock_endread(&modules_lock);
 					utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
@@ -1907,15 +1891,13 @@ again_find_existing_global_module:
 				if unlikely(!dec_stream)
 					goto err_buf_module_name;
 				module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FIGNORE);
-				if unlikely(!module_path_ob)
-					{
+				if unlikely(!module_path_ob) {
 err_buf_name_dec_stream:
 					Dee_Decref_likely(dec_stream);
 					goto err_buf_module_name;
 				}
 				result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
-				if unlikely(!result)
-					{
+				if unlikely(!result) {
 					/*err_buf_name_dec_stream_path:*/
 					Dee_Decref_likely(module_path_ob);
 					goto err_buf_name_dec_stream;
@@ -1945,8 +1927,7 @@ set_dec_file_module_global:
 					existing_module = find_file_module(module_path_ob, hash);
 					if likely(!existing_module)
 						existing_module = find_glob_module(module_name_ob);
-					if unlikely(existing_module)
-						{
+					if unlikely(existing_module) {
 						Dee_Incref(existing_module);
 						rwlock_endwrite(&modules_glob_lock);
 						rwlock_endwrite(&modules_lock);
@@ -1973,8 +1954,7 @@ set_dec_file_module_global:
 set_dec_file_module:
 					rwlock_write(&modules_lock);
 					existing_module = find_file_module(module_path_ob, hash);
-					if unlikely(existing_module)
-						{
+					if unlikely(existing_module) {
 						Dee_Incref(existing_module);
 						rwlock_endwrite(&modules_lock);
 						Dee_DecrefDokill(result);
@@ -1986,8 +1966,7 @@ try_load_module_after_dec_failure:
 						goto got_result;
 					}
 					/* Add the module to the file-cache. */
-					if unlikely(!add_file_module(result))
-						{
+					if unlikely(!add_file_module(result)) {
 						rwlock_endwrite(&modules_lock);
 						/* Try to collect some memory, then try again. */
 						if (Dee_CollectMemory(1))
@@ -1999,14 +1978,12 @@ try_load_module_after_dec_failure:
 				}
 				error = DeeModule_OpenDec(result, dec_stream, options);
 				Dee_Decref_likely(dec_stream);
-				if likely(error == 0)
-					{
+				if likely(error == 0) {
 					/* Successfully loaded the DEC file. */
 					DeeModule_DoneLoading(result);
 					goto got_result;
 				}
-				if unlikely(error < 0)
-					{
+				if unlikely(error < 0) {
 					/* Hard error. */
 					DeeModule_FailLoading(result);
 					goto err_buf_r;
@@ -2014,8 +1991,7 @@ try_load_module_after_dec_failure:
 load_module_after_dec_failure:
 				/* Must try to load the module from its source file. */
 				dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY, 0);
-				if unlikely(!ITER_ISOK(dec_stream))
-					{
+				if unlikely(!ITER_ISOK(dec_stream)) {
 					DeeModule_FailLoading(result);
 					if (dec_stream == ITER_DONE) {
 						DeeError_Throwf(&DeeError_FileNotFound,
@@ -2031,8 +2007,7 @@ load_module_after_dec_failure:
 				                                     options,
 				                                     result->mo_path);
 				Dee_Decref_likely(dec_stream);
-				if unlikely(error)
-					{
+				if unlikely(error) {
 					DeeModule_FailLoading(result);
 					goto err_buf_r;
 				}
@@ -2118,15 +2093,13 @@ load_module_after_dec_failure:
 #else  /* CONFIG_HOST_WINDOWS */
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len - 1, STRING_ERROR_FSTRICT);
 #endif /* !CONFIG_HOST_WINDOWS */
-			if unlikely(!module_path_ob)
-				{
+			if unlikely(!module_path_ob) {
 				CLOSE_MODULE(hModule);
 				goto err_buf_module_name;
 			}
 #endif /* !USE_LOADLIBRARY */
 			result = (DREF DeeModuleObject *)DeeDex_New((DeeObject *)module_name_ob);
-			if unlikely(!result)
-				{
+			if unlikely(!result) {
 				CLOSE_MODULE(hModule);
 				goto err_buf_module_name_path;
 			}
@@ -2155,8 +2128,7 @@ set_dex_file_module_global:
 				existing_module = find_file_module(module_path_ob, hash);
 				if likely(!existing_module)
 					existing_module = find_glob_module(module_name_ob);
-				if unlikely(existing_module)
-					{
+				if unlikely(existing_module) {
 					Dee_Incref(existing_module);
 					rwlock_endwrite(&modules_glob_lock);
 					rwlock_endwrite(&modules_lock);
@@ -2183,8 +2155,7 @@ set_dex_file_module_global:
 set_dex_file_module:
 				rwlock_write(&modules_lock);
 				existing_module = find_file_module(module_path_ob, hash);
-				if unlikely(existing_module)
-					{
+				if unlikely(existing_module) {
 					Dee_Incref(existing_module);
 					rwlock_endwrite(&modules_lock);
 					Dee_DecrefDokill(result);
@@ -2196,8 +2167,7 @@ try_load_module_after_dex_failure:
 					goto got_result;
 				}
 				/* Add the module to the file-cache. */
-				if unlikely(!add_file_module(result))
-					{
+				if unlikely(!add_file_module(result)) {
 					rwlock_endwrite(&modules_lock);
 					/* Try to collect some memory, then try again. */
 					if (Dee_CollectMemory(1))
@@ -2211,8 +2181,7 @@ load_module_after_dex_failure:
 			error = dex_load_handle((DeeDexObject *)result,
 			                        (void *)hModule,
 			                        (DeeObject *)result->mo_path);
-			if unlikely(error)
-				{
+			if unlikely(error) {
 				DeeModule_FailLoading(result);
 				goto err_buf_r;
 			}
@@ -2228,8 +2197,7 @@ load_module_after_dex_failure:
 		DREF DeeObject *source_stream;
 		int error;
 		source_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY, 0);
-		if unlikely(!ITER_ISOK(source_stream))
-			{
+		if unlikely(!ITER_ISOK(source_stream)) {
 			Dee_Decref(module_name_ob);
 			if (source_stream == ITER_DONE) {
 				/* The source file doesn't exist! */
@@ -2243,8 +2211,7 @@ load_module_after_dex_failure:
 			goto err_buf_module_path;
 		}
 		result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			/*err_buf_name_source_stream:*/
 			Dee_Decref_likely(source_stream);
 			goto err_buf_module_name_path;
@@ -2274,8 +2241,7 @@ set_src_file_module_global:
 			existing_module = find_file_module(module_path_ob, hash);
 			if likely(!existing_module)
 				existing_module = find_glob_module(module_name_ob);
-			if unlikely(existing_module)
-				{
+			if unlikely(existing_module) {
 				Dee_Incref(existing_module);
 				rwlock_endwrite(&modules_glob_lock);
 				rwlock_endwrite(&modules_lock);
@@ -2302,8 +2268,7 @@ set_src_file_module_global:
 set_src_file_module:
 			rwlock_write(&modules_lock);
 			existing_module = find_file_module(module_path_ob, hash);
-			if unlikely(existing_module)
-				{
+			if unlikely(existing_module) {
 				Dee_Incref(existing_module);
 				rwlock_endwrite(&modules_lock);
 				Dee_DecrefDokill(result);
@@ -2315,8 +2280,7 @@ try_load_module_after_src_failure:
 				goto got_result;
 			}
 			/* Add the module to the file-cache. */
-			if unlikely(!add_file_module(result))
-				{
+			if unlikely(!add_file_module(result)) {
 				rwlock_endwrite(&modules_lock);
 				/* Try to collect some memory, then try again. */
 				if (Dee_CollectMemory(1))
@@ -2334,8 +2298,7 @@ load_module_after_src_failure:
 		                                     options,
 		                                     result->mo_path);
 		Dee_Decref_likely(source_stream);
-		if unlikely(error)
-			{
+		if unlikely(error) {
 			DeeModule_FailLoading(result);
 			goto err_buf_r;
 		}
@@ -2785,8 +2748,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
 			goto err;
 		sym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,
 		                                kwd);
-		if unlikely(sym)
-			{
+		if unlikely(sym) {
 			if (sym->s_type == SYMBOL_TYPE_CONST &&
 			    sym->s_const == value)
 				return 0; /* Already defined. */
@@ -2819,8 +2781,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
 			new_globalv = (DREF DeeObject **)Dee_TryRealloc(self->mo_globalv,
 			                                                new_globala *
 			                                                sizeof(DREF DeeObject *));
-			if unlikely(!new_globalv)
-				{
+			if unlikely(!new_globalv) {
 				new_globala = self->mo_globalc + 1;
 				new_globalv = (DREF DeeObject **)Dee_Realloc(self->mo_globalv,
 				                                             new_globala *
@@ -3103,8 +3064,7 @@ DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
 			                       AST_FMULTIPLE_KEEPLAST,
 			                       NULL);
 pack_code_in_return:
-			if likely(code)
-				{
+			if likely(code) {
 				DREF struct ast *return_ast;
 				return_ast = ast_putddi(ast_return(code), &code->a_ddi);
 				ast_decref(code);
@@ -3284,8 +3244,7 @@ unix_readlink(/*utf-8*/ char const *__restrict path) {
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		req_size = readlink(path, buffer, bufsize + 1);
-		if unlikely(req_size < 0)
-			{
+		if unlikely(req_size < 0) {
 handle_error:
 			DBG_ALIGNMENT_ENABLE();
 			error = errno;
@@ -3443,13 +3402,11 @@ PUBLIC DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
 	result = get_default_home();
 
 	/* Save the generated path in the global variable. */
-	if likely(result)
-		{
+	if likely(result) {
 		DREF DeeStringObject *other;
 		rwlock_write(&deemon_home_lock);
 		other = deemon_home;
-		if unlikely(other)
-			{
+		if unlikely(other) {
 			Dee_Incref(other);
 			rwlock_endwrite(&deemon_home_lock);
 			Dee_Decref(result);
@@ -3533,8 +3490,7 @@ init_error:
 PRIVATE int module_init_state = INIT_PENDING;
 PUBLIC void DCALL DeeModule_InitPath(void) {
 	/* Lazily calculate hashes of exported objects upon first access. */
-	if unlikely(module_init_state != INIT_COMPLET)
-		{
+	if unlikely(module_init_state != INIT_COMPLET) {
 #ifdef CONFIG_NO_THREADS
 		do_init_module_path();
 		module_init_state = INIT_COMPLET;

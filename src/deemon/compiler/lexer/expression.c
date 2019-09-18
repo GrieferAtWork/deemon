@@ -427,8 +427,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 		                           DEEINT_STRING(0, DEEINT_STRING_FESCAPED |
 		                                            DEEINT_STRING_FTRY));
 		/* Check if the integer failed to be parsed. */
-		if unlikely(resval == ITER_DONE)
-			{
+		if unlikely(resval == ITER_DONE) {
 			if (WARN(W_INVALID_INTEGER))
 				goto err;
 			goto create_none;
@@ -689,8 +688,7 @@ do_empty_cell:
 			goto do_else_branch;
 		}
 		if (tok == KWD_else) {
-			if unlikely(yield() < 0)
-				{
+			if unlikely(yield() < 0) {
 err_tt:
 				ast_xdecref(tt_branch);
 				goto err_r;
@@ -808,8 +806,7 @@ do_create_class:
 					goto err_r_flags;
 				exprv[0] = result; /* Inherit */
 				merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
-				if unlikely(!merge)
-					{
+				if unlikely(!merge) {
 					Dee_Free(exprv);
 					goto err_r_flags;
 				}
@@ -887,8 +884,7 @@ do_create_class:
 						goto err_r;
 					tuple_branchv[0] = result; /* Inherit reference. */
 					merge            = ast_multiple(AST_FMULTIPLE_TUPLE, 1, tuple_branchv);
-					if unlikely(!merge)
-						{
+					if unlikely(!merge) {
 						Dee_Free(tuple_branchv);
 						goto err_r;
 					}
@@ -948,8 +944,7 @@ do_create_class:
 					goto err_r_flags;
 				exprv[0] = result; /* Inherit */
 				merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
-				if unlikely(!merge)
-					{
+				if unlikely(!merge) {
 					Dee_Free(exprv);
 					goto err_r_flags;
 				}
@@ -1114,14 +1109,12 @@ do_range_expression:
 				} else {
 					result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
 				}
-				if unlikely(!result)
-					{
+				if unlikely(!result) {
 					ast_decref(begin_expression);
 					goto err_flags;
 				}
 				if (tok == ',') {
-					if unlikely(yield() < 0)
-						{
+					if unlikely(yield() < 0) {
 err_begin_expr:
 						ast_decref(begin_expression);
 						goto err_r_flags;
@@ -1187,8 +1180,7 @@ err_begin_expr:
 		if unlikely(!this_ast)
 			goto err;
 		merge = ast_sethere(ast_sym(current_scope->s_class->cs_super));
-		if unlikely(!merge)
-			{
+		if unlikely(!merge) {
 			ast_decref(this_ast);
 			goto err;
 		}
@@ -1233,8 +1225,7 @@ err_begin_expr:
 			}
 			ast_decref(result);
 			sym = lookup_nth(nth_symbol, token.t_kwd);
-			if likely(sym)
-				{
+			if likely(sym) {
 				result = ast_sym(sym);
 			} else {
 				if (WARN(W_UNKNOWN_NTH_SYMBOL, nth_symbol))
@@ -1499,16 +1490,14 @@ do_range:
 			/* Use the brace AST in a single-argument call to `result' */
 			DREF struct ast **elemv;
 			elemv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-			if unlikely(!elemv)
-				{
+			if unlikely(!elemv) {
 err_other:
 				ast_decref(other);
 				goto err_r;
 			}
 			elemv[0] = other;
 			merge    = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, elemv), &loc);
-			if unlikely(!merge)
-				{
+			if unlikely(!merge) {
 				Dee_Free(elemv);
 				goto err_other;
 			}

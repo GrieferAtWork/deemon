@@ -158,8 +158,7 @@ smapiter_next(SharedMapIterator *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 	/* Got the key+value. Now pack them together into a tuple. */
 	result = DeeTuple_NewUninitialized(2);
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		Dee_Decref(result_value);
 		Dee_Decref(result_key);
 		goto done;
@@ -397,8 +396,7 @@ smap_getitem(SharedMap *__restrict self, DeeObject *__restrict key) {
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
-			if unlikely(temp < 0)
-				{
+			if unlikely(temp < 0) {
 				Dee_Decref(item_value);
 				goto err;
 			}
@@ -426,8 +424,7 @@ smap_getitem(SharedMap *__restrict self, DeeObject *__restrict key) {
 			temp = DeeObject_CompareEq(key, item_key);
 			if (temp != 0) {
 				Dee_Decref(item_key);
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 					Dee_Decref(item_value);
 					goto err;
 				}
@@ -475,8 +472,7 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
-			if unlikely(temp < 0)
-				{
+			if unlikely(temp < 0) {
 				Dee_Decref(item_value);
 				goto err;
 			}
@@ -504,8 +500,7 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 			temp = DeeObject_CompareEq(key, item_key);
 			if (temp != 0) {
 				Dee_Decref(item_key);
-				if unlikely(temp < 0)
-					{
+				if unlikely(temp < 0) {
 					Dee_Decref(item_value);
 					goto err;
 				}

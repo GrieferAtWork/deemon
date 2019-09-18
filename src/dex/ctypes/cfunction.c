@@ -415,8 +415,7 @@ stype_cfunction_rehash(DeeSTypeObject *__restrict self,
 again:
 	new_map = (DeeCFunctionTypeObject **)Dee_TryCalloc((new_mask + 1) *
 	                                                   sizeof(DeeCFunctionTypeObject *));
-	if unlikely(!new_map)
-		{
+	if unlikely(!new_map) {
 		/* Try again with a 1-element mask. */
 		if (!self->st_cfunction.sf_list && new_mask != 0) {
 			new_mask = 1;

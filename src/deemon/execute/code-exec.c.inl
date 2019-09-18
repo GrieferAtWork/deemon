@@ -192,8 +192,7 @@ get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_get_stack:
 #ifdef EXEC_SAFE
-		if unlikely((frame->cf_stack + imm_val) >= sp)
-			{
+		if unlikely((frame->cf_stack + imm_val) >= sp) {
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			return NULL;
@@ -208,8 +207,7 @@ do_get_stack:
 		imm_val = *(uint8_t *)(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_localc)
-			{
+		if unlikely(imm_val >= code->co_localc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			return NULL;
@@ -218,8 +216,7 @@ do_get_local:
 		ASSERT(imm_val < code->co_localc);
 #endif /* !EXEC_SAFE */
 		result = &frame->cf_frame[imm_val];
-		if unlikely(!*result)
-			{
+		if unlikely(!*result) {
 			err_unbound_local(code, frame->cf_ip, imm_val);
 			return NULL;
 		}
@@ -270,8 +267,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_get_stack:
 #ifdef EXEC_SAFE
-		if unlikely((frame->cf_stack + imm_val) >= sp)
-			{
+		if unlikely((frame->cf_stack + imm_val) >= sp) {
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			return NULL;
@@ -288,8 +284,7 @@ do_get_stack:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_staticc)
-			{
+		if unlikely(imm_val >= code->co_staticc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_static(frame, imm_val);
 			return NULL;
@@ -307,8 +302,7 @@ do_get_static:
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
 		imm_val = *(uint8_t *)(ip + 1);
-		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
-			{
+		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc) {
 err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
@@ -329,8 +323,7 @@ err_invalid_extern:
 do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= module->mo_globalc)
-			{
+		if unlikely(imm_val >= module->mo_globalc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			return NULL;
@@ -352,8 +345,7 @@ do_get_module_object:
 		imm_val = *(uint8_t *)(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_localc)
-			{
+		if unlikely(imm_val >= code->co_localc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			return NULL;
@@ -362,8 +354,7 @@ do_get_local:
 		ASSERT(imm_val < code->co_localc);
 #endif /* !EXEC_SAFE */
 		result = frame->cf_frame[imm_val];
-		if likely(result)
-			{
+		if likely(result) {
 			Dee_Incref(result);
 		} else {
 			err_unbound_local(code, frame->cf_ip, imm_val);
@@ -384,8 +375,7 @@ do_get_local:
 		case ASM16_EXTERN & 0xff:
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
-			if unlikely(imm_val >= code->co_module->mo_importc)
-				{
+			if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
@@ -460,8 +450,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_get_stack:
 #ifdef EXEC_SAFE
-		if unlikely((frame->cf_stack + imm_val) >= sp)
-			{
+		if unlikely((frame->cf_stack + imm_val) >= sp) {
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			return NULL;
@@ -478,8 +467,7 @@ do_get_stack:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_staticc)
-			{
+		if unlikely(imm_val >= code->co_staticc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_static(frame, imm_val);
 			return NULL;
@@ -497,8 +485,7 @@ do_get_static:
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
 		imm_val = *(uint8_t *)(ip + 1);
-		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
-			{
+		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc) {
 err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
@@ -520,8 +507,7 @@ err_invalid_extern:
 do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= module->mo_globalc)
-			{
+		if unlikely(imm_val >= module->mo_globalc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			return NULL;
@@ -532,8 +518,7 @@ do_get_global:
 do_get_module_object:
 		rwlock_write(&module->mo_lock);
 		result = module->mo_globalv[imm_val]; /* Inherit reference. */
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			rwlock_endwrite(&module->mo_lock);
 			err_unbound_global(module, imm_val);
 			return NULL;
@@ -547,8 +532,7 @@ do_get_module_object:
 		imm_val = *(uint8_t *)(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_localc)
-			{
+		if unlikely(imm_val >= code->co_localc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			return NULL;
@@ -578,8 +562,7 @@ do_get_local:
 		case ASM16_EXTERN & 0xff:
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
-			if unlikely(imm_val >= code->co_module->mo_importc)
-				{
+			if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
@@ -655,8 +638,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_set_stack:
 #ifdef EXEC_SAFE
-		if unlikely((frame->cf_stack + imm_val) >= sp)
-			{
+		if unlikely((frame->cf_stack + imm_val) >= sp) {
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			Dee_Decref(value);
@@ -674,8 +656,7 @@ do_set_stack:
 		imm_val = *(uint8_t *)ip;
 do_set_static:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_staticc)
-			{
+		if unlikely(imm_val >= code->co_staticc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_static(frame, imm_val);
 			Dee_Decref(value);
@@ -695,8 +676,7 @@ do_set_static:
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
 		imm_val = *(uint8_t *)(ip + 1);
-		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
-			{
+		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc) {
 err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
@@ -719,8 +699,7 @@ err_invalid_extern:
 do_set_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= module->mo_globalc)
-			{
+		if unlikely(imm_val >= module->mo_globalc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			Dee_Decref(value);
@@ -741,8 +720,7 @@ do_set_module_object:
 		imm_val = *(uint8_t *)(ip + 0);
 do_set_local:
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_localc)
-			{
+		if unlikely(imm_val >= code->co_localc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			Dee_Decref(value);
@@ -770,8 +748,7 @@ do_set_local:
 		case ASM16_EXTERN & 0xff:
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
-			if unlikely(imm_val >= code->co_module->mo_importc)
-				{
+			if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
@@ -1772,8 +1749,7 @@ do_push_arg:
 						HANDLE_EXCEPT();
 #ifdef CONFIG_NO_THREADS
 					oldval = frame->cf_kw->fk_varkwds;
-					if unlikely(oldval)
-						{
+					if unlikely(oldval) {
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
 					} else {
@@ -1781,8 +1757,7 @@ do_push_arg:
 					}
 #else /* CONFIG_NO_THREADS */
 					oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, varkwds);
-					if unlikely(oldval)
-						{
+					if unlikely(oldval) {
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
 					}
@@ -1823,8 +1798,7 @@ do_push_extern:
 			ASSERT_EXTERNimm();
 			EXTERN_LOCKREAD();
 			value = EXTERNimm;
-			if unlikely(!value)
-				{
+			if unlikely(!value) {
 				EXTERN_LOCKENDREAD();
 				goto err_unbound_extern;
 			}
@@ -1840,8 +1814,7 @@ do_push_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKREAD();
 			value = GLOBALimm;
-			if unlikely(!value)
-				{
+			if unlikely(!value) {
 				GLOBAL_LOCKENDREAD();
 				goto err_unbound_global;
 			}
@@ -3360,8 +3333,7 @@ do_setitem_c:
 			uint8_t n_args = READ_imm8();
 			ASSERT_USAGE(-(2 + (int)n_args), +1);
 			new_sp = sp - n_args;
-			if unlikely(!DeeString_Check(new_sp[-1]))
-				{
+			if unlikely(!DeeString_Check(new_sp[-1])) {
 				err_expected_string_for_attribute(new_sp[-1]);
 				HANDLE_EXCEPT();
 			}
@@ -3379,8 +3351,7 @@ do_setitem_c:
 		TARGET(ASM_CALLATTR_TUPLE, -3, +1) {
 			DREF DeeObject *call_result;
 			ASSERT_TUPLE(FIRST);
-			if unlikely(!DeeString_Check(SECOND))
-				{
+			if unlikely(!DeeString_Check(SECOND)) {
 				err_expected_string_for_attribute(SECOND);
 				HANDLE_EXCEPT();
 			}
@@ -3416,8 +3387,7 @@ do_setitem_c:
 				Dee_Incref(attr_name);
 				Dee_Incref(kwds_map);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(attr_name))
-					{
+				if unlikely(!DeeString_CheckExact(attr_name)) {
 					Dee_Decref_unlikely(attr_name);
 					Dee_Decref_unlikely(kwds_map);
 					goto err_requires_string;
@@ -3465,8 +3435,7 @@ do_callattr_tuple_c_kw:
 				Dee_Incref(attr_name);
 				Dee_Incref(kwds_map);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(attr_name))
-					{
+				if unlikely(!DeeString_CheckExact(attr_name)) {
 					Dee_Decref_unlikely(attr_name);
 					Dee_Decref_unlikely(kwds_map);
 					goto err_requires_string;
@@ -3502,8 +3471,7 @@ do_callattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref_unlikely(imm_name);
 					goto err_requires_string;
 				}
@@ -3539,14 +3507,12 @@ do_callattr_c_seq:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
 				shared_vector = DeeSharedVector_NewShared(imm_val2, new_sp);
-				if unlikely(!shared_vector)
-					{
+				if unlikely(!shared_vector) {
 					Dee_Decref(imm_name);
 					HANDLE_EXCEPT();
 				}
@@ -3589,14 +3555,12 @@ do_callattr_c_map:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
 				shared_map = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
-				if unlikely(!shared_map)
-					{
+				if unlikely(!shared_map) {
 					Dee_Decref(imm_name);
 					HANDLE_EXCEPT();
 				}
@@ -3639,8 +3603,7 @@ do_callattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3672,8 +3635,7 @@ do_callattr_tuple_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3706,8 +3668,7 @@ do_callattr_this_tuple_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3816,8 +3777,7 @@ do_object_call_imm:
 			imm_val = READ_imm8();
 #ifdef EXEC_SAFE
 			/* Assert stack usage. */
-			if unlikely(imm_val > STACKUSED || (!imm_val && !STACKFREE))
-				{
+			if unlikely(imm_val > STACKUSED || (!imm_val && !STACKFREE)) {
 				Dee_Decref(call_object);
 				if (imm_val > STACKUSED)
 					goto err_invalid_stack_affect;
@@ -3858,8 +3818,7 @@ do_call_local:
 
 		TARGET(ASM_GETATTR, -2, +1) {
 			DeeObject *attr_result;
-			if unlikely(!DeeString_Check(FIRST))
-				{
+			if unlikely(!DeeString_Check(FIRST)) {
 				err_expected_string_for_attribute(FIRST);
 				HANDLE_EXCEPT();
 			}
@@ -3873,8 +3832,7 @@ do_call_local:
 		}
 
 		TARGET(ASM_DELATTR, -2, +0) {
-			if unlikely(!DeeString_Check(FIRST))
-				{
+			if unlikely(!DeeString_Check(FIRST)) {
 				err_expected_string_for_attribute(FIRST);
 				HANDLE_EXCEPT();
 			}
@@ -3887,8 +3845,7 @@ do_call_local:
 
 		TARGET(ASM_SETATTR, -3, +0) {
 			int error;
-			if unlikely(!DeeString_Check(SECOND))
-				{
+			if unlikely(!DeeString_Check(SECOND)) {
 				err_expected_string_for_attribute(SECOND);
 				HANDLE_EXCEPT();
 			}
@@ -3903,8 +3860,7 @@ do_call_local:
 
 		TARGET(ASM_BOUNDATTR, -2, +1) {
 			int error;
-			if unlikely(!DeeString_Check(FIRST))
-				{
+			if unlikely(!DeeString_Check(FIRST)) {
 				err_expected_string_for_attribute(FIRST);
 				HANDLE_EXCEPT();
 			}
@@ -3930,8 +3886,7 @@ do_getattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3961,8 +3916,7 @@ do_delattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3991,8 +3945,7 @@ do_setattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4023,8 +3976,7 @@ do_getattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4054,8 +4006,7 @@ do_delattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4084,8 +4035,7 @@ do_setattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if unlikely(!DeeString_CheckExact(imm_name))
-					{
+				if unlikely(!DeeString_CheckExact(imm_name)) {
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4807,8 +4757,7 @@ do_setattr_this_c:
 						Dee_Incref(attr_name);
 						Dee_Incref(kwds_map);
 						CONST_LOCKENDREAD();
-						if unlikely(!DeeString_CheckExact(attr_name))
-							{
+						if unlikely(!DeeString_CheckExact(attr_name)) {
 							Dee_Decref_unlikely(attr_name);
 							Dee_Decref_unlikely(kwds_map);
 							goto err_requires_string;
@@ -4850,8 +4799,7 @@ do_setattr_this_c:
 					imm_val = READ_imm8();
 					ASSERT_USAGE(-(int)(imm_val + 3), +1);
 					new_sp = sp - (imm_val + 1);
-					if unlikely(!DeeString_Check(new_sp[-1]))
-						{
+					if unlikely(!DeeString_Check(new_sp[-1])) {
 						err_expected_string_for_attribute(new_sp[-1]);
 						HANDLE_EXCEPT();
 					}
@@ -4873,8 +4821,7 @@ do_setattr_this_c:
 				RAW_TARGET(ASM_CALLATTR_TUPLE_KWDS) {
 					DREF DeeObject *call_result;
 					ASSERT_USAGE(-4, +1);
-					if unlikely(!DeeString_Check(THIRD))
-						{
+					if unlikely(!DeeString_Check(THIRD)) {
 						err_expected_string_for_attribute(THIRD);
 						HANDLE_EXCEPT();
 					}
@@ -5258,8 +5205,7 @@ do_pack_dict:
 								HANDLE_EXCEPT();
 #ifdef CONFIG_NO_THREADS
 							oldval = frame->cf_kw->fk_varkwds;
-							if unlikely(oldval)
-								{
+							if unlikely(oldval) {
 								VARKWDS_DECREF(value);
 								value = oldval;
 							} else {
@@ -5267,8 +5213,7 @@ do_pack_dict:
 							}
 #else /* CONFIG_NO_THREADS */
 							oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, value);
-							if unlikely(oldval)
-								{
+							if unlikely(oldval) {
 								VARKWDS_DECREF(value);
 								value = oldval;
 							}
@@ -5646,8 +5591,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAddS8(&prefix_ob, READ_Simm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5673,8 +5617,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAddInt(&prefix_ob, READ_imm32());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5700,8 +5643,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceSubS8(&prefix_ob, READ_Simm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5727,8 +5669,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceSubInt(&prefix_ob, READ_imm32());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5754,8 +5695,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceMulInt(&prefix_ob, READ_Simm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5781,8 +5721,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceDivInt(&prefix_ob, READ_Simm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5808,8 +5747,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceModInt(&prefix_ob, READ_Simm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5835,8 +5773,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAndInt(&prefix_ob, READ_imm32());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5862,8 +5799,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceOrInt(&prefix_ob, READ_imm32());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5889,8 +5825,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceXorInt(&prefix_ob, READ_imm32());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5916,8 +5851,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceShlInt(&prefix_ob, READ_imm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -5943,8 +5877,7 @@ prefix_foreach_16:
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
 						error = DeeObject_InplaceShrInt(&prefix_ob, READ_imm8());
-						if unlikely(error)
-							{
+						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -6014,8 +5947,7 @@ prefix_do_function_c:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						if unlikely(DeeObject_Inc(&prefix_ob))
-							{
+						if unlikely(DeeObject_Inc(&prefix_ob)) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -6038,8 +5970,7 @@ prefix_do_function_c:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						if unlikely(DeeObject_Dec(&prefix_ob))
-							{
+						if unlikely(DeeObject_Dec(&prefix_ob)) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -6074,8 +6005,7 @@ do_prefix_operator:
 							HANDLE_EXCEPT();
 						call_result = DeeObject_PInvokeOperator(&prefix_ob, imm_val,
 						                                        imm_val2, sp - imm_val2);
-						if unlikely(!call_result)
-							{
+						if unlikely(!call_result) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -6116,8 +6046,7 @@ do_prefix_operator_tuple:
 						                                        imm_val,
 						                                        DeeTuple_SIZE(TOP),
 						                                        DeeTuple_ELEM(TOP));
-						if unlikely(!call_result)
-							{
+						if unlikely(!call_result) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
@@ -6194,8 +6123,7 @@ prefix_do_unpack:
 								if unlikely(!obcopy)
 									HANDLE_EXCEPT();
 								PUSH(obcopy); /* Inherit reference. */
-								if unlikely(!*prefix_pointer)
-									{
+								if unlikely(!*prefix_pointer) {
 #ifdef NDEBUG
 									get_prefix_object_ptr();
 #else /* NDEBUG */
@@ -6212,8 +6140,7 @@ prefix_do_unpack:
 								if unlikely(!prefix_ob)
 									HANDLE_EXCEPT();
 								obcopy = DeeObject_Copy(prefix_ob);
-								if unlikely(!obcopy)
-									{
+								if unlikely(!obcopy) {
 									Dee_Decref(prefix_ob);
 									HANDLE_EXCEPT();
 								}
@@ -6241,8 +6168,7 @@ prefix_do_unpack:
 								if unlikely(!obcopy)
 									HANDLE_EXCEPT();
 								PUSH(obcopy); /* Inherit reference. */
-								if unlikely(!*prefix_pointer)
-									{
+								if unlikely(!*prefix_pointer) {
 #ifdef NDEBUG
 									get_prefix_object_ptr();
 #else /* NDEBUG */
@@ -6259,8 +6185,7 @@ prefix_do_unpack:
 								if unlikely(!prefix_ob)
 									HANDLE_EXCEPT();
 								obcopy = DeeObject_Copy(prefix_ob);
-								if unlikely(!obcopy)
-									{
+								if unlikely(!obcopy) {
 									Dee_Decref(prefix_ob);
 									HANDLE_EXCEPT();
 								}
@@ -6293,8 +6218,7 @@ prefix_do_unpack:
 							drop_object = *(sp - shift);
 							MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
 							append_object = xch_prefix_object(drop_object);
-							if unlikely(!append_object)
-								{
+							if unlikely(!append_object) {
 								TOP = drop_object;
 								HANDLE_EXCEPT();
 							}
@@ -6320,8 +6244,7 @@ prefix_do_unpack:
 							drop_object = TOP;
 							MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
 							append_object = xch_prefix_object(drop_object);
-							if unlikely(!append_object)
-								{
+							if unlikely(!append_object) {
 								*(sp - shift) = drop_object;
 								HANDLE_EXCEPT();
 							}
@@ -6506,8 +6429,7 @@ prefix_do_unpack:
 					drop_object = *(sp - shift);
 					MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
 					append_object = xch_prefix_object(drop_object);
-					if unlikely(!append_object)
-						{
+					if unlikely(!append_object) {
 						TOP = drop_object;
 						HANDLE_EXCEPT();
 					}
@@ -6533,8 +6455,7 @@ prefix_do_unpack:
 					drop_object = TOP;
 					MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
 					append_object = xch_prefix_object(drop_object);
-					if unlikely(!append_object)
-						{
+					if unlikely(!append_object) {
 						*(sp - shift) = drop_object;
 						HANDLE_EXCEPT();
 					}
@@ -6719,8 +6640,7 @@ do_prefix_push_arg:
 								HANDLE_EXCEPT();
 #ifdef CONFIG_NO_THREADS
 							oldval = frame->cf_kw->fk_varkwds;
-							if unlikely(oldval)
-								{
+							if unlikely(oldval) {
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;
 							} else {
@@ -6728,8 +6648,7 @@ do_prefix_push_arg:
 							}
 #else /* CONFIG_NO_THREADS */
 							oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, varkwds);
-							if unlikely(oldval)
-								{
+							if unlikely(oldval) {
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;
 							}
@@ -6780,8 +6699,7 @@ do_prefix_push_extern:
 					ASSERT_EXTERNimm();
 					EXTERN_LOCKREAD();
 					value = EXTERNimm;
-					if unlikely(!value)
-						{
+					if unlikely(!value) {
 						EXTERN_LOCKENDREAD();
 						goto err_unbound_extern;
 					}
@@ -6799,8 +6717,7 @@ do_prefix_push_global:
 					ASSERT_GLOBALimm();
 					GLOBAL_LOCKREAD();
 					value = GLOBALimm;
-					if unlikely(!value)
-						{
+					if unlikely(!value) {
 						GLOBAL_LOCKENDREAD();
 						goto err_unbound_global;
 					}

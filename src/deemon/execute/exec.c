@@ -484,8 +484,7 @@ Dee_RunAtExit(uint16_t flags) {
 			temp = DeeObject_Call(list[size].ae_func,
 			                      DeeTuple_SIZE(list[size].ae_args),
 			                      DeeTuple_ELEM(list[size].ae_args));
-			if unlikely(!temp)
-				{
+			if unlikely(!temp) {
 				/* An error occurred. */
 				if (flags & DEE_RUNATEXIT_FRUNALL) {
 					/* Just dump the error (including interrupts). */
@@ -545,8 +544,7 @@ again:
 	/* Allocate more entries. */
 	new_list = (struct atexit_entry *)Dee_TryRealloc(atexit_list, (atexit_size + 1) *
 	                                                              sizeof(struct atexit_entry));
-	if unlikely(!new_list)
-		{
+	if unlikely(!new_list) {
 		size_t old_size = atexit_size;
 		rwlock_endwrite(&atexit_lock);
 		if (Dee_CollectMemory((old_size + 1) * sizeof(struct atexit_entry)))

@@ -1343,8 +1343,7 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 			while (*s) {
 				char const *next = strchr(s, ',');
 				size_t i, len = next ? (size_t)(next - s) : strlen(s);
-				if likely(len < COMPILER_LENOF(except_flags_db[0].ef_name))
-					{
+				if likely(len < COMPILER_LENOF(except_flags_db[0].ef_name)) {
 					for (i = 0; i < COMPILER_LENOF(except_flags_db); ++i) {
 						if (except_flags_db[i].ef_name[len] == '\0' &&
 						    memcmp(except_flags_db[i].ef_name, s, len) == 0) {
@@ -1452,8 +1451,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	if (DeeObject_GetBuf(text, &text_buf, Dee_BUFFER_FREADONLY))
 		goto err;
 #if __SIZEOF_SIZE_T__ > 4
-	if unlikely(text_buf.bb_size > (code_size_t)-1)
-		{
+	if unlikely(text_buf.bb_size > (code_size_t)-1) {
 		err_integer_overflow_i(32, true);
 		goto err_buf;
 	}
@@ -1479,8 +1477,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 			                                                           &keyword_count);
 			if unlikely(!keyword_vec)
 				goto err_r;
-			if unlikely(keyword_count > (uint16_t)-1)
-				{
+			if unlikely(keyword_count > (uint16_t)-1) {
 				DeeError_Throwf(&DeeError_IntegerOverflow,
 				                "Too many arguments %Iu for when at most 0xffff can be used",
 				                keyword_count);
@@ -1492,8 +1489,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 			                                                  sizeof(DREF DeeStringObject *));
 			if unlikely(!keyword_vec)
 				goto err_r;
-			if unlikely(DeeObject_Unpack(keywords, coargc, (DeeObject **)keyword_vec))
-				{
+			if unlikely(DeeObject_Unpack(keywords, coargc, (DeeObject **)keyword_vec)) {
 				Dee_Free(keyword_vec);
 				goto err_r;
 			}
@@ -1516,8 +1512,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		default_c = DeeObject_Size(defaults);
 		if unlikely(default_c == (size_t)-1)
 			goto err_r_keywords;
-		if unlikely(default_c > coargc)
-			{
+		if unlikely(default_c > coargc) {
 			DeeError_Throwf(&DeeError_IntegerOverflow,
 			                "Too many default arguments (%Iu) for "
 			                "code only taking %I16u arguments at most",
@@ -1552,8 +1547,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		static_vec = DeeSeq_AsHeapVector(statics, &static_cnt);
 		if unlikely(!static_vec)
 			goto err_r_default_v;
-		if unlikely(static_cnt > (uint16_t)-1)
-			{
+		if unlikely(static_cnt > (uint16_t)-1) {
 			while (static_cnt--)
 				Dee_Decref(static_vec[static_cnt]);
 			Dee_Free(static_vec);
@@ -1566,8 +1560,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	if (DeeNone_Check(module)) {
 		DeeThreadObject *ts = DeeThread_Self();
 		ASSERT(ts);
-		if unlikely(!ts->t_execsz)
-			{
+		if unlikely(!ts->t_execsz) {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "No module given, when the current "
 			                "module could not be determined");
@@ -1602,10 +1595,8 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 				uint16_t new_except_a = except_a * 2;
 				if (!except_a)
 					new_except_a = 2;
-				else if unlikely(new_except_a <= except_a)
-				{
-					if unlikely(except_a == (uint16_t)-1)
-						{
+				else if unlikely(new_except_a <= except_a) {
+					if unlikely(except_a == (uint16_t)-1) {
 						DeeError_Throwf(&DeeError_IntegerOverflow,
 						                "Too many exception handlers");
 err_r_except_temp_iter_elem:
@@ -1621,8 +1612,7 @@ err_r_except_temp_iter:
 				}
 				new_except_v = (struct except_handler *)Dee_TryRealloc(except_v, new_except_a *
 				                                                                 sizeof(struct except_handler));
-				if unlikely(!new_except_v)
-					{
+				if unlikely(!new_except_v) {
 					new_except_a = except_c + 1;
 					new_except_v = (struct except_handler *)Dee_Realloc(except_v, new_except_a *
 					                                                              sizeof(struct except_handler));
@@ -1658,8 +1648,7 @@ err_r_except_temp_iter:
 			while (*s) {
 				char const *next = strchr(s, ',');
 				size_t i, len = next ? (size_t)(next - s) : strlen(s);
-				if likely(len < COMPILER_LENOF(code_flags_db[0].cf_name))
-					{
+				if likely(len < COMPILER_LENOF(code_flags_db[0].cf_name)) {
 					for (i = 0; i < COMPILER_LENOF(code_flags_db); ++i) {
 						if (code_flags_db[i].cf_name[len] == '\0' &&
 						    memcmp(code_flags_db[i].cf_name, s, len) == 0) {

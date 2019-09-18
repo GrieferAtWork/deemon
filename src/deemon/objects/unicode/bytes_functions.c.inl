@@ -545,8 +545,7 @@ bytes_reverse(Bytes *__restrict self, size_t argc,
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:reverse", &start, &end))
 		goto err;
-	if unlikely(!DeeBytes_WRITABLE(self))
-		{
+	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -646,8 +645,7 @@ bytes_ord(Bytes *__restrict self,
 			                        DeeBytes_SIZE(self));
 			goto err;
 		}
-	} else if unlikely(DeeBytes_SIZE(self) != 1)
-	{
+	} else if unlikely(DeeBytes_SIZE(self) != 1) {
 		err_expected_single_character_string((DeeObject *)self);
 		goto err;
 	}
@@ -903,8 +901,7 @@ bytes_asnumber(Bytes *__restrict self,
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asnumber", &index, &defl))
 			goto err;
-		if unlikely(index >= DeeBytes_SIZE(self))
-			{
+		if unlikely(index >= DeeBytes_SIZE(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeBytes_SIZE(self));
 			goto err;
@@ -942,8 +939,7 @@ bytes_asdigit(Bytes *__restrict self,
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asdigit", &index, &defl))
 			goto err;
-		if unlikely(index >= DeeBytes_SIZE(self))
-			{
+		if unlikely(index >= DeeBytes_SIZE(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeBytes_SIZE(self));
 			goto err;
@@ -981,8 +977,7 @@ bytes_asdecimal(Bytes *__restrict self,
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asdecimal", &index, &defl))
 			goto err;
-		if unlikely(index >= DeeBytes_SIZE(self))
-			{
+		if unlikely(index >= DeeBytes_SIZE(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeBytes_SIZE(self));
 			goto err;
@@ -1129,8 +1124,7 @@ bytes_tolower(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
-		{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1149,8 +1143,7 @@ bytes_toupper(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
-		{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1170,8 +1163,7 @@ bytes_totitle(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
-		{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1197,8 +1189,7 @@ bytes_tocapitalize(Bytes *__restrict self, size_t argc,
 		end = DeeBytes_SIZE(self);
 	if (start < end) {
 		size_t i = start;
-		if unlikely(!DeeBytes_WRITABLE(self))
-			{
+		if unlikely(!DeeBytes_WRITABLE(self)) {
 			err_bytes_not_writable((DeeObject *)self);
 			goto err;
 		}
@@ -1220,8 +1211,7 @@ bytes_toswapcase(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
-		{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1252,8 +1242,7 @@ bytes_replace(Bytes *__restrict self, size_t argc,
 	/* Handle special cases. */
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
 		goto return_self;
-	if unlikely(!find_needle.n_size)
-		{
+	if unlikely(!find_needle.n_size) {
 		if (DeeBytes_SIZE(self))
 			goto return_self;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
@@ -1312,8 +1301,7 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 	/* Handle special cases. */
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
 		goto return_self;
-	if unlikely(!find_needle.n_size)
-		{
+	if unlikely(!find_needle.n_size) {
 		if (DeeBytes_SIZE(self))
 			goto return_self;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
@@ -1368,15 +1356,13 @@ bytes_toreplace(Bytes *__restrict self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|Iu:toreplace", &find_ob, &replace_ob, &max_count) ||
 	    get_needle(&find_needle, find_ob) || get_needle(&replace_needle, replace_ob))
 		goto err;
-	if unlikely(find_needle.n_size != replace_needle.n_size)
-		{
+	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Find(%Iu) and replace(%Iu) needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
-	if unlikely(!DeeBytes_WRITABLE(self))
-		{
+	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1418,15 +1404,13 @@ bytes_tocasereplace(Bytes *__restrict self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|Iu:tocasereplace", &find_ob, &replace_ob, &max_count) ||
 	    get_needle(&find_needle, find_ob) || get_needle(&replace_needle, replace_ob))
 		goto err;
-	if unlikely(find_needle.n_size != replace_needle.n_size)
-		{
+	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Find(%Iu) and replace(%Iu) needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
-	if unlikely(!DeeBytes_WRITABLE(self))
-		{
+	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -2228,8 +2212,7 @@ get_bcompare_args(Bytes *__restrict self,
 				goto err;
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
-			if unlikely(temp >= args->rhs_len)
-				{
+			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2243,8 +2226,7 @@ get_bcompare_args(Bytes *__restrict self,
 			if unlikely(!args->rhs_ptr)
 				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-			if unlikely(temp >= args->rhs_len)
-				{
+			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2253,8 +2235,7 @@ get_bcompare_args(Bytes *__restrict self,
 		} else {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 				goto err;
-			if unlikely(temp >= args->lhs_len)
-				{
+			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2283,8 +2264,7 @@ get_bcompare_args(Bytes *__restrict self,
 				goto err;
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp2))
 				goto err;
-			if unlikely(temp >= args->rhs_len)
-				{
+			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				if (temp2 > args->rhs_len)
@@ -2302,8 +2282,7 @@ get_bcompare_args(Bytes *__restrict self,
 				goto err;
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp2))
 				goto err;
-			if unlikely(temp >= args->rhs_len)
-				{
+			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				if (temp2 > args->rhs_len)
@@ -2314,8 +2293,7 @@ get_bcompare_args(Bytes *__restrict self,
 		} else if (DeeBytes_Check(argv[1])) {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 				goto err;
-			if unlikely(temp >= args->lhs_len)
-				{
+			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2326,8 +2304,7 @@ get_bcompare_args(Bytes *__restrict self,
 			args->rhs_len       = DeeBytes_SIZE(other);
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
 				goto err;
-			if unlikely(temp >= args->rhs_len)
-				{
+			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2336,8 +2313,7 @@ get_bcompare_args(Bytes *__restrict self,
 		} else if (DeeString_Check(argv[1])) {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 				goto err;
-			if unlikely(temp >= args->lhs_len)
-				{
+			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2350,8 +2326,7 @@ get_bcompare_args(Bytes *__restrict self,
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
 				goto err;
-			if unlikely(temp >= args->rhs_len)
-				{
+			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2388,8 +2363,7 @@ get_bcompare_args(Bytes *__restrict self,
 		if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 			goto err;
 		if (DeeBytes_Check(argv[1])) {
-			if unlikely(temp >= args->lhs_len)
-				{
+			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2411,8 +2385,7 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_len = temp2 - temp;
 			}
 		} else if (DeeString_Check(argv[1])) {
-			if unlikely(temp >= args->lhs_len)
-				{
+			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2438,8 +2411,7 @@ get_bcompare_args(Bytes *__restrict self,
 		} else {
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp2))
 				goto err;
-			if unlikely(temp >= args->lhs_len)
-				{
+			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
 				if (temp2 > args->lhs_len)
@@ -2836,8 +2808,7 @@ bytes_expandtabs(Bytes *__restrict self,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_printer;
 			/* Replace with white-space. */
-			if likely(tab_width)
-				{
+			if likely(tab_width) {
 				line_inset = tab_width - (line_inset % tab_width);
 				if (bytes_printer_repeat(&printer, ASCII_SPACE, line_inset) < 0)
 					goto err_printer;
@@ -3702,8 +3673,7 @@ bytes_segments(Bytes *__restrict self,
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:segments", &substring_length))
 		goto err;
-	if unlikely(!substring_length)
-		{
+	if unlikely(!substring_length) {
 		err_invalid_segment_size(substring_length);
 		goto err;
 	}
@@ -3719,8 +3689,7 @@ bytes_distribute(Bytes *__restrict self,
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &substring_count))
 		goto err;
-	if unlikely(!substring_count)
-		{
+	if unlikely(!substring_count) {
 		err_invalid_distribution_count(substring_count);
 		goto err;
 	}

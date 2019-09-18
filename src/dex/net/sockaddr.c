@@ -757,8 +757,7 @@ restart:
 	/* Safely copy the host's name. */
 	result = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 	                                                (name_length + 1) * sizeof(char));
-	if unlikely(!result)
-		{
+	if unlikely(!result) {
 		rwlock_endwrite(&sysdb_lock);
 		if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 		                      (name_length + 1) * sizeof(char)))
@@ -1070,8 +1069,7 @@ retry_addrinfo:
 		while (!info->ai_addr && info->ai_next)
 			info = info->ai_next;
 #endif
-		if unlikely(!info->ai_addr)
-			{
+		if unlikely(!info->ai_addr) {
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
@@ -1093,8 +1091,7 @@ retry_addrinfo:
 			                host, port,
 			                sock_getprotonameorid(real_proto),
 			                sock_getprotonameorid(protocol));
-		} else if unlikely(info->ai_addrlen > sizeof(SockAddr))
-		{
+		} else if unlikely(info->ai_addrlen > sizeof(SockAddr)) {
 			sa_family_t info_family = info->ai_addr->sa_family;
 			socklen_t info_len      = (socklen_t)info->ai_addrlen;
 			COMPILER_READ_BARRIER();
@@ -1211,8 +1208,7 @@ do_gethostbyname_again:
 		DBG_ALIGNMENT_DISABLE();
 		hp = (struct hostent *)gethostbyname(host);
 		DBG_ALIGNMENT_ENABLE();
-		if unlikely(!hp)
-			{
+		if unlikely(!hp) {
 			DBG_ALIGNMENT_DISABLE();
 			error = h_errno;
 			DBG_ALIGNMENT_ENABLE();
@@ -1478,8 +1474,7 @@ do_generic_string_2:
 
 #ifdef AF_UNIX
 	case AF_UNIX:
-		if likely(argc != 1)
-			{
+		if likely(argc != 1) {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Constructing address family AF_UNIX requires 1 argument, but %Iu were given",
 			                argc);
@@ -1490,8 +1485,7 @@ do_generic_string_2:
 			goto err;
 		/* v Note the '>='. That is on purpose as we need 'DeeString_SIZE(arg0) + 1'
 		 *   bytes for the string and its terminating \0 character */
-		if unlikely(DeeString_SIZE(arg0) >= sizeof(((struct sockaddr_un *)NULL)->sun_path) / sizeof(char))
-			{
+		if unlikely(DeeString_SIZE(arg0) >= sizeof(((struct sockaddr_un *)NULL)->sun_path) / sizeof(char)) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Given path for 'AF_UNIX' is too long: %r", arg0);
 			goto err;
@@ -1529,8 +1523,7 @@ do_generic_string_2:
 		switch (protocol) {
 
 		case BTPROTO_L2CAP: {
-			if unlikely(argc != 2)
-				{
+			if unlikely(argc != 2) {
 				if (argc == 1)
 					goto do_generic_string;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1549,8 +1542,7 @@ do_generic_string_2:
 		}	break;
 
 		case BTPROTO_RFCOMM: {
-			if unlikely(argc != 2)
-				{
+			if unlikely(argc != 2) {
 				if (argc == 1)
 					goto do_generic_string;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1569,8 +1561,7 @@ do_generic_string_2:
 		}	break;
 
 		case BTPROTO_HCI: {
-			if unlikely(argc != 1)
-				{
+			if unlikely(argc != 1) {
 				if (argc == 2)
 					goto do_generic_string_2;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1593,8 +1584,7 @@ do_generic_string_2:
 
 #if !defined(__FreeBSD__)
 		case BTPROTO_SCO: {
-			if unlikely(argc != 1)
-				{
+			if unlikely(argc != 1) {
 				if (argc == 2)
 					goto do_generic_string_2;
 				DeeError_Throwf(&DeeError_TypeError,

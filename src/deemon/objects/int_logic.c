@@ -632,8 +632,7 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
-		if unlikely(a->ob_size == 0)
-			{
+		if unlikely(a->ob_size == 0) {
 			*pself = (DeeIntObject *)&DeeInt_One;
 			Dee_Incref(&DeeInt_One);
 			Dee_DecrefDokill(a);
@@ -706,8 +705,7 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
-		if unlikely(a->ob_size == 0)
-			{
+		if unlikely(a->ob_size == 0) {
 			*pself = (DeeIntObject *)&DeeInt_One;
 			Dee_Incref(&DeeInt_One);
 			Dee_DecrefDokill(a);
@@ -1074,8 +1072,7 @@ kmul_split(DeeIntObject *__restrict n, dssize_t size,
 	size_hi               = size_n - size_lo;
 	if unlikely((hi = DeeInt_Alloc(size_hi)) == NULL)
 		return -1;
-	if unlikely((lo = DeeInt_Alloc(size_lo)) == NULL)
-		{
+	if unlikely((lo = DeeInt_Alloc(size_lo)) == NULL) {
 		Dee_Decref(hi);
 		return -1;
 	}
@@ -1333,13 +1330,11 @@ x_divrem(DeeIntObject *__restrict v1,
 	size_v = ABS(v1->ob_size);
 	size_w = ABS(w1->ob_size);
 	ASSERT(size_v >= size_w && size_w >= 2);
-	if unlikely((v = DeeInt_Alloc(size_v + 1)) == NULL)
-		{
+	if unlikely((v = DeeInt_Alloc(size_v + 1)) == NULL) {
 		*prem = NULL;
 		return NULL;
 	}
-	if unlikely((w = DeeInt_Alloc(size_w)) == NULL)
-		{
+	if unlikely((w = DeeInt_Alloc(size_w)) == NULL) {
 		Dee_Decref(v);
 		*prem = NULL;
 		return NULL;

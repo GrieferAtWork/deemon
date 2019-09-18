@@ -1138,8 +1138,7 @@ print_number_2:
 					repr_mode = 0;
 				}
 				attribute_id = get_repr_id(tag_begin, (size_t)(tag_end - tag_begin));
-				if unlikely(attribute_id == TIME_REPR_NONE)
-					{
+				if unlikely(attribute_id == TIME_REPR_NONE) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Unknown/Invalid time attribute: %$q",
 					                (size_t)(tag_end - tag_begin), tag_begin);
@@ -1156,8 +1155,7 @@ print_number_2:
 						repr_value = (repr_mode == 'S'
 						              ? GETSTRING_MONTH_FULL(attribval)
 						              : GETSTRING_MONTH_ABBR(attribval));
-					} else if likely(attribute_id == TIME_REPR_WDAY)
-					{
+					} else if likely(attribute_id == TIME_REPR_WDAY) {
 						ASSERT(attribval < 7);
 						repr_value = (repr_mode == 'S'
 						              ? GETSTRING_WDAY_FULL(attribval)
@@ -1255,8 +1253,7 @@ time_int64(DeeTimeObject *__restrict self,
 #ifdef HAVE_128BIT_TIME
 	dtime_t value = DeeTime_Get(self);
 	/* Check for overflow by probing the upper 64 bits. */
-	if unlikely(!DSINT128_IS64(value))
-		{
+	if unlikely(!DSINT128_IS64(value)) {
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "%s integer overflow after 64 bits in %k",
 		                value < 0 ? "negative" : "positive", self);
@@ -1501,8 +1498,7 @@ time_timepart_set(DeeTimeObject *__restrict self,
 	dtime_half_t addend;
 	if (object_as_time_half(value, &addend))
 		goto err;
-	if unlikely((dutime_half_t)addend > MICROSECONDS_PER_DAY)
-		{
+	if unlikely((dutime_half_t)addend > MICROSECONDS_PER_DAY) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Time-value %k is greater than one day",
 		                value);
@@ -1543,8 +1539,7 @@ time_datepart_set(DeeTimeObject *__restrict self,
 	dtime_t addend;
 	if (object_as_time(value, &addend))
 		goto err;
-	if unlikely((addend % MICROSECONDS_PER_DAY) != 0)
-		{
+	if unlikely((addend % MICROSECONDS_PER_DAY) != 0) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Date-value %k contains a time-part",
 		                value);

@@ -84,8 +84,7 @@ symbol_getkind(DeeCompilerSymbolObject *__restrict self) {
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym)
-		{
+	if likely(sym) {
 		ASSERT(sym->s_type < COMPILER_LENOF(symbol_type_names));
 		result = symbol_type_names[sym->s_type];
 		Dee_Incref(result);
@@ -108,10 +107,8 @@ symbol_delkind(DeeCompilerSymbolObject *__restrict self) {
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym)
-		{
-		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type))
-			{
+	if likely(sym) {
+		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 			result = err_symbol_readonly(sym);
 		} else {
 			/* Set the symbol type to `none' */
@@ -149,10 +146,8 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym)
-		{
-		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type))
-			{
+	if likely(sym) {
+		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 			result = err_symbol_readonly(sym);
 		} else {
 			/* Set the symbol type to `none' */
@@ -194,8 +189,7 @@ symbol_name(DeeCompilerSymbolObject *__restrict self) {
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym)
-		{
+	if likely(sym) {
 		result = DeeString_NewUtf8(sym->s_name->k_name,
 		                           sym->s_name->k_size,
 		                           STRING_ERROR_FIGNORE);
@@ -288,8 +282,7 @@ symbol_getalias(DeeCompilerSymbolObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":getalias"))
 		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym)
-		{
+	if likely(sym) {
 		if (sym->s_type != SYMBOL_TYPE_ALIAS) {
 			/* We're not an alias, so just re-return the given symbol. */
 			result = (DREF DeeObject *)self;
@@ -317,8 +310,7 @@ symbol_setalias(DeeCompilerSymbolObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:setalias", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
 		goto done;
-	if unlikely(other->ci_compiler != DeeCompiler_Current)
-		{
+	if unlikely(other->ci_compiler != DeeCompiler_Current) {
 		err_invalid_symbol_compiler(other);
 		goto done;
 	}
@@ -328,15 +320,13 @@ symbol_setalias(DeeCompilerSymbolObject *__restrict self,
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if unlikely(!sym)
 		goto done;
-	if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type))
-		{
+	if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 		err_symbol_readonly(sym);
 	} else {
 		/* Check that `self' isn't reachable from `other_sym' */
 		struct symbol *iter = other_sym;
 		for (;; iter = iter->s_alias) {
-			if unlikely(iter == sym)
-				{
+			if unlikely(iter == sym) {
 				DeeError_Throwf(&DeeError_ReferenceError,
 				                "Symbol alias loop with %$q",
 				                sym->s_name->k_size,
@@ -398,8 +388,7 @@ symbol_repr(DeeCompilerSymbolObject *__restrict self) {
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym)
-		{
+	if likely(sym) {
 		result = DeeString_Newf("<symbol %$q>",
 		                        sym->s_name->k_size,
 		                        sym->s_name->k_name);

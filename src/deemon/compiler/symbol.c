@@ -1185,8 +1185,7 @@ rehash_scope(DeeScopeObject *__restrict iter) {
 	new_size *= 2;
 rehash_realloc:
 	new_map = (struct symbol **)Dee_TryCalloc(new_size * sizeof(struct symbol *));
-	if unlikely(!new_map)
-		{
+	if unlikely(!new_map) {
 		if (new_size != 1) {
 			new_size = 1;
 			goto rehash_realloc;
@@ -1762,8 +1761,7 @@ PRIVATE int DCALL rehash_labels(void) {
 	new_size *= 2;
 rehash_realloc:
 	new_map = (struct text_label **)Dee_TryCalloc(new_size * sizeof(struct text_label *));
-	if unlikely(!new_map)
-		{
+	if unlikely(!new_map) {
 		if (new_size != 1) {
 			new_size = 1;
 			goto rehash_realloc;
@@ -1793,8 +1791,7 @@ rehash_realloc:
 INTERN struct text_label *DCALL
 lookup_label(struct TPPKeyword *__restrict name) {
 	struct text_label *result, **presult;
-	if likely(current_basescope->bs_lbla)
-		{
+	if likely(current_basescope->bs_lbla) {
 		result = current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
 		while (result) {
 			if (result->tl_name == name)

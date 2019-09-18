@@ -285,8 +285,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 	DeeCompiler_Unload(self);
 
 	if (self->cp_tags.at_anno.an_annov) {
-		if unlikely(self->cp_tags.at_anno.an_annoc)
-			{
+		if unlikely(self->cp_tags.at_anno.an_annoc) {
 			recursive_rwlock_write(&DeeCompiler_Lock);
 			while (self->cp_tags.at_anno.an_annoc--)
 				ast_decref(self->cp_tags.at_anno.an_annov[self->cp_tags.at_anno.an_annoc].aa_func);

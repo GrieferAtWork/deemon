@@ -452,8 +452,7 @@ com_deepcopy(Combinations *__restrict self,
 			goto err;
 		for (i = 0; i < other->c_seqlen; ++i) {
 			elem_copy[i] = DeeObject_DeepCopy(other->c_elem[i]);
-			if unlikely(!elem_copy[i])
-				{
+			if unlikely(!elem_copy[i]) {
 				while (i--)
 					Dee_Decref(elem_copy[i]);
 				Dee_Free(elem_copy);
@@ -478,20 +477,17 @@ com_deepcopy(Combinations *__restrict self,
 			/* Reload the sequence length, as it may have
 			 * changed after copying the underlying sequence. */
 			self->c_seqlen = DeeObject_Size(self->c_seq);
-			if unlikely(self->c_seqlen == (size_t)-1)
-				{
+			if unlikely(self->c_seqlen == (size_t)-1) {
 err_seq_len:
 				Dee_Decref(self->c_seq);
 				goto err;
 			}
-			if unlikely(self->c_seqlen == 0)
-				{
+			if unlikely(self->c_seqlen == 0) {
 				err_empty_sequence(self->c_seq);
 				goto err_seq_len;
 			}
 			/* Make sure that the sequence fulfills the minimum length requirements. */
-			if unlikely(self->c_comlen >= self->c_seqlen)
-				{
+			if unlikely(self->c_comlen >= self->c_seqlen) {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Sequence too short after deepcopy (needs at least %Iu items, but only has %Iu)",
 				                self->c_comlen, self->c_seqlen);
@@ -628,8 +624,7 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 			if unlikely(!result)
 				goto err;
 			elem = Combinations_GetSeqItem(self->ci_combi, 0);
-			if unlikely(!elem)
-				{
+			if unlikely(!elem) {
 				DeeTuple_FreeUninitialized(result);
 				goto err;
 			}
@@ -1208,13 +1203,11 @@ load_tp_size:
 						new_alloc = 8;
 					new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 					                                                       sizeof(DREF DeeObject *));
-					if unlikely(!new_elem_v)
-						{
+					if unlikely(!new_elem_v) {
 						new_alloc  = elem_c + 1;
 						new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 						                                                       sizeof(DREF DeeObject *));
-						if unlikely(!new_elem_v)
-							{
+						if unlikely(!new_elem_v) {
 							Dee_Decref(elem);
 err_elem_v:
 							while (elem_c--)
@@ -1243,8 +1236,7 @@ err_elem_v:
 					return DeeTuple_Pack(1, self);
 				return_empty_seq;
 			}
-			if likely(elem_a > elem_c)
-				{
+			if likely(elem_a > elem_c) {
 				new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, elem_c *
 				                                                       sizeof(DREF DeeObject *));
 				if likely(new_elem_v)
@@ -1385,13 +1377,11 @@ load_tp_size:
 						new_alloc = 8;
 					new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 					                                                       sizeof(DREF DeeObject *));
-					if unlikely(!new_elem_v)
-						{
+					if unlikely(!new_elem_v) {
 						new_alloc  = elem_c + 1;
 						new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 						                                                       sizeof(DREF DeeObject *));
-						if unlikely(!new_elem_v)
-							{
+						if unlikely(!new_elem_v) {
 							Dee_Decref(elem);
 err_elem_v:
 							while (elem_c--)
@@ -1415,8 +1405,7 @@ err_elem_v:
 				DeeObject_FREE(result);
 				return_empty_seq;
 			}
-			if likely(elem_a > elem_c)
-				{
+			if likely(elem_a > elem_c) {
 				new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, elem_c *
 				                                                       sizeof(DREF DeeObject *));
 				if likely(new_elem_v)
@@ -1553,14 +1542,12 @@ load_tp_size:
 					new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v,
 					                                               new_alloc *
 					                                               sizeof(DREF DeeObject *));
-					if unlikely(!new_elem_v)
-						{
+					if unlikely(!new_elem_v) {
 						new_alloc  = elem_c + 1;
 						new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v,
 						                                               new_alloc *
 						                                               sizeof(DREF DeeObject *));
-						if unlikely(!new_elem_v)
-							{
+						if unlikely(!new_elem_v) {
 							Dee_Decref(elem);
 err_elem_v:
 							while (elem_c--)
@@ -1584,8 +1571,7 @@ err_elem_v:
 				DeeObject_FREE(result);
 				return DeeTuple_Pack(1, Dee_EmptySeq);
 			}
-			if likely(elem_a > elem_c)
-				{
+			if likely(elem_a > elem_c) {
 				new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v,
 				                                               elem_c *
 				                                               sizeof(DREF DeeObject *));

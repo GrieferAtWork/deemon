@@ -31,8 +31,7 @@
 DECL_BEGIN
 
 PRIVATE int DCALL skip_argument_name(void) {
-	if unlikely(!TPP_ISKEYWORD(tok))
-		{
+	if unlikely(!TPP_ISKEYWORD(tok)) {
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 	} else {
@@ -56,8 +55,7 @@ err:
 PRIVATE struct symbol *DCALL parse_argument_name(void) {
 	struct symbol *result;
 	struct TPPKeyword *argument_name;
-	if unlikely(!TPP_ISKEYWORD(tok))
-		{
+	if unlikely(!TPP_ISKEYWORD(tok)) {
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 		result = new_unnamed_symbol();
@@ -105,8 +103,7 @@ PRIVATE int DCALL resize_argument_list(uint16_t *__restrict parga) {
 do_realloc_symv:
 		new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
 		                                            new_arga * sizeof(struct symbol *));
-		if unlikely(!new_symv)
-			{
+		if unlikely(!new_symv) {
 			if (new_arga != current_basescope->bs_argc + 1) {
 				new_arga = current_basescope->bs_argc + 1;
 				goto do_realloc_symv;
@@ -133,8 +130,7 @@ PRIVATE int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
 do_realloc_symv:
 		new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
 		                                                 new_defaulta * sizeof(DREF DeeObject *));
-		if unlikely(!new_defaultv)
-			{
+		if unlikely(!new_defaultv) {
 			if (new_defaulta != defaultc + 1) {
 				new_defaulta = defaultc + 1;
 				goto do_realloc_symv;
@@ -172,11 +168,9 @@ INTERN int DCALL parse_arglist(void) {
 
 			/* Special case: unnamed varargs. */
 			if (tok == TOK_DOTS) {
-				if unlikely(current_basescope->bs_flags & CODE_FVARARGS)
-					{
+				if unlikely(current_basescope->bs_flags & CODE_FVARARGS) {
 					arg = current_basescope->bs_varargs;
-					if likely(arg)
-						{
+					if likely(arg) {
 						if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
 						if unlikely(yield() < 0)
@@ -204,15 +198,13 @@ set_arg_as_varargs_argument:
 				current_basescope->bs_varargs                            = arg;
 				current_basescope->bs_flags |= CODE_FVARARGS;
 parse_varargs_suffix:
-				if unlikely(tok == '?')
-					{
+				if unlikely(tok == '?') {
 					if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if unlikely(yield() < 0)
 						goto err;
 				}
-				if unlikely(tok == TOK_DOTS)
-					{
+				if unlikely(tok == TOK_DOTS) {
 					if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if unlikely(yield() < 0)
@@ -227,8 +219,7 @@ parse_varargs_suffix:
 						goto err;
 				}
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-				if unlikely(tok == '=')
-					{
+				if unlikely(tok == '=') {
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					goto skip_default_suffix;
@@ -257,11 +248,9 @@ parse_varargs_suffix:
 			}
 			/* Check for keyword arguments parameter. */
 			if (tok == TOK_POW) {
-				if unlikely(current_basescope->bs_flags & CODE_FVARKWDS)
-					{
+				if unlikely(current_basescope->bs_flags & CODE_FVARKWDS) {
 					arg = current_basescope->bs_varkwds;
-					if likely(arg)
-						{
+					if likely(arg) {
 						if (WARN(W_KEYWORD_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
 						if (skip_argument_name())
@@ -295,8 +284,7 @@ parse_varargs_suffix:
 				/* Varargs argument. */
 				if unlikely(yield() < 0)
 					goto err;
-				if likely(!current_basescope->bs_varargs)
-					{
+				if likely(!current_basescope->bs_varargs) {
 					arg->s_flag = SYMBOL_FALLOC | symbol_flags;
 					goto set_arg_as_varargs_argument;
 				}
@@ -349,8 +337,7 @@ set_argument_as_local:
 						goto err;
 				}
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-				if unlikely(tok == '=')
-					{
+				if unlikely(tok == '=') {
 					DREF struct ast *default_expr;
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
 						goto err;
@@ -569,8 +556,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		return_type = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
 		if unlikely(!return_type)
 			goto err_decl;
-		if unlikely(decl_ast_parse(return_type))
-			{
+		if unlikely(decl_ast_parse(return_type)) {
 			Dee_Free(return_type);
 			goto err_decl;
 		}

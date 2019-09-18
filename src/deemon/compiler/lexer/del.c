@@ -73,13 +73,11 @@ ast_parse_del_single(unsigned int lookup_mode) {
 		/* Create a new operator branch. */
 		if unlikely(result->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			goto create_2;
-		if unlikely(!result->a_operator.o_op1)
-			{
+		if unlikely(!result->a_operator.o_op1) {
 			new_result = ast_operator1(new_operator,
 			                           result->a_operator.o_exflag,
 			                           result->a_operator.o_op0);
-		} else if unlikely(result->a_operator.o_op3)
-		{
+		} else if unlikely(result->a_operator.o_op3) {
 			new_result = ast_operator4(new_operator,
 			                           result->a_operator.o_exflag,
 			                           result->a_operator.o_op0,
@@ -153,8 +151,7 @@ ast_parse_del(unsigned int lookup_mode) {
 do_realloc_delv:
 				new_delv = (DREF struct ast **)Dee_TryRealloc(delv, new_dela *
 				                                                    sizeof(DREF struct ast *));
-				if unlikely(!new_delv)
-					{
+				if unlikely(!new_delv) {
 					if (new_dela != delc + 1) {
 						new_dela = delc + 1;
 						goto do_realloc_delv;

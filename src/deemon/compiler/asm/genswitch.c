@@ -201,8 +201,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 		 * to a case label, meaning that we must allow a
 		 * pre-allocated symbol. */
 		default_sym = self->a_switch.s_default->tl_asym;
-		if likely(!default_sym)
-			{
+		if likely(!default_sym) {
 			default_sym = asm_newsym();
 			/* Save the default symbol to that the switch-block may initialize it. */
 			self->a_switch.s_default->tl_asym = default_sym;
@@ -226,8 +225,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 		/* Allocate the symbol for every case (We'll need them all
 		 * eventually and this is a good spot to allocate them). */
 		case_sym = cases->tl_asym;
-		if likely(!case_sym)
-			{
+		if likely(!case_sym) {
 			case_sym = asm_newsym();
 			if unlikely(!case_sym)
 				goto err_cases;
@@ -250,8 +248,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 			continue;
 		}
 		/* Generate a runtime check for this case. */
-		if likely(!temp)
-			{
+		if likely(!temp) {
 			if (!has_expression) {
 				/* Assemble text for the switch expression. */
 				if (ast_genasm(self->a_switch.s_expr, ASM_G_FPUSHRES))
@@ -325,8 +322,7 @@ err_cases:
 			ASSERT(constant_cases->tl_expr->a_type == AST_CONSTEXPR);
 			ASSERT(constant_cases->tl_asym);
 			case_target = pack_target_tuple(constant_cases->tl_asym);
-			if unlikely(!case_target)
-				{
+			if unlikely(!case_target) {
 err_jump_table:
 				Dee_Decref(jump_table);
 				goto err;

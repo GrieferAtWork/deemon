@@ -136,8 +136,7 @@ bool_div(DeeObject *__restrict self, DeeObject *__restrict other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		return NULL;
-	if unlikely(!temp)
-		{
+	if unlikely(!temp) {
 		err_divide_by_zero(self, other);
 		return NULL;
 	}
@@ -149,8 +148,7 @@ bool_mod(DeeObject *__restrict self, DeeObject *__restrict other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		return NULL;
-	if unlikely(!temp)
-		{
+	if unlikely(!temp) {
 		err_divide_by_zero(self, other);
 		return NULL;
 	}

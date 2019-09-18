@@ -489,8 +489,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 	{
 		size_t addr = **ppusage_counter;
 		/* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
-		if unlikely(addr > UINT16_MAX - 2)
-			{
+		if unlikely(addr > UINT16_MAX - 2) {
 			PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
 			       self->cm_classsym->s_name->k_name);
 			goto err;
@@ -501,8 +500,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 	/* Make sure that no local symbol exists with the given name.
 	 * >> This is the compile-time portion of addressing symbols. */
 	result = get_local_symbol(name);
-	if unlikely(result)
-		{
+	if unlikely(result) {
 		if (SYMBOL_IS_WEAK(result)) {
 			SYMBOL_CLEAR_WEAK(result);
 		} else if (result->s_type == SYMBOL_TYPE_FWD) {
@@ -551,8 +549,7 @@ priv_alloc_class_member(struct class_maker *__restrict self) {
 do_realloc:
 		new_vector = (struct class_member *)Dee_TryRealloc(self->cm_class_initv, new_alloc *
 		                                                                         sizeof(struct class_member));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_alloc != self->cm_class_initc + 1) {
 				new_alloc = self->cm_class_initc + 1;
 				goto do_realloc;
@@ -577,8 +574,7 @@ priv_reserve_instance_init(struct class_maker *__restrict self) {
 do_realloc:
 		new_vector = (DREF struct ast **)Dee_TryRealloc(self->cm_initv, new_alloc *
 		                                                                sizeof(DREF struct ast *));
-		if unlikely(!new_vector)
-			{
+		if unlikely(!new_vector) {
 			if (new_alloc != self->cm_inita + 1) {
 				new_alloc = self->cm_initc + 1;
 				goto do_realloc;
@@ -690,8 +686,7 @@ class_maker_addoperator(struct class_maker *__restrict self,
 	uint16_t addr;
 	/* Allocate a new class member address for the operator. */
 	addr = self->cm_desc->cd_cmemb_size;
-	if unlikely(addr == UINT16_MAX)
-		{
+	if unlikely(addr == UINT16_MAX) {
 		PERRAST(callback, W_TOO_MANY_CLASS_MEMBER,
 		        self->cm_classsym->s_name->k_name);
 		goto err;
@@ -718,8 +713,7 @@ class_maker_deloperator(struct class_maker *__restrict self,
 	/* Deleted operator (e.g. `operator str = del;') */
 	if (self->cm_null_member == (uint16_t)-1) {
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
-		if unlikely(self->cm_null_member == (uint16_t)-1)
-			{
+		if unlikely(self->cm_null_member == (uint16_t)-1) {
 			return PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
 			              self->cm_classsym->s_name->k_name);
 		}
@@ -796,8 +790,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 			DREF struct ast **new_vector;
 			new_vector = (DREF struct ast **)Dee_TryRealloc(self->cm_initv, self->cm_initc *
 			                                                                sizeof(DREF struct ast *));
-			if likely(new_vector)
-				{
+			if likely(new_vector) {
 				self->cm_initv = new_vector;
 				self->cm_inita = self->cm_initc;
 			}
@@ -859,8 +852,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 		new_vector = (struct class_member *)Dee_TryRealloc(self->cm_class_initv,
 		                                                   self->cm_class_initc *
 		                                                   sizeof(struct class_member));
-		if likely(new_vector)
-			{
+		if likely(new_vector) {
 			self->cm_class_initv = new_vector;
 			self->cm_class_inita = self->cm_class_initc;
 		}
@@ -907,8 +899,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 		                   self->cm_class_initv);
 		ast_decref(descr_ast);
 	}
-	if likely(result)
-		{
+	if likely(result) {
 		/* The new ast will have inherit this stuff upon success. */
 		self->cm_class_initc = 0;
 		self->cm_class_inita = 0;
@@ -928,8 +919,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 		struct TPPKeyword *initializer_name;
 		if unlikely(skip_lf())
 			goto err;
-		if unlikely(!TPP_ISKEYWORD(tok))
-			{
+		if unlikely(!TPP_ISKEYWORD(tok)) {
 			if (WARN(W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT))
 				goto err;
 			break;
@@ -990,8 +980,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 			if (superkwds) {
 				DREF struct ast **pair;
 				pair = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-				if unlikely(!pair)
-					{
+				if unlikely(!pair) {
 err_flags_superargs_superkwds:
 					Dee_Free(pair);
 					ast_decref(superkwds);
@@ -1061,8 +1050,7 @@ done_superargs:
 				if unlikely(!initializer_ast)
 					goto err_flags;
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT))
-					{
+				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
 					ast_decref(initializer_ast);
 					goto err;
 				}
@@ -1076,8 +1064,7 @@ done_superargs:
 			ast_decref(initializer_ast);
 			if unlikely(!store_ast)
 				goto err;
-			if unlikely(priv_reserve_instance_init(self))
-				{
+			if unlikely(priv_reserve_instance_init(self)) {
 				ast_decref(store_ast);
 				goto err;
 			}
@@ -1224,8 +1211,7 @@ warn_deprecated_yield:
 					}
 					if unlikely(yield() < 0)
 						goto err;
-					if unlikely(tok == '.')
-						{
+					if unlikely(tok == '.') {
 						/* The old deemon allowed a `.' to follow some property names such as `del .'.
 						 * But since such behavior is now deprecated, just disregard all that and
 						 * consume a `.' token after a keyword and warn about it being ignored. */
@@ -1369,8 +1355,7 @@ do_parse_class_base:
 			struct module_symbol *oldbase_sym;
 			struct symbol *base_symbol;
 			d200_module = (DeeModuleObject *)DeeModule_OpenGlobal(&str_d200, inner_compiler_options, false);
-			if unlikely(!ITER_ISOK(d200_module))
-				{
+			if unlikely(!ITER_ISOK(d200_module)) {
 				if (d200_module) {
 #if 1
 					if (WARN(W_MODULE_NOT_FOUND, &str_d200))
@@ -1384,8 +1369,7 @@ do_parse_class_base:
 				goto err;
 			}
 			oldbase_sym = DeeModule_GetSymbolString(d200_module, old_base, Dee_HashStr(old_base));
-			if unlikely(!oldbase_sym)
-				{
+			if unlikely(!oldbase_sym) {
 				Dee_Decref(d200_module);
 				if (WARN(W_NO_D200_OLD_USER_CLASS))
 					goto err;
@@ -1393,8 +1377,7 @@ do_parse_class_base:
 			}
 			/* Back the reference to OldUserClass into a symbol. */
 			base_symbol = new_unnamed_symbol();
-			if unlikely(!base_symbol)
-				{
+			if unlikely(!base_symbol) {
 				Dee_Decref(d200_module);
 				goto err;
 			}
@@ -1684,15 +1667,13 @@ define_operator:
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				                                            );
 				basescope_pop();
-				if unlikely(!yield_function)
-					{
+				if unlikely(!yield_function) {
 err_operator_ast_ddi:
 					operator_ast = NULL;
 					goto got_operator_ast;
 				}
 				temp = ast_setddi(ast_sym(maker.cm_thissym), &loc);
-				if unlikely(!temp)
-					{
+				if unlikely(!temp) {
 err_yield_function:
 					ast_decref(yield_function);
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
@@ -1701,16 +1682,14 @@ err_yield_function:
 					goto err_operator_ast_ddi;
 				}
 				argv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-				if unlikely(!argv)
-					{
+				if unlikely(!argv) {
 err_yield_function_temp:
 					ast_decref(temp);
 					goto err_yield_function;
 				}
 				argv[0]      = temp; /* Inherit reference */
 				operator_ast = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, argv), &loc);
-				if unlikely(!operator_ast)
-					{
+				if unlikely(!operator_ast) {
 					Dee_Free(argv);
 					goto err_yield_function_temp;
 				}
@@ -1848,8 +1827,7 @@ yield_semi_after_operator:
 			loc_here(&loc);
 			if unlikely(yield() < 0)
 				goto err;
-			if unlikely(tok == KWD_class)
-				{
+			if unlikely(tok == KWD_class) {
 				if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
 				         maker.cm_classsym->s_name->k_name))
 					goto err;
@@ -1904,8 +1882,7 @@ yield_semi_after_operator:
 					goto err;
 				loc_here(&loc);
 define_constructor:
-				if unlikely(maker.cm_ctor)
-					{
+				if unlikely(maker.cm_ctor) {
 					if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
 					         maker.cm_classsym->s_name->k_name))
 						goto err;
@@ -2036,8 +2013,7 @@ define_constructor:
 						} else {
 							call_args = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
 						}
-						if unlikely(!call_args)
-							{
+						if unlikely(!call_args) {
 err_ctor_expr:
 							Dee_Decref(ctor_expr);
 							goto err_anno;
@@ -2430,8 +2406,7 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
 		if unlikely(!class_sym)
 			goto err_anon_r;
 		result = ast_annotations_apply(&annotations, result);
-		if unlikely(!result)
-			{
+		if unlikely(!result) {
 			ast_decref(class_sym);
 			goto err;
 		}
