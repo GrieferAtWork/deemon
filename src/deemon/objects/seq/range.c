@@ -1615,7 +1615,7 @@ DeeRange_NewInt(dssize_t begin,
 	Dee_Decref(end_ob);
 	Dee_Decref(begin_ob);
 	return result;
-#else  /* ALWAYS_USE_OBJECT_RANGES */
+#else /* ALWAYS_USE_OBJECT_RANGES */
 	DREF IntRange *result;
 	ASSERT(step != 0);
 

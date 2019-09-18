@@ -507,7 +507,7 @@ next_expr:
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
 					if unlikely(!var_symbol->s_global.g_doc)
 						goto err_current;
-#else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					/* Package together documentation tags for this variable symbol. */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
 					if unlikely(!var_symbol->s_global.g_doc)
@@ -644,7 +644,7 @@ err_args:
 				    !var_symbol->s_global.g_doc) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
-#else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					if unlikely(!var_symbol->s_global.g_doc)

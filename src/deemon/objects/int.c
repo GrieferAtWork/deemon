@@ -162,7 +162,7 @@ do_free:
 INTERN DREF DeeIntObject *DCALL
 #ifdef NDEBUG
 DeeInt_Alloc(size_t n_digits)
-#else  /* NDEBUG */
+#else /* NDEBUG */
 DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 #endif /* !NDEBUG */
 {
@@ -191,7 +191,7 @@ do_alloc:
 #ifdef NDEBUG
 	result = (DREF DeeIntObject *)DeeObject_Malloc(offsetof(DeeIntObject, ob_digit) +
 	                                               n_digits * sizeof(digit));
-#else  /* NDEBUG */
+#else /* NDEBUG */
 	result = (DREF DeeIntObject *)DeeDbgObject_Malloc(offsetof(DeeIntObject, ob_digit) +
 	                                                  n_digits * sizeof(digit),
 	                                                  file,
@@ -217,7 +217,7 @@ intcache_clear(size_t UNUSED(max_clear)) {
 INTERN DREF DeeIntObject *DCALL
 #ifdef NDEBUG
 DeeInt_Alloc(size_t n_digits)
-#else  /* NDEBUG */
+#else /* NDEBUG */
 DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 #endif /* !NDEBUG */
 {
@@ -225,7 +225,7 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 #ifdef NDEBUG
 	result = (DREF DeeIntObject *)DeeObject_Malloc(offsetof(DeeIntObject, ob_digit) +
 	                                               n_digits * sizeof(digit));
-#else  /* NDEBUG */
+#else /* NDEBUG */
 	result = (DREF DeeIntObject *)DeeDbgObject_Malloc(offsetof(DeeIntObject, ob_digit) +
 	                                                  n_digits * sizeof(digit),
 	                                                  file,

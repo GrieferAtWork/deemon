@@ -654,14 +654,14 @@ instance_destructor(DeeObject *__restrict self) {
 
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #define IF_NOBASE(x) x
-#else                /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#else /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #define IF_NOBASE(x) /* nothing */
-#endif               /* !CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* !CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #ifdef CLASS_TP_FAUTOINIT
 #define IF_AUTOINIT(x) x
-#else                  /* CLASS_TP_FAUTOINIT */
+#else /* CLASS_TP_FAUTOINIT */
 #define IF_AUTOINIT(x) /* nothing */
-#endif                 /* !CLASS_TP_FAUTOINIT */
+#endif /* !CLASS_TP_FAUTOINIT */
 
 #define IF_AUTOINITNB(x) IF_NOBASE(IF_AUTOINIT(x))
 
@@ -4589,7 +4589,7 @@ lazy_allocate(void **ptable, size_t table_size) {
 	if unlikely(*ptable)
 		Dee_Free(new_table);
 	else *ptable = new_table;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	if unlikely(!ATOMIC_CMPXCH(*ptable, NULL, new_table))
 		Dee_Free(new_table);
 #endif /* !CONFIG_NO_THREADS */
@@ -4755,7 +4755,7 @@ err_custom_allocator:
 				}
 			}
 			result_class->cd_offset = base_size;
-#else  /* !CONFIG_NO_OBJECT_SLABS */
+#else /* !CONFIG_NO_OBJECT_SLABS */
 			DeeGCObject_Free(result);
 			goto err_custom_allocator;
 #endif /* CONFIG_NO_OBJECT_SLABS */

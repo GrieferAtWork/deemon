@@ -303,7 +303,7 @@ type_inherit_constructors(DeeTypeObject *__restrict self) {
 		if (base->tp_init.tp_alloc.tp_free) {
 #ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
 			ASSERT((base->tp_flags & TP_FGC) == (self->tp_flags & TP_FGC));
-#else  /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
+#else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
 			ASSERTF(!(base->tp_flags & TP_FGC) || (self->tp_flags & TP_FGC),
 			        "Non-GC object is inheriting its constructors for a GC-enabled object");
 #endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
@@ -1303,7 +1303,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject * __restrict self)) {
 		opframe.rf_obj          = self;
 		opframe.rf_type         = tp_self;
 		this_thread->t_str_curr = (struct repr_frame *)&opframe;
-#else  /* DEFINE_TYPE_OPERATORS */
+#else /* DEFINE_TYPE_OPERATORS */
 		if unlikely(repr_contains(opframe.rf_prev, self))
 			goto recursion;
 		opframe.rf_obj = self;
@@ -1342,7 +1342,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject * __restrict self)) {
 		opframe.rf_obj           = self;
 		opframe.rf_type          = tp_self;
 		this_thread->t_repr_curr = (struct repr_frame *)&opframe;
-#else  /* DEFINE_TYPE_OPERATORS */
+#else /* DEFINE_TYPE_OPERATORS */
 		if unlikely(repr_contains(opframe.rf_prev, self))
 			goto recursion;
 		opframe.rf_obj = self;
@@ -1457,7 +1457,7 @@ err_no_keywords:
 	return NULL;
 }
 
-#else  /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
                 (DeeObject * __restrict self,
                  DeeObject *__restrict args)) {

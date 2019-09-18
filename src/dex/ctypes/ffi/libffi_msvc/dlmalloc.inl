@@ -1172,7 +1172,7 @@ int mspace_mallopt(int, int);
 #else /* ABORT_ON_ASSERT_FAILURE */
 #include <assert.h>
 #endif /* ABORT_ON_ASSERT_FAILURE */
-#else  /* DEBUG */
+#else /* DEBUG */
 #define assert(x)
 #endif /* DEBUG */
 #ifndef LACKS_STRING_H
@@ -1399,13 +1399,13 @@ static int win32munmap(void* ptr, size_t size) {
 
 #if HAVE_MMAP && HAVE_MREMAP
 #define CALL_MREMAP(addr, osz, nsz, mv) mremap((addr), (osz), (nsz), (mv))
-#else  /* HAVE_MMAP && HAVE_MREMAP */
+#else /* HAVE_MMAP && HAVE_MREMAP */
 #define CALL_MREMAP(addr, osz, nsz, mv) MFAIL
 #endif /* HAVE_MMAP && HAVE_MREMAP */
 
 #if HAVE_MORECORE
 #define CALL_MORECORE(S)     MORECORE(S)
-#else  /* HAVE_MORECORE */
+#else /* HAVE_MORECORE */
 #define CALL_MORECORE(S)     MFAIL
 #endif /* HAVE_MORECORE */
 
@@ -1470,7 +1470,7 @@ static int win32_acquire_lock (MLOCK_T *sl) {
 #ifdef InterlockedCompareExchangePointer
     if (!InterlockedCompareExchange(sl, 1, 0))
       return 0;
-#else  /* Use older void* version */
+#else /* Use older void* version */
     if (!InterlockedCompareExchange((void**)sl, (void*)1, (void*)0))
       return 0;
 #endif /* InterlockedCompareExchangePointer */
@@ -1492,7 +1492,7 @@ static MLOCK_T magic_init_mutex;
 #endif /* WIN32 */
 
 #define USE_LOCK_BIT               (2U)
-#else  /* USE_LOCKS */
+#else /* USE_LOCKS */
 #define USE_LOCK_BIT               (0U)
 #define INITIAL_LOCK(l)
 #endif /* USE_LOCKS */
@@ -1508,7 +1508,7 @@ static MLOCK_T magic_init_mutex;
 #if USE_LOCKS
 #define ACQUIRE_MAGIC_INIT_LOCK()  ACQUIRE_LOCK(&magic_init_mutex);
 #define RELEASE_MAGIC_INIT_LOCK()  RELEASE_LOCK(&magic_init_mutex);
-#else  /* USE_LOCKS */
+#else /* USE_LOCKS */
 #define ACQUIRE_MAGIC_INIT_LOCK()
 #define RELEASE_MAGIC_INIT_LOCK()
 #endif /* USE_LOCKS */
@@ -2175,7 +2175,7 @@ static int has_segment_link(mstate m, msegmentptr ss) {
 
 #ifndef MORECORE_CANNOT_TRIM
 #define should_trim(M,s)  ((s) > (M)->trim_check)
-#else  /* MORECORE_CANNOT_TRIM */
+#else /* MORECORE_CANNOT_TRIM */
 #define should_trim(M,s)  (0)
 #endif /* MORECORE_CANNOT_TRIM */
 
@@ -2441,7 +2441,7 @@ static size_t traverse_and_check(mstate m);
 #if (FOOTERS && !INSECURE)
 /* Check if (alleged) mstate m has expected magic field */
 #define ok_magic(M)      ((M)->magic == mparams.magic)
-#else  /* (FOOTERS && !INSECURE) */
+#else /* (FOOTERS && !INSECURE) */
 #define ok_magic(M)      (1)
 #endif /* (FOOTERS && !INSECURE) */
 
@@ -2514,7 +2514,7 @@ static int init_mparams(void) {
     mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
 #if MORECORE_CONTIGUOUS
     mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT;
-#else  /* MORECORE_CONTIGUOUS */
+#else /* MORECORE_CONTIGUOUS */
     mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT|USE_NONCONTIGUOUS_BIT;
 #endif /* MORECORE_CONTIGUOUS */
 

@@ -192,7 +192,7 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 	info->si_max_free      = info->si_cur_free;
 	info->si_max_fullpages = info->si_cur_fullpages;
 	info->si_max_freepages = info->si_cur_freepages;
-#else  /* CONFIG_NO_OBJECT_SLAB_STATS */
+#else /* CONFIG_NO_OBJECT_SLAB_STATS */
 	rwlock_read(&FUNC(slab).s_lock);
 read_again:
 	COMPILER_READ_BARRIER();

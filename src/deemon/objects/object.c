@@ -145,7 +145,7 @@ weakrefs_get(DeeObject *__restrict ob) {
 #ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
 	if unlikely(!tp->tp_weakrefs)
 		type_inherit_weakrefs(tp);
-#else  /* CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
+#else /* CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
 	while (!tp->tp_weakrefs && DeeType_Base(tp))
 		tp = DeeType_Base(tp);
 #endif /* !CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
@@ -198,7 +198,7 @@ LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 		lold = ATOMIC_READ(PTRLOCK_LBYTE(self));
 	} while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
 	ASSERTF((lold & PTRLOCK_LOCK_MASK) != 0, "Pointer was not locked.");
-#else  /* NDEBUG */
+#else /* NDEBUG */
 	ATOMIC_FETCHAND(PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
 #endif /* !NDEBUG */
 }
@@ -254,7 +254,7 @@ again:
 #ifdef __INTELLISENSE__
 PUBLIC void (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
                                     struct weakref const *__restrict other)
-#else  /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ */
 PUBLIC void (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
                                     struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
@@ -296,7 +296,7 @@ again:
 #ifdef __INTELLISENSE__
 PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
                                           struct weakref const *__restrict other)
-#else  /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ */
 PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
                                           struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
@@ -609,7 +609,7 @@ again:
 #ifndef NDEBUG
 		self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
 		ATOMIC_WRITE(self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else  /* !NDEBUG */
+#else /* !NDEBUG */
 		ATOMIC_WRITE(self->wr_next, NULL);
 #endif /* NDEBUG */
 		return true;
@@ -685,7 +685,7 @@ again:
  * @return: NULL: Failed to lock the weak reference. */
 #ifdef __INTELLISENSE__
 PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
-#else  /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ */
 PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
@@ -703,7 +703,7 @@ PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 		if likely(result->ob_refcnt != 0)
 			++result->ob_refcnt;
 		else result = NULL;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		{
 			/* Do an atomic-inc-if-not-zero on the reference counter. */
 			dref_t refcnt;
@@ -724,7 +724,7 @@ PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 /* Return the state of a snapshot of `self' currently being bound. */
 #ifdef __INTELLISENSE__
 PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
-#else  /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ */
 PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
@@ -740,7 +740,7 @@ PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
 		curr = self->wr_obj; /* Re-read in case it changed. */
 #ifdef CONFIG_NO_THREADS
 		if (curr->ob_refcnt == 0)
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_READ(curr->ob_refcnt) == 0)
 #endif /* !CONFIG_NO_THREADS */
 		{
@@ -803,7 +803,7 @@ again:
 #ifndef NDEBUG
 				self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
 				ATOMIC_WRITE(self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else  /* !NDEBUG */
+#else /* !NDEBUG */
 				ATOMIC_WRITE(self->wr_next, NULL);
 #endif /* NDEBUG */
 			}
@@ -863,7 +863,7 @@ again:
 		else {
 			result = NULL;
 		}
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		{
 			/* Do an atomic-inc-if-not-zero on the reference counter. */
 			dref_t refcnt;
@@ -957,7 +957,7 @@ restart_clear_weakrefs:
 #ifndef NDEBUG
 					iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
 					ATOMIC_WRITE(iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else  /* !NDEBUG */
+#else /* !NDEBUG */
 					ATOMIC_WRITE(iter->wr_next, NULL);
 #endif /* NDEBUG */
 				}
@@ -1033,7 +1033,7 @@ DeeFatal_BadDecref(DeeObject *__restrict UNUSED(ob),
                    char const *UNUSED(file), int UNUSED(line)) {
 	abort();
 }
-#else  /* __NO_DEFINE_ALIAS */
+#else /* __NO_DEFINE_ALIAS */
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref, 12),
                     ASSEMBLY_NAME(DeeFatal_BadIncref, 12));
 #endif /* !__NO_DEFINE_ALIAS */
@@ -1419,7 +1419,7 @@ object_sizeof(DeeObject *__restrict self,
 			goto err_iscustom;
 		}
 		return DeeInt_NewSize(slab_size);
-#else  /* !CONFIG_NO_OBJECT_SLABS */
+#else /* !CONFIG_NO_OBJECT_SLABS */
 		goto err_iscustom;
 #endif /* CONFIG_NO_OBJECT_SLABS */
 	}
@@ -4560,7 +4560,7 @@ Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
 	return false;
 }
 
-#else  /* CONFIG_TRACE_REFCHANGES */
+#else /* CONFIG_TRACE_REFCHANGES */
 
 PUBLIC void (DCALL Dee_Incref_traced)(DeeObject *__restrict ob,
                                       char const *UNUSED(file),

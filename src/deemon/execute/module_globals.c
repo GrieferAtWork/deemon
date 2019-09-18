@@ -654,7 +654,7 @@ mgi_next(ModuleGlobalsIterator *__restrict self) {
 	Dee_Incref(result);
 	self->mgi_index = new_index;
 	return result;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	uint16_t old_index, new_index;
 	DeeModule_LockSymbols(module);
 again:

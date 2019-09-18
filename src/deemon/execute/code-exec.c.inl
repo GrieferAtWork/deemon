@@ -4214,7 +4214,7 @@ do_setattr_this_c:
 					DREF DeeObject *callback_result;
 #ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
 #define shared_vector prefix_ob
-#else  /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
+#else /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					DREF DeeObject *shared_vector;
 #endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					ASSERT_USAGE(-((int)n_args + 1), +1);
@@ -4243,7 +4243,7 @@ do_setattr_this_c:
 					DREF DeeObject *callback_result;
 #ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
 #define shared_key_vector prefix_ob
-#else  /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
+#else /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					DREF DeeObject *shared_key_vector;
 #endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					ASSERT_USAGE(-(((int)n_args * 2) + 1), +1);

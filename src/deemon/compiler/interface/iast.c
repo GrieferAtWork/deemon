@@ -4466,7 +4466,7 @@ class_member_in_class:
 		PRINT("(");
 #ifdef CONFIG_LANGUAGE_NO_ASM
 		PRINT("\"\"");
-#else  /* CONFIG_LANGUAGE_NO_ASM */
+#else /* CONFIG_LANGUAGE_NO_ASM */
 		printf("%$q",
 		       self->a_assembly.as_text.at_text->s_size,
 		       self->a_assembly.as_text.at_text->s_text);

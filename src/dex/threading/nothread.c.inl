@@ -61,7 +61,7 @@ sema_enter(Semaphore *__restrict self) {
 	}
 	--self->sem_count;
 	return 0;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	size_t count;
 	for (;;) {
 		count = ATOMIC_READ(self->sem_count);
@@ -87,7 +87,7 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 	}
 	self->sem_count += count;
 	return 0;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	size_t old_count;
 	for (;;) {
 		old_count = ATOMIC_READ(self->sem_count);
@@ -131,7 +131,7 @@ sema_trywait(Semaphore *__restrict self, size_t argc,
 		return_false;
 	--self->sem_count;
 	return_true;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	for (;;) {
 		size_t count;
 		count = ATOMIC_READ(self->sem_count);
@@ -157,7 +157,7 @@ sema_timedwait(Semaphore *__restrict self, size_t argc,
 		return_false;
 	--self->sem_count;
 	return_true;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	for (;;) {
 		size_t count;
 		count = ATOMIC_READ(self->sem_count);

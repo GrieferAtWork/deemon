@@ -96,7 +96,7 @@ gcsetiterator_next(GCSetIterator *__restrict self) {
 			break;
 	}
 	self->gsi_index = new_index;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	size_t index, new_index;
 	do {
 		index     = self->gsi_index;

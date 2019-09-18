@@ -771,7 +771,7 @@ retry:
 		if ((invoc->ai_flags & (INVOKE_FPUSH | INVOKE_FPREFIX)) !=
 		    (iter->ao_flags & (ASM_OVERLOAD_FPUSH | ASM_OVERLOAD_FPREFIX)))
 			continue;
-#else  /* (INVOKE_FPUSH == ASM_OVERLOAD_FPUSH) && (INVOKE_FPREFIX == ASM_OVERLOAD_FPREFIX) */
+#else /* (INVOKE_FPUSH == ASM_OVERLOAD_FPUSH) && (INVOKE_FPREFIX == ASM_OVERLOAD_FPREFIX) */
 		if (!!(invoc->ai_flags & INVOKE_FPUSH) !=
 		    !!(iter->ao_flags & ASM_OVERLOAD_FPUSH))
 			continue;
@@ -1282,7 +1282,7 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 	else {
 		name = name << 24;
 	}
-#else  /* CONFIG_BIG_ENDIAN */
+#else /* CONFIG_BIG_ENDIAN */
 	if (name & 0xff000000) {
 		name = BSWAP32(name);
 	} else if (name & 0x00ff0000) {
@@ -2553,7 +2553,7 @@ err:
 	return -1;
 }
 
-#else  /* !CONFIG_LANGUAGE_NO_ASM */
+#else /* !CONFIG_LANGUAGE_NO_ASM */
 
 PRIVATE int DCALL
 compile_operator(struct asm_operand *__restrict op, bool is_output) {

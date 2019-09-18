@@ -471,7 +471,7 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 	{
 #ifndef CONFIG_NO_THREADS
 		pos = newpos = ATOMIC_READ(self->dk_iter);
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 		pos = newpos  = self->dk_iter;
 #endif /* CONFIG_NO_THREADS */
 		is_escaped = false;
@@ -520,7 +520,7 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 		if (ATOMIC_CMPXCH_WEAK(self->dk_iter, pos, newpos))
 			break;
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 		self->dk_iter = newpos;
 #endif /* CONFIG_NO_THREADS */
 	}

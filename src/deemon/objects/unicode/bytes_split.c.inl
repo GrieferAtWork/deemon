@@ -172,7 +172,7 @@ bsi_next(BytesSplitIterator *__restrict self) {
 		                        self->bsi_bytes->b_flags);
 	}
 	self->bsi_iter = end + self->bsi_sep_len;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	for (;;) {
 		start = ATOMIC_READ(self->bsi_iter);
 		if (!start)
@@ -215,7 +215,7 @@ bsci_next(BytesSplitIterator *__restrict self) {
 		                        self->bsi_bytes->b_flags);
 	}
 	self->bsi_iter = end + self->bsi_sep_len;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	for (;;) {
 		start = ATOMIC_READ(self->bsi_iter);
 		if (!start)
@@ -248,7 +248,7 @@ PRIVATE struct type_member bsi_members[] = {
 
 #ifdef CONFIG_NO_DOC
 #define bcsi_members bsi_members
-#else  /* CONFIG_NO_DOC */
+#else /* CONFIG_NO_DOC */
 PRIVATE struct type_member bcsi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesCaseSplit"),
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
@@ -781,7 +781,7 @@ blsi_next(BytesLineSplitIterator *__restrict self) {
 	}
 	self->blsi_iter = end + 1;
 return_view:
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 again:
 	for (;;) {
 		start = ATOMIC_READ(self->blsi_iter);

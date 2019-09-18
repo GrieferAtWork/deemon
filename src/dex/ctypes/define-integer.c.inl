@@ -431,7 +431,7 @@ F(intstr)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
 #ifdef CONFIG_BOOL_STRING
 	return_reference_(value ? (DeeObject *)&str_true : (DeeObject *)&str_false);
-#else  /* CONFIG_BOOL_STRING */
+#else /* CONFIG_BOOL_STRING */
 	return DeeString_Newf(FORMAT_STR, (FORMAT_TYP)value);
 #endif /* !CONFIG_BOOL_STRING */
 }
@@ -469,7 +469,7 @@ F(int_int64)(DeeSTypeObject *__restrict UNUSED(tp_self),
 #ifdef SIGNED
 	*result = (int64_t)value;
 	return INT_SIGNED;
-#else  /* SIGNED */
+#else /* SIGNED */
 	*(uint64_t *)result = (uint64_t)value;
 	return INT_UNSIGNED;
 #endif /* !SIGNED */

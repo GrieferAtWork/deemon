@@ -518,7 +518,7 @@ seqeach_getattr(SeqEachBase *__restrict self,
 done:
 	return result;
 }
-#else  /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 DEFINE_SEQ_EACH_BINARY(se_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
@@ -1102,7 +1102,7 @@ seqeachw_getattr(DeeObject *__restrict self,
 done:
 	return result;
 }
-#else  /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 DEFINE_SEW_BINARY(sew_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 

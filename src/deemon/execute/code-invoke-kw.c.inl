@@ -106,7 +106,7 @@ PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
 #endif
 #ifdef KW_IS_MAPPING
  frame.cf_argc = GET_ARGC();
-#else  /* KW_IS_MAPPING */
+#else /* KW_IS_MAPPING */
 	kw_argc = DeeKwds_SIZE(kw);
 	if unlikely(kw_argc > GET_ARGC()) {
 		/* Argument list is too short of the given keywords */

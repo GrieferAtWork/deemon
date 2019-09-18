@@ -110,7 +110,7 @@ ssi_next(StringScanIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	data   = self->si_datiter;
 	format = self->si_fmtiter;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	char *orig_data, *orig_format;
 again:
 	data = orig_data = ATOMIC_READ(self->si_datiter);
@@ -488,7 +488,7 @@ done:
 #ifdef CONFIG_NO_THREADS
 	self->si_datiter = data;
 	self->si_fmtiter = format;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	rwlock_write(&self->si_lock);
 	/* Check if another thread extracted a value in the mean time. */
 	if unlikely(self->si_datiter != orig_data ||

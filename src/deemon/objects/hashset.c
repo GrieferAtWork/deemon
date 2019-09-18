@@ -1144,7 +1144,7 @@ setiterator_next(SetIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->si_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct hashset_item *old_item;
 		old_item = item = ATOMIC_READ(self->si_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -1162,7 +1162,7 @@ setiterator_next(SetIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->si_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->si_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -1170,7 +1170,7 @@ setiterator_next(SetIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->si_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->si_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -1300,7 +1300,7 @@ seti_nii_setindex(SetIterator *__restrict self, size_t new_index) {
 		new_index = mask + 1;
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector + new_index;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	ATOMIC_WRITE(self->si_next, vector + new_index);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
@@ -1310,7 +1310,7 @@ PRIVATE int DCALL
 seti_nii_rewind(SetIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	self->si_next = self->si_set->s_elem;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	ATOMIC_WRITE(self->si_next, ATOMIC_READ(self->si_set->s_elem));
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
@@ -1335,7 +1335,7 @@ again:
 		vector = elem - step;
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
 		goto again;
 #endif /* !CONFIG_NO_THREADS */
@@ -1362,7 +1362,7 @@ again:
 	vector += index;
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
 		goto again;
 #endif /* !CONFIG_NO_THREADS */
@@ -1385,7 +1385,7 @@ again:
 		return 1; /* Indeterminate (detached), or at start */
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
 		goto again;
 #endif /* !CONFIG_NO_THREADS */
@@ -1409,7 +1409,7 @@ again:
 	vector = elem + 1;
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
 		goto again;
 #endif /* !CONFIG_NO_THREADS */

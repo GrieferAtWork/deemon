@@ -617,7 +617,7 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VPack, 8),
                     ASSEMBLY_NAME(DeeTuple_NewVector, 8));
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VPackSymbolic, 8),
                     ASSEMBLY_NAME(DeeTuple_NewVectorSymbolic, 8));
-#else  /* !__NO_DEFINE_ALIAS */
+#else /* !__NO_DEFINE_ALIAS */
 PUBLIC DREF DeeObject *DCALL
 DeeTuple_VPack(size_t n, va_list args) {
 	return DeeTuple_NewVector(n, (DeeObject **)args);

@@ -129,7 +129,7 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 		++entry;
 	}
 	self->ki_iter = entry + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		entry = old_iter = ATOMIC_READ(self->ki_iter);
@@ -165,7 +165,7 @@ kwds_nsi_nextkey(KwdsIterator *__restrict self) {
 		++entry;
 	}
 	self->ki_iter = entry + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		entry = old_iter = ATOMIC_READ(self->ki_iter);
@@ -196,7 +196,7 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 		++entry;
 	}
 	self->ki_iter = entry + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		entry = old_iter = ATOMIC_READ(self->ki_iter);

@@ -55,7 +55,7 @@ DECL_BEGIN
 
 #ifdef CONFIG_AST_IS_STRUCT
 DECLARE_STRUCT_CACHE(ast, struct ast)
-#else  /* CONFIG_AST_IS_STRUCT */
+#else /* CONFIG_AST_IS_STRUCT */
 DECLARE_OBJECT_CACHE(ast, struct ast)
 #endif /* !CONFIG_AST_IS_STRUCT */
 

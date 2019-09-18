@@ -81,7 +81,7 @@ rveciter_next(RefVectorIterator *__restrict self) {
 		if (presult >= vector->rv_vector + vector->rv_length)
 			return ITER_DONE;
 		++self->rvi_pos;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		do {
 			presult = ATOMIC_READ(self->rvi_pos);
 			if (presult >= vector->rv_vector + vector->rv_length)
@@ -346,7 +346,7 @@ rvec_setitem(RefVector *__restrict self,
 	DREF DeeObject *old_item;
 #ifndef CONFIG_NO_THREADS
 	if (!self->rv_plock)
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (!self->rv_writable)
 #endif /* CONFIG_NO_THREADS */
 	{
@@ -426,7 +426,7 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	if (self->rv_plock)
 		rwlock_write(self->rv_plock);
 	else
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (!self->rv_writable)
 #endif /* CONFIG_NO_THREADS */
 	{
@@ -447,7 +447,7 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 #endif /* !CONFIG_NO_THREADS */
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	Dee_Decref(oldobj);
-#else  /* CONFIG_ERROR_DELETE_UNBOUND */
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(oldobj);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
@@ -460,7 +460,7 @@ rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(self->rv_plock);
 	rwlock_write(self->rv_plock);
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	ASSERT(self->rv_writable);
 #endif /* CONFIG_NO_THREADS */
 	oldobj                 = self->rv_vector[index];
@@ -479,7 +479,7 @@ rvec_nsi_setitem_fast(RefVector *__restrict self, size_t index,
 #ifndef CONFIG_NO_THREADS
 	ASSERT(self->rv_plock);
 	rwlock_write(self->rv_plock);
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	ASSERT(self->rv_writable);
 #endif /* CONFIG_NO_THREADS */
 	oldobj                 = self->rv_vector[index];
@@ -500,7 +500,7 @@ rvec_nsi_setitem(RefVector *__restrict self, size_t index,
 	if (self->rv_plock) {
 		rwlock_write(self->rv_plock);
 	} else
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (!self->rv_writable)
 #endif /* CONFIG_NO_THREADS */
 	{
@@ -545,7 +545,7 @@ rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
 	if (self->rv_plock) {
 		rwlock_write(self->rv_plock);
 	} else
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (!self->rv_writable)
 #endif /* CONFIG_NO_THREADS */
 	{
@@ -577,7 +577,7 @@ rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
 #ifndef CONFIG_NO_THREADS
 	ASSERT(self->rv_plock);
 	rwlock_write(self->rv_plock);
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	ASSERT(self->rv_writable);
 #endif /* CONFIG_NO_THREADS */
 	if unlikely(self->rv_vector[index] != old_value) {
@@ -1007,7 +1007,7 @@ rvec_init(RefVector *__restrict self) {
 	self->rv_vector = NULL;
 #ifndef CONFIG_NO_THREADS
 	self->rv_plock = NULL;
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	self->rv_writable = false;
 #endif /* CONFIG_NO_THREADS */
 	return 0;
@@ -1022,7 +1022,7 @@ rvec_copy(RefVector *__restrict self,
 	self->rv_vector = other->rv_vector;
 #ifndef CONFIG_NO_THREADS
 	self->rv_plock = other->rv_plock;
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	self->rv_writable = other->rv_writable;
 #endif /* CONFIG_NO_THREADS */
 	return 0;
@@ -1162,7 +1162,7 @@ sveciter_next(SharedVectorIterator *__restrict self) {
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result);
 	}
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (self->si_index < vec->sv_length) {
 		result = vec->sv_vector[self->si_index++];
 		Dee_Incref(result);
@@ -1175,7 +1175,7 @@ INTERN int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->si_index < self->si_seq->sv_length;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	return (ATOMIC_READ(self->si_index) <
 	        ATOMIC_READ(self->si_seq->sv_length));
 #endif /* !CONFIG_NO_THREADS */
@@ -1186,7 +1186,7 @@ sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
 #ifdef CONFIG_NO_THREADS
 	self->si_index = other->si_index;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	self->si_index = ATOMIC_READ(other->si_index);
 #endif /* !CONFIG_NO_THREADS */
 	self->si_seq = other->si_seq;
@@ -1202,7 +1202,7 @@ sveciter_deep(SharedVectorIterator *__restrict self,
 		goto err;
 #ifdef CONFIG_NO_THREADS
 	self->si_index = other->si_index;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	self->si_index = ATOMIC_READ(other->si_index);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;

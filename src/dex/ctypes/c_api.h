@@ -34,7 +34,7 @@ DECL_BEGIN
 #define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
 	CTYPES_FAULTPROTECT(action_inline, action_error)
 #endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else  /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
+#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 #define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
 	do {                                                              \
 		action_libcall;                                               \

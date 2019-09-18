@@ -254,7 +254,7 @@ PRIVATE int DCALL append_decl_string(void) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 		if unlikely(ast_decode_unicode_string(&current_tags.at_decl))
 			goto err;
-#else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 		if unlikely(ast_decode_unicode_string(&current_tags.at_doc))
 			goto err;
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -266,7 +266,7 @@ PRIVATE int DCALL append_decl_string(void) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 	if unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
 		goto err;
-#else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 	if unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
 		goto err;
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */

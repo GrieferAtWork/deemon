@@ -53,7 +53,7 @@ open_file_for_copy(DeeObject *__restrict name, int oflags, int mode) {
 #ifdef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 	DeeObject_TypeAssertFailed(self, &DeeFile_Type);
 	return NULL;
-#else  /* CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
+#else /* CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 	/* Fallback: Interpret the name as an integer file descriptor number. */
 	if (DeeObject_AsFd(name, &fd))
 		return NULL;
@@ -845,7 +845,7 @@ f_libfs_S_ISDIR(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISDIR
 	return_bool(S_ISDIR(arg));
-#else  /* S_ISDIR */
+#else /* S_ISDIR */
 	return_bool((arg & STAT_IFMT) == STAT_IFDIR);
 #endif /* !S_ISDIR */
 }
@@ -857,7 +857,7 @@ f_libfs_S_ISCHR(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISCHR
 	return_bool(S_ISCHR(arg));
-#else  /* S_ISCHR */
+#else /* S_ISCHR */
 	return_bool((arg & STAT_IFMT) == STAT_IFCHR);
 #endif /* !S_ISCHR */
 }
@@ -869,7 +869,7 @@ f_libfs_S_ISBLK(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISBLK
 	return_bool(S_ISBLK(arg));
-#else  /* S_ISBLK */
+#else /* S_ISBLK */
 	return_bool((arg & STAT_IFMT) == STAT_IFBLK);
 #endif /* !S_ISBLK */
 }
@@ -881,7 +881,7 @@ f_libfs_S_ISREG(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISREG
 	return_bool(S_ISREG(arg));
-#else  /* S_ISREG */
+#else /* S_ISREG */
 	return_bool((arg & STAT_IFMT) == STAT_IFREG);
 #endif /* !S_ISREG */
 }
@@ -893,7 +893,7 @@ f_libfs_S_ISFIFO(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISFIFO
 	return_bool(S_ISFIFO(arg));
-#else  /* S_ISFIFO */
+#else /* S_ISFIFO */
 	return_bool((arg & STAT_IFMT) == STAT_IFIFO);
 #endif /* !S_ISFIFO */
 }
@@ -905,7 +905,7 @@ f_libfs_S_ISLNK(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISLNK
 	return_bool(S_ISLNK(arg));
-#else  /* S_ISLNK */
+#else /* S_ISLNK */
 	return_bool((arg & STAT_IFMT) == STAT_IFLNK);
 #endif /* !S_ISLNK */
 }
@@ -917,7 +917,7 @@ f_libfs_S_ISSOCK(size_t argc, DeeObject **__restrict argv) {
 		return NULL;
 #ifdef S_ISSOCK
 	return_bool(S_ISSOCK(arg));
-#else  /* S_ISSOCK */
+#else /* S_ISSOCK */
 	return_bool((arg & STAT_IFMT) == STAT_IFSOCK);
 #endif /* !S_ISSOCK */
 }

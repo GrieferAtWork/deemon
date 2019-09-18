@@ -79,7 +79,7 @@ smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result_key);
 	}
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (self->sm_index < map->sm_length) {
 		result_key = map->sm_vector[self->sm_index].si_key;
 		Dee_Incref(result_key);
@@ -111,7 +111,7 @@ smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result_value);
 	}
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (self->sm_index < map->sm_length) {
 		result_value = map->sm_vector[self->sm_index].si_value;
 		Dee_Incref(result_value);
@@ -147,7 +147,7 @@ smapiter_next(SharedMapIterator *__restrict self) {
 		Dee_Decref(result_value);
 		Dee_Decref(result_key);
 	}
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (self->sm_index < map->sm_length) {
 		result_key   = map->sm_vector[self->sm_index].si_key;
 		result_value = map->sm_vector[self->sm_index].si_value;

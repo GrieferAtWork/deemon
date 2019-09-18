@@ -695,7 +695,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 			line_length = jumps.tj_max * 2 - 1;
 #if DIRECTIVE_DEDENT_WIDTH == 0
 			line_length += 4;
-#else  /* DIRECTIVE_DEDENT_WIDTH == 0 */
+#else /* DIRECTIVE_DEDENT_WIDTH == 0 */
 			line_length += 3;
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
 			temp = DeeFormat_Repeat(printer, arg, ' ', line_length);
@@ -865,7 +865,7 @@ get_next_instruction_without_stack:
 						PRIVATE char const except_name[2][8] = { "except", "finally" };
 #if EXCEPTION_HANDLER_FFINALLY == 1
 						char const *name = except_name[hand->eh_flags & EXCEPTION_HANDLER_FFINALLY];
-#else  /* EXCEPTION_HANDLER_FFINALLY == 1 */
+#else /* EXCEPTION_HANDLER_FFINALLY == 1 */
 						char const *name = except_name[hand->eh_flags & EXCEPTION_HANDLER_FFINALLY ? 1 : 0];
 #endif /* EXCEPTION_HANDLER_FFINALLY != 1 */
 						char const *type = except_type[j];
@@ -997,7 +997,7 @@ prefix_except_prefix:
 					offset += line_bytes;
 				}
 			}
-#else  /* INSTRLEN_MAX > LINE_MAXBYTES*2 */
+#else /* INSTRLEN_MAX > LINE_MAXBYTES*2 */
 			if (num_bytes) {
 				if (prefix_len)
 					print(line_prefix, prefix_len);

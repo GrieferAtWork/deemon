@@ -65,7 +65,7 @@ PUBLIC struct string_utf *
 (DCALL Dee_string_utf_alloc_d)(char const *file, int line) {
 	return utf_dbgalloc(file, line);
 }
-#else  /* !NDEBUG */
+#else /* !NDEBUG */
 PUBLIC struct string_utf *
 (DCALL Dee_string_utf_alloc_d)(char const *UNUSED(file), int UNUSED(line)) {
 	return utf_alloc();
@@ -761,7 +761,7 @@ compare_strings(String *__restrict lhs,
 					if (result != 0)
 						return result;
 				}
-#else  /* __USE_KOS */
+#else /* __USE_KOS */
 				{
 					size_t i;
 					for (i = 0; i < common_len; ++i) {
@@ -822,7 +822,7 @@ compare_strings(String *__restrict lhs,
 					if (result != 0)
 						return result;
 				}
-#else  /* __USE_KOS */
+#else /* __USE_KOS */
 				{
 					size_t i;
 					for (i = 0; i < common_len; ++i) {
@@ -972,7 +972,7 @@ stringiter_next(StringIterator *__restrict self) {
 	if (pos.ptr >= self->si_end.ptr)
 		return ITER_DONE;
 	self->si_iter.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	union dcharptr pos, new_pos;
 	do {
 		pos.ptr = self->si_iter.ptr;
@@ -1103,7 +1103,7 @@ PRIVATE int DCALL
 stringiter_nii_rewind(StringIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	self->si_iter.ptr = DeeString_WSTR(self->si_string);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	ATOMIC_WRITE(self->si_iter.ptr,
 	             DeeString_WSTR(self->si_string));
 #endif /* !CONFIG_NO_THREADS */
@@ -1118,7 +1118,7 @@ stringiter_nii_prev(StringIterator *__restrict self) {
 	if (pos.ptr <= DeeString_WSTR(self->si_string))
 		return 1;
 	self->si_iter.cp8 = pos.cp8 - STRING_SIZEOF_WIDTH(self->si_width);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	union dcharptr pos, new_pos;
 	do {
 		pos.ptr = self->si_iter.ptr;
@@ -1139,7 +1139,7 @@ stringiter_nii_next(StringIterator *__restrict self) {
 	if (pos.ptr >= self->si_end.ptr)
 		return 1;
 	self->si_iter.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	union dcharptr pos, new_pos;
 	do {
 		pos.ptr = self->si_iter.ptr;

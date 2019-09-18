@@ -522,7 +522,7 @@ not_a_cast:
 			if unlikely(!result)
 				JITLexer_ErrorTrace(self, pos);
 			Dee_Decref(lhs);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 			result = 0;
 #endif /* JIT_EVAL */
 			goto done;
@@ -614,7 +614,7 @@ err_missing_rparen:
 			result = JITLexer_EvalCastOperand(self,
 			                                  DeeTuple_GET(merge, 0),
 			                                  JITLEXER_EVAL_FSECONDARY);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 			result = JITLexer_SkipCastOperand(self,
 			                                  JITLEXER_EVAL_FSECONDARY);
 #endif /* JIT_EVAL */
@@ -641,7 +641,7 @@ err_missing_rparen:
 		result = DeeObject_CallTuple(lhs, merge);
 		Dee_Decref(merge);
 		Dee_Decref(lhs);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* JIT_EVAL */
 	}	break;
@@ -664,7 +664,7 @@ do_a_cast:
 		result = DeeObject_Call(lhs, 1, (DeeObject **)&merge);
 		Dee_Decref(merge);
 		Dee_Decref(lhs);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
 		break;
@@ -763,7 +763,7 @@ DEFINE_PRIMARY(UnaryHead) {
 		result = DeeInt_FromString((char const *)self->jl_tokstart,
 		                           (size_t)(self->jl_tokend - self->jl_tokstart),
 		                           DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
 done_y1:
@@ -776,7 +776,7 @@ done_y1:
 		result = DeeString_FromBackslashEscaped((char const *)self->jl_tokstart + 1,
 		                                        (size_t)(self->jl_tokend - self->jl_tokstart) - 2,
 		                                        STRING_ERROR_FSTRICT);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
 		goto done_y1;
@@ -787,7 +787,7 @@ done_y1:
 		result = DeeString_NewUtf8((char const *)self->jl_tokstart + 2,
 		                           (size_t)(self->jl_tokend - self->jl_tokstart) - 3,
 		                           STRING_ERROR_FSTRICT);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
 		goto done_y1;
@@ -798,7 +798,7 @@ done_y1:
 		result = JIT_atof(self,
 		                  (char const *)self->jl_tokstart,
 		                  (size_t)(self->jl_tokend - self->jl_tokstart));
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
 		goto done_y1;
@@ -1355,7 +1355,7 @@ skip_rbrck_and_done:
 		JITLexer_Yield(self);
 #ifndef JIT_EVAL
 		result = JITLexer_SkipPair(self, '{', '}');
-#else  /* !JIT_EVAL */
+#else /* !JIT_EVAL */
 		result = FUNC(BraceItems)(self);
 		if (ISERR(result))
 			goto err;
@@ -1430,7 +1430,7 @@ skip_rbrck_and_done:
 #ifdef JIT_EVAL
 				result = Dee_None;
 				Dee_Incref(Dee_None);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
 				goto done_y1;
@@ -1439,7 +1439,7 @@ skip_rbrck_and_done:
 #ifdef JIT_EVAL
 				result = Dee_True;
 				Dee_Incref(Dee_True);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
 				goto done_y1;
@@ -1524,7 +1524,7 @@ skip_rbrck_and_done:
 #ifdef JIT_EVAL
 					result = Dee_EmptyTuple;
 					Dee_Incref(Dee_EmptyTuple);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 					result = 0;
 #endif /* !JIT_EVAL */
 				}
@@ -1551,7 +1551,7 @@ skip_rbrck_and_done:
 #ifdef JIT_EVAL
 				result = Dee_False;
 				Dee_Incref(Dee_False);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
 				goto done_y1;
@@ -1595,7 +1595,7 @@ skip_rbrck_and_done:
 			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
 #ifdef JIT_EVAL
 				result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
 				goto done_y1;
@@ -1695,7 +1695,7 @@ skip_rbrck_and_done:
 					goto err;
 			}
 			result = JIT_LVALUE;
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 			result = 0;
 			JITLexer_Yield(self);
 			if (JITLexer_ISKWD(self, "from")) {

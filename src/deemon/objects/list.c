@@ -2504,7 +2504,7 @@ err_empty:
 
 #ifdef __OPTIMIZE_SIZE__
 #define list_get_frozen DeeTuple_FromSequence
-#else  /* __OPTIMIZE_SIZE__ */
+#else /* __OPTIMIZE_SIZE__ */
 PRIVATE DREF DeeObject *DCALL
 list_get_frozen(List *__restrict self) {
 	size_t i, count;

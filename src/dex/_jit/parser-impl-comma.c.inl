@@ -29,7 +29,7 @@ INTERN DREF DeeObject *DCALL
 JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode,
                    DeeTypeObject *seq_type,
                    uint16_t *pout_mode)
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 INTERN int DCALL
 JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
                    uint16_t *pout_mode)
@@ -669,7 +669,7 @@ continue_expression_after_dots:
 		}
 #ifndef JIT_EVAL
 continue_expression_after_dots:
-#else  /* !JIT_EVAL */
+#else /* !JIT_EVAL */
 		ASSERT(current != JIT_LVALUE);
 #endif /* JIT_EVAL */
 		/* Check for further comma or store expressions. */
@@ -783,7 +783,7 @@ done_expression_nomerge:
 done_expression_nocurrent:
 #ifndef JIT_EVAL
 	current = 0;
-#else  /* !JIT_EVAL */
+#else /* !JIT_EVAL */
 	/* Merge the current expression with the batch and comma lists. */
 	if (expr_batch.ol_size || expr_comma.ll_size) {
 		if (!seq_type) {

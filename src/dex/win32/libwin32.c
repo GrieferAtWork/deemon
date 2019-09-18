@@ -2103,7 +2103,7 @@ PUBLIC struct dex DEX = {
 
 DECL_END
 
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {

@@ -93,7 +93,7 @@ bytesiter_copy(BytesIterator *__restrict self,
 	self->bi_bytes = other->bi_bytes;
 #ifdef CONFIG_NO_THREADS
 	self->bi_iter = other->bi_iter;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	self->bi_iter = ATOMIC_READ(other->bi_iter);
 #endif /* !CONFIG_NO_THREADS */
 	self->bi_end = other->bi_end;

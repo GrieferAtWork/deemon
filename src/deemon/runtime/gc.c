@@ -154,7 +154,7 @@ DeeGC_Track(DeeObject *__restrict ob) {
 		gc_root        = head;
 		GCLOCK_RELEASE();
 	}
-#else  /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+#else /* CONFIG_HAVE_PENDING_GC_OBJECTS */
 	GCLOCK_ACQUIRE();
 	if ((head->gc_next = gc_root) != NULL)
 		gc_root->gc_pself = &head->gc_next;

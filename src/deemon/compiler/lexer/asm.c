@@ -670,7 +670,7 @@ with_paren:
 	                      operands.ol_count[OPERAND_TYPE_INPUT],
 	                      operands.ol_count[OPERAND_TYPE_LABEL],
 	                      operands.ol_v);
-#else  /* CONFIG_LANGUAGE_NO_ASM */
+#else /* CONFIG_LANGUAGE_NO_ASM */
 	result = ast_assembly(ast_flags, text,
 	                      operands.ol_count[OPERAND_TYPE_OUTPUT],
 	                      operands.ol_count[OPERAND_TYPE_INPUT],

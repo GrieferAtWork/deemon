@@ -2341,7 +2341,7 @@ time_repr(DeeTimeObject *__restrict self) {
 	return DeeString_Newf(""
 #ifdef HAVE_128BIT_TIME
 	                      "time(%I64u,%u,%u,%u,%u,%u,%u,%u)%s%s",
-#else  /* HAVE_128BIT_TIME */
+#else /* HAVE_128BIT_TIME */
 	                      "time(%I32u,%u,%u,%u,%u,%u,%u,%u)%s%s",
 #endif /* !HAVE_128BIT_TIME */
 	                      (dtime_half_t)time_getint(self, TIME_REPR_YER),

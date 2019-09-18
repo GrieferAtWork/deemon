@@ -265,7 +265,7 @@ err:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef USE_LOADLIBRARY
 	FreeLibrary((HMODULE)handle);
-#else  /* USE_LOADLIBRARY */
+#else /* USE_LOADLIBRARY */
 	dlclose(handle);
 #endif /* !USE_LOADLIBRARY */
 	DBG_ALIGNMENT_ENABLE();
@@ -493,7 +493,7 @@ dex_fini(DeeDexObject *__restrict self) {
 		DBG_ALIGNMENT_DISABLE();
 #ifdef USE_LOADLIBRARY
 		FreeLibrary((HMODULE)self->d_handle);
-#else  /* USE_LOADLIBRARY */
+#else /* USE_LOADLIBRARY */
 		dlclose(self->d_handle);
 #endif /* !USE_LOADLIBRARY */
 		DBG_ALIGNMENT_ENABLE();

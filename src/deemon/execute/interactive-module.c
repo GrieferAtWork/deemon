@@ -1054,7 +1054,7 @@ imod_init(InteractiveModule *__restrict self,
 			name_start = name_end;
 			while (name_start != name && !ISSEP(name_start[-1]))
 				--name_start;
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 			name_start = (char *)memrchr(name, SEP, size);
 			if (!name_start)
 				name_start = name - 1;

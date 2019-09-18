@@ -76,7 +76,7 @@ subrangeiterator_next(SubRangeIterator *__restrict self) {
 	if (!self->sr_size)
 		return ITER_DONE;
 	--self->sr_size;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	size_t oldval;
 	/* Consume one from the max-iteration size. */
 	do {

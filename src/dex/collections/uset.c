@@ -83,7 +83,7 @@ usetiterator_next(USetIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->si_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct uset_item *old_item;
 		old_item = item = ATOMIC_READ(self->si_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -101,7 +101,7 @@ usetiterator_next(USetIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->si_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->si_next, old_item, item))
 				continue;
 #endif /*!CONFIG_NO_THREADS */
@@ -109,7 +109,7 @@ usetiterator_next(USetIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->si_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->si_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -168,7 +168,7 @@ usetiterator_init(USetIterator *__restrict self,
 	Dee_Incref(set);
 #ifdef CONFIG_NO_THREADS
 	self->si_next = set->s_elem;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	self->si_next = ATOMIC_READ(set->s_elem);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;

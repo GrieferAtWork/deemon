@@ -116,7 +116,7 @@ bsegiter_next(BytesSegmentsIterator *__restrict self) {
 		return ITER_DONE;
 	new_ptr     = ptr + self->b_siz;
 	self->b_ptr = new_ptr;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	do {
 		ptr = READ_PTR(self);
 		if (ptr >= self->b_end)

@@ -210,7 +210,7 @@ float_hash(Float *__restrict self) {
 #if __SIZEOF_POINTER__ == 4
 		return ((dhash_t)((uint32_t *)&self->f_value)[0] ^
 		        (dhash_t)((uint32_t *)&self->f_value)[1]);
-#else  /* __SIZEOF_POINTER__ == 4 */
+#else /* __SIZEOF_POINTER__ == 4 */
 		return (dhash_t) * (uint64_t *)&self->f_value;
 #endif /* __SIZEOF_POINTER__ != 4 */
 	}

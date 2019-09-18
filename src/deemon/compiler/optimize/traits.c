@@ -354,7 +354,7 @@ ast_has_sideeffects(struct ast *__restrict self) {
 	case AST_BOUND:
 		return symbol_bnd_haseffect(self->a_sym, self->a_scope);
 
-#else  /* !CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
+#else /* !CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
 	case AST_BOUND:
 #endif /* CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
 	case AST_SYM:

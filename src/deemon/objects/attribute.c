@@ -889,7 +889,7 @@ enumattriter_setup(EnumAttrIter *__restrict self,
 	rwlock_init(&self->ei_lock);
 	/* Set the buffer pointer to its initial state. */
 	self->ei_bufpos = NULL;
-#else  /* CONFIG_LONGJMP_ENUMATTR */
+#else /* CONFIG_LONGJMP_ENUMATTR */
 	self->ei_iter = seq->ea_attrv;
 	self->ei_end  = seq->ea_attrv + seq->ea_attrc;
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
@@ -1274,7 +1274,7 @@ done:
 	rwlock_endwrite(&self->ei_lock);
 #endif /* !CONFIG_NO_THREADS */
 	return result;
-#else  /* CONFIG_LONGJMP_ENUMATTR */
+#else /* CONFIG_LONGJMP_ENUMATTR */
 	DREF Attr **presult;
 	do {
 		presult = ATOMIC_READ(self->ei_iter);

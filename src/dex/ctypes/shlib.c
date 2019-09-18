@@ -88,7 +88,7 @@ shlib_init(Shlib *__restrict self, size_t argc,
 #ifdef CONFIG_NO_CFUNCTION
 		err_no_cfunction();
 		goto err;
-#else  /* CONFIG_NO_CFUNCTION */
+#else /* CONFIG_NO_CFUNCTION */
 		if (DeeObject_AssertTypeExact((DeeObject *)cc_name, &DeeString_Type))
 			goto err;
 		self->sh_defcc = cc_lookup(DeeString_STR(cc_name));
@@ -363,7 +363,7 @@ err:
 	return NULL;
 }
 
-#else  /* !CONFIG_NO_SHLIB */
+#else /* !CONFIG_NO_SHLIB */
 PRIVATE void DCALL err_shlib_unsupported(void) {
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "Shared libraries are not supported by the host");

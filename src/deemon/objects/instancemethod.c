@@ -75,7 +75,7 @@ im_ctor(InstanceMethod *__restrict self) {
 	self->im_this = Dee_None;
 #ifdef CONFIG_NO_THREADS
 	Dee_None->ob_refcnt += 2;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	ATOMIC_FETCHADD(Dee_None->ob_refcnt, 2);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;

@@ -289,7 +289,7 @@ DeeType_EnumAttr(DeeTypeObject *__restrict self,
 				goto err;
 			result += temp;
 		}
-#else  /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
+#else /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
 		temp = DeeObject_GenericEnumAttr(Dee_TYPE(iter), proc, arg);
 		if unlikely(temp < 0)
 			goto err;

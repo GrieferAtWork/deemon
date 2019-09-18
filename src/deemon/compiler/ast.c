@@ -462,7 +462,7 @@ DEFINE_AST_GENERATOR(ast_tryfinally,
 	catchv[0].ce_mask  = NULL;                       /* Regular finally-handlers don't have masks. */
 #ifdef CONFIG_NO_AST_DEBUG
 	result = ast_try(guarded_expression, 1, catchv);
-#else  /* CONFIG_NO_AST_DEBUG */
+#else /* CONFIG_NO_AST_DEBUG */
 	result = ast_try_d(file, line, guarded_expression, 1, catchv);
 #endif /* !CONFIG_NO_AST_DEBUG */
 	if unlikely(!result)
@@ -485,7 +485,7 @@ DEFINE_AST_GENERATOR(ast_loop,
 		 * When set, the loop block is usually placed in cold text. */
 #if AST_FCOND_UNLIKELY == AST_FLOOP_UNLIKELY
 		flags |= (current_tags.at_expect & AST_FCOND_UNLIKELY);
-#else  /* AST_FCOND_UNLIKELY == AST_FLOOP_UNLIKELY */
+#else /* AST_FCOND_UNLIKELY == AST_FLOOP_UNLIKELY */
 		if (current_tags.at_expect & AST_FCOND_UNLIKELY)
 			flags |= AST_FLOOP_UNLIKELY;
 #endif /* AST_FCOND_UNLIKELY != AST_FLOOP_UNLIKELY */
@@ -880,7 +880,7 @@ DEFINE_AST_GENERATOR(ast_assembly,
                      (uint16_t flags, struct TPPString *__restrict text,
                       size_t num_o, size_t num_i, size_t num_l,
                       /*inherit*/ struct asm_operand *__restrict opv))
-#else  /* !CONFIG_LANGUAGE_NO_ASM */
+#else /* !CONFIG_LANGUAGE_NO_ASM */
 DEFINE_AST_GENERATOR(ast_assembly,
                      (uint16_t flags,
                       size_t num_o, size_t num_i, size_t num_l,

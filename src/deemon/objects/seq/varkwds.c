@@ -105,7 +105,7 @@ again:
 #ifndef CONFIG_NO_THREADS
 	if (!ATOMIC_CMPXCH_WEAK(self->ki_iter, old_iter, iter + 1))
 		goto again;
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	self->ki_iter = iter + 1;
 #endif /* CONFIG_NO_THREADS */
 	return iter;

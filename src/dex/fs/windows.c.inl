@@ -736,7 +736,7 @@ env_next(Env *__restrict self) {
 	while (*next_string++)
 		;
 	self->e_iter = next_string;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	do {
 		result_string = ATOMIC_READ(self->e_iter);
 		if (!*result_string)
@@ -785,7 +785,7 @@ enviterator_next_key(DeeObject *__restrict self) {
 	while (*next_string++)
 		;
 	me->e_iter = next_string;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	do {
 		result_string = ATOMIC_READ(me->e_iter);
 		if (!*result_string)
@@ -817,7 +817,7 @@ enviterator_next_value(DeeObject *__restrict self) {
 	while (*next_string++)
 		;
 	me->e_iter = next_string;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	do {
 		result_string = ATOMIC_READ(me->e_iter);
 		if (!*result_string)

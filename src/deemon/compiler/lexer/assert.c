@@ -94,7 +94,7 @@ ast_parse_assert(bool needs_parenthesis) {
 	                           : ast_action1(AST_FACTION_ASSERT, result),
 #ifdef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	                   &result->a_ddi
-#else  /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
+#else /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	                   &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	);
@@ -162,7 +162,7 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 	                           : ast_action1(AST_FACTION_ASSERT, result),
 #ifdef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	                   &result->a_ddi
-#else  /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
+#else /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	                   &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	                   );

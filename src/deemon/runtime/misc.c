@@ -1847,7 +1847,7 @@ PUBLIC void (DCALL _Dee_dprint)(char const *__restrict message) {
 	DBG_ALIGNMENT_DISABLE();
 	OutputDebugStringA(message);
 	DBG_ALIGNMENT_ENABLE();
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 	if (debug_printer(NULL, message, strlen(message)) < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif /* !CONFIG_HOST_WINDOWS */

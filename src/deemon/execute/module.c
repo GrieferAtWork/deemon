@@ -483,7 +483,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 		return -1;
 	}
 	Dee_Decref(old_value);
-#else  /* CONFIG_ERROR_DELETE_UNBOUND */
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(old_value);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;

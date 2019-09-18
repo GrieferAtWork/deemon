@@ -118,7 +118,7 @@ rodictiterator_next_item(DictIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->di_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct rodict_item *old_item;
 		old_item = item = ATOMIC_READ(self->di_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -129,7 +129,7 @@ rodictiterator_next_item(DictIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->di_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -137,7 +137,7 @@ rodictiterator_next_item(DictIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->di_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -157,7 +157,7 @@ rodictiterator_next_key(DictIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->di_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct rodict_item *old_item;
 		old_item = item = ATOMIC_READ(self->di_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -168,7 +168,7 @@ rodictiterator_next_key(DictIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->di_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -176,7 +176,7 @@ rodictiterator_next_key(DictIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->di_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -196,7 +196,7 @@ rodictiterator_next_value(DictIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->di_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct rodict_item *old_item;
 		old_item = item = ATOMIC_READ(self->di_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -207,7 +207,7 @@ rodictiterator_next_value(DictIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->di_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -215,7 +215,7 @@ rodictiterator_next_value(DictIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->di_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */

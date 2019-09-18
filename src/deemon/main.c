@@ -1053,7 +1053,7 @@ PRIVATE int DCALL operation_mode_format(int argc, char **argv);
 int main(int argc, char *argv[]) {
 #ifdef EXIT_SUCCESS
 	int result = EXIT_SUCCESS;
-#else  /* EXIT_SUCCESS */
+#else /* EXIT_SUCCESS */
 	int result = 0;
 #endif /* !EXIT_SUCCESS */
 #ifdef __CYGWIN__

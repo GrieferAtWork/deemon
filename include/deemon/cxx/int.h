@@ -67,7 +67,7 @@ public:
 		                 : DeeObject_AsChar(*this, &value));
 		return *this;
 	}
-#else  /* __CHAR_UNSIGNED__ */
+#else /* __CHAR_UNSIGNED__ */
 	int_ const &getval(char &value) const {
 		throw_if_nonzero(DeeInt_Check(this->ptr())
 		                 ? DeeInt_AsS(__SIZEOF_CHAR__, *this, &value)

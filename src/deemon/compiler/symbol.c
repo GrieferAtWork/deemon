@@ -494,7 +494,7 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 INTERN void DCALL
 symbol_destroy(struct symbol *__restrict self)
-#else  /* CONFIG_SYMBOL_HAS_REFCNT */
+#else /* CONFIG_SYMBOL_HAS_REFCNT */
 PRIVATE void DCALL
 delsym(struct symbol *__restrict self)
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
@@ -539,7 +539,7 @@ scope_fini(DeeScopeObject *__restrict self) {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 			iter->s_scope = NULL;
 			symbol_decref(iter);
-#else  /* CONFIG_SYMBOL_HAS_REFCNT */
+#else /* CONFIG_SYMBOL_HAS_REFCNT */
 			delsym(iter);
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
 			iter = next;
@@ -553,7 +553,7 @@ scope_fini(DeeScopeObject *__restrict self) {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		iter->s_scope = NULL;
 		symbol_decref(iter);
-#else  /* CONFIG_SYMBOL_HAS_REFCNT */
+#else /* CONFIG_SYMBOL_HAS_REFCNT */
 		delsym(iter);
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
 		iter = next;

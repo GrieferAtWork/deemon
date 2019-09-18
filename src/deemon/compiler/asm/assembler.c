@@ -272,7 +272,7 @@ INTERN int (DCALL asm_putddi_dbg)(struct ast *__restrict self,
 	if unlikely((sym = asm_newsym()) == NULL ||
 	            (ddi = asm_newddi()) == NULL)
 		return -1;
-#else  /* NDEBUG */
+#else /* NDEBUG */
 	if unlikely((sym = asm_newsym_dbg(file, line)) == NULL ||
 	            (ddi = asm_newddi()) == NULL)
 		return -1;
@@ -407,7 +407,7 @@ INTERN int DCALL assembler_init(void) {
 	current_assembler.a_ddi.da_last                  = (code_addr_t)-1;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	return userassembler_init();
-#else  /* !CONFIG_LANGUAGE_NO_ASM */
+#else /* !CONFIG_LANGUAGE_NO_ASM */
 	return 0;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 }
@@ -425,7 +425,7 @@ assembler_init_reuse(DeeCodeObject *__restrict code_obj,
 	current_assembler.a_ddi.da_last                  = (code_addr_t)-1;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	return userassembler_init();
-#else  /* !CONFIG_LANGUAGE_NO_ASM */
+#else /* !CONFIG_LANGUAGE_NO_ASM */
 	return 0;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 }
@@ -2361,7 +2361,7 @@ INTERN int (DCALL asm_gjcc)(struct ast *__restrict cond,
 	return 0;
 err:
 	return -1;
-#else  /* CONFIG_ASM_ENABLE_JCC_SYMBOLS */
+#else /* CONFIG_ASM_ENABLE_JCC_SYMBOLS */
 	ASSERT(instr == ASM_JT || instr == ASM_JF);
 	if (cond->a_type == AST_BOOL) {
 		if (cond->a_flag & AST_FBOOL_NEGATE)

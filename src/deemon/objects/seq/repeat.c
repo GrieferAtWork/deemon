@@ -845,7 +845,7 @@ repeatitemiter_next(RepeatItemIterator *__restrict self) {
 		if ((count = ATOMIC_READ(self->rii_num)) == 0)
 			return ITER_DONE;
 	} while (!ATOMIC_CMPXCH_WEAK(self->ob_refcnt, count, count - 1));
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 	if (!self->rii_num)
 		return ITER_DONE;
 	--self->rii_num;

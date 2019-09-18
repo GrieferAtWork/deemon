@@ -286,7 +286,7 @@ INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 		DBG_ALIGNMENT_ENABLE();
 #ifdef ENAMETOOLONG
 		if (error == EINVAL || error == ENAMETOOLONG)
-#else  /* ENAMETOOLONG */
+#else /* ENAMETOOLONG */
 		if (error == EINVAL)
 #endif /* !ENAMETOOLONG */
 		{
@@ -475,7 +475,7 @@ err_release:
 	unicode_printer_free_wchar(printer, buffer);
 err:
 	return -1;
-#else  /* _WDIRECT_DEFINED */
+#else /* _WDIRECT_DEFINED */
 	char *buffer;
 	size_t bufsize = PATH_MAX;
 	if (DeeThread_CheckInterrupt())

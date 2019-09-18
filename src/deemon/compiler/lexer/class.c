@@ -455,7 +455,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 	/* Add a documentation string to the member. */
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 	if (decl)
-#else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 	if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc))
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 	{
@@ -470,7 +470,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 		 *      have to wait much longer, presumably until
 		 *      code starts getting assembled. */
 		attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(decl);
-#else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 		attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc();
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 		if unlikely(!attr->ca_doc)

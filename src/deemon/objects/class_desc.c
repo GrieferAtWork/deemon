@@ -102,7 +102,7 @@ coti_next_ent(ClassOperatorTableIterator *__restrict self) {
 			break;
 	}
 	self->co_iter = result + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	struct class_operator *result, *start;
 	for (;;) {
 		result = start = ATOMIC_READ(self->co_iter);
@@ -519,7 +519,7 @@ cati_next_ent(ClassAttributeTableIterator *__restrict self) {
 			break;
 	}
 	self->co_iter = result + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	struct class_attribute *result, *start;
 	for (;;) {
 		result = start = ATOMIC_READ(self->ca_iter);
@@ -2152,7 +2152,7 @@ ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
 	rwlock_endwrite(&self->ot_desc->id_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	Dee_Decref(oldval);
-#else  /* CONFIG_ERROR_DELETE_UNBOUND */
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(oldval);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
@@ -3589,7 +3589,7 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		if unlikely(!old_value)
 			goto unbound;
 		Dee_Decref(old_value);
-#else  /* CONFIG_ERROR_DELETE_UNBOUND */
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
@@ -4100,7 +4100,7 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		if unlikely(!old_value)
 			goto unbound;
 		Dee_Decref(old_value);
-#else  /* CONFIG_ERROR_DELETE_UNBOUND */
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	}

@@ -933,7 +933,7 @@ done_loop:
 		JITContext_PopScope(self->jl_context);
 		result = Dee_None;
 		Dee_Incref(Dee_None);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		if (JITLexer_SkipPair(self, '(', ')'))
 			goto err;
 		result = JITLexer_SkipStatement(self);
@@ -1065,7 +1065,7 @@ done_loop_rparen:
 		}
 		result = Dee_None;
 		Dee_Incref(Dee_None);
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		if (JITLexer_SkipStatement(self))
 			goto err;
 do_skip_while_suffix:
@@ -1194,7 +1194,7 @@ H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
 		*pwas_expression = AST_PARSE_WASEXPR_YES;
 #ifdef JIT_EVAL
 		result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
-#else  /* JIT_EVAL */
+#else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
 		return result;

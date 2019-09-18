@@ -1018,7 +1018,7 @@ writer_size(Writer *__restrict self,
 		return NULL;
 #ifdef CONFIG_NO_THREADS
 	result = self->w_printer.up_length;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	result = ATOMIC_READ(self->w_printer.up_length);
 #endif /* !CONFIG_NO_THREADS */
 	return DeeInt_NewSize(result);

@@ -571,7 +571,7 @@ PRIVATE void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
 	if (sigaction(PTHREAD_INTERRUPT_SIGNAL, &action, NULL))
 		BREAKPOINT();
 	DBG_ALIGNMENT_ENABLE();
-#else  /* CONFIG_NEED_SUSPEND_SIGNALS */
+#else /* CONFIG_NEED_SUSPEND_SIGNALS */
 	/* Even when we don't need it for suspension
 	 * signals, we still need it for interrupts. */
 	DBG_ALIGNMENT_DISABLE();

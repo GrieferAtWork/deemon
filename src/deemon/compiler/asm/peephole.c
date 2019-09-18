@@ -288,7 +288,7 @@ peephole_optf(char const *file, int line, instruction_t *addr_ptr,
 	print_ddi_file_and_line(addr_ptr);
 	DEE_DPRINTF("Peephole at +%.4I32X : ",
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin));
-#else  /* CONFIG_LOG_PEEPHOLE_SOURCE */
+#else /* CONFIG_LOG_PEEPHOLE_SOURCE */
 	DEE_DPRINTF("%s(%d) : Peephole at +%.4I32X : ", file, line,
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin));
 #endif /* !CONFIG_LOG_PEEPHOLE_SOURCE */

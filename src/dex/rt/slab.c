@@ -337,7 +337,7 @@ ssi_next(SlabStatIteratorObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 		if (ATOMIC_CMPXCH_WEAK(self->sti_index, index, index + 1))
 			break;
-#else  /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 		self->sti_index index + 1;
 #endif /* CONFIG_NO_THREADS */
 	}

@@ -72,7 +72,7 @@ dictiterator_next_key(DictIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->di_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct dict_item *old_item;
 		old_item = item = ATOMIC_READ(self->di_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -90,7 +90,7 @@ dictiterator_next_key(DictIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->di_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -98,7 +98,7 @@ dictiterator_next_key(DictIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->di_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -129,7 +129,7 @@ dictiterator_next_item(DictIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->di_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct dict_item *old_item;
 		old_item = item = ATOMIC_READ(self->di_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -147,7 +147,7 @@ dictiterator_next_item(DictIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->di_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -155,7 +155,7 @@ dictiterator_next_item(DictIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->di_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -191,7 +191,7 @@ dictiterator_next_value(DictIterator *__restrict self) {
 	{
 #ifdef CONFIG_NO_THREADS
 		item = ATOMIC_READ(self->di_next);
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		struct dict_item *old_item;
 		old_item = item = ATOMIC_READ(self->di_next);
 #endif /* !CONFIG_NO_THREADS */
@@ -209,7 +209,7 @@ dictiterator_next_value(DictIterator *__restrict self) {
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
 			self->di_next = item;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
 				continue;
 #endif /* !CONFIG_NO_THREADS */
@@ -217,7 +217,7 @@ dictiterator_next_value(DictIterator *__restrict self) {
 		}
 #ifdef CONFIG_NO_THREADS
 		self->di_next = item + 1;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
 			break;
 #endif /* !CONFIG_NO_THREADS */
@@ -257,7 +257,7 @@ dictiterator_init(DictIterator *__restrict self,
 	Dee_Incref(Dict);
 #ifdef CONFIG_NO_THREADS
 	self->di_next = Dict->d_elem;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	self->di_next = ATOMIC_READ(Dict->d_elem);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
@@ -518,7 +518,7 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
 	Dee_Incref(proxy->dp_dict);
 #ifdef CONFIG_NO_THREADS
 	self->dpi_base.di_next = proxy->dp_dict->d_elem;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	self->dpi_base.di_next = ATOMIC_READ(proxy->dp_dict->d_elem);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
@@ -591,7 +591,7 @@ dict_newproxy_iterator(DictProxy *__restrict self,
 	Dee_Incref(self);
 #ifdef CONFIG_NO_THREADS
 	result->dpi_base.di_next = self->dp_dict->d_elem;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	result->dpi_base.di_next = ATOMIC_READ(self->dp_dict->d_elem);
 #endif /* !CONFIG_NO_THREADS */
 done:
@@ -663,7 +663,7 @@ PRIVATE int DCALL
 proxy_bool(DictProxy *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->dp_dict->d_used != 0;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	return ATOMIC_READ(self->dp_dict->d_used) != 0;
 #endif /* !CONFIG_NO_THREADS */
 }

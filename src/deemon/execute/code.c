@@ -113,7 +113,7 @@ PRIVATE void *DCALL tryalloc_altstack(void) {
 	            MAP_STACK | MAP_UNINITIALIZED,
 	            -1,
 	            0);
-#else  /* MAP_ANONYMOUS */
+#else /* MAP_ANONYMOUS */
 	void *result;
 	int fd = open("/dev/null", O_RDONLY);
 	if unlikely(fd < 0)

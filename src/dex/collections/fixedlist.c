@@ -577,7 +577,7 @@ fl_nsi_delitem(FixedList *__restrict self, size_t index) {
 	rwlock_endread(&self->fl_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	Dee_Decref(oldval);
-#else  /* CONFIG_ERROR_DELETE_UNBOUND */
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(oldval);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;

@@ -2932,7 +2932,7 @@ mtime_cache_insert(DeeObject *__restrict path,
 	dhash_t i, perturb, hash;
 #ifdef CONFIG_HOST_WINDOWS
 	hash = DeeString_HashCase(path);
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 	hash = DeeString_Hash(path);
 #endif /* !CONFIG_HOST_WINDOWS */
 	rwlock_write(&mtime_cache.mc_lock);

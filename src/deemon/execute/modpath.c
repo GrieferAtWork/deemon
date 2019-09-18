@@ -430,7 +430,7 @@ begin_loading:
 			DBG_ALIGNMENT_DISABLE();
 			__NAMESPACE_INT_SYM SleepEx(1000, 0);
 			DBG_ALIGNMENT_ENABLE();
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 			SCHED_YIELD();
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_NO_THREADS */
@@ -746,7 +746,7 @@ find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 #ifdef CONFIG_NOCASE_FS
 			    MEMCASEEQ(DeeString_STR(result->mo_path), DeeString_STR(module_file),
 			              DeeString_SIZE(module_file) * sizeof(char))
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 			    memcmp(DeeString_STR(result->mo_path), DeeString_STR(module_file),
 			           DeeString_SIZE(module_file) * sizeof(char)) == 0
 #endif /* !CONFIG_NOCASE_FS */
@@ -763,7 +763,7 @@ PRIVATE DeeModuleObject *DCALL
 find_glob_module(DeeStringObject *__restrict module_name) {
 #ifdef CONFIG_NOCASE_FS
 	dhash_t hash = DeeString_HashCase((DeeObject *)module_name);
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 	dhash_t hash = DeeString_Hash((DeeObject *)module_name);
 #endif /* !CONFIG_NOCASE_FS */
 	DeeModuleObject *result = NULL;
@@ -1243,7 +1243,7 @@ DeeModule_OpenSourceStream(DeeObject *__restrict source_stream,
 			name_start = name_end;
 			while (name_start != name && !ISSEP(name_start[-1]))
 				--name_start;
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 			name_start = (char *)memrchr(name, SEP, size);
 			if (!name_start)
 				name_start = name - 1;
@@ -1524,7 +1524,7 @@ DeeModule_DoGet(char const *__restrict name,
 			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
 			    MEMCASEEQ(DeeString_STR(result->mo_name), name,
 			              size * sizeof(char))
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 			    memcmp(DeeString_STR(result->mo_name), name,
 			           size * sizeof(char)) == 0
 #endif /* !CONFIG_NOCASE_FS */
@@ -1547,7 +1547,7 @@ DeeModule_Get(DeeObject *__restrict module_name) {
 	                       DeeString_SIZE(module_name),
 #ifdef CONFIG_NOCASE_FS
 	                       DeeString_HashCase(module_name)
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 	                       DeeString_Hash(module_name)
 #endif /* !CONFIG_NOCASE_FS */
 	                       );
@@ -1560,7 +1560,7 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
 	                       module_namesize,
 #ifdef CONFIG_NOCASE_FS
 	                       Dee_HashCaseUtf8(module_name, module_namesize)
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 	                       Dee_HashUtf8(module_name, module_namesize)
 #endif /* !CONFIG_NOCASE_FS */
 	                       );
@@ -1606,7 +1606,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	            module_namesize, module_name);
 #ifndef CONFIG_NO_DEC
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 6) * sizeof(char));
-#else  /* !CONFIG_NO_DEC */
+#else /* !CONFIG_NO_DEC */
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5) * sizeof(char));
 #endif /* CONFIG_NO_DEC */
 	if unlikely(!buf)
@@ -1669,7 +1669,7 @@ err_bad_module_name:
 	len                      = (size_t)(dst - buf) + module_namesize + 4;
 #ifdef CONFIG_NOCASE_FS
 	hash = Dee_HashCaseUtf8(buf, len);
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 	hash = Dee_HashUtf8(buf, len);
 #endif /* !CONFIG_NOCASE_FS */
 again_search_fs_modules:
@@ -1716,7 +1716,7 @@ again_search_fs_modules:
 #ifdef CONFIG_NOCASE_FS
 			if (!MEMCASEEQ(utf8_path, buf, len * sizeof(char))) /* TODO: UTF-8 case compare! */
 				continue;
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 			if (memcmp(utf8_path, buf, len * sizeof(char)) != 0)
 				continue;
 #endif /* !CONFIG_NOCASE_FS */
@@ -1830,7 +1830,7 @@ again_find_existing_global_module:
 #ifdef CONFIG_NOCASE_FS
 				if (!MEMCASEEQ(utf8_path, buf, dex_len * sizeof(char))) /* TODO: UTF-8 case compare! */
 					continue;
-#else  /* CONFIG_NOCASE_FS */
+#else /* CONFIG_NOCASE_FS */
 				if (memcmp(utf8_path, buf, dex_len * sizeof(char)) != 0)
 					continue;
 #endif /* !CONFIG_NOCASE_FS */
@@ -2060,7 +2060,7 @@ load_module_after_dec_failure:
 		                 RTLD_LOCAL |
 #ifdef RTLD_LAZY
 		                 RTLD_LAZY
-#else  /* RTLD_LAZY */
+#else /* RTLD_LAZY */
 		                 RTLD_NOW
 #endif /* !RTLD_LAZY */
 		);
@@ -2090,7 +2090,7 @@ load_module_after_dec_failure:
 #ifndef USE_LOADLIBRARY
 #ifdef CONFIG_HOST_WINDOWS
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len - 1, STRING_ERROR_FSTRICT);
 #endif /* !CONFIG_HOST_WINDOWS */
 			if unlikely(!module_path_ob) {
@@ -2414,7 +2414,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 	}
 #ifdef CONFIG_HOST_WINDOWS
 	if unlikely(module_pathsize < 2 || module_path[1] != ':')
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 	if unlikely(!module_pathsize || module_path[0] != '/')
 #endif /* !CONFIG_HOST_WINDOWS */
 	{
@@ -2896,7 +2896,7 @@ DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
 			name_start = name_end;
 			while (name_start != name && !ISSEP(name_start[-1]))
 				--name_start;
-#else  /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
 			name_start = (char *)memrchr(name, SEP, size);
 			if (!name_start)
 				name_start = name - 1;
@@ -3152,7 +3152,7 @@ pack_code_in_return:
 	result->mo_importc = current_rootscope->rs_importc;
 #ifdef CONFIG_NO_THREADS
 	result->mo_flags |= current_rootscope->rs_flags;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 	ATOMIC_FETCHOR(result->mo_flags, current_rootscope->rs_flags);
 #endif /* !CONFIG_NO_THREADS */
 	result->mo_bucketm = current_rootscope->rs_bucketm;
@@ -3494,7 +3494,7 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 #ifdef CONFIG_NO_THREADS
 		do_init_module_path();
 		module_init_state = INIT_COMPLET;
-#else  /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS */
 		COMPILER_READ_BARRIER();
 		if (ATOMIC_CMPXCH(module_init_state, INIT_PENDING, INIT_PROGRES)) {
 			do_init_module_path();
