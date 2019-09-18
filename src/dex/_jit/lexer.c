@@ -378,20 +378,18 @@ raw_again:
 
 	case '\'':
 	case '\"':
-		if
-			unlikely(iter >= self->jl_end)
-		{
+		if unlikely(iter >= self->jl_end) {
 			self->jl_tokstart = (unsigned char *)"\"\"";
 			self->jl_tokend   = self->jl_tokstart + 2;
-		} else do {
-			unsigned char ch2 = *iter++;
-			if (ch2 == ch)
-				break;
-			if (ch2 == '\\' && iter < self->jl_end)
-				++iter;
+		} else {
+			do {
+				unsigned char ch2 = *iter++;
+				if (ch2 == ch)
+					break;
+				if (ch2 == '\\' && iter < self->jl_end)
+					++iter;
+			} while likely(iter < self->jl_end);
 		}
-		while
-			likely(iter < self->jl_end);
 		self->jl_tok = JIT_STRING;
 		break;
 

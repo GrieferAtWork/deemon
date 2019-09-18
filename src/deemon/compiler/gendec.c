@@ -1073,9 +1073,7 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		DeeHashSet_LockEndRead(me);
 		DEC_RECURSION_END();
 		/* For anything that couldn't be written, write `none' */
-		while
-			unlikely(written < length)
-		{
+		while unlikely(written < length) {
 			if (dec_putb(DTYPE_NONE))
 				goto err;
 			++written;
@@ -1136,9 +1134,7 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		DeeDict_LockEndRead(me);
 		DEC_RECURSION_END();
 		/* For anything that couldn't be written, write a `none:none' pair. */
-		while
-			unlikely(written < length)
-		{
+		while unlikely(written < length) {
 			if (dec_putb(DTYPE_NONE))
 				goto err;
 			if (dec_putb(DTYPE_NONE))

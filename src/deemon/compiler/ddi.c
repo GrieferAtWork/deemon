@@ -519,9 +519,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 						continue;
 					/* NOTE: With our very generous preallocation above,
 					 *       we're unlikely to have to allocate even more... */
-					while
-						unlikely(bind_size > result_size)
-					{
+					while unlikely(bind_size > result_size) {
 						/* Must allocate more buffer memory. */
 						size_t old_alloc = result_size + (size_t)(code_iter - result->d_ddi);
 						size_t new_alloc = old_alloc * 2;
