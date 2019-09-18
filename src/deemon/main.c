@@ -1695,8 +1695,8 @@ PRIVATE void DCALL emitpp_emit(void) {
 	    (emitpp_lasttoken_end != TPPLexer_Current->l_token.t_begin &&
 	     emitpp_lasttoken_fpoff != get_file_offset(TPPLexer_Current->l_token.t_begin))) {
 		/* The file changed, or there is a difference in the in-file position
-   * between the end of the last token and the start of this one.
-   * >> In any case, we must update the #line offset. */
+		 * between the end of the last token and the start of this one.
+		 * >> In any case, we must update the #line offset. */
 		emitpp_putline();
 	}
 	emitpp_emitraw();

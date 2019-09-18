@@ -245,7 +245,7 @@ INTERN uint8_t *DCALL dec_reuselocal(size_t n_bytes) {
 		dec_curr->ds_iter -= n_bytes;
 	} else {
 		/* No existing version was found.
-   * Just keep using the one created just now. */
+		 * Just keep using the one created just now. */
 		result = dec_curr->ds_iter - n_bytes;
 	}
 	return result;

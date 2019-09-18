@@ -4294,7 +4294,7 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 	ASSERT(self);
 	ASSERT(self->ca_flag & CLASS_ATTRIBUTE_FPRIVATE);
 	/* Only allow access if the calling code-frame originates from
-  * a this-call who's this-argument derives from `class_type'. */
+	 * a this-call who's this-argument derives from `class_type'. */
 	caller_frame = DeeThread_Self()->t_exec;
 	if (!caller_frame ||
 	    !(caller_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))

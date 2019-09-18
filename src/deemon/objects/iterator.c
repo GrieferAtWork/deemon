@@ -2784,10 +2784,10 @@ PRIVATE struct type_member if_members[] = {
 
 PRIVATE struct type_member if_class_members[] = {
 	/* Should always be right, because this standard proxy is usually constructed
-     * by the `future' member of `iterator', meaning that the contained iterator
-     * should always be derived from that type.
-     * -> The only time this isn't correct is when the user manually constructs
-     *    instances of this type... */
+	 * by the `future' member of `iterator', meaning that the contained iterator
+	 * should always be derived from that type.
+	 * -> The only time this isn't correct is when the user manually constructs
+	 *    instances of this type... */
 	TYPE_MEMBER_CONST("Iterator", &DeeIterator_Type),
 	TYPE_MEMBER_END
 };

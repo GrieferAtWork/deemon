@@ -342,14 +342,14 @@ dict_deepload(Dict *__restrict self) {
 		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy,0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
 	} Entry;
 	/* #1 Allocate 2 new element-vector of the same size as `self'
-  *    One of them has a length `d_mask+1', the other `d_used'
-  * #2 Copy all key/value pairs from `self' into the d_used-one (create references)
-  *    NOTE: Skip NULL/dummy entries in the Dict vector.
-  * #3 Go through the vector and create deep copies of all keys and items.
-  *    For every key, hash it and insert it into the 2nd vector from before.
-  * #4 Clear and free the 1st vector.
-  * #5 Assign the 2nd vector to the Dict, extracting the old one at the same time.
-  * #6 Clear and free the old vector. */
+	 *    One of them has a length `d_mask+1', the other `d_used'
+	 * #2 Copy all key/value pairs from `self' into the d_used-one (create references)
+	 *    NOTE: Skip NULL/dummy entries in the Dict vector.
+	 * #3 Go through the vector and create deep copies of all keys and items.
+	 *    For every key, hash it and insert it into the 2nd vector from before.
+	 * #4 Clear and free the 1st vector.
+	 * #5 Assign the 2nd vector to the Dict, extracting the old one at the same time.
+	 * #6 Clear and free the old vector. */
 	Entry *new_items, *items = NULL;
 	size_t i, hash_i, item_count, old_item_count = 0;
 	struct dict_item *new_map, *old_map;
@@ -387,7 +387,7 @@ dict_deepload(Dict *__restrict self) {
 	}
 	DeeDict_LockEndRead(self);
 	/* With our own local copy of all items being
-  * used, replace all of them with deep copies. */
+	 * used, replace all of them with deep copies. */
 	for (i = 0; i < item_count; ++i) {
 		if (DeeObject_InplaceDeepCopy(&items[i].e_key))
 			goto err_items_v;
@@ -807,7 +807,7 @@ again_lock:
 		item->di_value = NULL;
 		ASSERT(me->d_used);
 		/* Try to rehash the Dict and get rid of dummy
-   * items if there are a lot of them now. */
+		 * items if there are a lot of them now. */
 		if (--me->d_used <= me->d_size / 3)
 			dict_rehash(me, -1);
 		DeeDict_LockEndWrite(self);
@@ -858,7 +858,7 @@ again_lock:
 		item->di_value = NULL;
 		ASSERT(me->d_used);
 		/* Try to rehash the Dict and get rid of dummy
-   * items if there are a lot of them now. */
+		 * items if there are a lot of them now. */
 		if (--me->d_used <= me->d_size / 3)
 			dict_rehash(me, -1);
 		DeeDict_LockEndWrite(self);

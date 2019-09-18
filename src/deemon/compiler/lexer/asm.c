@@ -316,7 +316,7 @@ PRIVATE int
 	ASSERT(buf || !bufsize);
 	if ((string = self->sp_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
-   * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL' */
+		 * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL' */
 		if
 			unlikely(!bufsize)
 		return 0;

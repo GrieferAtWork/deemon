@@ -1854,19 +1854,19 @@ check_dst_sym_class_hybrid:
 	default: break;
 	}
 	/* TODO: Special handling when the stored value uses the target:
-  *  >> local my_list = [10,20,my_list]; // Should create a self-referencing list.
-  * ASM:
-  *  >>    pack List 0
-  *  >>    pop  local @my_list
-  *  >>    push local @my_list  // May be optimized to a dup
-  *  >>    push $10
-  *  >>    push $20
-  *  >>    push local @my_list
-  *  >>    pack List 3
-  *  >>    move assign top, pop // Move-assign the second list.
-  * Essentially, this would look like this:
-  *  >> local my_list = [];
-  *  >> my_list := [10,20,my_list]; */
+	 *  >> local my_list = [10,20,my_list]; // Should create a self-referencing list.
+	 * ASM:
+	 *  >>    pack List 0
+	 *  >>    pop  local @my_list
+	 *  >>    push local @my_list  // May be optimized to a dup
+	 *  >>    push $10
+	 *  >>    push $20
+	 *  >>    push local @my_list
+	 *  >>    pack List 3
+	 *  >>    move assign top, pop // Move-assign the second list.
+	 * Essentially, this would look like this:
+	 *  >> local my_list = [];
+	 *  >> my_list := [10,20,my_list]; */
 	if (asm_gpop_expr_enter(dst))
 		goto err;
 	if (ast_genasm(src, ASM_G_FPUSHRES))

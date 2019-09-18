@@ -1021,7 +1021,7 @@ restart_clear_weakrefs:
 					WEAKREF_UNLOCK(next);
 				}
 				/* Overwrite the weakly referenced object with NULL,
-     * indicating that the link has been severed. */
+				 * indicating that the link has been severed. */
 				ATOMIC_WRITE(iter->wr_obj, NULL);
 				ATOMIC_WRITE(list->wl_nodes, next);
 				if (iter->wr_del) {
@@ -1164,27 +1164,27 @@ restart_clear_weakrefs:
 
 
 #ifdef CONFIG_NO_BADREFCNT_CHECKS
-PUBLIC void (DCALL DeeObject_Destroy_d)
-(DeeObject *__restrict self, char const *UNUSED(file), int UNUSED(line)) {
+PUBLIC void (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
+                                        char const *UNUSED(file), int UNUSED(line)) {
 	return DeeObject_Destroy(self);
 }
 
 PUBLIC void (DCALL DeeObject_Destroy)(DeeObject *__restrict self)
-#else
+#else /* CONFIG_NO_BADREFCNT_CHECKS */
 PUBLIC void (DCALL DeeObject_Destroy)(DeeObject *__restrict self) {
 	return DeeObject_Destroy_d(self, NULL, 0);
 }
 
-PUBLIC void (DCALL DeeObject_Destroy_d)
-(DeeObject *__restrict self, char const *file, int line)
-#endif
+PUBLIC void (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
+                                        char const *file, int line)
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 {
 #undef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 	//#define CONFIG_OBJECT_DESTROY_CHECK_MEMORY 1
 	DeeTypeObject *orig_type, *type;
 #ifndef CONFIG_TRACE_REFCHANGES
 again:
-#endif
+#endif /* !CONFIG_TRACE_REFCHANGES */
 	orig_type = type = Dee_TYPE(self);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (self->ob_refcnt != 0) {
@@ -1201,17 +1201,17 @@ again:
 		BADREFCNT_END();
 		BREAKPOINT();
 	}
-#endif
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #if 0
 #ifndef CONFIG_NO_THREADS
- /* Make sure that all threads now see this object as dead.
-  * For why this is required, see `INCREF_IF_NONZERO()' */
- __hybrid_atomic_thread_fence(__ATOMIC_ACQ_REL);
-#endif
+	/* Make sure that all threads now see this object as dead.
+	 * For why this is required, see `INCREF_IF_NONZERO()' */
+	__hybrid_atomic_thread_fence(__ATOMIC_ACQ_REL);
+#endif /* !CONFIG_NO_THREADS */
 #endif
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 	DEE_CHECKMEMORY();
-#endif
+#endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 	if (type->tp_flags & TP_FGC) {
 		/* Special handling to track/untrack GC objects during destructor calls. */
 		/* Start by untracking the object in question. */
@@ -1223,18 +1223,18 @@ again:
 			        type->tp_name, orig_type->tp_name);
 			if (type->tp_init.tp_dtor) {
 				/* Update the object's typing to mirror what is written here.
-     * NOTE: We're allowed to modify the type of `self' _ONLY_
-     *       because it's reference counter is ZERO (and because
-     *       implementors of `tp_free' are aware of its volatile
-     *       nature that may only be interpreted as a free-hint).
-     * NOTE: This even applies to the slab allocators used by `DeeObject_MALLOC'! */
+				 * NOTE: We're allowed to modify the type of `self' _ONLY_
+				 *       because it's reference counter is ZERO (and because
+				 *       implementors of `tp_free' are aware of its volatile
+				 *       nature that may only be interpreted as a free-hint).
+				 * NOTE: This even applies to the slab allocators used by `DeeObject_MALLOC'! */
 				self->ob_type = type;
 				COMPILER_WRITE_BARRIER();
 				(*type->tp_init.tp_dtor)(self);
 				COMPILER_READ_BARRIER();
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 				DEE_CHECKMEMORY();
-#endif
+#endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 				/* Special case: The destructor managed to revive the object. */
 				if
 					unlikely(self->ob_refcnt != 0)
@@ -1246,12 +1246,12 @@ again:
 					/* Continue tracking the object. */
 					DeeGC_Track(self);
 					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
-      * in order to prevent a race condition that could otherwise occur when another
-      * thread would have cleared the external reference after the destructor created
-      * it, but before we were able to read out the fact that `ob_refcnt' was now
-      * non-zero. - If that were to happen, the other thread may also attempt to destroy
-      * the object, causing it to be destroyed in multiple threads at the same time,
-      * which is something that's not allowed! */
+					 * in order to prevent a race condition that could otherwise occur when another
+					 * thread would have cleared the external reference after the destructor created
+					 * it, but before we were able to read out the fact that `ob_refcnt' was now
+					 * non-zero. - If that were to happen, the other thread may also attempt to destroy
+					 * the object, causing it to be destroyed in multiple threads at the same time,
+					 * which is something that's not allowed! */
 					Dee_Decref(orig_type);
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
@@ -1263,14 +1263,14 @@ again:
 						if (oldref == 1)
 							goto again;
 					}
-#else
+#else /* !CONFIG_TRACE_REFCHANGES */
 					Dee_Decref(self);
-#endif
+#endif /* CONFIG_TRACE_REFCHANGES */
 					return;
 				}
 			}
 			/* Drop the reference held by this type.
-    * NOTE: Keep the reference to `orig_type' alive, though! */
+			 * NOTE: Keep the reference to `orig_type' alive, though! */
 			if ((type = type->tp_base) == NULL)
 				break;
 		}
@@ -1293,37 +1293,37 @@ again:
 			        orig_type->tp_name, type->tp_name);
 			if (type->tp_init.tp_dtor) {
 				/* Update the object's typing to mirror what is written here.
-     * NOTE: We're allowed to modify the type of `self' _ONLY_
-     *       because it's reference counter is ZERO (and because
-     *       implementors of `tp_free' are aware of its volatile
-     *       nature that may only be interpreted as a free-hint). */
+				 * NOTE: We're allowed to modify the type of `self' _ONLY_
+				 *       because it's reference counter is ZERO (and because
+				 *       implementors of `tp_free' are aware of its volatile
+				 *       nature that may only be interpreted as a free-hint). */
 				self->ob_type = type;
 				COMPILER_WRITE_BARRIER();
 				(*type->tp_init.tp_dtor)(self);
 				COMPILER_READ_BARRIER();
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 				DEE_CHECKMEMORY();
-#endif
+#endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 				/* Special case: The destructor managed to revive the object. */
 				if
 					unlikely(self->ob_refcnt != 0)
 				{
 					/* Incref() the new type that now describes this revived object.
-      * NOTE: The fact that this type may use a different (or none at all)
-      *       tp_free function, is the reason why no GC-able type from who's
-      *       destruct a user-callback that can somehow get ahold of the
-      *       instance being destroyed (which is also possible for any
-      *       weakly referencable type), is allowed to assume that it
-      *       will actually be called, limiting its use to pre-allocated object
-      *       caches that allocate their instances using `DeeObject_Malloc'. */
+					 * NOTE: The fact that this type may use a different (or none at all)
+					 *       tp_free function, is the reason why no GC-able type from who's
+					 *       destruct a user-callback that can somehow get ahold of the
+					 *       instance being destroyed (which is also possible for any
+					 *       weakly referencable type), is allowed to assume that it
+					 *       will actually be called, limiting its use to pre-allocated object
+					 *       caches that allocate their instances using `DeeObject_Malloc'. */
 					Dee_Incref(type);
 					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
-      * in order to prevent a race condition that could otherwise occur when another
-      * thread would have cleared the external reference after the destructor created
-      * it, but before we were able to read out the fact that `ob_refcnt' was now
-      * non-zero. - If that were to happen, the other thread may also attempt to destroy
-      * the object, causing it to be destroyed in multiple threads at the same time,
-      * which is something that's not allowed! */
+					 * in order to prevent a race condition that could otherwise occur when another
+					 * thread would have cleared the external reference after the destructor created
+					 * it, but before we were able to read out the fact that `ob_refcnt' was now
+					 * non-zero. - If that were to happen, the other thread may also attempt to destroy
+					 * the object, causing it to be destroyed in multiple threads at the same time,
+					 * which is something that's not allowed! */
 					Dee_Decref(orig_type);
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
@@ -1473,8 +1473,8 @@ object_sizeof(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	/* Individual sub-types should override this function and add the proper value.
-  * This implementation is merely used for any generic fixed-length type that
-  * doesn't do any custom heap allocations. */
+	 * This implementation is merely used for any generic fixed-length type that
+	 * doesn't do any custom heap allocations. */
 	type = Dee_TYPE(self);
 	/* Variable types lack a standardized way of determining their size in bytes. */
 	if
@@ -3336,7 +3336,7 @@ impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
                               char const *name_str,
                               dhash_t name_hash) {
 	/* TODO: Lookup the attribute in the member cache, and
-  *       see which type is set as the declaring type! */
+	 *       see which type is set as the declaring type! */
 	if (DeeType_IsClass(self)) {
 		struct class_desc *desc = DeeClass_DESC(self);
 		if (DeeClassDesc_QueryInstanceAttributeStringWithHash(desc, name_str, name_hash) != NULL)
@@ -4155,12 +4155,12 @@ PUBLIC DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
 	/* - For user-defined classes: search though all the operator/method bindings
-  *   described for the class member table, testing them for functions and
-  *   returning the module that they are bound to.
-  * - For types loaded by dex modules, do some platform-specific trickery to
-  *   determine the address space bounds within which the module was loaded,
-  *   then simply compare the type pointer against those bounds.
-  * - All other types are defined as part of the builtin `deemon' module. */
+	 *   described for the class member table, testing them for functions and
+	 *   returning the module that they are bound to.
+	 * - For types loaded by dex modules, do some platform-specific trickery to
+	 *   determine the address space bounds within which the module was loaded,
+	 *   then simply compare the type pointer against those bounds.
+	 * - All other types are defined as part of the builtin `deemon' module. */
 again:
 	if (self->tp_class)
 		return DeeClass_GetModule(self);
@@ -4171,9 +4171,9 @@ again:
 			return result;
 	}
 	/* Special case for custom type-types (such
-  * as those provided by the `ctypes' module)
-  *  -> In this case, we simply return the module associated with the
-  *     typetype, thus allowing custom types to be resolved as well. */
+	 * as those provided by the `ctypes' module)
+	 *  -> In this case, we simply return the module associated with the
+	 *     typetype, thus allowing custom types to be resolved as well. */
 	if (self != Dee_TYPE(self)) {
 		self = Dee_TYPE(self);
 		if (self != &DeeType_Type &&

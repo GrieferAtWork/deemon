@@ -1597,7 +1597,7 @@ bytes_join(Bytes *__restrict self,
 						                              DeeBytes_SIZE(self)) < 0)
 					goto err_elem;
 					/* NOTE: `bytes_printer_printobject()' automatically
-     *        optimizes for other bytes objects being printed. */
+					 *        optimizes for other bytes objects being printed. */
 					if
 						unlikely(bytes_printer_printobject(&printer, elem) < 0)
 					goto err_elem;

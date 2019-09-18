@@ -840,8 +840,8 @@ buffer_seek_nolock(Buffer *__restrict self,
 		/* Truncate the read buffer */
 		if (new_pos < self->fb_ptr) {
 			/* Seek below the current pointer (but we don't
-    * remember how much was actually read there, so
-    * we simply truncate the buffer fully) */
+			 * remember how much was actually read there, so
+			 * we simply truncate the buffer fully) */
 			self->fb_cnt = 0;
 		} else {
 			size_t skipsz = (size_t)(new_pos - self->fb_ptr);

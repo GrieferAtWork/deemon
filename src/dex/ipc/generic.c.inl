@@ -521,8 +521,8 @@ PRIVATE struct type_getset process_getsets[] = {
 	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & process_set_environ,
 	  DOC("->?S?T2?Dstring?Dstring\nThe state of environment variables in the given process") },
 	/* Process environment control:
-     * >> property memory -> file; // A file allowing read/write access to the process's VM
-     */
+	 * >> property memory -> file; // A file allowing read/write access to the process's VM
+	 */
 	{ NULL }
 };
 

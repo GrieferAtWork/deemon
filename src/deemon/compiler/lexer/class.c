@@ -160,7 +160,7 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	DREF DeeClassDescriptorObject *new_descr;
 	new_mask = (self->cd_iattr_mask << 1) | 1;
 	/* The instance-attribute table is pre-initialized
-  * to a mask of `7', so this would never trigger. */
+	 * to a mask of `7', so this would never trigger. */
 	/*if (new_mask <= 1) new_mask = 7;*/
 	new_descr = (DeeClassDescriptorObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
 	                                                         (new_mask + 1) * sizeof(struct class_attribute));

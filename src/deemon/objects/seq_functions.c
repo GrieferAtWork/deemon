@@ -668,7 +668,7 @@ DeeSeq_Min_k(DeeObject *__restrict self,
 					Dee_Decref(key_result);
 					Dee_Decref(result);
 					/* Continue working with `elem' after
-     * `result < elem' evaluated to `false' */
+					 * `result < elem' evaluated to `false' */
 					result     = elem;
 					key_result = key_elem;
 				} else {
@@ -733,7 +733,7 @@ DeeSeq_Max_k(DeeObject *__restrict self,
 					Dee_Decref(key_result);
 					Dee_Decref(result);
 					/* Continue working with `elem' after
-     * `result < elem' evaluated to `false' */
+					 * `result < elem' evaluated to `false' */
 					result     = elem;
 					key_result = key_elem;
 				}
@@ -780,7 +780,7 @@ DeeSeq_Min(DeeObject *__restrict self, DeeObject *key) {
 						goto err_r_iter_elem;
 					Dee_Decref(result);
 					/* Continue working with `elem' after
-     * `result < elem' evaluated to `false' */
+					 * `result < elem' evaluated to `false' */
 					result = elem;
 				} else {
 					Dee_Decref(elem);
@@ -828,7 +828,7 @@ DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
 				} else {
 					Dee_Decref(result);
 					/* Continue working with `elem' after
-     * `result < elem' evaluated to `false' */
+					 * `result < elem' evaluated to `false' */
 					result = elem;
 				}
 			}
@@ -1586,50 +1586,50 @@ DeeSeq_CountSeq(DeeObject *__restrict self,
 	(void)seq;
 	(void)key;
 	/*
-  * >> function copy_iterator(seq,iter,i) {
-  * >>     try {
-  * >>         return copy iter;
-  * >>     } catch (Error.RuntimeError.NotImplemented |
-  * >>              Error.ValueError) {
-  * >>         // Re-create the iterator.
-  * >>         local result = seq.operator __iter__();
-  * >>         while (i--) result.operator __next__();
-  * >>         return result;
-  * >>     }
-  * >> }
-  * >> function iter_same(a,b) {
-  * >>     try {
-  * >>         foreach(local elem_b: b) {
-  * >>             local elem_a = a.operator __next__();
-  * >>             if (!key(elem_a,elem_b))
-  * >>                 return false;
-  * >>         }
-  * >>     } catch (Signal.StopIteration) {
-  * >>         return false;
-  * >>     }
-  * >>     return true;
-  * >> }
-  * >> 
-  * >> local iter = self.operator __iter__();
-  * >> local head = seq.operator __iter__();
-  * >> local first;
-  * >> try {
-  * >>     first = head.operator __next__();
-  * >> } catch (Signal.StopIteration) {
-  * >>     return 0;
-  * >> }
-  * >> local result = 0;
-  * >> local i = 0;
-  * >> foreach(local elem: iter) {
-  * >>     ++i;
-  * >>     if (key(elem,first)) {
-  * >>         if (iter_same(copy_iterator(self,iter,i),
-  * >>                       copy_iterator(seq,head,1)))
-  * >>             ++result;
-  * >>     }
-  * >> }
-  * >> return result;
-  */
+	 * >> function copy_iterator(seq,iter,i) {
+	 * >>     try {
+	 * >>         return copy iter;
+	 * >>     } catch (Error.RuntimeError.NotImplemented |
+	 * >>              Error.ValueError) {
+	 * >>         // Re-create the iterator.
+	 * >>         local result = seq.operator __iter__();
+	 * >>         while (i--) result.operator __next__();
+	 * >>         return result;
+	 * >>     }
+	 * >> }
+	 * >> function iter_same(a,b) {
+	 * >>     try {
+	 * >>         foreach(local elem_b: b) {
+	 * >>             local elem_a = a.operator __next__();
+	 * >>             if (!key(elem_a,elem_b))
+	 * >>                 return false;
+	 * >>         }
+	 * >>     } catch (Signal.StopIteration) {
+	 * >>         return false;
+	 * >>     }
+	 * >>     return true;
+	 * >> }
+	 * >> 
+	 * >> local iter = self.operator __iter__();
+	 * >> local head = seq.operator __iter__();
+	 * >> local first;
+	 * >> try {
+	 * >>     first = head.operator __next__();
+	 * >> } catch (Signal.StopIteration) {
+	 * >>     return 0;
+	 * >> }
+	 * >> local result = 0;
+	 * >> local i = 0;
+	 * >> foreach(local elem: iter) {
+	 * >>     ++i;
+	 * >>     if (key(elem,first)) {
+	 * >>         if (iter_same(copy_iterator(self,iter,i),
+	 * >>                       copy_iterator(seq,head,1)))
+	 * >>             ++result;
+	 * >>     }
+	 * >> }
+	 * >> return result;
+	 */
 	DERROR_NOTIMPLEMENTED();
 	return (size_t)-1;
 }

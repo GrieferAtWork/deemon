@@ -445,7 +445,7 @@ INTERN int
 			continue; /* Negative assumptions are or'd together. */
 		sass = ast_assumes_getsymbol(sibling, cass->sa_sym);
 		/* Turn into a negative assumptions if the other branch
-   * doesn't made the same assumptions about the symbol. */
+		 * doesn't made the same assumptions about the symbol. */
 		if (!sass || !sass->sa_value ||
 		    !same_constant_value(cass->sa_value, sass->sa_value))
 			Dee_Clear(cass->sa_value);

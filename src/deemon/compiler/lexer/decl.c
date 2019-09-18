@@ -271,7 +271,7 @@ check_symbol:
 
 		case SYMBOL_TYPE_EXTERN:
 			/* Check if the symbol refers to the same type, when
-    * that type is exported from the deemon module. */
+			 * that type is exported from the deemon module. */
 			if (sym->s_extern.e_module != &deemon_module)
 				return false;
 			if (sym->s_extern.e_symbol->ss_index < deemon_module.mo_globalc &&

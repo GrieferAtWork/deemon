@@ -1208,9 +1208,9 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 	result = EVAL_PRIMARY(self, pwas_expression);
 #ifdef JIT_EVAL
 	/* Always leave the with-object.
-  * WARNING: This operation may cause a secondary exception to
-  *          be thrown. - If this happens, that exception will
-  *          be dumped by exec() before returning to user-code. */
+	 * WARNING: This operation may cause a secondary exception to
+	 *          be thrown. - If this happens, that exception will
+	 *          be dumped by exec() before returning to user-code. */
 	if (DeeObject_Leave(with_obj)) {
 		DECREF_MAYBE_LVALUE(result);
 		result = ERROR;

@@ -1037,7 +1037,7 @@ ast_makeloop(DeeCompilerObject *__restrict self,
 	DeeCompilerAstObject *next = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerAstObject *loop = (DeeCompilerAstObject *)Dee_None;
 	/* "(flags:?Dstring,ast elem=!N,ast iter,ast loop=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
-  * "(flags:?Dstring,ast cond=!N,ast next=!N,ast loop=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
+	 * "(flags:?Dstring,ast cond=!N,ast next=!N,ast loop=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
 	if
 		unlikely(!argc)
 	{
@@ -1439,7 +1439,7 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 		                       "base-scope as the function initializer");
 	}
 	/* Make sure that the base-scope of the function
-  * initializer can be reached from the function itself. */
+	 * initializer can be reached from the function itself. */
 	for (;;) {
 		code_scope = code_scope->bs_prev;
 		if (code_scope == ast_base_scope)
@@ -1560,7 +1560,7 @@ ast_makeoperatorfunc(DeeCompilerObject *__restrict self,
                      size_t argc, DeeObject **__restrict argv,
                      DeeObject *kw) {
 	/* "(string name,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
-  * "(int name,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
+	 * "(int name,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
 	uint16_t id;
@@ -1655,7 +1655,7 @@ ast_makeoperator(DeeCompilerObject *__restrict self,
                  size_t argc, DeeObject **__restrict argv,
                  DeeObject *kw) {
 	/* "(string name,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n"
-  * "(int name,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n" */
+	 * "(int name,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
 	uint16_t id, flags = 0;

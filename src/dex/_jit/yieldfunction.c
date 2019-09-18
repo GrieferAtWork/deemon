@@ -121,9 +121,9 @@ jy_iter(JITYieldFunction *__restrict self) {
 	       (result->ji_loc.ot_mask + 1) * sizeof(struct jit_object_entry));
 
 	/* Define the self-argument.
-  * NOTE: Do this before loading arguments, in case one of the arguments
-  *       uses the same name as the function, in which case that argument
-  *       must be loaded, rather than the function loading itself! */
+	 * NOTE: Do this before loading arguments, in case one of the arguments
+	 *       uses the same name as the function, in which case that argument
+	 *       must be loaded, rather than the function loading itself! */
 	if (jf->jf_selfarg != (size_t)-1) {
 		ASSERT(result->ji_loc.ot_list[jf->jf_selfarg].oe_value == NULL);
 		result->ji_loc.ot_list[jf->jf_selfarg].oe_value = (DREF DeeObject *)self;

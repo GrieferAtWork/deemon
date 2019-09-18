@@ -1191,7 +1191,7 @@ yfi_run_finally(YFIterator *__restrict self) {
 		unlikely(!self->yi_func)
 	return;
 	/* Recursively execute all finally-handlers that
-  * protect the current PC until none are left. */
+	 * protect the current PC until none are left. */
 	code = self->yi_frame.cf_func->fo_code;
 	if
 		unlikely(!code)

@@ -476,7 +476,7 @@ DeeFile_OpenString(char const *__restrict filename,
                    int oflags, int mode) {
 	DREF DeeObject *result, *nameob;
 	/* Due to the whole wide-string mess on windows, this is
-  * just a thin wrapper around the string-object version. */
+	 * just a thin wrapper around the string-object version. */
 	nameob = DeeString_New(filename);
 	if
 		unlikely(!nameob)

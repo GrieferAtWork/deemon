@@ -237,9 +237,9 @@ librt_get_KwdsMappingIterator_f(size_t UNUSED(argc), DeeObject **__restrict UNUS
 PRIVATE DREF DeeObject *DCALL
 librt_get_GenericIterator_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
 	/* The internal `_ObjectTable' type doesn't implement its own iterator type,
-  * but instead uses the generic iterator. - By requesting access to the iterator
-  * that's being used, we can thereby gain backdoor access to the internal, generic
-  * iterator implementation type. */
+	 * but instead uses the generic iterator. - By requesting access to the iterator
+	 * that's being used, we can thereby gain backdoor access to the internal, generic
+	 * iterator implementation type. */
 	return get_iterator_of(librt_get_ObjectTable_impl_f());
 }
 

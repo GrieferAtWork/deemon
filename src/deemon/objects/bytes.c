@@ -276,7 +276,7 @@ PUBLIC int
 	}
 	if (DeeBytes_Check(seq)) {
 		/* Optional optimization for `bytes' (though this one
-   * would also function using the fallback code below). */
+		 * would also function using the fallback code below). */
 		if (DeeBytes_SIZE(seq) != num_bytes) {
 			err_invalid_unpack_size(seq, num_bytes, DeeBytes_SIZE(seq));
 			goto err;
@@ -1210,7 +1210,7 @@ bytes_mod(Bytes *__restrict self,
 		argc = 1;
 	}
 	/* Use a different printer for format-copy-characters, thus allowing
-  * us to not need to both encoding the bytes from `self' as UTF-8. */
+	 * us to not need to both encoding the bytes from `self' as UTF-8. */
 	if
 		unlikely(DeeString_CFormat(&bytes_printer_print,
 		                           (dformatprinter)&bytes_printer_append,
@@ -2202,7 +2202,7 @@ Dee_bytes_printer_append(struct bytes_printer *__restrict self,
 	ASSERT(data || !datalen);
 	if ((bytes = self->bp_bytes) == NULL) {
 		/* Make sure not to allocate a bytes when the used length remains ZERO.
-   * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
+		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
 		if
 			unlikely(!datalen)
 		return 0;

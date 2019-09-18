@@ -372,11 +372,11 @@ DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc,
                                     /*inherit*/ DREF struct ast **__restrict exprv)) {
 	DREF struct ast *result;
 	/* Prevent AST ambiguity by not allowing
-  * keep-last, single-element multiple ASTs.
-  * -> ... Because they're literally no-ops that would otherwise
-  *        confuse the optimizer into not detecting constant
-  *        expressions, as well as special behavior surrounding
-  *       `AST_EXPAND' expressions not being triggered. */
+	 * keep-last, single-element multiple ASTs.
+	 * -> ... Because they're literally no-ops that would otherwise
+	 *        confuse the optimizer into not detecting constant
+	 *        expressions, as well as special behavior surrounding
+	 *       `AST_EXPAND' expressions not being triggered. */
 	if
 		unlikely(exprc == 1 && flags == AST_FMULTIPLE_KEEPLAST &&
 		         current_scope == exprv[0]->a_scope)
@@ -524,7 +524,7 @@ DEFINE_AST_GENERATOR(ast_loop,
 		likely((result = ast_new()) != NULL)
 	{
 		/* Apply the unlikely-branch tag to loop expressions.
-   * When set, the loop block is usually placed in cold text. */
+		 * When set, the loop block is usually placed in cold text. */
 #if AST_FCOND_UNLIKELY == AST_FLOOP_UNLIKELY
 		flags |= (current_tags.at_expect & AST_FCOND_UNLIKELY);
 #else  /* AST_FCOND_UNLIKELY == AST_FLOOP_UNLIKELY */

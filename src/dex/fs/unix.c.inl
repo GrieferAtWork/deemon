@@ -1601,7 +1601,7 @@ err_isdir:
 			if (S_ISDIR(st.st_mode))
 				goto err_isdir;
 			/* Posix also states that the presence of the
-    * S_ISVTX bit may cause EPERM to be returned. */
+			 * S_ISVTX bit may cause EPERM to be returned. */
 			if (st.st_mode & STAT_ISVTX)
 				goto err_access;
 		}

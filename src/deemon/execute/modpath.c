@@ -3104,11 +3104,11 @@ DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
 	}
 
 	/* Push the initial source file onto the #include-stack,
-  * and TPP inherit our reference to it. */
+	 * and TPP inherit our reference to it. */
 	TPPLexer_PushFileInherited(base_file);
 
 	/* Override the name that is used as the
-  * effective display/DDI string of the file. */
+	 * effective display/DDI string of the file. */
 	if (options && options->co_filename) {
 		struct TPPString *used_name;
 		ASSERT_OBJECT_TYPE_EXACT(options->co_filename, &DeeString_Type);
@@ -3132,7 +3132,7 @@ DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
 	inner_compiler_options = NULL;
 	if (options) {
 		/* Set the name of the current base-scope, which
-   * describes the function of the module's root code. */
+		 * describes the function of the module's root code. */
 		if (options->co_rootname) {
 			ASSERT_OBJECT_TYPE_EXACT(options->co_rootname, &DeeString_Type);
 			current_basescope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(options->co_rootname),

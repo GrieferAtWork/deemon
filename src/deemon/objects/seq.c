@@ -2548,14 +2548,14 @@ INTERN struct type_method seq_methods[] = {
 	      "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
 
 	/* TODO: unique(key:?DCallable=!N)->?DSequence
-     * Returns a generic Sequence proxy that contains all of the elements from @this Sequence,
-     * however will only enumerate the first of n consecutive objects for which ${key(first) == key(nth)}
-     * evaluates to true (essentially removing all duplicate, neighboring items)
-     * When @key is none, the behavior is the same as though @key was `identity from functools'
-     * >> local items = collect_items();
-     * >> local unique_items = items.sorted(Object.id).unique(Object.id);
-     * >> // `unique_items' now contains no object more than once
-     */
+	 * Returns a generic Sequence proxy that contains all of the elements from @this Sequence,
+	 * however will only enumerate the first of n consecutive objects for which ${key(first) == key(nth)}
+	 * evaluates to true (essentially removing all duplicate, neighboring items)
+	 * When @key is none, the behavior is the same as though @key was `identity from functools'
+	 * >> local items = collect_items();
+	 * >> local unique_items = items.sorted(Object.id).unique(Object.id);
+	 * >> // `unique_items' now contains no object more than once
+	 */
 
 	/* TODO: join(?S?DSequence items) -> Sequence */
 	/* TODO: strip(object item, callable key = none) -> Sequence */

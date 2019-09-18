@@ -262,8 +262,8 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&splititer_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /*  No visit, because it only ever references strings
-                                    * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
+	                                 * (or rather an object that can only reference strings). */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &splititer_cmp,
@@ -308,8 +308,8 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 		/* .tp_bool = */ NULL  /* INHERITED */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /*  No visit, because it only ever references strings
-                                    * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
+	                                 * (or rather an object that can only reference strings). */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL, /* INHERITED */
@@ -754,8 +754,8 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /*  No visit, because it only ever references strings
-                                    * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
+	                                 * (or rather an object that can only reference strings). */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &splititer_cmp, /* offset:`s_next' == offset:`ls_next' */

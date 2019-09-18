@@ -1236,8 +1236,8 @@ iri_next(IntRangeIterator *__restrict self) {
 PRIVATE struct type_member iri_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(IntRangeIterator, iri_range), "->?Ert:SeqIntRange"),
 	/* We allow write-access to these members because doing so doesn't
-     * actually harm anything, although fiddling with this stuff may
-     * break some weak expectations but should never crash anything! */
+	 * actually harm anything, although fiddling with this stuff may
+	 * break some weak expectations but should never crash anything! */
 	TYPE_MEMBER_FIELD("__index__", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRangeIterator, iri_index)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRangeIterator, iri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRangeIterator, iri_step)),

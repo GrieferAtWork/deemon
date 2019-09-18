@@ -623,7 +623,7 @@ PRIVATE DREF DeeObject *DCALL
 array_call(DeeArrayTypeObject *__restrict tp_self,
            void *base, size_t argc, DeeObject **__restrict argv) {
 	/* Because arrays must behave compatible to pointers,
-  * calling an array will call its first element. */
+	 * calling an array will call its first element. */
 	return DeeStruct_Call(tp_self->at_orig, base, argc, argv);
 }
 

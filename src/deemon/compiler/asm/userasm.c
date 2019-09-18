@@ -1213,7 +1213,7 @@ do_emit_instruction:
 }
 
 	/* Make sure to always set the assembly flag
-  * for code objects containing user-assembly. */
+	 * for code objects containing user-assembly. */
 	current_basescope->bs_flags |= CODE_FASSEMBLY;
 done:
 	return 0;
@@ -1432,7 +1432,7 @@ abs_stack_any:
 				goto err;
 		} else if (option != ASM_OP_STACK) {
 			/* Since this is a stack-operand, we _must_ provide an initial
-    * value despite the fact that it is an output-only operation. */
+			 * value despite the fact that it is an output-only operation. */
 			if (asm_gpush_none())
 				goto err;
 		} else {

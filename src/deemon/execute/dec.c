@@ -2316,9 +2316,9 @@ DecFile_LoadDDI(DecFile *__restrict self,
 		goto handle_map_error;
 
 	/* Use the string table of the DEC file as DDI string table,
-  * thus allowing data-reuse and solving the problem that DEC
-  * files allow DDI strings to be mixed & shared with all the
-  * other strings which we'd have to separate otherwise. */
+	 * thus allowing data-reuse and solving the problem that DEC
+	 * files allow DDI strings to be mixed & shared with all the
+	 * other strings which we'd have to separate otherwise. */
 	result->d_strtab = (DREF DeeStringObject *)DecFile_Strtab(self);
 	if
 		unlikely(!result->d_strtab)
@@ -2661,7 +2661,7 @@ err_kwds_i:
 	}
 
 	/* Load the code's text assembly from the file.
-  * NOTE: The existence of the text segment has already been checked above. */
+	 * NOTE: The existence of the text segment has already been checked above. */
 #if 0 /* Hide the fact that we've extended the text segment by a couple of `ret none' instructions. \
        * Without this, code would be able to determine that it was                                  \
        * loaded in untrusted mode by examining its own code object. */

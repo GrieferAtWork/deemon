@@ -109,8 +109,8 @@ fs_copyfile(DeeObject *__restrict existing_file,
 			unlikely(file_size == (dpos_t)-1)
 		{
 			/* Failed to determine stream size.
-    * If this is because the source stream doesn't implement
-    * seeking, ignore the error and proceed to copy file data. */
+			 * If this is because the source stream doesn't implement
+			 * seeking, ignore the error and proceed to copy file data. */
 			if (!DeeError_Catch(&DeeError_NotImplemented))
 				goto err_dst;
 		}
@@ -165,8 +165,8 @@ DeeTime_New(uint64_t microseconds) {
 		/* Try to lookup the object as a native function pointer. */
 		*(void **)&funp = DeeModule_GetNativeSymbol(TIME_MODULE, "DeeTime_New");
 		/* Not a native dex, the wrong dex, or a user-implemented dex.
-   * In any case, the specs describe a user-function `makeanon'
-   * that also does what we need to do. */
+		 * In any case, the specs describe a user-function `makeanon'
+		 * that also does what we need to do. */
 		if (!funp)
 			funp = &default_DeeTime_New;
 		p_DeeTime_New = funp;

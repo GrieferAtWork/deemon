@@ -1128,7 +1128,7 @@ again:
 	/* Done! Now save the attribute in the collection buffer. */
 	*iterator->ei_bufpos++ = new_attribute;
 	/* If the buffer is not full, jump over to the
-  * caller and let them yield what we've collected. */
+	 * caller and let them yield what we've collected. */
 	if (iterator->ei_bufpos == COMPILER_ENDOF(iterator->ei_buffer)) {
 		iterator->ei_bufpos = iterator->ei_buffer;
 		if ((error = setjmp(iterator->ei_continue)) == 0)
@@ -1140,7 +1140,7 @@ again:
 	return 0;
 err_collect:
 	/* Let the other end collect memory for us.
-  * With how small our stack is, we'd probably not be able to
+	 * With how small our stack is, we'd probably not be able to
   * safely execute user-code that may be invoked from gc-callbacks
   * associated with the memory collection sub-system. */
 	if ((error = setjmp(iterator->ei_continue)) == 0)

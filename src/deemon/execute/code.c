@@ -885,8 +885,8 @@ PRIVATE struct type_getset code_getsets[] = {
 	  DOC("->?S?O\n"
 	      "Access to the default values of arguments") },
 	/* Code-specific RTTI fields don't have leading/trailing underscores,
-     * because they don't need to match the ABI also provided by numerous
-     * other types (such as `function', `objmethod', etc.) */
+	 * because they don't need to match the ABI also provided by numerous
+	 * other types (such as `function', `objmethod', etc.) */
 	{ "statics",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & code_getstatic, NULL, NULL,
 	  DOC("->?S?O\n"

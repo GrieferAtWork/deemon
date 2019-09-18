@@ -1612,8 +1612,8 @@ again:
 		if (socket_upgrade(self) ||
 		    !(self->s_state & SOCKET_FSENDCONFOK)) {
 			/* Configure the socket for sending before the first send call.
-    * >> Unless overwritten by user-configurations, the socket
-    *    should not be blocking when attempting to send data. */
+			 * >> Unless overwritten by user-configurations, the socket
+			 *    should not be blocking when attempting to send data. */
 			result = socket_configure_send(self);
 			if
 				unlikely(result)
@@ -1629,7 +1629,7 @@ again:
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
 	result = wait_for_send(self, end_time);
 	/* NOTE: in the event of a timeout or error,
-  *      `wait_for_send()' will have unlocked the socket. */
+	 *      `wait_for_send()' will have unlocked the socket. */
 	if
 		unlikely(result)
 	goto done;
@@ -1743,8 +1743,8 @@ again:
 		if (socket_upgrade(self) ||
 		    !(self->s_state & SOCKET_FRECVCONFOK)) {
 			/* Configure the socket for receiving before the first recv call.
-    * >> Unless overwritten by user-configurations, the socket
-    *    should not be blocking when attempting to receive data. */
+			 * >> Unless overwritten by user-configurations, the socket
+			 *    should not be blocking when attempting to receive data. */
 			result = socket_configure_recv(self);
 			if
 				unlikely(result)
@@ -1760,7 +1760,7 @@ again:
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
 	result = wait_for_recv(self, end_time);
 	/* NOTE: in the event of a timeout or error,
-  *      `wait_for_recv()' will have unlocked the socket. */
+	 *      `wait_for_recv()' will have unlocked the socket. */
 	if
 		unlikely(result)
 	goto done;
@@ -1841,7 +1841,7 @@ PRIVATE size_t DCALL get_recv_chunksize(void) {
 PRIVATE size_t DCALL get_recv_burstsize(void) {
 	/* XXX: Consult an environment variable? */
 	/* The max size of a single ethernet frame
-  * (although we can't really assume ethernet connections...) */
+	 * (although we can't really assume ethernet connections...) */
 	return 1542;
 }
 

@@ -579,10 +579,10 @@ frame_setpc(Frame *__restrict self, DeeObject *__restrict value) {
 		unlikely(DeeObject_AsUInt32(value, &pc))
 	goto err;
 	/* Make sure that the stack-depth is either entirely unknown,
-  * or has been reverse engineered based on the starting PC.
-  * This is required, since we're about to modify PC, meaning that
-  * if SP was still unknown at this point, trying to reverse it at
-  * a later point in time could yield invalid results. */
+	 * or has been reverse engineered based on the starting PC.
+	 * This is required, since we're about to modify PC, meaning that
+	 * if SP was still unknown at this point, trying to reverse it at
+	 * a later point in time could yield invalid results. */
 	if ((self->f_flags & (DEEFRAME_FUNDEFSP | DEEFRAME_FUNDEFSP2)) ==
 	    DEEFRAME_FUNDEFSP)
 		frame_revengsp(self);

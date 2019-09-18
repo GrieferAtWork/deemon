@@ -96,7 +96,7 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 INTERN int DCALL
 userassembler_init(void) {
 	/* HINT: The caller will have already zero-initialized
-  *      `current_userasm' and `symtab' */
+	 *      `current_userasm' and `symtab' */
 	current_userasm.ua_lasti  = ASM_DELOP;
 	current_userasm.ua_asmuid = DeeCompiler_Current->cp_uasm_unique;
 	return 0;
@@ -257,7 +257,7 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 		unlikely(return_back_symbol)
 	{
 		/* If the symbol doesn't already exist,
-   * backward referencing is illegal. */
+		 * backward referencing is illegal. */
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Cannot cast backward reference to undefined symbol `%$s'",
 		                name->k_size, name->k_name);
@@ -351,7 +351,7 @@ uasm_parse_symnam(void) {
 			unlikely(!strval)
 		goto err;
 		/* Re-interprete the parsed string as a keyword that is then used as
-   * a symbol name (thus allowing _anything_ to appear in a symbol name). */
+		 * a symbol name (thus allowing _anything_ to appear in a symbol name). */
 		result = TPPLexer_LookupKeyword(strval->s_text,
 		                                strval->s_size, 1);
 		TPPString_Decref(strval);
@@ -361,7 +361,7 @@ uasm_parse_symnam(void) {
 	    !TOK_IS_SYMBOL_NAME_CH(*token.t_end) &&
 	    !DeeUni_IsSymCont(*token.t_end)) {
 		/* Simple case: the following character doesn't continue the symbol's name.
-   * In this case, we don't need to re-validate the symbol name. */
+		 * In this case, we don't need to re-validate the symbol name. */
 		result = token.t_kwd;
 		if
 			unlikely(yield() < 0)
@@ -387,7 +387,7 @@ continue_without_inc:
 			goto continue_without_inc;
 		}
 		/* We allow unicode symbol characters, as well as
-   * some special characters, but no whitespace! */
+		 * some special characters, but no whitespace! */
 		if (TOK_IS_SYMBOL_NAME_CH(*symbol_end))
 			continue;
 		if (DeeUni_IsSymCont(*symbol_end))

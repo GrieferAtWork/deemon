@@ -274,8 +274,8 @@ do_realloc:
 		unlikely(!elem)
 	goto err;
 	/* Save the allocated vector in the list.
-  * NOTE: Since lists are capable of being over-allocated, we don't truncate
-  *       our allocation but store that information in the list, too. */
+	 * NOTE: Since lists are capable of being over-allocated, we don't truncate
+	 *       our allocation but store that information in the list, too. */
 	self->l_alloc = alloc;
 	self->l_elem  = vector;
 	self->l_size  = size;
@@ -408,7 +408,7 @@ DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv) 
 	MEMCPY_PTR(DeeList_ELEM(result), objv, objc);
 	COMPILER_WRITE_BARRIER();
 	/* Now that the list's been filled with data,
-  * we can start tracking it as a GC object. */
+	 * we can start tracking it as a GC object. */
 	DeeGC_Track(result);
 done:
 	return result;
@@ -1970,7 +1970,7 @@ again:
 	if ((size_t)start_index >= (size_t)end_index) {
 		if (!self->l_size) {
 			/* Special case: The list didn't contain anything, yet
-    * -> Here, we can simply invert the insert-vector and call it a day! */
+			 * -> Here, we can simply invert the insert-vector and call it a day! */
 			Dee_Free(self->l_elem);
 			self->l_alloc = insert_count;
 			self->l_size  = insert_count;
@@ -2109,7 +2109,7 @@ again:
 		start_index = (dssize_t)DeeList_SIZE(self);
 		if (!self->l_size) {
 			/* Special case: The list didn't contain anything, yet
-    * -> Here, we can simply invert the insert-vector and call it a day! */
+			 * -> Here, we can simply invert the insert-vector and call it a day! */
 			Dee_Free(self->l_elem);
 			self->l_alloc = insert_count;
 			self->l_size  = insert_count;

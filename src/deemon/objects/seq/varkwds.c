@@ -997,17 +997,17 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 		unlikely(!DeeKwds_SIZE(kwds))
 	{
 		/* No keywords --> Return an empty mapping.
-   * -> This can happen depending on how keyword arguments
-   *    have been routed throughout the runtime. */
+		 * -> This can happen depending on how keyword arguments
+		 *    have been routed throughout the runtime. */
 		Dee_Incref(Dee_EmptyMapping);
 		return Dee_EmptyMapping;
 	}
 	argc = code->co_argc_max;
 	if (positional_argc >= argc || !code->co_keywords) {
 		/* No keyword information --> Return an unfiltered keywords mapping object.
-   * -> This happens for purely varkwds user-code functions, such a function
-   *    written as `function foo(**kwds)', in which case there aren't any other
-   *    keyword which would have to be blacklisted when access is made. */
+		 * -> This happens for purely varkwds user-code functions, such a function
+		 *    written as `function foo(**kwds)', in which case there aren't any other
+		 *    keyword which would have to be blacklisted when access is made. */
 		return DeeKwdsMapping_New((DeeObject *)kwds, argv);
 	}
 	/* Calculate an appropriate mask for the blacklist hash-set. */

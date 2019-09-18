@@ -3394,7 +3394,7 @@ PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
 PRIVATE DREF DeeObject *DCALL
 make_removeif_all_wrapper(DeeObject *__restrict elem, DeeObject *key) {
 	/* >> return [](x) -> keyed_search_item == (key is none ? x : key(x));
-  * So simple, yet sooo complex to implement in C... */
+	 * So simple, yet sooo complex to implement in C... */
 	DREF RemoveIfAllWrapper *result;
 	result = DeeObject_MALLOC(RemoveIfAllWrapper);
 	if unlikely(!result)
@@ -4367,7 +4367,7 @@ err_repeated_value:
 			}
 			if (seq->tp_set) {
 				/* >> for (local i = start; i < end; ++i)
-     * >>     this[i] = value; */
+				 * >>     this[i] = value; */
 				size_t i;
 				if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 				    nsi->nsi_seqlike.nsi_setitem) {

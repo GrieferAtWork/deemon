@@ -306,7 +306,7 @@ err:
 
 do_handle_code:
 	/* `.code @yielding, @copyable, @assembly, @lenient, @varargs,
-   *        @varkwds, @thiscall, @heapframe, @finally, @constructor' */
+	 *        @varkwds, @thiscall, @heapframe, @finally, @constructor' */
 	for (;;) {
 		if (tok == '@' && unlikely(yield() < 0))
 			goto err;

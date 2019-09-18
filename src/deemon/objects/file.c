@@ -661,7 +661,7 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 			goto got_read;
 			if (pgetc) {
 				/* If GETC() is implemented, but UNGETC()
-     * isn't, use the correct error description. */
+				 * isn't, use the correct error description. */
 				err_unimplemented_operator(Dee_TYPE(self), FILE_OPERATOR_UNGETC);
 				goto err;
 			}

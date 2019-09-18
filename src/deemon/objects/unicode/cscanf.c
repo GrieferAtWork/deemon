@@ -599,8 +599,8 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /*  No visit, because it only ever references strings
-                                    * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
+	                                 * (or rather an object that can only reference strings). */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ssi_cmp,

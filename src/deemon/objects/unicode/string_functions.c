@@ -1632,7 +1632,7 @@ DeeString_Indent(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(filler, &DeeString_Type);
 	/* Simple case: if the filler, or self-string are
-  *              empty, nothing would get inserted! */
+	 *              empty, nothing would get inserted! */
 	if
 		unlikely(DeeString_IsEmpty(filler) || DeeString_IsEmpty(self))
 	return_reference_(self);
@@ -1669,9 +1669,9 @@ DeeString_Indent(DeeObject *__restrict self,
 			}
 			if (iter.cp8 == flush_start.cp8) {
 				/* Either the string is empty or ends with a line-feed.
-     * In either case, we must remove `filler' from its end,
-     * because we're not supposed to have the resulting
-     * string include it as trailing memory. */
+				 * In either case, we must remove `filler' from its end,
+				 * because we're not supposed to have the resulting
+				 * string include it as trailing memory. */
 				ASSERT(UNICODE_PRINTER_LENGTH(&printer) >= DeeString_WLEN(filler));
 				unicode_printer_truncate(&printer,
 				                         UNICODE_PRINTER_LENGTH(&printer) -
@@ -2160,9 +2160,9 @@ string_replace(String *__restrict self, size_t argc,
 				begin.cp8 = ptr.cp8 + findlen;
 			}
 			/* If we never found `find', our printer will still be empty.
-    * >> In that case we don't need to write the entire string to it,
-    *    but can simply return a reference to the original string,
-    *    saving on memory and speeding up the function by a lot. */
+			 * >> In that case we don't need to write the entire string to it,
+			 *    but can simply return a reference to the original string,
+			 *    saving on memory and speeding up the function by a lot. */
 			if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp8 == mystr.cp8)
 				goto retself;
 			if
@@ -2299,9 +2299,9 @@ string_casereplace(String *__restrict self, size_t argc,
 				begin.cp8 = ptr.cp8 + match_length;
 			}
 			/* If we never found `find', our printer will still be empty.
-    * >> In that case we don't need to write the entire string to it,
-    *    but can simply return a reference to the original string,
-    *    saving on memory and speeding up the function by a lot. */
+			 * >> In that case we don't need to write the entire string to it,
+			 *    but can simply return a reference to the original string,
+			 *    saving on memory and speeding up the function by a lot. */
 			if (UNICODE_PRINTER_ISEMPTY(&p) && begin.cp8 == mystr.cp8)
 				goto retself;
 			if
@@ -3798,10 +3798,10 @@ string_startswith(String *__restrict self, size_t argc,
 #ifdef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
 	if (begin == 0 && end >= DeeString_WLEN(self) &&
 	    /* NOTE: This checks that `DeeString_STR()' being either LATIN-1, or
-      *       UTF-8 is the same for both our own, and the `other' string. */
+	     *       UTF-8 is the same for both our own, and the `other' string. */
 	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(other))) {
 		/* Special case: Since we don't have to count characters, we can simply
-   *               match the UTF-8 representations against each other. */
+		 *               match the UTF-8 representations against each other. */
 		if (DeeString_SIZE(other) > DeeString_SIZE(self) ||
 		    !MEMEQB(DeeString_STR(self), DeeString_STR(other),
 		            DeeString_SIZE(other)))
@@ -3810,7 +3810,7 @@ string_startswith(String *__restrict self, size_t argc,
 	}
 #endif /* CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS */
 	/* Must decode the other string in order to match its contents
-  * against data from our string at a specific offset. */
+	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(other))) {
 
@@ -3885,7 +3885,7 @@ string_endswith(String *__restrict self, size_t argc,
       *       UTF-8 is the same for both our own, and the `other' string. */
 	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(other))) {
 		/* Special case: Since we don't have to count characters, we can simply
-   *               match the UTF-8 representations against each other. */
+		 *               match the UTF-8 representations against each other. */
 		if (DeeString_SIZE(other) > DeeString_SIZE(self) ||
 		    !MEMEQB(DeeString_STR(self) +
 		            (DeeString_SIZE(self) - DeeString_SIZE(other)),
@@ -3895,7 +3895,7 @@ string_endswith(String *__restrict self, size_t argc,
 	}
 #endif /* CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS */
 	/* Must decode the other string in order to match its contents
-  * against data from our string at a specific offset. */
+	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(other))) {
 
@@ -3971,7 +3971,7 @@ string_casestartswith(String *__restrict self, size_t argc,
 	    DeeObject_AssertTypeExact((DeeObject *)other, &DeeString_Type))
 		goto err;
 	/* Must decode the other string in order to match its contents
-  * against data from our string at a specific offset. */
+	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(other))) {
 
@@ -4033,7 +4033,7 @@ string_caseendswith(String *__restrict self, size_t argc,
 	    DeeObject_AssertTypeExact((DeeObject *)other, &DeeString_Type))
 		goto err;
 	/* Must decode the other string in order to match its contents
-  * against data from our string at a specific offset. */
+	 * against data from our string at a specific offset. */
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 	                                        DeeString_WIDTH(other))) {
 
@@ -12262,9 +12262,9 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 		return (DREF String *)DeeObject_Str(other);
 	if (DeeString_Check(other)) {
 		/* In the likely case of `other' also being a string, we can
-   * try to perform some optimizations by looking that the common,
-   * required character width, and creating the resulting string in
-   * accordance to what _it_ requires (bypassing the need of for printer). */
+		 * try to perform some optimizations by looking that the common,
+		 * required character width, and creating the resulting string in
+		 * accordance to what _it_ requires (bypassing the need of for printer). */
 		struct string_utf *lhs_utf;
 		struct string_utf *rhs_utf;
 		/* Simple case: `other' is an empty string, so just re-use `self'. */
@@ -12277,7 +12277,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 				DREF String *result;
 				size_t total_length = self->s_len + DeeString_SIZE(other);
 				/* Most likely case: both strings use 1-byte characters,
-     * so we don't even need to use a multi-byte buffer! */
+				 * so we don't even need to use a multi-byte buffer! */
 				result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
 				                                         (total_length + 1) * sizeof(char));
 				if
@@ -12298,17 +12298,17 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			}
 		} else if (rhs_utf && rhs_utf->u_width != STRING_WIDTH_1BYTE) {
 			/* >> 2/4-byte + 2/4-byte
-    * This case we can optimize as well, because both the left,
-    * as well as the right string already feature their UTF-8
-    * representations, meaning that while we will have to generate
-    * a 2/4-byte string, we don't have to painfully convert that
-    * string into UTF-8, since we can simply generate the UTF-8
-    * sequence by concat-ing the 2 we already got! */
+			 * This case we can optimize as well, because both the left,
+			 * as well as the right string already feature their UTF-8
+			 * representations, meaning that while we will have to generate
+			 * a 2/4-byte string, we don't have to painfully convert that
+			 * string into UTF-8, since we can simply generate the UTF-8
+			 * sequence by concat-ing the 2 we already got! */
 			DREF String *result;
 			struct string_utf *result_utf;
 			size_t total_length = self->s_len + DeeString_SIZE(other);
 			/* Most likely case: both strings use 1-byte characters,
-    * so we don't even need to use a multi-byte buffer! */
+			 * so we don't even need to use a multi-byte buffer! */
 			result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
 			                                         (total_length + 1) * sizeof(char));
 			if
@@ -12321,7 +12321,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			memset(result_utf, 0, sizeof(struct string_utf));
 
 			/* Determine the common width of the left and right string,
-    * then construct a 16-bit, or 32-bit character string. */
+			 * then construct a 16-bit, or 32-bit character string. */
 			ASSERT(lhs_utf->u_width == STRING_WIDTH_2BYTE || lhs_utf->u_width == STRING_WIDTH_4BYTE);
 			ASSERT(rhs_utf->u_width == STRING_WIDTH_2BYTE || rhs_utf->u_width == STRING_WIDTH_4BYTE);
 			if (lhs_utf->u_width == STRING_WIDTH_2BYTE) {

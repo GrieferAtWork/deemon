@@ -160,14 +160,14 @@ INTERN struct TPPKeyword *DCALL tok_without_underscores(void) {
 		    result->k_name[result->k_size - 1] == '_') {
 			char const *begin, *end;
 			/* Keyword has leading/terminating underscores.
-    * >> Remove them and use that keyword instead! */
+			 * >> Remove them and use that keyword instead! */
 			end = (begin = result->k_name) + result->k_size;
 			while (begin != end && *begin == '_')
 				++begin;
 			while (end != begin && end[-1] == '_')
 				--end;
 			/* NOTE: Don't create the keyword if it doesn't exist!
-    *    >> Callers only use this function to unify attribute names & arguments! */
+			 *    >> Callers only use this function to unify attribute names & arguments! */
 			result = TPPLexer_LookupKeyword(begin, (size_t)(end - begin), 0);
 		}
 	}

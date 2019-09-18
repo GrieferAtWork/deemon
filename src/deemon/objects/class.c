@@ -110,13 +110,13 @@ again:
 			Dee_Decref(buffer[buflen]);
 		}
 		/* Since custom destructors may have been able to
-   * re-assign new members, we must keep clearing them
-   * all until none are left! */
+		 * re-assign new members, we must keep clearing them
+		 * all until none are left! */
 		goto again;
 	}
 	/* With all references objects who's destruction could potentially
-  * have side-effects now gone, we can move on to free heap-allocated
-  * data structures. */
+	 * have side-effects now gone, we can move on to free heap-allocated
+	 * data structures. */
 	for (i = 0; i < CLASS_HEADER_OPC1; ++i)
 		Dee_Free(my_class->cd_ops[i]);
 	Dee_Decref(my_class->cd_desc);
@@ -226,8 +226,8 @@ again:
 			Dee_Decref(buffer[buflen]);
 		}
 		/* Since custom destructors may have been able to
-   * re-assign new members, we must keep clearing them
-   * all until none are left! */
+		 * re-assign new members, we must keep clearing them
+		 * all until none are left! */
 		goto again;
 	}
 }
@@ -305,8 +305,8 @@ again:
 			Dee_Decref(buffer[buflen]);
 		}
 		/* Since custom destructors may have been able to
-   * re-assign new members, we must keep clearing them
-   * all until none are left! */
+		 * re-assign new members, we must keep clearing them
+		 * all until none are left! */
 		goto again;
 	}
 }
@@ -456,7 +456,7 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			Dee_Incref(result);
 			rwlock_endread(&iter_class->cd_lock);
 			/* Try to cache the associated operator (if possible)
-    * NOTE: Make sure not to accidentally cache inherited constructors! */
+			 * NOTE: Make sure not to accidentally cache inherited constructors! */
 			if (name < CLASS_OPERATOR_USERCOUNT) {
 				if (iter == self || !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 					calls_desc_cache_operator(DeeClass_DESC(self), name, result);
@@ -528,7 +528,7 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			Dee_Incref(result);
 			rwlock_endread(&iter_class->cd_lock);
 			/* Try to cache the associated operator (if possible)
-    * NOTE: Make sure not to accidentally cache inherited constructors! */
+			 * NOTE: Make sure not to accidentally cache inherited constructors! */
 			if (name < CLASS_OPERATOR_USERCOUNT) {
 				if (iter == self || !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 					calls_desc_cache_operator(DeeClass_DESC(self), name, result);
@@ -614,8 +614,8 @@ again:
 			Dee_Decref(buffer[buflen]);
 		}
 		/* Since custom destructors may have been able to
-   * re-assign new members, we must keep clearing them
-   * all until none are left! */
+		 * re-assign new members, we must keep clearing them
+		 * all until none are left! */
 		goto again;
 	}
 }
@@ -645,7 +645,7 @@ instance_destructor(DeeObject *__restrict self) {
 		result = DeeObject_ThisCall(callback, self, 0, NULL);
 		Dee_Decref(callback);
 		/* Check if `self' got revived. - If it did we let the caller
-   * inherit a reference to it to prevent a race condition. */
+		 * inherit a reference to it to prevent a race condition. */
 		for (;;) {
 			new_refcnt = ATOMIC_READ(self->ob_refcnt);
 			if (new_refcnt > 1) {
@@ -951,7 +951,7 @@ instance_builtin_tcopy(DeeTypeObject *__restrict tp_self,
 	uint16_t i, size;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 	/* Initialize the members of this instance as
-  * references to the same also found in `other'. */
+	 * references to the same also found in `other'. */
 	rwlock_init(&instance->id_lock);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
@@ -983,7 +983,7 @@ instance_builtin_nobase_tcopy(DeeTypeObject *__restrict tp_self,
 	uint16_t i, size;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 	/* Initialize the members of this instance as
-  * references to the same also found in `other'. */
+	 * references to the same also found in `other'. */
 	rwlock_init(&instance->id_lock);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;

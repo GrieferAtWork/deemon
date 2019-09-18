@@ -2253,7 +2253,7 @@ time_class_freq(DeeObject *__restrict UNUSED(self),
 
 PRIVATE struct type_method time_class_methods[] = {
 	/* For backwards compatibility with the old deemon (which
-     * did everything as part of the `time' builtin type) */
+	 * did everything as part of the `time' builtin type) */
 	{ "now", &time_class_now, DOC("->?GTime\nDeprecated. Use :time:now instead") },
 	{ "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use :time:tick instead") },
 	{ "freq", &time_class_freq, DOC("->?Dint\nDeprecated. Always returns ${1000000}") },

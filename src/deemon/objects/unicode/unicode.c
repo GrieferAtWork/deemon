@@ -542,12 +542,12 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	utf = ((String *)self)->s_data;
 	/* Simple case: No UTF data, or 1-byte string means that the string's
-  *              1-byte variant has no special encoding (aka. is LATIN-1). */
+	 *              1-byte variant has no special encoding (aka. is LATIN-1). */
 	if (!utf || utf->u_width == STRING_WIDTH_1BYTE)
 		return (uint8_t *)DeeString_STR(self);
 	/* The single-byte variant of the string was already allocated.
-  * Check how that variant's INV-byte flag compares to the caller's
-  * allow_invalid option. */
+	 * Check how that variant's INV-byte flag compares to the caller's
+	 * allow_invalid option. */
 	if (!allow_invalid && (utf->u_flags & STRING_UTF_FINVBYT))
 		goto err_invalid_string;
 	/* Check for a cached single-byte variant. */
@@ -555,17 +555,17 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	if (result)
 		return result;
 	/* Since strings are allowed to use a wider default width than they
-  * may actually need, `self' may still only contain characters that
-  * fit into the 00-FF unicode range, so regardless of `allow_invalid'
-  * (which controls the behavior for characters outside that range) */
+	 * may actually need, `self' may still only contain characters that
+	 * fit into the 00-FF unicode range, so regardless of `allow_invalid'
+	 * (which controls the behavior for characters outside that range) */
 	str = utf->u_data[utf->u_width];
 	ASSERT(utf->u_width != STRING_WIDTH_1BYTE);
 	length = WSTR_LENGTH(str);
 	ASSERT(length <= DeeString_SIZE(self));
 	if (length == DeeString_SIZE(self)) {
 		/* The actual length of the string matches the length of of its single-byte
-   * variant, in other words meaning that all of its characters could fit into
-   * that range, and that the string consists only of ASCII characters. */
+		 * variant, in other words meaning that all of its characters could fit into
+		 * that range, and that the string consists only of ASCII characters. */
 		ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FASCII);
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		return (uint8_t *)DeeString_STR(self);
@@ -580,7 +580,8 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	result += sizeof(size_t);
 	result[length]   = 0;
 	contains_invalid = false;
-	SWITCH_SIZEOF_WIDTH(utf->u_width) {
+	switch (utf->u_width) {
+
 	case STRING_WIDTH_2BYTE:
 		for (i = 0; i < length; ++i) {
 			uint16_t ch = ((uint16_t *)str)[i];
@@ -593,6 +594,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 			result[i] = (uint8_t)ch;
 		}
 		break;
+
 	case STRING_WIDTH_4BYTE:
 		for (i = 0; i < length; ++i) {
 			uint32_t ch = ((uint32_t *)str)[i];
@@ -605,6 +607,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 			result[i] = (uint8_t)ch;
 		}
 		break;
+
 	default: __builtin_unreachable();
 	}
 	/* All right. - We've managed to construct the single-byte variant. */
@@ -639,8 +642,8 @@ DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode) {
 			return (uint16_t *)utf->u_utf16;
 		if (utf->u_width == STRING_WIDTH_1BYTE) {
 			/* A single-byte string has no characters within the surrogate-range,
-    * meaning we can simply request the string's 2-byte variant, and we'll
-    * automatically be given a valid utf-16 string! */
+			 * meaning we can simply request the string's 2-byte variant, and we'll
+			 * automatically be given a valid utf-16 string! */
 load_2byte_width:
 			result = (uint16_t *)DeeString_As2Byte(self);
 			if
@@ -654,130 +657,59 @@ load_2byte_width:
 		}
 	} else {
 		/* Without a UTF descriptor, we know that all characters are within
-   * the U+0000 ... U+00FF range, meaning we can simply request the 2-byte
-   * variant of the string, and automatically be given a valid utf-16 string. */
+		 * the U+0000 ... U+00FF range, meaning we can simply request the 2-byte
+		 * variant of the string, and automatically be given a valid utf-16 string. */
 		goto load_2byte_width;
 	}
 	/* The complicated case: the string probably
-  * contains characters that need to be escaped. */
+	 * contains characters that need to be escaped. */
 	ASSERT(utf);
 	ASSERT(utf->u_width != STRING_WIDTH_1BYTE);
-	SWITCH_SIZEOF_WIDTH(utf->u_width) {
-		{
-			size_t i, length;
-			uint16_t *str, *result, *dst;
-		CASE_WIDTH_2BYTE:
-			str    = (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE];
-			length = WSTR_LENGTH(str);
-			/* Search if the string contains surrogate-characters. */
-			for (i = 0; i < length; ++i) {
-				uint16_t ch = str[i];
-				if ((ch < UTF16_HIGH_SURROGATE_MIN || ch > UTF16_HIGH_SURROGATE_MAX) &&
-				    (ch < UTF16_LOW_SURROGATE_MIN || ch > UTF16_LOW_SURROGATE_MAX))
-					continue;
-				if (!(error_mode & (STRING_ERROR_FREPLAC | STRING_ERROR_FIGNORE))) {
-					DeeError_Throwf(&DeeError_UnicodeEncodeError,
-					                "Invalid UTF-16 character U+%.4I16X", ch);
-					goto err;
-				}
-				/* Must generate a fixed variant. */
-				result = DeeString_New2ByteBuffer(length);
-				if
-					unlikely(!result)
-				goto err;
-				memcpyw(result, str, i);
-				dst = result + 1;
-				if (!(error_mode & STRING_ERROR_FIGNORE))
-					*dst++ = '?';
-				while (++i < length) {
-					ch = str[i];
-					if ((ch >= UTF16_HIGH_SURROGATE_MIN && ch <= UTF16_HIGH_SURROGATE_MAX) ||
-					    (ch >= UTF16_LOW_SURROGATE_MIN && ch <= UTF16_LOW_SURROGATE_MAX)) {
-						if (error_mode & STRING_ERROR_FIGNORE)
-							continue;
-						ch = '?';
-					}
-					*dst++ = ch;
-				}
-				*dst = 0;
-				if (error_mode & STRING_ERROR_FIGNORE) {
-					uint16_t *new_result;
-					new_result = DeeString_TryResize2ByteBuffer(result, (size_t)(dst - result));
-					if
-						likely(new_result)
-					result = new_result;
-				}
-				/* Save the utf-16 encoded string. */
-				if (!ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, result)) {
-					DeeString_Free2ByteBuffer(result);
-					return (uint16_t *)utf->u_utf16;
-				}
-				Dee_UntrackAlloc((size_t *)result - 1);
-				return result;
-			}
-			/* The 2-byte variant doesn't contain any illegal characters,
-   * so we can simply re-use it as the utf-16 variant. */
-			ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, str);
-			return (uint16_t *)utf->u_utf16;
-		}
-		break;
+	switch (utf->u_width) {
 
-		{
-			size_t i, length, result_length;
-			uint32_t *str;
-			uint16_t *result, *dst;
-		CASE_WIDTH_4BYTE:
-			/* The string is full-on UTF-32.
-   * -> Count the number of characters that need surrogates */
-			str           = (uint32_t *)utf->u_data[STRING_WIDTH_4BYTE];
-			result_length = length = WSTR_LENGTH(str);
-			for (i = 0; i < length; ++i) {
-				uint32_t ch = str[i];
-				if (ch <= 0xffff) {
-					if ((ch >= UTF16_HIGH_SURROGATE_MIN && ch <= UTF16_HIGH_SURROGATE_MAX) ||
-					    (ch >= UTF16_LOW_SURROGATE_MIN && ch <= UTF16_LOW_SURROGATE_MAX))
-						goto err_invalid_unicode;
-					continue;
-				} else if (ch > 0x10ffff) {
-err_invalid_unicode:
-					if (!(error_mode & (STRING_ERROR_FREPLAC | STRING_ERROR_FIGNORE))) {
-						DeeError_Throwf(&DeeError_UnicodeEncodeError,
-						                "Invalid unicode character U+%.4I32X", ch);
-						goto err;
-					}
-					if (error_mode & STRING_ERROR_FIGNORE)
-						--result_length;
-					continue;
-				}
-				++result_length;
+	CASE_WIDTH_2BYTE: {
+		size_t i, length;
+		uint16_t *str, *result, *dst;
+		str    = (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE];
+		length = WSTR_LENGTH(str);
+		/* Search if the string contains surrogate-characters. */
+		for (i = 0; i < length; ++i) {
+			uint16_t ch = str[i];
+			if ((ch < UTF16_HIGH_SURROGATE_MIN || ch > UTF16_HIGH_SURROGATE_MAX) &&
+			    (ch < UTF16_LOW_SURROGATE_MIN || ch > UTF16_LOW_SURROGATE_MAX))
+				continue;
+			if (!(error_mode & (STRING_ERROR_FREPLAC | STRING_ERROR_FIGNORE))) {
+				DeeError_Throwf(&DeeError_UnicodeEncodeError,
+				                "Invalid UTF-16 character U+%.4I16X", ch);
+				goto err;
 			}
-			result = DeeString_New2ByteBuffer(result_length);
+			/* Must generate a fixed variant. */
+			result = DeeString_New2ByteBuffer(length);
 			if
 				unlikely(!result)
 			goto err;
-			dst = result;
-			for (i = 0; i < length; ++i) {
-				uint32_t ch = str[i];
-				if (ch <= 0xffff) {
-					if ((ch >= UTF16_HIGH_SURROGATE_MIN && ch <= UTF16_HIGH_SURROGATE_MAX) ||
-					    (ch >= UTF16_LOW_SURROGATE_MIN && ch <= UTF16_LOW_SURROGATE_MAX)) {
-						if (error_mode & STRING_ERROR_FIGNORE)
-							continue;
-						ch = '?';
-					}
-					*dst++ = (uint16_t)ch;
-				} else if (ch > 0x10ffff) {
+			memcpyw(result, str, i);
+			dst = result + 1;
+			if (!(error_mode & STRING_ERROR_FIGNORE))
+				*dst++ = '?';
+			while (++i < length) {
+				ch = str[i];
+				if ((ch >= UTF16_HIGH_SURROGATE_MIN && ch <= UTF16_HIGH_SURROGATE_MAX) ||
+				    (ch >= UTF16_LOW_SURROGATE_MIN && ch <= UTF16_LOW_SURROGATE_MAX)) {
 					if (error_mode & STRING_ERROR_FIGNORE)
 						continue;
-					*dst++ = '?';
-				} else {
-					/* Must encode as a high/low surrogate pair. */
-					*dst++ = UTF16_HIGH_SURROGATE_MIN + (uint16_t)(ch >> 10);
-					*dst++ = UTF16_LOW_SURROGATE_MIN + (uint16_t)(ch & 0x3ff);
+					ch = '?';
 				}
+				*dst++ = ch;
 			}
-			ASSERT(dst == result + result_length);
 			*dst = 0;
+			if (error_mode & STRING_ERROR_FIGNORE) {
+				uint16_t *new_result;
+				new_result = DeeString_TryResize2ByteBuffer(result, (size_t)(dst - result));
+				if
+					likely(new_result)
+				result = new_result;
+			}
 			/* Save the utf-16 encoded string. */
 			if (!ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, result)) {
 				DeeString_Free2ByteBuffer(result);
@@ -786,7 +718,75 @@ err_invalid_unicode:
 			Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
-		break;
+		/* The 2-byte variant doesn't contain any illegal characters,
+			 * so we can simply re-use it as the utf-16 variant. */
+		ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, str);
+		return (uint16_t *)utf->u_utf16;
+	} break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i, length, result_length;
+		uint32_t *str;
+		uint16_t *result, *dst;
+		/* The string is full-on UTF-32.
+		 * -> Count the number of characters that need surrogates */
+		str           = (uint32_t *)utf->u_data[STRING_WIDTH_4BYTE];
+		result_length = length = WSTR_LENGTH(str);
+		for (i = 0; i < length; ++i) {
+			uint32_t ch = str[i];
+			if (ch <= 0xffff) {
+				if ((ch >= UTF16_HIGH_SURROGATE_MIN && ch <= UTF16_HIGH_SURROGATE_MAX) ||
+				    (ch >= UTF16_LOW_SURROGATE_MIN && ch <= UTF16_LOW_SURROGATE_MAX))
+					goto err_invalid_unicode;
+				continue;
+			} else if (ch > 0x10ffff) {
+			err_invalid_unicode:
+				if (!(error_mode & (STRING_ERROR_FREPLAC | STRING_ERROR_FIGNORE))) {
+					DeeError_Throwf(&DeeError_UnicodeEncodeError,
+					                "Invalid unicode character U+%.4I32X", ch);
+					goto err;
+				}
+				if (error_mode & STRING_ERROR_FIGNORE)
+					--result_length;
+				continue;
+			}
+			++result_length;
+		}
+		result = DeeString_New2ByteBuffer(result_length);
+		if
+			unlikely(!result)
+		goto err;
+		dst = result;
+		for (i = 0; i < length; ++i) {
+			uint32_t ch = str[i];
+			if (ch <= 0xffff) {
+				if ((ch >= UTF16_HIGH_SURROGATE_MIN && ch <= UTF16_HIGH_SURROGATE_MAX) ||
+				    (ch >= UTF16_LOW_SURROGATE_MIN && ch <= UTF16_LOW_SURROGATE_MAX)) {
+					if (error_mode & STRING_ERROR_FIGNORE)
+						continue;
+					ch = '?';
+				}
+				*dst++ = (uint16_t)ch;
+			} else if (ch > 0x10ffff) {
+				if (error_mode & STRING_ERROR_FIGNORE)
+					continue;
+				*dst++ = '?';
+			} else {
+				/* Must encode as a high/low surrogate pair. */
+				*dst++ = UTF16_HIGH_SURROGATE_MIN + (uint16_t)(ch >> 10);
+				*dst++ = UTF16_LOW_SURROGATE_MIN + (uint16_t)(ch & 0x3ff);
+			}
+		}
+		ASSERT(dst == result + result_length);
+		*dst = 0;
+		/* Save the utf-16 encoded string. */
+		if (!ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, result)) {
+			DeeString_Free2ByteBuffer(result);
+			return (uint16_t *)utf->u_utf16;
+		}
+		Dee_UntrackAlloc((size_t *)result - 1);
+		return result;
+	} break;
 
 	default: __builtin_unreachable();
 	}
@@ -813,10 +813,13 @@ Dee_unicode_printer_printstring(struct unicode_printer *__restrict self,
 	/* Directly print sized string data (without the need to convert to & from UTF-8). */
 	str = utf->u_data[utf->u_width];
 	SWITCH_SIZEOF_WIDTH(utf->u_width) {
+
 	CASE_WIDTH_1BYTE:
 		return unicode_printer_print8(self, (uint8_t *)str, WSTR_LENGTH(str));
+
 	CASE_WIDTH_2BYTE:
 		return unicode_printer_print16(self, (uint16_t *)str, WSTR_LENGTH(str));
+
 	CASE_WIDTH_4BYTE:
 		return unicode_printer_print32(self, (uint32_t *)str, WSTR_LENGTH(str));
 	}
@@ -832,10 +835,10 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 	dssize_t temp, result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	/* `DeeString_STR()' is the single-byte variant.
-  * That only means UTF-8 if the string is an ASCII
-  * string, or if its character with is greater than
-  * one (in which case the single-byte variant is the
-  * UTF-8 version of the string) */
+	 * That only means UTF-8 if the string is an ASCII
+	 * string, or if its character with is greater than
+	 * one (in which case the single-byte variant is the
+	 * UTF-8 version of the string) */
 again:
 	utf = ((String *)self)->s_data;
 	if (printer == &unicode_printer_print) {
@@ -850,10 +853,13 @@ again:
 		/* Directly print sized string data (without the need to convert to & from UTF-8). */
 		str = utf->u_data[utf->u_width];
 		SWITCH_SIZEOF_WIDTH(utf->u_width) {
+
 		CASE_WIDTH_1BYTE:
 			return unicode_printer_print8((struct unicode_printer *)arg, (uint8_t *)str, WSTR_LENGTH(str));
+
 		CASE_WIDTH_2BYTE:
 			return unicode_printer_print16((struct unicode_printer *)arg, (uint16_t *)str, WSTR_LENGTH(str));
+
 		CASE_WIDTH_4BYTE:
 			return unicode_printer_print32((struct unicode_printer *)arg, (uint32_t *)str, WSTR_LENGTH(str));
 		}
@@ -895,7 +901,7 @@ print_ascii:
 		if (ch <= 0x7f)
 			continue; /* ASCII character. */
 		/* This is a true LATIN-1 character, which we
-   * must manually encode as a 2-byte UTF-8 string. */
+		 * must manually encode as a 2-byte UTF-8 string. */
 		if (iter != flush_start) {
 			temp = (*printer)(arg, (char *)flush_start,
 			                  (size_t)((char *)iter - (char *)flush_start));
@@ -991,16 +997,18 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 			continue;
 
 		case 2:
-			ch32 = (ch & 0x1f) << 6;
-			ch32 |= (str[i + 1] & 0x3f);
+			if likely((str[i + 1] & 0xc0) == 0x80) {
+				ch32 = (ch & 0x1f) << 6;
+				ch32 |= (str[i + 1] & 0x3f);
+			} else {
+				ch32 = '?';
+			}
 			i += 2;
 			break;
 
 		case 3:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 1] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x0f) << 12;
 				ch32 |= (str[i + 1] & 0x3f) << 6;
 				ch32 |= (str[i + 2] & 0x3f);
@@ -1011,11 +1019,9 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 			break;
 
 		case 4:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x07) << 18;
 				ch32 |= (str[i + 1] & 0x3f) << 12;
 				ch32 |= (str[i + 2] & 0x3f) << 6;
@@ -1027,12 +1033,10 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 			break;
 
 		case 5:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x03) << 24;
 				ch32 |= (str[i + 1] & 0x3f) << 18;
 				ch32 |= (str[i + 2] & 0x3f) << 12;
@@ -1045,13 +1049,11 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 			break;
 
 		case 6:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80 &&
-				       (str[i + 5] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80 &&
+			          (str[i + 5] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x01) << 30;
 				ch32 |= (str[i + 1] & 0x3f) << 24;
 				ch32 |= (str[i + 2] & 0x3f) << 18;
@@ -1065,14 +1067,12 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 			break;
 
 		case 7:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80 &&
-				       (str[i + 5] & 0xc0) == 0x80 &&
-				       (str[i + 6] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80 &&
+			          (str[i + 5] & 0xc0) == 0x80 &&
+			          (str[i + 6] & 0xc0) == 0x80) {
 				ch32 = (str[i + 1] & 0x03 /*0x3f*/) << 30;
 				ch32 |= (str[i + 2] & 0x3f) << 24;
 				ch32 |= (str[i + 3] & 0x3f) << 18;
@@ -1086,15 +1086,13 @@ utf8_to_utf16(uint8_t *__restrict str, size_t length) {
 			break;
 
 		case 8:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80 &&
-				       (str[i + 5] & 0xc0) == 0x80 &&
-				       (str[i + 6] & 0xc0) == 0x80 &&
-				       (str[i + 7] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80 &&
+			          (str[i + 5] & 0xc0) == 0x80 &&
+			          (str[i + 6] & 0xc0) == 0x80 &&
+			          (str[i + 7] & 0xc0) == 0x80) {
 				/*ch32 = (str[i+1] & 0x3f) << 36;*/
 				ch32 = (str[i + 2] & 0x03 /*0x3f*/) << 30;
 				ch32 |= (str[i + 3] & 0x3f) << 24;
@@ -1157,25 +1155,31 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			continue;
 		}
 		switch (chlen) {
+
 		case 0: /* Just to safely deal with this type of error... */
 			*dst++ = '?';
 			++i;
 			continue;
+
 		case 1:
 			*dst++ = ch;
 			++i;
 			break;
+
 		case 2:
-			ch32 = (ch & 0x1f) << 6;
-			ch32 |= (str[i + 1] & 0x3f);
-			*dst++ = ch32;
+			if likely((str[i + 1] & 0xc0) == 0x80) {
+				ch32 = (ch & 0x1f) << 6;
+				ch32 |= (str[i + 1] & 0x3f);
+				*dst++ = ch32;
+			} else {
+				*dst++ = '?';
+			}
 			i += 2;
 			break;
+
 		case 3:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 1] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x0f) << 12;
 				ch32 |= (str[i + 1] & 0x3f) << 6;
 				ch32 |= (str[i + 2] & 0x3f);
@@ -1185,12 +1189,11 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			}
 			i += 3;
 			break;
+
 		case 4:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x07) << 18;
 				ch32 |= (str[i + 1] & 0x3f) << 12;
 				ch32 |= (str[i + 2] & 0x3f) << 6;
@@ -1201,13 +1204,12 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			}
 			i += 4;
 			break;
+
 		case 5:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x03) << 24;
 				ch32 |= (str[i + 1] & 0x3f) << 18;
 				ch32 |= (str[i + 2] & 0x3f) << 12;
@@ -1219,14 +1221,13 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			}
 			i += 5;
 			break;
+
 		case 6:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80 &&
-				       (str[i + 5] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80 &&
+			          (str[i + 5] & 0xc0) == 0x80) {
 				ch32 = (ch & 0x01) << 30;
 				ch32 |= (str[i + 1] & 0x3f) << 24;
 				ch32 |= (str[i + 2] & 0x3f) << 18;
@@ -1239,15 +1240,14 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			}
 			i += 6;
 			break;
+
 		case 7:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80 &&
-				       (str[i + 5] & 0xc0) == 0x80 &&
-				       (str[i + 6] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80 &&
+			          (str[i + 5] & 0xc0) == 0x80 &&
+			          (str[i + 6] & 0xc0) == 0x80) {
 				ch32 = (str[i + 1] & 0x03 /*0x3f*/) << 30;
 				ch32 |= (str[i + 2] & 0x3f) << 24;
 				ch32 |= (str[i + 3] & 0x3f) << 18;
@@ -1260,16 +1260,15 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			}
 			i += 7;
 			break;
+
 		case 8:
-			if
-				likely((str[i + 1] & 0xc0) == 0x80 &&
-				       (str[i + 2] & 0xc0) == 0x80 &&
-				       (str[i + 3] & 0xc0) == 0x80 &&
-				       (str[i + 4] & 0xc0) == 0x80 &&
-				       (str[i + 5] & 0xc0) == 0x80 &&
-				       (str[i + 6] & 0xc0) == 0x80 &&
-				       (str[i + 7] & 0xc0) == 0x80)
-			{
+			if likely((str[i + 1] & 0xc0) == 0x80 &&
+			          (str[i + 2] & 0xc0) == 0x80 &&
+			          (str[i + 3] & 0xc0) == 0x80 &&
+			          (str[i + 4] & 0xc0) == 0x80 &&
+			          (str[i + 5] & 0xc0) == 0x80 &&
+			          (str[i + 6] & 0xc0) == 0x80 &&
+			          (str[i + 7] & 0xc0) == 0x80) {
 				/*ch32 = (str[i+1] & 0x3f) << 36;*/
 				ch32 = (str[i + 2] & 0x03 /*0x3f*/) << 30;
 				ch32 |= (str[i + 3] & 0x3f) << 24;
@@ -1283,6 +1282,7 @@ utf8_to_utf32(uint8_t *__restrict str, size_t length) {
 			}
 			i += 8;
 			break;
+
 		default: __builtin_unreachable();
 		}
 	}
@@ -1803,6 +1803,7 @@ read_text_i:
 			result->s_str[i] = (char)(uint8_t)text[i];
 	} else {
 		switch (kind) {
+
 		case 0: /* Pure UTF-16 (without surrogates) */
 			utf->u_width                    = STRING_WIDTH_2BYTE;
 			utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
@@ -1966,6 +1967,7 @@ continue_at_i:
 			result->s_str[i] = (char)(uint8_t)text[i];
 	} else {
 		switch (kind) {
+
 		case 0: /* Pure UTF-16 (without surrogates) */
 			utf->u_width                    = STRING_WIDTH_2BYTE;
 			utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
@@ -1977,40 +1979,38 @@ continue_at_i:
 			        character_count, WSTR_LENGTH(text), length, WSTR_LENGTH(text), text);
 			char16_to_utf8(text, length, (uint8_t *)result->s_str);
 			break;
-			{
-				uint16_t *buffer;
-			case 1:
-				/* Regular UTF-16 in 2-byte range (with surrogates)
-    * -> Must convert the UTF-16 text into a 2-byte string. */
-				buffer = DeeString_TryNew2ByteBuffer(character_count);
-				if
-					unlikely(!buffer)
-				goto err_r_utf;
-				buffer[character_count]         = 0;
-				utf->u_width                    = STRING_WIDTH_2BYTE;
-				utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)buffer;
-				Dee_UntrackAlloc((size_t *)buffer - 1);
-				ASSERT(character_count < WSTR_LENGTH(text));
-				utf16_to_utf8_char16(text, length, (uint8_t *)result->s_str, buffer);
-			}
-			break;
-			{
-				uint32_t *buffer;
-			case 2:
-				/* Regular UTF-16 outside the 2-byte range (with surrogates)
-    * -> Must convert the UTF-16 text into a 4-byte string. */
-				buffer = DeeString_TryNew4ByteBuffer(character_count);
-				if
-					unlikely(!buffer)
-				goto err_r_utf;
-				buffer[character_count]         = 0;
-				utf->u_width                    = STRING_WIDTH_4BYTE;
-				utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)buffer;
-				Dee_UntrackAlloc((size_t *)buffer - 1);
-				ASSERT(character_count < WSTR_LENGTH(text));
-				utf16_to_utf8_char32(text, length, (uint8_t *)result->s_str, buffer);
-			}
-			break;
+
+		case 1: {
+			uint16_t *buffer;
+			/* Regular UTF-16 in 2-byte range (with surrogates)
+				 * -> Must convert the UTF-16 text into a 2-byte string. */
+			buffer = DeeString_TryNew2ByteBuffer(character_count);
+			if
+				unlikely(!buffer)
+			goto err_r_utf;
+			buffer[character_count]         = 0;
+			utf->u_width                    = STRING_WIDTH_2BYTE;
+			utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)buffer;
+			Dee_UntrackAlloc((size_t *)buffer - 1);
+			ASSERT(character_count < WSTR_LENGTH(text));
+			utf16_to_utf8_char16(text, length, (uint8_t *)result->s_str, buffer);
+		} break;
+
+		case 2: {
+			uint32_t *buffer;
+			/* Regular UTF-16 outside the 2-byte range (with surrogates)
+			 * -> Must convert the UTF-16 text into a 4-byte string. */
+			buffer = DeeString_TryNew4ByteBuffer(character_count);
+			if
+				unlikely(!buffer)
+			goto err_r_utf;
+			buffer[character_count]         = 0;
+			utf->u_width                    = STRING_WIDTH_4BYTE;
+			utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)buffer;
+			Dee_UntrackAlloc((size_t *)buffer - 1);
+			ASSERT(character_count < WSTR_LENGTH(text));
+			utf16_to_utf8_char32(text, length, (uint8_t *)result->s_str, buffer);
+		} break;
 		default: __builtin_unreachable();
 		}
 	}
@@ -2048,7 +2048,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	utf8_length  = 0;
 	for (i = 0; i < length; ++i) {
 		uint32_t ch = text[i];
-		/* */ if (ch <= UTF8_1BYTE_MAX)
+		if (ch <= UTF8_1BYTE_MAX)
 			utf8_length += 1;
 		else if (ch <= UTF8_2BYTE_MAX)
 			utf8_length += 2;
@@ -2192,7 +2192,7 @@ DeeString_PackWideBuffer(/*inherit(always)*/ dwchar_t *__restrict text,
 	DREF String *result, *new_result;
 #ifndef WC_ERR_INVALID_CHARS
 #define WC_ERR_INVALID_CHARS 0x00000080
-#endif
+#endif /* !WC_ERR_INVALID_CHARS */
 	static DWORD wincall_flags = WC_ERR_INVALID_CHARS;
 	ASSERT(text);
 	length = ((size_t *)text)[-1];
@@ -2370,7 +2370,7 @@ case STRING_ENCODING_-- - MBCS: {
 		utf_free(data);
 		goto err;
 	}
-#else
+#else /* __SIZEOF_WCHAR_T__ == 2 */
 	data->u_width                    = STRING_WIDTH_4BYTE;
 	data->u_data[STRING_WIDTH_4BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
 	                                                          DeeString_SIZE(self));
@@ -2380,7 +2380,7 @@ case STRING_ENCODING_-- - MBCS: {
 		utf_free(data);
 		goto err;
 	}
-#endif
+#endif /* __SIZEOF_WCHAR_T__ != 2 */
 	((String *)self)->s_data = data;
 	Dee_UntrackAlloc(data);
 	return self;
@@ -3064,14 +3064,17 @@ DeeString_Convert(DeeObject *__restrict self,
 		unlikely(!result)
 	return NULL;
 	SWITCH_SIZEOF_WIDTH(width) {
+
 	CASE_WIDTH_1BYTE:
 		for (i = 0; i < end; ++i)
 			((uint8_t *)result)[i] = (uint8_t)DeeUni_Convert(((uint8_t *)str)[start + i], kind);
 		break;
+
 	CASE_WIDTH_2BYTE:
 		for (i = 0; i < end; ++i)
 			((uint16_t *)result)[i] = (uint16_t)DeeUni_Convert(((uint16_t *)str)[start + i], kind);
 		break;
+
 	CASE_WIDTH_4BYTE:
 		for (i = 0; i < end; ++i)
 			((uint32_t *)result)[i] = (uint32_t)DeeUni_Convert(((uint32_t *)str)[start + i], kind);
@@ -3102,6 +3105,7 @@ DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 		unlikely(!result)
 	return NULL;
 	SWITCH_SIZEOF_WIDTH(width) {
+
 	CASE_WIDTH_1BYTE:
 		for (i = 0; i < end; ++i) {
 			uint8_t ch             = ((uint8_t *)str)[start + i];
@@ -3110,6 +3114,7 @@ DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 			kind                   = (desc->ut_flags & UNICODE_FSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
 		}
 		break;
+
 	CASE_WIDTH_2BYTE:
 		for (i = 0; i < end; ++i) {
 			uint16_t ch             = ((uint16_t *)str)[start + i];
@@ -3118,6 +3123,7 @@ DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 			kind                    = (desc->ut_flags & UNICODE_FSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
 		}
 		break;
+
 	CASE_WIDTH_4BYTE:
 		for (i = 0; i < end; ++i) {
 			uint32_t ch             = ((uint32_t *)str)[start + i];
@@ -3151,16 +3157,19 @@ DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end) {
 		unlikely(!result)
 	return NULL;
 	SWITCH_SIZEOF_WIDTH(width) {
+
 	CASE_WIDTH_1BYTE:
 		((uint8_t *)result)[0] = (uint8_t)DeeUni_ToUpper(((uint8_t *)str)[start]);
 		for (i = 1; i < end; ++i)
 			((uint8_t *)result)[i] = (uint8_t)DeeUni_ToLower(((uint8_t *)str)[start + i]);
 		break;
+
 	CASE_WIDTH_2BYTE:
 		((uint16_t *)result)[0] = (uint16_t)DeeUni_ToUpper(((uint16_t *)str)[start]);
 		for (i = 1; i < end; ++i)
 			((uint16_t *)result)[i] = (uint16_t)DeeUni_ToLower(((uint16_t *)str)[start + i]);
 		break;
+
 	CASE_WIDTH_4BYTE:
 		((uint32_t *)result)[0] = (uint32_t)DeeUni_ToUpper(((uint32_t *)str)[start]);
 		for (i = 1; i < end; ++i)
@@ -3191,14 +3200,17 @@ DeeString_Swapcase(DeeObject *__restrict self, size_t start, size_t end) {
 		unlikely(!result)
 	return NULL;
 	SWITCH_SIZEOF_WIDTH(width) {
+
 	CASE_WIDTH_1BYTE:
 		for (i = 0; i < end; ++i)
 			((uint8_t *)result)[i] = (uint8_t)DeeUni_SwapCase(((uint8_t *)str)[start + i]);
 		break;
+
 	CASE_WIDTH_2BYTE:
 		for (i = 0; i < end; ++i)
 			((uint16_t *)result)[i] = (uint16_t)DeeUni_SwapCase(((uint16_t *)str)[start + i]);
 		break;
+
 	CASE_WIDTH_4BYTE:
 		for (i = 0; i < end; ++i)
 			((uint32_t *)result)[i] = (uint32_t)DeeUni_SwapCase(((uint32_t *)str)[start + i]);
@@ -3214,27 +3226,33 @@ INTERN uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 	uint32_t result;
 	switch (seqlen) {
+
 	case 0:
 		result = 0;
 		break;
+
 	case 1:
 		result = base[0];
 		break;
+
 	case 2:
 		result = (base[0] & 0x1f) << 6;
 		result |= (base[1] & 0x3f);
 		break;
+
 	case 3:
 		result = (base[0] & 0x0f) << 12;
 		result |= (base[1] & 0x3f) << 6;
 		result |= (base[2] & 0x3f);
 		break;
+
 	case 4:
 		result = (base[0] & 0x07) << 18;
 		result |= (base[1] & 0x3f) << 12;
 		result |= (base[2] & 0x3f) << 6;
 		result |= (base[3] & 0x3f);
 		break;
+
 	case 5:
 		result = (base[0] & 0x03) << 24;
 		result |= (base[1] & 0x3f) << 18;
@@ -3242,6 +3260,7 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 		result |= (base[3] & 0x3f) << 6;
 		result |= (base[4] & 0x3f);
 		break;
+
 	case 6:
 		result = (base[0] & 0x01) << 30;
 		result |= (base[1] & 0x3f) << 24;
@@ -3250,6 +3269,7 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 		result |= (base[4] & 0x3f) << 6;
 		result |= (base[5] & 0x3f);
 		break;
+
 	case 7:
 		result = (base[1] & 0x03 /*0x3f*/) << 30;
 		result |= (base[2] & 0x3f) << 24;
@@ -3258,6 +3278,7 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 		result |= (base[5] & 0x3f) << 6;
 		result |= (base[6] & 0x3f);
 		break;
+
 	case 8:
 		/*result = (base[0] & 0x3f) << 42;*/
 		/*result = (base[1] & 0x3f) << 36;*/
@@ -3268,6 +3289,7 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 		result |= (base[6] & 0x3f) << 6;
 		result |= (base[7] & 0x3f);
 		break;
+
 	default: __builtin_unreachable();
 	}
 	return result;
@@ -3278,21 +3300,26 @@ utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
 	uint16_t result;
 	ASSERT(seqlen <= 3);
 	switch (seqlen) {
+
 	case 0:
 		result = 0;
 		break;
+
 	case 1:
 		result = base[0];
 		break;
+
 	case 2:
 		result = (base[0] & 0x1f) << 6;
 		result |= (base[1] & 0x3f);
 		break;
+
 	case 3:
 		result = (base[0] & 0x0f) << 12;
 		result |= (base[1] & 0x3f) << 6;
 		result |= (base[2] & 0x3f);
 		break;
+
 	default: __builtin_unreachable();
 	}
 	return result;
@@ -3312,19 +3339,25 @@ Dee_utf8_readchar(char const **__restrict piter,
 		if (iter + len - 1 >= end)
 			len = (uint8_t)(end - iter) + 1;
 		switch (len) {
+
 		case 0:
-		case 1: break;
+
+		case 1:
+			break;
+
 		case 2:
 			result = (result & 0x1f) << 6;
 			result |= (iter[0] & 0x3f);
 			iter += 1;
 			break;
+
 		case 3:
 			result = (result & 0x0f) << 12;
 			result |= (iter[0] & 0x3f) << 6;
 			result |= (iter[1] & 0x3f);
 			iter += 2;
 			break;
+
 		case 4:
 			result = (result & 0x07) << 18;
 			result |= (iter[0] & 0x3f) << 12;
@@ -3332,6 +3365,7 @@ Dee_utf8_readchar(char const **__restrict piter,
 			result |= (iter[2] & 0x3f);
 			iter += 3;
 			break;
+
 		case 5:
 			result = (result & 0x03) << 24;
 			result |= (iter[0] & 0x3f) << 18;
@@ -3340,6 +3374,7 @@ Dee_utf8_readchar(char const **__restrict piter,
 			result |= (iter[3] & 0x3f);
 			iter += 4;
 			break;
+
 		case 6:
 			result = (result & 0x01) << 30;
 			result |= (iter[0] & 0x3f) << 24;
@@ -3349,6 +3384,7 @@ Dee_utf8_readchar(char const **__restrict piter,
 			result |= (iter[4] & 0x3f);
 			iter += 5;
 			break;
+
 		case 7:
 			result = (iter[0] & 0x03 /*0x3f*/) << 30;
 			result |= (iter[1] & 0x3f) << 24;
@@ -3358,6 +3394,7 @@ Dee_utf8_readchar(char const **__restrict piter,
 			result |= (iter[5] & 0x3f);
 			iter += 6;
 			break;
+
 		case 8:
 			/*result = (result & 0x3f) << 36;*/
 			result = (iter[1] & 0x03 /*0x3f*/) << 30;
@@ -3368,6 +3405,7 @@ Dee_utf8_readchar(char const **__restrict piter,
 			result |= (iter[6] & 0x3f);
 			iter += 7;
 			break;
+
 		default: __builtin_unreachable();
 		}
 	}
@@ -3384,19 +3422,25 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 		uint8_t len;
 		len = utf8_sequence_len[result];
 		switch (len) {
+
 		case 0:
-		case 1: break;
+
+		case 1:
+			break;
+
 		case 2:
 			result = (result & 0x1f) << 6;
 			result |= (iter[0] & 0x3f);
 			iter += 1;
 			break;
+
 		case 3:
 			result = (result & 0x0f) << 12;
 			result |= (iter[0] & 0x3f) << 6;
 			result |= (iter[1] & 0x3f);
 			iter += 2;
 			break;
+
 		case 4:
 			result = (result & 0x07) << 18;
 			result |= (iter[0] & 0x3f) << 12;
@@ -3404,6 +3448,7 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 			result |= (iter[2] & 0x3f);
 			iter += 3;
 			break;
+
 		case 5:
 			result = (result & 0x03) << 24;
 			result |= (iter[0] & 0x3f) << 18;
@@ -3412,6 +3457,7 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 			result |= (iter[3] & 0x3f);
 			iter += 4;
 			break;
+
 		case 6:
 			result = (result & 0x01) << 30;
 			result |= (iter[0] & 0x3f) << 24;
@@ -3421,6 +3467,7 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 			result |= (iter[4] & 0x3f);
 			iter += 5;
 			break;
+
 		case 7:
 			result = (iter[0] & 0x03 /*0x3f*/) << 30;
 			result |= (iter[1] & 0x3f) << 24;
@@ -3430,6 +3477,7 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 			result |= (iter[5] & 0x3f);
 			iter += 6;
 			break;
+
 		case 8:
 			/*result = (result & 0x3f) << 36;*/
 			result = (iter[1] & 0x03 /*0x3f*/) << 30;
@@ -3440,6 +3488,7 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 			result |= (iter[6] & 0x3f);
 			iter += 7;
 			break;
+
 		default: __builtin_unreachable();
 		}
 	}
@@ -3541,13 +3590,13 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
 			self->up_flags |= width;
 		}
-#else
+#else /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		ASSERT(!self->up_length);
 		self->up_buffer = DeeString_TryNewWidthBuffer(num_chars, width);
 		if (!self->up_buffer)
 			goto err;
 		self->up_flags = (unsigned char)width;
-#endif
+#endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	} else {
 		/* Check if sufficient memory is already available. */
 		union dcharptr buffer;
@@ -3559,6 +3608,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 		if (avail < required) {
 			/* Try to pre-allocate memory by extending upon what has already been written. */
 			SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
 			CASE_WIDTH_1BYTE:
 				if (width == STRING_WIDTH_1BYTE) {
 					DeeStringObject *new_string;
@@ -3588,7 +3638,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					self->up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
 					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
-#endif
+#endif /* STRING_WIDTH_1BYTE != 0 */
 					self->up_flags |= STRING_WIDTH_2BYTE;
 				} else {
 					/* Upgrade to a 4-byte string. */
@@ -3606,10 +3656,11 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					self->up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
 					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
-#endif
+#endif /* STRING_WIDTH_1BYTE != 0 */
 					self->up_flags |= STRING_WIDTH_4BYTE;
 				}
 				break;
+
 			CASE_WIDTH_2BYTE:
 				if (width <= STRING_WIDTH_2BYTE) {
 					uint16_t *new_buffer;
@@ -3635,17 +3686,16 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					self->up_flags |= STRING_WIDTH_4BYTE;
 				}
 				break;
-				{
-					uint32_t *new_buffer;
-				CASE_WIDTH_4BYTE:
-					/* Extend the 4-byte buffer. */
-					new_buffer = DeeString_TryResize4ByteBuffer(buffer.cp32, required);
-					if
-						unlikely(!new_buffer)
-					goto err;
-					self->up_buffer = new_buffer;
-				}
-				break;
+
+			CASE_WIDTH_4BYTE: {
+				uint32_t *new_buffer;
+				/* Extend the 4-byte buffer. */
+				new_buffer = DeeString_TryResize4ByteBuffer(buffer.cp32, required);
+				if
+					unlikely(!new_buffer)
+				goto err;
+				self->up_buffer = new_buffer;
+			} break;
 			}
 		}
 	}
@@ -3812,12 +3862,15 @@ allocate_initial_normally:
 	}
 	/* Simply append the new character. */
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
 	CASE_WIDTH_1BYTE:
 		((uint8_t *)string)[self->up_length] = ch;
 		break;
+
 	CASE_WIDTH_2BYTE:
 		((uint16_t *)string)[self->up_length] = ch;
 		break;
+
 	CASE_WIDTH_4BYTE:
 		((uint32_t *)string)[self->up_length] = ch;
 		break;
@@ -3983,6 +4036,7 @@ allocate_initial_as_32:
 	}
 	ASSERT(self->up_length <= WSTR_LENGTH(string));
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
 	CASE_WIDTH_1BYTE:
 		/* Must always upcast, regardless of where we're at. */
 		if (ch <= 0xffff) {
@@ -4011,6 +4065,7 @@ allocate_initial_as_32:
 			goto append_4byte;
 		}
 		break;
+
 	CASE_WIDTH_2BYTE:
 		if (ch <= 0xffff) {
 			/* No need to cast. */
@@ -4044,6 +4099,7 @@ append_2byte:
 			goto append_4byte;
 		}
 		break;
+
 	CASE_WIDTH_4BYTE:
 append_4byte:
 		/* We're already at max-size, so just append. */
@@ -4275,7 +4331,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-#endif
+#endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if
 			unlikely(!textlen)
 		goto done;
@@ -4289,8 +4345,8 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
-#endif
-#endif
+#endif /* STRING_WIDTH_1BYTE != 0 */
+#endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		base_string = (String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +
 		                                            (initial_alloc + 1) * sizeof(char));
 		if
@@ -4311,6 +4367,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 	}
 	/* Append new string data. */
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
 	CASE_WIDTH_1BYTE:
 		if (self->up_length + textlen > WSTR_LENGTH(string)) {
 			String *new_string;
@@ -4342,7 +4399,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 		self->up_length += textlen;
 		break;
 
-CASE_WIDTH_2BYTE: {
+	CASE_WIDTH_2BYTE: {
 		uint16_t *dst;
 		if (self->up_length + textlen > WSTR_LENGTH(string)) {
 			size_t new_alloc;
@@ -4414,7 +4471,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-#endif
+#endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if
 			unlikely(!num_chars)
 		goto done;
@@ -4481,7 +4538,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 		self->up_length += num_chars;
 		break;
 
-		CASE_WIDTH_2BYTE: {
+	CASE_WIDTH_2BYTE: {
 		uint16_t *dst;
 		if (self->up_length + num_chars > WSTR_LENGTH(string)) {
 			size_t new_alloc;
@@ -4660,7 +4717,7 @@ append_2byte:
 		self->up_length += textlen;
 		break;
 
-		CASE_WIDTH_4BYTE: {
+	CASE_WIDTH_4BYTE: {
 		uint32_t *dst;
 		if (self->up_length + textlen > WSTR_LENGTH(string)) {
 			size_t new_alloc;
@@ -4742,7 +4799,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 	}
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
 
-		CASE_WIDTH_1BYTE: {
+	CASE_WIDTH_1BYTE: {
 		uint8_t *dst;
 		/* Check if there are any characters > 0xff */
 		for (i = 0; i < textlen; ++i) {
@@ -4801,7 +4858,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 			*dst++ = (uint8_t)*text++;
 	} break;
 
-		CASE_WIDTH_2BYTE: {
+	CASE_WIDTH_2BYTE: {
 		uint16_t *dst;
 append_2byte:
 		/* Check if there are any characters > 0xffff */
@@ -4920,6 +4977,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	{
 		SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
 		CASE_WIDTH_1BYTE: {
 			char *iter, *end, *flush_start;
 			/* If we're a 1-byte string, at the very least
@@ -4964,7 +5022,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 			}
 		} break;
 
-			CASE_WIDTH_2BYTE: {
+		CASE_WIDTH_2BYTE: {
 			size_t i;
 			/* Since our string already uses more than 1 byte per character,
 			 * there'd be no point in trying to buffer anything, since any
@@ -4996,7 +5054,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 			}
 		} break;
 
-			CASE_WIDTH_4BYTE: {
+		CASE_WIDTH_4BYTE: {
 			size_t i;
 			/* Same as the 2-byte variant: print one character at a time. */
 			for (i = 0; i < length; ++i) {
@@ -6001,18 +6059,18 @@ err:
 PUBLIC uint32_t *(DCALL Dee_unicode_printer_alloc_utf32)(struct unicode_printer *__restrict self,
                                                          size_t length) {
 	uint32_t *result;
-	do
+	do {
 		result = unicode_printer_tryalloc_utf32(self, length);
-	while (!result && Dee_CollectMemory(length * sizeof(uint32_t)));
+	} while (!result && Dee_CollectMemory(length * sizeof(uint32_t)));
 	return result;
 }
 
 PUBLIC uint32_t *(DCALL Dee_unicode_printer_resize_utf32)(struct unicode_printer *__restrict self,
                                                           uint32_t *buf, size_t new_length) {
 	uint32_t *result;
-	do
+	do {
 		result = unicode_printer_tryresize_utf32(self, buf, new_length);
-	while (!result && Dee_CollectMemory(new_length * sizeof(uint32_t)));
+	} while (!result && Dee_CollectMemory(new_length * sizeof(uint32_t)));
 	return result;
 }
 
@@ -6103,67 +6161,87 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
 		case '\r':
 			break; /* Escaped line-feed */
 
-			{
-				unsigned int count;
-				unsigned int max_digits;
-			case 'U':
-				max_digits = 8;
-				goto parse_hex_integer;
-			case 'u':
-				max_digits = 4;
-				goto parse_hex_integer;
-			case 'x':
-			case 'X':
-				max_digits = (unsigned int)-1; /* Unlimited. */
-parse_hex_integer:
-				count       = 0;
-				digit_value = 0;
-				while (count < max_digits) {
-					struct unitraits *desc;
-					uint32_t ch32;
-					uint8_t val;
-					char const *old_iter = iter;
-					ch32                 = utf8_readchar(&iter, end);
-					if (ch32 >= 'a' && ch32 <= 'f')
-						val = 10 + ((uint8_t)ch32 - 'a');
-					else if (ch32 >= 'A' && ch32 <= 'F')
-						val = 10 + ((uint8_t)ch32 - 'A');
-					else {
-						desc = DeeUni_Descriptor(ch32);
-						if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
-						    desc->ut_digit >= 10) {
-							iter = old_iter;
-							break;
-						}
-						val = desc->ut_digit;
+		{
+			unsigned int count;
+			unsigned int max_digits;
+		case 'U':
+			max_digits = 8;
+			goto parse_hex_integer;
+		case 'u':
+			max_digits = 4;
+			goto parse_hex_integer;
+		case 'x':
+		case 'X':
+			max_digits = (unsigned int)-1; /* Unlimited. */
+		parse_hex_integer:
+			count       = 0;
+			digit_value = 0;
+			while (count < max_digits) {
+				struct unitraits *desc;
+				uint32_t ch32;
+				uint8_t val;
+				char const *old_iter = iter;
+				ch32                 = utf8_readchar(&iter, end);
+				if (ch32 >= 'a' && ch32 <= 'f')
+					val = 10 + ((uint8_t)ch32 - 'a');
+				else if (ch32 >= 'A' && ch32 <= 'F')
+					val = 10 + ((uint8_t)ch32 - 'A');
+				else {
+					desc = DeeUni_Descriptor(ch32);
+					if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
+					    desc->ut_digit >= 10) {
+						iter = old_iter;
+						break;
 					}
-					digit_value <<= 4;
-					digit_value |= val;
-					++count;
+					val = desc->ut_digit;
 				}
-				if (!count) {
-					if (error_mode & (STRING_ERROR_FIGNORE |
-					                  STRING_ERROR_FREPLAC))
-						goto continue_or_replace;
-					DeeError_Throwf(&DeeError_UnicodeDecodeError,
-					                "No digits, or hex-chars found after \\x, \\u or \\U");
-					goto err;
-				}
-				if (unicode_printer_putc(printer, digit_value))
-					goto err;
+				digit_value <<= 4;
+				digit_value |= val;
+				++count;
 			}
-			break;
+			if (!count) {
+				if (error_mode & (STRING_ERROR_FIGNORE |
+				                  STRING_ERROR_FREPLAC))
+					goto continue_or_replace;
+				DeeError_Throwf(&DeeError_UnicodeDecodeError,
+				                "No digits, or hex-chars found after \\x, \\u or \\U");
+				goto err;
+			}
+			if (unicode_printer_putc(printer, digit_value))
+				goto err;
+		} break;
 
-		case 'a': ch = (char)0x07; goto put_ch;
-		case 'b': ch = (char)0x08; goto put_ch;
-		case 'f': ch = (char)0x0c; goto put_ch;
-		case 'n': ch = (char)0x0a; goto put_ch;
-		case 'r': ch = (char)0x0d; goto put_ch;
-		case 't': ch = (char)0x09; goto put_ch;
-		case 'v': ch = (char)0x0b; goto put_ch;
+		case 'a':
+			ch = (char)0x07;
+			goto put_ch;
+
+		case 'b':
+			ch = (char)0x08;
+			goto put_ch;
+
+		case 'f':
+			ch = (char)0x0c;
+			goto put_ch;
+
+		case 'n':
+			ch = (char)0x0a;
+			goto put_ch;
+
+		case 'r':
+			ch = (char)0x0d;
+			goto put_ch;
+
+		case 't':
+			ch = (char)0x09;
+			goto put_ch;
+
+		case 'v':
+			ch = (char)0x0b;
+			goto put_ch;
+
 		case 'e':
 			ch = (char)0x1b; /*goto put_ch;*/
-put_ch:
+		put_ch:
 			if (unicode_printer_putc(printer, (uint32_t)(unsigned char)ch))
 				goto err;
 			break;
@@ -6172,7 +6250,7 @@ put_ch:
 			if (ch >= '0' && ch <= '7') {
 				unsigned int count;
 				digit_value = (uint32_t)(ch - '0');
-parse_oct_integer:
+			parse_oct_integer:
 				/* Octal-encoded integer. */
 				count = 1;
 				while (count < 3) {
@@ -6278,11 +6356,10 @@ again_flush:
 		++text, --textlen;
 	/* Print ASCII text. */
 	if (flush_start != text) {
-		if
-			unlikely(bytes_printer_append(me,
-			                              (uint8_t *)flush_start,
-			                              (size_t)(text - flush_start)) < 0)
-		goto err;
+		if unlikely(bytes_printer_append(me,
+		                                 (uint8_t *)flush_start,
+		                                 (size_t)(text - flush_start)) < 0)
+			goto err;
 	}
 	if (textlen) {
 		uint8_t seqlen;
