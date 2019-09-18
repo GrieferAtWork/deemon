@@ -777,7 +777,7 @@ save_attr(DeeObject *__restrict declarator,
 		size_t new_alloc = self->al_a * 2;
 		if (!new_alloc)
 			new_alloc = 8;
-	do_realloc:
+do_realloc:
 		new_vector = (DREF Attr **)Dee_TryRealloc(self->al_v, new_alloc *
 		                                                      sizeof(DREF Attr *));
 		if
@@ -1464,7 +1464,7 @@ DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
 			    (error = DeeType_FindMemberAttr(tp_self, iter, result, rules)) <= 0)
 				goto done;
 		}
-	next_iter:
+next_iter:
 		iter = DeeType_Base(iter);
 		if (!iter)
 			break;
@@ -1472,7 +1472,7 @@ DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
 			dssize_t enum_error;
 			struct attribute_lookup_data data;
 			dssize_t(DCALL * enumattr)(DeeTypeObject * __restrict, DeeObject * __restrict, denum_t, void *);
-		do_iter_attr:
+do_iter_attr:
 			enumattr = iter->tp_attr->tp_enumattr;
 			if (!enumattr)
 				break;

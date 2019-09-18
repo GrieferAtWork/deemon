@@ -905,7 +905,7 @@ int_from_nonbinary_string(char *__restrict begin,
 		for (i = 0; i < convwidth && begin != end; ++i, ++begin) {
 			digit dig;
 			char ch;
-		parse_ch:
+parse_ch:
 			ch = *begin;
 			/* */ if (ch >= '0' && ch <= '9')
 				dig = ch - '0';
@@ -1556,7 +1556,7 @@ DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
 	{
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "int too large to format");
-	err:
+err:
 		return -1;
 	}
 	size = 1 + size_a * DIGIT_BITS / (3 * DeeInt_DECIMAL_SHIFT);
@@ -1711,7 +1711,7 @@ do_print:
 			dig     = number & dig_mask;
 			*--iter = digit_chars[dig];
 		}
-	do_print_prefix:
+do_print_prefix:
 		/* Print the numsys prefix. */
 		if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
 			if (dig_bits == 4)
@@ -1821,7 +1821,7 @@ DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value) {
 		} else if (result == (uint16_t)(0 - (uint16_t)INT16_MIN)) {
 			result = (uint16_t)INT16_MIN;
 		} else {
-		overflow:
+overflow:
 			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
 		}
 		*value = (int16_t)result;
@@ -1887,7 +1887,7 @@ DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value) {
 		} else if (result == (uint32_t)(0 - (uint32_t)INT32_MIN)) {
 			result = (uint32_t)INT32_MIN;
 		} else {
-		overflow:
+overflow:
 			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
 		}
 		*value = (int32_t)result;
@@ -1935,7 +1935,7 @@ DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value) {
 		} else if (result == (uint64_t)(0 - (uint64_t)INT64_MIN)) {
 			result = (uint64_t)INT64_MIN;
 		} else {
-		overflow:
+overflow:
 			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
 		}
 		*value = (int64_t)result;
@@ -1987,7 +1987,7 @@ DeeInt_TryAs128(DeeObject *__restrict self, dint128_t *__restrict value) {
 		} else if (DINT128_IS0MMIN(result)) {
 			DINT128_SETMIN(result);
 		} else {
-		overflow:
+overflow:
 			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
 		}
 		*(duint128_t *)value = result;
@@ -2343,7 +2343,7 @@ PUBLIC int (DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
 			*writer           = old_byte & ~byte_mask;
 			*writer |= new_byte & byte_mask;
 		}
-	done_decr:
+done_decr:
 		/* With the decrementation complete, we must now invert all bits. */
 		num_bits = total_bits;
 		writer   = (uint8_t *)dst;
@@ -2529,7 +2529,7 @@ PUBLIC DREF DeeObject *(DCALL DeeInt_FromBytes)(void const *__restrict buf, size
 			if ((result->ob_digit[digit_index])-- != 0)
 				goto done_decr;
 			result->ob_digit[digit_index] &= (((digit)1 << num_bits) - 1);
-		done_decr:
+done_decr:
 			/* With the decrementation complete, we must now invert all bits. */
 			for (digit_index = 0; digit_index < total_digits; ++digit_index)
 				result->ob_digit[digit_index] ^= DIGIT_MASK;

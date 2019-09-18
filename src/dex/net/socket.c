@@ -344,7 +344,7 @@ socket_close(Socket *__restrict self, size_t argc,
 		} else {
 			new_state = SOCKET_FSHUTDOWN_R | SOCKET_FSHUTDOWN_W;
 		}
-	again_shutdown:
+again_shutdown:
 		/* Test for interrupts. */
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -415,7 +415,7 @@ socket_shutdown(Socket *__restrict self, size_t argc,
 		} else {
 			new_state = SOCKET_FSHUTDOWN_R | SOCKET_FSHUTDOWN_W;
 		}
-	again_shutdown:
+again_shutdown:
 		/* Test for interrupts. */
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -526,7 +526,7 @@ again:
 	} else if (error_code == EINVAL) {
 		if (!(state & SOCKET_FOPENED) ||
 		    (state & SOCKET_FSHUTDOWN_R)) {
-		err_closed:
+err_closed:
 			err_socket_closed(error_code, self);
 		} else {
 			DeeError_SysThrowf(&DeeError_NetError, error_code,
@@ -625,7 +625,7 @@ again:
 			/* Non-blocking connect still going on
 			 * Use 'select' to wait for the socket to finish */
 			socklen_t errlen;
-		restart_select:
+restart_select:
 			socket_endread(self);
 			if (DeeThread_CheckInterrupt())
 				goto err_connect_failed;
@@ -815,7 +815,7 @@ again:
 	} else if (error_code == EINVAL) {
 		if (!(state & SOCKET_FOPENED) ||
 		    (state & SOCKET_FSHUTDOWN_R)) {
-		err_closed:
+err_closed:
 			err_socket_closed(error_code, self);
 		} else {
 			DeeError_SysThrowf(&DeeError_IsConnected, error_code,
@@ -848,7 +848,7 @@ restart:
 	socklen = SockAddr_Sizeof(self->s_sockaddr.sa.sa_family, self->s_proto);
 	if (timeout_microseconds == (uint64_t)-1) {
 		/* Accept. */
-	restart_no_timeout:
+restart_no_timeout:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		socket_read(self);
@@ -900,7 +900,7 @@ restart:
 		socket_endread(self);
 	} else if (timeout_microseconds == 0) {
 		/* Try-accept. */
-	do_try_select:
+do_try_select:
 		socket_read(self);
 		if (!(self->s_state & SOCKET_FOPENED) ||
 		    (self->s_state & SOCKET_FSHUTDOWN_R)) {
@@ -964,7 +964,7 @@ restart:
 		end_time = DeeThread_GetTimeMicroSeconds();
 		end_time += timeout_microseconds;
 		/* Timed-accept. */
-	do_timed_select:
+do_timed_select:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		ASSERT(timeout_microseconds);
@@ -1086,7 +1086,7 @@ handle_accept_error_neterror:
 	}
 #endif /* ENOMEM */
 	if (error == EBADF || error == ENOTSOCK) {
-	socket_was_closed:
+socket_was_closed:
 		err_socket_closed(error, self);
 	} else if (error == EINVAL) {
 		DeeError_SysThrowf(&DeeError_NotListening, error,
@@ -1199,7 +1199,7 @@ restart:
 #endif /* EINTR */
 	if (end_time == (uint64_t)-1) {
 		/* wait */
-	retry_infinite:
+retry_infinite:
 		socket_endread(self);
 		if (DeeThread_CheckInterrupt())
 			goto err_nounlock;
@@ -1886,7 +1886,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 			}
 			/* Pack together the generated string. */
 			return bytes_printer_pack(&printer);
-		err_printer:
+err_printer:
 			bytes_printer_fini(&printer);
 			return NULL;
 		}

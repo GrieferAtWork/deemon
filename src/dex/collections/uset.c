@@ -594,7 +594,7 @@ USet_InitSequence(USet *__restrict self,
 #ifndef CONFIG_NO_THREADS
 		rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
-	again_hashset:
+again_hashset:
 		DeeHashSet_LockRead(src);
 		self->s_used = self->s_size = src->s_used;
 		if (!self->s_used) {

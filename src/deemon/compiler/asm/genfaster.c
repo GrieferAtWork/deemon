@@ -116,7 +116,7 @@ ast_genasm_set(struct ast *__restrict self,
 		if
 			unlikely(!inner_set)
 		{
-		restore_error:
+restore_error:
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 			goto push_generic;
 		}

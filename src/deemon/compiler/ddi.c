@@ -526,7 +526,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 						size_t old_alloc = result_size + (size_t)(code_iter - result->d_ddi);
 						size_t new_alloc = old_alloc * 2;
 						DeeDDIObject *new_result;
-					do_realloc_bind:
+do_realloc_bind:
 						ASSERT(old_alloc);
 						ASSERT(new_alloc);
 						ASSERT(old_alloc != new_alloc);
@@ -577,7 +577,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 				if (iter->dc_addr == old_state.reg_uip)
 					continue;
 			}
-		do_last_transition:
+do_last_transition:
 
 			/* Generate DDI assembly to transition to the new state. */
 			text = ddi_transition(text, &old_state, &new_state);
@@ -593,7 +593,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 				size_t old_alloc = result_size + (size_t)(code_iter - result->d_ddi);
 				size_t new_alloc = old_alloc * 2;
 				DeeDDIObject *new_result;
-			do_realloc:
+do_realloc:
 				ASSERT(old_alloc);
 				ASSERT(new_alloc);
 				ASSERT(old_alloc != new_alloc);
@@ -685,7 +685,7 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 		((struct Dee_ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
 		result->d_exdat                                   = (struct Dee_ddi_exdat *)bytewriter_flush(&writer);
 		__IF0 {
-		err_xwriter:
+err_xwriter:
 			bytewriter_fini(&writer);
 			goto err;
 		}

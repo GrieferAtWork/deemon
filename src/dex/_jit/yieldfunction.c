@@ -629,7 +629,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
 			if (name == ENCODE4('e', 'l', 's', 'e')) {
 				JITLexer_Yield(&self->ji_lex);
-			do_skip_else:
+do_skip_else:
 				/* Skip the accompanying block. */
 				if
 					unlikely(JITLexer_SkipStatement(&self->ji_lex))
@@ -745,7 +745,7 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
 					/* Skip over the condition expression and break out of the loop */
 					if (JITLexer_SkipExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL))
 						goto err;
-				do_break_dowhile_loop:
+do_break_dowhile_loop:
 					if (self->ji_lex.jl_tok == ')') {
 						JITLexer_Yield(&self->ji_lex);
 					} else {
@@ -919,7 +919,7 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
 			default: __builtin_unreachable();
 			}
 			if (ctl_is_break) {
-			do_break_loop:
+do_break_loop:
 				/* Jump to the end of the loop block, and pop the loop itself. */
 				if
 					unlikely(JITLexer_SkipStatement(&self->ji_lex))
@@ -1095,7 +1095,7 @@ parse_again_same_statement:
 						goto parse_else_after_if;
 					} else if (name == ENCODE4('e', 'l', 'i', 'f')) {
 						self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
-					parse_else_after_if:
+parse_else_after_if:
 #if 1 /* Optimization: No need to push a scope if no declaration was made \
        *               within the condition expression of the if-statement. */
 						if (self->ji_ctx.jc_locals.otp_ind >= 2) {
@@ -1203,7 +1203,7 @@ parse_again_same_statement:
 					if
 						unlikely(!result)
 					{
-					err_elem_lvalue_scope:
+err_elem_lvalue_scope:
 						JITLValue_Fini(&elem_lvalue);
 						goto err_scope;
 					}
@@ -1247,7 +1247,7 @@ parse_again_same_statement:
 					if
 						unlikely(temp)
 					{
-					err_iter_scope_lvalue:
+err_iter_scope_lvalue:
 						Dee_Decref(iter);
 						goto err_elem_lvalue_scope;
 					}
@@ -1273,7 +1273,7 @@ parse_again_same_statement:
 						Dee_Decref(result);
 					}
 					if (self->ji_lex.jl_tok == ';') {
-					do_normal_for_noinit:
+do_normal_for_noinit:
 						JITLexer_Yield(&self->ji_lex);
 					} else {
 						syn_for_expected_semi1_after_for(&self->ji_lex);
@@ -1315,7 +1315,7 @@ parse_again_same_statement:
 								JITLexer_Yield(&self->ji_lex);
 							}
 							else {
-							err_missing_rparen_after_for:
+err_missing_rparen_after_for:
 								syn_for_expected_rparen_after_for(&self->ji_lex);
 								goto err_scope;
 							}
@@ -1388,7 +1388,7 @@ parse_again_same_statement:
 				}
 				else {
 					syn_with_expected_rparen_after_with(&self->ji_lex);
-				err_obj_scope:
+err_obj_scope:
 					Dee_Decref(obj);
 					goto err_scope;
 				}
@@ -1558,7 +1558,7 @@ parse_again_same_statement:
 				if
 					unlikely(!iter)
 				{
-				err_elem_lvalue_scope_2:
+err_elem_lvalue_scope_2:
 					JITLValue_Fini(&elem_lvalue);
 					goto err_scope;
 				}
@@ -1597,7 +1597,7 @@ parse_again_same_statement:
 				if
 					unlikely(temp)
 				{
-				err_iter_scope_lvalue_2:
+err_iter_scope_lvalue_2:
 					Dee_Decref(iter);
 					goto err_elem_lvalue_scope_2;
 				}
@@ -1642,7 +1642,7 @@ got_yield_value:
 
 	ASSERT(result != JIT_LVALUE);
 	if (!result) {
-	err:
+err:
 		if (self->ji_ctx.jc_retval != JITCONTEXT_RETVAL_UNSET) {
 			if (self->ji_ctx.jc_retval == JITCONTEXT_RETVAL_BREAK ||
 			    self->ji_ctx.jc_retval == JITCONTEXT_RETVAL_CONTINUE) {
@@ -1688,7 +1688,7 @@ got_yield_value:
 				/* Not a syntax-error. - Check for catch/finally blocks and handle
 				 * catch expressions, as well as execute finally-statements! */
 				struct jit_state *st;
-			again_check_try_statements:
+again_check_try_statements:
 				st = self->ji_state;
 				for (; st != &self->ji_bstat; st = st->js_prev) {
 					if (st->js_kind != JIT_STATE_KIND_TRY)
@@ -1708,7 +1708,7 @@ got_yield_value:
 					self->ji_state = st->js_prev;
 					jit_state_free(st);
 					/* Service handlers. */
-				service_exception_handlers:
+service_exception_handlers:
 					for (;;) {
 						bool allow_interrupts = false;
 						/* XXX: Full tagging support? */
@@ -1859,7 +1859,7 @@ got_yield_value:
 			}
 			if (!self->ji_lex.jl_errpos)
 				self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
-		handle_error:
+handle_error:
 			JITLValue_Fini(&self->ji_lex.jl_lvalue);
 			self->ji_lex.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 			result                         = NULL;
@@ -1929,7 +1929,7 @@ ji_fini(JITYieldFunctionIterator *__restrict self) {
 					goto err_try;
 				/* Service all finally statements that were used to guard this block. */
 				JITLexer_EvalFinallyStatements(&self->ji_lex);
-			err_try:
+err_try:
 				/* Dump all unhandled exceptions caused by */
 				while (ts->t_exceptsz > self->ji_ctx.jc_except)
 					DeeError_Print(NULL, ERROR_PRINT_DOHANDLE);

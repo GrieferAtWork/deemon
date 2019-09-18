@@ -198,7 +198,7 @@ ast_build_operator(uint16_t name, uint16_t flags,
 				result = ast_operator4(name, flags, argv[0], argv[1], argv[2], argv[3]);
 				break;
 			}
-		end_argv:
+end_argv:
 			ast_xdecref(argv[3]);
 			ast_xdecref(argv[2]);
 			ast_xdecref(argv[1]);
@@ -235,7 +235,7 @@ do_generic:
 		args = ast_operator2(OPERATOR_CALL, 0, function_ast, args);
 		ast_decref(function_ast);
 		return args;
-	err:
+err:
 		return NULL;
 	}
 	/* Encode a regular, old varargs operator. */
@@ -296,7 +296,7 @@ ast_build_bound_operator(uint16_t name, uint16_t flags,
 			case 2: result = ast_operator3(name, flags, self, argv[0], argv[1]); break;
 			default: result = ast_operator4(name, flags, self, argv[0], argv[1], argv[2]); break;
 			}
-		end_argv:
+end_argv:
 			ast_xdecref(argv[2]);
 			ast_xdecref(argv[1]);
 			ast_xdecref(argv[0]);
@@ -354,9 +354,9 @@ do_generic:
 		ast_decref(function_ast);
 		ast_decref(args);
 		return new_args;
-	err_args:
+err_args:
 		ast_decref(args);
-	err:
+err:
 		return NULL;
 	}
 	/* Encode a regular, old varargs operator. */
@@ -510,7 +510,7 @@ ast_parse_operator_name(uint16_t features) {
 		goto done_y1;
 
 	case TOK_LOWER:
-	do_operator_lo:
+do_operator_lo:
 		result = OPERATOR_LO;
 		goto done_y1;
 
@@ -519,7 +519,7 @@ ast_parse_operator_name(uint16_t features) {
 		goto done_y1;
 
 	case TOK_GREATER:
-	do_operator_gr:
+do_operator_gr:
 		result = OPERATOR_GR;
 		goto done_y1;
 
@@ -589,7 +589,7 @@ ast_parse_operator_name(uint16_t features) {
 		goto done_y1;
 
 	case TOK_STRING:
-	parse_string:
+parse_string:
 		if (advance_wraplf(advance_wraplf(token.t_begin)) != token.t_end &&
 		    WARN(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))
 			goto err;
@@ -848,7 +848,7 @@ ast_parse_operator_name(uint16_t features) {
 				goto done_y1;
 			}
 		}
-	unknown:
+unknown:
 		if (WARN(W_UNKNOWN_OPERATOR_NAME))
 			goto err;
 		result = (int32_t)0; /* Default to whatever operator #0 is. */

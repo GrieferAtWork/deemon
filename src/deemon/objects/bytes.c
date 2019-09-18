@@ -725,7 +725,7 @@ bytes_init(size_t argc, DeeObject **__restrict argv) {
 			}
 		}
 	} else if (!argc) {
-	err_args:
+err_args:
 		err_invalid_argc(DeeString_STR(&str_Bytes),
 		                 argc,
 		                 1,
@@ -787,7 +787,7 @@ bytes_init(size_t argc, DeeObject **__restrict argv) {
 			err_unimplemented_operator(tp_iter, OPERATOR_GETBUF);
 		}
 		goto err;
-	err_r:
+err_r:
 		DeeObject_Free(result);
 		goto err;
 	}
@@ -2210,7 +2210,7 @@ Dee_bytes_printer_append(struct bytes_printer *__restrict self,
 		alloc_size = 8;
 		while (alloc_size < datalen)
 			alloc_size *= 2;
-	alloc_again:
+alloc_again:
 		bytes = (Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) + alloc_size);
 		if
 			unlikely(!bytes)
@@ -2237,7 +2237,7 @@ Dee_bytes_printer_append(struct bytes_printer *__restrict self,
 	{
 		size_t min_alloc = self->bp_length + datalen;
 		alloc_size       = (min_alloc + 63) & ~63;
-	realloc_again:
+realloc_again:
 		bytes = (Bytes *)DeeObject_TryRealloc(bytes, offsetof(Bytes, b_data) + alloc_size);
 		if
 			unlikely(!bytes)
@@ -2321,7 +2321,7 @@ PUBLIC uint8_t *
 		alloc_size = 8;
 		while (alloc_size < datalen)
 			alloc_size *= 2;
-	alloc_again:
+alloc_again:
 		bytes = (Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) +
 		                                     (alloc_size + 1) * sizeof(char));
 		if
@@ -2349,7 +2349,7 @@ PUBLIC uint8_t *
 	{
 		size_t min_alloc = self->bp_length + datalen;
 		alloc_size       = (min_alloc + 63) & ~63;
-	realloc_again:
+realloc_again:
 		bytes = (Bytes *)DeeObject_TryRealloc(bytes, offsetof(Bytes, b_data) +
 		                                             (alloc_size + 1) * sizeof(char));
 		if unlikely(!bytes) {

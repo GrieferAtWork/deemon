@@ -88,7 +88,7 @@ DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeO
 		/* Without any dummy items, these are identical. */
 		result->s_used = num_items;
 		result->s_size = num_items;
-	next_key:
+next_key:
 		while (num_items--) {
 			DREF DeeObject *key = *items++;
 			dhash_t i, perturb, hash = DeeObject_Hash(key);

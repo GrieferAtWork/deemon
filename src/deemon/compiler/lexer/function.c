@@ -69,7 +69,7 @@ PRIVATE struct symbol *DCALL parse_argument_name(void) {
 	else {
 		if (tok == KWD_none) {
 			/* Special case: Allow `none' to be used for placeholder/pending arguments. */
-		create_anon_argument:
+create_anon_argument:
 			/* Create a new symbol for the argument. */
 			result = new_unnamed_symbol();
 			if
@@ -109,7 +109,7 @@ PRIVATE int DCALL resize_argument_list(uint16_t *__restrict parga) {
 		uint16_t new_arga = *parga * 2;
 		if (!new_arga)
 			new_arga = 2;
-	do_realloc_symv:
+do_realloc_symv:
 		new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
 		                                            new_arga * sizeof(struct symbol *));
 		if
@@ -138,7 +138,7 @@ PRIVATE int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
 		uint16_t new_defaulta = *pdefaulta * 2;
 		if (!new_defaulta)
 			new_defaulta = 2;
-	do_realloc_symv:
+do_realloc_symv:
 		new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
 		                                                 new_defaulta * sizeof(DREF DeeObject *));
 		if
@@ -208,7 +208,7 @@ INTERN int DCALL parse_arglist(void) {
 					unlikely(yield() < 0)
 				goto err;
 				arg->s_flag = SYMBOL_FALLOC;
-			set_arg_as_varargs_argument:
+set_arg_as_varargs_argument:
 				if
 					unlikely(resize_argument_list(&arga))
 				goto err;
@@ -218,7 +218,7 @@ INTERN int DCALL parse_arglist(void) {
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
 				current_basescope->bs_varargs                            = arg;
 				current_basescope->bs_flags |= CODE_FVARARGS;
-			parse_varargs_suffix:
+parse_varargs_suffix:
 				if
 					unlikely(tok == '?')
 				{
@@ -341,7 +341,7 @@ INTERN int DCALL parse_arglist(void) {
 				    ? WARN(W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, arg, current_basescope->bs_varkwds)
 				    : WARN(W_POSITIONAL_ARGUMENT_AFTER_VARARGS, arg, current_basescope->bs_varargs))
 					goto err;
-			set_argument_as_local:
+set_argument_as_local:
 				arg->s_type = SYMBOL_TYPE_LOCAL;
 				arg->s_flag = symbol_flags;
 				if (tok == '?' && unlikely(yield() < 0))
@@ -392,7 +392,7 @@ INTERN int DCALL parse_arglist(void) {
 					DREF struct ast *default_expr;
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
 						goto err;
-				skip_default_suffix:
+skip_default_suffix:
 					if
 						unlikely(yield() < 0)
 					goto err;
@@ -420,7 +420,7 @@ INTERN int DCALL parse_arglist(void) {
 				DREF DeeObject *default_value;
 				DREF struct ast *default_expr;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-			parse_default_suffix:
+parse_default_suffix:
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				if
 					unlikely(yield() < 0)
@@ -430,7 +430,7 @@ INTERN int DCALL parse_arglist(void) {
 					unlikely(!default_expr)
 				goto err;
 				if (ast_optimize_all(default_expr, true)) {
-				err_default_expr:
+err_default_expr:
 					ast_decref(default_expr);
 					goto err;
 				}
@@ -459,7 +459,7 @@ INTERN int DCALL parse_arglist(void) {
 				++current_basescope->bs_argc_max;
 			} else {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-			set_arg_as_normal:
+set_arg_as_normal:
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				ASSERT(current_basescope->bs_argc_min <= current_basescope->bs_argc_max);
 				if (current_basescope->bs_argc_min < current_basescope->bs_argc_max) {
@@ -481,7 +481,7 @@ INTERN int DCALL parse_arglist(void) {
 				++current_basescope->bs_argc_min;
 				++current_basescope->bs_argc_max;
 			}
-		next_argument:
+next_argument:
 			if (tok != ',')
 				break;
 			if

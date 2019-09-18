@@ -615,7 +615,7 @@ x_sub_revint2(twodigits a,
 		if (((a >> DIGIT_BITS) & DIGIT_MASK) < b->ob_digit[1])
 			goto do_reverse;
 	} else if ((a & DIGIT_MASK) < b->ob_digit[0]) {
-	do_reverse:
+do_reverse:
 		z = x_sub_int2(b, a);
 		if (z)
 			z->ob_size = -z->ob_size;

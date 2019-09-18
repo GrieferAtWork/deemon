@@ -319,7 +319,7 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 			if
 				unlikely(!fixed_result)
 			{
-			err_result:
+err_result:
 				Dee_DecrefDokill(result);
 				goto err;
 			}
@@ -802,7 +802,7 @@ again:
 		goto done_cmdline_copy;
 		if (final_exe != (DREF DeeStringObject *)ITER_DONE) {
 			/* Saved the new (fixed) executable name. */
-		save_final_exe:
+save_final_exe:
 			DBG_ALIGNMENT_ENABLE();
 			rwlock_write(&self->p_lock);
 			ASSERT(self->p_exe == exe); /* Inherit reference (from `self->p_exe' into `exe') */
@@ -1513,7 +1513,7 @@ pti_next(ProcessThreadsIterator *__restrict self) {
 again:
 	rwlock_write(&self->pti_lock);
 	if (!self->pti_entry.dwSize) {
-	done:
+done:
 		DBG_ALIGNMENT_ENABLE();
 		rwlock_endwrite(&self->pti_lock);
 		return ITER_DONE;
@@ -1718,7 +1718,7 @@ process_set_std(Process *__restrict self, int stdno, DeeObject *value) {
 			err_unbound_attribute(&DeeProcess_Type, std_names[stdno]);
 		}
 		Dee_Decref(old_stream);
-	done:
+done:
 		return 0;
 	}
 	rwlock_endwrite(&self->p_lock);
@@ -1949,11 +1949,11 @@ process_set_exe(Process *__restrict self, DeeObject *value) {
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
 	if (self == &this_process) {
-	err_started:
+err_started:
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot set exe for running process %k",
 		                self);
-	err:
+err:
 		return -1;
 	}
 	rwlock_write(&self->p_lock);
@@ -2026,11 +2026,11 @@ process_set_cmdline(Process *__restrict self, DeeObject *value) {
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
 	if (self == &this_process) {
-	err_started:
+err_started:
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot set cmdline for running process %k",
 		                self);
-	err:
+err:
 		return -1;
 	}
 	rwlock_write(&self->p_lock);

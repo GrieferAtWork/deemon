@@ -333,7 +333,7 @@ next:
 				goto done_flush;
 			} else if (flush_end - 1 == flush_start) {
 				/* Self-directory-reference. */
-			done_flush:
+done_flush:
 				flush_start = iter;
 				goto done_flush_nostart;
 			} else if (flush_end[-2] == SEP &&
@@ -342,7 +342,7 @@ next:
 				flush_end -= 2;
 			}
 		}
-	do_flush_after_sep:
+do_flush_after_sep:
 		/* Check if we need to fix anything */
 		if (flush_end == iter - 1
 #ifdef CONFIG_HOST_WINDOWS
@@ -380,7 +380,7 @@ next:
 			if (unicode_printer_putascii(&printer, SEP) < 0)
 				goto err;
 		}
-	done_flush_nostart:
+done_flush_nostart:
 		if (iter == end + 1)
 			goto done;
 		goto next;
@@ -1036,7 +1036,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 	if (result) {
 		Dee_Incref(result);
 		rwlock_endread(&modules_lock);
-	got_result_modulepath:
+got_result_modulepath:
 		Dee_Decref(module_path_ob);
 		goto got_result;
 	}
@@ -1124,7 +1124,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 	/* Cache the new module as part of the filesystem
 	 * module cache, as well as the global module cache. */
 	if (module_global_name) {
-	set_file_module_global:
+set_file_module_global:
 #ifndef CONFIG_NO_THREADS
 		rwlock_write(&modules_lock);
 		if (!rwlock_trywrite(&modules_glob_lock)) {
@@ -1166,7 +1166,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 		rwlock_endwrite(&modules_glob_lock);
 		rwlock_endwrite(&modules_lock);
 	} else {
-	set_file_module:
+set_file_module:
 		rwlock_write(&modules_lock);
 		existing_module = find_file_module(module_path_ob, hash);
 		if
@@ -1177,7 +1177,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 			Dee_DecrefDokill(result);
 			Dee_Decref_likely(input_stream);
 			result = existing_module;
-		try_load_module_after_failure:
+try_load_module_after_failure:
 			if (DeeModule_BeginLoading(result) == 0)
 				goto load_module_after_failure;
 			goto got_result;
@@ -1327,7 +1327,7 @@ DeeModule_OpenSourceStream(DeeObject *__restrict source_stream,
 		/* Create a new module. */
 		result = (DREF DeeModuleObject *)DeeModule_New(module_name);
 		/* Add the module to the global module cache. */
-	set_global_module:
+set_global_module:
 		rwlock_write(&modules_glob_lock);
 		existing_module = find_glob_module((DeeStringObject *)module_name);
 		if
@@ -1714,7 +1714,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 			ch                = SEP;
 			module_name_start = (char *)module_name + i + 1;
 		} else if (!IS_VALID_MODULE_CHARACTER(ch)) {
-		err_bad_module_name:
+err_bad_module_name:
 			err_invalid_module_name_s(module_name, module_namesize);
 			goto err_buf;
 		}
@@ -1789,11 +1789,11 @@ again_search_fs_modules:
 			/* Found it! */
 			Dee_Incref(result);
 			rwlock_endread(&modules_lock);
-		got_result_set_global:
+got_result_set_global:
 			if (module_global_name && likely(!result->mo_globpself)) {
 				DeeModuleObject *existing_module;
 				/* Cache the module as global (if it wasn't already) */
-			again_find_existing_global_module:
+again_find_existing_global_module:
 				rwlock_write(&modules_glob_lock);
 				COMPILER_READ_BARRIER();
 				if
@@ -1969,7 +1969,7 @@ again_search_fs_modules:
 				if
 					unlikely(!module_path_ob)
 				{
-				err_buf_name_dec_stream:
+err_buf_name_dec_stream:
 					Dee_Decref_likely(dec_stream);
 					goto err_buf_module_name;
 				}
@@ -1991,7 +1991,7 @@ again_search_fs_modules:
 				/* Cache the new module as part of the filesystem
 				 * module cache, as well as the global module cache. */
 				if (module_global_name) {
-				set_dec_file_module_global:
+set_dec_file_module_global:
 #ifndef CONFIG_NO_THREADS
 					rwlock_write(&modules_lock);
 					if (!rwlock_trywrite(&modules_glob_lock)) {
@@ -2033,7 +2033,7 @@ again_search_fs_modules:
 					rwlock_endwrite(&modules_glob_lock);
 					rwlock_endwrite(&modules_lock);
 				} else {
-				set_dec_file_module:
+set_dec_file_module:
 					rwlock_write(&modules_lock);
 					existing_module = find_file_module(module_path_ob, hash);
 					if
@@ -2044,7 +2044,7 @@ again_search_fs_modules:
 						Dee_DecrefDokill(result);
 						Dee_Decref_likely(dec_stream);
 						result = existing_module;
-					try_load_module_after_dec_failure:
+try_load_module_after_dec_failure:
 						if (DeeModule_BeginLoading(result) == 0)
 							goto load_module_after_dec_failure;
 						goto got_result;
@@ -2078,7 +2078,7 @@ again_search_fs_modules:
 					DeeModule_FailLoading(result);
 					goto err_buf_r;
 				}
-			load_module_after_dec_failure:
+load_module_after_dec_failure:
 				/* Must try to load the module from its source file. */
 				dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY, 0);
 				if
@@ -2215,7 +2215,7 @@ again_search_fs_modules:
 
 			/* Register the new dex module globally. */
 			if (module_global_name) {
-			set_dex_file_module_global:
+set_dex_file_module_global:
 #ifndef CONFIG_NO_THREADS
 				rwlock_write(&modules_lock);
 				if (!rwlock_trywrite(&modules_glob_lock)) {
@@ -2257,7 +2257,7 @@ again_search_fs_modules:
 				rwlock_endwrite(&modules_glob_lock);
 				rwlock_endwrite(&modules_lock);
 			} else {
-			set_dex_file_module:
+set_dex_file_module:
 				rwlock_write(&modules_lock);
 				existing_module = find_file_module(module_path_ob, hash);
 				if
@@ -2268,7 +2268,7 @@ again_search_fs_modules:
 					Dee_DecrefDokill(result);
 					CLOSE_MODULE(hModule);
 					result = existing_module;
-				try_load_module_after_dex_failure:
+try_load_module_after_dex_failure:
 					if (DeeModule_BeginLoading(result) == 0)
 						goto load_module_after_dex_failure;
 					goto got_result;
@@ -2286,7 +2286,7 @@ again_search_fs_modules:
 				}
 				rwlock_endwrite(&modules_lock);
 			}
-		load_module_after_dex_failure:
+load_module_after_dex_failure:
 			error = dex_load_handle((DeeDexObject *)result,
 			                        (void *)hModule,
 			                        (DeeObject *)result->mo_path);
@@ -2341,7 +2341,7 @@ again_search_fs_modules:
 
 		/* Register the new dex module globally. */
 		if (module_global_name) {
-		set_src_file_module_global:
+set_src_file_module_global:
 #ifndef CONFIG_NO_THREADS
 			rwlock_write(&modules_lock);
 			if (!rwlock_trywrite(&modules_glob_lock)) {
@@ -2383,7 +2383,7 @@ again_search_fs_modules:
 			rwlock_endwrite(&modules_glob_lock);
 			rwlock_endwrite(&modules_lock);
 		} else {
-		set_src_file_module:
+set_src_file_module:
 			rwlock_write(&modules_lock);
 			existing_module = find_file_module(module_path_ob, hash);
 			if
@@ -2394,7 +2394,7 @@ again_search_fs_modules:
 				Dee_DecrefDokill(result);
 				Dee_Decref_likely(source_stream);
 				result = existing_module;
-			try_load_module_after_src_failure:
+try_load_module_after_src_failure:
 				if (DeeModule_BeginLoading(result) == 0)
 					goto load_module_after_src_failure;
 				goto got_result;
@@ -2412,7 +2412,7 @@ again_search_fs_modules:
 			}
 			rwlock_endwrite(&modules_lock);
 		}
-	load_module_after_src_failure:
+load_module_after_src_failure:
 		error = DeeModule_LoadSourceStreamEx(result,
 		                                     source_stream,
 		                                     0,
@@ -2569,10 +2569,10 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 		                                 mode);
 		Dee_Decref(abs_path);
 		return (DREF DeeObject *)result;
-	err_abs_path:
+err_abs_path:
 		Dee_Decref(abs_path);
 		goto err;
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 		goto err;
 	}
@@ -2758,7 +2758,7 @@ DeeModule_Import(DeeObject *__restrict module_name,
 			--end;
 		result = DeeModule_OpenRelative(module_name, begin, (size_t)(end - begin), options, throw_error);
 	} else {
-	open_normal:
+open_normal:
 		/* Without an execution frame, dismiss the relative import() code handling. */
 		result = DeeModule_OpenGlobal(module_name, options, throw_error);
 	}
@@ -3222,7 +3222,7 @@ DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
 			                       AST_COMMA_ALLOWTYPEDECL,
 			                       AST_FMULTIPLE_KEEPLAST,
 			                       NULL);
-		pack_code_in_return:
+pack_code_in_return:
 			if
 				likely(code)
 			{
@@ -3415,7 +3415,7 @@ unix_readlink(/*utf-8*/ char const *__restrict path) {
 		if
 			unlikely(req_size < 0)
 		{
-		handle_error:
+handle_error:
 			DBG_ALIGNMENT_ENABLE();
 			error = errno;
 			DeeError_SysThrowf(&DeeError_FSError, error,
@@ -3494,9 +3494,9 @@ DCALL get_default_home(void) {
 		if
 			unlikely(!lpBuffer)
 		goto err;
-	again_chk_intr:
+again_chk_intr:
 		if (DeeThread_CheckInterrupt()) {
-		err_buffer:
+err_buffer:
 			DeeString_FreeWideBuffer(lpBuffer);
 			goto err;
 		}

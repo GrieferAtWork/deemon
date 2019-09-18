@@ -439,7 +439,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 				goto err;
 			goto create_none;
 		}
-	create_constexpr:
+create_constexpr:
 		if
 			unlikely(!resval)
 		goto err;
@@ -466,7 +466,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 
 	case TOK_STRING: {
 		DREF DeeObject *resval;
-	decode_string:
+decode_string:
 		loc_here(&loc);
 		resval = ast_parse_string();
 		if
@@ -498,9 +498,9 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 
 	case KWD_none: {
 		DeeObject *constval;
-	create_none:
+create_none:
 		constval = Dee_None;
-	mkconst:
+mkconst:
 		result = ast_sethere(ast_constexpr(constval));
 		if
 			unlikely(!result)
@@ -553,7 +553,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 		goto do_unary_operator_kwd;
 	case KWD_deepcopy:
 		opid = OPERATOR_DEEPCOPY;
-	do_unary_operator_kwd:
+do_unary_operator_kwd:
 		loc_here(&loc);
 		if
 			unlikely(yield() < 0)
@@ -591,7 +591,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 		goto do_unary_operator;
 	case TOK_DEC:
 		opid = OPERATOR_DEC;
-	do_unary_operator:
+do_unary_operator:
 		loc_here(&loc);
 		if (yield() < 0)
 			goto err;
@@ -669,7 +669,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 			goto err;
 		if (tok == '>') {
 			/* empty Cell. */
-		do_empty_cell:
+do_empty_cell:
 			result = ast_action0(AST_FACTION_CELL0);
 		} else {
 			result = ast_parse_unary(LOOKUP_SYM_SECONDARY);
@@ -727,11 +727,11 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 			if
 				unlikely(yield() < 0)
 			{
-			err_tt:
+err_tt:
 				ast_xdecref(tt_branch);
 				goto err_r;
 			}
-		do_else_branch:
+do_else_branch:
 			ff_branch = ast_parse_expr(LOOKUP_SYM_SECONDARY);
 			if
 				unlikely(!ff_branch)
@@ -786,7 +786,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 		goto do_create_class;
 	case KWD_class:
 		class_flags = TP_FNORMAL;
-	do_create_class:
+do_create_class:
 		/* Create a new function */
 		loc_here(&loc);
 		class_name = NULL;
@@ -1161,7 +1161,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 				unlikely(yield() < 0)
 			goto err;
 			if (tok == '(' || tok == '{' || tok == TOK_ARROW || tok == '@') {
-			do_lambda:
+do_lambda:
 				old_flags = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 				if
@@ -1186,7 +1186,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 					unlikely(!result)
 				goto err_flags;
 				/* Range without begin index. */
-			do_range_expression:
+do_range_expression:
 				if
 					unlikely(yield() < 0)
 				goto err_r_flags;
@@ -1208,7 +1208,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 					if
 						unlikely(yield() < 0)
 					{
-					err_begin_expr:
+err_begin_expr:
 						ast_decref(begin_expression);
 						goto err_r_flags;
 					}
@@ -1364,7 +1364,7 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 		goto do_warn_deprecated_modifier;
 	case KWD_local:
 		lookup_mode |= LOOKUP_SYM_VLOCAL;
-	do_warn_deprecated_modifier:
+do_warn_deprecated_modifier:
 		if (WARN(W_DEPRECATED_PREFIX_IN_EXPRESSION))
 			goto err;
 		if
@@ -1556,7 +1556,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 					unlikely(!merge)
 				goto err;
 				result = merge;
-			got_attr:
+got_attr:
 				if
 					unlikely(yield() < 0)
 				goto err_r;
@@ -1588,7 +1588,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 			goto err_r_flags;
 			if (tok == ':') {
 				DREF struct ast *third;
-			do_range:
+do_range:
 				/* range operator. */
 				if
 					unlikely(yield() < 0)
@@ -1631,7 +1631,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 			if
 				unlikely(!elemv)
 			{
-			err_other:
+err_other:
 				ast_decref(other);
 				goto err_r;
 			}
@@ -1753,7 +1753,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 			goto do_inplace_op;
 		case TOK_DEC:
 			opid = OPERATOR_DEC;
-		do_inplace_op:
+do_inplace_op:
 			merge = ast_sethere(ast_operator1(opid, AST_OPERATOR_FPOSTOP, result));
 			ast_decref(result);
 			if
@@ -1974,7 +1974,7 @@ ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		bool invert;
 		loc_here(&loc);
 		invert = cmd == '!';
-	yield_again:
+yield_again:
 		if
 			unlikely(yield() < 0)
 		goto err_r;

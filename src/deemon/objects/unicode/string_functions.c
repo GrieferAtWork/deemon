@@ -1749,7 +1749,7 @@ DeeString_Indent(DeeObject *__restrict self,
 			break;
 		}
 		return unicode_printer_pack(&printer);
-	err:
+err:
 		unicode_printer_fini(&printer);
 		return NULL;
 	}
@@ -2241,7 +2241,7 @@ string_replace(String *__restrict self, size_t argc,
 			break;
 		}
 		return (DREF String *)unicode_printer_pack(&p);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&p);
 	}
 err:
@@ -2382,7 +2382,7 @@ string_casereplace(String *__restrict self, size_t argc,
 			break;
 		}
 		return (DREF String *)unicode_printer_pack(&p);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&p);
 	}
 err:
@@ -2833,13 +2833,13 @@ string_casefold(String *__restrict self, size_t argc,
 			break;
 		}
 		return unicode_printer_pack(&printer);
-	return_self:
+return_self:
 		unicode_printer_fini(&printer);
 		return_reference_((DeeObject *)self);
-	return_empty:
+return_empty:
 		unicode_printer_fini(&printer);
 		return_empty_string;
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 	}
 err:
@@ -5515,9 +5515,9 @@ string_parition(String *__restrict self, size_t argc,
 		return partition_packb(other,
 		                       lhs.cp8, end,
 		                       ptr.cp8, WSTR_LENGTH(rhs.cp8));
-	not_foundb_zero:
+not_foundb_zero:
 		end = 0;
-	not_foundb:
+not_foundb:
 		return partition_pack_notfoundb(self, lhs.cp8, end);
 
 	CASE_WIDTH_2BYTE:
@@ -5548,9 +5548,9 @@ string_parition(String *__restrict self, size_t argc,
 		return partition_packw(other,
 		                       lhs.cp16, end,
 		                       ptr.cp16, WSTR_LENGTH(rhs.cp16));
-	not_foundw_zero:
+not_foundw_zero:
 		end = 0;
-	not_foundw:
+not_foundw:
 		return partition_pack_notfoundw(self, lhs.cp16, end);
 
 	CASE_WIDTH_4BYTE:
@@ -5581,9 +5581,9 @@ string_parition(String *__restrict self, size_t argc,
 		return partition_packl(other,
 		                       lhs.cp32, end,
 		                       ptr.cp32, WSTR_LENGTH(rhs.cp32));
-	not_foundl_zero:
+not_foundl_zero:
 		end = 0;
-	not_foundl:
+not_foundl:
 		return partition_pack_notfoundl(self, lhs.cp32, end);
 	}
 err:
@@ -5624,9 +5624,9 @@ string_rparition(String *__restrict self, size_t argc,
 		return partition_packb(other,
 		                       lhs.cp8, end,
 		                       ptr.cp8, WSTR_LENGTH(rhs.cp8));
-	not_foundb_zero:
+not_foundb_zero:
 		end = 0;
-	not_foundb:
+not_foundb:
 		return partition_pack_notfoundb(self, lhs.cp8, end);
 
 	CASE_WIDTH_2BYTE:
@@ -5657,9 +5657,9 @@ string_rparition(String *__restrict self, size_t argc,
 		return partition_packw(other,
 		                       lhs.cp16, end,
 		                       ptr.cp16, WSTR_LENGTH(rhs.cp16));
-	not_foundw_zero:
+not_foundw_zero:
 		end = 0;
-	not_foundw:
+not_foundw:
 		return partition_pack_notfoundw(self, lhs.cp16, end);
 
 	CASE_WIDTH_4BYTE:
@@ -5690,9 +5690,9 @@ string_rparition(String *__restrict self, size_t argc,
 		return partition_packl(other,
 		                       lhs.cp32, end,
 		                       ptr.cp32, WSTR_LENGTH(rhs.cp32));
-	not_foundl_zero:
+not_foundl_zero:
 		end = 0;
-	not_foundl:
+not_foundl:
 		return partition_pack_notfoundl(self, lhs.cp32, end);
 	}
 err:
@@ -5735,9 +5735,9 @@ string_caseparition(String *__restrict self, size_t argc,
 		                            ptr.cp8, match_length,
 		                            ptr.cp8 + match_length,
 		                            end - ((size_t)(ptr.cp8 - lhs.cp8) + match_length));
-	not_foundb_zero:
+not_foundb_zero:
 		end = 0;
-	not_foundb:
+not_foundb:
 		return partition_pack_notfoundb(self, lhs.cp8, end);
 
 	CASE_WIDTH_2BYTE:
@@ -5770,9 +5770,9 @@ string_caseparition(String *__restrict self, size_t argc,
 		                            ptr.cp16, match_length,
 		                            ptr.cp16 + match_length,
 		                            end - ((size_t)(ptr.cp16 - lhs.cp16) + match_length));
-	not_foundw_zero:
+not_foundw_zero:
 		end = 0;
-	not_foundw:
+not_foundw:
 		return partition_pack_notfoundw(self, lhs.cp16, end);
 
 	CASE_WIDTH_4BYTE:
@@ -5805,9 +5805,9 @@ string_caseparition(String *__restrict self, size_t argc,
 		                            ptr.cp32, match_length,
 		                            ptr.cp32 + match_length,
 		                            end - ((size_t)(ptr.cp32 - lhs.cp32) + match_length));
-	not_foundl_zero:
+not_foundl_zero:
 		end = 0;
-	not_foundl:
+not_foundl:
 		return partition_pack_notfoundl(self, lhs.cp32, end);
 	}
 err:
@@ -5850,9 +5850,9 @@ string_caserparition(String *__restrict self, size_t argc,
 		                            ptr.cp8, match_length,
 		                            ptr.cp8 + match_length,
 		                            end - ((size_t)(ptr.cp8 - lhs.cp8) + match_length));
-	not_foundb_zero:
+not_foundb_zero:
 		end = 0;
-	not_foundb:
+not_foundb:
 		return partition_pack_notfoundb(self, lhs.cp8, end);
 
 	CASE_WIDTH_2BYTE:
@@ -5885,9 +5885,9 @@ string_caserparition(String *__restrict self, size_t argc,
 		                            ptr.cp16, match_length,
 		                            ptr.cp16 + match_length,
 		                            end - ((size_t)(ptr.cp16 - lhs.cp16) + match_length));
-	not_foundw_zero:
+not_foundw_zero:
 		end = 0;
-	not_foundw:
+not_foundw:
 		return partition_pack_notfoundw(self, lhs.cp16, end);
 
 	CASE_WIDTH_4BYTE:
@@ -5920,9 +5920,9 @@ string_caserparition(String *__restrict self, size_t argc,
 		                            ptr.cp32, match_length,
 		                            ptr.cp32 + match_length,
 		                            end - ((size_t)(ptr.cp32 - lhs.cp32) + match_length));
-	not_foundl_zero:
+not_foundl_zero:
 		end = 0;
-	not_foundl:
+not_foundl:
 		return partition_pack_notfoundl(self, lhs.cp32, end);
 	}
 err:
@@ -8158,7 +8158,7 @@ string_format(String *__restrict self,
 			                          args) < 0)
 		goto err_printer;
 		return unicode_printer_pack(&printer);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 	}
 err:
@@ -9821,7 +9821,7 @@ PRIVATE int(DCALL regex_get_rules)(char const *__restrict rules_str,
 				                rule_length, name_start);
 				goto err;
 			}
-		got_rule_name:
+got_rule_name:
 			if (!*rules_str)
 				break;
 			++rules_str;
@@ -9841,7 +9841,7 @@ PRIVATE int(DCALL regex_getargs_generic)(String *__restrict self,
 	result->re_offset = 0;
 	switch (argc) {
 	case 1:
-	do_full_data_match:
+do_full_data_match:
 		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
 		if
 			unlikely(!result->re_dataptr)
@@ -9858,9 +9858,9 @@ PRIVATE int(DCALL regex_getargs_generic)(String *__restrict self,
 		/* Start offset. */
 		if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
 			goto err;
-	do_start_offset_only:
+do_start_offset_only:
 		if (result->re_offset >= DeeString_WLEN(self)) {
-		do_empty_scan:
+do_empty_scan:
 			result->re_offset  = DeeString_WLEN(self);
 			result->re_dataptr = "";
 			result->re_datalen = 0;
@@ -9916,7 +9916,7 @@ PRIVATE int(DCALL regex_getargs_generic)(String *__restrict self,
 					goto err;
 				if (regex_get_rules(DeeString_STR(argv[3]), &result->re_flags))
 					goto err;
-			do_load_3args:
+do_load_3args:
 				if (DeeObject_AsSSize(argv[2], (dssize_t *)&end_offset))
 					goto err;
 				if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
@@ -9985,7 +9985,7 @@ PRIVATE int(DCALL regex_getargs_generic_ex)(String *__restrict self,
 	result->re_endindex = DeeString_WLEN(self);
 	switch (argc) {
 	case 1:
-	do_full_data_match:
+do_full_data_match:
 		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
 		if
 			unlikely(!result->re_dataptr)
@@ -10002,9 +10002,9 @@ PRIVATE int(DCALL regex_getargs_generic_ex)(String *__restrict self,
 		/* Start offset. */
 		if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
 			goto err;
-	do_start_offset_only:
+do_start_offset_only:
 		if (result->re_offset >= DeeString_WLEN(self)) {
-		do_empty_scan:
+do_empty_scan:
 			result->re_offset   = DeeString_WLEN(self);
 			result->re_endindex = result->re_offset;
 			result->re_dataptr  = "";
@@ -10059,7 +10059,7 @@ PRIVATE int(DCALL regex_getargs_generic_ex)(String *__restrict self,
 				goto err;
 			if (regex_get_rules(DeeString_STR(argv[3]), &result->re_flags))
 				goto err;
-		do_load_3args:
+do_load_3args:
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
 				goto err;
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_endindex))
@@ -10527,7 +10527,7 @@ string_rereplace(String *__restrict self,
 		                              (size_t)(end - flush_start)) < 0)
 			goto err_printer;
 		return unicode_printer_pack(&printer);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 	}
 err:
@@ -12414,9 +12414,9 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			result->s_data = result_utf;
 			DeeObject_Init(result, &DeeString_Type);
 			return result;
-		err_r_2_4_utf:
+err_r_2_4_utf:
 			Dee_string_utf_free(result_utf);
-		err_r_2_4:
+err_r_2_4:
 			DeeObject_Free(result);
 			return NULL;
 		}
@@ -12433,7 +12433,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			unlikely(DeeObject_Print(other, &unicode_printer_print, &printer) < 0)
 		goto err_printer;
 		return (DREF String *)unicode_printer_pack(&printer);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 	}
 err:
@@ -12636,7 +12636,7 @@ memmemwb(uint16_t const *__restrict haystack, size_t haystack_length,
 				goto next_candidate;
 		}
 		return candidate;
-	next_candidate:
+next_candidate:
 		++candidate;
 		haystack_length = (haystack + haystack_length) - candidate;
 		haystack        = candidate;
@@ -12660,7 +12660,7 @@ memmemlb(uint32_t const *__restrict haystack, size_t haystack_length,
 				goto next_candidate;
 		}
 		return candidate;
-	next_candidate:
+next_candidate:
 		++candidate;
 		haystack_length = (haystack + haystack_length) - candidate;
 		haystack        = candidate;

@@ -207,7 +207,7 @@ ast_parse_if_hybrid(unsigned int *pwas_expression) {
 		if
 			unlikely(yield() < 0)
 		goto err_tt;
-	do_else_branch:
+do_else_branch:
 		ff_branch = ast_parse_hybrid_secondary(&was_expression);
 		if
 			unlikely(!ff_branch)
@@ -284,11 +284,11 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 		ASSERT(!result ||
 		       result->a_type == AST_MULTIPLE ||
 		       result->a_type == AST_CONSTEXPR);
-	parse_remainder_after_hybrid_popscope:
+parse_remainder_after_hybrid_popscope:
 		if
 			unlikely(!result)
 		goto err;
-	parse_remainder_after_hybrid_popscope_resok:
+parse_remainder_after_hybrid_popscope_resok:
 		if (was_expression == AST_PARSE_WASEXPR_NO)
 			goto parse_remainder_after_statement;
 		if (was_expression == AST_PARSE_WASEXPR_YES) {
@@ -296,7 +296,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 			if
 				unlikely(!result)
 			goto err;
-		check_recursion_after_expression_suffix:
+check_recursion_after_expression_suffix:
 			if (tok == ';') {
 				if
 					unlikely(yield() < 0)
@@ -306,7 +306,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 			if (tok == ':')
 				goto parse_remainder_after_colon_popscope;
 			if (tok == ',') {
-			parse_remainder_after_comma_popscope:
+parse_remainder_after_comma_popscope:
 				scope_pop();
 				remainder = ast_parse_brace_list(result);
 				if
@@ -324,7 +324,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 			if
 				likely(tok == '}')
 			{
-			parse_remainder_before_rbrace_popscope_wrap:
+parse_remainder_before_rbrace_popscope_wrap:
 				if
 					unlikely(yield() < 0)
 				goto err_r;
@@ -398,7 +398,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 			unlikely(scope_push() < 0)
 		goto err;
 		result = ast_parse_assert_hybrid(&was_expression);
-	parse_remainder_after_semicolon_hybrid_popscope:
+parse_remainder_after_semicolon_hybrid_popscope:
 		if
 			unlikely(!result)
 		goto err;
@@ -452,7 +452,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 	case KWD_default:
 	case '@':
 	case ';':
-	is_a_statement:
+is_a_statement:
 		if
 			unlikely(scope_push() < 0)
 		goto err;
@@ -516,7 +516,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 				if
 					unlikely(yield() < 0)
 				goto err;
-			parse_remainder_after_rbrace_popscope:
+parse_remainder_after_rbrace_popscope:
 				scope_pop();
 				if (pwas_expression)
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
@@ -528,7 +528,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 				ast_incref(remainder);
 				ast_decref(result);
 				result = remainder;
-			parse_remainder_after_colon_popscope:
+parse_remainder_after_colon_popscope:
 				scope_pop();
 				/* mapping-like brace expression. */
 				if
@@ -563,7 +563,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 		} else {
 			result->a_flag = AST_FMULTIPLE_KEEPLAST;
 		}
-	parse_remainder_after_statement:
+parse_remainder_after_statement:
 		if (tok == '}') {
 			ast_setddi(result, &loc);
 			if

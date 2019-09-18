@@ -944,7 +944,7 @@ lexer_get_textposition(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
-	is_empty_file:
+is_empty_file:
 		result = Dee_None;
 		Dee_Incref(Dee_None);
 	} else {
@@ -982,7 +982,7 @@ lexer_get_textendposition(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
-	is_empty_file:
+is_empty_file:
 		result = Dee_None;
 		Dee_Incref(Dee_None);
 	} else {

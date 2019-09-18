@@ -183,7 +183,7 @@ next_expr:
 #endif /* !JIT_EVAL */
 		} else {
 			syn_function_expected_lparen_after_function(self);
-		err_var_symbol:
+err_var_symbol:
 #ifdef JIT_EVAL
 			JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
@@ -350,7 +350,7 @@ next_expr:
 				/* Parse a preferred-type brace expression. */
 				args = CALL_PRIMARYF(Expression, LOOKUP_SYM_NORMAL);
 				if (ISERR(args)) {
-				err_currrent_var_symbol:
+err_currrent_var_symbol:
 #ifdef JIT_EVAL
 					JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
@@ -481,7 +481,7 @@ next_expr:
 		}
 #endif /* JIT_EVAL */
 		/* Yield the ',' token. */
-	continue_at_comma:
+continue_at_comma:
 		JITLexer_Yield(self);
 #if 1
 		if (!JIT_MaybeExpressionBegin(self->jl_tok))
@@ -554,7 +554,7 @@ next_expr:
 #endif
 		if (ISERR(store_source)) {
 #ifdef JIT_EVAL
-		err_current_lvalue:
+err_current_lvalue:
 			JITLValue_Fini(&current_lvalue);
 #endif
 			goto err_current;
@@ -578,7 +578,7 @@ next_expr:
 				if
 					unlikely(error)
 				{
-				err_store_source_current_lvalue:
+err_store_source_current_lvalue:
 					Dee_Decref(store_source);
 					goto err_current_lvalue;
 				}
@@ -605,7 +605,7 @@ next_expr:
 				if
 					unlikely(!buf)
 				{
-				err_store_source:
+err_store_source:
 					Dee_Decref(store_source);
 					goto err;
 				}
@@ -629,7 +629,7 @@ next_expr:
 					goto err;
 				}
 
-			continue_expression_after_dots:
+continue_expression_after_dots:
 				/* At this point, all L-values have been assigned, and all
 				 * R-values have been appended to the expression batch. */
 				JITLValueList_Fini(&expr_comma);
@@ -701,7 +701,7 @@ next_expr:
 #endif /* JIT_EVAL */
 		}
 #ifndef JIT_EVAL
-	continue_expression_after_dots:
+continue_expression_after_dots:
 #else  /* !JIT_EVAL */
 		ASSERT(current != JIT_LVALUE);
 #endif /* JIT_EVAL */
@@ -715,7 +715,7 @@ next_expr:
 					unlikely(error)
 				goto err_current;
 				Dee_Decref(current);
-			set_multiple_and_continue_at_comma:
+set_multiple_and_continue_at_comma:
 #endif /* JIT_EVAL */
 				if (pout_mode)
 					*pout_mode |= AST_COMMA_OUT_FMULTIPLE;
@@ -730,7 +730,7 @@ next_expr:
 						unlikely(error)
 					goto err_current;
 					Dee_Decref(current);
-				set_multiple_and_continue_at_comma_continue:
+set_multiple_and_continue_at_comma_continue:
 #endif /* JIT_EVAL */
 					if (pout_mode)
 						*pout_mode |= AST_COMMA_OUT_FMULTIPLE;

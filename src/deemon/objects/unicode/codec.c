@@ -387,7 +387,7 @@ encode_c_escape(DeeObject *__restrict self) {
 			                         FORMAT_QUOTE_FPRINTRAW) < 0)
 		goto err_bytes_printer;
 		return bytes_printer_pack(&printer);
-	err_bytes_printer:
+err_bytes_printer:
 		bytes_printer_fini(&printer);
 		return NULL;
 	}
@@ -424,7 +424,7 @@ encode_c_escape(DeeObject *__restrict self) {
 			break;
 		}
 		return ascii_printer_pack(&printer);
-	err_ascii_printer:
+err_ascii_printer:
 		ascii_printer_fini(&printer);
 		return NULL;
 	}
@@ -451,7 +451,7 @@ decode_utf16(DeeObject *__restrict self,
 		size = WSTR_LENGTH(data);
 	} else {
 		err_expected_string_or_bytes(self);
-	err:
+err:
 		return NULL;
 	}
 	if (size & 1) {
@@ -486,7 +486,7 @@ decode_utf32(DeeObject *__restrict self,
 		size = WSTR_LENGTH(data);
 	} else {
 		err_expected_string_or_bytes(self);
-	err:
+err:
 		return NULL;
 	}
 	if (size & 3) {
@@ -676,7 +676,7 @@ decode_utf8(DeeObject *__restrict self,
 		size = WSTR_LENGTH(data);
 	} else {
 		err_expected_string_or_bytes(self);
-	err:
+err:
 		return NULL;
 	}
 	return DeeString_NewUtf8((char *)data, size, error_mode);

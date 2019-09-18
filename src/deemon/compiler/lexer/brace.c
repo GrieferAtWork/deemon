@@ -113,7 +113,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 			DREF struct ast **new_elemv;
 			size_t new_elema = elema * 2;
 			ASSERT(new_elema);
-		do_realloc_dict:
+do_realloc_dict:
 			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, (new_elema * 2) *
 			                                                      sizeof(DREF struct ast *));
 			if
@@ -187,7 +187,7 @@ ast_parse_brace_list(struct ast *__restrict initial_item) {
 			}
 			break;
 		}
-	parse_list_item:
+parse_list_item:
 		if
 			unlikely(yield() < 0)
 		goto err_list_elemv;
@@ -201,7 +201,7 @@ ast_parse_brace_list(struct ast *__restrict initial_item) {
 			DREF struct ast **new_elemv;
 			size_t new_elema = elema * 2;
 			ASSERT(new_elema);
-		do_realloc_list:
+do_realloc_list:
 			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, new_elema *
 			                                                      sizeof(DREF struct ast *));
 			if
@@ -291,7 +291,7 @@ INTERN DREF struct ast *FCALL ast_parse_brace_items(void) {
 		if
 			unlikely(yield() < 0)
 		goto err_r;
-	parse_dict:
+parse_dict:
 		new_result = ast_parse_mapping(result);
 		ast_decref(result);
 		result = new_result;

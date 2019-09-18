@@ -122,7 +122,7 @@ env_next(Env *__restrict self) {
 	rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = self->e_version) != env_version) {
-	iter_done:
+iter_done:
 		rwlock_endread(&env_lock);
 		return ITER_DONE;
 	}
@@ -194,7 +194,7 @@ enviterator_next_key(DeeObject *__restrict self) {
 	rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = me->e_version) != env_version) {
-	iter_done:
+iter_done:
 		rwlock_endread(&env_lock);
 		return ITER_DONE;
 	}
@@ -239,7 +239,7 @@ enviterator_next_value(DeeObject *__restrict self) {
 	rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = me->e_version) != env_version) {
-	iter_done:
+iter_done:
 		rwlock_endread(&env_lock);
 		return ITER_DONE;
 	}
@@ -254,7 +254,7 @@ enviterator_next_value(DeeObject *__restrict self) {
 		value = Dee_EmptyString;
 		Dee_Incref(value);
 	} else {
-	allocate_value:
+allocate_value:
 		value = DeeString_TryNewSized(valstart, strlen(valstart));
 		if
 			unlikely(!value)

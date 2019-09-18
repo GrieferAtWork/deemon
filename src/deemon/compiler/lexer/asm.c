@@ -80,7 +80,7 @@ operand_list_add(struct operand_list *__restrict self,
 		size_t new_alloc = self->ol_a * 2;
 		if (!new_alloc)
 			new_alloc = 2;
-	do_realloc:
+do_realloc:
 		result = (struct asm_operand *)Dee_TryRealloc(self->ol_v, new_alloc *
 		                                                          sizeof(struct asm_operand));
 		if
@@ -186,7 +186,7 @@ asm_parse_operands(struct operand_list *__restrict list,
 					unlikely(!operand_value)
 				goto err_type;
 			} else {
-			with_paren:
+with_paren:
 				if
 					unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
 				goto err_type;
@@ -270,7 +270,7 @@ PRIVATE int32_t DCALL asm_parse_clobber(void) {
 		}
 		if (WARN(W_UNKNOWN_CLOBBER_NAME, name->s_text))
 			goto err_name;
-	got_clobber:
+got_clobber:
 		TPPString_Decref(name);
 		/* Yield the trailing comma. */
 		if (tok != ',')
@@ -324,7 +324,7 @@ PRIVATE int
 		alloc_size = 8;
 		while (alloc_size < bufsize)
 			alloc_size *= 2;
-	alloc_again:
+alloc_again:
 		string = (struct TPPString *)Dee_TryMalloc(offsetof(struct TPPString, s_text) +
 		                                           (alloc_size + 1) * sizeof(char));
 		if
@@ -353,7 +353,7 @@ PRIVATE int
 	{
 		size_t min_alloc = self->sp_length + bufsize;
 		alloc_size       = (min_alloc + 63) & ~63;
-	realloc_again:
+realloc_again:
 		string = (struct TPPString *)Dee_TryRealloc(string, offsetof(struct TPPString, s_text) +
 		                                                    (alloc_size + 1) * sizeof(char));
 		if
@@ -582,7 +582,7 @@ INTERN DREF struct ast *DCALL ast_parse_asm(void) {
 			goto yield_prefix;
 		}
 		break;
-	yield_prefix:
+yield_prefix:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -597,7 +597,7 @@ INTERN DREF struct ast *DCALL ast_parse_asm(void) {
 			goto with_paren;
 		has_paren = false;
 	} else {
-	with_paren:
+with_paren:
 		if
 			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
 		goto err_flags;

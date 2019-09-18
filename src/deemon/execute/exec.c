@@ -863,7 +863,7 @@ PUBLIC size_t DCALL Dee_Shutdown(void) {
 		bool must_continue = false;
 		/* Track how often we've already invoked the GC. */
 		if (++num_gc == MAX_NONEMPTY_GC_ITERATIONS_BEFORE_KILL) {
-		do_kill_user:
+do_kill_user:
 			num_gc       = 0;
 			num_empty_gc = 0;
 #ifndef CONFIG_NO_THREADS

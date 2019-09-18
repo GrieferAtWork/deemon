@@ -107,7 +107,7 @@ INTERN DREF struct ast *
 				Dee_Free(expr_v);
 				goto err_input_merge;
 			}
-		set_merge_from_inherit_args:
+set_merge_from_inherit_args:
 			merge = ast_operator2(OPERATOR_CALL,
 			                      AST_OPERATOR_FNORMAL,
 			                      base, args);
@@ -358,9 +358,9 @@ INTERN int(DCALL parse_tags)(void) {
 		if
 			unlikely(yield() < 0)
 		goto err;
-	again_compiler_tag:
+again_compiler_tag:
 		is_optional = false;
-	again_compiler_subtag:
+again_compiler_subtag:
 		if (!TPP_ISKEYWORD(tok)) {
 			if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD))
 				goto err;
@@ -481,11 +481,11 @@ INTERN int(DCALL parse_tags)(void) {
 				} else
 					goto warn_unknown_tag_yield;
 			} else {
-			warn_unknown_tag_yield:
+warn_unknown_tag_yield:
 				if
 					unlikely(yield() < 0)
 				goto err;
-			warn_unknown_tag:
+warn_unknown_tag:
 				if
 					unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
 				goto err;
@@ -494,13 +494,13 @@ INTERN int(DCALL parse_tags)(void) {
 				                    : W_COMPILER_TAG_UNKNOWN,
 				         tag_name_len, tag_name_str))
 					goto err;
-			again_check_tag_namespace:
+again_check_tag_namespace:
 				if (tok == '.') {
 					if
 						unlikely(yield() < 0)
 					goto err;
 					if (!TPP_ISKEYWORD(tok)) {
-					err_no_keyword_after_dot:
+err_no_keyword_after_dot:
 						if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, tag_name_len, tag_name_str))
 							goto err;
 					} else {
@@ -547,7 +547,7 @@ INTERN int(DCALL parse_tags)(void) {
 				unlikely(tok == '.')
 			goto warn_unknown_tag;
 		}
-	do_next_compiler_tag:
+do_next_compiler_tag:
 		if (tok == ',') {
 			if
 				unlikely(yield() < 0)

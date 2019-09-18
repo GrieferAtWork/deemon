@@ -242,7 +242,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			if
 				unlikely(!exprv)
 			{
-			err_loop_init:
+err_loop_init:
 				ast_decref(init);
 				goto err_r;
 			}
@@ -259,7 +259,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			result = ast_setddi(merge, &loc);
 		}
 		break;
-	err_for_loop:
+err_for_loop:
 		ast_xdecref(iter_or_next);
 		ast_xdecref(elem_or_cond);
 		ast_xdecref(init);
@@ -310,12 +310,12 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		ast_decref(foreach_iter);
 		ast_decref(foreach_elem);
 		break;
-	err_foreach_iter:
+err_foreach_iter:
 		ast_decref(foreach_iter);
-	err_foreach_elem:
+err_foreach_elem:
 		ast_decref(foreach_elem);
 		goto err;
-	err_foreach_elem_flags:
+err_foreach_elem_flags:
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		goto err_foreach_elem;
 	} break;

@@ -549,7 +549,7 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 		if (unicode_printer_print(&printer, flush_start, (size_t)(name_end - flush_start)) < 0)
 			goto err_printer;
 		return unicode_printer_pack(&printer);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 		return NULL;
 	}

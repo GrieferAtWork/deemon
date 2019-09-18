@@ -141,7 +141,7 @@ ast_setscope(Ast *__restrict self,
 	case AST_BOUND:
 		if (scope_reaches_symbol(value->ci_value, branch->a_sym))
 			break;
-	err_unreachable_symbols:
+err_unreachable_symbols:
 		DeeError_Throwf(&DeeError_ReferenceError,
 		                "Cannot assign new scope to branch containing "
 		                "symbols that would no longer be reachable");
@@ -396,7 +396,7 @@ ast_setmultiple(Ast *__restrict self, DeeObject *__restrict value) {
 		if
 			unlikely(!new_astv)
 		{
-		err:
+err:
 			result = -1;
 		}
 		else {
@@ -406,7 +406,7 @@ ast_setmultiple(Ast *__restrict self, DeeObject *__restrict value) {
 			for (i = 0; i < new_astc; ++i) {
 				struct ast *branch_ast;
 				if (DeeObject_AssertTypeExact((DeeObject *)new_astv[i], &DeeCompilerAst_Type)) {
-				err_branch_v:
+err_branch_v:
 					for (i = 0; i < new_astc; ++i)
 						Dee_Decref(new_astv[i]);
 					Dee_Free(new_astv);
@@ -820,7 +820,7 @@ ast_gettryhandlers(Ast *__restrict self) {
 			if
 				unlikely(!temp)
 			{
-			err_r_i_triple_0:
+err_r_i_triple_0:
 				DeeTuple_FreeUninitialized(triple);
 				goto err_r_i;
 			}
@@ -830,7 +830,7 @@ ast_gettryhandlers(Ast *__restrict self) {
 				if
 					unlikely(!temp)
 				{
-				err_r_i_triple_1:
+err_r_i_triple_1:
 					Dee_Decref(DeeTuple_GET(triple, 0));
 					goto err_r_i_triple_0;
 				}
@@ -851,7 +851,7 @@ ast_gettryhandlers(Ast *__restrict self) {
 			DeeTuple_SET(result, i, triple); /* Inherit reference. */
 		}
 		goto done;
-	err_r_i:
+err_r_i:
 		while (i--)
 			Dee_Decref(DeeTuple_GET(result, i));
 		DeeTuple_FreeUninitialized(result);
@@ -1082,7 +1082,7 @@ ast_getloopflags(Ast *__restrict self) {
 		}
 		result = unicode_printer_pack(&printer);
 		goto done;
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 		result = NULL;
 	}
@@ -2019,7 +2019,7 @@ ast_getconditionalflags(Ast *__restrict self) {
 		}
 		result = unicode_printer_pack(&printer);
 		goto done;
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 		result = NULL;
 	}
@@ -2941,7 +2941,7 @@ ast_getoperatorflags(Ast *__restrict self) {
 		}
 		result = unicode_printer_pack(&printer);
 		goto done;
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 		result = NULL;
 	}
@@ -3494,7 +3494,7 @@ print_enter_scope(DeeScopeObject *caller_scope,
 					goto print_symbol_name;
 				case SYMBOL_TYPE_STATIC:
 					PRINT("static local ");
-				print_symbol_name:
+print_symbol_name:
 					print(sym->s_name->k_name, sym->s_name->k_size);
 					break;
 				default: break;
@@ -3704,7 +3704,7 @@ print_ast_code(struct ast *__restrict self,
 	bool need_semicolon = true;
 	ENTER_SCOPE(caller_scope, self->a_scope, is_expression);
 	__IF0 {
-	force_scope:
+force_scope:
 		if (is_expression)
 			PRINT("(");
 		PRINT("{\n");
@@ -3886,7 +3886,7 @@ print_ast_code(struct ast *__restrict self,
 					}
 					except_symbol = NULL;
 				}
-			got_except_symbol:
+got_except_symbol:
 				if (handler->ce_flags & EXCEPTION_HANDLER_FINTERPT)
 					PRINT("@[interrupt] ");
 				PRINT(" catch (");
@@ -4142,7 +4142,7 @@ print_ast_code(struct ast *__restrict self,
 
 		case OPERATOR_COPY:
 			PRINT("copy(");
-		do_unary_operator:
+do_unary_operator:
 			DO(print_ast_code(self->a_operator.o_op0, printer, arg, true, self->a_scope, indent));
 			PRINT(")");
 			break;
@@ -4232,7 +4232,7 @@ print_ast_code(struct ast *__restrict self,
 
 		case OPERATOR_ADD:
 			name = "+";
-		do_binary:
+do_binary:
 			if (!self->a_operator.o_op1)
 				goto operator_fallback;
 			PRINT("(");
@@ -4454,7 +4454,7 @@ print_ast_code(struct ast *__restrict self,
 			break;
 
 		default:
-		operator_fallback:
+operator_fallback:
 			info = Dee_OperatorInfo(NULL, self->a_flag);
 			/* TODO: if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP); */
 			if (!info)
@@ -4802,7 +4802,7 @@ print_ast_code(struct ast *__restrict self,
 			} else {
 				struct class_member *member;
 				/* An instance-member that is saved within the class??? */
-			instance_member_in_class:
+instance_member_in_class:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 					PRINT("@method ");
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -4876,7 +4876,7 @@ print_ast_code(struct ast *__restrict self,
 			} else {
 				struct class_member *member;
 				/* An instance-member that is saved within the class??? */
-			class_member_in_class:
+class_member_in_class:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 					PRINT("@method ");
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -5234,7 +5234,7 @@ print_ast_repr(struct ast *__restrict self,
 
 	case AST_RETURN:
 		PRINT("makereturn(expr: ");
-	print_single_expr:
+print_single_expr:
 		if (self->a_return) {
 			PRINTAST(self->a_return);
 		} else {

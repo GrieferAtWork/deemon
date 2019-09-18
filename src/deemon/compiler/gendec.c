@@ -90,7 +90,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		if (mod->mo_globpself) {
 			/* Globally available module (loadable as part of the library path). */
 			char const *global_name;
-		import_module_by_name:
+import_module_by_name:
 			global_name = DeeString_AsUtf8((DeeObject *)mod->mo_name);
 			if
 				unlikely(!global_name)
@@ -636,7 +636,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassDescriptor::cd_doc */
 	} else {
-	empty_doc:
+empty_doc:
 		if (dec_putptr(0))
 			goto err; /* Dec_ClassDescriptor::cd_doclen */
 	}
@@ -733,7 +733,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 			if (dec_putptr(straddr))
 				goto err; /* Dec_ClassAttribute::ca_doc */
 		} else {
-		empty_cattr_doc:
+empty_cattr_doc:
 			if (dec_putptr(0))
 				goto err; /* Dec_ClassAttribute::ca_doclen */
 		}
@@ -791,7 +791,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 			if (dec_putptr(straddr))
 				goto err; /* Dec_ClassAttribute::ca_doc */
 		} else {
-		empty_iattr_doc:
+empty_iattr_doc:
 			if (dec_putptr(0))
 				goto err; /* Dec_ClassAttribute::ca_doclen */
 		}
@@ -1535,7 +1535,7 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 				}
 			} break;
 			default:
-			defl_xdat:
+defl_xdat:
 				buf = dec_alloc(1 + opsize);
 				if
 					unlikely(!buf)

@@ -142,7 +142,7 @@ wildcompare(T const *string, size_t string_length,
 		    DeeUni_ToLower(*pattern) == DeeUni_ToLower(*string)
 #endif /* !NOCASE */
 		) {
-		next:
+next:
 			++string;
 			++pattern;
 			continue; /* single character match */

@@ -70,7 +70,7 @@ INTERN int(DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stac
 		child_stack.os_assume = &child_assumes;
 		child_stack.os_used   = false;
 		if (ast_optimize(&child_stack, child_stack.os_ast, false)) {
-		err_child_assumes:
+err_child_assumes:
 			ast_assumes_fini(&child_assumes);
 			goto err;
 		}

@@ -592,7 +592,7 @@ do_exec_code:
 	if
 		unlikely(link_error != 0)
 	{
-	err_link:
+err_link:
 		if
 			unlikely(link_error >= 0)
 		{
@@ -645,7 +645,7 @@ done_assembler_fini:
 		if
 			unlikely(!current_code)
 		{
-		gencode_failed:
+gencode_failed:
 			result = NULL;
 			if (is_reusing_code_object)
 				goto recover_old_code_object;
@@ -739,11 +739,11 @@ done_assembler_fini:
 		/* Set the code-execution frame to continue where it left off before. */
 		self->im_frame.cf_ip = current_code->co_code + preexisting_codesize;
 	} else {
-	err_result:
+err_result:
 		result = NULL;
 		if (is_reusing_code_object) {
 			/* Recover the old code object. */
-		recover_old_code_object:
+recover_old_code_object:
 			ASSERT(is_reusing_code_object);
 			current_code                                = current_assembler.a_sect[SECTION_TEXT].sec_code;
 			current_code->co_code[preexisting_codesize] = ASM_UD;
@@ -1280,7 +1280,7 @@ imod_init(InteractiveModule *__restrict self,
 		if (self->im_options.co_filename) {
 			struct TPPString *used_name;
 			ASSERT_OBJECT_TYPE_EXACT(self->im_options.co_filename, &DeeString_Type);
-		do_create_used_name:
+do_create_used_name:
 			used_name = TPPString_New(DeeString_STR(self->im_options.co_filename),
 			                          DeeString_SIZE(self->im_options.co_filename));
 			if
@@ -1302,7 +1302,7 @@ imod_init(InteractiveModule *__restrict self,
 			ASSERT_OBJECT_TYPE_EXACT(self->im_options.co_rootname, &DeeString_Type);
 			module_base_scope = self->im_compiler->cp_scope->s_base;
 			ASSERT(!module_base_scope->bs_name);
-		do_create_base_name:
+do_create_base_name:
 			module_base_scope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(self->im_options.co_rootname),
 			                                                    DeeString_SIZE(self->im_options.co_rootname), 1);
 			if
@@ -1338,7 +1338,7 @@ imod_init(InteractiveModule *__restrict self,
 					if
 						unlikely((sym = sym_alloc()) == NULL)
 					{
-					err_compiler_basefile:
+err_compiler_basefile:
 						COMPILER_END();
 						goto err_basefile;
 					}

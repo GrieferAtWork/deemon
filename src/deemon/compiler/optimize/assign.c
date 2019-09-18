@@ -98,7 +98,7 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
 		ast_xincref(temp->a_operator.o_op3);
 		ATTR_FALLTHROUGH
 	case AST_CONDITIONAL:
-	do_xcopy_3:
+do_xcopy_3:
 		temp->a_operator.o_op2 = other->a_operator.o_op2;
 		ast_xincref(temp->a_operator.o_op2);
 		ATTR_FALLTHROUGH

@@ -167,7 +167,7 @@ DeeString_CFormat(dformatprinter printer,
 		flags        = 0;
 		width        = 0;
 		precision    = 0;
-	next_spec:
+next_spec:
 		ch = *iter++;
 		switch (ch) {
 		case '%': /* %% --> % */
@@ -226,7 +226,7 @@ DeeString_CFormat(dformatprinter printer,
 			if (flags & F_HASPREC)
 				goto invalid_format;
 			flags |= F_HASPREC;
-		do_prec_spec:
+do_prec_spec:
 			ch = *iter++;
 			if (ch == '*') {
 				unsigned int temp;
@@ -335,7 +335,7 @@ DeeString_CFormat(dformatprinter printer,
 			ATTR_FALLTHROUGH
 		case 'z':
 			length = sizeof(size_t);
-		do_length_integer:
+do_length_integer:
 			switch (*iter) {
 
 			case 'b':
@@ -563,7 +563,7 @@ DeeString_CFormat(dformatprinter printer,
 				if
 					unlikely(temp < 0)
 				{
-				err_subprinter:
+err_subprinter:
 					unicode_printer_fini(&subprinter);
 					goto err;
 				}
@@ -641,7 +641,7 @@ DeeString_CFormat(dformatprinter printer,
 				if
 					unlikely(temp < 0)
 				{
-				err_preprinter:
+err_preprinter:
 					unicode_printer_fini(&preprinter);
 					goto err;
 				}
@@ -732,12 +732,12 @@ F_HASPREC == DEEFLOAT_PRINT_FPRECISION
 				goto next_spec;
 			}
 
-		invalid_format:
+invalid_format:
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unknown or unexpected cformat character `%c' in `%$s', apart of %r",
 			                ch, (size_t)(iter - format_start), format_start, format);
 			goto err_m1;
-		missing_argument:
+missing_argument:
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Missing argument for `%$s'",
 			                (size_t)(iter - format_start), format_start);

@@ -840,7 +840,7 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 		/* Throw the appexit error. */
 		DeeError_Throw((DeeObject *)error);
 		Dee_Decref(error);
-	err:
+err:
 		return -1;
 	}
 #endif /* CONFIG_NO_STDLIB */

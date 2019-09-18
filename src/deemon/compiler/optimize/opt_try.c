@@ -48,7 +48,7 @@ INTERN int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack,
 		child_stack.os_prev   = stack;
 		child_stack.os_used   = result_used;
 		if (ast_optimize(&child_stack, child_stack.os_ast, result_used)) {
-		err_guard_assumes:
+err_guard_assumes:
 			ast_assumes_fini(&guard_assumes);
 			goto err;
 		}

@@ -249,7 +249,7 @@ ast_gen_getattr(struct ast *__restrict base,
 		if (base->a_type == AST_SYM) {
 			struct symbol *sym = base->a_sym;
 			DeeClassScopeObject *class_scope;
-		check_getattr_sym:
+check_getattr_sym:
 			for (class_scope = base->a_scope->s_class; class_scope;
 			     class_scope = DeeClassScope_Prev(class_scope)) {
 				/* Try to statically access known class members! */
@@ -361,7 +361,7 @@ ast_gen_getattr(struct ast *__restrict base,
 			    ASM_SYMBOL_MAY_REFERENCE(type_expr->a_sym)) {
 				/* We are allowed to reference the base-symbol! */
 				type_rid = asm_rsymid(type_expr->a_sym);
-			do_perform_supergetattr:
+do_perform_supergetattr:
 				if
 					unlikely(type_rid < 0)
 				goto err;
@@ -434,7 +434,7 @@ ast_gen_boundattr(struct ast *__restrict base,
 		if (base->a_type == AST_SYM) {
 			struct symbol *sym = base->a_sym;
 			DeeClassScopeObject *class_scope;
-		check_boundattr_sym:
+check_boundattr_sym:
 			for (class_scope = base->a_scope->s_class; class_scope;
 			     class_scope = DeeClassScope_Prev(class_scope)) {
 				/* Try to statically access known class members! */
@@ -558,7 +558,7 @@ ast_gen_delattr(struct ast *__restrict base,
 		if (base->a_type == AST_SYM) {
 			struct symbol *sym = base->a_sym;
 			DeeClassScopeObject *class_scope;
-		check_delattr_sym:
+check_delattr_sym:
 			for (class_scope = base->a_scope->s_class; class_scope;
 			     class_scope = DeeClassScope_Prev(class_scope)) {
 				/* Try to statically access known class members! */
@@ -672,7 +672,7 @@ asm_set_cattr_symbol(struct symbol *__restrict sym,
 		return ast_genasm(value, gflags & ASM_G_FPUSHRES);
 	}
 	if (!this_sym) {
-	set_class_attribute:
+set_class_attribute:
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 			/* Must invoke the getter callback. */
 			if (PUSH_RESULT && ast_genasm(value, ASM_G_FPUSHRES))
@@ -872,7 +872,7 @@ asm_set_cattr_symbol(struct symbol *__restrict sym,
 			if (asm_gcall(2))
 				goto err; /* [result], discard */
 		}
-	pop_unused_result:
+pop_unused_result:
 		return asm_gpop();
 	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -969,7 +969,7 @@ ast_gen_setattr(struct ast *__restrict base,
 		if (base->a_type == AST_SYM) {
 			struct symbol *sym = base->a_sym;
 			DeeClassScopeObject *class_scope;
-		check_base_symbol_class:
+check_base_symbol_class:
 			for (class_scope = base->a_scope->s_class; class_scope;
 			     class_scope = DeeClassScope_Prev(class_scope)) {
 				/* Try to statically access known class members! */
@@ -1582,7 +1582,7 @@ again:
 		if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
 			return asm_gmov_sym_ast(dst_sym, src, dst);
 
-	check_dst_sym_class:
+check_dst_sym_class:
 		switch (SYMBOL_TYPE(dst_sym)) {
 
 		case SYMBOL_TYPE_ALIAS:
@@ -1686,7 +1686,7 @@ again:
 		if (src->a_type == AST_SYM && !PUSH_RESULT &&
 		    asm_can_prefix_symbol_for_read(src->a_sym)) {
 			int32_t symid;
-		check_dst_sym_class_hybrid:
+check_dst_sym_class_hybrid:
 			if (!SYMBOL_MUST_REFERENCE(dst_sym)) {
 				switch (SYMBOL_TYPE(dst_sym)) {
 

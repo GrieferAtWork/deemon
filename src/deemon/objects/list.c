@@ -247,7 +247,7 @@ list_init_iterator(List *__restrict self,
 			new_alloc = alloc * 2;
 			if (!new_alloc)
 				new_alloc = 2;
-		do_realloc:
+do_realloc:
 			new_vector = (DREF DeeObject **)Dee_TryRealloc(vector, new_alloc *
 			                                                       sizeof(DREF DeeObject *));
 			if
@@ -520,7 +520,7 @@ DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 			size_t new_alloc = result->l_alloc * 2;
 			if (new_alloc < req_alloc)
 				new_alloc = req_alloc;
-		do_realloc_vector:
+do_realloc_vector:
 			new_vector = (DREF DeeObject **)Dee_TryRealloc(result->l_elem, new_alloc *
 			                                                               sizeof(DREF DeeObject *));
 			if
@@ -543,7 +543,7 @@ DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 		DREF DeeObject **new_vector;
 		size_t list_size, i;
 		list_size = DeeList_SIZE(self);
-	allocate_new_vector:
+allocate_new_vector:
 		new_vector = (DREF DeeObject **)Dee_Malloc((list_size + argc) *
 		                                           sizeof(DREF DeeObject *));
 		if
@@ -1042,7 +1042,7 @@ PUBLIC int(DCALL DeeList_Insert)(DeeObject *__restrict self, size_t index,
 		DREF DeeObject **new_vector;
 		if (!new_alloc)
 			new_alloc = 2;
-	do_realloc:
+do_realloc:
 		new_vector = (DREF DeeObject **)Dee_TryRealloc(me->l_elem, new_alloc *
 		                                                           sizeof(DREF DeeObject *));
 		if
@@ -1088,7 +1088,7 @@ PUBLIC int(DCALL DeeList_InsertVector)(DeeObject *__restrict self,
 			new_alloc = 2;
 		while (new_alloc < me->l_size + objc)
 			new_alloc *= 2;
-	do_realloc:
+do_realloc:
 		new_vector = (DREF DeeObject **)Dee_TryRealloc(me->l_elem, new_alloc *
 		                                                           sizeof(DREF DeeObject *));
 		if
@@ -1200,7 +1200,7 @@ list_init_sequence(List *__restrict self,
 		weakref_support_init(self);
 		rwlock_init(&self->l_lock);
 		return 0;
-	err_elem:
+err_elem:
 		while (i--)
 			Dee_Decref(elem[i]);
 		Dee_Free(elem);

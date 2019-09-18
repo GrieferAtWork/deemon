@@ -283,7 +283,7 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 			struct jit_object_entry *argent;
 			if (lex.jl_tok == TOK_DOTS) {
 				if (result->jf_varargs != (size_t)-1) {
-				err_varargs_already_defined:
+err_varargs_already_defined:
 					DeeError_Throwf(&DeeError_SyntaxError,
 					                "Variable arguments have already been defined");
 					goto err_r;
@@ -311,7 +311,7 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 					}
 					JITLexer_Yield(&lex);
 					if (lex.jl_tok != JIT_KEYWORD) {
-					err_no_keyword_for_argument:
+err_no_keyword_for_argument:
 						DeeError_Throwf(&DeeError_SyntaxError,
 						                "Expected a keyword as argument name, but got `%$s'",
 						                (size_t)(lex.jl_tokend - lex.jl_tokstart), lex.jl_tokstart);
@@ -774,7 +774,7 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 		else {
 			if (!lexer.jl_errpos)
 				lexer.jl_errpos = lexer.jl_tokstart;
-		handle_error:
+handle_error:
 			JITLValue_Fini(&lexer.jl_lvalue);
 			result = NULL;
 			/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
@@ -797,7 +797,7 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 			/* Error, or return encountered. */
 			goto load_return_value;
 		} while (lexer.jl_tok != TOK_EOF);
-	do_return_none:
+do_return_none:
 		result = Dee_None;
 		Dee_Incref(Dee_None);
 	}

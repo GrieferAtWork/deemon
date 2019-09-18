@@ -423,7 +423,7 @@ symbol_addambig(struct symbol *__restrict self,
 			goto set_default_location;
 		memcpy(new_vec, loc, sizeof(struct ast_loc));
 	} else {
-	set_default_location:
+set_default_location:
 		loc_here(new_vec);
 	}
 	if (new_vec->l_file)
@@ -1347,7 +1347,7 @@ lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
 		goto err;
 	if ((mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VLOCAL) {
 		/* Only lookup variables in the current scope. */
-	seach_single:
+seach_single:
 		ASSERT(iter->s_mapc <= iter->s_mapa);
 		result = NULL;
 		if (iter->s_mapa) {
@@ -1507,7 +1507,7 @@ add_result_to_iter:
 		       warn_loc,
 		       sizeof(struct ast_loc));
 	} else {
-	set_default_location:
+set_default_location:
 		loc_here(&result->s_decl);
 	}
 	if (result->s_decl.l_file)
@@ -1585,7 +1585,7 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 			goto set_default_location;
 		memcpy(&result->s_decl, loc, sizeof(struct ast_loc));
 	} else {
-	set_default_location:
+set_default_location:
 		loc_here(&result->s_decl);
 	}
 	if (result->s_decl.l_file)
@@ -1688,7 +1688,7 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 			goto set_default_location;
 		memcpy(&result->s_decl, loc, sizeof(struct ast_loc));
 	} else {
-	set_default_location:
+set_default_location:
 		loc_here(&result->s_decl);
 	}
 	if (result->s_decl.l_file)

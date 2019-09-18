@@ -151,7 +151,7 @@ DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler) {
 				/* Safe the state of a dangling compiler. */
 				save_compiler(compiler_loaded);
 			}
-		do_load_compiler:
+do_load_compiler:
 			/* Load the new compiler. */
 			load_compiler(compiler);
 			compiler_loaded = compiler;

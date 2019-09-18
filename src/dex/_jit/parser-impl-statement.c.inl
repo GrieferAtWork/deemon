@@ -141,7 +141,7 @@ FUNC(AssemblyOperands)(JITLexer *__restrict self
 		}
 		if (self->jl_tok == '(') {
 			/* Parse the assembly operand. */
-		do_parse_lparen:
+do_parse_lparen:
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			temp = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
@@ -196,7 +196,7 @@ FUNC(AssemblyOperands)(JITLexer *__restrict self
 			JITLValue_Fini(&self->jl_lvalue);
 			self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 		} else {
-		do_decref_temp_rvalue:
+do_decref_temp_rvalue:
 			Dee_Decref(temp);
 		}
 #endif /* JIT_EVAL */
@@ -517,7 +517,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			    *(uint8_t *)(tok_begin + 6) == '_') {
 				bool is_asm_goto;
 				bool need_trailing_rparen;
-			do_asm:
+do_asm:
 				JITLexer_Yield(self);
 				/* Skip assembly modifiers. */
 				is_asm_goto = false;
@@ -545,7 +545,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				}
 				need_trailing_rparen = true;
 				if (self->jl_tok == '(') {
-				do_parse_asm_leading_lparen:
+do_parse_asm_leading_lparen:
 					JITLexer_Yield(self);
 #ifndef JIT_EVAL
 					if (JITLexer_SkipPair(self, '(', ')'))
@@ -596,7 +596,7 @@ again_eval_asm_string:
 				} else if (self->jl_tok == JIT_RAWSTRING) {
 					unsigned char *str_start;
 					unsigned char *str_end;
-				again_eval_asm_rawstring:
+again_eval_asm_rawstring:
 					str_start = self->jl_tokstart + 2;
 					str_end   = self->jl_tokend - 1;
 					/* Make sure that the string only contains space characters! */
@@ -621,7 +621,7 @@ again_eval_asm_string:
 					if (self->jl_tok == '}') {
 						JITLexer_Yield(self);
 					} else {
-					err_unsupported_assembly:
+err_unsupported_assembly:
 						syn_asm_nonempty_string(self);
 						goto err;
 					}
@@ -673,7 +673,7 @@ again_eval_asm_string:
 					}
 				}
 #ifndef JIT_EVAL
-			check_trailing_asm_semicollon:
+check_trailing_asm_semicollon:
 #endif /* !JIT_EVAL */
 				if (self->jl_tok == ';') {
 					JITLexer_Yield(self);
@@ -723,7 +723,7 @@ again_eval_asm_string:
 	} break;
 
 	default:
-	parse_expr:
+parse_expr:
 		/* Fallback: parse a regular, old expression. */
 		result = FUNC(Comma)(self,
 		                     AST_COMMA_NORMAL |

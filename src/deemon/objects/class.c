@@ -3610,7 +3610,7 @@ impl_instance_builtin_le(DeeTypeObject *__restrict tp_self,
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
 			return temp;
-		non_last_member:
+non_last_member:
 			rwlock_endread(&instance->id_lock);
 			/* Compare the two members. */
 			temp = DeeObject_CompareLo(lhs_val, rhs_val);
@@ -4573,7 +4573,7 @@ instance_tclear(DeeTypeObject *__restrict tp_self,
 	buflen   = 0;
 	rwlock_write(&instance->id_lock);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
-	again_i:
+again_i:
 		if (!instance->id_vtab[i])
 			continue;
 		if (Dee_DecrefIfNotOne(instance->id_vtab[i])) {
@@ -4614,7 +4614,7 @@ instance_tpclear(DeeTypeObject *__restrict tp_self,
 	buflen   = 0;
 	rwlock_write(&instance->id_lock);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
-	again_i:
+again_i:
 		if (!instance->id_vtab[i])
 			continue; /* Unbound member slot. */
 		if (DeeObject_GCPriority(instance->id_vtab[i]) < gc_priority)
@@ -4893,7 +4893,7 @@ DeeClass_New(DeeTypeObject *__restrict base,
 	}
 	result_class_offset = result_type_type->tp_init.tp_alloc.tp_instance_size;
 	if (result_type_type->tp_init.tp_alloc.tp_free) {
-	err_custom_allocator:
+err_custom_allocator:
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Cannot use `%s' with custom allocator as class base",
 		                base->tp_name);

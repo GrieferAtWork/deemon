@@ -72,7 +72,7 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 			goto err;
 		ATTR_FALLTHROUGH
 	case TOK_DOTS:
-	not_a_cast:
+not_a_cast:
 		/* Not a cast expression. */
 		result = typeexpr;
 		ast_incref(result);
@@ -200,7 +200,7 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 		 * an expression, then this isn't a cast. */
 		if (!maybe_expression_begin())
 			goto not_a_cast;
-	do_a_cast:
+do_a_cast:
 		/* Actually do a cast. */
 		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
 		if

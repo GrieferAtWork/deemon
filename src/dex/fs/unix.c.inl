@@ -308,7 +308,7 @@ INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 				unlikely(!newbuf)
 			goto err;
 		} else {
-		err_generic:
+err_generic:
 			DeeError_SysThrowf(&DeeError_SystemError, error,
 			                   "Failed to determine host name");
 			goto err;
@@ -563,7 +563,7 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
 		error = fchdir(fd);
 		DBG_ALIGNMENT_ENABLE();
 		goto check_error;
-	try_filename:
+try_filename:
 #endif
 		/* Use the filename of a file stream. */
 		path = DeeFile_Filename(path);
@@ -1475,7 +1475,7 @@ err:
 PRIVATE ATTR_COLD int DCALL
 handle_rmdir_error(int error, DeeObject *__restrict path) {
 	if (error == EACCES) {
-	no_access:
+no_access:
 		DBG_ALIGNMENT_ENABLE();
 		return err_path_no_write_access(error, path);
 	} else if (error == EBUSY || error == EINVAL) {
@@ -1564,12 +1564,12 @@ err:
 PRIVATE ATTR_COLD int DCALL
 handle_unlink_error(int error, DeeObject *__restrict path) {
 	if (error == EACCES) {
-	err_access:
+err_access:
 		return err_path_no_write_access(error, path);
 	} else if (error == EBUSY) {
 		return err_path_busy(error, path);
 	} else if (error == EISDIR) {
-	err_isdir:
+err_isdir:
 		return err_path_is_dir(error, path);
 	} else if (error == ENOTDIR) {
 		return err_path_no_dir(error, path);
@@ -1803,7 +1803,7 @@ fs_rename(DeeObject *__restrict existing_path,
 	return 0;
 	error = errno;
 	if (error == EACCES) {
-	err_access:
+err_access:
 		DBG_ALIGNMENT_ENABLE();
 		err_path_no_access2(error, existing_path, new_path);
 	} else if (error == EBUSY) {
@@ -2018,7 +2018,7 @@ fs_readlink(DeeObject *__restrict path) {
 			if
 				unlikely(req_size < 0)
 			{
-			handle_error:
+handle_error:
 				error = errno;
 				DBG_ALIGNMENT_ENABLE();
 				if (error == EACCES) {
@@ -2028,7 +2028,7 @@ fs_readlink(DeeObject *__restrict path) {
 				} else if (error == ENOENT) {
 					err_path_not_found(error, path);
 				} else if (error == EINVAL) {
-				no_link:
+no_link:
 					DeeError_SysThrowf(&DeeError_NoLink, error,
 					                   "Path %r is not a symbolic link",
 					                   path);
@@ -2065,9 +2065,9 @@ fs_readlink(DeeObject *__restrict path) {
 		if (unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size) < 0)
 			goto err_printer;
 		return unicode_printer_pack(&printer);
-	err:
+err:
 		unicode_printer_free_utf8(&printer, buffer);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 		return NULL;
 	}
@@ -2119,7 +2119,7 @@ diriter_next(DirIterator *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 		rwlock_endwrite(&self->d_lock);
 #endif
-	iter_done:
+iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
 read_filename:
@@ -2406,7 +2406,7 @@ wild_match(char const *string, char const *pattern) {
 			}
 		}
 		if (*pattern == *string || *pattern == '?') {
-		next:
+next:
 			++string, ++pattern;
 			continue; /* single character match */
 		}

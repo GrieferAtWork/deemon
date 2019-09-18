@@ -279,7 +279,7 @@ ast_genprint(instruction_t mode,
 			      print_expression->a_multiple.m_astc;
 			if (iter == end) {
 				int32_t space_cid;
-			empty_operand:
+empty_operand:
 				/* Just print an empty line. */
 				if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NL) {
 					if (asm_putddi(ddi_ast))
@@ -354,7 +354,7 @@ ast_genprint(instruction_t mode,
 			}
 			Dee_Decref(items);
 			return 0;
-		err_items:
+err_items:
 			Dee_Decref(items);
 			goto err;
 #endif
@@ -551,7 +551,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 			asm_dellocal(sym->s_symid);
 			sym->s_flag &= ~SYMBOL_FALLOC;
 		}
-	done_push_none:
+done_push_none:
 		if (PUSH_RESULT && asm_gpush_none())
 			goto err;
 	} break;
@@ -733,7 +733,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 		 *       instructions that are known to never return.
 		 *       As is the case now, we only fake pushing something when
 		 *       a `return' expression is supposed to yield something. */
-	done_fake_none:
+done_fake_none:
 		if (PUSH_RESULT)
 			asm_incsp();
 		break;
@@ -1340,7 +1340,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 				    !asm_can_prefix_symbol(prefix_symbol))
 					goto varop_without_prefix;
 			} else {
-			varop_without_prefix:
+varop_without_prefix:
 				if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 					goto err;
 				prefix_symbol = NULL;
@@ -1366,7 +1366,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 				if (asm_goperator_tuple(operator_name))
 					goto err;
 			}
-		pop_unused:
+pop_unused:
 			if (!PUSH_RESULT && asm_gpop())
 				goto err;
 			break;
@@ -1663,7 +1663,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 				if (operator_name == OPERATOR_INPLACE_ADD ? asm_gadd_inplace_simm8((int8_t)intval)
 				                                          : asm_gsub_inplace_simm8((int8_t)intval))
 					goto err;
-			push_a_if_used:
+push_a_if_used:
 				if (PUSH_RESULT && ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 					goto err;
 				goto done;
@@ -2188,7 +2188,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 			}
 		}
 
-	generic_operator:
+generic_operator:
 
 	{
 		/* Generic operator assembler. */
@@ -2204,7 +2204,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 			    !asm_can_prefix_symbol(prefix_symbol))
 				goto operator_without_prefix;
 		} else {
-		operator_without_prefix:
+operator_without_prefix:
 			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;
 			prefix_symbol = NULL;
@@ -2305,7 +2305,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 							typesym = self->a_action.a_act1->a_sym;
 							SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
 							if (ASM_SYMBOL_MAY_REFERENCE(typesym)) {
-							do_this_as_typesym_ref:
+do_this_as_typesym_ref:
 								symid = asm_rsymid(typesym);
 								if
 									unlikely(symid < 0)
@@ -2467,7 +2467,7 @@ INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
 					if (asm_putddi(self) || asm_gcontains_const((uint16_t)cid))
 						goto err;
 				} else {
-				action_in_without_const:
+action_in_without_const:
 					if (ast_can_exchange(self->a_action.a_act0,
 					                     self->a_action.a_act1)) {
 						if (ast_genasm_set(self->a_action.a_act1, ASM_G_FPUSHRES))

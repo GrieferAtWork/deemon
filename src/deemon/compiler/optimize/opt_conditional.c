@@ -79,7 +79,7 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
 			if
 				unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
 			{
-			err_tt_assumes:
+err_tt_assumes:
 				ast_assumes_fini(&tt_assumes);
 				goto err;
 			}
@@ -93,7 +93,7 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
 			if
 				unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
 			{
-			err_ff_tt_assumes:
+err_ff_tt_assumes:
 				ast_assumes_fini(&ff_assumes);
 				goto err_tt_assumes;
 			}
@@ -333,12 +333,12 @@ after_constant_condition:
 			 * >>  cond ? true : false  --> !!cond
 			 * >>  cond ? true : true   --> ({ cond; true; })
 			 */
-		apply_bool_matrix_transformation:
+apply_bool_matrix_transformation:
 			if (tt_value) {
 				if (ff_value) {
 					/* cond ? true : true  --> ({ cond; true; }) */
 					DREF struct ast **elemv;
-				optimize_conditional_bool_predictable_inherit_multiple:
+optimize_conditional_bool_predictable_inherit_multiple:
 					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
 					if
 						unlikely(!elemv)
@@ -458,7 +458,7 @@ after_constant_condition:
 			if (ast_equal(tt, ff)) {
 				/* The true and false branches are identical. */
 				DREF struct ast **elemv;
-			if_statement_branches_identical:
+if_statement_branches_identical:
 				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
 				if
 					unlikely(!elemv)

@@ -199,7 +199,7 @@ print_ddi_file_and_line(instruction_t *addr_ptr) {
 		if (iter->dc_sym->as_addr <= addr)
 			continue;
 		if (iter > current_assembler.a_ddi.da_checkv) {
-		do_print:
+do_print:
 			--iter;
 		}
 		DEE_DPRINTF("%s(%d,%d) : ",
@@ -317,9 +317,9 @@ decrement_stack_referenes(instruction_t *start,
 	while (iter < end) {
 		instruction_t *iiter = iter;
 		uint16_t opcode;
-	read_opcode:
+read_opcode:
 		opcode = *iiter++;
-	switch_on_opcode:
+switch_on_opcode:
 		switch (opcode) {
 
 		case ASM_STACK:
@@ -560,7 +560,7 @@ continue_at_iter:
 		case ASM_ADJSTACK:
 			if (!(current_assembler.a_flag & ASM_FOPTIMIZE))
 				break;
-		do_adjstack_optimization:
+do_adjstack_optimization:
 			/* The `adjstack' instruction is normally optimized by the linker
 			 * when `asm_minjmp()' reduces required instruction groupings.
 			 * But since peephole optimizations require fully linked stack
@@ -654,7 +654,7 @@ continue_at_iter:
 		case ASM_STATIC:
 		case ASM_STACK:
 			after_prefix = iter + 2;
-		do_basic_optimize_after_prefix:
+do_basic_optimize_after_prefix:
 			if (IP_ISCJMP(after_prefix))
 				goto do_jmpf_conditional;
 			if (*after_prefix == ASM_FOREACH ||
@@ -667,21 +667,21 @@ continue_at_iter:
 		case ASM_JT:
 		case ASM_JF16:
 		case ASM_JT16:
-		do_jmpf_conditional:
+do_jmpf_conditional:
 			is_conditional = 1;
 			goto do_jmpf;
 
 		case ASM_FOREACH:
 		case ASM_FOREACH16:
-		do_jmpf_foreach:
+do_jmpf_foreach:
 			is_conditional = 2;
 			goto do_jmpf;
 
 		case ASM_JMP:
 		case ASM_JMP16:
-		do_jmpf_unconditional:
+do_jmpf_unconditional:
 			is_conditional = 0;
-		do_jmpf:
+do_jmpf:
 			/* Forward jump optimization:
 			 * >>    jmp 1f
 			 * >> 1: jmp 2f
@@ -1041,7 +1041,7 @@ do_push_bool_optimizations:
 				/* Special optimization for conditional-jump boolean-forwarding. */
 				instruction_t *instr_jmp;
 				instruction_t *instr_pop;
-			do_conditional_forward_optimization:
+do_conditional_forward_optimization:
 				instr_jmp = iiter + 1;
 				if (IP_ISCJMP(instr_jmp)) {
 					instr_pop = asm_nextinstr(instr_jmp);
@@ -1104,7 +1104,7 @@ do_push_bool_optimizations:
 											UNALIGNED_SETLE16((uint16_t *)(instr_jmp + 1),
 											                  (uint16_t)(int16_t)new_disp);
 										}
-									conditional_jump_forwarding_ok:
+conditional_jump_forwarding_ok:
 										delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 										                (code_size_t)(instr_jmp - iter));
 										/* Apply logic inversion _after_ forwarding checks, because
@@ -1187,7 +1187,7 @@ do_push_bool_optimizations:
 
 			if (IP_ISCJMP(iiter)) {
 				if (num_instruction != 0) {
-				delete_bool_before_jft:
+delete_bool_before_jft:
 					/* Merge the bool/not instructions into the conditional-jump instruction. */
 					delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 					                (code_size_t)(iiter - iter));
@@ -1215,7 +1215,7 @@ do_push_bool_optimizations:
 				SET_RESULTF(iter, "Flatten boolean logic repetition to a single `%s'",
 				            must_invert ? "not" : DeeString_STR(&str_bool));
 			}
-		done_opt_bool:
+done_opt_bool:
 			iter = iiter;
 			goto continue_at_iter;
 		} break;
@@ -1300,9 +1300,9 @@ do_optimize_conditional_jump:
 		case ASM16_STATIC:
 		case ASM16_STACK:
 			after_prefix = iiter + 2;
-		do_optimize_after_prefix:
+do_optimize_after_prefix:
 			opcode = *after_prefix++;
-		do_switch_after_prefix_opcode:
+do_switch_after_prefix_opcode:
 			switch (opcode) {
 
 			CASE_ASM_EXTENDED:
@@ -1384,7 +1384,7 @@ do_optimize_conditional_jump:
 					goto do_optimize_popmov_8bit;
 				case ASM_POP_STATIC:
 					temp[0] = ASM_STATIC;
-				do_optimize_popmov_8bit:
+do_optimize_popmov_8bit:
 					temp[1] = next_instruction[1];
 					memcpy(temp + 2, iter, next_instruction - iter);
 					memcpy(iter, temp, 2 + (next_instruction - iter));
@@ -1424,7 +1424,7 @@ do_optimize_conditional_jump:
 						goto do_optimize_popmov_16bit;
 					case ASM16_POP_STATIC & 0xff:
 						temp[1] = ASM16_STATIC & 0xff;
-					do_optimize_popmov_16bit:
+do_optimize_popmov_16bit:
 						temp[0] = (ASM16_STATIC & 0xff00) >> 8;
 						temp[2] = next_instruction[1];
 						temp[3] = next_instruction[2];
@@ -1516,7 +1516,7 @@ do_optimize_conditional_jump:
 			 *  >>   push      $10
 			 *  >>   pop
 			 */
-		do_unused_operand_optimization:
+do_unused_operand_optimization:
 			iiter_sp = stacksz;
 			/* Figure out the absolute stack-address of the
 			 * greatest operand created by this instruction. */
@@ -1572,7 +1572,7 @@ do_check_dup_into:
 						goto do_optimize_dupmov_8bit;
 					case ASM_POP_STATIC:
 						temp[0] = ASM_STATIC;
-					do_optimize_dupmov_8bit:
+do_optimize_dupmov_8bit:
 						temp[1] = next_instruction[1];
 						memcpy(temp + 2, iter, next_instruction - iter);
 						memcpy(iter, temp, 2 + (next_instruction - iter));
@@ -1617,7 +1617,7 @@ do_check_dup_into:
 							goto do_optimize_dupmov_16bit;
 						case ASM16_POP_STATIC & 0xff:
 							temp[1] = ASM16_STATIC & 0xff;
-						do_optimize_dupmov_16bit:
+do_optimize_dupmov_16bit:
 							temp[0] = (ASM16_STATIC & 0xff00) >> 8;
 							temp[2] = next_instruction[2];
 							temp[3] = next_instruction[3];
@@ -1667,7 +1667,7 @@ do_check_dup_into:
 				++stacksz;
 				goto do_unused_operand_optimization_ex;
 			}
-		do_unused_operand_optimization_ex:
+do_unused_operand_optimization_ex:
 			validate_stack_depth((code_addr_t)(next_instruction - sc_main.sec_begin), stacksz);
 			/* TODO: Optimize:
 			 * >>    push $42
@@ -1892,7 +1892,7 @@ delete_asm_after_pop:
 									iter[1] = ASM_DELOP;
 								}
 							}
-						set_result_for_pop:
+set_result_for_pop:
 							SET_RESULTF(next_instruction,
 							            "Refactor stack to localize producer and consumer at #%.4I32X",
 							            (code_addr_t)(iter - sc_main.sec_begin));
@@ -1907,7 +1907,7 @@ delete_asm_after_pop:
 						}
 						break;
 					}
-				continue_unused_operand:
+continue_unused_operand:
 					iter = next;
 				}
 			/* Continue regular peephole optimization at the address
@@ -2104,9 +2104,9 @@ break;
 		case ASM16_POP_GLOBAL:
 		case ASM16_POP_LOCAL:
 			pop_imma = UNALIGNED_GETLE16((uint16_t *)(iter + 2));
-		do_pop_push_optimization:
+do_pop_push_optimization:
 			pop_immb = 0;
-		do_pop_push_optimization2:
+do_pop_push_optimization2:
 			validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
 			next_stacksz = stacksz;
 			next         = next_instr_sp(iter, &next_stacksz);
@@ -2202,7 +2202,7 @@ break;
 					pop_size                 = (uint16_t)(next - iter);
 					prefix_size              = (uint16_t)(next_after_prefix - next);
 					next_after_prefix_opcode = next_after_prefix[0];
-				do_switch_next_after_prefix_opcode:
+do_switch_next_after_prefix_opcode:
 					switch (next_after_prefix_opcode) {
 
 					CASE_ASM_EXTENDED:
@@ -2239,7 +2239,7 @@ break;
 					}
 				}
 			}
-		do_writeonly_symbol_optimization:
+do_writeonly_symbol_optimization:
 			/* TODO: These optimization should also apply to any instruction
 			 *       that only uses a prefix as a write-only target, such as
 			 *       mov instructions:
@@ -2267,7 +2267,7 @@ break;
 						/* Following unconditional jumps. */
 						target = follow_jmp(scanner, NULL);
 						if (target <= scanner) {
-						scan_entire_text_for_local_readers:
+scan_entire_text_for_local_readers:
 							/* Search the entire assembly for assignments to this variable. */
 							scanner = sc_main.sec_begin;
 							for (; scanner < end; scanner = asm_nextinstr(scanner)) {
@@ -2317,7 +2317,7 @@ break;
 							} else {
 								break;
 							}
-						check_scanner_after_prefix:
+check_scanner_after_prefix:
 							/* A conditional jump instruction was encountered. */
 							if (IP_ISCJMP(after_prefix))
 								after_jmp = true;
@@ -2385,7 +2385,7 @@ break;
 					}
 #endif
 				}
-			delete_symbol_store:
+delete_symbol_store:
 				/* Yes, we can optimize away this use case. */
 				delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 					            (code_size_t)(next - iter));
@@ -2413,7 +2413,7 @@ break;
 				/* Yes, we can optimize away this use case. */
 				goto delete_symbol_store;
 			}
-		done_pop_optimization:
+done_pop_optimization:
 #endif
 			iter    = next;
 			stacksz = next_stacksz;

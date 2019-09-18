@@ -190,7 +190,7 @@ get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
 
 	case ASM_STACK:
 		imm_val = *(uint8_t *)ip;
-	do_get_stack:
+do_get_stack:
 #ifdef EXEC_SAFE
 		if
 			unlikely((frame->cf_stack + imm_val) >= sp)
@@ -207,7 +207,7 @@ get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
 
 	case ASM_LOCAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_get_local:
+do_get_local:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_localc)
@@ -271,7 +271,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_STACK:
 		imm_val = *(uint8_t *)ip;
-	do_get_stack:
+do_get_stack:
 #ifdef EXEC_SAFE
 		if
 			unlikely((frame->cf_stack + imm_val) >= sp)
@@ -290,7 +290,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
-	do_get_static:
+do_get_static:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_staticc)
@@ -315,7 +315,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 		if
 			unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
 		{
-		err_invalid_extern:
+err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
 			return NULL;
@@ -333,7 +333,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 		goto do_get_module_object;
 	case ASM_GLOBAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_get_global:
+do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
 		if
@@ -346,7 +346,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
-	do_get_module_object:
+do_get_module_object:
 		rwlock_read(&module->mo_lock);
 		result = module->mo_globalv[imm_val];
 		Dee_XIncref(result);
@@ -359,7 +359,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_LOCAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_get_local:
+do_get_local:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_localc)
@@ -399,7 +399,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 			if
 				unlikely(imm_val >= code->co_module->mo_importc)
 			{
-			err_invalid_extern16:
+err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
 				return NULL;
@@ -472,7 +472,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_STACK:
 		imm_val = *(uint8_t *)ip;
-	do_get_stack:
+do_get_stack:
 #ifdef EXEC_SAFE
 		if
 			unlikely((frame->cf_stack + imm_val) >= sp)
@@ -491,7 +491,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
-	do_get_static:
+do_get_static:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_staticc)
@@ -516,7 +516,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 		if
 			unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
 		{
-		err_invalid_extern:
+err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
 			return NULL;
@@ -535,7 +535,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_GLOBAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_get_global:
+do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
 		if
@@ -548,7 +548,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
-	do_get_module_object:
+do_get_module_object:
 		rwlock_write(&module->mo_lock);
 		result = module->mo_globalv[imm_val]; /* Inherit reference. */
 		if
@@ -565,7 +565,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_LOCAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_get_local:
+do_get_local:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_localc)
@@ -602,7 +602,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 			if
 				unlikely(imm_val >= code->co_module->mo_importc)
 			{
-			err_invalid_extern16:
+err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
 				return NULL;
@@ -639,7 +639,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 
 	default:
 #ifdef EXEC_SAFE
-	ill_instr:
+ill_instr:
 		err_illegal_instruction(code, frame->cf_ip);
 		return NULL;
 #else /* EXEC_SAFE */
@@ -676,7 +676,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_STACK:
 		imm_val = *(uint8_t *)ip;
-	do_set_stack:
+do_set_stack:
 #ifdef EXEC_SAFE
 		if
 			unlikely((frame->cf_stack + imm_val) >= sp)
@@ -696,7 +696,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
-	do_set_static:
+do_set_static:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_staticc)
@@ -723,7 +723,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 		if
 			unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
 		{
-		err_invalid_extern:
+err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
 			Dee_Decref(value);
@@ -743,7 +743,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_GLOBAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_set_global:
+do_set_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
 		if
@@ -757,7 +757,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
-	do_set_module_object:
+do_set_module_object:
 		rwlock_write(&module->mo_lock);
 		old_value                   = module->mo_globalv[imm_val];
 		module->mo_globalv[imm_val] = value;
@@ -767,7 +767,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 
 	case ASM_LOCAL:
 		imm_val = *(uint8_t *)(ip + 0);
-	do_set_local:
+do_set_local:
 #ifdef EXEC_SAFE
 		if
 			unlikely(imm_val >= code->co_localc)
@@ -802,7 +802,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 			if
 				unlikely(imm_val >= code->co_module->mo_importc)
 			{
-			err_invalid_extern16:
+err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
 				Dee_Decref(value);
@@ -841,7 +841,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 
 	default:
 #ifdef EXEC_SAFE
-	ill_instr:
+ill_instr:
 		Dee_Decref(value);
 		err_illegal_instruction(code, frame->cf_ip);
 		return -1;
@@ -1242,7 +1242,7 @@ next_instr:
 				DeeError_Throw(this_thread->t_except->ef_error);
 			} else {
 				/* Throw an exception because none had been thrown, yet. */
-			except_no_active_exception:
+except_no_active_exception:
 				err_no_active_exception();
 			}
 			HANDLE_EXCEPT();
@@ -1271,7 +1271,7 @@ next_instr:
 
 		TARGET(ASM_PUSH_BND_ARG, -0, +1) {
 			imm_val = READ_imm8();
-		do_push_bnd_arg:
+do_push_bnd_arg:
 			ASSERT_ARGimm();
 			PUSHREF(DeeBool_For(imm_val < frame->cf_argc ||
 			                    (frame->cf_kw &&
@@ -1282,7 +1282,7 @@ next_instr:
 		TARGET(ASM_PUSH_BND_EXTERN, -0, +1) {
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_push_bnd_extern:
+do_push_bnd_extern:
 			ASSERT_EXTERNimm();
 			/*EXTERN_LOCKREAD();*/
 			PUSHREF(DeeBool_For(EXTERNimm != NULL));
@@ -1292,7 +1292,7 @@ next_instr:
 
 		TARGET(ASM_PUSH_BND_GLOBAL, -0, +1) {
 			imm_val = READ_imm8();
-		do_push_bnd_global:
+do_push_bnd_global:
 			ASSERT_GLOBALimm();
 			/*GLOBAL_LOCKREAD();*/
 			PUSHREF(DeeBool_For(GLOBALimm != NULL));
@@ -1302,7 +1302,7 @@ next_instr:
 
 		TARGET(ASM_PUSH_BND_LOCAL, -0, +1) {
 			imm_val = READ_imm8();
-		do_push_bnd_local:
+do_push_bnd_local:
 			ASSERT_LOCALimm();
 			PUSHREF(DeeBool_For(LOCALimm != NULL));
 			DISPATCH();
@@ -1316,7 +1316,7 @@ next_instr:
 			HANDLE_EXCEPT();
 			POPREF();
 			if (!temp) {
-			jump_16:
+jump_16:
 #ifndef CONFIG_NO_THREADS
 				if ((int16_t)imm_val < 0 &&
 				    DeeThread_CheckInterruptSelf(this_thread))
@@ -1354,7 +1354,7 @@ next_instr:
 			/* Adjust the instruction pointer accordingly. */
 			ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
-		assert_ip_bounds:
+assert_ip_bounds:
 			/* Raise an error if the new PC has been displaced out-of-bounds. */
 			if
 				unlikely(ip.ptr < code->co_code ||
@@ -1431,7 +1431,7 @@ next_instr:
 			DREF DeeObject *call_result, **new_sp;
 			imm_val2 = READ_imm8();
 			imm_val  = READ_imm8();
-		do_call_kw:
+do_call_kw:
 			ASSERT_USAGE(-1 - (int)imm_val2, +1);
 			/* NOTE: Inherit references. */
 			new_sp = sp - imm_val2;
@@ -1462,7 +1462,7 @@ next_instr:
 		RAW_TARGET(ASM_CALL_TUPLE_KW) {
 			DREF DeeObject *call_result;
 			imm_val = READ_imm8();
-		do_call_tuple_kw:
+do_call_tuple_kw:
 			ASSERT_USAGE(-2, +1);
 			/* NOTE: Inherit references. */
 			ASSERT_CONSTimm();
@@ -1506,7 +1506,7 @@ next_instr:
 			DREF DeeObject *call_result;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_operator:
+do_operator:
 			ASSERT_USAGE(-1 - (int)imm_val2, +1);
 			/* NOTE: Inherit references. */
 			call_result = DeeObject_InvokeOperator((sp - imm_val2)[-1], imm_val,
@@ -1525,7 +1525,7 @@ next_instr:
 		TARGET(ASM_OPERATOR_TUPLE, -2, +1) {
 			DREF DeeObject *call_result;
 			imm_val = READ_imm8();
-		do_operator_tuple:
+do_operator_tuple:
 			ASSERT_TUPLE(FIRST);
 			call_result = DeeObject_InvokeOperator(SECOND, imm_val,
 			                                       DeeTuple_SIZE(FIRST),
@@ -1543,7 +1543,7 @@ next_instr:
 		TARGET(ASM_DEL_GLOBAL, -0, +0) {
 			DeeObject **pobject, *del_object;
 			imm_val = READ_imm8();
-		do_del_global:
+do_del_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKWRITE();
 			pobject    = &GLOBALimm;
@@ -1560,7 +1560,7 @@ next_instr:
 		TARGET(ASM_DEL_LOCAL, -0, +0) {
 			DeeObject **plocal;
 			imm_val = READ_imm8();
-		do_del_local:
+do_del_local:
 			ASSERT_LOCALimm();
 			plocal = &LOCALimm;
 			if
@@ -1632,7 +1632,7 @@ next_instr:
 		{
 			RAW_TARGET(ASM_ADJSTACK)
 			imm_val = (uint16_t)(int16_t)READ_Simm8();
-		do_stack_adjust:
+do_stack_adjust:
 			if ((int16_t)imm_val < 0) {
 #ifdef EXEC_SAFE
 				if
@@ -1676,7 +1676,7 @@ next_instr:
 		TARGET(ASM_SUPER_THIS_R, -0, +1) {
 			DREF DeeObject *super_wrapper;
 			imm_val = READ_imm8();
-		do_super_this_r:
+do_super_this_r:
 			ASSERT_THISCALL();
 			ASSERT_REFimm();
 			super_wrapper = DeeSuper_New((DeeTypeObject *)REFimm, THIS);
@@ -1697,7 +1697,7 @@ next_instr:
 		TARGET(ASM_POP_STATIC, -1, +0) {
 			DeeObject *old_value;
 			imm_val = READ_imm8();
-		do_pop_static:
+do_pop_static:
 			ASSERT_STATICimm();
 			STATIC_LOCKWRITE();
 			old_value = STATICimm;
@@ -1712,7 +1712,7 @@ next_instr:
 			DeeObject *old_value, **pglobl;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_pop_extern:
+do_pop_extern:
 			ASSERT_EXTERNimm();
 			EXTERN_LOCKWRITE();
 			pglobl    = &EXTERNimm;
@@ -1726,7 +1726,7 @@ next_instr:
 		TARGET(ASM_POP_GLOBAL, -1, +0) {
 			DeeObject *old_value, **pglobl;
 			imm_val = READ_imm8();
-		do_pop_global:
+do_pop_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKWRITE();
 			pglobl    = &GLOBALimm;
@@ -1740,7 +1740,7 @@ next_instr:
 		TARGET(ASM_POP_LOCAL, -1, +0) {
 			DeeObject *old_value;
 			imm_val = READ_imm8();
-		do_pop_local:
+do_pop_local:
 			ASSERT_LOCALimm();
 			old_value = LOCALimm;
 			LOCALimm  = POP();
@@ -1750,7 +1750,7 @@ next_instr:
 
 		TARGET(ASM_PUSH_REF, -0, +1) {
 			imm_val = READ_imm8();
-		do_push_ref:
+do_push_ref:
 			ASSERT_REFimm();
 			PUSHREF(REFimm);
 			DISPATCH();
@@ -1759,7 +1759,7 @@ next_instr:
 		TARGET(ASM_PUSH_ARG, -0, +1) {
 			DeeObject *value;
 			imm_val = READ_imm8();
-		do_push_arg:
+do_push_arg:
 			ASSERT_ARGimm();
 			/* Simple case: Direct argument/default reference. */
 			if (imm_val < frame->cf_argc) {
@@ -1850,7 +1850,7 @@ next_instr:
 
 		TARGET(ASM_PUSH_CONST, -0, +1) {
 			imm_val = READ_imm8();
-		do_push_const:
+do_push_const:
 			ASSERT_CONSTimm();
 			CONST_LOCKREAD();
 			PUSHREF(CONSTimm);
@@ -1860,7 +1860,7 @@ next_instr:
 
 		TARGET(ASM_PUSH_STATIC, -0, +1) {
 			imm_val = READ_imm8();
-		do_push_static:
+do_push_static:
 			ASSERT_STATICimm();
 			STATIC_LOCKREAD();
 			PUSHREF(STATICimm);
@@ -1872,7 +1872,7 @@ next_instr:
 			DeeObject *value;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_push_extern:
+do_push_extern:
 			ASSERT_EXTERNimm();
 			EXTERN_LOCKREAD();
 			value = EXTERNimm;
@@ -1890,7 +1890,7 @@ next_instr:
 		TARGET(ASM_PUSH_GLOBAL, -0, +1) {
 			DeeObject *value;
 			imm_val = READ_imm8();
-		do_push_global:
+do_push_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKREAD();
 			value = GLOBALimm;
@@ -1908,7 +1908,7 @@ next_instr:
 		TARGET(ASM_PUSH_LOCAL, -0, +1) {
 			DeeObject *value;
 			imm_val = READ_imm8();
-		do_push_local:
+do_push_local:
 			ASSERT_LOCALimm();
 			value = LOCALimm;
 			if
@@ -1921,7 +1921,7 @@ next_instr:
 		RAW_TARGET(ASM_PACK_TUPLE) {
 			DREF DeeObject *temp;
 			imm_val = READ_imm8();
-		do_pack_tuple:
+do_pack_tuple:
 			ASSERT_USAGE(-(int)imm_val, +1);
 			temp = DeeTuple_NewVectorSymbolic(imm_val, sp - imm_val); /* Inherit references. */
 			if
@@ -1935,7 +1935,7 @@ next_instr:
 		RAW_TARGET(ASM_PACK_LIST) {
 			DREF DeeObject *temp;
 			imm_val = READ_imm8();
-		do_pack_list:
+do_pack_list:
 			ASSERT_USAGE(-(int)imm_val, +1);
 			temp = DeeList_NewVectorInherited(imm_val, sp - imm_val); /* Inherit references. */
 			if
@@ -1950,7 +1950,7 @@ next_instr:
 			int error;
 			DREF DeeObject *sequence;
 			imm_val = READ_imm8();
-		do_unpack:
+do_unpack:
 			ASSERT_USAGE(-1, +(int)imm_val);
 			sequence = POP();
 			error    = DeeObject_Unpack(sequence, imm_val, sp);
@@ -1993,7 +1993,7 @@ next_instr:
 		TARGET(ASM_PUSH_MODULE, -0, +1) {
 			DeeModuleObject *mod;
 			imm_val = READ_imm8();
-		do_push_module:
+do_push_module:
 			mod = code->co_module;
 			ASSERT_OBJECT(mod);
 #ifdef EXEC_SAFE
@@ -2226,7 +2226,7 @@ next_instr:
 		TARGET(ASM_CLASS_C, -1, +1) {
 			DREF DeeTypeObject *new_class;
 			imm_val = READ_imm8();
-		do_class_c:
+do_class_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
@@ -2259,7 +2259,7 @@ next_instr:
 			DREF DeeObject *base;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_class_gc:
+do_class_gc:
 			ASSERT_GLOBALimm();
 			ASSERT_CONSTimm2();
 			GLOBAL_LOCKREAD();
@@ -2342,7 +2342,7 @@ next_instr:
 
 		TARGET(ASM_DEFCMEMBER, -2, +1) {
 			imm_val = READ_imm8();
-		do_defcmember:
+do_defcmember:
 #ifdef EXEC_SAFE
 			if (DeeClass_SetMemberSafe((DeeTypeObject *)SECOND, imm_val, FIRST))
 				HANDLE_EXCEPT();
@@ -2357,7 +2357,7 @@ next_instr:
 			DREF DeeObject *member_value;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_getcmember_r:
+do_getcmember_r:
 			ASSERT_REFimm();
 #ifdef EXEC_SAFE
 			member_value = DeeClass_GetMemberSafe((DeeTypeObject *)REFimm, imm_val2);
@@ -2376,7 +2376,7 @@ next_instr:
 			uint8_t argc;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_callcmember_this_r:
+do_callcmember_this_r:
 			argc = READ_imm8();
 			ASSERT_REFimm();
 			ASSERT_THISCALL();
@@ -2408,7 +2408,7 @@ next_instr:
 			DREF DeeObject *function;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_function_c:
+do_function_c:
 			ASSERT_USAGE(-(int)(imm_val2 + 1), +1);
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
@@ -2803,7 +2803,7 @@ next_instr:
 			DREF DeeObject *stream;
 			int error;
 			imm_val = READ_imm8();
-		do_print_c:
+do_print_c:
 			ASSERT_CONSTimm();
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if
@@ -2833,7 +2833,7 @@ next_instr:
 			DREF DeeObject *stream;
 			int error;
 			imm_val = READ_imm8();
-		do_print_c_sp:
+do_print_c_sp:
 			ASSERT_CONSTimm();
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if
@@ -2863,7 +2863,7 @@ next_instr:
 			DREF DeeObject *stream;
 			int error;
 			imm_val = READ_imm8();
-		do_print_c_nl:
+do_print_c_nl:
 			ASSERT_CONSTimm();
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if
@@ -2891,7 +2891,7 @@ next_instr:
 
 		TARGET(ASM_FPRINT_C, -1, +1) {
 			imm_val = READ_imm8();
-		do_fprint_c:
+do_fprint_c:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -2917,7 +2917,7 @@ next_instr:
 
 		TARGET(ASM_FPRINT_C_SP, -1, +1) {
 			imm_val = READ_imm8();
-		do_fprint_c_sp:
+do_fprint_c_sp:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -2943,7 +2943,7 @@ next_instr:
 
 		TARGET(ASM_FPRINT_C_NL, -1, +1) {
 			imm_val = READ_imm8();
-		do_fprint_c_nl:
+do_fprint_c_nl:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -3082,7 +3082,7 @@ next_instr:
 		RAW_TARGET(ASM_CONTAINS_C) {
 			DREF DeeObject *value;
 			imm_val = READ_imm8();
-		do_contains_c:
+do_contains_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
@@ -3132,7 +3132,7 @@ next_instr:
 		RAW_TARGET(ASM_GETITEM_C) {
 			DREF DeeObject *value;
 			imm_val = READ_imm8();
-		do_getitem_c:
+do_getitem_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
@@ -3175,7 +3175,7 @@ next_instr:
 
 		TARGET(ASM_SETITEM_C, -2, +0) {
 			imm_val = READ_imm8();
-		do_setitem_c:
+do_setitem_c:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -3616,7 +3616,7 @@ next_instr:
 			DREF DeeObject *call_result;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_callattr_tuple_c_kw:
+do_callattr_tuple_c_kw:
 			ASSERT_USAGE(-2, +1);
 			ASSERT_CONSTimm();
 			ASSERT_CONSTimm2();
@@ -3658,7 +3658,7 @@ next_instr:
 		RAW_TARGET(ASM_CALLATTR_C) {
 			DREF DeeObject *callback_result, **new_sp;
 			imm_val = READ_imm8();
-		do_callattr_c:
+do_callattr_c:
 			imm_val2 = READ_imm8();
 			ASSERT_USAGE(-((int)imm_val2 + 1), +1);
 			ASSERT_CONSTimm();
@@ -3697,7 +3697,7 @@ next_instr:
 			DREF DeeObject *callback_result, **new_sp;
 			DREF DeeObject *shared_vector;
 			imm_val = READ_imm8();
-		do_callattr_c_seq:
+do_callattr_c_seq:
 			imm_val2 = READ_imm8();
 			ASSERT_USAGE(-((int)imm_val2 + 1), +1);
 			ASSERT_CONSTimm();
@@ -3751,7 +3751,7 @@ next_instr:
 			DREF DeeObject *callback_result, **new_sp;
 			DREF DeeObject *shared_map;
 			imm_val = READ_imm8();
-		do_callattr_c_map:
+do_callattr_c_map:
 			imm_val2 = READ_imm8();
 			ASSERT_USAGE(-((int)(imm_val2 * 2) + 1), +1);
 			ASSERT_CONSTimm();
@@ -3805,7 +3805,7 @@ next_instr:
 		RAW_TARGET(ASM_CALLATTR_THIS_C) {
 			DREF DeeObject *callback_result;
 			imm_val = READ_imm8();
-		do_callattr_this_c:
+do_callattr_this_c:
 			imm_val2 = READ_imm8();
 			ASSERT_THISCALL();
 			ASSERT_USAGE(-(int)imm_val2, +1);
@@ -3842,7 +3842,7 @@ next_instr:
 		TARGET(ASM_CALLATTR_C_TUPLE, -2, +1) {
 			DREF DeeObject *callback_result;
 			imm_val = READ_imm8();
-		do_callattr_tuple_c:
+do_callattr_tuple_c:
 			ASSERT_TUPLE(FIRST);
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
@@ -3877,7 +3877,7 @@ next_instr:
 		TARGET(ASM_CALLATTR_THIS_C_TUPLE, -1, +1) {
 			DREF DeeObject *callback_result;
 			imm_val = READ_imm8();
-		do_callattr_this_tuple_c:
+do_callattr_this_tuple_c:
 			ASSERT_THISCALL();
 			ASSERT_TUPLE(TOP);
 			ASSERT_CONSTimm();
@@ -3913,7 +3913,7 @@ next_instr:
 			DREF DeeObject *result;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_getmember_r:
+do_getmember_r:
 			ASSERT_THISCALL();
 #ifdef EXEC_SAFE
 			result = DeeInstance_GetMemberSafe((DeeTypeObject *)REFimm, THIS, imm_val2);
@@ -3935,7 +3935,7 @@ next_instr:
 #endif /* !EXEC_SAFE */
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_boundmember_r:
+do_boundmember_r:
 			ASSERT_THISCALL();
 			ASSERT_REFimm();
 #ifdef EXEC_SAFE
@@ -3954,7 +3954,7 @@ next_instr:
 		TARGET(ASM_DELMEMBER_THIS_R, -0, +0) {
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_delmember_r:
+do_delmember_r:
 			ASSERT_THISCALL();
 			ASSERT_REFimm();
 #ifdef EXEC_SAFE
@@ -3970,7 +3970,7 @@ next_instr:
 		TARGET(ASM_SETMEMBER_THIS_R, -1, +0) {
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_setmember_r:
+do_setmember_r:
 			ASSERT_THISCALL();
 			ASSERT_REFimm();
 #ifdef EXEC_SAFE
@@ -3991,7 +3991,7 @@ next_instr:
 			RAW_TARGET(ASM_CALL_EXTERN)
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
-		do_call_extern:
+do_call_extern:
 			ASSERT_EXTERNimm();
 			EXTERN_LOCKREAD();
 			call_object = EXTERNimm;
@@ -4000,7 +4000,7 @@ next_instr:
 			if
 				unlikely(!call_object)
 			goto err_unbound_extern;
-		do_object_call_imm:
+do_object_call_imm:
 			imm_val = READ_imm8();
 #ifdef EXEC_SAFE
 			/* Assert stack usage. */
@@ -4026,7 +4026,7 @@ next_instr:
 			DISPATCH();
 			RAW_TARGET(ASM_CALL_GLOBAL)
 			imm_val = READ_imm8();
-		do_call_global:
+do_call_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKREAD();
 			call_object = GLOBALimm;
@@ -4038,7 +4038,7 @@ next_instr:
 			goto do_object_call_imm;
 			RAW_TARGET(ASM_CALL_LOCAL)
 			imm_val = READ_imm8();
-		do_call_local:
+do_call_local:
 			ASSERT_LOCALimm();
 			call_object = LOCALimm;
 			if
@@ -4120,7 +4120,7 @@ next_instr:
 		TARGET(ASM_GETATTR_C, -1, +1) {
 			DREF DeeObject *getattr_result;
 			imm_val = READ_imm8();
-		do_getattr_c:
+do_getattr_c:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -4153,7 +4153,7 @@ next_instr:
 		TARGET(ASM_DELATTR_C, -1, +0) {
 			int error;
 			imm_val = READ_imm8();
-		do_delattr_c:
+do_delattr_c:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -4185,7 +4185,7 @@ next_instr:
 		TARGET(ASM_SETATTR_C, -2, +0) {
 			int error;
 			imm_val = READ_imm8();
-		do_setattr_c:
+do_setattr_c:
 			ASSERT_CONSTimm();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
@@ -4218,7 +4218,7 @@ next_instr:
 		TARGET(ASM_GETATTR_THIS_C, -0, +1) {
 			DREF DeeObject *getattr_result;
 			imm_val = READ_imm8();
-		do_getattr_this_c:
+do_getattr_this_c:
 			ASSERT_CONSTimm();
 			ASSERT_THISCALL();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
@@ -4251,7 +4251,7 @@ next_instr:
 		TARGET(ASM_DELATTR_THIS_C, -0, +0) {
 			int error;
 			imm_val = READ_imm8();
-		do_delattr_this_c:
+do_delattr_this_c:
 			ASSERT_CONSTimm();
 			ASSERT_THISCALL();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
@@ -4283,7 +4283,7 @@ next_instr:
 		TARGET(ASM_SETATTR_THIS_C, -1, +0) {
 			int error;
 			imm_val = READ_imm8();
-		do_setattr_this_c:
+do_setattr_this_c:
 			ASSERT_CONSTimm();
 			ASSERT_THISCALL();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
@@ -5156,7 +5156,7 @@ next_instr:
 				TARGET(ASM_GETMEMBER, -2, +1) {
 					DREF DeeObject *result;
 					imm_val = READ_imm8();
-				do_getmember:
+do_getmember:
 					result = DeeInstance_GetMemberSafe((DeeTypeObject *)FIRST, SECOND, imm_val);
 					if
 						unlikely(!result)
@@ -5170,7 +5170,7 @@ next_instr:
 				TARGET(ASM_BOUNDMEMBER, -2, +1) {
 					int temp;
 					imm_val = READ_imm8();
-				do_hasmember:
+do_hasmember:
 					temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)FIRST, SECOND, imm_val);
 					if
 						unlikely(temp < 0)
@@ -5184,7 +5184,7 @@ next_instr:
 
 				TARGET(ASM_DELMEMBER, -2, +0) {
 					imm_val = READ_imm8();
-				do_delmember:
+do_delmember:
 					if (DeeInstance_DelMemberSafe((DeeTypeObject *)FIRST, SECOND, imm_val))
 						HANDLE_EXCEPT();
 					POPREF();
@@ -5194,7 +5194,7 @@ next_instr:
 
 				TARGET(ASM_SETMEMBER, -3, +0) {
 					imm_val = READ_imm8();
-				do_setmember:
+do_setmember:
 					if (DeeInstance_SetMemberSafe((DeeTypeObject *)SECOND, THIRD, imm_val, FIRST))
 						HANDLE_EXCEPT();
 					POPREF();
@@ -5226,7 +5226,7 @@ next_instr:
 				TARGET(ASM_GETMEMBER_THIS, -1, +1) {
 					DREF DeeObject *result;
 					imm_val = READ_imm8();
-				do_getmember_this:
+do_getmember_this:
 					ASSERT_THISCALL();
 					result = DeeInstance_GetMemberSafe((DeeTypeObject *)TOP, THIS, imm_val);
 					if
@@ -5240,7 +5240,7 @@ next_instr:
 				TARGET(ASM_BOUNDMEMBER_THIS, -1, +1) {
 					int temp;
 					imm_val = READ_imm8();
-				do_hasmember_this:
+do_hasmember_this:
 					ASSERT_THISCALL();
 					temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)TOP, THIS, imm_val);
 					if
@@ -5254,7 +5254,7 @@ next_instr:
 
 				TARGET(ASM_DELMEMBER_THIS, -1, +0) {
 					imm_val = READ_imm8();
-				do_delmember_this:
+do_delmember_this:
 					ASSERT_THISCALL();
 					if (DeeInstance_DelMemberSafe((DeeTypeObject *)TOP, THIS, imm_val))
 						HANDLE_EXCEPT();
@@ -5264,7 +5264,7 @@ next_instr:
 
 				TARGET(ASM_SETMEMBER_THIS, -2, +0) {
 					imm_val = READ_imm8();
-				do_setmember_this:
+do_setmember_this:
 					ASSERT_THISCALL();
 					if (DeeInstance_SetMemberSafe((DeeTypeObject *)SECOND, THIS, imm_val, FIRST))
 						HANDLE_EXCEPT();
@@ -5384,7 +5384,7 @@ next_instr:
 					goto do_pack_set;
 				RAW_TARGET(ASM_PACK_HASHSET)
 					imm_val = READ_imm8();
-				do_pack_set:
+do_pack_set:
 					hashset_object = DeeHashSet_NewItemsInherited(imm_val, sp - imm_val);
 					if
 						unlikely(!hashset_object)
@@ -5401,7 +5401,7 @@ next_instr:
 					goto do_pack_dict;
 				RAW_TARGET(ASM_PACK_DICT)
 					imm_val = READ_imm8();
-				do_pack_dict:
+do_pack_dict:
 					ASSERT_USAGE(-(int)(imm_val * 2), +1);
 					dict_object = DeeDict_NewKeyItemsInherited(imm_val, sp - (imm_val * 2));
 					if
@@ -5641,7 +5641,7 @@ next_instr:
 					DREF DeeObject *attr_value;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
-				do_supergetattr_rc:
+do_supergetattr_rc:
 					ASSERT_USAGE(-0, +1);
 					ASSERT_REFimm();
 					ASSERT_CONSTimm2();
@@ -5678,7 +5678,7 @@ next_instr:
 					uint8_t argc;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
-				do_supercallattr_rc:
+do_supercallattr_rc:
 					ASSERT_REFimm();
 					ASSERT_CONSTimm2();
 					ASSERT_THISCALL();
@@ -5743,7 +5743,7 @@ next_instr:
 		RAW_TARGET(ASM_GLOBAL)
 		RAW_TARGET(ASM_LOCAL)
 			++ip.ptr;
-		do_prefix_instr:
+do_prefix_instr:
 			/* Execute a prefixed instruction. */
 			switch (*ip.ptr++) {
 #define PREFIX_TARGET(opcode) case (opcode)&0xff:
@@ -5758,7 +5758,7 @@ next_instr:
 					DREF DeeObject *prefix_ob;
 					int temp;
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
-				prefix_jf_16:
+prefix_jf_16:
 					prefix_ob = get_prefix_object();
 					if
 						unlikely(!prefix_ob)
@@ -5795,7 +5795,7 @@ next_instr:
 					DREF DeeObject *prefix_ob;
 					int temp;
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
-				prefix_jt_16:
+prefix_jt_16:
 					prefix_ob = get_prefix_object();
 					if
 						unlikely(!prefix_ob)
@@ -5830,7 +5830,7 @@ next_instr:
 				PREFIX_TARGET(ASM_FOREACH) {
 					DREF DeeObject *elem, *prefix_ob;
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
-				prefix_foreach_16:
+prefix_foreach_16:
 					ASSERT_USAGE(-0, +1);
 					prefix_ob = get_prefix_object();
 					if
@@ -6282,7 +6282,7 @@ next_instr:
 					DREF DeeObject *function;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
-				prefix_do_function_c:
+prefix_do_function_c:
 					ASSERT_USAGE(-(int)(imm_val2 + 1), +0);
 					ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
@@ -6385,7 +6385,7 @@ next_instr:
 					DREF DeeObject **prefix_pointer;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
-				do_prefix_operator:
+do_prefix_operator:
 					ASSERT_USAGE(-(int)imm_val2, +1);
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
@@ -6428,7 +6428,7 @@ next_instr:
 					DREF DeeObject *call_result;
 					DREF DeeObject **prefix_pointer;
 					imm_val = READ_imm8();
-				do_prefix_operator_tuple:
+do_prefix_operator_tuple:
 					ASSERT_USAGE(-1, +1);
 					ASSERT_TUPLE(TOP);
 					prefix_pointer = get_prefix_object_ptr();
@@ -6474,7 +6474,7 @@ next_instr:
 					int error;
 					DREF DeeObject *sequence;
 					imm_val = READ_imm8();
-				prefix_do_unpack:
+prefix_do_unpack:
 					ASSERT_USAGE(-0, +(int)imm_val);
 					sequence = get_prefix_object();
 					if
@@ -6908,7 +6908,7 @@ next_instr:
 					DeeObject *old_value;
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_pop_static:
+do_prefix_pop_static:
 					ASSERT_STATICimm();
 					value = get_prefix_object();
 					if
@@ -6928,7 +6928,7 @@ next_instr:
 					DREF DeeObject *value;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
-				do_prefix_pop_extern:
+do_prefix_pop_extern:
 					ASSERT_EXTERNimm();
 					value = get_prefix_object();
 					if
@@ -6947,7 +6947,7 @@ next_instr:
 					DeeObject *old_value, **pglobl;
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_pop_global:
+do_prefix_pop_global:
 					ASSERT_GLOBALimm();
 					value = get_prefix_object();
 					if
@@ -6966,7 +6966,7 @@ next_instr:
 					DeeObject *old_value;
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_pop_local:
+do_prefix_pop_local:
 					ASSERT_LOCALimm();
 					value = get_prefix_object();
 					if
@@ -6981,7 +6981,7 @@ next_instr:
 				PREFIX_TARGET(ASM_PUSH_MODULE) {
 					DeeModuleObject *mod;
 					imm_val = READ_imm8();
-				do_prefix_push_module:
+do_prefix_push_module:
 					mod = code->co_module;
 					ASSERT_OBJECT(mod);
 #ifdef EXEC_SAFE
@@ -7007,7 +7007,7 @@ next_instr:
 
 				PREFIX_TARGET(ASM_PUSH_REF) {
 					imm_val = READ_imm8();
-				do_prefix_push_ref:
+do_prefix_push_ref:
 					ASSERT_REFimm();
 					Dee_Incref(REFimm);
 					if (set_prefix_object(REFimm))
@@ -7018,7 +7018,7 @@ next_instr:
 				PREFIX_TARGET(ASM_PUSH_ARG) {
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_push_arg:
+do_prefix_push_arg:
 					ASSERT_ARGimm();
 					/* Simple case: Direct argument/default reference. */
 					if (imm_val < frame->cf_argc) {
@@ -7118,7 +7118,7 @@ next_instr:
 				PREFIX_TARGET(ASM_PUSH_CONST) {
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_push_const:
+do_prefix_push_const:
 					ASSERT_CONSTimm();
 					CONST_LOCKREAD();
 					value = CONSTimm;
@@ -7132,7 +7132,7 @@ next_instr:
 				PREFIX_TARGET(ASM_PUSH_STATIC) {
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_push_static:
+do_prefix_push_static:
 					ASSERT_STATICimm();
 					STATIC_LOCKREAD();
 					value = CONSTimm;
@@ -7147,7 +7147,7 @@ next_instr:
 					DeeObject *value;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
-				do_prefix_push_extern:
+do_prefix_push_extern:
 					ASSERT_EXTERNimm();
 					EXTERN_LOCKREAD();
 					value = EXTERNimm;
@@ -7167,7 +7167,7 @@ next_instr:
 				PREFIX_TARGET(ASM_PUSH_GLOBAL) {
 					DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_push_global:
+do_prefix_push_global:
 					ASSERT_GLOBALimm();
 					GLOBAL_LOCKREAD();
 					value = GLOBALimm;
@@ -7187,7 +7187,7 @@ next_instr:
 				PREFIX_TARGET(ASM_PUSH_LOCAL) {
 					DeeObject *value;
 					imm_val = READ_imm8();
-				do_prefix_push_local:
+do_prefix_push_local:
 					ASSERT_LOCALimm();
 					value = LOCALimm;
 					if
@@ -7438,12 +7438,12 @@ handle_except:
 		frame->cf_result = NULL;
 		ip.ptr           = frame->cf_ip;
 		goto end_return;
-	exec_except_maybe_handle:
+exec_except_maybe_handle:
 		/* If the exception handler requests it,
 		 * already handle the error beforehand. */
 		if (current_except->eh_flags & EXCEPTION_HANDLER_FHANDLED)
 			DeeError_Handled(ERROR_HANDLED_INTERRUPT);
-	exec_except:
+exec_except:
 		ASSERTF(current_except->eh_addr < current_except->eh_start ||
 		        current_except->eh_addr >= current_except->eh_end,
 		        "An exception handler must not be used to protect itself. "

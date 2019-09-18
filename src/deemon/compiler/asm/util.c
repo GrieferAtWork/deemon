@@ -275,7 +275,7 @@ INTERN int(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 				goto push_tuple_parts;
 		}
 		goto push_constexpr;
-	push_tuple_parts:
+push_tuple_parts:
 		/* If not, push constant parts as individual segments. */
 		end = start, start = 0;
 		is_first_part = start == end;
@@ -459,7 +459,7 @@ INTERN int(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 		size_t i, mask, ro_mask, num_items;
 		struct dict_item *elem;
 		DREF DeeRoDictObject *rodict;
-	check_dict_again:
+check_dict_again:
 		DeeDict_LockRead(value);
 		if (!((DeeDictObject *)value)->d_used) {
 			/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
@@ -523,7 +523,7 @@ INTERN int(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 		if (asm_gcast_dict())
 			goto err;
 		return 0;
-	push_dict_parts:
+push_dict_parts:
 		/* Construct a Dict by pushing its individual parts. */
 		num_items = 0;
 		DeeDict_LockRead(value);
@@ -566,7 +566,7 @@ INTERN int(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 		size_t i, mask, ro_mask, num_items;
 		struct hashset_item *elem;
 		DREF DeeRoSetObject *roset;
-	check_set_again:
+check_set_again:
 		DeeHashSet_LockRead(value);
 		if (!((DeeHashSetObject *)value)->s_used) {
 			/* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
@@ -626,7 +626,7 @@ INTERN int(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 		if (asm_gcast_hashset())
 			goto err;
 		return 0;
-	push_set_parts:
+push_set_parts:
 		/* Construct a set by pushing its individual parts. */
 		num_items = 0;
 		DeeHashSet_LockRead(value);
@@ -897,7 +897,7 @@ check_function_class:
 				              /* Fallthrough to invoke the InstanceMethod normally. */
 			}
 			/* args..., func */
-		got_attribute_value:
+got_attribute_value:
 			if (asm_grrot(argc))
 				goto err; /* func, args... */
 			return asm_gcall(argc);
@@ -1521,7 +1521,7 @@ check_sym_class:
 		SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
 		if (!this_sym) {
 			/* Do a regular attribute lookup on the class itself. */
-		test_class_attribute:
+test_class_attribute:
 			if (asm_gpush_symbol(class_sym, warn_ast))
 				goto err;
 			if (asm_gpush_constexpr((DeeObject *)attr->ca_name))
@@ -1611,7 +1611,7 @@ check_sym_class:
 				if (asm_gcall(1))
 					goto err;
 			}
-		got_attribute_value:
+got_attribute_value:
 			guard_end = asm_newsym();
 			if
 				unlikely(!guard_end)
@@ -1698,7 +1698,7 @@ check_sym_class:
 		goto fallback;
 
 	default:
-	fallback:
+fallback:
 		return asm_gpush_true();
 	}
 	__builtin_unreachable();
@@ -1826,7 +1826,7 @@ check_sym_class:
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 				break; /* TODO: Dedicated warning. */
 			if (!this_sym) {
-			del_class_attribute:
+del_class_attribute:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					/* Must invoke the getter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
@@ -1936,7 +1936,7 @@ check_sym_class:
 					if (asm_gcall(1))
 						goto err;
 				}
-			pop_unused_result:
+pop_unused_result:
 				return asm_gpop();
 			}
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -2155,7 +2155,7 @@ check_sym_class:
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 				break; /* TODO: Dedicated warning. */
 			if (!this_sym) {
-			set_class_attribute:
+set_class_attribute:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					/* Must invoke the getter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
@@ -2272,7 +2272,7 @@ check_sym_class:
 					if (asm_gcall(2))
 						goto err; /* discard */
 				}
-			pop_unused_result:
+pop_unused_result:
 				return asm_gpop();
 			}
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)

@@ -156,7 +156,7 @@ next_format:
 			}
 		}
 		spec_data_start = data;
-	next_spec:
+next_spec:
 		switch (ch32) {
 
 		case '%':
@@ -170,7 +170,7 @@ next_format:
 
 		case 'i':
 		case 'u':
-		do_integer_scan:
+do_integer_scan:
 			/* Integer. */
 			while (data < data_end &&
 			       (*data == '+' || *data == '-') && width)
@@ -473,7 +473,7 @@ next_format:
 		 *       UnpackError if less than 3 items were parsed from `data',
 		 *       now indicated by the effective scanf()-sequence literally
 		 *       not being as long. */
-	match_ch:
+match_ch:
 		if (data >= data_end)
 			goto out_dataend;
 		if (*data != ch)

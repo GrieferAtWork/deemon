@@ -44,7 +44,7 @@ PRIVATE int DCALL
 nt_WaitForSemaphore(HANDLE hSemaphore, uint64_t uTimeoutInMicroseconds) {
 	DWORD wait_state;
 	if (uTimeoutInMicroseconds == (uint64_t)-1) {
-	again_infinite:
+again_infinite:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
@@ -65,7 +65,7 @@ nt_WaitForSemaphore(HANDLE hSemaphore, uint64_t uTimeoutInMicroseconds) {
 	} else if (uTimeoutInMicroseconds) {
 		uint64_t timeout_end, now;
 		timeout_end = DeeThread_GetTimeMicroSeconds() + uTimeoutInMicroseconds;
-	again_timed:
+again_timed:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		DBG_ALIGNMENT_DISABLE();

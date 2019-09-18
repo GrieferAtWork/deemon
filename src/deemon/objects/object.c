@@ -999,14 +999,14 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 				return false;
 			}
 		}
-	destroy_weak:
+destroy_weak:
 		/* Delete all weak references linked against this type level. */
 		if (has_noninherited_weakrefs(undo_start)) {
 			struct weakref *iter, *next;
 			struct weakref_list *list;
 			ASSERT(undo_start->tp_weakrefs >= sizeof(DeeObject));
 			list = (struct weakref_list *)((uintptr_t)self + undo_start->tp_weakrefs);
-		restart_clear_weakrefs:
+restart_clear_weakrefs:
 			LOCK_POINTER(list->wl_nodes);
 			if ((iter = (struct weakref *)GET_POINTER(list->wl_nodes)) != NULL) {
 				if (!WEAKREF_TRYLOCK(iter)) {
@@ -2111,7 +2111,7 @@ object_format_method(DeeObject *__restrict self,
 			unlikely(error < 0)
 		goto err_printer;
 		return unicode_printer_pack(&printer);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 	}
 err:
@@ -2652,7 +2652,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 		goto done;
 	if (first_base->tp_init.tp_alloc.tp_ctor) {
 		/* Invoke the mandatory base-type constructor. */
-	invoke_base_ctor:
+invoke_base_ctor:
 		if
 			unlikely((*first_base->tp_init.tp_alloc.tp_ctor)(result))
 		goto err_r;
@@ -2660,7 +2660,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	}
 	if (first_base->tp_init.tp_alloc.tp_any_ctor) {
 		/* Invoke the mandatory base-type constructor. */
-	invoke_base_any_ctor:
+invoke_base_any_ctor:
 		if
 			unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor)(result, 0, NULL))
 		goto err_r;
@@ -2668,7 +2668,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	}
 	if (first_base->tp_init.tp_alloc.tp_any_ctor_kw) {
 		/* Invoke the mandatory base-type constructor. */
-	invoke_base_any_ctor_kw:
+invoke_base_any_ctor_kw:
 		if
 			unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor_kw)(result, 0, NULL, NULL))
 		goto err_r;
@@ -2941,9 +2941,9 @@ unpack_init_info(DeeObject *__restrict info,
 			Dee_Decref(iterator);
 			goto err_args;
 		}
-	done_iterator:
+done_iterator:
 		Dee_Decref(iterator);
-	done_iterator_data:
+done_iterator_data:
 		if (DeeNone_Check(*pinit_fields))
 			Dee_Clear(*pinit_fields);
 		if (DeeNone_Check(*pinit_args)) {

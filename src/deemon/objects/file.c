@@ -1265,7 +1265,7 @@ file_class_open(DeeObject *__restrict UNUSED(self),
 				goto err_invalid_oflags;
 			if (!open_binary)
 				flags |= OPEN_EXFLAG_FTEXT;
-		found_option:
+found_option:
 			if (!*next)
 				break;
 			iter = next + 1;

@@ -125,7 +125,7 @@ INTERN int(DCALL asm_genassert)(struct ast *__restrict expr,
 		++argc;
 		if (ast_genasm_one(expr->a_operator.o_op3, ASM_G_FPUSHRES))
 			goto err;
-	emit_instruction:
+emit_instruction:
 		/* Duplicate all operands. */
 		if (asm_putddi(ddi_ast))
 			goto err;

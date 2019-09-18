@@ -333,7 +333,7 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 		                                     "?(%u)",
 		                            (unsigned int)self->io_class);
 		break;
-	do_raw_string:
+do_raw_string:
 		temp = ascii_printer_print(printer,
 		                           raw_operand_string,
 		                           strlen(raw_operand_string));
@@ -726,7 +726,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 		ATTR_FALLTHROUGH
 	default:
 		/* Fallback: confirm exact classification match. */
-	do_default_class_check:
+do_default_class_check:
 		if ((iop->io_class & OPERAND_CLASS_FMASK) !=
 		    (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK))
 			goto nope;
@@ -1006,7 +1006,7 @@ got_overload: {
 		case OPERAND_CLASS_LOCAL:
 			if (invoc->ai_ops[i].io_symid <= UINT8_MAX)
 				break;
-		do_emit_f0_prefix:
+do_emit_f0_prefix:
 			if (!(iter->ao_flags & ASM_OVERLOAD_F16BIT)) {
 				if (asm_put(ASM_EXTENDED1))
 					goto err;
@@ -1356,7 +1356,7 @@ next_option:
 	option = 0;
 cont_option:
 	if (option & 0xff000000) {
-	unknown_encoding:
+unknown_encoding:
 		option = fix_option_name(option);
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Unknown operand encoding %.4q",
@@ -1407,7 +1407,7 @@ cont_option:
 		break;
 
 	case ASM_OP_ABSSTACK:
-	abs_stack_any:
+abs_stack_any:
 		if ((mode == OPTION_MODE_INOUT || mode == OPTION_MODE_INPUT) &&
 		    self->a_type == AST_SYM) {
 			sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
@@ -1660,7 +1660,7 @@ cont_option:
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
-	write_regular_local:
+write_regular_local:
 		if (mode == OPTION_MODE_INPUT)
 			lid = asm_lsymid_for_read(sym, self);
 		else
@@ -2152,7 +2152,7 @@ next:
 				if
 					unlikely(!name)
 				{
-				err_unknown_operand:
+err_unknown_operand:
 					DeeError_Throwf(&DeeError_CompilerError,
 					                "No operand known under the name %$q",
 					                (size_t)(iter - name_start) - 1, name);
@@ -2166,7 +2166,7 @@ next:
 						goto has_operand; /* Found it! */
 				}
 				goto err_unknown_operand;
-			has_operand:
+has_operand:
 				iter = utf8_skipspace(iter - 1, end);
 				ch   = *iter++;
 				if (ch != ']') {
@@ -2212,7 +2212,7 @@ next:
 			/* Print the operand's representation. */
 			print(DeeString_STR(oprepr), DeeString_SIZE(oprepr));
 		}
-	done_special:
+done_special:
 		if (has_paren) {
 			iter = utf8_skipspace(iter, end);
 			if (*iter != ')') {
@@ -2346,7 +2346,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 			unlikely(!assembly_text)
 		goto err;
 		goto create_assembly_file;
-	err_formatter:
+err_formatter:
 		assembly_formatter_fini(&formatter);
 		goto err;
 	}

@@ -497,7 +497,7 @@ gen_guard:
 				 *       >>     print "Handler";
 				 *       >> }
 				 */
-			handle_mask_ast:
+handle_mask_ast:
 				if (mask_ast->a_type == AST_CONSTEXPR &&
 				    DeeType_Check(mask_ast->a_constexpr) &&
 				    asm_allowconst(mask_ast->a_constexpr)) {
@@ -601,7 +601,7 @@ gen_guard:
 							}
 						}
 					}
-				do_multimask_rethrow:
+do_multimask_rethrow:
 					if (enter_handler) {
 						/* If the enter-handler symbol was allocated, that means
 						 * that at least one of the catch-masks has to be evaluated

@@ -327,7 +327,7 @@ fl_init(size_t argc, DeeObject **__restrict argv) {
 					break;
 				iter = base;
 			}
-		init_from_iterator:
+init_from_iterator:
 			/* Initialize from iterators. */
 			iterator = DeeObject_IterSelf(size_ob);
 			if

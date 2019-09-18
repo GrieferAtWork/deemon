@@ -195,7 +195,7 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	} else {
 		if (!lexer.jl_errpos)
 			lexer.jl_errpos = lexer.jl_tokstart;
-	handle_error:
+handle_error:
 		JITLValue_Fini(&lexer.jl_lvalue);
 		/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
 		;

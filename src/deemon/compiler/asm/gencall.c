@@ -344,7 +344,7 @@ asm_gcall_expr(struct ast *__restrict func,
 			 * always make use of constant expression tuples... */
 			if (func->a_type == AST_SYM) {
 				funsym = func->a_sym;
-			check_small_constargs_symbol:
+check_small_constargs_symbol:
 				switch (funsym->s_type) {
 				case SYMBOL_TYPE_ALIAS:
 					funsym = SYMBOL_ALIAS(funsym);
@@ -407,7 +407,7 @@ asm_gcall_expr(struct ast *__restrict func,
 				case SYMBOL_TYPE_CATTR: {
 					struct symbol *class_sym, *this_sym;
 					struct class_attribute *attr;
-				invoke_cattr_funsym_small:
+invoke_cattr_funsym_small:
 					class_sym = funsym->s_attr.a_class;
 					this_sym  = funsym->s_attr.a_this;
 					attr      = funsym->s_attr.a_attr;
@@ -582,7 +582,7 @@ asm_gcall_expr(struct ast *__restrict func,
 							goto err;
 						goto pop_unused;
 					}
-				got_small_method:
+got_small_method:
 					if
 						unlikely(push_tuple_items(args->a_constexpr, args))
 					goto err;
@@ -670,7 +670,7 @@ asm_gcall_expr(struct ast *__restrict func,
 					if (function_self->a_type == AST_SYM) {
 						DeeClassScopeObject *class_scope;
 						struct symbol *sym = function_self->a_sym;
-					check_getattr_base_symbol_class_small:
+check_getattr_base_symbol_class_small:
 						for (class_scope = function_self->a_scope->s_class; class_scope;
 						     class_scope = DeeClassScope_Prev(class_scope)) {
 							/* Try to statically access known class members! */
@@ -776,7 +776,7 @@ asm_gcall_expr(struct ast *__restrict func,
 						    ASM_SYMBOL_MAY_REFERENCE(type_expr->a_sym)) {
 							/* We are allowed to reference the base-symbol! */
 							type_rid = asm_rsymid(type_expr->a_sym);
-						do_perform_supercallattr_small:
+do_perform_supercallattr_small:
 							if
 								unlikely(type_rid < 0)
 							goto err;
@@ -863,7 +863,7 @@ asm_gcall_expr(struct ast *__restrict func,
 			if (funsym->s_type == SYMBOL_TYPE_CATTR) {
 				struct symbol *class_sym, *this_sym;
 				struct class_attribute *attr;
-			invoke_cattr_funsym_tuple:
+invoke_cattr_funsym_tuple:
 				class_sym = funsym->s_attr.a_class;
 				this_sym  = funsym->s_attr.a_this;
 				attr      = funsym->s_attr.a_attr;
@@ -1077,7 +1077,7 @@ asm_gcall_expr(struct ast *__restrict func,
 				if (function_self->a_type == AST_SYM) {
 					DeeClassScopeObject *class_scope;
 					struct symbol *sym = function_self->a_sym;
-				check_getattr_base_symbol_class_tuple:
+check_getattr_base_symbol_class_tuple:
 					for (class_scope = function_self->a_scope->s_class; class_scope;
 					     class_scope = DeeClassScope_Prev(class_scope)) {
 						/* Try to statically access known class members! */
@@ -1350,7 +1350,7 @@ asm_gcall_expr(struct ast *__restrict func,
 
 	if (func->a_type == AST_SYM) {
 		funsym = func->a_sym;
-	check_funsym_class:
+check_funsym_class:
 		switch (funsym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
@@ -1412,7 +1412,7 @@ asm_gcall_expr(struct ast *__restrict func,
 		case SYMBOL_TYPE_CATTR: {
 			struct symbol *class_sym, *this_sym;
 			struct class_attribute *attr;
-		invoke_cattr_funsym_argv:
+invoke_cattr_funsym_argv:
 			class_sym = funsym->s_attr.a_class;
 			this_sym  = funsym->s_attr.a_this;
 			attr      = funsym->s_attr.a_attr;
@@ -1605,7 +1605,7 @@ asm_gcall_expr(struct ast *__restrict func,
 					goto err;
 				/* Fallthrough to invoke the InstanceMethod normally. */
 			}
-		got_method:
+got_method:
 			for (i = 0; i < argc; ++i)
 				if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 					goto err;
@@ -1696,7 +1696,7 @@ asm_gcall_expr(struct ast *__restrict func,
 			if (function_self->a_type == AST_SYM) {
 				struct symbol *sym = function_self->a_sym;
 				DeeClassScopeObject *class_scope;
-			check_getattr_base_symbol_class_argv:
+check_getattr_base_symbol_class_argv:
 				for (class_scope = function_self->a_scope->s_class; class_scope;
 				     class_scope = DeeClassScope_Prev(class_scope)) {
 					/* Try to statically access known class members! */
@@ -1787,7 +1787,7 @@ asm_gcall_expr(struct ast *__restrict func,
 				    ASM_SYMBOL_MAY_REFERENCE(type_expr->a_sym)) {
 					/* We are allowed to reference the base-symbol! */
 					type_rid = asm_rsymid(type_expr->a_sym);
-				do_perform_supercallattr_argv:
+do_perform_supercallattr_argv:
 					if
 						unlikely(type_rid < 0)
 					goto err;

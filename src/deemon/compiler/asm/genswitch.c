@@ -277,10 +277,10 @@ ast_genasm_switch(struct ast *__restrict self) {
 				unlikely(emit_runtime_check(self, cases->tl_expr, case_sym))
 			goto err_cases;
 		}
-	continue_next_case:
+continue_next_case:
 		pcases = &cases->tl_next;
 		continue;
-	err_cases:
+err_cases:
 		temp = -1;
 		goto continue_next_case;
 	}
@@ -347,7 +347,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 			if
 				unlikely(!case_target)
 			{
-			err_jump_table:
+err_jump_table:
 				Dee_Decref(jump_table);
 				goto err;
 			}
@@ -501,7 +501,7 @@ do_generate_block:
 			unpack[1] = ASM_DELOP;
 			unpack[2] = ASM_DELOP;
 			unpack[3] = ASM_DELOP;
-		update_constants:
+update_constants:
 			/* Change all the constants.
 			 * XXX: What if one of these constants got re-used in the mean time?
 			 *      In that case we'd be changing somebody else constant, too.

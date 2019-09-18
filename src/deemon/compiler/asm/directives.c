@@ -130,7 +130,7 @@ PRIVATE struct asm_sym *FCALL do_parse_symbol_for_op(int wid) {
 	if (!expr.ie_sym) {
 		expr.ie_sym = asm_newsym();
 		asm_defsym(expr.ie_sym);
-	warn_symbol:
+warn_symbol:
 		if (WARN(wid))
 			goto err;
 	} else {
@@ -456,7 +456,7 @@ do_handle_except:
 			if (tok == '@' && unlikely(yield() < 0))
 				goto except_err;
 			if (!TPP_ISKEYWORD(tok)) {
-			except_unknown_tag:
+except_unknown_tag:
 				if (WARN(W_UASM_EXCEPT_UNKNOWN_TAG))
 					goto except_err;
 				break;
@@ -524,7 +524,7 @@ do_handle_except:
 		++except_entry->as_used;
 
 		goto done;
-	except_err:
+except_err:
 		Dee_XDecref(except_mask);
 		goto err;
 	}
@@ -601,7 +601,7 @@ do_emit_memory:
 
 				case (ASM_OVERLOAD_FSTKDSP << 8) | 1:
 					relo_type = R_DMN_STCK8 | R_DMN_FUSER;
-				check_invalid_stack_and_adjust:
+check_invalid_stack_and_adjust:
 					if (current_assembler.a_userasm.ua_flags & USER_ASM_FSTKINV) {
 						DeeError_Throwf(&DeeError_CompilerError,
 						                "Cannot use relative SP addressing while the stack is in an undefined state");
@@ -757,7 +757,7 @@ do_handle_ddi:
 			asm_defsym(sym);
 			ddi->dc_sym = sym;
 			++sym->as_used; /* Track use of this symbol by DDI information. */
-		ddi_update:
+ddi_update:
 
 			/* Fill in the checkpoint. */
 			ddi->dc_loc.l_file = file;
@@ -786,11 +786,11 @@ do_handle_ddi:
 		Dee_Decref(line);
 		Dee_XDecref(filename);
 		goto done;
-	err_ddi_col:
+err_ddi_col:
 		Dee_XDecref(col);
-	err_ddi_line:
+err_ddi_line:
 		Dee_XDecref(line);
-	err_ddi_filename:
+err_ddi_filename:
 		Dee_XDecref(filename);
 		goto err;
 	}
@@ -798,7 +798,7 @@ do_handle_ddi:
 
 	{
 		struct asm_intexpr new_depth;
-	do_handle_adjstack:
+do_handle_adjstack:
 		/* `.adjstack <imm32>'
 		 * Adjust/set the virtual stack-depth as seen by the assembler.
 		 * Doing this usually only makes sense if the previous instruction

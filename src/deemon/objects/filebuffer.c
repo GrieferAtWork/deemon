@@ -273,7 +273,7 @@ buffer_determine_isatty(Buffer *__restrict self) {
 	uint16_t flags = self->fb_flag;
 	if (flags & (FILE_BUFFER_FNOTATTY |
 	             FILE_BUFFER_FISATTY)) {
-	set_lfflag:
+set_lfflag:
 		if (flags & FILE_BUFFER_FLNIFTTY) {
 			self->fb_flag &= ~FILE_BUFFER_FLNIFTTY;
 			/* Set the line-buffered flag if it is a TTY. */
@@ -458,7 +458,7 @@ again:
 	if
 		likely(bufavail)
 	{
-	read_from_buffer:
+read_from_buffer:
 		if (bufavail > bufsize)
 			bufavail = bufsize;
 		memcpy(buffer, self->fb_ptr, bufavail);
@@ -514,7 +514,7 @@ again:
 		unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
 	{
 		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
-	read_through:
+read_through:
 		file = self->fb_file;
 		Dee_Incref(file);
 		if (next_data != self->fb_fpos) {
@@ -736,7 +736,7 @@ again:
 		 *                         we must act as a write-through buffer. */
 		if (!self->fb_size) {
 			dssize_t temp;
-		do_writethrough:
+do_writethrough:
 			file = self->fb_file;
 			Dee_Incref(file);
 			COMPILER_BARRIER();
@@ -984,7 +984,7 @@ buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags) {
 	dpos_t next_data;
 again:
 	if (self->fb_cnt) {
-	read_from_buffer:
+read_from_buffer:
 		/* Simple case: we can read from the active buffer. */
 		result = (int)(unsigned int)(unsigned char)*self->fb_ptr++;
 		--self->fb_cnt;
@@ -1033,7 +1033,7 @@ again:
 		unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
 	{
 		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
-	read_through:
+read_through:
 		file = self->fb_file;
 		Dee_Incref(file);
 		if (next_data != self->fb_fpos) {

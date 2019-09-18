@@ -255,7 +255,7 @@ INTERN int
 								 * initialized. */
 								goto done_symbol_store;
 							}
-						stack_next:
+stack_next:
 							if (iter_ast->a_scope == symbol_scope)
 								found_scope = true;
 							prev_stack = iter;
@@ -292,7 +292,7 @@ INTERN int
 						goto did_optimize;
 					}
 				}
-			done_symbol_store:
+done_symbol_store:
 #ifdef OPTIMIZE_FASSUME
 				if (optimizer_flags & OPTIMIZE_FASSUME) {
 					if (allow_constexpr(self->a_action.a_act1->a_constexpr) != CONSTEXPR_ALLOWED)
@@ -307,7 +307,7 @@ INTERN int
 			}
 #ifdef OPTIMIZE_FASSUME
 			else if (optimizer_flags & OPTIMIZE_FASSUME) {
-			unset_symbol_assumption:
+unset_symbol_assumption:
 				if (ast_assumes_setsymval(stack->os_assume,
 				                          target_sym,
 				                          NULL))
@@ -315,7 +315,7 @@ INTERN int
 			}
 #endif /* OPTIMIZE_FASSUME */
 		}
-	after_target_symbol_optimization:
+after_target_symbol_optimization:
 		break;
 
 	case AST_FACTION_IN:
@@ -328,7 +328,7 @@ INTERN int
 			/* Propagate constants. */
 			expr_result = DeeObject_ContainsObject(self->a_action.a_act1->a_constexpr,
 			                                       self->a_action.a_act0->a_constexpr);
-		action_set_expr_result:
+action_set_expr_result:
 			if (!expr_result)
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
 			else {

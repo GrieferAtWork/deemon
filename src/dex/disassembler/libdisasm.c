@@ -108,7 +108,7 @@ parse_asm_flags(char *__restrict str,
 			                (size_t)(flag_end - flag_start), flag_start);
 			return -1;
 		}
-	next_opt:
+next_opt:
 		if (!*flag_end)
 			break;
 		str = flag_end + 1;

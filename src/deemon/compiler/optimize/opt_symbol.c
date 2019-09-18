@@ -99,7 +99,7 @@ INTERN int(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stac
 				likely(symval)
 			{
 				int allowed;
-			set_constant_expression:
+set_constant_expression:
 				allowed = allow_constexpr(symval);
 				if (allowed == CONSTEXPR_USECOPY) {
 					if (DeeObject_InplaceDeepCopy(&symval)) {
@@ -116,7 +116,7 @@ INTERN int(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stac
 				OPTIMIZE_VERBOSE("Inline constant symbol expression: `%r'\n", symval);
 				goto did_optimize;
 			}
-		done_set_constexpr:
+done_set_constexpr:
 			Dee_Decref(symval);
 		}
 	} else if (sym->s_type == SYMBOL_TYPE_CONST) {

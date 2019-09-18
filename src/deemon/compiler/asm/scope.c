@@ -133,7 +133,7 @@ asm_enter_scope(DeeScopeObject *__restrict scope) {
 		new_scope = new_scope->s_prev;
 	while (new_scope && new_scope != old_scope);
 	if (new_scope) {
-	set_new_scope:
+set_new_scope:
 		current_assembler.a_scope = scope;
 #ifndef NDEBUG
 		scope->s_old_stack = current_assembler.a_stackcur;

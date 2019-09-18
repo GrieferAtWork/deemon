@@ -431,7 +431,7 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 		if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 			goto err_r;
 	} else {
-	skip_keyword_label:
+skip_keyword_label:
 		if (self->jl_tok == JIT_KEYWORD) {
 			unsigned char *start = self->jl_tokstart;
 			JITLexer_Yield(self);
@@ -508,7 +508,7 @@ DEFINE_SECONDARY(CastOperand) {
 	case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
 /*	case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(Cell(castexpr))' */
 	case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(List(castexpr))' */
-	not_a_cast:
+not_a_cast:
 		/* Not a cast expression. */
 		result = LHS_OR_OK; /* Inherit reference */
 		break;
@@ -618,7 +618,7 @@ DEFINE_SECONDARY(CastOperand) {
 			break;
 		}
 		else {
-		err_missing_rparen:
+err_missing_rparen:
 			syn_paren_expected_rparen_after_lparen(self);
 			goto err_merge;
 		}
@@ -677,7 +677,7 @@ DEFINE_SECONDARY(CastOperand) {
 		 * an expression, then this isn't a cast. */
 		if (!JIT_MaybeExpressionBegin(self->jl_tok))
 			goto not_a_cast;
-	do_a_cast:
+do_a_cast:
 		/* Actually do a cast. */
 		LOAD_LVALUE(lhs, err);
 		merge = CALL_PRIMARY(Unary);
@@ -791,7 +791,7 @@ DEFINE_PRIMARY(UnaryHead) {
 #else  /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
-	done_y1:
+done_y1:
 		JITLexer_Yield(self);
 		goto done;
 
@@ -1208,7 +1208,7 @@ DEFINE_PRIMARY(UnaryHead) {
 					self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
 				goto done;
 #else /* JIT_EVAL */
-			skip_arrow_lambda:
+skip_arrow_lambda:
 				JITLexer_Yield(self);
 				result = JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY);
 				goto done;
@@ -1251,7 +1251,7 @@ DEFINE_PRIMARY(UnaryHead) {
 					self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
 				goto done;
 #else /* JIT_EVAL */
-			skip_brace_lambda:
+skip_brace_lambda:
 				JITLexer_Yield(self);
 				result = JITLexer_SkipPair(self, '{', '}');
 				goto done;
@@ -1389,7 +1389,7 @@ DEFINE_PRIMARY(UnaryHead) {
 			}
 #endif /* JIT_EVAL */
 		}
-	skip_rbrck_and_done:
+skip_rbrck_and_done:
 		if
 			likely(self->jl_tok == ']')
 		{
@@ -1835,7 +1835,7 @@ DEFINE_SECONDARY(UnaryOperand) {
 			if
 				unlikely(error)
 			{
-			err_result_copy:
+err_result_copy:
 				Dee_Decref(result_copy);
 				goto err_r;
 			}
@@ -1998,7 +1998,7 @@ DEFINE_SECONDARY(UnaryOperand) {
 						if (self->jl_tok == ']') {
 							JITLexer_Yield(self);
 						} else {
-						err_r_temp_expected_rbrck:
+err_r_temp_expected_rbrck:
 							DECREF(temp);
 							syn_item_expected_rbracket_after_lbracket(self);
 							goto err_r;
@@ -2048,7 +2048,7 @@ DEFINE_SECONDARY(UnaryOperand) {
 								goto err_r;
 #else /* !JIT_EVAL */
 							if (ISERR(temp)) {
-							err_start_expr:
+err_start_expr:
 								Dee_Decref(start_expr);
 								goto err_r;
 							}
@@ -2326,7 +2326,7 @@ case_unary:
 		}
 		if (TOKEN_IS_CMPEQ(self)) {
 	CASE_TOKEN_IS_CMPEQ:
-		case_cmpeq:
+case_cmpeq:
 			result = CALL_SECONDARY(CmpEQOperand, result);
 			if (ISERR(result))
 				goto done;
@@ -2808,7 +2808,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-	continue_expr:
+continue_expr:
 		if (!TOKEN_IS_CMPEQ(self))
 			break;
 		IF_EVAL(cmd = self->jl_tok;)
@@ -3038,7 +3038,7 @@ DEFINE_SECONDARY(LandOperand) {
 		if (ISERR(rhs))
 			goto err_r;
 #endif /* !JIT_EVAL */
-	continue_expr:
+continue_expr:
 		if (!TOKEN_IS_LAND(self))
 			break;
 	}
@@ -3112,7 +3112,7 @@ DEFINE_SECONDARY(LorOperand) {
 		if (ISERR(rhs))
 			goto err_r;
 #endif /* !JIT_EVAL */
-	continue_expr:
+continue_expr:
 		if (!TOKEN_IS_LOR(self))
 			break;
 	}
@@ -3231,7 +3231,7 @@ DEFINE_SECONDARY(CondOperand) {
 			}
 		}
 #endif /* !JIT_EVAL */
-	continue_expr:
+continue_expr:
 		if (!TOKEN_IS_COND(self))
 			break;
 	}
@@ -3315,7 +3315,7 @@ DEFINE_SECONDARY(AssignOperand) {
 			JITLexer_Yield(self);
 			rhs = CALL_PRIMARYF(Cond, flags | JITLEXER_EVAL_FALLOWINPLACE);
 			if (ISERR(rhs)) {
-			err_lvalue:
+err_lvalue:
 				JITLValue_Fini(&lhs_lvalue);
 				goto err;
 			}
@@ -3688,7 +3688,7 @@ case_unary:
 		}
 		if (TOKEN_IS_CMPEQ(self)) {
 	CASE_TOKEN_IS_CMPEQ:
-		case_cmpeq:
+case_cmpeq:
 			result = CALL_SECONDARY(CmpEQOperand, result);
 			if (ISERR(result))
 				goto done;

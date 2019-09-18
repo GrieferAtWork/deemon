@@ -1445,9 +1445,9 @@ string_class_fromseq(DeeObject *__restrict UNUSED(self),
 			goto err_iter;
 		Dee_Decref(iter);
 		return unicode_printer_pack(&printer);
-	err_iter:
+err_iter:
 		Dee_Decref(iter);
-	err_printer:
+err_printer:
 		unicode_printer_fini(&printer);
 	}
 err:

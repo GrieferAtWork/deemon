@@ -64,9 +64,9 @@ parse_match_count(char *__restrict piter,
 			result->mc_min    = 0;
 			result->mc_max    = (size_t)-1;
 			result->mc_greedy = true;
-		check_greedy:
+check_greedy:
 			++piter;
-		check_greedy2:
+check_greedy2:
 			if (*piter == '?') {
 				result->mc_greedy = false;
 				++piter;
@@ -98,7 +98,7 @@ parse_match_count(char *__restrict piter,
 					result->mc_min = trt->ut_digit;
 					for (;;) {
 						if (piter >= pend) {
-						err_eof_in_repeat:
+err_eof_in_repeat:
 							DeeError_Throwf(&DeeError_ValueError,
 							                "Unexpected end of pattern "
 							                "following `{' in regular expression");
@@ -270,9 +270,9 @@ is_in_range(char *range_start, char *range_end,
 					return true;
 			} else {
 				/* Fallback: match single */
-			match_single_nocase:
+match_single_nocase:
 				ch = DeeUni_ToLower(ch);
-			match_single_nocase2:
+match_single_nocase2:
 				if (data_ch == ch)
 					goto ok;
 			}
@@ -367,7 +367,7 @@ is_in_range(char *range_start, char *range_end,
 					return true;
 			} else {
 				/* Fallback: match single */
-			match_single:
+match_single:
 				if (data_ch == ch)
 					goto ok;
 			}
@@ -757,7 +757,7 @@ next:
 					/* Don't allow optional matches, which would mean that the entire lookahead
 					 * was optional in itself. And considering that it's not meant to consume any
 					 * data, it would become a no-op altogether! */
-				err_lookahead_must_be_nonzero:
+err_lookahead_must_be_nonzero:
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Positive lookahead assertions require a non-zero lower matching-bound. "
 					                "I.e. You can't use a `?', `*' or `{0,x}' / `{,x}' suffix");
@@ -958,7 +958,7 @@ next:
 				if
 					unlikely(error < 0)
 				{
-				err_backup_v:
+err_backup_v:
 					Dee_Free(backup_v);
 					goto err;
 				}
@@ -1008,7 +1008,7 @@ next:
 				}
 				if (variant_diter == post_variant_diter)
 					goto has_infinite_submatch; /* No data was parsed -> no data was matched (in this case x/0 == INF) */
-			save_variant_match:
+save_variant_match:
 				variant_diter = post_variant_diter;
 				variant_match_length += data->matlen;
 				if (match.mc_greedy) {
@@ -1044,7 +1044,7 @@ next:
 				Dee_Free(backup_v);
 				continue; /* Try the next variant. */
 			}
-		has_infinite_submatch:
+has_infinite_submatch:
 			if (backup_v) { /* NULL when in non-greedy mode. */
 				for (;;) {
 					ASSERT(match_count);
@@ -1129,7 +1129,7 @@ next:
 			if (ch == '+') {
 				/*  */
 				flag = 0;
-			next_anyflag_ch:
+next_anyflag_ch:
 				temp = get_regex_trait(ch);
 				if (!temp)
 					goto err_unknown_trait_char;
@@ -1164,10 +1164,10 @@ next:
 			if (negate)
 				ch = utf8_readchar((char const **)&piter, pend);
 			mask = flag = 0;
-		next_flag_ch:
+next_flag_ch:
 			temp = get_regex_trait(ch);
 			if (!temp) {
-			err_unknown_trait_char:
+err_unknown_trait_char:
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Unknown character trait character `%I32c' "
 				                "(Must be one of \"" REGEX_TRAIT_NAMES "\")");
@@ -1181,7 +1181,7 @@ next:
 				flag = ~flag;
 			mask = flag;
 			if (ch == '-') {
-			next_mask_ch:
+next_mask_ch:
 				ch   = utf8_readchar((char const **)&piter, pend);
 				temp = get_regex_trait(ch);
 				if (!temp)
@@ -1192,7 +1192,7 @@ next:
 					goto next_mask_ch;
 			}
 			if (ch != ']') {
-			err_missing_rbracket:
+err_missing_rbracket:
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Missing `]' after `\\[' in regular expression");
 				goto err;
@@ -1203,7 +1203,7 @@ next:
 		case 'd':
 			mask = UNICODE_FDIGIT;
 			flag = UNICODE_FDIGIT;
-		match_unicode_trait:
+match_unicode_trait:
 			piter = parse_match_count(piter, pend, &match);
 			if
 				unlikely(!piter)
@@ -1437,7 +1437,7 @@ next:
 
 		/* Default: match raw characters. */
 	default:
-	match_raw_character:
+match_raw_character:
 		piter = parse_match_count(piter, pend, &match);
 		if
 			unlikely(!piter)

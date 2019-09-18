@@ -393,7 +393,7 @@ INTERN struct dec_rel *DCALL dec_newrel(void) {
 		size_t new_alloc = sec->ds_rela * 2;
 		if (!new_alloc)
 			new_alloc = 2;
-	do_realloc:
+do_realloc:
 		result = (struct dec_rel *)Dee_TryRealloc(sec->ds_relv, new_alloc *
 		                                                        sizeof(struct dec_rel));
 		if

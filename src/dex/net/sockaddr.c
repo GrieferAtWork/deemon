@@ -135,7 +135,7 @@ sock_getmsgflagsof(DeeObject *__restrict name,
 			return DeeError_Throwf(&DeeError_NoSupport,
 			                       "MSG flag %$q is not recognized by this host",
 			                       part_length, iter);
-		next_part:
+next_part:
 			iter += part_length;
 			if (*iter)
 				++iter;
@@ -991,7 +991,7 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 	{
 		struct addrinfo *info;
 		struct addrinfo hints;
-	retry_addrinfo:
+retry_addrinfo:
 		if (family != AF_AUTO) {
 			memset(&hints, 0, sizeof(hints));
 			hints.ai_family   = (sa_family_t)family;
@@ -1145,7 +1145,7 @@ err:
 #ifdef TRY_AGAIN
 		int attempt_counter;
 #endif /* TRY_AGAIN */
-	do_gethostbyname:
+do_gethostbyname:
 		memset(self, 0, sizeof(SockAddr));
 		/* Quick check: If the host starts with a digit, or with `:',
 		 * then it isn't a special name, but an absolute address. */
@@ -1214,10 +1214,10 @@ err:
 			}
 #endif /* AF_INET */
 		}
-	no_special_hostname:
+no_special_hostname:
 #ifdef TRY_AGAIN
 		attempt_counter = 0;
-	do_gethostbyname_again:
+do_gethostbyname_again:
 #endif /* TRY_AGAIN */
 		rwlock_read(&sysdb_lock);
 		DBG_ALIGNMENT_DISABLE();
@@ -1256,7 +1256,7 @@ err:
 		if (hp->h_addrtype == AF_INET) {
 			self->sa_inet.sin_addr.s_addr = *(uint32_t *)hp->h_addr;
 			rwlock_endread(&sysdb_lock);
-		do_port_inet:
+do_port_inet:
 			self->sa_inet.sin_family = AF_INET;
 			if (get_port_name(port, port_length, &self->sa_inet.sin_port))
 				goto err;
@@ -1268,7 +1268,7 @@ err:
 		if (hp->h_addrtype == AF_INET6) {
 			memcpy(&self->sa_inet6.sin6_addr, hp->h_addr, 16);
 			rwlock_endread(&sysdb_lock);
-		do_port_inet6:
+do_port_inet6:
 			self->sa_inet6.sin6_family = AF_INET6;
 			if (get_port_name(port, port_length, &self->sa_inet6.sin6_port))
 				goto err;
@@ -1397,14 +1397,14 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 				if (DeeObject_AsUInt32(DeeTuple_GET(arg0, 0), &host) ||
 				    DeeObject_AsUInt16(DeeTuple_GET(arg0, 1), &port))
 					goto err;
-			do_init_inet_hostport:
+do_init_inet_hostport:
 				self->sa.sa_family            = AF_INET;
 				self->sa_inet.sin_addr.s_addr = HTON32(host);
 				self->sa_inet.sin_port        = HTON16(port);
 				goto done;
 			}
 #endif /* AF_INET */
-		do_generic_string:
+do_generic_string:
 			arg0 = argv[0];
 			if (DeeObject_AssertTypeExact(arg0, &DeeString_Type))
 				goto err;
@@ -1415,7 +1415,7 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 			goto done;
 
 		case 2:
-		do_generic_string_2:
+do_generic_string_2:
 			arg0 = argv[0];
 			if (DeeString_Check(argv[1]) || DeeInt_Check(argv[1])) {
 				DREF DeeObject *arg2_string;

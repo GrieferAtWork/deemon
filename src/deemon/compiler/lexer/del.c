@@ -100,7 +100,7 @@ ast_parse_del_single(unsigned int lookup_mode) {
 			                           result->a_operator.o_op2);
 		}
 		else {
-		create_2:
+create_2:
 			new_result = ast_operator2(new_operator,
 			                           result->a_operator.o_exflag,
 			                           result->a_operator.o_op0,
@@ -162,7 +162,7 @@ ast_parse_del(unsigned int lookup_mode) {
 			if (delc == dela) {
 				DREF struct ast **new_delv;
 				size_t new_dela = dela * 2;
-			do_realloc_delv:
+do_realloc_delv:
 				new_delv = (DREF struct ast **)Dee_TryRealloc(delv, new_dela *
 				                                                    sizeof(DREF struct ast *));
 				if

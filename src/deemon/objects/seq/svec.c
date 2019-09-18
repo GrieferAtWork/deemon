@@ -895,7 +895,7 @@ rvec_nsi_setrange(RefVector *__restrict self,
 					                        (size_t)end - (size_t)start,
 					                        i - (size_t)start);
 				}
-			err_iterator:
+err_iterator:
 				Dee_Decref(iterator);
 				goto err;
 			}

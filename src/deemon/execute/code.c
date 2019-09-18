@@ -483,7 +483,7 @@ DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self) {
 	/* Here comes the dangerous part: Checking the other threads... */
 	{
 		DeeThreadObject *threads;
-	check_other_threads:
+check_other_threads:
 		/* Check for interrupts. */
 		if (DeeThread_CheckInterruptSelf(caller))
 			goto err;
@@ -1372,7 +1372,7 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 				                "Unknown exception handler flag: %$q",
 				                (size_t)len, s);
 				goto err;
-			got_flag:
+got_flag:
 				if (!next)
 					break;
 				s = next + 1;
@@ -1636,9 +1636,9 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 					{
 						DeeError_Throwf(&DeeError_IntegerOverflow,
 						                "Too many exception handlers");
-					err_r_except_temp_iter_elem:
+err_r_except_temp_iter_elem:
 						Dee_Decref(elem);
-					err_r_except_temp_iter:
+err_r_except_temp_iter:
 						Dee_Decref(iter);
 						while (except_c--)
 							Dee_XDecref(except_v[except_c].eh_mask);
@@ -1709,7 +1709,7 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 				                "Unknown code flag: %$q",
 				                (size_t)len, s);
 				goto err_r_except;
-			got_flag:
+got_flag:
 				if (!next)
 					break;
 				s = next + 1;

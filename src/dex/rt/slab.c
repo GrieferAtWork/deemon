@@ -56,7 +56,7 @@ PRIVATE DREF SlabStatObject *DCALL ss_ctor(void) {
 		         (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)))
 	{
 		size_t oldsize;
-	do_realloc_result:
+do_realloc_result:
 		oldsize    = reqsize;
 		new_result = (DREF SlabStatObject *)DeeObject_Realloc(result,
 		                                                      COMPILER_OFFSETOF(SlabStatObject, st_stat) +

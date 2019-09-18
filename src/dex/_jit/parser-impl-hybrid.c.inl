@@ -50,7 +50,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 			JITLexer_Yield(self);
 		}
 		else {
-		err_rbrace_missing:
+err_rbrace_missing:
 			syn_brace_expected_rbrace(self);
 			goto err_r;
 		}
@@ -61,17 +61,17 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 	case '{': /* Recursion! */
 		IF_EVAL(JITContext_PushScope(self->jl_context));
 		result = FUNC(StatementOrBraces)(self, &was_expression);
-	parse_remainder_after_hybrid_popscope:
+parse_remainder_after_hybrid_popscope:
 		if (ISERR(result))
 			goto err;
-	parse_remainder_after_hybrid_popscope_resok:
+parse_remainder_after_hybrid_popscope_resok:
 		if (was_expression == AST_PARSE_WASEXPR_NO)
 			goto parse_remainder_after_statement;
 		if (was_expression == AST_PARSE_WASEXPR_YES) {
 			result = CALL_SECONDARY(Operand, result);
 			if (ISERR(result))
 				goto err;
-		check_recursion_after_expression_suffix:
+check_recursion_after_expression_suffix:
 			if (self->jl_tok == ';') {
 				JITLexer_Yield(self);
 				goto parse_remainder_after_statement;
@@ -79,7 +79,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 			if (self->jl_tok == ':')
 				goto parse_remainder_after_colon_popscope;
 			if (self->jl_tok == ',' || self->jl_tok == TOK_DOTS) {
-			parse_remainder_after_comma_popscope:
+parse_remainder_after_comma_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
 				result = CALL_SECONDARY(CommaListOperand, result);
@@ -100,7 +100,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 			if
 				likely(self->jl_tok == '}')
 			{
-			parse_remainder_before_rbrace_popscope_wrap:
+parse_remainder_before_rbrace_popscope_wrap:
 				JITLexer_Yield(self);
 			}
 			else {
@@ -235,7 +235,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 			    self->jl_tokstart[5] == 't') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(AssertHybrid)(self, &was_expression);
-			parse_remainder_after_semicolon_hybrid_popscope:
+parse_remainder_after_semicolon_hybrid_popscope:
 				if (ISERR(result))
 					goto err;
 				/* Special case: `assert' statements require a trailing `;' token.
@@ -295,7 +295,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 
 	case '@':
 	case ';':
-	is_a_statement:
+is_a_statement:
 		IF_EVAL(JITContext_PushScope(self->jl_context));
 		JITLexer_Yield(self);
 		/* Enter a new scope and parse expressions. */
@@ -354,7 +354,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 				/*parse_remainder_before_rbrace_popscope:*/
 				/* Sequence-like brace expression. */
 				JITLexer_Yield(self);
-			parse_remainder_after_rbrace_popscope:
+parse_remainder_after_rbrace_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
 				if (pwas_expression)
@@ -363,7 +363,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 			}
 			if (self->jl_tok == ':' &&
 			    !(comma_mode & AST_COMMA_OUT_FMULTIPLE)) {
-			parse_remainder_after_colon_popscope:
+parse_remainder_after_colon_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
 				/* mapping-like brace expression. */
@@ -393,7 +393,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 				goto err_r;
 			}
 		}
-	parse_remainder_after_statement:
+parse_remainder_after_statement:
 		if (self->jl_tok == '}') {
 			JITLexer_Yield(self);
 		} else {
@@ -439,7 +439,7 @@ FUNC(Hybrid)(JITLexer *__restrict self,
 		result = FUNC(StatementOrBraces)(self, &was_expression);
 		if (ISERR(result))
 			goto err;
-	parse_unary_suffix_if_notexpr:
+parse_unary_suffix_if_notexpr:
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
@@ -454,7 +454,7 @@ FUNC(Hybrid)(JITLexer *__restrict self,
 
 	case '@':
 	case ';':
-	is_a_statement:
+is_a_statement:
 		result = FUNC(Statement)(self);
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_NO;

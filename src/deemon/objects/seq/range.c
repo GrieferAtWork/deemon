@@ -694,7 +694,7 @@ range_getitem(Range *__restrict self, DeeObject *__restrict index) {
 		if
 			unlikely(!result)
 		goto err;
-	do_compare_positive:
+do_compare_positive:
 		error = DeeObject_CompareGe(result, self->r_end);
 	} else {
 		temp = DeeObject_Mul(self->r_step, index);
@@ -830,7 +830,7 @@ range_getrange(Range *__restrict self,
 		Dee_Incref(start);
 	}
 	if (DeeNone_Check(end)) {
-	reuse_old_end:
+reuse_old_end:
 		/* if (mylen <= new_start)
 		 *     return_reference_(Dee_EmptySeq);
 		 */
@@ -839,7 +839,7 @@ range_getrange(Range *__restrict self,
 			if
 				unlikely(error < 0)
 			goto err_mylen_ns;
-		return_empty_seq_mylen_ns:
+return_empty_seq_mylen_ns:
 			Dee_Decref(new_start);
 			Dee_Decref(mylen);
 			return_reference_(Dee_EmptySeq);

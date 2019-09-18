@@ -53,7 +53,7 @@ DeeFloat_Print(double value, dformatprinter printer, void *arg,
 		buf[1] = 'I';
 		buf[2] = 'N';
 		buf[3] = 'F';
-	do_special_float:
+do_special_float:
 		total_len   = 3;
 		is_negative = false;
 		if (value < 0)
@@ -195,7 +195,7 @@ DeeFloat_Print(double value, dformatprinter printer, void *arg,
 		goto err;
 		result += temp;
 	} else {
-	do_float_normal_width:
+do_float_normal_width:
 		if (is_negative)
 			buf[--len] = '-';
 		else if (flags & DEEFLOAT_PRINT_FSIGN)

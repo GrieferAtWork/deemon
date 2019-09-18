@@ -579,7 +579,7 @@ ast_makemultiple(DeeCompilerObject *__restrict self,
 	result                        = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
 	__IF0 {
-	err_branch_v:
+err_branch_v:
 		while (branch_c--)
 			Dee_Decref(branch_v[branch_c]);
 		Dee_Free(branch_v);
@@ -859,7 +859,7 @@ unpack_catch_expressions(DeeObject *__restrict handlers,
 			goto err_fast;
 		}
 		goto done;
-	err_fast:
+err_fast:
 		while (i--) {
 			ast_xdecref(catch_v[i].ce_mask);
 			ast_decref(catch_v[i].ce_code);
@@ -1066,7 +1066,7 @@ ast_makeloop(DeeCompilerObject *__restrict self,
 		if
 			unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	check_next:
+check_next:
 		/* The next (iter) operand is mandatory in foreach loop branches. */
 		if
 			unlikely(DeeObject_AssertTypeExact((DeeObject *)next, &DeeCompilerAst_Type))
@@ -1545,7 +1545,7 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 			*presult = AST_OPERATOR_GETATTR_OR_SETATTR;
 			break;
 		default:
-		unknown_str:
+unknown_str:
 			return DeeError_Throwf(&DeeError_ValueError,
 			                       "Unknown operator %q",
 			                       name);

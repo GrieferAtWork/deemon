@@ -366,7 +366,7 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 			flags = DeeUni_Flags(ch);
 			if (iter == symbol_start ? !(flags & UNICODE_FSYMSTRT)
 			                         : !(flags & UNICODE_FSYMCONT)) {
-			bad_symbol_name:
+bad_symbol_name:
 				if (is_module) {
 					if (WARN(W_INVALID_NAME_FOR_MODULE_SYMBOL, module_name, symbol_length, symbol_start))
 						goto err;
@@ -482,7 +482,7 @@ parse_import_symbol(struct import_item *__restrict result,
 		/* - `.foo.bar'
 		 * - `.foo.bar as foobar' */
 		unicode_printer_init(&printer);
-	complete_module_name:
+complete_module_name:
 		return_value = 1;
 		if
 			unlikely(unicode_printer_printascii(&printer, "...", dot_count(tok)) < 0)
@@ -525,7 +525,7 @@ parse_import_symbol(struct import_item *__restrict result,
 			goto err_name;
 		} else {
 			/* - `.foo.bar' */
-		autogenerate_symbol_name:
+autogenerate_symbol_name:
 			/* Autogenerate the module import symbol name. */
 			result->ii_symbol_name = get_module_symbol_name(result->ii_import_name,
 			                                                return_value != 0);
@@ -687,7 +687,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 									 * potentially re-assign the import such that the new module has less dependencies. */
 									if (sym->s_extern.e_module != &deemon_module) {
 										if (module == &deemon_module) {
-										do_reassign_new_alias:
+do_reassign_new_alias:
 											sym->s_extern.e_module = module;
 											sym->s_extern.e_symbol = iter;
 										} else {
@@ -804,7 +804,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 		if
 			unlikely(!import_symbol)
 		goto err;
-	init_import_symbol:
+init_import_symbol:
 		import_symbol->s_type               = SYMBOL_TYPE_EXTERN;
 		SYMBOL_EXTERN_MODULE(import_symbol) = module;
 		SYMBOL_EXTERN_SYMBOL(import_symbol) = sym;
@@ -864,7 +864,7 @@ ast_import_module(struct import_item *__restrict item) {
 		if
 			unlikely(!import_symbol)
 		goto err_module;
-	init_import_symbol:
+init_import_symbol:
 		if (module == current_rootscope->rs_module) {
 			SYMBOL_TYPE(import_symbol) = SYMBOL_TYPE_MYMOD;
 			Dee_Decref(module);
@@ -945,13 +945,13 @@ INTERN int FCALL ast_parse_post_import(void) {
 	if (error) {
 		/* Module import list */
 		for (;;) {
-		import_item_as_module:
+import_item_as_module:
 			error = ast_import_module(&item);
 			Dee_XDecref(item.ii_import_name);
 			if
 				unlikely(error)
 			goto err;
-		parse_module_import_list:
+parse_module_import_list:
 			if (tok != ',')
 				break;
 			if
@@ -998,7 +998,7 @@ INTERN int FCALL ast_parse_post_import(void) {
 		}
 		item_v[0] = item;
 		item_c    = 1;
-	import_parse_list:
+import_parse_list:
 		do {
 			ASSERT(tok == ',');
 			if
@@ -1112,14 +1112,14 @@ INTERN int FCALL ast_parse_post_import(void) {
 		}
 		Dee_Free(item_v);
 		goto done;
-	err_item_v_module:
+err_item_v_module:
 		Dee_Decref(module);
-	err_item_v:
+err_item_v:
 		while (item_c--)
 			Dee_XDecref(item_v[item_c].ii_import_name);
 		Dee_Free(item_v);
 		goto err;
-	err_item:
+err_item:
 		Dee_XDecref(item.ii_import_name);
 		goto err;
 	} else {

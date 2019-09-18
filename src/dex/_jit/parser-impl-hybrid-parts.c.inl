@@ -196,7 +196,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 					DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 					JITContext_PopScope(self->jl_context);
 					continue;
-				err_handle_catch_except:
+err_handle_catch_except:
 					JITContext_PopScope(self->jl_context);
 					JITLexer_YieldAt(self, start);
 					if (SKIP_SECONDARY(self, &was_expression))
@@ -357,7 +357,7 @@ do_if_statement:
 				}
 				if (JITLexer_ISTOK(self, "else")) {
 					JITLexer_Yield(self);
-				do_else_branch:
+do_else_branch:
 					if (SKIP_SECONDARY(self, pwas_expression))
 						goto err_scope_r;
 				}
@@ -478,9 +478,9 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 				unlikely(!iterator)
 			{
 				goto err_seq;
-			err_iter:
+err_iter:
 				Dee_Decref(iterator);
-			err_seq:
+err_seq:
 				Dee_Decref(seq);
 				JITLValue_Fini(&iterator_storage);
 				goto err_scope;
@@ -553,7 +553,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 				Dee_Decref(init);
 			}
 			if (self->jl_tok == ';') {
-			do_normal_for_noinit:
+do_normal_for_noinit:
 				JITLexer_Yield(self);
 			} else {
 				syn_for_expected_semi1_after_for(self);
@@ -592,7 +592,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 						JITLexer_Yield(self);
 					}
 					else {
-					err_missing_rparen_after_for:
+err_missing_rparen_after_for:
 						syn_for_expected_rparen_after_for(self);
 						goto err_scope;
 					}
@@ -640,7 +640,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 					}
 					goto err_scope;
 				}
-			do_continue_normal_forloop:
+do_continue_normal_forloop:
 				if (result == JIT_LVALUE) {
 					JITLValue_Fini(&self->jl_lvalue);
 					self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
@@ -692,7 +692,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 				JITLexer_Yield(self);
 			}
 		}
-	done_for:
+done_for:
 		JITContext_PopScope(self->jl_context);
 		result = Dee_None;
 		Dee_Incref(Dee_None);
@@ -792,7 +792,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 		}
 		else {
 			syn_foreach_expected_rparen_after_foreach(self);
-		err_iter:
+err_iter:
 			Dee_Decref(iterator);
 			goto err_scope;
 		}
@@ -928,14 +928,14 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 		goto err_scope;
 		if (!temp) {
 			/* The loop doesn't actually get executed. */
-		do_skip_loop:
+do_skip_loop:
 			if (JITLexer_SkipStatement(self))
 				goto err_scope;
 			goto done_loop;
 		}
 		block_start = self->jl_tokstart;
 		/* Evaluate the loop block. */
-	do_eval_while_loop:
+do_eval_while_loop:
 		result = JITLexer_EvalStatement(self);
 		if (!result) {
 			/* Check for special signal conditions. */
@@ -959,7 +959,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 			Dee_Decref(result);
 		}
 		block_end = self->jl_tokstart;
-	do_check_while_condition:
+do_check_while_condition:
 		/* Check the loop condition once again. */
 		self->jl_tokend = cond_start;
 		JITLexer_Yield(self);
@@ -993,7 +993,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 			if (JITLexer_SkipStatement(self))
 				goto err_scope;
 		}
-	done_loop:
+done_loop:
 		JITContext_PopScope(self->jl_context);
 		result = Dee_None;
 		Dee_Incref(Dee_None);
@@ -1042,7 +1042,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 		unsigned char *block_start;
 		block_start = self->jl_tokstart;
 		/* Parse the block for the first time. */
-	do_parse_block:
+do_parse_block:
 		result = JITLexer_EvalStatement(self);
 		if
 			unlikely(!result)
@@ -1086,7 +1086,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 		} else {
 			Dee_Decref(result);
 		}
-	continue_with_loop_cond:
+continue_with_loop_cond:
 		if (JITLexer_ISKWD(self, "while")) {
 			JITLexer_Yield(self);
 		} else {
@@ -1118,7 +1118,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 			JITLexer_Yield(self);
 			goto do_parse_block;
 		}
-	done_loop_rparen:
+done_loop_rparen:
 		if (self->jl_tok == ')') {
 			JITLexer_Yield(self);
 		} else {
@@ -1136,7 +1136,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 #else  /* JIT_EVAL */
 		if (JITLexer_SkipStatement(self))
 			goto err;
-	do_skip_while_suffix:
+do_skip_while_suffix:
 		if (JITLexer_ISKWD(self, "while")) {
 			JITLexer_Yield(self);
 		} else {

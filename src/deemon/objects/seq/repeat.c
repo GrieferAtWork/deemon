@@ -242,7 +242,7 @@ again_iter:
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
 	if (result != ITER_DONE) {
-	done:
+done:
 		return result;
 	}
 	if (!REPEATITER_READ_NUM(self))

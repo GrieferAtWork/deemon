@@ -1676,7 +1676,7 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 				if
 					unlikely(error)
 				{
-				err_new_self:
+err_new_self:
 					Dee_Decref(new_self);
 					goto err;
 				}
@@ -1794,7 +1794,7 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 				unlikely(!temp)
 			goto err_new_self;
 			Dee_Decref(temp);
-		do_prev_with_rewind_iterator:
+do_prev_with_rewind_iterator:
 			/* >> if (c == this)
 			 * >>     return false;
 			 * >> for (;;) {

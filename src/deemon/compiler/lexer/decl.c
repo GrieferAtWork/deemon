@@ -93,7 +93,7 @@ decl_ast_copy(struct decl_ast *__restrict self,
 			break;
 		ATTR_FALLTHROUGH
 	case DAST_SEQ:
-	copy_inner:
+copy_inner:
 		inner = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
 		if
 			unlikely(!inner)
@@ -116,7 +116,7 @@ decl_ast_copy(struct decl_ast *__restrict self,
 		if
 			unlikely(decl_ast_copy(&inner[0], &self->da_with.w_cell[0]))
 		{
-		err_with_inner:
+err_with_inner:
 			Dee_Free(inner);
 			goto err;
 		}
@@ -173,7 +173,7 @@ decl_ast_fini(struct decl_ast *__restrict self) {
 			break;
 		ATTR_FALLTHROUGH
 	case DAST_SEQ:
-	free_inner:
+free_inner:
 		decl_ast_fini(self->da_seq);
 		Dee_Free(self->da_seq);
 		break;
@@ -206,7 +206,7 @@ decl_ast_isnone(struct decl_ast const *__restrict self) {
 		return DeeNone_Check(self->da_const) || self->da_const == (DeeObject *)&DeeNone_Type;
 	if (self->da_type == DAST_SYMBOL) {
 		struct symbol *sym = self->da_symbol;
-	check_symbol:
+check_symbol:
 		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
@@ -233,7 +233,7 @@ decl_ast_isobject(struct decl_ast const *__restrict self) {
 		return self->da_const == (DeeObject *)&DeeObject_Type;
 	if (self->da_type == DAST_SYMBOL) {
 		struct symbol *sym = self->da_symbol;
-	check_symbol:
+check_symbol:
 		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
@@ -262,7 +262,7 @@ decl_ast_istype(struct decl_ast const *__restrict self,
 		return self->da_const == (DeeObject *)tp;
 	if (self->da_type == DAST_SYMBOL) {
 		struct symbol *sym = self->da_symbol;
-	check_symbol:
+check_symbol:
 		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
@@ -474,7 +474,7 @@ decl_ast_print_type(struct decl_ast const *__restrict self,
 	case DAST_SYMBOL: {
 		struct symbol *sym;
 		sym = self->da_symbol;
-	switch_symbol_type:
+switch_symbol_type:
 		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_GLOBAL:
@@ -573,7 +573,7 @@ decl_ast_print_type(struct decl_ast const *__restrict self,
 
 		default:
 			/* Fallback: emit the name of the symbol as private/undefined */
-		print_undefined_symbol_name:
+print_undefined_symbol_name:
 			if (UNICODE_PRINTER_PRINT(printer, "?U") < 0)
 				goto err;
 			if (decl_ast_escapename(sym->s_name->k_name,
@@ -813,7 +813,7 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			goto err;
 	} else if (!scope->bs_argc) {
 		/* Function only returns `none' --- encode as `()' */
-	encode_empty_paren:
+encode_empty_paren:
 		if (UNICODE_PRINTER_PRINT(printer, "()") < 0)
 			goto err;
 	}
@@ -936,7 +936,7 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 			}
 		}
 		return unicode_printer_pack(&printer);
-	err:
+err:
 		unicode_printer_fini(&printer);
 	}
 err2:
@@ -1002,7 +1002,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			unlikely(!type_expr)
 		goto err;
 		if (ast_optimize_all(type_expr, true)) {
-		err_type_expr:
+err_type_expr:
 			ast_decref(type_expr);
 			goto err;
 		}
@@ -1112,7 +1112,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		self->da_tuple.t_itemc = elemc;
 		self->da_tuple.t_itemv = elemv; /* Inherit */
 		break;
-	err_elemv:
+err_elemv:
 		while (elemc--)
 			decl_ast_fini(&elemv[elemc]);
 		Dee_Free(elemv);
@@ -1136,7 +1136,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		if
 			unlikely(error)
 		{
-		err_seq:
+err_seq:
 			Dee_Free(decl_seq);
 			goto err_flags;
 		}
@@ -1147,7 +1147,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			if
 				unlikely(!elemv)
 			{
-			err_seq_0:
+err_seq_0:
 				decl_ast_fini(decl_seq);
 				goto err_seq;
 			}
@@ -1155,7 +1155,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			if
 				unlikely(yield() < 0)
 			{
-			err_elemv_0:
+err_elemv_0:
 				decl_ast_fini(&elemv[0]);
 				Dee_Free(elemv);
 				goto err_seq;
@@ -1203,7 +1203,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		 * allowing the use of `__nth(2+3)' instead of forcing the
 		 * user to write `__nth(5)' or `__nth(__TPP_EVAL(2+3))' */
 		if (ast_optimize_all(nth_expr, true)) {
-		err_nth:
+err_nth:
 			ast_decref(nth_expr);
 			goto err;
 		}
@@ -1422,7 +1422,7 @@ decl_ast_parse_alt(struct decl_ast *__restrict self) {
 				goto after_inc_elemc;
 			}
 			++elemc;
-		after_inc_elemc:
+after_inc_elemc:
 			if (tok != '|')
 				break;
 			ASSERT(elemc <= elema);

@@ -1529,7 +1529,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 			                is_class_attribute ? "class" : "instance",
 			                self->ca_name);
 			goto err_addr_flags_doc;
-		got_flag:
+got_flag:
 			if (!next)
 				break;
 			pos = next + 1;
@@ -1856,7 +1856,7 @@ cd_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 				                "Invalid class flag %$q",
 				                flag_len, pos);
 				goto err_r_imemb;
-			got_flag:
+got_flag:
 				if (!next)
 					break;
 				pos = next + 1;
@@ -3064,7 +3064,7 @@ DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker,
 		perm |= ATTR_PRIVATE;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 		Dee_XDecref(attr_type);
-	not_found:
+not_found:
 		return 1;
 	}
 	result->a_doc      = NULL;
@@ -3139,7 +3139,7 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
 	}
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 		Dee_XDecref(attr_type);
-	not_found:
+not_found:
 		return 1;
 	}
 	result->a_decl     = (DREF DeeObject *)self;
@@ -3217,7 +3217,7 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
 		perm |= ATTR_PRIVATE;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 		Dee_XDecref(attr_type);
-	not_found:
+not_found:
 		return 1;
 	}
 	result->a_decl     = (DREF DeeObject *)self;

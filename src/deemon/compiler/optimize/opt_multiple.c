@@ -264,7 +264,7 @@ after_multiple_constexpr:
 	} else {
 		/* Try to optimize something like `[10,[x,y]...]' to `[10,x,y]' */
 		end = (iter = self->a_multiple.m_astv) + self->a_multiple.m_astc;
-	continue_inline_at_iter:
+continue_inline_at_iter:
 		for (; iter < end; ++iter) {
 			struct ast *inner;
 			if ((*iter)->a_type != AST_EXPAND)
@@ -336,7 +336,7 @@ after_multiple_constexpr:
 				if
 					unlikely(!new_astv)
 				{
-				err_expand_vec:
+err_expand_vec:
 					while (len--)
 						Dee_Decref(vec[len]);
 					Dee_Free(vec);

@@ -497,7 +497,7 @@ com_deepcopy(Combinations *__restrict self,
 			if
 				unlikely(self->c_seqlen == (size_t)-1)
 			{
-			err_seq_len:
+err_seq_len:
 				Dee_Decref(self->c_seq);
 				goto err;
 			}
@@ -700,7 +700,7 @@ update_indices:
 		if
 			unlikely(!temp)
 		goto err_indices_r;
-	set_temp:
+set_temp:
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
 	Dee_AFree(result_indices);
@@ -906,7 +906,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 	}
 	if (self->ci_indices[0] >= seqlen) {
 		/* Signal `ITER_DONE' */
-	signal_done:
+signal_done:
 		rwlock_endwrite(&self->ci_lock);
 		Dee_AFree(result_indices);
 		return ITER_DONE;
@@ -915,7 +915,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 	for (;;) {
 		size_t j, index;
 		--i;
-	increment_i:
+increment_i:
 		if (++self->ci_indices[i] >= seqlen) {
 			if (i == 0) {
 				self->ci_indices[i] = seqlen - 1;
@@ -1210,7 +1210,7 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 			}
 			result->c_getitem    = getitem_type->tp_seq;
 			result->c_getitem_tp = getitem_type;
-		load_tp_size:
+load_tp_size:
 			result->c_elem = NULL;
 			if (seq->tp_nsi) {
 				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
@@ -1261,7 +1261,7 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 							unlikely(!new_elem_v)
 						{
 							Dee_Decref(elem);
-						err_elem_v:
+err_elem_v:
 							while (elem_c--)
 								Dee_Decref(elem_v[elem_c]);
 							Dee_Free(elem_v);
@@ -1397,7 +1397,7 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 			}
 			result->c_getitem    = getitem_type->tp_seq;
 			result->c_getitem_tp = getitem_type;
-		load_tp_size:
+load_tp_size:
 			result->c_elem = NULL;
 			if (seq->tp_nsi) {
 				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
@@ -1448,7 +1448,7 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 							unlikely(!new_elem_v)
 						{
 							Dee_Decref(elem);
-						err_elem_v:
+err_elem_v:
 							while (elem_c--)
 								Dee_Decref(elem_v[elem_c]);
 							Dee_Free(elem_v);
@@ -1574,7 +1574,7 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 			}
 			result->c_getitem    = getitem_type->tp_seq;
 			result->c_getitem_tp = getitem_type;
-		load_tp_size:
+load_tp_size:
 			result->c_elem = NULL;
 			if (seq->tp_nsi) {
 				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
@@ -1627,7 +1627,7 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 							unlikely(!new_elem_v)
 						{
 							Dee_Decref(elem);
-						err_elem_v:
+err_elem_v:
 							while (elem_c--)
 								Dee_Decref(elem_v[elem_c]);
 							Dee_Free(elem_v);

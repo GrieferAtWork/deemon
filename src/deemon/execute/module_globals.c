@@ -139,7 +139,7 @@ module_it_getattr_symbol(DeeModuleObject *__restrict self,
 	if
 		likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
 	{
-	read_symbol:
+read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index];
@@ -198,7 +198,7 @@ again:
 				}
 				break;
 			}
-		continue_symbol_search:
+continue_symbol_search:
 			++new_index;
 			if (new_index > module->mo_bucketm) {
 				if (!ATOMIC_CMPXCH(self->mei_index, old_index, new_index))
@@ -365,7 +365,7 @@ module_my_getattr_symbol(ModuleExports *__restrict exports_map,
 	if
 		likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
 	{
-	read_symbol:
+read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index];
@@ -428,7 +428,7 @@ me_get(ModuleExports *__restrict self, DeeObject *__restrict key) {
 		unlikely(!symbol)
 	{
 		DeeModule_UnlockSymbols(module);
-	unknown_key:
+unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 		return NULL;
 	}
@@ -457,9 +457,9 @@ me_get_f(ModuleExports *__restrict self,
 		unlikely(!symbol)
 	{
 		DeeModule_UnlockSymbols(module);
-	unknown_key:
+unknown_key:
 		err_unknown_key((DeeObject *)self, key);
-	err:
+err:
 		return NULL;
 	}
 	result = module_it_getattr_symbol(module, symbol);
@@ -486,7 +486,7 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 		unlikely(!symbol)
 	{
 		DeeModule_UnlockSymbols(module);
-	unknown_key:
+unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 		return -1;
 	}
@@ -512,7 +512,7 @@ me_set(ModuleExports *__restrict self,
 		unlikely(!symbol)
 	{
 		DeeModule_UnlockSymbols(module);
-	unknown_key:
+unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 		return -1;
 	}

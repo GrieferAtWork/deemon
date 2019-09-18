@@ -136,7 +136,7 @@ object_format_generic(DeeObject *__restrict self,
 	case ALIGN_LEFT:
 		if (alignment_width <= self_len)
 			goto print_self_raw;
-	print_ljust:
+print_ljust:
 		temp = DeeString_PrintUtf8(self_str, printer, arg);
 		if
 			unlikely(temp < 0)
@@ -161,7 +161,7 @@ object_format_generic(DeeObject *__restrict self,
 			goto err_temp;
 			result += temp;
 		}
-	print_self_raw:
+print_self_raw:
 		temp = DeeString_PrintUtf8(self_str, printer, arg);
 		if
 			unlikely(temp < 0)
@@ -278,7 +278,7 @@ object_format_impl(DeeObject *__restrict self,
 			if
 				unlikely(!format_function)
 			{
-			check_attribute_error:
+check_attribute_error:
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))
 					break; /* Stop searching for a sub-class's __format__ function. */
@@ -294,7 +294,7 @@ object_format_impl(DeeObject *__restrict self,
 			if
 				unlikely(!format_function)
 			goto check_attribute_error;
-		call_format_function:
+call_format_function:
 			if (format_str_obj) {
 				callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
 			} else {

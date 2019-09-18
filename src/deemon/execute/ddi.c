@@ -450,9 +450,9 @@ next_ip:
 				save->s_prev  = self->rs_save;
 				self->rs_save = save;
 				break;
-			err_save_lc:
+err_save_lc:
 				Dee_Free(save->s_save.dx_lcnamv);
-			err_save:
+err_save:
 				Dee_Free(save);
 				goto err;
 			} break;

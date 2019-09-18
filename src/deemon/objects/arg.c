@@ -1242,7 +1242,7 @@ DeeKwdsMapping_Decref(DREF DeeObject *__restrict self) {
 		size_t i, argc = me->kmo_kwds->kw_size;
 		DREF DeeObject **argv;
 		if (!argc) {
-		clear_argv:
+clear_argv:
 			rwlock_write(&me->kmo_lock);
 			me->kmo_argv = NULL;
 			rwlock_endwrite(&me->kmo_lock);
@@ -1344,7 +1344,7 @@ DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
 	if
 		unlikely(index == (size_t)-1)
 	{
-	no_such_key:
+no_such_key:
 		err_unknown_key_str((DeeObject *)self, name);
 		return NULL;
 	}
@@ -1376,7 +1376,7 @@ DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self,
 	if
 		unlikely(index == (size_t)-1)
 	{
-	no_such_key:
+no_such_key:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
@@ -1409,7 +1409,7 @@ DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
 	if
 		unlikely(index == (size_t)-1)
 	{
-	no_such_key:
+no_such_key:
 		err_unknown_key_str_len((DeeObject *)self, name, namesize);
 		return NULL;
 	}
@@ -1442,7 +1442,7 @@ DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self,
 	if
 		unlikely(index == (size_t)-1)
 	{
-	no_such_key:
+no_such_key:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
@@ -1569,7 +1569,7 @@ DeeArg_GetKwStringDef(size_t argc, DeeObject **__restrict argv,
                       DeeObject *__restrict def) {
 	dhash_t hash;
 	if (!kw) {
-	return_def:
+return_def:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
@@ -1596,7 +1596,7 @@ DeeArg_GetKwStringLenDef(size_t argc, DeeObject **__restrict argv,
                          size_t namelen, dhash_t hash,
                          DeeObject *__restrict def) {
 	if (!kw) {
-	return_def:
+return_def:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;

@@ -422,7 +422,7 @@ process_set_exe(Process *__restrict self, DeeObject *value) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot set exe for running process %k",
 		                self);
-	err:
+err:
 		return -1;
 	}
 	ipc_unimplemented();
@@ -449,7 +449,7 @@ process_set_cmdline(Process *__restrict self, DeeObject *value) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot set cmdline for running process %k",
 		                self);
-	err:
+err:
 		return -1;
 	}
 	ipc_unimplemented();

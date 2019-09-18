@@ -204,9 +204,9 @@ fast_continue:
 	     iter = asm_nextinstr(iter)) {
 		uint16_t opcode;
 		int32_t offset;
-	do_switch_on_iter:
+do_switch_on_iter:
 		opcode = *iter;
-	do_switch_on_opcode:
+do_switch_on_opcode:
 		switch (opcode) {
 
 		CASE_ASM_EXTENDED:
@@ -241,7 +241,7 @@ fast_continue:
 		case ASM_JMP:
 		case ASM_FOREACH:
 			offset = *(int8_t *)(iter + 1);
-		do_relative_jump:
+do_relative_jump:
 			temp = iter;
 			iter = asm_nextinstr(iter);
 			if (textjumps_add(self, (code_addr_t)(temp - start_addr),
@@ -802,7 +802,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 
 		new_stacksz = stacksz;
 		if (new_stacksz == (uint16_t)-1) {
-		get_next_instruction_without_stack:
+get_next_instruction_without_stack:
 			next = asm_nextinstr(iter);
 		} else {
 			uint16_t opcode = *iter;
@@ -884,7 +884,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 #endif /* EXCEPTION_HANDLER_FFINALLY != 1 */
 						char const *type = except_type[j];
 						/* Found an overlap! */
-					prefix_except_prefix:
+prefix_except_prefix:
 						if (prefix_len)
 							print(line_prefix, prefix_len);
 						if (!(flags & PCODE_FNOADDRESS))

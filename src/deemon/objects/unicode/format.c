@@ -136,7 +136,7 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 			/* Do an integer-index lookup. */
 			result = DeeObject_GetItemIndex(self->f_args, index);
 		} else {
-		do_variable_length_index:
+do_variable_length_index:
 			index_end = fmt_start + 1;
 			while (DeeUni_IsSymCont(*index_end))
 				++index_end;
@@ -443,7 +443,7 @@ next_suffix:
 				unlikely(*fmt_start != ']')
 			{
 				Dee_Decref(index2);
-			err_bad_index_expression:
+err_bad_index_expression:
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Expected `]' after `[' in format expression, but got %:1q",
 				                fmt_start);
@@ -564,13 +564,13 @@ next_suffix:
 				Dee_Decref(new_arg);
 				fmt_start = after_dots; /* Skip `...' */
 			} else if (fmt_start[0] != ')') {
-			err_expected_rparen_arg:
+err_expected_rparen_arg:
 				Dee_Decref(arg);
-			err_expected_rparen:
+err_expected_rparen:
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Expected `)' after `(' to complete call expression, but got %:1q",
 				                fmt_start);
-			err_call_argv:
+err_call_argv:
 				object_vector_fini(&args);
 				goto err_r;
 			} else {
@@ -587,7 +587,7 @@ next_suffix:
 		if (object_vector_append(&args, arg))
 			goto err_call_argv;
 		++fmt_start; /* Skip `,' */
-	parse_second_argument:
+parse_second_argument:
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 		while (DeeUni_IsSpace(*fmt_start))
 			++fmt_start;
@@ -831,10 +831,10 @@ format_impl(struct formatter *__restrict self,
 			print_error = DeeObject_PrintFormatString(in_arg, printer, arg, content_start,
 			                                          (size_t)(content_end - content_start));
 		} else {
-		print_normal:
+print_normal:
 			print_error = DeeObject_Print(in_arg, printer, arg);
 		}
-	check_print_error:
+check_print_error:
 		Dee_Decref(in_arg);
 		if
 			unlikely(print_error < 0)
@@ -1000,10 +1000,10 @@ format_bytes_impl(struct formatter *__restrict self,
 			print_error = DeeObject_PrintFormatString(in_arg, printer, arg, content_start,
 			                                          (size_t)(content_end - content_start));
 		} else {
-		print_normal:
+print_normal:
 			print_error = DeeObject_Print(in_arg, printer, arg);
 		}
-	check_print_error:
+check_print_error:
 		Dee_Decref(in_arg);
 		if
 			unlikely(print_error < 0)

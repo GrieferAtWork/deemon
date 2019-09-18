@@ -561,7 +561,7 @@ priv_alloc_class_member(struct class_maker *__restrict self) {
 		if
 			unlikely(!new_alloc)
 		new_alloc = 2;
-	do_realloc:
+do_realloc:
 		new_vector = (struct class_member *)Dee_TryRealloc(self->cm_class_initv, new_alloc *
 		                                                                         sizeof(struct class_member));
 		if
@@ -589,7 +589,7 @@ priv_reserve_instance_init(struct class_maker *__restrict self) {
 		if
 			unlikely(!new_alloc)
 		new_alloc = 2;
-	do_realloc:
+do_realloc:
 		new_vector = (DREF struct ast **)Dee_TryRealloc(self->cm_initv, new_alloc *
 		                                                                sizeof(DREF struct ast *));
 		if
@@ -1036,7 +1036,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 				if
 					unlikely(!pair)
 				{
-				err_flags_superargs_superkwds:
+err_flags_superargs_superkwds:
 					Dee_Free(pair);
 					ast_decref(superkwds);
 					ast_decref(superargs);
@@ -1076,7 +1076,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 			if
 				unlikely(class_maker_push_ctorscope(self))
 			goto err_flags;
-		done_superargs:
+done_superargs:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if (has_paren) {
 				if
@@ -1282,7 +1282,7 @@ next:
 					callback_id = callback_names[i].cn_id;
 					/* Warn if the callback name has been marked as deprecated. */
 					if (callback_names[i].cn_depr) {
-					warn_deprecated_yield:
+warn_deprecated_yield:
 						if (WARN(W_DEPRECATED_PROPERTY_NAME,
 						         callback_names[callback_id].cn_name))
 							goto err;
@@ -1405,7 +1405,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 
 	ASSERT(name || !create_symbol);
 	if (tok == ':') {
-	do_parse_class_base:
+do_parse_class_base:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -1484,7 +1484,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 			/* Create a symbol-ast for the base expression. */
 			maker.cm_base = ast_sym(base_symbol);
 		} else {
-		use_object_base:
+use_object_base:
 			maker.cm_base = ast_constexpr((DeeObject *)&DeeObject_Type);
 		}
 		if
@@ -1560,7 +1560,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 		uint16_t *pusage_counter;
 		struct ast_loc loc;
 		bool modifiers_encountered;
-	next_member:
+next_member:
 		member_class          = MEMBER_CLASS_AUTO;
 		member_flags          = default_member_flags;
 		is_class_member       = false;
@@ -1569,7 +1569,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 		if
 			unlikely(ast_tags_clear())
 		goto err;
-	next_modifier:
+next_modifier:
 		switch (tok) {
 
 		case '@':
@@ -1616,7 +1616,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 			goto set_visibility;
 		case KWD_public:
 			new_visibility = CLASS_ATTRIBUTE_FPUBLIC;
-		set_visibility:
+set_visibility:
 			if
 				unlikely(yield() < 0)
 			goto err;
@@ -1712,7 +1712,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 				unlikely(temp < 0)
 			goto err;
 			operator_name = (uint16_t)temp;
-		define_operator:
+define_operator:
 			/* Special case: The constructor operator. */
 			if (operator_name == OPERATOR_CONSTRUCTOR)
 				goto define_constructor;
@@ -1793,7 +1793,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 				if
 					unlikely(!yield_function)
 				{
-				err_operator_ast_ddi:
+err_operator_ast_ddi:
 					operator_ast = NULL;
 					goto got_operator_ast;
 				}
@@ -1801,7 +1801,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 				if
 					unlikely(!temp)
 				{
-				err_yield_function:
+err_yield_function:
 					ast_decref(yield_function);
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 					decl_ast_fini(&decl); /* TODO: Encode declaration information in operator docs! */
@@ -1812,7 +1812,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 				if
 					unlikely(!argv)
 				{
-				err_yield_function_temp:
+err_yield_function_temp:
 					ast_decref(temp);
 					goto err_yield_function;
 				}
@@ -1885,7 +1885,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				                                          );
 			}
-		got_operator_ast:
+got_operator_ast:
 			basescope_pop();
 			if
 				unlikely(!operator_ast)
@@ -1935,7 +1935,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 				default: break;
 				}
 			}
-		set_operator_ast:
+set_operator_ast:
 			/* XXX: Add operator documentation? */
 			operator_ast = ast_annotations_apply(&annotations, operator_ast);
 			if
@@ -1956,7 +1956,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 			goto err;
 			/* Parse a trailing ';' if required to. */
 			if (need_semi) {
-			yield_semi_after_operator:
+yield_semi_after_operator:
 				if unlikely(likely(is_semicollon())
 				            ? (yield_semicollon() < 0)
 				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
@@ -2029,7 +2029,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 					unlikely(yield() < 0)
 				goto err;
 				loc_here(&loc);
-			define_constructor:
+define_constructor:
 				if
 					unlikely(maker.cm_ctor)
 				{
@@ -2175,7 +2175,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 						if
 							unlikely(!call_args)
 						{
-						err_ctor_expr:
+err_ctor_expr:
 							Dee_Decref(ctor_expr);
 							goto err_anno;
 						}
@@ -2399,7 +2399,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 					for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i)
 						ast_xdecref(prop_callbacks[i]);
 					break;
-				err_property:
+err_property:
 					for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i)
 						ast_xdecref(prop_callbacks[i]);
 					goto err;
@@ -2551,9 +2551,9 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 				unlikely(error)
 			goto err;
 			++*pusage_counter;
-		check_need_semi:
+check_need_semi:
 			if (need_semi) {
-			do_yield_semicollon:
+do_yield_semicollon:
 				if unlikely(likely(is_semicollon())
 				            ? (yield_semicollon() < 0)
 				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))

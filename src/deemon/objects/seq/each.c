@@ -498,7 +498,7 @@ se_leave(SeqEachBase *__restrict self) {
 		if
 			unlikely(DeeObject_Leave(elem[count]))
 		DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
-	err_elem_count:
+err_elem_count:
 		Dee_Decref(elem[count]);
 	}
 	Dee_Free(elem);
@@ -1102,7 +1102,7 @@ sew_leave(DeeObject *__restrict self) {
 		if
 			unlikely(DeeObject_Leave(elem[count]))
 		DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
-	err_elem_count:
+err_elem_count:
 		Dee_Decref(elem[count]);
 	}
 	Dee_Free(elem);

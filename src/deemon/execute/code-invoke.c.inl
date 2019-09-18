@@ -370,7 +370,7 @@ err_ex_frame:
 		DeeObject_Init(yf, &DeeYieldFunction_Type);
 		return (DREF DeeObject *)yf;
 #ifndef CALL_TUPLE
-	err_r:
+err_r:
 		DeeObject_FREE(yf);
 #endif /* !CALL_TUPLE */
 	}

@@ -465,7 +465,7 @@ uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 		if
 			unlikely(TPP_Atoi(&result->ie_val) == TPP_ATOF_ERR)
 		goto err;
-	yield_done:
+yield_done:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -690,12 +690,12 @@ again:
 			unlikely(WARN(W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT))
 		goto err;
 		break;
-	err_ipsp_no_symbol:
+err_ipsp_no_symbol:
 		if
 			unlikely(WARN(W_UASM_NEED_SYMBOL_FOR_RELOCATION_MODEL))
 		goto err;
 		goto again;
-	err_ipsp_already_defined:
+err_ipsp_already_defined:
 		if
 			unlikely(WARN(W_UASM_RELOCATION_MODEL_ALREADY_DEFINED))
 		goto err;
@@ -1037,7 +1037,7 @@ PRIVATE int32_t FCALL do_parse_constexpr(void) {
 	if
 		unlikely(ast_optimize_all(imm_const, true))
 	{
-	err_imm_const:
+err_imm_const:
 		ast_decref(imm_const);
 		goto err;
 	}
@@ -1293,7 +1293,7 @@ do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
 		asm_invoke_operand_determine_intclass(result);
 		result->io_class |= OPERAND_CLASS_FIMMVAL;
 		break;
-	allocate_constant:
+allocate_constant:
 #endif
 		/* Fallback: Allocate the operand as a constant variable. */
 		symid = asm_newconst(constval);
@@ -1309,7 +1309,7 @@ do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
 		int32_t symid;
 		/* Symbol expression. */
 		sym = expr->a_sym;
-	check_sym_class:
+check_sym_class:
 		if (SYMBOL_MUST_REFERENCE(sym)) {
 			symid = asm_rsymid(sym);
 			if
@@ -1416,7 +1416,7 @@ do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
 	}
 
 	default:
-	unsupported_expression:
+unsupported_expression:
 		if (WARN(W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND))
 			goto err;
 		break;
@@ -1495,7 +1495,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 		result->io_class |= OPERAND_CLASS_FBRACKETFLAG;
 		break;
 
-	parse_stack_operand:
+parse_stack_operand:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -1509,7 +1509,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 		if
 			unlikely(yield() < 0)
 		goto err;
-	parse_stack_operand_start:
+parse_stack_operand_start:
 		if
 			unlikely(do_parse_operand(result, false))
 		goto err;
@@ -1858,7 +1858,7 @@ parse_local_operand:
 		/* Determine the address width classification of the operand. */
 		asm_invoke_operand_determine_intclass(result);
 		break;
-	done_yield_1:
+done_yield_1:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -1964,7 +1964,7 @@ do_static_prefix:
 		goto err;
 		invoc.ai_prefix     = ASM_STATIC;
 		invoc.ai_prefix_id1 = (uint16_t)val;
-	continue_after_prefix:
+continue_after_prefix:
 		invoc.ai_flags |= INVOKE_FPREFIX;
 		if
 			unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_UASM_EXPECTED_COLLON_AFTER_PREFIX))

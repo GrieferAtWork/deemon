@@ -126,7 +126,7 @@ ast_gen_operator_func(struct ast *binding,
 				goto err_module; /* InstanceMethod(<...> from operators,binding) */
 		}
 	} else {
-	generic_operator:
+generic_operator:
 		/* Fallback: invoke the a function `operator from operators',
 		 *           which takes the raw ID of the operator which we're
 		 *           trying to generate a function for, such that the

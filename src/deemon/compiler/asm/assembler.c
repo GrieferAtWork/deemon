@@ -161,7 +161,7 @@ INTERN struct ddi_checkpoint *DCALL asm_newddi(void) {
 		/* Preallocate a bunch because we use checkpoints quite excessively. */
 		if (!new_alloc)
 			new_alloc = 16;
-	do_realloc:
+do_realloc:
 		result = (struct ddi_checkpoint *)Dee_TryRealloc(result, new_alloc *
 		                                                         sizeof(struct ddi_checkpoint));
 		if
@@ -711,7 +711,7 @@ INTERN bool DCALL asm_rmdelop(void) {
 				case 2:
 					*(iter + 0) = ASM_PUSH_NONE;
 					*(iter + 1) = ASM_PUSH_NONE;
-				common_adj16_delop:
+common_adj16_delop:
 					*(iter + 2) = ASM_DELOP;
 					*(iter + 3) = ASM_DELOP;
 					break;
@@ -1515,7 +1515,7 @@ INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
 		if
 			unlikely(!exceptv)
 		{
-		err_ddi:
+err_ddi:
 			Dee_Decref(ddi);
 			return NULL; /* Well... $h1t. */
 		}
@@ -1625,7 +1625,7 @@ INTERN struct asm_rel *(FCALL asm_allocrel)(void) {
 		while (new_rela <= current_assembler.a_curr->sec_relc)
 			new_rela *= 2;
 		/* Must allocate more relocations. */
-	do_realloc:
+do_realloc:
 		result = (struct asm_rel *)Dee_TryRealloc(current_assembler.a_curr->sec_relv,
 		                                          new_rela * sizeof(struct asm_rel));
 		if
@@ -2592,7 +2592,7 @@ PRIVATE int DCALL check_resize_constants(void) {
 				                       "Too many constant variables");
 			}
 		}
-	do_realloc:
+do_realloc:
 		new_vector = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_constv,
 		                                               new_consta * sizeof(DREF DeeObject *));
 		if
@@ -2698,7 +2698,7 @@ asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym) {
 				                       "Too many static variables");
 			}
 		}
-	do_realloc:
+do_realloc:
 		new_vector = (struct asm_symbol_static *)Dee_TryRealloc(current_assembler.a_staticv,
 		                                                        new_statica *
 		                                                        sizeof(struct asm_symbol_static));
@@ -2750,7 +2750,7 @@ INTERN int32_t DCALL asm_newlocal_noreuse(void) {
 		if
 			unlikely(new_size <= result)
 		new_size = UINT16_MAX;
-	do_realloc:
+do_realloc:
 		new_bitset = (uint8_t *)Dee_TryRealloc(current_assembler.a_localuse, new_size);
 		if
 			unlikely(!new_bitset)
@@ -3094,7 +3094,7 @@ asm_rsymid(struct symbol *__restrict sym) {
 		if
 			unlikely(new_size <= result)
 		new_size = UINT16_MAX;
-	do_realloc:
+do_realloc:
 		new_vector = (struct asm_symbol_ref *)Dee_TryRealloc(current_assembler.a_refv, new_size *
 		                                                                               sizeof(struct asm_symbol_ref));
 		if
@@ -3156,7 +3156,7 @@ asm_asymid_r(struct symbol *__restrict sym) {
 		if
 			unlikely(new_size <= result)
 		new_size = UINT16_MAX;
-	do_realloc:
+do_realloc:
 		new_vector = (struct symbol **)Dee_TryRealloc(current_assembler.a_argrefv,
 		                                              new_size * sizeof(struct symbol *));
 		if
@@ -3217,7 +3217,7 @@ asm_newmodule(DeeModuleObject *__restrict mod) {
 		if
 			unlikely(new_size <= result)
 		new_size = UINT16_MAX;
-	do_realloc:
+do_realloc:
 		new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
 		                                                     new_size *
 		                                                     sizeof(DREF DeeModuleObject *));
@@ -3313,7 +3313,7 @@ do_search:
 		if (deemon_module.mo_globalv[i] != constval)
 			continue;
 		rwlock_endread(&deemon_module.mo_lock);
-	did_find_export:
+did_find_export:
 		/* Check if the symbol has already been bound. */
 		result = current_rootscope->rs_scope.bs_scope.s_del;
 		for (; result; result = result->s_next) {
@@ -3333,7 +3333,7 @@ do_search:
 		result->s_extern.e_module = DeeModule_GetDeemon();
 		result->s_extern.e_symbol = DeeModule_GetSymbolID(&deemon_module, i);
 		ASSERT(result->s_extern.e_symbol != NULL);
-	done_result:
+done_result:
 		return result;
 	}
 	rwlock_endread(&deemon_module.mo_lock);
@@ -3404,7 +3404,7 @@ restart:
 			SYMBOL_INPLACE_UNWIND_ALIAS(sym);
 			if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
 				uint16_t argid;
-			do_savearg:
+do_savearg:
 				argid = (uint16_t)(iter - current_basescope->bs_argv);
 				if (!did_define_header_ddi) {
 					if (asm_putddi(code_ast))
@@ -3538,7 +3538,7 @@ restart:
 	if
 		unlikely(link_error != 0)
 	{
-	err_link:
+err_link:
 		if
 			unlikely(link_error < 0)
 		goto err;

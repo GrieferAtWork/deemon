@@ -194,7 +194,7 @@ gcset_deepcopy(GCSet *__restrict self) {
 			goto err;
 		}
 		return GCSetMaker_Pack(&maker);
-	err:
+err:
 		GCSetMaker_Fini(&maker);
 		return NULL;
 	}

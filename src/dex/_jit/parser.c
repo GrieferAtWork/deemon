@@ -319,7 +319,7 @@ do_operator_gr:
 
 	case JIT_STRING:
 		if (self->jl_tokend != self->jl_tokstart + 2) {
-		err_empty_string:
+err_empty_string:
 			syn_operator_expected_empty_string(self);
 			goto err_trace;
 		}
@@ -339,7 +339,7 @@ do_operator_gr:
 			JITLexer_Yield(self);
 		}
 		else {
-		err_rbrck_after_lbrck:
+err_rbrck_after_lbrck:
 			syn_bracket_expected_rbracket_after_lbracket(self);
 			goto err_trace;
 		}
@@ -588,7 +588,7 @@ do_operator_gr:
 					goto done_y1;
 				}
 			}
-		unknown:
+unknown:
 			syn_operator_unknown_name(self);
 			goto err_trace;
 		}
@@ -824,7 +824,7 @@ next_modifier:
 		if (JITLexer_ISTOK(self, "local")) {
 			*pmode &= ~LOOKUP_SYM_VMASK;
 			*pmode |= LOOKUP_SYM_VLOCAL;
-		continue_modifier:
+continue_modifier:
 			JITLexer_Yield(self);
 			goto next_modifier;
 		}

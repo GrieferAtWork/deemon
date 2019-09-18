@@ -329,7 +329,7 @@ do_yield_suffix:
 			if (self->jl_tok == '(') {
 				/* Skip the parameter list. */
 				unsigned int recursion;
-			do_parse_function_arglist:
+do_parse_function_arglist:
 				JITLexer_Yield(self);
 				recursion = 1;
 				for (;;) {
@@ -346,7 +346,7 @@ do_yield_suffix:
 					}
 					JITLexer_Yield(self);
 				}
-			do_parse_function:
+do_parse_function:
 				old_flags = self->jl_scandata.jl_flags;
 				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
 				if (self->jl_tok == TOK_ARROW) {
@@ -439,9 +439,9 @@ do_yield_suffix:
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, true);
 				if (JITLexer_ISKWD(self, "while")) {
-				do_yield_again_nocast:
+do_yield_again_nocast:
 					allow_casts = false;
-				do_yield_again:
+do_yield_again:
 					JITLexer_Yield(self);
 					goto again;
 				}
@@ -461,7 +461,7 @@ do_yield_suffix:
 			if (tok_begin[0] == 'f' &&
 			    tok_begin[1] == 'o' &&
 			    tok_begin[2] == 'r') {
-			do_handle_for:
+do_handle_for:
 				JITLexer_Yield(self);
 				JITLexer_ScanForHead(self);
 				goto do_again_docast;
@@ -625,7 +625,7 @@ do_suffix:
 	case '(':
 		/* Call suffix */
 		JITLexer_Yield(self);
-	do_scan_call_args:
+do_scan_call_args:
 		JITLexer_ScanExpression(self, true);
 		if (self->jl_tok == ':' ||
 		    self->jl_tok == TOK_POW) {
@@ -708,9 +708,9 @@ do_suffix:
 	case TOK_COLLON_EQUAL:
 	case TOK_EQUAL3:
 	case TOK_NOT_EQUAL3:
-	do_yield_again_docast:
+do_yield_again_docast:
 		JITLexer_Yield(self);
-	do_again_docast:
+do_again_docast:
 		allow_casts = true;
 		goto again;
 
@@ -761,14 +761,14 @@ again:
 		case 2:
 			if (tok_begin[0] == 'i' &&
 			    tok_begin[1] == 'f') {
-			do_yield_expression_again:
+do_yield_expression_again:
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, false);
 				goto again;
 			}
 			if (tok_begin[0] == 'd' &&
 			    tok_begin[1] == 'o') {
-			do_yield_again:
+do_yield_again:
 				JITLexer_Yield(self);
 				goto again;
 			}
@@ -782,7 +782,7 @@ again:
 			if (tok_begin[0] == 'f' &&
 			    tok_begin[1] == 'o' &&
 			    tok_begin[2] == 'r') {
-			do_scan_for_statement:
+do_scan_for_statement:
 				JITLexer_Yield(self);
 				JITLexer_ScanForHead(self);
 				goto again;
@@ -790,7 +790,7 @@ again:
 			if (tok_begin[0] == 'd' &&
 			    tok_begin[1] == 'e' &&
 			    tok_begin[2] == 'l') {
-			do_yield_expression_semi:
+do_yield_expression_semi:
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, true);
 				goto done_skip_semi;
@@ -808,7 +808,7 @@ again:
 			if (name == ENCODE4('e', 'l', 's', 'e'))
 				goto do_yield_again;
 			if (name == ENCODE4('f', 'r', 'o', 'm')) {
-			do_skip_until_semi:
+do_skip_until_semi:
 				do
 					JITLexer_Yield(self);
 				while (self->jl_tok && self->jl_tok != ';');
@@ -844,7 +844,7 @@ again:
 			}
 			if (name == ENCODE4('b', 'r', 'e', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'k') {
-			do_yield_semi:
+do_yield_semi:
 				JITLexer_Yield(self);
 				goto done_skip_semi;
 			}
@@ -887,7 +887,7 @@ again:
 			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('m', '_') &&
 			    *(uint8_t *)(tok_begin + 6) == '_') {
 				bool has_lparen;
-			do_asm:
+do_asm:
 				JITLexer_Yield(self);
 				if (JITLexer_ISKWD(self, "pack"))
 					JITLexer_Yield(self);
@@ -924,7 +924,7 @@ again:
 					} else {
 						JITLexer_Yield(self);
 					}
-				continue_skip_asm_operand:
+continue_skip_asm_operand:
 					if (self->jl_tok == '[') {
 						do
 							JITLexer_Yield(self);
@@ -967,7 +967,7 @@ again:
 
 	default:
 		JITLexer_ScanExpression(self, true);
-	done_skip_semi:
+done_skip_semi:
 		if (self->jl_tok == ';') {
 		case ';':
 			JITLexer_Yield(self);

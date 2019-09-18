@@ -1585,9 +1585,9 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 	case ASM_GLOBAL:
 	case ASM_LOCAL:
 		prefix_ip = ip + 2;
-	do_prefix_nosp:
+do_prefix_nosp:
 		prefix_stack_sub = 0;
-	do_prefix:
+do_prefix:
 		op = prefix_ip[0];
 		switch (op) {
 
@@ -1919,7 +1919,7 @@ asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
 	case ASM_STATIC:
 	case ASM_EXTERN:
 	case ASM_GLOBAL:
-	check_prefix_core_usage:
+check_prefix_core_usage:
 		switch (*ip) {
 
 		case ASM_PUSH_LOCAL: /* mov PREFIX, local */
@@ -2110,7 +2110,7 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
 	case ASM_LOCAL:
 	case ASM_EXTERN:
 	case ASM_GLOBAL:
-	check_prefix_core_usage:
+check_prefix_core_usage:
 		switch (*ip) {
 
 		case ASM_PUSH_STATIC: /* mov PREFIX, static */

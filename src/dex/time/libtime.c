@@ -709,7 +709,7 @@ time_setint(DeeTimeObject *__restrict self,
 
 	case TIME_REPR_YER:
 		arg = (dtime_half_t)value;
-	do_set_year:
+do_set_year:
 		if (self->t_type == TIME_MONTHS) {
 			self->t_months = (dtime_half_t)value * MONTHS_PER_YEAR;
 			goto done;
@@ -918,7 +918,7 @@ time_format(struct unicode_printer *__restrict printer,
 
 			case 'a':
 				text = GETSTRING_WDAY_ABBR(time_getint(self, TIME_REPR_WDAY));
-			print_text:
+print_text:
 				print(text, strlen(text));
 				break;
 
@@ -973,7 +973,7 @@ time_format(struct unicode_printer *__restrict printer,
 				/* TODO: @end locale_dependent */
 			case 'C':
 				number = ((unsigned int)time_getint(self, TIME_REPR_YER) / 100) % 100;
-			print_number_2:
+print_number_2:
 				printf("%0.2u", number);
 				break;
 

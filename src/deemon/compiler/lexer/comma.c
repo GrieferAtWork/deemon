@@ -163,7 +163,7 @@ next_modifier:
 			*pmode &= ~LOOKUP_SYM_VGLOBAL;
 		}
 		*pmode |= LOOKUP_SYM_VLOCAL;
-	continue_modifier:
+continue_modifier:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -621,7 +621,7 @@ next_expr:
 					if
 						unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
 					{
-					err_args:
+err_args:
 						ast_decref(args);
 						goto err_current;
 					}
@@ -711,7 +711,7 @@ next_expr:
 		goto err_current;
 		ast_decref(current);
 		/* Yield the ',' token. */
-	continue_at_comma:
+continue_at_comma:
 		if
 			unlikely(yield() < 0)
 		goto err;
@@ -768,7 +768,7 @@ next_expr:
 			if
 				unlikely(error)
 			{
-			err_store_source:
+err_store_source:
 				ast_decref(store_source);
 				goto err;
 			}
@@ -828,7 +828,7 @@ next_expr:
 		/* Check for further comma or store expressions. */
 		if (tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
 			if (!(mode & AST_COMMA_STRICTCOMMA)) {
-			do_append_gen_to_batch:
+do_append_gen_to_batch:
 				/* Append the generated expression to the batch. */
 				error = astlist_append(&expr_batch, current);
 				if
@@ -914,7 +914,7 @@ done_expression_nomerge:
 			if
 				unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
 			{
-			err_clear_current_only:
+err_clear_current_only:
 				ast_decref(current);
 				current = NULL;
 			}

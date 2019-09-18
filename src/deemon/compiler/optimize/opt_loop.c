@@ -67,7 +67,7 @@ INTERN int
 		if (self->a_flag & AST_FLOOP_FOREACH) {
 			/* foreach-style loop. */
 			if (ast_assumes_gather(&lookahead_assumptions, self->a_loop.l_iter, true)) {
-			err_lookahead_assumptions:
+err_lookahead_assumptions:
 				ast_assumes_fini(&lookahead_assumptions);
 				goto err;
 			}
@@ -119,7 +119,7 @@ INTERN int
 			child_stack.os_ast  = self->a_loop.l_iter;
 			child_stack.os_used = true;
 			if (ast_optimize(&child_stack, self->a_loop.l_iter, true)) {
-			err_entry_assumptions:
+err_entry_assumptions:
 				ast_assumes_fini(&entry_assumptions);
 				goto err;
 			}

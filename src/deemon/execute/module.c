@@ -238,7 +238,7 @@ DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
 	if
 		likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
 	{
-	read_symbol:
+read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index];
@@ -282,7 +282,7 @@ DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
 		likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
 	{
 		bool result;
-	read_symbol:
+read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index] != NULL;
@@ -591,7 +591,7 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 				unlikely(self->mo_globalv[symbol->ss_index] != NULL)
 			{
 				rwlock_endwrite(&self->mo_lock);
-			err_is_readonly:
+err_is_readonly:
 				return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			}
 			Dee_Incref(value);

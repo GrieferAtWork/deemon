@@ -705,7 +705,7 @@ DecFile_Init(DecFile *__restrict self,
 	if
 		unlikely((doff_t)old_pos < 0)
 	{
-	err_seek_failed:
+err_seek_failed:
 #if 0 /* TODO */
 		if (DeeError_Catch(&DeeError_NotImplemented)) {
 			/* If seeking isn't allowed within the input stream,
@@ -1232,7 +1232,7 @@ DecFile_LoadObject(DecFile *__restrict self,
 	switch (code) {
 
 	case DTYPE_NONE:
-	set_none_result:
+set_none_result:
 		result = Dee_None;
 		Dee_Incref(Dee_None);
 		break;
@@ -1299,7 +1299,7 @@ DecFile_LoadObject(DecFile *__restrict self,
 		if
 			unlikely(!result)
 		{
-		err_function_code:
+err_function_code:
 			Dee_Decref(code);
 			goto err;
 		}
@@ -2119,7 +2119,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 				unlikely(!ITER_ISOK(result[i]))
 			{
 				new_result = result[i];
-			read_failed:
+read_failed:
 				while (i--)
 					Dee_Decref(result[i]);
 				Dee_Free(result);
@@ -2614,7 +2614,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 				if
 					unlikely(kwd_reader >= end)
 				{
-				corrupt_kwds_i:
+corrupt_kwds_i:
 					while (i--)
 						Dee_Decref(kwds[i]);
 					Dee_Free(kwds);
@@ -2628,7 +2628,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 				if ((kwds[i] = (DREF DeeStringObject *)DeeString_NewUtf8(name,
 				                                                         strlen(name),
 				                                                         STRING_ERROR_FSTRICT)) == NULL) {
-				err_kwds_i:
+err_kwds_i:
 					while (i--)
 						Dee_Decref(kwds[i]);
 					Dee_Free(kwds);

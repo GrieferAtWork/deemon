@@ -1397,7 +1397,7 @@ INTERN DREF DeeObject *DCALL fs_getcwd(void) {
 		unlikely(!buffer)
 	goto err;
 	for (;;) {
-	again:
+again:
 		DBG_ALIGNMENT_DISABLE();
 		new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
 		if (!new_bufsize) {
@@ -1491,7 +1491,7 @@ again:
 			if (result < 0)
 				goto err;
 			if (result == 0 && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			do_throw_not_dir:
+do_throw_not_dir:
 				err_path_no_dir(dwError, path);
 				goto err;
 			}
@@ -2162,7 +2162,7 @@ user_get_home(struct user_object *__restrict self) {
 			unlikely(error < 0)
 		goto err;
 		return unicode_printer_pack(&printer);
-	err:
+err:
 		unicode_printer_fini(&printer);
 		return NULL;
 	}
@@ -2426,7 +2426,7 @@ again:
 			DBG_ALIGNMENT_ENABLE();
 			self->s_valid = STAT_FNORMAL;
 			self->s_hand  = fd; /* Inherit */
-		done:
+done:
 			return 0;
 		}
 		/* Failed to open the file as a reparse point.
@@ -2483,7 +2483,7 @@ again:
 			goto ok_user_fd;
 		DBG_ALIGNMENT_ENABLE();
 		/* Didn't work... (Try the filename) */
-	try_filename:
+try_filename:
 		path = DeeFile_Filename(path);
 		if
 			unlikely(!path)
@@ -2497,7 +2497,7 @@ again:
 	/* Retrieve information by handle. */
 	DBG_ALIGNMENT_DISABLE();
 	if (GetFileInformationByHandle(fd, &self->s_info)) {
-	ok_user_fd:
+ok_user_fd:
 		DBG_ALIGNMENT_ENABLE();
 		/* Immediately load the file type if the descriptor was given by the user. */
 		if (flags & DOSTAT_FNOEXINFO) {
@@ -3362,7 +3362,7 @@ get_pathhandle_wrattr(DeeObject *__restrict path,
                       HANDLE *__restrict phandle) {
 	int result;
 	if (DeeString_Check(path)) {
-	again:
+again:
 		*phandle = nt_CreateFile(path, FILE_WRITE_ATTRIBUTES,
 		                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		                         NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
@@ -3791,14 +3791,14 @@ again_deletefile:
 		/* Check if we've failed to delete a symbolic
 		 * directory-link (for which RemoveDirectory() must be used) */
 		DWORD attr;
-	again_getattr:
+again_getattr:
 		error = nt_GetFileAttributes(path, &attr);
 		if (error < 0)
 			goto err;
 		if (!error &&
 		    (attr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
 		    (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) {
-		again_rmdir:
+again_rmdir:
 			error = nt_RemoveDirectory(path);
 			if
 				unlikely(error <= 0)
@@ -4137,7 +4137,7 @@ fs_readlink(DeeObject *__restrict path) {
 	LPWSTR linkstr_begin, linkstr_end;
 	bool owns_linkfd;
 	if (DeeString_Check(path)) {
-	again_createfile:
+again_createfile:
 		link_fd = nt_CreateFile(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
 		                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
 		if
@@ -4355,7 +4355,7 @@ again:
 	/* Quick check: Has the iterator been exhausted. */
 	if (self->d_hnd == INVALID_HANDLE_VALUE) {
 		rwlock_endwrite(&self->d_lock);
-	iter_done:
+iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
 read_filename:
@@ -4708,7 +4708,7 @@ wild_match(LPWSTR string, LPWSTR pattern) {
 		}
 		if (DeeUni_ToLower(*pattern) == DeeUni_ToLower(*string) ||
 		    *pattern == '?') {
-		next:
+next:
 			++string, ++pattern;
 			continue; /* single character match */
 		}
@@ -4736,7 +4736,7 @@ again:
 	/* Quick check: Has the iterator been exhausted. */
 	if (self->q_iter.d_hnd == INVALID_HANDLE_VALUE) {
 		rwlock_endwrite(&self->q_iter.d_lock);
-	iter_done:
+iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
 read_filename:

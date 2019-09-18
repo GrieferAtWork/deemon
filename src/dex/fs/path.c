@@ -381,7 +381,7 @@ fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
 				break;
 			pth_begin = next;
 		}
-	again_trip_paths:
+again_trip_paths:
 		while (pwd_end > pwd_begin) {
 			next = pwd_end;
 			ch   = utf8_readchar_rev((char const **)&next, pwd_begin);
@@ -419,7 +419,7 @@ fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
 			}
 			goto again_trip_paths;
 		}
-	done_merge_paths:
+done_merge_paths:
 		/* Special optimizations when one part wasn't used at all.
 		 * Also: Special handling when one of the 2 paths has gotten empty! */
 		if (pwd_begin >= pwd_end) {
@@ -583,7 +583,7 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 				}
 				break;
 			}
-		continue_after_sep:
+continue_after_sep:
 			while (pth_iter < pth_end) {
 				next = pth_iter;
 				a    = utf8_readchar((char const **)&next, pth_end);
@@ -598,7 +598,7 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 					break;
 				pwd_iter = next;
 			}
-		continue_after_sep_sp:
+continue_after_sep_sp:
 			/* Keep track the last shared folder. */
 			pth_begin = pth_iter;
 			pwd_begin = pwd_iter;
@@ -775,7 +775,7 @@ continue_uprefs_normal:
 	}
 	if (!uprefs && pth_iter >= pth_end) {
 		/* Special case: The 2 given paths match each other exactly. */
-	return_single_dot:
+return_single_dot:
 		result = (DREF DeeObject *)&str_single_dot;
 		Dee_Incref(result);
 		goto done;
@@ -987,7 +987,7 @@ next:
 		}
 		flush_start = iter;
 		if (error) {
-		home_lookup_failed:
+home_lookup_failed:
 			/* Lookup failed, but errors are being ignored. */
 			flush_start = home_start;
 		}
@@ -1027,7 +1027,7 @@ next:
 			name_end    = iter;
 			flush_start = iter;
 		}
-	print_env:
+print_env:
 		if (environ_mapping == &DeeEnv_Singleton) {
 			if (!DeeObject_IsShared(path) || !*name_end) {
 				char temp = *name_end;
@@ -1164,7 +1164,7 @@ next:
 				goto done_flush;
 			} else if (flush_end - 1 == flush_start) {
 				/* Self-directory-reference. */
-			done_flush:
+done_flush:
 				flush_start = iter;
 				goto done_flush_nostart;
 			} else if (flush_end[-2] == SEP &&
@@ -1173,7 +1173,7 @@ next:
 				flush_end -= 2;
 			}
 		}
-	do_flush_after_sep:
+do_flush_after_sep:
 		/* Check if we need to fix anything */
 		if (flush_end == iter - 1
 #ifdef CONFIG_HOST_WINDOWS
@@ -1211,7 +1211,7 @@ next:
 			if (unicode_printer_putascii(&printer, SEP) < 0)
 				goto err;
 		}
-	done_flush_nostart:
+done_flush_nostart:
 		if (iter == end + 1)
 			goto done;
 		goto next;
@@ -1242,7 +1242,7 @@ done:
 						goto return_upper;
 				}
 				return_reference_(path);
-			return_upper:
+return_upper:
 				return DeeObject_CallAttrString(path, "upper", 0, NULL);
 			}
 #endif /* CONFIG_HOST_WINDOWS */

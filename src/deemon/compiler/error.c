@@ -319,7 +319,7 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 		size_t i, count;
 		/* A master (error/fatal) error was set.
 		 * Use it to pack everything together. */
-	handle_master:
+handle_master:
 		master = current_parser_errors.pe_master;
 		count  = current_parser_errors.pe_errorc;
 		ASSERT((master->ce_errorc != 0) ==

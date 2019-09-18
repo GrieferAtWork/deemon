@@ -245,7 +245,7 @@ JITLValue_GetValue(JITLValue *__restrict self,
 		if
 			unlikely(!result)
 		{
-		err_unbound:
+err_unbound:
 			DeeError_Throwf(&DeeError_UnboundLocal,
 			                "Unbound local variable");
 			goto err;
@@ -797,17 +797,17 @@ JITContext_Lookup(JITContext *__restrict self,
 		if (!ent)
 			break;
 		/* Found a local variable entry. */
-	set_object_entry:
+set_object_entry:
 		result->js_kind              = JIT_SYMBOL_OBJENT;
 		result->js_objent.jo_tab     = tab;
 		result->js_objent.jo_ent     = ent;
 		result->js_objent.jo_namestr = ent->oe_namestr;
 		result->js_objent.jo_namelen = ent->oe_namelen;
-	done:
+done:
 		return 0;
 
 	case LOOKUP_SYM_VGLOBAL:
-	set_global:
+set_global:
 #if 0
 		if (!self->jc_globals) {
 			self->jc_globals = DeeDict_New();

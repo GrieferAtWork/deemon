@@ -382,7 +382,7 @@ DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc,
 		         current_scope == exprv[0]->a_scope)
 	{
 		result = exprv[0]; /* Inherit reference. */
-	got_result:
+got_result:
 		Dee_Free(exprv); /* We're supposed to ~inherit~ this on success. (So we simply discard it). */
 		return result;
 	}
@@ -392,7 +392,7 @@ DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc,
 	{
 		if (flags == AST_FMULTIPLE_KEEPLAST) {
 			result = ast_constexpr(Dee_None);
-		got_result_maybe:
+got_result_maybe:
 			if
 				unlikely(!result)
 			return NULL;
@@ -1057,7 +1057,7 @@ ast_fini_contents(struct ast *__restrict self) {
 		ast_xdecref(self->a_operator.o_op3);
 		ATTR_FALLTHROUGH
 	case AST_CONDITIONAL:
-	do_xdecref_3:
+do_xdecref_3:
 		ast_xdecref(self->a_operator.o_op2);
 		ATTR_FALLTHROUGH
 	case AST_FUNCTION:
@@ -1190,7 +1190,7 @@ ast_visit_impl(struct ast *__restrict self,
 		ATTR_FALLTHROUGH
 	case AST_CONDITIONAL:
 	case AST_LOOP:
-	do_xvisit_3:
+do_xvisit_3:
 		if (self->a_operator.o_op2)
 			ast_visit(self->a_operator.o_op2);
 		ATTR_FALLTHROUGH

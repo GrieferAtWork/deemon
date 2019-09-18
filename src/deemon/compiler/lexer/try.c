@@ -71,7 +71,7 @@ INTERN DREF struct ast *DCALL ast_parse_catchmask(void) {
 				/* Must allocate more memory. */
 				DREF struct ast **new_exprv;
 				size_t new_expra = expra * 2;
-			do_realloc:
+do_realloc:
 				new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, new_expra *
 				                                                      sizeof(DREF struct ast *));
 				if
@@ -156,7 +156,7 @@ ast_parse_try(bool is_statement) {
 		{
 			size_t new_catcha = unlikely(catcha)
 			? catcha + ((catcha + 2) / 3) : 1;
-		do_realloc_catchv:
+do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
 			if
@@ -246,7 +246,7 @@ ast_parse_try(bool is_statement) {
 					goto parse_catch_mask;
 				}
 			} else {
-			parse_catch_mask:
+parse_catch_mask:
 				/* Explicit catch mask: `try { ... } catch (get_mask())' */
 				handler->ce_mask = ast_parse_catchmask();
 				/* NOTE: For some reason I though it would be a good idea to use
@@ -274,7 +274,7 @@ ast_parse_try(bool is_statement) {
 				}
 				if (TPP_ISKEYWORD(tok)) {
 					/* Exception guard name: `try { ... } catch (Error err) {}' */
-				parse_catch_symbol:
+parse_catch_symbol:
 					if
 						unlikely(scope_push() < 0)
 					goto err_try_flags;
@@ -291,7 +291,7 @@ ast_parse_try(bool is_statement) {
 					goto err_try_flags;
 				}
 			}
-		end_catch_handler:
+end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if
 				unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CATCH))
@@ -384,7 +384,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 		{
 			size_t new_catcha = unlikely(catcha)
 			? catcha + ((catcha + 2) / 3) : 1;
-		do_realloc_catchv:
+do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
 			if
@@ -472,7 +472,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 					goto parse_catch_mask;
 				}
 			} else {
-			parse_catch_mask:
+parse_catch_mask:
 				/* Explicit catch mask: `try { ... } catch (get_mask())' */
 				handler->ce_mask = ast_parse_catchmask();
 				/* NOTE: For some reason I though it would be a good idea to use
@@ -500,7 +500,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 				}
 				if (TPP_ISKEYWORD(tok)) {
 					/* Exception guard name: `try { ... } catch (Error err) {}' */
-				parse_catch_symbol:
+parse_catch_symbol:
 					if
 						unlikely(scope_push() < 0)
 					goto err_try_flags;
@@ -517,7 +517,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 					goto err_try_flags;
 				}
 			}
-		end_catch_handler:
+end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if
 				unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CATCH))

@@ -679,7 +679,7 @@ check_final_temp_from_first:
 		likely(temp != (size_t)-2)
 	{
 		if (temp != (size_t)-1) {
-		add_start_offset:
+add_start_offset:
 			if (OVERFLOW_UADD(temp, start_offset, &temp))
 				goto index_overflow;
 		}

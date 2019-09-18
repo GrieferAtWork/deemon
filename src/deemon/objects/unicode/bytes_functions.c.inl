@@ -440,7 +440,7 @@ bytes_format(Bytes *__restrict self,
 			                         args) < 0)
 		goto err_printer;
 		return bytes_printer_pack(&printer);
-	err_printer:
+err_printer:
 		bytes_printer_fini(&printer);
 	}
 err:
@@ -1612,14 +1612,14 @@ bytes_join(Bytes *__restrict self,
 			Dee_Decref(iterator);
 		}
 		return bytes_printer_pack(&printer);
-	err_elem_noiter:
+err_elem_noiter:
 		Dee_Decref(elem);
 		goto err_printer;
-	err_elem:
+err_elem:
 		Dee_Decref(elem);
-	err_iter:
+err_iter:
 		Dee_Decref(iterator);
-	err_printer:
+err_printer:
 		bytes_printer_fini(&printer);
 	}
 err:
@@ -2958,10 +2958,10 @@ bytes_expandtabs(Bytes *__restrict self,
 		                         (size_t)(iter - flush_start)) < 0)
 			goto err_printer;
 		return bytes_printer_pack(&printer);
-	retself:
+retself:
 		bytes_printer_fini(&printer);
 		return_reference_((DeeObject *)self);
-	err_printer:
+err_printer:
 		bytes_printer_fini(&printer);
 	}
 err:
@@ -3018,10 +3018,10 @@ bytes_unifylines(Bytes *__restrict self,
 		                         (size_t)(iter - flush_start)) < 0)
 			goto err_printer;
 		return bytes_printer_pack(&printer);
-	retself:
+retself:
 		bytes_printer_fini(&printer);
 		return_reference_((DeeObject *)self);
-	err_printer:
+err_printer:
 		bytes_printer_fini(&printer);
 	}
 err:
@@ -3091,7 +3091,7 @@ bytes_indent(Bytes *__restrict self,
 				goto err_printer;
 		}
 		return bytes_printer_pack(&printer);
-	err_printer:
+err_printer:
 		bytes_printer_fini(&printer);
 	}
 err:
@@ -3176,7 +3176,7 @@ bytes_dedent(Bytes *__restrict self,
 				goto err;
 		}
 		return bytes_printer_pack(&printer);
-	err_printer:
+err_printer:
 		bytes_printer_fini(&printer);
 	}
 err:

@@ -151,7 +151,7 @@ ast_parse_statements_until(uint16_t flags, tok_t end_token) {
 			size_t new_expra = expra * 2;
 			if (!new_expra)
 				new_expra = 8;
-		do_realloc:
+do_realloc:
 			new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, new_expra *
 			                                                      sizeof(DREF struct ast *));
 			if
@@ -303,7 +303,7 @@ again:
 		if
 			unlikely(parse_tags_block())
 		{
-		err_tt_branch:
+err_tt_branch:
 			ast_decref(tt_branch);
 			goto err_r;
 		}
@@ -318,7 +318,7 @@ again:
 			if
 				unlikely(yield() < 0)
 			goto err_tt_branch;
-		do_else_branch:
+do_else_branch:
 			ff_branch = ast_parse_statement(allow_nonblock);
 			if
 				unlikely(!ff_branch)
@@ -608,7 +608,7 @@ again:
 			if
 				unlikely(!exprv)
 			{
-			err_loop_init:
+err_loop_init:
 				ast_decref(init);
 				goto err_r;
 			}
@@ -628,9 +628,9 @@ again:
 		if (has_scope)
 			scope_pop();
 		break;
-	err_loop2:
+err_loop2:
 		ast_decref(loop);
-	err_loop:
+err_loop:
 		ast_xdecref(init);
 		ast_xdecref(elem_or_cond);
 		ast_xdecref(iter_or_next);
@@ -684,9 +684,9 @@ again:
 		ast_decref(foreach_elem);
 		scope_pop();
 		break;
-	err_foreach_iter:
+err_foreach_iter:
 		ast_decref(foreach_iter);
-	err_foreach_elem:
+err_foreach_elem:
 		ast_decref(foreach_elem);
 		goto err_flags;
 	} break;
@@ -990,9 +990,9 @@ again:
 		ast_decref(result);
 		result = merge;
 		break;
-	err_r_switch_block:
+err_r_switch_block:
 		ast_decref(switch_block);
-	err_r_switch:
+err_r_switch:
 		/* Cleanup switch cases + default. */
 		cleanup_switch_cases(switch_cases,
 		                     switch_default);
@@ -1028,7 +1028,7 @@ again:
 				if
 					unlikely(yield() < 0)
 				goto err; /* `:' token. */
-			handle_post_label:
+handle_post_label:
 				if
 					unlikely(skip_lf())
 				goto err;
@@ -1084,7 +1084,7 @@ again:
 					if
 						unlikely(!elemv)
 					{
-					err_label_ast:
+err_label_ast:
 						ast_decref(label_ast);
 						goto err_r;
 					}

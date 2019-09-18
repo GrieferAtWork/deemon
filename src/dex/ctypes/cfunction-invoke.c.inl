@@ -298,7 +298,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 
 				case 4:
 					iter->u32 = *(uint32_t *)DeeStruct_Data(dee_va_arg);
-				def_var_data:
+def_var_data:
 					*argp_iter = (void *)iter;
 					break;
 

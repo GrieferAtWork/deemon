@@ -73,7 +73,7 @@ DeeObject_TryAsPointer(DeeObject *__restrict self,
                        union pointer *__restrict result) {
 	if (DeeNone_Check(self)) {
 		/* none is the NULL pointer. */
-	null_pointer:
+null_pointer:
 		result->ptr = NULL;
 		return 0;
 	}
