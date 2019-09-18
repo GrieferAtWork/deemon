@@ -275,17 +275,21 @@ struct builtin_desc {
 #include <util>
 local sets = dict();
 for (local l: file.open(__FILE__)) {
-	local setid,name,id,typeval;
-	try setid,name,id,typeval = l.scanf(" # define DEC_BUILTIN_SET%[^_]_%[^ ] %[^ ] /" "* %[^ ] *" "/")...;
-	catch (...) continue;
+	local setid, name, id, typeval;
+	try {
+		setid, name, id, typeval = l.scanf(" # define DEC_BUILTIN_SET%[^_]_%[^ ] %[^ ] /" "* %[^ ] *" "/")...;
+	} catch (...) {
+		continue;
+	}
 	id = (int)id;
-	local setlist = sets.setdefault(setid,[]);
+	local setlist = sets.setdefault(setid, []);
 	if (#setlist <= id)
-			setlist.resize(id+1);
-	if (setlist[id] !is none)
+		setlist.resize(id+1);
+	if (setlist[id] !is none) {
 		throw "Set #%s id 0x%x is already used by `%s' when `%s' attempted to set it for `%s'" %
-				(setid,id,setlist[id][0],name,typeval);
-	setlist[id] = pack(name,typeval);
+			(setid, id, setlist[id][0], name, typeval);
+	}
+	setlist[id] = pack(name, typeval);
 }
 
 
@@ -296,14 +300,18 @@ local num_builtin_objects = (
 			if (y !is none)
 				y
 	)) + ...;
-print "#define NUM_BUILTIN_OBJECT_SETS",#sets;
-print "#define NUM_BUILTIN_OBJECTS    ",num_builtin_objects;
+print "#define NUM_BUILTIN_OBJECT_SETS", #sets;
+print "#define NUM_BUILTIN_OBJECTS    ", num_builtin_objects;
 print "PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {";
-for (local setname,setlist: sets) {
-	for (local i,data: util.enumerate(setlist)) {
-		if (data is none) continue;
-		local name,typeval = data...;
-		print "\t{ (DeeObject *)&"+typeval+", DEC_BUILTINID_MAKE("+setname+", DEC_BUILTIN_SET"+setname+"_"+name+") },";
+for (local setname, setlist: sets) {
+	for (local i, data: util.enumerate(setlist)) {
+		if (data is none)
+			continue;
+		local name, typeval = data...;
+		print "\t{ (DeeObject *)&" + typeval + 
+			", DEC_BUILTINID_MAKE(" + setname + 
+			", ", DEC_BUILTIN_SET" + setname + 
+			", "_" + name + ") },";
 	}
 }
 print "};";
@@ -312,13 +320,13 @@ print "};";
 for (local setname,setlist: sets) {
 	print "PRIVATE DeeObject *buitlin_set"+setname+"[DTYPE_BUILTIN_NUM] = {";
 	if (#setlist < 0xf0)
-			setlist.resize(0xf0);
-	for (local i,data: util.enumerate(setlist[0x10:])) {
+		setlist.resize(0xf0);
+	for (local i, data: util.enumerate(setlist[0x10:])) {
 		if (data is none) {
-			print "\t/" "* 0x%.2x *" "/ NULL," % (i+0x10);
+			print "\t/" "* 0x%.2x *" "/ NULL, " % (i+0x10);
 		} else {
-			local name,typeval = data...;
-			print "\t/" "* 0x%.2x *" "/ (DeeObject *)&%s, /" "* %s *" "/" % (i+0x10,typeval,name);
+			local name, typeval = data...;
+			print "\t/" "* 0x%.2x *" "/ (DeeObject *)&%s, /" "* %s *" "/" % (i+0x10, typeval, name);
 		}
 	}
 	print "};";

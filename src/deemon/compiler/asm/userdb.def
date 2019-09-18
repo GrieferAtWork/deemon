@@ -1128,15 +1128,19 @@ INSTR("mov", (
 fs.chdir(fs.path.head(__FILE__));
 local names = [];
 for (local l: file.open("../../../../include/deemon/compiler/assembler.h")) {
-    local name;
-    try name = l.scanf(" # define OPERAND_CLASS_%[^ ]")...;
-    catch (...) continue;
-    if ("(" in name) continue;
-    names.append(name);
+	local name;
+	try {
+		name = l.scanf(" # define OPERAND_CLASS_%[^ ]")...;
+	} catch (...) {
+		continue;
+	}
+	if ("(" in name)
+		continue;
+	names.append(name);
 }
 names.reverse();
 for (local x: names) {
-    print "#undef",x;
+	print "#undef", x;
 }
 ]]]*/
 #undef IMM_EQ_N2

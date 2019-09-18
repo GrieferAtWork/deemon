@@ -460,14 +460,14 @@ do_integer_scan:
 		 *       the same by indicating ITER_DONE.
 		 *    -> Despite this, considering the main use of scanf() in
 		 *       deemon has always been by code such as this...
-		 *       >> local x,y,z;
+		 *       >> local x, y, z;
 		 *       >> try {
-		 *       >>     x,y,z = data.scanf("x = %d, y = %d, z = %d")...;
+		 *       >>     x, y, z = data.scanf("x = %d, y = %d, z = %d")...;
 		 *       >> } catch (...) {
 		 *       >>     print "Bad data:",repr data;
 		 *       >>     continue;
 		 *       >> }
-		 *       >> process_data(x,y,z);
+		 *       >> process_data(x, y, z);
 		 *       ... With the intended behavior being that an exception is
 		 *       thrown if the number of parsed items doesn't match the
 		 *       expected number of items, that behavior still exists due
@@ -736,15 +736,15 @@ INTERN DeeTypeObject StringScan_Type = {
  * This functions then returns a sequence of all scanned objects, that is
  * the usually used in an expand expression:
  * >> for (local line: File.stdin) {
- * >>     local a,b,c;
+ * >>     local a, b, c;
  * >>     try {
- * >>         a,b,c = line.scanf("%s %s %s")...;
+ * >>         a, b, c = line.scanf("%s %s %s")...;
  * >>     } catch (...) { // Unpack errors.
  * >>         continue;
  * >>     }
- * >>     print "a:",a;
- * >>     print "b:",b;
- * >>     print "c:",c;
+ * >>     print "a:", a;
+ * >>     print "b:", b;
+ * >>     print "c:", c;
  * >> }
  */
 INTERN DREF DeeObject *DCALL

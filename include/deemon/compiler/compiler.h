@@ -198,7 +198,7 @@ DDATDEF DREF DeeCompilerObject *DeeCompiler_Current;
  * NOTE: The caller is responsible for holding a lock to `DeeCompiler_Lock'.
  * NOTE: It is possible to use sub-compilers, but it is not allowed to
  *       interweave top-level compilers below lower-level ones:
- *       >> DeeCompilerObject *a,b;
+ *       >> DeeCompilerObject *a, *b;
  *       >> DeeCompiler_Begin(a);
  *       >>    DeeCompiler_Begin(b); // OK!
  *       >>       DeeCompiler_Begin(a); // ILLEGAL: `a' is already apart of the ative compiler stack.

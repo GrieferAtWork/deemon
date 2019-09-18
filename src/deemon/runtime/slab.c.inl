@@ -139,9 +139,9 @@ DECL_END
 /*[[[deemon
 for (local x = 20; x >= 2; x = x - 1) {
 	print "#if DeeSlab_HasSize(" + x + ")";
-	print "#define SIZE",x;
+	print "#define SIZE", x;
 	print "#include \"slab-impl.c.inl\"";
-	print "#define NEXT_LARGER",x;
+	print "#define NEXT_LARGER", x;
 	print "#endif /" "* DeeSlab_HasSize(" + x + ") *" "/";
 }
 print "#undef NEXT_LARGER";

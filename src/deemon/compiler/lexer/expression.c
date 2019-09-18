@@ -67,8 +67,9 @@ local table = dict {
 for (local x: util::range(128)) {
 	local key   = util::chr((uint8_t)x);
 	local value = table.get(key);
-	if (value is none) value = "0";
-	print "\t/" "* "+repr(key)+" *" "/",value+",";
+	if (value is none)
+		value = "0";
+	print "\t/" "* " + repr(key) + " *" "/", value + ",";
 }
 ]]]*/
 	/* "\0" */ 0,
@@ -1270,8 +1271,8 @@ do_warn_deprecated_modifier:
 			 * the varargs portion of the argument list as an expand
 			 * expression, thus allowing it to simply be forwarded
 			 * in other function calls:
-			 * >> function foo(a,b) {
-			 * >>     print a,b;
+			 * >> function foo(a, b) {
+			 * >>     print a, b;
 			 * >> }
 			 * >> function bar(...) {
 			 * >>     foo(...); // In the old deemon you'd have to write `foo((...)...);'

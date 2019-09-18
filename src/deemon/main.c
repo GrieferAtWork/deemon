@@ -43,22 +43,24 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
+
 #ifndef CONFIG_NO_STDLIB
 #include <stdlib.h> /* EXIT_SUCCESS, EXIT_FAILURE */
-#endif
+#endif /* !CONFIG_NO_STDLIB */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
 
-#if !defined(__USE_KOS)
+#ifndef __USE_KOS
 #define strend(s) ((s) + strlen(s))
-#endif
+#endif /* !__USE_KOS */
 
 DECL_BEGIN
 
@@ -104,6 +106,8 @@ DECL_BEGIN
 #   define DEE_COMPILER "gcc " PP_STR(__GNUC__) "." PP_STR(__GNUC_MINOR__) "." PP_STR(__GNUC_PATCHLEVEL__)
 #elif defined(__TINYC__)
 #   define DEE_COMPILER "tcc " PP_STR(__TINYC__)
+#elif defined(__DCC_VERSION__)
+#   define DEE_COMPILER "dcc " PP_STR(__DCC_VERSION__)
 #else
 #   define DEE_COMPILER "Unknown c" DEE_COMPILER_CXX " compiler"
 #endif
@@ -139,7 +143,7 @@ __DATE__ "|"
 #endif
 #ifdef CONFIG_HAVE_EXEC_ASM
 "asm|"
-#endif
+#endif /* CONFIG_HAVE_EXEC_ASM */
 #ifdef __x86_64__
 "x86_64|"
 #elif defined(__i686__)
@@ -236,7 +240,7 @@ PRIVATE int DCALL cmd_O(char *arg) {
 	                                 |
 	                                 OPTIMIZE_FASSUME
 #endif /* OPTIMIZE_FASSUME */
-	);
+	                                 );
 	script_options.co_assembler &= ~(ASM_FSTACKDISP | ASM_FPEEPHOLE |
 	                                 ASM_FOPTIMIZE | ASM_FREUSELOC | ASM_FNODDI);
 	script_options.co_unwind_limit = 0;
@@ -248,7 +252,7 @@ PRIVATE int DCALL cmd_O(char *arg) {
 		                                |
 		                                OPTIMIZE_FASSUME
 #endif /* OPTIMIZE_FASSUME */
-		);
+		                                );
 		script_options.co_unwind_limit = 1; /* Only unwind loops with 0, or 1 iteration! */
 		script_options.co_assembler |= (ASM_FREUSELOC | ASM_FSTACKDISP |
 		                                ASM_FPEEPHOLE | ASM_FOPTIMIZE |
@@ -561,7 +565,7 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "ast-unused",    0, FIELD(co_optimizer), OPTIMIZE_FNOUSESYMS },
 #ifdef OPTIMIZE_FASSUME
 	{ "ast-assume",    0, FIELD(co_optimizer), OPTIMIZE_FASSUME },
-#endif
+#endif /* OPTIMIZE_FASSUME */
 	{ "ast-predict",   1, FIELD(co_optimizer), OPTIMIZE_FNOPREDICT },
 	{ "ast-compare",   1, FIELD(co_optimizer), OPTIMIZE_FNOCOMPARE },
 	{ "ast-onepass",   0, FIELD(co_optimizer), OPTIMIZE_FONEPASS },
@@ -634,9 +638,9 @@ PRIVATE char const doc_cmdmessage_format[] = "={msvc|gcc}\tSet the format for er
 #else /* _MSC_VER */
 PRIVATE char const doc_cmdmessage_format[] = "={msvc|gcc}\tSet the format for error message (Default: gcc)";
 #endif /* !_MSC_VER */
-PRIVATE char const doc_cmd_ftabstop[] = "=width\tSet the width of tab characters used by `__COLUMN__' and in warning/error messages (Default: " PP_STR(TPPLEXER_DEFAULT_TABSIZE) ")";
-PRIVATE char const doc_cmd_undef[] = "Disable all builtin macros";
-PRIVATE char const doc_cmd_trigraphs[] = "Enable recognition of trigraph character sequences";
+PRIVATE char const doc_cmd_ftabstop[]    = "=width\tSet the width of tab characters used by `__COLUMN__' and in warning/error messages (Default: " PP_STR(TPPLEXER_DEFAULT_TABSIZE) ")";
+PRIVATE char const doc_cmd_undef[]       = "Disable all builtin macros";
+PRIVATE char const doc_cmd_trigraphs[]   = "Enable recognition of trigraph character sequences";
 PRIVATE char const doc_cmd_traditional[] = "Enable recognition of traditional tokens & macros (Default: off)";
 
 PRIVATE struct cmd_option preprocessor_options[] = {
@@ -1073,7 +1077,7 @@ int main(int argc, char *argv[]) {
 
 	/*_CrtSetBreakAlloc(280);*/
 
-	/* TODO: Make Dict and rodict sensitive to item ordering
+	/* TODO: Make Dict and RoDict sensitive to item ordering
 	 *       -> `{ foo: "bar", bar: "foo" }' should on some level
 	 *          be destinct from `{ bar: "foo", foo: "bar" }' */
 	/* TODO: Using type caches, add the ability for volatile extensions
@@ -1090,8 +1094,10 @@ int main(int argc, char *argv[]) {
 	Dee_Initialize();
 
 	/* Skip the first argument (the deemon executable name) */
-	if (argc)
-		--argc, ++argv;
+	if (argc) {
+		--argc;
+		++argv;
+	}
 
 	if (!argc) {
 		DREF DeeObject *fp;
