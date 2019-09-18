@@ -804,9 +804,9 @@ do_yield_expression_semi:
 				goto do_yield_again;
 			if (name == ENCODE4('f', 'r', 'o', 'm')) {
 do_skip_until_semi:
-				do
+				do {
 					JITLexer_Yield(self);
-				while (self->jl_tok && self->jl_tok != ';');
+				} while (self->jl_tok && self->jl_tok != ';');
 				goto done_skip_semi;
 			}
 			break;
@@ -922,9 +922,9 @@ do_asm:
 					}
 continue_skip_asm_operand:
 					if (self->jl_tok == '[') {
-						do
+						do {
 							JITLexer_Yield(self);
-						while (self->jl_tok && self->jl_tok != ']');
+						} while (self->jl_tok && self->jl_tok != ']');
 						if (self->jl_tok == ']')
 							JITLexer_Yield(self);
 					}

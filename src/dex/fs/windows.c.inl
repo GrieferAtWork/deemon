@@ -4546,9 +4546,9 @@ wild_match(LPWSTR string, LPWSTR pattern) {
 			return (int)*string; /* Pattern end doesn't match */
 		if (*pattern == '*') {
 			/* Skip starts */
-			do
+			do {
 				++pattern;
-			while (*pattern == '*');
+			} while (*pattern == '*');
 			if ((card_post = *pattern++) == '\0')
 				return 0; /* Pattern ends with '*' (matches everything) */
 			if (card_post == '?')

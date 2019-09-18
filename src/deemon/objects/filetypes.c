@@ -1118,9 +1118,9 @@ writer_tryappend8(Writer *__restrict self,
 			/* Must allocate more memory. */
 			DeeStringObject *new_buffer;
 			size_t new_size = avail;
-			do
+			do {
 				new_size *= 2;
-			while (new_size < written + bufsize);
+			} while (new_size < written + bufsize);
 			new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 			                                                                           DeeStringObject,
 			                                                                           s_str),
@@ -1264,9 +1264,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 				/* Must allocate more memory. */
 				DeeStringObject *new_buffer;
 				size_t new_size = avail;
-				do
+				do {
 					new_size *= 2;
-				while (new_size <= written);
+				} while (new_size <= written);
 				new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 				                                                                           DeeStringObject,
 				                                                                           s_str),
@@ -1359,9 +1359,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 			/* Must allocate more memory. */
 			uint16_t *new_buffer;
 			size_t new_size = avail;
-			do
+			do {
 				new_size *= 2;
-			while (new_size <= written);
+			} while (new_size <= written);
 			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, new_size);
 			if unlikely(!new_buffer) {
 				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, written + 1);
@@ -1379,9 +1379,9 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 			/* Must allocate more memory. */
 			uint32_t *new_buffer;
 			size_t new_size = avail;
-			do
+			do {
 				new_size *= 2;
-			while (new_size <= written);
+			} while (new_size <= written);
 			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, new_size);
 			if unlikely(!new_buffer) {
 				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, written + 1);

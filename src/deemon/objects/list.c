@@ -1658,15 +1658,15 @@ again:
 			DREF DeeObject **new_elem;
 			if unlikely(!new_alloc)
 				new_alloc = 16;
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < min_alloc);
+			} while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
-				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
-                                                                           sizeof(DREF DeeObject *));
+				new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
+				                                                           sizeof(DREF DeeObject *));
 				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
@@ -1754,15 +1754,15 @@ again:
 			DREF DeeObject **new_elem;
 			if unlikely(!new_alloc)
 				new_alloc = 16;
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < min_alloc);
+			} while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
-				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
-                                                                           sizeof(DREF DeeObject *));
+				new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
+				                                                           sizeof(DREF DeeObject *));
 				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
@@ -1875,15 +1875,15 @@ again:
 			DREF DeeObject **new_elem;
 			if unlikely(!new_alloc)
 				new_alloc = 16;
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < min_alloc);
+			} while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
-				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
-                                                                           sizeof(DREF DeeObject *));
+				new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
+				                                                           sizeof(DREF DeeObject *));
 				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */
@@ -2004,15 +2004,15 @@ again:
 			DREF DeeObject **new_elem;
 			if unlikely(!new_alloc)
 				new_alloc = 16;
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < min_alloc);
+			} while (new_alloc < min_alloc);
 			new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
 			                                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_elem) {
 				new_alloc = min_alloc;
-				new_elem  = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
-                                                                           sizeof(DREF DeeObject *));
+				new_elem = (DREF DeeObject **)Dee_TryRealloc(self->l_elem, new_alloc *
+				                                                           sizeof(DREF DeeObject *));
 				if unlikely(!new_elem) {
 					DeeList_LockEndWrite(self);
 					/* Collect memory and try again. */

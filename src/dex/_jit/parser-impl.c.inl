@@ -2557,10 +2557,10 @@ DEFINE_SECONDARY(CmpEQOperand) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		if (self->jl_tok == '!') {
 			bool inverted = false;
-			do
-				JITLexer_Yield(self),
+			do {
+				JITLexer_Yield(self);
 				inverted = !inverted;
-			while (self->jl_tok == '!');
+			} while (self->jl_tok == '!');
 			if (JITLexer_ISKWD(self, "is")) {
 				JITLexer_Yield(self);
 				if (JITLexer_ISKWD(self, "bound")) {

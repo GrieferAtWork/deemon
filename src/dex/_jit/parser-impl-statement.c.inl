@@ -124,10 +124,10 @@ FUNC(AssemblyOperands)(JITLexer *__restrict self
 			goto err;
 		if (self->jl_tok == JIT_STRING ||
 		    self->jl_tok == JIT_RAWSTRING) {
-			do
+			do {
 				JITLexer_Yield(self);
-			while (self->jl_tok == JIT_STRING ||
-			       self->jl_tok == JIT_RAWSTRING);
+			} while (self->jl_tok == JIT_STRING ||
+			         self->jl_tok == JIT_RAWSTRING);
 		} else {
 			syn_asm_expected_string_before_operand(self);
 			goto err;

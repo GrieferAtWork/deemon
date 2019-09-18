@@ -456,11 +456,10 @@ yield_done:
 
 	case TOK_STRING:
 		if (!result) {
-			do
+			do {
 				if unlikely(yield() < 0)
-			goto err;
-			while (tok == TOK_STRING)
-				;
+					goto err;
+			} while (tok == TOK_STRING);
 		} else {
 			struct TPPString *strval;
 			struct TPPKeyword *name;

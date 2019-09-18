@@ -194,9 +194,9 @@ again:
 LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 #ifndef NDEBUG
 	__BYTE_TYPE__ lold;
-	do
+	do {
 		lold = ATOMIC_READ(PTRLOCK_LBYTE(self));
-	while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
+	} while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
 	ASSERTF((lold & PTRLOCK_LOCK_MASK) != 0, "Pointer was not locked.");
 #else  /* NDEBUG */
 	ATOMIC_FETCHAND(PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
@@ -4478,10 +4478,10 @@ Dee_Incref_n_traced(DeeObject *__restrict ob, dref_t n,
 PUBLIC bool DCALL
 Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob, char const *file, int line) {
 	dref_t oldref;
-	do
+	do {
 		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) == 0)
 			return false;
-	while (!ATOMIC_CMPXCH_WEAK(ob->ob_refcnt, oldref, oldref + 1));
+	} while (!ATOMIC_CMPXCH_WEAK(ob->ob_refcnt, oldref, oldref + 1));
 	reftracker_addchange(ob, file, line);
 	return true;
 }

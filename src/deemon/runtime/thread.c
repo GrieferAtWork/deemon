@@ -1476,11 +1476,11 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
 	/* Confirm startup by deleting the starting-flag and setting the started-flag. */
 	{
 		uint16_t state;
-		do
+		do {
 			state = ATOMIC_READ(self->t_state);
-		while (!ATOMIC_CMPXCH_WEAK(self->t_state, state,
-		                           (state & ~(THREAD_STATE_STARTING)) |
-		                           THREAD_STATE_STARTED));
+		} while (!ATOMIC_CMPXCH_WEAK(self->t_state, state,
+		                             (state & ~(THREAD_STATE_STARTING)) |
+		                             THREAD_STATE_STARTED));
 	}
 
 #ifdef CONFIG_NEED_SUSPEND_SIGNALS

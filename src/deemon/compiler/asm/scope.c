@@ -127,9 +127,9 @@ asm_enter_scope(DeeScopeObject *__restrict scope) {
 	/* Make sure that the old scope can be reached from the new one. */
 	if (!old_scope)
 		goto set_new_scope;
-	do
+	do {
 		new_scope = new_scope->s_prev;
-	while (new_scope && new_scope != old_scope);
+	} while (new_scope && new_scope != old_scope);
 	if (new_scope) {
 set_new_scope:
 		current_assembler.a_scope = scope;

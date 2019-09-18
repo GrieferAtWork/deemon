@@ -4160,9 +4160,9 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 			                                            COMPILER_OFFSETOF(String, s_str) +
 			                                            (new_alloc + 1) * sizeof(char));
@@ -4188,9 +4188,9 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
@@ -4212,9 +4212,9 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
@@ -4287,9 +4287,9 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + num_chars);
+			} while (new_alloc < self->up_length + num_chars);
 			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 			                                            COMPILER_OFFSETOF(String, s_str) +
 			                                            (new_alloc + 1) * sizeof(char));
@@ -4314,9 +4314,9 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + num_chars);
+			} while (new_alloc < self->up_length + num_chars);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
@@ -4338,9 +4338,9 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + num_chars);
+			} while (new_alloc < self->up_length + num_chars);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
@@ -4429,9 +4429,9 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResizeWidthBuffer(string, new_alloc,
 			                                        self->up_flags & UNICODE_PRINTER_FWIDTH);
 			if unlikely(!string) {
@@ -4454,9 +4454,9 @@ append_2byte:
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
@@ -4476,9 +4476,9 @@ append_2byte:
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)self->up_buffer,
@@ -4580,9 +4580,9 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResizeWidthBuffer(string, new_alloc,
 			                                        self->up_flags & UNICODE_PRINTER_FWIDTH);
 			if unlikely(!string) {
@@ -4620,9 +4620,9 @@ append_2byte:
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + textlen);
+			} while (new_alloc < self->up_length + textlen);
 			string = DeeString_TryResize2ByteBuffer((uint16_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize2ByteBuffer((uint16_t *)self->up_buffer,
@@ -4887,9 +4887,9 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 		if (new_length > size_avail) {
 			/* Must allocate more memory. */
 			size_t new_size = size_avail;
-			do
+			do {
 				new_size *= 2;
-			while (new_size < new_length);
+			} while (new_size < new_length);
 			str = DeeString_TryResizeWidthBuffer(str, new_size,
 			                                     self->up_flags & UNICODE_PRINTER_FWIDTH);
 			if unlikely(!str) {
@@ -5042,9 +5042,9 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + length);
+			} while (new_alloc < self->up_length + length);
 			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
 			                                            COMPILER_OFFSETOF(String, s_str) +
 			                                            (new_alloc + 1) * sizeof(char));
@@ -5671,9 +5671,9 @@ PUBLIC uint32_t *(DCALL Dee_unicode_printer_tryalloc_utf32)(struct unicode_print
 			size_t new_alloc;
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
-			do
+			do {
 				new_alloc *= 2;
-			while (new_alloc < self->up_length + length);
+			} while (new_alloc < self->up_length + length);
 			string = DeeString_TryResize4ByteBuffer((uint32_t *)string, new_alloc);
 			if unlikely(!string) {
 				string = DeeString_TryResize4ByteBuffer((uint32_t *)string, self->up_length + length);
@@ -5717,9 +5717,9 @@ PUBLIC uint32_t *(DCALL Dee_unicode_printer_tryresize_utf32)(struct unicode_prin
 		new_alloc = (self->up_length - old_length) + new_length;
 		ASSERT(old_alloc < new_alloc);
 		ASSERT(old_alloc != 0);
-		do
+		do {
 			old_alloc *= 2;
-		while (old_alloc < new_alloc);
+		} while (old_alloc < new_alloc);
 		/* Reallocate the buffer to fit the requested size. */
 		string = DeeString_TryResize4ByteBuffer(string, old_alloc);
 		if unlikely(!string) {

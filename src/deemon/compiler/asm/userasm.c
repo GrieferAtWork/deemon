@@ -2103,9 +2103,9 @@ next:
 					goto err;
 				}
 				name_start = iter - 1;
-				do
+				do {
 					ch = *iter++;
-				while (DeeUni_IsSymCont(ch));
+				} while (DeeUni_IsSymCont(ch));
 				/* Lookup the name of the operand. */
 				name = TPPLexer_LookupKeyword(name_start, (size_t)(iter - name_start) - 1, 0);
 				if unlikely(!name) {

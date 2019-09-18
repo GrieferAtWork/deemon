@@ -198,18 +198,18 @@ PRIVATE DeeObject *ast_names[] = {
 PRIVATE DREF DeeObject *DCALL
 ast_gettypeid(Ast *__restrict self) {
 	uint16_t result;
-	do
+	do {
 		result = ATOMIC_READ(self->ci_value->a_type);
-	while unlikely(result >= COMPILER_LENOF(ast_names));
+	} while unlikely(result >= COMPILER_LENOF(ast_names));
 	return DeeInt_NewU16(result);
 }
 
 PRIVATE DREF DeeObject *DCALL
 ast_getkind(Ast *__restrict self) {
 	uint16_t result;
-	do
+	do {
 		result = ATOMIC_READ(self->ci_value->a_type);
-	while unlikely(result >= COMPILER_LENOF(ast_names));
+	} while unlikely(result >= COMPILER_LENOF(ast_names));
 	return_reference(ast_names[result]);
 }
 

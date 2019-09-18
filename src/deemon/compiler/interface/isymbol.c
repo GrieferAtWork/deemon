@@ -288,9 +288,9 @@ symbol_getalias(DeeCompilerSymbolObject *__restrict self,
 			result = (DREF DeeObject *)self;
 			Dee_Incref(result);
 		} else {
-			do
+			do {
 				sym = sym->s_alias;
-			while (sym->s_type == SYMBOL_TYPE_ALIAS);
+			} while (sym->s_type == SYMBOL_TYPE_ALIAS);
 			result = DeeCompiler_GetSymbol(sym);
 		}
 	}

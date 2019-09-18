@@ -729,9 +729,9 @@ continue_uprefs_normal:
 		}
 		++uprefs;
 		is_nonempty_segment = false;
-		do
+		do {
 			b = utf8_readchar((char const **)&pwd_begin, pwd_end);
-		while (ISSEP(b) || DeeUni_IsSpace(b));
+		} while (ISSEP(b) || DeeUni_IsSpace(b));
 	}
 	if (is_nonempty_segment)
 		++uprefs;

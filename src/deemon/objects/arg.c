@@ -1225,9 +1225,9 @@ clear_argv:
 			me->kmo_argv = NULL;
 			rwlock_endwrite(&me->kmo_lock);
 		} else {
-			do
+			do {
 				argv = (DREF DeeObject **)Dee_TryMalloc(argc * sizeof(DREF DeeObject *));
-			while (unlikely(!argv) && Dee_TryCollectMemory(argc * sizeof(DREF DeeObject *)));
+			} while (unlikely(!argv) && Dee_TryCollectMemory(argc * sizeof(DREF DeeObject *)));
 			if unlikely(!argv)
 				goto clear_argv;
 			rwlock_write(&me->kmo_lock);
