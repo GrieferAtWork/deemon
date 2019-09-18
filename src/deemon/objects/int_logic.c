@@ -907,13 +907,13 @@ DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b) {
 		else {
 			z = x_sub_int2(a, (twodigits)b);
 		}
-#else
+#else /* (DIGIT_BITS * 2) >= 32 */
 		else if (b <= ((uint32_t)1 << (DIGIT_BITS * 2)) - 1) {
 			z = x_sub_int2(a, (twodigits)b);
 		} else {
 			z = x_sub_int3(a, b);
 		}
-#endif
+#endif /* (DIGIT_BITS * 2) < 32 */
 	}
 	return (DeeObject *)z;
 }
@@ -1174,7 +1174,7 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	Dee_Decref(ah);
 	Dee_Decref(al);
 	ah = al = NULL;
-	/* */ if (a == b) {
+	if (a == b) {
 		t2 = t1;
 		Dee_Incref(t2);
 	} else if ((t2 = x_add(bh, bl)) == NULL) {

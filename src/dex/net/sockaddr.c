@@ -1300,11 +1300,11 @@ SockAddr_FromString(SockAddr *__restrict self,
 	bracket_recursion = 0;
 	while (port_begin != port_end) {
 		chr = *port_begin++;
-		if (chr == '[')
+		if (chr == '[') {
 			++bracket_recursion;
-		else if (chr == ']')
+		} else if (chr == ']') {
 			--bracket_recursion;
-		else if (chr == ':' && bracket_recursion == 0) {
+		} else if (chr == ':' && bracket_recursion == 0) {
 			size_t host_length = ((size_t)(port_begin - string)) - 1;
 			/* Remove surrounding brackets from the IP name. */
 			if (*string == '[' && string[host_length - 1] == ']')

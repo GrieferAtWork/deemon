@@ -211,14 +211,16 @@ PUBLIC int DCALL DeeFile_Getc(DeeObject *__restrict self) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self,
 				                                                   &value, sizeof(unsigned char),
 				                                                   Dee_FILEIO_FNORMAL);
-				/* */ if (error < 0)
+				if (error < 0)
 					result = GETC_ERR;
 				else if ((size_t)error >= sizeof(char))
 					result = (int)(unsigned int)value;
-				else
+				else {
 					result = GETC_EOF;
-			} else
+				}
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -248,14 +250,16 @@ DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self,
 				                                                   &value, sizeof(char),
 				                                                   flags);
-				/* */ if (error < 0)
+				if (error < 0)
 					result = GETC_ERR;
 				else if ((size_t)error >= sizeof(char))
 					result = (int)value;
-				else
+				else {
 					result = GETC_EOF;
-			} else
+				}
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -286,14 +290,16 @@ DeeFile_Putc(DeeObject *__restrict self, int ch) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 				                                                    &value, sizeof(char),
 				                                                    Dee_FILEIO_FNORMAL);
-				/* */ if (error < 0)
+				if (error < 0)
 					result = GETC_ERR;
 				else if ((size_t)error >= sizeof(char))
 					result = (int)value;
-				else
+				else {
 					result = GETC_EOF;
-			} else
+				}
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -323,14 +329,16 @@ DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 				                                                    &value, sizeof(char),
 				                                                    flags);
-				/* */ if (error < 0)
+				if (error < 0)
 					result = GETC_ERR;
 				else if ((size_t)error >= sizeof(char))
 					result = (int)value;
-				else
+				else {
 					result = GETC_EOF;
-			} else
+				}
+			} else {
 				break;
+			}
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */

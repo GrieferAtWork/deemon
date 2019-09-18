@@ -1111,11 +1111,11 @@ print_number_2:
 							tag_end = format - 1;
 							break;
 						}
-					} else if (ch == '[')
+					} else if (ch == '[') {
 						++bracket_recursion;
-					else if (ch == ':' && bracket_recursion == 1)
+					} else if (ch == ':' && bracket_recursion == 1) {
 						mode_end = format - 1, tag_begin = format;
-					else if (!ch) {
+					} else if (!ch) {
 						tag_end = format;
 						break;
 					}
@@ -1124,8 +1124,9 @@ print_number_2:
 					if (*mode_begin == 'n' || *mode_begin == 's' ||
 					    *mode_begin == 'S' || *mode_begin == ' ')
 						repr_mode = *mode_begin++;
-					else
+					else {
 						repr_mode = 0;
+					}
 					/* Parse the width modifier */
 					while (mode_begin != mode_end) {
 						if (*mode_begin >= '0' && *mode_begin <= '9') {

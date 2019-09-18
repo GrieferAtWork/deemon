@@ -1232,9 +1232,9 @@ again_scan_newline:
 				++real_indent;
 				++tokend;
 			}
-			if (tokend >= len)
+			if (tokend >= len) {
 				real_indent = indent;
-			else if (text.islf(tokend)) {
+			} else if (text.islf(tokend)) {
 				real_indent = indent;
 				goto again_scan_newline;
 			}

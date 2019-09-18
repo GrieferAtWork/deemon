@@ -1465,9 +1465,9 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
 		/* If DDI allows, set the name of the function that's to-be executed. */
 		DeeCodeObject *exec_code = ((DeeFunctionObject *)threadmain)->fo_code;
 		char *name               = DeeCode_NAME(exec_code);
-		if (name)
+		if (name) {
 			sys_setthreadname(name);
-		else if (exec_code == exec_code->co_module->mo_root) {
+		} else if (exec_code == exec_code->co_module->mo_root) {
 			sys_setthreadname(DeeString_STR(exec_code->co_module->mo_name));
 		}
 	}
@@ -1713,9 +1713,9 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	QueueUserAPC(&dummy_apc_func, me->t_thread, 0);
 	/* Also try to interrupt synchronous I/O, meaning calls like `ReadFile()'.
 	 * Sadly, we must manually check if that functionality is even available... */
-	if (ITER_ISOK(pCancelSynchronousIo))
+	if (ITER_ISOK(pCancelSynchronousIo)) {
 		(*pCancelSynchronousIo)(me->t_thread);
-	else if (!pCancelSynchronousIo) {
+	} else if (!pCancelSynchronousIo) {
 		LPCANCELSYNCHRONOUSIO ptr;
 		*(void **)&ptr = GetProcAddress(GetModuleHandleW(kernel32), "CancelSynchronousIo");
 		if (!ptr)

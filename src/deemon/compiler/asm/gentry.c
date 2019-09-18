@@ -271,9 +271,9 @@ gen_guard:
 			/* Finally handlers are written in-line directly after the protected code.
 			 * Additionally, their stack alignment matches that of the guarded code,
 			 * so that we can easily hide the result value of the protected part in the stack. */
-			if (next_handler)
+			if (next_handler) {
 				handler_entry = next_handler, next_handler = NULL;
-			else if unlikely((handler_entry = asm_newsym()) == NULL) {
+			} else if unlikely((handler_entry = asm_newsym()) == NULL) {
 				goto err_hand_frame;
 			}
 			if (guard_finflags & ASM_FINFLAG_USED) {

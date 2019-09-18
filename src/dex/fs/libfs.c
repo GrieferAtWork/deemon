@@ -530,9 +530,9 @@ for (local x: util.range(64)) {
 	local b = options[x*2+1];
 	local val = (b << 4) | a;
 	print "0x%x%s" % (val, x != 63 ? "," : ""),;
-	if ((x%16) == 15 && x != 63)
+	if ((x%16) == 15 && x != 63) {
 		print "\n\t",;
-	else if (x != 63) {
+	} else if (x != 63) {
 		print " ",;
 	}
 }

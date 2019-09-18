@@ -861,9 +861,9 @@ JITLexer_SkipPair(JITLexer *__restrict self,
 	for (;;) {
 		if (!self->jl_tok)
 			goto err_eof;
-		if (self->jl_tok == pair_open)
+		if (self->jl_tok == pair_open) {
 			++recursion;
-		else if (self->jl_tok == pair_close) {
+		} else if (self->jl_tok == pair_close) {
 			--recursion;
 			if (!recursion) {
 				JITLexer_Yield(self);

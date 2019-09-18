@@ -1632,14 +1632,14 @@ again:
 	start_index = start;
 	end_index   = end;
 	DeeList_LockWrite(self);
-	if (end_index < 0)
+	if (end_index < 0) {
 		end_index += DeeList_SIZE(self);
-	else if ((size_t)end_index > DeeList_SIZE(self)) {
+	} else if ((size_t)end_index > DeeList_SIZE(self)) {
 		end_index = (dssize_t)DeeList_SIZE(self);
 	}
-	if (start_index < 0)
+	if (start_index < 0) {
 		start_index += DeeList_SIZE(self);
-	else if ((size_t)start_index >= DeeList_SIZE(self)) {
+	} else if ((size_t)start_index >= DeeList_SIZE(self)) {
 		goto done_noop;
 	}
 	if ((size_t)start_index >= (size_t)end_index)
@@ -1686,9 +1686,9 @@ list_delrange_in(List *__restrict self,
 again:
 	start_index = start;
 	DeeList_LockWrite(self);
-	if (start_index < 0)
+	if (start_index < 0) {
 		start_index += DeeList_SIZE(self);
-	else if ((size_t)start_index >= DeeList_SIZE(self)) {
+	} else if ((size_t)start_index >= DeeList_SIZE(self)) {
 		goto done_noop;
 	}
 	if ((size_t)start_index >= DeeList_SIZE(self))
@@ -1738,9 +1738,9 @@ again:
 	DeeList_LockWrite(self);
 	start_index = start;
 	end_index   = end;
-	if (start_index < 0)
+	if (start_index < 0) {
 		start_index += DeeList_SIZE(self);
-	else if ((size_t)start_index > DeeList_SIZE(self)) {
+	} else if ((size_t)start_index > DeeList_SIZE(self)) {
 		start_index = (dssize_t)DeeList_SIZE(self);
 	}
 	if ((size_t)start_index >= (size_t)end_index) {
@@ -1957,14 +1957,14 @@ again:
 	start_index = start;
 	end_index   = end;
 	DeeList_LockWrite(self);
-	if (end_index < 0)
+	if (end_index < 0) {
 		end_index += DeeList_SIZE(self);
-	else if ((size_t)end_index > DeeList_SIZE(self)) {
+	} else if ((size_t)end_index > DeeList_SIZE(self)) {
 		end_index = (dssize_t)DeeList_SIZE(self);
 	}
-	if (start_index < 0)
+	if (start_index < 0) {
 		start_index += DeeList_SIZE(self);
-	else if ((size_t)start_index > DeeList_SIZE(self)) {
+	} else if ((size_t)start_index > DeeList_SIZE(self)) {
 		start_index = (dssize_t)DeeList_SIZE(self);
 	}
 	if ((size_t)start_index >= (size_t)end_index) {

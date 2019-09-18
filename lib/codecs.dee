@@ -207,10 +207,10 @@ function register(name: string, codec: Object) {
 @@core does when the encode/decode functions of :string or :Bytes are invoked.
 local function normalize_codec_name(name: string): string {
 	name = name.casefold().replace("_", "-");
-	if (name.startswith("iso-"))
-		name = "iso"+name[4:];
-	else if (name.startswith("cp-")) {
-		name = "cp"+name[3:];
+	if (name.startswith("iso-")) {
+		name = "iso" + name[4:];
+	} else if (name.startswith("cp-")) {
+		name = "cp" + name[3:];
 	}
 	return name;
 }

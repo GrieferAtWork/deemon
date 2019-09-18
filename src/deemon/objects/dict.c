@@ -1886,7 +1886,6 @@ dict_update(DeeDictObject *__restrict self,
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
-	/*  */
 	iterator = DeeObject_IterSelf(items);
 	error    = dict_insert_iterator(self, iterator);
 	Dee_Decref(iterator);

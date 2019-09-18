@@ -389,10 +389,9 @@ do_exec_code:
 	parser_start();
 
 	/* Yield the initial token. */
-	if
-		unlikely((tok == TOK_EOF && yield() < 0) || skip_lf())
-	statement_ast = NULL;
-	else if (tok == TOK_EOF) {
+	if unlikely((tok == TOK_EOF && yield() < 0) || skip_lf()) {
+		statement_ast = NULL;
+	} else if (tok == TOK_EOF) {
 		result = ITER_DONE; /* True EOF */
 		if (parser_rethrow(false))
 			result = NULL;

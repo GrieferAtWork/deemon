@@ -4962,17 +4962,17 @@ print_ast_repr(struct ast *__restrict self,
 		char *typing;
 		size_t i;
 		typing = NULL;
-		/**/ if (self->a_flag == AST_FMULTIPLE_TUPLE)
+		if (self->a_flag == AST_FMULTIPLE_TUPLE) {
 			typing = DeeString_STR(&str_Tuple);
-		else if (self->a_flag == AST_FMULTIPLE_LIST)
+		} else if (self->a_flag == AST_FMULTIPLE_LIST) {
 			typing = DeeString_STR(&str_List);
-		else if (self->a_flag == AST_FMULTIPLE_HASHSET)
+		} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
 			typing = DeeString_STR(&str_Set);
-		else if (self->a_flag == AST_FMULTIPLE_DICT)
+		} else if (self->a_flag == AST_FMULTIPLE_DICT) {
 			typing = DeeString_STR(&str_Dict);
-		else if (self->a_flag == AST_FMULTIPLE_GENERIC)
+		} else if (self->a_flag == AST_FMULTIPLE_GENERIC) {
 			typing = DeeString_STR(&str_Sequence);
-		else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
+		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
 			typing = DeeString_STR(&str_Mapping);
 		}
 		printf("makemultiple(branches: { ");

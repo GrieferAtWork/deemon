@@ -1876,9 +1876,9 @@ process_set_pwd(Process *__restrict self, DeeObject *value) {
 		oldval      = self->p_pwd;
 		self->p_pwd = (DREF DeeStringObject *)value;
 		rwlock_endwrite(&self->p_lock);
-		if (oldval)
+		if (oldval) {
 			Dee_Decref(oldval);
-		else if (!value) {
+		} else if (!value) {
 			err_unbound_attribute(&DeeProcess_Type, "pwd");
 			goto err;
 		}
@@ -1965,9 +1965,9 @@ err:
 	old_value   = self->p_exe;
 	self->p_exe = (DREF DeeStringObject *)value;
 	rwlock_endwrite(&self->p_lock);
-	if (old_value)
+	if (old_value) {
 		Dee_Decref(old_value);
-	else if (!value) {
+	} else if (!value) {
 		err_unbound_attribute(&DeeProcess_Type, "exe");
 		goto err;
 	}
@@ -2042,9 +2042,9 @@ err:
 	old_value       = self->p_cmdline;
 	self->p_cmdline = (DREF DeeStringObject *)value;
 	rwlock_endwrite(&self->p_lock);
-	if (old_value)
+	if (old_value) {
 		Dee_Decref(old_value);
-	else if (!value) {
+	} else if (!value) {
 		err_unbound_attribute(&DeeProcess_Type, "cmdline");
 		goto err;
 	}

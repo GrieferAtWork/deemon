@@ -1016,9 +1016,9 @@ FORCELOCAL WUNUSED uint32_t *(DCALL DeeString_Resize4ByteBuffer)(uint32_t *buffe
 FORCELOCAL WUNUSED uint16_t *(DCALL DeeString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars) {
 	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
 	result         = (size_t *)Dee_TryRealloc(result, DeeString_Sizeof2ByteBuffer(num_chars));
-	if likely(result)
+	if likely(result) {
 		*result++ = num_chars;
-	else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
 		result                  = (size_t *)buffer;
 	}
@@ -1028,9 +1028,9 @@ FORCELOCAL WUNUSED uint16_t *(DCALL DeeString_TryResize2ByteBuffer)(uint16_t *bu
 FORCELOCAL WUNUSED uint32_t *(DCALL DeeString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars) {
 	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
 	result         = (size_t *)Dee_TryRealloc(result, sizeof(size_t) + (num_chars + 1) * 4);
-	if likely(result)
+	if likely(result) {
 		*result++ = num_chars;
-	else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
 		result                  = (size_t *)buffer;
 	}
@@ -1209,9 +1209,9 @@ FORCELOCAL WUNUSED uint16_t *(DCALL DeeDbgString_TryResize2ByteBuffer)(uint16_t 
                                                                        char const *file, int line) {
 	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
 	result         = (size_t *)DeeDbg_TryRealloc(result, DeeString_Sizeof2ByteBuffer(num_chars), file, line);
-	if likely(result)
+	if likely(result) {
 		*result++ = num_chars;
-	else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
 		result                  = (size_t *)buffer;
 	}
@@ -1222,9 +1222,9 @@ FORCELOCAL WUNUSED uint32_t *(DCALL DeeDbgString_TryResize4ByteBuffer)(uint32_t 
                                                                        char const *file, int line) {
 	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
 	result         = (size_t *)DeeDbg_TryRealloc(result, DeeString_Sizeof4ByteBuffer(num_chars), file, line);
-	if likely(result)
+	if likely(result) {
 		*result++ = num_chars;
-	else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
 		result                  = (size_t *)buffer;
 	}

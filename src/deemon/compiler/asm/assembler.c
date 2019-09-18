@@ -1015,7 +1015,7 @@ INTERN bool DCALL asm_minjmp(void) {
 			if (stack_offset >= -2 && stack_offset <= +2) {
 				/* Optimize to `pop; pop' or `push none; push none', and everything in-between. */
 				instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
-				/* */ if (stack_offset == -2)
+				if (stack_offset == -2)
 					*(instr + 0) = ASM_POP, *(instr + 1) = ASM_POP;
 				else if (stack_offset == -1)
 					*(instr + 0) = ASM_POP, *(instr + 1) = ASM_DELOP;
@@ -1023,8 +1023,9 @@ INTERN bool DCALL asm_minjmp(void) {
 					*(instr + 0) = ASM_DELOP, *(instr + 1) = ASM_DELOP;
 				else if (stack_offset == 1)
 					*(instr + 0) = ASM_PUSH_NONE, *(instr + 1) = ASM_DELOP;
-				else /*                   */
+				else {
 					*(instr + 0) = ASM_PUSH_NONE, *(instr + 1) = ASM_PUSH_NONE;
+				}
 				asm_reldel(iter); /* Delete this relocation. */
 				result = true;
 			}

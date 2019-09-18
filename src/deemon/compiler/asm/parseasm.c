@@ -530,12 +530,13 @@ yield_done:
 		goto err;
 		if (result->ie_sym && WARN(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL))
 			goto err;
-		/**/ if (operation == '!')
+		if (operation == '!')
 			result->ie_val = !result->ie_val;
 		else if (operation == '~')
 			result->ie_val = ~result->ie_val;
-		else /*                 */
+		else {
 			result->ie_val = -result->ie_val;
+		}
 	} break;
 
 	default:

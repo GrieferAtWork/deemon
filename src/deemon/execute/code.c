@@ -1552,9 +1552,9 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		for (i = 0; i < default_c; ++i) {
 			DREF DeeObject *elem;
 			elem = DeeObject_GetItemIndex(defaults, i);
-			if (elem)
+			if (elem) {
 				default_vec[i] = elem; /* Inherit reference */
-			else if (DeeError_Catch(&DeeError_UnboundItem)) {
+			} else if (DeeError_Catch(&DeeError_UnboundItem)) {
 				default_vec[i] = NULL; /* Optional argument */
 			} else {
 				while (i--)

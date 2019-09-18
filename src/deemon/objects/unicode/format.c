@@ -96,16 +96,17 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 			dssize_t new_index, index = ch - '0';
 			ch = *index_end;
 			if (ch == '0') {
-				/**/ if (ch == 'b' || ch == 'B')
+				if (ch == 'b' || ch == 'B')
 					radix = 2, ++index_end;
 				else if (ch == 'x' || ch == 'X')
 					radix = 16, ++index_end;
-				else
+				else {
 					radix = 8;
+				}
 			}
 			for (;;) {
 				ch = *index_end;
-				/**/ if (ch >= '0' && ch <= '9')
+				if (ch >= '0' && ch <= '9')
 					value = ch - '0';
 				else if (ch >= 'a' && ch <= 'f')
 					value = 10 + (ch - 'a');
@@ -259,10 +260,11 @@ Formatter_GetValue(struct formatter *__restrict self,
 	fmt_end   = fmt_start;
 	recursion = 1;
 	for (; fmt_end < self->f_end; ++fmt_end) {
-		if (*fmt_end == '{')
+		if (*fmt_end == '{') {
 			++recursion;
-		else if (*fmt_end == '}' && !--recursion) {
-			break;
+		} else {
+			if (*fmt_end == '}' && !--recursion)
+				break;
 		}
 	}
 	/* Load the format expression. */
@@ -762,10 +764,12 @@ format_impl(struct formatter *__restrict self,
 		format_end = self->f_iter;
 		recursion  = 1;
 		for (; format_end < self->f_end; ++format_end) {
-			/**/ if (*format_end == '{')
+			if (*format_end == '{') {
 				++recursion;
-			else if (*format_end == '}' && !--recursion)
-				break;
+			} else {
+				if (*format_end == '}' && !--recursion)
+					break;
+			}
 		}
 		/* Process the format string to extract an argument. */
 		in_arg = Formatter_GetOne(self, &format_start, true);
@@ -930,10 +934,11 @@ format_bytes_impl(struct formatter *__restrict self,
 		format_end = self->f_iter;
 		recursion  = 1;
 		for (; format_end < self->f_end; ++format_end) {
-			if (*format_end == '{')
+			if (*format_end == '{') {
 				++recursion;
-			else if (*format_end == '}' && !--recursion) {
-				break;
+			} else {
+				if (*format_end == '}' && !--recursion)
+					break;
 			}
 		}
 		/* Process the format string to extract an argument. */

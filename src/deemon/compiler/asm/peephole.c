@@ -1110,11 +1110,11 @@ conditional_jump_forwarding_ok:
 										/* Apply logic inversion _after_ forwarding checks, because
 										 * doing so beforehand would break the branching logic in
 										 * expressions like `if (!foo && bar)' */
-										if (must_invert)
+										if (must_invert) {
 											*instr_jmp ^= ASM_JX_NOTBIT;
-										if (*instr_pop == ASM_POP)
+										} if (*instr_pop == ASM_POP) {
 											*instr_pop = ASM_DELOP;
-										else if (*instr_pop == ASM_ADJSTACK) {
+										} else if (*instr_pop == ASM_ADJSTACK) {
 											--*(int8_t *)(instr_pop + 1);
 										} else {
 											UNALIGNED_SETLE16((uint16_t *)(instr_pop + 2),

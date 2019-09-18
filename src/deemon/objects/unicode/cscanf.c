@@ -279,14 +279,15 @@ do_integer_scan:
 		case 'I':
 			if (format >= format_end)
 				goto out_formatend;
-			/**/ if (format[0] == '8')
+			if (format[0] == '8') {
 				++format;
-			else if (format[0] == '1' && format < format_end - 1 && format[1] == '6')
+			} else if (format[0] == '1' && format < format_end - 1 && format[1] == '6') {
 				format += 2;
-			else if (format[0] == '3' && format < format_end - 1 && format[1] == '2')
+			} else if (format[0] == '3' && format < format_end - 1 && format[1] == '2') {
 				format += 2;
-			else if (format[0] == '6' && format < format_end - 1 && format[1] == '4')
+			} else if (format[0] == '6' && format < format_end - 1 && format[1] == '4') {
 				format += 2;
+			}
 			ATTR_FALLTHROUGH
 		case 'h':
 		case 'l':

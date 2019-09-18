@@ -2018,10 +2018,10 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	 *       all those problems, as all I really want it to do, is to mirror
 	 *       the spacing behavior already seen at the start of the output-block. */
 	has_leading_linefeed = false;
-	if (*override_start_ptr == '\n')
-		has_leading_linefeed = true,
+	if (*override_start_ptr == '\n') {
+		has_leading_linefeed = true;
 		++override_start_ptr;
-	else if (*override_start_ptr == '\r') {
+	} else if (*override_start_ptr == '\r') {
 		if (*++override_start_ptr == '\n')
 			++override_start_ptr;
 		has_leading_linefeed = true;

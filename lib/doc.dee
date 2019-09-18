@@ -1343,20 +1343,20 @@ class Expression: WeakRefAble {
 				if (!m_docstring.startswith("!")) {
 					/* Raw, constant expression */
 					m_kind = "C";
-					if (!m_docstring)
+					if (!m_docstring) {
 						m_cache = none;
-					else if (m_docstring.startswith("\""))
+					} else if (m_docstring.startswith("\"")) {
 						m_cache = try m_docstring.decode("c-escape") catch (...) m_docstring;
-					else if (m_docstring.startswith("r\""))
+					} else if (m_docstring.startswith("r\"")) {
 						m_cache = m_docstring[2:-1];
-					else if (m_docstring.isdigit(0))
+					} else if (m_docstring.isdigit(0)) {
 						m_cache = try
 							"." in m_docstring
 								? float(m_docstring)
 								: int(m_docstring)
 							catch (...)
 								m_docstring;
-					else if (":" in m_docstring) {
+					} else if (":" in m_docstring) {
 						/* Assume external symbol. */
 						local mod, none, path = m_docstring.partition(":")...;
 						m_docstring = "!E{}:{}".format({
@@ -2757,9 +2757,9 @@ class Doc: WeakRefAble {
 		get(): string {
 			if (m_qualified_path !is bound) {
 				local par = parent;
-				if (par is none)
+				if (par is none) {
 					m_qualified_path = "?U" + encode_name(name);
-				else if (par.ismodule) {
+				} else if (par.ismodule) {
 					m_qualified_path = "?E{}:{}".format({
 						/* TODO: This only works for global modules! */
 						encode_name(par.name),
@@ -3595,9 +3595,9 @@ set_is_type:
 					}
 				}
 			} else {
-				if (deemon.Type.hasprivateoperator(object, opname))
+				if (deemon.Type.hasprivateoperator(object, opname)) {
 					yield autogenerate_opdecl(opname)...;
-				else if (opname == "constructor") {
+				} else if (opname == "constructor") {
 					yield autogenerate_native_constructor_desc()...;
 				}
 			}

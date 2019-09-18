@@ -318,7 +318,7 @@ INTDEF bool DCALL ast_contains_goto(struct ast *__restrict self, uint16_t consid
  * @return -1: always reachable / unpredictable
  * @return -2: always reachable / unpredictable & doesn't return */
 INTDEF int (DCALL ast_doesnt_return)(struct ast *__restrict self, unsigned int flags);
-#define AST_DOESNT_RETURN_FNORMAL     0x0000 /*  */
+#define AST_DOESNT_RETURN_FNORMAL     0x0000
 #define AST_DOESNT_RETURN_FINLOOP     0x0001
 #define AST_DOESNT_RETURN_FINCATCH    0x0002
 #define AST_DOESNT_RETURN_FINCATCHALL 0x0004

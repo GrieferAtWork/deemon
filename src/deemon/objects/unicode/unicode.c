@@ -2064,12 +2064,13 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 				utf8_length += 1;
 			} else if (error_mode & STRING_ERROR_FIGNORE) {
 				/* Just encode it... */
-				/* */ if (ch <= UTF8_5BYTE_MAX)
+				if (ch <= UTF8_5BYTE_MAX)
 					utf8_length += 5;
 				else if (ch <= UTF8_6BYTE_MAX)
 					utf8_length += 6;
-				else
+				else {
 					utf8_length += 7;
+				}
 			} else {
 				DeeError_Throwf(&DeeError_UnicodeDecodeError,
 				                "Invalid unicode character U+%I32X",
@@ -2131,7 +2132,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	utf8_length  = 0;
 	for (i = 0; i < length; ++i) {
 		uint32_t ch = text[i];
-		/* */ if (ch <= UTF8_1BYTE_MAX)
+		if (ch <= UTF8_1BYTE_MAX)
 			utf8_length += 1;
 		else if (ch <= UTF8_2BYTE_MAX)
 			utf8_length += 2;
@@ -2143,8 +2144,9 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 			utf8_length += 5;
 		else if (ch <= UTF8_6BYTE_MAX)
 			utf8_length += 6;
-		else
+		else {
 			utf8_length += 7;
+		}
 	}
 	ASSERT(utf8_length >= length);
 	result = (DREF String *)DeeObject_TryMalloc(COMPILER_OFFSETOF(String, s_str) +

@@ -323,8 +323,7 @@ public: /* string from deemon */
 	}                                                                                                                           \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict find, /*utf-8*/ char const *__restrict repl, size_t maxcount) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ssIu", find, repl, maxcount));                                  \
-	}                                                                                                                           \
-	/**/
+	}
 	DEFINE_REPLACE_FUNCTION(replace)
 	DEFINE_REPLACE_FUNCTION(casereplace)
 #undef DEFINE_REPLACE_FUNCTION
@@ -484,8 +483,7 @@ public: /* string from deemon */
 	}                                                                                                                                 \
 	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start, size_t other_end) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuoIuIu", my_start, my_end, other, other_start, other_end));        \
-	}                                                                                                                                 \
-	/**/
+	}
 	DEFINE_COMPARE_FUNCTION(deemon::bool_, wmatch)
 	DEFINE_COMPARE_FUNCTION(deemon::bool_, casewmatch)
 #undef DEFINE_COMPARE_FUNCTION

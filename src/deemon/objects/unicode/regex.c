@@ -383,20 +383,20 @@ PRIVATE char *DCALL find_rparen(char *piter, char *pend) {
 	unsigned int paren_recursion = 0;
 	while (piter < pend) {
 		char ch = *piter++;
-		if (ch == '\\' && piter < pend)
+		if (ch == '\\' && piter < pend) {
 			++piter;
-		else if (ch == '(')
+		} else if (ch == '(') {
 			++paren_recursion;
-		else if (ch == ')') {
+		} else if (ch == ')') {
 			if (!paren_recursion)
 				break;
 			--paren_recursion;
 		} else if (ch == '[') {
 			while (piter < pend) {
 				ch = *piter++;
-				if (ch == '\\' && piter < pend)
+				if (ch == '\\' && piter < pend) {
 					++piter;
-				else if (ch == ']') {
+				} else if (ch == ']') {
 					break;
 				}
 			}
@@ -409,21 +409,21 @@ PRIVATE char *DCALL find_pipe(char *piter, char *pend) {
 	unsigned int paren_recursion = 0;
 	while (piter < pend) {
 		char ch = *piter++;
-		if (ch == '\\' && piter < pend)
+		if (ch == '\\' && piter < pend) {
 			++piter;
-		else if (ch == '|') {
+		} else if (ch == '|') {
 			if (!paren_recursion)
 				return piter;
-		} else if (ch == '(')
+		} else if (ch == '(') {
 			++paren_recursion;
-		else if (ch == ')')
+		} else if (ch == ')') {
 			--paren_recursion;
-		else if (ch == '[') {
+		} else if (ch == '[') {
 			while (piter < pend) {
 				ch = *piter++;
-				if (ch == '\\' && piter < pend)
+				if (ch == '\\' && piter < pend) {
 					++piter;
-				else if (ch == ']') {
+				} else if (ch == ']') {
 					break;
 				}
 			}
@@ -1127,7 +1127,6 @@ has_infinite_submatch:
 			/* Trait-based matching rules. */
 			ch = utf8_readchar((char const **)&piter, pend);
 			if (ch == '+') {
-				/*  */
 				flag = 0;
 next_anyflag_ch:
 				temp = get_regex_trait(ch);

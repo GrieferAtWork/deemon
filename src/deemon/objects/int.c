@@ -907,7 +907,7 @@ int_from_nonbinary_string(char *__restrict begin,
 			char ch;
 parse_ch:
 			ch = *begin;
-			/* */ if (ch >= '0' && ch <= '9')
+			if (ch >= '0' && ch <= '9')
 				dig = ch - '0';
 			else if (ch >= 'a' && ch <= 'z')
 				dig = 10 + (ch - 'a');
@@ -934,9 +934,8 @@ parse_ch:
 				}
 				goto invalid_r;
 			}
-			if
-				unlikely(dig >= radix)
-			goto invalid_r;
+			if unlikely(dig >= radix)
+				goto invalid_r;
 			c = (twodigits)(c * radix + dig);
 			ASSERT(c < DIGIT_BASE);
 		}
@@ -1204,12 +1203,13 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				}
 				break;
 			}
-			/* */ if (*begin == 'x' || *begin == 'X')
+			if (*begin == 'x' || *begin == 'X')
 				radix = 16, ++begin;
 			else if (*begin == 'b' || *begin == 'B')
 				radix = 2, ++begin;
-			else
+			else {
 				radix = 8;
+			}
 		} else {
 			radix = 10;
 		}
@@ -1249,7 +1249,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			char ch;
 			digit dig;
 			ch = *--iter;
-			/* */ if (ch >= '0' && ch <= '9')
+			if (ch >= '0' && ch <= '9')
 				dig = (digit)(ch - '0');
 			else if (ch >= 'a' && ch <= 'z')
 				dig = 10 + (digit)(ch - 'a');
@@ -1374,12 +1374,13 @@ PUBLIC int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
 				}
 				break;
 			}
-			/* */ if (*begin == 'x' || *begin == 'X')
+			if (*begin == 'x' || *begin == 'X')
 				radix = 16, ++begin;
 			else if (*begin == 'b' || *begin == 'B')
 				radix = 2, ++begin;
-			else
+			else {
 				radix = 8;
+			}
 		} else {
 			begin = old_begin;
 			radix = 10;
@@ -1398,7 +1399,7 @@ PUBLIC int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
 		struct unitraits *trt;
 		ch  = utf8_readchar_rev((char const **)&iter, begin);
 		trt = DeeUni_Descriptor(ch);
-		/* */ if (trt->ut_flags & UNICODE_FDECIMAL)
+		if (trt->ut_flags & UNICODE_FDECIMAL)
 			dig = trt->ut_digit;
 		else if (ch >= 'a' && ch <= 'z')
 			dig = 10 + (uint8_t)(ch - 'a');
@@ -1604,10 +1605,11 @@ err:
 		*--iter = '0' + rem % 10;
 		rem /= 10;
 	} while (rem != 0);
-	/* */ if (negative)
+	if (negative) {
 		*--iter = '-';
-	else if (flags & DEEINT_PRINT_FSIGN)
+	} else if (flags & DEEINT_PRINT_FSIGN) {
 		*--iter = '+';
+	}
 	result = (*printer)(arg, iter, (buf + buflen) - iter);
 	Dee_AFree(buf);
 done_pout:
@@ -1722,9 +1724,9 @@ do_print_prefix:
 			*--iter = '0';
 		}
 		/* Print the sign prefix. */
-		if (me->ob_size < 0)
+		if (me->ob_size < 0) {
 			*--iter = '-';
-		else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
+		} else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
 			*--iter = '+';
 		}
 		result = (*printer)(arg, iter, (size_t)((buf + bufsize) - iter));

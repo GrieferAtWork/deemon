@@ -498,9 +498,9 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 				break;
 		}
 		name_end = newpos;
-		if (*newpos == '?')
+		if (*newpos == '?') {
 			++newpos;
-		else if (*newpos == '!') {
+		} else if (*newpos == '!') {
 			++newpos;
 			if (*newpos == '!')
 				++newpos;

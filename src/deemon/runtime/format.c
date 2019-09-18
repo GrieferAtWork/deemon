@@ -240,9 +240,9 @@ nextfmt:
 
 	case 'I':
 		ch = *format++;
-		if (ch == '8')
+		if (ch == '8') {
 			length = LENGTH_VASIZEOF(LENGTH_I8);
-		else if (ch == '1' && *format == '6') {
+		} else if (ch == '1' && *format == '6') {
 			length = LENGTH_VASIZEOF(LENGTH_I16);
 		} else if (ch == '3' && *format == '2') {
 			length = LENGTH_VASIZEOF(LENGTH_I32);
@@ -482,9 +482,9 @@ nextfmt:
 
 	case 'I':
 		ch = *format++;
-		if (ch == '8')
+		if (ch == '8') {
 			length = LENGTH_I8;
-		else if (ch == '1' && *format == '6') {
+		} else if (ch == '1' && *format == '6') {
 			length = LENGTH_I16;
 		} else if (ch == '3' && *format == '2') {
 			length = LENGTH_I32;
@@ -585,16 +585,16 @@ nextfmt:
 			*--iter = dec[data.u % numsys];
 		} while ((data.u /= numsys) != 0);
 		if (flags & F_PREFIX && numsys != 10) {
-			if (numsys == 16)
+			if (numsys == 16) {
 				*--iter = dec[16]; /* X/x */
-			else if (numsys == 2) {
+			} else if (numsys == 2) {
 				*--iter = dec[11]; /* B/b */
 			}
 			*--iter = '0';
 		}
-		if (is_neg)
+		if (is_neg) {
 			*--iter = '-';
-		else if (flags & F_SIGN) {
+		} else if (flags & F_SIGN) {
 			*--iter = '+';
 		}
 		for (;;) {

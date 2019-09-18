@@ -674,13 +674,13 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 		if ((ddi_ip = Dee_ddi_state_init(&ddi, (DeeObject *)code, DDI_STATE_FNORMAL)) == DDI_NEXT_ERR)
 			goto err_n1;
 		stack_max = (uint16_t)DeeCode_StackDepth(code);
-		if (stack_max >= 10000)
+		if (stack_max >= 10000) {
 			sp_width = 5;
-		else if (stack_max >= 1000)
+		} else if (stack_max >= 1000) {
 			sp_width = 4;
-		else if (stack_max >= 100)
+		} else if (stack_max >= 100) {
 			sp_width = 3;
-		else if (stack_max >= 10) {
+		} else if (stack_max >= 10) {
 			sp_width = 2;
 		}
 	} else {

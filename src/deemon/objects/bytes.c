@@ -696,12 +696,13 @@ bytes_init(size_t argc, DeeObject **__restrict argv) {
 			char *str = DeeString_STR(argv[1]);
 			if (WSTR_LENGTH(str) != 1)
 				goto err_invalid_mode;
-			/* */ if (str[0] == 'r')
+			if (str[0] == 'r')
 				;
 			else if (str[0] == 'w')
 				flags = Dee_BUFFER_FWRITABLE;
-			else
+			else {
 				goto err_invalid_mode;
+			}
 			if (argc >= 3) {
 				if (DeeObject_AsSSize(argv[2], (dssize_t *)&start))
 					goto err;

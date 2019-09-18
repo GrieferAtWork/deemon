@@ -386,10 +386,11 @@ DeeSeq_Back(DeeObject *__restrict self) {
 					}
 				}
 				Dee_Decref(temp);
-				/* */ if unlikely(!next)
-				Dee_XClear(result);
-				else if unlikely(!result)
-				goto err_empty;
+				if unlikely(!next) {
+					Dee_XClear(result);
+				} else if unlikely(!result) {
+					goto err_empty;
+				}
 				return result;
 			}
 		}
@@ -438,9 +439,9 @@ DeeSeq_Reduce(DeeObject *__restrict self,
 		}
 	}
 	Dee_Decref(iterator);
-	if unlikely(!elem)
+	if unlikely(!elem) {
 		Dee_XClear(result);
-	else if (!result) {
+	} else if (!result) {
 		/* Must return `none' when the sequence was empty. */
 		result = Dee_None;
 		Dee_Incref(Dee_None);
@@ -949,9 +950,11 @@ DeeSeq_RLocate(DeeObject *__restrict self,
 			goto err_iter;
 	}
 	Dee_Decref(iterator);
-	/* */ if unlikely(!elem)
-	Dee_XClear(result);
-	else if (!result) err_item_not_found(self, keyed_search_item);
+	if unlikely(!elem) {
+		Dee_XClear(result);
+	} else if (!result) {
+		err_item_not_found(self, keyed_search_item);
+	}
 	return result;
 err_elem:
 	Dee_Decref(elem);

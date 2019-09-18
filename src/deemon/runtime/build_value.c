@@ -97,15 +97,16 @@ count_pack_args(char const *__restrict format) {
 			if (ch == '(')
 				--tagr;
 			for (; *format; ++format) {
-				/* */ if (*format == ch)
+				if (*format == ch) {
 					++recursion;
-				else if (*format == tagr) {
+				} else if (*format == tagr) {
 					if (!--recursion) {
 						++format;
 						break;
 					}
-				} else if (!*format)
+				} else if (!*format) {
 					break;
+				}
 			}
 			++result;
 		}	break;
@@ -156,15 +157,16 @@ count_unpack_args(char const **__restrict pformat) {
 			unsigned int recursion;
 			recursion = 1;
 			for (; *format; ++format) {
-				/* */ if (*format == '(')
+				if (*format == '(') {
 					++recursion;
-				else if (*format == ')') {
+				} else if (*format == ')') {
 					if (!--recursion) {
 						++format;
 						break;
 					}
-				} else if (!*format)
+				} else if (!*format) {
 					break;
+				}
 			}
 			++result;
 		}	break;

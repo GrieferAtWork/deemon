@@ -141,10 +141,11 @@ function print_decl_params(fp: File, decl: Declaration) {
 			if (par.isvarkwds)
 				fp << "**";
 			fp << "<i>" << escape_html(par.name) << "</i>";
-			if (par.isvarargs)
+			if (par.isvarargs) {
 				fp << "...";
-			else if (par.isoptional)
+			} else if (par.isoptional) {
 				fp << "?";
+			}
 			fp << ": ";
 			print_typeexpr(fp, par.typ);
 			local def = par.defexpr;

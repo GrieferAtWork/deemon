@@ -1074,9 +1074,9 @@ done_y1:
 				param_end = param_start = self->jl_tokstart;
 				recursion               = 1;
 				while (self->jl_tok) {
-					if (self->jl_tok == '(')
+					if (self->jl_tok == '(') {
 						++recursion;
-					else if (self->jl_tok == ')') {
+					} else if (self->jl_tok == ')') {
 						--recursion;
 						if (!recursion) {
 							JITLexer_Yield(self);
@@ -1136,9 +1136,9 @@ done_y1:
 					source_end = source_start = self->jl_tokstart;
 					/* Scan the body of the function. */
 					while (self->jl_tok) {
-						if (self->jl_tok == '{')
+						if (self->jl_tok == '{') {
 							++recursion;
-						else if (self->jl_tok == '}') {
+						} else if (self->jl_tok == '}') {
 							--recursion;
 							if (!recursion) {
 								JITLexer_Yield(self);
@@ -1220,9 +1220,9 @@ skip_arrow_lambda:
 				source_end = source_start = self->jl_tokstart;
 				/* Scan the body of the function. */
 				while (self->jl_tok) {
-					if (self->jl_tok == '{')
+					if (self->jl_tok == '{') {
 						++recursion;
-					else if (self->jl_tok == '}') {
+					} else if (self->jl_tok == '}') {
 						--recursion;
 						if (!recursion) {
 							JITLexer_Yield(self);

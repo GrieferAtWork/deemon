@@ -313,20 +313,24 @@ do_prec_spec:
 
 		case 'I':
 			length = sizeof(size_t);
-			if (*iter == '8')
-				++iter, length = 1;
-			else if (*iter == '1') {
+			if (*iter == '8') {
+				++iter;
+				length = 1;
+			} else if (*iter == '1') {
 				if (iter[1] != '6')
 					goto invalid_format;
-				iter += 2, length = 2;
+				iter += 2;
+				length = 2;
 			} else if (*iter == '3') {
 				if (iter[1] != '2')
 					goto invalid_format;
-				iter += 2, length = 4;
+				iter += 2;
+				length = 4;
 			} else if (*iter == '6') {
 				if (iter[1] != '4')
 					goto invalid_format;
-				iter += 2, length = 8;
+				iter += 2;
+				length = 8;
 			}
 			goto do_length_integer;
 
@@ -484,16 +488,16 @@ do_length_integer:
 		case 'q': {
 			size_t str_length;
 			GETARG();
-			if (DeeNone_Check(in_arg))
+			if (DeeNone_Check(in_arg)) {
 				in_arg = (DeeObject *)&str_lpnullrp;
-			else if (DeeObject_AssertTypeExact(in_arg, &DeeString_Type)) {
+			} else if (DeeObject_AssertTypeExact(in_arg, &DeeString_Type)) {
 				goto err_m1;
 			}
 			str_length = DeeString_WLEN(in_arg);
 			if (flags & F_HASPREC) {
-				if (str_length > precision)
+				if (str_length > precision) {
 					str_length = precision;
-				else if (flags & F_FIXBUF) {
+				} else if (flags & F_FIXBUF) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "String argument is too short (%Iu characters) "
 					                "for fixed buffer length %Iu",

@@ -1595,9 +1595,9 @@ DeeString_IsTitle(DeeObject *__restrict self,
 	bool was_space = false;
 	DeeString_Foreach(self, start_index, end_index, iter, end, {
 		uniflag_t f = DeeUni_Flags(*iter);
-		if (f & UNICODE_FSPACE)
+		if (f & UNICODE_FSPACE) {
 			was_space = true;
-		else if (was_space) {
+		} else if (was_space) {
 			was_space = false;
 			/* Space must be followed by title- or upper-case */
 			if (!(f & (UNICODE_FTITLE | UNICODE_FUPPER)))
@@ -9786,7 +9786,7 @@ PRIVATE int(DCALL regex_get_rules)(char const *__restrict rules_str,
 			char ch = *rules_str++;
 			if (!ch)
 				break;
-			/* */ if (ch == '.')
+			if (ch == '.')
 				*result |= Dee_REGEX_FDOTALL;
 			else if (ch == '\n')
 				*result |= Dee_REGEX_FMULTILINE;

@@ -60,9 +60,9 @@ PRIVATE stream_t DCALL
 tpp_userstream_fopen(char const *__restrict filename) {
 	stream_t result;
 	result = (stream_t)DeeFile_OpenString(filename, OPEN_FRDONLY, 0);
-	if (!result)
+	if (!result) {
 		TPPLexer_SetErr(); /* Set a lexer error to indicate failure. */
-	else if (result == (stream_t)ITER_DONE) {
+	} else if (result == (stream_t)ITER_DONE) {
 		result = NULL; /* Return NULL to indicate file-not-found. */
 	}
 	return result;

@@ -501,9 +501,9 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 	}
 	imm_val = iop->io_intexpr.ie_val;
 	imm_rel = iop->io_intexpr.ie_rel;
-	if (imm_rel == (uint16_t)-1)
+	if (imm_rel == (uint16_t)-1) {
 		imm_rel = ao_flags & ASM_OVERLOAD_FRELMSK;
-	else if (ao_flags & ASM_OVERLOAD_FREL_DSPBIT) {
+	} else if (ao_flags & ASM_OVERLOAD_FREL_DSPBIT) {
 		/* Toggle the relative displacement bit. */
 		imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
 	}
@@ -1043,13 +1043,14 @@ do_emit_instruction:
 		imm_val = invoc->ai_ops[i].io_intexpr.ie_val;
 		imm_sym = invoc->ai_ops[i].io_intexpr.ie_sym;
 		imm_rel = invoc->ai_ops[i].io_intexpr.ie_rel;
-		if (imm_rel == (uint16_t)-1)
+		if (imm_rel == (uint16_t)-1) {
 			imm_rel = iter->ao_flags;
-		else if (iter->ao_flags & ASM_OVERLOAD_FREL_DSPBIT) {
+		} else if (iter->ao_flags & ASM_OVERLOAD_FREL_DSPBIT) {
 			/* Toggle the relative displacement bit. */
 			imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
 		}
-		switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & (OPERAND_CLASS_FSPADD | OPERAND_CLASS_FSPSUB)) {
+		switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) &
+		        (OPERAND_CLASS_FSPADD | OPERAND_CLASS_FSPSUB)) {
 
 		case OPERAND_CLASS_FSPADD: /* `SP + imm' */
 			imm_val -= current_assembler.a_stackcur;
@@ -1297,11 +1298,11 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 		name = name << 24;
 	}
 #else  /* CONFIG_BIG_ENDIAN */
-	if (name & 0xff000000)
+	if (name & 0xff000000) {
 		name = BSWAP32(name);
-	else if (name & 0x00ff0000)
+	} else if (name & 0x00ff0000) {
 		name = BSWAP32(name) >> 8;
-	else if (name & 0x0000ff00) {
+	} else if (name & 0x0000ff00) {
 		name = (uint32_t)BSWAP16((uint16_t)name);
 	}
 #endif /* !CONFIG_BIG_ENDIAN */

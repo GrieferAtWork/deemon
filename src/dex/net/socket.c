@@ -222,9 +222,9 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 	                                     self->s_proto);
 	socket_read(self);
 	DBG_ALIGNMENT_DISABLE();
-	if unlikely(getpeername(self->s_socket, &result->sa, &socklen) < 0)
+	if unlikely(getpeername(self->s_socket, &result->sa, &socklen) < 0) {
 		ok = -1;
-	else if (!(self->s_state & SOCKET_FHASPEERADDR)) {
+	} else if (!(self->s_state & SOCKET_FHASPEERADDR)) {
 		memcpy(&self->s_peeraddr, result, sizeof(SockAddr));
 		self->s_state |= SOCKET_FHASPEERADDR;
 	}

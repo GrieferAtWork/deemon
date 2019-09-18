@@ -2914,9 +2914,9 @@ unpack_init_info(DeeObject *__restrict info,
 			goto err_fields;
 		}
 		*pinit_kw = DeeObject_IterNext(iterator);
-		if (*pinit_kw == ITER_DONE)
+		if (*pinit_kw == ITER_DONE) {
 			*pinit_kw = NULL;
-		else if (!*pinit_kw) {
+		} else if (!*pinit_kw) {
 			Dee_Decref(iterator);
 			goto err_args;
 		}

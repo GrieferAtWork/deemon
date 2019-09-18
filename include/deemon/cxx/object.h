@@ -791,9 +791,9 @@ public:
 	}
 	WeakRef &operator=(DeeObject *ob) {
 		if (ob) {
-			if (!ob)
+			if (!ob) {
 				Dee_weakref_clear(&w_ref);
-			else if (!Dee_weakref_set(&w_ref, ob)) {
+			} else if (!Dee_weakref_set(&w_ref, ob)) {
 				detail::err_cannot_weak_reference(ob);
 			}
 		} else {
@@ -808,9 +808,9 @@ public:
 	}
 	WeakRef &operator=(obj_maybenull ob) {
 		if (ob) {
-			if (!ob)
+			if (!ob) {
 				Dee_weakref_clear(&w_ref);
-			else if (!Dee_weakref_set(&w_ref, ob)) {
+			} else if (!Dee_weakref_set(&w_ref, ob)) {
 				detail::err_cannot_weak_reference(ob);
 			}
 		} else {

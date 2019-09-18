@@ -314,7 +314,7 @@ do_handle_code:
 		if
 			unlikely(!name)
 		goto err;
-		/* */ if (NAMEISKWD("yielding"))
+		if (NAMEISKWD("yielding"))
 			current_basescope->bs_flags |= CODE_FYIELDING;
 		else if (NAMEISKWD("copyable"))
 			current_basescope->bs_flags |= CODE_FCOPYABLE;
@@ -338,8 +338,9 @@ do_handle_code:
 		else if (NAMEISKWD("no_assembly"))
 			current_basescope->bs_flags &= ~CODE_FASSEMBLY;
 #endif
-		else if (WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name)) {
-			goto err;
+		else {
+			if (WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name))
+				goto err;
 		}
 		if (tok != ',')
 			break;
@@ -468,13 +469,13 @@ except_unknown_tag:
 #define IS_TAG(x)                                           \
 			(COMPILER_STRLEN(x) == (tag_end - tag_start) && \
 			 MEMCASEEQ(tag_start, x, sizeof(x) - sizeof(char)))
-			if (IS_TAG("finally"))
+			if (IS_TAG("finally")) {
 				except_flags |= EXCEPTION_HANDLER_FFINALLY;
-			else if (IS_TAG("interrupt"))
+			} else if (IS_TAG("interrupt")) {
 				except_flags |= EXCEPTION_HANDLER_FINTERPT;
-			else if (IS_TAG("handled"))
+			} else if (IS_TAG("handled")) {
 				except_flags |= EXCEPTION_HANDLER_FHANDLED;
-			else if (IS_TAG("mask")) {
+			} else if (IS_TAG("mask")) {
 				DREF DeeObject *mask;
 				if
 					unlikely(yield() < 0)

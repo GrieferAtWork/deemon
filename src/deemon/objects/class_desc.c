@@ -198,8 +198,7 @@ done:
 		return_bool(COTI_GETITER(self) op COTI_GETITER(other));                              \
 	err:                                                                                     \
 		return NULL;                                                                         \
-	}                                                                                        \
-/**/
+	}
 DEFINE_COTI_COMPARE(coti_eq, ==)
 DEFINE_COTI_COMPARE(coti_ne, !=)
 DEFINE_COTI_COMPARE(coti_lo, <)

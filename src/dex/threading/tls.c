@@ -259,15 +259,15 @@ tls_getvalue(Tls *__restrict self) {
 		err_tls_unbound();
 		goto err;
 	}
-	if (result)
+	if (result) {
 		Dee_Incref(result);
-	else if (!self->t_factory) {
+	} else if (!self->t_factory) {
 		err_tls_unbound();
 		goto err;
-	} else if (DeeNone_Check(self->t_factory))
-		ATOMIC_FETCHADD(Dee_None->ob_refcnt, 2),
+	} else if (DeeNone_Check(self->t_factory)) {
+		Dee_Incref_n(Dee_None, 2);
 		result = *presult = Dee_None; /* Save and return `none'. */
-	else {
+	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
 		if
@@ -500,9 +500,9 @@ tls_getvalue(Tls *__restrict self) {
 		err_tls_unbound();
 		goto err;
 	}
-	if (result)
+	if (result) {
 		Dee_Incref(result);
-	else if (!self->t_factory) {
+	} else if (!self->t_factory) {
 		err_tls_unbound();
 		goto err;
 	} else if (DeeNone_Check(self->t_factory))

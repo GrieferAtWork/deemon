@@ -335,9 +335,9 @@ do_parse_function_arglist:
 				for (;;) {
 					if (!self->jl_tok)
 						break;
-					if (self->jl_tok == '(')
+					if (self->jl_tok == '(') {
 						++recursion;
-					else if (self->jl_tok == ')') {
+					} else if (self->jl_tok == ')') {
 						--recursion;
 						if (!recursion) {
 							JITLexer_Yield(self);
@@ -901,9 +901,9 @@ do_asm:
 					for (;;) {
 						if (!self->jl_tok)
 							break;
-						if (self->jl_tok == '{')
+						if (self->jl_tok == '{') {
 							++recursion;
-						else if (self->jl_tok == '}') {
+						} else if (self->jl_tok == '}') {
 							--recursion;
 							if (!recursion) {
 								JITLexer_Yield(self);
@@ -912,11 +912,12 @@ do_asm:
 						}
 						JITLexer_Yield(self);
 					}
-				} else
+				} else {
 					while (self->jl_tok == JIT_STRING ||
 					       self->jl_tok == JIT_RAWSTRING) {
 						JITLexer_Yield(self);
 					}
+				}
 				while (self->jl_tok == ':' || self->jl_tok == TOK_COLLON_EQUAL) {
 					if (self->jl_tok == TOK_COLLON_EQUAL) {
 						++self->jl_tokstart;

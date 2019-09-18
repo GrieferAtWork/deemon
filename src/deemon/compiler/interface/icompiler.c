@@ -749,7 +749,7 @@ parse_handler_flags(char const *__restrict flags,
 		}
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
-			/**/ if (IS_FLAG("finally"))
+			if (IS_FLAG("finally"))
 				result->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
 			else if (IS_FLAG("interrupt"))
 				result->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
@@ -1002,7 +1002,7 @@ parse_loop_flags(char const *__restrict flags,
 		}
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
-			/**/ if (IS_FLAG("foreach"))
+			if (IS_FLAG("foreach"))
 				*presult |= AST_FLOOP_FOREACH;
 			else if (IS_FLAG("postcond"))
 				*presult |= AST_FLOOP_POSTCOND;
@@ -1204,7 +1204,7 @@ parse_conditional_flags(char const *__restrict flags,
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, sizeof(x) - sizeof(char)) == 0)
 #define IS_FLAG_S(len, s) (flag_length == (len) && memcmp(flags, s, (len) * sizeof(char)) == 0)
-			/**/ if (IS_FLAG_S(4, DeeString_STR(&str_bool)))
+			if (IS_FLAG_S(4, DeeString_STR(&str_bool)))
 				*presult |= AST_FCOND_BOOL;
 			else if (IS_FLAG("likely"))
 				*presult |= AST_FCOND_LIKELY;
@@ -1629,7 +1629,7 @@ parse_operator_flags(char const *__restrict flags,
 		}
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
-			/**/ if (IS_FLAG("post"))
+			if (IS_FLAG("post"))
 				*presult |= AST_OPERATOR_FPOSTOP;
 			else if (IS_FLAG("varargs"))
 				*presult |= AST_OPERATOR_FVARARGS;
