@@ -542,7 +542,7 @@ DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,(WG_SYMBOL),WSTATE_ERROR,{ stru
 DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{
 	struct symbol *sym = ARG(struct symbol *); size_t i;
 	char const *decl_format = TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
-	                          ? "\n%s(%d,%d) : ";
+	                          ? "\n%s(%d,%d) : "
 	                          : "\n%s:%d:%d: ";
 	WARNF("Symbol `%s' has been declared ambiguously",SYMBOL_NAME(sym));
 	if (sym->s_ambig.a_decl2.l_file) {
