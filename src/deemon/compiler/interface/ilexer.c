@@ -1897,7 +1897,7 @@ lexer_include(DeeCompilerWrapperObject *__restrict self,
 	return_none;
 err_filename:
 	Dee_Decref(filename);
-	/*err_stream:*/
+/*err_stream:*/
 	Dee_Decref(stream);
 err:
 	return NULL;

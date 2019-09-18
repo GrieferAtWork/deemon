@@ -633,7 +633,7 @@ cat_getitemdef(ClassAttributeTable *__restrict self,
 			continue;
 		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
 	}
-	/*nope:*/
+/*nope:*/
 	if (defl != ITER_DONE)
 		Dee_Incref(defl);
 	return defl;

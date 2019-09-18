@@ -274,7 +274,7 @@ err_entry_assumptions:
 			}
 		}
 	}
-	/*done:*/
+/*done:*/
 	return 0;
 /*
 did_optimize:

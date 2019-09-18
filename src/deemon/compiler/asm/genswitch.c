@@ -280,7 +280,7 @@ err_cases:
 	 *               The additional overhead caused by generating a jump-table here would be
 	 *               greater than the benefits it would give us. */
 	if (num_constants <= 1) {
-		/*use_runtime_checks:*/
+/*use_runtime_checks:*/
 		if (!has_expression) {
 			/* Assemble text for the switch expression. */
 			if (ast_genasm(self->a_switch.s_expr, ASM_G_FPUSHRES))

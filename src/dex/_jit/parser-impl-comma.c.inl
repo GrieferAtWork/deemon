@@ -563,7 +563,7 @@ err_store_source_current_lvalue:
 				ASSERT(current_lvalue.lv_kind == JIT_LVALUE_NONE);
 				error = JITLValueList_AppendRValue(&expr_comma, current);
 				if unlikely(error) {
-					/*err_store_source_current:*/
+/*err_store_source_current:*/
 					Dee_Decref(store_source);
 					goto err_current;
 				}
@@ -772,7 +772,7 @@ done_expression_nomerge:
 			JITLexer_Yield(self);
 		} else {
 			syn_expr_expected_semi_after_expr(self);
-			/*err_clear_current_only:*/
+/*err_clear_current_only:*/
 			DECREF(current);
 			current = ERROR;
 		}

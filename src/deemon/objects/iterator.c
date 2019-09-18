@@ -1921,7 +1921,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 		if (result != ITER_DONE)
 			return result;
 	}
-	/*err_noseq:*/
+/*err_noseq:*/
 	err_unknown_attribute(Dee_TYPE(self),
 	                      DeeString_STR(&str_seq),
 	                      ATTR_ACCESS_GET);

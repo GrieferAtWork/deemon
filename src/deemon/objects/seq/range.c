@@ -171,7 +171,7 @@ ri_deep(RangeIterator *__restrict self,
 err_r:
 	Dee_Decref_unlikely(self->ri_range);
 	Dee_Decref(self->ri_index);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 
@@ -239,7 +239,7 @@ again:
 	return new_index;
 err_ni:
 	Dee_Decref(new_index);
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 

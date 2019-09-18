@@ -339,7 +339,7 @@ is_a_statement:
 					result = seq;
 				}
 #endif /* JIT_EVAL */
-				/*parse_remainder_before_rbrace_popscope:*/
+/*parse_remainder_before_rbrace_popscope:*/
 				/* Sequence-like brace expression. */
 				JITLexer_Yield(self);
 parse_remainder_after_rbrace_popscope:

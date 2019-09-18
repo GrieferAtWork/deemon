@@ -1109,7 +1109,7 @@ done:
 	return result;
 err_r:
 	Dee_Decref(result);
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 
@@ -1135,7 +1135,7 @@ done_r:
 	return result;
 err_r:
 	Dee_Decref(result);
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 
@@ -1162,7 +1162,7 @@ done_r:
 	return result;
 err_r:
 	Dee_Decref(result);
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 

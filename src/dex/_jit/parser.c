@@ -356,7 +356,7 @@ err_rbrck_after_lbrck:
 			size_t name_size;
 			uint32_t name;
 		default:
-			/*default_case:*/
+/*default_case:*/
 			if (self->jl_tok != JIT_KEYWORD)
 				goto unknown;
 			name_begin = (char const *)self->jl_tokstart;
@@ -651,7 +651,7 @@ print_module_name(JITLexer *__restrict self,
 	return result;
 err_trace:
 	JITLexer_ErrorTrace(self, self->jl_tokstart);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 

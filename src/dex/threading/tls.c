@@ -337,7 +337,7 @@ again:
 		COMPILER_WRITE_BARRIER();
 		Dee_Decref(item);
 	}
-	/*done:*/
+/*done:*/
 	return 0;
 err:
 	return -1;
@@ -555,7 +555,7 @@ again:
 		COMPILER_WRITE_BARRIER();
 		Dee_Decref(item);
 	}
-	/*done:*/
+/*done:*/
 	return 0;
 err:
 	return -1;

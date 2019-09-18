@@ -798,7 +798,7 @@ retry:
 		goto got_overload;
 	next_overload:;
 	}
-	/*check_stackabs_translated:*/
+/*check_stackabs_translated:*/
 	if (!stackabs_translated) {
 		uint16_t immediate_stackdepth;
 		stackabs_translated = true;
@@ -1103,7 +1103,7 @@ do_emit_instruction:
 			case OPERAND_CLASS_GLOBAL:
 			case OPERAND_CLASS_LOCAL:
 			case OPERAND_CLASS_ARG:
-				/*do_emit_symid_816:*/
+/*do_emit_symid_816:*/
 				if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_symid)
 				               : asm_put_data8((uint8_t)invoc->ai_ops[i].io_symid))
 					goto err;
@@ -1153,7 +1153,7 @@ do_emit_instruction:
 			default: break;
 			}
 	}
-	/*done_instruction:*/
+/*done_instruction:*/
 	/* Save the last-written instruction. */
 	current_userasm.ua_lasti = iter->ao_instr;
 

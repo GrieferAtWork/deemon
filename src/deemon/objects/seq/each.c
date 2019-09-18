@@ -462,7 +462,7 @@ err_elem_i:
 		if unlikely(DeeObject_Leave(elem[i]))
 			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 	}
-	/*err_elem:*/
+/*err_elem:*/
 	while (count--)
 		Dee_Decref(elem[count]);
 	Dee_Free(elem);
@@ -1046,7 +1046,7 @@ err_elem_i:
 		if unlikely(DeeObject_Leave(elem[i]))
 			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 	}
-	/*err_elem:*/
+/*err_elem:*/
 	while (count--)
 		Dee_Decref(elem[count]);
 	Dee_Free(elem);

@@ -2981,17 +2981,17 @@ err_no_getter:
 	goto err;
 err_classmember_invalid_args_args_tuple:
 	Dee_Decref(args_tuple);
-	/*err_classmember_invalid_args:*/
+/*err_classmember_invalid_args:*/
 	err_classmember_requires_1_argument(attr);
 	goto err;
 err_classproperty_invalid_args_args_tuple:
 	Dee_Decref(args_tuple);
-	/*err_classproperty_invalid_args:*/
+/*err_classproperty_invalid_args:*/
 	err_classproperty_requires_1_argument(attr);
 	goto err;
 err_classmethod_noargs_args_tuple:
 	Dee_Decref(args_tuple);
-	/*err_classmethod_noargs:*/
+/*err_classmethod_noargs:*/
 	err_classmethod_requires_at_least_1_argument(attr);
 	goto err;
 err_args_tuple:

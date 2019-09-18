@@ -968,7 +968,7 @@ done_skip_semi:
 		case ';':
 			JITLexer_Yield(self);
 		}
-		/*done:*/
+/*done:*/
 		break;
 	}
 }

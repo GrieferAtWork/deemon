@@ -3092,7 +3092,7 @@ err_super:
 	}
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 
@@ -3130,7 +3130,7 @@ err_super:
 	}
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 
@@ -3252,7 +3252,7 @@ instance_builtin_auto_nobase_tinit(DeeTypeObject *__restrict tp_self,
 	return 0;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 
@@ -3277,7 +3277,7 @@ instance_builtin_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
 	return 0;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 
@@ -5006,7 +5006,7 @@ err_r_base:
 	Dee_XDecref_unlikely(desc->cd_name);
 	Dee_XDecref_unlikely(desc->cd_doc);
 	Dee_Decref_unlikely(desc);
-	/*err_r:*/
+/*err_r:*/
 	DeeGCObject_Free(result);
 err:
 	return NULL;

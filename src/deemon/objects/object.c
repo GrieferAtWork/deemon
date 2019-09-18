@@ -1279,7 +1279,7 @@ again:
 			DeeObject_Free(self);
 		}
 	}
-	/*done:*/
+/*done:*/
 	/* Drop a reference from the original type. */
 	Dee_Decref(orig_type);
 }

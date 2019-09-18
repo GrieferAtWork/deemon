@@ -1460,7 +1460,7 @@ buffer_size(Buffer *__restrict self,
 err_closed_unlock:
 	buf_endwrite(self);
 	err_buffer_closed();
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 
@@ -1482,7 +1482,7 @@ buffer_fileno(Buffer *__restrict self,
 err_closed_unlock:
 	buf_endwrite(self);
 	err_buffer_closed();
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 #endif
@@ -1655,7 +1655,7 @@ buffer_filename(Buffer *__restrict self) {
 err_closed_unlock:
 	buf_endwrite(self);
 	err_buffer_closed();
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 
@@ -1672,7 +1672,7 @@ buffer_getfile(Buffer *__restrict self) {
 err_closed_unlock:
 	buf_endwrite(self);
 	err_buffer_closed();
-	/*err:*/
+/*err:*/
 	return NULL;
 }
 

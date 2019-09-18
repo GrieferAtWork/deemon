@@ -463,7 +463,7 @@ is_a_statement:
 		ASSERT(result->a_flag == AST_FMULTIPLE_GENERIC);
 		if (!current_scope->s_mapc) {
 			if (tok == '}') {
-				/*parse_remainder_before_rbrace_popscope:*/
+/*parse_remainder_before_rbrace_popscope:*/
 				/* Sequence-like brace expression. */
 				if unlikely(yield() < 0)
 					goto err;

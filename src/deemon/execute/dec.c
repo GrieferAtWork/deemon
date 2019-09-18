@@ -2175,7 +2175,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
 err_r_maps:
 	Dee_Free((void *)result->d_strings);
 	Dee_Free((void *)result->d_exdat);
-	/*err_r:*/
+/*err_r:*/
 	Dee_Free(result);
 err:
 	return NULL;

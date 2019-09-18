@@ -759,7 +759,7 @@ err_r_i_triple_1:
 			DeeTuple_SET(triple, 1, temp); /* Inherit reference. */
 			temp = DeeCompiler_GetAst(me->a_try.t_catchv[i].ce_code);
 			if unlikely(!temp) {
-				/*err_r_i_triple_2:*/
+/*err_r_i_triple_2:*/
 				Dee_Decref(DeeTuple_GET(triple, 1));
 				goto err_r_i_triple_1;
 			}

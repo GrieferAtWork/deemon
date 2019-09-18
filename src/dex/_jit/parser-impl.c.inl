@@ -2271,7 +2271,7 @@ case_cmpeq:
 				goto done;
 		}
 		if (TOKEN_IS_AS(self)) {
-	/*CASE_TOKEN_IS_AS:*/
+/*CASE_TOKEN_IS_AS:*/
 case_as:
 			result = CALL_SECONDARY(AsOperand, result);
 			if (ISERR(result))
@@ -2949,7 +2949,7 @@ continue_expr:
 	}
 	return LHS_OR_OK;
 #ifdef JIT_EVAL
-	/*err_invoke:*/
+/*err_invoke:*/
 	/*DECREF(rhs);*/
 err_invoke_norhs:
 	JITLexer_ErrorTrace(self, pos);
@@ -3022,7 +3022,7 @@ continue_expr:
 	}
 	return LHS_OR_OK;
 #ifdef JIT_EVAL
-	/*err_invoke:*/
+/*err_invoke:*/
 	/*DECREF(rhs);*/
 err_invoke_norhs:
 	JITLexer_ErrorTrace(self, pos);
@@ -3591,7 +3591,7 @@ case_cmpeq:
 				goto done;
 		}
 		if (TOKEN_IS_AS(self)) {
-	/*CASE_TOKEN_IS_AS:*/
+/*CASE_TOKEN_IS_AS:*/
 case_as:
 			result = CALL_SECONDARY(AsOperand, result);
 			if (ISERR(result))

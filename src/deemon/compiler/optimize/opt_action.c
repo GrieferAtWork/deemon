@@ -629,7 +629,7 @@ action_set_expr_result:
 		}
 		break;
 	}
-	/*done:*/
+/*done:*/
 	return 0;
 did_optimize:
 	++optimizer_count;

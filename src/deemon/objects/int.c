@@ -488,7 +488,7 @@ DeeInt_GetUleb(DeeObject *__restrict self,
 			break;
 		}
 	}
-	/*done:*/
+/*done:*/
 	return dst;
 }
 

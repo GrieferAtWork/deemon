@@ -1828,7 +1828,7 @@ DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 continue_at_i:
 	for (; i < length; ++i) {
 		uint32_t ch;
-		/*read_text_i:*/
+/*read_text_i:*/
 		ch = text[i];
 		if (ch >= UTF16_HIGH_SURROGATE_MIN &&
 		    ch <= UTF16_HIGH_SURROGATE_MAX) {

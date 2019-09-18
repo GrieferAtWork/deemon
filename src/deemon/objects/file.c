@@ -632,7 +632,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 	if (result && DeeObject_AssertTypeExact(result, &DeeString_Type))
 		Dee_Clear(result);
 	return result;
-	/*err:*/
+/*err:*/
 	/* return NULL;*/
 }
 
@@ -775,7 +775,7 @@ got_read: {
 			break; /* EOF */
 		max_length -= (size_t)read_size;
 	}
-	/*done:*/
+/*done:*/
 	return bytes_printer_pack(&printer);
 err_printer:
 	bytes_printer_fini(&printer);
@@ -832,7 +832,7 @@ got_read: {
 		max_length -= (size_t)read_size;
 		pos += (size_t)read_size;
 	}
-	/*done:*/
+/*done:*/
 	return bytes_printer_pack(&printer);
 err_printer:
 	bytes_printer_fini(&printer);

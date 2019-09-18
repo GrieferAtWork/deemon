@@ -1178,7 +1178,7 @@ err_inputstream_r:
 	goto err;
 err_modulepath_inputstream:
 	Dee_Decref(input_stream);
-	/*err_modulepath:*/
+/*err_modulepath:*/
 	Dee_Decref(module_path_ob);
 err:
 	return NULL;
@@ -1898,7 +1898,7 @@ err_buf_name_dec_stream:
 				}
 				result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
 				if unlikely(!result) {
-					/*err_buf_name_dec_stream_path:*/
+/*err_buf_name_dec_stream_path:*/
 					Dee_Decref_likely(module_path_ob);
 					goto err_buf_name_dec_stream;
 				}
@@ -2212,7 +2212,7 @@ load_module_after_dex_failure:
 		}
 		result = (DREF DeeModuleObject *)DeeModule_New((DeeObject *)module_name_ob);
 		if unlikely(!result) {
-			/*err_buf_name_source_stream:*/
+/*err_buf_name_source_stream:*/
 			Dee_Decref_likely(source_stream);
 			goto err_buf_module_name_path;
 		}

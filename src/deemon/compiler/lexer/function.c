@@ -427,7 +427,7 @@ next_argument:
 			if unlikely(yield() < 0)
 				goto err;
 		}
-	/*done:*/
+/*done:*/
 	ASSERT(current_basescope->bs_argc_min <=
 	       current_basescope->bs_argc_max);
 	ASSERT(arga >= current_basescope->bs_argc);
@@ -664,7 +664,7 @@ err_flags_decl:
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 	decl_ast_fini(&my_decl);
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-	/*err_flags:*/
+/*err_flags:*/
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	goto err;

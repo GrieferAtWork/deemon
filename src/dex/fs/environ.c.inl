@@ -76,7 +76,7 @@ PRIVATE char *empty_env[] = { NULL };
 
 PRIVATE int DCALL
 env_init(Env *__restrict self) {
-	/*again:*/
+/*again:*/
 	rwlock_read(&env_lock);
 	self->e_iter    = environ;
 	self->e_version = env_version;

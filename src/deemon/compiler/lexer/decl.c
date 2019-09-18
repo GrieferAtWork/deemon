@@ -623,7 +623,7 @@ print_undefined_symbol_name:
 		break;
 
 	default:
-		/*print_object:*/
+/*print_object:*/
 		/* Fallback: emit a reference to `object' */
 		if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 			goto err;

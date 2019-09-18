@@ -1037,7 +1037,7 @@ handle_accept_error_neterror:
 	DBG_ALIGNMENT_DISABLE();
 	error = GET_NET_ERROR();
 	DBG_ALIGNMENT_ENABLE();
-	/*handle_accept_error:*/
+/*handle_accept_error:*/
 	/* Start over on timeout. */
 	if (error == EWOULDBLOCK)
 		goto restart_after_timeout;

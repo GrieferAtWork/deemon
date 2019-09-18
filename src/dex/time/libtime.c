@@ -985,7 +985,7 @@ print_number_2:
 
 			case 'e':
 				number = (unsigned int)time_getint(self, TIME_REPR_MDAY) + 1;
-				/*print_number_2_spc:*/
+/*print_number_2_spc:*/
 				printf("%02u", number);
 				break;
 
@@ -1006,7 +1006,7 @@ print_number_2:
 
 			case 'j':
 				number = (unsigned int)time_getint(self, TIME_REPR_YDAY) + 1;
-				/*print_number_3_spc:*/
+/*print_number_3_spc:*/
 				printf("%3u", number);
 				break;
 

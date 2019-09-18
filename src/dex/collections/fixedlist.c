@@ -332,7 +332,7 @@ init_from_iterator:
 			result->fl_elem[i] = elem; /* Inherit reference. */
 		}
 	}
-	/*done:*/
+/*done:*/
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	DeeGC_Track((DeeObject *)result);

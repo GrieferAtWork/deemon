@@ -864,7 +864,7 @@ yf_deepcopy(YFunction *__restrict self,
 err_kw_kw_i:
 	while (i--)
 		Dee_XDecref(kw->fk_kargv[i]);
-	/*err_kw_kw:*/
+/*err_kw_kw:*/
 	if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS)
 		Dee_Decref(self->yf_kw->fk_kw);
 err_kw:
@@ -912,7 +912,7 @@ yfi_init(YFIterator *__restrict self,
 err_r_base:
 	Dee_Decref(self->yi_frame.cf_func);
 	Dee_Decref(yield_function);
-	/*err:*/
+/*err:*/
 	return -1;
 }
 

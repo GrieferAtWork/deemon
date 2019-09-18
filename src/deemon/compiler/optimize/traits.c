@@ -1011,7 +1011,7 @@ ast_uses_symbol(struct ast *__restrict self,
 
 	default: break;
 	}
-	/*nope:*/
+/*nope:*/
 	return false;
 yup:
 	return true;
