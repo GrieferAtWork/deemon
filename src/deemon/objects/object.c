@@ -334,7 +334,7 @@ again:
 				struct weakref *next;
 				if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
 #if 0
-     struct weakref **block = self->wr_pself;
+					struct weakref **block = self->wr_pself;
 #endif
 					struct weakref **p       = self->wr_pself;
 					struct weakref **other_p = other->wr_pself;
@@ -345,8 +345,8 @@ again:
 						return;
 					SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
-     LOCK_POINTER(*block);
-     UNLOCK_POINTER(*block);
+					LOCK_POINTER(*block);
+					UNLOCK_POINTER(*block);
 #endif
 					goto again;
 				}
@@ -426,7 +426,7 @@ again:
 				struct weakref *next;
 				if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
 #if 0
-     struct weakref **block = self->wr_pself;
+					struct weakref **block = self->wr_pself;
 #endif
 					struct weakref **p       = self->wr_pself;
 					struct weakref **other_p = other->wr_pself;
@@ -437,8 +437,8 @@ again:
 						return;
 					SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
-     LOCK_POINTER(*block);
-     UNLOCK_POINTER(*block);
+					LOCK_POINTER(*block);
+					UNLOCK_POINTER(*block);
 #endif
 					goto again;
 				}

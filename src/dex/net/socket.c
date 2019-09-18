@@ -1637,14 +1637,14 @@ again:
 			                   "The peer %K has reset the connection",
 			                   SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 #if 0
-  } else if (error == ENOTCONN
+		} else if (error == ENOTCONN
 #ifdef EPIPE
-         || (error == EPIPE && !(self->s_state&SOCKET_FSHUTDOWN_W))
-#endif
-             ) {
-   DeeError_SysThrowf(&DeeError_NotConnected,error,
-                      "Socket %k is connection-oriented, but not connected",
-                      self);
+		           || (error == EPIPE && !(self->s_state & SOCKET_FSHUTDOWN_W))
+#endif /* EPIPE */
+		           ) {
+			DeeError_SysThrowf(&DeeError_NotConnected, error,
+			                   "Socket %k is connection-oriented, but not connected",
+			                   self);
 #endif
 #ifdef EPIPE
 		} else if (error == EPIPE) {
@@ -1732,10 +1732,10 @@ again:
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
-#endif
+#endif /* EAGAIN && EAGAIN != EWOULDBLOCK */
 #ifdef EINTR
 		    || error == EINTR
-#endif
+#endif /* EINTR */
 		) {
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
@@ -1750,7 +1750,7 @@ again:
 				goto again;
 			goto err;
 		}
-#endif
+#endif /* ENOMEM */
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 #ifdef MSG_OOB
@@ -1758,10 +1758,10 @@ again:
 			/* Indicate that nothing was read by returning 0. */
 			result = 0;
 			goto done;
-#endif
+#endif /* MSG_OOB */
 #if 0
-  } else if (error == ENOTCONN) {
-   err_receive_not_connected(error,self);
+		} else if (error == ENOTCONN) {
+			err_receive_not_connected(error, self);
 #endif
 		} else if (error == EOPNOTSUPP) {
 			err_invalid_transfer_mode(error, self, transfer_context_recv, flags);
@@ -1786,7 +1786,7 @@ err:
 PRIVATE size_t DCALL get_recv_chunksize(void) {
 	/* XXX: Consult an environment variable? */
 #if 0
- return 1;
+	return 1;
 #else
 	return 2048;
 #endif

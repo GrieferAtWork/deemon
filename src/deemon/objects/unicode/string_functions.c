@@ -6251,12 +6251,12 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		}
 	}
 #if 0
- /* If string contents are identical, leave off by comparing their lengths. */
- if (lhs_len == rhs_len)
-     return 0;
- if (lhs_len < rhs_len)
-     return -1;
- return 1;
+	/* If string contents are identical, leave off by comparing their lengths. */
+	if (lhs_len == rhs_len)
+		return 0;
+	if (lhs_len < rhs_len)
+		return -1;
+	return 1;
 #endif
 }
 #undef DO_COMPARE
