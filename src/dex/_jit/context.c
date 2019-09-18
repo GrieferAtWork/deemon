@@ -107,9 +107,8 @@ do_reload: {
 	i = perturb = hash & tab->ot_mask;
 	for (;; JITObjectTable_NEXT(i, perturb)) {
 		ent = &tab->ot_list[i & tab->ot_mask];
-		if
-			unlikely(!ent->oe_namestr)
-		goto err_unloaded;
+		if unlikely(!ent->oe_namestr)
+			goto err_unloaded;
 		if (ent->oe_namestr == (char *)ITER_DONE)
 			continue;
 		if (ent->oe_namehsh != hash)
@@ -152,9 +151,8 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		return *self->lv_ptr != NULL;
 
 	case JIT_LVALUE_OBJENT:
-		if
-			unlikely(!update_symbol_objent((JITSymbol *)self))
-		goto err;
+		if unlikely(!update_symbol_objent((JITSymbol *)self))
+			goto err;
 		result = self->lv_objent.lo_ent->oe_value != NULL;
 		break;
 
@@ -166,9 +164,8 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_GLOBAL:
-		if
-			unlikely(!context->jc_globals)
-		return 0;
+		if unlikely(!context->jc_globals)
+			return 0;
 		result = DeeObject_BoundItem(context->jc_globals,
 		                             (DeeObject *)self->lv_global,
 		                             true);
@@ -177,9 +174,8 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
-		if
-			unlikely(!context->jc_globals)
-		return 0;
+		if unlikely(!context->jc_globals)
+			return 0;
 		result = DeeObject_BoundItemStringLen(context->jc_globals,
 		                                      self->lv_globalstr.lg_namestr,
 		                                      self->lv_globalstr.lg_namelen,
@@ -242,9 +238,8 @@ JITLValue_GetValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_POINTER:
 		result = *self->lv_ptr;
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 err_unbound:
 			DeeError_Throwf(&DeeError_UnboundLocal,
 			                "Unbound local variable");
@@ -254,13 +249,11 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_OBJENT:
-		if
-			unlikely(!update_symbol_objent((JITSymbol *)self))
-		goto err;
+		if unlikely(!update_symbol_objent((JITSymbol *)self))
+			goto err;
 		result = self->lv_objent.lo_ent->oe_value;
-		if
-			unlikely(!result)
-		goto err_unbound;
+		if unlikely(!result)
+			goto err_unbound;
 		Dee_Incref(result);
 		break;
 
@@ -270,9 +263,8 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_GLOBAL:
-		if
-			unlikely(!context->jc_globals)
-		{
+		if unlikely(!context->jc_globals)
+			{
 			err_unknown_global((DeeObject *)self->lv_global);
 			goto err;
 		}
@@ -281,9 +273,8 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
-		if
-			unlikely(!context->jc_globals)
-		{
+		if unlikely(!context->jc_globals)
+			{
 			err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
 			                           self->lv_globalstr.lg_namelen);
 			goto err;
@@ -348,9 +339,8 @@ JITLValue_DelValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_OBJENT: {
 		DREF DeeObject *old_value;
-		if
-			unlikely(!update_symbol_objent((JITSymbol *)self))
-		goto err;
+		if unlikely(!update_symbol_objent((JITSymbol *)self))
+			goto err;
 		old_value                        = self->lv_objent.lo_ent->oe_value;
 		self->lv_objent.lo_ent->oe_value = NULL;
 		Dee_XDecref(old_value);
@@ -363,17 +353,15 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_GLOBAL:
-		if
-			unlikely(!context->jc_globals)
-		return err_unknown_global((DeeObject *)self->lv_global);
+		if unlikely(!context->jc_globals)
+			return err_unknown_global((DeeObject *)self->lv_global);
 		result = DeeObject_DelItem(context->jc_globals,
 		                           (DeeObject *)self->lv_global);
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
-		if
-			unlikely(!context->jc_globals)
-		return err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
+		if unlikely(!context->jc_globals)
+			return err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
 		                                  self->lv_globalstr.lg_namelen);
 		result = DeeObject_DelItemStringLen(context->jc_globals,
 		                                    self->lv_globalstr.lg_namestr,
@@ -437,9 +425,8 @@ JITLValue_SetValue(JITLValue *__restrict self,
 
 	case JIT_LVALUE_OBJENT: {
 		DREF DeeObject *old_value;
-		if
-			unlikely(!update_symbol_objent((JITSymbol *)self))
-		goto err;
+		if unlikely(!update_symbol_objent((JITSymbol *)self))
+			goto err;
 		Dee_Incref(value);
 		old_value                        = self->lv_objent.lo_ent->oe_value;
 		self->lv_objent.lo_ent->oe_value = value;
@@ -456,9 +443,8 @@ JITLValue_SetValue(JITLValue *__restrict self,
 	case JIT_LVALUE_GLOBAL:
 		if (!context->jc_globals) {
 			context->jc_globals = DeeDict_New();
-			if
-				unlikely(!context->jc_globals)
-			goto err;
+			if unlikely(!context->jc_globals)
+				goto err;
 		}
 		result = DeeObject_SetItem(context->jc_globals,
 		                           (DeeObject *)self->lv_global,
@@ -468,9 +454,8 @@ JITLValue_SetValue(JITLValue *__restrict self,
 	case JIT_LVALUE_GLOBALSTR:
 		if (!context->jc_globals) {
 			context->jc_globals = DeeDict_New();
-			if
-				unlikely(!context->jc_globals)
-			goto err;
+			if unlikely(!context->jc_globals)
+				goto err;
 		}
 		result = DeeObject_SetItemStringLen(context->jc_globals,
 		                                    self->lv_globalstr.lg_namestr,
@@ -542,16 +527,14 @@ JITLValueList_Append(JITLValueList *__restrict self,
 		new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
 		                                       new_alloc *
 		                                       sizeof(JITLValue));
-		if
-			unlikely(!new_list)
-		{
+		if unlikely(!new_list)
+			{
 			new_alloc = self->ll_size + 1;
 			new_list = (JITLValue *)Dee_Realloc(self->ll_list,
 			                                    new_alloc *
 			                                    sizeof(JITLValue));
-			if
-				unlikely(!new_list)
-			goto err;
+			if unlikely(!new_list)
+				goto err;
 		}
 		self->ll_list  = new_list;
 		self->ll_alloc = new_alloc;
@@ -578,16 +561,14 @@ JITLValueList_AppendRValue(JITLValueList *__restrict self,
 		new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
 		                                       new_alloc *
 		                                       sizeof(JITLValue));
-		if
-			unlikely(!new_list)
-		{
+		if unlikely(!new_list)
+			{
 			new_alloc = self->ll_size + 1;
 			new_list = (JITLValue *)Dee_Realloc(self->ll_list,
 			                                    new_alloc *
 			                                    sizeof(JITLValue));
-			if
-				unlikely(!new_list)
-			goto err;
+			if unlikely(!new_list)
+				goto err;
 		}
 		self->ll_list  = new_list;
 		self->ll_alloc = new_alloc;
@@ -613,15 +594,13 @@ JITLValueList_CopyObjects(JITLValueList *__restrict self,
 	if (!self->ll_size)
 		goto done;
 	buf = objectlist_alloc(dst, self->ll_size);
-	if
-		unlikely(!buf)
-	goto err;
+	if unlikely(!buf)
+		goto err;
 	for (i = 0; i < self->ll_size; ++i) {
 		DREF DeeObject *ob;
 		ob = JITLValue_GetValue(&self->ll_list[i], context);
-		if
-			unlikely(!ob)
-		goto err_i;
+		if unlikely(!ob)
+			goto err_i;
 		buf[i] = ob; /* Inherit reference. */
 	}
 done:
@@ -650,24 +629,21 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 			return err_invalid_unpack_size(values, self->ll_size, fast_size);
 		for (; i < fast_size; ++i) {
 			elem = DeeFastSeq_GetItem(values, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			temp = JITLValue_SetValue(&self->ll_list[i],
 			                          context,
 			                          elem);
 			Dee_Decref(elem);
-			if
-				unlikely(temp)
-			goto err;
+			if unlikely(temp)
+				goto err;
 		}
 		goto done;
 	}
 	if (DeeNone_Check(values)) {
 		/* Special case: `none' can be unpacked into anything. */
 		for (; i < fast_size; ++i) {
-			if
-				unlikely(JITLValue_SetValue(&self->ll_list[i],
+			if unlikely(JITLValue_SetValue(&self->ll_list[i],
 				                            context,
 				                            Dee_None))
 			goto err;
@@ -679,9 +655,8 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 		goto err;
 	for (; i < self->ll_size; ++i) {
 		elem = DeeObject_IterNext(iterator);
-		if
-			unlikely(!ITER_ISOK(elem))
-		{
+		if unlikely(!ITER_ISOK(elem))
+			{
 			if (elem)
 				err_invalid_unpack_size(values, self->ll_size, i);
 			goto err_iter;
@@ -690,15 +665,13 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 		                          context,
 		                          elem);
 		Dee_Decref(elem);
-		if
-			unlikely(temp)
-		goto err_iter;
+		if unlikely(temp)
+			goto err_iter;
 	}
 	/* Check to make sure that the iterator actually ends here. */
 	elem = DeeObject_IterNext(iterator);
-	if
-		unlikely(elem != ITER_DONE)
-	{
+	if unlikely(elem != ITER_DONE)
+		{
 		if (elem)
 			err_invalid_unpack_iter_size(values, iterator, self->ll_size);
 		goto err_iter;
@@ -757,9 +730,8 @@ JITContext_GetRWLocals(JITContext *__restrict self) {
 		return result;
 	/* Must create a new table for our own usage. */
 	result = jit_object_table_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	JITObjectTable_Init(result);
 	--self->jc_locals.otp_ind;
 	result->ot_prev         = self->jc_locals;
@@ -811,9 +783,8 @@ set_global:
 #if 0
 		if (!self->jc_globals) {
 			self->jc_globals = DeeDict_New();
-			if
-				unlikely(!self->jc_globals)
-			goto err;
+			if unlikely(!self->jc_globals)
+				goto err;
 		}
 #endif
 		result->js_kind                 = JIT_SYMBOL_GLOBALSTR;
@@ -849,29 +820,25 @@ set_global:
 			                                   name,
 			                                   namelen,
 			                                   hash);
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (error)
 				goto set_global; /* Known global */
 		}
 		break;
 	}
-	if
-		unlikely(!(mode & LOOKUP_SYM_ALLOWDECL))
-	goto err_unknown_var;
+	if unlikely(!(mode & LOOKUP_SYM_ALLOWDECL))
+		goto err_unknown_var;
 	/* Create a new local variable. */
 	tab = JITContext_GetRWLocals(self);
-	if
-		unlikely(!tab)
-	goto err;
+	if unlikely(!tab)
+		goto err;
 	ent = JITObjectTable_Create(tab,
 	                            name,
 	                            namelen,
 	                            hash);
-	if
-		unlikely(!ent)
-	goto err;
+	if unlikely(!ent)
+		goto err;
 	goto set_object_entry;
 err_unknown_var:
 	DeeError_Throwf(&DeeError_SymbolError,

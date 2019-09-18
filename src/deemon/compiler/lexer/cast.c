@@ -47,9 +47,8 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 		 * expression. However if it isn't, then it is a cast expression. */
 		next_tok = peek_next_token(&next_file);
 		for (;;) {
-			if
-				unlikely(!next_tok)
-			goto err;
+			if unlikely(!next_tok)
+				goto err;
 			if (*next_tok != '!')
 				break;
 			next_tok = peek_next_advance(next_tok + 1, &next_file);
@@ -93,42 +92,36 @@ not_a_cast:
 		 * `float(pack(10,20,30))', when we want it to be `float(10,20,30)' */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		if (tok == ')') {
 			/* Handle case #0 */
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			merge = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-			if
-				unlikely(!merge)
-			goto err;
+			if unlikely(!merge)
+				goto err;
 			result = ast_setddi(ast_operator2(OPERATOR_CALL,
 			                                  AST_OPERATOR_FNORMAL,
 			                                  typeexpr,
 			                                  merge),
 			                    &typeexpr->a_ddi);
 			ast_decref(merge);
-			if
-				unlikely(!result)
-			goto err;
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(!result)
+				goto err;
+			if unlikely(yield() < 0)
+				goto err_r;
 			goto done;
 		}
 		second_paren = tok == '(';
 		/* Parse the cast-expression / argument list. */
 		merge = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &kw_labels);
-		if
-			unlikely(!merge)
-		goto err_flags;
+		if unlikely(!merge)
+			goto err_flags;
 		ASSERT(merge->a_type == AST_MULTIPLE);
 		ASSERT(merge->a_flag == AST_FMULTIPLE_TUPLE);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
-		goto err_merge_kwlabels;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+			goto err_merge_kwlabels;
 		if (kw_labels) {
 			result = ast_setddi(ast_action3(AST_FACTION_CALL_KW,
 			                                typeexpr,
@@ -148,30 +141,26 @@ not_a_cast:
 				 */
 				result = merge->a_multiple.m_astv[0];
 				result = ast_parse_cast(result);
-				if
-					unlikely(!result)
-				goto err_merge;
+				if unlikely(!result)
+					goto err_merge;
 				if (result == merge->a_multiple.m_astv[0]) {
 					/* Same argument expression. */
 					ast_decref(result);
 				} else {
 					/* New argument expression. */
-					if
-						likely(!ast_shared(merge))
-					{
+					if likely(!ast_shared(merge))
+						{
 						ast_decref(merge->a_multiple.m_astv[0]);
 						merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
 					} else {
 						DREF struct ast *other;
 						exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-						if
-							unlikely(!exprv)
-						goto err_merge_r;
+						if unlikely(!exprv)
+							goto err_merge_r;
 						exprv[0] = result; /* Inherit */
 						other    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
-						if
-							unlikely(!other)
-						{
+						if unlikely(!other)
+							{
 							Dee_Free(exprv);
 							goto err_merge_r;
 						}
@@ -187,9 +176,8 @@ not_a_cast:
 			                    &typeexpr->a_ddi);
 		}
 		ast_decref(merge);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 	}	break;
 #endif
 
@@ -202,21 +190,18 @@ not_a_cast:
 do_a_cast:
 		/* Actually do a cast. */
 		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!result)
-		return NULL;
+		if unlikely(!result)
+			return NULL;
 		/* Use the parsed branch in a single-argument call-operator invocation. */
 		exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-		if
-			unlikely(!exprv)
-		goto err_r;
+		if unlikely(!exprv)
+			goto err_r;
 		exprv[0] = result; /* Inherit */
 		/* Pack together the argument list branch. */
 		merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv),
 		                   &typeexpr->a_ddi);
-		if
-			unlikely(!merge)
-		goto err_r_exprv;
+		if unlikely(!merge)
+			goto err_r_exprv;
 		/* Create the call expression branch. */
 		result = ast_setddi(ast_operator2(OPERATOR_CALL,
 		                                  AST_OPERATOR_FNORMAL,

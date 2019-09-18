@@ -246,9 +246,8 @@ PRIVATE DREF BytesSegmentsIterator *DCALL
 bseg_iter(BytesSegments *__restrict self) {
 	DREF BytesSegmentsIterator *result;
 	result = DeeObject_MALLOC(BytesSegmentsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(self->b_str);
 	result->b_str = self->b_str;
 	result->b_siz = self->b_siz;
@@ -278,9 +277,8 @@ bseg_contains(BytesSegments *__restrict self,
 		other_size = DeeBytes_SIZE(other);
 	} else if (DeeString_Check(other)) {
 		other_data = DeeString_AsBytes(other, false);
-		if
-			unlikely(!other_data)
-		goto err;
+		if unlikely(!other_data)
+			goto err;
 		other_size = WSTR_LENGTH(other_data);
 	} else {
 		DeeObject_TypeAssertFailed(other, &DeeBytes_Type);
@@ -321,9 +319,8 @@ bseg_get(BytesSegments *__restrict self,
 	length = DeeBytes_SIZE(self->b_str);
 	length += (self->b_siz - 1);
 	length /= self->b_siz;
-	if
-		unlikely(index > length)
-	goto err_index;
+	if unlikely(index > length)
+		goto err_index;
 	index *= self->b_siz;
 	return bytes_getsubstr(self->b_str, index, index + self->b_siz);
 err_index:
@@ -406,9 +403,8 @@ DeeBytes_Segments(DeeBytesObject *__restrict self,
 	DREF BytesSegments *result;
 	ASSERT(segment_size != 0);
 	result = DeeObject_MALLOC(BytesSegments);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->b_str = self;
 	Dee_Incref(self);
 	result->b_siz = segment_size;

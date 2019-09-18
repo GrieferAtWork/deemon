@@ -136,9 +136,8 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			/* Skip catch statements. */
 			JITLexer_Yield(self);
-			if
-				likely(self->jl_tok == '(')
-			{
+			if likely(self->jl_tok == '(')
+				{
 				JITLexer_Yield(self);
 			} else {
 				syn_try_expected_lparen_after_catch(self);
@@ -167,9 +166,8 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 					if (symbol_size) {
 						JITObjectTable *tab;
 						tab = JITContext_GetRWLocals(self->jl_context);
-						if
-							unlikely(!tab)
-						goto err_r_popscope;
+						if unlikely(!tab)
+							goto err_r_popscope;
 						if (JITObjectTable_Update(tab,
 						                          symbol_name,
 						                          symbol_size,
@@ -184,9 +182,8 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 					result = EVAL_SECONDARY(self, &was_expression);
 					if (result == JIT_LVALUE)
 						result = JITLexer_PackLValue(self);
-					if
-						unlikely(!result)
-					{
+					if unlikely(!result)
+						{
 						if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
 							goto err_popscope;
 						goto err_handle_catch_except;
@@ -264,9 +261,8 @@ err_handle_catch_except:
 				goto err;
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			JITLexer_Yield(self);
-			if
-				likely(self->jl_tok == '(')
-			{
+			if likely(self->jl_tok == '(')
+				{
 				JITLexer_Yield(self);
 			} else {
 				syn_try_expected_lparen_after_catch(self);
@@ -303,9 +299,8 @@ H_FUNC(If)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "if"));
 do_if_statement:
 	JITLexer_Yield(self);
-	if
-		likely(self->jl_tok == '(')
-	{
+	if likely(self->jl_tok == '(')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_if_expected_lparen_after_if(self);
@@ -321,9 +316,8 @@ do_if_statement:
 	if (ISERR(result))
 		goto err_scope;
 	LOAD_LVALUE(result, err);
-	if
-		likely(self->jl_tok == ')')
-	{
+	if likely(self->jl_tok == ')')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_if_expected_rparen_after_if(self);
@@ -337,15 +331,13 @@ do_if_statement:
 	{
 #ifdef JIT_EVAL
 		int b = DeeObject_Bool(result);
-		if
-			unlikely(b < 0)
-		goto err_scope_r;
+		if unlikely(b < 0)
+			goto err_scope_r;
 		Dee_Decref(result);
 		if (b) {
 			result = EVAL_PRIMARY(self, pwas_expression);
-			if
-				unlikely(!result)
-			goto err_scope;
+			if unlikely(!result)
+				goto err_scope;
 			if (self->jl_tok == JIT_KEYWORD) {
 				if (JITLexer_ISTOK(self, "elif")) {
 					self->jl_tokstart += 2;
@@ -418,9 +410,8 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 	result = FUNC(For)(self, true);
 #else /* JIT_HYBRID */
 	JITLexer_Yield(self);
-	if
-		likely(self->jl_tok == '(')
-	{
+	if likely(self->jl_tok == '(')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_for_expected_lparen_after_for(self);
@@ -437,9 +428,8 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 		                          AST_COMMA_ALLOWVARDECLS,
 		                          NULL,
 		                          NULL);
-		if
-			unlikely(!init)
-		goto err_scope;
+		if unlikely(!init)
+			goto err_scope;
 		if (self->jl_tok == ':') {
 			/* TODO: Multiple targets (`for (local x,y,z: triples)') */
 			JITLValue iterator_storage;
@@ -456,21 +446,18 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 			}
 			JITLexer_Yield(self);
 			seq = JITLexer_EvalRValue(self);
-			if
-				unlikely(!seq)
-			goto err_scope;
-			if
-				likely(self->jl_tok == ')')
-			{
+			if unlikely(!seq)
+				goto err_scope;
+			if likely(self->jl_tok == ')')
+				{
 				JITLexer_Yield(self);
 			} else {
 				syn_for_expected_rparen_after_foreach(self);
 				goto err_seq;
 			}
 			iterator = DeeObject_IterSelf(seq);
-			if
-				unlikely(!iterator)
-			{
+			if unlikely(!iterator)
+				{
 				goto err_seq;
 err_iter:
 				Dee_Decref(iterator);
@@ -487,9 +474,8 @@ err_seq:
 				                           self->jl_context,
 				                           elem);
 				Dee_Decref(elem);
-				if
-					unlikely(error)
-				goto err_iter;
+				if unlikely(error)
+					goto err_iter;
 				if (!is_first_loop) {
 					/* Check for interrupts before jumping back. */
 					if (DeeThread_CheckInterrupt())
@@ -499,9 +485,8 @@ err_seq:
 				}
 				is_first_loop = false;
 				result        = JITLexer_EvalStatement(self);
-				if
-					unlikely(!result)
-				{
+				if unlikely(!result)
+					{
 					/* Handle special loop signal codes. */
 					if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 						self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
@@ -528,9 +513,8 @@ err_seq:
 			JITLValue_Fini(&iterator_storage);
 			Dee_Decref(iterator);
 			Dee_Decref(seq);
-			if
-				unlikely(!elem)
-			goto err_scope;
+			if unlikely(!elem)
+				goto err_scope;
 			if (is_first_loop) {
 				if (JITLexer_SkipStatement(self))
 					goto err_scope;
@@ -560,15 +544,13 @@ do_normal_for_noinit:
 				int temp;
 				cond_start = self->jl_tokstart;
 				result     = JITLexer_EvalRValue(self);
-				if
-					unlikely(!result)
-				goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+				if unlikely(!result)
+					goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 				/* Perform the initial condition check. */
 				temp = DeeObject_Bool(result);
 				Dee_Decref(result);
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 				if (self->jl_tok == ';') {
 					JITLexer_Yield(self);
 				} else {
@@ -580,9 +562,8 @@ do_normal_for_noinit:
 					if (self->jl_tok != ')' &&
 					    JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 						goto err_scope;
-					if
-						likely(self->jl_tok == ')')
-					{
+					if likely(self->jl_tok == ')')
+						{
 						JITLexer_Yield(self);
 					} else {
 err_missing_rparen_after_for:
@@ -601,9 +582,8 @@ err_missing_rparen_after_for:
 				next_start = self->jl_tokstart;
 				if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 					goto err_scope;
-				if
-					likely(self->jl_tok == ')')
-				{
+				if likely(self->jl_tok == ')')
+					{
 					JITLexer_Yield(self);
 				} else {
 					goto err_missing_rparen_after_for;
@@ -614,9 +594,8 @@ err_missing_rparen_after_for:
 			for (;;) {
 				unsigned char *block_end;
 				result = JITLexer_EvalStatement(self);
-				if
-					unlikely(!result)
-				{
+				if unlikely(!result)
+					{
 					/* Handle special loop signal codes. */
 					if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 						self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
@@ -645,9 +624,8 @@ do_continue_normal_forloop:
 					self->jl_tokend = next_start;
 					JITLexer_Yield(self);
 					result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
-					if
-						unlikely(!result)
-					goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the next-expression? */
+					if unlikely(!result)
+						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the next-expression? */
 					if (result == JIT_LVALUE) {
 						JITLValue_Fini(&self->jl_lvalue);
 						self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
@@ -661,14 +639,12 @@ do_continue_normal_forloop:
 					self->jl_tokend = cond_start;
 					JITLexer_Yield(self);
 					result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
-					if
-						unlikely(!result)
-					goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+					if unlikely(!result)
+						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 					temp = DeeObject_Bool(result);
 					Dee_Decref(result);
-					if
-						unlikely(temp < 0)
-					goto err_scope;
+					if unlikely(temp < 0)
+						goto err_scope;
 					if (!temp) {
 						/* Stop iteration (jump to the end of the for-block). */
 						self->jl_tokend = block_end;
@@ -727,9 +703,8 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 	result = FUNC(Foreach)(self, true);
 #else /* JIT_HYBRID */
 	JITLexer_Yield(self);
-	if
-		likely(self->jl_tok == '(')
-	{
+	if likely(self->jl_tok == '(')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_foreach_expected_lparen_after_foreach(self);
@@ -744,9 +719,8 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 		                          AST_COMMA_ALLOWVARDECLS,
 		                          NULL,
 		                          NULL);
-		if
-			unlikely(!init)
-		goto err_scope;
+		if unlikely(!init)
+			goto err_scope;
 		if (self->jl_tok == ':') {
 			JITLexer_Yield(self);
 		} else {
@@ -773,12 +747,10 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 			iterator_storage.lv_rvalue = init; /* Inherit reference. */
 		}
 		iterator = JITLexer_EvalRValue(self);
-		if
-			unlikely(!iterator)
-		goto err_scope;
-		if
-			likely(self->jl_tok == ')')
-		{
+		if unlikely(!iterator)
+			goto err_scope;
+		if likely(self->jl_tok == ')')
+			{
 			JITLexer_Yield(self);
 		} else {
 			syn_foreach_expected_rparen_after_foreach(self);
@@ -793,9 +765,8 @@ err_iter:
 			                           self->jl_context,
 			                           elem);
 			Dee_Decref(elem);
-			if
-				unlikely(error)
-			goto err_iter;
+			if unlikely(error)
+				goto err_iter;
 			if (!is_first_loop) {
 				/* Check for interrupts before jumping back. */
 				if (DeeThread_CheckInterrupt())
@@ -805,9 +776,8 @@ err_iter:
 			}
 			is_first_loop = false;
 			result        = JITLexer_EvalStatement(self);
-			if
-				unlikely(!result)
-			{
+			if unlikely(!result)
+				{
 				/* Handle special loop signal codes. */
 				if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 					self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
@@ -833,9 +803,8 @@ err_iter:
 		}
 		JITLValue_Fini(&iterator_storage);
 		Dee_Decref(iterator);
-		if
-			unlikely(!elem)
-		goto err_scope;
+		if unlikely(!elem)
+			goto err_scope;
 		if (is_first_loop) {
 			if (JITLexer_SkipStatement(self))
 				goto err_scope;
@@ -882,9 +851,8 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 	result = FUNC(While)(self, true);
 #else /* JIT_HYBRID */
 	JITLexer_Yield(self);
-	if
-		likely(self->jl_tok == '(')
-	{
+	if likely(self->jl_tok == '(')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_while_expected_lparen_after_while(self);
@@ -900,9 +868,8 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 		/* Parse the loop condition for the first time. */
 		cond_start = self->jl_tokstart;
 		result     = JITLexer_EvalRValue(self);
-		if
-			unlikely(!result)
-		goto err_scope;
+		if unlikely(!result)
+			goto err_scope;
 		if (self->jl_tok == ')') {
 			JITLexer_Yield(self);
 		} else {
@@ -912,9 +879,8 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 		}
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err_scope;
+		if unlikely(temp < 0)
+			goto err_scope;
 		if (!temp) {
 			/* The loop doesn't actually get executed. */
 do_skip_loop:
@@ -953,14 +919,12 @@ do_check_while_condition:
 		self->jl_tokend = cond_start;
 		JITLexer_Yield(self);
 		result = JITLexer_EvalRValue(self);
-		if
-			unlikely(!result)
-		goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+		if unlikely(!result)
+			goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err_scope;
+		if unlikely(temp < 0)
+			goto err_scope;
 		if (temp) {
 			/* Loop back around, but check for interrupts first. */
 			if (DeeThread_CheckInterrupt())
@@ -970,9 +934,8 @@ do_check_while_condition:
 			goto do_eval_while_loop;
 		}
 		/* Stop looping and jump to the end of the while-block. */
-		if
-			likely(block_end)
-		{
+		if likely(block_end)
+			{
 			self->jl_tokend = block_end;
 			JITLexer_Yield(self);
 		} else {
@@ -1032,9 +995,8 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 		/* Parse the block for the first time. */
 do_parse_block:
 		result = JITLexer_EvalStatement(self);
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			/* Check for special signal codes. */
 			if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
 				/* `break' */
@@ -1090,14 +1052,12 @@ continue_with_loop_cond:
 
 		/* Parse the condition code. */
 		result = JITLexer_EvalRValue(self);
-		if
-			unlikely(!result)
-		goto err; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+		if unlikely(!result)
+			goto err; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (temp) {
 			/* Loop back to the start of the loop-block */
 			if (DeeThread_CheckInterrupt())
@@ -1174,9 +1134,8 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 #endif /* JIT_EVAL */
 	ASSERT(JITLexer_ISKWD(self, "with"));
 	JITLexer_Yield(self);
-	if
-		likely(self->jl_tok == '(')
-	{
+	if likely(self->jl_tok == '(')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_with_expected_lparen_after_with(self);
@@ -1184,18 +1143,15 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 	}
 #ifdef JIT_EVAL
 	with_obj = JITLexer_EvalRValue(self);
-	if
-		unlikely(!with_obj)
-	goto err;
+	if unlikely(!with_obj)
+		goto err;
 #else /* JIT_EVAL */
 	result = JITLexer_SkipRValue(self);
-	if
-		unlikely(result)
-	goto err;
+	if unlikely(result)
+		goto err;
 #endif /* !JIT_EVAL */
-	if
-		likely(self->jl_tok == ')')
-	{
+	if likely(self->jl_tok == ')')
+		{
 		JITLexer_Yield(self);
 	} else {
 		syn_with_expected_rparen_after_with(self);

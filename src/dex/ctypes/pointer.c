@@ -114,30 +114,26 @@ pointer_init(DeePointerTypeObject *__restrict tp_self,
 	if (DeeString_Check(arg)) {
 		if (tp_self->pt_orig == &DeeCChar_Type) {
 			value.ptr = DeeString_AsUtf8(arg);
-			if
-				unlikely(!value.ptr)
-			goto err;
+			if unlikely(!value.ptr)
+				goto err;
 			goto done;
 		}
 		if (tp_self->pt_orig == &DeeCWChar_Type) {
 			value.ptr = DeeString_AsWide(arg);
-			if
-				unlikely(!value.ptr)
-			goto err;
+			if unlikely(!value.ptr)
+				goto err;
 			goto done;
 		}
 		if (tp_self->pt_orig == &DeeCChar16_Type) {
 			value.ptr = DeeString_AsUtf16(arg, STRING_ERROR_FREPLAC);
-			if
-				unlikely(!value.ptr)
-			goto err;
+			if unlikely(!value.ptr)
+				goto err;
 			goto done;
 		}
 		if (tp_self->pt_orig == &DeeCChar32_Type) {
 			value.ptr = DeeString_AsUtf32(arg);
-			if
-				unlikely(!value.ptr)
-			goto err;
+			if unlikely(!value.ptr)
+				goto err;
 			goto done;
 		}
 		/* Default case: interpret the UTF-8/byte representation. */
@@ -186,14 +182,12 @@ pointer_get_deref(struct pointer_object *__restrict self) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *type;
 	result = DeeObject_MALLOC(struct lvalue_object);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Lookup the l-value version of the base-type. */
 	type = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
-	if
-		unlikely(!type)
-	goto err_r;
+	if unlikely(!type)
+		goto err_r;
 	/* Initialize the new l-value object. */
 	DeeObject_InitNoref(result, (DeeTypeObject *)type);
 	result->l_ptr.ptr = self->p_ptr.ptr;
@@ -516,13 +510,11 @@ lvalue_ref(struct lvalue_object *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *pointer_type;
 	pointer_type = DeeSType_Pointer(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
-	if
-		unlikely(!pointer_type)
-	goto err;
+	if unlikely(!pointer_type)
+		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Construct a new pointer with the same data-value as our l-value. */
 	DeeObject_InitNoref(result, (DREF DeeTypeObject *)pointer_type); /* Inherit reference: pointer_type */
 	result->p_ptr.ptr = self->l_ptr.ptr;
@@ -618,9 +610,8 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 
 	DeeObject_Init(result, (DeeTypeObject *)orig_type);
 	/* Handle GC objects (see above) */
-	if
-		unlikely(orig_type->st_base.tp_flags & TP_FGC)
-	DeeGC_Track(result);
+	if unlikely(orig_type->st_base.tp_flags & TP_FGC)
+		DeeGC_Track(result);
 done:
 	return result;
 }

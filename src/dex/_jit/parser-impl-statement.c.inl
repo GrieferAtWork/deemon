@@ -88,17 +88,15 @@ LOCAL WUNUSED int FCALL
 JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
 	if (self->jl_tok == '[') {
 		JITLexer_Yield(self);
-		if
-			likely(self->jl_tok == JIT_KEYWORD)
-		{
+		if likely(self->jl_tok == JIT_KEYWORD)
+			{
 			JITLexer_Yield(self);
 		} else {
 			syn_asm_expected_keyword_after_lbracket(self);
 			goto err;
 		}
-		if
-			likely(self->jl_tok == ']')
-		{
+		if likely(self->jl_tok == ']')
+			{
 			JITLexer_Yield(self);
 		} else {
 			syn_asm_expected_rbracket_after_lbracket(self);
@@ -124,9 +122,8 @@ FUNC(AssemblyOperands)(JITLexer *__restrict self
 	while (self->jl_tok == '[' ||
 	       self->jl_tok == JIT_STRING ||
 	       self->jl_tok == JIT_RAWSTRING) {
-		if
-			unlikely(JITLexer_SkipAssemblyOperandName(self))
-		goto err;
+		if unlikely(JITLexer_SkipAssemblyOperandName(self))
+			goto err;
 		if (self->jl_tok == JIT_STRING ||
 		    self->jl_tok == JIT_RAWSTRING) {
 			do
@@ -143,9 +140,8 @@ do_parse_lparen:
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			temp = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 #else /* JIT_EVAL */
 			if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 				goto err;
@@ -170,9 +166,8 @@ do_parse_lparen:
 				goto do_parse_lparen;
 #ifdef JIT_EVAL
 			temp = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 #else /* JIT_EVAL */
 			if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 				goto err;
@@ -186,9 +181,8 @@ do_parse_lparen:
 			if (is_input) {
 				/* Input operands are dereferenced. */
 				temp = JITLexer_PackLValue(self);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				goto do_decref_temp_rvalue;
 			}
 			JITLValue_Fini(&self->jl_lvalue);
@@ -231,9 +225,8 @@ JITLexer_SkipAssemblyClobber(JITLexer *__restrict self) {
 LOCAL WUNUSED int FCALL
 JITLexer_SkipAssemblyLabels(JITLexer *__restrict self) {
 	while (self->jl_tok == JIT_KEYWORD || self->jl_tok == '[') {
-		if
-			unlikely(JITLexer_SkipAssemblyOperandName(self))
-		goto err;
+		if unlikely(JITLexer_SkipAssemblyOperandName(self))
+			goto err;
 		if (self->jl_tok != JIT_KEYWORD) {
 			syn_asm_expected_keyword_for_label_operand(self);
 			goto err;
@@ -361,9 +354,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					if (ISERR(result))
 						goto err;
 					LOAD_LVALUE(result, err);
-					if
-						likely(self->jl_tok == ';')
-					{
+					if likely(self->jl_tok == ';')
+						{
 						JITLexer_Yield(self);
 					} else {
 						syn_throw_expected_semi_after_throw(self);
@@ -395,9 +387,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				JITLexer_Yield(self);
 				if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 					goto err;
-				if
-					likely(self->jl_tok == ';')
-				{
+				if likely(self->jl_tok == ';')
+					{
 					JITLexer_Yield(self);
 				} else {
 					syn_yield_expected_semi_after_yield(self);
@@ -416,9 +407,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			if (name == ENCODE4('b', 'r', 'e', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'k') {
 				JITLexer_Yield(self);
-				if
-					likely(self->jl_tok == ';')
-				{
+				if likely(self->jl_tok == ';')
+					{
 					JITLexer_Yield(self);
 				} else {
 					syn_break_expected_semi_after_break(self);
@@ -458,9 +448,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					if (ISERR(result))
 						goto err;
 					LOAD_LVALUE(result, err);
-					if
-						likely(self->jl_tok == ';')
-					{
+					if likely(self->jl_tok == ';')
+						{
 						JITLexer_Yield(self);
 					} else {
 						syn_return_expected_semi_after_return(self);
@@ -597,9 +586,8 @@ again_eval_asm_rawstring:
 					while (str_start < str_end) {
 						uint32_t ch;
 						ch = utf8_readchar((char const **)&str_start, (char const *)str_end);
-						if
-							unlikely(!DeeUni_IsSpace(ch))
-						goto err_unsupported_assembly;
+						if unlikely(!DeeUni_IsSpace(ch))
+							goto err_unsupported_assembly;
 					}
 					JITLexer_Yield(self);
 					/* Check for further strings that would have to be concatenated. */
@@ -627,23 +615,19 @@ err_unsupported_assembly:
 				if (JITLexer_IsColumn(self)) {
 					JITLexer_Yield(self);
 #ifdef JIT_EVAL
-					if
-						unlikely(FUNC(AssemblyOperands)(self, false)) /* OUTPUT */
+					if unlikely(FUNC(AssemblyOperands)(self, false)) /* OUTPUT */
 					goto err;
 #else /* JIT_EVAL */
-					if
-						unlikely(FUNC(AssemblyOperands)(self)) /* OUTPUT */
+					if unlikely(FUNC(AssemblyOperands)(self)) /* OUTPUT */
 					goto err;
 #endif /* !JIT_EVAL */
 					if (JITLexer_IsColumn(self)) {
 						JITLexer_Yield(self);
 #ifdef JIT_EVAL
-						if
-							unlikely(FUNC(AssemblyOperands)(self, false)) /* INPUT */
+						if unlikely(FUNC(AssemblyOperands)(self, false)) /* INPUT */
 						goto err;
 #else /* JIT_EVAL */
-						if
-							unlikely(FUNC(AssemblyOperands)(self)) /* INPUT */
+						if unlikely(FUNC(AssemblyOperands)(self)) /* INPUT */
 						goto err;
 #endif /* !JIT_EVAL */
 						if (JITLexer_IsColumn(self)) {
@@ -651,8 +635,7 @@ err_unsupported_assembly:
 							JITLexer_SkipAssemblyClobber(self); /* CLOBBER */
 							if (is_asm_goto && JITLexer_IsColumn(self)) {
 								JITLexer_Yield(self);
-								if
-									unlikely(JITLexer_SkipAssemblyLabels(self)) /* LABELS */
+								if unlikely(JITLexer_SkipAssemblyLabels(self)) /* LABELS */
 								goto err;
 							}
 						}
@@ -691,9 +674,8 @@ check_trailing_asm_semicollon:
 			if (name == ENCODE4('c', 'o', 'n', 't') &&
 			    nam2 == ENCODE4('i', 'n', 'u', 'e')) {
 				JITLexer_Yield(self);
-				if
-					likely(self->jl_tok == ';')
-				{
+				if likely(self->jl_tok == ';')
+					{
 					JITLexer_Yield(self);
 				} else {
 					syn_continue_expected_semi_after_continue(self);

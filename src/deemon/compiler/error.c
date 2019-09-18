@@ -60,13 +60,11 @@ print_symbol_declaration(struct unicode_printer *__restrict printer,
 	                                TPPFile_Filename(sym->s_decl.l_file, NULL),
 	                                sym->s_decl.l_line + 1,
 	                                sym->s_decl.l_col + 1);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	temp = unicode_printer_printf(printer, "See reference to declaration of `%s'", SYMBOL_NAME(sym));
-	if
-		unlikely(temp < 0)
-	goto err_temp;
+	if unlikely(temp < 0)
+		goto err_temp;
 	return result + temp;
 err_temp:
 	return temp;
@@ -146,9 +144,8 @@ _warnf_err:
 PRIVATE DREF DeeObject *DCALL
 get_warning_message(int wnum, va_list args) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if
-		unlikely(print_warning_message(&printer, wnum, args) < 0)
-	goto err;
+	if unlikely(print_warning_message(&printer, wnum, args) < 0)
+		goto err;
 	return unicode_printer_pack(&printer);
 err:
 	unicode_printer_fini(&printer);
@@ -166,9 +163,8 @@ do_realloc_errors:
 	new_vector = (DREF DeeCompilerErrorObject **)Dee_TryRealloc(current_parser_errors.pe_errorv,
 	                                                            new_alloc *
 	                                                            sizeof(DREF DeeCompilerErrorObject *));
-	if
-		unlikely(!new_vector)
-	{
+	if unlikely(!new_vector)
+		{
 		if (new_alloc != current_parser_errors.pe_errorc + 1) {
 			new_alloc = current_parser_errors.pe_errorc + 1;
 			goto do_realloc_errors;
@@ -199,9 +195,8 @@ parser_throw(struct compiler_error_object *__restrict error) {
 	 *               which case we need to do this ourself! */
 	if (!DeeCompiler_Current) {
 		int mode = DeeFile_PrintObjectNl(DeeFile_DefaultStddbg, (DeeObject *)error);
-		if
-			unlikely(mode < 0)
-		goto err;
+		if unlikely(mode < 0)
+			goto err;
 	} else {
 		/* Invoke a user-defined compiler error handler. */
 		if (DeeCompiler_Current->cp_options &&
@@ -209,9 +204,8 @@ parser_throw(struct compiler_error_object *__restrict error) {
 			int mode;
 			mode = (*DeeCompiler_Current->cp_options->co_error_handler)(error, error->ce_mode,
 			                                                            DeeCompiler_Current->cp_options->co_error_arg);
-			if
-				unlikely(mode < 0)
-			goto err;
+			if unlikely(mode < 0)
+				goto err;
 			/* Special handling for ignoring certain errors. */
 			switch (mode) {
 			case 3:
@@ -338,9 +332,8 @@ handle_master:
 					DREF DeeCompilerErrorObject **new_vector;
 					new_vector = (DREF DeeCompilerErrorObject **)Dee_Realloc(current_parser_errors.pe_errorv, new_count *
 					                                                                                          sizeof(DREF DeeCompilerErrorObject *));
-					if
-						unlikely(!new_vector)
-					goto err;
+					if unlikely(!new_vector)
+						goto err;
 					current_parser_errors.pe_errora = new_count;
 					current_parser_errors.pe_errorv = new_vector;
 				}
@@ -363,9 +356,8 @@ handle_master:
 			new_vector = (DREF DeeCompilerErrorObject **)Dee_TryRealloc(current_parser_errors.pe_errorv,
 			                                                            current_parser_errors.pe_errorc *
 			                                                            sizeof(DREF DeeCompilerErrorObject *));
-			if
-				likely(new_vector)
-			{
+			if likely(new_vector)
+				{
 				current_parser_errors.pe_errorv = new_vector;
 				current_parser_errors.pe_errora = current_parser_errors.pe_errorc;
 			}
@@ -402,9 +394,8 @@ handle_master:
 		/* Nothing went wrong?
 		 * Whatever... Let's just throw an anonymous compiler error... */
 		error = DeeObject_NewDefault(&DeeError_CompilerError);
-		if
-			likely(error)
-		{
+		if likely(error)
+			{
 			DeeError_Throw(error);
 			Dee_Decref(error);
 		}
@@ -413,9 +404,8 @@ handle_master:
 	return 0;
 err_handle_all_but_last:
 	num_errors = caller->t_exceptsz;
-	if
-		unlikely(current_parser_errors.pe_except >= num_errors)
-	goto err;
+	if unlikely(current_parser_errors.pe_except >= num_errors)
+		goto err;
 	num_errors -= current_parser_errors.pe_except;
 	ASSERT(num_errors);
 	ASSERT(caller->t_except);
@@ -504,9 +494,8 @@ capture_compiler_location(struct TPPFile *__restrict file,
 		    file == &TPPFile_Empty)
 			break;
 		extension = (struct compiler_error_loc *)Dee_Malloc(sizeof(struct compiler_error_loc));
-		if
-			unlikely(!extension)
-		goto err;
+		if unlikely(!extension)
+			goto err;
 		result->cl_prev = extension;
 		result          = extension;
 	}
@@ -542,12 +531,10 @@ err:
 			/* Recursively extend debug information */
 			struct compiler_error_loc *extension;
 			extension = (struct compiler_error_loc *)Dee_Malloc(sizeof(struct compiler_error_loc));
-			if
-				unlikely(!extension)
-			goto err;
-			if
-				unlikely(capture_compiler_location(next_file, extension, pmain_loc))
-			{
+			if unlikely(!extension)
+				goto err;
+			if unlikely(capture_compiler_location(next_file, extension, pmain_loc))
+				{
 				Dee_Free(extension);
 				goto err;
 			}
@@ -620,15 +607,13 @@ handle_compiler_warning(struct ast_loc *loc,
 	}
 	/* Construct a new compiler error. */
 	error = DeeObject_MALLOC(DeeCompilerErrorObject);
-	if
-		unlikely(!error)
-	goto err;
+	if unlikely(!error)
+		goto err;
 
 	/* Generate an error message. */
 	error->e_message = (DREF DeeStringObject *)get_warning_message(wnum, args);
-	if
-		unlikely(!error->e_message)
-	goto err_error;
+	if unlikely(!error->e_message)
+		goto err_error;
 
 	/* Initializer other members of the error object. */
 	weakref_support_init(error);
@@ -679,8 +664,7 @@ handle_compiler_warning(struct ast_loc *loc,
 		while (file->f_kind == TPPFILE_KIND_EXPLICIT &&
 		       file->f_prev)
 			file = file->f_prev;
-		if
-			unlikely(file->f_kind == TPPFILE_KIND_EXPLICIT ||
+		if unlikely(file->f_kind == TPPFILE_KIND_EXPLICIT ||
 			         file == &TPPFile_Empty)
 		{
 			/* Special case: The input file is an explicit file. */
@@ -691,13 +675,11 @@ handle_compiler_warning(struct ast_loc *loc,
 			error->ce_loc          = &error->ce_locs;
 		} else {
 			error->ce_loc = NULL;
-			if
-				unlikely(capture_compiler_location(file, &error->ce_locs,
+			if unlikely(capture_compiler_location(file, &error->ce_locs,
 				                                   &error->ce_loc))
 			goto err_message;
-			if
-				unlikely(!error->ce_loc)
-			error->ce_loc = &error->ce_locs;
+			if unlikely(!error->ce_loc)
+				error->ce_loc = &error->ce_locs;
 		}
 	}
 	Dee_weakref_null(&error->ce_master);
@@ -713,9 +695,8 @@ handle_compiler_warning(struct ast_loc *loc,
 	/* Finally, throw the error as a parser-error. */
 	mode = parser_throw(error);
 	Dee_Decref(error);
-	if
-		unlikely(mode)
-	goto err;
+	if unlikely(mode)
+		goto err;
 done_nonfatal:
 	return 0;
 err_message:

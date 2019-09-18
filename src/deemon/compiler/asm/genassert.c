@@ -92,12 +92,10 @@ INTERN int(DCALL asm_genassert)(struct ast *__restrict expr,
 	 * >>                         //       event that the assertion-failure function was overwritten,
 	 * >>                         //       it may actually return once again!
 	 */
-	if
-		unlikely((assert_enter = asm_newsym()) == NULL)
-	goto err; /* .cold.1: */
-	if
-		unlikely((assert_leave = asm_newsym()) == NULL)
-	goto err; /* 2: */
+	if unlikely((assert_enter = asm_newsym()) == NULL)
+		goto err; /* .cold.1: */
+	if unlikely((assert_leave = asm_newsym()) == NULL)
+		goto err; /* 2: */
 	if (expr->a_type == AST_OPERATOR &&
 	    /* NOTE: Don't handle varargs operators. */
 	    !(expr->a_operator.o_exflag & AST_OPERATOR_FVARARGS) &&
@@ -265,9 +263,8 @@ emit_instruction:
 		/* STACK: message, operator_name, a, [b, [c, [d]]] */
 		/* Add `deemon' to the import list. */
 		deemon_modid = asm_newmodule(DeeModule_GetDeemon());
-		if
-			unlikely(deemon_modid < 0)
-		goto err;
+		if unlikely(deemon_modid < 0)
+			goto err;
 		/* Generate the call to the builtin assertion function. */
 		if (asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc + 2))
 			goto err;
@@ -360,9 +357,8 @@ emit_instruction:
 	}
 	/* Add `deemon' to the import list. */
 	deemon_modid = asm_newmodule(DeeModule_GetDeemon());
-	if
-		unlikely(deemon_modid < 0)
-	goto err;
+	if unlikely(deemon_modid < 0)
+		goto err;
 	/* Generate the call to the builtin assertion function. */
 	if (asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc))
 		goto err;

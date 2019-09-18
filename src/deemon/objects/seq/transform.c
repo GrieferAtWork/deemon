@@ -78,9 +78,8 @@ transiter_seq_get(TransformationIterator *__restrict self) {
 	/* Forward access to this attribute to the pointed-to iterator. */
 	DREF DeeObject *orig, *result;
 	orig = DeeObject_GetAttr(self->ti_iter, &str_seq);
-	if
-		unlikely(!orig)
-	goto err;
+	if unlikely(!orig)
+		goto err;
 	result = DeeSeq_Transform(orig, self->ti_func);
 	Dee_Decref(orig);
 	return result;
@@ -141,9 +140,8 @@ PRIVATE int DCALL
 transiter_copy(TransformationIterator *__restrict self,
                TransformationIterator *__restrict other) {
 	self->ti_iter = DeeObject_Copy(other->ti_iter);
-	if
-		unlikely(!self->ti_iter)
-	goto err;
+	if unlikely(!self->ti_iter)
+		goto err;
 	self->ti_func = other->ti_func;
 	Dee_Incref(self->ti_func);
 	return 0;
@@ -155,13 +153,11 @@ PRIVATE int DCALL
 transiter_deep(TransformationIterator *__restrict self,
                TransformationIterator *__restrict other) {
 	self->ti_iter = DeeObject_Copy(other->ti_iter);
-	if
-		unlikely(!self->ti_iter)
-	goto err;
+	if unlikely(!self->ti_iter)
+		goto err;
 	self->ti_func = DeeObject_Copy(other->ti_func);
-	if
-		unlikely(!self->ti_func)
-	goto err_iter;
+	if unlikely(!self->ti_func)
+		goto err_iter;
 	return 0;
 err_iter:
 	Dee_Decref(self->ti_iter);
@@ -172,9 +168,8 @@ err:
 PRIVATE int DCALL
 transiter_ctor(TransformationIterator *__restrict self) {
 	self->ti_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	if
-		unlikely(!self->ti_iter)
-	goto err;
+	if unlikely(!self->ti_iter)
+		goto err;
 	self->ti_func = Dee_None;
 	Dee_Incref(Dee_None);
 	return 0;
@@ -191,9 +186,8 @@ transiter_init(TransformationIterator *__restrict self,
 	if (DeeObject_AssertTypeExact((DeeObject *)trans, &SeqTransformation_Type))
 		goto err;
 	self->ti_iter = DeeObject_IterSelf(trans->t_seq);
-	if
-		unlikely(!self->ti_iter)
-	goto err;
+	if unlikely(!self->ti_iter)
+		goto err;
 	self->ti_func = trans->t_fun;
 	Dee_Incref(self->ti_func);
 	return 0;
@@ -267,14 +261,12 @@ PRIVATE DREF DeeObject *DCALL
 trans_iter(Transformation *__restrict self) {
 	DREF TransformationIterator *result;
 	result = DeeObject_MALLOC(TransformationIterator);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Create the underlying iterator. */
 	result->ti_iter = DeeObject_IterSelf(self->t_seq);
-	if
-		unlikely(!result->ti_iter)
-	goto err_r;
+	if unlikely(!result->ti_iter)
+		goto err_r;
 	/* Assign the transformation functions. */
 	result->ti_func = self->t_fun;
 	Dee_Incref(self->t_fun);
@@ -307,9 +299,8 @@ trans_getitem(Transformation *__restrict self,
               DeeObject *__restrict index) {
 	DREF DeeObject *orig, *result;
 	orig = DeeObject_GetItem(self->t_seq, index);
-	if
-		unlikely(!orig)
-	return NULL;
+	if unlikely(!orig)
+		return NULL;
 	result = DeeObject_Call(self->t_fun, 1, &orig);
 	Dee_Decref(orig);
 	return result;
@@ -321,9 +312,8 @@ trans_getrange(Transformation *__restrict self,
                DeeObject *__restrict end) {
 	DREF DeeObject *orig, *result;
 	orig = DeeObject_GetRange(self->t_seq, start, end);
-	if
-		unlikely(!orig)
-	return NULL;
+	if unlikely(!orig)
+		return NULL;
 	result = DeeSeq_Transform(orig, self->t_fun);
 	Dee_Decref(orig);
 	return result;
@@ -344,9 +334,8 @@ PRIVATE DREF DeeObject *DCALL
 trans_nsi_getitem(Transformation *__restrict self, size_t index) {
 	DREF DeeObject *inner[1], *result;
 	inner[0] = DeeObject_GetItemIndex(self->t_seq, index);
-	if
-		unlikely(!inner[0])
-	return NULL;
+	if unlikely(!inner[0])
+		return NULL;
 	result = DeeObject_Call(self->t_fun, 1, inner);
 	Dee_Decref(inner[0]);
 	return result;
@@ -420,13 +409,11 @@ PRIVATE int DCALL
 trans_deep(Transformation *__restrict self,
            Transformation *__restrict other) {
 	self->t_seq = DeeObject_DeepCopy(other->t_seq);
-	if
-		unlikely(!self->t_seq)
-	goto err;
+	if unlikely(!self->t_seq)
+		goto err;
 	self->t_fun = DeeObject_DeepCopy(other->t_fun);
-	if
-		unlikely(!self->t_fun)
-	goto err_seq;
+	if unlikely(!self->t_fun)
+		goto err_seq;
 	return 0;
 err_seq:
 	Dee_Decref(self->t_seq);
@@ -499,9 +486,8 @@ DeeSeq_Transform(DeeObject *__restrict self,
 	DREF Transformation *result;
 	/* Create a new transformation sequence. */
 	result = DeeObject_MALLOC(Transformation);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_seq = self;
 	result->t_fun = transformation;
 	Dee_Incref(self);

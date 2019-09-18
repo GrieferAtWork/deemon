@@ -159,12 +159,10 @@ lookup_code_info(DeeCodeObject *__restrict self,
 	info->fi_getset = (uint16_t)-1;
 	/* Step #1: Search the code object's module for the given `function' */
 	module = self->co_module;
-	if
-		unlikely(!module)
-	goto without_module;
-	if
-		unlikely(DeeInteractiveModule_Check(module))
-	goto without_module;
+	if unlikely(!module)
+		goto without_module;
+	if unlikely(DeeInteractiveModule_Check(module))
+		goto without_module;
 	rwlock_read(&module->mo_lock);
 	for (addr = 0; addr < module->mo_globalc; ++addr) {
 		if (!module->mo_globalv[addr])
@@ -178,14 +176,12 @@ lookup_code_info(DeeCodeObject *__restrict self,
 			if (function_symbol) {
 				/* Found it! (it's a global) */
 				info->fi_name = module_symbol_getnameobj(function_symbol);
-				if
-					unlikely(!info->fi_name)
-				goto err;
+				if unlikely(!info->fi_name)
+					goto err;
 				if (function_symbol->ss_doc) {
 					info->fi_doc = module_symbol_getdocobj(function_symbol);
-					if
-						unlikely(!info->fi_doc)
-					goto err_name;
+					if unlikely(!info->fi_doc)
+						goto err_name;
 				}
 				return 0;
 			}
@@ -241,9 +237,8 @@ without_module:
 		if (name) {
 			/* Well... At least we got the name. - That's something. */
 			info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
-			if
-				unlikely(!info->fi_name)
-			goto err;
+			if unlikely(!info->fi_name)
+				goto err;
 			return 0;
 		}
 	}
@@ -284,9 +279,8 @@ DeeFunction_New(DeeObject *__restrict code, size_t refc,
 	ASSERT(((DeeCodeObject *)code)->co_refc == refc);
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (refc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->fo_code = (DREF DeeCodeObject *)code;
 	for (i = 0; i < refc; ++i) {
 		DREF DeeObject *obj = refv[i];
@@ -314,9 +308,8 @@ DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
 	        DeeCode_NAME(code));
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (refc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->fo_code = (DREF DeeCodeObject *)code;
 	MEMCPY_PTR(result->fo_refv, refv, refc);
 	Dee_Incref(code);
@@ -331,9 +324,8 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code) {
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(((DeeCodeObject *)code)->co_refc == 0);
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->fo_code = (DREF DeeCodeObject *)code;
 	Dee_Incref(code);
 	DeeObject_Init(result, &DeeFunction_Type);
@@ -360,9 +352,8 @@ function_init(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (code->co_refc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (DeeObject_Unpack(refs, code->co_refc, result->fo_refv))
 		goto err_r;
 	result->fo_code = code;
@@ -444,9 +435,8 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 function_get_module(Function *__restrict self) {
-	if
-		unlikely(!self->fo_code->co_module)
-	goto err_unbound; /* Shouldn't happen... */
+	if unlikely(!self->fo_code->co_module)
+		goto err_unbound; /* Shouldn't happen... */
 	return_reference_((DREF DeeObject *)self->fo_code->co_module);
 err_unbound:
 	err_unbound_attribute(&DeeFunction_Type,
@@ -643,9 +633,8 @@ function_eq(Function *__restrict self,
 		goto err;
 	result = DeeObject_CompareEq((DeeObject *)self->fo_code,
 	                             (DeeObject *)other->fo_code);
-	if
-		unlikely(result <= 0)
-	goto err_or_false;
+	if unlikely(result <= 0)
+		goto err_or_false;
 	ASSERT(self->fo_code->co_refc == other->fo_code->co_refc);
 	for (i = 0; i < self->fo_code->co_refc; ++i) {
 		result = DeeObject_CompareEq(self->fo_refv[i],
@@ -670,9 +659,8 @@ function_ne(Function *__restrict self,
 		goto err;
 	result = DeeObject_CompareNe((DeeObject *)self->fo_code,
 	                             (DeeObject *)other->fo_code);
-	if
-		unlikely(result != 0)
-	goto err_or_true;
+	if unlikely(result != 0)
+		goto err_or_true;
 	ASSERT(self->fo_code->co_refc == other->fo_code->co_refc);
 	for (i = 0; i < self->fo_code->co_refc; ++i) {
 		result = DeeObject_CompareNe(self->fo_refv[i],
@@ -785,9 +773,8 @@ yf_visit(YFunction *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE int DCALL
 yf_ctor(YFunction *__restrict self) {
 	self->yf_func = function_init(0, NULL);
-	if
-		unlikely(!self->yf_func)
-	goto err;
+	if unlikely(!self->yf_func)
+		goto err;
 	self->yf_args = (DREF DeeTupleObject *)Dee_EmptyTuple;
 	Dee_Incref(Dee_EmptyTuple);
 	self->yf_kw   = NULL;
@@ -808,9 +795,8 @@ yf_copy(YFunction *__restrict self,
 		count = (other->yf_func->fo_code->co_argc_max - DeeTuple_SIZE(other->yf_args));
 		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
 		                                          (count * sizeof(DREF DeeObject *)));
-		if
-			unlikely(!kw)
-		goto err;
+		if unlikely(!kw)
+			goto err;
 		self->yf_kw = kw;
 		MEMCPY_PTR(kw->fk_kargv, &other->yf_kw->fk_kargv, count);
 		if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
@@ -838,15 +824,13 @@ yf_deepcopy(YFunction *__restrict self,
 	size_t i, count;
 	struct code_frame_kwds *kw;
 	self->yf_args = (DREF DeeTupleObject *)DeeObject_DeepCopy((DeeObject *)other->yf_args);
-	if
-		unlikely(!self->yf_args)
-	goto err;
+	if unlikely(!self->yf_args)
+		goto err;
 	self->yf_this = NULL;
 	if (other->yf_this) {
 		self->yf_this = DeeObject_DeepCopy(other->yf_this);
-		if
-			unlikely(!self->yf_this)
-		goto err_args;
+		if unlikely(!self->yf_this)
+			goto err_args;
 	}
 	self->yf_kw = NULL;
 	if (other->yf_kw) {
@@ -854,15 +838,13 @@ yf_deepcopy(YFunction *__restrict self,
 		count = (other->yf_func->fo_code->co_argc_max - DeeTuple_SIZE(other->yf_args));
 		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
 		                                          (count * sizeof(DREF DeeObject *)));
-		if
-			unlikely(!kw)
-		goto err_this;
+		if unlikely(!kw)
+			goto err_this;
 		self->yf_kw = kw;
 		if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
 			temp = DeeObject_DeepCopy(other->yf_kw->fk_kw);
-			if
-				unlikely(!temp)
-			goto err_kw;
+			if unlikely(!temp)
+				goto err_kw;
 			self->yf_kw->fk_kw      = temp; /* Inherit reference. */
 			self->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */
 		}
@@ -870,9 +852,8 @@ yf_deepcopy(YFunction *__restrict self,
 			temp = other->yf_kw->fk_kargv[i];
 			if (temp) {
 				temp = DeeObject_DeepCopy(temp);
-				if
-					unlikely(!temp)
-				goto err_kw_kw_i;
+				if unlikely(!temp)
+					goto err_kw_kw_i;
 			}
 			kw->fk_kargv[i] = temp; /* Inherit reference. */
 		}
@@ -913,9 +894,8 @@ yfi_init(YFIterator *__restrict self,
 	/* Allocate memory for frame data. */
 	self->yi_frame.cf_prev  = CODE_FRAME_NOT_EXECUTING;
 	self->yi_frame.cf_frame = (DREF DeeObject **)Dee_Calloc(code->co_framesize);
-	if
-		unlikely(!self->yi_frame.cf_frame)
-	goto err_r_base;
+	if unlikely(!self->yi_frame.cf_frame)
+		goto err_r_base;
 	self->yi_frame.cf_stack = self->yi_frame.cf_frame + code->co_localc;
 	self->yi_frame.cf_sp    = self->yi_frame.cf_stack;
 	self->yi_frame.cf_ip    = code->co_code;
@@ -940,12 +920,10 @@ PRIVATE DREF YFIterator *DCALL
 yf_iter_self(YFunction *__restrict self) {
 	DREF YFIterator *result;
 	result = DeeGCObject_MALLOC(YFIterator);
-	if
-		unlikely(!result)
-	goto err;
-	if
-		unlikely(yfi_init(result, self))
-	goto err_r;
+	if unlikely(!result)
+		goto err;
+	if unlikely(yfi_init(result, self))
+		goto err_r;
 	DeeObject_Init(result, &DeeYieldFunctionIterator_Type);
 	DeeGC_Track((DeeObject *)result);
 	return result;
@@ -988,9 +966,8 @@ yf_eq_impl(DeeYieldFunctionObject *__restrict self,
 		goto nope;
 	error = DeeObject_CompareEq((DeeObject *)self->yf_args,
 	                            (DeeObject *)other->yf_args);
-	if
-		unlikely(error <= 0)
-	goto do_return_error;
+	if unlikely(error <= 0)
+		goto do_return_error;
 	ASSERTF((self->yf_this != NULL) == (other->yf_this != NULL),
 	        "If the functions are identical, they must also have "
 	        "identical requirements for the presence of a this-argument!");
@@ -1010,9 +987,8 @@ PRIVATE DREF DeeObject *DCALL
 yf_eq(DeeYieldFunctionObject *__restrict self,
       DeeYieldFunctionObject *__restrict other) {
 	int result = yf_eq_impl(self, other);
-	if
-		unlikely(result < 0)
-	return NULL;
+	if unlikely(result < 0)
+		return NULL;
 	return_bool_(result);
 }
 
@@ -1020,9 +996,8 @@ PRIVATE DREF DeeObject *DCALL
 yf_ne(DeeYieldFunctionObject *__restrict self,
       DeeYieldFunctionObject *__restrict other) {
 	int result = yf_eq_impl(self, other);
-	if
-		unlikely(result < 0)
-	return NULL;
+	if unlikely(result < 0)
+		return NULL;
 	return_bool_(!result);
 }
 
@@ -1187,15 +1162,13 @@ yfi_run_finally(YFIterator *__restrict self) {
 	DeeCodeObject *code;
 	code_addr_t ipaddr;
 	struct except_handler *iter, *begin;
-	if
-		unlikely(!self->yi_func)
-	return;
+	if unlikely(!self->yi_func)
+		return;
 	/* Recursively execute all finally-handlers that
 	 * protect the current PC until none are left. */
 	code = self->yi_frame.cf_func->fo_code;
-	if
-		unlikely(!code)
-	return;
+	if unlikely(!code)
+		return;
 	ASSERT_OBJECT_TYPE(code, &DeeCode_Type);
 	/* Simple case: without any finally handlers, we've got nothing to do. */
 	if (!(code->co_flags & CODE_FFINALLY))
@@ -1237,18 +1210,16 @@ exec_finally:
 		 * assigned, so we simply fake that by pre-assigning `none'. */
 		self->yi_frame.cf_result = Dee_None;
 		Dee_Incref(Dee_None);
-		if
-			unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY)
-		{
+		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY)
+			{
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
 			/* Default case: Execute from a fast yield-function-iterator frame. */
 			result = DeeCode_ExecFrameFast(&self->yi_frame);
 		}
-		if
-			likely(result)
-		Dee_Decref(result); /* Most likely, this is `none' */
+		if likely(result)
+			Dee_Decref(result); /* Most likely, this is `none' */
 		else {
 			DeeError_Print("Unhandled exception in YieldFunction.Iterator destructor\n",
 			               ERROR_PRINT_DOHANDLE);
@@ -1332,9 +1303,8 @@ yfi_clear(YFIterator *__restrict self) {
 	recursive_rwlock_write(&self->yi_lock);
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
-	if
-		unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
-	{
+	if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
+		{
 		/* Can't clear a frame currently being executed. */
 		recursive_rwlock_endwrite(&self->yi_lock);
 		return;
@@ -1384,9 +1354,8 @@ PRIVATE DREF DeeObject *DCALL
 yfi_iter_next(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		/* Special case: Always be indicative of an exhausted iterator
 		 * when default-constructed, or after being cleared. */
 		result = ITER_DONE;
@@ -1404,17 +1373,15 @@ yfi_iter_next(YFIterator *__restrict self) {
 		        self->yi_frame.cf_func->fo_code->co_code,
 		        self->yi_frame.cf_func->fo_code->co_code +
 		        self->yi_frame.cf_func->fo_code->co_codebytes);
-		if
-			unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
-		{
+		if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
+			{
 			DeeError_Throwf(&DeeError_SegFault, "Stack frame is already being executed");
 			result = NULL;
 			goto done;
 		}
 		self->yi_frame.cf_result = NULL;
-		if
-			unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY)
-		{
+		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY)
+			{
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -1521,9 +1488,8 @@ again:
 			/* Copy a heap-allocated, extended stack. */
 			self->yi_frame.cf_stack = (DREF DeeObject **)Dee_TryMalloc(self->yi_frame.cf_stacksz *
 			                                                           sizeof(DREF DeeObject *));
-			if
-				unlikely(!self->yi_frame.cf_stack)
-			goto nomem;
+			if unlikely(!self->yi_frame.cf_stack)
+				goto nomem;
 			src = other->yi_frame.cf_stack;
 			end = (iter = self->yi_frame.cf_stack) + self->yi_frame.cf_stacksz;
 			for (; iter != end; ++iter, ++src) {
@@ -1533,9 +1499,8 @@ again:
 			}
 		}
 		self->yi_frame.cf_frame = (DREF DeeObject **)Dee_TryMalloc(code->co_framesize);
-		if
-			unlikely(!self->yi_frame.cf_frame)
-		goto nomem_stack;
+		if unlikely(!self->yi_frame.cf_frame)
+			goto nomem_stack;
 		/* Copy local variables. */
 		src = other->yi_frame.cf_frame;
 		end = (iter = self->yi_frame.cf_frame) + code->co_localc;
@@ -1632,9 +1597,8 @@ yfi_getyfunc(YFIterator *__restrict self) {
 	result = self->yi_func;
 	Dee_XIncref(result);
 	recursive_rwlock_endread(&self->yi_lock);
-	if
-		unlikely(!result)
-	err_unbound_attribute(&DeeYieldFunctionIterator_Type, DeeString_STR(&str_seq));
+	if unlikely(!result)
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, DeeString_STR(&str_seq));
 	return result;
 }
 #endif /* !CONFIG_NO_THREADS */
@@ -1648,9 +1612,8 @@ yfi_getthis(YFIterator *__restrict self) {
 		result = NULL;
 	Dee_XIncref(result);
 	recursive_rwlock_endread(&self->yi_lock);
-	if
-		unlikely(!result)
-	err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__this__");
+	if unlikely(!result)
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__this__");
 	return result;
 }
 
@@ -1668,9 +1631,8 @@ PRIVATE DREF Function *DCALL
 yfi_getfunc(YFIterator *__restrict self) {
 	DREF Function *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__func__");
 		return NULL;
@@ -1685,9 +1647,8 @@ PRIVATE DREF DeeCodeObject *DCALL
 yfi_getcode(YFIterator *__restrict self) {
 	DREF DeeCodeObject *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__code__");
 		return NULL;
@@ -1703,9 +1664,8 @@ yfi_getrefs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__refs__");
 		return NULL;
@@ -1723,9 +1683,8 @@ yfi_getkwds(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type,
 		                      DeeString_STR(&str___kwds__));
@@ -1743,9 +1702,8 @@ PRIVATE DREF DeeObject *DCALL
 yfi_getargs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__args__");
 		return NULL;
@@ -1761,9 +1719,8 @@ yfi_get_func_reference(YFIterator *__restrict self,
                        char const *__restrict attr_name) {
 	DREF YFunction *result;
 	recursive_rwlock_write(&self->yi_lock);
-	if
-		unlikely(!self->yi_func)
-	{
+	if unlikely(!self->yi_func)
+		{
 		recursive_rwlock_endwrite(&self->yi_lock);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, attr_name);
 		return NULL;
@@ -1779,9 +1736,8 @@ yfi_getname(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, DeeString_STR(&str___name__));
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_name(func);
 	Dee_Decref(func);
 	return result;
@@ -1794,9 +1750,8 @@ yfi_getdoc(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, DeeString_STR(&str___doc__));
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_doc(func);
 	Dee_Decref(func);
 	return result;
@@ -1809,9 +1764,8 @@ yfi_gettype(YFIterator *__restrict self) {
 	DREF DeeTypeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, DeeString_STR(&str___type__));
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_type(func);
 	Dee_Decref(func);
 	return result;
@@ -1824,9 +1778,8 @@ yfi_getmodule(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, DeeString_STR(&str___module__));
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_module(func);
 	Dee_Decref(func);
 	return result;
@@ -1839,9 +1792,8 @@ yfi_getoperator(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, "__operator__");
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_operator(func);
 	Dee_Decref(func);
 	return result;
@@ -1854,9 +1806,8 @@ yfi_getoperatorname(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, "__operatorname__");
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_operatorname(func);
 	Dee_Decref(func);
 	return result;
@@ -1869,9 +1820,8 @@ yfi_getproperty(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, "__property__");
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = yf_get_property(func);
 	Dee_Decref(func);
 	return result;

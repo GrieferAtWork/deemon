@@ -344,9 +344,8 @@ split_doiter(StringSplit *__restrict self,
              DeeTypeObject *__restrict iter_type) {
 	DREF StringSplitIterator *result;
 	result = DeeObject_MALLOC(StringSplitIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->s_width = STRING_WIDTH_COMMON(DeeString_WIDTH(self->s_str),
 	                                      DeeString_WIDTH(self->s_sep));
 	SWITCH_SIZEOF_WIDTH(result->s_width) {
@@ -359,26 +358,22 @@ split_doiter(StringSplit *__restrict self,
 
 	CASE_WIDTH_2BYTE:
 		result->s_begin = (uint8_t *)DeeString_As2Byte((DeeObject *)self->s_str);
-		if
-			unlikely(!result->s_begin)
-		goto err_r;
+		if unlikely(!result->s_begin)
+			goto err_r;
 		result->s_end = result->s_begin + WSTR_LENGTH(result->s_begin) * 2;
 		result->s_sep = (uint8_t *)DeeString_As2Byte((DeeObject *)self->s_sep);
-		if
-			unlikely(!result->s_sep)
-		goto err_r;
+		if unlikely(!result->s_sep)
+			goto err_r;
 		break;
 
 	CASE_WIDTH_4BYTE:
 		result->s_begin = (uint8_t *)DeeString_As4Byte((DeeObject *)self->s_str);
-		if
-			unlikely(!result->s_begin)
-		goto err_r;
+		if unlikely(!result->s_begin)
+			goto err_r;
 		result->s_end = result->s_begin + WSTR_LENGTH(result->s_begin) * 4;
 		result->s_sep = (uint8_t *)DeeString_As4Byte((DeeObject *)self->s_sep);
-		if
-			unlikely(!result->s_sep)
-		goto err_r;
+		if unlikely(!result->s_sep)
+			goto err_r;
 		break;
 	}
 	result->s_next = result->s_begin;
@@ -544,9 +539,8 @@ DeeString_Split(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(seperator, &DeeString_Type);
 	result = DeeObject_MALLOC(StringSplit);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &StringSplit_Type);
 	Dee_Incref(self);
 	Dee_Incref(seperator);
@@ -564,9 +558,8 @@ DeeString_CaseSplit(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(seperator, &DeeString_Type);
 	result = DeeObject_MALLOC(StringSplit);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Same as the regular split(), but use the case-insensitive sequence type. */
 	DeeObject_Init(result, &StringCaseSplit_Type);
 	Dee_Incref(self);
@@ -781,9 +774,8 @@ PRIVATE DREF LineSplitIterator *DCALL
 linesplit_iter(LineSplit *__restrict self) {
 	DREF LineSplitIterator *result;
 	result = DeeObject_MALLOC(LineSplitIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ls_width = DeeString_WIDTH(self->ls_str);
 	result->ls_begin = (uint8_t *)DeeString_WSTR(self->ls_str);
 	result->ls_next  = result->ls_begin;
@@ -870,9 +862,8 @@ DeeString_SplitLines(DeeObject *__restrict self,
 	DREF LineSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	result = DeeObject_MALLOC(LineSplit);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Same as the regular split(), but use the case-insensitive sequence type. */
 	DeeObject_Init(result, &StringLineSplit_Type);
 	Dee_Incref(self);

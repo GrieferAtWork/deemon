@@ -37,9 +37,8 @@ PRIVATE DREF struct ast *FCALL ast_do_parse_brace_items(void) {
 	if (tok == '\n' && yield() < 0)
 		goto err_flags;
 	result = ast_parse_brace_items();
-	if
-		unlikely(!result)
-	goto err_flags;
+	if unlikely(!result)
+		goto err_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	return result;
 err_flags:
@@ -58,9 +57,8 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 
 	case '{':
 		result = ast_parse_statement_or_braces(&was_expression);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
@@ -132,13 +130,11 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 		                         AST_COMMA_PARSESEMI,
 		                         AST_FMULTIPLE_GENERIC,
 		                         &comma_mode);
-		if
-			unlikely(!result)
-		goto done;
+		if unlikely(!result)
+			goto done;
 		if (tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 			if (pwas_expression)
 				*pwas_expression = AST_PARSE_WASEXPR_NO;
 		} else if (old_varc != current_scope->s_mapc) {
@@ -174,29 +170,24 @@ ast_parse_if_hybrid(unsigned int *pwas_expression) {
 	unsigned int was_expression;
 	expect = current_tags.at_expect;
 	loc_here(&loc);
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if
-		unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
-	goto err_flags;
+	if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
+		goto err_flags;
 	result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if
-		unlikely(!result)
-	goto err;
-	if
-		unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
-	goto err;
+	if unlikely(!result)
+		goto err;
+	if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
+		goto err;
 	tt_branch      = NULL;
 	was_expression = AST_PARSE_WASEXPR_MAYBE;
 	if (tok != KWD_else && tok != KWD_elif) {
 		tt_branch = ast_parse_hybrid_primary(&was_expression);
-		if
-			unlikely(!tt_branch)
-		goto err_r;
+		if unlikely(!tt_branch)
+			goto err_r;
 	}
 	ff_branch = NULL;
 	if (tok == KWD_elif) {
@@ -204,14 +195,12 @@ ast_parse_if_hybrid(unsigned int *pwas_expression) {
 		goto do_else_branch;
 	}
 	if (tok == KWD_else) {
-		if
-			unlikely(yield() < 0)
-		goto err_tt;
+		if unlikely(yield() < 0)
+			goto err_tt;
 do_else_branch:
 		ff_branch = ast_parse_hybrid_secondary(&was_expression);
-		if
-			unlikely(!ff_branch)
-		goto err_tt;
+		if unlikely(!ff_branch)
+			goto err_tt;
 	}
 	merge = ast_setddi(ast_conditional(AST_FCOND_EVAL | expect,
 	                                   result,
@@ -245,62 +234,53 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 	unsigned int was_expression;
 	ASSERT(tok == '{');
 	loc_here(&loc);
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 	switch (tok) {
 
 	case '}':
 		/* Special case: empty sequence. */
 		result = ast_setddi(ast_multiple(AST_FMULTIPLE_GENERIC, 0, NULL), &loc);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			unlikely(yield() < 0)
-		goto err_r;
+		if unlikely(!result)
+			goto err;
+		if unlikely(yield() < 0)
+			goto err_r;
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
 		break;
 
 	case '.':
 		result = ast_setddi(ast_do_parse_brace_items(), &loc);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
-		goto err_r;
+		if unlikely(!result)
+			goto err;
+		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+			goto err_r;
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_YES;
 		break;
 
 
 	case '{': /* Recursion! */
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_statement_or_braces(&was_expression);
 		ASSERT(!result ||
 		       result->a_type == AST_MULTIPLE ||
 		       result->a_type == AST_CONSTEXPR);
 parse_remainder_after_hybrid_popscope:
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 parse_remainder_after_hybrid_popscope_resok:
 		if (was_expression == AST_PARSE_WASEXPR_NO)
 			goto parse_remainder_after_statement;
 		if (was_expression == AST_PARSE_WASEXPR_YES) {
 			result = ast_parse_postexpr(result);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 check_recursion_after_expression_suffix:
 			if (tok == ';') {
-				if
-					unlikely(yield() < 0)
-				goto err_r;
+				if unlikely(yield() < 0)
+					goto err_r;
 				goto parse_remainder_after_statement;
 			}
 			if (tok == ':')
@@ -309,40 +289,33 @@ check_recursion_after_expression_suffix:
 parse_remainder_after_comma_popscope:
 				scope_pop();
 				remainder = ast_parse_brace_list(result);
-				if
-					unlikely(!remainder)
-				goto err_r;
+				if unlikely(!remainder)
+					goto err_r;
 				ast_decref(result);
 				result = ast_setddi(remainder, &loc);
-				if
-					unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
-				goto err_r;
+				if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+					goto err_r;
 				if (pwas_expression)
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
-			if
-				likely(tok == '}')
-			{
+			if likely(tok == '}')
+				{
 parse_remainder_before_rbrace_popscope_wrap:
-				if
-					unlikely(yield() < 0)
-				goto err_r;
+				if unlikely(yield() < 0)
+					goto err_r;
 			} else {
-				if
-					unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
-				goto err_r;
+				if unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+					goto err_r;
 			}
 			/* Wrap the result as a single sequence. */
 			new_elemv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-			if
-				unlikely(!new_elemv)
-			goto err_r;
+			if unlikely(!new_elemv)
+				goto err_r;
 			new_elemv[0] = result; /* Inherit reference. */
 			remainder    = ast_multiple(AST_FMULTIPLE_GENERIC, 1, new_elemv);
-			if
-				unlikely(!remainder)
-			{
+			if unlikely(!remainder)
+				{
 				Dee_Free(new_elemv);
 				goto err_r;
 			}
@@ -359,9 +332,8 @@ parse_remainder_before_rbrace_popscope_wrap:
 		{
 			unsigned long token_num = token.t_num;
 			result                  = ast_parse_postexpr(result);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			if (token_num != token.t_num)
 				goto check_recursion_after_expression_suffix;
 		}
@@ -372,54 +344,46 @@ parse_remainder_before_rbrace_popscope_wrap:
 		goto parse_remainder_after_statement;
 
 	case KWD_try:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_try_hybrid(&was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_if:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_if_hybrid(&was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_with:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_with_hybrid(&was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_assert:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_assert_hybrid(&was_expression);
 parse_remainder_after_semicolon_hybrid_popscope:
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 
 		/* Special case: `assert' statements require a trailing `;' token.
 		 *                If that token exists, we know for sure that this is a statement! */
 		if (tok == ';') {
 			was_expression = AST_PARSE_WASEXPR_NO;
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 		}
 		goto parse_remainder_after_hybrid_popscope_resok;
 
 	case KWD_import:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_import_hybrid(&was_expression);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		/* Same as `assert': `import' requires a trailing `;' */
 		goto parse_remainder_after_semicolon_hybrid_popscope;
 
@@ -428,9 +392,8 @@ parse_remainder_after_semicolon_hybrid_popscope:
 	case KWD_foreach:
 	case KWD_do:
 	case KWD_while:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		result = ast_parse_loopexpr_hybrid(&was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
@@ -452,27 +415,22 @@ parse_remainder_after_semicolon_hybrid_popscope:
 	case '@':
 	case ';':
 is_a_statement:
-		if
-			unlikely(scope_push() < 0)
-		goto err;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		/* Enter a new scope and parse expressions. */
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 		result = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		while (tok == '\n')
-			if
-				unlikely(yield() < 0)
+			if unlikely(yield() < 0)
 		goto err_r;
-		if
-			unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
-		goto err_r;
+		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
+			goto err_r;
 		scope_pop();
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_NO;
@@ -483,18 +441,16 @@ is_a_statement:
 		/* Check for a label definition. */
 		if (TPP_ISKEYWORD(tok)) {
 			char *next_token = peek_next_token(NULL);
-			if
-				unlikely(!next_token)
-			goto err;
+			if unlikely(!next_token)
+				goto err;
 			if (*next_token == ':' &&
 			    (next_token = advance_wraplf(next_token),
 			     *next_token != ':' && *next_token != '='))
 				goto is_a_statement; /* label */
 		}
 		/* Figure out what we're dealing with as we go. */
-		if
-			unlikely(scope_push() < 0)
-		goto err;
+		if unlikely(scope_push() < 0)
+			goto err;
 		comma_mode = 0;
 		result = ast_parse_comma(AST_COMMA_NORMAL |
 		                         AST_COMMA_FORCEMULTIPLE |
@@ -503,18 +459,16 @@ is_a_statement:
 		                         AST_COMMA_PARSESEMI,
 		                         AST_FMULTIPLE_GENERIC,
 		                         &comma_mode);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		ASSERT(result->a_type == AST_MULTIPLE);
 		ASSERT(result->a_flag == AST_FMULTIPLE_GENERIC);
 		if (!current_scope->s_mapc) {
 			if (tok == '}') {
 				/*parse_remainder_before_rbrace_popscope:*/
 				/* Sequence-like brace expression. */
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 parse_remainder_after_rbrace_popscope:
 				scope_pop();
 				if (pwas_expression)
@@ -530,18 +484,15 @@ parse_remainder_after_rbrace_popscope:
 parse_remainder_after_colon_popscope:
 				scope_pop();
 				/* mapping-like brace expression. */
-				if
-					unlikely(yield() < 0)
-				goto err_r;
+				if unlikely(yield() < 0)
+					goto err_r;
 				remainder = ast_parse_mapping(result);
 				ast_decref(result);
-				if
-					unlikely(!remainder)
-				goto err;
+				if unlikely(!remainder)
+					goto err;
 				result = ast_setddi(remainder, &loc);
-				if
-					unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
-				goto err_r;
+				if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+					goto err_r;
 				if (pwas_expression)
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
 				break;
@@ -550,9 +501,8 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
-			if
-				unlikely(likely(tok == ';') ? (yield() < 0) : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
-			goto err_r;
+			if unlikely(likely(tok == ';') ? (yield() < 0) : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+				goto err_r;
 		}
 		if (result->a_multiple.m_astc == 1) {
 			remainder = result->a_multiple.m_astv[0];
@@ -565,38 +515,33 @@ parse_remainder_after_colon_popscope:
 parse_remainder_after_statement:
 		if (tok == '}') {
 			ast_setddi(result, &loc);
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 		} else {
 			remainder = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &loc);
-			if
-				unlikely(!remainder)
-			goto err_r;
+			if unlikely(!remainder)
+				goto err_r;
 			if (remainder->a_type == AST_MULTIPLE &&
 			    remainder->a_flag == AST_FMULTIPLE_KEEPLAST &&
 			    remainder->a_scope == current_scope) {
 				new_elemv = (DREF struct ast **)Dee_Realloc(remainder->a_multiple.m_astv,
 				                                            (remainder->a_multiple.m_astc + 1) *
 				                                            sizeof(DREF struct ast *));
-				if
-					unlikely(!new_elemv)
-				goto err_r_remainder;
+				if unlikely(!new_elemv)
+					goto err_r_remainder;
 				MEMMOVE_PTR(new_elemv + 1, new_elemv, remainder->a_multiple.m_astc);
 				remainder->a_multiple.m_astv = new_elemv;
 				new_elemv[0]                 = result; /* Inherit reference. */
 				++remainder->a_multiple.m_astc;
 			} else {
 				new_elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-				if
-					unlikely(!new_elemv)
-				goto err_r_remainder;
+				if unlikely(!new_elemv)
+					goto err_r_remainder;
 				new_elemv[0] = result;    /* Inherit reference. */
 				new_elemv[1] = remainder; /* Inherit reference. */
 				remainder    = ast_multiple(AST_FMULTIPLE_KEEPLAST, 2, new_elemv);
-				if
-					unlikely(!remainder)
-				{
+				if unlikely(!remainder)
+					{
 					ast_decref(new_elemv[1]);
 					ast_decref(new_elemv[0]);
 					Dee_Free(new_elemv);
@@ -605,9 +550,8 @@ parse_remainder_after_statement:
 				/* `ast_multiple()' inherited `new_elemv' on success. */
 			}
 			result = ast_setddi(remainder, &loc);
-			if
-				unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
-			goto err_r;
+			if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
+				goto err_r;
 		}
 		scope_pop();
 		if (pwas_expression)

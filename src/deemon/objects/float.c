@@ -54,9 +54,8 @@ DeeFloat_NewReuse(Float *__restrict self, double value) {
 		goto done_ok;
 	}
 	result = float_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeFloat_Type);
 done_ok:
 	result->f_value = value;
@@ -68,9 +67,8 @@ PUBLIC DREF DeeObject *DCALL
 DeeFloat_New(double value) {
 	/* Allocate a new float object descriptor. */
 	DREF Float *result = float_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Initialize the float object and assign its value. */
 	DeeObject_Init(result, &DeeFloat_Type);
 	result->f_value = value;

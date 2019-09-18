@@ -93,9 +93,8 @@ cmdline_add_arg(struct ascii_printer *__restrict printer,
 		char *start;
 		size_t length;
 		length = printer->ap_length - start_length;
-		if
-			unlikely(!ascii_printer_alloc(printer, 2))
-		goto err;
+		if unlikely(!ascii_printer_alloc(printer, 2))
+			goto err;
 		start = printer->ap_string->s_str + start_length;
 		/* Shift the argument text. */
 		memmove(start + 1, start, length * sizeof(char));
@@ -114,24 +113,21 @@ cmdline_add_args(struct ascii_printer *__restrict printer,
 	DREF DeeObject *iter, *elem;
 	int result = 0;
 	iter       = DeeObject_IterSelf(args);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 			result = -1;
 		else
 			result = cmdline_add_arg(printer, (DeeStringObject *)elem);
 		Dee_Decref(elem);
-		if
-			unlikely(result)
-		break;
+		if unlikely(result)
+			break;
 		if (DeeThread_CheckInterrupt())
 			goto err_iter;
 	}
-	if
-		unlikely(!elem)
-	goto err_iter;
+	if unlikely(!elem)
+		goto err_iter;
 	Dee_Decref(iter);
 	return result;
 err_iter:
@@ -151,9 +147,8 @@ cmdline_split(DeeStringObject *__restrict cmdline) {
 	/* Since this function isn't actually used that often, it doesn't use
 	 * an anonymous sequence type, but simply creates and returns a List
 	 * object. */
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	end = (iter = DeeString_STR(cmdline)) + DeeString_SIZE(cmdline);
 	while (iter != end) {
 		bool is_quoting = false;
@@ -197,15 +192,13 @@ cmdline_split(DeeStringObject *__restrict cmdline) {
 			goto err_r_printer;
 		/* Pack together the argument. */
 		arg = ascii_printer_pack(&printer);
-		if
-			unlikely(!arg)
-		goto err_r;
+		if unlikely(!arg)
+			goto err_r;
 		/* Add the argument to the resulting list. */
 		temp = DeeList_Append(result, arg);
 		Dee_Decref(arg);
-		if
-			unlikely(temp)
-		goto err_r;
+		if unlikely(temp)
+			goto err_r;
 	}
 done:
 	return result;

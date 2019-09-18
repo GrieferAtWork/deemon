@@ -55,12 +55,10 @@ DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeO
 	DREF Set *result;
 	/* Allocate the set object. */
 	result = DeeGCObject_MALLOC(Set);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(!num_items)
-	{
+	if unlikely(!result)
+		goto done;
+	if unlikely(!num_items)
+		{
 		/* Special case: allocate an empty set. */
 		result->s_mask = 0;
 		result->s_size = 0;
@@ -74,15 +72,13 @@ DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeO
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
 		result->s_elem = (struct hashset_item *)Dee_TryCalloc((mask + 1) * sizeof(struct hashset_item));
-		if
-			unlikely(!result->s_elem)
-		{
+		if unlikely(!result->s_elem)
+			{
 			/* Try one level less if that failed. */
 			mask           = min_mask;
 			result->s_elem = (struct hashset_item *)Dee_Calloc((mask + 1) * sizeof(struct hashset_item));
-			if
-				unlikely(!result->s_elem)
-			goto err_r;
+			if unlikely(!result->s_elem)
+				goto err_r;
 		}
 		/* Without any dummy items, these are identical. */
 		result->s_used = num_items;
@@ -96,16 +92,13 @@ next_key:
 				struct hashset_item *item = &result->s_elem[i & mask];
 				if (item->si_key) { /* Already in use */
 					int temp;
-					if
-						likely(item->si_hash != hash)
-					continue;
+					if likely(item->si_hash != hash)
+						continue;
 					temp = DeeObject_CompareEq(item->si_key, key);
-					if
-						likely(temp == 0)
-					continue;
-					if
-						unlikely(temp < 0)
-					goto err_r;
+					if likely(temp == 0)
+						continue;
+					if unlikely(temp < 0)
+						goto err_r;
 					/* Duplicate key. */
 					--result->s_used;
 					--result->s_size;
@@ -147,16 +140,14 @@ set_init_iterator(Set *__restrict self,
 #endif /* !CONFIG_NO_THREADS */
 	weakref_support_init(self);
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if
-			unlikely(DeeHashSet_Insert((DeeObject *)self, elem) < 0)
-		goto err_elem;
+		if unlikely(DeeHashSet_Insert((DeeObject *)self, elem) < 0)
+			goto err_elem;
 		Dee_Decref(elem);
 		if (DeeThread_CheckInterrupt())
 			goto err;
 	}
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	return 0;
 err_elem:
 	Dee_Decref(elem);
@@ -188,15 +179,13 @@ set_init_sequence(Set *__restrict self,
 #endif /* !CONFIG_NO_THREADS */
 		self->s_mask = src->rs_mask;
 		self->s_used = self->s_size = src->rs_size;
-		if
-			unlikely(!self->s_size)
-		self->s_elem = (struct hashset_item *)empty_set_items;
+		if unlikely(!self->s_size)
+			self->s_elem = (struct hashset_item *)empty_set_items;
 		else {
 			self->s_elem = (struct hashset_item *)Dee_Malloc((src->rs_mask + 1) *
 			                                                 sizeof(struct hashset_item));
-			if
-				unlikely(!self->s_elem)
-			goto err;
+			if unlikely(!self->s_elem)
+				goto err;
 			memcpy(self->s_elem, src->rs_elem,
 			       (self->s_mask + 1) * sizeof(struct hashset_item));
 			end = (iter = self->s_elem) + (self->s_mask + 1);
@@ -208,9 +197,8 @@ set_init_sequence(Set *__restrict self,
 	}
 	/* TODO: Fast-sequence support */
 	iterator = DeeObject_IterSelf(sequence);
-	if
-		unlikely(!iterator)
-	goto err;
+	if unlikely(!iterator)
+		goto err;
 	error = set_init_iterator(self, iterator);
 	Dee_Decref(iterator);
 	return error;
@@ -222,12 +210,10 @@ PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromIterator(DeeObject *__restrict self) {
 	DREF Set *result;
 	result = DeeGCObject_MALLOC(Set);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(set_init_iterator(result, self))
-	goto err;
+	if unlikely(!result)
+		goto done;
+	if unlikely(set_init_iterator(result, self))
+		goto err;
 	DeeObject_Init(result, &DeeHashSet_Type);
 	DeeGC_Track((DeeObject *)result);
 done:
@@ -241,12 +227,10 @@ PUBLIC DREF DeeObject *DCALL
 DeeHashSet_FromSequence(DeeObject *__restrict self) {
 	DREF Set *result;
 	result = DeeGCObject_MALLOC(Set);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(set_init_sequence(result, self))
-	goto err;
+	if unlikely(!result)
+		goto done;
+	if unlikely(set_init_sequence(result, self))
+		goto err;
 	DeeObject_Init(result, &DeeHashSet_Type);
 	DeeGC_Track((DeeObject *)result);
 done:
@@ -284,9 +268,8 @@ again:
 	self->s_used = other->s_used;
 	if ((self->s_elem = other->s_elem) != empty_set_items) {
 		self->s_elem = (struct hashset_item *)Dee_TryMalloc((other->s_mask + 1) * sizeof(struct hashset_item));
-		if
-			unlikely(!self->s_elem)
-		{
+		if unlikely(!self->s_elem)
+			{
 			DeeHashSet_LockEndRead(other);
 			if (Dee_CollectMemory((other->s_mask + 1) * sizeof(struct hashset_item)))
 				goto again;
@@ -324,9 +307,8 @@ set_deepload(Set *__restrict self) {
 			break;
 		DeeHashSet_LockEndRead(self);
 		new_items = (DREF DeeObject **)Dee_Realloc(items, item_count * sizeof(DREF DeeObject *));
-		if
-			unlikely(!new_items)
-		goto err_items;
+		if unlikely(!new_items)
+			goto err_items;
 		ols_item_count = item_count;
 		items          = new_items;
 	}
@@ -352,9 +334,8 @@ set_deepload(Set *__restrict self) {
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
 	new_map = (struct hashset_item *)Dee_Calloc((new_mask + 1) * sizeof(struct hashset_item));
-	if
-		unlikely(!new_map)
-	goto err_items_v;
+	if unlikely(!new_map)
+		goto err_items_v;
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
 		dhash_t j, perturb, hash;
@@ -471,13 +452,11 @@ set_rehash(Set *__restrict self, int sizedir) {
 	size_t new_mask = self->s_mask;
 	if (sizedir > 0) {
 		new_mask = (new_mask << 1) | 1;
-		if
-			unlikely(new_mask == 1)
-		new_mask = 16 - 1; /* Start out bigger than 2. */
+		if unlikely(new_mask == 1)
+			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if
-			unlikely(!self->s_used)
-		{
+		if unlikely(!self->s_used)
+			{
 			ASSERT(!self->s_used);
 			/* Special case: delete the vector. */
 			if (self->s_size) {
@@ -505,9 +484,8 @@ set_rehash(Set *__restrict self, int sizedir) {
 	ASSERT(self->s_used < new_mask);
 	ASSERT(self->s_used <= self->s_size);
 	new_vector = (struct hashset_item *)Dee_TryCalloc((new_mask + 1) * sizeof(struct hashset_item));
-	if
-		unlikely(!new_vector)
-	return false;
+	if unlikely(!new_vector)
+		return false;
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
 	ASSERT((self->s_elem == empty_set_items) == (self->s_used == 0));
 	ASSERT((self->s_elem == empty_set_items) == (self->s_size == 0));
@@ -581,9 +559,8 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if
-			unlikely(error < 0)
-		return NULL; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return NULL; /* Error in compare operator. */
 		if (error > 0) {
 			DeeHashSet_LockWrite(me);
 			/* Check if the set was modified. */
@@ -676,9 +653,8 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if
-			unlikely(error < 0)
-		return -1; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return -1; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 		/* Check if the set was modified. */
 		if (me->s_elem != vector ||
@@ -754,9 +730,8 @@ restart:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if
-			unlikely(error < 0)
-		return -1; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return -1; /* Error in compare operator. */
 		if (error > 0) {
 			/* Found it! */
 			DeeHashSet_LockWrite(me);
@@ -833,15 +808,13 @@ again:
 		Dee_XDecref(result);
 		return existing_key; /* Already exists. */
 	}
-	if
-		likely(!result)
-	{
+	if likely(!result)
+		{
 		/* Create the actual string that's going to get stored. */
 		result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (search_item_length + 1) * sizeof(char));
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			DeeHashSet_LockEndRead(me);
 			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) + (search_item_length + 1) * sizeof(char)))
 				goto again_lock;
@@ -932,15 +905,13 @@ again:
 		Dee_XDecref(new_item);
 		return 0; /* Already exists. */
 	}
-	if
-		likely(!new_item)
-	{
+	if likely(!new_item)
+		{
 		/* Create the actual string that's going to get stored. */
 		new_item = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                       (search_item_length + 1) * sizeof(char));
-		if
-			unlikely(!new_item)
-		{
+		if unlikely(!new_item)
+			{
 			DeeHashSet_LockEndRead(me);
 			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) + (search_item_length + 1) * sizeof(char)))
 				goto again_lock;
@@ -1075,9 +1046,8 @@ restart:
 		Dee_Decref(item_key);
 		if (error > 0)
 			return 1; /* Found the item. */
-		if
-			unlikely(error < 0)
-		return -1; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return -1; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 		/* Check if the set was modified. */
 		if (me->s_elem != vector ||
@@ -1145,9 +1115,8 @@ set_nsi_getsize(Set *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 set_contains(Set *__restrict self, DeeObject *__restrict search_item) {
 	int result = DeeHashSet_Contains((DeeObject *)self, search_item);
-	if
-		unlikely(result < 0)
-	return NULL;
+	if unlikely(result < 0)
+		return NULL;
 	return_bool_(result);
 }
 
@@ -1189,14 +1158,12 @@ setiterator_next(SetIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
-			if
-				unlikely(item > end)
-			goto set_has_changed;
+			if unlikely(item > end)
+				goto set_has_changed;
 			goto iter_exhausted;
 		}
-		if
-			unlikely(item < set->s_elem)
-		goto set_has_changed;
+		if unlikely(item < set->s_elem)
+			goto set_has_changed;
 		/* Search for the next non-empty item. */
 		while (item != end && (!item->si_key || item->si_key == dummy))
 			++item;
@@ -1232,9 +1199,8 @@ iter_exhausted:
 INTERN int DCALL
 setiterator_ctor(SetIterator *__restrict self) {
 	self->si_set = (DeeHashSetObject *)DeeHashSet_New();
-	if
-		unlikely(!self->si_set)
-	return -1;
+	if unlikely(!self->si_set)
+		return -1;
 	self->si_next = self->si_set->s_elem;
 	return 0;
 }
@@ -1325,9 +1291,8 @@ seti_nii_getindex(SetIterator *__restrict self) {
 	mask   = self->si_set->s_mask;
 	DeeHashSet_LockEndRead(self->si_set);
 	elem = READ_ITEM(self);
-	if
-		unlikely(elem < vector || elem > vector + mask)
-	return (size_t)-2; /* Indeterminate (detached) */
+	if unlikely(elem < vector || elem > vector + mask)
+		return (size_t)-2; /* Indeterminate (detached) */
 	return (size_t)(elem - vector);
 }
 
@@ -1371,9 +1336,8 @@ again:
 	mask   = self->si_set->s_mask;
 	DeeHashSet_LockEndRead(self->si_set);
 	elem = READ_ITEM(self);
-	if
-		unlikely(elem < vector || elem > vector + mask)
-	return 0; /* Indeterminate (detached) */
+	if unlikely(elem < vector || elem > vector + mask)
+		return 0; /* Indeterminate (detached) */
 	index = (size_t)(elem - vector);
 	if (step < index)
 		vector = elem - step;
@@ -1398,9 +1362,8 @@ again:
 	mask   = self->si_set->s_mask;
 	DeeHashSet_LockEndRead(self->si_set);
 	elem = READ_ITEM(self);
-	if
-		unlikely(elem < vector || elem > vector + mask)
-	return 0; /* Indeterminate (detached) */
+	if unlikely(elem < vector || elem > vector + mask)
+		return 0; /* Indeterminate (detached) */
 	index = (size_t)(elem - vector) + step;
 	if (index > mask + 1)
 		index = mask + 1;
@@ -1426,9 +1389,8 @@ again:
 	mask   = self->si_set->s_mask;
 	DeeHashSet_LockEndRead(self->si_set);
 	elem = READ_ITEM(self);
-	if
-		unlikely(elem <= vector || elem > vector + mask)
-	return 1; /* Indeterminate (detached), or at start */
+	if unlikely(elem <= vector || elem > vector + mask)
+		return 1; /* Indeterminate (detached), or at start */
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector;
 #else  /* CONFIG_NO_THREADS */
@@ -1450,9 +1412,8 @@ again:
 	mask   = self->si_set->s_mask;
 	DeeHashSet_LockEndRead(self->si_set);
 	elem = READ_ITEM(self);
-	if
-		unlikely(elem < vector || elem >= vector + mask)
-	return 1; /* Indeterminate (detached), or at end */
+	if unlikely(elem < vector || elem >= vector + mask)
+		return 1; /* Indeterminate (detached), or at end */
 	vector = elem + 1;
 #ifdef CONFIG_NO_THREADS
 	self->si_next = vector;
@@ -1484,14 +1445,12 @@ seti_nii_peek(SetIterator *__restrict self) {
 	item = READ_ITEM(self);
 	/* Validate that the pointer is still located in-bounds. */
 	if (item >= end) {
-		if
-			unlikely(item > end)
-		goto set_has_changed;
+		if unlikely(item > end)
+			goto set_has_changed;
 		goto iter_exhausted;
 	}
-	if
-		unlikely(item < set->s_elem)
-	goto set_has_changed;
+	if unlikely(item < set->s_elem)
+		goto set_has_changed;
 	/* Search for the next non-empty item. */
 	while (item != end && (!item->si_key || item->si_key == dummy))
 		++item;
@@ -1592,9 +1551,8 @@ PRIVATE DREF SetIterator *DCALL
 set_iter(Set *__restrict self) {
 	DREF SetIterator *result;
 	result = DeeObject_MALLOC(SetIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &HashSetIterator_Type);
 	result->si_set = self;
 	Dee_Incref(self);
@@ -1660,9 +1618,8 @@ again:
 		/* Print this item. */
 		error = unicode_printer_printf(&p, "%s%r", is_first ? "" : ", ", key);
 		Dee_Decref(key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		is_first = false;
 		DeeHashSet_LockRead(self);
 		if (self->s_elem != vector ||
@@ -1698,14 +1655,12 @@ set_init(Set *__restrict self,
          size_t argc, DeeObject **__restrict argv) {
 	DeeObject *seq;
 	int error;
-	if
-		unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
-	goto err;
+	if unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
+		goto err;
 	/* TODO: Support for initialization from `_roset' */
 	/* TODO: Optimization for fast-sequence types. */
-	if
-		unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
-	goto err;
+	if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
+		goto err;
 	error = set_init_iterator(self, seq);
 	Dee_Decref(seq);
 	return error;
@@ -1759,9 +1714,8 @@ set_insert(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
 		goto err;
 	result = DeeHashSet_Insert((DeeObject *)self, item);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;
@@ -1794,9 +1748,8 @@ set_update(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
 	result = DeeObject_Foreach(items, (dforeach_t)&insert_callback, self);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -1809,9 +1762,8 @@ set_remove(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
 		goto err;
 	result = DeeHashSet_Remove((DeeObject *)self, item);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;

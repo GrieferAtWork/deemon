@@ -129,9 +129,8 @@ numeric_asu128(DeeObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 numeric_signed8(DeeObject *__restrict self) {
 	int8_t result;
-	if
-		unlikely(DeeObject_GetInt8(self, &result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt8(self, &result) < 0)
+		goto err;
 	return DeeInt_NewS8(result);
 err:
 	return NULL;
@@ -140,9 +139,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_unsigned8(DeeObject *__restrict self) {
 	uint8_t result;
-	if
-		unlikely(DeeObject_GetInt8(self, (int8_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt8(self, (int8_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU8(result);
 err:
 	return NULL;
@@ -151,9 +149,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_signed16(DeeObject *__restrict self) {
 	int16_t result;
-	if
-		unlikely(DeeObject_GetInt16(self, &result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt16(self, &result) < 0)
+		goto err;
 	return DeeInt_NewS16(result);
 err:
 	return NULL;
@@ -162,9 +159,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_unsigned16(DeeObject *__restrict self) {
 	uint16_t result;
-	if
-		unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU16(result);
 err:
 	return NULL;
@@ -173,9 +169,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_signed32(DeeObject *__restrict self) {
 	int32_t result;
-	if
-		unlikely(DeeObject_GetInt32(self, &result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt32(self, &result) < 0)
+		goto err;
 	return DeeInt_NewS32(result);
 err:
 	return NULL;
@@ -184,9 +179,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_unsigned32(DeeObject *__restrict self) {
 	uint32_t result;
-	if
-		unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU32(result);
 err:
 	return NULL;
@@ -195,9 +189,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_signed64(DeeObject *__restrict self) {
 	int64_t result;
-	if
-		unlikely(DeeObject_GetInt64(self, &result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt64(self, &result) < 0)
+		goto err;
 	return DeeInt_NewS64(result);
 err:
 	return NULL;
@@ -206,9 +199,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_unsigned64(DeeObject *__restrict self) {
 	uint64_t result;
-	if
-		unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU64(result);
 err:
 	return NULL;
@@ -217,9 +209,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_signed128(DeeObject *__restrict self) {
 	dint128_t result;
-	if
-		unlikely(DeeObject_GetInt128(self, &result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt128(self, &result) < 0)
+		goto err;
 	return DeeInt_NewS128(result);
 err:
 	return NULL;
@@ -228,9 +219,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_unsigned128(DeeObject *__restrict self) {
 	duint128_t result;
-	if
-		unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU128(result);
 err:
 	return NULL;
@@ -239,9 +229,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_swap16(DeeObject *__restrict self) {
 	uint16_t result;
-	if
-		unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU16(BSWAP16(result));
 err:
 	return NULL;
@@ -250,9 +239,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_swap32(DeeObject *__restrict self) {
 	uint32_t result;
-	if
-		unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU32(BSWAP32(result));
 err:
 	return NULL;
@@ -261,9 +249,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_swap64(DeeObject *__restrict self) {
 	uint64_t result;
-	if
-		unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewU64(BSWAP64(result));
 err:
 	return NULL;
@@ -273,9 +260,8 @@ PRIVATE DREF DeeObject *DCALL
 numeric_swap128(DeeObject *__restrict self) {
 	duint128_t result;
 	uint64_t temp;
-	if
-		unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
+		goto err;
 	temp = DUINT128_GET64(result)[0];
 	DUINT128_GET64(result)
 	[0] = BSWAP64(DUINT128_GET64(result)[1]);
@@ -289,9 +275,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_sswap16(DeeObject *__restrict self) {
 	uint16_t result;
-	if
-		unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewS16((int16_t)BSWAP16(result));
 err:
 	return NULL;
@@ -300,9 +285,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_sswap32(DeeObject *__restrict self) {
 	uint32_t result;
-	if
-		unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewS32((int64_t)BSWAP32(result));
 err:
 	return NULL;
@@ -311,9 +295,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 numeric_sswap64(DeeObject *__restrict self) {
 	uint64_t result;
-	if
-		unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
+		goto err;
 	return DeeInt_NewS64((int64_t)BSWAP64(result));
 err:
 	return NULL;
@@ -323,9 +306,8 @@ PRIVATE DREF DeeObject *DCALL
 numeric_sswap128(DeeObject *__restrict self) {
 	dint128_t result;
 	uint64_t temp;
-	if
-		unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
-	goto err;
+	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
+		goto err;
 	temp = DUINT128_GET64(result)[0];
 	DUINT128_GET64(result)
 	[0] = BSWAP64(DUINT128_GET64(result)[1]);

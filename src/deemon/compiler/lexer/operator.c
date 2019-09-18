@@ -165,9 +165,8 @@ ast_build_operator(uint16_t name, uint16_t flags,
 	    DeeTuple_Check(args->a_constexpr)) {
 		/* Another special case: The argument AST is a constant-expression tuple. */
 		size_t argc = DeeTuple_SIZE(args->a_constexpr);
-		if
-			likely(argc < 4 && argc != 0)
-		{
+		if likely(argc < 4 && argc != 0)
+			{
 			DeeObject *tuple        = args->a_constexpr;
 			DREF struct ast *result = NULL, *argv[4] = { NULL, NULL, NULL, NULL };
 			if (!convert_operator_name(&name, argc))
@@ -216,9 +215,8 @@ do_generic:
 		struct symbol *function_symbol;
 		DeeObject *function_name = rt_operator_names[name - AST_OPERATOR_MIN];
 		function_symbol          = new_unnamed_symbol();
-		if
-			unlikely(!function_symbol)
-		goto err;
+		if unlikely(!function_symbol)
+			goto err;
 		function_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 		function_symbol->s_extern.e_module = DeeModule_GetDeemon();
 		Dee_Incref(function_symbol->s_extern.e_module);
@@ -229,9 +227,8 @@ do_generic:
 		        "Missing runtime function `%s'",
 		        DeeString_STR(function_name));
 		function_ast = ast_sym(function_symbol);
-		if
-			unlikely(!function_ast)
-		goto err;
+		if unlikely(!function_ast)
+			goto err;
 		args = ast_operator2(OPERATOR_CALL, 0, function_ast, args);
 		ast_decref(function_ast);
 		return args;
@@ -277,9 +274,8 @@ ast_build_bound_operator(uint16_t name, uint16_t flags,
 	    DeeTuple_Check(args->a_constexpr)) {
 		/* Another special case: The argument AST is a constant-expression tuple. */
 		size_t argc = DeeTuple_SIZE(args->a_constexpr);
-		if
-			likely(argc < 4)
-		{
+		if likely(argc < 4)
+			{
 			DeeObject *tuple        = args->a_constexpr;
 			DREF struct ast *result = NULL, *argv[3] = { NULL, NULL, NULL };
 			if (!convert_operator_name(&name, 1 + argc))
@@ -314,29 +310,25 @@ do_generic:
 		struct symbol *function_symbol;
 		DeeObject *function_name = rt_operator_names[name - AST_OPERATOR_MIN];
 		/* Pack together the argument list. */
-		if
-			unlikely((args = ast_expand(args)) == NULL)
-		goto err;
+		if unlikely((args = ast_expand(args)) == NULL)
+			goto err;
 		argv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-		if
-			unlikely(!argv)
-		goto err_args;
+		if unlikely(!argv)
+			goto err_args;
 		argv[0] = self;
 		argv[1] = args;
 		ast_incref(self);
 		new_args = ast_multiple(AST_FMULTIPLE_TUPLE, 2, argv);
-		if
-			unlikely(!new_args)
-		{
+		if unlikely(!new_args)
+			{
 			ast_decref(self);
 			Dee_Free(argv);
 			goto err_args;
 		}
 		args            = new_args; /* This is now the argument tuple for the builtin function call. */
 		function_symbol = new_unnamed_symbol();
-		if
-			unlikely(!function_symbol)
-		goto err_args;
+		if unlikely(!function_symbol)
+			goto err_args;
 		function_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 		function_symbol->s_extern.e_module = DeeModule_GetDeemon();
 		Dee_Incref(function_symbol->s_extern.e_module);
@@ -347,9 +339,8 @@ do_generic:
 		        "Missing runtime function `%s'",
 		        DeeString_STR(function_name));
 		function_ast = ast_sym(function_symbol);
-		if
-			unlikely(!function_ast)
-		goto err_args;
+		if unlikely(!function_ast)
+			goto err_args;
 		new_args = ast_operator2(OPERATOR_CALL, 0, function_ast, args);
 		ast_decref(function_ast);
 		ast_decref(args);
@@ -551,9 +542,8 @@ do_operator_gr:
 		ATTR_FALLTHROUGH
 	case TOK_COLLON_EQUAL:
 		result = OPERATOR_ASSIGN;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (TPP_ISKEYWORD(tok) && token.t_kwd->k_size == 4 &&
 		    UNALIGNED_GET32((uint32_t *)token.t_kwd->k_name) == ENCODE4('m', 'o', 'v', 'e')) {
 			/* `= move' move-assign operator. */
@@ -565,9 +555,8 @@ do_operator_gr:
 	case '(':
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		if (tok == ')') {
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			result = OPERATOR_CALL;
@@ -575,13 +564,11 @@ do_operator_gr:
 		}
 		/* Parenthesis around operator name. */
 		result = ast_parse_operator_name(features);
-		if
-			unlikely(result < 0)
-		goto err_flags;
+		if unlikely(result < 0)
+			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(tok != ')')
-		{
+		if unlikely(tok != ')')
+			{
 			if (WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err;
 			goto done;
@@ -601,24 +588,20 @@ parse_string:
 	case '[':
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		result = AST_OPERATOR_GETITEM_OR_SETITEM;
 		if (tok == ':') {
 			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
-			if
-				unlikely(yield() < 0)
-			goto err_flags;
+			if unlikely(yield() < 0)
+				goto err_flags;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
-		goto err;
-		if (tok == '=') {
-			if
-				unlikely(yield() < 0)
+		if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 			goto err;
+		if (tok == '=') {
+			if unlikely(yield() < 0)
+				goto err;
 			result = (result == AST_OPERATOR_GETITEM_OR_SETITEM
 			          ? OPERATOR_SETITEM
 			          : OPERATOR_SETRANGE);
@@ -626,26 +609,22 @@ parse_string:
 		goto done;
 
 	case KWD_del:
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == '[') {
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if
-				unlikely(yield() < 0)
-			goto err_flags;
+			if unlikely(yield() < 0)
+				goto err_flags;
 			result = OPERATOR_DELITEM;
 			if (tok == ':') {
 				result = OPERATOR_DELRANGE;
-				if
-					unlikely(yield() < 0)
-				goto err_flags;
+				if unlikely(yield() < 0)
+					goto err_flags;
 			}
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if
-				unlikely(tok != ']')
-			{
+			if unlikely(tok != ']')
+				{
 				if (WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 					goto err;
 				goto done;
@@ -653,9 +632,8 @@ parse_string:
 			goto done_y1;
 		}
 		result = OPERATOR_DELATTR;
-		if
-			unlikely(tok != '.')
-		{
+		if unlikely(tok != '.')
+			{
 			if (WARN(W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME))
 				goto err;
 			goto done;
@@ -664,9 +642,8 @@ parse_string:
 
 	case '.':
 		result = AST_OPERATOR_GETATTR_OR_SETATTR;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == '=') {
 			result = OPERATOR_SETATTR;
 			goto done_y1;
@@ -709,13 +686,11 @@ parse_string:
 				goto done_y1;
 			}
 			if (name == ENCODE4('m', 'o', 'v', 'e')) {
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				result = OPERATOR_MOVEASSIGN;
-				if
-					unlikely(tok == '=')
-				{
+				if unlikely(tok == '=')
+					{
 					if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
 				} else if unlikely(tok != TOK_COLLON_EQUAL)
@@ -856,9 +831,8 @@ unknown:
 	}
 
 done_y1:
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 done:
 	return result;
 err_flags:

@@ -240,9 +240,8 @@ ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
 			                                  new_alloc *
 			                                  sizeof(uint16_t));
 		}
-		if
-			unlikely(!new_vec)
-		return -1;
+		if unlikely(!new_vec)
+			return -1;
 	}
 	regs->dx_spnamv = new_vec;
 	regs->dx_spnama = new_alloc;
@@ -320,9 +319,8 @@ next_ip:
 			address = (uint16_t)get_uleb((uint8_t **)&ip);
 			if (flags & DDI_STATE_FNONAMES)
 				break;
-			if
-				unlikely(!self->rs_regs.dr_usp)
-			break; /* Shouldn't happen... */
+			if unlikely(!self->rs_regs.dr_usp)
+				break; /* Shouldn't happen... */
 			if (self->rs_regs.dr_usp >= self->rs_xregs.dx_spnama &&
 			    ddi_xrealloc_sp(&self->rs_xregs, self->rs_regs.dr_usp, flags))
 				goto err;
@@ -378,15 +376,13 @@ next_ip:
 				struct ddi_saved *save;
 				/* Save the current register state. */
 				save = (struct ddi_saved *)Dee_TryMalloc(sizeof(struct ddi_saved));
-				if
-					unlikely(!save)
-				{
+				if unlikely(!save)
+					{
 					if (flags & DDI_STATE_FNOTHROW)
 						goto next_ip;
 					save = (struct ddi_saved *)Dee_Malloc(sizeof(struct ddi_saved));
-					if
-						unlikely(!save)
-					goto err;
+					if unlikely(!save)
+						goto err;
 				}
 				memcpy(&save->s_save.dx_base.dr_usp, &self->rs_xregs.dx_base.dr_usp,
 				       sizeof(struct ddi_xregs) - offsetof(struct ddi_xregs, dx_spnama));
@@ -399,18 +395,16 @@ next_ip:
 				else {
 					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc *
 					                                                   sizeof(uint16_t));
-					if
-						unlikely(!save->s_save.dx_lcnamv)
-					{
+					if unlikely(!save->s_save.dx_lcnamv)
+						{
 						if (flags & DDI_STATE_FNOTHROW) {
 							Dee_Free(save);
 							goto next_ip;
 						}
 						save->s_save.dx_lcnamv = (uint16_t *)Dee_Malloc(self->rs_xregs.dx_lcnamc *
 						                                                sizeof(uint16_t));
-						if
-							unlikely(!save->s_save.dx_lcnamv)
-						goto err_save;
+						if unlikely(!save->s_save.dx_lcnamv)
+							goto err_save;
 					}
 					memcpy(save->s_save.dx_lcnamv, self->rs_xregs.dx_lcnamv,
 					       self->rs_xregs.dx_lcnamc * sizeof(uint16_t));
@@ -429,9 +423,8 @@ next_ip:
 				else {
 					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMalloc(save->s_save.dx_spnama *
 					                                                   sizeof(uint16_t));
-					if
-						unlikely(!save->s_save.dx_spnamv)
-					{
+					if unlikely(!save->s_save.dx_spnamv)
+						{
 						if (flags & DDI_STATE_FNOTHROW) {
 							Dee_Free(save->s_save.dx_lcnamv);
 							Dee_Free(save);
@@ -439,9 +432,8 @@ next_ip:
 						}
 						save->s_save.dx_spnamv = (uint16_t *)Dee_Malloc(save->s_save.dx_spnama *
 						                                                sizeof(uint16_t));
-						if
-							unlikely(!save->s_save.dx_spnamv)
-						goto err_save_lc;
+						if unlikely(!save->s_save.dx_spnamv)
+							goto err_save_lc;
 					}
 					memcpy(save->s_save.dx_spnamv, self->rs_xregs.dx_spnamv,
 					       save->s_save.dx_spnama * sizeof(uint16_t));
@@ -508,17 +500,15 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	else {
 		self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc *
 		                                                     sizeof(uint16_t));
-		if
-			unlikely(!self->rs_xregs.dx_lcnamv)
-		{
+		if unlikely(!self->rs_xregs.dx_lcnamv)
+			{
 			if (flags & DDI_STATE_FNOTHROW)
 				self->rs_xregs.dx_lcnamc = 0;
 			else {
 				self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Malloc(self->rs_xregs.dx_lcnamc *
 				                                                  sizeof(uint16_t));
-				if
-					unlikely(!self->rs_xregs.dx_lcnamv)
-				return DDI_NEXT_ERR;
+				if unlikely(!self->rs_xregs.dx_lcnamv)
+					return DDI_NEXT_ERR;
 			}
 		}
 		for (i = 0; i < self->rs_xregs.dx_lcnamc; ++i)
@@ -530,9 +520,8 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	else {
 		self->rs_xregs.dx_spnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_spnama *
 		                                                     sizeof(uint16_t));
-		if
-			unlikely(!self->rs_xregs.dx_spnamv)
-		self->rs_xregs.dx_spnama = 0; /* The SP-buffer is optional, so don't sweat it if this failed. */
+		if unlikely(!self->rs_xregs.dx_spnamv)
+			self->rs_xregs.dx_spnama = 0; /* The SP-buffer is optional, so don't sweat it if this failed. */
 		else {
 			for (i = 0; i < self->rs_xregs.dx_spnama; ++i) {
 				self->rs_xregs.dx_spnamv[i] = DDI_REGS_UNBOUND_NAME;

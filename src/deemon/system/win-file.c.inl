@@ -1166,9 +1166,8 @@ sysfile_pread(SystemFile *__restrict self,
 	DWORD bytes_written;
 	my_OVERLAPPED overlapped;
 #if __SIZEOF_SIZE_T__ > 4
-	if
-		unlikely(bufsize > UINT32_MAX)
-	bufsize = UINT32_MAX;
+	if unlikely(bufsize > UINT32_MAX)
+		bufsize = UINT32_MAX;
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again:
 	memset(&overlapped, 0, sizeof(overlapped));

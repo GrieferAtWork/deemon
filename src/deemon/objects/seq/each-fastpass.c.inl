@@ -57,18 +57,16 @@ F(getitem_for_inplace)(STRUCT_TYPE *__restrict self,
                        size_t index) {
 	DREF DeeObject *result, *baseelem;
 	baseelem = DeeObject_GetItemIndex(self->se_seq, index);
-	if
-		unlikely(!baseelem)
-	goto err;
+	if unlikely(!baseelem)
+		goto err;
 #ifdef DEFINE_GETATTR
 	result = DeeObject_GetAttr(baseelem,
 	                           (DeeObject *)self->sg_attr);
 #else /* DEFINE_GETATTR */
 #error "Unsupported mode"
 #endif /* !DEFINE_GETATTR */
-	if
-		unlikely(!result)
-	goto err_baseelem;
+	if unlikely(!result)
+		goto err_baseelem;
 	*pbaseelem = baseelem;
 	return result;
 err_baseelem:
@@ -242,14 +240,12 @@ PRIVATE DREF SeqEachIterator *DCALL
 F(iter)(STRUCT_TYPE *__restrict self) {
 	DREF SeqEachIterator *result;
 	result = DeeObject_MALLOC(SeqEachIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ei_each = (DREF SeqEachBase *)self;
 	result->ei_iter = DeeObject_IterSelf(((DREF SeqEachBase *)self)->se_seq);
-	if
-		unlikely(!result->ei_iter)
-	goto err_r;
+	if unlikely(!result->ei_iter)
+		goto err_r;
 	Dee_Incref(self);
 	DeeObject_Init(result, &ITERATOR_TYPE_OBJECT);
 done:
@@ -287,9 +283,8 @@ PRIVATE DREF DeeObject *DCALL
 F(nsi_getitem)(STRUCT_TYPE *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
-	if
-		likely(result)
-	result = F(transform)(self, result);
+	if likely(result)
+		result = F(transform)(self, result);
 	return result;
 }
 
@@ -298,9 +293,8 @@ F(getitem)(STRUCT_TYPE *__restrict self,
            DeeObject *__restrict index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->se_seq, index);
-	if
-		likely(result)
-	result = F(transform)(self, result);
+	if likely(result)
+		result = F(transform)(self, result);
 	return result;
 }
 
@@ -420,9 +414,8 @@ PRIVATE int DCALL
 F(deep)(STRUCT_TYPE *__restrict self,
         STRUCT_TYPE *__restrict other) {
 	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if
-		unlikely(!self->se_seq)
-	goto err;
+	if unlikely(!self->se_seq)
+		goto err;
 	self->sg_attr = other->sg_attr;
 	Dee_Incref(self->sg_attr);
 	return 0;
@@ -451,9 +444,8 @@ err:
 PRIVATE DREF STRUCT_TYPE *DCALL F(ctor)(void) {
 	DREF STRUCT_TYPE *result;
 	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(COMPILER_OFFSETOF(STRUCT_TYPE, sg_argv));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq  = Dee_EmptySeq;
 	result->sg_attr = (DREF DeeStringObject *)Dee_EmptyString;
 	result->sg_argc = 0;
@@ -474,9 +466,8 @@ F(copy)(STRUCT_TYPE *__restrict other) {
 	size_t i;
 	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(COMPILER_OFFSETOF(STRUCT_TYPE, sg_argv) +
 	                                              (other->sg_argc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq  = other->se_seq;
 	result->sg_attr = other->sg_attr;
 	result->sg_argc = other->sg_argc;
@@ -500,25 +491,21 @@ F(deep)(STRUCT_TYPE *__restrict other) {
 	size_t i;
 	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(COMPILER_OFFSETOF(STRUCT_TYPE, sg_argv) +
 	                                              (other->sg_argc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if
-		unlikely(!result->se_seq)
-	goto err_r;
+	if unlikely(!result->se_seq)
+		goto err_r;
 #ifdef DEFINE_CALLATTRKW
 	result->sg_kw = DeeObject_DeepCopy(other->sg_kw);
-	if
-		unlikely(!result->sg_kw)
-	goto err_r_seq;
+	if unlikely(!result->sg_kw)
+		goto err_r_seq;
 #endif /* DEFINE_CALLATTRKW */
 	result->sg_argc = other->sg_argc;
 	for (i = 0; i < result->sg_argc; ++i) {
 		result->sg_argv[i] = DeeObject_DeepCopy(other->sg_argv[i]);
-		if
-			unlikely(!result->sg_argv[i])
-		goto err_r_argv;
+		if unlikely(!result->sg_argv[i])
+			goto err_r_argv;
 	}
 	result->sg_attr = other->sg_attr;
 	Dee_Incref(result->sg_attr);
@@ -562,9 +549,8 @@ F(init)(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(COMPILER_OFFSETOF(STRUCT_TYPE, sg_argv) +
 	                                              (DeeTuple_SIZE(args) * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->sg_argc = DeeTuple_SIZE(args);
 	MEMCPY_PTR(result->sg_argv, DeeTuple_ELEM(args), DeeTuple_SIZE(args));
 	for (i = 0; i < DeeTuple_SIZE(args); ++i)
@@ -695,13 +681,11 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 PRIVATE int DCALL
 Fi(ctor)(SeqEachIterator *__restrict self) {
 	self->ei_each = (DREF SeqEachBase *)DeeObject_NewDefault(&TYPE_OBJECT);
-	if
-		unlikely(!self->ei_each)
-	goto err;
+	if unlikely(!self->ei_each)
+		goto err;
 	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
-	if
-		unlikely(!self->ei_iter)
-	goto err_each;
+	if unlikely(!self->ei_iter)
+		goto err_each;
 	return 0;
 err_each:
 	Dee_Decref(self->ei_each);
@@ -727,9 +711,8 @@ Fi(init)(SeqEachIterator *__restrict self,
 	if (DeeObject_AssertTypeExact(self->ei_each, &TYPE_OBJECT))
 		goto err;
 	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
-	if
-		unlikely(!self->ei_iter)
-	goto err;
+	if unlikely(!self->ei_iter)
+		goto err;
 	Dee_Incref(self->ei_each);
 	return 0;
 err:
@@ -756,9 +739,8 @@ PRIVATE DREF DeeObject *DCALL
 Fi(next)(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ei_iter);
-	if
-		likely(ITER_ISOK(result))
-	result = F(transform)((STRUCT_TYPE *)self->ei_each, result);
+	if likely(ITER_ISOK(result))
+		result = F(transform)((STRUCT_TYPE *)self->ei_each, result);
 	return result;
 }
 

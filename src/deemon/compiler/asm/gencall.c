@@ -108,9 +108,8 @@ ast_assemble_function_refargs(struct ast *__restrict function_ast,
 	 * register it as a constant variable of our own code. */
 	current_basescope = prev_scope->s_base;
 	current_scope     = prev_scope;
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Save the restore-code-object for the event of the linker having to be reset. */
 	function_ast->a_function.f_scope->bs_restore = result;
 	return result;
@@ -172,9 +171,8 @@ asm_gcall_func(struct ast *__restrict func,
 	DREF DeeCodeObject *code;
 	int32_t cid;
 	code = ast_assemble_function_refargs(func, &refc, &refv, &refargc, &refargv);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	if (asm_putddi(func))
 		goto err_refv;
 	if (!refc) {
@@ -185,22 +183,19 @@ asm_gcall_func(struct ast *__restrict func,
 		Dee_Free(refv);
 		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
 		Dee_Decref(code);
-		if
-			unlikely(!function)
-		goto err_refargv;
+		if unlikely(!function)
+			goto err_refargv;
 		cid = asm_newconst((DeeObject *)function);
 		Dee_Decref(function);
-		if
-			unlikely(cid < 0)
-		goto err_refargv;
+		if unlikely(cid < 0)
+			goto err_refargv;
 		if (asm_gpush_const((uint16_t)cid))
 			goto err_refargv;
 	} else {
 		cid = asm_newconst((DeeObject *)code);
 		Dee_Decref(code);
-		if
-			unlikely(cid < 0)
-		goto err_refv;
+		if unlikely(cid < 0)
+			goto err_refv;
 		/* Push referenced symbols. */
 		for (i = 0; i < refc; ++i) {
 			refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC | SYMBOL_FALLOCREF);
@@ -362,12 +357,10 @@ check_small_constargs_symbol:
 					} else {
 						symid = asm_esymid(funsym);
 					}
-					if
-						unlikely(symid < 0)
-					goto err;
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcall_extern((uint16_t)symid, modsym->ss_index, argc))
@@ -377,12 +370,10 @@ check_small_constargs_symbol:
 
 				case SYMBOL_TYPE_GLOBAL:
 					/* Direct call to symbol. */
-					if
-						unlikely((symid = asm_gsymid_for_read(funsym, func)) < 0)
-					goto err;
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely((symid = asm_gsymid_for_read(funsym, func)) < 0)
+						goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcall_global((uint16_t)symid, argc))
@@ -392,12 +383,10 @@ check_small_constargs_symbol:
 				case SYMBOL_TYPE_LOCAL:
 					if (SYMBOL_MUST_REFERENCE_TYPEMAY(funsym))
 						break;
-					if
-						unlikely((symid = asm_lsymid_for_read(funsym, func)) < 0)
-					goto err;
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely((symid = asm_lsymid_for_read(funsym, func)) < 0)
+						goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcall_local((uint16_t)symid, argc))
@@ -440,18 +429,16 @@ invoke_cattr_funsym_small:
 							ASSERT(argc != (uint8_t)-1);
 							if (asm_gpush_symbol(class_sym, func))
 								goto err; /* func, class_sym */
-							if
-								unlikely(push_tuple_items(args->a_constexpr, args))
-							goto err;
+							if unlikely(push_tuple_items(args->a_constexpr, args))
+								goto err;
 							if (asm_putddi(ddi_ast))
 								goto err; /* func, class_sym, args... */
 							if (asm_gcall(argc + 1))
 								goto err; /* result */
 							goto pop_unused;
 						}
-						if
-							unlikely(push_tuple_items(args->a_constexpr, args))
-						goto err;
+						if unlikely(push_tuple_items(args->a_constexpr, args))
+							goto err;
 						if (asm_putddi(ddi_ast))
 							goto err; /* func, args... */
 						if (asm_gcall(argc))
@@ -459,20 +446,17 @@ invoke_cattr_funsym_small:
 						goto pop_unused;
 					}
 					/* The attribute must be accessed as virtual. */
-					if
-						unlikely(asm_check_thiscall(funsym, func))
-					goto err;
+					if unlikely(asm_check_thiscall(funsym, func))
+						goto err;
 					SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 					if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 						symid = asm_newconst((DeeObject *)attr->ca_name);
-						if
-							unlikely(symid < 0)
-						goto err;
+						if unlikely(symid < 0)
+							goto err;
 						if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 						    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-							if
-								unlikely(push_tuple_items(args->a_constexpr, args))
-							goto err;
+							if unlikely(push_tuple_items(args->a_constexpr, args))
+								goto err;
 							if (asm_putddi(ddi_ast))
 								goto err; /* args... */
 							if (asm_gcallattr_this_const((uint16_t)symid, argc))
@@ -483,9 +467,8 @@ invoke_cattr_funsym_small:
 							goto err;
 						if (asm_gpush_symbol(this_sym, func))
 							goto err; /* this */
-						if
-							unlikely(push_tuple_items(args->a_constexpr, args))
-						goto err;
+						if unlikely(push_tuple_items(args->a_constexpr, args))
+							goto err;
 						if (asm_putddi(ddi_ast))
 							goto err; /* this, args... */
 						if (asm_gcallattr_const((uint16_t)symid, argc))
@@ -496,9 +479,8 @@ invoke_cattr_funsym_small:
 					if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 						if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 							symid = asm_rsymid(class_sym);
-							if
-								unlikely(symid < 0)
-							goto err;
+							if unlikely(symid < 0)
+								goto err;
 							if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
 							    this_sym->s_type == SYMBOL_TYPE_THIS &&
 							    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
@@ -508,9 +490,8 @@ invoke_cattr_funsym_small:
 										goto err;
 									goto got_small_method;
 								}
-								if
-									unlikely(push_tuple_items(args->a_constexpr, args))
-								goto err;
+								if unlikely(push_tuple_items(args->a_constexpr, args))
+									goto err;
 								if (asm_putddi(ddi_ast))
 									goto err;
 								if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr, argc))
@@ -541,9 +522,8 @@ invoke_cattr_funsym_small:
 							goto err;
 					} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if
-							unlikely(symid < 0)
-						goto err;
+						if unlikely(symid < 0)
+							goto err;
 						if (asm_putddi(func))
 							goto err;
 						if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr))
@@ -573,9 +553,8 @@ invoke_cattr_funsym_small:
 						if (asm_gpush_symbol(this_sym, func))
 							goto err; /* func, this */
 						ASSERT(argc != (uint8_t)-1);
-						if
-							unlikely(push_tuple_items(args->a_constexpr, args))
-						goto err;
+						if unlikely(push_tuple_items(args->a_constexpr, args))
+							goto err;
 						if (asm_putddi(ddi_ast))
 							goto err;
 						if (asm_gcall(argc + 1))
@@ -583,9 +562,8 @@ invoke_cattr_funsym_small:
 						goto pop_unused;
 					}
 got_small_method:
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err; /* func, args... */
 					if (asm_gcall(argc))
@@ -613,9 +591,8 @@ got_small_method:
 					if (asm_gpush_this())
 						goto err;
 					ASSERT(argc != (uint8_t)-1);
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcall(argc + 1))
@@ -634,19 +611,16 @@ got_small_method:
 					int32_t attrid;
 					DREF DeeObject *name_ob;
 					name_ob = DeeString_New(name);
-					if
-						unlikely(!name_ob)
-					goto err;
+					if unlikely(!name_ob)
+						goto err;
 					attrid = asm_newconst(name_ob);
 					Dee_Decref(name_ob);
-					if
-						unlikely(attrid < 0)
-					goto err;
+					if unlikely(attrid < 0)
+						goto err;
 					if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr)))
 						goto err;
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcallattr_const((uint16_t)attrid, argc))
@@ -659,9 +633,8 @@ got_small_method:
 			    !(func->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS))) {
 				struct ast *function_self = func->a_operator.o_op0;
 				struct ast *function_attr = func->a_operator.o_op1;
-				if
-					unlikely(!function_attr)
-				goto generic_call;
+				if unlikely(!function_attr)
+					goto generic_call;
 				/* Call to an attribute with stack-based argument list. */
 				if (function_attr->a_type == AST_CONSTEXPR &&
 				    DeeString_Check(function_attr->a_constexpr)) {
@@ -700,13 +673,11 @@ check_getattr_base_symbol_class_small:
 							if (SYMBOL_MUST_REFERENCE_THIS(sym))
 								break;
 							/* call to the `this' argument. (aka. in-class member call) */
-							if
-								unlikely(push_tuple_items(args->a_constexpr, args))
-							goto err;
+							if unlikely(push_tuple_items(args->a_constexpr, args))
+								goto err;
 							attrid = asm_newconst(function_attr->a_constexpr);
-							if
-								unlikely(attrid < 0)
-							goto err;
+							if unlikely(attrid < 0)
+								goto err;
 							if (asm_putddi(ddi_ast))
 								goto err;
 							if (asm_gcallattr_this_const((uint16_t)attrid, argc))
@@ -729,13 +700,11 @@ check_getattr_base_symbol_class_small:
 							} else {
 								module_id = asm_msymid(sym);
 							}
-							if
-								unlikely(module_id < 0)
-							goto err;
+							if unlikely(module_id < 0)
+								goto err;
 							/* Do a call to an external symbol. `ASM_CALL_EXTERN' */
-							if
-								unlikely(push_tuple_items(args->a_constexpr, args))
-							goto err;
+							if unlikely(push_tuple_items(args->a_constexpr, args))
+								goto err;
 							if (asm_putddi(ddi_ast))
 								goto err;
 							if (asm_gcall_extern((uint16_t)module_id, modsym->ss_index, argc))
@@ -777,16 +746,13 @@ check_getattr_base_symbol_class_small:
 							/* We are allowed to reference the base-symbol! */
 							type_rid = asm_rsymid(type_expr->a_sym);
 do_perform_supercallattr_small:
-							if
-								unlikely(type_rid < 0)
-							goto err;
+							if unlikely(type_rid < 0)
+								goto err;
 							attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
-							if
-								unlikely(attrid < 0)
-							goto err;
-							if
-								unlikely(push_tuple_items(args->a_constexpr, args))
-							goto err;
+							if unlikely(attrid < 0)
+								goto err;
+							if unlikely(push_tuple_items(args->a_constexpr, args))
+								goto err;
 							if (asm_putddi(ddi_ast))
 								goto err;
 							if (asm_gsupercallattr_this_rc((uint16_t)type_rid, (uint16_t)attrid, argc))
@@ -801,9 +767,8 @@ do_perform_supercallattr_small:
 							 * an explicit reference to it. */
 							struct symbol *deemon_symbol;
 							deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
-							if
-								unlikely(!deemon_symbol)
-							goto err;
+							if unlikely(!deemon_symbol)
+								goto err;
 							if (deemon_symbol != ASM_BIND_DEEMON_EXPORT_NOTFOUND) {
 								type_rid = asm_rsymid(deemon_symbol);
 								goto do_perform_supercallattr_small;
@@ -825,14 +790,12 @@ do_perform_supercallattr_small:
 					if (argc <= 1) {
 						/* call to some other object. */
 						attrid = asm_newconst(function_attr->a_constexpr);
-						if
-							unlikely(attrid < 0)
-						goto err;
+						if unlikely(attrid < 0)
+							goto err;
 						if (ast_genasm(function_self, ASM_G_FPUSHRES))
 							goto err;
-						if
-							unlikely(push_tuple_items(args->a_constexpr, args))
-						goto err;
+						if unlikely(push_tuple_items(args->a_constexpr, args))
+							goto err;
 						if (asm_putddi(ddi_ast))
 							goto err;
 						if (asm_gcallattr_const((uint16_t)attrid, argc))
@@ -847,9 +810,8 @@ do_perform_supercallattr_small:
 						goto err;
 					if (ast_genasm_one(function_attr, ASM_G_FPUSHRES))
 						goto err;
-					if
-						unlikely(push_tuple_items(args->a_constexpr, args))
-					goto err;
+					if unlikely(push_tuple_items(args->a_constexpr, args))
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcallattr(argc))
@@ -918,15 +880,13 @@ invoke_cattr_funsym_tuple:
 					goto pop_unused;
 				}
 				/* The attribute must be accessed as virtual. */
-				if
-					unlikely(asm_check_thiscall(funsym, func))
-				goto err;
+				if unlikely(asm_check_thiscall(funsym, func))
+					goto err;
 				SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 				if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 					symid = asm_newconst((DeeObject *)attr->ca_name);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 						if (ast_genasm(args, ASM_G_FPUSHRES))
@@ -953,9 +913,8 @@ invoke_cattr_funsym_tuple:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if
-							unlikely(symid < 0)
-						goto err;
+						if unlikely(symid < 0)
+							goto err;
 						if (asm_putddi(func))
 							goto err;
 						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr))
@@ -980,9 +939,8 @@ invoke_cattr_funsym_tuple:
 						goto err;
 				} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_putddi(func))
 						goto err;
 					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr))
@@ -1036,14 +994,12 @@ invoke_cattr_funsym_tuple:
 				int32_t attrid;
 				DREF DeeObject *name_ob;
 				name_ob = DeeString_New(name);
-				if
-					unlikely(!name_ob)
-				goto err;
+				if unlikely(!name_ob)
+					goto err;
 				attrid = asm_newconst(name_ob);
 				Dee_Decref(name_ob);
-				if
-					unlikely(attrid < 0)
-				goto err;
+				if unlikely(attrid < 0)
+					goto err;
 				if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr)))
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
@@ -1063,17 +1019,15 @@ invoke_cattr_funsym_tuple:
 		    !(func->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS))) {
 			struct ast *function_self = func->a_operator.o_op0;
 			struct ast *function_attr = func->a_operator.o_op1;
-			if
-				unlikely(!function_attr)
-			goto generic_call;
+			if unlikely(!function_attr)
+				goto generic_call;
 			/* callattr() with an argument list only known at runtime.
 			 * This can actually happen _very_ easily when expand expressions are being used. */
 			if (function_attr->a_type == AST_CONSTEXPR &&
 			    DeeString_Check(function_attr->a_constexpr)) {
 				int32_t attrid = asm_newconst(function_attr->a_constexpr);
-				if
-					unlikely(attrid < 0)
-				goto err;
+				if unlikely(attrid < 0)
+					goto err;
 				if (function_self->a_type == AST_SYM) {
 					DeeClassScopeObject *class_scope;
 					struct symbol *sym = function_self->a_sym;
@@ -1178,14 +1132,12 @@ check_getattr_base_symbol_class_tuple:
 						int32_t attrid;
 						DREF DeeObject *name_ob;
 						name_ob = DeeString_New(name);
-						if
-							unlikely(!name_ob)
-						goto err;
+						if unlikely(!name_ob)
+							goto err;
 						attrid = asm_newconst(name_ob);
 						Dee_Decref(name_ob);
-						if
-							unlikely(attrid < 0)
-						goto err;
+						if unlikely(attrid < 0)
+							goto err;
 						/* callattr with sequence argument. */
 						if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr)))
 							goto err;
@@ -1210,9 +1162,8 @@ check_getattr_base_symbol_class_tuple:
 					if (ast_genasm(func->a_operator.o_op0, ASM_G_FPUSHRES))
 						goto err;
 					cid = asm_newconst(func->a_operator.o_op1->a_constexpr);
-					if
-						unlikely(cid < 0)
-					goto err;
+					if unlikely(cid < 0)
+						goto err;
 					for (i = 0; i < seq_argc; ++i)
 						if (ast_genasm_one(seq_argv[i], ASM_G_FPUSHRES))
 							goto err;
@@ -1249,9 +1200,8 @@ check_getattr_base_symbol_class_tuple:
 					if (ast_genasm(func->a_operator.o_op0, ASM_G_FPUSHRES))
 						goto err;
 					cid = asm_newconst(func->a_operator.o_op1->a_constexpr);
-					if
-						unlikely(cid < 0)
-					goto err;
+					if unlikely(cid < 0)
+						goto err;
 					for (i = 0; i < seq_argc; ++i)
 						if (ast_genasm_one(seq_argv[i], ASM_G_FPUSHRES))
 							goto err;
@@ -1367,9 +1317,8 @@ check_funsym_class:
 			} else {
 				symid = asm_esymid(funsym);
 			}
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			for (i = 0; i < argc; ++i)
 				if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 					goto err;
@@ -1383,9 +1332,8 @@ check_funsym_class:
 			if (SYMBOL_MUST_REFERENCE_NOTTHIS(funsym))
 				break;
 			symid = asm_lsymid_for_read(funsym, func);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			for (i = 0; i < argc; ++i)
 				if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 					goto err;
@@ -1397,9 +1345,8 @@ check_funsym_class:
 
 		case SYMBOL_TYPE_GLOBAL:
 			symid = asm_gsymid_for_read(funsym, func);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			for (i = 0; i < argc; ++i)
 				if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 					goto err;
@@ -1455,9 +1402,8 @@ invoke_cattr_funsym_argv:
 						goto pop_unused;
 					}
 					symid = asm_newmodule(DeeModule_GetDeemon());
-					if
-						unlikely(symid < 0)
-					goto err; /* Call as an InstanceMethod */
+					if unlikely(symid < 0)
+						goto err; /* Call as an InstanceMethod */
 					if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 						goto err;
 					/* Fallthrough to invoke the InstanceMethod normally. */
@@ -1472,15 +1418,13 @@ invoke_cattr_funsym_argv:
 				goto pop_unused;
 			}
 			/* The attribute must be accessed as virtual. */
-			if
-				unlikely(asm_check_thiscall(funsym, func))
-			goto err;
+			if unlikely(asm_check_thiscall(funsym, func))
+				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 				symid = asm_newconst((DeeObject *)attr->ca_name);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 				    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 					for (i = 0; i < argc; ++i)
@@ -1509,9 +1453,8 @@ invoke_cattr_funsym_argv:
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
 					    this_sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
@@ -1554,9 +1497,8 @@ invoke_cattr_funsym_argv:
 					goto err;
 			} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_putddi(func))
 					goto err;
 				if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr))
@@ -1585,9 +1527,8 @@ invoke_cattr_funsym_argv:
 				/* Access to an instance member function (must produce a bound method). */
 				if (asm_gpush_symbol(this_sym, func))
 					goto err; /* func, this */
-				if
-					unlikely(argc != (uint8_t)-1)
-				{
+				if unlikely(argc != (uint8_t)-1)
+					{
 					for (i = 0; i < argc; ++i)
 						if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 							goto err;
@@ -1598,9 +1539,8 @@ invoke_cattr_funsym_argv:
 					goto pop_unused;
 				}
 				symid = asm_newmodule(DeeModule_GetDeemon());
-				if
-					unlikely(symid < 0)
-				goto err; /* Call as an InstanceMethod */
+				if unlikely(symid < 0)
+					goto err; /* Call as an InstanceMethod */
 				if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 					goto err;
 				/* Fallthrough to invoke the InstanceMethod normally. */
@@ -1621,9 +1561,8 @@ got_method:
 				break;
 			if (!(current_basescope->bs_flags & CODE_FTHISCALL))
 				break;
-			if
-				unlikely(argc >= (uint8_t)-1)
-			break;
+			if unlikely(argc >= (uint8_t)-1)
+				break;
 			ASSERT(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
 			/* Call to the current or surrounding function, when
 			 * that function is defined to be a this-call function.
@@ -1659,14 +1598,12 @@ got_method:
 			int32_t attrid;
 			DREF DeeObject *name_ob;
 			name_ob = DeeString_New(name);
-			if
-				unlikely(!name_ob)
-			goto err;
+			if unlikely(!name_ob)
+				goto err;
 			attrid = asm_newconst(name_ob);
 			Dee_Decref(name_ob);
-			if
-				unlikely(attrid < 0)
-			goto err;
+			if unlikely(attrid < 0)
+				goto err;
 			/* call to some other object. */
 			if (asm_gpush_constexpr(DeeObjMethod_SELF(func->a_constexpr)))
 				goto err;
@@ -1685,9 +1622,8 @@ got_method:
 	    !(func->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS))) {
 		struct ast *function_self = func->a_operator.o_op0;
 		struct ast *function_attr = func->a_operator.o_op1;
-		if
-			unlikely(!function_attr)
-		goto generic_call;
+		if unlikely(!function_attr)
+			goto generic_call;
 		/* Call to an attribute with stack-based argument list. */
 		if (function_attr->a_type == AST_CONSTEXPR &&
 		    DeeString_Check(function_attr->a_constexpr)) {
@@ -1731,9 +1667,8 @@ check_getattr_base_symbol_class_argv:
 						if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 							goto err;
 					attrid = asm_newconst(function_attr->a_constexpr);
-					if
-						unlikely(attrid < 0)
-					goto err;
+					if unlikely(attrid < 0)
+						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcallattr_this_const((uint16_t)attrid, argc))
@@ -1756,9 +1691,8 @@ check_getattr_base_symbol_class_argv:
 					} else {
 						module_id = asm_msymid(sym);
 					}
-					if
-						unlikely(module_id < 0)
-					goto err;
+					if unlikely(module_id < 0)
+						goto err;
 					/* Do a call to an external symbol. `ASM_CALL_EXTERN' */
 					for (i = 0; i < argc; ++i)
 						if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
@@ -1788,13 +1722,11 @@ check_getattr_base_symbol_class_argv:
 					/* We are allowed to reference the base-symbol! */
 					type_rid = asm_rsymid(type_expr->a_sym);
 do_perform_supercallattr_argv:
-					if
-						unlikely(type_rid < 0)
-					goto err;
+					if unlikely(type_rid < 0)
+						goto err;
 					attrid = asm_newconst((DeeObject *)function_attr->a_constexpr);
-					if
-						unlikely(attrid < 0)
-					goto err;
+					if unlikely(attrid < 0)
+						goto err;
 					for (i = 0; i < argc; ++i)
 						if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))
 							goto err;
@@ -1812,9 +1744,8 @@ do_perform_supercallattr_argv:
 					 * an explicit reference to it. */
 					struct symbol *deemon_symbol;
 					deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
-					if
-						unlikely(!deemon_symbol)
-					goto err;
+					if unlikely(!deemon_symbol)
+						goto err;
 					if (deemon_symbol != ASM_BIND_DEEMON_EXPORT_NOTFOUND) {
 						type_rid = asm_rsymid(deemon_symbol);
 						goto do_perform_supercallattr_argv;
@@ -1823,9 +1754,8 @@ do_perform_supercallattr_argv:
 			}
 			/* call to some other object. */
 			attrid = asm_newconst(function_attr->a_constexpr);
-			if
-				unlikely(attrid < 0)
-			goto err;
+			if unlikely(attrid < 0)
+				goto err;
 			if (ast_genasm(function_self, ASM_G_FPUSHRES))
 				goto err;
 			for (i = 0; i < argc; ++i)
@@ -1900,20 +1830,17 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 			int32_t attrid;
 			DREF DeeObject *name_ob;
 			name_ob = DeeString_New(name);
-			if
-				unlikely(!name_ob)
-			goto err;
+			if unlikely(!name_ob)
+				goto err;
 			attrid = asm_newconst(name_ob);
 			Dee_Decref(name_ob);
-			if
-				unlikely(attrid < 0)
-			goto err;
+			if unlikely(attrid < 0)
+				goto err;
 			if (kwds->a_type == AST_CONSTEXPR) {
 				int32_t kwd_cid;
 				kwd_cid = asm_newconst(kwds->a_constexpr);
-				if
-					unlikely(kwd_cid < 0)
-				goto err;
+				if unlikely(kwd_cid < 0)
+					goto err;
 				if (args->a_type == AST_MULTIPLE &&
 				    AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
 				    args->a_multiple.m_astc <= UINT8_MAX &&
@@ -2032,13 +1959,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		    DeeString_Check(name->a_constexpr)) {
 			int32_t kwd_cid, att_cid;
 			kwd_cid = asm_newconst(kwds->a_constexpr);
-			if
-				unlikely(kwd_cid < 0)
-			goto err;
+			if unlikely(kwd_cid < 0)
+				goto err;
 			att_cid = asm_newconst(name->a_constexpr);
-			if
-				unlikely(att_cid < 0)
-			goto err;
+			if unlikely(att_cid < 0)
+				goto err;
 			if (args->a_type == AST_MULTIPLE &&
 			    AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
 			    args->a_multiple.m_astc <= UINT8_MAX &&
@@ -2151,9 +2076,8 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 	if (kwds->a_type == AST_CONSTEXPR) {
 		int32_t kwd_cid;
 		kwd_cid = asm_newconst(kwds->a_constexpr);
-		if
-			unlikely(kwd_cid < 0)
-		goto err;
+		if unlikely(kwd_cid < 0)
+			goto err;
 		if (args->a_type == AST_MULTIPLE &&
 		    AST_FMULTIPLE_ISSEQUENCE(args->a_flag) &&
 		    args->a_multiple.m_astc <= UINT8_MAX &&

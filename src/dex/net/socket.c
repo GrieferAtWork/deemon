@@ -144,9 +144,8 @@ DeeSocket_GetSockName(DeeSocketObject *__restrict self,
 again:
 	socket_read(self);
 	state = self->s_state;
-	if
-		unlikely(!(state & (SOCKET_FBOUND | SOCKET_FCONNECTED | SOCKET_FOPENED)))
-	{
+	if unlikely(!(state & (SOCKET_FBOUND | SOCKET_FCONNECTED | SOCKET_FOPENED)))
+		{
 		socket_endread(self);
 		if (state & (SOCKET_FBINDING | SOCKET_FCONNECTING)) {
 			/* Socket is currently binding/connecting (wait a bit more) */
@@ -172,9 +171,8 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		error = getsockname(self->s_socket, &result->sa, &addrlen);
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(error < 0)
-		{
+		if unlikely(error < 0)
+			{
 			socket_endread(self);
 			if (throw_error) {
 				DBG_ALIGNMENT_DISABLE();
@@ -230,9 +228,8 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 	}
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if
-		unlikely(ok && throw_error)
-	{
+	if unlikely(ok && throw_error)
+		{
 		neterrno_t err;
 		DBG_ALIGNMENT_DISABLE();
 		err = GET_NET_ERROR();
@@ -260,12 +257,10 @@ PRIVATE DREF DeeSockAddrObject *DCALL
 socket_sockname_get(Socket *__restrict self) {
 	DREF DeeSockAddrObject *result;
 	result = DeeObject_MALLOC(DeeSockAddrObject);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(DeeSocket_GetSockName(self, &result->sa_addr, true))
-	goto err_r;
+	if unlikely(!result)
+		goto done;
+	if unlikely(DeeSocket_GetSockName(self, &result->sa_addr, true))
+		goto err_r;
 	DeeObject_Init(result, &DeeSockAddr_Type);
 done:
 	return result;
@@ -280,12 +275,10 @@ socket_peeraddr_get(Socket *__restrict self) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	result = DeeObject_MALLOC(DeeSockAddrObject);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(DeeSocket_GetPeerAddr(self, &result->sa_addr, true))
-	goto err_r;
+	if unlikely(!result)
+		goto done;
+	if unlikely(DeeSocket_GetPeerAddr(self, &result->sa_addr, true))
+		goto err_r;
 	DeeObject_Init(result, &DeeSockAddr_Type);
 done:
 	return result;
@@ -333,9 +326,8 @@ socket_close(Socket *__restrict self, size_t argc,
 	    !DeeString_IsEmpty(shutdown_mode)) {
 		int error, mode;
 		uint16_t new_state;
-		if
-			unlikely(get_shutdown_modeof(shutdown_mode, &mode))
-		goto err;
+		if unlikely(get_shutdown_modeof(shutdown_mode, &mode))
+			goto err;
 		/* First of: acquire read-access and call shutdown(). */
 		if (mode == SHUT_RD) {
 			new_state = SOCKET_FSHUTDOWN_R;
@@ -358,9 +350,8 @@ again_shutdown:
 		}
 		/* We'll have to do the shutdown. */
 		error = socket_do_shutdown(self, mode);
-		if
-			unlikely(error < 0)
-		{
+		if unlikely(error < 0)
+			{
 			DBG_ALIGNMENT_DISABLE();
 			error = GET_NET_ERROR();
 			DBG_ALIGNMENT_ENABLE();
@@ -404,9 +395,8 @@ socket_shutdown(Socket *__restrict self, size_t argc,
 	    !DeeString_IsEmpty(shutdown_mode)) {
 		int error, mode;
 		uint16_t new_state;
-		if
-			unlikely(get_shutdown_modeof(shutdown_mode, &mode))
-		goto err;
+		if unlikely(get_shutdown_modeof(shutdown_mode, &mode))
+			goto err;
 		/* First of: acquire read-access and call shutdown(). */
 		if (mode == SHUT_RD) {
 			new_state = SOCKET_FSHUTDOWN_R;
@@ -429,9 +419,8 @@ again_shutdown:
 		}
 		/* Actually do the shutdown. */
 		error = socket_do_shutdown(self, mode);
-		if
-			unlikely(error < 0)
-		{
+		if unlikely(error < 0)
+			{
 			DBG_ALIGNMENT_DISABLE();
 			error = GET_NET_ERROR();
 			DBG_ALIGNMENT_ENABLE();
@@ -497,9 +486,8 @@ again:
 	/* Do the bind system call. */
 	error = bind(self->s_socket, (struct sockaddr *)addr, (socklen_t)SockAddr_Sizeof(addr->sa.sa_family, self->s_proto));
 	DBG_ALIGNMENT_ENABLE();
-	if
-		likely(error >= 0)
-	{
+	if likely(error >= 0)
+		{
 		/* Save the (now) active socket address. */
 		memcpy(&self->s_sockaddr, addr, sizeof(SockAddr));
 		COMPILER_WRITE_BARRIER();
@@ -508,9 +496,8 @@ again:
 	/* Unset the binding-flag. */
 	state = ATOMIC_FETCHAND(self->s_state, ~SOCKET_FBINDING);
 	socket_endread(self);
-	if
-		likely(error >= 0)
-	return 0;
+	if likely(error >= 0)
+		return 0;
 	DBG_ALIGNMENT_DISABLE();
 	error_code = GET_NET_ERROR();
 	DBG_ALIGNMENT_ENABLE();
@@ -651,9 +638,8 @@ restart_select:
 				DBG_ALIGNMENT_DISABLE();
 				error = select(self->s_socket + 1, NULL, &wfds, NULL, &timeout);
 				DBG_ALIGNMENT_ENABLE();
-				if
-					unlikely(error <= 0)
-				{
+				if unlikely(error <= 0)
+					{
 					if (error == 0)
 						goto restart_select;
 					DBG_ALIGNMENT_DISABLE();
@@ -674,9 +660,8 @@ restart_select:
 			               (char *)&error, &errlen))
 				error = 0;
 			DBG_ALIGNMENT_ENABLE();
-			if
-				unlikely(error)
-			goto err_connect_failure;
+			if unlikely(error)
+				goto err_connect_failure;
 		}
 	}
 	ATOMIC_FETCHOR(self->s_state, SOCKET_FCONNECTED | SOCKET_FHASSOCKADDR);
@@ -768,9 +753,8 @@ DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog) {
 	if (max_backlog < 0) {
 		max_backlog = get_default_backlog();
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(max_backlog < 0)
-		goto err;
+		if unlikely(max_backlog < 0)
+			goto err;
 	}
 again:
 	if (DeeThread_CheckInterrupt())
@@ -789,15 +773,13 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	error = listen(self->s_socket, max_backlog);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		likely(error >= 0)
-	ATOMIC_FETCHOR(self->s_state, SOCKET_FLISTENING);
+	if likely(error >= 0)
+		ATOMIC_FETCHOR(self->s_state, SOCKET_FLISTENING);
 	/* Unset the binding-flag. */
 	state = ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSTARTLISTENING);
 	socket_endread(self);
-	if
-		likely(error >= 0)
-	return 0;
+	if likely(error >= 0)
+		return 0;
 	DBG_ALIGNMENT_DISABLE();
 	error_code = GET_NET_ERROR();
 	DBG_ALIGNMENT_ENABLE();
@@ -1275,9 +1257,8 @@ retry_timeout:
 		if (DeeThread_CheckInterrupt())
 			goto err_nounlock;
 		now = DeeThread_GetTimeMicroSeconds();
-		if
-			unlikely(now >= end_time)
-		goto send_timeout_nounlock;
+		if unlikely(now >= end_time)
+			goto send_timeout_nounlock;
 		socket_read(self);
 #ifdef CONFIG_HOST_WINDOWS
 		{
@@ -1395,9 +1376,8 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to send data. */
 			result = socket_configure_send(self);
-			if
-				unlikely(result)
-			{
+			if unlikely(result)
+				{
 				socket_endwrite(self);
 				err_configure_send(self);
 				goto err;
@@ -1410,16 +1390,14 @@ again:
 	result = wait_for_send(self, end_time);
 	/* NOTE: in the event of a timeout or error,
 	 *      `wait_for_send()' will have unlocked the socket. */
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 	DBG_ALIGNMENT_DISABLE();
 	result = send(self->s_socket, buf, bufsize, flags);
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if
-		unlikely(result < 0)
-	{
+	if unlikely(result < 0)
+		{
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1501,9 +1479,8 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to receive data. */
 			result = socket_configure_recv(self);
-			if
-				unlikely(result)
-			{
+			if unlikely(result)
+				{
 				socket_endwrite(self);
 				err_configure_recv(self);
 				goto err;
@@ -1516,16 +1493,14 @@ again:
 	result = wait_for_recv(self, end_time);
 	/* NOTE: in the event of a timeout or error,
 	 *      `wait_for_recv()' will have unlocked the socket. */
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 	DBG_ALIGNMENT_DISABLE();
 	result = recv(self->s_socket, buf, bufsize, flags);
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if
-		unlikely(result < 0)
-	{
+	if unlikely(result < 0)
+		{
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1615,9 +1590,8 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to send data. */
 			result = socket_configure_send(self);
-			if
-				unlikely(result)
-			{
+			if unlikely(result)
+				{
 				socket_endwrite(self);
 				err_configure_send(self);
 				goto err;
@@ -1630,17 +1604,15 @@ again:
 	result = wait_for_send(self, end_time);
 	/* NOTE: in the event of a timeout or error,
 	 *      `wait_for_send()' will have unlocked the socket. */
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 	DBG_ALIGNMENT_DISABLE();
 	result = sendto(self->s_socket, buf, bufsize, flags, &target->sa,
 	                SockAddr_Sizeof(target->sa.sa_family, self->s_proto));
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if
-		unlikely(result < 0)
-	{
+	if unlikely(result < 0)
+		{
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1746,9 +1718,8 @@ again:
 			 * >> Unless overwritten by user-configurations, the socket
 			 *    should not be blocking when attempting to receive data. */
 			result = socket_configure_recv(self);
-			if
-				unlikely(result)
-			{
+			if unlikely(result)
+				{
 				socket_endwrite(self);
 				err_configure_recv(self);
 				goto err;
@@ -1761,16 +1732,14 @@ again:
 	result = wait_for_recv(self, end_time);
 	/* NOTE: in the event of a timeout or error,
 	 *      `wait_for_recv()' will have unlocked the socket. */
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 	DBG_ALIGNMENT_DISABLE();
 	result = recvfrom(self->s_socket, buf, bufsize, flags, &source->sa, &length);
 	DBG_ALIGNMENT_ENABLE();
 	socket_endread(self);
-	if
-		unlikely(result < 0)
-	{
+	if unlikely(result < 0)
+		{
 		neterrno_t error;
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
@@ -1860,9 +1829,8 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 			/* Variable-length buffer. */
 			for (;;) {
 				uint8_t *part = bytes_printer_alloc(&printer, chunksize);
-				if
-					unlikely(!part)
-				goto err_printer;
+				if unlikely(!part)
+					goto err_printer;
 				recv_length = DeeSocket_Recv(self, timeout_microseconds, part, chunksize, flags);
 				if (recv_length == -2) {
 					/* A timeout during the first pass must cause ITER_DONE to be returned. */
@@ -1873,9 +1841,8 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 					/* Handle timeout as end-of-data. */
 					recv_length = 0;
 				}
-				if
-					unlikely(recv_length < 0)
-				goto err_printer;
+				if unlikely(recv_length < 0)
+					goto err_printer;
 				/* Release unused data. */
 				bytes_printer_release(&printer, chunksize - (size_t)recv_length);
 				/* Stop trying when no more data can be read. */
@@ -1895,18 +1862,16 @@ err_printer:
 	}
 	/* Fixed-length buffer. */
 	result = DeeBytes_NewBufferUninitialized(max_bufsize);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	recv_length = source ? DeeSocket_RecvFrom(self, timeout_microseconds,
 	                                          DeeBytes_DATA(result),
 	                                          max_bufsize, flags, source)
 	                     : DeeSocket_Recv(self, timeout_microseconds,
 	                                      DeeBytes_DATA(result),
 	                                      max_bufsize, flags);
-	if
-		unlikely(recv_length < 0)
-	{
+	if unlikely(recv_length < 0)
+		{
 		Dee_DecrefDokill(result);
 		if (recv_length == -2)
 			return ITER_DONE; /* Timeout. */
@@ -1927,8 +1892,7 @@ PRIVATE DREF DeeObject *DCALL
 socket_bind(Socket *__restrict self, size_t argc,
             DeeObject **__restrict argv) {
 	SockAddr addr;
-	if
-		unlikely(SockAddr_FromArgv(&addr,
+	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
 		                           self->s_proto,
 		                           self->s_type,
@@ -1936,9 +1900,8 @@ socket_bind(Socket *__restrict self, size_t argc,
 		                           argv))
 	goto err;
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(DeeSocket_Bind(self, &addr))
-	goto err;
+	if unlikely(DeeSocket_Bind(self, &addr))
+		goto err;
 	return_none;
 err:
 	DBG_ALIGNMENT_ENABLE();
@@ -1949,8 +1912,7 @@ PRIVATE DREF DeeObject *DCALL
 socket_connect(Socket *__restrict self, size_t argc,
                DeeObject **__restrict argv) {
 	SockAddr addr;
-	if
-		unlikely(SockAddr_FromArgv(&addr,
+	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
 		                           self->s_proto,
 		                           self->s_type,
@@ -1958,9 +1920,8 @@ socket_connect(Socket *__restrict self, size_t argc,
 		                           argv))
 	goto err;
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(DeeSocket_Connect(self, &addr))
-	goto err;
+	if unlikely(DeeSocket_Connect(self, &addr))
+		goto err;
 	return_none;
 err:
 	DBG_ALIGNMENT_ENABLE();
@@ -1973,9 +1934,8 @@ socket_listen(Socket *__restrict self, size_t argc,
 	int max_backlog = -1;
 	if (DeeArg_Unpack(argc, argv, "|d:listen", &max_backlog))
 		goto err;
-	if
-		unlikely(DeeSocket_Listen(self, max_backlog))
-	goto err;
+	if unlikely(DeeSocket_Listen(self, max_backlog))
+		goto err;
 	return_none;
 err:
 	return NULL;
@@ -1986,15 +1946,13 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout) {
 	DREF Socket *result;
 	int error;
 	result = DeeObject_MALLOC(Socket);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	error = DeeSocket_Accept(self, timeout,
 	                         &result->s_socket,
 	                         &result->s_peeraddr);
-	if
-		unlikely(error < 0)
-	goto err_r;
+	if unlikely(error < 0)
+		goto err_r;
 	if (error > 0) {
 		DeeObject_FREE(result);
 		return_none; /* Timeout */
@@ -2132,9 +2090,8 @@ socket_recvinto(Socket *__restrict self, size_t argc,
 	                        buffer.bb_size,
 	                        flags);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -2191,20 +2148,17 @@ socket_recvfrom(Socket *__restrict self, size_t argc,
 	}
 	/* Create the socket address object that's going to be returned. */
 	result_addr = DeeObject_MALLOC(DeeSockAddrObject);
-	if
-		unlikely(!result_addr)
-	goto err;
+	if unlikely(!result_addr)
+		goto err;
 	/* Actually receive the data. */
 	result_text = DeeSocket_RecvData(self, timeout, max_size, flags,
 	                                 &result_addr->sa_addr);
-	if
-		unlikely(!result_text)
-	goto err_addr;
+	if unlikely(!result_text)
+		goto err_addr;
 	/* Create a new tuple to package the 2 objects. */
 	result = DeeTuple_NewUninitialized(2);
-	if
-		unlikely(!result)
-	goto err_text;
+	if unlikely(!result)
+		goto err_text;
 	if (result_text == ITER_DONE) {
 		/* A somewhat different story: must return (none,"") */
 		DeeObject_FREE(result_addr);
@@ -2267,9 +2221,8 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
 	}
 	/* Create the socket address object that's going to be returned. */
 	result_addr = DeeObject_MALLOC(DeeSockAddrObject);
-	if
-		unlikely(!result_addr)
-	goto err;
+	if unlikely(!result_addr)
+		goto err;
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err_addr;
 	result_size = DeeSocket_RecvFrom(self,
@@ -2279,14 +2232,12 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
 	                                 flags,
 	                                 &result_addr->sa_addr);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
-	if
-		unlikely(result_size < 0)
-	goto err_addr;
+	if unlikely(result_size < 0)
+		goto err_addr;
 	/* Create a new tuple to package the 2 objects. */
 	result = DeeTuple_NewUninitialized(2);
-	if
-		unlikely(!result)
-	goto err_addr;
+	if unlikely(!result)
+		goto err_addr;
 	if (result_size == 0) {
 		/* A somewhat different story: must return (none,"") */
 		DeeObject_FREE(result_addr);
@@ -2297,9 +2248,8 @@ socket_recvfrominto(Socket *__restrict self, size_t argc,
 	} else {
 		DREF DeeObject *result_size_ob;
 		result_size_ob = DeeInt_NewSize((size_t)result_size);
-		if
-			unlikely(!result_size_ob)
-		{
+		if unlikely(!result_size_ob)
+			{
 			DeeTuple_FreeUninitialized(result);
 			goto err_addr;
 		}
@@ -2357,9 +2307,8 @@ socket_send(Socket *__restrict self, size_t argc,
 	                        buffer.bb_size,
 	                        flags);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
-	if
-		unlikely(result < 0)
-	{
+	if unlikely(result < 0)
+		{
 		if (result != -2)
 			goto err;
 		result = 0;
@@ -2431,9 +2380,8 @@ socket_sendto(Socket *__restrict self, size_t argc,
 	                          flags,
 	                          &target_addr);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
-	if
-		unlikely(result < 0)
-	{
+	if unlikely(result < 0)
+		{
 		if (result != -2)
 			goto err;
 		result = 0;
@@ -2480,9 +2428,8 @@ socket_wasshutdown(Socket *__restrict self,
 	if (DeeString_Check(shutdown_mode) &&
 	    DeeString_IsEmpty(shutdown_mode))
 		return_bool(!(state & SOCKET_FOPENED));
-	if
-		unlikely(get_shutdown_modeof(shutdown_mode, &mode))
-	goto err;
+	if unlikely(get_shutdown_modeof(shutdown_mode, &mode))
+		goto err;
 	if (mode == SHUT_RD) {
 		mode = state & SOCKET_FSHUTDOWN_R;
 	} else if (mode == SHUT_WR) {

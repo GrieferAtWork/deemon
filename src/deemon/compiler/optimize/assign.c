@@ -67,9 +67,8 @@ INTERN int (DCALL ast_assign)(struct ast *__restrict self,
 		temp->a_class.c_memberc = other->a_class.c_memberc;
 		dst = (struct class_member *)Dee_Malloc(temp->a_class.c_memberc *
 		                                        sizeof(struct class_member));
-		if
-			unlikely(!dst)
-		goto err;
+		if unlikely(!dst)
+			goto err;
 		temp->a_class.c_base = other->a_class.c_base;
 		temp->a_class.c_desc = other->a_class.c_desc;
 		ast_xincref(temp->a_class.c_base);
@@ -137,9 +136,8 @@ do_xcopy_3:
 		end = (iter = other->a_multiple.m_astv) + other->a_multiple.m_astc;
 		dst = (DREF struct ast **)Dee_Malloc(temp->a_multiple.m_astc *
 		                                     sizeof(DREF struct ast *));
-		if
-			unlikely(!dst)
-		goto err;
+		if unlikely(!dst)
+			goto err;
 		temp->a_multiple.m_astv = dst;
 		for (; iter != end; ++iter, ++dst) {
 			*dst = *iter;
@@ -155,9 +153,8 @@ do_xcopy_3:
 		end = (iter = other->a_try.t_catchv) + other->a_try.t_catchc;
 		dst = (struct catch_expr *)Dee_Malloc(temp->a_try.t_catchc *
 		                                      sizeof(struct catch_expr));
-		if
-			unlikely(!dst)
-		goto err;
+		if unlikely(!dst)
+			goto err;
 		temp->a_try.t_catchv = dst;
 		for (; iter != end; ++iter, ++dst) {
 			*dst = *iter;
@@ -241,9 +238,8 @@ INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
 	if (self->a_scope == other->a_scope)
 		return ast_assign(self, other);
 	elemv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-	if
-		unlikely(!elemv)
-	return -1;
+	if unlikely(!elemv)
+		return -1;
 	elemv[0] = other;
 	ast_incref(other);
 	if (self != other) {
@@ -266,9 +262,8 @@ INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
 INTERN struct ast *DCALL
 ast_setscope_and_ddi(struct ast *self,
                      struct ast *__restrict src) {
-	if
-		unlikely(!self)
-	return NULL;
+	if unlikely(!self)
+		return NULL;
 	Dee_Incref(src->a_scope);
 	Dee_Decref(self->a_scope);
 	/* Override the effective scope of the AST. */

@@ -39,9 +39,8 @@ ast_parse_assert(bool needs_parenthesis) {
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 	message = NULL;
 	if (tok == '(') {
 		/* Special case: We must be able to handle both of these:
@@ -49,24 +48,20 @@ ast_parse_assert(bool needs_parenthesis) {
 		 * >> ASSERT(foo == bar, "Error");
 		 */
 		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (!needs_parenthesis) {
 			result = ast_parse_postexpr(result);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 		}
 		if (!needs_parenthesis && tok == ',') {
 			/* The message was passed individually. */
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
-			if
-				unlikely(!message)
-			goto err_r;
+			if unlikely(!message)
+				goto err_r;
 		} else if (result->a_type == AST_MULTIPLE &&
 		           result->a_flag == AST_FMULTIPLE_TUPLE &&
 		           result->a_multiple.m_astc >= 2) {
@@ -84,17 +79,14 @@ ast_parse_assert(bool needs_parenthesis) {
 		    WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
 			goto err;
 		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (tok == ',') {
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
-			if
-				unlikely(!message)
-			goto err_r;
+			if unlikely(!message)
+				goto err_r;
 		}
 	}
 	/* Create the assert branch. */
@@ -126,9 +118,8 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 	message = NULL;
 	if (tok == '(') {
 		/* Special case: We must be able to handle both of these:
@@ -136,9 +127,8 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 		 * >> ASSERT(foo == bar, "Error");
 		 */
 		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (result->a_type == AST_MULTIPLE &&
 		    result->a_flag == AST_FMULTIPLE_TUPLE &&
 		    result->a_multiple.m_astc >= 2) {
@@ -155,17 +145,14 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 			*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
 	} else {
 		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (tok == ',') {
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
-			if
-				unlikely(!message)
-			goto err_r;
+			if unlikely(!message)
+				goto err_r;
 		}
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_NO;

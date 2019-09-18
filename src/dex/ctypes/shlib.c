@@ -92,36 +92,31 @@ shlib_init(Shlib *__restrict self, size_t argc,
 		if (DeeObject_AssertTypeExact((DeeObject *)cc_name, &DeeString_Type))
 			goto err;
 		self->sh_defcc = cc_lookup(DeeString_STR(cc_name));
-		if
-			unlikely(self->sh_defcc == CC_INVALID)
-		goto err;
+		if unlikely(self->sh_defcc == CC_INVALID)
+			goto err;
 #endif /* !CONFIG_NO_CFUNCTION */
 	}
 
 #ifdef USE_LOADLIBRARY
 	{
 		LPWSTR wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
-		if
-			unlikely(!wname)
-		goto err;
+		if unlikely(!wname)
+			goto err;
 		self->sh_lib = LoadLibraryW(wname);
 		if (!self->sh_lib && nt_IsUncError(GetLastError())) {
 			name = (DeeStringObject *)nt_FixUncPath((DeeObject *)name);
-			if
-				unlikely(!name)
-			goto err;
+			if unlikely(!name)
+				goto err;
 			wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
-			if
-				unlikely(!wname)
-			{
+			if unlikely(!wname)
+				{
 				Dee_Decref(name);
 				goto err;
 			}
 			self->sh_lib = LoadLibraryW(wname);
 			Dee_Decref(name);
-			if
-				unlikely(!self->sh_lib)
-			{
+			if unlikely(!self->sh_lib)
+				{
 				DWORD error = GetLastError();
 				if (nt_IsFileNotFound(error)) {
 					DeeError_SysThrowf(&DeeError_FileNotFound, error,
@@ -236,9 +231,8 @@ LOCAL DREF DeeSTypeObject *DCALL get_void_pointer(void) {
 	}
 	rwlock_endread(&static_type_lock);
 	result = (DREF DeeSTypeObject *)DeeSType_Pointer(&DeeCVoid_Type);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	rwlock_write(&static_type_lock);
 	if (!void_ptr) {
 		Dee_Incref((DeeObject *)result);
@@ -260,21 +254,18 @@ shlib_getitem(Shlib *__restrict self,
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	symaddr = shlib_dlsym(self, DeeString_STR(name));
-	if
-		unlikely(!symaddr)
-	{
+	if unlikely(!symaddr)
+		{
 		DeeError_Throwf(&DeeError_KeyError,
 		                "No export named %r", name);
 		goto err;
 	}
 	result_type = get_void_pointer();
-	if
-		unlikely(!result_type)
-	goto err;
+	if unlikely(!result_type)
+		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto err_type;
+	if unlikely(!result)
+		goto err_type;
 	DeeObject_InitNoref(result, (DeeTypeObject *)result_type);
 	result->p_ptr.ptr = symaddr;
 	return (DREF DeeObject *)result;
@@ -291,22 +282,19 @@ shlib_getattr(Shlib *__restrict self,
 	DREF DeeSTypeObject *result_type;
 	void *symaddr;
 	symaddr = shlib_dlsym(self, DeeString_STR(name));
-	if
-		unlikely(!symaddr)
-	{
+	if unlikely(!symaddr)
+		{
 		DeeError_Throwf(&DeeError_AttributeError,
 		                "No export named %r", name);
 		goto err;
 	}
 #ifdef CONFIG_NO_CFUNCTION
 	result_type = (DREF DeeSTypeObject *)DeeSType_Pointer(&DeeCVoid_Type);
-	if
-		unlikely(!result_type)
-	goto err;
+	if unlikely(!result_type)
+		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		Dee_Decref((DeeObject *)result_type);
 		goto err;
 	}
@@ -319,14 +307,12 @@ shlib_getattr(Shlib *__restrict self,
 		                                                        (cc_t)((unsigned int)self->sh_defcc |
 		                                                               (unsigned int)CC_FVARARGS),
 		                                                        0, NULL, true);
-		if
-			unlikely(!result_type)
-		goto err;
+		if unlikely(!result_type)
+			goto err;
 		new_type = (DREF DeeSTypeObject *)DeeSType_Pointer(result_type);
 		Dee_Decref_unlikely((DeeObject *)result_type);
-		if
-			unlikely(!new_type)
-		goto err;
+		if unlikely(!new_type)
+			goto err;
 		result_type = new_type;
 		/* Save the reference in the shlib descriptor. */
 		if (!ATOMIC_CMPXCH(self->sh_vfunptr, NULL, result_type))
@@ -334,9 +320,8 @@ shlib_getattr(Shlib *__restrict self,
 		ASSERT(self->sh_vfunptr == result_type);
 	}
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	DeeObject_Init(result, (DeeTypeObject *)result_type);
 #endif /* !CONFIG_NO_CFUNCTION */
 	result->p_ptr.ptr = symaddr;
@@ -367,13 +352,11 @@ shlib_base(Shlib *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, ":base"))
 		goto err;
 	result_type = get_void_pointer();
-	if
-		unlikely(!result_type)
-	goto err;
+	if unlikely(!result_type)
+		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto err_type;
+	if unlikely(!result)
+		goto err_type;
 	DeeObject_InitNoref(result, (DeeTypeObject *)result_type);
 	/* Return the base address of the shared library. */
 	result->p_ptr.ptr = (void *)self->sh_lib;

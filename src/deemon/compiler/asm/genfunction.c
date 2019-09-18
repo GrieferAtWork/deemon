@@ -59,9 +59,8 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	 * register it as a constant variable of our own code. */
 	current_basescope = prev_scope->s_base;
 	current_scope     = prev_scope;
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Save the restore-code-object for the event of the linker having to be reset. */
 	function_ast->a_function.f_scope->bs_restore = result;
 	return result;
@@ -76,9 +75,8 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 	uint16_t i, refc;
 	struct asm_symbol_ref *refv;
 	code = ast_assemble_function(function_ast, &refc, &refv);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	if (asm_putddi(function_ast))
 		goto err;
 	if (!refc) {
@@ -89,21 +87,18 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 		Dee_Free(refv);
 		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
 		Dee_Decref(code);
-		if
-			unlikely(!function)
-		goto err;
+		if unlikely(!function)
+			goto err;
 		cid = asm_newconst((DeeObject *)function);
 		Dee_Decref(function);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		return asm_gpush_const((uint16_t)cid);
 	}
 	cid = asm_newconst((DeeObject *)code);
 	Dee_Decref(code);
-	if
-		unlikely(cid < 0)
-	goto err_refv;
+	if unlikely(cid < 0)
+		goto err_refv;
 	/* Push referenced symbols. */
 	for (i = 0; i < refc; ++i) {
 		refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC | SYMBOL_FALLOCREF);
@@ -132,9 +127,8 @@ asm_gmov_function(struct symbol *__restrict dst,
 	uint16_t i, refc;
 	struct asm_symbol_ref *refv;
 	code = ast_assemble_function(function_ast, &refc, &refv);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	if (asm_putddi(function_ast))
 		goto err;
 	if (!refc) {
@@ -145,23 +139,20 @@ asm_gmov_function(struct symbol *__restrict dst,
 		Dee_Free(refv);
 		function = (DREF DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)code);
 		Dee_Decref(code);
-		if
-			unlikely(!function)
-		goto err;
+		if unlikely(!function)
+			goto err;
 		cid = asm_newconst((DeeObject *)function);
 		Dee_Decref(function);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		if (asm_gprefix_symbol(dst, dst_warn_ast))
 			goto err;
 		return asm_gpush_const_p((uint16_t)cid);
 	}
 	cid = asm_newconst((DeeObject *)code);
 	Dee_Decref(code);
-	if
-		unlikely(cid < 0)
-	goto err_refv;
+	if unlikely(cid < 0)
+		goto err_refv;
 	/* Push referenced symbols. */
 	for (i = 0; i < refc; ++i) {
 		refv[i].sr_sym->s_flag &= ~(SYMBOL_FALLOC | SYMBOL_FALLOCREF);

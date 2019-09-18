@@ -39,9 +39,8 @@ PRIVATE DREF SeqEachOperator *DCALL
 seqeach_makeop0(DeeObject *__restrict seq, uint16_t opname) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(0);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq    = seq;
 	result->so_opname = opname;
 	result->so_opargc = 0;
@@ -56,9 +55,8 @@ seqeach_makeop1(DeeObject *__restrict seq, uint16_t opname,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_0) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(1);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->se_seq       = seq;
 	result->so_opname    = opname;
 	result->so_opargc    = 1;
@@ -77,9 +75,8 @@ seqeach_makeop2(DeeObject *__restrict seq, uint16_t opname,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_1) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(2);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->se_seq       = seq;
 	result->so_opname    = opname;
 	result->so_opargc    = 2;
@@ -115,9 +112,8 @@ PRIVATE int DCALL
 se_deep(SeqEachBase *__restrict self,
         SeqEachBase *__restrict other) {
 	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if
-		unlikely(!self->se_seq)
-	goto err;
+	if unlikely(!self->se_seq)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -247,9 +243,8 @@ PRIVATE DREF SeqEachOperator *DCALL
 se_call(SeqEachBase *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
-	if
-		unlikely(!tuple)
-	goto err;
+	if unlikely(!tuple)
+		goto err;
 	return seqeach_makeop1(self->se_seq, OPERATOR_CALL, tuple);
 err:
 	return NULL;
@@ -260,9 +255,8 @@ se_call_kw(SeqEachBase *__restrict self, size_t argc,
            DeeObject **__restrict argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
-	if
-		unlikely(!tuple)
-	goto err;
+	if unlikely(!tuple)
+		goto err;
 	return kw
 	       ? (Dee_Incref(kw),
 	          seqeach_makeop2(self->se_seq, OPERATOR_CALL, tuple, kw))
@@ -453,9 +447,8 @@ se_enter(SeqEachBase *__restrict self) {
 	DREF DeeObject **elem;
 	size_t i, count;
 	elem = DeeSeq_AsHeapVector(self->se_seq, &count);
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	for (i = 0; i < count; ++i) {
 		if (DeeObject_Enter(elem[i]))
 			goto err_elem_i;
@@ -466,9 +459,8 @@ se_enter(SeqEachBase *__restrict self) {
 	return 0;
 err_elem_i:
 	while (i--) {
-		if
-			unlikely(DeeObject_Leave(elem[i]))
-		DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
+		if unlikely(DeeObject_Leave(elem[i]))
+			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 	}
 	/*err_elem:*/
 	while (count--)
@@ -483,21 +475,18 @@ se_leave(SeqEachBase *__restrict self) {
 	DREF DeeObject **elem;
 	size_t count;
 	elem = DeeSeq_AsHeapVector(self->se_seq, &count);
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	while (count--) {
-		if
-			unlikely(DeeObject_Leave(elem[count]))
-		goto err_elem_count;
+		if unlikely(DeeObject_Leave(elem[count]))
+			goto err_elem_count;
 		Dee_Decref(elem[count]);
 	}
 	Dee_Free(elem);
 	return 0;
 	while (count--) {
-		if
-			unlikely(DeeObject_Leave(elem[count]))
-		DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
+		if unlikely(DeeObject_Leave(elem[count]))
+			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 err_elem_count:
 		Dee_Decref(elem[count]);
 	}
@@ -519,9 +508,8 @@ seqeach_getattr(SeqEachBase *__restrict self,
                 struct string_object *__restrict attr) {
 	DREF SeqEachGetAttr *result;
 	result = DeeObject_MALLOC(SeqEachGetAttr);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq  = self->se_seq;
 	result->sg_attr = attr;
 	Dee_Incref(self->se_seq);
@@ -629,9 +617,8 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_Each(DeeObject *__restrict self) {
 	DREF SeqEachBase *result;
 	result = DeeObject_MALLOC(SeqEachBase);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqEach_Type);
@@ -673,14 +660,12 @@ seo_deep(SeqEachOperator *__restrict self,
          SeqEachOperator *__restrict other) {
 	size_t i;
 	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if
-		unlikely(!self->se_seq)
-	goto err;
+	if unlikely(!self->se_seq)
+		goto err;
 	for (i = 0; i < other->so_opargc; ++i) {
 		self->so_opargv[i] = DeeObject_DeepCopy(other->so_opargv[i]);
-		if
-			unlikely(!self->so_opargv[i])
-		goto err_i;
+		if unlikely(!self->so_opargv[i])
+			goto err_i;
 	}
 	self->so_opname = other->so_opname;
 	self->so_opargc = other->so_opargc;
@@ -704,9 +689,8 @@ seo_init(SeqEachOperator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
-	if
-		unlikely(DeeTuple_SIZE(args) > COMPILER_LENOF(self->so_opargv))
-	{
+	if unlikely(DeeTuple_SIZE(args) > COMPILER_LENOF(self->so_opargv))
+		{
 		DeeError_Throwf(&DeeError_UnpackError,
 		                "Too many operator arguments (%Iu > %Iu)",
 		                (size_t)DeeTuple_SIZE(args),
@@ -715,9 +699,8 @@ seo_init(SeqEachOperator *__restrict self,
 	}
 	if (DeeString_Check(name)) {
 		self->so_opname = Dee_OperatorFromName(NULL, DeeString_STR(name));
-		if
-			unlikely(self->so_opname == (uint16_t)-1)
-		{
+		if unlikely(self->so_opname == (uint16_t)-1)
+			{
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unknown operator %q",
 			                DeeString_STR(name));
@@ -782,9 +765,8 @@ PRIVATE DREF DeeObject *DCALL
 sew_call(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
-	if
-		unlikely(!tuple)
-	goto err;
+	if unlikely(!tuple)
+		goto err;
 	return (DREF DeeObject *)seqeach_makeop1(self, OPERATOR_CALL, tuple);
 err:
 	return NULL;
@@ -795,9 +777,8 @@ sew_call_kw(DeeObject *__restrict self, size_t argc,
             DeeObject **__restrict argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
-	if
-		unlikely(!tuple)
-	goto err;
+	if unlikely(!tuple)
+		goto err;
 	return kw
 	       ? (Dee_Incref(kw),
 	          seqeach_makeop2(self, OPERATOR_CALL, tuple, kw))
@@ -854,32 +835,28 @@ seo_getitem_for_inplace(SeqEachOperator *__restrict self,
                         size_t index, uint16_t operator_name) {
 	DREF DeeObject *result, *baseelem;
 	baseelem = DeeObject_GetItemIndex(self->se_seq, index);
-	if
-		unlikely(!baseelem)
-	goto err;
+	if unlikely(!baseelem)
+		goto err;
 	switch (self->so_opname) {
 
 		/* Only a select few operators can be used for inplace. */
 	case OPERATOR_GETATTR:
-		if
-			unlikely(self->so_opargc < 1)
-		goto err_noimp;
+		if unlikely(self->so_opargc < 1)
+			goto err_noimp;
 		if (DeeObject_AssertTypeExact(self->so_opargv[0], &DeeString_Type))
 			goto err_baseelem;
 		result = DeeObject_GetAttr(baseelem, self->so_opargv[0]);
 		break;
 
 	case OPERATOR_GETITEM:
-		if
-			unlikely(self->so_opargc < 1)
-		goto err_noimp;
+		if unlikely(self->so_opargc < 1)
+			goto err_noimp;
 		result = DeeObject_GetItem(baseelem, self->so_opargv[0]);
 		break;
 
 	case OPERATOR_GETRANGE:
-		if
-			unlikely(self->so_opargc < 2)
-		goto err_noimp;
+		if unlikely(self->so_opargc < 2)
+			goto err_noimp;
 		result = DeeObject_GetRange(baseelem,
 		                            self->so_opargv[0],
 		                            self->so_opargv[1]);
@@ -887,9 +864,8 @@ seo_getitem_for_inplace(SeqEachOperator *__restrict self,
 
 	default: goto err_noimp;
 	}
-	if
-		unlikely(!result)
-	goto err_baseelem;
+	if unlikely(!result)
+		goto err_baseelem;
 	*pbaseelem = baseelem;
 	return result;
 err_noimp:
@@ -1057,9 +1033,8 @@ sew_enter(DeeObject *__restrict self) {
 	DREF DeeObject **elem;
 	size_t i, count;
 	elem = DeeSeq_AsHeapVector(self, &count);
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	for (i = 0; i < count; ++i) {
 		if (DeeObject_Enter(elem[i]))
 			goto err_elem_i;
@@ -1070,9 +1045,8 @@ sew_enter(DeeObject *__restrict self) {
 	return 0;
 err_elem_i:
 	while (i--) {
-		if
-			unlikely(DeeObject_Leave(elem[i]))
-		DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
+		if unlikely(DeeObject_Leave(elem[i]))
+			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 	}
 	/*err_elem:*/
 	while (count--)
@@ -1087,21 +1061,18 @@ sew_leave(DeeObject *__restrict self) {
 	DREF DeeObject **elem;
 	size_t count;
 	elem = DeeSeq_AsHeapVector(self, &count);
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	while (count--) {
-		if
-			unlikely(DeeObject_Leave(elem[count]))
-		goto err_elem_count;
+		if unlikely(DeeObject_Leave(elem[count]))
+			goto err_elem_count;
 		Dee_Decref(elem[count]);
 	}
 	Dee_Free(elem);
 	return 0;
 	while (count--) {
-		if
-			unlikely(DeeObject_Leave(elem[count]))
-		DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
+		if unlikely(DeeObject_Leave(elem[count]))
+			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 err_elem_count:
 		Dee_Decref(elem[count]);
 	}
@@ -1123,9 +1094,8 @@ seqeachw_getattr(DeeObject *__restrict self,
                  struct string_object *__restrict attr) {
 	DREF SeqEachGetAttr *result;
 	result = DeeObject_MALLOC(SeqEachGetAttr);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq  = self;
 	result->sg_attr = attr;
 	Dee_Incref(self);
@@ -1150,14 +1120,12 @@ PRIVATE DREF SeqEachIterator *DCALL
 seo_iter(SeqEachOperator *__restrict self) {
 	DREF SeqEachIterator *result;
 	result = DeeObject_MALLOC(SeqEachIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ei_each = (DREF SeqEachBase *)self;
 	result->ei_iter = DeeObject_IterSelf(((DREF SeqEachBase *)self)->se_seq);
-	if
-		unlikely(!result->ei_iter)
-	goto err_r;
+	if unlikely(!result->ei_iter)
+		goto err_r;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqEachOperatorIterator_Type);
 done:
@@ -1198,9 +1166,8 @@ PRIVATE DREF DeeObject *DCALL
 seo_nsi_getitem(SeqEachOperator *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
-	if
-		likely(result)
-	result = seo_transform(self, result);
+	if likely(result)
+		result = seo_transform(self, result);
 	return result;
 }
 
@@ -1209,9 +1176,8 @@ seo_getitem(SeqEachOperator *__restrict self,
             DeeObject *__restrict index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->se_seq, index);
-	if
-		likely(result)
-	result = seo_transform(self, result);
+	if likely(result)
+		result = seo_transform(self, result);
 	return result;
 }
 
@@ -1323,13 +1289,11 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 PRIVATE int DCALL
 seoi_ctor(SeqEachIterator *__restrict self) {
 	self->ei_each = (DREF SeqEachBase *)DeeObject_NewDefault(&SeqEachOperator_Type);
-	if
-		unlikely(!self->ei_each)
-	goto err;
+	if unlikely(!self->ei_each)
+		goto err;
 	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
-	if
-		unlikely(!self->ei_iter)
-	goto err_each;
+	if unlikely(!self->ei_iter)
+		goto err_each;
 	return 0;
 err_each:
 	Dee_Decref(self->ei_each);
@@ -1345,9 +1309,8 @@ seoi_init(SeqEachIterator *__restrict self,
 	if (DeeObject_AssertTypeExact(self->ei_each, &SeqEachOperator_Type))
 		goto err;
 	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
-	if
-		unlikely(!self->ei_iter)
-	goto err;
+	if unlikely(!self->ei_iter)
+		goto err;
 	Dee_Incref(self->ei_each);
 	return 0;
 err:
@@ -1358,9 +1321,8 @@ PRIVATE int DCALL
 sewi_copy(SeqEachIterator *__restrict self,
           SeqEachIterator *__restrict other) {
 	self->ei_iter = DeeObject_Copy(other->ei_iter);
-	if
-		unlikely(!self->ei_iter)
-	goto err;
+	if unlikely(!self->ei_iter)
+		goto err;
 	self->ei_each = other->ei_each;
 	Dee_Incref(self->ei_each);
 	return 0;
@@ -1372,13 +1334,11 @@ PRIVATE int DCALL
 sewi_deep(SeqEachIterator *__restrict self,
           SeqEachIterator *__restrict other) {
 	self->ei_iter = DeeObject_DeepCopy(other->ei_iter);
-	if
-		unlikely(!self->ei_iter)
-	goto err;
+	if unlikely(!self->ei_iter)
+		goto err;
 	self->ei_each = (DREF SeqEachBase *)DeeObject_DeepCopy((DeeObject *)other->ei_each);
-	if
-		unlikely(!self->ei_each)
-	goto err_iter;
+	if unlikely(!self->ei_each)
+		goto err_iter;
 	return 0;
 err_iter:
 	Dee_Decref(self->ei_iter);
@@ -1524,9 +1484,8 @@ PRIVATE DREF DeeObject *DCALL
 seoi_next(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ei_iter);
-	if
-		likely(ITER_ISOK(result))
-	result = seo_transform((SeqEachOperator *)self->ei_each, result);
+	if likely(ITER_ISOK(result))
+		result = seo_transform((SeqEachOperator *)self->ei_each, result);
 	return result;
 }
 
@@ -1589,9 +1548,8 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
 	DREF SeqEachCallAttr *result;
 	result = (DREF SeqEachCallAttr *)DeeObject_Malloc(COMPILER_OFFSETOF(SeqEachCallAttr, sg_argv) +
 	                                                  (argc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq  = self;
 	result->sg_attr = (DREF struct string_object *)attr;
 	result->sg_argc = argc;
@@ -1617,9 +1575,8 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 		return DeeSeqEach_CallAttr(self, attr, argc, argv);
 	result = (DREF SeqEachCallAttrKw *)DeeObject_Malloc(COMPILER_OFFSETOF(SeqEachCallAttrKw, sg_argv) +
 	                                                    (argc * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->se_seq  = self;
 	result->sg_attr = (DREF struct string_object *)attr;
 	result->sg_kw   = kw;
@@ -1643,9 +1600,8 @@ DeeSeqEach_CallAttrString(DeeObject *__restrict self,
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
-	if
-		unlikely(!attr_ob)
-	goto err;
+	if unlikely(!attr_ob)
+		goto err;
 	result = DeeSeqEach_CallAttr(self,
 	                             (DeeObject *)attr_ob,
 	                             argc,
@@ -1663,9 +1619,8 @@ DeeSeqEach_CallAttrStringLen(DeeObject *__restrict self,
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
-	if
-		unlikely(!attr_ob)
-	goto err;
+	if unlikely(!attr_ob)
+		goto err;
 	result = DeeSeqEach_CallAttr(self,
 	                             (DeeObject *)attr_ob,
 	                             argc,
@@ -1683,9 +1638,8 @@ DeeSeqEach_CallAttrStringKw(DeeObject *__restrict self,
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
-	if
-		unlikely(!attr_ob)
-	goto err;
+	if unlikely(!attr_ob)
+		goto err;
 	result = DeeSeqEach_CallAttrKw(self,
 	                               (DeeObject *)attr_ob,
 	                               argc,
@@ -1704,9 +1658,8 @@ DeeSeqEach_CallAttrStringLenKw(DeeObject *__restrict self,
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
-	if
-		unlikely(!attr_ob)
-	goto err;
+	if unlikely(!attr_ob)
+		goto err;
 	result = DeeSeqEach_CallAttrKw(self,
 	                               (DeeObject *)attr_ob,
 	                               argc,

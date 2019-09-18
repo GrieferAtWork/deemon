@@ -290,9 +290,8 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
                        void const *__restrict needle, size_t needle_length) {
 	uint8_t *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
 	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
 		if (memcmp(candidate, needle, needle_length) == 0)
@@ -463,9 +462,8 @@ LOCAL void *dee_memcasemem(void const *__restrict haystack, size_t haystack_len,
                            void const *__restrict needle, size_t needle_len) {
 	void const *candidate;
 	uint8_t marker1, marker2;
-	if
-		unlikely(!needle_len || needle_len > haystack_len)
-	return NULL;
+	if unlikely(!needle_len || needle_len > haystack_len)
+		return NULL;
 	haystack_len -= needle_len;
 	marker1 = (uint8_t)tolower(*(uint8_t *)needle);
 	marker2 = (uint8_t)toupper(*(uint8_t *)needle);
@@ -484,16 +482,14 @@ LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_len,
                         void const *__restrict needle, size_t needle_len) {
 	void const *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_len || needle_len > haystack_len)
-	return NULL;
+	if unlikely(!needle_len || needle_len > haystack_len)
+		return NULL;
 	haystack_len -= needle_len - 1, marker = *(uint8_t *)needle;
 	while ((candidate = memrchr(haystack, marker, haystack_len)) != NULL) {
 		if (memcmp(candidate, needle, needle_len) == 0)
 			return (void *)candidate;
-		if
-			unlikely(candidate == haystack)
-		break;
+		if unlikely(candidate == haystack)
+			break;
 		haystack_len = (uintptr_t)candidate - (uintptr_t)haystack;
 	}
 	return NULL;
@@ -519,17 +515,15 @@ LOCAL void *dee_memcasermem(void const *__restrict haystack, size_t haystack_len
                             void const *__restrict needle, size_t needle_len) {
 	void const *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_len || needle_len > haystack_len)
-	return NULL;
+	if unlikely(!needle_len || needle_len > haystack_len)
+		return NULL;
 	haystack_len -= needle_len;
 	marker = (uint8_t)tolower(*(uint8_t *)needle);
 	while ((candidate = dee_memlowerrchr(haystack, marker, haystack_len)) != NULL) {
 		if (memcasecmp(candidate, needle, needle_len) == 0)
 			return (void *)candidate;
-		if
-			unlikely(candidate == haystack)
-		break;
+		if unlikely(candidate == haystack)
+			break;
 		haystack_len = (((uintptr_t)candidate) - 1) - (uintptr_t)haystack;
 	}
 	return NULL;
@@ -1256,8 +1250,7 @@ capi_memmem(size_t argc, DeeObject **__restrict argv) {
 		void const *candidate;
 		uint8_t marker;
 		result = NULL;
-		if
-			unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len || needle_len > haystack_len);
 		else {
 			haystack_len -= needle_len;
 			marker = *b.p8;
@@ -1314,8 +1307,7 @@ capi_memcasemem(size_t argc, DeeObject **__restrict argv) {
 		uint8_t marker1;
 		uint8_t marker2;
 		result = NULL;
-		if
-			unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len || needle_len > haystack_len);
 		else {
 			haystack_len -= needle_len;
 			marker1 = (uint8_t)tolower(*b.p8);
@@ -1376,8 +1368,7 @@ capi_memrmem(size_t argc, DeeObject **__restrict argv) {
 		void const *candidate;
 		uint8_t marker;
 		result = NULL;
-		if
-			unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len || needle_len > haystack_len);
 		else {
 			haystack_len -= needle_len - 1;
 			marker = *(uint8_t *)b.ptr;
@@ -1404,9 +1395,8 @@ capi_memrmem(size_t argc, DeeObject **__restrict argv) {
 					result = (void *)candidate;
 					break;
 				}
-				if
-					unlikely(candidate == b.ptr)
-				break;
+				if unlikely(candidate == b.ptr)
+					break;
 				haystack_len = (uintptr_t)candidate - (uintptr_t)a.ptr;
 			}
 		}
@@ -1435,8 +1425,7 @@ capi_memcasermem(size_t argc, DeeObject **__restrict argv) {
 		uint8_t marker1;
 		uint8_t marker2;
 		result = NULL;
-		if
-			unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len || needle_len > haystack_len);
 		else {
 			haystack_len -= needle_len - 1;
 			marker1 = (uint8_t)tolower(*(uint8_t *)b.ptr);
@@ -1470,9 +1459,8 @@ capi_memcasermem(size_t argc, DeeObject **__restrict argv) {
 					result = (void *)candidate;
 					break;
 				}
-				if
-					unlikely(candidate == b.ptr)
-				break;
+				if unlikely(candidate == b.ptr)
+					break;
 				haystack_len = (uintptr_t)candidate - (uintptr_t)a.ptr;
 			}
 		}

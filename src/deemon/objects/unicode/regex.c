@@ -485,9 +485,8 @@ parse_u8(char **ppiter, char *pend,
 		*result += trt->ut_digit;
 		is_first = false;
 	}
-	if
-		unlikely(is_first)
-	{
+	if unlikely(is_first)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Expected a decimal for digit range");
 		goto err;
@@ -512,9 +511,8 @@ parse_digit_range(char *piter, char *pend,
 			} else {
 				if (parse_u8(&piter, pend, phigh))
 					goto err;
-				if
-					unlikely(!*phigh)
-				{
+				if unlikely(!*phigh)
+					{
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Invalid digit matching rule: `<0'");
 					goto err;
@@ -533,9 +531,8 @@ parse_digit_range(char *piter, char *pend,
 			} else {
 				if (parse_u8(&piter, pend, plow))
 					goto err;
-				if
-					unlikely(*plow == 0xff)
-				{
+				if unlikely(*plow == 0xff)
+					{
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Invalid digit matching rule: `>255'");
 					goto err;
@@ -555,9 +552,8 @@ parse_digit_range(char *piter, char *pend,
 		break;
 	}
 	ASSERT(piter <= pend);
-	if
-		unlikely(piter < pend)
-	{
+	if unlikely(piter < pend)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Bad digit matching range string %$q",
 		                (size_t)(pend - piter), piter);
@@ -666,9 +662,8 @@ next:
 		if (rparen[-1] != ')')
 			++content_end;
 		piter = parse_match_count(rparen, pend, &match);
-		if
-			unlikely(!piter)
-		goto err;
+		if unlikely(!piter)
+			goto err;
 		ASSERT(match.mc_min <= match.mc_max);
 		if (content_start[0] == '?') {
 			/* Regex extensions. */
@@ -719,9 +714,8 @@ next:
 					                       REGEX_CONTEXT_FINPAREN |
 					                       REGEX_CONTEXT_FEMPTYOK);
 					if (error != 0) { /* Match or error. */
-						if
-							unlikely(error < 0)
-						goto err;
+						if unlikely(error < 0)
+							goto err;
 						if (content_start[-1] == '!')
 							goto nope;
 						goto next; /* It was able to match an empty string! */
@@ -735,12 +729,10 @@ next:
 						                       REGEX_CONTEXT_FINPAREN |
 						                       REGEX_CONTEXT_FEMPTYOK);
 						if (error != 0) { /* Match or error. */
-							if
-								unlikely(error < 0)
-							goto err;
-							if
-								unlikely((variant_diter != diter) ^ (content_start[-1] == '!'))
-							goto nope; /* The match doesn't end where our datastring begins. */
+							if unlikely(error < 0)
+								goto err;
+							if unlikely((variant_diter != diter) ^ (content_start[-1] == '!'))
+								goto nope; /* The match doesn't end where our datastring begins. */
 							goto next;
 						}
 						--variant_diter;
@@ -751,9 +743,8 @@ next:
 				goto nope;
 
 			case '=':
-				if
-					unlikely(!match.mc_min)
-				{
+				if unlikely(!match.mc_min)
+					{
 					/* Don't allow optional matches, which would mean that the entire lookahead
 					 * was optional in itself. And considering that it's not meant to consume any
 					 * data, it would become a no-op altogether! */
@@ -773,9 +764,8 @@ err_lookahead_must_be_nonzero:
 					                       data,
 					                       REGEX_CONTEXT_FEMPTYOK |
 					                       REGEX_CONTEXT_FINPAREN);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (!error)
 						goto nope; /* Insufficient number of matches */
 					++match_count;
@@ -787,9 +777,8 @@ err_lookahead_must_be_nonzero:
 				 * Useful if you don't want to match anything x followed by y:
 				 * >> print repr "foo foobar".refindall(r"foo");        // { (0, 3), (4, 7) }
 				 * >> print repr "foo foobar".refindall(r"foo(?!bar)"); // { (0, 3) } */
-				if
-					unlikely(!match.mc_min)
-				goto err_lookahead_must_be_nonzero;
+				if unlikely(!match.mc_min)
+					goto err_lookahead_must_be_nonzero;
 				variant_diter = diter;
 				match_count   = 0;
 				/* Lookahead to assert that at the very leas `match.mc_min'  */
@@ -800,9 +789,8 @@ err_lookahead_must_be_nonzero:
 					                       data,
 					                       REGEX_CONTEXT_FEMPTYOK |
 					                       REGEX_CONTEXT_FINPAREN);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (!error)
 						goto next; /* Miss-match found before it would have been too late. */
 					++match_count;
@@ -871,9 +859,8 @@ err_lookahead_must_be_nonzero:
 			error = regex_match_impl(&variant_diter, dend,
 			                         &variant_piter, content_end,
 			                         data, REGEX_CONTEXT_FINPAREN);
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (error == 0) {
 				/* Variant doesn't result in a match. */
 				variant_piter = find_pipe(variant_piter, content_end);
@@ -889,15 +876,13 @@ err_lookahead_must_be_nonzero:
 				error = regex_match_impl(&variant_diter, dend,
 				                         &suffix_piter, pend,
 				                         data, context | REGEX_CONTEXT_FEMPTYOK);
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				if (error) {
 					data->matlen += variant_match_length;
 					*ppiter = suffix_piter;
-					if
-						unlikely(!data->matlen && !(context & REGEX_CONTEXT_FEMPTYOK))
-					return 0;
+					if unlikely(!data->matlen && !(context & REGEX_CONTEXT_FEMPTYOK))
+						return 0;
 					*pditer = variant_diter;
 					return 1;
 				}
@@ -917,14 +902,12 @@ err_lookahead_must_be_nonzero:
 			} else {
 				backup_a = 4;
 				backup_v = (struct match_backup *)Dee_TryMalloc(backup_a * sizeof(struct match_backup));
-				if
-					unlikely(!backup_v)
-				{
+				if unlikely(!backup_v)
+					{
 					backup_a = 1;
 					backup_v = (struct match_backup *)Dee_Malloc(backup_a * sizeof(struct match_backup));
-					if
-						unlikely(!backup_v)
-					goto err;
+					if unlikely(!backup_v)
+						goto err;
 				}
 				backup_v[0].mb_diter  = variant_diter;
 				backup_v[0].mb_dcount = variant_match_length;
@@ -955,9 +938,8 @@ err_lookahead_must_be_nonzero:
 				                         /* Pass EMPTYOK, because we check for that case
 				                          * explicitly by jumping to `has_infinite_submatch'. */
 				                         REGEX_CONTEXT_FEMPTYOK);
-				if
-					unlikely(error < 0)
-				{
+				if unlikely(error < 0)
+					{
 err_backup_v:
 					Dee_Free(backup_v);
 					goto err;
@@ -986,9 +968,8 @@ err_backup_v:
 						                         /* Pass EMPTYOK, because we check for that case
 						                          * explicitly by jumping to `has_infinite_submatch'. */
 						                         REGEX_CONTEXT_FEMPTYOK);
-						if
-							unlikely(error < 0)
-						goto err_backup_v;
+						if unlikely(error < 0)
+							goto err_backup_v;
 						if (error) {
 							if (variant_diter == alt_variant_diter)
 								goto has_infinite_submatch; /* No data was parsed -> no data was matched (in this case x/0 == INF) */
@@ -1014,22 +995,19 @@ save_variant_match:
 				if (match.mc_greedy) {
 					/* Save the new match entry, so we can undo our greediness if necessary. */
 					ASSERT(match_count <= backup_a);
-					if
-						unlikely(match_count >= backup_a)
-					{
+					if unlikely(match_count >= backup_a)
+						{
 						size_t new_alloc = backup_a * 2;
 						struct match_backup *new_vec;
 						new_vec = (struct match_backup *)Dee_TryRealloc(backup_v, new_alloc *
 						                                                          sizeof(struct match_backup));
-						if
-							unlikely(!new_vec)
-						{
+						if unlikely(!new_vec)
+							{
 							new_alloc = match_count + 1;
 							new_vec = (struct match_backup *)Dee_Realloc(backup_v, new_alloc *
 							                                                       sizeof(struct match_backup));
-							if
-								unlikely(!new_vec)
-							goto err_backup_v;
+							if unlikely(!new_vec)
+								goto err_backup_v;
 						}
 						backup_a = new_alloc;
 						backup_v = new_vec;
@@ -1054,16 +1032,14 @@ has_infinite_submatch:
 					error = regex_match_impl(&variant_diter, dend,
 					                         &suffix_piter, pend,
 					                         data, context | REGEX_CONTEXT_FEMPTYOK);
-					if
-						unlikely(error < 0)
-					goto err_backup_v;
+					if unlikely(error < 0)
+						goto err_backup_v;
 					if (error) {
 						data->matlen += backup_v[match_count].mb_dcount;
 						*ppiter = suffix_piter;
 						Dee_Free(backup_v);
-						if
-							unlikely(!data->matlen && !(context & REGEX_CONTEXT_FEMPTYOK))
-						return 0;
+						if unlikely(!data->matlen && !(context & REGEX_CONTEXT_FEMPTYOK))
+							return 0;
 						*pditer = variant_diter;
 						return 1;
 					}
@@ -1104,9 +1080,8 @@ has_infinite_submatch:
 
 		/* Character trait matching */
 	case '\\':
-		if
-			unlikely(piter == pend)
-		{
+		if unlikely(piter == pend)
+			{
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Missing character after `\\' in regular expression");
 			goto err;
@@ -1139,9 +1114,8 @@ next_anyflag_ch:
 				if (ch != ']')
 					goto next_anyflag_ch;
 				piter = parse_match_count(piter, pend, &match);
-				if
-					unlikely(!piter)
-				goto err;
+				if unlikely(!piter)
+					goto err;
 				/* Match any. */
 				while (match_count < match.mc_max) {
 					char *prev_diter;
@@ -1204,9 +1178,8 @@ err_missing_rbracket:
 			flag = UNICODE_FDIGIT;
 match_unicode_trait:
 			piter = parse_match_count(piter, pend, &match);
-			if
-				unlikely(!piter)
-			goto err;
+			if unlikely(!piter)
+				goto err;
 			DO_CHARACTERWISE_MATCH((DeeUni_Flags(data_ch) & mask) == flag);
 			goto check_match;
 
@@ -1227,9 +1200,8 @@ match_unicode_trait:
 
 		case 'w':
 			piter = parse_match_count(piter, pend, &match);
-			if
-				unlikely(!piter)
-			goto err;
+			if unlikely(!piter)
+				goto err;
 			DO_CHARACTERWISE_MATCH(DeeUni_Flags(data_ch) &
 			                       (UNICODE_FALPHA | UNICODE_FDECIMAL |
 			                        UNICODE_FSYMSTRT | UNICODE_FSYMCONT));
@@ -1241,9 +1213,8 @@ match_unicode_trait:
 
 		case 'n':
 			piter = parse_match_count(piter, pend, &match);
-			if
-				unlikely(!piter)
-			goto err;
+			if unlikely(!piter)
+				goto err;
 			while (match_count < match.mc_max) {
 				char *prev_diter;
 				CHECK_NONGREEDY_SUFFIX();
@@ -1369,9 +1340,8 @@ match_unicode_trait:
 		range_end = piter;
 		++piter; /* Skip the `]' */
 		piter = parse_match_count(piter, pend, &match);
-		if
-			unlikely(!piter)
-		goto err;
+		if unlikely(!piter)
+			goto err;
 
 		/* Match characters apart of the range. */
 		invert_range = false;
@@ -1386,9 +1356,8 @@ match_unicode_trait:
 
 	case '.':
 		piter = parse_match_count(piter, pend, &match);
-		if
-			unlikely(!piter)
-		goto err;
+		if unlikely(!piter)
+			goto err;
 		if (data->flags & Dee_REGEX_FDOTALL) {
 			/* Match anything (must still use a regular iteration
 			 * because we must match by character, which can have
@@ -1438,9 +1407,8 @@ match_unicode_trait:
 	default:
 match_raw_character:
 		piter = parse_match_count(piter, pend, &match);
-		if
-			unlikely(!piter)
-		goto err;
+		if unlikely(!piter)
+			goto err;
 		if (data->flags & Dee_REGEX_FNOCASE) {
 			ch = DeeUni_ToLower(ch);
 			DO_CHARACTERWISE_MATCH(DeeUni_ToLower(data_ch) == ch);
@@ -1476,9 +1444,8 @@ check_match:
 	}
 	goto next;
 done:
-	if
-		unlikely(!match_length && !(context & REGEX_CONTEXT_FEMPTYOK))
-	goto nope; /* Don't allow empty matches. */
+	if unlikely(!match_length && !(context & REGEX_CONTEXT_FEMPTYOK))
+		goto nope; /* Don't allow empty matches. */
 	*ppiter      = piter;
 	*pditer      = diter;
 	data->matlen = match_length;
@@ -1491,9 +1458,8 @@ err:
 forward_error:
 	*ppiter = new_piter;
 	data->matlen += match_length;
-	if
-		unlikely(!data->matlen && !(context & REGEX_CONTEXT_FEMPTYOK))
-	return 0;
+	if unlikely(!data->matlen && !(context & REGEX_CONTEXT_FEMPTYOK))
+		return 0;
 	*pditer = new_diter;
 	return error;
 }
@@ -1512,12 +1478,10 @@ DeeRegex_Matches(/*utf-8*/ char const *__restrict data, size_t datalen,
 	error = regex_match((char **)&data, (char *)data + datalen,
 	                    (char **)&pattern, (char *)pattern + patternlen,
 	                    &rdat);
-	if
-		unlikely(error < 0)
-	return (size_t)-1;
-	if
-		unlikely(error == 0)
-	return 0;
+	if unlikely(error < 0)
+		return (size_t)-1;
+	if unlikely(error == 0)
+		return 0;
 	return rdat.matlen;
 }
 
@@ -1536,12 +1500,10 @@ DeeRegex_MatchesPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 	error = regex_match((char **)&data, (char *)data + datalen,
 	                    (char **)&pattern, (char *)pattern + patternlen,
 	                    &rdat);
-	if
-		unlikely(error < 0)
-	return (size_t)-1;
-	if
-		unlikely(error == 0)
-	return 0;
+	if unlikely(error < 0)
+		return (size_t)-1;
+	if unlikely(error == 0)
+		return 0;
 	*pdataend = data;
 	return rdat.matlen;
 }
@@ -1598,9 +1560,8 @@ DeeRegex_Find(/*utf-8*/ char const *__restrict data, size_t datalen,
 	struct regex_data rdat;
 	ASSERT(datalen != (size_t)-1);
 	ASSERT(patternlen != (size_t)-1);
-	if
-		unlikely(!patternlen)
-	goto nope;
+	if unlikely(!patternlen)
+		goto nope;
 	rdat.data_start = (char *)data;
 	rdat.flags      = flags;
 	dend            = (diter = (char *)data) + datalen;
@@ -1627,9 +1588,8 @@ DeeRegex_Find(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &temp_piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start = data_index - 1;
 				presult->rr_end   = data_index + rdat.matlen;
 				return 1;
@@ -1643,9 +1603,8 @@ DeeRegex_Find(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start = data_index;
 				presult->rr_end   = data_index + rdat.matlen;
 				return 1;
@@ -1682,9 +1641,8 @@ DeeRegex_RFind(/*utf-8*/ char const *__restrict data, size_t datalen,
 	struct regex_data rdat;
 	ASSERT(datalen != (size_t)-1);
 	ASSERT(patternlen != (size_t)-1);
-	if
-		unlikely(!patternlen)
-	goto nope;
+	if unlikely(!patternlen)
+		goto nope;
 	rdat.data_start = (char *)data;
 	rdat.flags      = flags;
 	dend = diter = (char *)data + datalen;
@@ -1711,9 +1669,8 @@ DeeRegex_RFind(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &temp_piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start = count_utf8_characters((char *)data, match_begin);
 				presult->rr_end   = presult->rr_start + rdat.matlen;
 				--presult->rr_start;
@@ -1732,9 +1689,8 @@ DeeRegex_RFind(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start = count_utf8_characters((char *)data, match_begin);
 				presult->rr_end   = presult->rr_start + rdat.matlen;
 				return 1;
@@ -1758,9 +1714,8 @@ DeeRegex_FindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
 	struct regex_data rdat;
 	ASSERT(datalen != (size_t)-1);
 	ASSERT(patternlen != (size_t)-1);
-	if
-		unlikely(!patternlen)
-	goto nope;
+	if unlikely(!patternlen)
+		goto nope;
 	rdat.data_start = (char *)data;
 	rdat.flags      = flags;
 	dend            = (diter = (char *)data) + datalen;
@@ -1790,9 +1745,8 @@ DeeRegex_FindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &temp_piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start     = data_index - 1;
 				presult->rr_end       = data_index + rdat.matlen;
 				presult->rr_start_ptr = data_start;
@@ -1809,9 +1763,8 @@ DeeRegex_FindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start     = data_index;
 				presult->rr_end       = data_index + rdat.matlen;
 				presult->rr_start_ptr = data_start;
@@ -1839,9 +1792,8 @@ DeeRegex_RFindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
 	struct regex_data rdat;
 	ASSERT(datalen != (size_t)-1);
 	ASSERT(patternlen != (size_t)-1);
-	if
-		unlikely(!patternlen)
-	goto nope;
+	if unlikely(!patternlen)
+		goto nope;
 	rdat.data_start = (char *)data;
 	rdat.flags      = flags;
 	dend = diter = (char *)data + datalen;
@@ -1870,9 +1822,8 @@ DeeRegex_RFindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &temp_piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start     = count_utf8_characters((char *)data, match_begin);
 				presult->rr_end       = presult->rr_start + 1 + rdat.matlen;
 				presult->rr_start_ptr = match_begin;
@@ -1892,9 +1843,8 @@ DeeRegex_RFindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				presult->rr_start     = count_utf8_characters((char *)data, match_begin);
 				presult->rr_end       = presult->rr_start + rdat.matlen;
 				presult->rr_start_ptr = match_begin;
@@ -1919,9 +1869,8 @@ DeeRegex_FindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 	char *piter, *pend, *dend;
 	ASSERT(datalen != (size_t)-1);
 	ASSERT(patternlen != (size_t)-1);
-	if
-		unlikely(!patternlen)
-	goto nope;
+	if unlikely(!patternlen)
+		goto nope;
 	rdat.data_start = (char *)data;
 	rdat.flags      = flags;
 	dend            = (char *)data + datalen;
@@ -1947,9 +1896,8 @@ DeeRegex_FindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				/* Got a match! */
 				presult->rr_start = data_start;
 				presult->rr_end   = diter;
@@ -1967,9 +1915,8 @@ DeeRegex_FindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				/* Got a match! */
 				presult->rr_start = diter;
 				presult->rr_end   = dend_ptr;
@@ -1994,9 +1941,8 @@ DeeRegex_RFindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 	char *piter, *pend, *dend;
 	ASSERT(datalen != (size_t)-1);
 	ASSERT(patternlen != (size_t)-1);
-	if
-		unlikely(!patternlen)
-	goto nope;
+	if unlikely(!patternlen)
+		goto nope;
 	rdat.data_start = (char *)data;
 	rdat.flags      = flags;
 	dend            = (char *)data + datalen;
@@ -2022,9 +1968,8 @@ DeeRegex_RFindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				/* Got a match! */
 				presult->rr_start = data_start;
 				presult->rr_end   = diter;
@@ -2043,9 +1988,8 @@ DeeRegex_RFindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 			                    &piter, pend,
 			                    &rdat);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				/* Got a match! */
 				presult->rr_start = diter;
 				presult->rr_end   = dend_ptr;

@@ -73,9 +73,8 @@ PRIVATE int DCALL
 bfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_FindAll((Bytes *)Dee_EmptyBytes,
 	                                                    Dee_EmptyBytes, 0, 0);
-	if
-		unlikely(!self->bfi_find)
-	return -1;
+	if unlikely(!self->bfi_find)
+		return -1;
 	self->bfi_start      = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_ptr        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_end        = DeeBytes_DATA(Dee_EmptyBytes);
@@ -88,9 +87,8 @@ PRIVATE int DCALL
 bcfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_CaseFindAll((Bytes *)Dee_EmptyBytes,
 	                                                        Dee_EmptyBytes, 0, 0);
-	if
-		unlikely(!self->bfi_find)
-	return -1;
+	if unlikely(!self->bfi_find)
+		return -1;
 	self->bfi_start      = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_ptr        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_end        = DeeBytes_DATA(Dee_EmptyBytes);
@@ -407,9 +405,8 @@ PRIVATE DREF BytesFindIterator *DCALL
 bf_iter(BytesFind *__restrict self) {
 	DREF BytesFindIterator *result;
 	result = DeeObject_MALLOC(BytesFindIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (bfi_setup(result, self))
 		goto err_r;
 	DeeObject_Init(result, &BytesFindIterator_Type);
@@ -424,9 +421,8 @@ PRIVATE DREF BytesFindIterator *DCALL
 bcf_iter(BytesFind *__restrict self) {
 	DREF BytesFindIterator *result;
 	result = DeeObject_MALLOC(BytesFindIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (bfi_setup(result, self))
 		goto err_r;
 	DeeObject_Init(result, &BytesCaseFindIterator_Type);
@@ -561,9 +557,8 @@ DeeBytes_FindAll(Bytes *__restrict self,
                  size_t start, size_t end) {
 	DREF BytesFind *result;
 	result = DeeObject_MALLOC(BytesFind);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (get_needle(&result->bf_needle, other))
 		goto err_r;
 	if (end > DeeBytes_SIZE(self))
@@ -590,9 +585,8 @@ DeeBytes_CaseFindAll(Bytes *__restrict self,
                      size_t start, size_t end) {
 	DREF BytesFind *result;
 	result = DeeObject_MALLOC(BytesFind);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (get_needle(&result->bf_needle, other))
 		goto err_r;
 	if (end > DeeBytes_SIZE(self))

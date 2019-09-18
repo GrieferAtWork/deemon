@@ -78,16 +78,14 @@ iterator_bool(DeeObject *__restrict self) {
 	DeeObject *elem;
 	/* Check if the Iterator has been exhausted
 	 * by creating a copy and testing it. */
-	if
-		unlikely((self = DeeObject_Copy(self)) == NULL)
-	goto err;
+	if unlikely((self = DeeObject_Copy(self)) == NULL)
+		goto err;
 	elem = DeeObject_IterNext(self);
 	Dee_Decref(self);
 	if (elem == ITER_DONE)
 		return 0; /* Empty iterator. */
-	if
-		unlikely(!elem)
-	goto err; /* Error. */
+	if unlikely(!elem)
+		goto err; /* Error. */
 	Dee_Decref(elem);
 	return 1; /* Non-empty iterator. */
 err:
@@ -105,26 +103,21 @@ iterator_repr(DeeObject *__restrict self) {
 	 * >> y.operator __next__();
 	 * >> print repr y; // { [...], 20, 30 }
 	 */
-	if
-		unlikely(!iterator)
-	return NULL;
-	if
-		unlikely(UNICODE_PRINTER_PRINT(&p, "{ [...]") < 0)
-	goto err1;
+	if unlikely(!iterator)
+		return NULL;
+	if unlikely(UNICODE_PRINTER_PRINT(&p, "{ [...]") < 0)
+		goto err1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if
-			unlikely(unicode_printer_printf(&p, ", %r", elem) < 0)
-		goto err2;
+		if unlikely(unicode_printer_printf(&p, ", %r", elem) < 0)
+			goto err2;
 		Dee_Decref(elem);
 		if (DeeThread_CheckInterrupt())
 			goto err1;
 	}
-	if
-		unlikely(!elem)
-	goto err1;
-	if
-		unlikely(UNICODE_PRINTER_PRINT(&p, " }") < 0)
-	goto err1;
+	if unlikely(!elem)
+		goto err1;
+	if unlikely(UNICODE_PRINTER_PRINT(&p, " }") < 0)
+		goto err1;
 	Dee_Decref(iterator);
 	return unicode_printer_pack(&p);
 err2:
@@ -145,9 +138,8 @@ PRIVATE dssize_t DCALL
 get_remaining_iterations(DeeObject *__restrict self) {
 	dssize_t result;
 	DREF DeeObject *elem;
-	if
-		unlikely((self = DeeObject_Copy(self)) == NULL)
-	goto err;
+	if unlikely((self = DeeObject_Copy(self)) == NULL)
+		goto err;
 	result = 0;
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		++result;
@@ -155,9 +147,8 @@ get_remaining_iterations(DeeObject *__restrict self) {
 		if (DeeThread_CheckInterrupt())
 			goto err_self;
 	}
-	if
-		unlikely(!elem)
-	goto err_self;
+	if unlikely(!elem)
+		goto err_self;
 	Dee_Decref(self);
 	return result;
 err_self:
@@ -228,9 +219,8 @@ iterator_do_hasprev(DeeObject *__restrict self, struct type_nii *__restrict nii)
 	if (nii->nii_common.nii_hasprev)
 		return (*nii->nii_common.nii_hasprev)(self);
 	temp = DeeObject_GetAttr(self, &str_hasprev);
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	error = DeeObject_Bool(temp);
 	Dee_Decref(temp);
 	return error;
@@ -245,9 +235,8 @@ iterator_prev(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":prev"))
 		goto err;
 	error = DeeIterator_Prev(self);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(!error);
 err:
 	return NULL;
@@ -291,12 +280,10 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 			    nii->nii_common.nii_setindex) {
 				size_t index;
 				index = (*nii->nii_common.nii_getindex)(self);
-				if
-					unlikely(index == (size_t)-1)
-				goto err;
-				if
-					unlikely(index == (size_t)-2)
-				goto done;
+				if unlikely(index == (size_t)-1)
+					goto err;
+				if unlikely(index == (size_t)-2)
+					goto done;
 				if (index <= count) {
 					error = nii->nii_common.nii_rewind
 					        ? (*nii->nii_common.nii_rewind)(self)
@@ -304,17 +291,15 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				} else {
 					error = (*nii->nii_common.nii_setindex)(self, index - count);
 				}
-				if
-					unlikely(error)
-				goto err;
+				if unlikely(error)
+					goto err;
 				return index <= count ? 2 : 1;
 			}
 			if (nii->nii_common.nii_prev) {
 				for (;;) {
 					error = (*nii->nii_common.nii_prev)(self);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (error)
 						return 1;
 					if (!--count)
@@ -332,17 +317,15 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				Dee_Incref(temp2);
 			} else {
 				temp2 = DeeInt_NewSize(count);
-				if
-					unlikely(!temp2)
-				goto err;
+				if unlikely(!temp2)
+					goto err;
 			}
 			temp = self;
 			Dee_Incref(self);
 			error = (*m->tp_inplace_sub)(&temp, temp2);
 			Dee_Decref(temp2);
-			if
-				unlikely(error)
-			goto err_temp;
+			if unlikely(error)
+				goto err_temp;
 			if (temp != self &&
 			    DeeObject_MoveAssign(self, temp))
 				goto err_temp;
@@ -351,22 +334,19 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 		}
 		error = has_generic_attribute(tp_self, self, &str_revert);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (count_ob) {
 				temp = count_ob;
 				Dee_Incref(temp);
 			} else {
 				temp = DeeInt_NewSize(count);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 			}
 			temp2 = DeeObject_CallAttr(self, &str_revert, 1, &temp);
-			if
-				unlikely(!temp2)
-			goto err_temp;
+			if unlikely(!temp2)
+				goto err_temp;
 			Dee_Decref(temp2);
 			Dee_Decref(temp);
 			goto done;
@@ -378,17 +358,15 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				Dee_Incref(temp2);
 			} else {
 				temp2 = DeeInt_NewSSize(-(dssize_t)count);
-				if
-					unlikely(!temp2)
-				goto err;
+				if unlikely(!temp2)
+					goto err;
 			}
 			temp = self;
 			Dee_Incref(self);
 			error = (*m->tp_inplace_add)(&temp, temp2);
 			Dee_Decref(temp2);
-			if
-				unlikely(error)
-			goto err_temp;
+			if unlikely(error)
+				goto err_temp;
 			if (temp != self &&
 			    DeeObject_MoveAssign(self, temp))
 				goto err_temp;
@@ -397,22 +375,19 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 		}
 		error = has_generic_attribute(tp_self, self, &str_advance);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (minus_count_ob) {
 				temp = minus_count_ob;
 				Dee_Incref(temp);
 			} else {
 				temp = DeeInt_NewSSize(-(dssize_t)count);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 			}
 			temp2 = DeeObject_CallAttr(self, &str_advance, 1, &temp);
-			if
-				unlikely(!temp2)
-			goto err_temp;
+			if unlikely(!temp2)
+				goto err_temp;
 			Dee_Decref(temp2);
 			Dee_Decref(temp);
 			goto done;
@@ -420,28 +395,24 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 		temp = get_generic_attribute(tp_self, self, &str_index);
 		if (temp != ITER_DONE) {
 			size_t old_index;
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			if (DeeObject_AsSize(temp, &old_index))
 				goto err_temp;
 			Dee_Decref(temp);
 			if (old_index <= count) {
-				if
-					unlikely(DeeObject_SetAttr(self, &str_index, &DeeInt_Zero))
-				goto err;
+				if unlikely(DeeObject_SetAttr(self, &str_index, &DeeInt_Zero))
+					goto err;
 				return 1;
 			} else {
 				temp = DeeInt_NewSize(old_index - count);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				error = DeeObject_SetAttr(self, &str_index, temp);
 				Dee_Decref(temp);
 			}
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 			return 2;
 		}
 		if (m) {
@@ -451,15 +422,13 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 					Dee_Incref(temp2);
 				} else {
 					temp2 = DeeInt_NewSize(count);
-					if
-						unlikely(!temp2)
-					goto err;
+					if unlikely(!temp2)
+						goto err;
 				}
 				temp = (*m->tp_add)(self, temp2);
 				Dee_Decref(temp2);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				if (DeeObject_MoveAssign(self, temp))
 					goto err_temp;
 				Dee_Decref(temp);
@@ -471,15 +440,13 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 					Dee_Incref(temp2);
 				} else {
 					temp2 = DeeInt_NewSSize(-(dssize_t)count);
-					if
-						unlikely(!temp2)
-					goto err;
+					if unlikely(!temp2)
+						goto err;
 				}
 				temp = (*m->tp_sub)(self, temp2);
 				Dee_Decref(temp2);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				if (DeeObject_MoveAssign(self, temp))
 					goto err_temp;
 				Dee_Decref(temp);
@@ -491,21 +458,18 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				for (;;) {
 					if (DeeThread_CheckInterrupt())
 						goto err_temp;
-					if
-						unlikely((*m->tp_dec)(&temp))
-					goto err_temp;
+					if unlikely((*m->tp_dec)(&temp))
+						goto err_temp;
 					if (!--count)
 						break;
 					temp2 = DeeObject_GetAttr(self, &str_hasprev);
-					if
-						unlikely(!temp2)
-					goto err_temp;
+					if unlikely(!temp2)
+						goto err_temp;
 					error = DeeObject_Bool(temp2);
 					Dee_Decref(temp2);
 					if (error <= 0) {
-						if
-							unlikely(error < 0)
-						goto err;
+						if unlikely(error < 0)
+							goto err;
 						if (temp != self && DeeObject_MoveAssign(self, temp))
 							goto err_temp;
 						Dee_Decref(temp);
@@ -521,22 +485,19 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 			if (error == 0)
 				error = has_generic_attribute(tp_self, self, &str_prev);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				for (;;) {
 					if (DeeThread_CheckInterrupt())
 						goto err;
 					temp = DeeObject_CallAttr(self, &str_prev, 0, NULL);
-					if
-						unlikely(!temp)
-					goto err;
+					if unlikely(!temp)
+						goto err;
 					error = DeeObject_Bool(temp);
 					Dee_Decref(temp);
 					if (error <= 0) {
-						if
-							unlikely(error < 0)
-						goto err;
+						if unlikely(error < 0)
+							goto err;
 						return 1;
 					}
 					if (!--count)
@@ -576,26 +537,22 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 			    nii->nii_common.nii_setindex) {
 				size_t index;
 				index = (*nii->nii_common.nii_getindex)(self);
-				if
-					unlikely(index == (size_t)-1)
-				goto err;
-				if
-					unlikely(index == (size_t)-2)
-				goto done;
+				if unlikely(index == (size_t)-1)
+					goto err;
+				if unlikely(index == (size_t)-2)
+					goto done;
 				if (OVERFLOW_UADD(index, count, &index))
 					index = (size_t)-1;
 				error = (*nii->nii_common.nii_setindex)(self, index);
-				if
-					unlikely(error)
-				goto err;
+				if unlikely(error)
+					goto err;
 				goto done;
 			}
 			if (nii->nii_common.nii_next) {
 				for (;;) {
 					error = (*nii->nii_common.nii_next)(self);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (error)
 						return 1;
 					if (!--count)
@@ -613,17 +570,15 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				Dee_Incref(temp2);
 			} else {
 				temp2 = DeeInt_NewSize(count);
-				if
-					unlikely(!temp2)
-				goto err;
+				if unlikely(!temp2)
+					goto err;
 			}
 			temp = self;
 			Dee_Incref(self);
 			error = (*m->tp_inplace_add)(&temp, temp2);
 			Dee_Decref(temp2);
-			if
-				unlikely(error)
-			goto err_temp;
+			if unlikely(error)
+				goto err_temp;
 			if (temp != self &&
 			    DeeObject_MoveAssign(self, temp))
 				goto err_temp;
@@ -632,22 +587,19 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 		}
 		error = has_generic_attribute(tp_self, self, &str_advance);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (count_ob) {
 				temp = count_ob;
 				Dee_Incref(temp);
 			} else {
 				temp = DeeInt_NewSize(count);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 			}
 			temp2 = DeeObject_CallAttr(self, &str_advance, 1, &temp);
-			if
-				unlikely(!temp2)
-			goto err_temp;
+			if unlikely(!temp2)
+				goto err_temp;
 			Dee_Decref(temp2);
 			Dee_Decref(temp);
 			goto done;
@@ -659,17 +611,15 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				Dee_Incref(temp2);
 			} else {
 				temp2 = DeeInt_NewSSize(-(dssize_t)count);
-				if
-					unlikely(!temp2)
-				goto err;
+				if unlikely(!temp2)
+					goto err;
 			}
 			temp = self;
 			Dee_Incref(self);
 			error = (*m->tp_inplace_sub)(&temp, temp2);
 			Dee_Decref(temp2);
-			if
-				unlikely(error)
-			goto err_temp;
+			if unlikely(error)
+				goto err_temp;
 			if (temp != self &&
 			    DeeObject_MoveAssign(self, temp))
 				goto err_temp;
@@ -678,22 +628,19 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 		}
 		error = has_generic_attribute(tp_self, self, &str_revert);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (minus_count_ob) {
 				temp = minus_count_ob;
 				Dee_Incref(temp);
 			} else {
 				temp = DeeInt_NewSSize(-(dssize_t)count);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 			}
 			temp2 = DeeObject_CallAttr(self, &str_revert, 1, &temp);
-			if
-				unlikely(!temp2)
-			goto err_temp;
+			if unlikely(!temp2)
+				goto err_temp;
 			Dee_Decref(temp2);
 			Dee_Decref(temp);
 			goto done;
@@ -701,21 +648,18 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 		temp = get_generic_attribute(tp_self, self, &str_index);
 		if (temp != ITER_DONE) {
 			size_t old_index;
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			if (DeeObject_AsSize(temp, &old_index))
 				goto err_temp;
 			Dee_Decref(temp);
 			temp = DeeInt_NewSize(old_index + count);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			error = DeeObject_SetAttr(self, &str_index, temp);
 			Dee_Decref(temp);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 			goto done;
 		}
 		if (m) {
@@ -725,15 +669,13 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 					Dee_Incref(temp2);
 				} else {
 					temp2 = DeeInt_NewSize(count);
-					if
-						unlikely(!temp2)
-					goto err;
+					if unlikely(!temp2)
+						goto err;
 				}
 				temp = (*m->tp_add)(self, temp2);
 				Dee_Decref(temp2);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				if (DeeObject_MoveAssign(self, temp))
 					goto err_temp;
 				Dee_Decref(temp);
@@ -745,15 +687,13 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 					Dee_Incref(temp2);
 				} else {
 					temp2 = DeeInt_NewSSize(-(dssize_t)count);
-					if
-						unlikely(!temp2)
-					goto err;
+					if unlikely(!temp2)
+						goto err;
 				}
 				temp = (*m->tp_sub)(self, temp2);
 				Dee_Decref(temp2);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				if (DeeObject_MoveAssign(self, temp))
 					goto err_temp;
 				Dee_Decref(temp);
@@ -765,21 +705,18 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				for (;;) {
 					if (DeeThread_CheckInterrupt())
 						goto err_temp;
-					if
-						unlikely((*m->tp_inc)(&temp))
-					goto err_temp;
+					if unlikely((*m->tp_inc)(&temp))
+						goto err_temp;
 					if (!--count)
 						break;
 					temp2 = DeeObject_GetAttr(self, &str_hasnext);
-					if
-						unlikely(!temp2)
-					goto err_temp;
+					if unlikely(!temp2)
+						goto err_temp;
 					error = DeeObject_Bool(temp2);
 					Dee_Decref(temp2);
 					if (error <= 0) {
-						if
-							unlikely(error < 0)
-						goto err;
+						if unlikely(error < 0)
+							goto err;
 						if (temp != self && DeeObject_MoveAssign(self, temp))
 							goto err_temp;
 						Dee_Decref(temp);
@@ -798,9 +735,8 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 					goto err;
 				temp = (*tp_self->tp_iter_next)(self);
 				if (!ITER_ISOK(temp)) {
-					if
-						unlikely(!temp)
-					goto err;
+					if unlikely(!temp)
+						goto err;
 					return 1;
 				}
 				Dee_Decref(temp);
@@ -829,17 +765,15 @@ iterator_revert(DeeObject *__restrict self,
 	int error;
 	if (DeeArg_Unpack(argc, argv, "Id:revert", &count))
 		goto err;
-	if
-		unlikely(count == 0)
-	goto done;
+	if unlikely(count == 0)
+		goto done;
 	error = (unlikely(count < 0))
 	        ? iterator_do_advance(self, (size_t)-count, NULL, argv[0])
 	        : (likely(count > 0))
 	          ? iterator_do_revert(self, (size_t)count, argv[0], NULL)
 	          : 0;
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 done:
 	return_none;
 err:
@@ -853,17 +787,15 @@ iterator_advance(DeeObject *__restrict self,
 	int error;
 	if (DeeArg_Unpack(argc, argv, "Id:advance", &count))
 		goto err;
-	if
-		unlikely(count == 0)
-	goto done;
+	if unlikely(count == 0)
+		goto done;
 	error = (unlikely(count < 0))
 	        ? iterator_do_revert(self, (size_t)-count, NULL, argv[0])
 	        : (likely(count > 0))
 	          ? iterator_do_advance(self, (size_t)count, argv[0], NULL)
 	          : 0;
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 done:
 	return_none;
 err:
@@ -1199,30 +1131,25 @@ DeeIterator_GetIndex(DeeObject *__restrict self) {
 		}
 		error = has_generic_attribute(tp_self, self, &str_rewind);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			copy = DeeObject_Copy(self);
-			if
-				unlikely(!copy)
-			goto err;
+			if unlikely(!copy)
+				goto err;
 			temp = DeeObject_CallAttr(copy, &str_rewind, 0, NULL);
-			if
-				unlikely(!temp)
-			goto err_copy;
+			if unlikely(!temp)
+				goto err_copy;
 			Dee_Decref(temp);
 			goto got_rewound_iter;
 		}
 		temp = get_generic_attribute(tp_self, self, &str_seq);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			copy = DeeObject_IterSelf(temp);
 			Dee_Decref(temp);
-			if
-				unlikely(!copy)
-			goto err;
+			if unlikely(!copy)
+				goto err;
 			goto got_rewound_iter;
 		}
 		if ((tp_self = DeeType_Base(tp_self)) == NULL)
@@ -1237,22 +1164,19 @@ got_rewound_iter:
 			goto err;
 		error = DeeObject_CompareLo(copy, self);
 		if (error <= 0) {
-			if
-				unlikely(error < 0)
-			goto err_copy;
+			if unlikely(error < 0)
+				goto err_copy;
 			break;
 		}
 		temp = DeeObject_IterNext(copy);
 		if (!ITER_ISOK(temp)) {
-			if
-				unlikely(!temp)
-			goto err_copy;
+			if unlikely(!temp)
+				goto err_copy;
 			return (size_t)-2;
 		}
 		Dee_Decref(temp);
-		if
-			unlikely(index >= (size_t)-2)
-		goto err_overflow;
+		if unlikely(index >= (size_t)-2)
+			goto err_overflow;
 		++index;
 	}
 	Dee_Decref(copy);
@@ -1280,9 +1204,8 @@ DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 			if (nii->nii_common.nii_setindex)
 				return (*nii->nii_common.nii_setindex)(self, new_index);
 			if (nii->nii_common.nii_rewind) {
-				if
-					unlikely((*nii->nii_common.nii_rewind)(self))
-				goto err;
+				if unlikely((*nii->nii_common.nii_rewind)(self))
+					goto err;
 				goto after_rewind;
 			}
 			break;
@@ -1291,9 +1214,8 @@ DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 			break;
 	}
 	temp = DeeObject_CallAttr(self, &str_rewind, 0, NULL);
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	Dee_Decref(temp);
 after_rewind:
 	return !new_index ? 0 : iterator_do_advance(self, new_index, NULL, NULL);
@@ -1315,31 +1237,27 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 		struct type_nii *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_rewind) {
-				if
-					unlikely((*nii->nii_common.nii_rewind)(self))
-				goto err;
+				if unlikely((*nii->nii_common.nii_rewind)(self))
+					goto err;
 				goto done;
 			}
 			if (nii->nii_common.nii_setindex) {
-				if
-					unlikely((*nii->nii_common.nii_setindex)(self, 0))
-				goto err;
+				if unlikely((*nii->nii_common.nii_setindex)(self, 0))
+					goto err;
 				goto done;
 			}
 			if (nii->nii_common.nii_revert) {
 				for (;;) {
 					error = (*nii->nii_common.nii_revert)(self, (size_t)-1);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (error == 1)
 						break;
 					if (error == 2)
 						continue;
 					error = iterator_do_hasprev(self, nii);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (!error)
 						break;
 				}
@@ -1348,9 +1266,8 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			if (nii->nii_common.nii_prev) {
 				for (;;) {
 					error = (*nii->nii_common.nii_prev)(self);
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					if (error)
 						break;
 				}
@@ -1360,50 +1277,42 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 		}
 		error = has_generic_attribute(tp_self, self, &str_index);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			error = DeeObject_SetAttr(self, &str_index, &DeeInt_Zero);
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			goto done;
 		}
 		temp = get_generic_attribute(tp_self, self, &str_seq);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			temp2 = DeeObject_IterSelf(temp);
 			Dee_Decref(temp);
-			if
-				unlikely(!temp2)
-			goto err;
+			if unlikely(!temp2)
+				goto err;
 			error = DeeObject_MoveAssign(self, temp2);
 			Dee_Decref(temp2);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 			goto done;
 		}
 		temp = get_generic_attribute(tp_self, self, &str_prev);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
 				temp2 = DeeObject_Call(temp, 0, NULL);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				error = DeeObject_Bool(temp2);
 				Dee_Decref(temp2);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err_temp;
+					if unlikely(error < 0)
+						goto err_temp;
 					break;
 				}
 			}
@@ -1423,19 +1332,16 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 				        : (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)
 				          ? (*m->tp_inplace_add)(&temp, (DeeObject *)&int_size_min)
 				          : (*m->tp_dec)(&temp);
-				if
-					unlikely(error)
-				goto err_temp;
+				if unlikely(error)
+					goto err_temp;
 				temp2 = DeeObject_GetAttr(temp, &str_hasprev);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				error = DeeObject_Bool(temp2);
 				Dee_Decref(temp2);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err_temp;
+					if unlikely(error < 0)
+						goto err_temp;
 					break;
 				}
 			}
@@ -1447,28 +1353,24 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 		}
 		temp = get_generic_attribute(tp_self, self, &str_revert);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
 				temp3 = (DREF DeeObject *)&int_size_max;
 				temp2 = DeeObject_Call(temp, 1, &temp3);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				Dee_Decref(temp2);
 				temp2 = DeeObject_GetAttr(self, &str_hasprev);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				error = DeeObject_Bool(temp2);
 				Dee_Decref(temp2);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err_temp;
+					if unlikely(error < 0)
+						goto err_temp;
 					break;
 				}
 			}
@@ -1477,28 +1379,24 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 		}
 		temp = get_generic_attribute(tp_self, self, &str_advance);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
 				temp3 = (DREF DeeObject *)&int_size_min;
 				temp2 = DeeObject_Call(temp, 1, &temp3);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				Dee_Decref(temp2);
 				temp2 = DeeObject_GetAttr(self, &str_hasprev);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				error = DeeObject_Bool(temp2);
 				Dee_Decref(temp2);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err_temp;
+					if unlikely(error < 0)
+						goto err_temp;
 					break;
 				}
 			}
@@ -1514,21 +1412,18 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 				temp2 = (m->tp_sub && m->tp_sub != &iterator_sub)
 				        ? (*m->tp_sub)(temp, (DeeObject *)&int_size_max)
 				        : (*m->tp_add)(temp, (DeeObject *)&int_size_min);
-				if
-					unlikely(error)
-				goto err_temp;
+				if unlikely(error)
+					goto err_temp;
 				Dee_Decref(temp);
 				temp  = temp2;
 				temp2 = DeeObject_GetAttr(temp, &str_hasprev);
-				if
-					unlikely(!temp2)
-				goto err_temp;
+				if unlikely(!temp2)
+					goto err_temp;
 				error = DeeObject_Bool(temp2);
 				Dee_Decref(temp2);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err_temp;
+					if unlikely(error < 0)
+						goto err_temp;
 					break;
 				}
 			}
@@ -1587,14 +1482,12 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 			if (nii->nii_common.nii_revert) {
 				error = iterator_do_hasprev(self, nii);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					return 1;
 				}
-				if
-					unlikely((*nii->nii_common.nii_revert)(self, 1) < 0)
-				goto err;
+				if unlikely((*nii->nii_common.nii_revert)(self, 1) < 0)
+					goto err;
 				return 0;
 			}
 			if (nii->nii_common.nii_getindex &&
@@ -1603,12 +1496,10 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 				index = (*nii->nii_common.nii_getindex)(self);
 				if (index == 0 || index == (size_t)-2)
 					return 1;
-				if
-					unlikely(index == (size_t)-1)
-				goto err;
-				if
-					unlikely((*nii->nii_common.nii_setindex)(self, index - 1))
-				goto err;
+				if unlikely(index == (size_t)-1)
+					goto err;
+				if unlikely((*nii->nii_common.nii_setindex)(self, index - 1))
+					goto err;
 				return 0;
 			}
 			break;
@@ -1620,22 +1511,19 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 			 * >>     return false;
 			 * >> this.index = i - 1;
 			 * >> return true; */
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			error = DeeObject_Bool(temp);
 			if (error <= 0) {
 				Dee_Decref(temp);
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				return 1;
 			}
 			temp2 = DeeObject_Sub(temp, &DeeInt_One);
 			Dee_Decref(temp);
-			if
-				unlikely(!temp2)
-			goto err;
+			if unlikely(!temp2)
+				goto err;
 			error = DeeObject_SetAttr(self, &str_index, temp2);
 			Dee_Decref(temp2);
 			return error;
@@ -1652,15 +1540,13 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 				 * >> }
 				 */
 				temp = DeeObject_GetAttr(self, &str_hasprev);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				error = DeeObject_Bool(temp);
 				Dee_Decref(temp);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					return 1;
 				}
 				new_self = self;
@@ -1673,9 +1559,8 @@ INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 					ASSERT(m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add);
 					error = (*m->tp_inplace_add)(&new_self, &DeeInt_MinusOne);
 				}
-				if
-					unlikely(error)
-				{
+				if unlikely(error)
+					{
 err_new_self:
 					Dee_Decref(new_self);
 					goto err;
@@ -1695,15 +1580,13 @@ err_new_self:
 				 * >> }
 				 */
 				temp = DeeObject_GetAttr(self, &str_hasprev);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				error = DeeObject_Bool(temp);
 				Dee_Decref(temp);
 				if (error <= 0) {
-					if
-						unlikely(error < 0)
-					goto err;
+					if unlikely(error < 0)
+						goto err;
 					return 1;
 				}
 				if (m->tp_sub && m->tp_sub != &iterator_sub) {
@@ -1712,9 +1595,8 @@ err_new_self:
 					ASSERT(m->tp_add && m->tp_add != &iterator_add);
 					temp = (*m->tp_add)(self, &DeeInt_MinusOne);
 				}
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				error = DeeObject_MoveAssign(self, temp);
 				Dee_Decref(temp);
 				return error;
@@ -1727,26 +1609,22 @@ err_new_self:
 			 * >> this.revert(1);
 			 * >> return true;
 			 */
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			temp = DeeObject_GetAttr(self, &str_hasprev);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			error = DeeObject_Bool(temp);
 			Dee_Decref(temp);
 			if (error <= 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				return 1;
 			}
 			new_self = &DeeInt_One;
 			temp     = DeeObject_CallAttr(self, &str_revert, 1, &new_self);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			Dee_Decref(temp);
 			return 0;
 		}
@@ -1757,42 +1635,35 @@ err_new_self:
 			 * >> this.advance(-1);
 			 * >> return true;
 			 */
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			temp = DeeObject_GetAttr(self, &str_hasprev);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			error = DeeObject_Bool(temp);
 			Dee_Decref(temp);
 			if (error <= 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				return 1;
 			}
 			new_self = &DeeInt_MinusOne;
 			temp     = DeeObject_CallAttr(self, &str_advance, 1, &new_self);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			Dee_Decref(temp);
 			return 0;
 		}
 		error = has_generic_attribute(tp_self, self, &str_rewind);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			new_self = DeeObject_Copy(self);
-			if
-				unlikely(!new_self)
-			goto err;
+			if unlikely(!new_self)
+				goto err;
 			temp = DeeObject_CallAttr(new_self, &str_rewind, 0, NULL);
-			if
-				unlikely(!temp)
-			goto err_new_self;
+			if unlikely(!temp)
+				goto err_new_self;
 			Dee_Decref(temp);
 do_prev_with_rewind_iterator:
 			/* >> if (c == this)
@@ -1811,9 +1682,8 @@ do_prev_with_rewind_iterator:
 			 * >> return true; */
 			error = DeeObject_CompareEq(new_self, self);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err_new_self;
+				if unlikely(error < 0)
+					goto err_new_self;
 				Dee_Decref(new_self);
 				return 1;
 			}
@@ -1822,26 +1692,22 @@ do_prev_with_rewind_iterator:
 				if (DeeThread_CheckInterrupt())
 					goto err_new_self;
 				new_copy = DeeObject_Copy(new_self);
-				if
-					unlikely(!new_copy)
-				goto err_new_self;
+				if unlikely(!new_copy)
+					goto err_new_self;
 				temp = DeeObject_IterNext(new_copy);
-				if
-					unlikely(!ITER_ISOK(temp))
-				{
+				if unlikely(!ITER_ISOK(temp))
+					{
 					Dee_Decref(new_copy);
 					Dee_Decref(new_self);
-					if
-						unlikely(!temp)
-					goto err;
+					if unlikely(!temp)
+						goto err;
 					return 1;
 				}
 				error = DeeObject_CompareGe(new_copy, self);
 				if (error != 0) {
 					Dee_Decref(new_copy);
-					if
-						unlikely(error < 0)
-					goto err_new_self;
+					if unlikely(error < 0)
+						goto err_new_self;
 					break;
 				}
 				Dee_Decref(new_self);
@@ -1853,14 +1719,12 @@ do_prev_with_rewind_iterator:
 		}
 		temp = get_generic_attribute(tp_self, self, &str_seq);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			new_self = DeeObject_IterSelf(temp);
 			Dee_Decref(temp);
-			if
-				unlikely(!new_self)
-			goto err;
+			if unlikely(!new_self)
+				goto err;
 			goto do_prev_with_rewind_iterator;
 		}
 		if ((tp_self = DeeType_Base(tp_self)) == NULL)
@@ -1898,53 +1762,45 @@ INTERN int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
 			if (nii->nii_common.nii_getindex) {
 				size_t index;
 				index = (*nii->nii_common.nii_getindex)(self);
-				if
-					unlikely(index == (size_t)-1)
-				goto err;
+				if unlikely(index == (size_t)-1)
+					goto err;
 				return index != 0;
 			}
 			break;
 		}
 		temp = get_generic_attribute(tp_self, self, &str_index);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			error = DeeObject_CompareNe(temp, &DeeInt_Zero);
 			Dee_Decref(temp);
 			return error;
 		}
 		error = has_generic_attribute(tp_self, self, &str_prev);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			temp = DeeObject_Copy(self);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			temp2 = DeeObject_CallAttr(temp, &str_prev, 0, NULL);
 			Dee_Decref(temp);
-			if
-				unlikely(!temp2)
-			goto err;
+			if unlikely(!temp2)
+				goto err;
 			error = DeeObject_Bool(temp2);
 			Dee_Decref(temp2);
 			return error;
 		}
 		error = has_generic_attribute(tp_self, self, &str_rewind);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			temp = DeeObject_Copy(self);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			temp2 = DeeObject_CallAttr(temp, &str_rewind, 0, NULL);
-			if
-				unlikely(!temp2)
-			{
+			if unlikely(!temp2)
+				{
 				Dee_Decref(temp);
 				goto err;
 			}
@@ -1955,14 +1811,12 @@ INTERN int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
 		}
 		temp = get_generic_attribute(tp_self, self, &str_seq);
 		if (temp != ITER_DONE) {
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			temp2 = DeeObject_IterSelf(temp);
 			Dee_Decref(temp);
-			if
-				unlikely(!temp2)
-			goto err;
+			if unlikely(!temp2)
+				goto err;
 			error = DeeObject_CompareNe(self, temp2);
 			Dee_Decref(temp2);
 			return error;
@@ -2004,12 +1858,10 @@ INTERN DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
 			if (nii->nii_common.nii_getindex &&
 			    nii->nii_common.nii_setindex) {
 				size_t index = (*nii->nii_common.nii_getindex)(self);
-				if
-					unlikely(index == (size_t)-1)
-				goto err;
-				if
-					unlikely(index == (size_t)-2)
-				return ITER_DONE;
+				if unlikely(index == (size_t)-1)
+					goto err;
+				if unlikely(index == (size_t)-2)
+					return ITER_DONE;
 				result = DeeObject_IterNext(self);
 				if (ITER_ISOK(result) &&
 				    unlikely((*nii->nii_common.nii_setindex)(self, index)))
@@ -2020,9 +1872,8 @@ INTERN DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
 		}
 		error = has_generic_attribute(tp_self, self, &str_peek);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			result = DeeObject_CallAttr(self, &str_peek, 0, NULL);
 			if (!result && DeeError_Catch(&DeeError_StopIteration))
 				result = ITER_DONE;
@@ -2030,9 +1881,8 @@ INTERN DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
 		}
 	}
 	temp = DeeObject_Copy(self);
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	result = DeeObject_IterNext(temp);
 	Dee_Decref(temp);
 	return result;
@@ -2061,9 +1911,8 @@ INTERN DREF DeeObject *DCALL
 DeeIterator_GetSeq(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if
-		unlikely(tp_self == &DeeIterator_Type)
-	return_empty_seq;
+	if unlikely(tp_self == &DeeIterator_Type)
+		return_empty_seq;
 	while (tp_self != &DeeIterator_Type) {
 		struct type_nii *nii;
 		if (tp_self->tp_cmp &&
@@ -2115,9 +1964,8 @@ iterator_is_bidirectional(DeeObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 iterator_get_isbidirectional(DeeObject *__restrict self) {
 	int temp = iterator_is_bidirectional(self);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	return_bool_(temp);
 err:
 	return NULL;
@@ -2126,9 +1974,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 iterator_get_hasnext(DeeObject *__restrict self) {
 	int temp = DeeObject_Bool(self);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	return_bool_(temp);
 err:
 	return NULL;
@@ -2137,9 +1984,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 iterator_get_hasprev(DeeObject *__restrict self) {
 	int error = DeeIterator_HasPrev(self);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error);
 err:
 	return NULL;
@@ -2148,12 +1994,10 @@ err:
 PRIVATE DREF DeeObject *DCALL
 iterator_get_index(DeeObject *__restrict self) {
 	size_t result = DeeIterator_GetIndex(self);
-	if
-		unlikely(result == (size_t)-1)
-	goto err;
-	if
-		unlikely(result == (size_t)-2)
-	return_none;
+	if unlikely(result == (size_t)-1)
+		goto err;
+	if unlikely(result == (size_t)-2)
+		return_none;
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -2174,9 +2018,8 @@ iterator_set_index(DeeObject *__restrict self,
 			if (nii->nii_common.nii_setindex)
 				return (*nii->nii_common.nii_setindex)(self, newindex);
 			if (nii->nii_common.nii_rewind) {
-				if
-					unlikely((*nii->nii_common.nii_rewind)(self))
-				goto err;
+				if unlikely((*nii->nii_common.nii_rewind)(self))
+					goto err;
 				goto after_rewind;
 			}
 			break;
@@ -2185,9 +2028,8 @@ iterator_set_index(DeeObject *__restrict self,
 			break;
 	}
 	temp = DeeObject_CallAttr(self, &str_rewind, 0, NULL);
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	Dee_Decref(temp);
 after_rewind:
 	return !newindex ? 0 : iterator_do_advance(self, newindex, indexob, NULL);
@@ -2354,8 +2196,7 @@ iterator_inplace_add(DeeObject **__restrict pself,
 	/* Increment the Iterator by `(int)count' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
-	if
-		unlikely((unlikely(count < 0) ? iterator_do_revert(*pself, (size_t)-count, NULL, countob)
+	if unlikely((unlikely(count < 0) ? iterator_do_revert(*pself, (size_t)-count, NULL, countob)
 		                              : (count > 0) ? iterator_do_advance(*pself, (size_t)count, countob, NULL) : 0) < 0)
 	goto err;
 	return 0;
@@ -2370,8 +2211,7 @@ iterator_inplace_sub(DeeObject **__restrict pself,
 	/* Increment the Iterator by `(int)count' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
-	if
-		unlikely((unlikely(count < 0) ? iterator_do_advance(*pself, (size_t)-count, NULL, countob)
+	if unlikely((unlikely(count < 0) ? iterator_do_advance(*pself, (size_t)-count, NULL, countob)
 		                              : (count > 0) ? iterator_do_revert(*pself, (size_t)count, countob, NULL) : 0) < 0)
 	goto err;
 	return 0;
@@ -2388,11 +2228,9 @@ iterator_add(DeeObject *__restrict self,
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	result = DeeObject_Copy(self);
-	if
-		unlikely(!result)
-	goto err;
-	if
-		unlikely((unlikely(count < 0) ? iterator_do_revert(result, (size_t)-count, NULL, countob)
+	if unlikely(!result)
+		goto err;
+	if unlikely((unlikely(count < 0) ? iterator_do_revert(result, (size_t)-count, NULL, countob)
 		                              : (count > 0) ? iterator_do_advance(result, (size_t)count, countob, NULL) : 0) < 0)
 	goto err_r;
 	return result;
@@ -2411,9 +2249,8 @@ iterator_sub(DeeObject *__restrict self,
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	result = DeeObject_Copy(self);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if unlikely((unlikely(count < 0) ? iterator_do_advance(result, (size_t)-count, NULL, countob)
 	                                 : (count > 0) ? iterator_do_revert(result, (size_t)count, countob, NULL) : 0) < 0)
 		goto err_r;
@@ -2529,9 +2366,8 @@ iterator_assign(DeeObject *__restrict self,
 	 * >>     ++this; // or `operator next()', `operator ++ ()', `operator += ()' or `advance()'
 	 */
 	index = DeeIterator_GetIndex(other);
-	if
-		unlikely(index == (size_t)-1)
-	goto err;
+	if unlikely(index == (size_t)-1)
+		goto err;
 	return DeeIterator_SetIndex(self, index);
 err:
 	return -1;
@@ -2701,9 +2537,8 @@ INTERN DREF DeeObject *DCALL
 IteratorFuture_For(DeeObject *__restrict self) {
 	DREF IteratorFuture *result;
 	result = DeeObject_MALLOC(IteratorFuture);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->if_iter = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &IteratorFuture_Type);
@@ -2723,9 +2558,8 @@ PRIVATE int DCALL
 if_copy(IteratorFuture *__restrict self,
         IteratorFuture *__restrict other) {
 	self->if_iter = DeeObject_Copy(other->if_iter);
-	if
-		unlikely(!self->if_iter)
-	goto err;
+	if unlikely(!self->if_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -2735,9 +2569,8 @@ PRIVATE int DCALL
 if_deep(IteratorFuture *__restrict self,
         IteratorFuture *__restrict other) {
 	self->if_iter = DeeObject_DeepCopy(other->if_iter);
-	if
-		unlikely(!self->if_iter)
-	goto err;
+	if unlikely(!self->if_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -2850,9 +2683,8 @@ INTERN DREF DeeObject *DCALL
 IteratorPending_For(DeeObject *__restrict self) {
 	DREF IteratorPending *result;
 	result = DeeObject_MALLOC(IteratorPending);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ip_iter = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &IteratorPending_Type);

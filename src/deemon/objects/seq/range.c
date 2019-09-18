@@ -81,9 +81,8 @@ function range(start,end,step?) {
 PRIVATE int DCALL
 ri_ctor(RangeIterator *__restrict self) {
 	self->ri_range = (DREF Range *)DeeRange_New(Dee_None, Dee_None, NULL);
-	if
-		unlikely(!self->ri_range)
-	goto err;
+	if unlikely(!self->ri_range)
+		goto err;
 	self->ri_index = Dee_None;
 	self->ri_end   = Dee_None;
 	self->ri_step  = NULL;
@@ -129,9 +128,8 @@ again:
 	/* Create a copy of the index (may not be correct if it already changed) */
 	new_index = DeeObject_Copy(old_index);
 	Dee_Decref(old_index);
-	if
-		unlikely(!new_index)
-	goto err;
+	if unlikely(!new_index)
+		goto err;
 	COMPILER_READ_BARRIER();
 	if (old_index != other->ri_index) {
 		Dee_Decref(new_index);
@@ -209,9 +207,8 @@ again:
 		temp = self->ri_step
 		       ? DeeObject_InplaceAdd(&new_index, self->ri_step)
 		       : DeeObject_Inc(&new_index);
-		if
-			unlikely(temp)
-		goto err_ni;
+		if unlikely(temp)
+			goto err_ni;
 	}
 	/* Check if the end has been reached */
 	temp = (likely(!self->ri_range->r_rev))
@@ -219,16 +216,14 @@ again:
 	       : DeeObject_CompareGr(new_index, self->ri_end);
 	if (temp <= 0) {
 		/* Error, or done. */
-		if
-			unlikely(temp < 0)
-		goto err_ni;
+		if unlikely(temp < 0)
+			goto err_ni;
 		Dee_Decref(new_index);
 		return ITER_DONE;
 	}
 	/* Save the new index object. */
 	rwlock_write(&self->ri_lock);
-	if
-		unlikely(self->ri_index != old_index ||
+	if unlikely(self->ri_index != old_index ||
 		         self->ri_first != is_first)
 	{
 		rwlock_endwrite(&self->ri_lock);
@@ -262,14 +257,12 @@ again:
 		temp = self->ri_step
 		       ? DeeObject_InplaceAdd(&new_index, self->ri_step)
 		       : DeeObject_Inc(&new_index);
-		if
-			unlikely(temp)
-		goto err_r;
+		if unlikely(temp)
+			goto err_r;
 		/* Save the new index object. */
 		rwlock_write(&self->ri_lock);
-		if
-			unlikely(self->ri_index != old_index || self->ri_first)
-		{
+		if unlikely(self->ri_index != old_index || self->ri_first)
+			{
 			rwlock_endwrite(&self->ri_lock);
 			Dee_Decref(new_index);
 			goto again;
@@ -491,9 +484,8 @@ PRIVATE DREF RangeIterator *DCALL
 range_iter(Range *__restrict self) {
 	DREF RangeIterator *result;
 	result = DeeObject_MALLOC(RangeIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &SeqRangeIterator_Type);
 	result->ri_index = self->r_start;
 	result->ri_range = self;
@@ -512,9 +504,8 @@ range_contains(Range *__restrict self,
                DeeObject *__restrict index) {
 	DREF DeeObject *temp, *temp2, *temp3;
 	int error;
-	if
-		likely(!self->r_rev)
-	{
+	if likely(!self->r_rev)
+		{
 		/* if (!(self->r_start <= index)) return false; */
 		error = DeeObject_CompareLe(self->r_start, index);
 		if (error <= 0) /* if false-or-error */
@@ -529,22 +520,19 @@ range_contains(Range *__restrict self,
 				temp = DeeObject_Sub(index, self->r_start);
 			} else {
 				temp = DeeObject_Sub(self->r_start, index);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				temp2 = DeeObject_Neg(temp);
 				Dee_Decref(temp);
 				temp = temp2;
 			}
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			/* temp = temp % self->r_step; */
 			temp2 = DeeObject_Mod(temp, self->r_step);
 			Dee_Decref(temp);
-			if
-				unlikely(!temp2)
-			goto err;
+			if unlikely(!temp2)
+				goto err;
 			error = DeeObject_Bool(temp2);
 			Dee_Decref(temp2);
 			/* if ((index - self->r_start) % self->r_step) return false; */
@@ -563,20 +551,17 @@ range_contains(Range *__restrict self,
 			goto err_or_false;
 		/* temp = self->r_start - index; */
 		temp = DeeObject_Sub(self->r_start, index);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		temp3 = DeeObject_Neg(self->r_step);
-		if
-			unlikely(!temp3)
-		goto err_temp;
+		if unlikely(!temp3)
+			goto err_temp;
 		/* temp2 = (self->r_start - index) % -self->r_step; */
 		temp2 = DeeObject_Mod(temp, temp3);
 		Dee_Decref(temp3);
 		Dee_Decref(temp);
-		if
-			unlikely(!temp2)
-		goto err;
+		if unlikely(!temp2)
+			goto err;
 		error = DeeObject_Bool(temp2);
 		Dee_Decref(temp2);
 		/* if ((self->r_start - index) % -self->r_step) return false; */
@@ -626,34 +611,28 @@ range_size(Range *__restrict self) {
 	DREF DeeObject *result, *temp;
 	int error;
 	result = DeeObject_Sub(self->r_end, self->r_start);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (self->r_step) {
 		temp = DeeObject_Add(result, self->r_step);
-		if
-			unlikely(!temp)
-		goto err_r;
+		if unlikely(!temp)
+			goto err_r;
 		Dee_Decref(result);
 		error = (likely(!self->r_rev))
 		        ? DeeObject_Dec(&temp)
 		        : DeeObject_Inc(&temp);
-		if
-			unlikely(error)
-		goto err_temp;
+		if unlikely(error)
+			goto err_temp;
 		result = DeeObject_Div(temp, self->r_step);
-		if
-			unlikely(!result)
-		goto err_temp;
+		if unlikely(!result)
+			goto err_temp;
 		Dee_Decref(temp);
 	}
 	error = DeeObject_CompareLo(result, &DeeInt_Zero);
-	if
-		unlikely(error != 0)
-	{
-		if
-			unlikely(error < 0)
-		goto err_r;
+	if unlikely(error != 0)
+		{
+		if unlikely(error < 0)
+			goto err_r;
 		temp = DeeObject_NewDefault(Dee_TYPE(result));
 		Dee_Decref(result);
 		result = temp;
@@ -690,32 +669,26 @@ range_getitem(Range *__restrict self, DeeObject *__restrict index) {
 	int error;
 	if (!self->r_step) {
 		result = DeeObject_Add(self->r_start, index);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 do_compare_positive:
 		error = DeeObject_CompareGe(result, self->r_end);
 	} else {
 		temp = DeeObject_Mul(self->r_step, index);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		result = DeeObject_Add(self->r_start, temp);
 		Dee_Decref(temp);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			likely(!self->r_rev)
-		goto do_compare_positive;
+		if unlikely(!result)
+			goto err;
+		if likely(!self->r_rev)
+			goto do_compare_positive;
 		error = DeeObject_CompareLe(result, self->r_end);
 	}
-	if
-		unlikely(error != 0)
-	{
-		if
-			unlikely(error < 0)
-		goto err;
+	if unlikely(error != 0)
+		{
+		if unlikely(error < 0)
+			goto err;
 		goto oob;
 	}
 	return result;
@@ -763,14 +736,12 @@ range_getrange(Range *__restrict self,
 		 */
 		error = DeeObject_CompareLo(end, &DeeInt_Zero);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (self->r_step) {
 				temp = DeeObject_Mul(self->r_step, end);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				new_end = DeeObject_Add(self->r_end, temp);
 				Dee_Decref(temp);
 			} else {
@@ -778,38 +749,33 @@ range_getrange(Range *__restrict self,
 			}
 		} else {
 			mylen = range_size(self);
-			if
-				unlikely(!mylen)
-			goto err;
+			if unlikely(!mylen)
+				goto err;
 			error = DeeObject_CompareGe(mylen, end);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				return_reference_((DeeObject *)self);
 			}
 			if (self->r_step) {
 				temp = DeeObject_Mul(self->r_step, end);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				new_end = DeeObject_Add(self->r_start, temp);
 				Dee_Decref(temp);
 			} else {
 				new_end = DeeObject_Add(self->r_start, end);
 			}
 		}
-		if
-			unlikely(!new_end)
-		goto err;
+		if unlikely(!new_end)
+			goto err;
 		new_start = self->r_start;
 		Dee_Incref(new_start);
 		goto got_ns_ne;
 	}
 	mylen = range_size(self);
-	if
-		unlikely(!mylen)
-	goto err;
+	if unlikely(!mylen)
+		goto err;
 	/* if (start < 0)
 	 *     new_start = mylen + start;
 	 * else
@@ -817,13 +783,11 @@ range_getrange(Range *__restrict self,
 	 */
 	error = DeeObject_CompareLo(start, &DeeInt_Zero);
 	if (error != 0) {
-		if
-			unlikely(error < 0)
-		goto err_mylen;
+		if unlikely(error < 0)
+			goto err_mylen;
 		new_start = DeeObject_Add(mylen, start);
-		if
-			unlikely(!new_start)
-		goto err_mylen;
+		if unlikely(!new_start)
+			goto err_mylen;
 	} else {
 		new_start = start;
 		Dee_Incref(start);
@@ -835,9 +799,8 @@ reuse_old_end:
 		 */
 		error = DeeObject_CompareLe(mylen, new_start);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err_mylen_ns;
+			if unlikely(error < 0)
+				goto err_mylen_ns;
 return_empty_seq_mylen_ns:
 			Dee_Decref(new_start);
 			Dee_Decref(mylen);
@@ -854,22 +817,19 @@ return_empty_seq_mylen_ns:
 		 */
 		error = DeeObject_CompareLo(end, &DeeInt_Zero);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err_mylen_ns;
+			if unlikely(error < 0)
+				goto err_mylen_ns;
 			new_end = DeeObject_Add(mylen, end);
-			if
-				unlikely(!new_end)
-			goto err_mylen_ns;
+			if unlikely(!new_end)
+				goto err_mylen_ns;
 		} else {
 			/* if (mylen <= new_end)
 			 *     goto reuse_old_end;
 			 */
 			error = DeeObject_CompareLe(mylen, end);
 			if (error != 0) {
-				if
-					unlikely(error < 0)
-				goto err_mylen_ns;
+				if unlikely(error < 0)
+					goto err_mylen_ns;
 				goto reuse_old_end;
 			}
 			new_end = end;
@@ -886,17 +846,15 @@ return_empty_seq_mylen_ns:
 		        ? DeeObject_CompareGe(new_start, new_end)
 		        : DeeObject_CompareLe(new_end, new_start);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			goto err_mylen_ns_ne;
+			if unlikely(error < 0)
+				goto err_mylen_ns_ne;
 			Dee_Decref(new_end);
 			goto return_empty_seq_mylen_ns;
 		}
 		/* new_end = mylen - new_end; */
 		temp = DeeObject_Sub(mylen, new_end);
-		if
-			unlikely(!temp)
-		goto err_mylen_ns_ne;
+		if unlikely(!temp)
+			goto err_mylen_ns_ne;
 		Dee_Decref(new_end);
 		new_end = temp;
 		/* if (self->r_step)
@@ -904,17 +862,15 @@ return_empty_seq_mylen_ns:
 		 */
 		if (self->r_step) {
 			temp = DeeObject_Mul(new_end, self->r_step);
-			if
-				unlikely(!temp)
-			goto err_mylen_ns_ne;
+			if unlikely(!temp)
+				goto err_mylen_ns_ne;
 			Dee_Decref(new_end);
 			new_end = temp;
 		}
 		/* new_end = self->r_end - new_end; */
 		temp = DeeObject_Sub(self->r_end, new_end);
-		if
-			unlikely(!temp)
-		goto err_mylen_ns_ne;
+		if unlikely(!temp)
+			goto err_mylen_ns_ne;
 		Dee_Decref(new_end);
 		new_end = temp;
 	}
@@ -925,26 +881,23 @@ return_empty_seq_mylen_ns:
 	 */
 	if (self->r_step) {
 		temp = DeeObject_Mul(self->r_step, new_start);
-		if
-			unlikely(!temp)
-		goto err_ns_ne;
+		if unlikely(!temp)
+			goto err_ns_ne;
 		Dee_Decref(new_start);
 		new_start = temp;
 	}
 	/* new_start = self->r_start + new_start; */
 	temp = DeeObject_Add(self->r_start, new_start);
-	if
-		unlikely(!temp)
-	goto err_ns_ne;
+	if unlikely(!temp)
+		goto err_ns_ne;
 	Dee_Decref(new_start);
 	new_start = temp;
 
 got_ns_ne:
 	/* Pack together the new range object. */
 	result = DeeObject_MALLOC(Range);
-	if
-		unlikely(!result)
-	goto err_ns_ne;
+	if unlikely(!result)
+		goto err_ns_ne;
 	result->r_start = new_start; /* Inherit reference */
 	result->r_end   = new_end;   /* Inherit reference */
 	result->r_rev   = self->r_rev;
@@ -1029,24 +982,20 @@ PRIVATE int DCALL
 range_deep(Range *__restrict self,
            Range *__restrict other) {
 	self->r_start = DeeObject_DeepCopy(other->r_start);
-	if
-		unlikely(!self->r_start)
-	goto err;
+	if unlikely(!self->r_start)
+		goto err;
 	self->r_end = DeeObject_DeepCopy(other->r_end);
-	if
-		unlikely(!self->r_end)
-	goto err_begin;
+	if unlikely(!self->r_end)
+		goto err_begin;
 	self->r_step = NULL;
 	if (other->r_step) {
 		int temp;
 		self->r_step = DeeObject_DeepCopy(other->r_step);
-		if
-			unlikely(!self->r_step)
-		goto err_end;
+		if unlikely(!self->r_step)
+			goto err_end;
 		temp = DeeObject_CompareLo(self->r_step, &DeeInt_Zero);
-		if
-			unlikely(temp < 0)
-		goto err_step;
+		if unlikely(temp < 0)
+			goto err_step;
 		self->r_rev = !!temp;
 	}
 	return 0;
@@ -1072,9 +1021,8 @@ range_init(Range *__restrict self,
 	if (self->r_step) {
 		int temp;
 		temp = DeeObject_CompareLo(self->r_step, &DeeInt_Zero);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		self->r_rev = !!temp;
 		Dee_Incref(self->r_step);
 	}
@@ -1147,9 +1095,8 @@ INTERN DeeTypeObject SeqRange_Type = {
 PRIVATE int DCALL
 iri_ctor(IntRangeIterator *__restrict self) {
 	self->iri_range = DeeObject_MALLOC(IntRange);
-	if
-		unlikely(!self->iri_range)
-	goto err;
+	if unlikely(!self->iri_range)
+		goto err;
 	DeeObject_Init(self->iri_range, &SeqIntRange_Type);
 	self->iri_range->ir_start = 0;
 	self->iri_range->ir_end   = 0;
@@ -1336,9 +1283,8 @@ PRIVATE DREF IntRangeIterator *DCALL
 intrange_iter(IntRange *__restrict self) {
 	DREF IntRangeIterator *result;
 	result = DeeObject_MALLOC(IntRangeIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &SeqIntRangeIterator_Type);
 	result->iri_range = self;
 	result->iri_step  = self->ir_step;
@@ -1573,9 +1519,8 @@ intrange_init(IntRange *__restrict self,
 	                  &self->ir_end,
 	                  &self->ir_step))
 		goto err;
-	if
-		unlikely(self->ir_step == 0)
-	{
+	if unlikely(self->ir_step == 0)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot used `0' as step for _SeqIntRange");
 	}
@@ -1677,9 +1622,8 @@ DeeRange_NewInt(dssize_t begin,
 
 	/* Create the new range. */
 	result = DeeObject_MALLOC(IntRange);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &SeqIntRange_Type);
 	/* Fill in members of the new range object. */
 	result->ir_start = begin;
@@ -1710,9 +1654,8 @@ DeeRange_New(DeeObject *__restrict begin,
 			if (step) {
 				if (!DeeInt_Check(step) || !DeeInt_TryAsSSize(step, &i_step))
 					goto do_object_range;
-				if
-					unlikely(!step)
-				{
+				if unlikely(!step)
+					{
 					if (i_begin >= i_end)
 						return_reference_(Dee_EmptySeq);
 					return DeeSeq_RepeatItemForever(begin);
@@ -1728,15 +1671,13 @@ do_object_range:
 	/* Check if `step' is negative (required for proper compare operations of the range iterator). */
 	if (step) {
 		temp = DeeObject_CompareLo(step, &DeeInt_Zero);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 	}
 	/* Create the new range. */
 	result = DeeObject_MALLOC(Range);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &SeqRange_Type);
 	/* Fill in members of the new range object. */
 	result->r_start = begin;

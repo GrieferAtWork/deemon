@@ -93,18 +93,15 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
 	DREF struct ast *const_ast;
 	DREF DeeObject *result;
-	if
-		unlikely(scope_push())
-	goto err;
+	if unlikely(scope_push())
+		goto err;
 	const_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
 	scope_pop();
-	if
-		unlikely(!const_ast)
-	goto err;
+	if unlikely(!const_ast)
+		goto err;
 	/* Optimize the constant branch to allow for constant propagation. */
-	if
-		unlikely(ast_optimize_all(const_ast, true))
-	goto err_const_ast;
+	if unlikely(ast_optimize_all(const_ast, true))
+		goto err_const_ast;
 	if (const_ast->a_type == AST_CONSTEXPR &&
 	    asm_allowconst(const_ast->a_constexpr)) {
 		result = const_ast->a_constexpr;
@@ -124,9 +121,8 @@ err:
 
 PRIVATE struct asm_sym *FCALL do_parse_symbol_for_op(int wid) {
 	struct asm_intexpr expr;
-	if
-		unlikely(uasm_parse_intexpr(&expr, UASM_INTEXPR_FHASSP))
-	goto err;
+	if unlikely(uasm_parse_intexpr(&expr, UASM_INTEXPR_FHASSP))
+		goto err;
 	if (!expr.ie_sym) {
 		expr.ie_sym = asm_newsym();
 		asm_defsym(expr.ie_sym);
@@ -184,9 +180,8 @@ get_reloc_by_name(char const *__restrict name) {
 	if (memcmp(name, "R_DMN_", 6 * sizeof(char)) == 0)
 		name += 6;
 	namelen = strlen(name);
-	if
-		unlikely(namelen >= COMPILER_LENOF(reloc_db[0].rt_name))
-	return R_DMN_COUNT;
+	if unlikely(namelen >= COMPILER_LENOF(reloc_db[0].rt_name))
+		return R_DMN_COUNT;
 	for (result = 0; result < R_DMN_COUNT; ++result) {
 		if (memcmp(reloc_db[result].rt_name, name, namelen * sizeof(char)) == 0)
 			break;
@@ -209,33 +204,28 @@ uasm_parse_directive(void) {
 	 MEMCASEEQ(name->k_name, s, (len) * sizeof(char)))
 	struct TPPKeyword *name;
 	name = uasm_parse_symnam();
-	if
-		unlikely(!name)
-	goto err;
+	if unlikely(!name)
+		goto err;
 	if (tok == ':') {
 		struct TPPKeyword *label_name;
 		char backup;
 		struct asm_sym *label;
 		/* Actually a label definition. */
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		/* Cheat a bit... */
 		backup           = name->k_name[-1];
 		name->k_name[-1] = '.';
 		label_name       = TPPLexer_LookupKeyword(name->k_name - 1, name->k_size + 1, 1);
 		name->k_name[-1] = backup;
-		if
-			unlikely(!label_name)
-		goto err;
+		if unlikely(!label_name)
+			goto err;
 		label = uasm_symbol(label_name);
-		if
-			unlikely(!label)
-		goto err;
+		if unlikely(!label)
+			goto err;
 		/* Make sure that the symbol hasn't already been defined. */
-		if
-			unlikely(ASM_SYM_DEFINED(label))
-		{
+		if unlikely(ASM_SYM_DEFINED(label))
+			{
 			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name))
 				goto err;
 		} else {
@@ -311,9 +301,8 @@ do_handle_code:
 		if (tok == '@' && unlikely(yield() < 0))
 			goto err;
 		name = uasm_parse_symnam();
-		if
-			unlikely(!name)
-		goto err;
+		if unlikely(!name)
+			goto err;
 		if (NAMEISKWD("yielding"))
 			current_basescope->bs_flags |= CODE_FYIELDING;
 		else if (NAMEISKWD("copyable"))
@@ -344,9 +333,8 @@ do_handle_code:
 		}
 		if (tok != ',')
 			break;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	}
 	goto done;
 
@@ -357,12 +345,10 @@ do_handle_code:
 		uint16_t reloc_value;
 do_handle_reloc:
 		/* `.reloc ., <name> [, <symbol> [, <value>]]'  */
-		if
-			likely(tok == '.')
-		{
-			if
-				unlikely(yield() < 0)
-			goto err;
+		if likely(tok == '.')
+			{
+			if unlikely(yield() < 0)
+				goto err;
 		} else {
 			struct asm_intexpr expr;
 			if (WARN(W_UASM_RELOC_NEED_DOT))
@@ -370,35 +356,30 @@ do_handle_reloc:
 			if (uasm_parse_intexpr(&expr, UASM_INTEXPR_FNORMAL))
 				goto err;
 		}
-		if
-			unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
-		goto err;
+		if unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
+			goto err;
 		reloc_name  = uasm_parse_symnam();
 		reloc_sym   = NULL;
 		reloc_value = 0;
 		reloc_type  = get_reloc_by_name(reloc_name->k_name);
 		/* Check if the relocation name could be determined. */
-		if
-			unlikely(reloc_type == R_DMN_COUNT)
-		{
+		if unlikely(reloc_type == R_DMN_COUNT)
+			{
 			if (WARN(W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name))
 				goto err;
 			reloc_type = R_DMN_NONE;
 		}
 		if (tok == ',') {
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			/* Parse the relocation symbol. */
 			reloc_sym = do_parse_symbol_for_reloc();
-			if
-				unlikely(!reloc_sym)
-			goto err;
+			if unlikely(!reloc_sym)
+				goto err;
 			if (tok == ',') {
 				struct asm_intexpr rval;
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				/* Parse the relocation value. */
 				if (uasm_parse_intexpr(&rval, UASM_INTEXPR_FNORMAL))
 					goto err;
@@ -437,21 +418,18 @@ do_handle_except:
 		 *   - `[@]mask(const)' -- Use `const' as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except();
-		if
-			unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
-		goto err;
+		if unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
+			goto err;
 		except_end = do_parse_symbol_for_except();
-		if
-			unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
-		goto err;
+		if unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
+			goto err;
 		except_entry = do_parse_symbol_for_except();
 		except_flags = EXCEPTION_HANDLER_FNORMAL;
 		except_mask  = NULL;
 		while (tok == ',') {
 			char const *tag_start, *tag_end;
-			if
-				unlikely(yield() < 0)
-			goto except_err;
+			if unlikely(yield() < 0)
+				goto except_err;
 			if (tok == '@' && unlikely(yield() < 0))
 				goto except_err;
 			if (!TPP_ISKEYWORD(tok)) {
@@ -477,12 +455,10 @@ except_unknown_tag:
 				except_flags |= EXCEPTION_HANDLER_FHANDLED;
 			} else if (IS_TAG("mask")) {
 				DREF DeeObject *mask;
-				if
-					unlikely(yield() < 0)
-				goto except_err;
-				if
-					unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN))
-				goto except_err;
+				if unlikely(yield() < 0)
+					goto except_err;
+				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN))
+					goto except_err;
 				mask = do_parse_constant();
 				if (DeeNone_Check(mask)) {
 					/* Special case: `mask(none)' is the same as `mask(type none)' */
@@ -490,8 +466,7 @@ except_unknown_tag:
 					mask = (DREF DeeObject *)&DeeNone_Type;
 					Dee_Incref(mask);
 				}
-				if
-					unlikely(DeeObject_AssertType(mask, &DeeType_Type) ||
+				if unlikely(DeeObject_AssertType(mask, &DeeType_Type) ||
 					         (likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN)))
 				{
 					Dee_Decref(mask);
@@ -503,15 +478,13 @@ except_unknown_tag:
 			} else {
 				goto except_unknown_tag;
 			}
-			if
-				unlikely(yield() < 0)
-			goto except_err;
+			if unlikely(yield() < 0)
+				goto except_err;
 #undef IS_TAG
 		}
 		except = asm_newexc();
-		if
-			unlikely(!except)
-		goto except_err;
+		if unlikely(!except)
+			goto except_err;
 		except->ex_mask  = except_mask; /* Inherit reference. */
 		except->ex_start = except_start;
 		except->ex_end   = except_end;
@@ -548,9 +521,8 @@ do_emit_memory:
 		current_assembler.a_flag &= ~(ASM_FPEEPHOLE);
 		current_basescope->bs_flags |= CODE_FASSEMBLY;
 		for (;;) {
-			if
-				unlikely(uasm_parse_intexpr(&value, UASM_INTEXPR_FHASSP))
-			goto err;
+			if unlikely(uasm_parse_intexpr(&value, UASM_INTEXPR_FHASSP))
+				goto err;
 			if (value.ie_sym) {
 				/* Emit a relocation. */
 				uint16_t relo_type;
@@ -653,9 +625,8 @@ check_invalid_stack_and_adjust:
 			}
 			if (tok != ',')
 				break;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 		}
 		goto done;
 	}
@@ -670,22 +641,19 @@ do_handle_ddi:
 		/* `.ddi <filename:string>, <line:imm>' */
 		/* `.ddi <filename:string>, <line:imm>, <col:imm>' */
 		filename = do_parse_constant();
-		if
-			unlikely(!filename)
-		goto err;
+		if unlikely(!filename)
+			goto err;
 		if (tok != ',') {
 			/* `.ddi <line:imm>' */
 			line     = filename;
 			filename = NULL;
 			col      = NULL;
 		} else {
-			if
-				unlikely(yield() < 0)
-			goto err_ddi_filename;
+			if unlikely(yield() < 0)
+				goto err_ddi_filename;
 			line = do_parse_constant();
-			if
-				unlikely(!line)
-			goto err_ddi_filename;
+			if unlikely(!line)
+				goto err_ddi_filename;
 			if (tok != ',') {
 				if (DeeString_Check(filename)) {
 					/* `.ddi <filename:string>, <line:imm>' */
@@ -698,13 +666,11 @@ do_handle_ddi:
 				}
 			} else {
 				/* `.ddi <filename:string>, <line:imm>, <col:imm>' */
-				if
-					unlikely(yield() < 0)
-				goto err_ddi_line;
+				if unlikely(yield() < 0)
+					goto err_ddi_line;
 				col = do_parse_constant();
-				if
-					unlikely(!col)
-				goto err_ddi_line;
+				if unlikely(!col)
+					goto err_ddi_line;
 			}
 		}
 		/* Make sure that the filename is a string. */
@@ -736,9 +702,8 @@ do_handle_ddi:
 					sym = ddi->dc_sym;
 					ASSERT(sym->as_used >= 1);
 					if (sym->as_used > 1) {
-						if
-							unlikely((sym = asm_newsym()) == NULL)
-						return -1;
+						if unlikely((sym = asm_newsym()) == NULL)
+							return -1;
 						--ddi->dc_sym->as_used;
 						ddi->dc_sym = sym;
 						asm_defsym(sym);
@@ -747,8 +712,7 @@ do_handle_ddi:
 					goto ddi_update;
 				}
 			}
-			if
-				unlikely((sym = asm_newsym()) == NULL ||
+			if unlikely((sym = asm_newsym()) == NULL ||
 				         (ddi = asm_newddi()) == NULL)
 			return -1;
 			/* Simply define the symbol at the current text position.
@@ -809,15 +773,12 @@ do_handle_adjstack:
 		 * >>               // between this point and the end of it's instruction.
 		 * >> 1:  print @"The current stack depth is 42", nl
 		 */
-		if
-			unlikely(uasm_parse_intexpr(&new_depth, UASM_INTEXPR_FHASSP))
-		goto err;
-		if
-			unlikely(new_depth.ie_sym &&
+		if unlikely(uasm_parse_intexpr(&new_depth, UASM_INTEXPR_FHASSP))
+			goto err;
+		if unlikely(new_depth.ie_sym &&
 			         WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION))
 		goto err;
-		if
-			unlikely((new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX) &&
+		if unlikely((new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX) &&
 			         WARN(W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val))
 		goto err;
 		/* Special case: If nothing changed, don't even sweat it. */
@@ -825,9 +786,8 @@ do_handle_adjstack:
 		    !(current_userasm.ua_mode & USER_ASM_FSTKINV))
 			goto done;
 		/* Warn if the previous instruction does actually return. */
-		if
-			unlikely(!asm_isnoreturn(current_userasm.ua_lasti, current_basescope->bs_flags))
-		{
+		if unlikely(!asm_isnoreturn(current_userasm.ua_lasti, current_basescope->bs_flags))
+			{
 			if (WARN(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT))
 				goto err;
 #if 1

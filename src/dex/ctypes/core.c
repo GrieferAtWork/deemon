@@ -102,30 +102,26 @@ null_pointer:
 		}
 		if (pointer_base == &DeeCChar_Type) {
 			result->ptr = DeeString_AsUtf8(self);
-			if
-				unlikely(!result->ptr)
-			goto err;
+			if unlikely(!result->ptr)
+				goto err;
 			return 0;
 		}
 		if (pointer_base == &DeeCWChar_Type) {
 			result->ptr = DeeString_AsWide(self);
-			if
-				unlikely(!result->ptr)
-			goto err;
+			if unlikely(!result->ptr)
+				goto err;
 			return 0;
 		}
 		if (pointer_base == &DeeCChar16_Type) {
 			result->ptr = DeeString_AsUtf16(self, STRING_ERROR_FREPLAC);
-			if
-				unlikely(!result->ptr)
-			goto err;
+			if unlikely(!result->ptr)
+				goto err;
 			return 0;
 		}
 		if (pointer_base == &DeeCChar32_Type) {
 			result->ptr = DeeString_AsUtf32(self);
-			if
-				unlikely(!result->ptr)
-			goto err;
+			if unlikely(!result->ptr)
+				goto err;
 			return 0;
 		}
 	}
@@ -174,22 +170,19 @@ stype_dofunc(DeeSTypeObject *__restrict self, size_t argc,
 	if (argc && DeeString_Check(argv[0])) {
 		--argc, ++argv;
 		cc = cc_lookup(DeeString_STR(argv[-1]));
-		if
-			unlikely(cc == CC_INVALID)
-		goto err;
+		if unlikely(cc == CC_INVALID)
+			goto err;
 		cc = (cc_t)((unsigned int)cc |
 		            (unsigned int)cc_flags);
 	}
 	argv_types = (DeeSTypeObject **)Dee_Malloc(argc * sizeof(DeeSTypeObject *));
-	if
-		unlikely(!argv_types)
-	goto err;
+	if unlikely(!argv_types)
+		goto err;
 	/* Translate argument types. */
 	for (i = 0; i < argc; ++i) {
 		argv_types[i] = DeeSType_Get(argv[i]);
-		if
-			unlikely(!argv_types[i])
-		goto err_argv;
+		if unlikely(!argv_types[i])
+			goto err_argv;
 	}
 	/* Lookup the associated C-function type while inheriting the argument vector. */
 	return (DREF DeeObject *)DeeSType_CFunction(self, cc, argc, argv_types, true);
@@ -538,14 +531,12 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	DREF DeePointerTypeObject *result;
 	DREF DeeStringObject *name;
 	result = DeeGCObject_CALLOC(DeePointerTypeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)make_structured_name(self, '*');
-	if
-		unlikely(!name)
-	goto err_r;
+	if unlikely(!name)
+		goto err_r;
 	/* Store a reference to the pointed-to type. */
 	Dee_Incref((DeeObject *)self);
 	Dee_Incref((DeeObject *)&DeePointer_Type);
@@ -585,14 +576,12 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	DREF DeeLValueTypeObject *result;
 	DREF DeeStringObject *name;
 	result = DeeGCObject_CALLOC(DeeLValueTypeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)make_structured_name(self, '&');
-	if
-		unlikely(!name)
-	goto err_r;
+	if unlikely(!name)
+		goto err_r;
 	/* Store a reference to the pointed-to type. */
 	Dee_Incref((DeeObject *)self);
 	Dee_Incref((DeeObject *)&DeeLValue_Type);
@@ -632,13 +621,11 @@ DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 	if (!result) {
 		/* Lazily construct missing types. */
 		result = pointertype_new(self);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
-			if
-				unlikely(self->st_pointer &&
+			if unlikely(self->st_pointer &&
 				         Dee_IncrefIfNotZero((DeeObject *)self->st_pointer))
 			{
 				DREF DeePointerTypeObject *new_result;
@@ -666,13 +653,11 @@ DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	if (!result) {
 		/* Lazily construct missing types. */
 		result = lvaluetype_new(self);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
-			if
-				unlikely(self->st_lvalue &&
+			if unlikely(self->st_lvalue &&
 				         Dee_IncrefIfNotZero((DeeObject *)self->st_lvalue))
 			{
 				DREF DeeLValueTypeObject *new_result;
@@ -991,13 +976,11 @@ struct_ref(DeeObject *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *pointer_type;
 	pointer_type = DeeSType_Pointer((DeeSTypeObject *)Dee_TYPE(self));
-	if
-		unlikely(!pointer_type)
-	goto err;
+	if unlikely(!pointer_type)
+		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Construct a new pointer directed at the data of this structured object. */
 	DeeObject_InitNoref(result, (DREF DeeTypeObject *)pointer_type); /* Inherit reference: pointer_type */
 	result->p_ptr.ptr = DeeStruct_Data(self);
@@ -1127,14 +1110,12 @@ DeeObject_Ref(DeeObject *__restrict self) {
 		/* Special case: Must reference the data originally designated through the l-value. */
 		/* Lookup the required pointer type. */
 		tp_result = DeeSType_Pointer(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
-		if
-			unlikely(!tp_result)
-		goto err;
+		if unlikely(!tp_result)
+			goto err;
 		/* Create the new pointer object. */
 		result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
-		if
-			unlikely(!result)
-		goto err_tpres;
+		if unlikely(!result)
+			goto err_tpres;
 		DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
 		/* Copy the l-value pointer into the regular pointer. */
 		result->p_ptr.ptr = ((struct lvalue_object *)self)->l_ptr.ptr;
@@ -1142,14 +1123,12 @@ DeeObject_Ref(DeeObject *__restrict self) {
 	}
 	/* Lookup the required pointer type. */
 	tp_result = DeeSType_Pointer((DeeSTypeObject *)Dee_TYPE(self));
-	if
-		unlikely(!tp_result)
-	goto err;
+	if unlikely(!tp_result)
+		goto err;
 	/* Create the new pointer object. */
 	result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto err_tpres;
+	if unlikely(!result)
+		goto err_tpres;
 	DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
 	result->p_ptr.ptr = DeeStruct_Data(self);
 done:
@@ -1167,13 +1146,11 @@ DeeObject_Deref(DeeObject *__restrict self) {
 	if (DeePointer_Check(self)) {
 		/* Regular pointer. */
 		tp_result = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
-		if
-			unlikely(!tp_result)
-		goto err;
+		if unlikely(!tp_result)
+			goto err;
 		result = DeeObject_MALLOC(struct lvalue_object);
-		if
-			unlikely(!result)
-		goto err_tpres;
+		if unlikely(!result)
+			goto err_tpres;
 		DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
 		result->l_ptr.ptr = ((struct pointer_object *)self)->p_ptr.ptr;
 		return (DREF DeeObject *)result;
@@ -1184,13 +1161,11 @@ DeeObject_Deref(DeeObject *__restrict self) {
 		if (DeePointerType_Check(tp_base)) {
 			/* LValue-to-pointer. */
 			tp_result = DeeSType_LValue(tp_base->pt_orig);
-			if
-				unlikely(!tp_result)
-			goto err;
+			if unlikely(!tp_result)
+				goto err;
 			result = DeeObject_MALLOC(struct lvalue_object);
-			if
-				unlikely(!result)
-			goto err_tpres;
+			if unlikely(!result)
+				goto err_tpres;
 			DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
 			/* Dereference this pointer. */
 			CTYPES_FAULTPROTECT(result->l_ptr.ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
@@ -1218,9 +1193,8 @@ DeePointer_New(DeePointerTypeObject *__restrict pointer_type,
 	ASSERT(DeePointerType_Check(pointer_type));
 	/* Allocate a new pointer object. */
 	result = DeeObject_MALLOC(struct pointer_object);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Initialize the new pointer object. */
 	DeeObject_Init(result, (DeeTypeObject *)pointer_type);
 	result->p_ptr.ptr = pointer_value;
@@ -1234,9 +1208,8 @@ DeePointer_NewFor(DeeSTypeObject *__restrict pointer_type,
 	DREF DeeObject *result;
 	DREF DeePointerTypeObject *ptr_type;
 	ptr_type = DeeSType_Pointer(pointer_type);
-	if
-		unlikely(!ptr_type)
-	goto err;
+	if unlikely(!ptr_type)
+		goto err;
 	result = DeePointer_New(ptr_type, pointer_value);
 	Dee_Decref((DeeObject *)ptr_type);
 	return result;
@@ -1613,9 +1586,8 @@ DeeStruct_GetItem(DeeSTypeObject *__restrict tp_self, void *self,
 	         DeeSType_Check(tp_self));
 	/* Fallback: Implement getitem as `ind(add)' --> `foo[2]' same as `*(foo + 2)' */
 	result = DeeStruct_Add(tp_self, self, index);
-	if
-		unlikely(!result)
-	return NULL;
+	if unlikely(!result)
+		return NULL;
 	new_result = DeeObject_Deref(result);
 	Dee_Decref(result);
 	return new_result;
@@ -1649,14 +1621,12 @@ DeeStruct_SetItem(DeeSTypeObject *__restrict tp_self, void *self,
 	 * `ind(add) := value' --> `foo[2] = value'
 	 *              same as `*(foo + 2) := value' */
 	temp = DeeStruct_Add(tp_self, self, index);
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	temp2 = DeeObject_Deref(temp);
 	Dee_Decref(temp);
-	if
-		unlikely(!temp2)
-	goto err;
+	if unlikely(!temp2)
+		goto err;
 	result = DeeObject_Assign(temp2, value);
 	Dee_Decref(temp2);
 	return result;

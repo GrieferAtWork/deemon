@@ -127,9 +127,8 @@ ast_gen_setattr_inplace(struct ast *__restrict base,
 	    DeeString_Check(name->a_constexpr)) {
 		/* Special case: Name is a constant string. */
 		int32_t cid = asm_newconst(name->a_constexpr);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		if (base->a_type == AST_SYM) {
 			struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
 			if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
@@ -330,9 +329,8 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
 		}
 		if (asm_allowconst(index->a_constexpr)) {
 			int32_t cid = asm_newconst(index->a_constexpr);
-			if
-				unlikely(cid < 0)
-			goto err;
+			if unlikely(cid < 0)
+				goto err;
 			if (ast_genasm(base, ASM_G_FPUSHRES))
 				goto err; /* base */
 			if (asm_putddi(ddi_ast))

@@ -50,9 +50,8 @@ typedef struct {
 PRIVATE int(DCALL get_needle)(Needle *__restrict self, DeeObject *__restrict ob) {
 	if (DeeString_Check(ob)) {
 		self->n_data = DeeString_AsBytes(ob, false);
-		if
-			unlikely(!self->n_data)
-		goto err;
+		if unlikely(!self->n_data)
+			goto err;
 		self->n_size = WSTR_LENGTH(self->n_data) * sizeof(char);
 	} else if (DeeBytes_Check(ob)) {
 		self->n_data = DeeBytes_DATA(ob);
@@ -431,8 +430,7 @@ bytes_format(Bytes *__restrict self,
 		goto err;
 	{
 		struct bytes_printer printer = BYTES_PRINTER_INIT;
-		if
-			unlikely(DeeBytes_Format(&bytes_printer_print,
+		if unlikely(DeeBytes_Format(&bytes_printer_print,
 			                         (dformatprinter)&bytes_printer_append,
 			                         &printer,
 			                         (char *)DeeBytes_DATA(self),
@@ -489,9 +487,8 @@ bytes_resized(Bytes *__restrict self,
 		if (DeeObject_AsSize(argv[0], &new_size))
 			goto err;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(new_size);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		memcpy(result->b_data,
 		       DeeBytes_DATA(self),
 		       MIN(DeeBytes_SIZE(self), new_size));
@@ -500,9 +497,8 @@ bytes_resized(Bytes *__restrict self,
 		if (DeeArg_Unpack(argc, argv, "Iu|I8u:resized", &new_size, &init))
 			goto err;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(new_size);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (new_size <= DeeBytes_SIZE(self)) {
 			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
 		} else {
@@ -530,9 +526,8 @@ bytes_reversed(Bytes *__restrict self, size_t argc,
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	end -= start;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	data = DeeBytes_DATA(self);
 	dst  = DeeBytes_DATA(result);
 	do {
@@ -550,9 +545,8 @@ bytes_reverse(Bytes *__restrict self, size_t argc,
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:reverse", &start, &end))
 		goto err;
-	if
-		unlikely(!DeeBytes_WRITABLE(self))
-	{
+	if unlikely(!DeeBytes_WRITABLE(self))
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -618,9 +612,8 @@ bytes_hex(Bytes *__restrict self, size_t argc,
 	data = DeeBytes_DATA(self);
 	data += start;
 	result = (DREF DeeStringObject *)DeeString_NewBuffer(end * 2);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	dst = DeeString_STR(result);
 	for (i = 0; i < end; ++i) {
 		uint8_t byte = data[i];
@@ -653,8 +646,7 @@ bytes_ord(Bytes *__restrict self,
 			                        DeeBytes_SIZE(self));
 			goto err;
 		}
-	} else if
-		unlikely(DeeBytes_SIZE(self) != 1)
+	} else if unlikely(DeeBytes_SIZE(self) != 1)
 	{
 		err_expected_single_character_string((DeeObject *)self);
 		goto err;
@@ -904,17 +896,15 @@ bytes_asnumber(Bytes *__restrict self,
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
 	if (argc == 0) {
-		if
-			unlikely(DeeBytes_SIZE(self) != 1)
-		goto err_not_single_char;
+		if unlikely(DeeBytes_SIZE(self) != 1)
+			goto err_not_single_char;
 		ch = DeeBytes_DATA(self)[0];
 	} else {
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asnumber", &index, &defl))
 			goto err;
-		if
-			unlikely(index >= DeeBytes_SIZE(self))
-		{
+		if unlikely(index >= DeeBytes_SIZE(self))
+			{
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeBytes_SIZE(self));
 			goto err;
@@ -945,17 +935,15 @@ bytes_asdigit(Bytes *__restrict self,
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
 	if (argc == 0) {
-		if
-			unlikely(DeeBytes_SIZE(self) != 1)
-		goto err_not_single_char;
+		if unlikely(DeeBytes_SIZE(self) != 1)
+			goto err_not_single_char;
 		ch = DeeBytes_DATA(self)[0];
 	} else {
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asdigit", &index, &defl))
 			goto err;
-		if
-			unlikely(index >= DeeBytes_SIZE(self))
-		{
+		if unlikely(index >= DeeBytes_SIZE(self))
+			{
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeBytes_SIZE(self));
 			goto err;
@@ -986,17 +974,15 @@ bytes_asdecimal(Bytes *__restrict self,
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
 	if (argc == 0) {
-		if
-			unlikely(DeeBytes_SIZE(self) != 1)
-		goto err_not_single_char;
+		if unlikely(DeeBytes_SIZE(self) != 1)
+			goto err_not_single_char;
 		ch = DeeBytes_DATA(self)[0];
 	} else {
 		size_t index;
 		if (DeeArg_Unpack(argc, argv, "Iu|o:asdecimal", &index, &defl))
 			goto err;
-		if
-			unlikely(index >= DeeBytes_SIZE(self))
-		{
+		if unlikely(index >= DeeBytes_SIZE(self))
+			{
 			err_index_out_of_bounds((DeeObject *)self, index,
 			                        DeeBytes_SIZE(self));
 			goto err;
@@ -1034,9 +1020,8 @@ bytes_lower(Bytes *__restrict self, size_t argc,
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	end -= start;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i < end; ++i)
 		DeeBytes_DATA(result)[i] = (uint8_t)DeeUni_ToLower(DeeBytes_DATA(self)[start + i]);
 done:
@@ -1056,9 +1041,8 @@ bytes_upper(Bytes *__restrict self, size_t argc,
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	end -= start;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i < end; ++i)
 		DeeBytes_DATA(result)[i] = (uint8_t)DeeUni_ToUpper(DeeBytes_DATA(self)[start + i]);
 done:
@@ -1079,9 +1063,8 @@ bytes_title(Bytes *__restrict self, size_t argc,
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	end -= start;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i < end; ++i) {
 		uint8_t ch               = DeeBytes_DATA(self)[start + i];
 		DeeBytes_DATA(result)[i] = kind == UNICODE_CONVERT_TITLE
@@ -1106,9 +1089,8 @@ bytes_capitalize(Bytes *__restrict self, size_t argc,
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	end -= start;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeBytes_DATA(result)[0] = (uint8_t)DeeUni_ToUpper(DeeBytes_DATA(self)[start]);
 	for (i = 1; i < end; ++i)
 		DeeBytes_DATA(result)[i] = (uint8_t)DeeUni_ToLower(DeeBytes_DATA(self)[start + i]);
@@ -1129,9 +1111,8 @@ bytes_swapcase(Bytes *__restrict self, size_t argc,
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	end -= start;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(end);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i < end; ++i)
 		DeeBytes_DATA(result)[i] = (uint8_t)DeeUni_SwapCase(DeeBytes_DATA(self)[start + i]);
 done:
@@ -1148,9 +1129,8 @@ bytes_tolower(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(!DeeBytes_WRITABLE(self) && start < end)
-	{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1169,9 +1149,8 @@ bytes_toupper(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(!DeeBytes_WRITABLE(self) && start < end)
-	{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1191,9 +1170,8 @@ bytes_totitle(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(!DeeBytes_WRITABLE(self) && start < end)
-	{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1219,9 +1197,8 @@ bytes_tocapitalize(Bytes *__restrict self, size_t argc,
 		end = DeeBytes_SIZE(self);
 	if (start < end) {
 		size_t i = start;
-		if
-			unlikely(!DeeBytes_WRITABLE(self))
-		{
+		if unlikely(!DeeBytes_WRITABLE(self))
+			{
 			err_bytes_not_writable((DeeObject *)self);
 			goto err;
 		}
@@ -1243,9 +1220,8 @@ bytes_toswapcase(Bytes *__restrict self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(!DeeBytes_WRITABLE(self) && start < end)
-	{
+	if unlikely(!DeeBytes_WRITABLE(self) && start < end)
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
@@ -1274,26 +1250,22 @@ bytes_replace(Bytes *__restrict self, size_t argc,
 	    get_needle(&find_needle, find_ob) || get_needle(&replace_needle, replace_ob))
 		return NULL;
 	/* Handle special cases. */
-	if
-		unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-	goto return_self;
-	if
-		unlikely(!find_needle.n_size)
-	{
+	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
+		goto return_self;
+	if unlikely(!find_needle.n_size)
+		{
 		if (DeeBytes_SIZE(self))
 			goto return_self;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
-		if
-			likely(result)
-		memcpy(result->b_data, replace_needle.n_data, replace_needle.n_size);
+		if likely(result)
+			memcpy(result->b_data, replace_needle.n_data, replace_needle.n_size);
 		return result;
 	}
 	bytes_printer_init(&printer);
 	end         = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if
-		likely(max_count)
-	while (begin <= end) {
+	if likely(max_count)
+		while (begin <= end) {
 		if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 			/* Found one */
 			if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
@@ -1303,15 +1275,13 @@ bytes_replace(Bytes *__restrict self, size_t argc,
 			block_begin = begin;
 			if (begin >= end)
 				break;
-			if
-				unlikely(!--max_count)
-			break;
+			if unlikely(!--max_count)
+				break;
 			continue;
 		}
 		++begin;
 	}
-	if
-		unlikely(bytes_printer_append(&printer, block_begin,
+	if unlikely(bytes_printer_append(&printer, block_begin,
 		                              (size_t)((end - block_begin) +
 		                                       (find_needle.n_size - 1))) < 0)
 	goto err;
@@ -1322,9 +1292,8 @@ err:
 	return NULL;
 return_self:
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self));
-	if
-		likely(result)
-	memcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
+	if likely(result)
+		memcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
 	return result;
 }
 
@@ -1341,26 +1310,22 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 	    get_needle(&find_needle, find_ob) || get_needle(&replace_needle, replace_ob))
 		return NULL;
 	/* Handle special cases. */
-	if
-		unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-	goto return_self;
-	if
-		unlikely(!find_needle.n_size)
-	{
+	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
+		goto return_self;
+	if unlikely(!find_needle.n_size)
+		{
 		if (DeeBytes_SIZE(self))
 			goto return_self;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
-		if
-			likely(result)
-		memcpy(result->b_data, replace_needle.n_data, replace_needle.n_size);
+		if likely(result)
+			memcpy(result->b_data, replace_needle.n_data, replace_needle.n_size);
 		return result;
 	}
 	bytes_printer_init(&printer);
 	end         = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if
-		likely(max_count)
-	while (begin <= end) {
+	if likely(max_count)
+		while (begin <= end) {
 		if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
 			/* Found one */
 			if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
@@ -1370,15 +1335,13 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 			block_begin = begin;
 			if (begin >= end)
 				break;
-			if
-				unlikely(!--max_count)
-			break;
+			if unlikely(!--max_count)
+				break;
 			continue;
 		}
 		++begin;
 	}
-	if
-		unlikely(bytes_printer_append(&printer, block_begin,
+	if unlikely(bytes_printer_append(&printer, block_begin,
 		                              (size_t)((end - block_begin) +
 		                                       (find_needle.n_size - 1))) < 0)
 	goto err;
@@ -1389,9 +1352,8 @@ err:
 	return NULL;
 return_self:
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self));
-	if
-		likely(result)
-	memcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
+	if likely(result)
+		memcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
 	return result;
 }
 
@@ -1406,42 +1368,36 @@ bytes_toreplace(Bytes *__restrict self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|Iu:toreplace", &find_ob, &replace_ob, &max_count) ||
 	    get_needle(&find_needle, find_ob) || get_needle(&replace_needle, replace_ob))
 		goto err;
-	if
-		unlikely(find_needle.n_size != replace_needle.n_size)
-	{
+	if unlikely(find_needle.n_size != replace_needle.n_size)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Find(%Iu) and replace(%Iu) needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
-	if
-		unlikely(!DeeBytes_WRITABLE(self))
-	{
+	if unlikely(!DeeBytes_WRITABLE(self))
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
 
 	/* Handle special cases. */
-	if
-		unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-	goto done;
-	if
-		unlikely(!find_needle.n_size)
-	goto done;
+	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
+		goto done;
+	if unlikely(!find_needle.n_size)
+		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if
-		likely(max_count)
-	while (begin <= end) {
+	if likely(max_count)
+		while (begin <= end) {
 		if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 			/* Found one */
 			memcpy(begin, replace_needle.n_data, replace_needle.n_size);
 			begin += find_needle.n_size;
 			if (begin >= end)
 				break;
-			if
-				unlikely(!--max_count)
-			break;
+			if unlikely(!--max_count)
+				break;
 			continue;
 		}
 		++begin;
@@ -1462,42 +1418,36 @@ bytes_tocasereplace(Bytes *__restrict self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|Iu:tocasereplace", &find_ob, &replace_ob, &max_count) ||
 	    get_needle(&find_needle, find_ob) || get_needle(&replace_needle, replace_ob))
 		goto err;
-	if
-		unlikely(find_needle.n_size != replace_needle.n_size)
-	{
+	if unlikely(find_needle.n_size != replace_needle.n_size)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Find(%Iu) and replace(%Iu) needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
-	if
-		unlikely(!DeeBytes_WRITABLE(self))
-	{
+	if unlikely(!DeeBytes_WRITABLE(self))
+		{
 		err_bytes_not_writable((DeeObject *)self);
 		goto err;
 	}
 
 	/* Handle special cases. */
-	if
-		unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-	goto done;
-	if
-		unlikely(!find_needle.n_size)
-	goto done;
+	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
+		goto done;
+	if unlikely(!find_needle.n_size)
+		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if
-		likely(max_count)
-	while (begin <= end) {
+	if likely(max_count)
+		while (begin <= end) {
 		if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
 			/* Found one */
 			memcpy(begin, replace_needle.n_data, replace_needle.n_size);
 			begin += find_needle.n_size;
 			if (begin >= end)
 				break;
-			if
-				unlikely(!--max_count)
-			break;
+			if unlikely(!--max_count)
+				break;
 			continue;
 		}
 		++begin;
@@ -1565,29 +1515,25 @@ bytes_join(Bytes *__restrict self,
 			size_t i;
 			for (i = 0; i < fast_size; ++i) {
 				/* Print `self' prior to every object, starting with the 2nd one. */
-				if
-					unlikely(!is_first &&
+				if unlikely(!is_first &&
 					         bytes_printer_append(&printer,
 					                              DeeBytes_DATA(self),
 					                              DeeBytes_SIZE(self)) < 0)
 				goto err_printer;
 				elem = DeeFastSeq_GetItem(seq, i);
-				if
-					unlikely(!elem)
-				goto err_printer;
+				if unlikely(!elem)
+					goto err_printer;
 				/* NOTE: `bytes_printer_printobject()' automatically
 				 *        optimizes for other bytes objects being printed. */
-				if
-					unlikely(bytes_printer_printobject(&printer, elem) < 0)
-				goto err_elem_noiter;
+				if unlikely(bytes_printer_printobject(&printer, elem) < 0)
+					goto err_elem_noiter;
 				Dee_Decref(elem);
 				is_first = false;
 			}
 		} else {
 			iterator = DeeObject_IterSelf(seq);
-			if
-				unlikely(!iterator)
-			goto err_printer;
+			if unlikely(!iterator)
+				goto err_printer;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 				if unlikely(!is_first &&
 				            bytes_printer_append(&printer,
@@ -1603,9 +1549,8 @@ bytes_join(Bytes *__restrict self,
 				if (DeeThread_CheckInterrupt())
 					goto err_iter;
 			}
-			if
-				unlikely(!elem)
-			goto err_iter;
+			if unlikely(!elem)
+				goto err_iter;
 			Dee_Decref(iterator);
 		}
 		return bytes_printer_pack(&printer);
@@ -1746,26 +1691,22 @@ bytes_pack_partition(Bytes *__restrict self, uint8_t *find_ptr,
 	if (!find_ptr)
 		return DeeTuple_Pack(3, self, Dee_EmptyBytes, Dee_EmptyBytes);
 	result = DeeTuple_NewUninitialized(3);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	temp = DeeBytes_NewSubView(self, start_ptr,
 	                           (size_t)(find_ptr - start_ptr));
-	if
-		unlikely(!temp)
-	goto err_r_0;
+	if unlikely(!temp)
+		goto err_r_0;
 	DeeTuple_SET(result, 0, temp); /* Inherit reference. */
 	temp = DeeBytes_NewSubView(self, find_ptr, needle_len);
-	if
-		unlikely(!temp)
-	goto err_r_1;
+	if unlikely(!temp)
+		goto err_r_1;
 	DeeTuple_SET(result, 1, temp); /* Inherit reference. */
 	find_ptr += needle_len;
 	temp = DeeBytes_NewSubView(self, find_ptr,
 	                           (start_ptr + search_size) - find_ptr);
-	if
-		unlikely(!temp)
-	goto err_r_2;
+	if unlikely(!temp)
+		goto err_r_2;
 	DeeTuple_SET(result, 2, temp); /* Inherit reference. */
 done:
 	return result;
@@ -2272,13 +2213,11 @@ get_bcompare_args(Bytes *__restrict self,
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 		} else {
-			if
-				unlikely(!DeeString_Check(other))
-			goto err_type_other;
+			if unlikely(!DeeString_Check(other))
+				goto err_type_other;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 		}
 		break;
@@ -2289,9 +2228,8 @@ get_bcompare_args(Bytes *__restrict self,
 				goto err;
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
-			if
-				unlikely(temp >= args->rhs_len)
-			{
+			if unlikely(temp >= args->rhs_len)
+				{
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2302,13 +2240,11 @@ get_bcompare_args(Bytes *__restrict self,
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp))
 				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-			if
-				unlikely(temp >= args->rhs_len)
-			{
+			if unlikely(temp >= args->rhs_len)
+				{
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2317,9 +2253,8 @@ get_bcompare_args(Bytes *__restrict self,
 		} else {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 				goto err;
-			if
-				unlikely(temp >= args->lhs_len)
-			{
+			if unlikely(temp >= args->lhs_len)
+				{
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2330,13 +2265,11 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_ptr = DeeBytes_DATA(other);
 				args->rhs_len = DeeBytes_SIZE(other);
 			} else {
-				if
-					unlikely(!DeeString_Check(other))
-				goto err_type_other;
+				if unlikely(!DeeString_Check(other))
+					goto err_type_other;
 				args->rhs_ptr = DeeString_AsBytes(other, false);
-				if
-					unlikely(!args->rhs_ptr)
-				goto err;
+				if unlikely(!args->rhs_ptr)
+					goto err;
 				args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			}
 		}
@@ -2350,9 +2283,8 @@ get_bcompare_args(Bytes *__restrict self,
 				goto err;
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp2))
 				goto err;
-			if
-				unlikely(temp >= args->rhs_len)
-			{
+			if unlikely(temp >= args->rhs_len)
+				{
 				args->rhs_len = 0;
 			} else {
 				if (temp2 > args->rhs_len)
@@ -2363,17 +2295,15 @@ get_bcompare_args(Bytes *__restrict self,
 		} else if (DeeString_Check(argv[0])) {
 			args->other = other = argv[0];
 			args->rhs_ptr       = DeeString_AsBytes(other, true);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp))
 				goto err;
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp2))
 				goto err;
-			if
-				unlikely(temp >= args->rhs_len)
-			{
+			if unlikely(temp >= args->rhs_len)
+				{
 				args->rhs_len = 0;
 			} else {
 				if (temp2 > args->rhs_len)
@@ -2384,9 +2314,8 @@ get_bcompare_args(Bytes *__restrict self,
 		} else if (DeeBytes_Check(argv[1])) {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 				goto err;
-			if
-				unlikely(temp >= args->lhs_len)
-			{
+			if unlikely(temp >= args->lhs_len)
+				{
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2397,9 +2326,8 @@ get_bcompare_args(Bytes *__restrict self,
 			args->rhs_len       = DeeBytes_SIZE(other);
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
 				goto err;
-			if
-				unlikely(temp >= args->rhs_len)
-			{
+			if unlikely(temp >= args->rhs_len)
+				{
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2408,9 +2336,8 @@ get_bcompare_args(Bytes *__restrict self,
 		} else if (DeeString_Check(argv[1])) {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 				goto err;
-			if
-				unlikely(temp >= args->lhs_len)
-			{
+			if unlikely(temp >= args->lhs_len)
+				{
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2418,15 +2345,13 @@ get_bcompare_args(Bytes *__restrict self,
 			}
 			args->other = other = argv[1];
 			args->rhs_ptr       = DeeString_AsBytes(other, false);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&temp))
 				goto err;
-			if
-				unlikely(temp >= args->rhs_len)
-			{
+			if unlikely(temp >= args->rhs_len)
+				{
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
@@ -2450,13 +2375,11 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_ptr = DeeBytes_DATA(other);
 				args->rhs_len = DeeBytes_SIZE(other);
 			} else {
-				if
-					unlikely(!DeeString_Check(other))
-				goto err_type_other;
+				if unlikely(!DeeString_Check(other))
+					goto err_type_other;
 				args->rhs_ptr = DeeString_AsBytes(other, false);
-				if
-					unlikely(!args->rhs_ptr)
-				goto err;
+				if unlikely(!args->rhs_ptr)
+					goto err;
 				args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			}
 		}
@@ -2465,9 +2388,8 @@ get_bcompare_args(Bytes *__restrict self,
 		if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
 			goto err;
 		if (DeeBytes_Check(argv[1])) {
-			if
-				unlikely(temp >= args->lhs_len)
-			{
+			if unlikely(temp >= args->lhs_len)
+				{
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2489,9 +2411,8 @@ get_bcompare_args(Bytes *__restrict self,
 				args->rhs_len = temp2 - temp;
 			}
 		} else if (DeeString_Check(argv[1])) {
-			if
-				unlikely(temp >= args->lhs_len)
-			{
+			if unlikely(temp >= args->lhs_len)
+				{
 				args->lhs_len = 0;
 			} else {
 				args->lhs_ptr += temp;
@@ -2503,9 +2424,8 @@ get_bcompare_args(Bytes *__restrict self,
 			if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp2))
 				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (temp >= args->rhs_len) {
 				args->rhs_len = 0;
@@ -2518,9 +2438,8 @@ get_bcompare_args(Bytes *__restrict self,
 		} else {
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp2))
 				goto err;
-			if
-				unlikely(temp >= args->lhs_len)
-			{
+			if unlikely(temp >= args->lhs_len)
+				{
 				args->lhs_len = 0;
 			} else {
 				if (temp2 > args->lhs_len)
@@ -2529,15 +2448,13 @@ get_bcompare_args(Bytes *__restrict self,
 				args->lhs_len = temp2 - temp;
 			}
 			args->other = other = argv[2];
-			if
-				unlikely(!DeeString_Check(other))
-			goto err_type_other;
+			if unlikely(!DeeString_Check(other))
+				goto err_type_other;
 			if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp))
 				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (temp >= args->rhs_len) {
 				args->rhs_len = 0;
@@ -2565,13 +2482,11 @@ get_bcompare_args(Bytes *__restrict self,
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 		} else {
-			if
-				unlikely(!DeeString_Check(other))
-			goto err_type_other;
+			if unlikely(!DeeString_Check(other))
+				goto err_type_other;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
-			if
-				unlikely(!args->rhs_ptr)
-			goto err;
+			if unlikely(!args->rhs_ptr)
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 		}
 		if (DeeObject_AsSSize(argv[3], (dssize_t *)&temp))
@@ -2652,9 +2567,8 @@ bytes_fuzzycompare(Bytes *__restrict self,
 		goto err;
 	result = fuzzy_compareb(args.lhs_ptr, args.lhs_len,
 	                        args.rhs_ptr, args.lhs_len);
-	if
-		unlikely(result == (dssize_t)-1)
-	goto err;
+	if unlikely(result == (dssize_t)-1)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -2726,9 +2640,8 @@ bytes_casefuzzycompare(Bytes *__restrict self,
 		goto err;
 	result = fuzzy_asciicasecompareb(args.lhs_ptr, args.lhs_len,
 	                                 args.rhs_ptr, args.lhs_len);
-	if
-		unlikely(result == (dssize_t)-1)
-	goto err;
+	if unlikely(result == (dssize_t)-1)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -2769,9 +2682,8 @@ bytes_center(Bytes *__restrict self,
 	} else {
 		size_t fill_front, fill_back;
 		result = DeeBytes_NewBufferUninitialized(width);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		fill_front = (width - DeeBytes_SIZE(self));
 		fill_back  = fill_front / 2;
 		fill_front -= fill_back;
@@ -2809,9 +2721,8 @@ bytes_ljust(Bytes *__restrict self,
 	} else {
 		size_t fill_back;
 		result = DeeBytes_NewBufferUninitialized(width);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		fill_back = (width - DeeBytes_SIZE(self));
 		memcpyb(DeeBytes_DATA(result) + 0,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
@@ -2846,9 +2757,8 @@ bytes_rjust(Bytes *__restrict self,
 	} else {
 		size_t fill_front;
 		result = DeeBytes_NewBufferUninitialized(width);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		fill_front = (width - DeeBytes_SIZE(self));
 		memfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(DeeBytes_DATA(result) + fill_front,
@@ -2883,9 +2793,8 @@ bytes_zfill(Bytes *__restrict self,
 		size_t fill_front, src_len;
 		uint8_t *dst, *src;
 		result = DeeBytes_NewBufferUninitialized(width);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		dst        = DeeBytes_DATA(result);
 		src        = DeeBytes_DATA(self);
 		src_len    = DeeBytes_SIZE(self);
@@ -2927,9 +2836,8 @@ bytes_expandtabs(Bytes *__restrict self,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_printer;
 			/* Replace with white-space. */
-			if
-				likely(tab_width)
-			{
+			if likely(tab_width)
+				{
 				line_inset = tab_width - (line_inset % tab_width);
 				if (bytes_printer_repeat(&printer, ASCII_SPACE, line_inset) < 0)
 					goto err_printer;
@@ -3023,13 +2931,11 @@ bytes_indent(Bytes *__restrict self,
 	if (filler_ob) {
 		if (get_needle(&filler, filler_ob))
 			goto err;
-		if
-			unlikely(!filler.n_size || DeeBytes_IsEmpty(self))
-		goto retself;
+		if unlikely(!filler.n_size || DeeBytes_IsEmpty(self))
+			goto retself;
 	} else {
-		if
-			unlikely(DeeBytes_IsEmpty(self))
-		goto retself;
+		if unlikely(DeeBytes_IsEmpty(self))
+			goto retself;
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
 		filler._n_buf[0] = ASCII_TAB;
@@ -3092,9 +2998,8 @@ bytes_dedent(Bytes *__restrict self,
 	DeeObject *mask_ob = NULL;
 	if (DeeArg_Unpack(argc, argv, "|Iuo:dedent", &max_chars, &mask_ob))
 		goto err;
-	if
-		unlikely(!max_chars)
-	goto retself;
+	if unlikely(!max_chars)
+		goto retself;
 	{
 		struct bytes_printer printer = BYTES_PRINTER_INIT;
 		uint8_t *flush_start, *iter, *end;
@@ -3280,17 +3185,15 @@ bytes_findmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = find_matchb(scan_str + start, scan_len,
                       s_open.n_data, s_open.n_size,
                       s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
 	return_reference_(&DeeInt_MinusOne);
@@ -3311,17 +3214,15 @@ bytes_rfindmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = rfind_matchb(scan_str + start, scan_len,
                        s_open.n_data, s_open.n_size,
                        s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
 	return_reference_(&DeeInt_MinusOne);
@@ -3342,17 +3243,15 @@ bytes_indexmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = find_matchb(scan_str + start, scan_len,
                       s_open.n_data, s_open.n_size,
                       s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
 	err_index_not_found((DeeObject *)self, s_clos_ob);
@@ -3373,17 +3272,15 @@ bytes_rindexmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = rfind_matchb(scan_str + start, scan_len,
                        s_open.n_data, s_open.n_size,
                        s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
 	err_index_not_found((DeeObject *)self, s_open_ob);
@@ -3404,17 +3301,15 @@ bytes_casefindmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = find_asciicasematchb(scan_str + start, scan_len,
                                s_open.n_data, s_open.n_size,
                                s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	return DeeTuple_Newf(DEE_FMT_SIZE_T
 	                     DEE_FMT_SIZE_T,
 	                     (size_t)(ptr - scan_str),
@@ -3438,17 +3333,15 @@ bytes_caserfindmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = rfind_asciicasematchb(scan_str + start, scan_len,
                                 s_open.n_data, s_open.n_size,
                                 s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_Newf(DEE_FMT_SIZE_T
 	                     DEE_FMT_SIZE_T,
@@ -3473,17 +3366,15 @@ bytes_caseindexmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = find_asciicasematchb(scan_str + start, scan_len,
                                s_open.n_data, s_open.n_size,
                                s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_Newf(DEE_FMT_SIZE_T
 	                     DEE_FMT_SIZE_T,
@@ -3508,17 +3399,15 @@ bytes_caserindexmatch(Bytes *__restrict self,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto err_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
 	ptr      = rfind_asciicasematchb(scan_str + start, scan_len,
                                 s_open.n_data, s_open.n_size,
                                 s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!ptr)
-	goto err_not_found;
+	if unlikely(!ptr)
+		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
 	return DeeTuple_Newf(DEE_FMT_SIZE_T
 	                     DEE_FMT_SIZE_T,
@@ -3552,27 +3441,23 @@ bytes_partitionmatch(Bytes *__restrict self,
 			goto err_r_2;                                        \
 	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	scan_str = DeeBytes_DATA(self);
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto match_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto match_not_found; /* Empty search area. */
 	scan_len    = end - start;
 	match_start = memmemb(scan_str + start, scan_len,
 	                      s_open.n_data, s_open.n_size);
-	if
-		unlikely(!match_start)
-	goto match_not_found;
+	if unlikely(!match_start)
+		goto match_not_found;
 	match_end = find_matchb(match_start + s_open.n_size, scan_len - (match_start - (scan_str + start)),
 	                        s_open.n_data, s_open.n_size,
 	                        s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!match_end)
-	goto match_not_found;
+	if unlikely(!match_end)
+		goto match_not_found;
 	SET_BYTES(DeeBytes_NewSubView(self, scan_str,
 	                              (size_t)(match_start - scan_str)),
 	          DeeBytes_NewSubView(self, match_start,
@@ -3586,9 +3471,8 @@ done:
 	return (DREF DeeObject *)result;
 match_not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
-	if
-		unlikely(!result->t_elem[0])
-	goto err_r_0;
+	if unlikely(!result->t_elem[0])
+		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyBytes;
 	result->t_elem[2] = Dee_EmptyBytes;
 	Dee_Incref_n(Dee_EmptyBytes, 2);
@@ -3625,28 +3509,24 @@ bytes_rpartitionmatch(Bytes *__restrict self,
 			goto err_r_2;                                        \
 	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	scan_str = DeeBytes_DATA(self);
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto match_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto match_not_found; /* Empty search area. */
 	scan_len  = end - start;
 	match_end = memrmemb(scan_str + start, scan_len,
 	                     s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!match_end)
-	goto match_not_found;
+	if unlikely(!match_end)
+		goto match_not_found;
 	match_start = rfind_matchb(scan_str + start,
 	                           (size_t)(match_end - (scan_str + start)),
 	                           s_open.n_data, s_open.n_size,
 	                           s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!match_start)
-	goto match_not_found;
+	if unlikely(!match_start)
+		goto match_not_found;
 	SET_BYTES(DeeBytes_NewSubView(self, scan_str,
 	                              (size_t)(match_start - scan_str)),
 	          DeeBytes_NewSubView(self, match_start,
@@ -3660,9 +3540,8 @@ done:
 	return (DREF DeeObject *)result;
 match_not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
-	if
-		unlikely(!result->t_elem[0])
-	goto err_r_0;
+	if unlikely(!result->t_elem[0])
+		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyString;
 	result->t_elem[2] = Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
@@ -3699,27 +3578,23 @@ bytes_casepartitionmatch(Bytes *__restrict self,
 			goto err_r_2;                                        \
 	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	scan_str = DeeBytes_DATA(self);
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto match_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto match_not_found; /* Empty search area. */
 	scan_len    = end - start;
 	match_start = dee_memasciicasemem(scan_str + start, scan_len,
 	                                  s_open.n_data, s_open.n_size);
-	if
-		unlikely(!match_start)
-	goto match_not_found;
+	if unlikely(!match_start)
+		goto match_not_found;
 	match_end = find_asciicasematchb(match_start + s_open.n_size, scan_len - (match_start - (scan_str + start)),
 	                                 s_open.n_data, s_open.n_size,
 	                                 s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!match_end)
-	goto match_not_found;
+	if unlikely(!match_end)
+		goto match_not_found;
 	SET_BYTES(DeeBytes_NewSubView(self, scan_str,
 	                              (size_t)(match_start - scan_str)),
 	          DeeBytes_NewSubView(self, match_start,
@@ -3733,9 +3608,8 @@ done:
 	return (DREF DeeObject *)result;
 match_not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
-	if
-		unlikely(!result->t_elem[0])
-	goto err_r_0;
+	if unlikely(!result->t_elem[0])
+		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyBytes;
 	result->t_elem[2] = Dee_EmptyBytes;
 	Dee_Incref_n(Dee_EmptyBytes, 2);
@@ -3772,28 +3646,24 @@ bytes_caserpartitionmatch(Bytes *__restrict self,
 			goto err_r_2;                                        \
 	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	scan_str = DeeBytes_DATA(self);
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if
-		unlikely(end <= start)
-	goto match_not_found; /* Empty search area. */
+	if unlikely(end <= start)
+		goto match_not_found; /* Empty search area. */
 	scan_len  = end - start;
 	match_end = dee_memasciicasermem(scan_str + start, scan_len,
 	                                 s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!match_end)
-	goto match_not_found;
+	if unlikely(!match_end)
+		goto match_not_found;
 	match_start = rfind_asciicasematchb(scan_str + start,
 	                                    (size_t)(match_end - (scan_str + start)),
 	                                    s_open.n_data, s_open.n_size,
 	                                    s_clos.n_data, s_clos.n_size);
-	if
-		unlikely(!match_start)
-	goto match_not_found;
+	if unlikely(!match_start)
+		goto match_not_found;
 	SET_BYTES(DeeBytes_NewSubView(self, scan_str,
 	                              (size_t)(match_start - scan_str)),
 	          DeeBytes_NewSubView(self, match_start,
@@ -3807,9 +3677,8 @@ done:
 	return (DREF DeeObject *)result;
 match_not_found:
 	result->t_elem[0] = (DREF DeeObject *)bytes_getsubstr(self, start, end);
-	if
-		unlikely(!result->t_elem[0])
-	goto err_r_0;
+	if unlikely(!result->t_elem[0])
+		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyString;
 	result->t_elem[2] = Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
@@ -3833,9 +3702,8 @@ bytes_segments(Bytes *__restrict self,
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:segments", &substring_length))
 		goto err;
-	if
-		unlikely(!substring_length)
-	{
+	if unlikely(!substring_length)
+		{
 		err_invalid_segment_size(substring_length);
 		goto err;
 	}
@@ -3851,18 +3719,16 @@ bytes_distribute(Bytes *__restrict self,
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &substring_count))
 		goto err;
-	if
-		unlikely(!substring_count)
-	{
+	if unlikely(!substring_count)
+		{
 		err_invalid_distribution_count(substring_count);
 		goto err;
 	}
 	substring_length = DeeBytes_SIZE(self);
 	substring_length += substring_count - 1;
 	substring_length /= substring_count;
-	if
-		unlikely(!substring_length)
-	return_empty_seq;
+	if unlikely(!substring_length)
+		return_empty_seq;
 	return DeeBytes_Segments(self, substring_length);
 err:
 	return NULL;

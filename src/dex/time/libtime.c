@@ -220,9 +220,8 @@ INTERN dtime_half_t
 PUBLIC DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS,
 	                           TIME_REPR_NONE);
@@ -235,9 +234,8 @@ INTERN DREF DeeObject *DCALL
 DeeTime_New_(dtime_t microseconds, uint16_t kind) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_kind = kind;
 	result->t_time = microseconds;
@@ -249,9 +247,8 @@ INTERN DREF DeeObject *DCALL
 DeeTime_NewMonths_(dtime_half_t num_months, uint16_t kind) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_kind   = kind;
 	result->t_months = num_months;
@@ -271,9 +268,8 @@ INTERN DREF DeeObject *DCALL
 DeeTime_New64_(uint64_t microseconds, uint16_t kind) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_kind = kind;
 	_Time_Set64(*result, microseconds);
@@ -402,9 +398,8 @@ time_asrepr(DeeTimeObject *__restrict self, uint8_t repr) {
 		goto return_self;
 	}
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_type = self->t_type;
 	result->t_repr = repr;
@@ -1143,9 +1138,8 @@ print_number_2:
 					repr_mode = 0;
 				}
 				attribute_id = get_repr_id(tag_begin, (size_t)(tag_end - tag_begin));
-				if
-					unlikely(attribute_id == TIME_REPR_NONE)
-				{
+				if unlikely(attribute_id == TIME_REPR_NONE)
+					{
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Unknown/Invalid time attribute: %$q",
 					                (size_t)(tag_end - tag_begin), tag_begin);
@@ -1162,8 +1156,7 @@ print_number_2:
 						repr_value = (repr_mode == 'S'
 						              ? GETSTRING_MONTH_FULL(attribval)
 						              : GETSTRING_MONTH_ABBR(attribval));
-					} else if
-						likely(attribute_id == TIME_REPR_WDAY)
+					} else if likely(attribute_id == TIME_REPR_WDAY)
 					{
 						ASSERT(attribval < 7);
 						repr_value = (repr_mode == 'S'
@@ -1262,9 +1255,8 @@ time_int64(DeeTimeObject *__restrict self,
 #ifdef HAVE_128BIT_TIME
 	dtime_t value = DeeTime_Get(self);
 	/* Check for overflow by probing the upper 64 bits. */
-	if
-		unlikely(!DSINT128_IS64(value))
-	{
+	if unlikely(!DSINT128_IS64(value))
+		{
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "%s integer overflow after 64 bits in %k",
 		                value < 0 ? "negative" : "positive", self);
@@ -1488,9 +1480,8 @@ PRIVATE DREF DeeTimeObject *DCALL
 time_timepart_get(DeeTimeObject *__restrict self) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_kind = self->t_kind;
 	result->t_time = self->t_time;
@@ -1510,9 +1501,8 @@ time_timepart_set(DeeTimeObject *__restrict self,
 	dtime_half_t addend;
 	if (object_as_time_half(value, &addend))
 		goto err;
-	if
-		unlikely((dutime_half_t)addend > MICROSECONDS_PER_DAY)
-	{
+	if unlikely((dutime_half_t)addend > MICROSECONDS_PER_DAY)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Time-value %k is greater than one day",
 		                value);
@@ -1534,9 +1524,8 @@ PRIVATE DREF DeeTimeObject *DCALL
 time_datepart_get(DeeTimeObject *__restrict self) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	result->t_kind = self->t_kind;
 	result->t_time = self->t_time;
@@ -1554,9 +1543,8 @@ time_datepart_set(DeeTimeObject *__restrict self,
 	dtime_t addend;
 	if (object_as_time(value, &addend))
 		goto err;
-	if
-		unlikely((addend % MICROSECONDS_PER_DAY) != 0)
-	{
+	if unlikely((addend % MICROSECONDS_PER_DAY) != 0)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Date-value %k contains a time-part",
 		                value);
@@ -1724,9 +1712,8 @@ PRIVATE DREF DeeTimeObject *DCALL
 time_neg(DeeTimeObject *__restrict self) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeTime_Type);
 	if (self->t_type == TIME_MONTHS) {
 		result->t_months = -self->t_months;
@@ -1743,9 +1730,8 @@ time_add(DeeTimeObject *__restrict self,
          DeeTimeObject *__restrict other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_repr = self->t_repr;
 	if (DeeTime_Check(other)) {
 		if (self->t_type == other->t_type) {
@@ -1780,9 +1766,8 @@ time_sub(DeeTimeObject *__restrict self,
          DeeTimeObject *__restrict other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_repr = self->t_repr;
 	if (DeeTime_Check(other)) {
 		if (self->t_type == other->t_type) {
@@ -1817,9 +1802,8 @@ time_mul(DeeTimeObject *__restrict self,
          DeeObject *__restrict other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_kind = self->t_kind;
 	if (self->t_type == TIME_MICROSECONDS) {
 		if (object_as_time(other, &result->t_time))
@@ -1851,23 +1835,20 @@ time_div(DeeTimeObject *__restrict self,
          DeeObject *__restrict other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_kind = self->t_kind;
 	if (self->t_type == TIME_MICROSECONDS) {
 		if (object_as_time(other, &result->t_time))
 			goto err;
-		if
-			unlikely(!result->t_time)
-		goto err_divzero;
+		if unlikely(!result->t_time)
+			goto err_divzero;
 		result->t_time = self->t_time / result->t_time;
 	} else {
 		if (object_as_time_half(other, &result->t_months))
 			goto err;
-		if
-			unlikely(!result->t_months)
-		goto err_divzero;
+		if unlikely(!result->t_months)
+			goto err_divzero;
 		result->t_months = self->t_months / result->t_months;
 	}
 	DeeObject_Init(result, &DeeTime_Type);
@@ -1885,23 +1866,20 @@ time_mod(DeeTimeObject *__restrict self,
          DeeObject *__restrict other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_kind = self->t_kind;
 	if (self->t_type == TIME_MICROSECONDS) {
 		if (object_as_time(other, &result->t_time))
 			goto err;
-		if
-			unlikely(!result->t_time)
-		goto err_divzero;
+		if unlikely(!result->t_time)
+			goto err_divzero;
 		result->t_time = self->t_time % result->t_time;
 	} else {
 		if (object_as_time_half(other, &result->t_months))
 			goto err;
-		if
-			unlikely(!result->t_months)
-		goto err_divzero;
+		if unlikely(!result->t_months)
+			goto err_divzero;
 		result->t_months = self->t_months % result->t_months;
 	}
 	DeeObject_Init(result, &DeeTime_Type);
@@ -1959,9 +1937,8 @@ f_libtime_now(size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, ":now"))
 		goto err;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	/* Load the current time. */
 	result->t_time = time_now();
@@ -1977,9 +1954,8 @@ f_libtime_tick(size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, ":tick"))
 		goto err;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Initialize using micro-second precision.
 	 * XXX: If the system can't provide that precision, we
 	 *      should probably use a different representation. */
@@ -2067,9 +2043,8 @@ f_libtime_maketime(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|uuuuu:maketime", &hor, &min, &sec, &mil, &mic))
 		goto err;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	result->t_time = 0;
 	if (time_setint(result, TIME_REPR_HOR, hor) ||
@@ -2106,9 +2081,8 @@ f_libtime_makedate(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		goto err;
 #endif /* !HAVE_128BIT_TIME */
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	result->t_time = 0;
 	if (time_setint(result, TIME_REPR_YER, yer) ||
@@ -2138,9 +2112,8 @@ f_libtime_makeanon(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 #endif /* !HAVE_128BIT_TIME */
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	result->t_time = value;
 	DeeObject_Init(result, &DeeTime_Type);
@@ -2232,9 +2205,8 @@ time_class_from_time_t(DeeObject *__restrict UNUSED(self),
 	                  &value))
 		goto err;
 	result = DeeObject_MALLOC(DeeTimeObject);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	result->t_time = time_yer2day(1970) * MICROSECONDS_PER_DAY + (dtime_t)value * MICROSECONDS_PER_SECOND;
 	DeeObject_Init(result, &DeeTime_Type);

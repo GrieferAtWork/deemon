@@ -44,8 +44,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 
 	case 2:
 		error = DeeObject_CompareLo(src[0], src[1]);
-		if
-			unlikely(error < 0 &&
+		if unlikely(error < 0 &&
 			         !DeeError_Catch(&DeeError_TypeError) &&
 			         !DeeError_Catch(&DeeError_NotImplemented))
 		goto err;
@@ -64,20 +63,17 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 		s1    = objc / 2;
 		s2    = objc - s1;
 		error = mergesort_impl(temp, dst, src, s1);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		error = mergesort_impl(temp + s1, dst + s1, src + s1, s2);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		iter1 = temp;
 		iter2 = temp + s1;
 		while (s1 && s2) {
 			error = DeeObject_CompareLo(*iter1, *iter2);
-			if
-				unlikely(error < 0)
-			{
+			if unlikely(error < 0)
+				{
 				if (!DeeError_Catch(&DeeError_TypeError) &&
 				    !DeeError_Catch(&DeeError_NotImplemented))
 					goto err;
@@ -110,13 +106,11 @@ compare_lo(DeeObject *__restrict lhs,
            DeeObject *__restrict key) {
 	int result;
 	lhs = DeeObject_Call(key, 1, (DeeObject **)&lhs);
-	if
-		unlikely(!lhs)
-	goto err;
+	if unlikely(!lhs)
+		goto err;
 	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
-	if
-		unlikely(!rhs)
-	goto err_lhs;
+	if unlikely(!rhs)
+		goto err_lhs;
 	result = DeeObject_CompareLo(lhs, rhs);
 	Dee_Decref(rhs);
 	Dee_Decref(lhs);
@@ -142,8 +136,7 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 	case 2:
 		error = compare_lo(src[0], src[1], key);
 		if (error <= 0) {
-			if
-				unlikely(error < 0 &&
+			if unlikely(error < 0 &&
 				         !DeeError_Catch(&DeeError_TypeError) &&
 				         !DeeError_Catch(&DeeError_NotImplemented))
 			goto err;
@@ -161,20 +154,17 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 		s1    = objc / 2;
 		s2    = objc - s1;
 		error = mergesort_impl_p(temp, dst, src, s1, key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		error = mergesort_impl_p(temp + s1, dst + s1, src + s1, s2, key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		iter1 = temp;
 		iter2 = temp + s1;
 		while (s1 && s2) {
 			error = compare_lo(*iter1, *iter2, key);
 			if (error <= 0) {
-				if
-					unlikely(error < 0 &&
+				if unlikely(error < 0 &&
 					         !DeeError_Catch(&DeeError_TypeError) &&
 					         !DeeError_Catch(&DeeError_NotImplemented))
 				goto err;
@@ -211,8 +201,7 @@ insertsort_impl(DREF DeeObject **__restrict dst,
 		for (j = 0; j < i; ++j) {
 			/* Check if we need to insert the object in this location. */
 			temp = DeeObject_CompareLo(ob, dst[j]);
-			if
-				unlikely(temp < 0 &&
+			if unlikely(temp < 0 &&
 				         !DeeError_Catch(&DeeError_TypeError) &&
 				         !DeeError_Catch(&DeeError_NotImplemented))
 			goto err;
@@ -239,8 +228,7 @@ insertsort_impl_p(DREF DeeObject **__restrict dst,
 		for (j = 0; j < i; ++j) {
 			/* Check if we need to insert the object in this location. */
 			temp = compare_lo(src_ob, dst[j], key);
-			if
-				unlikely(temp < 0 &&
+			if unlikely(temp < 0 &&
 				         !DeeError_Catch(&DeeError_TypeError) &&
 				         !DeeError_Catch(&DeeError_NotImplemented))
 			goto err;
@@ -279,8 +267,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 		       ? compare_lo(src[0], src[1], key)
 		       : DeeObject_CompareLo(src[0], src[1]);
 		if (temp <= 0) {
-			if
-				unlikely(temp < 0 &&
+			if unlikely(temp < 0 &&
 				         !DeeError_Catch(&DeeError_TypeError) &&
 				         !DeeError_Catch(&DeeError_NotImplemented))
 			goto err;
@@ -296,9 +283,8 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 		DeeObject **temp;
 		/* Default case: Do an actual merge-sort. */
 		temp = (DeeObject **)Dee_TryMalloc(objc * sizeof(DeeObject *));
-		if
-			unlikely(!temp)
-		{
+		if unlikely(!temp)
+			{
 			/* Use a fallback sorting function */
 			result = key
 			         ? insertsort_impl_p(dst, src, objc, key)
@@ -339,8 +325,7 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
 		temp = key
 		       ? compare_lo(src[0], src[1], key)
 		       : DeeObject_CompareLo(src[0], src[1]);
-		if
-			unlikely(temp < 0 &&
+		if unlikely(temp < 0 &&
 			         !DeeError_Catch(&DeeError_TypeError) &&
 			         !DeeError_Catch(&DeeError_NotImplemented))
 		goto err;

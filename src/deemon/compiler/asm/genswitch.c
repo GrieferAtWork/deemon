@@ -43,15 +43,12 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
                    struct asm_sym *__restrict target) {
 	struct asm_sym *temp, *guard_begin, *guard_end;
 	struct asm_exc *exc_hand;
-	if
-		unlikely((temp = asm_newsym()) == NULL)
-	goto err;
-	if
-		unlikely((guard_begin = asm_newsym()) == NULL)
-	goto err;
-	if
-		unlikely((guard_end = asm_newsym()) == NULL)
-	goto err;
+	if unlikely((temp = asm_newsym()) == NULL)
+		goto err;
+	if unlikely((guard_begin = asm_newsym()) == NULL)
+		goto err;
+	if unlikely((guard_end = asm_newsym()) == NULL)
+		goto err;
 	if (asm_putddi(ddi_ast))
 		goto err;
 	if (asm_gdup())
@@ -78,9 +75,8 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 	asm_defsym(temp); /* Jump here when the expressions didn't match. */
 
 	/* Create a primary exception handler for NOT_IMPLEMENTED errors. */
-	if
-		unlikely((exc_hand = asm_newexc()) == NULL)
-	goto err;
+	if unlikely((exc_hand = asm_newexc()) == NULL)
+		goto err;
 	Dee_Incref(&DeeError_NotImplemented);
 	exc_hand->ex_mask  = &DeeError_NotImplemented;
 	exc_hand->ex_start = guard_begin;
@@ -95,9 +91,8 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 	++temp->as_used;
 
 	/* Create a secondary exception handler for TYPE-errors. */
-	if
-		unlikely((exc_hand = asm_newexc()) == NULL)
-	goto err;
+	if unlikely((exc_hand = asm_newexc()) == NULL)
+		goto err;
 	Dee_Incref(&DeeError_TypeError);
 	exc_hand->ex_mask  = &DeeError_TypeError;
 	exc_hand->ex_start = guard_begin;
@@ -124,17 +119,14 @@ pack_target_tuple(struct asm_sym *__restrict sym) {
 	DREF DeeObject *ri_sp;
 	DREF DeeObject *result;
 	ri_ip = DeeRelInt_New(sym, 0, RELINT_MODE_FADDR);
-	if
-		unlikely(!ri_ip)
-	goto err;
+	if unlikely(!ri_ip)
+		goto err;
 	ri_sp = DeeRelInt_New(sym, 0, RELINT_MODE_FSTCK);
-	if
-		unlikely(!ri_sp)
-	goto err_ip;
+	if unlikely(!ri_sp)
+		goto err_ip;
 	result = DeeTuple_NewUninitialized(2);
-	if
-		unlikely(!result)
-	goto err_sp;
+	if unlikely(!result)
+		goto err_sp;
 	DeeTuple_SET(result, 0, ri_ip); /* Inherit reference. */
 	DeeTuple_SET(result, 1, ri_sp); /* Inherit reference. */
 	return result;
@@ -167,9 +159,8 @@ try_get_integer_as_u16(DeeObject *__restrict self,
 			goto nope; /* Address values may change during relocation. */
 		val = me->ri_add;
 		val += me->ri_sym->as_stck;
-		if
-			unlikely(val < 0 || val > UINT16_MAX)
-		goto nope;
+		if unlikely(val < 0 || val > UINT16_MAX)
+			goto nope;
 		*result = (uint16_t)val;
 		return true;
 	}
@@ -197,9 +188,8 @@ ast_genasm_switch(struct ast *__restrict self) {
 	/* Allocate a new symbol for `break' being used
 	 * inside of a switch and set up contextual flags. */
 	switch_break = asm_newsym();
-	if
-		unlikely(!switch_break)
-	goto err;
+	if unlikely(!switch_break)
+		goto err;
 	old_break                                    = current_assembler.a_loopctl[ASM_LOOPCTL_BRK];
 	current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = switch_break;
 	old_finflag                                  = current_assembler.a_finflag;
@@ -211,9 +201,8 @@ ast_genasm_switch(struct ast *__restrict self) {
 		 * to a case label, meaning that we must allow a
 		 * pre-allocated symbol. */
 		default_sym = self->a_switch.s_default->tl_asym;
-		if
-			likely(!default_sym)
-		{
+		if likely(!default_sym)
+			{
 			default_sym = asm_newsym();
 			/* Save the default symbol to that the switch-block may initialize it. */
 			self->a_switch.s_default->tl_asym = default_sym;
@@ -221,9 +210,8 @@ ast_genasm_switch(struct ast *__restrict self) {
 	} else {
 		default_sym = asm_newsym();
 	}
-	if
-		unlikely(!default_sym)
-	goto err;
+	if unlikely(!default_sym)
+		goto err;
 
 	/* Go through all the cases and collect those than can be considered
 	 * suitable candidates for constant expressions, while generating
@@ -238,13 +226,11 @@ ast_genasm_switch(struct ast *__restrict self) {
 		/* Allocate the symbol for every case (We'll need them all
 		 * eventually and this is a good spot to allocate them). */
 		case_sym = cases->tl_asym;
-		if
-			likely(!case_sym)
-		{
+		if likely(!case_sym)
+			{
 			case_sym = asm_newsym();
-			if
-				unlikely(!case_sym)
-			goto err_cases;
+			if unlikely(!case_sym)
+				goto err_cases;
 			cases->tl_asym = case_sym;
 		}
 
@@ -264,18 +250,16 @@ ast_genasm_switch(struct ast *__restrict self) {
 			continue;
 		}
 		/* Generate a runtime check for this case. */
-		if
-			likely(!temp)
-		{
+		if likely(!temp)
+			{
 			if (!has_expression) {
 				/* Assemble text for the switch expression. */
 				if (ast_genasm(self->a_switch.s_expr, ASM_G_FPUSHRES))
 					goto err_cases;
 				has_expression = true;
 			}
-			if
-				unlikely(emit_runtime_check(self, cases->tl_expr, case_sym))
-			goto err_cases;
+			if unlikely(emit_runtime_check(self, cases->tl_expr, case_sym))
+				goto err_cases;
 		}
 continue_next_case:
 		pcases = &cases->tl_next;
@@ -289,9 +273,8 @@ err_cases:
 	ASSERT((constant_cases != NULL) ==
 	       (num_constants != 0));
 	/* Check if something went wrong during creation of runtime cases. */
-	if
-		unlikely(temp)
-	goto err;
+	if unlikely(temp)
+		goto err;
 
 	/* Now that all of the non-constant cases are out-of-the-way, we
 	 * can simply move on to all of the actually constant cases. */
@@ -308,8 +291,7 @@ err_cases:
 			has_expression = true;
 		}
 		for (i = 0; i < num_constants; ++i) {
-			if
-				unlikely(emit_runtime_check(self, constant_cases->tl_expr,
+			if unlikely(emit_runtime_check(self, constant_cases->tl_expr,
 				                            constant_cases->tl_asym))
 			goto err;
 			constant_cases = constant_cases->tl_next;
@@ -335,18 +317,16 @@ err_cases:
 		DREF DeeObject *default_target;
 		int32_t get_cid;
 		jump_table = DeeRoDict_NewWithHint(num_constants);
-		if
-			unlikely(!jump_table)
-		goto err;
+		if unlikely(!jump_table)
+			goto err;
 		for (i = 0; i < num_constants; ++i) {
 			DREF DeeObject *case_target;
 			ASSERT_AST(constant_cases->tl_expr);
 			ASSERT(constant_cases->tl_expr->a_type == AST_CONSTEXPR);
 			ASSERT(constant_cases->tl_asym);
 			case_target = pack_target_tuple(constant_cases->tl_asym);
-			if
-				unlikely(!case_target)
-			{
+			if unlikely(!case_target)
+				{
 err_jump_table:
 				Dee_Decref(jump_table);
 				goto err;
@@ -355,9 +335,8 @@ err_jump_table:
 			                        constant_cases->tl_expr->a_constexpr,
 			                        case_target);
 			Dee_Decref_unlikely(case_target);
-			if
-				unlikely(temp)
-			goto err_jump_table;
+			if unlikely(temp)
+				goto err_jump_table;
 			constant_cases = constant_cases->tl_next;
 		}
 		/* With the jump table now generated, generate code like this:
@@ -370,9 +349,8 @@ err_jump_table:
 		// ...
 		if (asm_allowconst(jump_table)) {
 			jumptable_cid = asm_newconst(jump_table);
-			if
-				unlikely(jumptable_cid < 0)
-			goto err_jump_table;
+			if unlikely(jumptable_cid < 0)
+				goto err_jump_table;
 			if (asm_gpush_const((uint16_t)jumptable_cid))
 				goto err_jump_table;
 		} else {
@@ -395,20 +373,17 @@ err_jump_table:
 		}
 		/* jump_table, expr */
 		default_target = pack_target_tuple(default_sym);
-		if
-			unlikely(!default_target)
-		goto err;
+		if unlikely(!default_target)
+			goto err;
 		default_cid = asm_newconst(default_target);
 		Dee_Decref_unlikely(default_target);
-		if
-			unlikely(default_cid < 0)
-		goto err;
+		if unlikely(default_cid < 0)
+			goto err;
 		if (asm_gpush_const((uint16_t)default_cid))
 			goto err; /* jump_table, expr, default */
 		get_cid = asm_newconst(&str_get);
-		if
-			unlikely(get_cid < 0)
-		goto err;
+		if unlikely(get_cid < 0)
+			goto err;
 		if (asm_gcallattr_const((uint16_t)get_cid, 2))
 			goto err; /* target */
 		case_unpack_addr = asm_ip();
@@ -462,15 +437,12 @@ do_generate_block:
 		instruction_t *unpack;
 		jump_table     = (DeeRoDictObject *)current_assembler.a_constv[jumptable_cid];
 		default_target = current_assembler.a_constv[default_cid];
-		if
-			unlikely(!DeeRoDict_Check(jump_table))
-		goto done; /* Shouldn't happen */
-		if
-			unlikely(!DeeTuple_Check(default_target))
-		goto done; /* Shouldn't happen */
-		if
-			unlikely(DeeTuple_SIZE(default_target) != 2)
-		goto done; /* Shouldn't happen */
+		if unlikely(!DeeRoDict_Check(jump_table))
+			goto done; /* Shouldn't happen */
+		if unlikely(!DeeTuple_Check(default_target))
+			goto done; /* Shouldn't happen */
+		if unlikely(DeeTuple_SIZE(default_target) != 2)
+			goto done; /* Shouldn't happen */
 		if (!try_get_integer_as_u16(DeeTuple_GET(default_target, 1), &common_sp))
 			goto done;
 		/* Make sure that all constant cases share the same common SP value. */
@@ -479,12 +451,10 @@ do_generate_block:
 			if (!jump_table->rd_elem[i].di_key)
 				continue;
 			case_target = jump_table->rd_elem[i].di_value;
-			if
-				unlikely(!DeeTuple_Check(case_target))
-			goto done; /* Shouldn't happen */
-			if
-				unlikely(DeeTuple_SIZE(case_target) != 2)
-			goto done; /* Shouldn't happen */
+			if unlikely(!DeeTuple_Check(case_target))
+				goto done; /* Shouldn't happen */
+			if unlikely(DeeTuple_SIZE(case_target) != 2)
+				goto done; /* Shouldn't happen */
 			if (!try_get_integer_as_u16(DeeTuple_GET(case_target, 1), &alt_sp))
 				goto done;
 			if (common_sp != alt_sp)

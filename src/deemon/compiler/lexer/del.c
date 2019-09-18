@@ -33,18 +33,16 @@ ast_parse_del_single(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	DREF struct ast *new_result;
 	result = ast_parse_unary(lookup_mode);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	switch (result->a_type) {
 
 	case AST_SYM:
 		/* Create an unbind AST. */
 		new_result = ast_setddi(ast_unbind(result->a_sym),
 		                        &result->a_ddi);
-		if
-			unlikely(!new_result)
-		goto err_r;
+		if unlikely(!new_result)
+			goto err_r;
 		ast_decref(result);
 		result = new_result;
 		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) &&
@@ -73,12 +71,10 @@ ast_parse_del_single(unsigned int lookup_mode) {
 		default: goto default_case;
 		}
 		/* Create a new operator branch. */
-		if
-			unlikely(result->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
-		goto create_2;
-		if
-			unlikely(!result->a_operator.o_op1)
-		{
+		if unlikely(result->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
+			goto create_2;
+		if unlikely(!result->a_operator.o_op1)
+			{
 			new_result = ast_operator1(new_operator,
 			                           result->a_operator.o_exflag,
 			                           result->a_operator.o_op0);
@@ -103,9 +99,8 @@ create_2:
 			                           result->a_operator.o_op0,
 			                           result->a_operator.o_op1);
 		}
-		if
-			unlikely(!new_result)
-		goto err_r;
+		if unlikely(!new_result)
+			goto err_r;
 		ast_setddi(new_result, &result->a_ddi);
 		ast_decref(result);
 		result = new_result;
@@ -134,37 +129,32 @@ ast_parse_del(unsigned int lookup_mode) {
 	if (ast_parse_lookup_mode(&lookup_mode))
 		goto err;
 	result = ast_parse_del_single(lookup_mode);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (tok == ',') {
 		/* Delete-multiple expression. */
-		if
-			unlikely(yield() < 0)
-		goto err_r;
+		if unlikely(yield() < 0)
+			goto err_r;
 		/* Check for relaxed comma-rules. */
 		if (!maybe_expression_begin())
 			goto done;
 		delv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-		if
-			unlikely(!delv)
-		goto err_r;
+		if unlikely(!delv)
+			goto err_r;
 		dela = 2, delc = 1;
 		delv[0] = result; /* Inherit */
 		do {
 			result = ast_parse_del_single(lookup_mode);
-			if
-				unlikely(!result)
-			goto err_delv;
+			if unlikely(!result)
+				goto err_delv;
 			if (delc == dela) {
 				DREF struct ast **new_delv;
 				size_t new_dela = dela * 2;
 do_realloc_delv:
 				new_delv = (DREF struct ast **)Dee_TryRealloc(delv, new_dela *
 				                                                    sizeof(DREF struct ast *));
-				if
-					unlikely(!new_delv)
-				{
+				if unlikely(!new_delv)
+					{
 					if (new_dela != delc + 1) {
 						new_dela = delc + 1;
 						goto do_realloc_delv;
@@ -179,23 +169,20 @@ do_realloc_delv:
 			delv[delc++] = result; /* Inherit */
 			if (tok != ',')
 				break;
-			if
-				unlikely(yield() < 0)
-			goto err_delv;
+			if unlikely(yield() < 0)
+				goto err_delv;
 		} while (maybe_expression_begin());
 		/* Pack all delete expression together into a multiple-branch. */
 		if (delc != dela) {
 			DREF struct ast **new_delv;
 			new_delv = (DREF struct ast **)Dee_TryRealloc(delv, delc *
 			                                                    sizeof(DREF struct ast *));
-			if
-				likely(new_delv)
-			delv = new_delv;
+			if likely(new_delv)
+				delv = new_delv;
 		}
 		result = ast_multiple(AST_FMULTIPLE_KEEPLAST, delc, delv);
-		if
-			unlikely(!result)
-		goto err_delv;
+		if unlikely(!result)
+			goto err_delv;
 		/* Upon success, the multiple-branch inherited all `delv' expressions. */
 	}
 done:

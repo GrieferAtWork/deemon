@@ -366,9 +366,8 @@ do_integer_scan:
 			} else {
 				size_t total_consumption;
 				char *iter = DeeString_AsUtf8(self->si_scanner->ss_data);
-				if
-					unlikely(!iter)
-				goto err;
+				if unlikely(!iter)
+					goto err;
 				total_consumption = 0;
 				while (iter < data) {
 					++total_consumption;
@@ -483,9 +482,8 @@ match_ch:
 		goto next_format;
 	}
 	/* Check for errors. */
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 done:
 #ifdef CONFIG_NO_THREADS
 	self->si_datiter = data;
@@ -493,8 +491,7 @@ done:
 #else  /* CONFIG_NO_THREADS */
 	rwlock_write(&self->si_lock);
 	/* Check if another thread extracted a value in the mean time. */
-	if
-		unlikely(self->si_datiter != orig_data ||
+	if unlikely(self->si_datiter != orig_data ||
 		         self->si_fmtiter != orig_format)
 	{
 		/* Race condition! -> Loop back and try to read a value once again. */
@@ -633,16 +630,14 @@ PRIVATE DREF StringScanIterator *DCALL
 ss_iter(StringScanner *__restrict self) {
 	DREF StringScanIterator *result;
 	result = DeeObject_MALLOC(StringScanIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Universally use UTF-8 for string scanning to prevent
 	 * any problems related to unicode text processing. */
 	if (DeeString_Check(self->ss_data)) {
 		result->si_datiter = DeeString_AsUtf8((DeeObject *)self->ss_data);
-		if
-			unlikely(!result->si_datiter)
-		goto err_r;
+		if unlikely(!result->si_datiter)
+			goto err_r;
 		result->si_datend = result->si_datiter + WSTR_LENGTH(result->si_datiter);
 	} else {
 		ASSERT(DeeBytes_Check(self->ss_data));
@@ -651,9 +646,8 @@ ss_iter(StringScanner *__restrict self) {
 	}
 	if (DeeString_Check(self->ss_format)) {
 		result->si_fmtiter = DeeString_AsUtf8((DeeObject *)self->ss_format);
-		if
-			unlikely(!result->si_fmtiter)
-		goto err_r;
+		if unlikely(!result->si_fmtiter)
+			goto err_r;
 		result->si_fmtend = result->si_fmtiter + WSTR_LENGTH(result->si_fmtiter);
 	} else {
 		ASSERT(DeeBytes_Check(self->ss_format));
@@ -765,9 +759,8 @@ DeeString_Scanf(DeeObject *__restrict self,
 	 * to only generate output values which are actually
 	 * being used. */
 	result = DeeObject_MALLOC(StringScanner);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ss_data   = self;
 	result->ss_format = format;
 	Dee_Incref(self);

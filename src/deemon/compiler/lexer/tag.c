@@ -48,14 +48,12 @@ INTERN DREF struct ast *
 			/* Invoke the annotation function using the current input:
 			 * >> input = aa_func(input); */
 			expr_v = (struct ast **)Dee_Malloc(1 * sizeof(struct ast *));
-			if
-				unlikely(!expr_v)
-			goto err_input;
+			if unlikely(!expr_v)
+				goto err_input;
 			expr_v[0] = input; /* Inherit reference. */
 			args      = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, expr_v), &func->a_ddi);
-			if
-				unlikely(!args)
-			{
+			if unlikely(!args)
+				{
 				Dee_Free(expr_v);
 				goto err_input;
 			}
@@ -79,9 +77,8 @@ INTERN DREF struct ast *
 					expr_v = (DREF struct ast **)Dee_Realloc(args->a_multiple.m_astv,
 					                                         (args->a_multiple.m_astc + 1) *
 					                                         sizeof(DREF struct ast *));
-					if
-						unlikely(!expr_v)
-					goto err_input;
+					if unlikely(!expr_v)
+						goto err_input;
 					MEMMOVE_PTR(expr_v + 1, expr_v, args->a_multiple.m_astc);
 					expr_v[0]               = input; /* inherit reference. */
 					args->a_multiple.m_astv = expr_v;
@@ -91,19 +88,16 @@ INTERN DREF struct ast *
 				}
 			}
 			merge = ast_setddi(ast_expand(args), &func->a_ddi);
-			if
-				unlikely(!merge)
-			goto err_input;
+			if unlikely(!merge)
+				goto err_input;
 			expr_v = (struct ast **)Dee_Malloc(2 * sizeof(struct ast *));
-			if
-				unlikely(!expr_v)
-			goto err_input_merge;
+			if unlikely(!expr_v)
+				goto err_input_merge;
 			expr_v[0] = input; /* Inherit reference. */
 			expr_v[1] = merge; /* Inherit reference. */
 			args      = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 2, expr_v), &func->a_ddi);
-			if
-				unlikely(!args)
-			{
+			if unlikely(!args)
+				{
 				Dee_Free(expr_v);
 				goto err_input_merge;
 			}
@@ -113,9 +107,8 @@ set_merge_from_inherit_args:
 			                      base, args);
 		}
 		ast_decref_unlikely(args);
-		if
-			unlikely(!merge)
-		goto err;
+		if unlikely(!merge)
+			goto err;
 		input = ast_setddi(merge, &func->a_ddi);
 		--self->an_annoc;
 		ast_decref(self->an_annov[self->an_annoc].aa_func);
@@ -190,16 +183,14 @@ INTERN int (DCALL ast_annotations_add)(struct ast *__restrict func,
 		new_anno = (struct ast_annotation *)Dee_TryRealloc(current_tags.at_anno.an_annov,
 		                                                   new_alloc *
 		                                                   sizeof(struct ast_annotation));
-		if
-			unlikely(!new_anno)
-		{
+		if unlikely(!new_anno)
+			{
 			new_alloc = current_tags.at_anno.an_annoc + 1;
 			new_anno = (struct ast_annotation *)Dee_Realloc(current_tags.at_anno.an_annov,
 			                                                new_alloc *
 			                                                sizeof(struct ast_annotation));
-			if
-				unlikely(!new_anno)
-			goto err;
+			if unlikely(!new_anno)
+				goto err;
 		}
 		current_tags.at_anno.an_annoa = new_alloc;
 		current_tags.at_anno.an_annov = new_anno;
@@ -264,28 +255,23 @@ PRIVATE int DCALL append_decl_string(void) {
 	       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
 	do {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-		if
-			unlikely(ast_decode_unicode_string(&current_tags.at_decl))
-		goto err;
+		if unlikely(ast_decode_unicode_string(&current_tags.at_decl))
+			goto err;
 #else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-		if
-			unlikely(ast_decode_unicode_string(&current_tags.at_doc))
-		goto err;
+		if unlikely(ast_decode_unicode_string(&current_tags.at_doc))
+			goto err;
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	} while (tok == TOK_STRING ||
 	         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
 	/* Append a line-feed at the end. */
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-	if
-		unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
-	goto err;
+	if unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
+		goto err;
 #else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-	if
-		unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
-	goto err;
+	if unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
+		goto err;
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 	return 0;
 err:
@@ -295,9 +281,8 @@ err:
 LOCAL int DCALL
 convert_dot_tag_namespace(size_t tag_name_len,
                           char const *__restrict tag_name_str) {
-	if
-		unlikely(tok == ':' || tok == TOK_COLLON_COLLON)
-	{
+	if unlikely(tok == ':' || tok == TOK_COLLON_COLLON)
+		{
 		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, tag_name_len, tag_name_str))
 			goto err;
 		tok = '.';
@@ -338,13 +323,11 @@ INTERN int(DCALL parse_tags)(void) {
 			}
 		}
 		token.t_file->f_pos = doc_end;
-		if
-			unlikely(unicode_printer_print(&current_tags.at_doc, doc_start,
+		if unlikely(unicode_printer_print(&current_tags.at_doc, doc_start,
 			                               (size_t)(doc_end - doc_start)) < 0)
 		goto err;
-		if
-			unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
-		goto err;
+		if unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
+			goto err;
 		if (yield() < 0)
 			goto err;
 	} else if (tok == '[') {
@@ -355,9 +338,8 @@ INTERN int(DCALL parse_tags)(void) {
 #define IS_TAG(x)                              \
 		(tag_name_len == COMPILER_STRLEN(x) && \
 		 !memcmp(tag_name_str, x, COMPILER_STRLEN(x)))
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 again_compiler_tag:
 		is_optional = false;
 again_compiler_subtag:
@@ -383,30 +365,24 @@ again_compiler_subtag:
 			} else if (IS_TAG("copyable")) {
 				current_tags.at_code_flags |= CODE_FCOPYABLE;
 			} else if (IS_TAG("optional")) {
-				if
-					unlikely(yield() < 0)
-				goto err;
-				if
-					unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
-				goto err;
-				if
-					unlikely(likely(tok == '.') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
+				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+					goto err;
+				if unlikely(likely(tok == '.') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
+					goto err;
 				is_optional = true;
 				goto again_compiler_subtag;
 			} else if (IS_TAG("gatw")) {
 				/* The annotation namespace used by our implementation (GATW). */
-				if
-					unlikely(yield() < 0)
-				goto err;
-				if
-					unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
+				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+					goto err;
 				if (tok != '.')
 					goto warn_unknown_tag;
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				if (!TPP_ISKEYWORD(tok))
 					goto err_no_keyword_after_dot;
 				tag_name_str = token.t_kwd->k_name;
@@ -442,52 +418,42 @@ again_compiler_subtag:
 				} else if (IS_TAG("constructor")) {
 					current_tags.at_code_flags |= CODE_FCONSTRUCTOR;
 				} else if (IS_TAG("doc")) {
-					if
-						unlikely(yield() < 0)
-					goto err;
-					if
-						likely(tok == '(')
-					{
-						if
-							unlikely(yield() < 0)
+					if unlikely(yield() < 0)
 						goto err;
+					if likely(tok == '(')
+						{
+						if unlikely(yield() < 0)
+							goto err;
 					} else {
 						if (is_optional)
 							goto do_next_compiler_tag;
-						if
-							unlikely(WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
-						goto err;
+						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
+							goto err;
 						if (tok == ',' || tok == ']')
 							goto do_next_compiler_tag;
 					}
-					if
-						likely(tok == TOK_STRING ||
+					if likely(tok == TOK_STRING ||
 						       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)))
 					{
-						if
-							unlikely(append_decl_string())
-						goto err;
+						if unlikely(append_decl_string())
+							goto err;
 					} else {
-						if
-							unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
-						goto err;
+						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
+							goto err;
 					}
-					if
-						unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
-					goto err;
+					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
+						goto err;
 					goto do_next_compiler_tag;
 				} else {
 					goto warn_unknown_tag_yield;
 				}
 			} else {
 warn_unknown_tag_yield:
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 warn_unknown_tag:
-				if
-					unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
-				goto err;
+				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+					goto err;
 				if (!is_optional &&
 				    WARN(tok == '.' ? W_COMPILER_TAG_UNKNOWN_NS
 				                    : W_COMPILER_TAG_UNKNOWN,
@@ -495,9 +461,8 @@ warn_unknown_tag:
 					goto err;
 again_check_tag_namespace:
 				if (tok == '.') {
-					if
-						unlikely(yield() < 0)
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
 					if (!TPP_ISKEYWORD(tok)) {
 err_no_keyword_after_dot:
 						if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, tag_name_len, tag_name_str))
@@ -505,29 +470,25 @@ err_no_keyword_after_dot:
 					} else {
 						tag_name_str = token.t_kwd->k_name;
 						tag_name_len = token.t_kwd->k_size;
-						if
-							unlikely(yield() < 0)
-						goto err;
+						if unlikely(yield() < 0)
+							goto err;
 					}
-					if
-						unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
-					goto err;
+					if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+						goto err;
 					goto again_check_tag_namespace;
 				}
 				if (tok == '(') {
 					/* Skip tag argument list. */
 					unsigned int recursion = 1;
 					while (tok) {
-						if
-							unlikely(yield() < 0)
-						goto err;
+						if unlikely(yield() < 0)
+							goto err;
 						if (tok == '(') {
 							++recursion;
 						} else if (tok == ')') {
 							if (recursion == 1) {
-								if
-									unlikely(yield() < 0)
-								goto err;
+								if unlikely(yield() < 0)
+									goto err;
 								break;
 							}
 							--recursion;
@@ -536,27 +497,22 @@ err_no_keyword_after_dot:
 				}
 				goto do_next_compiler_tag;
 			}
-			if
-				unlikely(yield() < 0)
-			goto err;
-			if
-				unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
-			goto err;
-			if
-				unlikely(tok == '.')
-			goto warn_unknown_tag;
+			if unlikely(yield() < 0)
+				goto err;
+			if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+				goto err;
+			if unlikely(tok == '.')
+				goto warn_unknown_tag;
 		}
 do_next_compiler_tag:
 		if (tok == ',') {
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (tok != ']')
 				goto again_compiler_tag;
 		}
-		if
-			unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_RBRACKET))
-		goto err;
+		if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_RBRACKET))
+			goto err;
 #undef IS_TAG
 	} else {
 		uint16_t flags;
@@ -566,14 +522,12 @@ do_next_compiler_tag:
 		if (tok == '(')
 			flags |= AST_ANNOTATION_FNOFUNC;
 		annotation = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!annotation)
-		goto err;
+		if unlikely(!annotation)
+			goto err;
 		error = ast_annotations_add(annotation, flags);
 		ast_decref_unlikely(annotation);
-		if
-			unlikely(error)
-		goto err;
+		if unlikely(error)
+			goto err;
 		goto done;
 	}
 done:
@@ -584,12 +538,10 @@ err:
 
 INTERN int DCALL parse_tags_block(void) {
 	while (tok == '@') {
-		if
-			unlikely(yield() < 0)
-		goto err;
-		if
-			unlikely(parse_tags())
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
+		if unlikely(parse_tags())
+			goto err;
 	}
 	return 0;
 err:

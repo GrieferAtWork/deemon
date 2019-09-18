@@ -114,9 +114,8 @@ DeeFile_Read(DeeObject *__restrict self,
 	}
 	while (DeeFileType_CheckExact(tp_self)) {
 		if (tp_self->tp_features & TF_HASFILEOPS) {
-			if
-				unlikely(!((DeeFileTypeObject *)tp_self)->ft_read)
-			break;
+			if unlikely(!((DeeFileTypeObject *)tp_self)->ft_read)
+				break;
 			return (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self,
 			                                                  buffer,
 			                                                  bufsize,
@@ -142,9 +141,8 @@ DeeFile_Write(DeeObject *__restrict self,
 	}
 	while (DeeFileType_CheckExact(tp_self)) {
 		if (tp_self->tp_features & TF_HASFILEOPS) {
-			if
-				unlikely(!((DeeFileTypeObject *)tp_self)->ft_write)
-			break;
+			if unlikely(!((DeeFileTypeObject *)tp_self)->ft_write)
+				break;
 			return (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 			                                                   buffer,
 			                                                   bufsize,
@@ -170,15 +168,13 @@ DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
 		if (tp_self->tp_features & TF_HASFILEOPS) {
 			dpos_t trunc_pos;
 			int result;
-			if
-				unlikely(!((DeeFileTypeObject *)tp_self)->ft_trunc ||
+			if unlikely(!((DeeFileTypeObject *)tp_self)->ft_trunc ||
 				         !((DeeFileTypeObject *)tp_self)->ft_seek)
 			break;
 			/* Determine the current position and truncate the file there. */
 			trunc_pos = (dpos_t)(*((DeeFileTypeObject *)tp_self)->ft_seek)((DeeFileObject *)self, 0, SEEK_CUR);
-			if
-				unlikely((doff_t)trunc_pos < 0)
-			result      = -1;
+			if unlikely((doff_t)trunc_pos < 0)
+				result      = -1;
 			else result = (*((DeeFileTypeObject *)tp_self)->ft_trunc)((DeeFileObject *)self, trunc_pos);
 			if (psize)
 				*psize = trunc_pos;
@@ -568,9 +564,8 @@ DeeFile_IsAtty(DeeObject *__restrict self) {
 	int result;
 	/* Very simply: Just call the `isatty()' member function. */
 	result_ob = DeeObject_CallAttr(self, &str_isatty, 0, NULL);
-	if
-		unlikely(!result_ob)
-	goto err_call;
+	if unlikely(!result_ob)
+		goto err_call;
 	result = DeeObject_Bool(result_ob);
 	Dee_Decref(result_ob);
 	return result;
@@ -607,9 +602,8 @@ DeeFile_Fileno(DeeObject *__restrict self) {
 #endif
 	/* Callback: Call a `fileno()' member function. */
 	result_ob = DeeObject_CallAttr(self, &str_fileno, 0, NULL);
-	if
-		unlikely(!result_ob)
-	goto err;
+	if unlikely(!result_ob)
+		goto err;
 	/* Cast the member function's return value to an integer. */
 	if (DeeObject_AsFd(result_ob, &result))
 		goto err_result_ob;
@@ -664,9 +658,8 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 			pungetc = ((DeeFileTypeObject *)tp_self)->ft_ungetc;
 			if (!pgetc && ((DeeFileTypeObject *)tp_self)->ft_read)
 				pgetc = (int(DCALL *)(DeeFileObject * __restrict, dioflag_t)) & DeeFile_Getcf;
-			if
-				likely(pgetc && pungetc)
-			goto got_read;
+			if likely(pgetc && pungetc)
+				goto got_read;
 			if (pgetc) {
 				/* If GETC() is implemented, but UNGETC()
 				 * isn't, use the correct error description. */
@@ -753,9 +746,8 @@ DeeFile_ReadText(DeeObject *__restrict self,
 		features = tp_self->tp_features;
 		if (features & TF_HASFILEOPS) {
 			pread = ((DeeFileTypeObject *)tp_self)->ft_read;
-			if
-				likely(pread)
-			goto got_read;
+			if likely(pread)
+				goto got_read;
 			break;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -771,14 +763,12 @@ got_read: {
 		size_t bufsize = MIN(max_length, READTEXT_BUFSIZE);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
-		if
-			unlikely(!buffer)
-		goto err_printer;
+		if unlikely(!buffer)
+			goto err_printer;
 		/* Read more data. */
 		read_size = (*pread)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-		if
-			unlikely(read_size < 0)
-		goto err_printer;
+		if unlikely(read_size < 0)
+			goto err_printer;
 		bytes_printer_release(&printer, bufsize - (size_t)read_size);
 		if (!read_size ||
 		    (!readall && (size_t)read_size != bufsize))
@@ -812,9 +802,8 @@ DeeFile_PReadText(DeeObject *__restrict self,
 		features = tp_self->tp_features;
 		if (features & TF_HASFILEOPS) {
 			ppread = ((DeeFileTypeObject *)tp_self)->ft_pread;
-			if
-				likely(ppread)
-			goto got_read;
+			if likely(ppread)
+				goto got_read;
 			break;
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -830,14 +819,12 @@ got_read: {
 		size_t bufsize = MIN(max_length, READTEXT_BUFSIZE);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
-		if
-			unlikely(!buffer)
-		goto err_printer;
+		if unlikely(!buffer)
+			goto err_printer;
 		/* Read more data. */
 		read_size = (*ppread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-		if
-			unlikely(read_size < 0)
-		goto err_printer;
+		if unlikely(read_size < 0)
+			goto err_printer;
 		bytes_printer_release(&printer, bufsize - (size_t)read_size);
 		if (!read_size ||
 		    (!readall && (size_t)read_size != bufsize))
@@ -882,18 +869,16 @@ DeeFile_PrintObject(DeeObject *__restrict self,
 PUBLIC int DCALL
 DeeFile_PrintObjectSp(DeeObject *__restrict self,
                       DeeObject *__restrict ob) {
-	if
-		unlikely(print_ob_str(self, ob))
-	return -1;
+	if unlikely(print_ob_str(self, ob))
+		return -1;
 	return print_sp(self);
 }
 
 PUBLIC int DCALL
 DeeFile_PrintObjectNl(DeeObject *__restrict self,
                       DeeObject *__restrict ob) {
-	if
-		unlikely(print_ob_str(self, ob))
-	return -1;
+	if unlikely(print_ob_str(self, ob))
+		return -1;
 	return DeeFile_PrintNl(self);
 }
 
@@ -910,45 +895,38 @@ DeeFile_PrintAll(DeeObject *__restrict self,
 		for (i = 0; i < fast_size; ++i) {
 			if (i != 0) {
 				result = print_sp(self);
-				if
-					unlikely(result)
-				goto err;
+				if unlikely(result)
+					goto err;
 			}
 			elem = DeeFastSeq_GetItem(ob, i);
-			if
-				unlikely(!elem)
-			goto err_m1;
+			if unlikely(!elem)
+				goto err_m1;
 			result = DeeFile_PrintObject(self, elem);
 			Dee_Decref(elem);
-			if
-				unlikely(result)
-			goto err;
+			if unlikely(result)
+				goto err;
 		}
 		return 0;
 	}
-	if
-		unlikely((ob = DeeObject_IterSelf(ob)) == NULL)
-	goto err_m1;
+	if unlikely((ob = DeeObject_IterSelf(ob)) == NULL)
+		goto err_m1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
 		if (!is_first) {
 			result = print_sp(self);
-			if
-				unlikely(result)
-			goto err_elem;
+			if unlikely(result)
+				goto err_elem;
 		}
 		result = DeeFile_PrintObject(self, elem);
-		if
-			unlikely(result)
-		goto err_elem;
+		if unlikely(result)
+			goto err_elem;
 		Dee_Decref(elem);
 		is_first = false;
 		if (DeeThread_CheckInterrupt())
 			goto err_ob;
 	}
 	Dee_Decref(ob);
-	if
-		unlikely(!elem)
-	goto err_m1;
+	if unlikely(!elem)
+		goto err_m1;
 	return 0;
 err_elem:
 	Dee_Decref(elem);
@@ -972,35 +950,30 @@ DeeFile_PrintAllSp(DeeObject *__restrict self,
 		size_t i;
 		for (i = 0; i < fast_size; ++i) {
 			elem = DeeFastSeq_GetItem(ob, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			result = DeeFile_PrintObjectSp(self, elem);
 			Dee_Decref(elem);
-			if
-				unlikely(result)
-			goto err;
+			if unlikely(result)
+				goto err;
 		}
 		return 0;
 	}
-	if
-		unlikely((ob = DeeObject_IterSelf(ob)) == NULL)
-	goto err;
+	if unlikely((ob = DeeObject_IterSelf(ob)) == NULL)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
 		result = DeeFile_PrintObjectSp(self, elem);
 		Dee_Decref(elem);
-		if
-			unlikely(result)
-		{
+		if unlikely(result)
+			{
 			Dee_Decref(ob);
 			return result;
 		}
 		if (DeeThread_CheckInterrupt())
 			goto err_ob;
 	}
-	if
-		unlikely(!elem)
-	goto err_ob;
+	if unlikely(!elem)
+		goto err_ob;
 	Dee_Decref(ob);
 	return 0;
 err_ob:
@@ -1012,9 +985,8 @@ err:
 PUBLIC int DCALL
 DeeFile_PrintAllNl(DeeObject *__restrict self,
                    DeeObject *__restrict ob) {
-	if
-		unlikely(DeeFile_PrintAll(self, ob))
-	return -1;
+	if unlikely(DeeFile_PrintAll(self, ob))
+		return -1;
 	return DeeFile_PrintNl(self);
 }
 
@@ -1282,12 +1254,10 @@ found_option:
 	}
 	/* Actually open the file. */
 	result = DeeFile_Open(path, oflags, mode);
-	if
-		unlikely(!ITER_ISOK(result))
-	{
-		if
-			unlikely(!result)
-		goto err;
+	if unlikely(!ITER_ISOK(result))
+		{
+		if unlikely(!result)
+			goto err;
 		/* Handle file-not-found / file-already-exists errors. */
 		if ((oflags & (OPEN_FCREAT | OPEN_FEXCL)) == (OPEN_FCREAT | OPEN_FEXCL)) {
 			DeeError_Throwf(&DeeError_FileExists,
@@ -1310,9 +1280,8 @@ found_option:
 		                               : (FILE_BUFFER_MODE_AUTO),
 		                               0);
 		Dee_Decref(result);
-		if
-			unlikely(!new_result)
-		goto err;
+		if unlikely(!new_result)
+			goto err;
 		result = new_result;
 	}
 	return result;
@@ -1412,16 +1381,14 @@ create_std_buffer(unsigned int id) {
 #else /* CONFIG_NATIVE_STD_FILES_ARE_BUFFERED */
 	result = DeeFileBuffer_New(DeeFile_DefaultStd(id),
 	                           std_buffer_modes[id], 0);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 #endif /* !CONFIG_NATIVE_STD_FILES_ARE_BUFFERED */
 	rwlock_write(&dee_std_lock);
 	/* Save the newly created buffer in the standard stream vector. */
 	new_result = dee_std[id];
-	if
-		unlikely(new_result != ITER_DONE)
-	{
+	if unlikely(new_result != ITER_DONE)
+		{
 		Dee_XIncref(new_result);
 		rwlock_endwrite(&dee_std_lock);
 		Dee_Decref(result);
@@ -1446,9 +1413,8 @@ DeeFile_GetStd(unsigned int id) {
 	ASSERT(id < DEE_STDCNT);
 	rwlock_read(&dee_std_lock);
 	result = dee_std[id];
-	if
-		unlikely(!ITER_ISOK(result))
-	{
+	if unlikely(!ITER_ISOK(result))
+		{
 		rwlock_endread(&dee_std_lock);
 		/* When the stream is `ITER_DONE', lazily create the STD stream. */
 		if (result == ITER_DONE)
@@ -1469,16 +1435,14 @@ DeeFile_TryGetStd(unsigned int id) {
 	ASSERT(id < DEE_STDCNT);
 	rwlock_read(&dee_std_lock);
 	result = dee_std[id];
-	if
-		unlikely(!ITER_ISOK(result))
-	{
+	if unlikely(!ITER_ISOK(result))
+		{
 		rwlock_endread(&dee_std_lock);
 		/* When the stream is `ITER_DONE', lazily create the STD stream. */
 		if (result == ITER_DONE) {
 			result = create_std_buffer(id);
-			if
-				unlikely(!result)
-			DeeError_Handled(ERROR_HANDLED_RESTORE);
+			if unlikely(!result)
+				DeeError_Handled(ERROR_HANDLED_RESTORE);
 		}
 		goto done;
 	}
@@ -1516,24 +1480,20 @@ get_files_object(DeeObject *__restrict name) {
 again:
 	rwlock_read(&files_module_lock);
 	mod = files_module;
-	if
-		unlikely(!mod)
-	{
+	if unlikely(!mod)
+		{
 		rwlock_endread(&files_module_lock);
 		mod = DeeModule_OpenGlobal(&str_files, NULL, true);
-		if
-			unlikely(!mod)
-		return NULL;
-		if
-			unlikely(DeeModule_RunInit(mod) < 0)
-		{
+		if unlikely(!mod)
+			return NULL;
+		if unlikely(DeeModule_RunInit(mod) < 0)
+			{
 			Dee_Decref(mod);
 			return NULL;
 		}
 		rwlock_write(&files_module_lock);
-		if
-			unlikely(ATOMIC_READ(files_module))
-		{
+		if unlikely(ATOMIC_READ(files_module))
+			{
 			rwlock_endwrite(&files_module_lock);
 			Dee_Decref(mod);
 			goto again;
@@ -1738,20 +1698,17 @@ PUBLIC dpos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, &str_size, 0, NULL);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		dpos_t resval;
 		int error;
 		error = DeeObject_AsUInt64(result, &resval);
 		Dee_Decref(result);
-		if
-			unlikely(error)
-		goto err;
+		if unlikely(error)
+			goto err;
 		/* Ensure that the file isn't too large. */
-		if
-			unlikely(resval == (dpos_t)-1)
-		{
+		if unlikely(resval == (dpos_t)-1)
+			{
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Failed %k is too large (%I64u is bigger than 2^63 bytes)",
 			                self, resval);
@@ -1800,9 +1757,8 @@ file_readinto(DeeObject *__restrict self, size_t argc,
 	         ? DeeFile_ReadAll(self, buffer.bb_base, buffer.bb_size)
 	         : DeeFile_Read(self, buffer.bb_base, buffer.bb_size);
 	DeeObject_PutBuf(dst, &buffer, Dee_BUFFER_FWRITABLE);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -1824,9 +1780,8 @@ file_write(DeeObject *__restrict self, size_t argc,
 	         ? DeeFile_WriteAll(self, buffer.bb_base, buffer.bb_size)
 	         : DeeFile_Write(self, buffer.bb_base, buffer.bb_size);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -1862,9 +1817,8 @@ file_preadinto(DeeObject *__restrict self, size_t argc,
 	result = readall ? DeeFile_PReadAll(self, buffer.bb_base, buffer.bb_size, file_pos)
 	                 : DeeFile_PRead(self, buffer.bb_base, buffer.bb_size, file_pos);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -1886,9 +1840,8 @@ file_pwrite(DeeObject *__restrict self, size_t argc,
 	result = writeall ? DeeFile_PWriteAll(self, buffer.bb_base, buffer.bb_size, file_pos)
 	                  : DeeFile_PWrite(self, buffer.bb_base, buffer.bb_size, file_pos);
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FREADONLY);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -1946,9 +1899,8 @@ file_seek(DeeObject *__restrict self, size_t argc,
 	}
 got_whence:
 	seek_off = DeeFile_Seek(self, seek_off, whence);
-	if
-		unlikely(seek_off < 0)
-	goto err;
+	if unlikely(seek_off < 0)
+		goto err;
 	return DeeInt_NewU64((dpos_t)seek_off);
 err:
 	return NULL;
@@ -1961,9 +1913,8 @@ file_tell(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":tell"))
 		goto err;
 	result = DeeFile_Tell(self);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewU64((dpos_t)result);
 err:
 	return NULL;
@@ -2033,9 +1984,8 @@ file_getc(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":getc"))
 		goto err;
 	result = DeeFile_Getc(self);
-	if
-		unlikely(result == GETC_ERR)
-	goto err;
+	if unlikely(result == GETC_ERR)
+		goto err;
 #if GETC_EOF != -1
 	if (result == GETC_EOF)
 		result = -1;
@@ -2052,9 +2002,8 @@ file_ungetc(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "d:ungetc", &result))
 		goto err;
 	result = DeeFile_Ungetc(self, result);
-	if
-		unlikely(result == GETC_ERR)
-	goto err;
+	if unlikely(result == GETC_ERR)
+		goto err;
 	return_bool_(result != GETC_EOF);
 err:
 	return NULL;
@@ -2068,9 +2017,8 @@ file_putc(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "I8u:putc", &byte))
 		goto err;
 	result = DeeFile_Putc(self, (int)byte);
-	if
-		unlikely(result == GETC_ERR)
-	goto err;
+	if unlikely(result == GETC_ERR)
+		goto err;
 	return_bool_(result != GETC_EOF);
 err:
 	return NULL;
@@ -2089,18 +2037,16 @@ file_size(DeeObject *__restrict self,
 			if (pseek) {
 				dpos_t old_pos, filesize;
 				old_pos = (dpos_t)(*pseek)((DeeFileObject *)self, 0, SEEK_CUR);
-				if
-					unlikely((doff_t)old_pos < 0)
-				goto err;
+				if unlikely((doff_t)old_pos < 0)
+					goto err;
 				/* Seek to the end to figure out how large the file is. */
 				filesize = (dpos_t)(*pseek)((DeeFileObject *)self, 0, SEEK_END);
 				/* Return to the previous file position. */
 				if ((doff_t)filesize >= 0 &&
 				    (*pseek)((DeeFileObject *)self, (doff_t)old_pos, SEEK_SET) < 0)
 					filesize = (dpos_t)-1;
-				if
-					unlikely(filesize < 0)
-				goto err;
+				if unlikely(filesize < 0)
+					goto err;
 				/* Return the size of the file. */
 				return DeeInt_NewU64((uint64_t)filesize);
 			}
@@ -2347,12 +2293,10 @@ file_shr(DeeObject *__restrict self,
 		goto err;
 	result = DeeFile_ReadAll(self, buffer.bb_base, buffer.bb_size);
 	DeeObject_PutBuf(some_object, &buffer, Dee_BUFFER_FWRITABLE);
-	if
-		unlikely(result < 0)
-	goto err;
-	if
-		unlikely((size_t)result < buffer.bb_size)
-	{
+	if unlikely(result < 0)
+		goto err;
+	if unlikely((size_t)result < buffer.bb_size)
+		{
 		DeeError_Throwf(&DeeError_FSError,
 		                "Failed to fill the entire buffer of %Iu bytes when only %Iu were read",
 		                buffer.bb_size, (size_t)result);

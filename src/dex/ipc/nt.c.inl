@@ -233,9 +233,8 @@ INTERN DREF DeeObject *DCALL nt_GetModuleFileName(HMODULE hModule) {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_buffer;
@@ -264,9 +263,8 @@ again:
 		/* Increase buffer size. */
 		dwBufSize *= 2;
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_buffer;
+		if unlikely(!lpNewBuffer)
+			goto err_buffer;
 		lpBuffer = lpNewBuffer;
 	}
 	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
@@ -301,9 +299,8 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 	if (*(void **)&func == (void *)-1)
 		return ITER_DONE;
 	buffer = DeeString_NewWideBuffer(bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*func)(hProcess, dwFlags, buffer, &bufsize)) {
 		DWORD error = GetLastError();
@@ -320,9 +317,8 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 			/* Increase the buffer size. */
 			bufsize    = (DWORD)(WSTR_LENGTH(buffer) * 2);
 			new_buffer = DeeString_ResizeWideBuffer(buffer, bufsize);
-			if
-				unlikely(!new_buffer)
-			goto err_r;
+			if unlikely(!new_buffer)
+				goto err_r;
 			buffer = new_buffer;
 			break;
 
@@ -334,9 +330,8 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	new_buffer = DeeString_TryResizeWideBuffer(buffer, bufsize);
-	if
-		likely(new_buffer)
-	buffer = new_buffer;
+	if likely(new_buffer)
+		buffer = new_buffer;
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_r:
 	DeeString_FreeWideBuffer(buffer);

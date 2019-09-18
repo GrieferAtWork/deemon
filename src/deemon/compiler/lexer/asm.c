@@ -83,9 +83,8 @@ operand_list_add(struct operand_list *__restrict self,
 do_realloc:
 		result = (struct asm_operand *)Dee_TryRealloc(self->ol_v, new_alloc *
 		                                                          sizeof(struct asm_operand));
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			if (new_alloc != self->ol_c + 1) {
 				new_alloc = self->ol_c + 1;
 				goto do_realloc;
@@ -118,47 +117,40 @@ asm_parse_operands(struct operand_list *__restrict list,
 		struct TPPKeyword *name = NULL;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 		if (tok == '[') {
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (TPP_ISKEYWORD(tok)) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 				name = token.t_kwd;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 			} else {
 				if (WARN(W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
 					goto err;
 			}
-			if
-				unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
-			goto err;
+			if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
+				goto err;
 		}
 		if (type == OPERAND_TYPE_LABEL) {
 			struct text_label *label_value;
 			/* Label operand. */
 			if (TPP_ISKEYWORD(tok)) {
 				label_value = lookup_label(token.t_kwd);
-				if
-					unlikely(!label_value)
-				goto err;
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(!label_value)
+					goto err;
+				if unlikely(yield() < 0)
+					goto err;
 			} else {
 				if (WARN(W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND))
 					goto err;
 				label_value = lookup_label(&TPPKeyword_Empty);
-				if
-					unlikely(!label_value)
-				goto err;
+				if unlikely(!label_value)
+					goto err;
 			}
 			operand = operand_list_add(list, type);
-			if
-				unlikely(!operand)
-			goto err;
+			if unlikely(!operand)
+				goto err;
 			/* Add the usage-reference to the label. */
 			++label_value->tl_goto;
 			operand->ao_label = label_value;
@@ -167,41 +159,34 @@ asm_parse_operands(struct operand_list *__restrict list,
 			if (tok == TOK_STRING ||
 			    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 				operand_type = TPPLexer_ParseString();
-				if
-					unlikely(!operand_type)
-				goto err;
+				if unlikely(!operand_type)
+					goto err;
 			} else {
 				if (WARN(W_EXPECTED_STRING_BEFORE_OPERAND_VALUE))
 					goto err;
 				operand_type = TPPString_NewEmpty();
 			}
 			if (tok == KWD_pack) {
-				if
-					unlikely(yield() < 0)
-				goto err_type;
+				if unlikely(yield() < 0)
+					goto err_type;
 				if (tok == '(')
 					goto with_paren;
 				operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if
-					unlikely(!operand_value)
-				goto err_type;
+				if unlikely(!operand_value)
+					goto err_type;
 			} else {
 with_paren:
-				if
-					unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
-				goto err_type;
+				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
+					goto err_type;
 				operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if
-					unlikely(!operand_value)
-				goto err_type;
-				if
-					unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
-				goto err_value;
+				if unlikely(!operand_value)
+					goto err_type;
+				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
+					goto err_value;
 			}
 			operand = operand_list_add(list, type);
-			if
-				unlikely(!operand)
-			goto err_value;
+			if unlikely(!operand)
+				goto err_value;
 			operand->ao_type = operand_type;  /* Inherit */
 			operand->ao_expr = operand_value; /* Inherit */
 		}
@@ -211,9 +196,8 @@ with_paren:
 		/* Yield the trailing comma. */
 		if (tok != ',')
 			break;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	}
 	return 0;
 err_value:
@@ -254,9 +238,8 @@ PRIVATE int32_t DCALL asm_parse_clobber(void) {
 	while (tok == TOK_STRING ||
 	       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 		name = TPPLexer_ParseString();
-		if
-			unlikely(!name)
-		goto err;
+		if unlikely(!name)
+			goto err;
 		if (name->s_size < COMPILER_LENOF(clobber_descs[0].cd_name)) {
 			struct clobber_desc const *iter = clobber_descs;
 			for (; iter != COMPILER_ENDOF(clobber_descs); ++iter) {
@@ -275,9 +258,8 @@ got_clobber:
 		/* Yield the trailing comma. */
 		if (tok != ',')
 			break;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	}
 	return result;
 err_name:
@@ -317,9 +299,8 @@ PRIVATE int
 	if ((string = self->sp_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
 		 * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL' */
-		if
-			unlikely(!bufsize)
-		return 0;
+		if unlikely(!bufsize)
+			return 0;
 		/* Allocate the initial string. */
 		alloc_size = 8;
 		while (alloc_size < bufsize)
@@ -327,9 +308,8 @@ PRIVATE int
 alloc_again:
 		string = (struct TPPString *)Dee_TryMalloc(offsetof(struct TPPString, s_text) +
 		                                           (alloc_size + 1) * sizeof(char));
-		if
-			unlikely(!string)
-		{
+		if unlikely(!string)
+			{
 			if (alloc_size != bufsize) {
 				alloc_size = bufsize;
 				goto alloc_again;
@@ -348,17 +328,15 @@ alloc_again:
 	alloc_size = string->s_size;
 	ASSERT(alloc_size >= self->sp_length);
 	alloc_size -= self->sp_length;
-	if
-		unlikely(alloc_size < bufsize)
-	{
+	if unlikely(alloc_size < bufsize)
+		{
 		size_t min_alloc = self->sp_length + bufsize;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
 		string = (struct TPPString *)Dee_TryRealloc(string, offsetof(struct TPPString, s_text) +
 		                                                    (alloc_size + 1) * sizeof(char));
-		if
-			unlikely(!string)
-		{
+		if unlikely(!string)
+			{
 			string = self->sp_string;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
@@ -382,28 +360,24 @@ done:
 
 PRIVATE dssize_t DCALL
 tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
-	if
-		unlikely(tpp_string_printer_append(buf, bufsize, (struct tpp_string_printer *)arg))
-	return -1;
+	if unlikely(tpp_string_printer_append(buf, bufsize, (struct tpp_string_printer *)arg))
+		return -1;
 	return (dssize_t)bufsize;
 }
 
 PRIVATE /*REF*/ struct TPPString *
 (TPPCALL tpp_string_printer_pack)(struct tpp_string_printer *__restrict self) {
 	/*REF*/ struct TPPString *result = (struct TPPString *)self->sp_string;
-	if
-		unlikely(!result)
-	return TPPString_NewEmpty();
+	if unlikely(!result)
+		return TPPString_NewEmpty();
 	/* Deallocate unused memory. */
-	if
-		likely(self->sp_length != result->s_size)
-	{
+	if likely(self->sp_length != result->s_size)
+		{
 		DREF struct TPPString *reloc;
 		reloc = (DREF struct TPPString *)Dee_TryRealloc(result, offsetof(struct TPPString, s_text) +
 		                                                        (self->sp_length + 1) * sizeof(char));
-		if
-			likely(reloc)
-		result         = reloc;
+		if likely(reloc)
+			result         = reloc;
 		result->s_size = self->sp_length;
 	}
 	/* Make sure to terminate the c-string representation. */
@@ -440,9 +414,8 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
 	ASSERT(tok == '{');
 	for (;;) {
-		if
-			unlikely(yield() < 0)
-		goto err_printer;
+		if unlikely(yield() < 0)
+			goto err_printer;
 		switch (tok) {
 		case 0: goto done;
 		case '(': ++paren_recursion; goto default_case;
@@ -494,25 +467,22 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 					                         loc.l_line + 1,
 					                         loc.l_col + 1);
 				}
-				if
-					unlikely(error < 0)
-				goto err_printer;
+				if unlikely(error < 0)
+					goto err_printer;
 			}
 		default_case:
 			is_after_linefeed = false;
 			break;
 		}
-		if
-			unlikely(TPP_PrintToken((printer_t)&tpp_string_printer_append, &printer))
-		goto err_printer;
+		if unlikely(TPP_PrintToken((printer_t)&tpp_string_printer_append, &printer))
+			goto err_printer;
 	}
 done:
 	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
 	TPPLexer_Current->l_flags |= old_flags;
 	/* Yield the final `}'-token. */
-	if
-		unlikely(yield() < 0)
-	goto err_printer;
+	if unlikely(yield() < 0)
+		goto err_printer;
 	return tpp_string_printer_pack(&printer);
 err_printer:
 	Dee_Free(printer.sp_string);
@@ -562,9 +532,8 @@ INTERN DREF struct ast *DCALL ast_parse_asm(void) {
 	bool has_paren;
 	memset(&operands, 0, sizeof(struct operand_list));
 	/*ASSERT(tok == KWD___asm__);*/
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 	while (TPP_ISKEYWORD(tok)) {
 		char const *name = token.t_kwd->k_name;
 		size_t size      = token.t_kwd->k_size;
@@ -583,33 +552,29 @@ INTERN DREF struct ast *DCALL ast_parse_asm(void) {
 		}
 		break;
 yield_prefix:
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	}
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	if (tok == KWD_pack) {
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		if (tok == '(')
 			goto with_paren;
 		has_paren = false;
 	} else {
 with_paren:
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
+			goto err_flags;
 		has_paren = true;
 	}
 	loc_here(&loc); /* Use the assembly text for DDI information. */
 	if (tok == TOK_STRING ||
 	    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 		text = TPPLexer_ParseString();
-		if
-			unlikely(!text)
-		goto err_flags;
+		if unlikely(!text)
+			goto err_flags;
 	} else if (tok == '{') {
 		/* Auto-format token-based source code:
 		 *    >> __asm__({
@@ -650,9 +615,8 @@ with_paren:
 		 * Assembly is terminated once a `}' token matching the initial `{'
 		 * is found. */
 		text = parse_brace_text();
-		if
-			unlikely(!text)
-		goto err_flags;
+		if unlikely(!text)
+			goto err_flags;
 	} else {
 		if (WARN(W_EXPECTED_STRING_AFTER_ASM))
 			goto err_flags;
@@ -662,54 +626,44 @@ with_paren:
 #ifdef CONFIG_LANGUAGE_NO_ASM
 	/* When user-assembly is disabled, only empty (or
 	 * fully whitespace) strings are allowed as text. */
-	if
-		unlikely(check_empty_assembly_text(text, &loc))
-	goto err_ops;
+	if unlikely(check_empty_assembly_text(text, &loc))
+		goto err_ops;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 
 	if (is_collon()) {
-		if
-			unlikely(yield() < 0)
-		goto err_ops;
+		if unlikely(yield() < 0)
+			goto err_ops;
 		/* Enable assembly formatting. */
 		ast_flags |= AST_FASSEMBLY_FORMAT;
 		/* Parse operands. */
-		if
-			unlikely(asm_parse_operands(&operands, OPERAND_TYPE_OUTPUT))
-		goto err_ops;
+		if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_OUTPUT))
+			goto err_ops;
 		if (is_collon()) {
-			if
-				unlikely(yield() < 0)
-			goto err_ops;
-			if
-				unlikely(asm_parse_operands(&operands, OPERAND_TYPE_INPUT))
-			goto err_ops;
+			if unlikely(yield() < 0)
+				goto err_ops;
+			if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_INPUT))
+				goto err_ops;
 			if (is_collon()) {
 				int32_t clobber;
-				if
-					unlikely(yield() < 0)
-				goto err_ops;
+				if unlikely(yield() < 0)
+					goto err_ops;
 				clobber = asm_parse_clobber();
-				if
-					unlikely(clobber < 0)
-				goto err_ops;
+				if unlikely(clobber < 0)
+					goto err_ops;
 				ast_flags |= (uint16_t)clobber;
 				if (is_asm_goto && is_collon()) {
-					if
-						unlikely(yield() < 0)
-					goto err_ops;
-					if
-						unlikely(asm_parse_operands(&operands, OPERAND_TYPE_LABEL))
-					goto err_ops;
+					if unlikely(yield() < 0)
+						goto err_ops;
+					if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_LABEL))
+						goto err_ops;
 				}
 			}
 		}
 	}
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	if (has_paren) {
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ASM))
-		goto err_text;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ASM))
+			goto err_text;
 	}
 	ASSERT(operands.ol_c ==
 	       operands.ol_count[OPERAND_TYPE_OUTPUT] +
@@ -728,9 +682,8 @@ with_paren:
 	                      operands.ol_count[OPERAND_TYPE_LABEL],
 	                      operands.ol_v);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-	if
-		unlikely(!result)
-	goto err_ops;
+	if unlikely(!result)
+		goto err_ops;
 	/* NOTE: `a_assembly' has inherited the operand vector upon success. */
 	TPPString_Decref(text);
 	return ast_setddi(result, &loc);

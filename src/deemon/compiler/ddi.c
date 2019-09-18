@@ -108,9 +108,8 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 			return (int32_t)(iter - vector);
 	}
 	/* Ensure that we're not already at the limit. */
-	if
-		unlikely(size == max_size)
-	{
+	if unlikely(size == max_size)
+		{
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many paths/files for DDI");
 		return -1;
@@ -118,9 +117,8 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 	/* Append a new value. */
 	vector = (uint32_t *)Dee_Realloc(vector, (size + 1) *
 	                                         sizeof(uint32_t));
-	if
-		unlikely(!vector)
-	return -1;
+	if unlikely(!vector)
+		return -1;
 	vector[size] = offset_value;
 	*pvector     = vector;
 	*psize       = size + 1;
@@ -302,14 +300,12 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 	               current_assembler.a_sect[0].sec_begin) *
 	              3;
 	result = (DeeDDIObject *)DeeObject_TryCalloc(offsetof(DeeDDIObject, d_ddi) + 1 + result_size);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		result_size = 0;
 		result      = (DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) + 1 + result_size);
-		if
-			unlikely(!result)
-		return NULL;
+		if unlikely(!result)
+			return NULL;
 	}
 	/* Initialize the string printer we're using for the ddi's string table. */
 	ascii_printer_init(&strtab);
@@ -336,9 +332,8 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 			goto err;
 		/* Link the initial symbol name for the main function. */
 		result->d_strings = (uint32_t *)Dee_Malloc(sizeof(uint32_t));
-		if
-			unlikely(!result->d_strings)
-		goto err;
+		if unlikely(!result->d_strings)
+			goto err;
 		result->d_nstring                  = 1;
 		((uint32_t *)result->d_strings)[0] = 0;
 		/* No need to set this field. - The name has
@@ -396,9 +391,8 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 					char *tab_str, backup;
 					tab_str = ascii_printer_allocstr(&strtab, file_begin + 1,
 					                                 (size_t)(length - (file_begin - filename)) + 1);
-					if
-						unlikely(!tab_str)
-					goto err;
+					if unlikely(!tab_str)
+						goto err;
 					file_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					/* Now to allocate the path. */
 					backup        = file_begin[0];
@@ -406,25 +400,22 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 					tab_str = ascii_printer_allocstr(&strtab, filename,
 					                                 (size_t)(file_begin - filename) + 1);
 					file_begin[0] = backup;
-					if
-						unlikely(!tab_str)
-					goto err;
+					if unlikely(!tab_str)
+						goto err;
 					path_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					temp = find_or_alloc_offset((uint32_t **)&result->d_strings,
 					                            &result->d_nstring,
 					                            path_offset, UINT32_MAX - 1);
-					if
-						unlikely(temp < 0)
-					goto err;
+					if unlikely(temp < 0)
+						goto err;
 					new_state.reg_path = (uint16_t)(temp + 1);
 				} else {
 					/* Special case: The filename has no path associated. */
 					if (length)
 						++length;
 					filename = ascii_printer_allocstr(&strtab, filename, length);
-					if
-						unlikely(!filename)
-					goto err;
+					if unlikely(!filename)
+						goto err;
 					file_offset        = (uint32_t)(filename - strtab.ap_string->s_str);
 					new_state.reg_path = 0; /* No path. */
 				}
@@ -432,9 +423,8 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 				temp = find_or_alloc_offset((uint32_t **)&result->d_strings,
 				                            &result->d_nstring,
 				                            file_offset, UINT32_MAX);
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 				new_state.reg_file = (uint16_t)temp;
 			}
 			/* Generate DDI assembly to update symbol name bindings. */
@@ -454,18 +444,16 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 							symbol_name = ascii_printer_allocstr(&strtab,
 							                                     binding->db_name->k_name,
 							                                     binding->db_name->k_size + 1);
-							if
-								unlikely(!symbol_name)
-							goto err;
+							if unlikely(!symbol_name)
+								goto err;
 							/* Allocate an entry for the symbol name. */
 							symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
 							                                      &result->d_nstring,
 							                                      (uint32_t)(symbol_name -
 							                                                 strtab.ap_string->s_str),
 							                                      UINT32_MAX);
-							if
-								unlikely(symbol_name_id < 0)
-							goto err;
+							if unlikely(symbol_name_id < 0)
+								goto err;
 							*bind_text++ = DDI_DEFLCNAME;
 							bind_text    = put_uleb(bind_text, binding->db_index);
 							bind_text    = put_uleb(bind_text, (uint16_t)(uint32_t)symbol_name_id);
@@ -479,18 +467,16 @@ INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
 							symbol_name = ascii_printer_allocstr(&strtab,
 							                                     binding->db_name->k_name,
 							                                     binding->db_name->k_size + 1);
-							if
-								unlikely(!symbol_name)
-							goto err;
+							if unlikely(!symbol_name)
+								goto err;
 							/* Allocate an entry for the symbol name. */
 							symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
 							                                      &result->d_nstring,
 							                                      (uint32_t)(symbol_name -
 							                                                 strtab.ap_string->s_str),
 							                                      UINT32_MAX);
-							if
-								unlikely(symbol_name_id < 0)
-							goto err;
+							if unlikely(symbol_name_id < 0)
+								goto err;
 							/* Optimize to make use of the `DDI_DEFSPNAME' instruction. */
 							if (old_state.reg_usp == binding->db_index + 1) {
 								*bind_text++ = DDI_DEFSPNAME;
@@ -529,9 +515,8 @@ do_realloc_bind:
 						ASSERT(new_alloc);
 						ASSERT(old_alloc != new_alloc);
 						new_result = (DeeDDIObject *)DeeObject_TryRealloc(result, offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
-						if
-							unlikely(!new_result)
-						{
+						if unlikely(!new_result)
+							{
 							size_t min_alloc = bind_size + (size_t)(code_iter - result->d_ddi);
 							if (new_alloc != min_alloc) {
 								new_alloc = min_alloc;
@@ -597,9 +582,8 @@ do_realloc:
 				ASSERT(old_alloc != new_alloc);
 				new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,
 				                                                  offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
-				if
-					unlikely(!new_result)
-				{
+				if unlikely(!new_result)
+					{
 					size_t min_alloc = text_size + (size_t)(code_iter - result->d_ddi);
 					if (new_alloc != min_alloc) {
 						new_alloc = min_alloc;
@@ -639,9 +623,8 @@ do_realloc:
 		uint16_t i, offset;
 		struct symbol *sym;
 		struct bytewriter writer = BYTEWRITER_INIT;
-		if
-			unlikely(!bytewriter_alloc(&writer, 4))
-		goto err_xwriter; /* `dx_size' */
+		if unlikely(!bytewriter_alloc(&writer, 4))
+			goto err_xwriter; /* `dx_size' */
 		/* Generate debug information for references and static variables. */
 		for (i = 0; i < current_assembler.a_refc; ++i) {
 			char *name;
@@ -651,9 +634,8 @@ do_realloc:
 			name = ascii_printer_allocstr(&strtab,
 			                              sym->s_name->k_name,
 			                              sym->s_name->k_size + 1);
-			if
-				unlikely(!name)
-			goto err_xwriter;
+			if unlikely(!name)
+				goto err_xwriter;
 			if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_RNAM, i,
 			                           (uint32_t)(name - strtab.ap_string->s_str)))
 				goto err_xwriter;
@@ -672,9 +654,8 @@ do_realloc:
 				name = ascii_printer_allocstr(&strtab,
 				                              sym->s_name->k_name,
 				                              sym->s_name->k_size + 1);
-				if
-					unlikely(!name)
-				goto err_xwriter;
+				if unlikely(!name)
+					goto err_xwriter;
 				if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_SNAM, offset + i,
 				                           (uint32_t)(name - strtab.ap_string->s_str)))
 					goto err_xwriter;
@@ -702,9 +683,8 @@ err_xwriter:
 	}
 	/* Pack the string printer and call it a day. */
 	result->d_strtab = (DREF struct string_object *)ascii_printer_pack(&strtab);
-	if
-		unlikely(!result->d_strtab)
-	goto err_noprinter;
+	if unlikely(!result->d_strtab)
+		goto err_noprinter;
 	if (!current_basescope->bs_name) {
 		/* If no function name was set, mark the initial DDI-name register as invalid. */
 		result->d_start.dr_name = (uint16_t)-1;

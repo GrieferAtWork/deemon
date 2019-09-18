@@ -106,9 +106,8 @@ PUBLIC DREF DeeObject *
 	DREF Frame *result;
 	ASSERT_OBJECT_OPT(owner);
 	result = DeeObject_MALLOC(Frame);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->f_owner = owner;
 	result->f_frame = frame;
 	result->f_flags = flags;
@@ -172,20 +171,17 @@ print_ddi(struct ascii_printer *__restrict printer,
 			                                   iter->dx_base.dr_col + 1,
 			                                   name ? name : (code->co_flags & CODE_FCONSTRUCTOR ? "<anonymous_ctor>" : "<anonymous>"),
 			                                   ip);
-			if
-				unlikely(print_error < 0)
-			break;
+			if unlikely(print_error < 0)
+				break;
 			if (name != base_name && *base_name) {
 				/* Also print the name of the base-function */
 				print_error = ascii_printer_printf(printer, " (%s)", base_name);
-				if
-					unlikely(print_error < 0)
-				break;
+				if unlikely(print_error < 0)
+					break;
 			}
 			print_error = ascii_printer_putc(printer, '\n');
-			if
-				unlikely(print_error < 0)
-			break;
+			if unlikely(print_error < 0)
+				break;
 		}
 		DDI_STATE_WHILE(iter, &state);
 		Dee_ddi_state_fini(&state);
@@ -196,9 +192,8 @@ print_ddi(struct ascii_printer *__restrict printer,
 PRIVATE DREF DeeObject *DCALL
 print_ddi_string(DeeCodeObject *__restrict code, code_addr_t ip) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if
-		unlikely(print_ddi(&printer, code, ip) < 0)
-	goto err;
+	if unlikely(print_ddi(&printer, code, ip) < 0)
+		goto err;
 	return ascii_printer_pack(&printer);
 err:
 	ascii_printer_fini(&printer);
@@ -248,9 +243,8 @@ frame_getddi(Frame *__restrict self,
 	code_addr_t startip;
 	DREF DeeCodeObject *code;
 	rwlock_read(&self->f_lock);
-	if
-		unlikely(!self->f_frame)
-	{
+	if unlikely(!self->f_frame)
+		{
 		rwlock_endread(&self->f_lock);
 		return (DREF DeeCodeObject *)ITER_DONE;
 	}
@@ -285,28 +279,24 @@ frame_getlocation(Frame *__restrict self) {
 	struct ddi_state state;
 	size_t i, count;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
-	if
-		unlikely(!code)
-	goto err;
-	if
-		unlikely(code == (DREF DeeCodeObject *)ITER_DONE)
-	return DeeTuple_Newf("(nnnn)");
+	if unlikely(!code)
+		goto err;
+	if unlikely(code == (DREF DeeCodeObject *)ITER_DONE)
+		return DeeTuple_Newf("(nnnn)");
 	count = 0;
 	DDI_STATE_DO(iter, &state) {
 		++count;
 	}
 	DDI_STATE_WHILE(iter, &state);
 	result = DeeTuple_NewUninitialized(count);
-	if
-		unlikely(!result)
-	goto err_state;
+	if unlikely(!result)
+		goto err_state;
 	i = 0;
 	DDI_STATE_DO(iter, &state) {
 		char *temp, *file;
 		file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
-		if
-			unlikely(!file)
-		fileob = Dee_None, Dee_Incref(Dee_None);
+		if unlikely(!file)
+			fileob = Dee_None, Dee_Incref(Dee_None);
 		else {
 			if (!state.rs_regs.dr_path-- ||
 			    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file)) == NULL)
@@ -314,18 +304,16 @@ frame_getlocation(Frame *__restrict self) {
 			else {
 				fileob = DeeString_Newf("%s" TRACEBACK_SLASH "%s", temp, file);
 			}
-			if
-				unlikely(!fileob)
-			goto err_state_r;
+			if unlikely(!fileob)
+				goto err_state_r;
 		}
 		temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_name);
 		if (!temp)
 			nameob = Dee_None, Dee_Incref(Dee_None);
 		else {
 			nameob = DeeString_New(temp);
-			if
-				unlikely(!nameob)
-			goto err_state_r_fileob;
+			if unlikely(!nameob)
+				goto err_state_r_fileob;
 		}
 		entry = DeeTuple_Newf("oddo",
 		                      fileob,
@@ -334,9 +322,8 @@ frame_getlocation(Frame *__restrict self) {
 		                      nameob);
 		Dee_Decref(nameob);
 		Dee_Decref(fileob);
-		if
-			unlikely(!entry)
-		goto err_state_r;
+		if unlikely(!entry)
+			goto err_state_r;
 		DeeTuple_SET(result, i, entry); /* Inherit reference. */
 		++i;
 	}
@@ -365,13 +352,11 @@ frame_getfile(Frame *__restrict self) {
 	struct ddi_state state;
 	char *temp, *file;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
-	if
-		unlikely(!file)
-	result = Dee_None, Dee_Incref(Dee_None);
+	if unlikely(!file)
+		result = Dee_None, Dee_Incref(Dee_None);
 	else {
 		if (!state.rs_regs.dr_path-- ||
 		    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_path)) == NULL)
@@ -393,9 +378,8 @@ frame_getline(Frame *__restrict self) {
 	DREF DeeCodeObject *code;
 	struct ddi_state state;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	if (code == (DREF DeeCodeObject *)ITER_DONE)
 		return_none;
 	result = DeeInt_NewInt(state.rs_regs.dr_lno);
@@ -412,9 +396,8 @@ frame_getcol(Frame *__restrict self) {
 	DREF DeeCodeObject *code;
 	struct ddi_state state;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	if (code == (DREF DeeCodeObject *)ITER_DONE)
 		return_none;
 	result = DeeInt_NewInt(state.rs_regs.dr_col);
@@ -432,9 +415,8 @@ frame_getname(Frame *__restrict self) {
 	struct ddi_state state;
 	char *name;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	if (code == (DREF DeeCodeObject *)ITER_DONE ||
 	    (name = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_name)) == NULL)
 		return_none;
@@ -450,9 +432,8 @@ PRIVATE DREF DeeObject *DCALL
 frame_getfunc(Frame *__restrict self) {
 	DREF DeeFunctionObject *result;
 	rwlock_read(&self->f_lock);
-	if
-		unlikely(!self->f_frame)
-	{
+	if unlikely(!self->f_frame)
+		{
 		rwlock_endread(&self->f_lock);
 		return_none;
 	}
@@ -485,9 +466,8 @@ PRIVATE DREF DeeObject *DCALL
 frame_getcode(Frame *__restrict self) {
 	DREF DeeCodeObject *result;
 	rwlock_read(&self->f_lock);
-	if
-		unlikely(!self->f_frame)
-	goto err_df;
+	if unlikely(!self->f_frame)
+		goto err_df;
 	PLOCK_READ(self);
 	result = self->f_frame->cf_func->fo_code;
 	Dee_Incref(result);
@@ -504,9 +484,8 @@ PRIVATE DREF DeeObject *DCALL
 frame_getpc(Frame *__restrict self) {
 	code_addr_t pc;
 	rwlock_read(&self->f_lock);
-	if
-		unlikely(!self->f_frame)
-	goto err_df;
+	if unlikely(!self->f_frame)
+		goto err_df;
 	PLOCK_READ(self);
 	pc = (code_addr_t)(self->f_frame->cf_ip -
 	                   self->f_frame->cf_func->fo_code->co_code);
@@ -546,9 +525,8 @@ frame_getsp(Frame *__restrict self) {
 	uint16_t flags = ATOMIC_READ(self->f_flags);
 	if (!(flags & DEEFRAME_FUNDEFSP)) {
 		rwlock_read(&self->f_lock);
-		if
-			unlikely(!self->f_frame)
-		{
+		if unlikely(!self->f_frame)
+			{
 			rwlock_endread(&self->f_lock);
 			return -2;
 		}
@@ -572,12 +550,10 @@ frame_getsp(Frame *__restrict self) {
 PRIVATE int DCALL
 frame_setpc(Frame *__restrict self, DeeObject *__restrict value) {
 	code_addr_t pc;
-	if
-		unlikely(!(self->f_flags & DEEFRAME_FWRITABLE))
-	return err_readonly_frame(self);
-	if
-		unlikely(DeeObject_AsUInt32(value, &pc))
-	goto err;
+	if unlikely(!(self->f_flags & DEEFRAME_FWRITABLE))
+		return err_readonly_frame(self);
+	if unlikely(DeeObject_AsUInt32(value, &pc))
+		goto err;
 	/* Make sure that the stack-depth is either entirely unknown,
 	 * or has been reverse engineered based on the starting PC.
 	 * This is required, since we're about to modify PC, meaning that
@@ -587,9 +563,8 @@ frame_setpc(Frame *__restrict self, DeeObject *__restrict value) {
 	    DEEFRAME_FUNDEFSP)
 		frame_revengsp(self);
 	rwlock_read(&self->f_lock);
-	if
-		unlikely(!self->f_frame)
-	goto err_df;
+	if unlikely(!self->f_frame)
+		goto err_df;
 	PLOCK_READ(self);
 	self->f_frame->cf_ip = self->f_frame->cf_func->fo_code->co_code + pc;
 	PLOCK_ENDREAD(self);
@@ -605,12 +580,10 @@ err:
 PRIVATE DREF DeeObject *DCALL
 frame_getsp_obj(Frame *__restrict self) {
 	int32_t result = frame_getsp(self);
-	if
-		unlikely(result == -2)
-	goto err_df;
-	if
-		unlikely(result == -1)
-	goto err_unknown;
+	if unlikely(result == -2)
+		goto err_df;
+	if unlikely(result == -1)
+		goto err_unknown;
 	return DeeInt_NewU16((uint16_t)result);
 err_unknown:
 	DeeError_Throwf(&DeeError_ValueError,

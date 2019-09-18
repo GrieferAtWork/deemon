@@ -47,16 +47,14 @@ thread_tls_get(size_t index) {
 	struct tls_descriptor *desc;
 	DeeThreadObject *caller = DeeThread_Self();
 	desc                    = (struct tls_descriptor *)caller->t_tlsdata;
-	if
-		unlikely(!desc || index >= desc->td_size)
-	{
+	if unlikely(!desc || index >= desc->td_size)
+		{
 		size_t old_size = desc ? desc->td_size : 0;
 		desc = (struct tls_descriptor *)Dee_Realloc(desc,
 		                                            offsetof(struct tls_descriptor, td_elem) +
 		                                            (index + 1) * sizeof(DREF DeeObject *));
-		if
-			unlikely(!desc)
-		return NULL;
+		if unlikely(!desc)
+			return NULL;
 		/* Save the new descriptor length. */
 		desc->td_size = index + 1;
 		/* ZERO-initialize all newly allocated indices. */
@@ -73,9 +71,8 @@ thread_tls_tryget(size_t index) {
 	struct tls_descriptor *desc;
 	DeeThreadObject *caller = DeeThread_Self();
 	desc                    = (struct tls_descriptor *)caller->t_tlsdata;
-	if
-		unlikely(!desc || index >= desc->td_size)
-	return NULL;
+	if unlikely(!desc || index >= desc->td_size)
+		return NULL;
 	/* Return a pointer into the descriptor. */
 	return &desc->td_elem[index];
 }
@@ -156,9 +153,8 @@ again:
 		uint8_t *new_bitset;
 		new_bitset = (uint8_t *)Dee_TryRealloc(tls_inuse, ((tls_nexti / 8) + 1) * sizeof(uint8_t));
 		/* The the realloc failed, return `(size_t)-1'. */
-		if
-			unlikely(!new_bitset)
-		{
+		if unlikely(!new_bitset)
+			{
 			rwlock_endwrite(&tls_reglock);
 			/* Try to collect some memory. */
 			if (Dee_CollectMemory(((tls_nexti / 8) + 1) * sizeof(uint8_t)))
@@ -216,9 +212,8 @@ tls_init(Tls *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
 		goto err;
 	self->t_index = tls_alloc();
-	if
-		unlikely(self->t_index == (size_t)-1)
-	goto err;
+	if unlikely(self->t_index == (size_t)-1)
+		goto err;
 	/* Save a reference for the factory. */
 	Dee_XIncref(self->t_factory);
 	return 0;
@@ -249,13 +244,11 @@ PRIVATE DREF DeeObject *DCALL
 tls_getvalue(Tls *__restrict self) {
 	DREF DeeObject **presult, *result;
 	presult = thread_tls_get(self->t_index);
-	if
-		unlikely(!presult)
-	goto err;
+	if unlikely(!presult)
+		goto err;
 	result = *presult;
-	if
-		unlikely(result == ITER_DONE)
-	{
+	if unlikely(result == ITER_DONE)
+		{
 		err_tls_unbound();
 		goto err;
 	}
@@ -270,17 +263,15 @@ tls_getvalue(Tls *__restrict self) {
 	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		/* Must re-retrieve the TLS pointer in case the factory
 		 * did some other TLS manipulations that changed the vector. */
 		presult = thread_tls_get(self->t_index);
 		ASSERTF(presult, "Since we've already allocated this index "
 		                 "before, it should have already existed");
-		if
-			unlikely(*presult)
-		{
+		if unlikely(*presult)
+			{
 			/* Highly unlikely: The factory called the TLS recursively
 			 *                  but actually returned a value in some
 			 *                  inner callback.
@@ -314,30 +305,26 @@ PRIVATE int DCALL
 tls_dodelitem(Tls *__restrict self) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
-	if
-		unlikely(!pitem)
-	goto err;
+	if unlikely(!pitem)
+		goto err;
 again:
 	item = *pitem; /* Inherit */
 	/* Check if the variable had been manually unbound. */
-	if
-		unlikely(item == ITER_DONE)
-	return 1;
+	if unlikely(item == ITER_DONE)
+		return 1;
 	if (!item) {
 		/* The variable had never been assigned. */
 		if (self->t_factory &&
 		    !DeeNone_Check(self->t_factory)) {
 			/* Must still invoke the factory to remain consistent. */
 			item = DeeObject_Call(self->t_factory, 0, NULL);
-			if
-				unlikely(!item)
-			goto err;
+			if unlikely(!item)
+				goto err;
 			/* Mark the variable as unbound. */
 			pitem = thread_tls_get(self->t_index);
 			/* Check if the factory tinkered with the TLS variable. */
-			if
-				unlikely(*pitem != NULL)
-			{
+			if unlikely(*pitem != NULL)
+				{
 				Dee_Decref(item);
 				goto again;
 			}
@@ -373,9 +360,8 @@ PRIVATE int DCALL
 tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
-	if
-		unlikely(!pitem)
-	goto err;
+	if unlikely(!pitem)
+		goto err;
 	Dee_Incref(value);
 	item   = *pitem; /* Inherit */
 	*pitem = value;  /* Inherit */
@@ -391,13 +377,11 @@ tls_xchitem(Tls *__restrict self, DeeObject *value) {
 	ASSERT(value != NULL);
 again:
 	pitem = thread_tls_get(self->t_index);
-	if
-		unlikely(!pitem)
-	goto err;
+	if unlikely(!pitem)
+		goto err;
 	result = *pitem; /* Inherit */
-	if
-		unlikely(result == ITER_DONE)
-	{
+	if unlikely(result == ITER_DONE)
+		{
 		/* The slot has been unbound and there's nothing we could return. */
 		err_tls_unbound();
 		goto err;
@@ -405,9 +389,8 @@ again:
 	if (!result) {
 		/* Cheat a bit by letting `tls_getvalue()' deal with the factory call. */
 		result = tls_getvalue(self);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		Dee_Decref(result);
 		goto again;
 	}
@@ -494,9 +477,8 @@ PRIVATE DREF DeeObject *DCALL
 tls_getvalue(Tls *__restrict self) {
 	DREF DeeObject *result;
 	result = self->t_value;
-	if
-		unlikely(result == ITER_DONE)
-	{
+	if unlikely(result == ITER_DONE)
+		{
 		err_tls_unbound();
 		goto err;
 	}
@@ -511,14 +493,12 @@ tls_getvalue(Tls *__restrict self) {
 	else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		/* Must re-retrieve the TLS pointer in case the factory
 		 * did some other TLS manipulations that changed the vector. */
-		if
-			unlikely(self->t_value)
-		{
+		if unlikely(self->t_value)
+			{
 			/* Highly unlikely: The factory called the TLS recursively
 			 *                  but actually returned a value in some
 			 *                  inner callback.
@@ -554,22 +534,19 @@ tls_dodelitem(Tls *__restrict self) {
 again:
 	item = self->t_value; /* Inherit */
 	/* Check if the variable had been manually unbound. */
-	if
-		unlikely(item == ITER_DONE)
-	return 1;
+	if unlikely(item == ITER_DONE)
+		return 1;
 	if (!item) {
 		/* The variable had never been assigned. */
 		if (self->t_factory &&
 		    !DeeNone_Check(self->t_factory)) {
 			/* Must still invoke the factory to remain consistent. */
 			item = DeeObject_Call(self->t_factory, 0, NULL);
-			if
-				unlikely(!item)
-			goto err;
+			if unlikely(!item)
+				goto err;
 			/* Check if the factory tinkered with the TLS variable. */
-			if
-				unlikely(self->t_value != NULL)
-			{
+			if unlikely(self->t_value != NULL)
+				{
 				Dee_Decref(item);
 				goto again;
 			}
@@ -617,9 +594,8 @@ tls_xchitem(Tls *__restrict self, DeeObject *value) {
 	ASSERT(value != NULL);
 again:
 	result = self->t_value; /* Inherit */
-	if
-		unlikely(result == ITER_DONE)
-	{
+	if unlikely(result == ITER_DONE)
+		{
 		/* The slot has been unbound and there's nothing we could return. */
 		err_tls_unbound();
 		goto err;
@@ -627,9 +603,8 @@ again:
 	if (!result) {
 		/* Cheat a bit by letting `tls_getvalue()' deal with the factory call. */
 		result = tls_getvalue(self);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		Dee_Decref(result);
 		goto again;
 	}
@@ -713,9 +688,8 @@ tls_delete(Tls *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":delete"))
 		goto err;
 	result = tls_dodelitem(self);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result == 0);
 err:
 	return NULL;

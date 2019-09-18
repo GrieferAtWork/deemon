@@ -343,9 +343,8 @@ again:
 		if (!self->s_attr.a_this)
 			break;
 		/* The attribute must be accessed as virtual. */
-		if
-			unlikely(!symbol_reachable(self, caller_scope))
-		return true;
+		if unlikely(!symbol_reachable(self, caller_scope))
+			return true;
 		return symbol_get_haseffect(self->s_attr.a_this, caller_scope);
 
 	case SYMBOL_TYPE_EXTERN:
@@ -384,9 +383,8 @@ again:
 		if (!self->s_attr.a_this)
 			break;
 		/* The attribute must be accessed as virtual. */
-		if
-			unlikely(!symbol_reachable(self, caller_scope))
-		return true;
+		if unlikely(!symbol_reachable(self, caller_scope))
+			return true;
 		return symbol_get_haseffect(self->s_attr.a_this, caller_scope);
 
 	case SYMBOL_TYPE_EXTERN:
@@ -413,9 +411,8 @@ symbol_addambig(struct symbol *__restrict self,
 	new_vec = (struct ast_loc *)Dee_TryRealloc(self->s_ambig.a_declv,
 	                                           (self->s_ambig.a_declc + 1) *
 	                                           sizeof(struct ast_loc));
-	if
-		unlikely(!new_vec)
-	return;
+	if unlikely(!new_vec)
+		return;
 	self->s_ambig.a_declv = new_vec;
 	new_vec += self->s_ambig.a_declc++;
 	if (loc) {
@@ -932,9 +929,8 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 INTERN int(DCALL scope_push)(void) {
 	DREF DeeScopeObject *new_scope;
 	new_scope = DeeObject_CALLOC(DeeScopeObject);
-	if
-		unlikely(!new_scope)
-	goto err;
+	if unlikely(!new_scope)
+		goto err;
 	DeeObject_Init(new_scope, &DeeScope_Type);
 	new_scope->s_prev  = current_scope; /* Inherit reference */
 	new_scope->s_base  = current_basescope;
@@ -962,13 +958,11 @@ INTERN int(DCALL classscope_push)(void) {
 	DREF DeeClassScopeObject *new_scope;
 	struct symbol *this_sym;
 	new_scope = DeeObject_CALLOC(DeeClassScopeObject);
-	if
-		unlikely(!new_scope)
-	goto err;
+	if unlikely(!new_scope)
+		goto err;
 	this_sym = sym_alloc();
-	if
-		unlikely(!this_sym)
-	goto err_new_scope;
+	if unlikely(!this_sym)
+		goto err_new_scope;
 	DeeObject_Init((DeeObject *)new_scope, &DeeClassScope_Type);
 	memset(this_sym, 0, sizeof(*this_sym));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
@@ -1020,9 +1014,8 @@ basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
 INTERN int(DCALL basescope_push)(void) {
 	DREF DeeBaseScopeObject *new_scope;
 	new_scope = DeeObject_CALLOC(DeeBaseScopeObject);
-	if
-		unlikely(!new_scope)
-	goto err;
+	if unlikely(!new_scope)
+		goto err;
 	DeeObject_Init((DeeObject *)new_scope, &DeeBaseScope_Type);
 	ASSERT(current_scope);
 	ASSERT(current_rootscope == current_basescope->bs_root);
@@ -1075,9 +1068,8 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	count = other->bs_argc_max - other->bs_argc_min;
 	if (count) {
 		current_basescope->bs_default = (DREF DeeObject **)Dee_Malloc(count * sizeof(DREF DeeObject *));
-		if
-			unlikely(!current_basescope->bs_default)
-		goto err;
+		if unlikely(!current_basescope->bs_default)
+			goto err;
 		for (i = 0; i < count; ++i) {
 			current_basescope->bs_default[i] = other->bs_default[i];
 			Dee_XIncref(other->bs_default[i]);
@@ -1086,9 +1078,8 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	count = other->bs_argc;
 	if (count) {
 		current_basescope->bs_argv = (struct symbol **)Dee_Malloc(count * sizeof(struct symbol *));
-		if
-			unlikely(!current_basescope->bs_argv)
-		goto err;
+		if unlikely(!current_basescope->bs_argv)
+			goto err;
 		/* Copy the actual argument symbols. */
 		for (i = 0; i < count; ++i) {
 			struct symbol *sym, *other_sym;
@@ -1097,9 +1088,8 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 			sym = other_sym->s_name == &TPPKeyword_Empty
 			      ? new_unnamed_symbol()
 			      : new_local_symbol(other_sym->s_name, &other_sym->s_decl);
-			if
-				unlikely(!sym)
-			goto err;
+			if unlikely(!sym)
+				goto err;
 			SYMBOL_TYPE(sym) = SYMBOL_TYPE_ARG;
 			ASSERT(other_sym->s_symid == (uint16_t)i);
 			sym->s_flag  = SYMBOL_FALLOC;
@@ -1169,15 +1159,13 @@ INTERN int DCALL link_forward_symbols(void) {
 	for (; bucket_iter < bucket_end; ++bucket_iter) {
 		iter = *bucket_iter;
 		for (; iter; iter = iter->s_next)
-			if
-				unlikely(link_forward_symbol(iter))
+			if unlikely(link_forward_symbol(iter))
 		goto err;
 	}
 	/* Must also perform final linking on symbols that have been deleted. */
 	iter = current_scope->s_del;
 	for (; iter; iter = iter->s_next)
-		if
-			unlikely(link_forward_symbol(iter))
+		if unlikely(link_forward_symbol(iter))
 	goto err;
 	return 0;
 err:
@@ -1197,9 +1185,8 @@ rehash_scope(DeeScopeObject *__restrict iter) {
 	new_size *= 2;
 rehash_realloc:
 	new_map = (struct symbol **)Dee_TryCalloc(new_size * sizeof(struct symbol *));
-	if
-		unlikely(!new_map)
-	{
+	if unlikely(!new_map)
+		{
 		if (new_size != 1) {
 			new_size = 1;
 			goto rehash_realloc;
@@ -1418,9 +1405,8 @@ seach_single:
 			 * the final linking when the class has been fully declared, at which point
 			 * the symbol has either been re-declared as a member of the class, or will
 			 * be linked to other declarations that may be visible outside of the class. */
-			if
-				unlikely((result = sym_alloc()) == NULL)
-			goto err;
+			if unlikely((result = sym_alloc()) == NULL)
+				goto err;
 			memset(result, 0, sizeof(*result));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 			result->s_refcnt = 1;
@@ -1450,9 +1436,8 @@ create_variable:
 		goto err;
 
 	/* Create a new symbol. */
-	if
-		unlikely((result = sym_alloc()) == NULL)
-	goto err;
+	if unlikely((result = sym_alloc()) == NULL)
+		goto err;
 	memset(result, 0, sizeof(*result));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
@@ -1490,9 +1475,8 @@ create_variable:
 add_result_to_iter:
 	if (++iter->s_mapc > iter->s_mapa) {
 		/* Must rehash this scope. */
-		if
-			unlikely(rehash_scope(iter))
-		goto err_r;
+		if unlikely(rehash_scope(iter))
+			goto err_r;
 	}
 	/* Insert the new symbol. */
 	ASSERT(iter->s_mapa != 0);
@@ -1524,9 +1508,8 @@ INTERN struct symbol *DCALL
 lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
 	DeeScopeObject *iter;
 	/* Make sure to return `NULL' when `nth' was zero. */
-	if
-		unlikely(!nth--)
-	return NULL;
+	if unlikely(!nth--)
+		return NULL;
 	iter = current_scope;
 	for (; iter; iter = iter->s_prev) {
 		struct symbol *result;
@@ -1553,9 +1536,8 @@ INTERN struct symbol *DCALL
 new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	ASSERT(name);
-	if
-		unlikely((result = sym_alloc()) == NULL)
-	return NULL;
+	if unlikely((result = sym_alloc()) == NULL)
+		return NULL;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1564,9 +1546,8 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	result->s_name = name;
 	if (++current_scope->s_mapc > current_scope->s_mapa) {
-		if
-			unlikely(rehash_scope(current_scope))
-		goto err_r;
+		if unlikely(rehash_scope(current_scope))
+			goto err_r;
 	}
 	ASSERT(current_scope->s_mapa != 0);
 	bucket         = &current_scope->s_map[name->k_id % current_scope->s_mapa];
@@ -1599,9 +1580,8 @@ err_r:
 
 INTERN struct symbol *DCALL new_unnamed_symbol(void) {
 	struct symbol *result;
-	if
-		unlikely((result = sym_alloc()) == NULL)
-	return NULL;
+	if unlikely((result = sym_alloc()) == NULL)
+		return NULL;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1626,9 +1606,8 @@ INTERN struct symbol *DCALL new_unnamed_symbol(void) {
 INTERN struct symbol *DCALL
 new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 	struct symbol *result;
-	if
-		unlikely((result = sym_alloc()) == NULL)
-	return NULL;
+	if unlikely((result = sym_alloc()) == NULL)
+		return NULL;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1656,9 +1635,8 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
                           struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	ASSERT(name);
-	if
-		unlikely((result = sym_alloc()) == NULL)
-	return NULL;
+	if unlikely((result = sym_alloc()) == NULL)
+		return NULL;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1667,9 +1645,8 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	result->s_name = name;
 	if (++scope->s_mapc > scope->s_mapa) {
-		if
-			unlikely(rehash_scope(scope))
-		goto err_r;
+		if unlikely(rehash_scope(scope))
+			goto err_r;
 	}
 	ASSERT(scope->s_mapa != 0);
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
@@ -1785,9 +1762,8 @@ PRIVATE int DCALL rehash_labels(void) {
 	new_size *= 2;
 rehash_realloc:
 	new_map = (struct text_label **)Dee_TryCalloc(new_size * sizeof(struct text_label *));
-	if
-		unlikely(!new_map)
-	{
+	if unlikely(!new_map)
+		{
 		if (new_size != 1) {
 			new_size = 1;
 			goto rehash_realloc;
@@ -1817,9 +1793,8 @@ rehash_realloc:
 INTERN struct text_label *DCALL
 lookup_label(struct TPPKeyword *__restrict name) {
 	struct text_label *result, **presult;
-	if
-		likely(current_basescope->bs_lbla)
-	{
+	if likely(current_basescope->bs_lbla)
+		{
 		result = current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
 		while (result) {
 			if (result->tl_name == name)
@@ -1833,9 +1808,8 @@ lookup_label(struct TPPKeyword *__restrict name) {
 	ASSERT(current_basescope->bs_lbla);
 	presult = &current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
 	result  = lbl_alloc();
-	if
-		unlikely(!result)
-	return NULL;
+	if unlikely(!result)
+		return NULL;
 	result->tl_next = *presult;
 	result->tl_name = name;
 	result->tl_asym = NULL;
@@ -1851,9 +1825,8 @@ new_case_label(struct ast *__restrict expr) {
 	        "Not inside a switch statement");
 	ASSERT_AST(expr);
 	result = lbl_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Initialize the new label. */
 	ast_incref(expr);
 	result->tl_expr = expr;
@@ -1872,13 +1845,11 @@ new_default_label(void) {
 	ASSERTF(current_basescope->bs_cflags & BASESCOPE_FSWITCH,
 	        "Not inside a switch statement");
 	result = current_basescope->bs_swdefl;
-	if
-		unlikely(result)
-	goto done; /* Unlikely, considering actually valid use cases. */
+	if unlikely(result)
+		goto done; /* Unlikely, considering actually valid use cases. */
 	result = lbl_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Initialize the new label. */
 	result->tl_next = NULL;
 	result->tl_expr = NULL;

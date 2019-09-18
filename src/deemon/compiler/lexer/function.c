@@ -31,9 +31,8 @@
 DECL_BEGIN
 
 PRIVATE int DCALL skip_argument_name(void) {
-	if
-		unlikely(!TPP_ISKEYWORD(tok))
-	{
+	if unlikely(!TPP_ISKEYWORD(tok))
+		{
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 	} else {
@@ -46,9 +45,8 @@ PRIVATE int DCALL skip_argument_name(void) {
 					goto err;
 			}
 		}
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	}
 	return 0;
 err:
@@ -58,9 +56,8 @@ err:
 PRIVATE struct symbol *DCALL parse_argument_name(void) {
 	struct symbol *result;
 	struct TPPKeyword *argument_name;
-	if
-		unlikely(!TPP_ISKEYWORD(tok))
-	{
+	if unlikely(!TPP_ISKEYWORD(tok))
+		{
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 		result = new_unnamed_symbol();
@@ -70,9 +67,8 @@ PRIVATE struct symbol *DCALL parse_argument_name(void) {
 create_anon_argument:
 			/* Create a new symbol for the argument. */
 			result = new_unnamed_symbol();
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			loc_here(&result->s_decl);
 			if (result->s_decl.l_file)
 				TPPFile_Incref(result->s_decl.l_file);
@@ -91,9 +87,8 @@ create_anon_argument:
 			/* Create a new symbol for the argument. */
 			result = new_local_symbol(argument_name, NULL);
 		}
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	}
 	return result;
 err:
@@ -110,9 +105,8 @@ PRIVATE int DCALL resize_argument_list(uint16_t *__restrict parga) {
 do_realloc_symv:
 		new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
 		                                            new_arga * sizeof(struct symbol *));
-		if
-			unlikely(!new_symv)
-		{
+		if unlikely(!new_symv)
+			{
 			if (new_arga != current_basescope->bs_argc + 1) {
 				new_arga = current_basescope->bs_argc + 1;
 				goto do_realloc_symv;
@@ -139,9 +133,8 @@ PRIVATE int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
 do_realloc_symv:
 		new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
 		                                                 new_defaulta * sizeof(DREF DeeObject *));
-		if
-			unlikely(!new_defaultv)
-		{
+		if unlikely(!new_defaultv)
+			{
 			if (new_defaulta != defaultc + 1) {
 				new_defaulta = defaultc + 1;
 				goto do_realloc_symv;
@@ -179,37 +172,31 @@ INTERN int DCALL parse_arglist(void) {
 
 			/* Special case: unnamed varargs. */
 			if (tok == TOK_DOTS) {
-				if
-					unlikely(current_basescope->bs_flags & CODE_FVARARGS)
-				{
-					arg = current_basescope->bs_varargs;
-					if
-						likely(arg)
+				if unlikely(current_basescope->bs_flags & CODE_FVARARGS)
 					{
+					arg = current_basescope->bs_varargs;
+					if likely(arg)
+						{
 						if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
-						if
-							unlikely(yield() < 0)
-						goto err;
+						if unlikely(yield() < 0)
+							goto err;
 						goto parse_varargs_suffix;
 					}
 				}
 				ASSERT(!current_basescope->bs_varargs);
 				arg = new_unnamed_symbol();
-				if
-					unlikely(!arg)
-				goto err;
+				if unlikely(!arg)
+					goto err;
 				loc_here(&arg->s_decl);
 				if (arg->s_decl.l_file)
 					TPPFile_Incref(arg->s_decl.l_file);
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				arg->s_flag = SYMBOL_FALLOC;
 set_arg_as_varargs_argument:
-				if
-					unlikely(resize_argument_list(&arga))
-				goto err;
+				if unlikely(resize_argument_list(&arga))
+					goto err;
 				/* Add the symbol to the argument symbol vector. */
 				arg->s_type                                              = SYMBOL_TYPE_ARG;
 				arg->s_symid                                             = current_basescope->bs_argc;
@@ -217,38 +204,31 @@ set_arg_as_varargs_argument:
 				current_basescope->bs_varargs                            = arg;
 				current_basescope->bs_flags |= CODE_FVARARGS;
 parse_varargs_suffix:
-				if
-					unlikely(tok == '?')
-				{
+				if unlikely(tok == '?')
+					{
 					if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
-					if
-						unlikely(yield() < 0)
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
 				}
-				if
-					unlikely(tok == TOK_DOTS)
-				{
+				if unlikely(tok == TOK_DOTS)
+					{
 					if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
-					if
-						unlikely(yield() < 0)
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
 				}
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					/* Parse argument declaration information. */
-					if
-						unlikely(yield() < 0)
-					goto err;
-					if
-						unlikely(decl_ast_parse_for_symbol(arg))
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
+					if unlikely(decl_ast_parse_for_symbol(arg))
+						goto err;
 				}
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-				if
-					unlikely(tok == '=')
-				{
+				if unlikely(tok == '=')
+					{
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					goto skip_default_suffix;
@@ -277,13 +257,11 @@ parse_varargs_suffix:
 			}
 			/* Check for keyword arguments parameter. */
 			if (tok == TOK_POW) {
-				if
-					unlikely(current_basescope->bs_flags & CODE_FVARKWDS)
-				{
-					arg = current_basescope->bs_varkwds;
-					if
-						likely(arg)
+				if unlikely(current_basescope->bs_flags & CODE_FVARKWDS)
 					{
+					arg = current_basescope->bs_varkwds;
+					if likely(arg)
+						{
 						if (WARN(W_KEYWORD_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
 						if (skip_argument_name())
@@ -291,17 +269,14 @@ parse_varargs_suffix:
 						goto parse_varargs_suffix;
 					}
 				}
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				/* Parse the argument name. */
 				arg = parse_argument_name();
-				if
-					unlikely(!arg)
-				goto err;
-				if
-					unlikely(resize_argument_list(&arga))
-				goto err;
+				if unlikely(!arg)
+					goto err;
+				if unlikely(resize_argument_list(&arga))
+					goto err;
 				/* Add the symbol to the argument symbol vector. */
 				arg->s_type                                              = SYMBOL_TYPE_ARG;
 				arg->s_flag                                              = SYMBOL_FALLOC | symbol_flags;
@@ -314,17 +289,14 @@ parse_varargs_suffix:
 
 			/* Parse the argument name. */
 			arg = parse_argument_name();
-			if
-				unlikely(!arg)
-			goto err;
+			if unlikely(!arg)
+				goto err;
 			if (tok == TOK_DOTS) {
 				/* Varargs argument. */
-				if
-					unlikely(yield() < 0)
-				goto err;
-				if
-					likely(!current_basescope->bs_varargs)
-				{
+				if unlikely(yield() < 0)
+					goto err;
+				if likely(!current_basescope->bs_varargs)
+					{
 					arg->s_flag = SYMBOL_FALLOC | symbol_flags;
 					goto set_arg_as_varargs_argument;
 				}
@@ -346,70 +318,58 @@ set_argument_as_local:
 					goto err;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
-					if
-						unlikely(yield() < 0)
-					goto err;
-					if
-						unlikely(decl_ast_parse_for_symbol(arg))
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
+					if unlikely(decl_ast_parse_for_symbol(arg))
+						goto err;
 				}
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				if (tok == '=')
 					goto skip_default_suffix;
 			} else if (tok == '?') { /* Optional argument */
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				arg->s_type  = SYMBOL_TYPE_ARG;
 				arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
 				arg->s_symid = current_basescope->bs_argc;
-				if
-					unlikely(resize_argument_list(&arga))
-				goto err;
+				if unlikely(resize_argument_list(&arga))
+					goto err;
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
-				if
-					unlikely(resize_default_list(&defaulta))
-				goto err;
+				if unlikely(resize_default_list(&defaulta))
+					goto err;
 				/* Set a default value of NULL to indicate a variable that is unbound by default. */
 				current_basescope->bs_default[current_basescope->bs_argc_max -
 				                              current_basescope->bs_argc_min] = NULL;
 				++current_basescope->bs_argc_max;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
-					if
-						unlikely(yield() < 0)
-					goto err;
-					if
-						unlikely(decl_ast_parse_for_symbol(arg))
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
+					if unlikely(decl_ast_parse_for_symbol(arg))
+						goto err;
 				}
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-				if
-					unlikely(tok == '=')
-				{
+				if unlikely(tok == '=')
+					{
 					DREF struct ast *default_expr;
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
 						goto err;
 skip_default_suffix:
-					if
-						unlikely(yield() < 0)
-					goto err;
+					if unlikely(yield() < 0)
+						goto err;
 					/* Parse & discard the default expression. */
 					default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
-					if
-						unlikely(!default_expr)
-					goto err;
+					if unlikely(!default_expr)
+						goto err;
 					ast_decref(default_expr);
 					goto next_argument;
 				}
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 			} else if (tok == ':') { /* Declaration suffix. */
-				if
-					unlikely(yield() < 0)
-				goto err;
-				if
-					unlikely(decl_ast_parse_for_symbol(arg))
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
+				if unlikely(decl_ast_parse_for_symbol(arg))
+					goto err;
 				if (tok == '=')
 					goto parse_default_suffix;
 				goto set_arg_as_normal;
@@ -420,24 +380,20 @@ skip_default_suffix:
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 parse_default_suffix:
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if
-					unlikely(!default_expr)
-				goto err;
+				if unlikely(!default_expr)
+					goto err;
 				if (ast_optimize_all(default_expr, true)) {
 err_default_expr:
 					ast_decref(default_expr);
 					goto err;
 				}
-				if
-					unlikely(resize_argument_list(&arga))
-				goto err;
-				if
-					unlikely(resize_default_list(&defaulta))
-				goto err;
+				if unlikely(resize_argument_list(&arga))
+					goto err;
+				if unlikely(resize_default_list(&defaulta))
+					goto err;
 				if (default_expr->a_type != AST_CONSTEXPR) {
 					if (WARNAST(default_expr, W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, arg))
 						goto err_default_expr;
@@ -472,9 +428,8 @@ set_arg_as_normal:
 				arg->s_symid = current_basescope->bs_argc;
 				ASSERT(current_basescope->bs_argc_min == current_basescope->bs_argc);
 				ASSERT(current_basescope->bs_argc_min == current_basescope->bs_argc_max);
-				if
-					unlikely(resize_argument_list(&arga))
-				goto err;
+				if unlikely(resize_argument_list(&arga))
+					goto err;
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
 				++current_basescope->bs_argc_min;
 				++current_basescope->bs_argc_max;
@@ -482,9 +437,8 @@ set_arg_as_normal:
 next_argument:
 			if (tok != ',')
 				break;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 		}
 	/*done:*/
 	ASSERT(current_basescope->bs_argc_min <=
@@ -496,9 +450,8 @@ next_argument:
 		new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
 		                                            current_basescope->bs_argc *
 		                                            sizeof(struct symbol *));
-		if
-			likely(new_symv)
-		current_basescope->bs_argv = new_symv;
+		if likely(new_symv)
+			current_basescope->bs_argv = new_symv;
 	}
 	if (current_basescope->bs_default) {
 		/* Truncate the default argument vector. */
@@ -506,9 +459,8 @@ next_argument:
 		if (defaulta != req_defaulta) {
 			new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
 			                                                 req_defaulta * sizeof(DREF DeeObject *));
-			if
-				likely(new_defaultv)
-			current_basescope->bs_default = new_defaultv;
+			if likely(new_defaultv)
+				current_basescope->bs_default = new_defaultv;
 		}
 	}
 	ASSERT(current_basescope->bs_argc_max >= current_basescope->bs_argc_min);
@@ -541,9 +493,8 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
 	DREF struct ast *result;
 	struct ast_annotations annotations;
 	ast_annotations_get(&annotations);
-	if
-		unlikely(basescope_push())
-	goto err_anno;
+	if unlikely(basescope_push())
+		goto err_anno;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
 	result = ast_parse_function_noscope(name, pneed_semi, allow_missing_params, name_loc
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
@@ -552,9 +503,8 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 	                                    );
 	basescope_pop();
-	if
-		unlikely(!result)
-	goto err_anno;
+	if unlikely(!result)
+		goto err_anno;
 	return ast_annotations_apply(&annotations, result);
 err_anno:
 	ast_annotations_free(&annotations);
@@ -586,9 +536,8 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		current_basescope->bs_name = name;
 		/* Create a new symbol to allow for function-self-referencing. */
 		funcself_symbol = new_local_symbol(name, name_loc);
-		if
-			unlikely(!funcself_symbol)
-		goto err;
+		if unlikely(!funcself_symbol)
+			goto err;
 		SYMBOL_TYPE(funcself_symbol) = SYMBOL_TYPE_MYFUNC;
 	}
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
@@ -599,16 +548,13 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		/* Argument list. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags_decl;
-		if
-			unlikely(parse_arglist())
-		goto err_flags_decl;
+		if unlikely(yield() < 0)
+			goto err_flags_decl;
+		if unlikely(parse_arglist())
+			goto err_flags_decl;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ARGLIST))
-		goto err_decl;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ARGLIST))
+			goto err_decl;
 	} else if (!allow_missing_params) {
 		if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
 			goto err_decl;
@@ -616,18 +562,15 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 	if (tok == ':') {
 		struct decl_ast *return_type;
-		if
-			unlikely(yield() < 0)
-		goto err_decl;
+		if unlikely(yield() < 0)
+			goto err_decl;
 		/* Function return type information. */
 		ASSERT(!my_decl.da_func.f_ret);
 		return_type = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
-		if
-			unlikely(!return_type)
-		goto err_decl;
-		if
-			unlikely(decl_ast_parse(return_type))
-		{
+		if unlikely(!return_type)
+			goto err_decl;
+		if unlikely(decl_ast_parse(return_type))
+			{
 			Dee_Free(return_type);
 			goto err_decl;
 		}
@@ -649,14 +592,12 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	if (tok == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
-		if
-			unlikely(yield() < 0)
-		goto err_decl;
+		if unlikely(yield() < 0)
+			goto err_decl;
 		/* Expression function. */
 		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!code)
-		goto err_decl;
+		if unlikely(!code)
+			goto err_decl;
 		result = code->a_type == AST_EXPAND
 		         ? (current_basescope->bs_flags |= CODE_FYIELDING, ast_yield(code))
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
@@ -670,15 +611,13 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		old_flags = TPPLexer_Current->l_flags;
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags_decl;
+		if unlikely(yield() < 0)
+			goto err_flags_decl;
 		code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
-		goto err_xcode_decl;
+		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
+			goto err_xcode_decl;
 		if (pneed_semi)
 			*pneed_semi = false;
 	} else {
@@ -708,14 +647,12 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		if (pneed_semi)
 			*pneed_semi = true;
 	}
-	if
-		unlikely(!code)
-	goto err_decl;
+	if unlikely(!code)
+		goto err_decl;
 	result = ast_function(code, current_basescope);
 	ast_decref(code);
-	if
-		unlikely(!result)
-	goto err_decl;
+	if unlikely(!result)
+		goto err_decl;
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	Dee_Decref(result->a_scope);
 	ASSERT(current_basescope);
@@ -727,9 +664,8 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	if (decl) {
 		/* Pass Declaration information to the caller. */
 		if (funcself_symbol) {
-			if
-				unlikely(decl_ast_copy(decl, &funcself_symbol->s_decltype))
-			Dee_Clear(result);
+			if unlikely(decl_ast_copy(decl, &funcself_symbol->s_decltype))
+				Dee_Clear(result);
 		} else {
 			decl_ast_move(decl, &my_decl);
 		}
@@ -764,14 +700,12 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 	if (tok == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		/* Expression function. */
 		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!code)
-		goto err;
+		if unlikely(!code)
+			goto err;
 		result = code->a_type == AST_EXPAND
 		         ? (current_basescope->bs_flags |= CODE_FYIELDING, ast_yield(code))
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
@@ -785,15 +719,13 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		old_flags = TPPLexer_Current->l_flags;
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
-		goto err_xcode;
+		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
+			goto err_xcode;
 		if (pneed_semi)
 			*pneed_semi = false;
 	} else {
@@ -806,14 +738,12 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		if (pneed_semi)
 			*pneed_semi = true;
 	}
-	if
-		unlikely(!code)
-	goto err;
+	if unlikely(!code)
+		goto err;
 	result = ast_function(code, current_basescope);
 	ast_decref(code);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	Dee_Decref(result->a_scope);
 	ASSERT(current_basescope);

@@ -66,9 +66,8 @@ astlist_upsize(struct astlist *__restrict self,
 do_realloc:
 	new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v, new_alloc *
 	                                                             sizeof(DREF struct ast *));
-	if
-		unlikely(!new_vector)
-	{
+	if unlikely(!new_vector)
+		{
 		if (new_alloc != self->ast_c + min_add) {
 			new_alloc = self->ast_c + min_add;
 			goto do_realloc;
@@ -91,9 +90,8 @@ astlist_trunc(struct astlist *__restrict self) {
 		return;
 	new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v, self->ast_c *
 	                                                             sizeof(DREF struct ast *));
-	if
-		likely(new_vector)
-	self->ast_v = new_vector;
+	if likely(new_vector)
+		self->ast_v = new_vector;
 }
 
 INTERN int DCALL
@@ -164,9 +162,8 @@ next_modifier:
 		}
 		*pmode |= LOOKUP_SYM_VLOCAL;
 continue_modifier:
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		goto next_modifier;
 
 	case TOK_COLLON_COLLON:
@@ -309,20 +306,17 @@ next_expr:
 			class_flags |= TP_FFINAL;
 		symbol_mode &= ~(LOOKUP_SYM_FINAL | LOOKUP_SYM_VARYING);
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == KWD_final && !(class_flags & TP_FFINAL)) {
 			class_flags |= TP_FFINAL;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 		}
 		if (TPP_ISKEYWORD(tok)) {
 			class_name = token.t_kwd;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
 				if (current_scope == &current_rootscope->rs_scope.bs_scope)
@@ -335,9 +329,8 @@ next_expr:
 		                                     class_name != NULL,
 		                                     symbol_mode),
 		                     &loc);
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 		need_semi = false; /* Classes always have braces and don't need semicolons. */
 #if 0                      /* TODO: property variable */
 	} else if (tok == KWD_property) {
@@ -349,15 +342,13 @@ next_expr:
 		unsigned int symbol_mode         = lookup_mode;
 		struct ast_loc function_name_loc;
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (TPP_ISKEYWORD(tok)) {
 			loc_here(&function_name_loc);
 			function_name = token.t_kwd;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
 				if (current_scope == &current_rootscope->rs_scope.bs_scope)
@@ -367,9 +358,8 @@ next_expr:
 			}
 			/* Create the symbol that will be used by the function. */
 			function_symbol = lookup_symbol(symbol_mode, function_name, &loc);
-			if
-				unlikely(!function_symbol)
-			goto err;
+			if unlikely(!function_symbol)
+				goto err;
 		}
 		{
 			struct ast_tags_printers temp;
@@ -382,9 +372,8 @@ next_expr:
 			);
 			AST_TAGS_RESTORE_PRINTERS(temp);
 		}
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 		/* Pack together the documentation string for the function. */
 		if (function_symbol) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
@@ -405,30 +394,26 @@ next_expr:
 #else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				function_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-				if
-					unlikely(!function_symbol->s_global.g_doc)
-				goto err;
+				if unlikely(!function_symbol->s_global.g_doc)
+					goto err;
 			}
 		} else {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 			decl_ast_fini(&decl);
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 		}
-		if
-			unlikely(ast_tags_clear())
-		goto err_current;
+		if unlikely(ast_tags_clear())
+			goto err_current;
 		if (function_symbol) {
 			DREF struct ast *function_name_ast, *merge;
 			/* Store the function in the parsed symbol. */
 			function_name_ast = ast_setddi(ast_sym(function_symbol), &function_name_loc);
-			if
-				unlikely(!function_name_ast)
-			goto err_current;
+			if unlikely(!function_name_ast)
+				goto err_current;
 			merge = ast_setddi(ast_action2(AST_FACTION_STORE, function_name_ast, current), &loc);
 			ast_decref(function_name_ast);
-			if
-				unlikely(!merge)
-			goto err_current;
+			if unlikely(!merge)
+				goto err_current;
 			ast_decref(current);
 			current = merge;
 		}
@@ -438,9 +423,8 @@ next_expr:
 				/* If the next token is a `:', then we're currently at a keyword list label,
 				 * in which case we're supposed to stop and let the caller deal with this. */
 				char *next = peek_next_token(NULL);
-				if
-					unlikely(!next)
-				goto err;
+				if unlikely(!next)
+					goto err;
 				if (*next == ':') {
 					/* Make sure it isn't a `::' or `:=' token. */
 					++next;
@@ -461,9 +445,8 @@ next_expr:
 		}
 		current = ast_parse_expr(lookup_mode);
 		/* Check for errors. */
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && TPP_ISKEYWORD(tok) &&
 		    (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(token.t_kwd))) {
 			/* C-style variable declarations. */
@@ -480,17 +463,15 @@ next_expr:
 			}
 			loc_here(&symbol_name_loc);
 			var_symbol = get_local_symbol(token.t_kwd);
-			if
-				unlikely(var_symbol)
-			{
+			if unlikely(var_symbol)
+				{
 				if (WARN(W_VARIABLE_ALREADY_EXISTS, token.t_kwd))
 					goto err_current;
 			} else {
 				/* Create a new symbol for the initialized variable. */
 				var_symbol = new_local_symbol(token.t_kwd, NULL);
-				if
-					unlikely(!var_symbol)
-				goto err_current;
+				if unlikely(!var_symbol)
+					goto err_current;
 				if (lookup_mode & LOOKUP_SYM_FINAL) {
 					var_symbol->s_flag |= SYMBOL_FFINAL;
 					if (lookup_mode & LOOKUP_SYM_VARYING)
@@ -524,26 +505,22 @@ next_expr:
 					}
 					/* Package together documentation tags for this variable symbol. */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
-					if
-						unlikely(!var_symbol->s_global.g_doc)
-					goto err_current;
+					if unlikely(!var_symbol->s_global.g_doc)
+						goto err_current;
 #else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					/* Package together documentation tags for this variable symbol. */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
-					if
-						unlikely(!var_symbol->s_global.g_doc)
-					goto err_current;
+					if unlikely(!var_symbol->s_global.g_doc)
+						goto err_current;
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 				} else {
 					var_symbol->s_type = SYMBOL_TYPE_LOCAL;
 				}
 			}
-			if
-				unlikely(ast_tags_clear())
-			goto err_current;
-			if
-				unlikely(yield() < 0)
-			goto err_current;
+			if unlikely(ast_tags_clear())
+				goto err_current;
+			if unlikely(yield() < 0)
+				goto err_current;
 
 			/* Allow syntax like this:
 			 * >> list my_list;
@@ -572,21 +549,18 @@ next_expr:
 					goto err_current;
 				/* Parse a preferred-type brace expression. */
 				args = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if
-					unlikely(!args)
-				goto err_current;
+				if unlikely(!args)
+					goto err_current;
 				/* Wrap the returned ast in a 1-element tuple (for the argument list) */
 				exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-				if
-					unlikely(!exprv)
-				goto err_args;
+				if unlikely(!exprv)
+					goto err_args;
 				exprv[0] = args; /* Inherit */
 				/* Create a multi-branch AST for the assigned expression. */
 				/* TODO: Add support for applying annotations here! */
 				args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv), &equal_loc);
-				if
-					unlikely(!args)
-				{
+				if unlikely(!args)
+					{
 					ast_decref(exprv[0]);
 					Dee_Free(exprv);
 					goto err_current;
@@ -597,9 +571,8 @@ next_expr:
 				bool has_paren = tok == '(';
 				old_flags      = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if
-					unlikely(yield() < 0)
-				{
+				if unlikely(yield() < 0)
+					{
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
 				}
@@ -613,13 +586,11 @@ next_expr:
 					                       NULL);
 				}
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				if
-					unlikely(!args)
-				goto err_current;
+				if unlikely(!args)
+					goto err_current;
 				if (has_paren) {
-					if
-						unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
-					{
+					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
+						{
 err_args:
 						ast_decref(args);
 						goto err_current;
@@ -628,32 +599,28 @@ err_args:
 			} else {
 				/* No argument list. */
 				args = ast_setddi(ast_constexpr(Dee_EmptyTuple), &symbol_name_loc);
-				if
-					unlikely(!args)
-				goto err_current;
+				if unlikely(!args)
+					goto err_current;
 			}
 			merge = ast_setddi(ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL,
 			                                 current, args),
 			                   &symbol_name_loc);
 			ast_decref(args);
 			ast_decref(current);
-			if
-				unlikely(!merge)
-			goto err;
+			if unlikely(!merge)
+				goto err;
 			current = merge;
 			/* Now generate a branch to store the expression in the branch. */
 			args = ast_setddi(ast_sym(var_symbol), &symbol_name_loc);
-			if
-				unlikely(!args)
-			goto err_current;
+			if unlikely(!args)
+				goto err_current;
 			merge = ast_setddi(ast_action2(AST_FACTION_STORE,
 			                               args, current),
 			                   &symbol_name_loc);
 			ast_decref(args);
 			ast_decref(current);
-			if
-				unlikely(!merge)
-			goto err;
+			if unlikely(!merge)
+				goto err;
 			current = merge;
 		} else {
 			if (current->a_type == AST_SYM &&
@@ -662,12 +629,10 @@ err_args:
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					struct decl_ast decl;
-					if
-						unlikely(yield() < 0)
-					goto err_current;
-					if
-						unlikely(decl_ast_parse(&decl))
-					goto err_current;
+					if unlikely(yield() < 0)
+						goto err_current;
+					if unlikely(decl_ast_parse(&decl))
+						goto err_current;
 					if (var_symbol->s_decltype.da_type != DAST_NONE &&
 					    !decl_ast_equal(&var_symbol->s_decltype, &decl)) {
 						decl_ast_fini(&decl);
@@ -685,9 +650,8 @@ err_args:
 #else  /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-					if
-						unlikely(!var_symbol->s_global.g_doc)
-					goto err_current;
+					if unlikely(!var_symbol->s_global.g_doc)
+						goto err_current;
 				}
 			}
 		}
@@ -697,38 +661,33 @@ err_args:
 		if (mode & AST_COMMA_STRICTCOMMA) {
 			/* Peek the next token to check if it might be an expression. */
 			char *next = peek_next_token(NULL);
-			if
-				unlikely(!next)
-			goto err;
+			if unlikely(!next)
+				goto err;
 			if (!maybe_expression_begin_c(*next))
 				goto done_expression;
 		}
 		/* Append to the current comma-sequence. */
 		error = astlist_append(&expr_comma, current);
-		if
-			unlikely(error)
-		goto err_current;
+		if unlikely(error)
+			goto err_current;
 		ast_decref(current);
 		/* Yield the ',' token. */
 continue_at_comma:
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (!maybe_expression_begin()) {
 			/* Special case: `x = (10,)'
 			 * Same as `x = pack(10)', in that a single-element tuple is created. */
 			/* Flush any remaining entries from the comma-list. */
 			error = astlist_appendall(&expr_batch, &expr_comma);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 			Dee_Free(expr_comma.ast_v);
 			/* Pack the branch together to form a multi-branch AST. */
 			astlist_trunc(&expr_batch);
 			current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
-			if
-				unlikely(!current)
-			goto err_nocomma;
+			if unlikely(!current)
+				goto err_nocomma;
 			/* Free an remaining buffers. */
 			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 			/* WARNING: At this point, both `expr_batch' and `expr_comma' are
@@ -742,17 +701,15 @@ continue_at_comma:
 		/* This is where the magic happens and where we
 		 * assign to expression in the active comma-list. */
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err_current;
+		if unlikely(yield() < 0)
+			goto err_current;
 		/* TODO: Add support for applying annotations here! */
 		store_source = ast_parse_comma(AST_COMMA_PARSESINGLE |
 		                               (mode & AST_COMMA_STRICTCOMMA),
 		                               AST_FMULTIPLE_KEEPLAST,
 		                               NULL);
-		if
-			unlikely(!store_source)
-		goto err_current;
+		if unlikely(!store_source)
+			goto err_current;
 
 		need_semi = true;
 		/* Now everything depends on whether or not what
@@ -764,9 +721,8 @@ continue_at_comma:
 			/* Append the last expression (in the example above, that is `c') */
 			error = astlist_append(&expr_comma, current);
 			ast_decref(current);
-			if
-				unlikely(error)
-			{
+			if unlikely(error)
+				{
 err_store_source:
 				ast_decref(store_source);
 				goto err;
@@ -776,9 +732,8 @@ err_store_source:
 			                                       expr_comma.ast_c,
 			                                       expr_comma.ast_v),
 			                          &loc);
-			if
-				unlikely(!store_target)
-			goto err_store_source;
+			if unlikely(!store_target)
+				goto err_store_source;
 			/* Steal all of these. */
 			expr_comma.ast_a = 0;
 			expr_comma.ast_c = 0;
@@ -790,23 +745,20 @@ err_store_source:
 			                          &loc);
 			ast_decref(store_target);
 			ast_decref(store_source);
-			if
-				unlikely(!store_branch)
-			goto err;
+			if unlikely(!store_branch)
+				goto err;
 			/* Now wrap the store-branch in another expand expression. */
 			current = ast_setddi(ast_expand(store_branch), &loc);
 			ast_decref(store_branch);
-			if
-				unlikely(!current)
-			goto err;
+			if unlikely(!current)
+				goto err;
 		} else {
 			DREF struct ast *store_branch;
 			/* Second case: assign `store_source' to `current' after
 			 *              flushing everything from the comma-list. */
 			error = astlist_appendall(&expr_batch, &expr_comma);
-			if
-				unlikely(error)
-			{
+			if unlikely(error)
+				{
 				ast_decref(store_source);
 				goto err_current;
 			}
@@ -818,9 +770,8 @@ err_store_source:
 			                          &loc);
 			ast_decref(store_source);
 			ast_decref(current);
-			if
-				unlikely(!store_branch)
-			goto err;
+			if unlikely(!store_branch)
+				goto err;
 			current = store_branch;
 		}
 
@@ -830,17 +781,15 @@ err_store_source:
 do_append_gen_to_batch:
 				/* Append the generated expression to the batch. */
 				error = astlist_append(&expr_batch, current);
-				if
-					unlikely(error)
-				goto err_current;
+				if unlikely(error)
+					goto err_current;
 				ast_decref(current);
 				goto continue_at_comma;
 			} else {
 				char *next_token;
 				next_token = peek_next_token(NULL);
-				if
-					unlikely(!next_token)
-				goto err_current;
+				if unlikely(!next_token)
+					goto err_current;
 				if (maybe_expression_begin_c(*next_token))
 					goto do_append_gen_to_batch;
 			}
@@ -852,21 +801,18 @@ done_expression:
 	if (expr_batch.ast_c || expr_comma.ast_c) {
 		/* Flush any remaining entries from the comma-list. */
 		error = astlist_appendall(&expr_batch, &expr_comma);
-		if
-			unlikely(error)
-		goto err_current;
+		if unlikely(error)
+			goto err_current;
 		/* Append the remaining expression to the batch. */
 		error = astlist_append(&expr_batch, current);
-		if
-			unlikely(error)
-		goto err_current;
+		if unlikely(error)
+			goto err_current;
 		ast_decref(current);
 		/* Pack the branch together to form a multi-branch AST. */
 		astlist_trunc(&expr_batch);
 		current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 
 		/* Free an remaining buffers. */
 		/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
@@ -881,14 +827,12 @@ done_expression:
 			 * everything in a multi-branch, grant that wish. */
 			DREF struct ast **astv, *result;
 			astv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-			if
-				unlikely(!astv)
-			goto err_current;
+			if unlikely(!astv)
+				goto err_current;
 			astv[0] = current;
 			result  = ast_multiple(flags, 1, astv);
-			if
-				unlikely(!result)
-			{
+			if unlikely(!result)
+				{
 				Dee_Free(astv);
 				goto err_current;
 			}
@@ -901,17 +845,15 @@ done_expression_nomerge:
 			*pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
 		/* Consume a `;' token as part of the expression. */
-		if
-			likely(tok == ';' || tok == '\n')
-		{
+		if likely(tok == ';' || tok == '\n')
+			{
 			do {
 				if (yieldnbif(mode & AST_COMMA_ALLOWNONBLOCK) < 0)
 					goto err_clear_current_only;
 			} while (tok == '\n');
 		} else {
-			if
-				unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
-			{
+			if unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+				{
 err_clear_current_only:
 				ast_decref(current);
 				current = NULL;
@@ -924,15 +866,13 @@ done_expression_nocurrent:
 	if (expr_batch.ast_c || expr_comma.ast_c) {
 		/* Flush any remaining entries from the comma-list. */
 		error = astlist_appendall(&expr_batch, &expr_comma);
-		if
-			unlikely(error)
-		goto err;
+		if unlikely(error)
+			goto err;
 		/* Pack the branch together to form a multi-branch AST. */
 		astlist_trunc(&expr_batch);
 		current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 		/* Free an remaining buffers. */
 		/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		Dee_Free(expr_comma.ast_v);
@@ -944,9 +884,8 @@ done_expression_nocurrent:
 		/* If the caller wants to force us to package
 		 * everything in a multi-branch, grant that wish. */
 		current = ast_multiple(flags, 0, NULL);
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 	}
 	goto done_expression_nomerge;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION

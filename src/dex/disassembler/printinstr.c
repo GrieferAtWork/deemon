@@ -702,9 +702,8 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 			} else {
 				temp = (*printer)(arg, PREFIX_CONSTANT, COMPILER_STRLEN(PREFIX_CONSTANT));
 			}
-			if
-				unlikely(temp < 0)
-			return temp;
+			if unlikely(temp < 0)
+				return temp;
 			result += temp;
 			numsys = 16;
 			if (((DeeIntObject *)constval)->ob_size < 0 ||

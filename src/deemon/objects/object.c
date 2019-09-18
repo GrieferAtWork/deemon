@@ -143,9 +143,8 @@ LOCAL struct weakref_list *DCALL
 weakrefs_get(DeeObject *__restrict ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
 #ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
-	if
-		unlikely(!tp->tp_weakrefs)
-	type_inherit_weakrefs(tp);
+	if unlikely(!tp->tp_weakrefs)
+		type_inherit_weakrefs(tp);
 #else  /* CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
 	while (!tp->tp_weakrefs && DeeType_Base(tp))
 		tp = DeeType_Base(tp);
@@ -227,18 +226,16 @@ _Dee_weakref_init(struct weakref *__restrict self,
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 again:
 	list = WEAKREFS_GET(ob);
-	if
-		unlikely(!WEAKREFS_OK(list, ob))
-	return false;
+	if unlikely(!WEAKREFS_OK(list, ob))
+		return false;
 	LOCK_POINTER(list->wl_nodes);
 	next           = (struct weakref *)GET_POINTER(list->wl_nodes);
 	self->wr_obj   = ob;
 	self->wr_pself = &list->wl_nodes;
 	if (next) {
 		ASSERT(next->wr_obj == ob);
-		if
-			unlikely(!WEAKREF_TRYLOCK(next))
-		{
+		if unlikely(!WEAKREF_TRYLOCK(next))
+			{
 			UNLOCK_POINTER(list->wl_nodes);
 			SCHED_YIELD();
 			goto again;
@@ -277,12 +274,10 @@ again:
 	if (other->wr_obj) {
 		WEAKREF_LOCK(other);
 		COMPILER_READ_BARRIER();
-		if
-			likely(other->wr_obj)
-		{
-			if
-				unlikely(!TRYLOCK_POINTER(*other->wr_pself))
+		if likely(other->wr_obj)
 			{
+			if unlikely(!TRYLOCK_POINTER(*other->wr_pself))
+				{
 				WEAKREF_UNLOCK(other);
 				SCHED_YIELD();
 				goto again;
@@ -315,44 +310,37 @@ PUBLIC void(DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
-	if
-		unlikely(self == other)
-	return;
+	if unlikely(self == other)
+		return;
 again:
 	if (other->wr_obj) {
 		WEAKREF_LOCK(other);
 		COMPILER_READ_BARRIER();
-		if
-			likely(other->wr_obj)
-		{
-			if
-				unlikely(!TRYLOCK_POINTER(*other->wr_pself))
+		if likely(other->wr_obj)
 			{
+			if unlikely(!TRYLOCK_POINTER(*other->wr_pself))
+				{
 				WEAKREF_UNLOCK(other);
 				SCHED_YIELD();
 				goto again;
 			}
-			if
-				unlikely(!WEAKREF_TRYLOCK(self))
-			{
+			if unlikely(!WEAKREF_TRYLOCK(self))
+				{
 				struct weakref **p = other->wr_pself;
 				UNLOCK_POINTER(*other->wr_pself);
 				WEAKREF_UNLOCK(other);
-				if
-					unlikely(p == &self->wr_next)
-				return;
+				if unlikely(p == &self->wr_next)
+					return;
 				WEAKREF_LOCK(self);
 				WEAKREF_UNLOCK(self);
 				goto again;
 			}
 			COMPILER_READ_BARRIER();
-			if
-				unlikely(self->wr_obj)
-			{
-				struct weakref *next;
-				if
-					unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+			if unlikely(self->wr_obj)
 				{
+				struct weakref *next;
+				if unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+					{
 #if 0
      struct weakref **block = self->wr_pself;
 #endif
@@ -361,9 +349,8 @@ again:
 					WEAKREF_UNLOCK(self);
 					UNLOCK_POINTER(*other->wr_pself);
 					WEAKREF_UNLOCK(other);
-					if
-						unlikely(p == other_p || p == &other->wr_next)
-					return;
+					if unlikely(p == other_p || p == &other->wr_next)
+						return;
 					SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
      LOCK_POINTER(*block);
@@ -373,17 +360,15 @@ again:
 				}
 				next = (struct weakref *)GET_POINTER(self->wr_next);
 				if (next) {
-					if
-						unlikely(!WEAKREF_TRYLOCK(next))
-					{
+					if unlikely(!WEAKREF_TRYLOCK(next))
+						{
 						/* Prevent a deadlock. */
 						WEAKREF_UNLOCK(*self->wr_pself);
 						WEAKREF_UNLOCK(self);
 						UNLOCK_POINTER(*other->wr_pself);
 						WEAKREF_UNLOCK(other);
-						if
-							unlikely(next == other)
-						return;
+						if unlikely(next == other)
+							return;
 						SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
       WEAKREF_LOCK(next);
@@ -418,9 +403,8 @@ Dee_weakref_moveassign(struct weakref *__restrict self,
 #ifndef NDEBUG
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
-	if
-		unlikely(self == other)
-	return;
+	if unlikely(self == other)
+		return;
 again:
 #ifndef NDEBUG
 	self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
@@ -429,36 +413,31 @@ again:
 	if (other->wr_obj) {
 		WEAKREF_LOCK(other);
 		COMPILER_READ_BARRIER();
-		if
-			likely(other->wr_obj)
-		{
+		if likely(other->wr_obj)
+			{
 			struct weakref *next;
 			if (!TRYLOCK_POINTER(*other->wr_pself)) {
 				WEAKREF_UNLOCK(other);
 				SCHED_YIELD();
 				goto again;
 			}
-			if
-				unlikely(!WEAKREF_TRYLOCK(self))
-			{
+			if unlikely(!WEAKREF_TRYLOCK(self))
+				{
 				struct weakref **p = other->wr_pself;
 				UNLOCK_POINTER(*other->wr_pself);
 				WEAKREF_UNLOCK(other);
-				if
-					unlikely(p == &self->wr_next)
-				return;
+				if unlikely(p == &self->wr_next)
+					return;
 				WEAKREF_LOCK(self);
 				WEAKREF_UNLOCK(self);
 				goto again;
 			}
 			COMPILER_READ_BARRIER();
-			if
-				unlikely(self->wr_obj)
-			{
-				struct weakref *next;
-				if
-					unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+			if unlikely(self->wr_obj)
 				{
+				struct weakref *next;
+				if unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+					{
 #if 0
      struct weakref **block = self->wr_pself;
 #endif
@@ -467,9 +446,8 @@ again:
 					WEAKREF_UNLOCK(self);
 					UNLOCK_POINTER(*other->wr_pself);
 					WEAKREF_UNLOCK(other);
-					if
-						unlikely(p == other_p || p == &other->wr_next)
-					return;
+					if unlikely(p == other_p || p == &other->wr_next)
+						return;
 					SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
      LOCK_POINTER(*block);
@@ -479,17 +457,15 @@ again:
 				}
 				next = (struct weakref *)GET_POINTER(self->wr_next);
 				if (next) {
-					if
-						unlikely(!WEAKREF_TRYLOCK(next))
-					{
+					if unlikely(!WEAKREF_TRYLOCK(next))
+						{
 						/* Prevent a deadlock. */
 						WEAKREF_UNLOCK(*self->wr_pself);
 						WEAKREF_UNLOCK(self);
 						UNLOCK_POINTER(*other->wr_pself);
 						WEAKREF_UNLOCK(other);
-						if
-							unlikely(next == other)
-						return;
+						if unlikely(next == other)
+							return;
 						SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
       WEAKREF_LOCK(next);
@@ -506,9 +482,8 @@ again:
 			self->wr_pself = other->wr_pself;
 			self->wr_next  = next;
 			if (next) {
-				if
-					unlikely(!WEAKREF_TRYLOCK(next))
-				{
+				if unlikely(!WEAKREF_TRYLOCK(next))
+					{
 					/* Prevent a deadlock. */
 					WEAKREF_UNLOCK(*other->wr_pself);
 					WEAKREF_UNLOCK(other);
@@ -548,18 +523,16 @@ again:
 	if (src->wr_obj) {
 		WEAKREF_LOCK(src);
 		COMPILER_READ_BARRIER();
-		if
-			likely(src->wr_obj)
-		{
+		if likely(src->wr_obj)
+			{
 			struct weakref *next;
 			LOCK_POINTER(*src->wr_pself);
 			next          = (struct weakref *)GET_POINTER(src->wr_next);
 			dst->wr_pself = src->wr_pself;
 			dst->wr_next  = next;
 			if (next) {
-				if
-					unlikely(!WEAKREF_TRYLOCK(next))
-				{
+				if unlikely(!WEAKREF_TRYLOCK(next))
+					{
 					/* Prevent a deadlock. */
 					WEAKREF_UNLOCK(*src->wr_pself);
 					WEAKREF_UNLOCK(src);
@@ -592,16 +565,14 @@ again:
 	if (self->wr_obj) {
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
-		if
-			likely(self->wr_obj)
-		{
+		if likely(self->wr_obj)
+			{
 			struct weakref *next;
 			LOCK_POINTER(*self->wr_pself);
 			next = (struct weakref *)GET_POINTER(self->wr_next);
 			if (next) {
-				if
-					unlikely(!WEAKREF_TRYLOCK(next))
-				{
+				if unlikely(!WEAKREF_TRYLOCK(next))
+					{
 					/* Prevent a deadlock. */
 					WEAKREF_UNLOCK(*self->wr_pself);
 					WEAKREF_UNLOCK(self);
@@ -634,18 +605,16 @@ again:
 		COMPILER_READ_BARRIER();
 		if (self->wr_obj) {
 			struct weakref *next;
-			if
-				unlikely(!TRYLOCK_POINTER(*self->wr_pself))
-			{
+			if unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+				{
 				WEAKREF_UNLOCK(self);
 				SCHED_YIELD();
 				goto again;
 			}
 			next = (struct weakref *)GET_POINTER(self->wr_next);
 			if (next) {
-				if
-					unlikely(!WEAKREF_TRYLOCK(next))
-				{
+				if unlikely(!WEAKREF_TRYLOCK(next))
+					{
 					/* Prevent a deadlock. */
 					WEAKREF_UNLOCK(*self->wr_pself);
 					WEAKREF_UNLOCK(self);
@@ -684,31 +653,27 @@ Dee_weakref_set(struct weakref *__restrict self,
 	ASSERT(ob->ob_refcnt);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 	new_list = WEAKREFS_GET(ob);
-	if
-		unlikely(!WEAKREFS_OK(new_list, ob))
-	return false;
+	if unlikely(!WEAKREFS_OK(new_list, ob))
+		return false;
 again:
 	WEAKREF_LOCK(self);
-	if
-		unlikely(ob == self->wr_obj)
-	{
+	if unlikely(ob == self->wr_obj)
+		{
 		/* Still the same object. */
 		WEAKREF_UNLOCK(self);
 	} else {
 		/* Delete a previously assigned object. */
 		if (self->wr_obj) {
-			if
-				unlikely(!TRYLOCK_POINTER(*self->wr_pself))
-			{
+			if unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+				{
 				WEAKREF_UNLOCK(self);
 				SCHED_YIELD();
 				goto again;
 			}
 			next = (struct weakref *)GET_POINTER(self->wr_next);
 			if (next) {
-				if
-					unlikely(!WEAKREF_TRYLOCK(next))
-				{
+				if unlikely(!WEAKREF_TRYLOCK(next))
+					{
 					/* Prevent a deadlock. */
 					WEAKREF_UNLOCK(*self->wr_pself);
 					WEAKREF_UNLOCK(self);
@@ -759,9 +724,8 @@ PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 		COMPILER_READ_BARRIER();
 		result = self->wr_obj; /* Re-read in case it changed. */
 #ifdef CONFIG_NO_THREADS
-		if
-			likely(result->ob_refcnt != 0)
-		++result->ob_refcnt;
+		if likely(result->ob_refcnt != 0)
+			++result->ob_refcnt;
 		else result = NULL;
 #else  /* CONFIG_NO_THREADS */
 		{
@@ -835,25 +799,22 @@ again:
 		/* Do the exchange. */
 		if (!new_ob) {
 			/* Clear the object. */
-			if
-				unlikely(!old_ob)
-			{
+			if unlikely(!old_ob)
+				{
 				WEAKREF_UNLOCK(self);
 			} else {
 				struct weakref *next;
 				/* Delete a previously assigned object. */
-				if
-					unlikely(!TRYLOCK_POINTER(*self->wr_pself))
-				{
+				if unlikely(!TRYLOCK_POINTER(*self->wr_pself))
+					{
 					WEAKREF_UNLOCK(self);
 					SCHED_YIELD();
 					goto again;
 				}
 				next = (struct weakref *)GET_POINTER(self->wr_next);
 				if (next) {
-					if
-						unlikely(!WEAKREF_TRYLOCK(next))
-					{
+					if unlikely(!WEAKREF_TRYLOCK(next))
+						{
 						/* Prevent a deadlock. */
 						WEAKREF_UNLOCK(*self->wr_pself);
 						WEAKREF_UNLOCK(self);
@@ -876,9 +837,8 @@ again:
 		} else {
 			struct weakref_list *new_list;
 			new_list = WEAKREFS_GET(new_ob);
-			if
-				unlikely(!WEAKREFS_OK(new_list, new_ob))
-			{
+			if unlikely(!WEAKREFS_OK(new_list, new_ob))
+				{
 				WEAKREF_UNLOCK(self);
 				/* Weak referencing is not supported. */
 				return ITER_DONE;
@@ -892,9 +852,8 @@ again:
 					LOCK_POINTER(*self->wr_pself);
 					next = (struct weakref *)GET_POINTER(self->wr_next);
 					if (next) {
-						if
-							unlikely(!WEAKREF_TRYLOCK(next))
-						{
+						if unlikely(!WEAKREF_TRYLOCK(next))
+							{
 							/* Prevent a deadlock. */
 							WEAKREF_UNLOCK(*self->wr_pself);
 							WEAKREF_UNLOCK(self);
@@ -929,9 +888,8 @@ again:
 		result = self->wr_obj; /* Re-read in case it changed. */
 #endif
 #ifdef CONFIG_NO_THREADS
-		if
-			likely(result->ob_refcnt != 0)
-		++result->ob_refcnt;
+		if likely(result->ob_refcnt != 0)
+			++result->ob_refcnt;
 		else {
 			result = NULL;
 		}
@@ -964,9 +922,8 @@ PUBLIC DREF DeeObject *(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
 PUBLIC bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
                            DeeObject *__restrict self) {
-	if
-		unlikely(!ATOMIC_CMPXCH(self->ob_refcnt, 1, 0))
-	return false;
+	if unlikely(!ATOMIC_CMPXCH(self->ob_refcnt, 1, 0))
+		return false;
 	for (;; undo_start = DeeType_Base(undo_start)) {
 		if (!undo_start)
 			break;
@@ -1236,9 +1193,8 @@ again:
 				DEE_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 				/* Special case: The destructor managed to revive the object. */
-				if
-					unlikely(self->ob_refcnt != 0)
-				{
+				if unlikely(self->ob_refcnt != 0)
+					{
 					Dee_Incref(type);
 					ASSERTF(type->tp_flags & TP_FGC,
 					        "This runtime does not implementing reviving "
@@ -1305,9 +1261,8 @@ again:
 				DEE_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 				/* Special case: The destructor managed to revive the object. */
-				if
-					unlikely(self->ob_refcnt != 0)
-				{
+				if unlikely(self->ob_refcnt != 0)
+					{
 					/* Incref() the new type that now describes this revived object.
 					 * NOTE: The fact that this type may use a different (or none at all)
 					 *       tp_free function, is the reason why no GC-able type from who's
@@ -1477,12 +1432,10 @@ object_sizeof(DeeObject *__restrict self,
 	 * doesn't do any custom heap allocations. */
 	type = Dee_TYPE(self);
 	/* Variable types lack a standardized way of determining their size in bytes. */
-	if
-		unlikely(type->tp_flags & TP_FVARIABLE)
-	goto err_isvar;
-	if
-		unlikely(type->tp_init.tp_alloc.tp_free)
-	{
+	if unlikely(type->tp_flags & TP_FVARIABLE)
+		goto err_isvar;
+	if unlikely(type->tp_init.tp_alloc.tp_free)
+		{
 #ifndef CONFIG_NO_OBJECT_SLABS
 		/* Check for slab allocators. */
 		size_t slab_size;
@@ -1592,9 +1545,8 @@ object_bool(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, meth_bool))
 		goto err;
 	result = DeeObject_Bool(self);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;
@@ -2005,9 +1957,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 object_callattr(DeeObject *__restrict self,
                 size_t argc, DeeObject **__restrict argv) {
-	if
-		unlikely(!argc)
-	goto err_badargc;
+	if unlikely(!argc)
+		goto err_badargc;
 	if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
 		goto err;
 	return DeeObject_CallAttr(self, argv[0], argc - 1, argv + 1);
@@ -2027,9 +1978,8 @@ object_hasattr(DeeObject *__restrict self,
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	result = DeeObject_HasAttr(self, name);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;
@@ -2090,18 +2040,16 @@ object_format_method(DeeObject *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(format_str, &DeeString_Type))
 		goto err;
-	if
-		unlikely((format_utf8 = DeeString_AsUtf8(format_str)) == NULL)
-	goto err;
+	if unlikely((format_utf8 = DeeString_AsUtf8(format_str)) == NULL)
+		goto err;
 	{
 		dssize_t error;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		error                          = object_format_generic(self,
                                       &unicode_printer_print,
                                       &printer, format_utf8, WSTR_LENGTH(format_utf8));
-		if
-			unlikely(error < 0)
-		goto err_printer;
+		if unlikely(error < 0)
+			goto err_printer;
 		return unicode_printer_pack(&printer);
 err_printer:
 		unicode_printer_fini(&printer);
@@ -2118,9 +2066,8 @@ object_not(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":__not__"))
 		goto err;
 	temp = DeeObject_Bool(self);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	return_bool_(!temp);
 err:
 	return NULL;
@@ -2155,13 +2102,11 @@ object_inc(DeeObject *__restrict self,
 	selfref = self;
 	Dee_Incref(selfref);
 	error = DeeObject_Inc(&selfref);
-	if
-		unlikely(error)
-	goto err_selfref;
+	if unlikely(error)
+		goto err_selfref;
 	error = DeeObject_Assign(self, selfref);
-	if
-		unlikely(error)
-	goto err_selfref;
+	if unlikely(error)
+		goto err_selfref;
 	return selfref;
 err_selfref:
 	Dee_Decref(selfref);
@@ -2179,13 +2124,11 @@ object_dec(DeeObject *__restrict self,
 	selfref = self;
 	Dee_Incref(selfref);
 	error = DeeObject_Dec(&selfref);
-	if
-		unlikely(error)
-	goto err_selfref;
+	if unlikely(error)
+		goto err_selfref;
 	error = DeeObject_Assign(self, selfref);
-	if
-		unlikely(error)
-	goto err_selfref;
+	if unlikely(error)
+		goto err_selfref;
 	return selfref;
 err_selfref:
 	Dee_Decref(selfref);
@@ -2201,18 +2144,16 @@ object_incpost(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":__incpost__"))
 		goto err;
 	result = DeeObject_Copy(self);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	selfref = self;
 	Dee_Incref(selfref);
 	error = DeeObject_Inc(&selfref);
 	if (likely(error == 0) && selfref != self)
 		error = DeeObject_Assign(self, selfref);
 	Dee_Decref(selfref);
-	if
-		unlikely(error)
-	goto err_r;
+	if unlikely(error)
+		goto err_r;
 	return result;
 err_r:
 	Dee_Decref(result);
@@ -2228,18 +2169,16 @@ object_decpost(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":__decpost__"))
 		goto err;
 	result = DeeObject_Copy(self);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	selfref = self;
 	Dee_Incref(selfref);
 	error = DeeObject_Dec(&selfref);
 	if (likely(error == 0) && selfref != self)
 		error = DeeObject_Assign(self, selfref);
 	Dee_Decref(selfref);
-	if
-		unlikely(error)
-	goto err_r;
+	if unlikely(error)
+		goto err_r;
 	return result;
 err_r:
 	Dee_Decref(result);
@@ -2611,9 +2550,8 @@ PRIVATE DREF DeeObject *DCALL
 type_new_raw(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
 	DeeTypeObject *first_base;
-	if
-		unlikely(self->tp_flags & TP_FVARIABLE)
-	{
+	if unlikely(self->tp_flags & TP_FVARIABLE)
+		{
 		err_init_var_type(self);
 		goto err;
 	}
@@ -2624,9 +2562,8 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	} else {
 		result = (DREF DeeObject *)DeeObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
 	}
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	DeeObject_Init(result, self);
 	/* Search for the first non-class base. */
 	first_base = self;
@@ -2645,25 +2582,22 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	if (first_base->tp_init.tp_alloc.tp_ctor) {
 		/* Invoke the mandatory base-type constructor. */
 invoke_base_ctor:
-		if
-			unlikely((*first_base->tp_init.tp_alloc.tp_ctor)(result))
-		goto err_r;
+		if unlikely((*first_base->tp_init.tp_alloc.tp_ctor)(result))
+			goto err_r;
 		goto done;
 	}
 	if (first_base->tp_init.tp_alloc.tp_any_ctor) {
 		/* Invoke the mandatory base-type constructor. */
 invoke_base_any_ctor:
-		if
-			unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor)(result, 0, NULL))
-		goto err_r;
+		if unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor)(result, 0, NULL))
+			goto err_r;
 		goto done;
 	}
 	if (first_base->tp_init.tp_alloc.tp_any_ctor_kw) {
 		/* Invoke the mandatory base-type constructor. */
 invoke_base_any_ctor_kw:
-		if
-			unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor_kw)(result, 0, NULL, NULL))
-		goto err_r;
+		if unlikely((*first_base->tp_init.tp_alloc.tp_any_ctor_kw)(result, 0, NULL, NULL))
+			goto err_r;
 		goto done;
 	}
 	if (type_inherit_constructors(first_base)) {
@@ -2738,9 +2672,8 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 			old_value                        = instance->id_vtab[attr->ca_addr];
 			instance->id_vtab[attr->ca_addr] = value;
 			rwlock_endwrite(&instance->id_lock);
-			if
-				unlikely(old_value)
-			Dee_Decref(old_value);
+			if unlikely(old_value)
+				Dee_Decref(old_value);
 			return 0;
 		}
 		if (iter->tp_members &&
@@ -2782,9 +2715,8 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
 		old_value                        = instance->id_vtab[attr->ca_addr];
 		instance->id_vtab[attr->ca_addr] = value;
 		rwlock_endwrite(&instance->id_lock);
-		if
-			unlikely(old_value)
-		Dee_Decref(old_value);
+		if unlikely(old_value)
+			Dee_Decref(old_value);
 		return 0;
 	}
 	if (tp_self->tp_members &&
@@ -2805,9 +2737,8 @@ unpack_init_info(DeeObject *__restrict info,
                  DREF DeeObject **__restrict pinit_kw) {
 	DREF DeeObject *iterator;
 	DREF DeeObject *sentinal;
-	if
-		likely(DeeTuple_Check(info))
-	{
+	if likely(DeeTuple_Check(info))
+		{
 		switch (DeeTuple_SIZE(info)) {
 		case 1:
 			*pinit_fields = DeeTuple_GET(info, 0);
@@ -2851,50 +2782,42 @@ unpack_init_info(DeeObject *__restrict info,
 		if (fast_size != DEE_FASTSEQ_NOTFAST) {
 			if (fast_size == 1) {
 				*pinit_fields = DeeFastSeq_GetItem(info, 0);
-				if
-					unlikely(!*pinit_fields)
-				goto err;
+				if unlikely(!*pinit_fields)
+					goto err;
 				*pinit_args = Dee_EmptyTuple;
 				Dee_Incref(Dee_EmptyTuple);
 				goto done_iterator_data;
 			}
 			if (fast_size == 2) {
 				*pinit_fields = DeeFastSeq_GetItem(info, 0);
-				if
-					unlikely(!*pinit_fields)
-				goto err;
+				if unlikely(!*pinit_fields)
+					goto err;
 				*pinit_args = DeeFastSeq_GetItem(info, 1);
-				if
-					unlikely(!*pinit_args)
-				goto err_fields;
+				if unlikely(!*pinit_args)
+					goto err_fields;
 				goto done_iterator_data;
 			}
 			if (fast_size == 3) {
 				*pinit_fields = DeeFastSeq_GetItem(info, 0);
-				if
-					unlikely(!*pinit_fields)
-				goto err;
+				if unlikely(!*pinit_fields)
+					goto err;
 				*pinit_args = DeeFastSeq_GetItem(info, 1);
-				if
-					unlikely(!*pinit_args)
-				goto err_fields;
+				if unlikely(!*pinit_args)
+					goto err_fields;
 				*pinit_kw = DeeFastSeq_GetItem(info, 2);
-				if
-					unlikely(!*pinit_kw)
-				goto err_args;
+				if unlikely(!*pinit_kw)
+					goto err_args;
 				goto done_iterator_data;
 			}
 			return err_invalid_unpack_size_minmax(info, 1, 3, fast_size);
 		}
 		/* Fallback: use iteartors. */
 		iterator = DeeObject_IterSelf(info);
-		if
-			unlikely(!iterator)
-		goto err;
+		if unlikely(!iterator)
+			goto err;
 		*pinit_fields = DeeObject_IterNext(iterator);
-		if
-			unlikely(!ITER_ISOK(*pinit_fields))
-		{
+		if unlikely(!ITER_ISOK(*pinit_fields))
+			{
 			if (*pinit_fields)
 				err_invalid_unpack_size_minmax(info, 1, 3, 0);
 			Dee_Decref(iterator);
@@ -2907,9 +2830,8 @@ unpack_init_info(DeeObject *__restrict info,
 			Dee_Incref(Dee_EmptyTuple);
 			goto done_iterator;
 		}
-		if
-			unlikely(!*pinit_args)
-		{
+		if unlikely(!*pinit_args)
+			{
 			Dee_Decref(iterator);
 			goto err_fields;
 		}
@@ -2921,9 +2843,8 @@ unpack_init_info(DeeObject *__restrict info,
 			goto err_args;
 		}
 		sentinal = DeeObject_IterNext(iterator);
-		if
-			unlikely(sentinal != ITER_DONE)
-		{
+		if unlikely(sentinal != ITER_DONE)
+			{
 			if (sentinal) {
 				Dee_Decref(sentinal);
 				err_invalid_unpack_iter_size_minmax(info, iterator, 1, 3);
@@ -2964,9 +2885,8 @@ unpack_init_info1(DeeObject *__restrict info) {
 	DREF DeeObject *init_fields;
 	DREF DeeObject *init_argv;
 	DREF DeeObject *init_kw;
-	if
-		unlikely(unpack_init_info(info, &init_fields, &init_argv, &init_kw))
-	return NULL;
+	if unlikely(unpack_init_info(info, &init_fields, &init_argv, &init_kw))
+		return NULL;
 	Dee_XDecref(init_kw);
 	Dee_Decref(init_argv);
 	if (!init_fields)
@@ -2987,28 +2907,23 @@ assign_init_fields(DeeTypeObject *__restrict tp_self,
 	int temp;
 	DREF DeeObject *key_and_value[2];
 	iterator = DeeObject_IterSelf(fields);
-	if
-		unlikely(!iterator)
-	goto err;
+	if unlikely(!iterator)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		temp = DeeObject_Unpack(elem, 2, key_and_value);
 		Dee_Decref(elem);
-		if
-			unlikely(temp)
-		goto err_iterator;
+		if unlikely(temp)
+			goto err_iterator;
 		temp = DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type);
-		if
-			likely(!temp)
-		temp = set_basic_member(tp_self, self, (DeeStringObject *)key_and_value[0], key_and_value[1]);
+		if likely(!temp)
+			temp = set_basic_member(tp_self, self, (DeeStringObject *)key_and_value[0], key_and_value[1]);
 		Dee_Decref(key_and_value[1]);
 		Dee_Decref(key_and_value[0]);
-		if
-			unlikely(temp)
-		goto err_iterator;
+		if unlikely(temp)
+			goto err_iterator;
 	}
-	if
-		unlikely(!elem)
-	goto err_iterator;
+	if unlikely(!elem)
+		goto err_iterator;
 	Dee_Decref(iterator);
 	return 0;
 err_iterator:
@@ -3024,9 +2939,8 @@ type_new_extended(DeeTypeObject *__restrict self,
 	int temp;
 	DREF DeeObject *init_fields, *init_args, *init_kw;
 	DeeTypeObject *first_base, *iter;
-	if
-		unlikely(self->tp_flags & TP_FVARIABLE)
-	{
+	if unlikely(self->tp_flags & TP_FVARIABLE)
+		{
 		err_init_var_type(self);
 		goto err;
 	}
@@ -3037,9 +2951,8 @@ type_new_extended(DeeTypeObject *__restrict self,
 	} else {
 		result = (DREF DeeObject *)DeeObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
 	}
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	DeeObject_Init(result, self);
 	/* Search for the first non-class base. */
 	first_base = self;
@@ -3058,14 +2971,12 @@ type_new_extended(DeeTypeObject *__restrict self,
 	/* {(Type,({(string,object)...},tuple))...} */
 	/* {(Type,({(string,object)...},tuple,mapping))...} */
 	init_info = DeeObject_GetItemDef(initializer, (DeeObject *)first_base, Dee_None);
-	if
-		unlikely(!init_info)
-	goto err_r;
+	if unlikely(!init_info)
+		goto err_r;
 	temp = unpack_init_info(init_info, &init_fields, &init_args, &init_kw);
 	Dee_Decref(init_info);
-	if
-		unlikely(temp)
-	goto err_r;
+	if unlikely(temp)
+		goto err_r;
 	/* Invoke the mandatory base-type constructor. */
 	temp = type_invoke_base_constructor(first_base, result,
 	                                    DeeTuple_SIZE(init_args),
@@ -3073,13 +2984,11 @@ type_new_extended(DeeTypeObject *__restrict self,
 	                                    init_kw);
 	Dee_XDecref(init_kw);
 	Dee_Decref(init_args);
-	if
-		likely(!temp && init_fields)
-	temp = assign_init_fields(first_base, result, init_fields);
+	if likely(!temp && init_fields)
+		temp = assign_init_fields(first_base, result, init_fields);
 	Dee_XDecref(init_fields);
-	if
-		unlikely(temp)
-	goto err_r_firstbase;
+	if unlikely(temp)
+		goto err_r_firstbase;
 done_fields:
 	/* Fill in all of the fields of non-first-base types. */
 	iter = self;
@@ -3089,9 +2998,8 @@ done_fields:
 		init_info = DeeObject_GetItemDef(initializer,
 		                                 (DeeObject *)iter,
 		                                 Dee_None);
-		if
-			unlikely(!init_info)
-		goto err_r_firstbase;
+		if unlikely(!init_info)
+			goto err_r_firstbase;
 		if (DeeNone_Check(init_info)) {
 			Dee_DecrefNokill(init_info);
 			continue;
@@ -3100,14 +3008,12 @@ done_fields:
 		Dee_Decref(init_info);
 		if (init_fields == ITER_DONE)
 			continue;
-		if
-			unlikely(!init_fields)
-		goto err_r_firstbase;
+		if unlikely(!init_fields)
+			goto err_r_firstbase;
 		temp = assign_init_fields(iter, result, init_fields);
 		Dee_Decref(init_fields);
-		if
-			unlikely(temp)
-		goto err_r_firstbase;
+		if unlikely(temp)
+			goto err_r_firstbase;
 	} while ((iter = DeeType_Base(iter)) != NULL);
 
 	if (self->tp_flags & TP_FGC)
@@ -3158,42 +3064,36 @@ type_newinstance(DeeTypeObject *__restrict self, size_t argc,
 				if (!kwds->kw_map[i].ke_name)
 					continue;
 				ASSERT(kwds->kw_map[i].ke_index <= argc);
-				if
-					unlikely(set_private_basic_member(self, result,
+				if unlikely(set_private_basic_member(self, result,
 					                                  kwds->kw_map[i].ke_name,
 					                                  argv[kwds->kw_map[i].ke_index]))
 				goto err_r;
 			}
 		} else {
 			iterator = DeeObject_IterSelf(kw);
-			if
-				unlikely(!iterator)
-			goto err_r;
+			if unlikely(!iterator)
+				goto err_r;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 				DREF DeeObject *name_and_value[2];
 				int temp;
 				temp = DeeObject_Unpack(elem, 2, name_and_value);
 				Dee_Decref(elem);
-				if
-					unlikely(temp)
-				goto err_r_iterator;
+				if unlikely(temp)
+					goto err_r_iterator;
 				temp = DeeObject_AssertTypeExact(name_and_value[0], &DeeString_Type);
-				if
-					likely(!temp)
-				{
+				if likely(!temp)
+					{
 					temp = set_private_basic_member(self, result,
 					                                (DeeStringObject *)name_and_value[0],
 					                                name_and_value[1]);
 				}
 				Dee_Decref(name_and_value[1]);
 				Dee_Decref(name_and_value[0]);
-				if
-					unlikely(temp)
-				goto err_r_iterator;
+				if unlikely(temp)
+					goto err_r_iterator;
 			}
-			if
-				unlikely(!elem)
-			goto err_r_iterator;
+			if unlikely(!elem)
+				goto err_r_iterator;
 			Dee_Decref(iterator);
 		}
 		return result;
@@ -3272,9 +3172,8 @@ type_hasinstanceattr(DeeTypeObject *__restrict self,
 	result = DeeType_HasInstanceAttrString(self,
 	                                       DeeString_STR(name),
 	                                       DeeString_Hash(name));
-	if
-		unlikely(result < 0)
-	return NULL;
+	if unlikely(result < 0)
+		return NULL;
 	return_bool_(result);
 }
 
@@ -3540,25 +3439,21 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
 	DREF DeeObject *temp;
 	int error;
 	temp = DeeObject_GetAttrString((DeeObject *)self, "isstructured");
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	error = DeeObject_Bool(temp);
 	Dee_Decref(temp);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (!error)
 		goto nope;
 	temp = DeeObject_GetAttrString((DeeObject *)self, name);
-	if
-		unlikely(!temp)
-	goto err;
+	if unlikely(!temp)
+		goto err;
 	error = DeeObject_Bool(temp);
 	Dee_Decref(temp);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error)
 		return_true;
 nope:
@@ -4187,9 +4082,8 @@ PRIVATE DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self);
-	if
-		unlikely(!result)
-	return_none;
+	if unlikely(!result)
+		return_none;
 	return result;
 }
 
@@ -4538,9 +4432,8 @@ PRIVATE struct Dee_reftracker *DCALL
 get_reftracker(DeeObject *__restrict self) {
 	struct Dee_reftracker *result, *new_result;
 	result = self->ob_trace;
-	if
-		likely(result)
-	goto done;
+	if likely(result)
+		goto done;
 
 	/* Allocate a new reference tracker. */
 	result = (struct Dee_reftracker *)Dee_TryCalloc(sizeof(struct Dee_reftracker));
@@ -4552,9 +4445,8 @@ get_reftracker(DeeObject *__restrict self) {
 	COMPILER_WRITE_BARRIER();
 	/* Setup the tracker for use by this object. */
 	new_result = ATOMIC_CMPXCH_VAL(self->ob_trace, NULL, result);
-	if
-		unlikely(new_result != NULL)
-	{
+	if unlikely(new_result != NULL)
+		{
 		/* Race condition... */
 		Dee_Free(result);
 		result = new_result;
@@ -4574,9 +4466,8 @@ reftracker_addchange(DeeObject *__restrict ob,
 	struct Dee_refchanges *new_changes;
 	struct Dee_refchanges *last;
 	self = get_reftracker(ob);
-	if
-		unlikely(!self || self == DEE_REFTRACKER_UNTRACKED)
-	return;
+	if unlikely(!self || self == DEE_REFTRACKER_UNTRACKED)
+		return;
 again:
 	last = self->rt_last;
 	for (i = 0; i < COMPILER_LENOF(last->rc_chng); ++i) {
@@ -4587,9 +4478,8 @@ again:
 	}
 	/* Must allocate a new set of changes. */
 	new_changes = (struct Dee_refchanges *)Dee_TryCalloc(sizeof(struct Dee_refchanges));
-	if
-		unlikely(!new_changes)
-	return;
+	if unlikely(!new_changes)
+		return;
 	new_changes->rc_chng[0].rc_file = file;
 	new_changes->rc_chng[0].rc_line = line;
 	new_changes->rc_prev            = last;
@@ -4642,13 +4532,11 @@ Dee_Decref_traced(DeeObject *__restrict ob, char const *file, int line) {
 	dref_t newref;
 	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if
-		unlikely(newref == 0)
-	DeeFatal_BadDecref(ob, file, line);
+	if unlikely(newref == 0)
+		DeeFatal_BadDecref(ob, file, line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
-	if
-		unlikely(newref == 1)
-	DeeObject_Destroy_d(ob, file, line);
+	if unlikely(newref == 1)
+		DeeObject_Destroy_d(ob, file, line);
 	else {
 		reftracker_addchange(ob, file, -line);
 	}
@@ -4702,13 +4590,11 @@ Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
 	dref_t newref;
 	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if
-		unlikely(newref == 0)
-	DeeFatal_BadDecref(ob, file, line);
+	if unlikely(newref == 0)
+		DeeFatal_BadDecref(ob, file, line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
-	if
-		unlikely(newref == 1)
-	{
+	if unlikely(newref == 1)
+		{
 		DeeObject_Destroy_d(ob, file, line);
 		return true;
 	}

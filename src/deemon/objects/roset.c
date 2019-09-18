@@ -56,9 +56,8 @@ INTDEF DeeTypeObject RoSetIterator_Type;
 INTERN int DCALL
 rosetiterator_ctor(SetIterator *__restrict self) {
 	self->si_set = (Set *)DeeRoSet_New();
-	if
-		unlikely(!self->si_set)
-	return -1;
+	if unlikely(!self->si_set)
+		return -1;
 	self->si_next = self->si_set->rs_elem;
 	return 0;
 }
@@ -243,9 +242,8 @@ DeeRoSet_FromSequence(DeeObject *__restrict self) {
 	/* TODO: if (DeeHashSet_CheckExact(self)) ... */
 	/* Construct a read-only set from an iterator. */
 	self = DeeObject_IterSelf(self);
-	if
-		unlikely(!self)
-	goto err;
+	if unlikely(!self)
+		goto err;
 	/* TODO: Use the fast-sequence interface directly! */
 	length_hint = DeeFastSeq_GetSize(self);
 	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
@@ -266,9 +264,8 @@ rehash(DREF Set *__restrict self, size_t old_mask, size_t new_mask) {
 	DREF Set *result;
 	size_t i;
 	result = ROSET_ALLOC(new_mask);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i <= old_mask; ++i) {
 		size_t j, perturb;
 		struct roset_item *item;
@@ -305,9 +302,8 @@ insert(DREF Set *__restrict self, size_t mask,
 			continue;
 		/* Same hash. -> Check if it's also the same key. */
 		error = DeeObject_CompareEq(key, item->si_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (error)
 			return 1; /* It _is_ the same key! */
 	}
@@ -324,9 +320,8 @@ err:
 PUBLIC DREF DeeObject *DCALL DeeRoSet_New(void) {
 	DREF Set *result;
 	result = ROSET_ALLOC(ROSET_INITIAL_MASK);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->rs_mask = ROSET_INITIAL_MASK;
 	result->rs_size = 0;
 	DeeObject_Init(result, &DeeRoSet_Type);
@@ -342,9 +337,8 @@ DeeRoSet_NewWithHint(size_t num_items) {
 		mask = (mask << 1) | 1;
 	mask   = (mask << 1) | 1;
 	result = ROSET_ALLOC(mask);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->rs_mask = mask;
 	result->rs_size = 0;
 	DeeObject_Init(result, &DeeRoSet_Type);
@@ -359,15 +353,13 @@ DeeRoSet_Insert(DREF DeeObject **__restrict pself,
 	Set *me = (Set *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
-	if
-		unlikely(me->rs_size * 2 > me->rs_mask)
-	{
+	if unlikely(me->rs_size * 2 > me->rs_mask)
+		{
 		size_t old_size = me->rs_size;
 		size_t new_mask = (me->rs_mask << 1) | 1;
 		me              = rehash(me, me->rs_mask, new_mask);
-		if
-			unlikely(!me)
-		goto err;
+		if unlikely(!me)
+			goto err;
 		me->rs_mask = new_mask;
 		me->rs_size = old_size; /* `rs_size' is not saved by `rehash()' */
 	}
@@ -375,9 +367,8 @@ DeeRoSet_Insert(DREF DeeObject **__restrict pself,
 	Dee_Incref(key);
 	error = insert(me, me->rs_mask, key);
 	if (error != 0) {
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 	} else {
 		++me->rs_size; /* Keep track of the number of inserted items. */
 	}
@@ -394,17 +385,15 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	int error;
 	/* Construct a read-only set from an iterator. */
 	result = ROSET_ALLOC(mask);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		/* Check if we must re-hash the resulting set. */
 		if (elem_count * 2 > mask) {
 			size_t new_mask = (mask << 1) | 1;
 			new_result      = rehash(result, mask, new_mask);
-			if
-				unlikely(!new_result)
-			{
+			if unlikely(!new_result)
+				{
 				Dee_Decref(elem);
 				goto err_r;
 			}
@@ -413,21 +402,18 @@ DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 		}
 		/* Insert the key-value pair into the resulting set. */
 		error = insert(result, mask, elem);
-		if
-			unlikely(error != 0)
-		{
-			if
-				unlikely(error < 0)
-			goto err_r;
+		if unlikely(error != 0)
+			{
+			if unlikely(error < 0)
+				goto err_r;
 		} else {
 			++elem_count;
 		}
 		if (DeeThread_CheckInterrupt())
 			goto err_r;
 	}
-	if
-		unlikely(!elem)
-	goto err_r;
+	if unlikely(!elem)
+		goto err_r;
 	/* Fill in control members and setup the resulting object. */
 	result->rs_size = elem_count;
 	result->rs_mask = mask;
@@ -464,9 +450,8 @@ PRIVATE DREF SetIterator *DCALL
 roset_iter(Set *__restrict self) {
 	DREF SetIterator *result;
 	result = DeeObject_MALLOC(SetIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_set  = self;
 	result->si_next = self->rs_elem;
 	Dee_Incref(self);
@@ -495,9 +480,8 @@ roset_contains(Set *__restrict self,
 		if (item->si_hash != hash)
 			continue;
 		error = DeeObject_CompareEq(key, item->si_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			continue; /* Non-equal keys. */
 		/* Found it! */
@@ -524,9 +508,8 @@ DeeRoSet_Contains(DeeObject *__restrict self,
 		if (item->si_hash != hash)
 			continue;
 		error = DeeObject_CompareEq(key, item->si_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			continue; /* Non-equal keys. */
 		/* Found it! */
@@ -600,15 +583,13 @@ roset_repr(Set *__restrict self) {
 	for (i = 0; i <= self->rs_mask; ++i) {
 		if (!self->rs_elem[i].si_key)
 			continue;
-		if
-			unlikely(unicode_printer_printf(&p, "%s%r",
+		if unlikely(unicode_printer_printf(&p, "%s%r",
 			                                is_first ? "" : ", ",
 			                                self->rs_elem[i].si_key) < 0)
 		goto err;
 		is_first = false;
 	}
-	if
-		unlikely((is_first ? unicode_printer_putascii(&p, '}')
+	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
 		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
 	goto err;
 	return unicode_printer_pack(&p);
@@ -662,9 +643,8 @@ PRIVATE struct type_member roset_class_members[] = {
 PRIVATE DREF Set *DCALL roset_ctor(void) {
 	DREF Set *result;
 	result = ROSET_ALLOC(1);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->rs_mask = 1;
 	result->rs_size = 0;
 	DeeObject_Init(result, &DeeRoSet_Type);
@@ -678,24 +658,21 @@ roset_deepcopy(Set *__restrict self) {
 	size_t i;
 	int temp;
 	result = (DREF Set *)DeeRoSet_NewWithHint(self->rs_size);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i <= self->rs_mask; ++i) {
 		DREF DeeObject *key_copy;
 		/* Deep-copy the key & value */
 		if (!self->rs_elem[i].si_key)
 			continue;
 		key_copy = DeeObject_DeepCopy(self->rs_elem[i].si_key);
-		if
-			unlikely(!key_copy)
-		goto err;
+		if unlikely(!key_copy)
+			goto err;
 		/* Insert the copied key & value into the new set. */
 		temp = DeeRoSet_Insert((DREF DeeObject **)&result, key_copy);
 		Dee_Decref(key_copy);
-		if
-			unlikely(temp)
-		goto err;
+		if unlikely(temp)
+			goto err;
 	}
 done:
 	return result;

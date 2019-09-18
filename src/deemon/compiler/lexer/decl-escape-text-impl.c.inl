@@ -40,9 +40,8 @@ PP_CAT2(decl_ast_escapetext,N)(PP_CAT3(uint,N,_t) const *__restrict text, size_t
 		PP_CAT3(uint, N, _t)
 		ch = *iter;
 		if (ch == '\\') {
-			if
-				unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(iter - flush_start)) < 0)
-			goto err;
+			if unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+				goto err;
 			if (unicode_printer_putascii(printer, '\\'))
 				goto err;
 			flush_start = iter;
@@ -50,9 +49,8 @@ PP_CAT2(decl_ast_escapetext,N)(PP_CAT3(uint,N,_t) const *__restrict text, size_t
 		}
 		if (ch == '-' && iter + 1 < end && iter[1] == '>') {
 			++iter;
-			if
-				unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(iter - flush_start)) < 0)
-			goto err;
+			if unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+				goto err;
 			if (unicode_printer_putascii(printer, '\\'))
 				goto err;
 			flush_start = iter;
@@ -62,9 +60,8 @@ PP_CAT2(decl_ast_escapetext,N)(PP_CAT3(uint,N,_t) const *__restrict text, size_t
 		    (iter == text || iter[-1] == '\n' ||
 		     (iter[-1] == '\r' && ch != '\n'))) {
 			/* <START_OF_LINE>( / <START_OF_LINE><LF> */
-			if
-				unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(iter - flush_start)) < 0)
-			goto err;
+			if unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+				goto err;
 			if (unicode_printer_putascii(printer, '\\'))
 				goto err;
 			flush_start = iter;
@@ -78,9 +75,8 @@ PP_CAT2(decl_ast_escapetext,N)(PP_CAT3(uint,N,_t) const *__restrict text, size_t
 		memcpy(printer, source_printer, sizeof(struct unicode_printer));
 		unicode_printer_init(source_printer);
 	} else {
-		if
-			unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(end - flush_start)) < 0)
-		goto err;
+		if unlikely(PP_CAT2(unicode_printer_print, N)(printer, flush_start, (size_t)(end - flush_start)) < 0)
+			goto err;
 	}
 	return 0;
 err:

@@ -56,9 +56,8 @@ JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name
 		/* Create a new reference for this keyword. */
 		destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
 		                                name, size, hash);
-		if
-			unlikely(!destent)
-		goto err;
+		if unlikely(!destent)
+			goto err;
 		destent->oe_value = ent->oe_value;
 		Dee_XIncref(ent->oe_value);
 		break;
@@ -312,9 +311,8 @@ do_yield_suffix:
 				JITLexer_Yield(self);
 				break;
 			}
-			if
-				unlikely(start == self->jl_tokstart)
-			JITLexer_Yield(self);
+			if unlikely(start == self->jl_tokstart)
+				JITLexer_Yield(self);
 		}
 		if (allow_cast)
 			goto again;
@@ -389,9 +387,8 @@ do_parse_function:
 				JITLexer_Yield(self);
 				continue;
 			}
-			if
-				unlikely(start == self->jl_tokstart)
-			JITLexer_Yield(self);
+			if unlikely(start == self->jl_tokstart)
+				JITLexer_Yield(self);
 		}
 		break;
 
@@ -408,9 +405,8 @@ do_parse_function:
 			}
 			if (!self->jl_tok)
 				break;
-			if
-				unlikely(start == self->jl_tokstart)
-			JITLexer_Yield(self);
+			if unlikely(start == self->jl_tokstart)
+				JITLexer_Yield(self);
 		}
 		break;
 
@@ -741,9 +737,8 @@ again:
 				JITLexer_Yield(self);
 				break;
 			}
-			if
-				unlikely(start == self->jl_tokstart)
-			JITLexer_Yield(self);
+			if unlikely(start == self->jl_tokstart)
+				JITLexer_Yield(self);
 		}
 		break;
 

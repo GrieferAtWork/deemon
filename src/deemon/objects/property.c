@@ -132,9 +132,8 @@ property_hash(Property *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 property_repr(Property *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if
-		unlikely(UNICODE_PRINTER_PRINT(&printer, "Property(") < 0)
-	goto err;
+	if unlikely(UNICODE_PRINTER_PRINT(&printer, "Property(") < 0)
+		goto err;
 	if (self->p_get &&
 	    unlikely(unicode_printer_printf(&printer, "getter: %r%s", self->p_get,
 	                                    self->p_del || self->p_set ? ", " : "") < 0))
@@ -251,9 +250,8 @@ property_get_name(Property *__restrict self) {
 	int error;
 	DREF DeeObject *result;
 	error = property_info(self, &info);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_name)
@@ -272,9 +270,8 @@ property_get_doc(Property *__restrict self) {
 	int error;
 	DREF DeeObject *result;
 	error = property_info(self, &info);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_doc)
@@ -293,9 +290,8 @@ property_get_type(Property *__restrict self) {
 	int error;
 	DREF DeeTypeObject *result;
 	error = property_info(self, &info);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_type)
@@ -367,9 +363,8 @@ PRIVATE struct type_getset property_getsets[] = {
 PRIVATE DREF DeeObject *DCALL
 property_call(Property *__restrict self,
               size_t argc, DeeObject **__restrict argv) {
-	if
-		likely(self->p_get)
-	return DeeObject_Call(self->p_get, argc, argv);
+	if likely(self->p_get)
+		return DeeObject_Call(self->p_get, argc, argv);
 	err_unbound_attribute(&DeeProperty_Type, DeeString_STR(&str_get));
 	return NULL;
 }

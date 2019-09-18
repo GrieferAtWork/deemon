@@ -86,9 +86,8 @@ print_environ(struct ascii_printer *__restrict printer,
 		Dee_Decref(item);
 	}
 	Dee_Decref(iter);
-	if
-		unlikely(!item)
-	goto err;
+	if unlikely(!item)
+		goto err;
 	if (ascii_printer_putc(printer, '\0'))
 		goto err;
 	return 0;
@@ -106,9 +105,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 pack_environ(DeeObject *__restrict procenv) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if
-		unlikely(print_environ(&printer, procenv))
-	goto err;
+	if unlikely(print_environ(&printer, procenv))
+		goto err;
 	return ascii_printer_pack(&printer);
 err:
 	ascii_printer_fini(&printer);
@@ -232,9 +230,8 @@ nt_GetEnvironmentVariable(LPCWSTR lpName) {
 	DWORD bufsize = 256, error;
 	LPWSTR new_buffer;
 	buffer = DeeString_NewWideBuffer(bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		error = GetEnvironmentVariableW(lpName, buffer, bufsize + 1);
@@ -248,9 +245,8 @@ nt_GetEnvironmentVariable(LPCWSTR lpName) {
 			break;
 		/* Resize to fit. */
 		new_buffer = DeeString_ResizeWideBuffer(buffer, error - 1);
-		if
-			unlikely(!new_buffer)
-		goto err_result;
+		if unlikely(!new_buffer)
+			goto err_result;
 		buffer  = new_buffer;
 		bufsize = error - 1;
 	}
@@ -274,9 +270,8 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 	LPWSTR iter = lpPathVariable, next, bufiter;
 	LPWSTR buffer, new_buffer;
 	buffer = DeeString_NewWideBuffer(128 + szApplicationNameLength);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 	for (;;) {
 		DWORD error;
 		size_t pathlen;
@@ -292,9 +287,8 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 		    (bFixUnc && pathlen != WSTR_LENGTH(buffer))) {
 			/* Resize the encoding buffer. */
 			new_buffer = DeeString_ResizeWideBuffer(buffer, pathlen);
-			if
-				unlikely(!new_buffer)
-			goto err_buffer;
+			if unlikely(!new_buffer)
+				goto err_buffer;
 			buffer = new_buffer;
 		}
 		bufiter = buffer;
@@ -312,21 +306,18 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 			DREF DeeStringObject *result, *fixed_result;
 			/* If requested, also fix UNC casing for the buffer-path. */
 			result = (DREF DeeStringObject *)DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			fixed_result = (DREF DeeStringObject *)nt_FixUncPath((DeeObject *)result);
-			if
-				unlikely(!fixed_result)
-			{
+			if unlikely(!fixed_result)
+				{
 err_result:
 				Dee_DecrefDokill(result);
 				goto err;
 			}
 			pathname = (LPWSTR)DeeString_AsWide((DeeObject *)fixed_result);
-			if
-				unlikely(!pathname)
-			{
+			if unlikely(!pathname)
+				{
 				Dee_Decref(fixed_result);
 				goto err_result;
 			}
@@ -404,9 +395,8 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 	LPWSTR iter = lpPathExtVariable, next, bufiter;
 	LPWSTR buffer, new_buffer;
 	buffer = DeeString_NewWideBuffer(128 + szApplicationNameLength);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 	for (;;) {
 		DWORD error;
 		size_t pathlen;
@@ -418,9 +408,8 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 		if (pathlen > WSTR_LENGTH(buffer)) {
 			/* Resize the encoding buffer. */
 			new_buffer = DeeString_ResizeWideBuffer(buffer, pathlen);
-			if
-				unlikely(!new_buffer)
-			goto err_buffer;
+			if unlikely(!new_buffer)
+				goto err_buffer;
 			buffer = new_buffer;
 		}
 		bufiter = buffer;
@@ -491,17 +480,15 @@ nt_CreateProcessPath(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
 	LPWSTR pathStr;
 	BOOL bFixUnc = FALSE;
 	path         = (DREF DeeStringObject *)nt_GetEnvironmentVariable(wPathStr);
-	if
-		unlikely(!ITER_ISOK(path))
-	{
+	if unlikely(!ITER_ISOK(path))
+		{
 		if (!path)
 			goto err_nopath;
 		goto done_nopath;
 	}
 	pathStr = (LPWSTR)DeeString_AsWide((DeeObject *)path);
-	if
-		unlikely(!pathStr)
-	goto err;
+	if unlikely(!pathStr)
+		goto err;
 again:
 	result = nt_CreateProcessPathNoExt(lpApplicationName, szApplicationNameLength, pathStr,
 	                                   bFixUnc, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
@@ -519,17 +506,14 @@ again:
 	if (pathext != (DREF DeeStringObject *)ITER_DONE) {
 		LPWSTR appnameBuffer, iter, next, newAppnameBuffer;
 		SIZE_T appnameBufferSize = szApplicationNameLength + 4; /* Optimize for 4-character long extensions. */
-		if
-			unlikely(!pathext)
-		goto err;
+		if unlikely(!pathext)
+			goto err;
 		appnameBuffer = (LPWSTR)Dee_Malloc((appnameBufferSize + 1) * sizeof(WCHAR));
-		if
-			unlikely(!appnameBuffer)
-		goto err_pathext;
+		if unlikely(!appnameBuffer)
+			goto err_pathext;
 		iter = (LPWSTR)DeeString_AsWide((DeeObject *)pathext);
-		if
-			unlikely(!iter)
-		{
+		if unlikely(!iter)
+			{
 			Dee_Free(appnameBuffer);
 			goto err_pathext;
 		}
@@ -543,14 +527,12 @@ again:
 			/* Append extensions from $PATHEXT */
 			extLength     = (SIZE_T)(next - iter);
 			appnameLength = szApplicationNameLength + extLength;
-			if
-				unlikely(appnameLength > appnameBufferSize)
-			{
+			if unlikely(appnameLength > appnameBufferSize)
+				{
 				/* More-than-4-character extension. */
 				newAppnameBuffer = (LPWSTR)Dee_Realloc(appnameBuffer, (appnameLength + 1) * sizeof(WCHAR));
-				if
-					unlikely(!newAppnameBuffer)
-				{
+				if unlikely(!newAppnameBuffer)
+					{
 					Dee_Free(appnameBuffer);
 					goto err_pathext;
 				}
@@ -615,13 +597,11 @@ nt_CreateProcessExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
 	pathext = (DREF DeeStringObject *)nt_GetEnvironmentVariable(wPathExtStr);
 	if (pathext != (DREF DeeStringObject *)ITER_DONE) {
 		LPWSTR lpPathExt;
-		if
-			unlikely(!pathext)
-		goto err;
+		if unlikely(!pathext)
+			goto err;
 		lpPathExt = (LPWSTR)DeeString_AsWide((DeeObject *)pathext);
-		if
-			unlikely(!lpPathExt)
-		result = NULL;
+		if unlikely(!lpPathExt)
+			result = NULL;
 		else {
 			result = nt_CreateProcessPathWithExt(lpApplicationName,
 			                                     szApplicationNameLength,
@@ -667,9 +647,8 @@ process_start(Process *__restrict self,
 again:
 	rwlock_read(&self->p_lock);
 	/* Check if the process had already been started. */
-	if
-		unlikely(self->p_state & PROCESS_FSTARTED)
-	{
+	if unlikely(self->p_state & PROCESS_FSTARTED)
+		{
 		rwlock_endread(&self->p_lock);
 		return_false;
 	}
@@ -682,9 +661,8 @@ again:
 	}
 	exe     = self->p_exe;
 	cmdline = self->p_cmdline;
-	if
-		unlikely(!exe || !cmdline)
-	{
+	if unlikely(!exe || !cmdline)
+		{
 		/* Shouldn't happen because processes without these
 		 * attributes should have the `PROCESS_FSTARTED'
 		 * flag set. */
@@ -709,45 +687,39 @@ again:
 
 	/* Load the widestring representations of the exe and cmdline. */
 	wExe = (LPWSTR)DeeString_AsWide((DeeObject *)exe);
-	if
-		unlikely(!wExe)
-	goto done_procenv;
+	if unlikely(!wExe)
+		goto done_procenv;
 	wCmdLine = (LPWSTR)DeeString_AsWide((DeeObject *)cmdline);
-	if
-		unlikely(!wCmdLine)
-	goto done_procenv;
+	if unlikely(!wCmdLine)
+		goto done_procenv;
 
 	/* Since `CreateProcessW()' is allowed to modify the commandline, we must copy it beforehand. */
 	wCmdLineSize = (WSTR_LENGTH(wCmdLine) + 1) * sizeof(WCHAR);
 	wCmdLineCopy = (LPWSTR)Dee_Malloc(wCmdLineSize);
-	if
-		unlikely(!wCmdLineCopy)
-	goto done_procenv;
+	if unlikely(!wCmdLineCopy)
+		goto done_procenv;
 	memcpy(wCmdLineCopy, wCmdLine, wCmdLineSize);
 
 	/* Pack together environment strings. */
 	wEnviron = NULL;
 	if (procenv) {
 		temp = pack_environ(procenv);
-		if
-			unlikely(!temp)
-		goto done_cmdline_copy;
+		if unlikely(!temp)
+			goto done_cmdline_copy;
 		Dee_Decref(procenv);
 		procenv = temp;
 		/* Load the widestring representation of the environment table. */
 		wEnviron = (LPWSTR)DeeString_AsWide(procenv);
-		if
-			unlikely(!wEnviron)
-		goto done_cmdline_copy;
+		if unlikely(!wEnviron)
+			goto done_cmdline_copy;
 	}
 
 	wPwd = NULL;
 	if (pwd) {
 		/* Load the wide-character version of the process working directory. */
 		wPwd = (LPWSTR)DeeString_AsWide((DeeObject *)pwd);
-		if
-			unlikely(!wEnviron)
-		goto done_cmdline_copy;
+		if unlikely(!wEnviron)
+			goto done_cmdline_copy;
 	}
 
 	memset(&startupInfo, 0, sizeof(STARTUPINFOW));
@@ -756,17 +728,14 @@ again:
 
 	/* Load standard handles for the new process. */
 	startupInfo.hStdInput = get_stdhandle_for_process(procin, DEE_STDIN);
-	if
-		unlikely(startupInfo.hStdInput == INVALID_HANDLE_VALUE)
-	goto done_cmdline_copy;
+	if unlikely(startupInfo.hStdInput == INVALID_HANDLE_VALUE)
+		goto done_cmdline_copy;
 	startupInfo.hStdOutput = get_stdhandle_for_process(procout, DEE_STDOUT);
-	if
-		unlikely(startupInfo.hStdOutput == INVALID_HANDLE_VALUE)
-	goto done_cmdline_copy;
+	if unlikely(startupInfo.hStdOutput == INVALID_HANDLE_VALUE)
+		goto done_cmdline_copy;
 	startupInfo.hStdError = get_stdhandle_for_process(procerr, DEE_STDERR);
-	if
-		unlikely(startupInfo.hStdError == INVALID_HANDLE_VALUE)
-	goto done_cmdline_copy;
+	if unlikely(startupInfo.hStdError == INVALID_HANDLE_VALUE)
+		goto done_cmdline_copy;
 
 	/* If `wExe' isn't an absolute path and isn't relative to the current directory,
 	 * search $PATH for it, before trying again while appending extensions for $PATHEXT.
@@ -797,9 +766,8 @@ again:
 		                                 wCmdLineCopy, NULL, NULL, TRUE,
 		                                 CREATE_UNICODE_ENVIRONMENT, wEnviron,
 		                                 wPwd, &startupInfo, &procInfo);
-		if
-			unlikely(!final_exe)
-		goto done_cmdline_copy;
+		if unlikely(!final_exe)
+			goto done_cmdline_copy;
 		if (final_exe != (DREF DeeStringObject *)ITER_DONE) {
 			/* Saved the new (fixed) executable name. */
 save_final_exe:
@@ -831,13 +799,11 @@ save_final_exe:
 		DBG_ALIGNMENT_ENABLE();
 		if (nt_IsUncError(error)) {
 			final_exe = (DREF DeeStringObject *)nt_FixUncPath((DeeObject *)exe);
-			if
-				unlikely(!final_exe)
-			goto done_cmdline_copy;
+			if unlikely(!final_exe)
+				goto done_cmdline_copy;
 			wExe = (LPWSTR)DeeString_AsWide((DeeObject *)final_exe);
-			if
-				unlikely(!wExe)
-			{
+			if unlikely(!wExe)
+				{
 				Dee_Decref(final_exe);
 				goto done_cmdline_copy;
 			}
@@ -1207,9 +1173,8 @@ process_join(Process *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, ":join"))
 		goto err;
 	error = process_dojoin(self, &result, (uint64_t)-1);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return DeeInt_NewU32((uint32_t)result);
 err:
 	return NULL;
@@ -1223,9 +1188,8 @@ process_tryjoin(Process *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
 		goto err;
 	error = process_dojoin(self, &result, 0);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error == 0)
 		return DeeInt_NewU32(result);
 	return_none;
@@ -1242,9 +1206,8 @@ process_timedjoin(Process *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, "I64d:timedjoin", &timeout))
 		goto err;
 	error = process_dojoin(self, &result, timeout);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error == 0)
 		return DeeInt_NewU32(result);
 	return_none;
@@ -1396,9 +1359,8 @@ INTDEF DeeTypeObject ProcessThreads_Type;
 PRIVATE DREF ProcessThreads *DCALL pt_new(DWORD pid) {
 	DREF ProcessThreads *result;
 	result = DeeObject_MALLOC(ProcessThreads);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->pt_id = pid;
 	DeeObject_Init(result, &ProcessThreads_Type);
 done:
@@ -1409,9 +1371,8 @@ PRIVATE DREF ProcessThreadsIterator *DCALL
 pt_iter(ProcessThreads *__restrict self) {
 	DREF ProcessThreadsIterator *result;
 	result = DeeObject_MALLOC(ProcessThreadsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DBG_ALIGNMENT_DISABLE();
 	result->pti_handle = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, self->pt_id);
 	DBG_ALIGNMENT_ENABLE();
@@ -1553,9 +1514,8 @@ done:
 #else /* !CONFIG_NO_THREADID */
 	result = DeeThread_NewExternal(thread_handle);
 #endif /* CONFIG_NO_THREADID */
-	if
-		unlikely(!result)
-	CloseHandle(thread_handle);
+	if unlikely(!result)
+		CloseHandle(thread_handle);
 	return result;
 }
 
@@ -1753,9 +1713,8 @@ call_extern(DeeObject *__restrict module_name,
             size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	result = DeeObject_CallAttr(module, global_name, argc, argv);
 	Dee_Decref(module);
 	return result;
@@ -1768,9 +1727,8 @@ get_extern(DeeObject *__restrict module_name,
            DeeObject *__restrict global_name) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	result = DeeObject_GetAttr(module, global_name);
 	Dee_Decref(module);
 	return result;
@@ -1806,9 +1764,8 @@ process_set_environ(Process *__restrict self, DeeObject *value) {
 	if (self == &this_process) {
 		int result;
 		temp = get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
-		if
-			unlikely(!temp)
-		return -1;
+		if unlikely(!temp)
+			return -1;
 		result = DeeObject_Assign(temp, value ? value : Dee_None);
 		Dee_Decref(temp);
 		return result;
@@ -1858,15 +1815,13 @@ process_set_pwd(Process *__restrict self, DeeObject *value) {
 		goto err;
 	if (self == &this_process) {
 		DREF DeeObject *temp;
-		if
-			unlikely(!value)
-		goto err_running;
+		if unlikely(!value)
+			goto err_running;
 		temp = call_extern((DeeObject *)&str_fs,
 		                   (DeeObject *)&str_chdir,
 		                   0, NULL);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		Dee_Decref(temp);
 		return 0;
 	}
@@ -2061,9 +2016,8 @@ process_get_argv(Process *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *cmdline;
 	cmdline = (DREF DeeStringObject *)process_get_cmdline(self);
-	if
-		unlikely(!cmdline)
-	goto err;
+	if unlikely(!cmdline)
+		goto err;
 	/* Split the commandline. */
 	result = cmdline_split(cmdline);
 	Dee_Decref(cmdline);
@@ -2078,13 +2032,11 @@ process_set_argv(Process *__restrict self, DeeObject *__restrict value) {
 	int result;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	/* Pack together a commandline. */
-	if
-		unlikely(cmdline_add_args(&printer, value))
-	goto err;
+	if unlikely(cmdline_add_args(&printer, value))
+		goto err;
 	cmdline = (DREF DeeStringObject *)ascii_printer_pack(&printer);
-	if
-		unlikely(!cmdline)
-	goto err_noprinter;
+	if unlikely(!cmdline)
+		goto err_noprinter;
 	/* Set the commandline of the process. */
 	result = process_set_cmdline(self, (DeeObject *)cmdline);
 	Dee_Decref(cmdline);
@@ -2179,9 +2131,8 @@ process_init(Process *__restrict self,
 		goto err;
 	/* Add the initial exe-argument. */
 	if (DeeString_Check(exe)) {
-		if
-			unlikely(cmdline_add_arg(&cmdline, exe))
-		goto err;
+		if unlikely(cmdline_add_arg(&cmdline, exe))
+			goto err;
 		Dee_Incref(exe);
 	} else {
 		if (DeeInt_Check(exe)) {
@@ -2192,13 +2143,11 @@ process_init(Process *__restrict self,
 		} else {
 			exe = (DREF DeeStringObject *)DeeFile_Filename((DeeObject *)exe);
 		}
-		if
-			unlikely(!exe)
-		goto err;
+		if unlikely(!exe)
+			goto err;
 		temp = cmdline_add_arg(&cmdline, exe);
-		if
-			unlikely(temp)
-		goto err_exe;
+		if unlikely(temp)
+			goto err_exe;
 	}
 	/* Add additional arguments. */
 	if (args && cmdline_add_args(&cmdline, args))
@@ -2206,9 +2155,8 @@ process_init(Process *__restrict self,
 
 	/* Pack together the commandline. */
 	self->p_cmdline = (DREF DeeStringObject *)ascii_printer_pack(&cmdline);
-	if
-		unlikely(!self->p_cmdline)
-	goto err_exe_noprinter;
+	if unlikely(!self->p_cmdline)
+		goto err_exe_noprinter;
 	self->p_exe = (DREF DeeStringObject *)exe; /* Inherit */
 
 	/* Initialize all the other fields. */

@@ -136,18 +136,16 @@ LOCAL DREF DeeObject *DCALL
 module_it_getattr_symbol(DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {
 	DREF DeeObject *result;
-	if
-		likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
-	{
+	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
+		{
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index];
 		Dee_XIncref(result);
 		rwlock_endread(&self->mo_lock);
-		if
-			unlikely(!result)
-		result = ITER_DONE; /* Unbound */
+		if unlikely(!result)
+			result = ITER_DONE; /* Unbound */
 		return result;
 	}
 	/* External symbol, or property. */
@@ -157,9 +155,8 @@ read_symbol:
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->mo_lock);
-		if
-			unlikely(!callback)
-		return ITER_DONE;
+		if unlikely(!callback)
+			return ITER_DONE;
 		/* Invoke the property callback. */
 		result = DeeObject_Call(callback, 0, NULL);
 		Dee_Decref(callback);
@@ -190,9 +187,8 @@ again:
 			symbol = &module->mo_bucketv[new_index];
 			if (symbol->ss_name) {
 				result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
-				if
-					unlikely(!result_name)
-				{
+				if unlikely(!result_name)
+					{
 					DeeModule_UnlockSymbols(module);
 					return NULL;
 				}
@@ -210,9 +206,8 @@ continue_symbol_search:
 		/* Read the current value of this symbol. */
 		result_value = module_it_getattr_symbol(module, symbol);
 		if (!ITER_ISOK(result_value)) {
-			if
-				unlikely(!result_value)
-			return NULL;
+			if unlikely(!result_value)
+				return NULL;
 			goto continue_symbol_search;
 		}
 		if (ATOMIC_CMPXCH(self->mei_index, old_index, new_index + 1))
@@ -222,9 +217,8 @@ continue_symbol_search:
 	Dee_Incref(result_name);
 	DeeModule_UnlockSymbols(module);
 	result = DeeTuple_PackSymbolic(2, result_name, result_value);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		Dee_Decref_unlikely(result_name);
 		Dee_Decref_unlikely(result_value);
 	}
@@ -320,9 +314,8 @@ PRIVATE DREF ModuleExportsIterator *DCALL
 me_iter(ModuleExports *__restrict self) {
 	DREF ModuleExportsIterator *result;
 	result = DeeObject_MALLOC(ModuleExportsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mei_module = self->me_module;
 	result->mei_index  = 0;
 	Dee_Incref(result->mei_module);
@@ -362,18 +355,16 @@ module_my_getattr_symbol(ModuleExports *__restrict exports_map,
                          DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {
 	DREF DeeObject *result;
-	if
-		likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
-	{
+	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY)))
+		{
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		rwlock_read(&self->mo_lock);
 		result = self->mo_globalv[symbol->ss_index];
 		Dee_XIncref(result);
 		rwlock_endread(&self->mo_lock);
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
 				err_unknown_key((DeeObject *)exports_map,
 				                (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name, DeeStringObject, s_str));
@@ -390,9 +381,8 @@ read_symbol:
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->mo_lock);
-		if
-			unlikely(!callback)
-		{
+		if unlikely(!callback)
+			{
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
 				err_unknown_key((DeeObject *)exports_map,
 				                (DeeObject *)COMPILER_CONTAINER_OF(symbol->ss_name, DeeStringObject, s_str));
@@ -424,9 +414,8 @@ me_get(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if
-		unlikely(!symbol)
-	{
+	if unlikely(!symbol)
+		{
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -453,9 +442,8 @@ me_get_f(ModuleExports *__restrict self,
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if
-		unlikely(!symbol)
-	{
+	if unlikely(!symbol)
+		{
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -482,9 +470,8 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if
-		unlikely(!symbol)
-	{
+	if unlikely(!symbol)
+		{
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -508,9 +495,8 @@ me_set(ModuleExports *__restrict self,
 	symbol = DeeModule_GetSymbolString(module,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if
-		unlikely(!symbol)
-	{
+	if unlikely(!symbol)
+		{
 		DeeModule_UnlockSymbols(module);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
@@ -601,9 +587,8 @@ INTERN DREF ModuleExports *DCALL
 DeeModule_ViewExports(DeeModuleObject *__restrict self) {
 	DREF ModuleExports *result;
 	result = DeeObject_MALLOC(ModuleExports);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->me_module = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &ModuleExports_Type);
@@ -795,9 +780,8 @@ PRIVATE DREF ModuleGlobalsIterator *DCALL
 mg_iter(ModuleGlobals *__restrict self) {
 	DREF ModuleGlobalsIterator *result;
 	result = DeeObject_MALLOC(ModuleGlobalsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mgi_index  = 0;
 	result->mgi_module = self->mg_module;
 	Dee_Incref(self->mg_module);
@@ -832,9 +816,8 @@ mg_get(ModuleGlobals *__restrict self,
 	}
 	rwlock_read(&module->mo_lock);
 	result = module->mo_globalv[index];
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		rwlock_endread(&module->mo_lock);
 		DeeModule_UnlockSymbols(module);
 		err_unbound_index((DeeObject *)self, index);
@@ -941,9 +924,8 @@ INTERN DREF ModuleGlobals *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
 	DREF ModuleGlobals *result;
 	result = DeeObject_MALLOC(ModuleGlobals);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mg_module = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &ModuleGlobals_Type);

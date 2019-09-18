@@ -98,9 +98,8 @@ DeeExec_RunStream(DeeObject *__restrict source_stream,
 	                                         default_symbols,
 	                                         source_pathname,
 	                                         module_name);
-	if
-		unlikely(!function)
-	goto err;
+	if unlikely(!function)
+		goto err;
 	result = DeeObject_Call(function, argc, argv);
 	Dee_Decref(function);
 	return result;
@@ -126,17 +125,15 @@ DeeExec_RunStreamString(DeeObject *__restrict source_stream,
 		source_pathname_ob = DeeString_NewUtf8(source_pathname,
 		                                       source_pathsize,
 		                                       STRING_ERROR_FSTRICT);
-		if
-			unlikely(!source_pathname_ob)
-		goto err;
+		if unlikely(!source_pathname_ob)
+			goto err;
 	}
 	if (module_name) {
 		module_name_ob = DeeString_NewUtf8(module_name,
 		                                   module_namesize,
 		                                   STRING_ERROR_FSTRICT);
-		if
-			unlikely(!module_name_ob)
-		goto err_source_pathname_ob;
+		if unlikely(!module_name_ob)
+			goto err_source_pathname_ob;
 	}
 	result = DeeExec_RunStream(source_stream,
 	                           mode,
@@ -179,9 +176,8 @@ DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
 	                                     default_symbols,
 	                                     source_pathname,
 	                                     module_name);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	result = DeeModule_GetRoot(module, true);
 	Dee_Decref(module);
 	return result;
@@ -206,17 +202,15 @@ DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
 		source_pathname_ob = DeeString_NewUtf8(source_pathname,
 		                                       source_pathsize,
 		                                       STRING_ERROR_FSTRICT);
-		if
-			unlikely(!source_pathname_ob)
-		goto err;
+		if unlikely(!source_pathname_ob)
+			goto err;
 	}
 	if (module_name) {
 		module_name_ob = DeeString_NewUtf8(module_name,
 		                                   module_namesize,
 		                                   STRING_ERROR_FSTRICT);
-		if
-			unlikely(!module_name_ob)
-		goto err_source_pathname_ob;
+		if unlikely(!module_name_ob)
+			goto err_source_pathname_ob;
 	}
 	result = DeeExec_CompileModuleStream(source_stream,
 	                                     mode,
@@ -257,9 +251,8 @@ DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
 	                                           source_pathsize,
 	                                           module_name,
 	                                           module_namesize);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	result = DeeModule_GetRoot(module, true);
 	Dee_Decref(module);
 	return result;
@@ -280,9 +273,8 @@ DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
 	stream = DeeFile_OpenRoMemory(data, data_size);
-	if
-		unlikely(!stream)
-	goto err;
+	if unlikely(!stream)
+		goto err;
 	result = DeeExec_RunStream(stream,
 	                           mode,
 	                           argc,
@@ -312,9 +304,8 @@ DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
 	stream = DeeFile_OpenRoMemory(data, data_size);
-	if
-		unlikely(!stream)
-	goto err;
+	if unlikely(!stream)
+		goto err;
 	result = DeeExec_RunStreamString(stream,
 	                                 mode,
 	                                 argc,
@@ -343,9 +334,8 @@ DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_s
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
 	stream = DeeFile_OpenRoMemory(data, data_size);
-	if
-		unlikely(!stream)
-	goto err;
+	if unlikely(!stream)
+		goto err;
 	result = DeeExec_CompileModuleStream(stream,
 	                                     mode,
 	                                     start_line,
@@ -370,9 +360,8 @@ DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
 	stream = DeeFile_OpenRoMemory(data, data_size);
-	if
-		unlikely(!stream)
-	goto err;
+	if unlikely(!stream)
+		goto err;
 	result = DeeExec_CompileFunctionStream(stream,
 	                                       mode,
 	                                       start_line,
@@ -399,9 +388,8 @@ DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t 
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
 	stream = DeeFile_OpenRoMemory(data, data_size);
-	if
-		unlikely(!stream)
-	goto err;
+	if unlikely(!stream)
+		goto err;
 	result = DeeExec_CompileModuleStreamString(stream,
 	                                           mode,
 	                                           start_line,
@@ -430,9 +418,8 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
 	stream = DeeFile_OpenRoMemory(data, data_size);
-	if
-		unlikely(!stream)
-	goto err;
+	if unlikely(!stream)
+		goto err;
 	result = DeeExec_CompileFunctionStreamString(stream,
 	                                             mode,
 	                                             start_line,
@@ -497,9 +484,8 @@ Dee_RunAtExit(uint16_t flags) {
 			temp = DeeObject_Call(list[size].ae_func,
 			                      DeeTuple_SIZE(list[size].ae_args),
 			                      DeeTuple_ELEM(list[size].ae_args));
-			if
-				unlikely(!temp)
-			{
+			if unlikely(!temp)
+				{
 				/* An error occurred. */
 				if (flags & DEE_RUNATEXIT_FRUNALL) {
 					/* Just dump the error (including interrupts). */
@@ -559,9 +545,8 @@ again:
 	/* Allocate more entries. */
 	new_list = (struct atexit_entry *)Dee_TryRealloc(atexit_list, (atexit_size + 1) *
 	                                                              sizeof(struct atexit_entry));
-	if
-		unlikely(!new_list)
-	{
+	if unlikely(!new_list)
+		{
 		size_t old_size = atexit_size;
 		rwlock_endwrite(&atexit_lock);
 		if (Dee_CollectMemory((old_size + 1) * sizeof(struct atexit_entry)))

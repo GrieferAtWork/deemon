@@ -43,9 +43,8 @@ PRIVATE DREF SystemFile *DCALL
 open_fd(DeeFileTypeObject *__restrict fType, HANDLE hHandle) {
 	DREF SystemFile *result;
 	result = DeeObject_MALLOC(SystemFile);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Fill in the system file. */
 	result->sf_filename  = NULL;
 	result->sf_handle    = hHandle;
@@ -75,18 +74,15 @@ pipe_class_new(DeeObject *__restrict UNUSED(self),
 	DBG_ALIGNMENT_ENABLE();
 	/* Create file objects for the pipe handles. */
 	fReader = open_fd(&DeePipeReader_Type, hReader);
-	if
-		unlikely(!fReader)
-	goto err_hreadwrite;
+	if unlikely(!fReader)
+		goto err_hreadwrite;
 	fWriter = open_fd(&DeePipeWriter_Type, hWriter);
-	if
-		unlikely(!fWriter)
-	goto err_fread_hwrite;
+	if unlikely(!fWriter)
+		goto err_fread_hwrite;
 	/* Pack the file into a tuple. */
 	result = DeeTuple_PackSymbolic(2, fReader, fWriter);
-	if
-		unlikely(!result)
-	goto err_freadwrite;
+	if unlikely(!result)
+		goto err_freadwrite;
 	return result;
 err_freadwrite:
 	Dee_Decref(fReader);

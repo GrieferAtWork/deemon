@@ -101,9 +101,8 @@ file_exists(DeeObject *__restrict filename) {
 	if (DeeString_Check(filename))
 		return file_exists_str(DeeString_STR(filename));
 	filename = DeeFile_Filename(filename);
-	if
-		unlikely(!filename)
-	return -1;
+	if unlikely(!filename)
+		return -1;
 	result = file_exists_str(DeeString_STR(filename));
 	Dee_Decref(filename);
 	return result;
@@ -117,14 +116,12 @@ file_open(DeeObject *__restrict filename, char const *mode) {
 		Dee_Incref(filename);
 	} else {
 		filename = DeeFile_Filename(filename);
-		if
-			unlikely(!filename)
-		goto err;
+		if unlikely(!filename)
+			goto err;
 	}
 	name = DeeString_AsUtf8(filename);
-	if
-		unlikely(!name)
-	goto err_filename;
+	if unlikely(!name)
+		goto err_filename;
 	DBG_ALIGNMENT_DISABLE();
 	result = fopen(name, mode);
 	DBG_ALIGNMENT_ENABLE();
@@ -155,9 +152,8 @@ stat_ctor(Stat *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:stat", &path))
 		goto err;
 	self->st_file = file_open(path, "r");
-	if
-		unlikely(!self->st_file)
-	goto err;
+	if unlikely(!self->st_file)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -245,9 +241,8 @@ stat_class_exists(DeeObject *__restrict UNUSED(self),
 	if (DeeArg_Unpack(argc, argv, "o:exists", &path))
 		goto err;
 	error = file_exists(path);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error != 0);
 err:
 	return NULL;
@@ -261,9 +256,8 @@ stat_class_isreg(DeeObject *__restrict UNUSED(self),
 	if (DeeArg_Unpack(argc, argv, "o:isreg", &path))
 		goto err;
 	error = file_exists(path);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error != 0);
 err:
 	return NULL;
@@ -451,9 +445,8 @@ fs_remove(DeeObject *__restrict path) {
 	if (!DeeString_Check(path)) {
 		int result;
 		path = DeeFile_Filename(path);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		result = fs_remove(path);
 		Dee_Decref(path);
 		return result;
@@ -461,9 +454,8 @@ fs_remove(DeeObject *__restrict path) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	name = DeeString_AsUtf8(path);
-	if
-		unlikely(!name)
-	goto err;
+	if unlikely(!name)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (remove(name)) {
 		DBG_ALIGNMENT_ENABLE();
@@ -485,9 +477,8 @@ fs_rename(DeeObject *__restrict existing_path,
 	if (!DeeString_Check(existing_path)) {
 		int result;
 		existing_path = DeeFile_Filename(existing_path);
-		if
-			unlikely(!existing_path)
-		goto err;
+		if unlikely(!existing_path)
+			goto err;
 		result = fs_rename(existing_path, new_path);
 		Dee_Decref(existing_path);
 		return result;
@@ -495,13 +486,11 @@ fs_rename(DeeObject *__restrict existing_path,
 	if (DeeObject_AssertTypeExact(new_path, &DeeString_Type))
 		goto err;
 	old_name = DeeString_AsUtf8(existing_path);
-	if
-		unlikely(!old_name)
-	goto err;
+	if unlikely(!old_name)
+		goto err;
 	new_name = DeeString_AsUtf8(new_path);
-	if
-		unlikely(!new_name)
-	goto err;
+	if unlikely(!new_name)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (rename(old_name, new_name)) {
 		DBG_ALIGNMENT_ENABLE();

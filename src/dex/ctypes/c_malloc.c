@@ -73,13 +73,11 @@ capi_malloc(size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "Iu:malloc", &num_bytes))
 		goto err;
 	ptr = Dee_Malloc(num_bytes);
-	if
-		unlikely(!ptr)
-	goto err;
+	if unlikely(!ptr)
+		goto err;
 	result = DeePointer_NewVoid(ptr);
-	if
-		unlikely(!result)
-	Dee_Free(ptr);
+	if unlikely(!result)
+		Dee_Free(ptr);
 	return result;
 err:
 	return NULL;
@@ -99,15 +97,13 @@ capi_realloc(size_t argc, DeeObject **__restrict argv) {
 	 * This way, we don't run the chance to cause an exception
 	 * after we've already successfully reallocated the user-pointer. */
 	result = DeePointer_NewVoid(0);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	CTYPES_RECURSIVE_FAULTPROTECT(
 	ptr.ptr = Dee_Realloc(ptr.ptr, new_size),
 	goto err_r);
-	if
-		unlikely(!ptr.ptr)
-	goto err_r;
+	if unlikely(!ptr.ptr)
+		goto err_r;
 	/* Update the resulting pointer. */
 	((struct pointer_object *)result)->p_ptr.ptr = ptr.ptr;
 	return result;
@@ -134,13 +130,11 @@ capi_calloc(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	}
 	ptr = Dee_Calloc(total);
-	if
-		unlikely(!ptr)
-	goto err;
+	if unlikely(!ptr)
+		goto err;
 	result = DeePointer_NewVoid(ptr);
-	if
-		unlikely(!result)
-	Dee_Free(ptr);
+	if unlikely(!result)
+		Dee_Free(ptr);
 	return result;
 err:
 	return NULL;
@@ -157,9 +151,8 @@ capi_trymalloc(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	ptr    = Dee_TryMalloc(num_bytes);
 	result = DeePointer_NewVoid(ptr);
-	if
-		unlikely(!result)
-	Dee_Free(ptr);
+	if unlikely(!result)
+		Dee_Free(ptr);
 	return result;
 err:
 	return NULL;
@@ -179,9 +172,8 @@ capi_tryrealloc(size_t argc, DeeObject **__restrict argv) {
 	 * This way, we don't run the chance to cause an exception
 	 * after we've already successfully reallocated the user-pointer. */
 	result = DeePointer_NewVoid(0);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	CTYPES_RECURSIVE_FAULTPROTECT(
 	ptr.ptr = Dee_TryRealloc(ptr.ptr, new_size),
 	goto err_r);
@@ -205,21 +197,18 @@ capi_trycalloc(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	total = count * num_bytes;
 	/* Check for allocation overflow. */
-	if
-		unlikely((total < count || total < num_bytes) &&
+	if unlikely((total < count || total < num_bytes) &&
 		         count && num_bytes)
 	{
 		ptr = NULL;
 	} else {
 		ptr = Dee_TryCalloc(total);
 	}
-	if
-		unlikely(!ptr)
-	goto err;
+	if unlikely(!ptr)
+		goto err;
 	result = DeePointer_NewVoid(ptr);
-	if
-		unlikely(!result)
-	Dee_Free(ptr);
+	if unlikely(!result)
+		Dee_Free(ptr);
 	return result;
 err:
 	return NULL;
@@ -240,15 +229,13 @@ capi_strdup(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	CTYPES_PROTECTED_STRNLEN(len, str.pchar, maxlen, goto err);
 	resptr = Dee_Malloc((len + 1) * sizeof(char));
-	if
-		unlikely(!resptr)
-	goto err;
+	if unlikely(!resptr)
+		goto err;
 	CTYPES_PROTECTED_MEMCPY(resptr, str.pchar, len * sizeof(char), goto err_r);
 	((char *)resptr)[len] = '\0';
 	result                = DeePointer_NewChar(resptr);
-	if
-		unlikely(!result)
-	goto err_r;
+	if unlikely(!result)
+		goto err_r;
 	return result;
 err_r:
 	Dee_Free(resptr);
@@ -270,16 +257,14 @@ capi_trystrdup(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	CTYPES_PROTECTED_STRNLEN(len, str.pchar, maxlen, goto err);
 	resptr = Dee_TryMalloc((len + 1) * sizeof(char));
-	if
-		likely(resptr)
-	{
+	if likely(resptr)
+		{
 		CTYPES_PROTECTED_MEMCPY(resptr, str.pchar, len * sizeof(char), goto err_r);
 		((char *)resptr)[len] = '\0';
 	}
 	result = DeePointer_NewChar(resptr);
-	if
-		unlikely(!result)
-	goto err_r;
+	if unlikely(!result)
+		goto err_r;
 	return result;
 err_r:
 	Dee_Free(resptr);

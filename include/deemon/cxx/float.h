@@ -53,24 +53,21 @@ public:
 #ifndef __OPTIMIZE_SIZE__
 	using Object::getval;
 	float_ const &getval(float &value) const {
-		if
-			likely(DeeFloat_CheckExact(this->ptr()))
-		value = (float)DeeFloat_VALUE(this->ptr());
+		if likely(DeeFloat_CheckExact(this->ptr()))
+			value = (float)DeeFloat_VALUE(this->ptr());
 		else Object::getval(value);
 		return *this;
 	}
 	float_ const &getval(double &value) const {
-		if
-			likely(DeeFloat_CheckExact(this->ptr()))
-		value = (double)DeeFloat_VALUE(this->ptr());
+		if likely(DeeFloat_CheckExact(this->ptr()))
+			value = (double)DeeFloat_VALUE(this->ptr());
 		else Object::getval(value);
 		return *this;
 	}
 #ifdef __COMPILER_HAVE_LONGDOUBLE
 	float_ const &getval(long double &value) const {
-		if
-			likely(DeeFloat_CheckExact(this->ptr()))
-		value = (long double)DeeFloat_VALUE(this->ptr());
+		if likely(DeeFloat_CheckExact(this->ptr()))
+			value = (long double)DeeFloat_VALUE(this->ptr());
 		else Object::getval(value);
 		return *this;
 	}

@@ -73,9 +73,8 @@ sfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_find = (DREF StringFind *)DeeString_FindAll((String *)Dee_EmptyString,
 	                                                      (String *)Dee_EmptyString,
 	                                                      0, 0);
-	if
-		unlikely(!self->sfi_find)
-	return -1;
+	if unlikely(!self->sfi_find)
+		return -1;
 	self->sfi_start.cp8      = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_ptr.cp8        = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_end.cp8        = DeeString_As1Byte(Dee_EmptyString);
@@ -90,9 +89,8 @@ scfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_find = (DREF StringFind *)DeeString_CaseFindAll((String *)Dee_EmptyString,
 	                                                          (String *)Dee_EmptyString,
 	                                                          0, 0);
-	if
-		unlikely(!self->sfi_find)
-	return -1;
+	if unlikely(!self->sfi_find)
+		return -1;
 	self->sfi_start.cp8      = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_ptr.cp8        = DeeString_As1Byte(Dee_EmptyString);
 	self->sfi_end.cp8        = DeeString_As1Byte(Dee_EmptyString);
@@ -141,9 +139,8 @@ sfi_setup(StringFindIterator *__restrict self,
 
 	CASE_WIDTH_2BYTE:
 		self->sfi_ptr.cp16 = DeeString_As2Byte((DeeObject *)find->sf_str);
-		if
-			unlikely(!self->sfi_ptr.cp16)
-		goto err;
+		if unlikely(!self->sfi_ptr.cp16)
+			goto err;
 		self->sfi_start.cp16 = self->sfi_ptr.cp16;
 		if (my_end > WSTR_LENGTH(self->sfi_ptr.cp16))
 			my_end = WSTR_LENGTH(self->sfi_ptr.cp16);
@@ -152,17 +149,15 @@ sfi_setup(StringFindIterator *__restrict self,
 		self->sfi_end.cp16 = self->sfi_ptr.cp16 + my_end;
 		self->sfi_ptr.cp16 += my_start;
 		self->sfi_needle_ptr.cp16 = DeeString_As2Byte((DeeObject *)find->sf_needle);
-		if
-			unlikely(!self->sfi_needle_ptr.cp16)
-		goto err;
+		if unlikely(!self->sfi_needle_ptr.cp16)
+			goto err;
 		self->sfi_needle_len = WSTR_LENGTH(self->sfi_needle_ptr.cp16);
 		break;
 
 	CASE_WIDTH_4BYTE:
 		self->sfi_ptr.cp32 = DeeString_As4Byte((DeeObject *)find->sf_str);
-		if
-			unlikely(!self->sfi_ptr.cp32)
-		goto err;
+		if unlikely(!self->sfi_ptr.cp32)
+			goto err;
 		self->sfi_start.cp32 = self->sfi_ptr.cp32;
 		if (my_end > WSTR_LENGTH(self->sfi_ptr.cp32))
 			my_end = WSTR_LENGTH(self->sfi_ptr.cp32);
@@ -171,9 +166,8 @@ sfi_setup(StringFindIterator *__restrict self,
 		self->sfi_end.cp32 = self->sfi_ptr.cp32 + my_end;
 		self->sfi_ptr.cp32 += my_start;
 		self->sfi_needle_ptr.cp32 = DeeString_As4Byte((DeeObject *)find->sf_needle);
-		if
-			unlikely(!self->sfi_needle_ptr.cp32)
-		goto err;
+		if unlikely(!self->sfi_needle_ptr.cp32)
+			goto err;
 		self->sfi_needle_len = WSTR_LENGTH(self->sfi_needle_ptr.cp32);
 		break;
 	}
@@ -538,9 +532,8 @@ PRIVATE DREF StringFindIterator *DCALL
 sf_iter(StringFind *__restrict self) {
 	DREF StringFindIterator *result;
 	result = DeeObject_MALLOC(StringFindIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (sfi_setup(result, self))
 		goto err_r;
 	DeeObject_Init(result, &StringFindIterator_Type);
@@ -555,9 +548,8 @@ PRIVATE DREF StringFindIterator *DCALL
 scf_iter(StringFind *__restrict self) {
 	DREF StringFindIterator *result;
 	result = DeeObject_MALLOC(StringFindIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (sfi_setup(result, self))
 		goto err_r;
 	DeeObject_Init(result, &StringCaseFindIterator_Type);
@@ -692,9 +684,8 @@ DeeString_FindAll(String *__restrict self,
                   size_t start, size_t end) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sf_str    = self;
 	result->sf_needle = other;
 	result->sf_start  = start;
@@ -712,9 +703,8 @@ DeeString_CaseFindAll(String *__restrict self,
                       size_t start, size_t end) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sf_str    = self;
 	result->sf_needle = other;
 	result->sf_start  = start;

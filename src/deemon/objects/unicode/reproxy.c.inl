@@ -172,9 +172,8 @@ again:
 	                        self->re_args.re_patternlen,
 	                        &range,
 	                        self->re_args.re_flags);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (!error) {
 		rwlock_write(&self->re_lock);
 		if (dataptr != self->re_args.re_dataptr ||
@@ -379,9 +378,8 @@ again:
 	                         self->re_args.re_patternlen,
 	                         &range,
 	                         self->re_args.re_flags);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	if (!error) {
 		rwlock_write(&self->re_lock);
 		if (dataptr != self->re_args.re_dataptr ||
@@ -518,9 +516,8 @@ again:
 	                         self->re_args.re_patternlen,
 	                         &range,
 	                         self->re_args.re_flags);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	if (!error) {
 		rwlock_write(&self->re_lock);
 		if (dataptr != self->re_args.re_dataptr ||
@@ -636,13 +633,11 @@ refa_init(ReSequence *__restrict self,
 			goto err;
 	}
 	self->re_args.re_dataptr = DeeString_AsUtf8((DeeObject *)self->re_data);
-	if
-		unlikely(!self->re_args.re_dataptr)
-	goto err;
+	if unlikely(!self->re_args.re_dataptr)
+		goto err;
 	self->re_args.re_patternptr = DeeString_AsUtf8((DeeObject *)self->re_pattern);
-	if
-		unlikely(!self->re_args.re_patternptr)
-	goto err;
+	if unlikely(!self->re_args.re_patternptr)
+		goto err;
 	self->re_args.re_datalen    = WSTR_LENGTH(self->re_args.re_dataptr);
 	self->re_args.re_patternlen = WSTR_LENGTH(self->re_args.re_patternptr);
 	Dee_Incref(self->re_data);
@@ -671,9 +666,8 @@ PRIVATE DREF ReSequenceIterator *DCALL
 refa_iter(ReSequence *__restrict self) {
 	DREF ReSequenceIterator *result;
 	result = DeeObject_MALLOC(ReSequenceIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	memcpy(&result->re_data, &self->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
 	Dee_Incref(result->re_data);
@@ -701,9 +695,8 @@ refa_nsi_getsize(ReSequence *__restrict self) {
 		                         self->re_args.re_patternlen,
 		                         &range,
 		                         self->re_args.re_flags);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			break;
 		++result;
@@ -718,9 +711,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 refa_size(ReSequence *__restrict self) {
 	size_t result = refa_nsi_getsize(self);
-	if
-		unlikely(result == (size_t)-1)
-	return NULL;
+	if unlikely(result == (size_t)-1)
+		return NULL;
 	return DeeInt_NewSize(result);
 }
 
@@ -837,9 +829,8 @@ PRIVATE DREF ReSequenceIterator *DCALL
 rela_iter(ReSequence *__restrict self) {
 	DREF ReSequenceIterator *result;
 	result = DeeObject_MALLOC(ReSequenceIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	memcpy(&result->re_data, &self->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
 	Dee_Incref(result->re_data);
@@ -942,9 +933,8 @@ PRIVATE DREF ReSequenceIterator *DCALL
 resp_iter(ReSequence *__restrict self) {
 	DREF ReSequenceIterator *result;
 	result = DeeObject_MALLOC(ReSequenceIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	memcpy(&result->re_data, &self->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
 	ASSERT(result->re_args.re_datalen ? 1 : result->re_args.re_dataptr == NULL);
@@ -970,9 +960,8 @@ resp_nsi_getsize(ReSequence *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 resp_size(ReSequence *__restrict self) {
 	size_t result = resp_nsi_getsize(self);
-	if
-		unlikely(result == (size_t)-1)
-	return NULL;
+	if unlikely(result == (size_t)-1)
+		return NULL;
 	return DeeInt_NewSize(result);
 }
 
@@ -1080,9 +1069,8 @@ string_re_findall(String *__restrict self,
                   struct re_args const *__restrict args) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->re_data    = self;
 	result->re_pattern = pattern;
 	memcpy(&result->re_args, args, sizeof(struct re_args));
@@ -1099,9 +1087,8 @@ string_re_locateall(String *__restrict self,
                     struct re_args const *__restrict args) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->re_data    = self;
 	result->re_pattern = pattern;
 	memcpy(&result->re_args, args, sizeof(struct re_args));
@@ -1118,9 +1105,8 @@ string_re_split(String *__restrict self,
                 struct re_args const *__restrict args) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->re_data    = self;
 	result->re_pattern = pattern;
 	memcpy(&result->re_args, args, sizeof(struct re_args));

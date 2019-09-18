@@ -44,14 +44,12 @@ PRIVATE DREF SlabStatObject *DCALL ss_ctor(void) {
 	DREF SlabStatObject *new_result;
 	result = (DREF SlabStatObject *)DeeObject_Malloc(COMPILER_OFFSETOF(SlabStatObject, st_stat.st_slabs) +
 	                                                 Dee_SLAB_COUNT * sizeof(DeeSlabInfo));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	reqsize = DeeSlab_Stat(&result->st_stat,
 	                       COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
 	                       (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)));
-	if
-		unlikely(reqsize >
+	if unlikely(reqsize >
 		         COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
 		         (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)))
 	{
@@ -61,23 +59,20 @@ do_realloc_result:
 		new_result = (DREF SlabStatObject *)DeeObject_Realloc(result,
 		                                                      COMPILER_OFFSETOF(SlabStatObject, st_stat) +
 		                                                      reqsize);
-		if
-			unlikely(!new_result)
-		goto err_r;
+		if unlikely(!new_result)
+			goto err_r;
 		result  = new_result;
 		reqsize = DeeSlab_Stat(&result->st_stat, reqsize);
-		if
-			unlikely(reqsize > oldsize)
-		goto do_realloc_result;
+		if unlikely(reqsize > oldsize)
+			goto do_realloc_result;
 	} else if unlikely(reqsize <
 	                   COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
 	                   (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
 		new_result = (DREF SlabStatObject *)DeeObject_TryRealloc(result,
 		                                                         COMPILER_OFFSETOF(SlabStatObject, st_stat) +
 		                                                         reqsize);
-		if
-			likely(new_result)
-		result = new_result;
+		if likely(new_result)
+			result = new_result;
 	}
 	DeeObject_Init(result, &SlabStat_Type);
 done:
@@ -132,18 +127,16 @@ ss_nsi_getsize(SlabStatObject *__restrict self) {
 PRIVATE DREF SlabInfoObject *DCALL
 ss_nsi_getitem(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
-	if
-		unlikely(index >= self->st_stat.st_slabcount)
-	{
+	if unlikely(index >= self->st_stat.st_slabcount)
+		{
 		DeeError_Throwf(&DeeError_IndexError,
 		                "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
 		                index, self->st_stat.st_slabcount, Dee_TYPE(self));
 		return NULL;
 	}
 	result = DeeObject_MALLOC(SlabInfoObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_info = &self->st_stat.st_slabs[index];
 	result->si_stat = self;
 	Dee_Incref(self);
@@ -156,9 +149,8 @@ PRIVATE DREF SlabStatIteratorObject *DCALL
 ss_iter(SlabStatObject *__restrict self) {
 	DREF SlabStatIteratorObject *result;
 	result = DeeObject_MALLOC(SlabStatIteratorObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sti_stat  = self;
 	result->sti_index = 0;
 	Dee_Incref(self);
@@ -351,9 +343,8 @@ ssi_next(SlabStatIteratorObject *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 	}
 	result = DeeObject_MALLOC(SlabInfoObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_stat = self->sti_stat;
 	result->si_info = &result->si_stat->st_stat.st_slabs[index];
 	Dee_Incref(result->si_stat);

@@ -90,9 +90,8 @@ INTERN int
 			if (ast_optimize(stack, self->a_action.a_act1, result_used))
 				goto err;
 			OPTIMIZE_VERBOSE("Discarding store-to-none\n");
-			if
-				unlikely(ast_graft_onto(self, self->a_action.a_act1))
-			goto err;
+			if unlikely(ast_graft_onto(self, self->a_action.a_act1))
+				goto err;
 			goto did_optimize;
 		}
 		if (ast_optimize(stack, self->a_action.a_act1, true))
@@ -121,9 +120,8 @@ INTERN int
 				OPTIMIZE_VERBOSE("Removing store to symbol `%s' that is never "
 				                 "read from, or checking for being bound\n",
 				                 SYMBOL_NAME(target_sym));
-				if
-					unlikely(ast_graft_onto(self, self->a_action.a_act1))
-				goto err;
+				if unlikely(ast_graft_onto(self, self->a_action.a_act1))
+					goto err;
 				goto did_optimize;
 			}
 			/* Check if what's being assigned is a constant expression. */
@@ -274,9 +272,8 @@ stack_next:
 						target_sym->s_const = self->a_action.a_act1->a_constexpr;
 						Dee_Incref(target_sym->s_const);
 						/* Replace the store-branch with a  */
-						if
-							unlikely(ast_graft_onto(self, self->a_action.a_act1))
-						goto err;
+						if unlikely(ast_graft_onto(self, self->a_action.a_act1))
+							goto err;
 						goto did_optimize;
 					}
 					if (!target_sym->s_nread && target_sym->s_nbound &&
@@ -576,9 +573,8 @@ action_set_expr_result:
 				                                        self->a_action.a_act1,
 				                                        self->a_action.a_act0),
 				                            self);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				ast_decref_nokill(self->a_action.a_act1);
 				ast_decref_nokill(self->a_action.a_act0);
 				self->a_bool = temp; /* Inherit reference. */
@@ -601,9 +597,8 @@ action_set_expr_result:
 				                                        self->a_action.a_act0,
 				                                        self->a_action.a_act1),
 				                            self);
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				ast_decref_nokill(self->a_action.a_act0);
 				ast_decref_nokill(self->a_action.a_act1);
 				self->a_bool = temp; /* Inherit reference. */

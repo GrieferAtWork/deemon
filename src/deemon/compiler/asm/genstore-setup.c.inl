@@ -174,9 +174,8 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int
 				struct ast *base = self->a_operator.o_op0;
 #ifdef LEAVE
 				int32_t cid = asm_newconst(attr->a_constexpr);
-				if
-					unlikely(cid < 0)
-				goto err;
+				if unlikely(cid < 0)
+					goto err;
 #endif /* LEAVE */
 				if (base->a_type == AST_SYM) {
 					struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
@@ -233,9 +232,8 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int
 
 		case OPERATOR_GETITEM: {
 			struct ast *index;
-			if
-				unlikely((index = self->a_operator.o_op1) == NULL)
-			break;
+			if unlikely((index = self->a_operator.o_op1) == NULL)
+				break;
 #ifdef ENTER
 			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;
@@ -263,9 +261,8 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int
 				if (asm_allowconst(index->a_constexpr)) {
 #ifdef LEAVE
 					int_index = asm_newconst(index->a_constexpr);
-					if
-						unlikely(int_index < 0)
-					goto err;
+					if unlikely(int_index < 0)
+						goto err;
 					if (asm_putddi(self))
 						goto err;
 					if (PUSH_RESULT) {
@@ -301,9 +298,8 @@ INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int
 		case OPERATOR_GETRANGE: {
 			struct ast *begin, *end;
 			int32_t index;
-			if
-				unlikely(!self->a_operator.o_op2)
-			break;
+			if unlikely(!self->a_operator.o_op2)
+				break;
 #ifdef ENTER
 			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;

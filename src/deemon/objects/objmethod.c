@@ -51,9 +51,8 @@ DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self) {
 	DREF DeeObjMethodObject *result;
 	ASSERT_OBJECT(self);
 	result = DeeObject_MALLOC(DeeObjMethodObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeObjMethod_Type);
 	result->om_func = func;
 	result->om_this = self;
@@ -67,9 +66,8 @@ DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self) {
 	DREF DeeKwObjMethodObject *result;
 	ASSERT_OBJECT(self);
 	result = DeeObject_MALLOC(DeeKwObjMethodObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeKwObjMethod_Type);
 	result->om_func = func;
 	result->om_this = self;
@@ -294,9 +292,8 @@ PRIVATE DREF DeeObject *DCALL
 objmethod_get_name(DeeObjMethodObject *__restrict self) {
 	char const *name;
 	name = DeeObjMethod_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	return_none;
+	if unlikely(!name)
+		return_none;
 	return DeeString_NewAuto(name);
 }
 
@@ -304,9 +301,8 @@ PRIVATE DREF DeeObject *DCALL
 objmethod_get_doc(DeeObjMethodObject *__restrict self) {
 	char const *doc;
 	doc = DeeObjMethod_GetDoc((DeeObject *)self);
-	if
-		unlikely(!doc)
-	return_none;
+	if unlikely(!doc)
+		return_none;
 	return DeeString_NewAuto(doc);
 }
 
@@ -380,9 +376,8 @@ PRIVATE DREF DeeObject *DCALL
 objmethod_str(DeeObjMethodObject *__restrict self) {
 	char const *name    = DeeObjMethod_GetName((DeeObject *)self);
 	DeeTypeObject *type = DeeObjMethod_GetType((DeeObject *)self);
-	if
-		unlikely(!name)
-	name = "<unknown>";
+	if unlikely(!name)
+		name = "<unknown>";
 	if (!type)
 		return DeeString_Newf("<object method <unknown>.%s, bound to %r>", name, self->om_this);
 	return DeeString_Newf("<object method %k.%s, bound to %r>", type, name, self->om_this);
@@ -392,9 +387,8 @@ PRIVATE DREF DeeObject *DCALL
 objmethod_repr(DeeObjMethodObject *__restrict self) {
 	char const *name;
 	name = DeeObjMethod_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	name = "?";
+	if unlikely(!name)
+		name = "?";
 	return DeeString_Newf("%r.%s", self->om_this, name);
 }
 
@@ -600,9 +594,8 @@ PRIVATE DREF DocKwds *DCALL
 dockwdsiter_getseq(DocKwdsIterator *__restrict self) {
 	DREF DocKwds *result;
 	result = DeeObject_MALLOC(DocKwds);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->dk_start = self->dk_start;
 	DeeObject_Init(result, &DocKwds_Type);
 done:
@@ -674,9 +667,8 @@ PRIVATE DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
 	DREF DocKwdsIterator *result;
 	result = DeeObject_MALLOC(DocKwdsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	ASSERT(self->dk_start);
 	ASSERT(self->dk_start[0] == '(');
 	result->dk_start = self->dk_start;
@@ -759,9 +751,8 @@ doc_decode_kwds(char const *doc) {
 	if (doc[0] != '(')
 		goto no_kwds;
 	result = DeeObject_MALLOC(DocKwds);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->dk_start = doc;
 	DeeObject_Init(result, &DocKwds_Type);
 done:
@@ -895,9 +886,8 @@ DeeClsMethod_New(DeeTypeObject *__restrict type,
 	DeeClsMethodObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeClsMethodObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeClsMethod_Type);
 	result->cm_type = type;
 	result->cm_func = func;
@@ -912,9 +902,8 @@ DeeKwClsMethod_New(DeeTypeObject *__restrict type,
 	DeeKwClsMethodObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeKwClsMethodObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeKwClsMethod_Type);
 	result->cm_type = type;
 	result->cm_func = func;
@@ -966,9 +955,8 @@ PRIVATE DREF DeeObject *DCALL
 clsmethod_str(DeeClsMethodObject *__restrict self) {
 	char const *name;
 	name = DeeClsMethod_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	name = "<unknown>";
+	if unlikely(!name)
+		name = "<unknown>";
 	return DeeString_Newf("<class method %r.%s>", self->cm_type, name);
 }
 
@@ -976,9 +964,8 @@ PRIVATE DREF DeeObject *DCALL
 clsmethod_repr(DeeClsMethodObject *__restrict self) {
 	char const *name;
 	name = DeeClsMethod_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	name = "?";
+	if unlikely(!name)
+		name = "?";
 	return DeeString_Newf("%r.%s", self->cm_type, name);
 }
 
@@ -1049,9 +1036,8 @@ PRIVATE DREF DeeObject *DCALL
 clsmethod_get_name(DeeClsMethodObject *__restrict self) {
 	char const *name;
 	name = DeeClsMethod_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	return_none;
+	if unlikely(!name)
+		return_none;
 	return DeeString_NewAuto(name);
 }
 
@@ -1290,9 +1276,8 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
 	DeeClsPropertyObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeClsPropertyObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeClsProperty_Type);
 	result->cp_type = type;
 	Dee_Incref(type);
@@ -1399,9 +1384,8 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
 	    (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
 	     DeeObject_AssertType(thisarg, self->cp_type)))
 		return NULL;
-	if
-		unlikely((*self->cp_del)(thisarg))
-	return NULL;
+	if unlikely((*self->cp_del)(thisarg))
+		return NULL;
 	return_none;
 }
 
@@ -1421,9 +1405,8 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 	    (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
 	     DeeObject_AssertType(thisarg, self->cp_type)))
 		return NULL;
-	if
-		unlikely((*self->cp_set)(thisarg, value))
-	return NULL;
+	if unlikely((*self->cp_set)(thisarg, value))
+		return NULL;
 	return_none;
 }
 
@@ -1457,9 +1440,8 @@ PRIVATE DREF DeeObject *DCALL
 clsproperty_str(DeeClsPropertyObject *__restrict self) {
 	char const *name;
 	name = DeeClsProperty_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	name = "<unknown>";
+	if unlikely(!name)
+		name = "<unknown>";
 	return DeeString_Newf("<class property %r.%s (%c%c%c)>",
 	                      self->cp_type, name,
 	                      self->cp_get ? 'G' : '-',
@@ -1471,9 +1453,8 @@ PRIVATE DREF DeeObject *DCALL
 clsproperty_repr(DeeClsPropertyObject *__restrict self) {
 	char const *name;
 	name = DeeClsProperty_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	name = "?";
+	if unlikely(!name)
+		name = "?";
 	return DeeString_Newf("%r.%s", self->cp_type, name);
 }
 
@@ -1481,9 +1462,8 @@ PRIVATE DREF DeeObject *DCALL
 clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
 	char const *name;
 	name = DeeClsProperty_GetName((DeeObject *)self);
-	if
-		unlikely(!name)
-	return_none;
+	if unlikely(!name)
+		return_none;
 	return DeeString_NewAuto(name);
 }
 
@@ -1500,9 +1480,8 @@ PRIVATE DREF DeeObject *DCALL
 clsproperty_get_module(DeeClsPropertyObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self->cp_type);
-	if
-		unlikely(!result)
-	return_none;
+	if unlikely(!result)
+		return_none;
 	return result;
 }
 
@@ -1615,9 +1594,8 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
 	DREF DeeClsMemberObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeClsMemberObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeClsMember_Type);
 	result->cm_memb = *desc;
 	result->cm_type = type;
@@ -2300,8 +2278,7 @@ DeeCMethod_CallFunc_d(dcmethod_t fun, size_t argc, DeeObject **__restrict argv) 
 	DeeThreadObject *caller = DeeThread_Self();
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(argc, argv);
-	if
-		unlikely(result ? old_depth != caller->t_exceptsz
+	if unlikely(result ? old_depth != caller->t_exceptsz
 		                : old_depth + 1 != caller->t_exceptsz)
 	fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;
@@ -2314,8 +2291,7 @@ DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *__restrict self,
 	DeeThreadObject *caller = DeeThread_Self();
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(self, argc, argv);
-	if
-		unlikely(result ? old_depth != caller->t_exceptsz
+	if unlikely(result ? old_depth != caller->t_exceptsz
 		                : old_depth + 1 != caller->t_exceptsz)
 	fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;
@@ -2328,8 +2304,7 @@ DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc,
 	DeeThreadObject *caller = DeeThread_Self();
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(argc, argv, kw);
-	if
-		unlikely(result ? old_depth != caller->t_exceptsz
+	if unlikely(result ? old_depth != caller->t_exceptsz
 		                : old_depth + 1 != caller->t_exceptsz)
 	fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;
@@ -2342,8 +2317,7 @@ DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *__restrict self,
 	DeeThreadObject *caller = DeeThread_Self();
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(self, argc, argv, kw);
-	if
-		unlikely(result ? old_depth != caller->t_exceptsz
+	if unlikely(result ? old_depth != caller->t_exceptsz
 		                : old_depth + 1 != caller->t_exceptsz)
 	fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;

@@ -63,9 +63,8 @@ INTDEF DeeTypeObject SeqLocatorIterator_Type;
 PRIVATE int DCALL
 locatoriter_ctor(LocatorIterator *__restrict self) {
 	self->li_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	if
-		unlikely(!self->li_iter)
-	goto err;
+	if unlikely(!self->li_iter)
+		goto err;
 	self->li_elem = Dee_None;
 	self->li_pred = NULL;
 	Dee_Incref(Dee_None);
@@ -78,9 +77,8 @@ PRIVATE int DCALL
 locatoriter_copy(LocatorIterator *__restrict self,
                  LocatorIterator *__restrict other) {
 	self->li_iter = DeeObject_Copy(other->li_iter);
-	if
-		unlikely(!self->li_iter)
-	goto err;
+	if unlikely(!self->li_iter)
+		goto err;
 	self->li_elem = other->li_elem;
 	self->li_pred = other->li_pred;
 	Dee_Incref(self->li_elem);
@@ -94,19 +92,16 @@ PRIVATE int DCALL
 locatoriter_deep(LocatorIterator *__restrict self,
                  LocatorIterator *__restrict other) {
 	self->li_iter = DeeObject_DeepCopy(other->li_iter);
-	if
-		unlikely(!self->li_iter)
-	goto err;
+	if unlikely(!self->li_iter)
+		goto err;
 	self->li_elem = DeeObject_DeepCopy(other->li_elem);
-	if
-		unlikely(!self->li_elem)
-	goto err_iter;
+	if unlikely(!self->li_elem)
+		goto err_iter;
 	self->li_pred = NULL;
 	if (other->li_pred) {
 		self->li_pred = DeeObject_DeepCopy(other->li_pred);
-		if
-			unlikely(!self->li_pred)
-		goto err_elem;
+		if unlikely(!self->li_pred)
+			goto err_elem;
 	}
 	return 0;
 err_elem:
@@ -126,9 +121,8 @@ locatoriter_init(LocatorIterator *__restrict self,
 	if (DeeObject_AssertTypeExact((DeeObject *)loc, &SeqLocator_Type))
 		goto err;
 	self->li_iter = DeeObject_IterSelf(loc->l_seq);
-	if
-		unlikely(!self->li_iter)
-	goto err;
+	if unlikely(!self->li_iter)
+		goto err;
 	self->li_elem = loc->l_elem;
 	self->li_pred = loc->l_pred;
 	Dee_Incref(self->li_elem);
@@ -162,9 +156,8 @@ locatoriter_next(LocatorIterator *__restrict self) {
 			break;
 		temp = DeeObject_CompareKeyEq(self->li_elem, result, self->li_pred);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			goto err_r;
+			if unlikely(temp < 0)
+				goto err_r;
 			break; /* Found it */
 		}
 		Dee_Decref(result);
@@ -215,9 +208,8 @@ locatoriter_seq_get(LocatorIterator *__restrict self) {
 	DREF DeeObject *inner_seq, *result;
 	/* Forward access to this attribute to the pointed-to iterator. */
 	inner_seq = DeeObject_GetAttr(self->li_iter, &str_seq);
-	if
-		unlikely(!inner_seq)
-	return NULL;
+	if unlikely(!inner_seq)
+		return NULL;
 	result = DeeSeq_LocateAll(inner_seq, self->li_elem, self->li_pred);
 	Dee_Decref(inner_seq);
 	return result;
@@ -310,19 +302,16 @@ PRIVATE int DCALL
 locator_deep(Locator *__restrict self,
              Locator *__restrict other) {
 	self->l_seq = DeeObject_DeepCopy(other->l_seq);
-	if
-		unlikely(!self->l_seq)
-	goto err;
+	if unlikely(!self->l_seq)
+		goto err;
 	self->l_elem = DeeObject_DeepCopy(other->l_elem);
-	if
-		unlikely(!self->l_elem)
-	goto err_seq;
+	if unlikely(!self->l_elem)
+		goto err_seq;
 	self->l_pred = NULL;
 	if (other->l_pred) {
 		self->l_pred = DeeObject_DeepCopy(other->l_pred);
-		if
-			unlikely(!self->l_pred)
-		goto err_elem;
+		if unlikely(!self->l_pred)
+			goto err_elem;
 	}
 	return 0;
 err_elem:
@@ -341,9 +330,8 @@ locator_init(Locator *__restrict self,
 		goto err;
 	if (self->l_pred) {
 		self->l_elem = DeeObject_Call(self->l_pred, 1, &self->l_elem);
-		if
-			unlikely(!self->l_elem)
-		goto err;
+		if unlikely(!self->l_elem)
+			goto err;
 		Dee_Incref(self->l_pred);
 	} else {
 		Dee_Incref(self->l_elem);
@@ -372,14 +360,12 @@ PRIVATE DREF DeeObject *DCALL
 locator_iter(Locator *__restrict self) {
 	DREF LocatorIterator *result;
 	result = DeeObject_MALLOC(LocatorIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Create the underlying iterator. */
 	result->li_iter = DeeObject_IterSelf(self->l_seq);
-	if
-		unlikely(!result->li_iter)
-	goto err_r;
+	if unlikely(!result->li_iter)
+		goto err_r;
 	/* Assign the locator element & key function. */
 	result->li_elem = self->l_elem;
 	Dee_Incref(self->l_elem);
@@ -472,9 +458,8 @@ DeeSeq_LocateAll(DeeObject *__restrict self,
 	DREF Locator *result;
 	/* Create a new locator sequence. */
 	result = DeeObject_MALLOC(Locator);
-	if
-		unlikely(!result)
-	return NULL;
+	if unlikely(!result)
+		return NULL;
 	result->l_seq  = self;
 	result->l_elem = keyed_search_item;
 	result->l_pred = key;

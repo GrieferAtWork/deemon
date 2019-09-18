@@ -633,9 +633,8 @@ invoke_operator(DeeObject *__restrict self,
 		if (DeeArg_Unpack(argc, argv, ":__bool__"))
 			goto err;
 		result = DeeObject_Bool(self);
-		if
-			unlikely(result < 0)
-		goto err;
+		if unlikely(result < 0)
+			goto err;
 		return_bool_(result);
 	}
 
@@ -752,9 +751,8 @@ invoke_operator(DeeObject *__restrict self,
 		return DeeObject_Pow(self, other);
 
 	case OPERATOR_INC:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, ":__inc__"))
 			goto err;
 		if (DeeObject_Inc(pself))
@@ -762,9 +760,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_DEC:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, ":__dec__"))
 			goto err;
 		if (DeeObject_Dec(pself))
@@ -772,9 +769,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_ADD:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__iadd__", &other))
 			goto err;
 		if (DeeObject_InplaceAdd(pself, other))
@@ -782,9 +778,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_SUB:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__isub__", &other))
 			goto err;
 		if (DeeObject_InplaceSub(pself, other))
@@ -792,9 +787,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_MUL:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__imul__", &other))
 			goto err;
 		if (DeeObject_InplaceMul(pself, other))
@@ -802,9 +796,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_DIV:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__idiv__", &other))
 			goto err;
 		if (DeeObject_InplaceDiv(pself, other))
@@ -812,9 +805,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_MOD:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__imod__", &other))
 			goto err;
 		if (DeeObject_InplaceMod(pself, other))
@@ -822,9 +814,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_SHL:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ishl__", &other))
 			goto err;
 		if (DeeObject_InplaceShl(pself, other))
@@ -832,9 +823,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_SHR:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ishr__", &other))
 			goto err;
 		if (DeeObject_InplaceShr(pself, other))
@@ -842,9 +832,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_AND:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__iand__", &other))
 			goto err;
 		if (DeeObject_InplaceAnd(pself, other))
@@ -852,9 +841,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_OR:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ior__", &other))
 			goto err;
 		if (DeeObject_InplaceOr(pself, other))
@@ -862,9 +850,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_XOR:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ixor__", &other))
 			goto err;
 		if (DeeObject_InplaceXor(pself, other))
@@ -872,9 +859,8 @@ invoke_operator(DeeObject *__restrict self,
 		goto return_self;
 
 	case OPERATOR_INPLACE_POW:
-		if
-			unlikely(!pself)
-		goto requires_inplace;
+		if unlikely(!pself)
+			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ipow__", &other))
 			goto err;
 		if (DeeObject_InplacePow(pself, other))

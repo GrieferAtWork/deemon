@@ -45,9 +45,8 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 	new_mask = (self->st_fmsk << 1) | 1;
 	result = (DREF DeeStructTypeObject *)DeeGCObject_Malloc(offsetof(DeeStructTypeObject, st_fvec) +
 	                                                        (new_mask + 1) * sizeof(struct struct_field));
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->st_fmsk = new_mask;
 	memcpy(&result->st_base, &self->st_base, sizeof(DeeSTypeObject));
 	for (i = 0; i <= self->st_fmsk; ++i) {
@@ -78,9 +77,8 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 	size_t i, min_align = 1, instance_size = 0;
 	result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject, st_fvec) +
 	                                                        (2 * sizeof(struct struct_field)));
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->st_fmsk = 1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		int temp;
@@ -89,18 +87,16 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 			/* Must allocate more fields. */
 			DREF DeeStructTypeObject *new_result;
 			new_result = struct_type_rehash(result);
-			if
-				unlikely(!new_result)
-			goto err_r;
+			if unlikely(!new_result)
+				goto err_r;
 			DeeGCObject_Free(result);
 			result = new_result;
 		}
 		ASSERT(field_count < result->st_fmsk);
 		temp = DeeObject_Unpack(elem, 2, field_name_and_type);
 		Dee_Decref(elem);
-		if
-			unlikely(temp)
-		goto err_r;
+		if unlikely(temp)
+			goto err_r;
 		/* Validate that this is a string/struct_type-pair. */
 		if (DeeObject_AssertTypeExact(field_name_and_type[0], &DeeString_Type) ||
 		    DeeObject_AssertType(field_name_and_type[1], &DeeSType_Type)) {
@@ -135,9 +131,8 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 			field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
 			field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
 			Dee_Decref(field_name_and_type[1]);
-			if
-				unlikely(!field->sf_type)
-			{
+			if unlikely(!field->sf_type)
+				{
 				Dee_Decref(field_name_and_type[0]);
 				field->sf_name = NULL;
 				goto err_r;
@@ -148,9 +143,8 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 		if (DeeThread_CheckInterrupt())
 			goto err_r;
 	}
-	if
-		unlikely(!elem)
-	goto err_r;
+	if unlikely(!elem)
+		goto err_r;
 	/* Fill in size & alignment info. */
 	result->st_base.st_align                                  = min_align;
 	result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = (sizeof(DeeObject) + instance_size);
@@ -183,9 +177,8 @@ DeeStructType_FromSequence(DeeObject *name,
 			result_mask = (result_mask << 1) | 1;
 		result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject, st_fvec) +
 		                                                        (result_mask + 1) * sizeof(struct struct_field));
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		result->st_fmsk = result_mask;
 		for (i = 0; i < field_count; ++i) {
 			DREF DeeObject *elem;
@@ -193,14 +186,12 @@ DeeStructType_FromSequence(DeeObject *name,
 			int temp;
 			dhash_t j, perturb, hash;
 			elem = DeeFastSeq_GetItem(fields, i);
-			if
-				unlikely(!elem)
-			goto err_r;
+			if unlikely(!elem)
+				goto err_r;
 			temp = DeeObject_Unpack(elem, 2, field_name_and_type);
 			Dee_Decref(elem);
-			if
-				unlikely(temp)
-			goto err_r;
+			if unlikely(temp)
+				goto err_r;
 			/* Validate that this is a string/struct_type-pair. */
 			if (DeeObject_AssertTypeExact(field_name_and_type[0], &DeeString_Type) ||
 			    DeeObject_AssertType(field_name_and_type[1], &DeeSType_Type)) {
@@ -235,9 +226,8 @@ DeeStructType_FromSequence(DeeObject *name,
 				field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
 				field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
 				Dee_Decref(field_name_and_type[1]);
-				if
-					unlikely(!field->sf_type)
-				{
+				if unlikely(!field->sf_type)
+					{
 					Dee_Decref(field_name_and_type[0]);
 					field->sf_name = NULL;
 					goto err_r;
@@ -251,14 +241,12 @@ DeeStructType_FromSequence(DeeObject *name,
 	} else {
 		/* Use iterators to construct the struct-type. */
 		fields = DeeObject_IterSelf(fields);
-		if
-			unlikely(!fields)
-		return NULL;
+		if unlikely(!fields)
+			return NULL;
 		result = struct_type_alloc_iterator(fields, flags);
 		Dee_Decref(fields);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 	}
 	/* Fill in remaining fields and start tracking the new struct type. */
 	Dee_Incref((DeeObject *)&DeeStruct_Type);
@@ -343,9 +331,8 @@ struct_type_offsetof(DeeStructTypeObject *__restrict self,
 	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(self, i);
-		if
-			unlikely(!field->sf_name)
-		break;
+		if unlikely(!field->sf_name)
+			break;
 		if (field->sf_hash != hash)
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
@@ -378,9 +365,8 @@ struct_type_offsetafter(DeeStructTypeObject *__restrict self,
 	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(self, i);
-		if
-			unlikely(!field->sf_name)
-		break;
+		if unlikely(!field->sf_name)
+			break;
 		if (field->sf_hash != hash)
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
@@ -413,9 +399,8 @@ struct_type_typeof(DeeStructTypeObject *__restrict self,
 	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(self, i);
-		if
-			unlikely(!field->sf_name)
-		break;
+		if unlikely(!field->sf_name)
+			break;
 		if (field->sf_hash != hash)
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
@@ -539,9 +524,8 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
 			continue;
 		/* Found it! (return an l-value to the field in question) */
 		result = DeeObject_MALLOC(struct lvalue_object);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		DeeObject_Init(result, (DeeTypeObject *)field->sf_type);
 		result->l_ptr.uint = (uintptr_t)self + field->sf_offset;
 		return result;
@@ -634,9 +618,8 @@ struct_enumattr(DeeStructTypeObject *__restrict self, denum_t proc, void *arg) {
 		               ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET,
 		               (DeeTypeObject *)self->st_fvec[i].sf_type,
 		               arg);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	return result;
@@ -658,9 +641,8 @@ struct_setpair(DeeStructTypeObject *__restrict tp_self,
                void *self, DeeObject *__restrict pair) {
 	DREF DeeObject *key_and_value[2];
 	int result;
-	if
-		unlikely(DeeObject_Unpack(pair, 2, key_and_value))
-	goto err;
+	if unlikely(DeeObject_Unpack(pair, 2, key_and_value))
+		goto err;
 	result = struct_setattr(tp_self, self,
 	                        key_and_value[0],
 	                        key_and_value[1]);
@@ -734,36 +716,31 @@ struct_assign(DeeStructTypeObject *__restrict tp_self,
 		for (i = 0; i < fast_size; ++i) {
 			int temp;
 			elem = DeeFastSeq_GetItem(value, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			temp = struct_setpair(tp_self, self, elem);
 			Dee_Decref(elem);
-			if
-				unlikely(temp)
-			goto err;
+			if unlikely(temp)
+				goto err;
 		}
 		return 0;
 	}
 
 	/* Use iterators. */
 	value = DeeObject_IterSelf(value);
-	if
-		unlikely(!value)
-	goto err;
+	if unlikely(!value)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(value))) {
 		int temp;
 		temp = struct_setpair(tp_self, self, elem);
 		Dee_Decref(elem);
-		if
-			unlikely(temp)
-		goto err_value;
+		if unlikely(temp)
+			goto err_value;
 		if (DeeThread_CheckInterrupt())
 			goto err_value;
 	}
-	if
-		unlikely(!elem)
-	goto err_value;
+	if unlikely(!elem)
+		goto err_value;
 	Dee_Decref(value);
 	return 0;
 err_value:

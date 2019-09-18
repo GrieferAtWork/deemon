@@ -44,9 +44,8 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 		result = FUNC(BraceItems)(self);
 		if (ISERR(result))
 			goto err;
-		if
-			likely(self->jl_tok == '}')
-		{
+		if likely(self->jl_tok == '}')
+			{
 			JITLexer_Yield(self);
 		} else {
 err_rbrace_missing:
@@ -84,9 +83,8 @@ parse_remainder_after_comma_popscope:
 				result = CALL_SECONDARY(CommaListOperand, result);
 				if (ISERR(result))
 					goto err;
-				if
-					likely(self->jl_tok == '}')
-				{
+				if likely(self->jl_tok == '}')
+					{
 					JITLexer_Yield(self);
 				} else {
 					goto err_rbrace_missing;
@@ -95,9 +93,8 @@ parse_remainder_after_comma_popscope:
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
-			if
-				likely(self->jl_tok == '}')
-			{
+			if likely(self->jl_tok == '}')
+				{
 parse_remainder_before_rbrace_popscope_wrap:
 				JITLexer_Yield(self);
 			} else {
@@ -108,9 +105,8 @@ parse_remainder_before_rbrace_popscope_wrap:
 			{
 				DREF DeeObject *result_list;
 				result_list = DeeList_NewVectorInherited(1, (DeeObject *const *)&result);
-				if
-					unlikely(!result_list)
-				goto err_r;
+				if unlikely(!result_list)
+					goto err_r;
 				result = result_list;
 			}
 #endif /* JIT_EVAL */
@@ -330,9 +326,8 @@ is_a_statement:
 		                     AST_COMMA_ALLOWTYPEDECL |
 		                     AST_COMMA_PARSESEMI,
 		                     IF_EVAL(NULL, ) & comma_mode);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 #ifdef JIT_EVAL
 		if (old_tab == JITContext_GetROLocals(self->jl_context))
 #endif /* JIT_EVAL */
@@ -342,9 +337,8 @@ is_a_statement:
 				if (comma_mode & AST_COMMA_OUT_FMULTIPLE) {
 					DREF DeeObject *seq;
 					seq = DeeList_NewVectorInherited(1, (DeeObject *const *)&result);
-					if
-						unlikely(!seq)
-					goto err_r;
+					if unlikely(!seq)
+						goto err_r;
 					result = seq;
 				}
 #endif /* JIT_EVAL */
@@ -368,9 +362,8 @@ parse_remainder_after_colon_popscope:
 				result = CALL_SECONDARY(CommaDictOperand, result);
 				if (ISERR(result))
 					goto err;
-				if
-					unlikely(self->jl_tok != '}')
-				goto err_rbrace_missing;
+				if unlikely(self->jl_tok != '}')
+					goto err_rbrace_missing;
 				JITLexer_Yield(self);
 				if (pwas_expression)
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
@@ -380,9 +373,8 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
-			if
-				likely(self->jl_tok == ';')
-			{
+			if likely(self->jl_tok == ';')
+				{
 				JITLexer_Yield(self);
 			} else {
 				syn_expr_expected_semi_after_expr(self);

@@ -63,9 +63,8 @@ blvi_deep(BlackListVarkwdsIterator *__restrict self,
 	self->ki_iter = BLVI_GETITER(other);
 	self->ki_end  = other->ki_end;
 	self->ki_map  = (DREF BlackListVarkwds *)DeeObject_DeepCopy((DeeObject *)other->ki_map);
-	if
-		unlikely(!self->ki_map)
-	goto err;
+	if unlikely(!self->ki_map)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -120,9 +119,8 @@ blvi_next(BlackListVarkwdsIterator *__restrict self) {
 	if (!ent)
 		return ITER_DONE;
 	rwlock_read(&self->ki_map->vk_lock);
-	if
-		unlikely(!self->ki_map->vk_argv)
-	{
+	if unlikely(!self->ki_map->vk_argv)
+		{
 		rwlock_endread(&self->ki_map->vk_lock);
 		return ITER_DONE;
 	}
@@ -151,9 +149,8 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 	if (!ent)
 		return ITER_DONE;
 	rwlock_read(&self->ki_map->vk_lock);
-	if
-		unlikely(!self->ki_map->vk_argv)
-	{
+	if unlikely(!self->ki_map->vk_argv)
+		{
 		rwlock_endread(&self->ki_map->vk_lock);
 		return ITER_DONE;
 	}
@@ -523,16 +520,13 @@ BlackListVarkwds_GetItem(BlackListVarkwds *__restrict self,
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name);
-	if
-		unlikely(index == (size_t)-1)
-	goto missing;
-	if
-		unlikely(BlackListVarkwds_IsBlackListed(self, name))
-	goto missing;
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(BlackListVarkwds_IsBlackListed(self, name))
+		goto missing;
 	rwlock_read(&self->vk_lock);
-	if
-		unlikely(!self->vk_argv)
-	{
+	if unlikely(!self->vk_argv)
+		{
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -551,16 +545,13 @@ BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self,
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStr(self->vk_kwds, name, hash);
-	if
-		unlikely(index == (size_t)-1)
-	goto missing;
-	if
-		unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
-	goto missing;
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
+		goto missing;
 	rwlock_read(&self->vk_lock);
-	if
-		unlikely(!self->vk_argv)
-	{
+	if unlikely(!self->vk_argv)
+		{
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -580,16 +571,13 @@ BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self,
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStrLen(self->vk_kwds, name, namesize, hash);
-	if
-		unlikely(index == (size_t)-1)
-	goto missing;
-	if
-		unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
-	goto missing;
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
+		goto missing;
 	rwlock_read(&self->vk_lock);
-	if
-		unlikely(!self->vk_argv)
-	{
+	if unlikely(!self->vk_argv)
+		{
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -609,16 +597,13 @@ BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self,
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name);
-	if
-		unlikely(index == (size_t)-1)
-	goto missing;
-	if
-		unlikely(BlackListVarkwds_IsBlackListed(self, name))
-	goto missing;
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(BlackListVarkwds_IsBlackListed(self, name))
+		goto missing;
 	rwlock_read(&self->vk_lock);
-	if
-		unlikely(!self->vk_argv)
-	{
+	if unlikely(!self->vk_argv)
+		{
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -639,16 +624,13 @@ BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self,
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStr(self->vk_kwds, name, hash);
-	if
-		unlikely(index == (size_t)-1)
-	goto missing;
-	if
-		unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
-	goto missing;
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
+		goto missing;
 	rwlock_read(&self->vk_lock);
-	if
-		unlikely(!self->vk_argv)
-	{
+	if unlikely(!self->vk_argv)
+		{
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -670,16 +652,13 @@ BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self,
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStrLen(self->vk_kwds, name, namesize, hash);
-	if
-		unlikely(index == (size_t)-1)
-	goto missing;
-	if
-		unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
-	goto missing;
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
+		goto missing;
 	rwlock_read(&self->vk_lock);
-	if
-		unlikely(!self->vk_argv)
-	{
+	if unlikely(!self->vk_argv)
+		{
 		rwlock_endread(&self->vk_lock);
 		goto missing;
 	}
@@ -759,9 +738,8 @@ PRIVATE DREF BlackListVarkwdsIterator *DCALL
 blv_iter(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwdsIterator *result;
 	result = DeeObject_MALLOC(BlackListVarkwdsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ki_iter = self->vk_kwds->kw_map;
 	result->ki_end  = result->ki_iter + self->vk_kwds->kw_mask + 1;
 	result->ki_map  = self;
@@ -786,9 +764,8 @@ blv_contains(BlackListVarkwds *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 blv_getitem(BlackListVarkwds *__restrict self,
             DeeObject *__restrict key) {
-	if
-		unlikely(!DeeString_Check(key))
-	{
+	if unlikely(!DeeString_Check(key))
+		{
 		err_unknown_key((DeeObject *)self, key);
 		return NULL;
 	}
@@ -799,9 +776,8 @@ PRIVATE DREF DeeObject *DCALL
 blv_getdefault(BlackListVarkwds *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict def) {
-	if
-		unlikely(!DeeString_Check(key))
-	{
+	if unlikely(!DeeString_Check(key))
+		{
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
@@ -847,15 +823,13 @@ blv_copy(BlackListVarkwds *__restrict self) {
 	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, vk_blck) +
 	                                                   (self->vk_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	count           = self->vk_kwds->kw_size;
 	result->vk_argv = (DREF DeeObject **)Dee_Malloc(count *
 	                                                sizeof(DREF DeeObject *));
-	if
-		unlikely(!result->vk_argv)
-	goto err_r;
+	if unlikely(!result->vk_argv)
+		goto err_r;
 	rwlock_read(&self->vk_lock);
 	for (i = 0; i < count; ++i) {
 		result->vk_argv[i] = self->vk_argv[i];
@@ -889,15 +863,13 @@ blv_deep(BlackListVarkwds *__restrict self) {
 	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, vk_blck) +
 	                                                   (self->vk_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	count           = self->vk_kwds->kw_size;
 	result->vk_argv = (DREF DeeObject **)Dee_Malloc(count *
 	                                                sizeof(DREF DeeObject *));
-	if
-		unlikely(!result->vk_argv)
-	goto err_r;
+	if unlikely(!result->vk_argv)
+		goto err_r;
 	rwlock_read(&self->vk_lock);
 	for (i = 0; i < count; ++i) {
 		result->vk_argv[i] = self->vk_argv[i];
@@ -993,9 +965,8 @@ BlackListVarkwds_New(struct code_object *__restrict code,
                      DeeObject **__restrict argv) {
 	DREF BlackListVarkwds *result;
 	size_t argc, mask;
-	if
-		unlikely(!DeeKwds_SIZE(kwds))
-	{
+	if unlikely(!DeeKwds_SIZE(kwds))
+		{
 		/* No keywords --> Return an empty mapping.
 		 * -> This can happen depending on how keyword arguments
 		 *    have been routed throughout the runtime. */
@@ -1015,9 +986,8 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 		;
 	result = (DREF BlackListVarkwds *)DeeObject_Calloc(offsetof(BlackListVarkwds, vk_blck) +
 	                                                   (mask + 1) * sizeof(BlackListVarkwdsEntry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	rwlock_cinit(&result->vk_lock);
 	result->vk_code = code; /* Weakly referenced. */
 	result->vk_ckwc = argc - positional_argc;
@@ -1053,9 +1023,8 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 	/* Must transform the object such that it can continue to exist without causing problems. */
 	kwdc = DeeKwds_SIZE(me->vk_kwds);
 	argv = (DREF DeeObject **)Dee_TryMalloc(kwdc * sizeof(DREF DeeObject *));
-	if
-		likely(argv)
-	{
+	if likely(argv)
+		{
 		size_t i;
 		/* Initialize the argument vector copy. */
 		MEMCPY_PTR(argv, me->vk_argv, kwdc);
@@ -1109,9 +1078,8 @@ PRIVATE int DCALL
 blmi_copy(BlackListMappingIterator *__restrict self,
           BlackListMappingIterator *__restrict other) {
 	self->mi_iter = DeeObject_Copy(other->mi_iter);
-	if
-		unlikely(!self->mi_iter)
-	goto err;
+	if unlikely(!self->mi_iter)
+		goto err;
 	self->mi_map = other->mi_map;
 	Dee_Incref(self->mi_map);
 	return 0;
@@ -1139,9 +1107,8 @@ again:
 	result = DeeObject_IterNext(self->mi_iter);
 	if (!ITER_ISOK(result))
 		goto done;
-	if
-		unlikely(DeeObject_Unpack(result, 2, pair))
-	goto err_r;
+	if unlikely(DeeObject_Unpack(result, 2, pair))
+		goto err_r;
 	Dee_Decref(pair[1]);
 	if (DeeString_Check(pair[0]) &&
 	    BlackListMapping_IsBlackListed(self->mi_map, pair[0])) {
@@ -1165,9 +1132,8 @@ again:
 	result = DeeObject_IterNext(self->mi_iter);
 	if (!ITER_ISOK(result))
 		goto done_r;
-	if
-		unlikely(DeeObject_Unpack(result, 2, pair))
-	goto err_r;
+	if unlikely(DeeObject_Unpack(result, 2, pair))
+		goto err_r;
 	Dee_Decref(pair[1]);
 	if (DeeString_Check(pair[0]) &&
 	    BlackListMapping_IsBlackListed(self->mi_map, pair[0])) {
@@ -1192,9 +1158,8 @@ again:
 	result = DeeObject_IterNext(self->mi_iter);
 	if (!ITER_ISOK(result))
 		goto done_r;
-	if
-		unlikely(DeeObject_Unpack(result, 2, pair))
-	goto err_r;
+	if unlikely(DeeObject_Unpack(result, 2, pair))
+		goto err_r;
 	if (DeeString_Check(pair[0]) &&
 	    BlackListMapping_IsBlackListed(self->mi_map, pair[0])) {
 		Dee_Decref(pair[1]);
@@ -1598,16 +1563,14 @@ PRIVATE int DCALL
 blm_bool(BlackListMapping *__restrict self) {
 	DREF DeeObject *vals[2], *elem, *iter;
 	iter = DeeObject_IterSelf(self->bm_kw);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		int error;
 		error = DeeObject_Unpack(elem, 2, vals);
 		Dee_Decref(elem);
-		if
-			unlikely(error)
-		goto err_iter;
+		if unlikely(error)
+			goto err_iter;
 		Dee_Decref(vals[1]);
 		if (!DeeString_Check(vals[0]) ||
 		    !BlackListMapping_IsBlackListed(self, vals[0])) {
@@ -1616,9 +1579,8 @@ blm_bool(BlackListMapping *__restrict self) {
 		}
 		Dee_Decref(vals[0]);
 	}
-	if
-		unlikely(!elem)
-	goto err_iter;
+	if unlikely(!elem)
+		goto err_iter;
 	Dee_Decref(iter);
 	return 0;
 err_iter:
@@ -1632,25 +1594,22 @@ blm_nsi_size(BlackListMapping *__restrict self) {
 	size_t result = 0;
 	DREF DeeObject *vals[2], *elem, *iter;
 	iter = DeeObject_IterSelf(self->bm_kw);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		int error;
 		error = DeeObject_Unpack(elem, 2, vals);
 		Dee_Decref(elem);
-		if
-			unlikely(error)
-		goto err_iter;
+		if unlikely(error)
+			goto err_iter;
 		Dee_Decref(vals[1]);
 		if (!DeeString_Check(vals[0]) ||
 		    !BlackListMapping_IsBlackListed(self, vals[0]))
 			++result;
 		Dee_Decref(vals[0]);
 	}
-	if
-		unlikely(!elem)
-	goto err_iter;
+	if unlikely(!elem)
+		goto err_iter;
 	Dee_Decref(iter);
 	return result;
 err_iter:
@@ -1664,13 +1623,11 @@ PRIVATE DREF BlackListMappingIterator *DCALL
 blm_iter(BlackListMapping *__restrict self) {
 	DREF BlackListMappingIterator *result;
 	result = DeeObject_MALLOC(BlackListMappingIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mi_iter = DeeObject_IterSelf(self->bm_kw);
-	if
-		unlikely(!result->mi_iter)
-	goto err_r;
+	if unlikely(!result->mi_iter)
+		goto err_r;
 	result->mi_map = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &BlackListMappingIterator_Type);
@@ -1699,9 +1656,8 @@ PRIVATE DREF DeeObject *DCALL
 blm_getdefault(BlackListMapping *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict def) {
-	if
-		unlikely(!DeeString_Check(key))
-	{
+	if unlikely(!DeeString_Check(key))
+		{
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
@@ -1747,14 +1703,12 @@ blm_copy(BlackListMapping *__restrict self) {
 	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
 	                                                   (self->bm_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Create a copy of the original keywords, since we're acting as a proxy. */
 	result->bm_kw = DeeObject_Copy(self->bm_kw);
-	if
-		unlikely(!result->bm_kw)
-	goto err_r;
+	if unlikely(!result->bm_kw)
+		goto err_r;
 	rwlock_init(&result->bm_lock);
 	result->bm_code = self->bm_code;
 	Dee_Incref(result->bm_code);
@@ -1781,13 +1735,11 @@ blm_deep(BlackListMapping *__restrict self) {
 	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
 	                                                   (self->bm_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->bm_kw = DeeObject_DeepCopy(self->bm_kw);
-	if
-		unlikely(!result->bm_kw)
-	goto err_r;
+	if unlikely(!result->bm_kw)
+		goto err_r;
 	rwlock_init(&result->bm_lock);
 	result->bm_code = self->bm_code; /* Immutable, so no copy required */
 	Dee_Incref(result->bm_code);
@@ -1872,9 +1824,8 @@ BlackListMapping_New(struct code_object *__restrict code,
 		;
 	result = (DREF BlackListMapping *)DeeObject_Calloc(offsetof(BlackListMapping, bm_blck) +
 	                                                   (mask + 1) * sizeof(BlackListVarkwdsEntry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	rwlock_cinit(&result->bm_lock);
 	result->bm_code = code;
 	result->bm_ckwc = argc - positional_argc;

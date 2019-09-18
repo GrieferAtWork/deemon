@@ -278,9 +278,8 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	DBG_ALIGNMENT_DISABLE();
 	error = (neterrno_t)WSAStartup(MAKEWORD(1, 1), &wsaData);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(error != 0)
-	{
+	if unlikely(error != 0)
+		{
 		DeeError_Throwf(&DeeError_NetError, "WSAStartup() : %lu", error);
 		return -1;
 	}

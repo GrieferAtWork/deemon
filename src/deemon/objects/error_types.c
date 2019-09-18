@@ -215,9 +215,8 @@ error_deep(DeeErrorObject *__restrict self,
 	self->e_inner = NULL;
 	if (other->e_inner) {
 		self->e_inner = DeeObject_DeepCopy(other->e_inner);
-		if
-			unlikely(!self->e_inner)
-		return -1;
+		if unlikely(!self->e_inner)
+			return -1;
 	}
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_message);
@@ -449,9 +448,8 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 PRIVATE DREF DeeObject *DCALL
 comerr_str(DeeCompilerErrorObject *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if
-		unlikely(comerr_print(self, &unicode_printer_print, &printer) < 0)
-	goto err;
+	if unlikely(comerr_print(self, &unicode_printer_print, &printer) < 0)
+		goto err;
 	return unicode_printer_pack(&printer);
 err:
 	unicode_printer_fini(&printer);
@@ -831,9 +829,8 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 	{
 		struct appexit_object *error;
 		error = DeeObject_MALLOC(struct appexit_object);
-		if
-			unlikely(!error)
-		goto err;
+		if unlikely(!error)
+			goto err;
 		/* Initialize the appexit error. */
 		error->ae_exitcode = exitcode;
 		DeeObject_Init(error, &DeeError_AppExit);

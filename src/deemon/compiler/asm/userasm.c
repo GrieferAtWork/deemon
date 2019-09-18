@@ -60,34 +60,29 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 	dssize_t temp, result = 0;
 	char const *raw_operand_string = NULL;
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
-		if
-			unlikely(ascii_printer_putc(printer, '['))
-		goto err_m1;
+		if unlikely(ascii_printer_putc(printer, '['))
+			goto err_m1;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACEFLAG) {
-		if
-			unlikely(ascii_printer_putc(printer, '{'))
-		goto err_m1;
+		if unlikely(ascii_printer_putc(printer, '{'))
+			goto err_m1;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FIMMVAL) {
-		if
-			unlikely(ascii_printer_putc(printer, '$'))
-		goto err_m1;
+		if unlikely(ascii_printer_putc(printer, '$'))
+			goto err_m1;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FSTACKFLAG) {
-		if
-			unlikely(ascii_printer_putc(printer, '#'))
-		goto err_m1;
+		if unlikely(ascii_printer_putc(printer, '#'))
+			goto err_m1;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FSTACKFLAG2) {
 		temp = ASCII_PRINTER_PRINT(printer, " #");
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	switch (self->io_class & OPERAND_CLASS_FMASK) {
@@ -170,9 +165,8 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 			}
 			if (!self->io_intexpr.ie_val)
 				break;
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 		}
 		if ((self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP8 ||
@@ -339,27 +333,23 @@ do_raw_string:
 		                           strlen(raw_operand_string));
 		break;
 	}
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	result += temp;
 	if (self->io_class & OPERAND_CLASS_FDOTSFLAG) {
 		temp = ASCII_PRINTER_PRINT(printer, "...");
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACEFLAG) {
-		if
-			unlikely(ascii_printer_putc(printer, '}'))
-		goto err_m1;
+		if unlikely(ascii_printer_putc(printer, '}'))
+			goto err_m1;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
-		if
-			unlikely(ascii_printer_putc(printer, ']'))
-		goto err_m1;
+		if unlikely(ascii_printer_putc(printer, ']'))
+			goto err_m1;
 		++result;
 	}
 
@@ -378,9 +368,8 @@ asm_invocation_print(struct asm_invocation *__restrict self,
 	unsigned int i;
 	if (self->ai_flags & INVOKE_FPUSH) {
 		temp = ASCII_PRINTER_PRINT(printer, "push ");
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	if (self->ai_flags & INVOKE_FPREFIX) {
@@ -420,17 +409,15 @@ asm_invocation_print(struct asm_invocation *__restrict self,
 			                            (unsigned int)self->ai_prefix_id2);
 			break;
 		}
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	temp = ascii_printer_print(printer,
 	                           instr->am_name,
 	                           strlen(instr->am_name));
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	result += temp;
 	for (i = 0; i < self->ai_opcount; ++i) {
 		if (i == 0) {
@@ -460,9 +447,8 @@ INTERN DREF DeeObject *DCALL
 asm_invocation_tostring(struct asm_invocation *__restrict self,
                         struct asm_mnemonic *__restrict instr) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if
-		unlikely(asm_invocation_print(self, instr, &printer) < 0)
-	goto err;
+	if unlikely(asm_invocation_print(self, instr, &printer) < 0)
+		goto err;
 	return ascii_printer_pack(&printer);
 err:
 	ascii_printer_fini(&printer);
@@ -864,9 +850,8 @@ got_overload: {
 		/* Create a fake symbol to prevent peephole
 		 * optimization from tinkering with the generated code. */
 		struct asm_sym *volatile_sym = asm_newsym();
-		if
-			unlikely(!volatile_sym)
-		goto err;
+		if unlikely(!volatile_sym)
+			goto err;
 		asm_defsym(volatile_sym);
 		++volatile_sym->as_used; /* Intentionally left dangling. */
 	}
@@ -1098,9 +1083,8 @@ do_emit_instruction:
 			                    imm_rel & ASM_OVERLOAD_FREL_STKBIT
 			                    ? RELINT_MODE_FSTCK
 			                    : RELINT_MODE_FADDR);
-			if
-				unlikely(cid < 0)
-			goto err;
+			if unlikely(cid < 0)
+				goto err;
 			if (emit_sym16 ? asm_put_data16((uint16_t)cid)
 			               : asm_put_data8((uint8_t)cid))
 				goto err;
@@ -1186,9 +1170,8 @@ do_emit_instruction:
 		goto err;
 	}
 
-	if
-		unlikely(sp_sub > old_sp)
-	{
+	if unlikely(sp_sub > old_sp)
+		{
 		/* Negative stack offset? */
 #if 1
 		DeeError_Throwf(&DeeError_CompilerError,
@@ -1441,9 +1424,8 @@ abs_stack_any:
 			return_empty_string;
 		}
 		result = DeeString_Newf("stack #%I16u", current_assembler.a_stackcur - 1);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		break;
 
 	case ASM_OP_EXCEPT:
@@ -1466,9 +1448,8 @@ abs_stack_any:
 		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MODULE)
 			goto next_option;
 		mid = asm_msymid(sym);
-		if
-			unlikely(mid < 0)
-		goto err;
+		if unlikely(mid < 0)
+			goto err;
 		result = DeeString_Newf("module %I16u", (uint16_t)mid);
 	}	break;
 
@@ -1514,9 +1495,8 @@ abs_stack_any:
 		if (!SYMBOL_MUST_REFERENCE(sym))
 			goto next_option;
 		rid = asm_rsymid(sym);
-		if
-			unlikely(rid < 0)
-		goto err;
+		if unlikely(rid < 0)
+			goto err;
 		result = DeeString_Newf("ref %I16u", (uint16_t)rid);
 	}	break;
 
@@ -1526,9 +1506,8 @@ abs_stack_any:
 		    current_basescope != (DeeBaseScopeObject *)current_rootscope) {
 			/* Check if the object is being exported from `deemon' */
 			sym = asm_bind_deemon_export(self->a_constexpr);
-			if
-				unlikely(!sym)
-			goto err;
+			if unlikely(!sym)
+				goto err;
 			if (sym == ASM_BIND_DEEMON_EXPORT_NOTFOUND)
 				goto next_option;
 		} else {
@@ -1540,9 +1519,8 @@ abs_stack_any:
 				goto next_option;
 		}
 		rid = asm_rsymid(sym);
-		if
-			unlikely(rid < 0)
-		goto err;
+		if unlikely(rid < 0)
+			goto err;
 		result = DeeString_Newf("ref %I16u", (uint16_t)rid);
 	}	break;
 
@@ -1593,9 +1571,8 @@ abs_stack_any:
 		if (!asm_allowconst(self->a_constexpr))
 			goto next_option;
 		cid = asm_newconst(self->a_constexpr);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		result = DeeString_Newf("const %I16u", (uint16_t)cid);
 	}	break;
 
@@ -1612,9 +1589,8 @@ abs_stack_any:
 			sid = asm_ssymid_for_read(sym, self);
 		else
 			sid = asm_ssymid(sym);
-		if
-			unlikely(sid < 0)
-		goto err;
+		if unlikely(sid < 0)
+			goto err;
 		result = DeeString_Newf("static %I16u", (uint16_t)sid);
 	}	break;
 
@@ -1628,9 +1604,8 @@ abs_stack_any:
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
 			goto next_option;
 		eid = asm_esymid(sym);
-		if
-			unlikely(eid < 0)
-		goto err;
+		if unlikely(eid < 0)
+			goto err;
 		result = DeeString_Newf("extern %I16u:%I16u", (uint16_t)eid,
 		                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 	}	break;
@@ -1646,9 +1621,8 @@ abs_stack_any:
 			gid = asm_gsymid_for_read(sym, self);
 		else
 			gid = asm_gsymid(sym);
-		if
-			unlikely(gid < 0)
-		goto err;
+		if unlikely(gid < 0)
+			goto err;
 		result = DeeString_Newf("global %I16u", (uint16_t)gid);
 	}	break;
 
@@ -1666,9 +1640,8 @@ write_regular_local:
 			lid = asm_lsymid_for_read(sym, self);
 		else
 			lid = asm_lsymid(sym);
-		if
-			unlikely(lid < 0)
-		goto err;
+		if unlikely(lid < 0)
+			goto err;
 		result = DeeString_Newf("local %I16u", (uint16_t)lid);
 	}	break;
 
@@ -1681,9 +1654,8 @@ write_regular_local:
 				goto write_regular_local;
 		}
 		lid = asm_newlocal();
-		if
-			unlikely(lid < 0)
-		goto err;
+		if unlikely(lid < 0)
+			goto err;
 		if (mode != OPTION_MODE_OUTPUT) {
 			struct symbol temp;
 			INITIALIZE_FAKE_LOCAL_SYMBOL(&temp, (uint16_t)lid);
@@ -1761,21 +1733,18 @@ write_regular_local:
 				Dee_Incref(item);
 				DeeDict_LockEndRead(d);
 				error = asm_gpush_constexpr(key);
-				if
-					likely(!error)
-				error = asm_gpush_constexpr(item);
+				if likely(!error)
+					error = asm_gpush_constexpr(item);
 				Dee_Decref(key);
 				Dee_Decref(item);
-				if
-					unlikely(error)
-				goto err;
+				if unlikely(error)
+					goto err;
 				++length;
 				DeeDict_LockRead(d);
 			}
 			DeeDict_LockEndRead(d);
-			if
-				unlikely(length > UINT8_MAX)
-			{
+			if unlikely(length > UINT8_MAX)
+				{
 				/* Shouldn't really happen, but is required due to race conditions.
 				 * Peephole optimization should be able to get rid of this later... */
 				length *= 2;
@@ -1806,9 +1775,8 @@ write_regular_local:
 			size_t length;
 			/* Check the length of the sequence. */
 			length = DeeObject_Size(self->a_constexpr);
-			if
-				unlikely(length == (size_t)-1)
-			{
+			if unlikely(length == (size_t)-1)
+				{
 				if (DeeError_Catch(&DeeError_NotImplemented))
 					goto next_option;
 				goto err;
@@ -1816,9 +1784,8 @@ write_regular_local:
 			if (length > UINT8_MAX)
 				goto next_option;
 			iter = DeeObject_IterSelf(self->a_constexpr);
-			if
-				unlikely(!iter)
-			{
+			if unlikely(!iter)
+				{
 				if (DeeError_Catch(&DeeError_NotImplemented))
 					goto next_option;
 				goto err;
@@ -1829,21 +1796,18 @@ write_regular_local:
 				int error;
 				error = asm_gpush_constexpr(elem);
 				Dee_Decref(elem);
-				if
-					unlikely(!error)
-				{
+				if unlikely(!error)
+					{
 					elem = NULL;
 					break;
 				}
 				++length;
 			}
 			Dee_Decref(iter);
-			if
-				unlikely(!elem)
-			goto err;
-			if
-				unlikely(length > UINT8_MAX)
-			{
+			if unlikely(!elem)
+				goto err;
+			if unlikely(length > UINT8_MAX)
+				{
 				/* Shouldn't really happen, but is required due to race conditions.
 				 * Peephole optimization should be able to get rid of this later... */
 				while (length--)
@@ -2150,9 +2114,8 @@ next:
 				while (DeeUni_IsSymCont(ch));
 				/* Lookup the name of the operand. */
 				name = TPPLexer_LookupKeyword(name_start, (size_t)(iter - name_start) - 1, 0);
-				if
-					unlikely(!name)
-				{
+				if unlikely(!name)
+					{
 err_unknown_operand:
 					DeeError_Throwf(&DeeError_CompilerError,
 					                "No operand known under the name %$q",
@@ -2188,9 +2151,8 @@ has_operand:
 					opno += DeeUni_AsDigit(ch);
 					ch = *iter++;
 				}
-				if
-					unlikely(opno > self->af_ast->a_assembly.as_opc)
-				{
+				if unlikely(opno > self->af_ast->a_assembly.as_opc)
+					{
 					DeeError_Throwf(&DeeError_CompilerError,
 					                "Expected `]' after `%[' in user-assembly text");
 					goto err;
@@ -2288,9 +2250,8 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		cleanup_actions = (struct cleanup_mode *)Dee_Calloc((self->a_assembly.as_num_o +
 		                                                     self->a_assembly.as_num_i) *
 		                                                    sizeof(struct cleanup_mode));
-		if
-			unlikely(!cleanup_actions)
-		goto err;
+		if unlikely(!cleanup_actions)
+			goto err;
 	}
 
 	if (self->a_flag & AST_FASSEMBLY_FORMAT) {
@@ -2300,9 +2261,8 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		formatter.af_ast     = self;
 		formatter.af_opreprv = (DREF DeeStringObject **)Dee_Calloc(self->a_assembly.as_opc *
 		                                                           sizeof(DREF DeeStringObject *));
-		if
-			unlikely(!formatter.af_opreprv)
-		goto err;
+		if unlikely(!formatter.af_opreprv)
+			goto err;
 		ascii_printer_init(&formatter.af_printer);
 		/* Generate text representations of assembly operands. */
 		dst         = formatter.af_opreprv;
@@ -2315,9 +2275,8 @@ ast_genasm_userasm(struct ast *__restrict self) {
 			                                                             iter->ao_type->s_text,
 			                                                             OPTION_MODE_UNDEF,
 			                                                             cleanup_dst, &old_state);
-			if
-				unlikely(!*dst)
-			goto err_formatter;
+			if unlikely(!*dst)
+				goto err_formatter;
 		}
 		/* Format output operands. */
 		count = self->a_assembly.as_num_i;
@@ -2326,26 +2285,23 @@ ast_genasm_userasm(struct ast *__restrict self) {
 			                                                             iter->ao_type->s_text,
 			                                                             OPTION_MODE_INPUT,
 			                                                             cleanup_dst, &old_state);
-			if
-				unlikely(!*dst)
-			goto err_formatter;
+			if unlikely(!*dst)
+				goto err_formatter;
 		}
 		/* Format label operands. */
 		count = self->a_assembly.as_num_l;
 		for (i = 0; i < count; ++i, ++dst) {
 			*dst = (DREF DeeStringObject *)get_label_repr(i);
-			if
-				unlikely(!*dst)
-			goto err_formatter;
+			if unlikely(!*dst)
+				goto err_formatter;
 		}
 
 		/* Format the input text to what will then be processed. */
 		assembly_text = assembly_formatter_format(&formatter,
 		                                          self->a_assembly.as_text.at_text);
 		assembly_formatter_fini(&formatter);
-		if
-			unlikely(!assembly_text)
-		goto err;
+		if unlikely(!assembly_text)
+			goto err;
 		goto create_assembly_file;
 err_formatter:
 		assembly_formatter_fini(&formatter);
@@ -2366,9 +2322,8 @@ err_formatter:
 		                                                             iter->ao_type->s_text,
 		                                                             OPTION_MODE_UNDEF,
 		                                                             cleanup_dst, &old_state);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		Dee_Decref(temp);
 	}
 	count = self->a_assembly.as_num_i;
@@ -2379,9 +2334,8 @@ err_formatter:
 		                                                             iter->ao_type->s_text,
 		                                                             OPTION_MODE_INPUT,
 		                                                             cleanup_dst, &old_state);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		Dee_Decref(temp);
 	}
 	/* Emit debug information for user-assembly. */
@@ -2392,9 +2346,8 @@ err_formatter:
 	TPPString_Incref(assembly_text);
 create_assembly_file:
 	assembly_file = TPPFile_NewExplicitInherited(assembly_text);
-	if
-		unlikely(!assembly_file)
-	goto err_text;
+	if unlikely(!assembly_file)
+		goto err_text;
 	/* Push out assembly file. */
 	TPPLexer_PushFileInherited(assembly_file);
 	/* Configure the lexer so that it will not attempt to pop our file, or
@@ -2461,9 +2414,8 @@ create_assembly_file:
 			                            (self->a_assembly.as_num_i +
 			                             self->a_assembly.as_num_o);
 			parser_start();
-			if
-				unlikely(yield() < 0)
-			result = -1;
+			if unlikely(yield() < 0)
+				result = -1;
 			else {
 				result = uasm_parse();
 			}
@@ -2475,9 +2427,8 @@ create_assembly_file:
 		if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
 		    (current_assembler.a_flag & ASM_FPEEPHOLE) && !result) {
 			struct asm_sym *volatile_sym = asm_newsym();
-			if
-				unlikely(!volatile_sym)
-			result = -1;
+			if unlikely(!volatile_sym)
+				result = -1;
 			asm_defsym(volatile_sym);
 			++volatile_sym->as_used; /* Intentionally left dangling. */
 		}
@@ -2485,9 +2436,8 @@ create_assembly_file:
 		    current_assembler.a_curr != old_section) {
 			/* Generate a jump to the proper section. */
 			struct asm_sym *temp = asm_newsym();
-			if
-				unlikely(!temp)
-			result = -1;
+			if unlikely(!temp)
+				result = -1;
 			else {
 				result                   = asm_gjmp(ASM_JMP, temp);
 				current_assembler.a_curr = old_section;
@@ -2518,9 +2468,8 @@ create_assembly_file:
 		TPPLexer_PopFile();
 
 	/* Check for errors during processing of user-assembly. */
-	if
-		unlikely(result)
-	goto err;
+	if unlikely(result)
+		goto err;
 
 	/* Check if the assembler is still in an undefined state. */
 	if (current_userasm.ua_mode & USER_ASM_FSTKINV) {
@@ -2538,9 +2487,8 @@ create_assembly_file:
 
 		case CLEANUP_MODE_FSTACK:
 			operand = self->a_assembly.as_opv[count].ao_expr;
-			if
-				unlikely(current_assembler.a_stackcur <= old_state.as_stackcur)
-			{
+			if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur)
+				{
 				/* The user broke stack alignment (just evaluate the operand). */
 				if (self->a_assembly.as_opv[count].ao_name) {
 					if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,

@@ -56,9 +56,8 @@ typedef struct {
 INTERN int DCALL
 rodictiterator_ctor(DictIterator *__restrict self) {
 	self->di_dict = (Dict *)DeeRoDict_New();
-	if
-		unlikely(!self->di_dict)
-	return -1;
+	if unlikely(!self->di_dict)
+		return -1;
 	self->di_next = self->di_dict->rd_elem;
 	return 0;
 }
@@ -323,9 +322,8 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	/* TODO: if (DeeDict_CheckExact(self)) ... */
 	/* Construct a read-only Dict from an iterator. */
 	self = DeeObject_IterSelf(self);
-	if
-		unlikely(!self)
-	return NULL;
+	if unlikely(!self)
+		return NULL;
 	length_hint = DeeFastSeq_GetSize(self);
 	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
 	         ? DeeRoDict_FromIteratorWithHint(self, length_hint)
@@ -343,9 +341,8 @@ rehash(DREF Dict *__restrict self, size_t old_mask, size_t new_mask) {
 	DREF Dict *result;
 	size_t i;
 	result = RODICT_ALLOC(new_mask);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i < old_mask; ++i) {
 		size_t j, perturb;
 		struct rodict_item *item;
@@ -384,9 +381,8 @@ insert(DREF Dict *__restrict self, size_t mask,
 			continue;
 		/* Same hash. -> Check if it's also the same key. */
 		error = DeeObject_CompareEq(key, item->di_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			continue; /* Not the same key. */
 		/* It _is_ the same key! (override it...) */
@@ -411,9 +407,8 @@ err:
 PUBLIC DREF DeeObject *DCALL DeeRoDict_New(void) {
 	DREF Dict *result;
 	result = RODICT_ALLOC(RODICT_INITIAL_MASK);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->rd_mask = RODICT_INITIAL_MASK;
 	result->rd_size = 0;
 	DeeObject_Init(result, &DeeRoDict_Type);
@@ -429,9 +424,8 @@ DeeRoDict_NewWithHint(size_t num_items) {
 		mask = (mask << 1) | 1;
 	mask   = (mask << 1) | 1;
 	result = RODICT_ALLOC(mask);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->rd_mask = mask;
 	result->rd_size = 0;
 	DeeObject_Init(result, &DeeRoDict_Type);
@@ -446,15 +440,13 @@ DeeRoDict_Insert(DREF DeeObject **__restrict pself,
 	Dict *me = (Dict *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
 	ASSERT(!DeeObject_IsShared(me));
-	if
-		unlikely(me->rd_size * 2 > me->rd_mask)
-	{
+	if unlikely(me->rd_size * 2 > me->rd_mask)
+		{
 		size_t old_size = me->rd_size;
 		size_t new_mask = (me->rd_mask << 1) | 1;
 		me              = rehash(me, me->rd_mask, new_mask);
-		if
-			unlikely(!me)
-		goto err;
+		if unlikely(!me)
+			goto err;
 		me->rd_mask = new_mask;
 		me->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
 	}
@@ -475,24 +467,21 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	size_t elem_count = 0;
 	/* Construct a read-only Dict from an iterator. */
 	result = RODICT_ALLOC(mask);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		int error;
 		DREF DeeObject *key_and_value[2];
 		error = DeeObject_Unpack(elem, 2, key_and_value);
 		Dee_Decref(elem);
-		if
-			unlikely(error)
-		goto err_r;
+		if unlikely(error)
+			goto err_r;
 		/* Check if we must re-hash the resulting Dict. */
 		if (elem_count * 2 > mask) {
 			size_t new_mask = (mask << 1) | 1;
 			new_result      = rehash(result, mask, new_mask);
-			if
-				unlikely(!new_result)
-			{
+			if unlikely(!new_result)
+				{
 				Dee_Decref(key_and_value[1]);
 				Dee_Decref(key_and_value[0]);
 				goto err_r;
@@ -500,15 +489,13 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 			mask = new_mask;
 		}
 		/* Insert the key-value pair into the resulting Dict. */
-		if
-			unlikely(insert(result, mask, &elem_count, key_and_value[0], key_and_value[1]))
-		goto err_r;
+		if unlikely(insert(result, mask, &elem_count, key_and_value[0], key_and_value[1]))
+			goto err_r;
 		if (DeeThread_CheckInterrupt())
 			goto err_r;
 	}
-	if
-		unlikely(!elem)
-	goto err_r;
+	if unlikely(!elem)
+		goto err_r;
 	/* Fill in control members and setup the resulting object. */
 	result->rd_size = elem_count;
 	result->rd_mask = mask;
@@ -546,9 +533,8 @@ PRIVATE DREF DictIterator *DCALL
 rodict_iter(Dict *__restrict self) {
 	DREF DictIterator *result;
 	result = DeeObject_MALLOC(DictIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->di_dict = self;
 	result->di_next = self->rd_elem;
 	Dee_Incref(self);
@@ -577,9 +563,8 @@ rodict_contains(Dict *__restrict self,
 		if (item->di_hash != hash)
 			continue;
 		error = DeeObject_CompareEq(key, item->di_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			continue; /* Non-equal keys. */
 		/* Found it! */
@@ -605,9 +590,8 @@ rodict_getitem(Dict *__restrict self,
 		if (item->di_hash != hash)
 			continue;
 		error = DeeObject_CompareEq(key, item->di_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			continue; /* Non-equal keys. */
 		/* Found it! */
@@ -635,9 +619,8 @@ DeeRoDict_GetItemDef(DeeObject *__restrict self,
 		if (item->di_hash != hash)
 			continue;
 		error = DeeObject_CompareEq(key, item->di_key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			continue; /* Non-equal keys. */
 		/* Found it! */
@@ -950,9 +933,8 @@ PRIVATE struct type_member rodict_class_members[] = {
 PRIVATE DREF Dict *DCALL rodict_ctor(void) {
 	DREF Dict *result;
 	result = RODICT_ALLOC(1);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->rd_mask = 1;
 	result->rd_size = 0;
 	DeeObject_Init(result, &DeeRoDict_Type);
@@ -966,22 +948,19 @@ rodict_deepcopy(Dict *__restrict self) {
 	size_t i;
 	int temp;
 	result = (DREF Dict *)DeeRoDict_NewWithHint(self->rd_size);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i <= self->rd_mask; ++i) {
 		DREF DeeObject *key_copy, *value_copy;
 		/* Deep-copy the key & value */
 		if (!self->rd_elem[i].di_key)
 			continue;
 		key_copy = DeeObject_DeepCopy(self->rd_elem[i].di_key);
-		if
-			unlikely(!key_copy)
-		goto err;
+		if unlikely(!key_copy)
+			goto err;
 		value_copy = DeeObject_DeepCopy(self->rd_elem[i].di_value);
-		if
-			unlikely(!value_copy)
-		{
+		if unlikely(!value_copy)
+			{
 			Dee_Decref(key_copy);
 			goto err;
 		}
@@ -989,9 +968,8 @@ rodict_deepcopy(Dict *__restrict self) {
 		temp = DeeRoDict_Insert((DREF DeeObject **)&result, key_copy, value_copy);
 		Dee_Decref(value_copy);
 		Dee_Decref(key_copy);
-		if
-			unlikely(temp)
-		goto err;
+		if unlikely(temp)
+			goto err;
 	}
 done:
 	return result;

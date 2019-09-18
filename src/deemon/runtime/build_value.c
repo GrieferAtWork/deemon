@@ -616,9 +616,8 @@ invalid_argc2:
 		str = format[0] == '1'
 		      ? (void *)DeeString_As2Byte(self)
 		      : (void *)DeeString_As4Byte(self);
-		if
-			unlikely(!str)
-		return -1;
+		if unlikely(!str)
+			return -1;
 		format += 3;
 		*va_arg(pargs->vl_ap, void **) = str;
 	}	break;
@@ -674,9 +673,8 @@ invalid_argc2:
 	case 'b': {
 		int temp; /* Bool */
 		temp = DeeObject_Bool(self);
-		if
-			unlikely(temp < 0)
-		return temp;
+		if unlikely(temp < 0)
+			return temp;
 		*va_arg(pargs->vl_ap, bool *) = !!temp;
 	}	break;
 
@@ -1058,9 +1056,8 @@ PUBLIC int
 				goto invalid_argc; /* Too many arguments. */
 			}
 			temp = Dee_VPUnpackf(*argv++, (char const **)&format, pargs);
-			if
-				unlikely(temp)
-			return temp;
+			if unlikely(temp)
+				return temp;
 			ASSERTF(kwlist->k_name, "Keyword list too short");
 			++kwlist;
 		}

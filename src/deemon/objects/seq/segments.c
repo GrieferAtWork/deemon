@@ -56,9 +56,8 @@ segiter_init(SegmentsIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegmentsIterator",
 	                  &self->si_iter, &self->si_len))
 		goto err;
-	if
-		unlikely(!self->si_len)
-	{
+	if unlikely(!self->si_len)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid length passed to `_SeqSegmentsIterator'");
 		goto err;
@@ -72,9 +71,8 @@ err:
 PRIVATE int DCALL
 segiter_ctor(SegmentsIterator *__restrict self) {
 	self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	if
-		unlikely(!self->si_iter)
-	goto err;
+	if unlikely(!self->si_iter)
+		goto err;
 	self->si_len = 1;
 	return 0;
 err:
@@ -85,9 +83,8 @@ PRIVATE int DCALL
 segiter_copy(SegmentsIterator *__restrict self,
              SegmentsIterator *__restrict other) {
 	self->si_iter = DeeObject_Copy(other->si_iter);
-	if
-		unlikely(!self->si_iter)
-	goto err;
+	if unlikely(!self->si_iter)
+		goto err;
 	self->si_len = other->si_len;
 	return 0;
 err:
@@ -98,9 +95,8 @@ PRIVATE int DCALL
 segiter_deep(SegmentsIterator *__restrict self,
              SegmentsIterator *__restrict other) {
 	self->si_iter = DeeObject_DeepCopy(other->si_iter);
-	if
-		unlikely(!self->si_iter)
-	goto err;
+	if unlikely(!self->si_iter)
+		goto err;
 	self->si_len = other->si_len;
 	return 0;
 err:
@@ -126,16 +122,14 @@ segiter_next(SegmentsIterator *__restrict self) {
 	if (!ITER_ISOK(elem))
 		return elem;
 	result = DeeTuple_NewUninitialized(self->si_len);
-	if
-		unlikely(!result)
-	goto err_elem;
+	if unlikely(!result)
+		goto err_elem;
 	DeeTuple_SET(result, 0, elem);
 	for (i = 1; i < self->si_len; ++i) {
 		elem = DeeObject_IterNext(self->si_iter);
 		if (!ITER_ISOK(elem)) {
-			if
-				unlikely(!elem)
-			goto err_r_i;
+			if unlikely(!elem)
+				goto err_r_i;
 			/* Premature end (aka. last segment)
 			 * -> Must return a truncated result tuple. */
 			return DeeTuple_TruncateUninitialized(result, i);
@@ -163,9 +157,8 @@ PRIVATE DREF DeeObject *DCALL
 segiter_getseq(SegmentsIterator *__restrict self) {
 	DREF DeeObject *base_seq, *result;
 	base_seq = DeeObject_GetAttr(self->si_iter, &str_seq);
-	if
-		unlikely(!base_seq)
-	goto err;
+	if unlikely(!base_seq)
+		goto err;
 	result = DeeSeq_Segments(base_seq, self->si_len);
 	Dee_Decref_unlikely(base_seq);
 	return result;
@@ -295,9 +288,8 @@ seg_init(Segments *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegments",
 	                  &self->s_seq, &self->s_len))
 		goto err;
-	if
-		unlikely(!self->s_len)
-	{
+	if unlikely(!self->s_len)
+		{
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid length passed to `_SeqSegments'");
 		goto err;
@@ -313,13 +305,11 @@ PRIVATE DREF SegmentsIterator *DCALL
 seg_iter(Segments *__restrict self) {
 	DREF SegmentsIterator *result;
 	result = DeeObject_MALLOC(SegmentsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_iter = DeeObject_IterSelf(self->s_seq);
-	if
-		unlikely(!result->si_iter)
-	goto err_r;
+	if unlikely(!result->si_iter)
+		goto err_r;
 	result->si_len = self->s_len;
 	DeeObject_Init(result, &SeqSegmentsIterator_Type);
 done:
@@ -333,9 +323,8 @@ PRIVATE size_t DCALL
 seg_nsi_getsize(Segments *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->s_seq);
-	if
-		likely(result != (size_t)-1)
-	result = (result + (self->s_len - 1)) / self->s_len;
+	if likely(result != (size_t)-1)
+		result = (result + (self->s_len - 1)) / self->s_len;
 	return result;
 }
 
@@ -343,9 +332,8 @@ PRIVATE DREF DeeObject *DCALL
 seg_getsize(Segments *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->s_seq);
-	if
-		unlikely(result == (size_t)-1)
-	goto err;
+	if unlikely(result == (size_t)-1)
+		goto err;
 	return DeeInt_NewSize((result + (self->s_len - 1)) / self->s_len);
 err:
 	return NULL;
@@ -355,9 +343,8 @@ PRIVATE size_t DCALL
 seg_nsi_fast_getsize(Segments *__restrict self) {
 	size_t result;
 	result = DeeFastSeq_GetSize(self->s_seq);
-	if
-		likely(result != (size_t)-1)
-	result = (result + (self->s_len - 1)) / self->s_len;
+	if likely(result != (size_t)-1)
+		result = (result + (self->s_len - 1)) / self->s_len;
 	return result;
 }
 
@@ -384,9 +371,8 @@ seg_nsi_getitem(Segments *__restrict self, size_t index) {
 	for (i = 0; i < len; ++i) {
 		DREF DeeObject *temp;
 		temp = DeeObject_GetItemIndex(self->s_seq, start + i);
-		if
-			unlikely(!temp)
-		{
+		if unlikely(!temp)
+			{
 			if (DeeError_Catch(&DeeError_IndexError))
 				return DeeTuple_TruncateUninitialized(result, i);
 			goto err_r;
@@ -516,9 +502,8 @@ DeeSeq_Segments(DeeObject *__restrict self, size_t segsize) {
 	DREF Segments *result;
 	ASSERT(segsize != 0);
 	result = DeeObject_MALLOC(Segments);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->s_seq = self;
 	result->s_len = segsize;
 	Dee_Incref(self);

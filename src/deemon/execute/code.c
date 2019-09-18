@@ -245,9 +245,8 @@ DFUNDEF DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
-	if
-		unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
-	return NULL;
+	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
+		return NULL;
 	CALL_WITH_STACK(result, DeeCode_ExecFrameFast, frame, new_stack);
 	free_altstack(new_stack);
 	return result;
@@ -257,9 +256,8 @@ DFUNDEF DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
-	if
-		unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
-	return NULL;
+	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
+		return NULL;
 	CALL_WITH_STACK(result, DeeCode_ExecFrameSafe, frame, new_stack);
 	free_altstack(new_stack);
 	return result;
@@ -1111,9 +1109,8 @@ code_eq(DeeCodeObject *__restrict self,
         DeeCodeObject *__restrict other) {
 	int result;
 	result = code_eq_impl(self, other);
-	if
-		unlikely(result < 0)
-	return NULL;
+	if unlikely(result < 0)
+		return NULL;
 	return_bool_(result != 0);
 }
 
@@ -1122,9 +1119,8 @@ code_ne(DeeCodeObject *__restrict self,
         DeeCodeObject *__restrict other) {
 	int result;
 	result = code_eq_impl(self, other);
-	if
-		unlikely(result < 0)
-	return NULL;
+	if unlikely(result < 0)
+		return NULL;
 	return_bool_(result == 0);
 }
 
@@ -1138,9 +1134,8 @@ PRIVATE DREF DeeObject *DCALL
 code_str(DeeCodeObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *name = code_get_name(self);
-	if
-		unlikely(!name)
-	goto err;
+	if unlikely(!name)
+		goto err;
 	if (DeeNone_Check(name))
 		result = DeeString_New("<code for <anonymous>>");
 	else {
@@ -1162,9 +1157,8 @@ code_copy(DeeCodeObject *__restrict self) {
 	uint16_t i;
 	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
 	                                                  self->co_codebytes);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	memcpy(result, self, offsetof(DeeCodeObject, co_code) + self->co_codebytes);
 	rwlock_init(&result->co_static_lock);
 	if (result->co_keywords) {
@@ -1173,9 +1167,8 @@ code_copy(DeeCodeObject *__restrict self) {
 		else {
 			result->co_keywords = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
 			                                                          sizeof(DREF DeeStringObject *));
-			if
-				unlikely(!result->co_keywords)
-			goto err_r;
+			if unlikely(!result->co_keywords)
+				goto err_r;
 			memcpy((void *)result->co_keywords, self->co_keywords,
 			       result->co_argc_max * sizeof(DREF DeeStringObject *));
 			for (i = 0; i < result->co_argc_max; ++i)
@@ -1188,9 +1181,8 @@ code_copy(DeeCodeObject *__restrict self) {
 	if (result->co_defaultv) {
 		uint16_t n          = result->co_argc_max - result->co_argc_min;
 		result->co_defaultv = (DREF DeeObject **)Dee_Malloc(n * sizeof(DREF DeeObject *));
-		if
-			unlikely(!result->co_defaultv)
-		goto err_r_keywords;
+		if unlikely(!result->co_defaultv)
+			goto err_r_keywords;
 		memcpy((void *)result->co_defaultv, self->co_defaultv,
 		       n * sizeof(DREF DeeObject *));
 		for (i = 0; i < n; ++i)
@@ -1201,9 +1193,8 @@ code_copy(DeeCodeObject *__restrict self) {
 	if (result->co_staticv) {
 		result->co_staticv = (DREF DeeObject **)Dee_Malloc(result->co_staticc *
 		                                                   sizeof(DREF DeeObject *));
-		if
-			unlikely(!result->co_staticv)
-		goto err_r_default;
+		if unlikely(!result->co_staticv)
+			goto err_r_default;
 		rwlock_read(&self->co_static_lock);
 		memcpy((void *)result->co_staticv, self->co_staticv,
 		       result->co_staticc * sizeof(DREF DeeObject *));
@@ -1216,9 +1207,8 @@ code_copy(DeeCodeObject *__restrict self) {
 	else {
 		result->co_exceptv = (struct except_handler *)Dee_Malloc(result->co_exceptc *
 		                                                         sizeof(struct except_handler));
-		if
-			unlikely(!result->co_exceptv)
-		goto err_r_static;
+		if unlikely(!result->co_exceptv)
+			goto err_r_static;
 		memcpy(result->co_exceptv, self->co_exceptv,
 		       result->co_exceptc *
 		       sizeof(struct except_handler));
@@ -1261,9 +1251,8 @@ code_deepcopy(DeeCodeObject *__restrict self) {
 	DREF DeeCodeObject *result;
 	uint16_t i;
 	result = code_copy(self);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (result->co_defaultv) {
 		uint16_t n = result->co_argc_max - result->co_argc_min;
 		for (i = 0; i < n; ++i) {
@@ -1354,9 +1343,8 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 			while (*s) {
 				char const *next = strchr(s, ',');
 				size_t i, len = next ? (size_t)(next - s) : strlen(s);
-				if
-					likely(len < COMPILER_LENOF(except_flags_db[0].ef_name))
-				{
+				if likely(len < COMPILER_LENOF(except_flags_db[0].ef_name))
+					{
 					for (i = 0; i < COMPILER_LENOF(except_flags_db); ++i) {
 						if (except_flags_db[i].ef_name[len] == '\0' &&
 						    memcmp(except_flags_db[i].ef_name, s, len) == 0) {
@@ -1364,9 +1352,8 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 							goto got_flag;
 						}
 					}
-					if
-						unlikely(!len)
-					goto got_flag;
+					if unlikely(!len)
+						goto got_flag;
 				}
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Unknown exception handler flag: %$q",
@@ -1465,18 +1452,16 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	if (DeeObject_GetBuf(text, &text_buf, Dee_BUFFER_FREADONLY))
 		goto err;
 #if __SIZEOF_SIZE_T__ > 4
-	if
-		unlikely(text_buf.bb_size > (code_size_t)-1)
-	{
+	if unlikely(text_buf.bb_size > (code_size_t)-1)
+		{
 		err_integer_overflow_i(32, true);
 		goto err_buf;
 	}
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(COMPILER_OFFSETOF(DeeCodeObject, co_code) +
 	                                                  text_buf.bb_size + INSTRLEN_MAX);
-	if
-		unlikely(!result)
-	goto err_buf;
+	if unlikely(!result)
+		goto err_buf;
 	/* Copy text bytes. */
 	result->co_codebytes = (code_size_t)text_buf.bb_size;
 	memcpy(result->co_code, text_buf.bb_base, text_buf.bb_size);
@@ -1492,12 +1477,10 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 			size_t keyword_count;
 			keyword_vec = (DREF DeeStringObject **)DeeSeq_AsHeapVector(keywords,
 			                                                           &keyword_count);
-			if
-				unlikely(!keyword_vec)
-			goto err_r;
-			if
-				unlikely(keyword_count > (uint16_t)-1)
-			{
+			if unlikely(!keyword_vec)
+				goto err_r;
+			if unlikely(keyword_count > (uint16_t)-1)
+				{
 				DeeError_Throwf(&DeeError_IntegerOverflow,
 				                "Too many arguments %Iu for when at most 0xffff can be used",
 				                keyword_count);
@@ -1507,12 +1490,10 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		} else {
 			keyword_vec = (DREF DeeStringObject **)Dee_Malloc(coargc *
 			                                                  sizeof(DREF DeeStringObject *));
-			if
-				unlikely(!keyword_vec)
-			goto err_r;
-			if
-				unlikely(DeeObject_Unpack(keywords, coargc, (DeeObject **)keyword_vec))
-			{
+			if unlikely(!keyword_vec)
+				goto err_r;
+			if unlikely(DeeObject_Unpack(keywords, coargc, (DeeObject **)keyword_vec))
+				{
 				Dee_Free(keyword_vec);
 				goto err_r;
 			}
@@ -1533,12 +1514,10 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		size_t i, default_c;
 		DREF DeeObject **default_vec;
 		default_c = DeeObject_Size(defaults);
-		if
-			unlikely(default_c == (size_t)-1)
-		goto err_r_keywords;
-		if
-			unlikely(default_c > coargc)
-		{
+		if unlikely(default_c == (size_t)-1)
+			goto err_r_keywords;
+		if unlikely(default_c > coargc)
+			{
 			DeeError_Throwf(&DeeError_IntegerOverflow,
 			                "Too many default arguments (%Iu) for "
 			                "code only taking %I16u arguments at most",
@@ -1546,9 +1525,8 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 			goto err_r_keywords;
 		}
 		default_vec = (DREF DeeObject **)Dee_Malloc(default_c * sizeof(DREF DeeObject *));
-		if
-			unlikely(!default_vec)
-		goto err_r_keywords;
+		if unlikely(!default_vec)
+			goto err_r_keywords;
 		for (i = 0; i < default_c; ++i) {
 			DREF DeeObject *elem;
 			elem = DeeObject_GetItemIndex(defaults, i);
@@ -1572,12 +1550,10 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		DREF DeeObject **static_vec;
 		size_t static_cnt;
 		static_vec = DeeSeq_AsHeapVector(statics, &static_cnt);
-		if
-			unlikely(!static_vec)
-		goto err_r_default_v;
-		if
-			unlikely(static_cnt > (uint16_t)-1)
-		{
+		if unlikely(!static_vec)
+			goto err_r_default_v;
+		if unlikely(static_cnt > (uint16_t)-1)
+			{
 			while (static_cnt--)
 				Dee_Decref(static_vec[static_cnt]);
 			Dee_Free(static_vec);
@@ -1590,9 +1566,8 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	if (DeeNone_Check(module)) {
 		DeeThreadObject *ts = DeeThread_Self();
 		ASSERT(ts);
-		if
-			unlikely(!ts->t_execsz)
-		{
+		if unlikely(!ts->t_execsz)
+			{
 			DeeError_Throwf(&DeeError_TypeError,
 			                "No module given, when the current "
 			                "module could not be determined");
@@ -1619,21 +1594,18 @@ code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		struct except_handler *new_except_v;
 		DREF DeeObject *iter, *elem;
 		iter = DeeObject_IterSelf(except);
-		if
-			unlikely(!iter)
-		goto err_r_statics;
+		if unlikely(!iter)
+			goto err_r_statics;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 			ASSERT(except_c <= except_a);
 			if (except_c >= except_a) {
 				uint16_t new_except_a = except_a * 2;
 				if (!except_a)
 					new_except_a = 2;
-				else if
-					unlikely(new_except_a <= except_a)
+				else if unlikely(new_except_a <= except_a)
 				{
-					if
-						unlikely(except_a == (uint16_t)-1)
-					{
+					if unlikely(except_a == (uint16_t)-1)
+						{
 						DeeError_Throwf(&DeeError_IntegerOverflow,
 						                "Too many exception handlers");
 err_r_except_temp_iter_elem:
@@ -1649,35 +1621,30 @@ err_r_except_temp_iter:
 				}
 				new_except_v = (struct except_handler *)Dee_TryRealloc(except_v, new_except_a *
 				                                                                 sizeof(struct except_handler));
-				if
-					unlikely(!new_except_v)
-				{
+				if unlikely(!new_except_v)
+					{
 					new_except_a = except_c + 1;
 					new_except_v = (struct except_handler *)Dee_Realloc(except_v, new_except_a *
 					                                                              sizeof(struct except_handler));
-					if
-						unlikely(!new_except_v)
-					goto err_r_except_temp_iter_elem;
+					if unlikely(!new_except_v)
+						goto err_r_except_temp_iter_elem;
 				}
 				except_v = new_except_v;
 				except_a = new_except_a;
 			}
-			if
-				unlikely(unpack_exception_descriptor(&except_v[except_c], elem))
-			goto err_r_except_temp_iter_elem;
+			if unlikely(unpack_exception_descriptor(&except_v[except_c], elem))
+				goto err_r_except_temp_iter_elem;
 			Dee_Decref(elem);
 			++except_c;
 		}
-		if
-			unlikely(!elem)
-		goto err_r_except_temp_iter;
+		if unlikely(!elem)
+			goto err_r_except_temp_iter;
 		Dee_Decref(iter);
 		if (except_a > except_c) {
 			new_except_v = (struct except_handler *)Dee_TryRealloc(except_v, except_c *
 			                                                                 sizeof(struct except_handler));
-			if
-				likely(new_except_v)
-			except_v = new_except_v;
+			if likely(new_except_v)
+				except_v = new_except_v;
 		}
 		result->co_exceptc = except_c;
 		result->co_exceptv = except_v;
@@ -1691,9 +1658,8 @@ err_r_except_temp_iter:
 			while (*s) {
 				char const *next = strchr(s, ',');
 				size_t i, len = next ? (size_t)(next - s) : strlen(s);
-				if
-					likely(len < COMPILER_LENOF(code_flags_db[0].cf_name))
-				{
+				if likely(len < COMPILER_LENOF(code_flags_db[0].cf_name))
+					{
 					for (i = 0; i < COMPILER_LENOF(code_flags_db); ++i) {
 						if (code_flags_db[i].cf_name[len] == '\0' &&
 						    memcmp(code_flags_db[i].cf_name, s, len) == 0) {
@@ -1701,9 +1667,8 @@ err_r_except_temp_iter:
 							goto got_flag;
 						}
 					}
-					if
-						unlikely(!len)
-					goto got_flag;
+					if unlikely(!len)
+						goto got_flag;
 				}
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Unknown code flag: %$q",

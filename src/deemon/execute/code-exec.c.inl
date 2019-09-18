@@ -192,9 +192,8 @@ get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_get_stack:
 #ifdef EXEC_SAFE
-		if
-			unlikely((frame->cf_stack + imm_val) >= sp)
-		{
+		if unlikely((frame->cf_stack + imm_val) >= sp)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			return NULL;
@@ -209,9 +208,8 @@ do_get_stack:
 		imm_val = *(uint8_t *)(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_localc)
-		{
+		if unlikely(imm_val >= code->co_localc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			return NULL;
@@ -220,9 +218,8 @@ do_get_local:
 		ASSERT(imm_val < code->co_localc);
 #endif /* !EXEC_SAFE */
 		result = &frame->cf_frame[imm_val];
-		if
-			unlikely(!*result)
-		{
+		if unlikely(!*result)
+			{
 			err_unbound_local(code, frame->cf_ip, imm_val);
 			return NULL;
 		}
@@ -273,9 +270,8 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_get_stack:
 #ifdef EXEC_SAFE
-		if
-			unlikely((frame->cf_stack + imm_val) >= sp)
-		{
+		if unlikely((frame->cf_stack + imm_val) >= sp)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			return NULL;
@@ -292,9 +288,8 @@ do_get_stack:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_staticc)
-		{
+		if unlikely(imm_val >= code->co_staticc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_static(frame, imm_val);
 			return NULL;
@@ -312,18 +307,16 @@ do_get_static:
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
 		imm_val = *(uint8_t *)(ip + 1);
-		if
-			unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
-		{
+		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
+			{
 err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
 			return NULL;
 		}
 		module = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
-		if
-			unlikely(imm_val >= module->mo_globalc)
-		goto err_invalid_extern;
+		if unlikely(imm_val >= module->mo_globalc)
+			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(*(uint8_t *)(ip + 0) < code->co_module->mo_importc);
 		module  = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
@@ -336,9 +329,8 @@ err_invalid_extern:
 do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= module->mo_globalc)
-		{
+		if unlikely(imm_val >= module->mo_globalc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			return NULL;
@@ -351,9 +343,8 @@ do_get_module_object:
 		result = module->mo_globalv[imm_val];
 		Dee_XIncref(result);
 		rwlock_endread(&module->mo_lock);
-		if
-			unlikely(!result)
-		err_unbound_global(module, imm_val);
+		if unlikely(!result)
+			err_unbound_global(module, imm_val);
 		ASSERT_OBJECT_OPT(result);
 		break;
 
@@ -361,9 +352,8 @@ do_get_module_object:
 		imm_val = *(uint8_t *)(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_localc)
-		{
+		if unlikely(imm_val >= code->co_localc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			return NULL;
@@ -372,9 +362,8 @@ do_get_local:
 		ASSERT(imm_val < code->co_localc);
 #endif /* !EXEC_SAFE */
 		result = frame->cf_frame[imm_val];
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			Dee_Incref(result);
 		} else {
 			err_unbound_local(code, frame->cf_ip, imm_val);
@@ -395,9 +384,8 @@ do_get_local:
 		case ASM16_EXTERN & 0xff:
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
-			if
-				unlikely(imm_val >= code->co_module->mo_importc)
-			{
+			if unlikely(imm_val >= code->co_module->mo_importc)
+				{
 err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
@@ -405,9 +393,8 @@ err_invalid_extern16:
 			}
 			module  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
-			if
-				unlikely(imm_val >= module->mo_globalc)
-			goto err_invalid_extern16;
+			if unlikely(imm_val >= module->mo_globalc)
+				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
 			module  = code->co_module->mo_importv[imm_val];
@@ -473,9 +460,8 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_get_stack:
 #ifdef EXEC_SAFE
-		if
-			unlikely((frame->cf_stack + imm_val) >= sp)
-		{
+		if unlikely((frame->cf_stack + imm_val) >= sp)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			return NULL;
@@ -492,9 +478,8 @@ do_get_stack:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_staticc)
-		{
+		if unlikely(imm_val >= code->co_staticc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_static(frame, imm_val);
 			return NULL;
@@ -512,18 +497,16 @@ do_get_static:
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
 		imm_val = *(uint8_t *)(ip + 1);
-		if
-			unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
-		{
+		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
+			{
 err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
 			return NULL;
 		}
 		module = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
-		if
-			unlikely(imm_val >= module->mo_globalc)
-		goto err_invalid_extern;
+		if unlikely(imm_val >= module->mo_globalc)
+			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(*(uint8_t *)(ip + 0) < code->co_module->mo_importc);
 		module  = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
@@ -537,9 +520,8 @@ err_invalid_extern:
 do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= module->mo_globalc)
-		{
+		if unlikely(imm_val >= module->mo_globalc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			return NULL;
@@ -550,9 +532,8 @@ do_get_global:
 do_get_module_object:
 		rwlock_write(&module->mo_lock);
 		result = module->mo_globalv[imm_val]; /* Inherit reference. */
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			rwlock_endwrite(&module->mo_lock);
 			err_unbound_global(module, imm_val);
 			return NULL;
@@ -566,9 +547,8 @@ do_get_module_object:
 		imm_val = *(uint8_t *)(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_localc)
-		{
+		if unlikely(imm_val >= code->co_localc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			return NULL;
@@ -598,9 +578,8 @@ do_get_local:
 		case ASM16_EXTERN & 0xff:
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
-			if
-				unlikely(imm_val >= code->co_module->mo_importc)
-			{
+			if unlikely(imm_val >= code->co_module->mo_importc)
+				{
 err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
@@ -608,9 +587,8 @@ err_invalid_extern16:
 			}
 			module  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
-			if
-				unlikely(imm_val >= module->mo_globalc)
-			goto err_invalid_extern16;
+			if unlikely(imm_val >= module->mo_globalc)
+				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
 			module  = code->co_module->mo_importv[imm_val];
@@ -677,9 +655,8 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 		imm_val = *(uint8_t *)ip;
 do_set_stack:
 #ifdef EXEC_SAFE
-		if
-			unlikely((frame->cf_stack + imm_val) >= sp)
-		{
+		if unlikely((frame->cf_stack + imm_val) >= sp)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_sp(frame, imm_val);
 			Dee_Decref(value);
@@ -697,9 +674,8 @@ do_set_stack:
 		imm_val = *(uint8_t *)ip;
 do_set_static:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_staticc)
-		{
+		if unlikely(imm_val >= code->co_staticc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_static(frame, imm_val);
 			Dee_Decref(value);
@@ -719,9 +695,8 @@ do_set_static:
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
 		imm_val = *(uint8_t *)(ip + 1);
-		if
-			unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
-		{
+		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc)
+			{
 err_invalid_extern:
 			frame->cf_sp = sp;
 			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
@@ -729,9 +704,8 @@ err_invalid_extern:
 			return -1;
 		}
 		module = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
-		if
-			unlikely(imm_val >= module->mo_globalc)
-		goto err_invalid_extern;
+		if unlikely(imm_val >= module->mo_globalc)
+			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(*(uint8_t *)(ip + 0) < code->co_module->mo_importc);
 		module  = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
@@ -745,9 +719,8 @@ err_invalid_extern:
 do_set_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= module->mo_globalc)
-		{
+		if unlikely(imm_val >= module->mo_globalc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			Dee_Decref(value);
@@ -768,9 +741,8 @@ do_set_module_object:
 		imm_val = *(uint8_t *)(ip + 0);
 do_set_local:
 #ifdef EXEC_SAFE
-		if
-			unlikely(imm_val >= code->co_localc)
-		{
+		if unlikely(imm_val >= code->co_localc)
+			{
 			frame->cf_sp = sp;
 			err_srt_invalid_locale(frame, imm_val);
 			Dee_Decref(value);
@@ -798,9 +770,8 @@ do_set_local:
 		case ASM16_EXTERN & 0xff:
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
 #ifdef EXEC_SAFE
-			if
-				unlikely(imm_val >= code->co_module->mo_importc)
-			{
+			if unlikely(imm_val >= code->co_module->mo_importc)
+				{
 err_invalid_extern16:
 				frame->cf_sp = sp;
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
@@ -809,9 +780,8 @@ err_invalid_extern16:
 			}
 			module  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
-			if
-				unlikely(imm_val >= module->mo_globalc)
-			goto err_invalid_extern16;
+			if unlikely(imm_val >= module->mo_globalc)
+				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
 			module  = code->co_module->mo_importv[imm_val];
@@ -1213,9 +1183,8 @@ next_instr:
 			if (ITER_ISOK(frame->cf_result))
 				Dee_Decref(frame->cf_result);
 			frame->cf_result = DeeObject_IterNext(TOP);
-			if
-				unlikely(!frame->cf_result)
-			HANDLE_EXCEPT();
+			if unlikely(!frame->cf_result)
+				HANDLE_EXCEPT();
 			if (frame->cf_result != ITER_DONE) {
 				/* Repeat this instruction and forward the value we've just read. */
 				REPEAT_INSTRUCTION();
@@ -1310,9 +1279,8 @@ do_push_bnd_local:
 		TARGETSimm16(ASM_JF, -1, +0) {
 			/* Conditionally jump if true. */
 			int temp = DeeObject_Bool(TOP);
-			if
-				unlikely(temp < 0)
-			HANDLE_EXCEPT();
+			if unlikely(temp < 0)
+				HANDLE_EXCEPT();
 			POPREF();
 			if (!temp) {
 jump_16:
@@ -1335,9 +1303,8 @@ jump_16:
 		TARGETSimm16(ASM_JT, -1, +0) {
 			/* Conditionally jump if false. */
 			int temp = DeeObject_Bool(TOP);
-			if
-				unlikely(temp < 0)
-			HANDLE_EXCEPT();
+			if unlikely(temp < 0)
+				HANDLE_EXCEPT();
 			POPREF();
 			if (temp)
 				goto jump_16;
@@ -1355,8 +1322,7 @@ jump_16:
 #ifdef EXEC_SAFE
 assert_ip_bounds:
 			/* Raise an error if the new PC has been displaced out-of-bounds. */
-			if
-				unlikely(ip.ptr < code->co_code ||
+			if unlikely(ip.ptr < code->co_code ||
 				         ip.ptr >= code->co_code + code->co_codebytes)
 			goto err_invalid_ip;
 #else /* EXEC_SAFE */
@@ -1369,9 +1335,8 @@ assert_ip_bounds:
 		TARGETSimm16(ASM_FOREACH, -1, +2) {
 			DREF DeeObject *elem;
 			elem = DeeObject_IterNext(TOP);
-			if
-				unlikely(!elem)
-			HANDLE_EXCEPT();
+			if unlikely(!elem)
+				HANDLE_EXCEPT();
 			if (elem == ITER_DONE) {
 				/* Pop the iterator and Jump if it finished. */
 				POPREF();
@@ -1416,9 +1381,8 @@ assert_ip_bounds:
 			/* NOTE: Inherit references. */
 			new_sp      = sp - n_args;
 			call_result = DeeObject_Call(new_sp[-1], n_args, new_sp);
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			while (n_args--)
 				POPREF();
 			Dee_Decref(TOP);   /* Drop a reference from the called function. */
@@ -1448,9 +1412,8 @@ do_call_kw:
 #else /* EXEC_SAFE */
 			call_result = DeeObject_CallKw(new_sp[-1], imm_val2, new_sp, CONSTimm);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			while (imm_val2--)
 				POPREF();
 			Dee_Decref(TOP);   /* Drop a reference from the called function. */
@@ -1479,9 +1442,8 @@ do_call_tuple_kw:
 #else /* EXEC_SAFE */
 			call_result = DeeObject_CallTupleKw(SECOND, FIRST, CONSTimm);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			POPREF();          /* Pop the argument tuple. */
 			Dee_Decref(TOP);   /* Drop a reference from the called function. */
 			TOP = call_result; /* Save the frame->cf_result of the call back on the stack. */
@@ -1492,9 +1454,8 @@ do_call_tuple_kw:
 			DREF DeeObject *temp;
 			ASSERT_TUPLE(FIRST);
 			temp = DeeObject_CallTuple(SECOND, FIRST);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = temp; /* Inherit reference. */
@@ -1511,9 +1472,8 @@ do_operator:
 			call_result = DeeObject_InvokeOperator((sp - imm_val2)[-1], imm_val,
 			                                       (size_t)imm_val2,
 			                                       sp - imm_val2);
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			while (imm_val2--)
 				POPREF();
 			Dee_Decref(TOP);   /* Drop a reference from the operator self-argument. */
@@ -1529,9 +1489,8 @@ do_operator_tuple:
 			call_result = DeeObject_InvokeOperator(SECOND, imm_val,
 			                                       DeeTuple_SIZE(FIRST),
 			                                       DeeTuple_ELEM(FIRST));
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			POPREF();          /* Pop the argument tuple. */
 			Dee_Decref(TOP);   /* Drop a reference from operator self-argument. */
 			TOP = call_result; /* Save the result of the call back on the stack. */
@@ -1549,9 +1508,8 @@ do_del_global:
 			del_object = *pobject;
 			*pobject   = NULL;
 			GLOBAL_LOCKENDWRITE();
-			if
-				unlikely(!del_object)
-			goto err_unbound_global;
+			if unlikely(!del_object)
+				goto err_unbound_global;
 			Dee_Decref(del_object);
 			DISPATCH();
 		}
@@ -1562,9 +1520,8 @@ do_del_global:
 do_del_local:
 			ASSERT_LOCALimm();
 			plocal = &LOCALimm;
-			if
-				unlikely(!*plocal)
-			goto err_unbound_local;
+			if unlikely(!*plocal)
+				goto err_unbound_local;
 			Dee_Clear(*plocal);
 			DISPATCH();
 		}
@@ -1634,9 +1591,8 @@ do_del_local:
 do_stack_adjust:
 			if ((int16_t)imm_val < 0) {
 #ifdef EXEC_SAFE
-				if
-					unlikely(-(int16_t)imm_val > STACKUSED)
-				goto err_invalid_stack_affect;
+				if unlikely(-(int16_t)imm_val > STACKUSED)
+					goto err_invalid_stack_affect;
 #else /* EXEC_SAFE */
 				ASSERT(-(int16_t)imm_val <= STACKUSED);
 #endif /* !EXEC_SAFE */
@@ -1644,9 +1600,8 @@ do_stack_adjust:
 					POPREF();
 			} else {
 #ifdef EXEC_SAFE
-				if
-					unlikely((int16_t)imm_val > STACKFREE)
-				goto increase_stacksize;
+				if unlikely((int16_t)imm_val > STACKFREE)
+					goto increase_stacksize;
 #else /* EXEC_SAFE */
 				ASSERT((int16_t)imm_val <= STACKFREE);
 #endif /* !EXEC_SAFE */
@@ -1663,9 +1618,8 @@ do_stack_adjust:
 		TARGET(ASM_SUPER, -2, +1) {
 			DREF DeeObject *super_wrapper;
 			super_wrapper = DeeSuper_New((DeeTypeObject *)FIRST, SECOND);
-			if
-				unlikely(!super_wrapper)
-			HANDLE_EXCEPT();
+			if unlikely(!super_wrapper)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = super_wrapper; /* Inherit reference. */
@@ -1679,9 +1633,8 @@ do_super_this_r:
 			ASSERT_THISCALL();
 			ASSERT_REFimm();
 			super_wrapper = DeeSuper_New((DeeTypeObject *)REFimm, THIS);
-			if
-				unlikely(!super_wrapper)
-			HANDLE_EXCEPT();
+			if unlikely(!super_wrapper)
+				HANDLE_EXCEPT();
 			PUSH(super_wrapper); /* Inherit reference. */
 			DISPATCH();
 		}
@@ -1794,9 +1747,8 @@ do_push_arg:
 					frame->cf_vargs = (DREF DeeTupleObject *)
 					DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
 					                   frame->cf_argv + code->co_argc_max);
-					if
-						unlikely(!frame->cf_vargs)
-					HANDLE_EXCEPT();
+					if unlikely(!frame->cf_vargs)
+						HANDLE_EXCEPT();
 				}
 			}
 			PUSHREF((DeeObject *)frame->cf_vargs);
@@ -1816,14 +1768,12 @@ do_push_arg:
 				if (!varkwds) {
 					DeeObject *oldval;
 					varkwds = construct_varkwds_mapping();
-					if
-						unlikely(!varkwds)
-					HANDLE_EXCEPT();
+					if unlikely(!varkwds)
+						HANDLE_EXCEPT();
 #ifdef CONFIG_NO_THREADS
 					oldval = frame->cf_kw->fk_varkwds;
-					if
-						unlikely(oldval)
-					{
+					if unlikely(oldval)
+						{
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
 					} else {
@@ -1831,9 +1781,8 @@ do_push_arg:
 					}
 #else /* CONFIG_NO_THREADS */
 					oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, varkwds);
-					if
-						unlikely(oldval)
-					{
+					if unlikely(oldval)
+						{
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
 					}
@@ -1874,9 +1823,8 @@ do_push_extern:
 			ASSERT_EXTERNimm();
 			EXTERN_LOCKREAD();
 			value = EXTERNimm;
-			if
-				unlikely(!value)
-			{
+			if unlikely(!value)
+				{
 				EXTERN_LOCKENDREAD();
 				goto err_unbound_extern;
 			}
@@ -1892,9 +1840,8 @@ do_push_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKREAD();
 			value = GLOBALimm;
-			if
-				unlikely(!value)
-			{
+			if unlikely(!value)
+				{
 				GLOBAL_LOCKENDREAD();
 				goto err_unbound_global;
 			}
@@ -1909,9 +1856,8 @@ do_push_global:
 do_push_local:
 			ASSERT_LOCALimm();
 			value = LOCALimm;
-			if
-				unlikely(!value)
-			goto err_unbound_local;
+			if unlikely(!value)
+				goto err_unbound_local;
 			PUSHREF(value);
 			DISPATCH();
 		}
@@ -1922,9 +1868,8 @@ do_push_local:
 do_pack_tuple:
 			ASSERT_USAGE(-(int)imm_val, +1);
 			temp = DeeTuple_NewVectorSymbolic(imm_val, sp - imm_val); /* Inherit references. */
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			sp -= imm_val;
 			PUSH(temp);
 			DISPATCH();
@@ -1936,9 +1881,8 @@ do_pack_tuple:
 do_pack_list:
 			ASSERT_USAGE(-(int)imm_val, +1);
 			temp = DeeList_NewVectorInherited(imm_val, sp - imm_val); /* Inherit references. */
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			sp -= imm_val;
 			PUSH(temp);
 			DISPATCH();
@@ -1953,9 +1897,8 @@ do_unpack:
 			sequence = POP();
 			error    = DeeObject_Unpack(sequence, imm_val, sp);
 			Dee_Decref(sequence);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			sp += imm_val;
 			DISPATCH();
 		}
@@ -1963,9 +1906,8 @@ do_unpack:
 		TARGET(ASM_CAST_TUPLE, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeTuple_FromSequence(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp; /* Inherit reference. */
 			DISPATCH();
@@ -1974,9 +1916,8 @@ do_unpack:
 		TARGET(ASM_CAST_LIST, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeList_FromSequence(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp; /* Inherit reference. */
 			DISPATCH();
@@ -2009,9 +1950,8 @@ do_push_module:
 		TARGET(ASM_CONCAT, -2, +1) {
 			DREF DeeObject *temp;
 			temp = DeeObject_ConcatInherited(SECOND, FIRST);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			SECOND = temp;
 			POPREF();
 			DISPATCH();
@@ -2024,9 +1964,8 @@ do_push_module:
 			ASSERT_USAGE(-((int)n_args + 1), +1);
 			new_sp = sp - n_args;
 			temp   = DeeObject_ExtendInherited(new_sp[-1], n_args, new_sp);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			sp  = new_sp;
 			TOP = temp;
 			DISPATCH();
@@ -2053,9 +1992,8 @@ do_push_module:
 		TARGET(ASM_SUPEROF, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeSuper_Of(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp; /* Inherit reference. */
 			DISPATCH();
@@ -2082,9 +2020,8 @@ do_push_module:
 		TARGET(ASM_STR, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeObject_Str(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp; /* Inherit reference. */
 			DISPATCH();
@@ -2116,15 +2053,13 @@ do_push_module:
 						DISPATCH();
 					}
 					temp = DeeObject_Repr(TOP);
-					if
-						unlikely(!temp)
-					HANDLE_EXCEPT();
+					if unlikely(!temp)
+						HANDLE_EXCEPT();
 					POPREF();
 					other = (*tp_shl)(TOP, temp);
 					Dee_Decref(temp);
-					if
-						unlikely(!other)
-					HANDLE_EXCEPT();
+					if unlikely(!other)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = other;
 					DISPATCH();
@@ -2132,9 +2067,8 @@ do_push_module:
 			}
 #endif
 			temp = DeeObject_Repr(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp; /* Inherit reference. */
 			DISPATCH();
@@ -2142,9 +2076,8 @@ do_push_module:
 
 		TARGET(ASM_BOOL, -1, +1) {
 			int boolval = DeeObject_Bool(TOP);
-			if
-				unlikely(boolval < 0)
-			HANDLE_EXCEPT();
+			if unlikely(boolval < 0)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = DeeBool_For(boolval);
 			Dee_Incref(TOP);
@@ -2153,9 +2086,8 @@ do_push_module:
 
 		TARGET(ASM_NOT, -1, +1) {
 			int boolval = DeeObject_Bool(TOP);
-			if
-				unlikely(boolval < 0)
-			HANDLE_EXCEPT();
+			if unlikely(boolval < 0)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = DeeBool_For(!boolval);
 			Dee_Incref(TOP);
@@ -2163,18 +2095,16 @@ do_push_module:
 		}
 
 		TARGET(ASM_ASSIGN, -2, +1) {
-			if
-				unlikely(DeeObject_Assign(SECOND, TOP))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_Assign(SECOND, TOP))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_MOVE_ASSIGN, -2, +1) {
-			if
-				unlikely(DeeObject_MoveAssign(SECOND, TOP))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_MoveAssign(SECOND, TOP))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			DISPATCH();
@@ -2183,9 +2113,8 @@ do_push_module:
 		TARGET(ASM_COPY, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeObject_Copy(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp;
 			DISPATCH();
@@ -2194,9 +2123,8 @@ do_push_module:
 		TARGET(ASM_DEEPCOPY, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeObject_DeepCopy(TOP);
-			if
-				unlikely(!temp)
-			HANDLE_EXCEPT();
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = temp;
 			DISPATCH();
@@ -2233,9 +2161,8 @@ do_class_c:
 				descriptor = CONSTimm;
 				Dee_Incref(descriptor);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
-				new_class = NULL;
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+					new_class = NULL;
 				else {
 					new_class = DeeClass_New((DeeTypeObject *)TOP, descriptor);
 				}
@@ -2244,9 +2171,8 @@ do_class_c:
 #else /* EXEC_SAFE */
 			new_class = DeeClass_New((DeeTypeObject *)TOP, CONSTimm);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!new_class)
-			HANDLE_EXCEPT();
+			if unlikely(!new_class)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = (DREF DeeObject *)new_class; /* Inherit reference. */
 			DISPATCH();
@@ -2264,9 +2190,8 @@ do_class_gc:
 			base = GLOBALimm;
 			Dee_XIncref(base);
 			GLOBAL_LOCKENDREAD();
-			if
-				unlikely(!base)
-			goto err_unbound_global;
+			if unlikely(!base)
+				goto err_unbound_global;
 #ifdef EXEC_SAFE
 			{
 				DeeObject *descriptor;
@@ -2274,9 +2199,8 @@ do_class_gc:
 				descriptor = CONSTimm2;
 				Dee_Incref(descriptor);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
-				new_class = NULL;
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+					new_class = NULL;
 				else {
 					new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
 				}
@@ -2286,9 +2210,8 @@ do_class_gc:
 			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm);
 #endif /* !EXEC_SAFE */
 			Dee_Decref(base);
-			if
-				unlikely(!new_class)
-			HANDLE_EXCEPT();
+			if unlikely(!new_class)
+				HANDLE_EXCEPT();
 			PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
 			DISPATCH();
 		}
@@ -2303,9 +2226,8 @@ do_class_gc:
 			base = EXTERNimm;
 			Dee_XIncref(base);
 			EXTERN_LOCKENDREAD();
-			if
-				unlikely(!base)
-			goto err_unbound_extern;
+			if unlikely(!base)
+				goto err_unbound_extern;
 #undef EXCEPTION_CLEANUP
 #define EXCEPTION_CLEANUP Dee_Decref(base);
 			imm_val = READ_imm8();
@@ -2319,9 +2241,8 @@ do_class_gc:
 				descriptor = CONSTimm;
 				Dee_Incref(descriptor);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
-				new_class = NULL;
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+					new_class = NULL;
 				else {
 					new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
 				}
@@ -2331,9 +2252,8 @@ do_class_gc:
 			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm);
 #endif /* !EXEC_SAFE */
 			Dee_Decref(base);
-			if
-				unlikely(!new_class)
-			HANDLE_EXCEPT();
+			if unlikely(!new_class)
+				HANDLE_EXCEPT();
 			PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
 			DISPATCH();
 		}
@@ -2362,9 +2282,8 @@ do_getcmember_r:
 #else /* EXEC_SAFE */
 			member_value = DeeClass_GetMember((DeeTypeObject *)REFimm, imm_val2);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!member_value)
-			HANDLE_EXCEPT();
+			if unlikely(!member_value)
+				HANDLE_EXCEPT();
 			PUSH(member_value); /* Inherit reference. */
 			DISPATCH();
 		}
@@ -2384,14 +2303,12 @@ do_callcmember_this_r:
 #else /* EXEC_SAFE */
 			callback = DeeClass_GetMember((DeeTypeObject *)REFimm, imm_val2);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback)
-			HANDLE_EXCEPT();
+			if unlikely(!callback)
+				HANDLE_EXCEPT();
 			result = DeeObject_ThisCall(callback, THIS, argc, sp - argc);
 			Dee_Decref(callback);
-			if
-				unlikely(!result)
-			HANDLE_EXCEPT();
+			if unlikely(!result)
+				HANDLE_EXCEPT();
 			while (argc--)
 				POPREF();
 			PUSH(result); /* Inherit reference. */
@@ -2435,9 +2352,8 @@ do_function_c:
 			                                    imm_val2 + 1,
 			                                    sp - (imm_val2 + 1));
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!function)
-			HANDLE_EXCEPT();
+			if unlikely(!function)
+				HANDLE_EXCEPT();
 			sp -= imm_val2 + 1;
 			PUSH(function);
 			DISPATCH();
@@ -2446,9 +2362,8 @@ do_function_c:
 		TARGET(ASM_CAST_INT, -1, +1) {
 			DeeObject *cast_result;
 			cast_result = DeeObject_Int(TOP);
-			if
-				unlikely(!cast_result)
-			HANDLE_EXCEPT();
+			if unlikely(!cast_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = cast_result; /* Inherit reference. */
 			DISPATCH();
@@ -2496,9 +2411,8 @@ do_function_c:
 		TARGET(ASM_ADD_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_AddS8(TOP, READ_Simm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2506,9 +2420,8 @@ do_function_c:
 		TARGET(ASM_ADD_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_AddInt(TOP, READ_imm32());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2517,9 +2430,8 @@ do_function_c:
 		TARGET(ASM_SUB_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_SubS8(TOP, READ_Simm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2527,9 +2439,8 @@ do_function_c:
 		TARGET(ASM_SUB_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_SubInt(TOP, READ_imm32());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2538,9 +2449,8 @@ do_function_c:
 		TARGET(ASM_MUL_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_MulInt(TOP, READ_Simm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2549,9 +2459,8 @@ do_function_c:
 		TARGET(ASM_DIV_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_DivInt(TOP, READ_Simm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2560,9 +2469,8 @@ do_function_c:
 		TARGET(ASM_MOD_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_ModInt(TOP, READ_Simm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2571,9 +2479,8 @@ do_function_c:
 		TARGET(ASM_AND_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_AndInt(TOP, READ_imm32());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2582,9 +2489,8 @@ do_function_c:
 		TARGET(ASM_OR_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_OrInt(TOP, READ_imm32());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2593,9 +2499,8 @@ do_function_c:
 		TARGET(ASM_XOR_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_XorInt(TOP, READ_imm32());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2604,9 +2509,8 @@ do_function_c:
 		TARGET(ASM_SHL_IMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_ShlInt(TOP, READ_imm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2615,9 +2519,8 @@ do_function_c:
 		TARGET(ASM_SHR_IMM8, -1, +1) {
 			DREF DeeObject *math_result;
 			math_result = DeeObject_ShrInt(TOP, READ_imm8());
-			if
-				unlikely(!math_result)
-			HANDLE_EXCEPT();
+			if unlikely(!math_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = math_result;
 			DISPATCH();
@@ -2635,14 +2538,12 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintObject(stream, TOP);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -2651,14 +2552,12 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintObjectSp(stream, TOP);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -2667,14 +2566,12 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintObjectNl(stream, TOP);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -2683,14 +2580,12 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintAll(stream, TOP);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -2699,14 +2594,12 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintAllSp(stream, TOP);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -2715,14 +2608,12 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintAllNl(stream, TOP);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -2731,69 +2622,60 @@ do_function_c:
 			DREF DeeObject *stream;
 			int error;
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 			error = DeeFile_PrintNl(stream);
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINT, -2, +1) {
-			if
-				unlikely(DeeFile_PrintObject(SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintObject(SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINT_SP, -2, +1) {
-			if
-				unlikely(DeeFile_PrintObjectSp(SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintObjectSp(SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINT_NL, -2, +1) {
-			if
-				unlikely(DeeFile_PrintObjectNl(SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintObjectNl(SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINTALL, -2, +1) {
-			if
-				unlikely(DeeFile_PrintAll(SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintAll(SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINTALL_SP, -2, +1) {
-			if
-				unlikely(DeeFile_PrintAllSp(SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintAllSp(SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINTALL_NL, -2, +1) {
-			if
-				unlikely(DeeFile_PrintAllNl(SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintAllNl(SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_FPRINTNL, -1, +1) {
-			if
-				unlikely(DeeFile_PrintNl(FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintNl(FIRST))
+				HANDLE_EXCEPT();
 			DISPATCH();
 		}
 
@@ -2804,9 +2686,8 @@ do_function_c:
 do_print_c:
 			ASSERT_CONSTimm();
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
 				DREF DeeObject *print_object;
@@ -2821,9 +2702,8 @@ do_print_c:
 			error = DeeFile_PrintObject(stream, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			DISPATCH();
 		}
 
@@ -2834,9 +2714,8 @@ do_print_c:
 do_print_c_sp:
 			ASSERT_CONSTimm();
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
 				DREF DeeObject *print_object;
@@ -2851,9 +2730,8 @@ do_print_c_sp:
 			error = DeeFile_PrintObjectSp(stream, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			DISPATCH();
 		}
 
@@ -2864,9 +2742,8 @@ do_print_c_sp:
 do_print_c_nl:
 			ASSERT_CONSTimm();
 			stream = DeeFile_GetStd(DEE_STDOUT);
-			if
-				unlikely(!stream)
-			HANDLE_EXCEPT();
+			if unlikely(!stream)
+				HANDLE_EXCEPT();
 #if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
 			{
 				DREF DeeObject *print_object;
@@ -2881,9 +2758,8 @@ do_print_c_nl:
 			error = DeeFile_PrintObjectNl(stream, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
 			Dee_Decref(stream);
-			if
-				unlikely(error)
-			HANDLE_EXCEPT();
+			if unlikely(error)
+				HANDLE_EXCEPT();
 			DISPATCH();
 		}
 
@@ -2901,14 +2777,12 @@ do_fprint_c:
 				CONST_LOCKENDREAD();
 				error = DeeFile_PrintObject(TOP, print_object);
 				Dee_Decref(print_object);
-				if
-					unlikely(error)
-				HANDLE_EXCEPT();
+				if unlikely(error)
+					HANDLE_EXCEPT();
 			}
 #else /* EXEC_SAFE && !CONFIG_NO_THREADS */
-			if
-				unlikely(DeeFile_PrintObject(TOP, CONSTimm))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintObject(TOP, CONSTimm))
+				HANDLE_EXCEPT();
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
 			DISPATCH();
 		}
@@ -2927,14 +2801,12 @@ do_fprint_c_sp:
 				CONST_LOCKENDREAD();
 				error = DeeFile_PrintObjectSp(TOP, print_object);
 				Dee_Decref(print_object);
-				if
-					unlikely(error)
-				HANDLE_EXCEPT();
+				if unlikely(error)
+					HANDLE_EXCEPT();
 			}
 #else /* EXEC_SAFE && !CONFIG_NO_THREADS */
-			if
-				unlikely(DeeFile_PrintObjectSp(TOP, CONSTimm))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintObjectSp(TOP, CONSTimm))
+				HANDLE_EXCEPT();
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
 			DISPATCH();
 		}
@@ -2953,14 +2825,12 @@ do_fprint_c_nl:
 				CONST_LOCKENDREAD();
 				error = DeeFile_PrintObjectNl(TOP, print_object);
 				Dee_Decref(print_object);
-				if
-					unlikely(error)
-				HANDLE_EXCEPT();
+				if unlikely(error)
+					HANDLE_EXCEPT();
 			}
 #else /* EXEC_SAFE && !CONFIG_NO_THREADS */
-			if
-				unlikely(DeeFile_PrintObjectNl(TOP, CONSTimm))
-			HANDLE_EXCEPT();
+			if unlikely(DeeFile_PrintObjectNl(TOP, CONSTimm))
+				HANDLE_EXCEPT();
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
 			DISPATCH();
 		}
@@ -2971,9 +2841,8 @@ do_fprint_c_nl:
 #error "sizeof(size_t) is too small and may cause an overflow for range object (WTF? a 16-bit machine?)"
 #endif
 			range_object = DeeRange_NewInt(0, READ_imm16(), 1);
-			if
-				unlikely(!range_object)
-			HANDLE_EXCEPT();
+			if unlikely(!range_object)
+				HANDLE_EXCEPT();
 			PUSH(range_object);
 			DISPATCH();
 		}
@@ -2982,9 +2851,8 @@ do_fprint_c_nl:
 			DREF DeeObject *range_object;
 			range_object = DeeRange_New(DeeNone_Check(SECOND) ? &DeeInt_Zero : SECOND,
 			                            FIRST, NULL);
-			if
-				unlikely(!range_object)
-			HANDLE_EXCEPT();
+			if unlikely(!range_object)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = range_object; /* Inherit reference. */
@@ -2994,14 +2862,12 @@ do_fprint_c_nl:
 		TARGET(ASM_RANGE_DEF, -1, +1) {
 			DREF DeeObject *range_object, *begin;
 			begin = DeeObject_NewDefault(Dee_TYPE(TOP));
-			if
-				unlikely(!begin)
-			HANDLE_EXCEPT();
+			if unlikely(!begin)
+				HANDLE_EXCEPT();
 			range_object = DeeRange_New(begin, TOP, NULL);
 			Dee_Decref(begin);
-			if
-				unlikely(!range_object)
-			HANDLE_EXCEPT();
+			if unlikely(!range_object)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = range_object; /* Inherit reference. */
 			DISPATCH();
@@ -3011,9 +2877,8 @@ do_fprint_c_nl:
 			DREF DeeObject *range_object;
 			range_object = DeeRange_New(DeeNone_Check(THIRD) ? &DeeInt_Zero : THIRD, SECOND,
 			                            DeeNone_Check(FIRST) ? NULL : FIRST);
-			if
-				unlikely(!range_object)
-			HANDLE_EXCEPT();
+			if unlikely(!range_object)
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			Dee_Decref(TOP);
@@ -3024,15 +2889,13 @@ do_fprint_c_nl:
 		TARGET(ASM_RANGE_STEP_DEF, -2, +1) {
 			DREF DeeObject *range_object, *begin;
 			begin = DeeObject_NewDefault(Dee_TYPE(SECOND));
-			if
-				unlikely(!begin)
-			HANDLE_EXCEPT();
+			if unlikely(!begin)
+				HANDLE_EXCEPT();
 			range_object = DeeRange_New(begin, SECOND,
 			                            DeeNone_Check(FIRST) ? NULL : FIRST);
 			Dee_Decref(begin);
-			if
-				unlikely(!range_object)
-			HANDLE_EXCEPT();
+			if unlikely(!range_object)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = range_object; /* Inherit reference. */
@@ -3057,9 +2920,8 @@ do_fprint_c_nl:
 		TARGET(ASM_GETSIZE, -1, +1) {
 			DREF DeeObject *object_size;
 			object_size = DeeObject_SizeObject(TOP);
-			if
-				unlikely(!object_size)
-			HANDLE_EXCEPT();
+			if unlikely(!object_size)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = object_size; /* Inherit reference. */
 			DISPATCH();
@@ -3068,9 +2930,8 @@ do_fprint_c_nl:
 		TARGET(ASM_CONTAINS, -2, +1) {
 			DREF DeeObject *does_contain;
 			does_contain = DeeObject_ContainsObject(SECOND, FIRST);
-			if
-				unlikely(!does_contain)
-			HANDLE_EXCEPT();
+			if unlikely(!does_contain)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = does_contain; /* Inherit reference. */
@@ -3096,9 +2957,8 @@ do_contains_c:
 #else /* EXEC_SAFE && !CONFIG_NO_THREADS */
 			value = DeeObject_ContainsObject(CONSTimm, TOP);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(!value)
-			HANDLE_EXCEPT();
+			if unlikely(!value)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = value; /* Inherit reference. */
 			DISPATCH();
@@ -3107,9 +2967,8 @@ do_contains_c:
 		TARGET(ASM_GETITEM, -2, +1) {
 			DREF DeeObject *value;
 			value = DeeObject_GetItem(SECOND, FIRST);
-			if
-				unlikely(!value)
-			HANDLE_EXCEPT();
+			if unlikely(!value)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = value; /* Inherit reference. */
@@ -3119,9 +2978,8 @@ do_contains_c:
 		TARGET(ASM_GETITEM_I, -1, +1) {
 			DREF DeeObject *value;
 			value = DeeObject_GetItemIndex(TOP, READ_Simm16());
-			if
-				unlikely(!value)
-			HANDLE_EXCEPT();
+			if unlikely(!value)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = value; /* Inherit reference. */
 			DISPATCH();
@@ -3146,9 +3004,8 @@ do_getitem_c:
 #else /* EXEC_SAFE && !CONFIG_NO_THREADS */
 			value = DeeObject_GetItem(TOP, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(!value)
-			HANDLE_EXCEPT();
+			if unlikely(!value)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = value; /* Inherit reference. */
 			DISPATCH();
@@ -3185,9 +3042,8 @@ do_setitem_c:
 				CONST_LOCKENDREAD();
 				error = DeeObject_SetItem(SECOND, index_object, FIRST);
 				Dee_Decref(index_object);
-				if
-					unlikely(error)
-				HANDLE_EXCEPT();
+				if unlikely(error)
+					HANDLE_EXCEPT();
 			}
 #else /* EXEC_SAFE && !CONFIG_NO_THREADS */
 			if (DeeObject_SetItem(SECOND, CONSTimm, FIRST))
@@ -3209,9 +3065,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE, -3, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRange(THIRD, SECOND, FIRST);
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			Dee_Decref(TOP);
@@ -3222,9 +3077,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE_PN, -2, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRange(SECOND, FIRST, Dee_None);
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
@@ -3234,9 +3088,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE_NP, -2, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRange(SECOND, Dee_None, FIRST);
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
@@ -3246,9 +3099,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE_PI, -2, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRangeEndIndex(SECOND, FIRST, READ_Simm16());
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
@@ -3258,9 +3110,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE_IP, -2, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRangeBeginIndex(SECOND, READ_Simm16(), FIRST);
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
@@ -3270,9 +3121,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE_NI, -1, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRangeEndIndex(TOP, Dee_None, READ_Simm16());
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
 			DISPATCH();
@@ -3281,9 +3131,8 @@ do_setitem_c:
 		TARGET(ASM_GETRANGE_IN, -1, +1) {
 			DREF DeeObject *range_value;
 			range_value = DeeObject_GetRangeBeginIndex(TOP, READ_Simm16(), Dee_None);
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
 			DISPATCH();
@@ -3293,9 +3142,8 @@ do_setitem_c:
 			DREF DeeObject *range_value;
 			int16_t begin = READ_Simm16();
 			range_value   = DeeObject_GetRangeIndex(TOP, begin, READ_Simm16());
-			if
-				unlikely(!range_value)
-			HANDLE_EXCEPT();
+			if unlikely(!range_value)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = range_value; /* Inherit reference. */
 			DISPATCH();
@@ -3339,9 +3187,8 @@ do_setitem_c:
 		}
 
 		TARGET(ASM_SETRANGE_PI, -3, +0) {
-			if
-				unlikely(DeeObject_SetRangeEndIndex(THIRD, SECOND, READ_Simm16(), FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_SetRangeEndIndex(THIRD, SECOND, READ_Simm16(), FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			POPREF();
@@ -3349,9 +3196,8 @@ do_setitem_c:
 		}
 
 		TARGET(ASM_SETRANGE_IP, -3, +0) {
-			if
-				unlikely(DeeObject_SetRangeBeginIndex(THIRD, READ_Simm16(), SECOND, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_SetRangeBeginIndex(THIRD, READ_Simm16(), SECOND, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			POPREF();
@@ -3359,18 +3205,16 @@ do_setitem_c:
 		}
 
 		TARGET(ASM_SETRANGE_NI, -2, +0) {
-			if
-				unlikely(DeeObject_SetRangeEndIndex(SECOND, Dee_None, READ_Simm16(), FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_SetRangeEndIndex(SECOND, Dee_None, READ_Simm16(), FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			DISPATCH();
 		}
 
 		TARGET(ASM_SETRANGE_IN, -2, +0) {
-			if
-				unlikely(DeeObject_SetRangeBeginIndex(SECOND, READ_Simm16(), Dee_None, FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_SetRangeBeginIndex(SECOND, READ_Simm16(), Dee_None, FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			DISPATCH();
@@ -3378,9 +3222,8 @@ do_setitem_c:
 
 		TARGET(ASM_SETRANGE_II, -2, +0) {
 			int16_t begin = READ_Simm16();
-			if
-				unlikely(DeeObject_SetRangeIndex(SECOND, begin, READ_Simm16(), FIRST))
-			HANDLE_EXCEPT();
+			if unlikely(DeeObject_SetRangeIndex(SECOND, begin, READ_Simm16(), FIRST))
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			DISPATCH();
@@ -3501,9 +3344,8 @@ do_setitem_c:
 		TARGET(ASM_ITERSELF, -1, +1) {
 			DREF DeeObject *iterator;
 			iterator = DeeObject_IterSelf(TOP);
-			if
-				unlikely(!iterator)
-			HANDLE_EXCEPT();
+			if unlikely(!iterator)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = iterator;
 			/* Predict that this will be a foreach loop. */
@@ -3518,16 +3360,14 @@ do_setitem_c:
 			uint8_t n_args = READ_imm8();
 			ASSERT_USAGE(-(2 + (int)n_args), +1);
 			new_sp = sp - n_args;
-			if
-				unlikely(!DeeString_Check(new_sp[-1]))
-			{
+			if unlikely(!DeeString_Check(new_sp[-1]))
+				{
 				err_expected_string_for_attribute(new_sp[-1]);
 				HANDLE_EXCEPT();
 			}
 			resval = DeeObject_CallAttr(new_sp[-2], new_sp[-1], n_args, new_sp);
-			if
-				unlikely(!resval)
-			HANDLE_EXCEPT();
+			if unlikely(!resval)
+				HANDLE_EXCEPT();
 			while (n_args--)
 				POPREF();
 			POPREF();
@@ -3539,16 +3379,14 @@ do_setitem_c:
 		TARGET(ASM_CALLATTR_TUPLE, -3, +1) {
 			DREF DeeObject *call_result;
 			ASSERT_TUPLE(FIRST);
-			if
-				unlikely(!DeeString_Check(SECOND))
-			{
+			if unlikely(!DeeString_Check(SECOND))
+				{
 				err_expected_string_for_attribute(SECOND);
 				HANDLE_EXCEPT();
 			}
 			call_result = DeeObject_CallAttrTuple(THIRD, SECOND, FIRST);
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			Dee_Decref(TOP);
@@ -3578,9 +3416,8 @@ do_setitem_c:
 				Dee_Incref(attr_name);
 				Dee_Incref(kwds_map);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(attr_name))
-				{
+				if unlikely(!DeeString_CheckExact(attr_name))
+					{
 					Dee_Decref_unlikely(attr_name);
 					Dee_Decref_unlikely(kwds_map);
 					goto err_requires_string;
@@ -3601,9 +3438,8 @@ do_setitem_c:
 			                                   new_sp,
 			                                   CONSTimm2);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			while (sp > new_sp)
 				POPREF();
 			Dee_Decref(TOP);
@@ -3629,9 +3465,8 @@ do_callattr_tuple_c_kw:
 				Dee_Incref(attr_name);
 				Dee_Incref(kwds_map);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(attr_name))
-				{
+				if unlikely(!DeeString_CheckExact(attr_name))
+					{
 					Dee_Decref_unlikely(attr_name);
 					Dee_Decref_unlikely(kwds_map);
 					goto err_requires_string;
@@ -3644,9 +3479,8 @@ do_callattr_tuple_c_kw:
 			ASSERT_STRING(CONSTimm);
 			call_result = DeeObject_CallAttrTupleKw(SECOND, CONSTimm, FIRST, CONSTimm2);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = call_result; /* Inherit reference. */
@@ -3668,9 +3502,8 @@ do_callattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref_unlikely(imm_name);
 					goto err_requires_string;
 				}
@@ -3681,9 +3514,8 @@ do_callattr_c:
 			ASSERT_STRING(CONSTimm);
 			callback_result = DeeObject_CallAttr(new_sp[-1], CONSTimm, imm_val2, new_sp);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback_result)
-			HANDLE_EXCEPT();
+			if unlikely(!callback_result)
+				HANDLE_EXCEPT();
 			while (imm_val2--)
 				POPREF();
 			Dee_Decref(TOP);
@@ -3707,16 +3539,14 @@ do_callattr_c_seq:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
 				shared_vector = DeeSharedVector_NewShared(imm_val2, new_sp);
-				if
-					unlikely(!shared_vector)
-				{
+				if unlikely(!shared_vector)
+					{
 					Dee_Decref(imm_name);
 					HANDLE_EXCEPT();
 				}
@@ -3729,17 +3559,15 @@ do_callattr_c_seq:
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			shared_vector = DeeSharedVector_NewShared(imm_val2, new_sp);
-			if
-				unlikely(!shared_vector)
-			HANDLE_EXCEPT();
+			if unlikely(!shared_vector)
+				HANDLE_EXCEPT();
 			sp              = new_sp;
 			callback_result = DeeObject_CallAttr(new_sp[-1], CONSTimm, 1,
 			                                     (DeeObject **)&shared_vector);
 			DeeSharedVector_Decref(shared_vector);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback_result)
-			HANDLE_EXCEPT();
+			if unlikely(!callback_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = callback_result; /* Inherit reference. */
 			DISPATCH();
@@ -3761,16 +3589,14 @@ do_callattr_c_map:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
 				shared_map = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
-				if
-					unlikely(!shared_map)
-				{
+				if unlikely(!shared_map)
+					{
 					Dee_Decref(imm_name);
 					HANDLE_EXCEPT();
 				}
@@ -3783,17 +3609,15 @@ do_callattr_c_map:
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			shared_map = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
-			if
-				unlikely(!shared_map)
-			HANDLE_EXCEPT();
+			if unlikely(!shared_map)
+				HANDLE_EXCEPT();
 			sp              = new_sp;
 			callback_result = DeeObject_CallAttr(new_sp[-1], CONSTimm, 1,
 			                                     (DeeObject **)&shared_map);
 			DeeSharedMap_Decref(shared_map);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback_result)
-			HANDLE_EXCEPT();
+			if unlikely(!callback_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = callback_result; /* Inherit reference. */
 			DISPATCH();
@@ -3815,9 +3639,8 @@ do_callattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3828,9 +3651,8 @@ do_callattr_this_c:
 			ASSERT_STRING(CONSTimm);
 			callback_result = DeeObject_CallAttr(THIS, CONSTimm, imm_val2, sp - imm_val2);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback_result)
-			HANDLE_EXCEPT();
+			if unlikely(!callback_result)
+				HANDLE_EXCEPT();
 			while (imm_val2--)
 				POPREF();
 			PUSH(callback_result); /* Push the result onto the stack. */
@@ -3850,9 +3672,8 @@ do_callattr_tuple_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3863,9 +3684,8 @@ do_callattr_tuple_c:
 			ASSERT_STRING(CONSTimm);
 			callback_result = DeeObject_CallAttrTuple(SECOND, CONSTimm, FIRST);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback_result)
-			HANDLE_EXCEPT();
+			if unlikely(!callback_result)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = callback_result; /* Inherit reference. */
@@ -3886,9 +3706,8 @@ do_callattr_this_tuple_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -3899,9 +3718,8 @@ do_callattr_this_tuple_c:
 			ASSERT_STRING(CONSTimm);
 			callback_result = DeeObject_CallAttrTuple(THIS, CONSTimm, TOP);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!callback_result)
-			HANDLE_EXCEPT();
+			if unlikely(!callback_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = callback_result; /* Inherit reference. */
 			DISPATCH();
@@ -3918,9 +3736,8 @@ do_getmember_r:
 #else /* EXEC_SAFE */
 			result = DeeInstance_GetMember((DeeTypeObject *)REFimm, THIS, imm_val2);
 #endif /* !EXEC_SAFE */
-			if
-				unlikely(!result)
-			HANDLE_EXCEPT();
+			if unlikely(!result)
+				HANDLE_EXCEPT();
 			PUSH(result);
 			DISPATCH();
 		}
@@ -3938,9 +3755,8 @@ do_boundmember_r:
 			ASSERT_REFimm();
 #ifdef EXEC_SAFE
 			temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)REFimm, THIS, imm_val2);
-			if
-				unlikely(temp < 0)
-			HANDLE_EXCEPT();
+			if unlikely(temp < 0)
+				HANDLE_EXCEPT();
 			PUSHREF(DeeBool_For(temp != 0));
 #else /* EXEC_SAFE */
 			temp = DeeInstance_BoundMember((DeeTypeObject *)REFimm, THIS, imm_val2);
@@ -3972,9 +3788,8 @@ do_setmember_r:
 			ASSERT_THISCALL();
 			ASSERT_REFimm();
 #ifdef EXEC_SAFE
-			if
-				unlikely(DeeInstance_SetMemberSafe((DeeTypeObject *)REFimm, THIS, imm_val2, TOP))
-			HANDLE_EXCEPT();
+			if unlikely(DeeInstance_SetMemberSafe((DeeTypeObject *)REFimm, THIS, imm_val2, TOP))
+				HANDLE_EXCEPT();
 #else /* EXEC_SAFE */
 			DeeInstance_SetMember((DeeTypeObject *)REFimm, THIS,
 			                      imm_val2, TOP);
@@ -3995,16 +3810,14 @@ do_call_extern:
 			call_object = EXTERNimm;
 			Dee_XIncref(call_object);
 			EXTERN_LOCKENDREAD();
-			if
-				unlikely(!call_object)
-			goto err_unbound_extern;
+			if unlikely(!call_object)
+				goto err_unbound_extern;
 do_object_call_imm:
 			imm_val = READ_imm8();
 #ifdef EXEC_SAFE
 			/* Assert stack usage. */
-			if
-				unlikely(imm_val > STACKUSED || (!imm_val && !STACKFREE))
-			{
+			if unlikely(imm_val > STACKUSED || (!imm_val && !STACKFREE))
+				{
 				Dee_Decref(call_object);
 				if (imm_val > STACKUSED)
 					goto err_invalid_stack_affect;
@@ -4015,9 +3828,8 @@ do_object_call_imm:
 #endif /* !EXEC_SAFE */
 			call_result = DeeObject_Call(call_object, imm_val, sp - imm_val);
 			Dee_Decref(call_object);
-			if
-				unlikely(!call_result)
-			HANDLE_EXCEPT();
+			if unlikely(!call_result)
+				HANDLE_EXCEPT();
 			while (imm_val--)
 				POPREF();
 			PUSH(call_result);
@@ -4030,34 +3842,30 @@ do_call_global:
 			call_object = GLOBALimm;
 			Dee_XIncref(call_object);
 			GLOBAL_LOCKENDREAD();
-			if
-				unlikely(!call_object)
-			goto err_unbound_global;
+			if unlikely(!call_object)
+				goto err_unbound_global;
 			goto do_object_call_imm;
 			RAW_TARGET(ASM_CALL_LOCAL)
 			imm_val = READ_imm8();
 do_call_local:
 			ASSERT_LOCALimm();
 			call_object = LOCALimm;
-			if
-				unlikely(!call_object)
-			goto err_unbound_local;
+			if unlikely(!call_object)
+				goto err_unbound_local;
 			Dee_Incref(call_object);
 			goto do_object_call_imm;
 		}
 
 		TARGET(ASM_GETATTR, -2, +1) {
 			DeeObject *attr_result;
-			if
-				unlikely(!DeeString_Check(FIRST))
-			{
+			if unlikely(!DeeString_Check(FIRST))
+				{
 				err_expected_string_for_attribute(FIRST);
 				HANDLE_EXCEPT();
 			}
 			attr_result = DeeObject_GetAttr(SECOND, FIRST);
-			if
-				unlikely(!attr_result)
-			HANDLE_EXCEPT();
+			if unlikely(!attr_result)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = attr_result; /* Inherit reference. */
@@ -4065,9 +3873,8 @@ do_call_local:
 		}
 
 		TARGET(ASM_DELATTR, -2, +0) {
-			if
-				unlikely(!DeeString_Check(FIRST))
-			{
+			if unlikely(!DeeString_Check(FIRST))
+				{
 				err_expected_string_for_attribute(FIRST);
 				HANDLE_EXCEPT();
 			}
@@ -4080,16 +3887,14 @@ do_call_local:
 
 		TARGET(ASM_SETATTR, -3, +0) {
 			int error;
-			if
-				unlikely(!DeeString_Check(SECOND))
-			{
+			if unlikely(!DeeString_Check(SECOND))
+				{
 				err_expected_string_for_attribute(SECOND);
 				HANDLE_EXCEPT();
 			}
 			error = DeeObject_SetAttr(THIRD, SECOND, FIRST);
-			if
-				unlikely(error < 0)
-			HANDLE_EXCEPT();
+			if unlikely(error < 0)
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			POPREF();
@@ -4098,16 +3903,14 @@ do_call_local:
 
 		TARGET(ASM_BOUNDATTR, -2, +1) {
 			int error;
-			if
-				unlikely(!DeeString_Check(FIRST))
-			{
+			if unlikely(!DeeString_Check(FIRST))
+				{
 				err_expected_string_for_attribute(FIRST);
 				HANDLE_EXCEPT();
 			}
 			error = DeeObject_BoundAttr(SECOND, FIRST);
-			if
-				unlikely(error == -1)
-			HANDLE_EXCEPT();
+			if unlikely(error == -1)
+				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
 			TOP = DeeBool_For(error > 0);
@@ -4127,9 +3930,8 @@ do_getattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4140,9 +3942,8 @@ do_getattr_c:
 			ASSERT_STRING(CONSTimm);
 			getattr_result = DeeObject_GetAttr(TOP, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(!getattr_result)
-			HANDLE_EXCEPT();
+			if unlikely(!getattr_result)
+				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
 			TOP = getattr_result; /* Inherit reference. */
 			DISPATCH();
@@ -4160,9 +3961,8 @@ do_delattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4173,9 +3973,8 @@ do_delattr_c:
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_DelAttr(TOP, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(error < 0)
-			HANDLE_EXCEPT();
+			if unlikely(error < 0)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -4192,9 +3991,8 @@ do_setattr_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4205,9 +4003,8 @@ do_setattr_c:
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_SetAttr(SECOND, CONSTimm, FIRST);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(error < 0)
-			HANDLE_EXCEPT();
+			if unlikely(error < 0)
+				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
 			DISPATCH();
@@ -4226,9 +4023,8 @@ do_getattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4239,9 +4035,8 @@ do_getattr_this_c:
 			ASSERT_STRING(CONSTimm);
 			getattr_result = DeeObject_GetAttr(THIS, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(!getattr_result)
-			HANDLE_EXCEPT();
+			if unlikely(!getattr_result)
+				HANDLE_EXCEPT();
 			PUSH(getattr_result); /* Inherit reference. */
 			DISPATCH();
 		}
@@ -4259,9 +4054,8 @@ do_delattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4272,9 +4066,8 @@ do_delattr_this_c:
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_DelAttr(THIS, CONSTimm);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(error < 0)
-			HANDLE_EXCEPT();
+			if unlikely(error < 0)
+				HANDLE_EXCEPT();
 			DISPATCH();
 		}
 
@@ -4291,9 +4084,8 @@ do_setattr_this_c:
 				imm_name = CONSTimm;
 				Dee_Incref(imm_name);
 				CONST_LOCKENDREAD();
-				if
-					unlikely(!DeeString_CheckExact(imm_name))
-				{
+				if unlikely(!DeeString_CheckExact(imm_name))
+					{
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
@@ -4304,9 +4096,8 @@ do_setattr_this_c:
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_SetAttr(THIS, CONSTimm, TOP);
 #endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
-			if
-				unlikely(error < 0)
-			HANDLE_EXCEPT();
+			if unlikely(error < 0)
+				HANDLE_EXCEPT();
 			POPREF();
 			DISPATCH();
 		}
@@ -4458,9 +4249,8 @@ do_setattr_this_c:
 					ASSERT_USAGE(-3, +1);
 					ASSERT_TUPLE(SECOND);
 					call_result = DeeObject_CallTupleKw(THIRD, SECOND, FIRST);
-					if
-						unlikely(!call_result)
-					HANDLE_EXCEPT();
+					if unlikely(!call_result)
+						HANDLE_EXCEPT();
 					POPREF();
 					POPREF();
 					Dee_Decref(TOP);
@@ -4479,17 +4269,15 @@ do_setattr_this_c:
 #endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					ASSERT_USAGE(-((int)n_args + 1), +1);
 					shared_vector = DeeSharedVector_NewShared(n_args, sp - n_args);
-					if
-						unlikely(!shared_vector)
-					HANDLE_EXCEPT();
+					if unlikely(!shared_vector)
+						HANDLE_EXCEPT();
 					sp -= n_args; /* These operands have been inherited `DeeSharedVector_NewShared' */
 					/* Invoke the object that is now located in TOP
 					 * For this invocation, we pass only a single argument `shared_vector' */
 					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&shared_vector);
 					DeeSharedVector_Decref(shared_vector);
-					if
-						unlikely(!callback_result)
-					HANDLE_EXCEPT();
+					if unlikely(!callback_result)
+						HANDLE_EXCEPT();
 					/* Replace the function that was called with its return value. */
 					Dee_Decref(TOP);
 					TOP = callback_result;
@@ -4512,17 +4300,15 @@ do_setattr_this_c:
 					/* NOTE: The vector of DeeSharedItem structures has
 					 *       previously been constructed on the stack. */
 					shared_key_vector = DeeSharedMap_NewShared(n_args, (DeeSharedItem *)(sp - n_args * 2));
-					if
-						unlikely(!shared_key_vector)
-					HANDLE_EXCEPT();
+					if unlikely(!shared_key_vector)
+						HANDLE_EXCEPT();
 					sp -= n_args * 2; /* These operands have been inherited `DeeSharedVector_NewShared' */
 					/* Invoke the object that is now located in TOP
 					 * For this invocation, we pass only a single argument `shared_key_vector' */
 					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&shared_key_vector);
 					DeeSharedMap_Decref(shared_key_vector);
-					if
-						unlikely(!callback_result)
-					HANDLE_EXCEPT();
+					if unlikely(!callback_result)
+						HANDLE_EXCEPT();
 					/* Replace the function that was called with its return value. */
 					Dee_Decref(TOP);
 					TOP = callback_result;
@@ -4536,9 +4322,8 @@ do_setattr_this_c:
 					DREF DeeObject *callback_result;
 					ASSERT_TUPLE(FIRST);
 					callback_result = DeeObject_ThisCallTuple(THIRD, SECOND, FIRST);
-					if
-						unlikely(!callback_result)
-					HANDLE_EXCEPT();
+					if unlikely(!callback_result)
+						HANDLE_EXCEPT();
 					POPREF();
 					POPREF();
 					Dee_Decref(TOP);
@@ -4559,9 +4344,8 @@ do_setattr_this_c:
 				TARGET(ASM_PUSH_EXCEPT, -0, +1) {
 					DeeObject *temp;
 					/* Check if an exception has been set. */
-					if
-						unlikely(!this_thread->t_except)
-					goto except_no_active_exception;
+					if unlikely(!this_thread->t_except)
+						goto except_no_active_exception;
 					temp = this_thread->t_except->ef_error;
 					PUSHREF(temp);
 					DISPATCH();
@@ -4769,9 +4553,8 @@ do_setattr_this_c:
 					if (DeeObject_AssertTypeExact(TOP, &DeeClassDescriptor_Type))
 						HANDLE_EXCEPT();
 					new_class = DeeClass_New((DeeTypeObject *)SECOND, TOP);
-					if
-						unlikely(!new_class)
-					HANDLE_EXCEPT();
+					if unlikely(!new_class)
+						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
 					TOP = (DREF DeeObject *)new_class; /* Inherit reference. */
@@ -4799,9 +4582,8 @@ do_setattr_this_c:
 					base = EXTERNimm;
 					Dee_XIncref(base);
 					EXTERN_LOCKENDREAD();
-					if
-						unlikely(!base)
-					goto err_unbound_extern;
+					if unlikely(!base)
+						goto err_unbound_extern;
 #undef EXCEPTION_CLEANUP
 #define EXCEPTION_CLEANUP Dee_Decref(base);
 					imm_val = READ_imm16();
@@ -4815,9 +4597,8 @@ do_setattr_this_c:
 						descriptor = CONSTimm;
 						Dee_Incref(descriptor);
 						CONST_LOCKENDREAD();
-						if
-							unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
-						new_class = NULL;
+						if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+							new_class = NULL;
 						else {
 							new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
 						}
@@ -4827,9 +4608,8 @@ do_setattr_this_c:
 					new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm);
 #endif /* !EXEC_SAFE */
 					Dee_Decref(base);
-					if
-						unlikely(!new_class)
-					HANDLE_EXCEPT();
+					if unlikely(!new_class)
+						HANDLE_EXCEPT();
 					PUSH((DREF DeeObject *)new_class); /* Inherit reference. */
 					DISPATCH();
 				}
@@ -4843,9 +4623,8 @@ do_setattr_this_c:
 					DREF DeeObject *member_value;
 					imm_val      = READ_imm16();
 					member_value = DeeClass_GetMemberSafe((DeeTypeObject *)TOP, imm_val);
-					if
-						unlikely(!member_value)
-					HANDLE_EXCEPT();
+					if unlikely(!member_value)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = member_value; /* Inherit reference. */
 					DISPATCH();
@@ -4878,9 +4657,8 @@ do_setattr_this_c:
 				TARGET(ASM_REDUCE_MIN, -1, +1) {
 					DREF DeeObject *result;
 					result = DeeSeq_Min(TOP, NULL);
-					if
-						unlikely(!result)
-					HANDLE_EXCEPT();
+					if unlikely(!result)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = result; /* Inherit reference. */
 					DISPATCH();
@@ -4889,9 +4667,8 @@ do_setattr_this_c:
 				TARGET(ASM_REDUCE_MAX, -1, +1) {
 					DREF DeeObject *result;
 					result = DeeSeq_Max(TOP, NULL);
-					if
-						unlikely(!result)
-					HANDLE_EXCEPT();
+					if unlikely(!result)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = result; /* Inherit reference. */
 					DISPATCH();
@@ -4900,9 +4677,8 @@ do_setattr_this_c:
 				TARGET(ASM_REDUCE_SUM, -1, +1) {
 					DREF DeeObject *result;
 					result = DeeSeq_Sum(TOP);
-					if
-						unlikely(!result)
-					HANDLE_EXCEPT();
+					if unlikely(!result)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = result; /* Inherit reference. */
 					DISPATCH();
@@ -4910,9 +4686,8 @@ do_setattr_this_c:
 
 				TARGET(ASM_REDUCE_ANY, -1, +1) {
 					int result = DeeSeq_Any(TOP);
-					if
-						unlikely(result < 0)
-					HANDLE_EXCEPT();
+					if unlikely(result < 0)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(result);
 					Dee_Incref(TOP);
@@ -4921,9 +4696,8 @@ do_setattr_this_c:
 
 				TARGET(ASM_REDUCE_ALL, -1, +1) {
 					int result = DeeSeq_All(TOP);
-					if
-						unlikely(result < 0)
-					HANDLE_EXCEPT();
+					if unlikely(result < 0)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(result);
 					Dee_Incref(TOP);
@@ -4987,9 +4761,8 @@ do_setattr_this_c:
 						 *               range in order to prevent the potential 
 						 *               overflow. */
 						DREF DeeObject *ob_end = DeeInt_NewU32(range_end);
-						if
-							unlikely(!ob_end)
-						HANDLE_EXCEPT();
+						if unlikely(!ob_end)
+							HANDLE_EXCEPT();
 #if 1 /* Both versions will result in the same behavior, but this        \
        * one is faster in the current implementation because `int'       \
        * actually doesn't implement inplace operations, meaning          \
@@ -5006,9 +4779,8 @@ do_setattr_this_c:
 					{
 						range_object = DeeRange_NewInt(0, (dssize_t)range_end, 1);
 					}
-					if
-						unlikely(!range_object)
-					HANDLE_EXCEPT();
+					if unlikely(!range_object)
+						HANDLE_EXCEPT();
 					PUSH(range_object);
 					DISPATCH();
 				}
@@ -5035,9 +4807,8 @@ do_setattr_this_c:
 						Dee_Incref(attr_name);
 						Dee_Incref(kwds_map);
 						CONST_LOCKENDREAD();
-						if
-							unlikely(!DeeString_CheckExact(attr_name))
-						{
+						if unlikely(!DeeString_CheckExact(attr_name))
+							{
 							Dee_Decref_unlikely(attr_name);
 							Dee_Decref_unlikely(kwds_map);
 							goto err_requires_string;
@@ -5058,9 +4829,8 @@ do_setattr_this_c:
 					                                   new_sp,
 					                                   CONSTimm2);
 #endif /* !EXEC_SAFE */
-					if
-						unlikely(!call_result)
-					HANDLE_EXCEPT();
+					if unlikely(!call_result)
+						HANDLE_EXCEPT();
 					while (sp > new_sp)
 						POPREF();
 					Dee_Decref(TOP);
@@ -5080,9 +4850,8 @@ do_setattr_this_c:
 					imm_val = READ_imm8();
 					ASSERT_USAGE(-(int)(imm_val + 3), +1);
 					new_sp = sp - (imm_val + 1);
-					if
-						unlikely(!DeeString_Check(new_sp[-1]))
-					{
+					if unlikely(!DeeString_Check(new_sp[-1]))
+						{
 						err_expected_string_for_attribute(new_sp[-1]);
 						HANDLE_EXCEPT();
 					}
@@ -5091,9 +4860,8 @@ do_setattr_this_c:
 					                                   imm_val,
 					                                   new_sp,
 					                                   TOP);
-					if
-						unlikely(!call_result)
-					HANDLE_EXCEPT();
+					if unlikely(!call_result)
+						HANDLE_EXCEPT();
 					while (sp > new_sp)
 						POPREF();
 					POPREF(); /* name */
@@ -5105,9 +4873,8 @@ do_setattr_this_c:
 				RAW_TARGET(ASM_CALLATTR_TUPLE_KWDS) {
 					DREF DeeObject *call_result;
 					ASSERT_USAGE(-4, +1);
-					if
-						unlikely(!DeeString_Check(THIRD))
-					{
+					if unlikely(!DeeString_Check(THIRD))
+						{
 						err_expected_string_for_attribute(THIRD);
 						HANDLE_EXCEPT();
 					}
@@ -5156,9 +4923,8 @@ do_setattr_this_c:
 					imm_val = READ_imm8();
 do_getmember:
 					result = DeeInstance_GetMemberSafe((DeeTypeObject *)FIRST, SECOND, imm_val);
-					if
-						unlikely(!result)
-					HANDLE_EXCEPT();
+					if unlikely(!result)
+						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
 					TOP = result; /* Inherit reference. */
@@ -5170,9 +4936,8 @@ do_getmember:
 					imm_val = READ_imm8();
 do_hasmember:
 					temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)FIRST, SECOND, imm_val);
-					if
-						unlikely(temp < 0)
-					HANDLE_EXCEPT();
+					if unlikely(temp < 0)
+						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(temp);
@@ -5227,9 +4992,8 @@ do_setmember:
 do_getmember_this:
 					ASSERT_THISCALL();
 					result = DeeInstance_GetMemberSafe((DeeTypeObject *)TOP, THIS, imm_val);
-					if
-						unlikely(!result)
-					HANDLE_EXCEPT();
+					if unlikely(!result)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = result; /* Inherit reference. */
 					DISPATCH();
@@ -5241,9 +5005,8 @@ do_getmember_this:
 do_hasmember_this:
 					ASSERT_THISCALL();
 					temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)TOP, THIS, imm_val);
-					if
-						unlikely(temp < 0)
-					HANDLE_EXCEPT();
+					if unlikely(temp < 0)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(temp);
 					Dee_Incref(TOP);
@@ -5334,9 +5097,8 @@ do_setmember_this:
 				TARGET(ASM_BOUNDITEM, -2, +1) {
 					int error;
 					error = DeeObject_BoundItem(SECOND, FIRST, true);
-					if
-						unlikely(error == -1)
-					HANDLE_EXCEPT();
+					if unlikely(error == -1)
+						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(error > 0);
@@ -5384,9 +5146,8 @@ do_setmember_this:
 					imm_val = READ_imm8();
 do_pack_set:
 					hashset_object = DeeHashSet_NewItemsInherited(imm_val, sp - imm_val);
-					if
-						unlikely(!hashset_object)
-					HANDLE_EXCEPT();
+					if unlikely(!hashset_object)
+						HANDLE_EXCEPT();
 					sp -= imm_val;
 					PUSH(hashset_object);
 					DISPATCH();
@@ -5402,9 +5163,8 @@ do_pack_set:
 do_pack_dict:
 					ASSERT_USAGE(-(int)(imm_val * 2), +1);
 					dict_object = DeeDict_NewKeyItemsInherited(imm_val, sp - (imm_val * 2));
-					if
-						unlikely(!dict_object)
-					HANDLE_EXCEPT();
+					if unlikely(!dict_object)
+						HANDLE_EXCEPT();
 					sp -= (imm_val * 2); /* Adjust SP to pop items. */
 					PUSH(dict_object);   /* Inherit reference. */
 					DISPATCH();
@@ -5414,9 +5174,8 @@ do_pack_dict:
 					DREF DeeObject *dict_cast;
 					ASSERT_USAGE(-1, +1);
 					dict_cast = DeeDict_FromSequence(TOP);
-					if
-						unlikely(!dict_cast)
-					HANDLE_EXCEPT();
+					if unlikely(!dict_cast)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = dict_cast; /* Inherit reference. */
 					DISPATCH();
@@ -5425,9 +5184,8 @@ do_pack_dict:
 				TARGET(ASM_CAST_HASHSET, -1, +1) {
 					DREF DeeObject *set_cast;
 					set_cast = DeeHashSet_FromSequence(TOP);
-					if
-						unlikely(!set_cast)
-					HANDLE_EXCEPT();
+					if unlikely(!set_cast)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = set_cast; /* Inherit reference */
 					DISPATCH();
@@ -5437,9 +5195,8 @@ do_pack_dict:
 					DREF DeeObject *iter_res;
 					ASSERT_USAGE(-1, +1);
 					iter_res = DeeObject_IterNext(TOP);
-					if
-						unlikely(!iter_res)
-					HANDLE_EXCEPT();
+					if unlikely(!iter_res)
+						HANDLE_EXCEPT();
 					if (iter_res == ITER_DONE) {
 						/* Throw the stop-iterator error object. */
 						DeeError_Throw(&DeeError_StopIteration_instance);
@@ -5497,14 +5254,12 @@ do_pack_dict:
 						if (!value) {
 							DeeObject *oldval;
 							value = construct_varkwds_mapping();
-							if
-								unlikely(!value)
-							HANDLE_EXCEPT();
+							if unlikely(!value)
+								HANDLE_EXCEPT();
 #ifdef CONFIG_NO_THREADS
 							oldval = frame->cf_kw->fk_varkwds;
-							if
-								unlikely(oldval)
-							{
+							if unlikely(oldval)
+								{
 								VARKWDS_DECREF(value);
 								value = oldval;
 							} else {
@@ -5512,18 +5267,16 @@ do_pack_dict:
 							}
 #else /* CONFIG_NO_THREADS */
 							oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, value);
-							if
-								unlikely(oldval)
-							{
+							if unlikely(oldval)
+								{
 								VARKWDS_DECREF(value);
 								value = oldval;
 							}
 #endif /* !CONFIG_NO_THREADS */
 						}
 						temp = DeeObject_Bool(value);
-						if
-							unlikely(temp < 0)
-						HANDLE_EXCEPT();
+						if unlikely(temp < 0)
+							HANDLE_EXCEPT();
 						value = DeeBool_For(temp);
 					}
 					PUSHREF(value);
@@ -5544,9 +5297,8 @@ do_pack_dict:
 						Dee_Incref(varsize);
 					} else {
 						varsize = DeeInt_NewSize((size_t)(frame->cf_argc - code->co_argc_max));
-						if
-							unlikely(!varsize)
-						HANDLE_EXCEPT();
+						if unlikely(!varsize)
+							HANDLE_EXCEPT();
 					}
 					PUSH(varsize); /* Inherit reference. */
 					DISPATCH();
@@ -5663,9 +5415,8 @@ do_supergetattr_rc:
 #else /* EXEC_SAFE */
 					attr_value = DeeObject_TGetAttr((DeeTypeObject *)REFimm, THIS, CONSTimm2);
 #endif /* !EXEC_SAFE */
-					if
-						unlikely(!attr_value)
-					HANDLE_EXCEPT();
+					if unlikely(!attr_value)
+						HANDLE_EXCEPT();
 					PUSH(attr_value);
 					DISPATCH();
 				}
@@ -5701,9 +5452,8 @@ do_supercallattr_rc:
 #else /* EXEC_SAFE */
 					callback_result = DeeObject_TCallAttr((DeeTypeObject *)REFimm, THIS, CONSTimm2, argc, sp - argc);
 #endif /* !EXEC_SAFE */
-					if
-						unlikely(!callback_result)
-					HANDLE_EXCEPT();
+					if unlikely(!callback_result)
+						HANDLE_EXCEPT();
 					while (argc--)
 						POPREF();
 					PUSH(callback_result);
@@ -5757,14 +5507,12 @@ do_prefix_instr:
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
 prefix_jf_16:
 					prefix_ob = get_prefix_object();
-					if
-						unlikely(!prefix_ob)
-					HANDLE_EXCEPT();
+					if unlikely(!prefix_ob)
+						HANDLE_EXCEPT();
 					temp = DeeObject_Bool(prefix_ob);
 					Dee_Decref(prefix_ob);
-					if
-						unlikely(temp < 0)
-					HANDLE_EXCEPT();
+					if unlikely(temp < 0)
+						HANDLE_EXCEPT();
 					if (!temp) {
 #ifndef CONFIG_NO_THREADS
 						if ((int16_t)imm_val < 0 &&
@@ -5794,14 +5542,12 @@ prefix_jf_16:
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
 prefix_jt_16:
 					prefix_ob = get_prefix_object();
-					if
-						unlikely(!prefix_ob)
-					HANDLE_EXCEPT();
+					if unlikely(!prefix_ob)
+						HANDLE_EXCEPT();
 					temp = DeeObject_Bool(prefix_ob);
 					Dee_Decref(prefix_ob);
-					if
-						unlikely(temp < 0)
-					HANDLE_EXCEPT();
+					if unlikely(temp < 0)
+						HANDLE_EXCEPT();
 					if (temp) {
 #ifndef CONFIG_NO_THREADS
 						if ((int16_t)imm_val < 0 &&
@@ -5830,14 +5576,12 @@ prefix_jt_16:
 prefix_foreach_16:
 					ASSERT_USAGE(-0, +1);
 					prefix_ob = get_prefix_object();
-					if
-						unlikely(!prefix_ob)
-					HANDLE_EXCEPT();
+					if unlikely(!prefix_ob)
+						HANDLE_EXCEPT();
 					elem = DeeObject_IterNext(prefix_ob);
 					Dee_Decref(prefix_ob);
-					if
-						unlikely(!elem)
-					HANDLE_EXCEPT();
+					if unlikely(!elem)
+						HANDLE_EXCEPT();
 					if (elem == ITER_DONE)
 						goto jump_16;
 					/* Push the element. */
@@ -5891,29 +5635,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAddS8(prefix_pointer, READ_Simm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAddS8(&prefix_ob, READ_Simm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -5923,29 +5662,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAddInt(prefix_pointer, READ_imm32());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAddInt(&prefix_ob, READ_imm32());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -5955,29 +5689,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceSubS8(prefix_pointer, READ_Simm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceSubS8(&prefix_ob, READ_Simm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -5987,29 +5716,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceSubInt(prefix_pointer, READ_imm32());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceSubInt(&prefix_ob, READ_imm32());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6019,29 +5743,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceMulInt(prefix_pointer, READ_Simm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceMulInt(&prefix_ob, READ_Simm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6051,29 +5770,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceDivInt(prefix_pointer, READ_Simm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceDivInt(&prefix_ob, READ_Simm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6083,29 +5797,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceModInt(prefix_pointer, READ_Simm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceModInt(&prefix_ob, READ_Simm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6115,29 +5824,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAndInt(prefix_pointer, READ_imm32());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceAndInt(&prefix_ob, READ_imm32());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6147,29 +5851,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceOrInt(prefix_pointer, READ_imm32());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceOrInt(&prefix_ob, READ_imm32());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6179,29 +5878,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceXorInt(prefix_pointer, READ_imm32());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceXorInt(&prefix_ob, READ_imm32());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6211,29 +5905,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceShlInt(prefix_pointer, READ_imm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceShlInt(&prefix_ob, READ_imm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6243,29 +5932,24 @@ prefix_foreach_16:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceShrInt(prefix_pointer, READ_imm8());
-						if
-							unlikely(error)
-						HANDLE_EXCEPT();
+						if unlikely(error)
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						error = DeeObject_InplaceShrInt(&prefix_ob, READ_imm8());
-						if
-							unlikely(error)
-						{
+						if unlikely(error)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6308,13 +5992,11 @@ prefix_do_function_c:
 					                                    imm_val2 + 1,
 					                                    sp - (imm_val2 + 1));
 #endif /* !EXEC_SAFE */
-					if
-						unlikely(!function)
-					HANDLE_EXCEPT();
+					if unlikely(!function)
+						HANDLE_EXCEPT();
 					sp -= imm_val2 + 1;
-					if
-						unlikely(set_prefix_object(function))
-					HANDLE_EXCEPT();
+					if unlikely(set_prefix_object(function))
+						HANDLE_EXCEPT();
 					DISPATCH();
 				}
 
@@ -6323,27 +6005,22 @@ prefix_do_function_c:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
-						if
-							unlikely(DeeObject_Inc(prefix_pointer))
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
+						if unlikely(DeeObject_Inc(prefix_pointer))
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
-						if
-							unlikely(DeeObject_Inc(&prefix_ob))
-						{
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
+						if unlikely(DeeObject_Inc(&prefix_ob))
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6352,27 +6029,22 @@ prefix_do_function_c:
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
-						if
-							unlikely(DeeObject_Dec(prefix_pointer))
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
+						if unlikely(DeeObject_Dec(prefix_pointer))
+							HANDLE_EXCEPT();
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
-						if
-							unlikely(DeeObject_Dec(&prefix_ob))
-						{
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
+						if unlikely(DeeObject_Dec(&prefix_ob))
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6386,37 +6058,32 @@ do_prefix_operator:
 					ASSERT_USAGE(-(int)imm_val2, +1);
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						call_result = DeeObject_PInvokeOperator(prefix_pointer, imm_val,
 						                                        imm_val2, sp - imm_val2);
-						if
-							unlikely(!call_result)
-						HANDLE_EXCEPT();
+						if unlikely(!call_result)
+							HANDLE_EXCEPT();
 						while (imm_val2--)
 							POPREF();
 						PUSH(call_result);
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						call_result = DeeObject_PInvokeOperator(&prefix_ob, imm_val,
 						                                        imm_val2, sp - imm_val2);
-						if
-							unlikely(!call_result)
-						{
+						if unlikely(!call_result)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
 						while (imm_val2--)
 							POPREF();
 						PUSH(call_result);
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6430,39 +6097,34 @@ do_prefix_operator_tuple:
 					ASSERT_TUPLE(TOP);
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-						if
-							unlikely(!prefix_pointer)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_pointer)
+							HANDLE_EXCEPT();
 						call_result = DeeObject_PInvokeOperator(prefix_pointer,
 						                                        imm_val,
 						                                        DeeTuple_SIZE(TOP),
 						                                        DeeTuple_ELEM(TOP));
-						if
-							unlikely(!call_result)
-						HANDLE_EXCEPT();
+						if unlikely(!call_result)
+							HANDLE_EXCEPT();
 						Dee_Decref(TOP);
 						TOP = call_result; /* Inherit reference. */
 					} else {
 						USING_PREFIX_OBJECT
 						prefix_ob = get_prefix_object();
-						if
-							unlikely(!prefix_ob)
-						HANDLE_EXCEPT();
+						if unlikely(!prefix_ob)
+							HANDLE_EXCEPT();
 						call_result = DeeObject_PInvokeOperator(&prefix_ob,
 						                                        imm_val,
 						                                        DeeTuple_SIZE(TOP),
 						                                        DeeTuple_ELEM(TOP));
-						if
-							unlikely(!call_result)
-						{
+						if unlikely(!call_result)
+							{
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
 						}
 						Dee_Decref(TOP);
 						TOP = call_result; /* Inherit reference. */
-						if
-							unlikely(set_prefix_object(prefix_ob))
-						HANDLE_EXCEPT();
+						if unlikely(set_prefix_object(prefix_ob))
+							HANDLE_EXCEPT();
 					}
 					DISPATCH();
 				}
@@ -6474,14 +6136,12 @@ do_prefix_operator_tuple:
 prefix_do_unpack:
 					ASSERT_USAGE(-0, +(int)imm_val);
 					sequence = get_prefix_object();
-					if
-						unlikely(!sequence)
-					HANDLE_EXCEPT();
+					if unlikely(!sequence)
+						HANDLE_EXCEPT();
 					error = DeeObject_Unpack(sequence, imm_val, sp);
 					Dee_Decref(sequence);
-					if
-						unlikely(error)
-					HANDLE_EXCEPT();
+					if unlikely(error)
+						HANDLE_EXCEPT();
 					sp += imm_val;
 					DISPATCH();
 				}
@@ -6528,17 +6188,14 @@ prefix_do_unpack:
 							ASSERT_USAGE(-0, +1);
 							prefix_pointer = get_prefix_object_ptr();
 							if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-								if
-									unlikely(!prefix_pointer)
-								HANDLE_EXCEPT();
+								if unlikely(!prefix_pointer)
+									HANDLE_EXCEPT();
 								obcopy = DeeObject_Copy(*prefix_pointer);
-								if
-									unlikely(!obcopy)
-								HANDLE_EXCEPT();
+								if unlikely(!obcopy)
+									HANDLE_EXCEPT();
 								PUSH(obcopy); /* Inherit reference. */
-								if
-									unlikely(!*prefix_pointer)
-								{
+								if unlikely(!*prefix_pointer)
+									{
 #ifdef NDEBUG
 									get_prefix_object_ptr();
 #else /* NDEBUG */
@@ -6552,13 +6209,11 @@ prefix_do_unpack:
 							} else {
 								USING_PREFIX_OBJECT
 								prefix_ob = get_prefix_object();
-								if
-									unlikely(!prefix_ob)
-								HANDLE_EXCEPT();
+								if unlikely(!prefix_ob)
+									HANDLE_EXCEPT();
 								obcopy = DeeObject_Copy(prefix_ob);
-								if
-									unlikely(!obcopy)
-								{
+								if unlikely(!obcopy)
+									{
 									Dee_Decref(prefix_ob);
 									HANDLE_EXCEPT();
 								}
@@ -6567,9 +6222,8 @@ prefix_do_unpack:
 									Dee_Decref(prefix_ob);
 									HANDLE_EXCEPT();
 								}
-								if
-									unlikely(set_prefix_object(prefix_ob))
-								HANDLE_EXCEPT();
+								if unlikely(set_prefix_object(prefix_ob))
+									HANDLE_EXCEPT();
 							}
 							DISPATCH();
 						}
@@ -6581,17 +6235,14 @@ prefix_do_unpack:
 							ASSERT_USAGE(-0, +1);
 							prefix_pointer = get_prefix_object_ptr();
 							if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
-								if
-									unlikely(!prefix_pointer)
-								HANDLE_EXCEPT();
+								if unlikely(!prefix_pointer)
+									HANDLE_EXCEPT();
 								obcopy = DeeObject_Copy(*prefix_pointer);
-								if
-									unlikely(!obcopy)
-								HANDLE_EXCEPT();
+								if unlikely(!obcopy)
+									HANDLE_EXCEPT();
 								PUSH(obcopy); /* Inherit reference. */
-								if
-									unlikely(!*prefix_pointer)
-								{
+								if unlikely(!*prefix_pointer)
+									{
 #ifdef NDEBUG
 									get_prefix_object_ptr();
 #else /* NDEBUG */
@@ -6605,13 +6256,11 @@ prefix_do_unpack:
 							} else {
 								USING_PREFIX_OBJECT
 								prefix_ob = get_prefix_object();
-								if
-									unlikely(!prefix_ob)
-								HANDLE_EXCEPT();
+								if unlikely(!prefix_ob)
+									HANDLE_EXCEPT();
 								obcopy = DeeObject_Copy(prefix_ob);
-								if
-									unlikely(!obcopy)
-								{
+								if unlikely(!obcopy)
+									{
 									Dee_Decref(prefix_ob);
 									HANDLE_EXCEPT();
 								}
@@ -6620,9 +6269,8 @@ prefix_do_unpack:
 									Dee_Decref(prefix_ob);
 									HANDLE_EXCEPT();
 								}
-								if
-									unlikely(set_prefix_object(prefix_ob))
-								HANDLE_EXCEPT();
+								if unlikely(set_prefix_object(prefix_ob))
+									HANDLE_EXCEPT();
 							}
 							DISPATCH();
 						}
@@ -6645,9 +6293,8 @@ prefix_do_unpack:
 							drop_object = *(sp - shift);
 							MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
 							append_object = xch_prefix_object(drop_object);
-							if
-								unlikely(!append_object)
-							{
+							if unlikely(!append_object)
+								{
 								TOP = drop_object;
 								HANDLE_EXCEPT();
 							}
@@ -6673,9 +6320,8 @@ prefix_do_unpack:
 							drop_object = TOP;
 							MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
 							append_object = xch_prefix_object(drop_object);
-							if
-								unlikely(!append_object)
-							{
+							if unlikely(!append_object)
+								{
 								*(sp - shift) = drop_object;
 								HANDLE_EXCEPT();
 							}
@@ -6686,9 +6332,8 @@ prefix_do_unpack:
 						PREFIX_TARGET(ASM_PUSH_EXCEPT) {
 							DREF DeeObject *temp;
 							/* Check if an exception has been set. */
-							if
-								unlikely(!this_thread->t_except)
-							goto except_no_active_exception;
+							if unlikely(!this_thread->t_except)
+								goto except_no_active_exception;
 							temp = this_thread->t_except->ef_error;
 							Dee_Incref(temp);
 							if (set_prefix_object(temp))
@@ -6811,9 +6456,8 @@ prefix_do_unpack:
 							uint16_t offset = READ_imm16();
 							ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
 							value = get_prefix_object();
-							if
-								unlikely(!value)
-							HANDLE_EXCEPT();
+							if unlikely(!value)
+								HANDLE_EXCEPT();
 							pslot     = sp - (offset + 2);
 							old_value = *pslot;
 							*pslot    = value; /* Inherit reference. */
@@ -6838,9 +6482,8 @@ prefix_do_unpack:
 					DREF DeeObject *new_top;
 					ASSERT_USAGE(-1, +1);
 					new_top = xch_prefix_object(TOP);
-					if
-						unlikely(!new_top)
-					HANDLE_EXCEPT();
+					if unlikely(!new_top)
+						HANDLE_EXCEPT();
 					TOP = new_top; /* Inherit reference. */
 					DISPATCH();
 				}
@@ -6863,9 +6506,8 @@ prefix_do_unpack:
 					drop_object = *(sp - shift);
 					MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
 					append_object = xch_prefix_object(drop_object);
-					if
-						unlikely(!append_object)
-					{
+					if unlikely(!append_object)
+						{
 						TOP = drop_object;
 						HANDLE_EXCEPT();
 					}
@@ -6891,9 +6533,8 @@ prefix_do_unpack:
 					drop_object = TOP;
 					MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
 					append_object = xch_prefix_object(drop_object);
-					if
-						unlikely(!append_object)
-					{
+					if unlikely(!append_object)
+						{
 						*(sp - shift) = drop_object;
 						HANDLE_EXCEPT();
 					}
@@ -6908,9 +6549,8 @@ prefix_do_unpack:
 do_prefix_pop_static:
 					ASSERT_STATICimm();
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					STATIC_LOCKWRITE();
 					old_value = STATICimm;
 					STATICimm = value; /* Inherit reference. */
@@ -6928,9 +6568,8 @@ do_prefix_pop_static:
 do_prefix_pop_extern:
 					ASSERT_EXTERNimm();
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					EXTERN_LOCKWRITE();
 					pglobl    = &EXTERNimm;
 					old_value = *pglobl;
@@ -6947,9 +6586,8 @@ do_prefix_pop_extern:
 do_prefix_pop_global:
 					ASSERT_GLOBALimm();
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					GLOBAL_LOCKWRITE();
 					pglobl    = &GLOBALimm;
 					old_value = *pglobl;
@@ -6966,9 +6604,8 @@ do_prefix_pop_global:
 do_prefix_pop_local:
 					ASSERT_LOCALimm();
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					old_value = LOCALimm;
 					LOCALimm  = value; /* Inherit reference. */
 					Dee_XDecref(old_value);
@@ -7054,9 +6691,8 @@ do_prefix_push_arg:
 							frame->cf_vargs = (DREF DeeTupleObject *)
 							DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
 							                   frame->cf_argv + code->co_argc_max);
-							if
-								unlikely(!frame->cf_vargs)
-							HANDLE_EXCEPT();
+							if unlikely(!frame->cf_vargs)
+								HANDLE_EXCEPT();
 						}
 					}
 					Dee_Incref(frame->cf_vargs);
@@ -7079,14 +6715,12 @@ do_prefix_push_arg:
 						if (!varkwds) {
 							DeeObject *oldval;
 							varkwds = construct_varkwds_mapping();
-							if
-								unlikely(!varkwds)
-							HANDLE_EXCEPT();
+							if unlikely(!varkwds)
+								HANDLE_EXCEPT();
 #ifdef CONFIG_NO_THREADS
 							oldval = frame->cf_kw->fk_varkwds;
-							if
-								unlikely(oldval)
-							{
+							if unlikely(oldval)
+								{
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;
 							} else {
@@ -7094,9 +6728,8 @@ do_prefix_push_arg:
 							}
 #else /* CONFIG_NO_THREADS */
 							oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, varkwds);
-							if
-								unlikely(oldval)
-							{
+							if unlikely(oldval)
+								{
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;
 							}
@@ -7147,9 +6780,8 @@ do_prefix_push_extern:
 					ASSERT_EXTERNimm();
 					EXTERN_LOCKREAD();
 					value = EXTERNimm;
-					if
-						unlikely(!value)
-					{
+					if unlikely(!value)
+						{
 						EXTERN_LOCKENDREAD();
 						goto err_unbound_extern;
 					}
@@ -7167,9 +6799,8 @@ do_prefix_push_global:
 					ASSERT_GLOBALimm();
 					GLOBAL_LOCKREAD();
 					value = GLOBALimm;
-					if
-						unlikely(!value)
-					{
+					if unlikely(!value)
+						{
 						GLOBAL_LOCKENDREAD();
 						goto err_unbound_global;
 					}
@@ -7186,9 +6817,8 @@ do_prefix_push_global:
 do_prefix_push_local:
 					ASSERT_LOCALimm();
 					value = LOCALimm;
-					if
-						unlikely(!value)
-					goto err_unbound_local;
+					if unlikely(!value)
+						goto err_unbound_local;
 					Dee_Incref(value);
 					if (set_prefix_object(value))
 						HANDLE_EXCEPT();
@@ -7217,9 +6847,8 @@ do_prefix_push_local:
 					DREF DeeObject *value;
 					ASSERT_USAGE(-1, +1);
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
 					TOP = value; /* Inherit reference. */
 					DISPATCH();
@@ -7231,9 +6860,8 @@ do_prefix_push_local:
 					uint8_t offset = READ_imm8();
 					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					pslot     = sp - (offset + 2);
 					old_value = *pslot;
 					*pslot    = value; /* Inherit reference. */
@@ -7244,9 +6872,8 @@ do_prefix_push_local:
 				PREFIX_TARGET(ASM_RET) {
 					DREF DeeObject *value;
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					/* Check if we're overwriting a previous return value
 					 * (which can happen when `return' appears in a finally-block) */
 					if (ITER_ISOK(frame->cf_result))
@@ -7260,17 +6887,15 @@ do_prefix_push_local:
 				PREFIX_TARGET(ASM_YIELDALL) {
 					DREF DeeObject *value;
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					ASSERT_YIELDING();
 					if (ITER_ISOK(frame->cf_result))
 						Dee_Decref(frame->cf_result);
 					frame->cf_result = DeeObject_IterNext(value);
 					Dee_Decref(value);
-					if
-						unlikely(!frame->cf_result)
-					HANDLE_EXCEPT();
+					if unlikely(!frame->cf_result)
+						HANDLE_EXCEPT();
 					if (frame->cf_result != ITER_DONE) {
 						/* Repeat this instruction and forward the value we've just read. */
 						REPEAT_INSTRUCTION();
@@ -7284,9 +6909,8 @@ do_prefix_push_local:
 				PREFIX_TARGET(ASM_THROW) {
 					DREF DeeObject *value;
 					value = get_prefix_object();
-					if
-						unlikely(!value)
-					HANDLE_EXCEPT();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
 					DeeError_Throw(value);
 					Dee_Decref(value);
 					HANDLE_EXCEPT();
@@ -7460,9 +7084,8 @@ exec_except:
 			for (; iter; iter = iter->ef_prev) {
 				if (!ITER_ISOK(iter->ef_trace))
 					continue;
-				if
-					unlikely(iter->ef_trace->tb_thread != this_thread)
-				continue;
+				if unlikely(iter->ef_trace->tb_thread != this_thread)
+					continue;
 				DeeTraceback_AddFrame(iter->ef_trace, frame,
 				                      this_thread->t_execsz - 1);
 			}

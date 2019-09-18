@@ -83,9 +83,8 @@ Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 	    nsi->nsi_seqlike.nsi_getitem)
 		return (*nsi->nsi_seqlike.nsi_getitem)(self->c_seq, index);
 	temp = DeeInt_NewSize(index);
-	if
-		unlikely(!temp)
-	return NULL;
+	if unlikely(!temp)
+		return NULL;
 	if (self->c_getitem->tp_get == &instance_getitem)
 		result = instance_tgetitem(self->c_getitem_tp, self->c_seq, temp);
 	else {
@@ -117,14 +116,12 @@ comiter_fini(CombinationsIterator *__restrict self) {
 PRIVATE int DCALL
 comiter_ctor(CombinationsIterator *__restrict self) {
 	self->ci_combi = (DREF Combinations *)DeeObject_NewDefault(&SeqCombinations_Type);
-	if
-		unlikely(!self->ci_combi)
-	goto err;
+	if unlikely(!self->ci_combi)
+		goto err;
 	self->ci_indices = (size_t *)Dee_Calloc(self->ci_combi->c_comlen *
 	                                        sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err_combi;
+	if unlikely(!self->ci_indices)
+		goto err_combi;
 	self->ci_first = true;
 	rwlock_init(&self->ci_lock);
 	return 0;
@@ -145,9 +142,8 @@ comiter_init(CombinationsIterator *__restrict self,
 	rwlock_init(&self->ci_lock);
 	comlen           = self->ci_combi->c_comlen;
 	self->ci_indices = (size_t *)Dee_Malloc(comlen * sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err;
+	if unlikely(!self->ci_indices)
+		goto err;
 	for (i = 0; i < comlen; ++i)
 		self->ci_indices[i] = i;
 	self->ci_first = true;
@@ -162,9 +158,8 @@ comiter_copy(CombinationsIterator *__restrict self,
              CombinationsIterator *__restrict other) {
 	self->ci_indices = (size_t *)Dee_Malloc(other->ci_combi->c_comlen *
 	                                        sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err;
+	if unlikely(!self->ci_indices)
+		goto err;
 	rwlock_read(&other->ci_lock);
 	memcpy(self->ci_indices, other->ci_indices,
 	       other->ci_combi->c_comlen * sizeof(size_t));
@@ -183,9 +178,8 @@ comiter_deep(CombinationsIterator *__restrict self,
              CombinationsIterator *__restrict other) {
 	self->ci_indices = (size_t *)Dee_Malloc(other->ci_combi->c_comlen *
 	                                        sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err;
+	if unlikely(!self->ci_indices)
+		goto err;
 	rwlock_read(&other->ci_lock);
 	memcpy(self->ci_indices, other->ci_indices,
 	       other->ci_combi->c_comlen *
@@ -194,9 +188,8 @@ comiter_deep(CombinationsIterator *__restrict self,
 	rwlock_endread(&other->ci_lock);
 	rwlock_init(&self->ci_lock);
 	self->ci_combi = (DREF Combinations *)DeeObject_DeepCopy((DeeObject *)other->ci_combi);
-	if
-		unlikely(!self->ci_combi)
-	goto err_indices;
+	if unlikely(!self->ci_combi)
+		goto err_indices;
 	return 0;
 err_indices:
 	Dee_Free(self->ci_indices);
@@ -216,9 +209,8 @@ comiter_next(CombinationsIterator *__restrict self) {
 	comlen         = self->ci_combi->c_comlen;
 	seqlen         = self->ci_combi->c_seqlen;
 	result_indices = (size_t *)Dee_AMalloc(comlen * sizeof(size_t));
-	if
-		unlikely(!result_indices)
-	goto err;
+	if unlikely(!result_indices)
+		goto err;
 	rwlock_write(&self->ci_lock);
 	if (self->ci_first) {
 		self->ci_first = false;
@@ -243,16 +235,14 @@ copy_indices:
 	       comlen * sizeof(size_t));
 	rwlock_endwrite(&self->ci_lock);
 	result = DeeTuple_NewUninitialized(comlen);
-	if
-		unlikely(!result)
-	goto err_indices;
+	if unlikely(!result)
+		goto err_indices;
 	for (i = 0; i < comlen; ++i) {
 		DREF DeeObject *temp;
 		temp = Combinations_GetSeqItem(self->ci_combi,
 		                               result_indices[i]);
-		if
-			unlikely(!temp)
-		goto err_indices_r;
+		if unlikely(!temp)
+			goto err_indices_r;
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
 	Dee_AFree(result_indices);
@@ -385,16 +375,14 @@ com_iter(Combinations *__restrict self) {
 	DREF CombinationsIterator *result;
 	size_t i, comlen;
 	result = DeeObject_MALLOC(CombinationsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ci_combi = self;
 	rwlock_init(&result->ci_lock);
 	comlen             = self->c_comlen;
 	result->ci_indices = (size_t *)Dee_Malloc(comlen * sizeof(size_t));
-	if
-		unlikely(!result->ci_indices)
-	goto err_r;
+	if unlikely(!result->ci_indices)
+		goto err_r;
 	for (i = 0; i < comlen; ++i)
 		result->ci_indices[i] = i;
 	result->ci_first = true;
@@ -428,9 +416,8 @@ com_copy(Combinations *__restrict self,
 		ASSERT(other->c_seqlen != 0);
 		elem_copy = (DREF DeeObject **)Dee_Malloc(other->c_seqlen *
 		                                          sizeof(DREF DeeObject *));
-		if
-			unlikely(!elem_copy)
-		goto err;
+		if unlikely(!elem_copy)
+			goto err;
 		MEMFIL_PTR(elem_copy, other->c_elem, other->c_seqlen);
 		for (i = 0; i < other->c_seqlen; ++i)
 			Dee_Incref(elem_copy[i]);
@@ -461,14 +448,12 @@ com_deepcopy(Combinations *__restrict self,
 		ASSERT(other->c_seqlen != 0);
 		elem_copy = (DREF DeeObject **)Dee_Malloc(other->c_seqlen *
 		                                          sizeof(DREF DeeObject *));
-		if
-			unlikely(!elem_copy)
-		goto err;
+		if unlikely(!elem_copy)
+			goto err;
 		for (i = 0; i < other->c_seqlen; ++i) {
 			elem_copy[i] = DeeObject_DeepCopy(other->c_elem[i]);
-			if
-				unlikely(!elem_copy[i])
-			{
+			if unlikely(!elem_copy[i])
+				{
 				while (i--)
 					Dee_Decref(elem_copy[i]);
 				Dee_Free(elem_copy);
@@ -481,9 +466,8 @@ com_deepcopy(Combinations *__restrict self,
 		self->c_seqlen = other->c_seqlen;
 	} else {
 		self->c_seq = DeeObject_DeepCopy(other->c_seq);
-		if
-			unlikely(!self->c_seq)
-		goto err;
+		if unlikely(!self->c_seq)
+			goto err;
 		ASSERT(Dee_TYPE(self->c_seq) == Dee_TYPE(other->c_seq));
 		if (other->c_elem == DeeTuple_ELEM(other->c_seq)) {
 			self->c_elem   = DeeTuple_ELEM(self->c_seq);
@@ -494,23 +478,20 @@ com_deepcopy(Combinations *__restrict self,
 			/* Reload the sequence length, as it may have
 			 * changed after copying the underlying sequence. */
 			self->c_seqlen = DeeObject_Size(self->c_seq);
-			if
-				unlikely(self->c_seqlen == (size_t)-1)
-			{
+			if unlikely(self->c_seqlen == (size_t)-1)
+				{
 err_seq_len:
 				Dee_Decref(self->c_seq);
 				goto err;
 			}
-			if
-				unlikely(self->c_seqlen == 0)
-			{
+			if unlikely(self->c_seqlen == 0)
+				{
 				err_empty_sequence(self->c_seq);
 				goto err_seq_len;
 			}
 			/* Make sure that the sequence fulfills the minimum length requirements. */
-			if
-				unlikely(self->c_comlen >= self->c_seqlen)
-			{
+			if unlikely(self->c_comlen >= self->c_seqlen)
+				{
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Sequence too short after deepcopy (needs at least %Iu items, but only has %Iu)",
 				                self->c_comlen, self->c_seqlen);
@@ -528,9 +509,8 @@ err:
 PRIVATE int DCALL
 com_ctor(Combinations *__restrict self) {
 	self->c_seq = DeeTuple_Pack(1, Dee_None);
-	if
-		unlikely(!self->c_seq)
-	goto err;
+	if unlikely(!self->c_seq)
+		goto err;
 	self->c_elem       = DeeTuple_ELEM(self->c_seq);
 	self->c_seqlen     = 1;
 	self->c_comlen     = 1;
@@ -645,13 +625,11 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 			self->ci_first = false;
 			rwlock_endwrite(&self->ci_lock);
 			result = DeeTuple_NewUninitialized(comlen);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			elem = Combinations_GetSeqItem(self->ci_combi, 0);
-			if
-				unlikely(!elem)
-			{
+			if unlikely(!elem)
+				{
 				DeeTuple_FreeUninitialized(result);
 				goto err;
 			}
@@ -661,9 +639,8 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 		}
 	}
 	result_indices = (size_t *)Dee_AMalloc(comlen * sizeof(size_t));
-	if
-		unlikely(!result_indices)
-	goto err;
+	if unlikely(!result_indices)
+		goto err;
 	rwlock_write(&self->ci_lock);
 	i = comlen;
 	while (i--) {
@@ -683,9 +660,8 @@ update_indices:
 	       comlen * sizeof(size_t));
 	rwlock_endwrite(&self->ci_lock);
 	result = DeeTuple_NewUninitialized(comlen);
-	if
-		unlikely(!result)
-	goto err_indices;
+	if unlikely(!result)
+		goto err_indices;
 	for (i = 0; i < comlen; ++i) {
 		DREF DeeObject *temp;
 		size_t j, index = result_indices[i];
@@ -697,9 +673,8 @@ update_indices:
 			}
 		}
 		temp = Combinations_GetSeqItem(self->ci_combi, index);
-		if
-			unlikely(!temp)
-		goto err_indices_r;
+		if unlikely(!temp)
+			goto err_indices_r;
 set_temp:
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
@@ -724,14 +699,12 @@ PRIVATE struct type_member rcomiter_members[] = {
 PRIVATE int DCALL
 rcomiter_ctor(CombinationsIterator *__restrict self) {
 	self->ci_combi = (DREF Combinations *)DeeObject_NewDefault(&SeqRepeatCombinations_Type);
-	if
-		unlikely(!self->ci_combi)
-	goto err;
+	if unlikely(!self->ci_combi)
+		goto err;
 	self->ci_indices = (size_t *)Dee_Calloc(self->ci_combi->c_comlen *
 	                                        sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err_combi;
+	if unlikely(!self->ci_indices)
+		goto err_combi;
 	self->ci_first = true;
 	rwlock_init(&self->ci_lock);
 	return 0;
@@ -752,9 +725,8 @@ rcomiter_init(CombinationsIterator *__restrict self,
 	rwlock_init(&self->ci_lock);
 	comlen           = self->ci_combi->c_comlen;
 	self->ci_indices = (size_t *)Dee_Malloc(comlen * sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err;
+	if unlikely(!self->ci_indices)
+		goto err;
 	for (i = 0; i < comlen; ++i)
 		self->ci_indices[i] = i;
 	self->ci_first = true;
@@ -813,15 +785,13 @@ PRIVATE DREF CombinationsIterator *DCALL
 rcom_iter(Combinations *__restrict self) {
 	DREF CombinationsIterator *result;
 	result = DeeObject_MALLOC(CombinationsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ci_combi = self;
 	rwlock_init(&result->ci_lock);
 	result->ci_indices = (size_t *)Dee_Calloc(self->c_comlen * sizeof(size_t));
-	if
-		unlikely(!result->ci_indices)
-	goto err_r;
+	if unlikely(!result->ci_indices)
+		goto err_r;
 	result->ci_first = true;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqRepeatCombinationsIterator_Type);
@@ -896,9 +866,8 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 	comlen         = self->ci_combi->c_comlen;
 	seqlen         = self->ci_combi->c_seqlen;
 	result_indices = (size_t *)Dee_AMalloc(comlen * sizeof(size_t));
-	if
-		unlikely(!result_indices)
-	goto err;
+	if unlikely(!result_indices)
+		goto err;
 	rwlock_write(&self->ci_lock);
 	if (self->ci_first) {
 		self->ci_first = false;
@@ -939,16 +908,14 @@ copy_indices:
 	       comlen * sizeof(size_t));
 	rwlock_endwrite(&self->ci_lock);
 	result = DeeTuple_NewUninitialized(comlen);
-	if
-		unlikely(!result)
-	goto err_indices;
+	if unlikely(!result)
+		goto err_indices;
 	for (i = 0; i < comlen; ++i) {
 		DREF DeeObject *temp;
 		temp = Combinations_GetSeqItem(self->ci_combi,
 		                               result_indices[i]);
-		if
-			unlikely(!temp)
-		goto err_indices_r;
+		if unlikely(!temp)
+			goto err_indices_r;
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
 	Dee_AFree(result_indices);
@@ -971,14 +938,12 @@ PRIVATE struct type_member pmutiter_members[] = {
 PRIVATE int DCALL
 pmutiter_ctor(CombinationsIterator *__restrict self) {
 	self->ci_combi = (DREF Combinations *)DeeObject_NewDefault(&SeqPermutations_Type);
-	if
-		unlikely(!self->ci_combi)
-	goto err;
+	if unlikely(!self->ci_combi)
+		goto err;
 	self->ci_indices = (size_t *)Dee_Calloc(self->ci_combi->c_comlen *
 	                                        sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err_combi;
+	if unlikely(!self->ci_indices)
+		goto err_combi;
 	self->ci_first = true;
 	rwlock_init(&self->ci_lock);
 	return 0;
@@ -999,9 +964,8 @@ pmutiter_init(CombinationsIterator *__restrict self,
 	rwlock_init(&self->ci_lock);
 	comlen           = self->ci_combi->c_comlen;
 	self->ci_indices = (size_t *)Dee_Malloc(comlen * sizeof(size_t));
-	if
-		unlikely(!self->ci_indices)
-	goto err;
+	if unlikely(!self->ci_indices)
+		goto err;
 	for (i = 0; i < comlen; ++i)
 		self->ci_indices[i] = i;
 	self->ci_first = true;
@@ -1062,16 +1026,14 @@ pmut_iter(Combinations *__restrict self) {
 	DREF CombinationsIterator *result;
 	size_t i, comlen;
 	result = DeeObject_MALLOC(CombinationsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ci_combi = self;
 	rwlock_init(&result->ci_lock);
 	comlen             = self->c_comlen;
 	result->ci_indices = (size_t *)Dee_Malloc(comlen * sizeof(size_t));
-	if
-		unlikely(!result->ci_indices)
-	goto err_r;
+	if unlikely(!result->ci_indices)
+		goto err_r;
 	for (i = 0; i < comlen; ++i)
 		result->ci_indices[i] = i;
 	result->ci_first = true;
@@ -1146,9 +1108,8 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 	DREF Combinations *result;
 	DeeTypeObject *tp_iter;
 	result = DeeObject_MALLOC(Combinations);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Quickly check if we can use the fast-sequence interface. */
 	tp_iter = Dee_TYPE(self);
 	if (tp_iter == &DeeTuple_Type) {
@@ -1214,21 +1175,18 @@ load_tp_size:
 			result->c_elem = NULL;
 			if (seq->tp_nsi) {
 				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
-				if
-					unlikely(result->c_seqlen == (size_t)-1)
-				goto err_r;
+				if unlikely(result->c_seqlen == (size_t)-1)
+					goto err_r;
 			} else {
 				DREF DeeObject *temp;
 				int error;
 				temp = (*seq->tp_size)(self);
-				if
-					unlikely(!temp)
-				goto err_r;
+				if unlikely(!temp)
+					goto err_r;
 				error = DeeObject_AsSize(temp, &result->c_seqlen);
 				Dee_Decref(temp);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 			goto fill_in_result;
 		}
@@ -1238,9 +1196,8 @@ load_tp_size:
 			size_t elem_c, elem_a;
 			/* Use the iterator variant */
 			iterator = (*seq->tp_iter_self)(self);
-			if
-				unlikely(!iterator)
-			goto err_r;
+			if unlikely(!iterator)
+				goto err_r;
 			elem_c = elem_a = 0;
 			elem_v          = NULL;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1251,15 +1208,13 @@ load_tp_size:
 						new_alloc = 8;
 					new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 					                                                       sizeof(DREF DeeObject *));
-					if
-						unlikely(!new_elem_v)
-					{
+					if unlikely(!new_elem_v)
+						{
 						new_alloc  = elem_c + 1;
 						new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 						                                                       sizeof(DREF DeeObject *));
-						if
-							unlikely(!new_elem_v)
-						{
+						if unlikely(!new_elem_v)
+							{
 							Dee_Decref(elem);
 err_elem_v:
 							while (elem_c--)
@@ -1275,9 +1230,8 @@ err_elem_v:
 				if (DeeThread_CheckInterrupt())
 					goto err_elem_v;
 			}
-			if
-				unlikely(!elem)
-			goto err_elem_v;
+			if unlikely(!elem)
+				goto err_elem_v;
 			Dee_Decref(iterator);
 			if (r >= elem_c) {
 				size_t i;
@@ -1289,14 +1243,12 @@ err_elem_v:
 					return DeeTuple_Pack(1, self);
 				return_empty_seq;
 			}
-			if
-				likely(elem_a > elem_c)
-			{
+			if likely(elem_a > elem_c)
+				{
 				new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, elem_c *
 				                                                       sizeof(DREF DeeObject *));
-				if
-					likely(new_elem_v)
-				elem_v = new_elem_v;
+				if likely(new_elem_v)
+					elem_v = new_elem_v;
 			}
 			result->c_getitem = NULL;
 			result->c_elem    = elem_v;
@@ -1335,9 +1287,8 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 	if (!r)
 		return DeeTuple_Pack(1, Dee_EmptySeq);
 	result = DeeObject_MALLOC(Combinations);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Quickly check if we can use the fast-sequence interface. */
 	tp_iter = Dee_TYPE(self);
 	if (tp_iter == &DeeTuple_Type) {
@@ -1401,21 +1352,18 @@ load_tp_size:
 			result->c_elem = NULL;
 			if (seq->tp_nsi) {
 				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
-				if
-					unlikely(result->c_seqlen == (size_t)-1)
-				goto err_r;
+				if unlikely(result->c_seqlen == (size_t)-1)
+					goto err_r;
 			} else {
 				DREF DeeObject *temp;
 				int error;
 				temp = (*seq->tp_size)(self);
-				if
-					unlikely(!temp)
-				goto err_r;
+				if unlikely(!temp)
+					goto err_r;
 				error = DeeObject_AsSize(temp, &result->c_seqlen);
 				Dee_Decref(temp);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 			goto fill_in_result;
 		}
@@ -1425,9 +1373,8 @@ load_tp_size:
 			size_t elem_c, elem_a;
 			/* Use the iterator variant */
 			iterator = (*seq->tp_iter_self)(self);
-			if
-				unlikely(!iterator)
-			goto err_r;
+			if unlikely(!iterator)
+				goto err_r;
 			elem_c = elem_a = 0;
 			elem_v          = NULL;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1438,15 +1385,13 @@ load_tp_size:
 						new_alloc = 8;
 					new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 					                                                       sizeof(DREF DeeObject *));
-					if
-						unlikely(!new_elem_v)
-					{
+					if unlikely(!new_elem_v)
+						{
 						new_alloc  = elem_c + 1;
 						new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, new_alloc *
 						                                                       sizeof(DREF DeeObject *));
-						if
-							unlikely(!new_elem_v)
-						{
+						if unlikely(!new_elem_v)
+							{
 							Dee_Decref(elem);
 err_elem_v:
 							while (elem_c--)
@@ -1462,23 +1407,20 @@ err_elem_v:
 				if (DeeThread_CheckInterrupt())
 					goto err_elem_v;
 			}
-			if
-				unlikely(!elem)
-			goto err_elem_v;
+			if unlikely(!elem)
+				goto err_elem_v;
 			Dee_Decref(iterator);
 			if (!elem_c) {
 				Dee_Free(elem_v);
 				DeeObject_FREE(result);
 				return_empty_seq;
 			}
-			if
-				likely(elem_a > elem_c)
-			{
+			if likely(elem_a > elem_c)
+				{
 				new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v, elem_c *
 				                                                       sizeof(DREF DeeObject *));
-				if
-					likely(new_elem_v)
-				elem_v = new_elem_v;
+				if likely(new_elem_v)
+					elem_v = new_elem_v;
 			}
 			result->c_getitem = NULL;
 			result->c_elem    = elem_v;
@@ -1512,9 +1454,8 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 	DREF Combinations *result;
 	DeeTypeObject *tp_iter;
 	result = DeeObject_MALLOC(Combinations);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Quickly check if we can use the fast-sequence interface. */
 	tp_iter = Dee_TYPE(self);
 	if (tp_iter == &DeeTuple_Type) {
@@ -1578,21 +1519,18 @@ load_tp_size:
 			result->c_elem = NULL;
 			if (seq->tp_nsi) {
 				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
-				if
-					unlikely(result->c_seqlen == (size_t)-1)
-				goto err_r;
+				if unlikely(result->c_seqlen == (size_t)-1)
+					goto err_r;
 			} else {
 				DREF DeeObject *temp;
 				int error;
 				temp = (*seq->tp_size)(self);
-				if
-					unlikely(!temp)
-				goto err_r;
+				if unlikely(!temp)
+					goto err_r;
 				error = DeeObject_AsSize(temp, &result->c_seqlen);
 				Dee_Decref(temp);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 			goto fill_in_result;
 		}
@@ -1602,9 +1540,8 @@ load_tp_size:
 			size_t elem_c, elem_a;
 			/* Use the iterator variant */
 			iterator = (*seq->tp_iter_self)(self);
-			if
-				unlikely(!iterator)
-			goto err_r;
+			if unlikely(!iterator)
+				goto err_r;
 			elem_c = elem_a = 0;
 			elem_v          = NULL;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1616,16 +1553,14 @@ load_tp_size:
 					new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v,
 					                                               new_alloc *
 					                                               sizeof(DREF DeeObject *));
-					if
-						unlikely(!new_elem_v)
-					{
+					if unlikely(!new_elem_v)
+						{
 						new_alloc  = elem_c + 1;
 						new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v,
 						                                               new_alloc *
 						                                               sizeof(DREF DeeObject *));
-						if
-							unlikely(!new_elem_v)
-						{
+						if unlikely(!new_elem_v)
+							{
 							Dee_Decref(elem);
 err_elem_v:
 							while (elem_c--)
@@ -1641,24 +1576,21 @@ err_elem_v:
 				if (DeeThread_CheckInterrupt())
 					goto err_elem_v;
 			}
-			if
-				unlikely(!elem)
-			goto err_elem_v;
+			if unlikely(!elem)
+				goto err_elem_v;
 			Dee_Decref(iterator);
 			if (!elem_c) {
 				Dee_Free(elem_v);
 				DeeObject_FREE(result);
 				return DeeTuple_Pack(1, Dee_EmptySeq);
 			}
-			if
-				likely(elem_a > elem_c)
-			{
+			if likely(elem_a > elem_c)
+				{
 				new_elem_v = (DREF DeeObject **)Dee_TryRealloc(elem_v,
 				                                               elem_c *
 				                                               sizeof(DREF DeeObject *));
-				if
-					likely(new_elem_v)
-				elem_v = new_elem_v;
+				if likely(new_elem_v)
+					elem_v = new_elem_v;
 			}
 			result->c_getitem = NULL;
 			result->c_elem    = elem_v;
@@ -1692,9 +1624,8 @@ DeeSeq_Permutations2(DeeObject *__restrict self, size_t r) {
 	if (!r)
 		return DeeTuple_Pack(1, Dee_EmptySeq);
 	result = DeeSeq_Permutations(self);
-	if
-		unlikely(!result || Dee_TYPE(result) != &SeqPermutations_Type)
-	goto done;
+	if unlikely(!result || Dee_TYPE(result) != &SeqPermutations_Type)
+		goto done;
 	((Combinations *)result)->c_comlen = r;
 	if (r > ((Combinations *)result)->c_seqlen) {
 		Dee_Decref(result);

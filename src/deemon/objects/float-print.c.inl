@@ -64,9 +64,8 @@ do_special_float:
 		    (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST) &&
 		    (width > total_len)) {
 			temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 		}
 		if (total_len == 4) {
@@ -80,17 +79,15 @@ do_special_float:
 		} else {
 			temp = (*printer)(arg, buf + 1, 3);
 		}
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 		if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
 		    (DEEFLOAT_PRINT_FWIDTH) &&
 		    (width > total_len)) {
 			temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 		}
 		return result;
@@ -173,9 +170,8 @@ do_special_float:
 			goto do_float_normal_width;
 		if (!(flags & DEEFLOAT_PRINT_FPADZERO)) {
 			temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 			goto do_float_normal_width;
 		}
@@ -183,16 +179,14 @@ do_special_float:
 			/* print the sign */
 			buf[0] = is_negative ? '-' : (flags & DEEFLOAT_PRINT_FSIGN) ? '+' : ' ';
 			temp   = (*printer)(arg, buf, 1);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 		}
 		/* Insert leading zeroes for padding. */
 		temp = DeeFormat_Repeat(printer, arg, '0', width - total_len);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	} else {
 do_float_normal_width:
@@ -204,9 +198,8 @@ do_float_normal_width:
 			buf[--len] = ' ';
 	}
 	temp = (*printer)(arg, buf + len, COMPILER_LENOF(buf) - len);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	result += temp;
 
 	/* Fractional part. */
@@ -222,16 +215,14 @@ do_float_normal_width:
 		}
 		buf[--len] = '.';
 		temp       = (*printer)(arg, buf + len, COMPILER_LENOF(buf) - len);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 		total_len += COMPILER_LENOF(buf) - len;
 		if (min_prec) {
 			temp = DeeFormat_Repeat(printer, arg, '0', min_prec);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 			total_len += min_prec;
 		}
@@ -243,9 +234,8 @@ do_float_normal_width:
 		if (flags & DEEFLOAT_PRINT_FPADZERO && max_prec == 0) {
 			buf[0] = '.';
 			temp   = (*printer)(arg, buf, 1);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 			--total_len;
 		}
@@ -253,9 +243,8 @@ do_float_normal_width:
 		temp = DeeFormat_Repeat(printer, arg,
 		                        flags & DEEFLOAT_PRINT_FPADZERO ? '0' : ' ',
 		                        width - total_len);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 #undef FLOAT_TYPE

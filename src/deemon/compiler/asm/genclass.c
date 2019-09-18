@@ -70,9 +70,8 @@ INTERN int(DCALL asm_genclass)(struct ast *__restrict class_ast,
 	if (class_ast->a_class.c_desc->a_type == AST_CONSTEXPR &&
 	    DeeClassDescriptor_Check(class_ast->a_class.c_desc->a_constexpr)) {
 		int32_t cid = asm_newconst(class_ast->a_class.c_desc->a_constexpr);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		if (asm_gclass_c((uint16_t)cid))
 			goto err;
 	} else {
@@ -105,9 +104,8 @@ INTERN int(DCALL asm_genclass)(struct ast *__restrict class_ast,
 	for (i = 0; i < class_ast->a_class.c_memberc; ++i) {
 		struct class_member *member;
 		member = &class_ast->a_class.c_memberv[i];
-		if
-			likely(member->cm_index != (uint16_t)-1)
-		{
+		if likely(member->cm_index != (uint16_t)-1)
+			{
 			if (ast_genasm_one(member->cm_ast, ASM_G_FPUSHRES))
 				goto err;
 			if (asm_putddi(class_ast))

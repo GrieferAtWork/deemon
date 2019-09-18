@@ -145,9 +145,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 		char **names = (char **)descriptor->d_import_names;
 		while (*names)
 			++impcount, ++names;
-		if
-			unlikely(impcount > UINT16_MAX)
-		{
+		if unlikely(impcount > UINT16_MAX)
+			{
 			DeeError_Throwf(&DeeError_RuntimeError,
 			                "Dex extension %r has too many imports",
 			                input_file);
@@ -155,9 +154,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 		}
 		imports = (DREF DeeModuleObject **)Dee_Malloc(impcount *
 		                                              sizeof(DREF DeeModuleObject *));
-		if
-			unlikely(!imports)
-		goto err;
+		if unlikely(!imports)
+			goto err;
 		names = (char **)descriptor->d_import_names;
 		/* Load import modules, using the same index as the original name. */
 		for (i = 0; i < impcount; ++i) {
@@ -166,9 +164,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 			                                    strlen(names[i]),
 			                                    NULL,
 			                                    true);
-			if
-				unlikely(!import)
-			{
+			if unlikely(!import)
+				{
 				while (i--)
 					Dee_Decref(imports[i]);
 				goto err_imp;
@@ -192,9 +189,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 		}
 	}
 	glbcount += symcount;
-	if
-		unlikely(glbcount > UINT16_MAX)
-	{
+	if unlikely(glbcount > UINT16_MAX)
+		{
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Dex extension %r is too large",
 		                input_file);
@@ -204,9 +200,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 	/* Generate the global variable table. */
 	symbols = descriptor->d_symbols;
 	globals = (DREF DeeObject **)Dee_Malloc(glbcount * sizeof(DREF DeeObject *));
-	if
-		unlikely(!globals)
-	goto err_imp_elem;
+	if unlikely(!globals)
+		goto err_imp_elem;
 	/* Figure out how large the hash-mask should be. */
 	bucket_mask = 1;
 	while (bucket_mask < symcount)
@@ -216,9 +211,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 	--bucket_mask;
 	modsym = (struct module_symbol *)Dee_Calloc((bucket_mask + 1) *
 	                                            sizeof(struct module_symbol));
-	if
-		unlikely(!modsym)
-	goto err_glob;
+	if unlikely(!modsym)
+		goto err_glob;
 	/* Set the symbol table and global variable vector. */
 	for (symi = 0; symi < (uint16_t)glbcount; ++symi) {
 		struct dex_symbol *sym = &symbols[symi];
@@ -361,9 +355,8 @@ DeeDex_New(DeeObject *__restrict name) {
 	DREF DeeDexObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	result = DeeGCObject_CALLOC(DeeDexObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(&result->d_module, &DeeDex_Type);
 	result->d_module.mo_name    = (DeeStringObject *)name;
 	result->d_module.mo_bucketv = empty_module_buckets;

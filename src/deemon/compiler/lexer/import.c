@@ -73,9 +73,8 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 			return_reference_(current_rootscope->rs_module);
 		}
 		filename = TPPFile_Filename(token.t_file, &filename_length);
-		if
-			likely(filename)
-		{
+		if likely(filename)
+			{
 			char *path_start; /* Relative module import. */
 			path_start = (char *)memrchr(filename, '/', filename_length);
 #ifdef CONFIG_HOST_WINDOWS
@@ -104,12 +103,10 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 	                                                      inner_compiler_options,
 	                                                      false);
 module_opened:
-	if
-		unlikely(!ITER_ISOK(result))
-	{
-		if
-			unlikely(!result)
-		goto err;
+	if unlikely(!ITER_ISOK(result))
+		{
+		if unlikely(!result)
+			goto err;
 		if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
 			goto err;
 		result = &empty_module;
@@ -160,9 +157,8 @@ ast_parse_module_name(struct unicode_printer *__restrict printer,
 			if (unicode_printer_printascii(printer, "...", dot_count(tok)) < 0)
 				goto err;
 			result = 1;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (UNICODE_PRINTER_LENGTH(printer) == 1 &&
 			    (!TPP_ISKEYWORD(tok) && tok != TOK_STRING &&
 			     (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)) &&
@@ -180,18 +176,16 @@ ast_parse_module_name(struct unicode_printer *__restrict printer,
 			                          token.t_kwd->k_name,
 			                          token.t_kwd->k_size) < 0)
 				goto err;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (!TOK_ISDOT(tok))
 				break;
 		} else if (tok == TOK_STRING ||
 		           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 			if (ast_decode_unicode_string(printer) < 0)
 				goto err;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (!TOK_ISDOT(tok) && tok != TOK_STRING &&
 			    (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)))
 				break;
@@ -222,17 +216,15 @@ ast_parse_symbol_name(struct unicode_printer *__restrict printer,
 		                          token.t_kwd->k_name,
 		                          token.t_kwd->k_size) < 0)
 			goto err;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 	} else if (tok == TOK_STRING ||
 	           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 		do {
 			if (ast_decode_unicode_string(printer) < 0)
 				goto err;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 		} while (tok == TOK_STRING ||
 		         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
 	} else {
@@ -251,13 +243,11 @@ INTERN DREF DeeModuleObject *DCALL parse_module_byname(bool for_alias) {
 	struct unicode_printer name = UNICODE_PRINTER_INIT;
 	struct ast_loc loc;
 	loc_here(&loc);
-	if
-		unlikely(ast_parse_module_name(&name, for_alias) < 0)
-	goto err_printer;
+	if unlikely(ast_parse_module_name(&name, for_alias) < 0)
+		goto err_printer;
 	module_name = (DREF DeeStringObject *)unicode_printer_pack(&name);
-	if
-		unlikely(!module_name)
-	goto err;
+	if unlikely(!module_name)
+		goto err;
 	result = import_module_by_name(module_name, &loc);
 	Dee_Decref(module_name);
 	return result;
@@ -274,19 +264,16 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 	struct module_symbol *modsym;
 	/* Parse the name of the module from which to import a symbol. */
 	module = parse_module_byname(true);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	/* We've got the module. - Now just create an anonymous symbol. */
 	extern_symbol = new_unnamed_symbol();
-	if
-		unlikely(!extern_symbol)
-	goto err_module;
+	if unlikely(!extern_symbol)
+		goto err_module;
 	/* Lookup the symbol which we're importing. */
 	modsym = import_module_symbol(module, import_name);
-	if
-		unlikely(!modsym)
-	{
+	if unlikely(!modsym)
+		{
 		if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 		         import_name->k_name,
 		         DeeString_STR(module->mo_name)))
@@ -316,9 +303,8 @@ INTERN DREF struct ast *FCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
 	struct symbol *extern_symbol;
 	extern_symbol = ast_parse_import_single_sym(import_name);
-	if
-		unlikely(!extern_symbol)
-	goto err;
+	if unlikely(!extern_symbol)
+		goto err;
 	/* Return the whole thing as a symbol-ast. */
 	return ast_sym(extern_symbol);
 err:
@@ -340,9 +326,8 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 	char *utf8_repr, *symbol_start;
 	size_t symbol_length;
 	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
-	if
-		unlikely(!utf8_repr)
-	goto err;
+	if unlikely(!utf8_repr)
+		goto err;
 	symbol_start = (char *)memrchr(utf8_repr, '.', WSTR_LENGTH(utf8_repr));
 	if (!symbol_start)
 		symbol_start = utf8_repr;
@@ -355,9 +340,8 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 		char *iter, *end;
 		uint32_t ch;
 		end = (iter = symbol_start) + symbol_length;
-		if
-			unlikely(!symbol_length)
-		goto bad_symbol_name;
+		if unlikely(!symbol_length)
+			goto bad_symbol_name;
 		for (; iter < end; ++iter) {
 			uniflag_t flags;
 			ch    = utf8_readchar((char const **)&iter, end);
@@ -402,9 +386,8 @@ parse_import_symbol(struct import_item *__restrict result,
 		 * - `foo.bar'
 		 * - `foo.bar as foobar' */
 		result->ii_symbol_name = token.t_kwd;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == '=') {
 			/* - `foo = bar'
 			 * - `foo = .foo.bar'
@@ -412,43 +395,37 @@ parse_import_symbol(struct import_item *__restrict result,
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, result->ii_symbol_name))
 				goto err;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			unicode_printer_init(&printer);
 			loc_here(&result->ii_import_loc);
 			return_value = allow_module_name
 			               ? ast_parse_module_name(&printer, true)
 			               : ast_parse_symbol_name(&printer, true);
-			if
-				unlikely(return_value < 0)
-			goto err_printer;
+			if unlikely(return_value < 0)
+				goto err_printer;
 			result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
-			if
-				unlikely(!result->ii_import_name)
-			goto err;
+			if unlikely(!result->ii_import_name)
+				goto err;
 		} else if (tok == KWD_as) {
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, result->ii_symbol_name))
 				goto err;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			/* - `foo as bar' */
 			if (TPP_ISKEYWORD(tok)) {
 				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8(result->ii_symbol_name->k_name,
 				                                                                   result->ii_symbol_name->k_size,
 				                                                                   STRING_ERROR_FSTRICT);
-				if
-					unlikely(!result->ii_import_name)
-				goto err;
+				if unlikely(!result->ii_import_name)
+					goto err;
 				result->ii_symbol_name = token.t_kwd;
 				if (is_reserved_symbol_name(token.t_kwd) &&
 				    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
 					goto err;
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 			} else {
 				if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
 					goto err;
@@ -461,8 +438,7 @@ parse_import_symbol(struct import_item *__restrict result,
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_MODULE_NAME, result->ii_symbol_name))
 				goto err;
 			unicode_printer_init(&printer);
-			if
-				unlikely(unicode_printer_print(&printer,
+			if unlikely(unicode_printer_print(&printer,
 				                               result->ii_symbol_name->k_name,
 				                               result->ii_symbol_name->k_size) < 0)
 			goto err_printer;
@@ -482,33 +458,27 @@ parse_import_symbol(struct import_item *__restrict result,
 		unicode_printer_init(&printer);
 complete_module_name:
 		return_value = 1;
-		if
-			unlikely(unicode_printer_printascii(&printer, "...", dot_count(tok)) < 0)
-		goto err_printer;
-		if
-			unlikely(yield() < 0)
-		goto err_printer;
+		if unlikely(unicode_printer_printascii(&printer, "...", dot_count(tok)) < 0)
+			goto err_printer;
+		if unlikely(yield() < 0)
+			goto err_printer;
 		/* Make sure to properly parse `import . as me' */
 		if ((TPP_ISKEYWORD(tok) && tok != KWD_as) ||
 		    TOK_ISDOT(tok) || tok == TOK_STRING ||
 		    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)) ||
 		    (UNICODE_PRINTER_LENGTH(&printer) != 1)) {
-			if
-				unlikely(ast_parse_module_name(&printer, true) < 0)
-			goto err_printer;
+			if unlikely(ast_parse_module_name(&printer, true) < 0)
+				goto err_printer;
 		}
 		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
-		if
-			unlikely(!result->ii_import_name)
-		goto err;
+		if unlikely(!result->ii_import_name)
+			goto err;
 		if (tok == KWD_as) {
 			/* - `.foo.bar as foobar' */
-			if
-				unlikely(yield() < 0)
-			goto err_name;
-			if
-				unlikely(!TPP_ISKEYWORD(tok))
-			{
+			if unlikely(yield() < 0)
+				goto err_name;
+			if unlikely(!TPP_ISKEYWORD(tok))
+				{
 				if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
 					goto err_name;
 				goto autogenerate_symbol_name;
@@ -518,18 +488,16 @@ complete_module_name:
 			if (is_reserved_symbol_name(token.t_kwd) &&
 			    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
 				goto err_name;
-			if
-				unlikely(yield() < 0)
-			goto err_name;
+			if unlikely(yield() < 0)
+				goto err_name;
 		} else {
 			/* - `.foo.bar' */
 autogenerate_symbol_name:
 			/* Autogenerate the module import symbol name. */
 			result->ii_symbol_name = get_module_symbol_name(result->ii_import_name,
 			                                                return_value != 0);
-			if
-				unlikely(!result->ii_symbol_name)
-			goto err_name;
+			if unlikely(!result->ii_symbol_name)
+				goto err_name;
 			/* Warn about the auto-generated name being a reserved identifiers */
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc,
@@ -548,19 +516,16 @@ autogenerate_symbol_name:
 		return_value = allow_module_name
 		               ? ast_parse_module_name(&printer, true)
 		               : ast_parse_symbol_name(&printer, true);
-		if
-			unlikely(return_value < 0)
-		goto err_printer;
+		if unlikely(return_value < 0)
+			goto err_printer;
 		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
-		if
-			unlikely(!result->ii_import_name)
-		goto err;
+		if unlikely(!result->ii_import_name)
+			goto err;
 		if (tok != KWD_as)
 			goto autogenerate_symbol_name;
 		/* An import alias was given. */
-		if
-			unlikely(yield() < 0)
-		goto err_name;
+		if unlikely(yield() < 0)
+			goto err_name;
 		if (!TPP_ISKEYWORD(tok)) {
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
 				goto err_name;
@@ -571,9 +536,8 @@ autogenerate_symbol_name:
 		if (is_reserved_symbol_name(token.t_kwd) &&
 		    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
 			goto err_name;
-		if
-			unlikely(yield() < 0)
-		goto err_name;
+		if unlikely(yield() < 0)
+			goto err_name;
 	} else {
 		if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
 			goto err;
@@ -610,13 +574,11 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 		name = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(iter),
 		                              MODULE_SYMBOL_GETNAMELEN(iter),
 		                              1);
-		if
-			unlikely(!name)
-		goto err;
+		if unlikely(!name)
+			goto err;
 		sym = get_local_symbol(name);
-		if
-			unlikely(sym)
-		{
+		if unlikely(sym)
+			{
 			/* Re-importing a different symbol that would collide with another
 			 * weak symbol will create an ambiguity when that symbol is used.
 			 * Instead of producing an error here and now, only do so if the
@@ -662,14 +624,12 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
 						int error;
 						error = DeeModule_RunInit((DeeObject *)module);
-						if
-							unlikely(error < 0)
-						goto err;
+						if unlikely(error < 0)
+							goto err;
 						if (error == 0) {
 							error = DeeModule_RunInit((DeeObject *)sym->s_extern.e_module);
-							if
-								unlikely(error < 0)
-							goto err;
+							if unlikely(error < 0)
+								goto err;
 							if (error == 0) {
 								/* Both modules are now initialized. */
 								DeeObject *old_val, *new_val;
@@ -728,9 +688,8 @@ do_reassign_new_alias:
 			}
 		} else {
 			sym = new_local_symbol(name, loc);
-			if
-				unlikely(!sym)
-			goto err;
+			if unlikely(!sym)
+				goto err;
 			/* Define this symbol as an import from this module. */
 			sym->s_type = SYMBOL_TYPE_EXTERN;
 			sym->s_flag |= SYMBOL_FWEAK; /* Symbols imported by `*' are defined weakly. */
@@ -777,9 +736,8 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 		}
 	}
 	import_symbol = get_local_symbol(item->ii_symbol_name);
-	if
-		unlikely(import_symbol)
-	{
+	if unlikely(import_symbol)
+		{
 		if (SYMBOL_IS_WEAK(import_symbol)) {
 			SYMBOL_CLEAR_WEAK(import_symbol);
 			goto init_import_symbol;
@@ -797,9 +755,8 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 	} else {
 		import_symbol = new_local_symbol(item->ii_symbol_name,
 		                                 &item->ii_import_loc);
-		if
-			unlikely(!import_symbol)
-		goto err;
+		if unlikely(!import_symbol)
+			goto err;
 init_import_symbol:
 		import_symbol->s_type               = SYMBOL_TYPE_EXTERN;
 		SYMBOL_EXTERN_MODULE(import_symbol) = module;
@@ -824,20 +781,17 @@ ast_import_module(struct import_item *__restrict item) {
 		module_name = (DREF DeeStringObject *)DeeString_NewUtf8(item->ii_symbol_name->k_name,
 		                                                        item->ii_symbol_name->k_size,
 		                                                        STRING_ERROR_FSTRICT);
-		if
-			unlikely(!module_name)
-		goto err;
+		if unlikely(!module_name)
+			goto err;
 		module = import_module_by_name(module_name,
 		                               &item->ii_import_loc);
 		Dee_Decref(module_name);
 	}
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	import_symbol = get_local_symbol(item->ii_symbol_name);
-	if
-		unlikely(import_symbol)
-	{
+	if unlikely(import_symbol)
+		{
 		if (SYMBOL_IS_WEAK(import_symbol)) {
 			SYMBOL_CLEAR_WEAK(import_symbol);
 			goto init_import_symbol;
@@ -856,9 +810,8 @@ ast_import_module(struct import_item *__restrict item) {
 	} else {
 		import_symbol = new_local_symbol(item->ii_symbol_name,
 		                                 &item->ii_import_loc);
-		if
-			unlikely(!import_symbol)
-		goto err_module;
+		if unlikely(!import_symbol)
+			goto err_module;
 init_import_symbol:
 		if (module == current_rootscope->rs_module) {
 			SYMBOL_TYPE(import_symbol) = SYMBOL_TYPE_MYMOD;
@@ -906,17 +859,14 @@ INTERN int FCALL ast_parse_post_import(void) {
 	star_loc.l_file = NULL; /* When non-NULL, import all */
 	if (tok == '*') {
 		loc_here(&star_loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == KWD_from) {
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			module = parse_module_byname(true);
-			if
-				unlikely(!module)
-			goto err;
+			if unlikely(!module)
+				goto err;
 			error = ast_import_all_from_module(module, &star_loc);
 			Dee_Decref(module);
 			goto done;
@@ -931,34 +881,28 @@ INTERN int FCALL ast_parse_post_import(void) {
 		goto done;
 	}
 	error = parse_import_symbol(&item, true);
-	if
-		unlikely(error < 0)
-	goto err;
-	if
-		unlikely(error == 2)
-	goto done;
+	if unlikely(error < 0)
+		goto err;
+	if unlikely(error == 2)
+		goto done;
 	if (error) {
 		/* Module import list */
 		for (;;) {
 import_item_as_module:
 			error = ast_import_module(&item);
 			Dee_XDecref(item.ii_import_name);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 parse_module_import_list:
 			if (tok != ',')
 				break;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			error = parse_import_symbol(&item, true);
-			if
-				unlikely(error < 0)
-			goto err;
-			if
-				unlikely(error == 2)
-			break;
+			if unlikely(error < 0)
+				goto err;
+			if unlikely(error == 2)
+				break;
 		}
 		/* Warn if the module import list is followed by a `from' */
 		if (tok == KWD_from &&
@@ -966,39 +910,33 @@ parse_module_import_list:
 			goto err;
 	} else if (tok == KWD_from) {
 		/*  - `import foo from bar' */
-		if
-			unlikely(yield() < 0)
-		goto err_item;
+		if unlikely(yield() < 0)
+			goto err_item;
 		module = parse_module_byname(true);
-		if
-			unlikely(!module)
-		goto err_item;
+		if unlikely(!module)
+			goto err_item;
 		error = ast_import_single_from_module(module, &item);
 		Dee_XDecref(item.ii_import_name);
 		Dee_Decref(module);
-		if
-			unlikely(error)
-		goto err;
+		if unlikely(error)
+			goto err;
 	} else if (tok == ',') {
 		item_a = 4;
 		item_v = (struct import_item *)Dee_TryMalloc(4 * sizeof(struct import_item));
-		if
-			unlikely(!item_v)
-		{
+		if unlikely(!item_v)
+			{
 			item_a = 2;
 			item_v = (struct import_item *)Dee_Malloc(2 * sizeof(struct import_item));
-			if
-				unlikely(!item_v)
-			goto err_item;
+			if unlikely(!item_v)
+				goto err_item;
 		}
 		item_v[0] = item;
 		item_c    = 1;
 import_parse_list:
 		do {
 			ASSERT(tok == ',');
-			if
-				unlikely(yield() < 0)
-			goto err_item_v;
+			if unlikely(yield() < 0)
+				goto err_item_v;
 			if (tok == '*') {
 				if (star_loc.l_file) {
 					if (WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
@@ -1006,9 +944,8 @@ import_parse_list:
 				} else {
 					loc_here(&star_loc);
 				}
-				if
-					unlikely(yield() < 0)
-				goto err_item_v;
+				if unlikely(yield() < 0)
+					goto err_item_v;
 				/* Don't allow modules after `*' confirmed that symbols are being imported.
 				 * -> There is no such thing as import-all-modules. */
 				allow_modules = false;
@@ -1019,31 +956,26 @@ import_parse_list:
 					/* Allocate more space. */
 					struct import_item *new_item_v;
 					size_t new_item_a = item_a * 2;
-					if
-						unlikely(!new_item_a)
-					new_item_a = 2;
+					if unlikely(!new_item_a)
+						new_item_a = 2;
 					new_item_v = (struct import_item *)Dee_TryRealloc(item_v, new_item_a *
 					                                                          sizeof(struct import_item));
-					if
-						unlikely(!new_item_v)
-					{
+					if unlikely(!new_item_v)
+						{
 						new_item_a = item_c + 1;
 						new_item_v = (struct import_item *)Dee_Realloc(item_v, new_item_a *
 						                                                       sizeof(struct import_item));
-						if
-							unlikely(!new_item_v)
-						goto err_item_v;
+						if unlikely(!new_item_v)
+							goto err_item_v;
 					}
 					item_v = new_item_v;
 					item_a = new_item_a;
 				}
 				error = parse_import_symbol(&item_v[item_c], allow_modules);
-				if
-					unlikely(error < 0)
-				goto err_item_v;
-				if
-					unlikely(error == 2)
-				break;
+				if unlikely(error < 0)
+					goto err_item_v;
+				if unlikely(error == 2)
+					break;
 				++item_c; /* Import parsing confirmed. */
 				if (error) {
 					/* We're dealing with a module import list!
@@ -1051,9 +983,8 @@ import_parse_list:
 					size_t i;
 					ASSERT(allow_modules);
 					for (i = 0; i < item_c; ++i) {
-						if
-							unlikely(ast_import_module(&item_v[i]))
-						goto err_item_v;
+						if unlikely(ast_import_module(&item_v[i]))
+							goto err_item_v;
 						Dee_XClear(item_v[i].ii_import_name);
 					}
 					Dee_Free(item_v);
@@ -1066,42 +997,36 @@ import_parse_list:
 		if (tok == KWD_from) {
 			size_t i;
 			/* import foo, bar, foobar from foobarfoo;  (symbol import) */
-			if
-				unlikely(yield() < 0)
-			goto err_item_v;
+			if unlikely(yield() < 0)
+				goto err_item_v;
 			module = parse_module_byname(true);
-			if
-				unlikely(!module)
-			goto err_item_v;
+			if unlikely(!module)
+				goto err_item_v;
 			/* If `*' was apart of the symbol import list,
 			 * start by importing all symbols from the module. */
 			if (star_loc.l_file) {
-				if
-					unlikely(ast_import_all_from_module(module, &star_loc))
-				goto err_item_v_module;
+				if unlikely(ast_import_all_from_module(module, &star_loc))
+					goto err_item_v_module;
 			}
 			/* Now import all the explicitly defined symbols. */
 			for (i = 0; i < item_c; ++i) {
-				if
-					unlikely(ast_import_single_from_module(module, &item_v[i]))
-				goto err_item_v_module;
+				if unlikely(ast_import_single_from_module(module, &item_v[i]))
+					goto err_item_v_module;
 				Dee_XClear(item_v[i].ii_import_name);
 			}
 			Dee_Decref(module);
 		} else {
 			size_t i;
-			if
-				unlikely(!allow_modules)
-			{
+			if unlikely(!allow_modules)
+				{
 				/* Warn if there is a `from' missing following a symbol import list. */
 				if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
 					goto err_item_v;
 			}
 			/* import foo, bar, foobar;  (module import) */
 			for (i = 0; i < item_c; ++i) {
-				if
-					unlikely(ast_import_module(&item_v[i]))
-				goto err_item_v;
+				if unlikely(ast_import_module(&item_v[i]))
+					goto err_item_v;
 				Dee_XClear(item_v[i].ii_import_name);
 			}
 		}
@@ -1133,30 +1058,25 @@ ast_parse_import_hybrid(unsigned int *pwas_expression) {
 	struct ast_loc import_loc;
 	ASSERT(tok == KWD_import);
 	loc_here(&import_loc);
-	if
-		unlikely(yield() < 0)
-	goto err;
+	if unlikely(yield() < 0)
+		goto err;
 	if (tok == '(' || tok == KWD_pack) {
 		/* `import', as seen in expressions. */
 		result = ast_setddi(ast_sym_import_from_deemon(), &import_loc);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		result = ast_parse_unary_operand(result);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		result = ast_parse_postexpr(result);
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_YES;
 	} else {
 		result = ast_setddi(ast_constexpr(Dee_None), &import_loc);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			unlikely(ast_parse_post_import())
-		goto err_r;
+		if unlikely(!result)
+			goto err;
+		if unlikely(ast_parse_post_import())
+			goto err_r;
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_NO;
 	}
@@ -1258,54 +1178,44 @@ INTERN DREF struct ast *FCALL ast_parse_import(void) {
 		 * - from deemon import object as my_object, list as my_list; */
 		bool did_import_all = false;
 		result              = ast_setddi(ast_constexpr(Dee_None), &import_loc);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			unlikely(yield() < 0)
-		goto err_r;
+		if unlikely(!result)
+			goto err;
+		if unlikely(yield() < 0)
+			goto err_r;
 		module = parse_module_byname(true);
-		if
-			unlikely(!module)
-		goto err_r;
+		if unlikely(!module)
+			goto err_r;
 		/* All right! we've got the module. */
-		if
-			unlikely(likely(tok == KWD_import) ? (yield() < 0) : WARN(W_EXPECTED_IMPORT_AFTER_FROM))
-		goto err_r_module;
+		if unlikely(likely(tok == KWD_import) ? (yield() < 0) : WARN(W_EXPECTED_IMPORT_AFTER_FROM))
+			goto err_r_module;
 		for (;;) {
 			/* Parse an entire import list. */
 			if (tok == '*') {
 				if (did_import_all &&
 				    WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 					goto err_r_module;
-				if
-					unlikely(ast_import_all_from_module(module, NULL))
-				goto err_r_module;
-				if
-					unlikely(yield() < 0)
-				goto err_r_module;
+				if unlikely(ast_import_all_from_module(module, NULL))
+					goto err_r_module;
+				if unlikely(yield() < 0)
+					goto err_r_module;
 				did_import_all = true;
 			} else {
 				int error;
 				struct import_item item;
 				error = parse_import_symbol(&item, false);
-				if
-					unlikely(error < 0)
-				goto err_r_module;
-				if
-					unlikely(error == 2)
-				break; /* failed */
+				if unlikely(error < 0)
+					goto err_r_module;
+				if unlikely(error == 2)
+					break; /* failed */
 				error = ast_import_single_from_module(module, &item);
 				Dee_XDecref(item.ii_import_name);
-				if
-					unlikely(error)
-				goto err_r_module;
+				if unlikely(error)
+					goto err_r_module;
 			}
 			if (tok != ',')
 				break;
-			if
-				unlikely(yield() < 0)
-			goto err_r_module;
+			if unlikely(yield() < 0)
+				goto err_r_module;
 		}
 		Dee_Decref(module);
 	} else {
@@ -1329,29 +1239,24 @@ INTERN DREF struct ast *FCALL ast_parse_import(void) {
 		 * - import "object" as my_object from deemon;
 		 * - import object as my_object, list as my_list from deemon; */
 		ASSERT(tok == KWD_import);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == '(' || tok == KWD_pack) {
 			/* `import', as seen in expressions. */
 			result = ast_setddi(ast_sym_import_from_deemon(), &import_loc);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			result = ast_parse_unary_operand(result);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			result = ast_parse_postexpr(result);
 			goto done;
 		}
 		result = ast_setddi(ast_constexpr(Dee_None), &import_loc);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			unlikely(ast_parse_post_import())
-		goto err_r;
+		if unlikely(!result)
+			goto err;
+		if unlikely(ast_parse_post_import())
+			goto err_r;
 	}
 done:
 	return result;

@@ -145,9 +145,8 @@ INTERN int (DCALL asm_gentry)(struct ast *__restrict try_ast,
 		if (!(iter->ce_flags & EXCEPTION_HANDLER_FFINALLY))
 			continue;
 		my_first_finally = asm_newsym();
-		if
-			unlikely(!my_first_finally)
-		goto err;
+		if unlikely(!my_first_finally)
+			goto err;
 		current_assembler.a_finsym  = my_first_finally;
 		current_assembler.a_finflag = ASM_FINFLAG_NORMAL;
 		goto gen_guard;
@@ -182,13 +181,11 @@ gen_guard:
 	for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
 		if (guard_begin[i] != guard_end[i]) {
 			guard[i].b = asm_newsym();
-			if
-				unlikely(!guard[i].b)
-			goto err;
+			if unlikely(!guard[i].b)
+				goto err;
 			guard[i].e = asm_newsym();
-			if
-				unlikely(!guard[i].e)
-			goto err;
+			if unlikely(!guard[i].e)
+				goto err;
 			guard[i].b->as_sect = i;
 			guard[i].e->as_sect = i;
 #if 1
@@ -277,16 +274,13 @@ gen_guard:
 				goto err_hand_frame;
 			}
 			if (guard_finflags & ASM_FINFLAG_USED) {
-				if
-					unlikely((finally_exit = asm_newsym()) == NULL)
-				goto err_hand_frame;
+				if unlikely((finally_exit = asm_newsym()) == NULL)
+					goto err_hand_frame;
 				/* Push the stack & address where finally is meant to return to normally. */
-				if
-					unlikely(asm_gpush_abs(finally_exit))
-				goto err_hand_frame;
-				if
-					unlikely(asm_gpush_stk(finally_exit))
-				goto err_hand_frame;
+				if unlikely(asm_gpush_abs(finally_exit))
+					goto err_hand_frame;
+				if unlikely(asm_gpush_stk(finally_exit))
+					goto err_hand_frame;
 				handler_stack += 2;
 			}
 			if (my_first_finally) {
@@ -323,9 +317,8 @@ gen_guard:
 					if (!(iter2->ce_flags & EXCEPTION_HANDLER_FFINALLY))
 						continue;
 					next_finally = asm_newsym();
-					if
-						unlikely(!next_finally)
-					goto err_hand_frame;
+					if unlikely(!next_finally)
+						goto err_hand_frame;
 					/* Define as the entry point of the next finally-block. */
 					my_first_finally = next_finally;
 					break;
@@ -446,9 +439,8 @@ gen_guard:
 			current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 			if (prev_section == current_assembler.a_curr) {
 				jump_across = asm_newsym();
-				if
-					unlikely(!jump_across)
-				goto err_hand_frame;
+				if unlikely(!jump_across)
+					goto err_hand_frame;
 				if (asm_gjmp(ASM_JMP, jump_across))
 					goto err_hand_frame;
 			}
@@ -461,8 +453,7 @@ gen_guard:
 			/* This is where the handler's entry point is located at! */
 			if (next_handler)
 				handler_entry = next_handler, next_handler = NULL;
-			else if
-				unlikely((handler_entry = asm_newsym()) == NULL)
+			else if unlikely((handler_entry = asm_newsym()) == NULL)
 			goto err_hand_frame;
 			asm_defsym(handler_entry);
 
@@ -510,16 +501,14 @@ handle_mask_ast:
 					maskv         = DeeTuple_ELEM(mask_ast->a_constexpr);
 					catch_mask_c  = DeeTuple_SIZE(mask_ast->a_constexpr);
 					enter_handler = NULL;
-					if
-						unlikely(!catch_mask_c) /* No mask? */
+					if unlikely(!catch_mask_c) /* No mask? */
 					catch_mask_v = NULL;
 					else {
 						size_t catch_mask_i;
 						catch_mask_v = (DREF DeeTypeObject **)Dee_Calloc(catch_mask_c *
 						                                                 sizeof(DREF DeeTypeObject *));
-						if
-							unlikely(!catch_mask_v)
-						{
+						if unlikely(!catch_mask_v)
+							{
 							catch_mask_c = 0;
 							goto err_hand_frame;
 						}
@@ -562,16 +551,14 @@ handle_mask_ast:
 						goto handle_mask_ast;
 					}
 					catch_mask_c = mask_ast->a_multiple.m_astc;
-					if
-						unlikely(!catch_mask_c) /* No mask? */
+					if unlikely(!catch_mask_c) /* No mask? */
 					catch_mask_v = NULL;
 					else {
 						size_t catch_mask_i;
 						catch_mask_v = (DREF DeeTypeObject **)Dee_Calloc(catch_mask_c *
 						                                                 sizeof(DREF DeeTypeObject *));
-						if
-							unlikely(!catch_mask_v)
-						{
+						if unlikely(!catch_mask_v)
+							{
 							catch_mask_c = 0;
 							goto err_hand_frame;
 						}
@@ -608,9 +595,8 @@ do_multimask_rethrow:
 						 * at runtime, meaning we must generate a bit more code now. */
 						if (!IS_LAST_HANDLER()) {
 							next_handler = asm_newsym();
-							if
-								unlikely(!next_handler)
-							goto err_hand_frame;
+							if unlikely(!next_handler)
+								goto err_hand_frame;
 							if (asm_gjmp(ASM_JMP, next_handler))
 								goto err_hand_frame;
 						} else {
@@ -630,9 +616,8 @@ do_multimask_rethrow:
 
 					if (!IS_LAST_HANDLER()) {
 						next_handler = asm_newsym();
-						if
-							unlikely(!next_handler)
-						goto err_hand_frame;
+						if unlikely(!next_handler)
+							goto err_hand_frame;
 						/* Jump to the next handler when it's not a match. */
 						if (asm_gjmp(ASM_JF, next_handler))
 							goto err_hand_frame;
@@ -640,9 +625,8 @@ do_multimask_rethrow:
 					} else {
 						struct asm_sym *is_a_match;
 						is_a_match = asm_newsym();
-						if
-							unlikely(!is_a_match)
-						goto err_hand_frame;
+						if unlikely(!is_a_match)
+							goto err_hand_frame;
 						/* Execute the handler when it's a match. */
 						if (asm_gjmp(ASM_JT, is_a_match))
 							goto err_hand_frame;
@@ -673,13 +657,11 @@ do_multimask_rethrow:
 						continue;
 					needs_cleanup = true;
 					cleanup[i].b  = asm_newsym();
-					if
-						unlikely(!cleanup[i].b)
-					goto err_hand_frame;
+					if unlikely(!cleanup[i].b)
+						goto err_hand_frame;
 					cleanup[i].e = asm_newsym();
-					if
-						unlikely(!cleanup[i].e)
-					goto err_hand_frame;
+					if unlikely(!cleanup[i].e)
+						goto err_hand_frame;
 					cleanup[i].b->as_stck = ASM_SYM_STCK_INVALID;
 					cleanup[i].e->as_stck = ASM_SYM_STCK_INVALID;
 					cleanup[i].b->as_sect = i;
@@ -769,9 +751,8 @@ do_multimask_rethrow:
 					}
 					/* Determine the distance to the highest-order exception handler. */
 					cleanup_entry = asm_newsym();
-					if
-						unlikely(!cleanup_entry)
-					goto err_hand_frame;
+					if unlikely(!cleanup_entry)
+						goto err_hand_frame;
 
 					/* Create an exception descriptor for the cleanup. */
 					for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
@@ -780,9 +761,8 @@ do_multimask_rethrow:
 						/* NOTE: Increase the priority for following handlers, so that
 						 *       cleanup handlers are considered after the real handlers. */
 						descriptor = asm_newexc_at(except_index++);
-						if
-							unlikely(!descriptor)
-						goto err_hand_frame;
+						if unlikely(!descriptor)
+							goto err_hand_frame;
 						/* Track usage of exception handler symbols. */
 						++cleanup[i].b->as_used;
 						++cleanup[i].e->as_used;
@@ -842,9 +822,8 @@ do_multimask_rethrow:
 			 * just as is intended by the deemon specs. */
 			for (mask_i = 0; mask_i < catch_mask_c; ++mask_i) {
 				descriptor = asm_newexc_at(except_index);
-				if
-					unlikely(!descriptor)
-				goto err_hand_frame;
+				if unlikely(!descriptor)
+					goto err_hand_frame;
 				descriptor->ex_mask = catch_mask_v[mask_i];
 				Dee_XIncref(catch_mask_v[mask_i]);
 				/* Track usage of exception handler symbols. */

@@ -52,13 +52,11 @@ INTERN struct asm_sym *(DCALL asm_genloop)(uint16_t loop_flags,
 	old_continue = current_assembler.a_loopctl[ASM_LOOPCTL_CON];
 	/* Create new symbols for loop control. */
 	loop_break = asm_newsym();
-	if
-		unlikely(!loop_break)
-	goto err;
+	if unlikely(!loop_break)
+		goto err;
 	loop_continue = asm_newsym();
-	if
-		unlikely(!loop_continue)
-	goto err;
+	if unlikely(!loop_continue)
+		goto err;
 	/* Setup the new loop control symbols. */
 	current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = loop_break;
 	current_assembler.a_loopctl[ASM_LOOPCTL_CON] = loop_continue;
@@ -104,9 +102,8 @@ INTERN struct asm_sym *(DCALL asm_genloop)(uint16_t loop_flags,
 		    prev_section != &current_assembler.a_sect[SECTION_COLD]) {
 			struct asm_sym *loop_begin;
 			loop_begin = asm_newsym();
-			if
-				unlikely(!loop_begin)
-			goto err;
+			if unlikely(!loop_begin)
+				goto err;
 			if (asm_putddi(ddi_ast))
 				goto err;
 			if (asm_gjmp(ASM_JMP, loop_begin))
@@ -138,9 +135,8 @@ INTERN struct asm_sym *(DCALL asm_genloop)(uint16_t loop_flags,
 		asm_decsp();
 	} else if (loop_flags & AST_FLOOP_POSTCOND) {
 		struct asm_sym *loop_block = asm_newsym();
-		if
-			unlikely(!loop_block)
-		goto err;
+		if unlikely(!loop_block)
+			goto err;
 		asm_defsym(loop_block);
 		/* NOTE: There's no point in trying to put some if this stuff into
 		 *       the cold section when the `AST_FLOOP_UNLIKELY' flag is set.
@@ -173,9 +169,8 @@ INTERN struct asm_sym *(DCALL asm_genloop)(uint16_t loop_flags,
 			loop_block = loop_continue;
 		} else {
 			loop_block = asm_newsym();
-			if
-				unlikely(!loop_block)
-			goto err;
+			if unlikely(!loop_block)
+				goto err;
 		}
 		asm_defsym(loop_block);
 		/* Evaluate the condition before the loop. */
@@ -184,9 +179,8 @@ INTERN struct asm_sym *(DCALL asm_genloop)(uint16_t loop_flags,
 			struct asm_sec *prev_section;
 			struct asm_sym *loop_enter;
 			loop_enter = asm_newsym();
-			if
-				unlikely(!loop_enter)
-			goto err;
+			if unlikely(!loop_enter)
+				goto err;
 			if (asm_gjcc(elem_or_cond, ASM_JT, loop_enter, ddi_ast))
 				goto err; /* if (cond) goto enter_loop; */
 

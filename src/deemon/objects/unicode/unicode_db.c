@@ -35,9 +35,8 @@ static struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 
 PUBLIC ATTR_CONST struct unitraits *DCALL
 DeeUni_Descriptor(uint32_t ch) {
-	if
-		likely(ch < UNICODE_COUNT_VALID)
-	return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
+	if likely(ch < UNICODE_COUNT_VALID)
+		return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
 	return (struct unitraits *)&default_traits;
 }
 

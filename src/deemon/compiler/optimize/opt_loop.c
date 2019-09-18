@@ -60,9 +60,8 @@ INTERN int
 		struct ast_assumes lookahead_assumptions;
 		struct ast_assumes entry_assumptions;
 		struct ast_optimize_stack child_stack;
-		if
-			unlikely(ast_assumes_initcond(&lookahead_assumptions, stack->os_assume))
-		goto err;
+		if unlikely(ast_assumes_initcond(&lookahead_assumptions, stack->os_assume))
+			goto err;
 		/* Build up assumptions as they will appear after the loop. */
 		if (self->a_flag & AST_FLOOP_FOREACH) {
 			/* foreach-style loop. */
@@ -99,13 +98,11 @@ err_lookahead_assumptions:
 		if ((self->a_flag & (AST_FLOOP_FOREACH | AST_FLOOP_POSTCOND)) != AST_FLOOP_POSTCOND &&
 		    ast_assumes_mergecond(&lookahead_assumptions, NULL))
 			goto err_lookahead_assumptions;
-		if
-			unlikely(ast_assumes_initcond(&entry_assumptions, stack->os_assume))
-		goto err_lookahead_assumptions;
+		if unlikely(ast_assumes_initcond(&entry_assumptions, stack->os_assume))
+			goto err_lookahead_assumptions;
 		/* Merge assumptions upon entry (0 iterations) with those made up exit (>= 1 iterations) */
-		if
-			unlikely(ast_assumes_mergecond(&entry_assumptions, &lookahead_assumptions))
-		{
+		if unlikely(ast_assumes_mergecond(&entry_assumptions, &lookahead_assumptions))
+			{
 			ast_assumes_fini(&entry_assumptions);
 			goto err_lookahead_assumptions;
 		}
@@ -148,9 +145,8 @@ err_entry_assumptions:
 			}
 		}
 		/* Merge the final set of assumptions with those done by the caller. */
-		if
-			unlikely(ast_assumes_merge(stack->os_assume, &entry_assumptions))
-		goto err_entry_assumptions;
+		if unlikely(ast_assumes_merge(stack->os_assume, &entry_assumptions))
+			goto err_entry_assumptions;
 		ast_assumes_fini(&entry_assumptions);
 	} else
 #endif /* OPTIMIZE_FASSUME */
@@ -187,13 +183,11 @@ err_entry_assumptions:
 				 * >> while (0) { ... } */
 				DREF struct ast **elemv, *none_ast;
 				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-				if
-					unlikely(!elemv)
-				goto err;
+				if unlikely(!elemv)
+					goto err;
 				none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None), self);
-				if
-					unlikely(!none_ast)
-				{
+				if unlikely(!none_ast)
+					{
 					Dee_Free(elemv);
 					goto err;
 				}
@@ -258,13 +252,11 @@ err_entry_assumptions:
 				/* Convert to `{ <loop>; <next>; <cond>; none; }' */
 				DREF struct ast **elemv, *none_ast, **iter;
 				elemv = (DREF struct ast **)Dee_Malloc(4 * sizeof(DREF struct ast *));
-				if
-					unlikely(!elemv)
-				goto err;
+				if unlikely(!elemv)
+					goto err;
 				none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None), self);
-				if
-					unlikely(!none_ast)
-				{
+				if unlikely(!none_ast)
+					{
 					Dee_Free(elemv);
 					goto err;
 				}

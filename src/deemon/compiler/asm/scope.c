@@ -57,17 +57,15 @@ check_symbol:
 				goto err;
 		}
 		lid = asm_newlocal();
-		if
-			unlikely(lid < 0)
-		goto err;
+		if unlikely(lid < 0)
+			goto err;
 #if 1
 		if (asm_plocal((uint16_t)lid))
 			goto err;
 		if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE) {
 			int32_t mid = asm_msymid(sym);
-			if
-				unlikely(mid < 0)
-			goto err;
+			if unlikely(mid < 0)
+				goto err;
 			if (asm_gpush_module_p((uint16_t)mid))
 				goto err;
 			Dee_Decref(SYMBOL_MODULE_MODULE(sym));
@@ -388,15 +386,13 @@ INTERN int (DCALL ast_genasm_one)(struct ast *__restrict self,
 	uint16_t old_sp = current_assembler.a_stackcur;
 	uint16_t wnt_sp;
 	int result = ast_genasm(self, gflags);
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 	wnt_sp = old_sp;
 	if (gflags & ASM_G_FPUSHRES)
 		++wnt_sp;
-	if
-		unlikely(current_assembler.a_stackcur != wnt_sp)
-	{
+	if unlikely(current_assembler.a_stackcur != wnt_sp)
+		{
 		/* Emit a warning and forcefully re-align the stack. */
 		result = WARNAST(self, W_ASM_MISSALIGNED_STACK);
 		if (result)
@@ -412,15 +408,13 @@ INTERN int (DCALL ast_genasm_set_one)(struct ast *__restrict self,
 	uint16_t old_sp = current_assembler.a_stackcur;
 	uint16_t wnt_sp;
 	int result = ast_genasm_set(self, gflags);
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 	wnt_sp = old_sp;
 	if (gflags & ASM_G_FPUSHRES)
 		++wnt_sp;
-	if
-		unlikely(current_assembler.a_stackcur != wnt_sp)
-	{
+	if unlikely(current_assembler.a_stackcur != wnt_sp)
+		{
 		/* Emit a warning and forcefully re-align the stack. */
 		result = WARNAST(self, W_ASM_MISSALIGNED_STACK);
 		if (result)

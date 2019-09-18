@@ -97,9 +97,8 @@ JIT_GetOperatorFunction(uint16_t opname) {
 	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
 	                                                                NULL,
 	                                                                true);
-	if
-		unlikely(!operators_module)
-	goto err;
+	if unlikely(!operators_module)
+		goto err;
 	if (symbol_name) {
 		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,
 		                                     symbol_name,
@@ -108,9 +107,8 @@ JIT_GetOperatorFunction(uint16_t opname) {
 		/* Fallback: Invoke `operator(id)' to generate the default callback. */
 		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, "operator",
 		                                     Dee_HashPtr("operator", COMPILER_STRLEN("operator")));
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			DREF DeeObject *callback_result;
 			callback_result = DeeObject_Callf(result, "I16u", opname);
 			Dee_Decref(result);
@@ -300,12 +298,10 @@ do_operator_gr:
 		}
 		/* Parenthesis around operator name. */
 		result = JITLexer_ParseOperatorName(self, features);
-		if
-			unlikely(result < 0)
-		goto err;
-		if
-			unlikely(self->jl_tok != ')')
-		{
+		if unlikely(result < 0)
+			goto err;
+		if unlikely(self->jl_tok != ')')
+			{
 			syn_paren_expected_rparen_after_lparen(self);
 			goto err_trace;
 		}
@@ -333,9 +329,8 @@ err_empty_string:
 			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
 			JITLexer_Yield(self);
 		}
-		if
-			likely(self->jl_tok == ']')
-		{
+		if likely(self->jl_tok == ']')
+			{
 			JITLexer_Yield(self);
 		} else {
 err_rbrck_after_lbrck:
@@ -393,15 +388,13 @@ err_rbrck_after_lbrck:
 							result = OPERATOR_DELRANGE;
 							JITLexer_Yield(self);
 						}
-						if
-							unlikely(self->jl_tok != ']')
-						goto err_rbrck_after_lbrck;
+						if unlikely(self->jl_tok != ']')
+							goto err_rbrck_after_lbrck;
 						goto done_y1;
 					}
 					result = OPERATOR_DELATTR;
-					if
-						unlikely(self->jl_tok != '.')
-					{
+					if unlikely(self->jl_tok != '.')
+						{
 						syn_operator_expected_lbracket_or_dot_after_del(self);
 						goto err_trace;
 					}
@@ -443,8 +436,7 @@ err_rbrck_after_lbrck:
 				if (name == ENCODE4('m', 'o', 'v', 'e')) {
 					JITLexer_Yield(self);
 					result = OPERATOR_MOVEASSIGN;
-					if
-						unlikely(self->jl_tok != '=' &&
+					if unlikely(self->jl_tok != '=' &&
 						         self->jl_tok != TOK_COLLON_EQUAL)
 					{
 						DeeError_Throwf(&DeeError_SyntaxError,
@@ -748,23 +740,20 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	                                 &printer,
 	                                 &name_start,
 	                                 &name_end);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0) {
 		/* The printer was used. */
 		DREF DeeObject *str;
 		str = unicode_printer_pack(&printer);
-		if
-			unlikely(!str)
-		goto err_trace;
+		if unlikely(!str)
+			goto err_trace;
 		if (DeeString_STR(str)[0] != '.') {
 			result = DeeModule_OpenGlobal(str, NULL, true);
 		} else {
 			DeeModuleObject *base = self->jl_context->jc_impbase;
-			if
-				unlikely(!base)
-			{
+			if unlikely(!base)
+				{
 				DeeError_Throwf(&DeeError_CompilerError,
 				                "Cannot import relative module %r",
 				                str);
@@ -780,9 +769,8 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		                                    true);
 	} else {
 		DeeModuleObject *base = self->jl_context->jc_impbase;
-		if
-			unlikely(!base)
-		{
+		if unlikely(!base)
+			{
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Cannot import relative module %$q",
 			                (size_t)(name_end - name_start),
@@ -795,12 +783,10 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		                                   NULL,
 		                                   true);
 	}
-	if
-		unlikely(!result)
-	goto err_trace;
-	if
-		unlikely(DeeModule_RunInit(result) < 0)
-	goto err_rt_r;
+	if unlikely(!result)
+		goto err_trace;
+	if unlikely(DeeModule_RunInit(result) < 0)
+		goto err_rt_r;
 	return result;
 err_rt_r:
 	Dee_Decref(result);

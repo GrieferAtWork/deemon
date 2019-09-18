@@ -1287,8 +1287,7 @@ DEFINE_TYPE_INHERIT_FUNCTION2(type_inherit_call, "operator call", tp_call, tp_ca
 DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject * __restrict self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
-	if
-		unlikely(!tp_self->tp_cast.tp_str &&
+	if unlikely(!tp_self->tp_cast.tp_str &&
 		         !type_inherit_str(tp_self))
 	goto missing;
 	/* Handle string-repr recursion for GC objects. */
@@ -1440,9 +1439,8 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
 				} else {
 					size_t kw_length;
 					kw_length = DeeObject_Size(kw);
-					if
-						unlikely(kw_length == (size_t)-1)
-					return NULL;
+					if unlikely(kw_length == (size_t)-1)
+						return NULL;
 					if (kw_length != 0)
 						goto err_no_keywords;
 				}
@@ -1490,9 +1488,8 @@ DEFINE_OPERATOR(DREF DeeObject *, CallKw,
 				} else {
 					size_t kw_length;
 					kw_length = DeeObject_Size(kw);
-					if
-						unlikely(kw_length == (size_t)-1)
-					return NULL;
+					if unlikely(kw_length == (size_t)-1)
+						return NULL;
 					if (kw_length != 0)
 						goto err_no_keywords;
 				}
@@ -1552,9 +1549,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 	}
 	/* sigh... Looks like we need to create a temporary argument tuple... */
 	full_args = DeeTuple_NewUninitialized(1 + argc);
-	if
-		unlikely(!full_args)
-	return NULL;
+	if unlikely(!full_args)
+		return NULL;
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
 	memcpy(&DeeTuple_ELEM(full_args)[1], argv, argc * sizeof(DeeObject *));
@@ -1606,9 +1602,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 			} else {
 				size_t kw_length;
 				kw_length = DeeObject_Size(kw);
-				if
-					unlikely(kw_length == (size_t)-1)
-				return NULL;
+				if unlikely(kw_length == (size_t)-1)
+					return NULL;
 				if (kw_length != 0)
 					goto err_no_keywords;
 			}
@@ -1694,9 +1689,8 @@ DeeObject_VCallPack(DeeObject *__restrict self,
                     size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
-	if
-		unlikely(!args_tuple)
-	return NULL;
+	if unlikely(!args_tuple)
+		return NULL;
 	result = DeeObject_Call(self, argc, DeeTuple_ELEM(args_tuple));
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
@@ -1707,9 +1701,8 @@ DeeObject_VCallf(DeeObject *__restrict self,
                  char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
-	if
-		unlikely(!args_tuple)
-	return NULL;
+	if unlikely(!args_tuple)
+		return NULL;
 	result = DeeObject_Call(self,
 	                        DeeTuple_SIZE(args_tuple),
 	                        DeeTuple_ELEM(args_tuple));
@@ -1723,9 +1716,8 @@ DeeObject_VThisCallf(DeeObject *__restrict self,
                      char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
-	if
-		unlikely(!args_tuple)
-	return NULL;
+	if unlikely(!args_tuple)
+		return NULL;
 	result = DeeObject_ThisCall(self, this_arg,
 	                            DeeTuple_SIZE(args_tuple),
 	                            DeeTuple_ELEM(args_tuple));
@@ -4185,9 +4177,8 @@ PUBLIC int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self,
 			}
 			/* Fallback create an integer object and use it for indexing. */
 			index_ob = DeeInt_NewSize(index);
-			if
-				unlikely(!index_ob)
-			goto err;
+			if unlikely(!index_ob)
+				goto err;
 			result = DeeType_INVOKE_GETITEM(tp_self, self, index_ob);
 			Dee_Decref(index_ob);
 check_result:
@@ -5091,9 +5082,8 @@ PUBLIC int (DCALL DeeObject_Unpack)(DeeObject *__restrict self,
 			return err_invalid_unpack_size(self, objc, fast_size);
 		for (; i < objc; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			objv[i] = elem; /* Inherit reference. */
 		}
 		return 0;

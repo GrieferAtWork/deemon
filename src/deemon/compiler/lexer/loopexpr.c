@@ -44,9 +44,8 @@ PRIVATE DREF struct ast *FCALL
 wrap_yield(DREF struct ast *self, struct ast_loc *__restrict loc) {
 	DREF struct ast *result;
 	result = ast_setddi(ast_yield(ast_setddi(self, loc)), loc);
-	if
-		likely(result)
-	ast_decref(self);
+	if likely(result)
+		ast_decref(self);
 	return result;
 }
 
@@ -64,43 +63,36 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 	case KWD_if: {
 		DREF struct ast *ff_branch;
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
+			goto err_flags;
 		/* NOTE: Allow variable declarations within the condition. */
 		result = ast_parse_comma(LOOKUP_SYM_NORMAL |
 		                         LOOKUP_SYM_ALLOWDECL,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
-		if
-			unlikely(!result)
-		goto err_flags;
+		if unlikely(!result)
+			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
-		goto err_r;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
+			goto err_r;
 
 		/* Parse the conditional expression. */
 		other = parse_generator_loop(ddi_loc);
-		if
-			unlikely(!other)
-		goto err_r;
+		if unlikely(!other)
+			goto err_r;
 
 		/* Parse an optional false-branch. */
 		ff_branch = NULL;
 		if (tok == KWD_else) {
-			if
-				unlikely(yield() < 0)
-			goto err_r_other;
+			if unlikely(yield() < 0)
+				goto err_r_other;
 			ff_branch = parse_generator_loop(ddi_loc);
-			if
-				unlikely(!ff_branch)
-			goto err_r_other;
+			if unlikely(!ff_branch)
+				goto err_r_other;
 		}
 
 		/* Create the conditional branch. */
@@ -116,34 +108,27 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 
 	case KWD_do:
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		result = parse_generator_loop(&loc);
-		if
-			unlikely(!result)
-		goto err;
-		if
-			unlikely(likely(tok == KWD_while) ? (yield() < 0) : WARN(W_EXPECTED_WHILE_AFTER_DO))
-		goto err_r;
+		if unlikely(!result)
+			goto err;
+		if unlikely(likely(tok == KWD_while) ? (yield() < 0) : WARN(W_EXPECTED_WHILE_AFTER_DO))
+			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
-		goto err_r_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
+			goto err_r_flags;
 		other = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!other)
-		goto err_r_flags;
+		if unlikely(!other)
+			goto err_r_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
-		goto err_r_other;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
+			goto err_r_other;
 		/* Pack together the loop expression. */
 		merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND, other, NULL, result), &loc);
-		if
-			unlikely(!merge)
-		goto err_r_other;
+		if unlikely(!merge)
+			goto err_r_other;
 		ast_decref(other);
 		ast_decref(result);
 		result = merge;
@@ -151,36 +136,30 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 
 	case KWD_while:
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		/* Parse the while-condition. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
+			goto err_flags;
 		/* NOTE: Allow variable declarations within the condition. */
 		result = ast_parse_comma(LOOKUP_SYM_NORMAL |
 		                         LOOKUP_SYM_ALLOWDECL,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
-		if
-			unlikely(!result)
-		goto err_flags;
+		if unlikely(!result)
+			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
-		goto err_r;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
+			goto err_r;
 		/* Parse the generator loop. */
 		other = parse_generator_loop(&loc);
-		if
-			unlikely(!other)
-		goto err_r;
+		if unlikely(!other)
+			goto err_r;
 		merge = ast_loop(AST_FLOOP_NORMAL, result, NULL, other);
-		if
-			unlikely(!merge)
-		goto err_r_other;
+		if unlikely(!merge)
+			goto err_r_other;
 		ast_decref(result);
 		ast_decref(other);
 		result = merge;
@@ -192,19 +171,16 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		DREF struct ast *iter_or_next;
 		int32_t type;
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
+			goto err_flags;
 		/* Parse the for-header. */
 		type = ast_parse_for_head(&init, &elem_or_cond, &iter_or_next);
-		if
-			unlikely(type < 0)
-		goto err_flags;
+		if unlikely(type < 0)
+			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (type & AST_FLOOP_FOREACH && iter_or_next) {
 			/* Wrap the iterator of a foreach-loop with an __iterself__ operator. */
@@ -212,26 +188,22 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			                                 AST_OPERATOR_FNORMAL,
 			                                 iter_or_next),
 			                   &loc);
-			if
-				unlikely(!merge)
-			goto err_for_loop;
+			if unlikely(!merge)
+				goto err_for_loop;
 			ast_decref(iter_or_next);
 			iter_or_next = merge;
 		}
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
-		goto err_for_loop;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
+			goto err_for_loop;
 		/* Parse the loop expression. */
 		result = parse_generator_loop(&loc);
-		if
-			unlikely(!result)
-		goto err_for_loop;
+		if unlikely(!result)
+			goto err_for_loop;
 		/* Pack together the loop ast. */
 		merge = ast_loop((uint16_t)type, elem_or_cond, iter_or_next, result);
 		ast_decref(result);
-		if
-			unlikely(!merge)
-		goto err_for_loop;
+		if unlikely(!merge)
+			goto err_for_loop;
 		ast_xdecref(iter_or_next);
 		ast_xdecref(elem_or_cond);
 		result = merge;
@@ -239,9 +211,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		 * If one was, then simply wrap everything in a multi-branch AST. */
 		if (init) {
 			DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-			if
-				unlikely(!exprv)
-			{
+			if unlikely(!exprv)
+				{
 err_loop_init:
 				ast_decref(init);
 				goto err_r;
@@ -250,9 +221,8 @@ err_loop_init:
 			exprv[0] = init;   /* Inherit reference. */
 			exprv[1] = result; /* Inherit reference. */
 			merge    = ast_multiple(AST_FMULTIPLE_KEEPLAST, 2, exprv);
-			if
-				unlikely(!merge)
-			{
+			if unlikely(!merge)
+				{
 				Dee_Free(exprv);
 				goto err_loop_init;
 			}
@@ -271,36 +241,29 @@ err_for_loop:
 		DREF struct ast *foreach_iter;
 		DREF struct ast *foreach_loop;
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
+			goto err_flags;
 		foreach_elem = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
 		                               AST_FMULTIPLE_TUPLE,
 		                               NULL);
-		if
-			unlikely(!foreach_elem)
-		goto err_flags;
-		if
-			unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
-		goto err_foreach_elem_flags;
+		if unlikely(!foreach_elem)
+			goto err_flags;
+		if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
+			goto err_foreach_elem_flags;
 		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!foreach_iter)
-		goto err_foreach_elem_flags;
+		if unlikely(!foreach_iter)
+			goto err_foreach_elem_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
-		goto err_foreach_iter;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
+			goto err_foreach_iter;
 		/* Parse the generator loop expression. */
 		foreach_loop = parse_generator_loop(&loc);
-		if
-			unlikely(!foreach_loop)
-		goto err_foreach_iter;
+		if unlikely(!foreach_loop)
+			goto err_foreach_iter;
 		result = ast_setddi(ast_loop(AST_FLOOP_FOREACH,
 		                             foreach_elem,
 		                             foreach_iter,
@@ -354,16 +317,14 @@ INTERN DREF struct ast *FCALL ast_parse_loopexpr(void) {
 	current_basescope->bs_flags |= current_tags.at_code_flags;
 	/* Parse the generator loop. */
 	result = parse_generator_loop(&loc);
-	if
-		unlikely(!result)
-	goto err_scope;
+	if unlikely(!result)
+		goto err_scope;
 	/* Wrap the generator loop in a function ast. */
 	merge = ast_setddi(ast_function(result, current_basescope), &loc);
 	ast_decref(result);
 	basescope_pop();
-	if
-		unlikely(!merge)
-	goto err;
+	if unlikely(!merge)
+		goto err;
 	result = merge;
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	ASSERT(current_scope);
@@ -374,9 +335,8 @@ INTERN DREF struct ast *FCALL ast_parse_loopexpr(void) {
 	result->a_scope = current_scope;
 	/* With the lambda function now created, we must still wrap it in a call-expression. */
 	other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-	if
-		unlikely(!other)
-	goto err_r;
+	if unlikely(!other)
+		goto err_r;
 	merge = ast_setddi(ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL, result, other), &loc);
 	ast_decref(other);
 	ast_decref(result);

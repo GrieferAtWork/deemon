@@ -104,9 +104,8 @@ jy_iter(JITYieldFunction *__restrict self) {
 	JITFunction *jf = self->jy_func;
 	size_t i;
 	result = DeeGCObject_MALLOC(JITYieldFunctionIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 
 	ASSERT(jf->jf_args.ot_prev.otp_ind >= 2);
 	ASSERT(jf->jf_args.ot_prev.otp_tab == &jf->jf_refs);
@@ -114,9 +113,8 @@ jy_iter(JITYieldFunction *__restrict self) {
 	ASSERT(result->ji_loc.ot_prev.otp_tab != NULL);
 	result->ji_loc.ot_list = (struct jit_object_entry *)Dee_Malloc((result->ji_loc.ot_mask + 1) *
 	                                                               sizeof(struct jit_object_entry));
-	if
-		unlikely(!result->ji_loc.ot_list)
-	goto err_r;
+	if unlikely(!result->ji_loc.ot_list)
+		goto err_r;
 	memcpy(result->ji_loc.ot_list, jf->jf_args.ot_list,
 	       (result->ji_loc.ot_mask + 1) * sizeof(struct jit_object_entry));
 
@@ -381,9 +379,8 @@ JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 			JITLexer_Yield(self);
 			/* Evaluate the finally-statement (NOTE: JIT doesn't allow yield-in-finally) */
 			value = JITLexer_EvalStatement(self);
-			if
-				unlikely(!value)
-			goto err;
+			if unlikely(!value)
+				goto err;
 			if (value == JIT_LVALUE) {
 				JITLValue_Fini(&self->jl_lvalue);
 				JITLValue_Init(&self->jl_lvalue);
@@ -393,9 +390,8 @@ JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 		} else if (JITLexer_ISKWD(self, "catch")) {
 			/* Simply skip catch statements. */
 			JITLexer_Yield(self);
-			if
-				likely(self->jl_tok == '(')
-			{
+			if likely(self->jl_tok == '(')
+				{
 				JITLexer_Yield(self);
 			} else {
 				syn_try_expected_lparen_after_catch(self);
@@ -431,9 +427,8 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 
 	case JIT_STATE_KIND_TRY:
 		/* Search for, and execute finally-blocks. */
-		if
-			unlikely(JITLexer_EvalFinallyStatements(&self->ji_lex))
-		goto err;
+		if unlikely(JITLexer_EvalFinallyStatements(&self->ji_lex))
+			goto err;
 		goto do_pop_state;
 
 	case JIT_STATE_KIND_DOWHILE:
@@ -459,14 +454,12 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			DREF DeeObject *value;
 			int temp;
 			value = JITLexer_EvalRValue(&self->ji_lex);
-			if
-				unlikely(!value)
-			goto err;
+			if unlikely(!value)
+				goto err;
 			temp = DeeObject_Bool(value);
 			Dee_Decref(value);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			if (!temp) {
 				if (self->ji_lex.jl_tok == ')') {
 					JITLexer_Yield(&self->ji_lex);
@@ -498,15 +491,13 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 		JITLexer_YieldAt(&self->ji_lex, st->js_while.f_cond);
 		/* Invoke the cond-expression. */
 		value = JITLexer_EvalRValueDecl(&self->ji_lex);
-		if
-			unlikely(!value)
-		goto err;
+		if unlikely(!value)
+			goto err;
 		/* Check if loop iteration should continue. */
 		temp = DeeObject_Bool(value);
 		Dee_Decref(value);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp) {
 			/* Restore the old position (which is presumably just after the loop block) */
 			JITLexer_YieldAt(&self->ji_lex, old_pos);
@@ -529,9 +520,8 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			/* Invoke the next-expression. */
 			temp = JITLexer_EvalExpression(&self->ji_lex,
 			                               JITLEXER_EVAL_FNORMAL);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			if (temp == JIT_LVALUE) {
 				JITLValue_Fini(&self->ji_lex.jl_lvalue);
 				JITLValue_Init(&self->ji_lex.jl_lvalue);
@@ -545,15 +535,13 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			JITLexer_YieldAt(&self->ji_lex, st->js_for.f_cond);
 			/* Invoke the cond-expression. */
 			value = JITLexer_EvalRValue(&self->ji_lex);
-			if
-				unlikely(!value)
-			goto err;
+			if unlikely(!value)
+				goto err;
 			/* Check if loop iteration should continue. */
 			temp = DeeObject_Bool(value);
 			Dee_Decref(value);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			if (!temp) {
 				/* Restore the old position (which is presumably just after the loop block) */
 				JITLexer_YieldAt(&self->ji_lex, old_pos);
@@ -578,9 +566,8 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			                          &self->ji_ctx,
 			                          elem);
 			Dee_Decref(elem);
-			if
-				unlikely(temp)
-			goto err;
+			if unlikely(temp)
+				goto err;
 			/* Check for interrupts before looping. */
 			if (DeeThread_CheckInterrupt())
 				goto err;
@@ -604,9 +591,8 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			                                  &self->ji_ctx,
 			                                  elem);
 			Dee_Decref(elem);
-			if
-				unlikely(temp)
-			goto err;
+			if unlikely(temp)
+				goto err;
 			/* Check for interrupts before looping. */
 			if (DeeThread_CheckInterrupt())
 				goto err;
@@ -630,9 +616,8 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 				JITLexer_Yield(&self->ji_lex);
 do_skip_else:
 				/* Skip the accompanying block. */
-				if
-					unlikely(JITLexer_SkipStatement(&self->ji_lex))
-				goto err;
+				if unlikely(JITLexer_SkipStatement(&self->ji_lex))
+					goto err;
 			} else if (name == ENCODE4('e', 'l', 'i', 'f')) {
 				self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
 				goto do_skip_else;
@@ -641,9 +626,8 @@ do_skip_else:
 		goto do_pop_state_scope;
 
 	case JIT_STATE_KIND_WITH:
-		if
-			unlikely(DeeObject_Leave(st->js_with.w_obj))
-		{
+		if unlikely(DeeObject_Leave(st->js_with.w_obj))
+			{
 			/* Still pop the state upon error! */
 			self->ji_state = st->js_prev;
 			jit_state_destroy(st);
@@ -725,9 +709,8 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
 		case JIT_STATE_KIND_FOREACH:
 		case JIT_STATE_KIND_FOREACH2:
 			/* Unwind up until the target state. */
-			if
-				unlikely(JITYieldFunctionIterator_UnwindUntil(self, st))
-			goto err;
+			if unlikely(JITYieldFunctionIterator_UnwindUntil(self, st))
+				goto err;
 			/* Leave the scope of the loop body (the scope will
 			 * be re-entered when the loop body is entered again) */
 			if (!(st->js_flag & JIT_STATE_FLAG_SINGLE)) {
@@ -737,9 +720,8 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
 			switch (st->js_kind) {
 
 			case JIT_STATE_KIND_DOWHILE:
-				if
-					unlikely(JITLexer_JumpToDoWhileCondition(&self->ji_lex, st))
-				goto err;
+				if unlikely(JITLexer_JumpToDoWhileCondition(&self->ji_lex, st))
+					goto err;
 				if (ctl_is_break) {
 					/* Skip over the condition expression and break out of the loop */
 					if (JITLexer_SkipExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL))
@@ -766,14 +748,12 @@ do_break_dowhile_loop:
 					DREF DeeObject *value;
 					int temp;
 					value = JITLexer_EvalRValue(&self->ji_lex);
-					if
-						unlikely(!value)
-					goto err;
+					if unlikely(!value)
+						goto err;
 					temp = DeeObject_Bool(value);
 					Dee_Decref(value);
-					if
-						unlikely(temp < 0)
-					goto err;
+					if unlikely(temp < 0)
+						goto err;
 					if (!temp)
 						goto do_break_dowhile_loop;
 				}
@@ -794,14 +774,12 @@ do_break_dowhile_loop:
 					/* Evaluate the cond-expression */
 					JITLexer_YieldAt(&self->ji_lex, st->js_while.f_cond);
 					value = JITLexer_EvalRValueDecl(&self->ji_lex);
-					if
-						unlikely(!value)
-					goto err;
+					if unlikely(!value)
+						goto err;
 					temp = DeeObject_Bool(value);
 					Dee_Decref(value);
-					if
-						unlikely(temp < 0)
-					goto err;
+					if unlikely(temp < 0)
+						goto err;
 					if (!temp) {
 						JITLexer_YieldAt(&self->ji_lex, st->js_while.f_loop);
 						goto do_break_loop; /* Break out of the loop */
@@ -823,9 +801,8 @@ do_break_dowhile_loop:
 						/* Evaluate the next-expression */
 						JITLexer_YieldAt(&self->ji_lex, st->js_for.f_next);
 						value = JITLexer_EvalExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL);
-						if
-							unlikely(!value)
-						goto err;
+						if unlikely(!value)
+							goto err;
 						if (value == JIT_LVALUE) {
 							JITLValue_Fini(&self->ji_lex.jl_lvalue);
 							JITLValue_Init(&self->ji_lex.jl_lvalue);
@@ -838,14 +815,12 @@ do_break_dowhile_loop:
 						/* Evaluate the cond-expression */
 						JITLexer_YieldAt(&self->ji_lex, st->js_for.f_cond);
 						value = JITLexer_EvalRValue(&self->ji_lex);
-						if
-							unlikely(!value)
-						goto err;
+						if unlikely(!value)
+							goto err;
 						temp = DeeObject_Bool(value);
 						Dee_Decref(value);
-						if
-							unlikely(temp < 0)
-						goto err;
+						if unlikely(temp < 0)
+							goto err;
 						if (!temp) {
 							JITLexer_YieldAt(&self->ji_lex, st->js_for.f_loop);
 							goto do_break_loop; /* Break out of the loop */
@@ -867,9 +842,8 @@ do_break_dowhile_loop:
 					/* Load the next item */
 					elem = DeeObject_IterNext(st->js_foreach.f_iter);
 					if (!ITER_ISOK(elem)) {
-						if
-							unlikely(!elem)
-						goto err;
+						if unlikely(!elem)
+							goto err;
 						/* The iterator has been exhausted. */
 						goto do_break_loop;
 					}
@@ -878,9 +852,8 @@ do_break_dowhile_loop:
 					                          &self->ji_ctx,
 					                          elem);
 					Dee_Decref(elem);
-					if
-						unlikely(temp)
-					goto err;
+					if unlikely(temp)
+						goto err;
 					/* Check for interrupts before jumping back. */
 					if (DeeThread_CheckInterrupt())
 						goto err;
@@ -895,9 +868,8 @@ do_break_dowhile_loop:
 					/* Load the next item */
 					elem = DeeObject_IterNext(st->js_foreach2.f_iter);
 					if (!ITER_ISOK(elem)) {
-						if
-							unlikely(!elem)
-						goto err;
+						if unlikely(!elem)
+							goto err;
 						/* The iterator has been exhausted. */
 						goto do_break_loop;
 					}
@@ -906,9 +878,8 @@ do_break_dowhile_loop:
 					                                  &self->ji_ctx,
 					                                  elem);
 					Dee_Decref(elem);
-					if
-						unlikely(temp)
-					goto err;
+					if unlikely(temp)
+						goto err;
 					/* Check for interrupts before jumping back. */
 					if (DeeThread_CheckInterrupt())
 						goto err;
@@ -920,9 +891,8 @@ do_break_dowhile_loop:
 			if (ctl_is_break) {
 do_break_loop:
 				/* Jump to the end of the loop block, and pop the loop itself. */
-				if
-					unlikely(JITLexer_SkipStatement(&self->ji_lex))
-				goto err;
+				if unlikely(JITLexer_SkipStatement(&self->ji_lex))
+					goto err;
 				ASSERT(JIT_STATE_KIND_HASSCOPE(st->js_kind));
 				ASSERT(st->js_kind != JIT_STATE_KIND_WITH);
 				JITContext_PopScope(&self->ji_ctx);
@@ -956,9 +926,8 @@ parse_again:
 	 * point of execution. */
 	while (self->ji_state->js_flag & JIT_STATE_FLAG_SINGLE) {
 		error = JITYieldFunctionIterator_PopState(self);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (error)
 			break;
 	}
@@ -979,9 +948,8 @@ parse_again_same_statement:
 		else {
 			/* Recursively defined block scope. */
 			st = jit_state_alloc();
-			if
-				unlikely(!st)
-			goto err;
+			if unlikely(!st)
+				goto err;
 			st->js_prev    = self->ji_state;
 			st->js_kind    = JIT_STATE_KIND_SCOPE;
 			st->js_flag    = JIT_STATE_FLAG_BLOCK;
@@ -1016,9 +984,8 @@ parse_again_same_statement:
 			st->js_flag |= JIT_STATE_FLAG_SINGLE;
 		} else {
 			error = JITYieldFunctionIterator_PopState(self);
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (error)
 				goto parse_again_same_statement;
 		}
@@ -1040,9 +1007,8 @@ parse_again_same_statement:
 				DREF DeeObject *value;
 				int temp;
 				JITLexer_Yield(&self->ji_lex);
-				if
-					likely(self->ji_lex.jl_tok == '(')
-				{
+				if likely(self->ji_lex.jl_tok == '(')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_if_expected_lparen_after_if(&self->ji_lex);
@@ -1050,17 +1016,14 @@ parse_again_same_statement:
 				}
 				JITContext_PushScope(&self->ji_ctx);
 				value = JITLexer_EvalRValueDecl(&self->ji_lex);
-				if
-					unlikely(!value)
-				goto err_scope;
+				if unlikely(!value)
+					goto err_scope;
 				temp = DeeObject_Bool(value);
 				Dee_Decref(value);
-				if
-					unlikely(temp < 0)
-				goto err_scope;
-				if
-					likely(self->ji_lex.jl_tok == ')')
-				{
+				if unlikely(temp < 0)
+					goto err_scope;
+				if likely(self->ji_lex.jl_tok == ')')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_if_expected_rparen_after_if(&self->ji_lex);
@@ -1070,9 +1033,8 @@ parse_again_same_statement:
 					/* Choose the true-branch (push a skip-else state). */
 					struct jit_state *st;
 					st = jit_state_alloc();
-					if
-						unlikely(!st)
-					goto err_scope;
+					if unlikely(!st)
+						goto err_scope;
 					st->js_kind    = JIT_STATE_KIND_SKIPELSE;
 					st->js_flag    = JIT_STATE_FLAG_SINGLE;
 					st->js_prev    = self->ji_state;
@@ -1080,9 +1042,8 @@ parse_again_same_statement:
 					goto parse_again_same_statement;
 				}
 				/* Choose the false-branch (should it exist) */
-				if
-					unlikely(JITLexer_SkipStatement(&self->ji_lex))
-				goto err_scope;
+				if unlikely(JITLexer_SkipStatement(&self->ji_lex))
+					goto err_scope;
 				if (self->ji_lex.jl_tok == JIT_KEYWORD &&
 				    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
 					uint32_t name;
@@ -1104,9 +1065,8 @@ parse_else_after_if:
 							 * the condition of the if-branch. */
 							struct jit_state *st;
 							st = jit_state_alloc();
-							if
-								unlikely(!st)
-							goto err_scope;
+							if unlikely(!st)
+								goto err_scope;
 							st->js_kind    = JIT_STATE_KIND_SCOPE2;
 							st->js_flag    = JIT_STATE_FLAG_SINGLE;
 							st->js_prev    = self->ji_state;
@@ -1124,9 +1084,8 @@ parse_else_after_if:
 				struct jit_state *st;
 				/* Push a state for the do-while loop. */
 				st = jit_state_alloc();
-				if
-					unlikely(!st)
-				goto err;
+				if unlikely(!st)
+					goto err;
 				JITLexer_Yield(&self->ji_lex);
 				st->js_kind           = JIT_STATE_KIND_DOWHILE;
 				st->js_flag           = JIT_STATE_FLAG_SINGLE;
@@ -1145,9 +1104,8 @@ parse_else_after_if:
 				struct jit_state *st;
 				JITLexer_Yield(&self->ji_lex);
 				st = jit_state_alloc();
-				if
-					unlikely(!st)
-				goto err;
+				if unlikely(!st)
+					goto err;
 				st->js_kind        = JIT_STATE_KIND_TRY;
 				st->js_flag        = JIT_STATE_FLAG_SINGLE;
 				st->js_try.t_guard = self->ji_lex.jl_tokstart;
@@ -1160,9 +1118,8 @@ parse_else_after_if:
 			    tok_begin[2] == 'r') {
 				struct jit_state *st;
 				JITLexer_Yield(&self->ji_lex);
-				if
-					likely(self->ji_lex.jl_tok == '(')
-				{
+				if likely(self->ji_lex.jl_tok == '(')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_for_expected_lparen_after_for(&self->ji_lex);
@@ -1177,9 +1134,8 @@ parse_else_after_if:
 				                            AST_COMMA_ALLOWVARDECLS,
 				                            NULL,
 				                            NULL);
-				if
-					unlikely(!result)
-				goto err_scope;
+				if unlikely(!result)
+					goto err_scope;
 				if (self->ji_lex.jl_tok == ':') {
 					JITLValue elem_lvalue;
 					DREF DeeObject *iter;
@@ -1196,16 +1152,14 @@ parse_else_after_if:
 					JITLexer_Yield(&self->ji_lex);
 					/* Parse the sequence expression. */
 					result = JITLexer_EvalRValue(&self->ji_lex);
-					if
-						unlikely(!result)
-					{
+					if unlikely(!result)
+						{
 err_elem_lvalue_scope:
 						JITLValue_Fini(&elem_lvalue);
 						goto err_scope;
 					}
-					if
-						likely(self->ji_lex.jl_tok == ')')
-					{
+					if likely(self->ji_lex.jl_tok == ')')
+						{
 						JITLexer_Yield(&self->ji_lex);
 					} else {
 						syn_for_expected_rparen_after_foreach(&self->ji_lex);
@@ -1214,9 +1168,8 @@ err_elem_lvalue_scope:
 					}
 					iter = DeeObject_IterSelf(result);
 					Dee_Decref(result);
-					if
-						unlikely(!iter)
-					goto err_elem_lvalue_scope;
+					if unlikely(!iter)
+						goto err_elem_lvalue_scope;
 					/* We're now where the loop starts. */
 					/* -> Load the first iterator element. */
 					result = DeeObject_IterNext(iter);
@@ -1225,9 +1178,8 @@ err_elem_lvalue_scope:
 						Dee_Decref(iter);
 						JITLValue_Fini(&elem_lvalue);
 						JITContext_PopScope(&self->ji_ctx);
-						if
-							unlikely(!result)
-						goto err;
+						if unlikely(!result)
+							goto err;
 						/* Skip the body of the for-statement */
 						if (JITLexer_SkipStatement(&self->ji_lex))
 							goto err;
@@ -1239,18 +1191,16 @@ err_elem_lvalue_scope:
 					                          &self->ji_ctx,
 					                          result);
 					Dee_Decref(result);
-					if
-						unlikely(temp)
-					{
+					if unlikely(temp)
+						{
 err_iter_scope_lvalue:
 						Dee_Decref(iter);
 						goto err_elem_lvalue_scope;
 					}
 					/* Allocate the state used to track this foreach loop. */
 					st = jit_state_alloc();
-					if
-						unlikely(!st)
-					goto err_iter_scope_lvalue;
+					if unlikely(!st)
+						goto err_iter_scope_lvalue;
 					st->js_flag           = JIT_STATE_FLAG_SINGLE;
 					st->js_kind           = JIT_STATE_KIND_FOREACH;
 					st->js_foreach.f_elem = elem_lvalue; /* Inherit reference */
@@ -1284,14 +1234,12 @@ do_normal_for_noinit:
 						 * and check if the loop is even entered. */
 						cond_start = self->ji_lex.jl_tokstart;
 						value      = JITLexer_EvalRValue(&self->ji_lex);
-						if
-							unlikely(!value)
-						goto err_scope;
+						if unlikely(!value)
+							goto err_scope;
 						temp = DeeObject_Bool(value);
 						Dee_Decref(value);
-						if
-							unlikely(temp < 0)
-						goto err_scope;
+						if unlikely(temp < 0)
+							goto err_scope;
 						if (self->ji_lex.jl_tok == ';') {
 							JITLexer_Yield(&self->ji_lex);
 						} else {
@@ -1304,9 +1252,8 @@ do_normal_for_noinit:
 							if (self->ji_lex.jl_tok != ')' &&
 							    JITLexer_SkipExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL))
 								goto err;
-							if
-								likely(self->ji_lex.jl_tok == ')')
-							{
+							if likely(self->ji_lex.jl_tok == ')')
+								{
 								JITLexer_Yield(&self->ji_lex);
 							} else {
 err_missing_rparen_after_for:
@@ -1327,9 +1274,8 @@ err_missing_rparen_after_for:
 						next_start = self->ji_lex.jl_tokstart;
 						if (JITLexer_SkipExpression(&self->ji_lex, JITLEXER_EVAL_FNORMAL))
 							goto err_scope;
-						if
-							likely(self->ji_lex.jl_tok == ')')
-						{
+						if likely(self->ji_lex.jl_tok == ')')
+							{
 							JITLexer_Yield(&self->ji_lex);
 						} else {
 							goto err_missing_rparen_after_for;
@@ -1338,9 +1284,8 @@ err_missing_rparen_after_for:
 
 					/* Allocate the state used to track this for-loop. */
 					st = jit_state_alloc();
-					if
-						unlikely(!st)
-					goto err_scope;
+					if unlikely(!st)
+						goto err_scope;
 					st->js_flag       = JIT_STATE_FLAG_SINGLE;
 					st->js_kind       = JIT_STATE_KIND_FOR;
 					st->js_for.f_cond = cond_start;
@@ -1360,9 +1305,8 @@ err_missing_rparen_after_for:
 				struct jit_state *st;
 				DREF DeeObject *obj;
 				JITLexer_Yield(&self->ji_lex);
-				if
-					likely(self->ji_lex.jl_tok == '(')
-				{
+				if likely(self->ji_lex.jl_tok == '(')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_with_expected_lparen_after_with(&self->ji_lex);
@@ -1370,12 +1314,10 @@ err_missing_rparen_after_for:
 				}
 				JITContext_PushScope(&self->ji_ctx);
 				obj = JITLexer_EvalRValueDecl(&self->ji_lex);
-				if
-					unlikely(!obj)
-				goto err_scope;
-				if
-					likely(self->ji_lex.jl_tok == ')')
-				{
+				if unlikely(!obj)
+					goto err_scope;
+				if likely(self->ji_lex.jl_tok == ')')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_with_expected_rparen_after_with(&self->ji_lex);
@@ -1384,13 +1326,11 @@ err_obj_scope:
 					goto err_scope;
 				}
 				st = jit_state_alloc();
-				if
-					unlikely(!st)
-				goto err_obj_scope;
+				if unlikely(!st)
+					goto err_obj_scope;
 				/* Invoke `operator enter()' on the with-object */
-				if
-					unlikely(DeeObject_Enter(obj))
-				{
+				if unlikely(DeeObject_Enter(obj))
+					{
 					jit_state_free(st);
 					goto err_obj_scope;
 				}
@@ -1411,9 +1351,8 @@ err_obj_scope:
 				JITLexer_Yield(&self->ji_lex);
 				result = JITLexer_EvalRValue(&self->ji_lex);
 				/* Consume the trailing `;' that is required for yield statements. */
-				if
-					likely(self->ji_lex.jl_tok == ';')
-				{
+				if likely(self->ji_lex.jl_tok == ';')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_yield_expected_semi_after_yield(&self->ji_lex);
@@ -1428,9 +1367,8 @@ err_obj_scope:
 				DREF DeeObject *value;
 				int temp;
 				JITLexer_Yield(&self->ji_lex);
-				if
-					likely(self->ji_lex.jl_tok == '(')
-				{
+				if likely(self->ji_lex.jl_tok == '(')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_while_expected_lparen_after_while(&self->ji_lex);
@@ -1440,12 +1378,10 @@ err_obj_scope:
 				JITContext_PushScope(&self->ji_ctx);
 				cond_start = self->ji_lex.jl_tokstart;
 				value      = JITLexer_EvalRValueDecl(&self->ji_lex);
-				if
-					unlikely(!value)
-				goto err_scope;
-				if
-					likely(self->ji_lex.jl_tok == ')')
-				{
+				if unlikely(!value)
+					goto err_scope;
+				if likely(self->ji_lex.jl_tok == ')')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					Dee_Decref(value);
@@ -1454,9 +1390,8 @@ err_obj_scope:
 				}
 				temp = DeeObject_Bool(value);
 				Dee_Decref(value);
-				if
-					unlikely(temp < 0)
-				goto err_scope;
+				if unlikely(temp < 0)
+					goto err_scope;
 				if (!temp) {
 					/* The while-statement's body is never reached. */
 					JITContext_PopScope(&self->ji_ctx);
@@ -1466,9 +1401,8 @@ err_obj_scope:
 				}
 				/* Push a state that can be used to describe the behavior of the while-loop */
 				st = jit_state_alloc();
-				if
-					unlikely(!st)
-				goto err_scope;
+				if unlikely(!st)
+					goto err_scope;
 				st->js_kind         = JIT_STATE_KIND_WHILE;
 				st->js_flag         = JIT_STATE_FLAG_SINGLE;
 				st->js_while.f_cond = cond_start;
@@ -1501,9 +1435,8 @@ err_obj_scope:
 				JITLValue elem_lvalue;
 				DREF DeeObject *iter;
 				JITLexer_Yield(&self->ji_lex);
-				if
-					likely(self->ji_lex.jl_tok == '(')
-				{
+				if likely(self->ji_lex.jl_tok == '(')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_foreach_expected_lparen_after_foreach(&self->ji_lex);
@@ -1515,9 +1448,8 @@ err_obj_scope:
 				                            AST_COMMA_ALLOWVARDECLS,
 				                            NULL,
 				                            NULL);
-				if
-					unlikely(!result)
-				goto err_scope;
+				if unlikely(!result)
+					goto err_scope;
 				if (self->ji_lex.jl_tok == ':') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
@@ -1542,16 +1474,14 @@ err_obj_scope:
 				JITLexer_Yield(&self->ji_lex);
 				/* Parse the sequence expression. */
 				iter = JITLexer_EvalRValue(&self->ji_lex);
-				if
-					unlikely(!iter)
-				{
+				if unlikely(!iter)
+					{
 err_elem_lvalue_scope_2:
 					JITLValue_Fini(&elem_lvalue);
 					goto err_scope;
 				}
-				if
-					likely(self->ji_lex.jl_tok == ')')
-				{
+				if likely(self->ji_lex.jl_tok == ')')
+					{
 					JITLexer_Yield(&self->ji_lex);
 				} else {
 					syn_foreach_expected_rparen_after_foreach(&self->ji_lex);
@@ -1566,9 +1496,8 @@ err_elem_lvalue_scope_2:
 					Dee_Decref(iter);
 					JITLValue_Fini(&elem_lvalue);
 					JITContext_PopScope(&self->ji_ctx);
-					if
-						unlikely(!result)
-					goto err;
+					if unlikely(!result)
+						goto err;
 					/* Skip the body of the for-statement */
 					if (JITLexer_SkipStatement(&self->ji_lex))
 						goto err;
@@ -1580,18 +1509,16 @@ err_elem_lvalue_scope_2:
 				                          &self->ji_ctx,
 				                          result);
 				Dee_Decref(result);
-				if
-					unlikely(temp)
-				{
+				if unlikely(temp)
+					{
 err_iter_scope_lvalue_2:
 					Dee_Decref(iter);
 					goto err_elem_lvalue_scope_2;
 				}
 				/* Allocate the state used to track this foreach loop. */
 				st = jit_state_alloc();
-				if
-					unlikely(!st)
-				goto err_iter_scope_lvalue_2;
+				if unlikely(!st)
+					goto err_iter_scope_lvalue_2;
 				st->js_flag           = JIT_STATE_FLAG_SINGLE;
 				st->js_kind           = JIT_STATE_KIND_FOREACH;
 				st->js_foreach.f_elem = elem_lvalue; /* Inherit reference */
@@ -1613,9 +1540,8 @@ err_iter_scope_lvalue_2:
 parse_generic_statement:
 		/* Fallback: Parse a regular statement. */
 		result = JITLexer_EvalStatement(&self->ji_lex);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (result == JIT_LVALUE) {
 			JITLValue_Fini(&self->ji_lex.jl_lvalue);
 			self->ji_lex.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
@@ -1636,9 +1562,8 @@ err:
 				/* Try to service the break/continue control command using
 				 * the currently active compiler context state stack. */
 				error = JITYieldFunctionIterator_HandleLoopctl(self, is_break);
-				if
-					unlikely(error < 0)
-				goto err;
+				if unlikely(error < 0)
+					goto err;
 				if (error) { /* Resume execution at the location that was unwound */
 					self->ji_ctx.jc_retval = JITCONTEXT_RETVAL_UNSET;
 					goto parse_again_same_statement;
@@ -1680,9 +1605,8 @@ again_check_try_statements:
 					if (st->js_kind != JIT_STATE_KIND_TRY)
 						continue;
 					/* Found a try-state (unwind to it) */
-					if
-						unlikely(JITYieldFunctionIterator_UnwindUntil(self, st))
-					goto err;
+					if unlikely(JITYieldFunctionIterator_UnwindUntil(self, st))
+						goto err;
 					/* If the try was followed by a block, we must unwind that block as well */
 					if (!(st->js_flag & JIT_STATE_FLAG_SINGLE))
 						JITContext_PopScope(&self->ji_ctx);
@@ -1719,9 +1643,8 @@ service_exception_handlers:
 							JITLexer_Yield(&self->ji_lex);
 							/* Evaluate the finally-statement (NOTE: JIT doesn't allow yield-in-finally) */
 							value = JITLexer_EvalStatement(&self->ji_lex);
-							if
-								unlikely(!value)
-							goto err;
+							if unlikely(!value)
+								goto err;
 							if (value == JIT_LVALUE) {
 								JITLValue_Fini(&self->ji_lex.jl_lvalue);
 								JITLValue_Init(&self->ji_lex.jl_lvalue);
@@ -1735,9 +1658,8 @@ service_exception_handlers:
 							size_t symbol_size;
 							/* Simply skip catch statements. */
 							JITLexer_Yield(&self->ji_lex);
-							if
-								likely(self->ji_lex.jl_tok == '(')
-							{
+							if likely(self->ji_lex.jl_tok == '(')
+								{
 								JITLexer_Yield(&self->ji_lex);
 							} else {
 								syn_try_expected_lparen_after_catch(&self->ji_lex);
@@ -1745,8 +1667,7 @@ service_exception_handlers:
 							}
 							JITContext_PushScope(&self->ji_ctx);
 							/* Parse the mask of this catch statement! */
-							if
-								unlikely(JITLexer_ParseCatchMask(&self->ji_lex,
+							if unlikely(JITLexer_ParseCatchMask(&self->ji_lex,
 								                                 &typemask,
 								                                 &symbol_name,
 								                                 &symbol_size))
@@ -1764,9 +1685,8 @@ service_exception_handlers:
 								if (symbol_size) {
 									JITObjectTable *tab;
 									tab = JITContext_GetRWLocals(&self->ji_ctx);
-									if
-										unlikely(!tab)
-									goto err_scope;
+									if unlikely(!tab)
+										goto err_scope;
 									if (JITObjectTable_Update(tab,
 									                          symbol_name,
 									                          symbol_size,
@@ -1779,9 +1699,8 @@ service_exception_handlers:
 								old_except_sz = ts->t_exceptsz;
 								handler_start = self->ji_lex.jl_tokstart;
 								result        = JITLexer_EvalStatement(&self->ji_lex);
-								if
-									unlikely(!result)
-								{
+								if unlikely(!result)
+									{
 									if (self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)
 										goto err_scope;
 									JITContext_PopScope(&self->ji_ctx);
@@ -1826,9 +1745,8 @@ service_exception_handlers:
 									Dee_Decref(result);
 								}
 								/* Execute all additional finally-blocks, but skip any other catch-blocks! */
-								if
-									unlikely(JITLexer_EvalFinallyStatements(&self->ji_lex))
-								goto err;
+								if unlikely(JITLexer_EvalFinallyStatements(&self->ji_lex))
+									goto err;
 								/* Continue parsing, now that the exception has been handled. */
 								goto parse_again;
 							}

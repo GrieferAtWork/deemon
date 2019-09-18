@@ -166,9 +166,8 @@ fs_pathdrive(DeeObject *__restrict path) {
 		++drive_start;
 		drive_length = (size_t)(drive_start - DeeString_STR(path));
 		result       = DeeString_NewBuffer(drive_length + 1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			char *dst = DeeString_STR(result);
 			memcpy(dst, DeeString_STR(path), drive_length * sizeof(char));
 			/* Alway follow up with a slash. */
@@ -198,9 +197,8 @@ fs_pathinctrail(DeeObject *__restrict path) {
 	/* The +1 out-of-bounds read is OK because of the trailing \0 */
 	result = DeeString_NewSized(DeeString_STR(path),
 	                            DeeString_SIZE(path) + 1);
-	if
-		likely(result)
-	DeeString_END(result)[-1] = SEP;
+	if likely(result)
+		DeeString_END(result)[-1] = SEP;
 	return result;
 }
 
@@ -329,9 +327,8 @@ fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
 			return_reference_(path);
 		/* If a custom PWD is given, then we have to do this double-callback. */
 		path = fs_pathrel(path, NULL);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		ASSERT(!ISABS_STR(path));
 		result = fs_pathabs(path, pwd);
 		Dee_Decref(path);
@@ -340,16 +337,14 @@ fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
 	/* If the given `pwd' isn't absolute, make it using the real PWD. */
 	if (pwd && !ISABS_STR(pwd)) {
 		pwd = fs_pathabs(pwd, NULL);
-		if
-			unlikely(!pwd)
-		goto err;
+		if unlikely(!pwd)
+			goto err;
 	} else if (pwd) {
 		Dee_Incref(pwd);
 	} else {
 		pwd = fs_getcwd();
-		if
-			unlikely(!pwd)
-		goto err;
+		if unlikely(!pwd)
+			goto err;
 	}
 	{
 		uint32_t ch;
@@ -357,13 +352,11 @@ fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
 		char *pwd_base, *pwd_begin, *pwd_end;
 		char *pth_base, *pth_begin, *pth_end;
 		pwd_base = DeeString_AsUtf8(pwd);
-		if
-			unlikely(!pwd_base)
-		goto err_pwd;
+		if unlikely(!pwd_base)
+			goto err_pwd;
 		pth_base = DeeString_AsUtf8(path);
-		if
-			unlikely(!pth_base)
-		goto err_pwd;
+		if unlikely(!pth_base)
+			goto err_pwd;
 		pwd_end = (pwd_begin = pwd_base) + WSTR_LENGTH(pwd_base);
 		pth_end = (pth_begin = pth_base) + WSTR_LENGTH(pth_base);
 		/* Trim the given PWD and PATH strings. */
@@ -446,9 +439,8 @@ done_merge_paths:
 			size_t pth_length = (size_t)(pth_end - pth_begin);
 			size_t pwd_length = (size_t)(pwd_end - pwd_begin);
 			result            = DeeString_NewBuffer(pwd_length + 1 + pth_length);
-			if
-				unlikely(!result)
-			goto err_pwd;
+			if unlikely(!result)
+				goto err_pwd;
 			dst = DeeString_STR(result);
 			memcpy(dst, pwd_begin, pwd_length * sizeof(char));
 			dst += pwd_length;
@@ -493,9 +485,8 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 			return_reference_(path);
 		/* If a custom PWD is given, then we have to do this double-callback. */
 		path = fs_pathabs(path, NULL);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		ASSERT(ISABS_STR(path));
 		/* Now that the path is absolute, re-invoke the relative path creator. */
 		result = fs_pathrel(path, pwd);
@@ -505,26 +496,22 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 	/* If the given `pwd' isn't absolute, make it using the real PWD. */
 	if (pwd && !ISABS_STR(pwd)) {
 		pwd = fs_pathabs(pwd, NULL);
-		if
-			unlikely(!pwd)
-		goto err;
+		if unlikely(!pwd)
+			goto err;
 	} else if (pwd) {
 		Dee_Incref(pwd);
 	} else {
 		/* Lookup the real PWD. */
 		pwd = fs_getcwd();
-		if
-			unlikely(!pwd)
-		goto err;
+		if unlikely(!pwd)
+			goto err;
 	}
 	pth_iter = DeeString_AsUtf8(path);
-	if
-		unlikely(!pth_iter)
-	goto err;
+	if unlikely(!pth_iter)
+		goto err;
 	pwd_iter = DeeString_AsUtf8(pwd);
-	if
-		unlikely(!pwd_iter)
-	goto err;
+	if unlikely(!pwd_iter)
+		goto err;
 	pth_end = pth_iter + WSTR_LENGTH(pth_iter);
 	pwd_end = pwd_iter + WSTR_LENGTH(pwd_iter);
 #ifdef CONFIG_HOST_WINDOWS
@@ -539,13 +526,11 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 			goto done;
 		}
 		/* Stop when the path prefix is found. */
-		if
-			likely(a == ':')
-		break;
+		if likely(a == ':')
+			break;
 		/* This shouldn't really happen, but we've got no guaranty that it can't. */
-		if
-			unlikely(!a)
-		goto return_single_dot;
+		if unlikely(!a)
+			goto return_single_dot;
 	}
 	pth_base = pth_iter;
 #endif /* CONFIG_HOST_WINDOWS */
@@ -726,9 +711,8 @@ continue_uprefs_normal:
 #ifndef CONFIG_HOST_WINDOWS
 					char *pth_base;
 					pth_base = DeeString_AsUtf8(path);
-					if
-						unlikely(!pth_base)
-					goto err;
+					if unlikely(!pth_base)
+						goto err;
 #endif /* !CONFIG_HOST_WINDOWS */
 					/* Skip trailing slash/space characters that had been skipped previously. */
 					pth_begin = find_last_path_segment(pth_base, pth_begin);
@@ -784,9 +768,8 @@ return_single_dot:
 	pth_length = (size_t)(pth_end - pth_begin);
 	result = DeeString_NewBuffer(uprefs * COMPILER_LENOF(aligned_upref_buffer[0]) +
 	                             pth_length);
-	if
-		unlikely(!result)
-	goto err_pwd;
+	if unlikely(!result)
+		goto err_pwd;
 	dst = DeeString_STR(result);
 	while (uprefs) {
 		size_t part = MIN(uprefs, MAX_UPREF_COPY);
@@ -813,9 +796,8 @@ fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
 	char nextsep = SEP;
 	struct unicode_printer printer;
 	/* Special case: Return `.' when no paths are given. */
-	if
-		unlikely(!pathc)
-	return_reference_((DeeObject *)&str_single_dot);
+	if unlikely(!pathc)
+		return_reference_((DeeObject *)&str_single_dot);
 	/* Special case: Return `.' when no paths are given. */
 	unicode_printer_init(&printer);
 	for (i = 0; i < pathc; ++i) {
@@ -826,9 +808,8 @@ fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
 		if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 			goto err;
 		begin = DeeString_AsUtf8(path);
-		if
-			unlikely(!begin)
-		goto err;
+		if unlikely(!begin)
+			goto err;
 		end = begin + WSTR_LENGTH(begin);
 		while (begin < end) {
 			next = begin;
@@ -879,9 +860,8 @@ fs_pathexpand(DeeObject *__restrict path, uint16_t options,
 	ASSERT_OBJECT(environ_mapping);
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	begin = DeeString_AsUtf8(path);
-	if
-		unlikely(!begin)
-	goto err;
+	if unlikely(!begin)
+		goto err;
 	end = begin + WSTR_LENGTH(begin);
 	ASSERT(*end == '\0');
 	if (options & FS_EXPAND_FABS) {
@@ -950,9 +930,8 @@ next:
 			user_ob = DeeObject_Newf(&DeeUser_Type, "$s",
 			                         (size_t)(iter - name_start),
 			                         name_start);
-			if
-				unlikely(!user_ob)
-			{
+			if unlikely(!user_ob)
+				{
 				if ((options & FS_EXPAND_FNOFAIL) &&
 				    (DeeError_Catch(&DeeError_SystemError) ||
 				     DeeError_Catch(&DeeError_ValueError)))
@@ -961,9 +940,8 @@ next:
 			}
 			homepath = DeeObject_GetAttrString(user_ob, "home");
 			Dee_Decref(user_ob);
-			if
-				unlikely(!homepath)
-			{
+			if unlikely(!homepath)
+				{
 				if ((options & FS_EXPAND_FNOFAIL) &&
 				    (DeeError_Catch(&DeeError_SystemError) ||
 				     DeeError_Catch(&DeeError_ValueError)))
@@ -975,15 +953,13 @@ next:
 			                        &unicode_printer_print,
 			                        &printer);
 			Dee_Decref(homepath);
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			error = 0;
 		} else {
 			error = fs_printhome(&printer, !!(options & FS_EXPAND_FNOFAIL));
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 		}
 		flush_start = iter;
 		if (error) {
@@ -1038,18 +1014,16 @@ print_env:
 				/* Must use a temporary string. */
 				size_t length = (size_t)(name_end - name_start);
 				char *temp    = (char *)Dee_Malloc((length + 1) * sizeof(char));
-				if
-					unlikely(!temp)
-				goto err;
+				if unlikely(!temp)
+					goto err;
 				memcpy(temp, name_start, length * sizeof(char));
 				temp[length] = '\0';
 				/* Now print the environment variable. */
 				error = fs_printenv(name_start, &printer, !!(options & FS_EXPAND_FNOFAIL));
 				Dee_Free(temp);
 			}
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 			if (error)
 				flush_start = env_start;
 		} else {
@@ -1058,9 +1032,8 @@ print_env:
 			item = DeeObject_GetItemStringLen(environ_mapping, name_start,
 			                                  (size_t)(name_end - name_start),
 			                                  Dee_HashUtf8(name_start, (size_t)(name_end - name_start)));
-			if
-				unlikely(!item)
-			{
+			if unlikely(!item)
+				{
 				/* When the item wasn't found, try to handle `KeyError'. */
 				if (!(options & FS_EXPAND_FNOFAIL) ||
 				    !DeeError_Catch(&DeeError_KeyError))
@@ -1071,9 +1044,8 @@ print_env:
 				/* Print the item in place of the variable reference. */
 				temp = unicode_printer_printobject(&printer, item);
 				Dee_Decref(item);
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 			}
 		}
 		goto next;
@@ -1232,9 +1204,8 @@ done:
 			if (options & FS_EXPAND_FCASE) {
 				/* Check for lowercase characters. */
 				iter = begin = DeeString_AsUtf8(path);
-				if
-					unlikely(!iter)
-				goto err_without_printer;
+				if unlikely(!iter)
+					goto err_without_printer;
 				while (iter < end) {
 					ch = utf8_readchar((char const **)&iter, end);
 					if (DeeUni_IsLower(ch))
@@ -1254,9 +1225,8 @@ return_upper:
 	}
 	/* Pack everything together. */
 	path = unicode_printer_pack(&printer);
-	if
-		unlikely(!path)
-	goto err_without_printer;
+	if unlikely(!path)
+		goto err_without_printer;
 	if (options & FS_EXPAND_FREL) {
 		/* Force the path to become relative. */
 		DREF DeeObject *new_path;

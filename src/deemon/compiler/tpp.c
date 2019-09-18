@@ -217,12 +217,10 @@ again:
 		}
 		result = curfile->f_begin + (result - file_begin);
 		/* If the file was extended, search for the next token again. */
-		if
-			likely(extend_error)
-		{
-			if
-				unlikely(extend_error < 0)
-			return NULL;
+		if likely(extend_error)
+			{
+			if unlikely(extend_error < 0)
+				return NULL;
 			goto again;
 		}
 		/* Continue searching through the include-stack. */
@@ -299,9 +297,8 @@ INTERN struct TPPKeyword *DCALL
 peek_next_keyword(int create_missing) {
 	struct TPPFile *tok_file;
 	char *tok_begin = peek_next_token(&tok_file);
-	if
-		unlikely(!tok_begin)
-	return NULL;
+	if unlikely(!tok_begin)
+		return NULL;
 	return peek_keyword(tok_file, tok_begin, create_missing);
 }
 
@@ -498,15 +495,13 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 		if (self->ce_errorv[i] == self)
 			continue;
 		temp = (*printer)(arg, "\n", 1);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 		temp = DeeObject_Print((DeeObject *)self->ce_errorv[i],
 		                       printer, arg);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	return result;
@@ -551,9 +546,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 	buflen = 128 + filename_size;
 	buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 	                                                (buflen + 1) * sizeof(char));
-	if
-		unlikely(!buffer)
-	buflen = 0;
+	if unlikely(!buffer)
+		buflen = 0;
 	else {
 		buffer->s_data = NULL;
 		buffer->s_hash = (dhash_t)-1;
@@ -573,15 +567,13 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		              1 +                               /* /  (Optional, but always allocated) */
 		              COMPILER_STRLEN(include_prefix) + /* include/ */
 		              filename_size);                   /* baz.dee */
-		if
-			unlikely(req_length > buflen)
-		{
+		if unlikely(req_length > buflen)
+			{
 			/* Need a larger buffer. */
 			new_buffer = (DeeStringObject *)DeeObject_Realloc(buffer, offsetof(DeeStringObject, s_str) +
 			                                                          (req_length + 1) * sizeof(char));
-			if
-				unlikely(!new_buffer)
-			goto err_path;
+			if unlikely(!new_buffer)
+				goto err_path;
 			if (!buffer) {
 				new_buffer->s_data = NULL;
 				new_buffer->s_hash = (dhash_t)-1;
@@ -642,9 +634,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		if (buffer->s_len != buflen) {
 			new_buffer = (DeeStringObject *)DeeObject_TryRealloc(buffer, offsetof(DeeStringObject, s_str) +
 			                                                             (buffer->s_len + 1) * sizeof(char));
-			if
-				likely(new_buffer)
-			{
+			if likely(new_buffer)
+				{
 				buffer = new_buffer;
 				buflen = buffer->s_len;
 			}
@@ -653,15 +644,13 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		if (stream != ITER_DONE) {       /* Error or success. */
 			Dee_Incref(&DeeString_Type); /* Finalize initialization of the buffer. */
 			/* Check for errors that may have occurred during `DeeFile_Open()' */
-			if
-				unlikely(!stream)
-			goto err_streamopen_failed;
+			if unlikely(!stream)
+				goto err_streamopen_failed;
 			/* Use the stream to open a new TPP file descriptor. */
 			result = TPPFile_OpenStream((stream_t)stream, DeeString_STR(buffer));
 			Dee_Decref(buffer); /* Drop our own reference to the buffer. */
-			if
-				unlikely(!result)
-			{
+			if unlikely(!result)
+				{
 				/* Failed to create the TPP descriptor. */
 				Dee_Decref(stream);
 				goto err;
@@ -672,9 +661,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			 * Now to cache it in a keyword entry. */
 			if (!keyword_entry) {
 				keyword_entry = TPPLexer_LookupKeyword(buffer->s_str, req_length, 1);
-				if
-					unlikely(!keyword_entry)
-				goto err_r;
+				if unlikely(!keyword_entry)
+					goto err_r;
 			}
 			/* Ensure that rare data has been allocated for the keyword. */
 			if unlikely(!TPPKeyword_API_MAKERARE(keyword_entry))

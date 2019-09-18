@@ -78,14 +78,12 @@ dictiterator_next_key(DictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
-			if
-				unlikely(item > end)
-			goto dict_has_changed;
+			if unlikely(item > end)
+				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if
-			unlikely(item < Dict->d_elem)
-		goto dict_has_changed;
+		if unlikely(item < Dict->d_elem)
+			goto dict_has_changed;
 		/* Search for the next non-empty item. */
 		while (item != end && (!item->di_key || item->di_key == dummy))
 			++item;
@@ -137,14 +135,12 @@ dictiterator_next_item(DictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
-			if
-				unlikely(item > end)
-			goto dict_has_changed;
+			if unlikely(item > end)
+				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if
-			unlikely(item < Dict->d_elem)
-		goto dict_has_changed;
+		if unlikely(item < Dict->d_elem)
+			goto dict_has_changed;
 		/* Search for the next non-empty item. */
 		while (item != end && (!item->di_key || item->di_key == dummy))
 			++item;
@@ -201,14 +197,12 @@ dictiterator_next_value(DictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
-			if
-				unlikely(item > end)
-			goto dict_has_changed;
+			if unlikely(item > end)
+				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if
-			unlikely(item < Dict->d_elem)
-		goto dict_has_changed;
+		if unlikely(item < Dict->d_elem)
+			goto dict_has_changed;
 		/* Search for the next non-empty item. */
 		while (item != end && (!item->di_key || item->di_key == dummy))
 			++item;
@@ -272,9 +266,8 @@ dictiterator_init(DictIterator *__restrict self,
 INTERN int DCALL
 dictiterator_ctor(DictIterator *__restrict self) {
 	self->di_dict = (DeeDictObject *)DeeDict_New();
-	if
-		unlikely(!self->di_dict)
-	return -1;
+	if unlikely(!self->di_dict)
+		return -1;
 	self->di_next = self->di_dict->d_elem;
 	return 0;
 }
@@ -382,9 +375,8 @@ INTERN DREF DeeObject *DCALL
 dict_iter(DeeDictObject *__restrict self) {
 	DREF DictIterator *result;
 	result = DeeObject_MALLOC(DictIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DictIterator_Type);
 	result->di_dict = self;
 	Dee_Incref(self);
@@ -492,13 +484,11 @@ dictproxyiterator_ctor(DictProxyIterator *__restrict self) {
 	DeeTypeObject *proxy_type;
 	proxy_type             = (DeeObject_InstanceOf((DeeObject *)self, &DictKeysIterator_Type) ? &DeeDictKeys_Type : DeeObject_InstanceOf((DeeObject *)self, &DictItemsIterator_Type) ? &DeeDictItems_Type : &DeeDictValues_Type);
 	self->dpi_base.di_dict = (DeeDictObject *)DeeDict_New();
-	if
-		unlikely(!self->dpi_base.di_dict)
-	goto err;
+	if unlikely(!self->dpi_base.di_dict)
+		goto err;
 	self->dpi_proxy = DeeObject_MALLOC(DictProxy);
-	if
-		unlikely(!self->dpi_proxy)
-	goto err_dict;
+	if unlikely(!self->dpi_proxy)
+		goto err_dict;
 	DeeObject_Init(self->dpi_proxy, proxy_type);
 	self->dpi_proxy->dp_dict = self->dpi_base.di_dict;
 	Dee_Incref(self->dpi_base.di_dict);
@@ -592,9 +582,8 @@ dict_newproxy_iterator(DictProxy *__restrict self,
                        DeeTypeObject *__restrict proxy_iterator_type) {
 	DREF DictProxyIterator *result;
 	result = DeeObject_MALLOC(DictProxyIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init((DeeObject *)result, proxy_iterator_type);
 	result->dpi_base.di_dict = self->dp_dict;
 	result->dpi_proxy        = self;
@@ -616,9 +605,8 @@ dict_newproxy(DeeDictObject *__restrict self,
 	DREF DictProxy *result;
 	ASSERT_OBJECT_TYPE(self, &DeeDict_Type);
 	result = DeeObject_MALLOC(DictProxy);
-	if
-		unlikely(!result)
-	return NULL;
+	if unlikely(!result)
+		return NULL;
 	DeeObject_Init(result, proxy_type);
 	result->dp_dict = self;
 	Dee_Incref(self);
@@ -629,9 +617,8 @@ dict_newproxy(DeeDictObject *__restrict self,
 PRIVATE int DCALL
 proxy_ctor(DictProxy *__restrict self) {
 	self->dp_dict = (DREF DeeDictObject *)DeeDict_New();
-	if
-		unlikely(!self->dp_dict)
-	goto err;
+	if unlikely(!self->dp_dict)
+		goto err;
 	return 0;
 err:
 	return -1;

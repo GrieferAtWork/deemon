@@ -296,9 +296,8 @@ call_extern(DeeObject *__restrict module_name,
             size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	result = DeeObject_CallAttr(module, global_name, argc, argv);
 	Dee_Decref(module);
 	return result;
@@ -311,9 +310,8 @@ get_extern(DeeObject *__restrict module_name,
            DeeObject *__restrict global_name) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
-	if
-		unlikely(!module)
-	goto err;
+	if unlikely(!module)
+		goto err;
 	result = DeeObject_GetAttr(module, global_name);
 	Dee_Decref(module);
 	return result;
@@ -349,9 +347,8 @@ process_set_environ(Process *__restrict self, DeeObject *value) {
 		DREF DeeObject *temp;
 		int result;
 		temp = get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
-		if
-			unlikely(!temp)
-		return -1;
+		if unlikely(!temp)
+			return -1;
 		result = DeeObject_Assign(temp, value ? value : Dee_None);
 		Dee_Decref(temp);
 		return result;
@@ -380,15 +377,13 @@ process_set_pwd(Process *__restrict self, DeeObject *value) {
 		goto err;
 	if (self == &this_process) {
 		DREF DeeObject *temp;
-		if
-			unlikely(!value)
-		goto err_running;
+		if unlikely(!value)
+			goto err_running;
 		temp = call_extern((DeeObject *)&str_fs,
 		                   (DeeObject *)&str_chdir,
 		                   0, NULL);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		Dee_Decref(temp);
 		return 0;
 	}

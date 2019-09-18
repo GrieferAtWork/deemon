@@ -100,9 +100,8 @@ typedef struct {
 PRIVATE DREF DeeObject *DCALL float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
 	Float_double_object *result;
 	result = DeeObject_MALLOC(Float_double_object);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, (DeeTypeObject *)&DeeCDouble_Type);
 	result->f_value = val;
 done:
@@ -116,9 +115,8 @@ done:
 PRIVATE DREF DeeObject *DCALL F(fltnew)(T val) {
 	X(Float) * result;
 	result = DeeObject_MALLOC(X(Float));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, (DeeTypeObject *)&TYPE_NAME);
 	result->f_value = val;
 done:
@@ -269,9 +267,8 @@ F(float_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	if (DeeObject_AsDouble(some_object, &other_value))
 		return NULL;
-	if
-		unlikely(!other_value)
-	{
+	if unlikely(!other_value)
+		{
 		F(float_divzero)
 		(value, some_object);
 		return NULL;
@@ -315,9 +312,8 @@ F(float_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
 		return -1;
-	if
-		unlikely(!other_value)
-	{
+	if unlikely(!other_value)
+		{
 		T value;
 		CTYPES_FAULTPROTECT(value = *self, return -1);
 		F(float_divzero)

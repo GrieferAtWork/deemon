@@ -43,9 +43,8 @@ DeeCell_New(DeeObject *__restrict item) {
 	DREF Cell *result;
 	ASSERT_OBJECT(item);
 	result = DeeGCObject_MALLOC(Cell);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Initialize and fill in the new Cell. */
 	DeeObject_Init(result, &DeeCell_Type);
 	Dee_Incref(item);
@@ -143,9 +142,8 @@ PUBLIC DREF DeeObject *DCALL
 DeeCell_Get(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeCell_TryGet(self);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		DeeError_Throwf(&DeeError_UnboundAttribute,
 		                "The cell is empty");
 		/* No mitochondria here... */
@@ -178,9 +176,8 @@ DeeCell_XchNonNull(DeeObject *__restrict self,
 	Dee_XIncref(value);
 	DeeCell_LockWrite(self);
 	result = DeeCell_Item(self);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		DeeCell_LockEndWrite(self);
 		Dee_DecrefNokill(value);
 	} else {

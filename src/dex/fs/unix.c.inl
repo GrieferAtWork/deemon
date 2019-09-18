@@ -137,22 +137,19 @@ LOCAL DIR *(opendir)(char const *name) {
 	DIR *result;
 	size_t namelen = strlen(name);
 	char *query    = (char *)malloc((namelen + 3) * sizeof(char));
-	if
-		unlikely(!query)
-	return NULL;
+	if unlikely(!query)
+		return NULL;
 	result = (DIR *)malloc(sizeof(DIR));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	memcpy(query, name, namelen * sizeof(char));
 	query[namelen]     = '\\';
 	query[namelen + 1] = '*';
 	query[namelen + 2] = '\0';
 	result->d_isfirst  = 1;
 	result->d_hnd      = _findfirst32(query, (struct _finddata32_t *)&result->d_ent.d_attrib);
-	if
-		unlikely(result->d_hnd == -1)
-	{
+	if unlikely(result->d_hnd == -1)
+		{
 		free(result);
 		result = 0;
 	}
@@ -282,9 +279,8 @@ INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 	size_t buflen                  = HOST_NAME_MAX;
 	char *newbuf;
 	char *buf = unicode_printer_alloc_utf8(&printer, buflen);
-	if
-		unlikely(!buf)
-	goto err_printer;
+	if unlikely(!buf)
+		goto err_printer;
 	DBG_ALIGNMENT_DISABLE();
 	while (gethostname(buf, buflen) < 0) {
 		int error = errno;
@@ -304,9 +300,8 @@ INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 			}
 			buflen *= 2;
 			newbuf = unicode_printer_resize_utf8(&printer, buf, buflen);
-			if
-				unlikely(!newbuf)
-			goto err;
+			if unlikely(!newbuf)
+				goto err;
 		} else {
 err_generic:
 			DeeError_SysThrowf(&DeeError_SystemError, error,
@@ -450,9 +445,8 @@ fs_printcwd(struct unicode_printer *__restrict printer) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	if (!_wgetcwd(buffer, bufsize + 1)) {
@@ -464,9 +458,8 @@ again:
 			/* Increase buffer size. */
 			new_bufsize = bufsize * 2;
 			new_buffer  = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
-			if
-				unlikely(!new_buffer)
-			goto err_release;
+			if unlikely(!new_buffer)
+				goto err_release;
 			buffer  = new_buffer;
 			bufsize = new_bufsize;
 			goto again;
@@ -489,9 +482,8 @@ err:
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	buffer = unicode_printer_alloc_utf8(printer, bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	if (!getcwd(buffer, bufsize + 1)) {
@@ -503,9 +495,8 @@ again:
 			/* Increase buffer size. */
 			new_bufsize = bufsize * 2;
 			new_buffer = unicode_printer_resize_utf8(printer, buffer, new_bufsize);
-			if
-				unlikely(!new_buffer)
-			goto err_release;
+			if unlikely(!new_buffer)
+				goto err_release;
 			buffer = new_buffer;
 			bufsize = new_bufsize;
 			goto again;
@@ -550,9 +541,8 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
 				goto err;
 		} else {
 			fd = (int)DeeFile_Fileno(path);
-			if
-				unlikely(fd == (int)DSYSFD_INVALID)
-			{
+			if unlikely(fd == (int)DSYSFD_INVALID)
+				{
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))
 					goto try_filename;
@@ -567,9 +557,8 @@ try_filename:
 #endif
 		/* Use the filename of a file stream. */
 		path = DeeFile_Filename(path);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		error = fs_chdir(path);
 		Dee_Decref(path);
 		return error;
@@ -580,9 +569,8 @@ try_filename:
 #ifdef _WDIRECT_DEFINED
 	{
 		wchar_t *wstr = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wstr)
-		goto err;
+		if unlikely(!wstr)
+			goto err;
 		if (!*wstr && !WSTR_LENGTH(wstr))
 			goto done;
 		DBG_ALIGNMENT_DISABLE();
@@ -592,12 +580,10 @@ try_filename:
 #else /* _WDIRECT_DEFINED */
 	{
 		char *utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		goto err;
-		if
-			unlikely(!*utf8)
-		goto done;
+		if unlikely(!utf8)
+			goto err;
+		if unlikely(!*utf8)
+			goto done;
 		DBG_ALIGNMENT_DISABLE();
 		error = chdir(utf8);
 		DBG_ALIGNMENT_ENABLE();
@@ -606,9 +592,8 @@ try_filename:
 #ifdef HAVE_FCHDIR
 check_error:
 #endif /* HAVE_FCHDIR */
-	if
-		unlikely(error)
-	{
+	if unlikely(error)
+		{
 		error = errno;
 		if (error == EACCES) {
 			err_path_no_access(error, path);
@@ -757,16 +742,14 @@ Stat_Init(STRUCT_STAT *__restrict self,
 				goto err;
 		} else {
 			fd = (int)DeeFile_Fileno(path);
-			if
-				unlikely(fd == (int)DSYSFD_INVALID)
-			{
+			if unlikely(fd == (int)DSYSFD_INVALID)
+				{
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented)) {
 					/* Try the file's filename. */
 					path = DeeFile_Filename(path);
-					if
-						unlikely(!path)
-					goto err;
+					if unlikely(!path)
+						goto err;
 					error = Stat_Init(self, path, try_stat, do_lstat);
 					Dee_Decref(path);
 					return error;
@@ -782,9 +765,8 @@ Stat_Init(STRUCT_STAT *__restrict self,
 #ifdef _WIO_DEFINED
 		wchar_t *wpath;
 		wpath = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wpath)
-		goto err;
+		if unlikely(!wpath)
+			goto err;
 		/* Do a filename stat. */
 		DBG_ALIGNMENT_DISABLE();
 		error = do_lstat ? _WLSTAT(wpath, self)
@@ -793,9 +775,8 @@ Stat_Init(STRUCT_STAT *__restrict self,
 #else /* _WIO_DEFINED */
 		char *utf8;
 		utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		goto err;
+		if unlikely(!utf8)
+			goto err;
 		/* Do a filename stat. */
 		DBG_ALIGNMENT_DISABLE();
 		error = do_lstat ? LSTAT(utf8, self)
@@ -803,9 +784,8 @@ Stat_Init(STRUCT_STAT *__restrict self,
 		DBG_ALIGNMENT_ENABLE();
 #endif /* !_WIO_DEFINED */
 	}
-	if
-		unlikely(error)
-	{
+	if unlikely(error)
+		{
 		error = errno;
 		if (error == EACCES) {
 			err_path_no_access(error, path);
@@ -1048,9 +1028,8 @@ stat_class_exists(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:exists", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0);
 err:
 	return NULL;
@@ -1065,9 +1044,8 @@ stat_class_isdir(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isdir", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISDIR(buf.st_mode));
 err:
 	return NULL;
@@ -1082,9 +1060,8 @@ stat_class_ischr(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:ischr", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISCHR(buf.st_mode));
 err:
 	return NULL;
@@ -1099,9 +1076,8 @@ stat_class_isblk(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isblk", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISBLK(buf.st_mode));
 err:
 	return NULL;
@@ -1116,9 +1092,8 @@ stat_class_isreg(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isreg", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISREG(buf.st_mode));
 err:
 	return NULL;
@@ -1133,9 +1108,8 @@ stat_class_isfifo(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isfifo", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISFIFO(buf.st_mode));
 err:
 	return NULL;
@@ -1150,9 +1124,8 @@ stat_class_islnk(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:islnk", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, true); /* Always do an lstat() for this */
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISLNK(buf.st_mode));
 err:
 	return NULL;
@@ -1167,9 +1140,8 @@ stat_class_issock(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:issock", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool(error == 0 && S_ISSOCK(buf.st_mode));
 err:
 	return NULL;
@@ -1181,9 +1153,8 @@ do_ishidden(DeeObject *__restrict path) {
 	char *begin, *iter;
 	if (!DeeString_Check(path)) {
 		path = DeeFile_Filename(path);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		result = do_ishidden(path);
 		Dee_Decref(path);
 		goto done;
@@ -1223,9 +1194,8 @@ stat_class_isexe(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isexe", &path))
 		goto err;
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	/* Check for execute-permissions. */
 	return_bool(error == 0 && (buf.st_mode & 0111));
 err:
@@ -1425,9 +1395,8 @@ fs_mkdir(DeeObject *__restrict path,
 #ifdef _WDIRECT_DEFINED
 	{
 		wchar_t *wpath = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wpath)
-		goto err;
+		if unlikely(!wpath)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		error = _wmkdir(wpath);
 		DBG_ALIGNMENT_ENABLE();
@@ -1435,17 +1404,15 @@ fs_mkdir(DeeObject *__restrict path,
 #else /* _WDIRECT_DEFINED */
 	{
 		char *utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		goto err;
+		if unlikely(!utf8)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		error = mkdir(utf8, creat_mode);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* !_WDIRECT_DEFINED */
-	if
-		unlikely(error)
-	{
+	if unlikely(error)
+		{
 		error = errno;
 		if (error == EACCES) {
 			err_path_no_write_access(error, path);
@@ -1496,9 +1463,8 @@ no_access:
 #ifdef _WIO_DEFINED
 		wchar_t *wpath;
 		wpath = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wpath)
-		return -1;
+		if unlikely(!wpath)
+			return -1;
 		DBG_ALIGNMENT_DISABLE();
 		if (!_WLSTAT(wpath, &st) && (st.st_mode & STAT_ISVTX))
 			goto no_access;
@@ -1506,9 +1472,8 @@ no_access:
 #else /* _WIO_DEFINED */
 		char *utf8;
 		utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		return -1;
+		if unlikely(!utf8)
+			return -1;
 		DBG_ALIGNMENT_DISABLE();
 		if (!LSTAT(utf8, &st) && (st.st_mode & STAT_ISVTX))
 			goto no_access;
@@ -1535,9 +1500,8 @@ fs_rmdir(DeeObject *__restrict path) {
 #ifdef _WDIRECT_DEFINED
 	{
 		wchar_t *wpath = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wpath)
-		goto err;
+		if unlikely(!wpath)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		error = _wrmdir(wpath);
 		DBG_ALIGNMENT_ENABLE();
@@ -1545,17 +1509,15 @@ fs_rmdir(DeeObject *__restrict path) {
 #else /* _WIO_DEFINED */
 	{
 		char *utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		goto err;
+		if unlikely(!utf8)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		error = rmdir(utf8);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* !_WIO_DEFINED */
-	if
-		unlikely(error)
-	return handle_rmdir_error(errno, path);
+	if unlikely(error)
+		return handle_rmdir_error(errno, path);
 	return 0;
 err:
 	return -1;
@@ -1582,17 +1544,15 @@ err_isdir:
 #ifdef _WIO_DEFINED
 		wchar_t *wpath;
 		wpath = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wpath)
-		return -1;
+		if unlikely(!wpath)
+			return -1;
 		DBG_ALIGNMENT_DISABLE();
 		if (!_WLSTAT(wpath, &st))
 #else /* _WIO_DEFINED */
 		char *utf8;
 		utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		return -1;
+		if unlikely(!utf8)
+			return -1;
 		DBG_ALIGNMENT_DISABLE();
 		if (!LSTAT(utf8, &st))
 #endif /* !_WIO_DEFINED */
@@ -1627,9 +1587,8 @@ fs_unlink(DeeObject *__restrict path) {
 #ifdef _WIO_DEFINED
 	{
 		wchar_t *wpath = (wchar_t *)DeeString_AsWide(path);
-		if
-			unlikely(!wpath)
-		goto err;
+		if unlikely(!wpath)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		error = _wunlink(wpath);
 		DBG_ALIGNMENT_ENABLE();
@@ -1637,17 +1596,15 @@ fs_unlink(DeeObject *__restrict path) {
 #else
 	{
 		char *utf8 = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		goto err;
+		if unlikely(!utf8)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		error = unlink(utf8);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif
-	if
-		unlikely(error)
-	{
+	if unlikely(error)
+		{
 		handle_unlink_error(errno, path);
 		goto err;
 	}
@@ -1670,17 +1627,15 @@ fs_remove(DeeObject *__restrict path) {
 		goto err;
 #ifdef _WIO_DEFINED
 	wpath = (wchar_t *)DeeString_AsWide(path);
-	if
-		unlikely(!wpath)
-	goto err;
+	if unlikely(!wpath)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = _wunlink(wpath);
 	DBG_ALIGNMENT_ENABLE();
 #else
 	utf8 = DeeString_AsUtf8(path);
-	if
-		unlikely(!utf8)
-	goto err;
+	if unlikely(!utf8)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = unlink(utf8);
 	DBG_ALIGNMENT_ENABLE();
@@ -1696,9 +1651,8 @@ fs_remove(DeeObject *__restrict path) {
 			error = rmdir(utf8);
 #endif
 			DBG_ALIGNMENT_ENABLE();
-			if
-				likely(!error)
-			goto done;
+			if likely(!error)
+				goto done;
 			handle_rmdir_error(errno, path);
 		} else {
 			/* Handle errors. */
@@ -1761,9 +1715,8 @@ fs_rename(DeeObject *__restrict existing_path,
 #endif
 	if (!DeeString_Check(existing_path)) {
 		existing_path = DeeFile_Filename(existing_path);
-		if
-			unlikely(!existing_path)
-		goto err;
+		if unlikely(!existing_path)
+			goto err;
 		error = fs_rename(existing_path, new_path);
 		Dee_Decref(existing_path);
 		return error;
@@ -1774,22 +1727,18 @@ fs_rename(DeeObject *__restrict existing_path,
 		goto err;
 #ifdef _WIO_DEFINED
 	woldpath = (wchar_t *)DeeString_AsWide(existing_path);
-	if
-		unlikely(!woldpath)
-	goto err;
+	if unlikely(!woldpath)
+		goto err;
 	wnewpath = (wchar_t *)DeeString_AsWide(new_path);
-	if
-		unlikely(!wnewpath)
-	goto err;
+	if unlikely(!wnewpath)
+		goto err;
 #else
 	uoldpath = DeeString_AsUtf8(existing_path);
-	if
-		unlikely(!uoldpath)
-	goto err;
+	if unlikely(!uoldpath)
+		goto err;
 	unewpath = DeeString_AsUtf8(new_path);
-	if
-		unlikely(!unewpath)
-	goto err;
+	if unlikely(!unewpath)
+		goto err;
 #endif
 	DBG_ALIGNMENT_DISABLE();
 #ifdef _WIO_DEFINED
@@ -1798,9 +1747,8 @@ fs_rename(DeeObject *__restrict existing_path,
 	error = rename(uoldpath, unewpath);
 #endif
 	DBG_ALIGNMENT_ENABLE();
-	if
-		likely(!error)
-	return 0;
+	if likely(!error)
+		return 0;
 	error = errno;
 	if (error == EACCES) {
 err_access:
@@ -1868,9 +1816,8 @@ fs_link(DeeObject *__restrict existing_path,
 #endif
 	if (!DeeString_Check(existing_path)) {
 		existing_path = DeeFile_Filename(existing_path);
-		if
-			unlikely(!existing_path)
-		goto err;
+		if unlikely(!existing_path)
+			goto err;
 		error = fs_link(existing_path, new_path);
 		Dee_Decref(existing_path);
 		return error;
@@ -1879,22 +1826,18 @@ fs_link(DeeObject *__restrict existing_path,
 		goto err;
 #ifdef _WIO_DEFINED
 	woldpath = (wchar_t *)DeeString_AsWide(existing_path);
-	if
-		unlikely(!woldpath)
-	goto err;
+	if unlikely(!woldpath)
+		goto err;
 	wnewpath = (wchar_t *)DeeString_AsWide(new_path);
-	if
-		unlikely(!wnewpath)
-	goto err;
+	if unlikely(!wnewpath)
+		goto err;
 #else
 	uoldpath = DeeString_AsUtf8(existing_path);
-	if
-		unlikely(!uoldpath)
-	goto err;
+	if unlikely(!uoldpath)
+		goto err;
 	unewpath = DeeString_AsUtf8(new_path);
-	if
-		unlikely(!unewpath)
-	goto err;
+	if unlikely(!unewpath)
+		goto err;
 #endif
 	DBG_ALIGNMENT_DISABLE();
 #ifdef _WIO_DEFINED
@@ -1903,9 +1846,8 @@ fs_link(DeeObject *__restrict existing_path,
 	error = link(uoldpath, unewpath);
 #endif
 	DBG_ALIGNMENT_ENABLE();
-	if
-		likely(!error)
-	return 0;
+	if likely(!error)
+		return 0;
 	error = errno;
 	if (error == EACCES) {
 		err_path_no_access2(error, existing_path, new_path);
@@ -1944,19 +1886,16 @@ fs_symlink(DeeObject *__restrict target_text,
 	if (DeeObject_AssertTypeExact(link_path, &DeeString_Type))
 		goto err;
 	utarget_text = DeeString_AsUtf8(target_text);
-	if
-		unlikely(!utarget_text)
-	goto err;
+	if unlikely(!utarget_text)
+		goto err;
 	ulink_path = DeeString_AsUtf8(link_path);
-	if
-		unlikely(!ulink_path)
-	goto err;
+	if unlikely(!ulink_path)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = symlink(utarget_text, ulink_path);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(error)
-	{
+	if unlikely(error)
+		{
 		DBG_ALIGNMENT_DISABLE();
 		error = errno;
 		DBG_ALIGNMENT_ENABLE();
@@ -1990,9 +1929,8 @@ fs_readlink(DeeObject *__restrict path) {
 	if (!DeeString_Check(path)) {
 		DREF DeeObject *result;
 		path = DeeFile_Filename(path);
-		if
-			unlikely(!path)
-		return NULL;
+		if unlikely(!path)
+			return NULL;
 		result = fs_readlink(path);
 		Dee_Decref(path);
 		return result;
@@ -2003,21 +1941,18 @@ fs_readlink(DeeObject *__restrict path) {
 		dssize_t req_size;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		utf8                           = DeeString_AsUtf8(path);
-		if
-			unlikely(!utf8)
-		goto err_printer;
+		if unlikely(!utf8)
+			goto err_printer;
 		bufsize = PATH_MAX;
 		buffer  = unicode_printer_alloc_utf8(&printer, bufsize);
-		if
-			unlikely(!buffer)
-		goto err_printer;
+		if unlikely(!buffer)
+			goto err_printer;
 		for (;;) {
 			STRUCT_STAT st;
 			DBG_ALIGNMENT_DISABLE();
 			req_size = readlink(utf8, buffer, bufsize + 1);
-			if
-				unlikely(req_size < 0)
-			{
+			if unlikely(req_size < 0)
+				{
 handle_error:
 				error = errno;
 				DBG_ALIGNMENT_ENABLE();
@@ -2055,9 +1990,8 @@ no_link:
 			if (new_size <= bufsize)
 				break; /* Shouldn't happen, but might due to race conditions? */
 			new_buffer = unicode_printer_resize_utf8(&printer, buffer, new_size);
-			if
-				unlikely(!new_buffer)
-			goto err;
+			if unlikely(!new_buffer)
+				goto err;
 			buffer  = new_buffer;
 			bufsize = new_size;
 		}
@@ -2130,9 +2064,8 @@ read_filename:
 	if (!ent) {
 		/* End of directory / error. */
 		int error = errno;
-		if
-			likely(error == 0)
-		{
+		if likely(error == 0)
+			{
 			DIR *dfd = self->d_hnd;
 			/* End of directory. */
 			self->d_hnd = NULL;
@@ -2162,9 +2095,8 @@ read_filename:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite(&self->d_lock);
 #endif
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		Dee_BadAlloc(offsetof(DeeStringObject, s_str) +
 		             (result_length + 1) * sizeof(char));
 		goto err;
@@ -2196,20 +2128,17 @@ dir_iter(Dir *__restrict self) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	result = DeeObject_MALLOC(DirIterator);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Open a directory descriptor. */
 	utf8 = DeeString_AsUtf8((DeeObject *)self->d_path);
-	if
-		unlikely(!utf8)
-	goto err_r;
+	if unlikely(!utf8)
+		goto err_r;
 	DBG_ALIGNMENT_DISABLE();
 	result->d_hnd = opendir(utf8);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(!result->d_hnd)
-	{
+	if unlikely(!result->d_hnd)
+		{
 		err_handle_opendir((DeeObject *)self->d_path);
 		goto err_r;
 	}
@@ -2299,9 +2228,8 @@ dir_ctor(Dir *__restrict self,
 	} else {
 		/* TODO: fopendir() */
 		self->d_path = (DREF DeeStringObject *)DeeFile_Filename((DeeObject *)self->d_path);
-		if
-			unlikely(!self->d_path)
-		goto err;
+		if unlikely(!self->d_path)
+			goto err;
 	}
 	return 0;
 err:
@@ -2429,9 +2357,8 @@ again:
 	result = diriter_next(&self->q_iter);
 	if (ITER_ISOK(result)) {
 		char *utf8 = DeeString_AsUtf8((DeeObject *)result);
-		if
-			unlikely(!utf8)
-		goto err_r;
+		if unlikely(!utf8)
+			goto err_r;
 		if (wild_match(utf8, self->q_wild) != 0) {
 			/* Non-matching entry (read more) */
 			Dee_Decref(result);
@@ -2503,13 +2430,11 @@ query_iter(Dir *__restrict self) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	result = DeeObject_MALLOC(QueryIterator);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	query_str = DeeString_AsUtf8((DeeObject *)self->d_path);
-	if
-		unlikely(!query_str)
-	goto err;
+	if unlikely(!query_str)
+		goto err;
 	query_start = (char *)memrchr(query_str, '/', WSTR_LENGTH(query_str));
 	if (!query_start) {
 		/* Open a directory descriptor. */
@@ -2522,9 +2447,8 @@ query_iter(Dir *__restrict self) {
 			int old_errno;
 			size_t temp_filesize = (size_t)(query_start - query_str);
 			temp_filename        = (char *)Dee_AMalloc((temp_filesize + 1) * sizeof(char));
-			if
-				unlikely(!temp_filename)
-			goto err_r;
+			if unlikely(!temp_filename)
+				goto err_r;
 			memcpy(temp_filename, query_str, temp_filesize * sizeof(char));
 			temp_filename[temp_filesize] = '\0'; /* Override the '/' to terminate the string. */
 			DBG_ALIGNMENT_DISABLE();
@@ -2544,9 +2468,8 @@ query_iter(Dir *__restrict self) {
 		}
 		++query_start;
 	}
-	if
-		unlikely(!result->q_iter.d_hnd)
-	{
+	if unlikely(!result->q_iter.d_hnd)
+		{
 		err_handle_opendir((DeeObject *)self->d_path);
 		goto err_r;
 	}

@@ -182,16 +182,14 @@ gcset_deepcopy(GCSet *__restrict self) {
 			if (!self->gs_elem[i])
 				continue;
 			copy = DeeObject_DeepCopy(self->gs_elem[i]);
-			if
-				unlikely(!copy)
-			goto err;
+			if unlikely(!copy)
+				goto err;
 			error = GCSetMaker_Insert(&maker, copy);
 			if (error == 0)
 				continue;
 			Dee_Decref(copy);
-			if
-				unlikely(error < 0)
-			goto err;
+			if unlikely(error < 0)
+				goto err;
 		}
 		return GCSetMaker_Pack(&maker);
 err:
@@ -223,9 +221,8 @@ PRIVATE DREF GCSetIterator *DCALL
 gcset_iter(GCSet *__restrict self) {
 	DREF GCSetIterator *result;
 	result = DeeObject_MALLOC(GCSetIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->gsi_index = 0;
 	result->gsi_set   = self;
 	Dee_Incref(self);
@@ -345,9 +342,8 @@ GCSetMaker_Rehash(GCSetMaker *__restrict self) {
 	}
 	new_set = (GCSet *)DeeObject_TryCalloc(COMPILER_OFFSETOF(GCSet, gs_elem) +
 	                                       (new_mask + 1) * sizeof(DREF DeeObject *));
-	if
-		unlikely(!new_set)
-	return false;
+	if unlikely(!new_set)
+		return false;
 	new_set->gs_mask = new_mask;
 	self->gs_set     = new_set;
 	if (old_set) {
@@ -414,9 +410,8 @@ GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self) {
 	new_set = (GCSet *)DeeObject_TryCalloc(COMPILER_OFFSETOF(GCSet, gs_elem) +
 	                                       (old_set->gs_mask + 1) *
 	                                       sizeof(DREF DeeObject *));
-	if
-		unlikely(!new_set)
-	return false;
+	if unlikely(!new_set)
+		return false;
 	new_set->gs_mask = old_set->gs_mask;
 	self->gs_set     = new_set;
 	new_set->gs_size = old_set->gs_size;
@@ -548,9 +543,8 @@ DeeGC_CollectReferred(GCSetMaker *__restrict self,
 again:
 	self->gs_err = 0;
 	DeeObject_Visit(start, (dvisit_t)&visit_referr_func, self);
-	if
-		unlikely(self->gs_err)
-	{
+	if unlikely(self->gs_err)
+		{
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
 		return -1;
@@ -564,9 +558,8 @@ DeeGC_CollectReachable(GCSetMaker *__restrict self,
 again:
 	self->gs_err = 0;
 	DeeObject_Visit(start, (dvisit_t)&visit_reachable_func, self);
-	if
-		unlikely(self->gs_err)
-	{
+	if unlikely(self->gs_err)
+		{
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
 		return -1;

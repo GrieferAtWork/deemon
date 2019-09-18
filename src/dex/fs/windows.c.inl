@@ -702,9 +702,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	self->e_strings = GetEnvironmentStringsW();
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(!self->e_strings)
-	{
+	if unlikely(!self->e_strings)
+		{
 		if (Dee_CollectMemory(42)) /* ??? */
 			goto again;
 		return -1;
@@ -756,19 +755,16 @@ env_next(Env *__restrict self) {
 	name = DeeString_NewWide(result_string,
 	                         (size_t)(next_string - result_string) - 1,
 	                         STRING_ERROR_FREPLAC);
-	if
-		unlikely(!name)
-	goto err;
+	if unlikely(!name)
+		goto err;
 	value = DeeString_NewWide(next_string,
 	                          wcslen(next_string),
 	                          STRING_ERROR_FREPLAC);
-	if
-		unlikely(!value)
-	goto err_name;
+	if unlikely(!value)
+		goto err_name;
 	result = DeeTuple_PackSymbolic(2, name, value); /* Inherit: name, value */
-	if
-		unlikely(!result)
-	goto err_value;
+	if unlikely(!result)
+		goto err_value;
 	return result;
 err_value:
 	Dee_Decref(value);
@@ -907,9 +903,8 @@ fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	LPWSTR wname;
 	bool result;
 	wname = (LPWSTR)DeeString_AsWide(name);
-	if
-		unlikely(!wname)
-	{
+	if unlikely(!wname)
+		{
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return false;
 	}
@@ -926,13 +921,11 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
 	LPWSTR wname;
 	DWORD bufsize = 256, error;
 	wname         = (LPWSTR)DeeString_AsWide(name);
-	if
-		unlikely(!wname)
-	goto err_consume;
+	if unlikely(!wname)
+		goto err_consume;
 	buffer = DeeString_NewWideBuffer(bufsize);
-	if
-		unlikely(!buffer)
-	goto err_consume;
+	if unlikely(!buffer)
+		goto err_consume;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		error = GetEnvironmentVariableW(wname, buffer, bufsize + 1);
@@ -948,20 +941,17 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
 			break;
 		/* Resize to fit. */
 		new_buffer = DeeString_ResizeWideBuffer(buffer, error);
-		if
-			unlikely(!new_buffer)
-		goto err_result;
+		if unlikely(!new_buffer)
+			goto err_result;
 		buffer  = new_buffer;
 		bufsize = error - 1;
 	}
 	new_buffer = DeeString_TryResizeWideBuffer(buffer, error);
-	if
-		likely(new_buffer)
-	buffer = new_buffer;
+	if likely(new_buffer)
+		buffer = new_buffer;
 	result = DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
-	if
-		unlikely(!result)
-	goto err_consume;
+	if unlikely(!result)
+		goto err_consume;
 	return result;
 err_result:
 	DeeString_FreeWideBuffer(buffer);
@@ -979,16 +969,14 @@ fs_wprintenv(uint16_t const *__restrict name,
 	LPWSTR buffer;
 	DWORD new_bufsize, bufsize = 256;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetEnvironmentVariableW((LPCWSTR)name, buffer, bufsize + 1);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(!new_bufsize)
-	{
+	if unlikely(!new_bufsize)
+		{
 		if (!try_get) {
 			DeeError_Throwf(&DeeError_KeyError,
 			                "Unknown environment variable `%I16s'",
@@ -1002,9 +990,8 @@ again:
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
 		new_buffer = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
-		if
-			unlikely(!new_buffer)
-		goto err_release;
+		if unlikely(!new_buffer)
+			goto err_release;
 		buffer  = new_buffer;
 		bufsize = new_bufsize;
 		goto again;
@@ -1026,24 +1013,20 @@ fs_printenv(/*utf-8*/ char const *__restrict name,
 	DWORD new_bufsize, bufsize = 256;
 	DREF DeeObject *wide_name;
 	wide_name = DeeString_NewUtf8(name, strlen(name), STRING_ERROR_FSTRICT);
-	if
-		unlikely(!wide_name)
-	goto err;
+	if unlikely(!wide_name)
+		goto err;
 	wname = DeeString_AsWide(wide_name);
-	if
-		unlikely(!wname)
-	goto err_wide_name;
+	if unlikely(!wname)
+		goto err_wide_name;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
-	if
-		unlikely(!buffer)
-	goto err_wide_name;
+	if unlikely(!buffer)
+		goto err_wide_name;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetEnvironmentVariableW(wname, buffer, bufsize + 1);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(!new_bufsize)
-	{
+	if unlikely(!new_bufsize)
+		{
 		if (!try_get) {
 			DeeError_Throwf(&DeeError_KeyError,
 			                "Unknown environment variable `%s'",
@@ -1058,9 +1041,8 @@ again:
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
 		new_buffer = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
-		if
-			unlikely(!new_buffer)
-		goto err_release;
+		if unlikely(!new_buffer)
+			goto err_release;
 		buffer  = new_buffer;
 		bufsize = new_bufsize;
 		goto again;
@@ -1081,9 +1063,8 @@ INTERN int DCALL
 fs_delenv(DeeObject *__restrict name) {
 	LPWSTR wname;
 	wname = (LPWSTR)DeeString_AsWide(name);
-	if
-		unlikely(!wname)
-	goto err;
+	if unlikely(!wname)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (!SetEnvironmentVariableW(wname, NULL)) {
 		DBG_ALIGNMENT_ENABLE();
@@ -1101,13 +1082,11 @@ fs_setenv(DeeObject *__restrict name,
           DeeObject *__restrict value) {
 	LPWSTR wname, wvalue;
 	wname = (LPWSTR)DeeString_AsWide(name);
-	if
-		unlikely(!wname)
-	goto err;
+	if unlikely(!wname)
+		goto err;
 	wvalue = (LPWSTR)DeeString_AsWide(value);
-	if
-		unlikely(!wvalue)
-	goto err;
+	if unlikely(!wvalue)
+		goto err;
 again_setenv:
 	DBG_ALIGNMENT_DISABLE();
 	if (!SetEnvironmentVariableW(wname, wvalue)) {
@@ -1137,9 +1116,8 @@ INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	buffer = DeeString_NewWideBuffer(bufsize - 1);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	if (!GetComputerNameW(buffer, &bufsize)) {
@@ -1148,9 +1126,8 @@ again:
 		if (error == ERROR_BUFFER_OVERFLOW && bufsize &&
 		    bufsize - 1 > WSTR_LENGTH(buffer)) {
 			new_buffer = DeeString_ResizeWideBuffer(buffer, bufsize - 1);
-			if
-				unlikely(!new_buffer)
-			goto err_result;
+			if unlikely(!new_buffer)
+				goto err_result;
 			buffer = new_buffer;
 			goto again;
 		}
@@ -1166,9 +1143,8 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 	/* Truncate the buffer and return it. */
 	new_buffer = DeeString_TryResizeWideBuffer(buffer, bufsize);
-	if
-		likely(new_buffer)
-	buffer = new_buffer;
+	if likely(new_buffer)
+		buffer = new_buffer;
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(buffer);
@@ -1345,15 +1321,13 @@ fs_printcwd(struct unicode_printer *__restrict printer) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
-	if
-		unlikely(!new_bufsize)
-	{
+	if unlikely(!new_bufsize)
+		{
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -1370,9 +1344,8 @@ again:
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
 		new_buffer = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
-		if
-			unlikely(!new_buffer)
-		goto err_release;
+		if unlikely(!new_buffer)
+			goto err_release;
 		buffer  = new_buffer;
 		bufsize = new_bufsize;
 		goto again;
@@ -1393,9 +1366,8 @@ INTERN DREF DeeObject *DCALL fs_getcwd(void) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	buffer = DeeString_NewWideBuffer(bufsize);
-	if
-		unlikely(!buffer)
-	goto err;
+	if unlikely(!buffer)
+		goto err;
 	for (;;) {
 again:
 		DBG_ALIGNMENT_DISABLE();
@@ -1417,16 +1389,14 @@ again:
 			break;
 		/* Resize to fit. */
 		new_buffer = DeeString_ResizeWideBuffer(buffer, new_bufsize);
-		if
-			unlikely(!new_buffer)
-		goto err_result;
+		if unlikely(!new_buffer)
+			goto err_result;
 		buffer  = new_buffer;
 		bufsize = new_bufsize;
 	}
 	new_buffer = DeeString_TryResizeWideBuffer(buffer, new_bufsize);
-	if
-		likely(new_buffer)
-	buffer = new_buffer;
+	if likely(new_buffer)
+		buffer = new_buffer;
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(buffer);
@@ -1446,17 +1416,15 @@ INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
 			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
 				goto err;
 			path = nt_GetFilenameOfHandle(fd);
-			if
-				unlikely(!path)
-			goto err;
+			if unlikely(!path)
+				goto err;
 			result = fs_chdir(path);
 			Dee_Decref(path);
 			return result;
 		}
 		path = DeeFile_Filename(path);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		result = fs_chdir(path);
 		Dee_Decref(path);
 		return result;
@@ -1467,13 +1435,11 @@ again:
 	if (DeeString_WLEN(path) == 0)
 		goto done;
 	result = nt_SetCurrentDirectory(path);
-	if
-		unlikely(result != 0)
-	{
+	if unlikely(result != 0)
+		{
 		DWORD dwError;
-		if
-			unlikely(result < 0)
-		goto err;
+		if unlikely(result < 0)
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -1564,9 +1530,8 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
-	if
-		unlikely(!wBuffer)
-	goto err;
+	if unlikely(!wBuffer)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetUserProfileDirectoryW)((HANDLE)hToken, wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
@@ -1575,9 +1540,8 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 		    dwError == ERROR_MORE_DATA) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_release;
+			if unlikely(!wNewBuffer)
+				goto err_release;
 			wBuffer = wNewBuffer;
 		} else {
 			if (bTryGet) {
@@ -1627,9 +1591,8 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
-	if
-		unlikely(!wBuffer)
-	goto err;
+	if unlikely(!wBuffer)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetProfilesDirectoryW)(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
@@ -1638,9 +1601,8 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 		    dwError == ERROR_MORE_DATA) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_release;
+			if unlikely(!wNewBuffer)
+				goto err_release;
 			wBuffer = wNewBuffer;
 		} else {
 			if (bTryGet) {
@@ -1690,9 +1652,8 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
-	if
-		unlikely(!wBuffer)
-	goto err;
+	if unlikely(!wBuffer)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetDefaultUserProfileDirectoryW)(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
@@ -1701,9 +1662,8 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 		    dwError == ERROR_MORE_DATA) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_release;
+			if unlikely(!wNewBuffer)
+				goto err_release;
 			wBuffer = wNewBuffer;
 		} else {
 			if (bTryGet) {
@@ -1752,9 +1712,8 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
-	if
-		unlikely(!wBuffer)
-	goto err;
+	if unlikely(!wBuffer)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetAllUsersProfileDirectoryW)(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
@@ -1763,9 +1722,8 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 		    dwError == ERROR_MORE_DATA) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_release;
+			if unlikely(!wNewBuffer)
+				goto err_release;
 			wBuffer = wNewBuffer;
 		} else {
 			if (bTryGet) {
@@ -1794,9 +1752,8 @@ nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess,
 	int result;
 	HANDLE hProcessToken;
 	DBG_ALIGNMENT_DISABLE();
-	if
-		unlikely(!OpenProcessToken((HANDLE)hProcess, TOKEN_QUERY, &hProcessToken))
-	{
+	if unlikely(!OpenProcessToken((HANDLE)hProcess, TOKEN_QUERY, &hProcessToken))
+		{
 		DWORD dwError;
 		DBG_ALIGNMENT_ENABLE();
 		if (bTryGet)
@@ -1828,9 +1785,8 @@ fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
 	old_length = UNICODE_PRINTER_LENGTH(printer);
 	if ((error = fs_wprintenv(var_HOMEDRIVE, printer, true)) <= 0) {
 		size_t before_homepath_index;
-		if
-			unlikely(error < 0)
-		goto done_error;
+		if unlikely(error < 0)
+			goto done_error;
 		before_homepath_index = UNICODE_PRINTER_LENGTH(printer);
 		while (before_homepath_index) {
 			uint32_t ch;
@@ -1846,9 +1802,8 @@ fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
 		error = fs_wprintenv(var_HOMEPATH, printer, true);
 		if (error <= 0) {
 			size_t remove_count;
-			if
-				unlikely(error < 0)
-			goto done_error;
+			if unlikely(error < 0)
+				goto done_error;
 			/* Remove any additional leading slashes/space characters from $HOMEPATH */
 			remove_count = 0;
 			while (before_homepath_index + remove_count < UNICODE_PRINTER_LENGTH(printer)) {
@@ -1885,9 +1840,8 @@ INTERN int DCALL
 fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 	DWORD dwBufsize = 64 + 1;
 	LPWSTR wBuffer  = unicode_printer_alloc_wchar(printer, dwBufsize - 1);
-	if
-		unlikely(!wBuffer)
-	goto err;
+	if unlikely(!wBuffer)
+		goto err;
 	while (!GetUserNameW(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
 		if (dwError == ERROR_BUFFER_OVERFLOW ||
@@ -1895,9 +1849,8 @@ fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 		    dwError == ERROR_MORE_DATA) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_release;
+			if unlikely(!wNewBuffer)
+				goto err_release;
 		} else {
 			if (try_get) {
 				unicode_printer_free_wchar(printer, wBuffer);
@@ -2054,13 +2007,11 @@ user_get_name_and_domain(struct user_object *__restrict self,
 	DWORD wDomainBufSize = 64 + 1;
 	LPWSTR wNewBuffer;
 	wNameBuffer = DeeString_NewWideBuffer(wNameBufSize - 1);
-	if
-		unlikely(!wNameBuffer)
-	goto err;
+	if unlikely(!wNameBuffer)
+		goto err;
 	wDomainBuffer = DeeString_NewWideBuffer(wDomainBufSize - 1);
-	if
-		unlikely(!wDomainBuffer)
-	goto err_name_buffer;
+	if unlikely(!wDomainBuffer)
+		goto err_name_buffer;
 	DBG_ALIGNMENT_DISABLE();
 	while (!LookupAccountSidW(NULL,
 	                          self->u_sid,
@@ -2074,14 +2025,12 @@ user_get_name_and_domain(struct user_object *__restrict self,
 		    dwError == ERROR_INSUFFICIENT_BUFFER ||
 		    dwError == ERROR_MORE_DATA) {
 			wNewBuffer = DeeString_ResizeWideBuffer(wNameBuffer, wNameBufSize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_domain_buffer;
+			if unlikely(!wNewBuffer)
+				goto err_domain_buffer;
 			wNameBuffer = wNewBuffer;
 			wNewBuffer  = DeeString_ResizeWideBuffer(wDomainBuffer, wDomainBufSize - 1);
-			if
-				unlikely(!wNewBuffer)
-			goto err_domain_buffer;
+			if unlikely(!wNewBuffer)
+				goto err_domain_buffer;
 			wDomainBuffer = wNewBuffer;
 		} else {
 
@@ -2095,13 +2044,11 @@ user_get_name_and_domain(struct user_object *__restrict self,
 	if (wDomainBuffer[wDomainBufSize])
 		wDomainBufSize = (DWORD)wcsnlen(wDomainBuffer, wDomainBufSize);
 	wNewBuffer = DeeString_TryResizeWideBuffer(wNameBuffer, wNameBufSize);
-	if
-		likely(wNewBuffer)
-	wNameBuffer = wNewBuffer;
+	if likely(wNewBuffer)
+		wNameBuffer = wNewBuffer;
 	wNewBuffer  = DeeString_TryResizeWideBuffer(wDomainBuffer, wDomainBufSize);
-	if
-		likely(wNewBuffer)
-	wDomainBuffer = wNewBuffer;
+	if likely(wNewBuffer)
+		wDomainBuffer = wNewBuffer;
 	*pname        = wNameBuffer;
 	*pdomain      = wDomainBuffer;
 	return 0;
@@ -2158,9 +2105,8 @@ user_get_home(struct user_object *__restrict self) {
 		DeeString_FreeWideBuffer(domain);
 		error = unicode_printer_printwide(&printer, name, WSTR_LENGTH(name));
 		DeeString_FreeWideBuffer(name);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		return unicode_printer_pack(&printer);
 err:
 		unicode_printer_fini(&printer);
@@ -2228,9 +2174,8 @@ nt_NewUserDescriptor(/*inherit(on_success)*/ PSID pSid,
                      /*inherit(on_success)*/ PSECURITY_DESCRIPTOR pSD) {
 	DREF struct user_object *result;
 	result = DeeObject_MALLOC(struct user_object);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->u_sd  = pSD;
 	result->u_sid = pSid;
 	DeeObject_Init(result, &DeeUser_Type);
@@ -2258,9 +2203,8 @@ nt_NewUserDescriptorFromHandleOwner(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = nt_NewUserDescriptor(pSidOwner, pSD);
-	if
-		likely(result)
-	return result;
+	if likely(result)
+		return result;
 	LocalFree(pSD);
 err:
 	return NULL;
@@ -2286,9 +2230,8 @@ nt_NewUserDescriptorFromHandleGroup(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = nt_NewUserDescriptor(pSidGroup, pSD);
-	if
-		likely(result)
-	return result;
+	if likely(result)
+		return result;
 	LocalFree(pSD);
 err:
 	return NULL;
@@ -2442,9 +2385,8 @@ done:
 		DBG_ALIGNMENT_DISABLE();
 		error = nt_GetFileAttributesEx(path, GetFileExInfoStandard, &attrib);
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error) {
 			/* It worked! */
 			self->s_info.dwFileAttributes = attrib.dwFileAttributes;
@@ -2459,12 +2401,10 @@ done:
 		/* Nope. Still nothing...
 		 * Try this one last thing. */
 		error = nt_GetFileAttributes(path, &self->s_info.dwFileAttributes);
-		if
-			unlikely(error < 0)
-		goto err;
-		if
-			unlikely(error)
-		goto err_nt;
+		if unlikely(error < 0)
+			goto err;
+		if unlikely(error)
+			goto err_nt;
 		self->s_valid = (STAT_FNOTIME | STAT_FNOVOLSERIAL | STAT_FNOSIZE |
 		                 STAT_FNONLINK | STAT_FNOFILEID);
 		goto done;
@@ -2485,9 +2425,8 @@ done:
 		/* Didn't work... (Try the filename) */
 try_filename:
 		path = DeeFile_Filename(path);
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		error = Stat_Init(self, path, flags);
 		Dee_Decref(path);
 		return error;
@@ -2516,9 +2455,8 @@ ok_user_fd:
 				self->s_ftype = GetFileType(fd);
 				DBG_ALIGNMENT_ENABLE();
 				self->s_valid = STAT_FNORMAL;
-				if
-					unlikely(self->s_ftype == FILE_TYPE_UNKNOWN)
-				self->s_valid |= STAT_FNONTTYPE;
+				if unlikely(self->s_ftype == FILE_TYPE_UNKNOWN)
+					self->s_valid |= STAT_FNONTTYPE;
 			}
 		}
 		goto done;
@@ -2571,9 +2509,8 @@ stat_get_nttype(Stat *__restrict self, bool try_get) {
 		DBG_ALIGNMENT_DISABLE();
 		result = GetFileType(self->s_hand);
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(result == FILE_TYPE_UNKNOWN)
-		goto err_noinfo;
+		if unlikely(result == FILE_TYPE_UNKNOWN)
+			goto err_noinfo;
 		new_type = ATOMIC_CMPXCH_VAL(self->s_ftype, FILE_TYPE_UNKNOWN, result);
 		if (new_type != FILE_TYPE_UNKNOWN)
 			result = new_type;
@@ -2631,9 +2568,8 @@ DeeTime_NewFiletime(FILETIME const *__restrict val) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNOVOLSERIAL)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNOVOLSERIAL)
+		{
 		err_no_dev_info();
 		return NULL;
 	}
@@ -2642,9 +2578,8 @@ stat_get_dev(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_ino(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNOFILEID)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNOFILEID)
+		{
 		err_no_ino_info();
 		return NULL;
 	}
@@ -2695,9 +2630,8 @@ stat_get_mode(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNONLINK)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNONLINK)
+		{
 		err_no_link_info();
 		return NULL;
 	}
@@ -2706,9 +2640,8 @@ stat_get_nlink(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_uid(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
-	{
+	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
+		{
 		err_no_uid_info();
 		return NULL;
 	}
@@ -2717,9 +2650,8 @@ stat_get_uid(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_gid(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
-	{
+	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
+		{
 		err_no_gid_info();
 		return NULL;
 	}
@@ -2734,9 +2666,8 @@ stat_get_rdev(DeeStatObject *__restrict UNUSED(self)) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNOSIZE)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE)
+		{
 		err_no_size_info();
 		return NULL;
 	}
@@ -2746,9 +2677,8 @@ stat_get_size(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNOTIME)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
+		{
 		err_no_time_info();
 		return NULL;
 	}
@@ -2757,9 +2687,8 @@ stat_get_atime(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNOTIME)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
+		{
 		err_no_time_info();
 		return NULL;
 	}
@@ -2768,9 +2697,8 @@ stat_get_mtime(DeeStatObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
-	if
-		unlikely(self->st_stat.s_valid & STAT_FNOTIME)
-	{
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
+		{
 		err_no_time_info();
 		return NULL;
 	}
@@ -2785,9 +2713,8 @@ stat_getntattr_np(DeeStatObject *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 stat_getnttype_np(DeeStatObject *__restrict self) {
 	DWORD result = stat_get_nttype(&self->st_stat, false);
-	if
-		unlikely(result == FILE_TYPE_UNKNOWN)
-	return NULL;
+	if unlikely(result == FILE_TYPE_UNKNOWN)
+		return NULL;
 	return DeeInt_NewU32(result);
 }
 
@@ -2906,15 +2833,13 @@ stat_class_exists(DeeObject *__restrict self,
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		return_bool(!error);
 	}
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	Stat_Fini(&buf);
@@ -2936,16 +2861,14 @@ stat_class_isdir(DeeObject *__restrict self,
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			return_bool(attr & FILE_ATTRIBUTE_DIRECTORY);
 	}
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	error = (int)(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
@@ -2966,9 +2889,8 @@ stat_class_ischr(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:ischr", &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	if (!(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
@@ -2993,9 +2915,8 @@ stat_class_isblk(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isblk", &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	if (!(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
@@ -3022,9 +2943,8 @@ stat_class_isreg(DeeObject *__restrict self,
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if ((attr & FILE_ATTRIBUTE_REPARSE_POINT) &&
 		    self != (DeeObject *)&DeeLStat_Type)
 			goto do_normal_stat;
@@ -3035,9 +2955,8 @@ stat_class_isreg(DeeObject *__restrict self,
 	}
 do_normal_stat:
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	error = (int)(buf.s_info.dwFileAttributes &
@@ -3060,9 +2979,8 @@ stat_class_isfifo(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:isfifo", &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	error = stat_get_nttype(&buf, true) == FILE_TYPE_PIPE;
@@ -3085,16 +3003,14 @@ stat_class_islnk(DeeObject *__restrict UNUSED(self),
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (!error)
 			return_bool(attr & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 	error = Stat_Init(&buf, path, DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	error = (int)(buf.s_info.dwFileAttributes &
@@ -3116,9 +3032,8 @@ stat_class_issock(DeeObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:issock", &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	error = stat_get_nttype(&buf, true) == FILE_TYPE_REMOTE;
@@ -3141,9 +3056,8 @@ stat_class_ishidden(DeeObject *__restrict self,
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if ((attr & FILE_ATTRIBUTE_REPARSE_POINT) &&
 		    self != (DeeObject *)&DeeLStat_Type)
 			goto do_normal_stat;
@@ -3155,9 +3069,8 @@ do_normal_stat:
 	                  self == (DeeObject *)&DeeLStat_Type
 	                  ? (DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT)
 	                  : (DOSTAT_FTRY | DOSTAT_FNOEXINFO));
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error > 0)
 		return_false;
 	error = (int)(buf.s_info.dwFileAttributes &
@@ -3189,9 +3102,8 @@ is_exe_filename(DeeObject *__restrict path) {
 	ext_size = (size_t)(ext_end - ext_begin);
 	/* Got the file path. */
 	pathext_ob = nt_GetEnvironmentVariableA("PATHEXT");
-	if
-		likely(pathext_ob)
-	pathext = DeeString_STR(pathext_ob);
+	if likely(pathext_ob)
+		pathext = DeeString_STR(pathext_ob);
 	else {
 		pathext = (char *)".COM;.EXE;.BAT;.CMD";
 	}
@@ -3236,9 +3148,8 @@ stat_class_isexe(DeeObject *__restrict UNUSED(self),
 		} else {
 			path = DeeFile_Filename(path);
 		}
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		result = is_exe_filename(path);
 		Dee_Decref(path);
 	}
@@ -3403,9 +3314,8 @@ again:
 		goto err;
 	/* Use the filename of a file stream. */
 	path = DeeFile_Filename(path);
-	if
-		unlikely(!path)
-	goto err;
+	if unlikely(!path)
+		goto err;
 	result = get_pathhandle_wrattr(path, phandle);
 	Dee_Decref(path);
 	return result;
@@ -3446,9 +3356,8 @@ fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	result = get_pathhandle_wrattr(path, &hnd);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	if (!DeeNone_Check(atime) && unlikely(ob_GetFileTime(atime, &ftAtime)))
 		goto err;
 	if (!DeeNone_Check(mtime) && unlikely(ob_GetFileTime(mtime, &ftMtime)))
@@ -3463,9 +3372,8 @@ again:
 	                    DeeNone_Check(mtime) ? NULL : &ftMtime);
 	if (result)
 		CloseHandle(hnd);
-	if
-		unlikely(!error)
-	{
+	if unlikely(!error)
+		{
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -3511,9 +3419,8 @@ fs_chmod(DeeObject *__restrict path,
 		} else {
 			path = DeeFile_Filename(path);
 		}
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		error = fs_chmod(path, mode);
 		Dee_Decref(path);
 		return error;
@@ -3522,12 +3429,10 @@ fs_chmod(DeeObject *__restrict path,
 		goto err;
 again:
 	error = nt_GetFileAttributes(path, &old_flags);
-	if
-		unlikely(error < 0)
-	goto err;
-	if
-		unlikely(error)
-	goto err_nt;
+	if unlikely(error < 0)
+		goto err;
+	if unlikely(error)
+		goto err_nt;
 	new_flags = old_flags & ~FILE_ATTRIBUTE_READONLY;
 	if (mask & 0222) /* Inherit old writability mode. */
 		new_flags |= old_flags & FILE_ATTRIBUTE_READONLY;
@@ -3539,12 +3444,10 @@ again:
 	if (new_flags != old_flags) {
 		/* Set new flags. */
 		error = nt_SetFileAttributes(path, new_flags);
-		if
-			unlikely(error < 0)
-		goto err;
-		if
-			unlikely(error)
-		goto err_nt;
+		if unlikely(error < 0)
+			goto err;
+		if unlikely(error)
+			goto err_nt;
 	}
 	return 0;
 err_nt:
@@ -3590,9 +3493,8 @@ fs_chattr_np(DeeObject *__restrict path,
 		} else {
 			path = DeeFile_Filename(path);
 		}
-		if
-			unlikely(!path)
-		goto err;
+		if unlikely(!path)
+			goto err;
 		error = fs_chattr_np(path, new_attr);
 		Dee_Decref(path);
 		return error;
@@ -3661,9 +3563,8 @@ again:
 	} else {
 		error = nt_CreateDirectory(path, NULL);
 	}
-	if
-		unlikely(error > 0)
-	goto err_nt;
+	if unlikely(error > 0)
+		goto err_nt;
 	return error;
 err_nt:
 	DBG_ALIGNMENT_DISABLE();
@@ -3724,9 +3625,8 @@ fs_rmdir(DeeObject *__restrict path) {
 		goto err;
 again:
 	error = nt_RemoveDirectory(path);
-	if
-		unlikely(error > 0)
-	goto err_nt;
+	if unlikely(error > 0)
+		goto err_nt;
 	return error;
 err_nt:
 	DBG_ALIGNMENT_DISABLE();
@@ -3781,9 +3681,8 @@ fs_unlink(DeeObject *__restrict path) {
 		goto err;
 again_deletefile:
 	error = nt_DeleteFile(path);
-	if
-		unlikely(error <= 0)
-	return error;
+	if unlikely(error <= 0)
+		return error;
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
@@ -3800,9 +3699,8 @@ again_getattr:
 		    (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) {
 again_rmdir:
 			error = nt_RemoveDirectory(path);
-			if
-				unlikely(error <= 0)
-			return error;
+			if unlikely(error <= 0)
+				return error;
 			DBG_ALIGNMENT_DISABLE();
 			error = (int)GetLastError();
 			DBG_ALIGNMENT_ENABLE();
@@ -3843,9 +3741,8 @@ fs_remove(DeeObject *__restrict path) {
 		goto err;
 again:
 	error = nt_DeleteFile(path);
-	if
-		likely(error <= 0)
-	return error;
+	if likely(error <= 0)
+		return error;
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
@@ -3887,9 +3784,8 @@ fs_rename(DeeObject *__restrict existing_path,
 		} else {
 			existing_path = DeeFile_Filename(existing_path);
 		}
-		if
-			unlikely(!existing_path)
-		goto err;
+		if unlikely(!existing_path)
+			goto err;
 		error = fs_rename(existing_path, new_path);
 		Dee_Decref(existing_path);
 		return error;
@@ -3957,9 +3853,8 @@ fs_link(DeeObject *__restrict existing_path,
 		goto err;
 again:
 	error = nt_CreateHardLink(new_path, existing_path, NULL);
-	if
-		likely(error <= 0)
-	return error;
+	if likely(error <= 0)
+		return error;
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
@@ -4000,18 +3895,15 @@ PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
 	TOKEN_PRIVILEGES tok_priv;
 	DWORD error;
 	hProcess = GetCurrentProcess();
-	if
-		unlikely(!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
-	goto fail;
-	if
-		unlikely(!LookupPrivilegeValueW(NULL, lpName, &luid))
-	goto fail;
+	if unlikely(!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
+		goto fail;
+	if unlikely(!LookupPrivilegeValueW(NULL, lpName, &luid))
+		goto fail;
 	tok_priv.PrivilegeCount           = 1;
 	tok_priv.Privileges[0].Luid       = luid;
 	tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	if
-		unlikely(!AdjustTokenPrivileges(tok, FALSE, &tok_priv, 0, NULL, NULL))
-	return FALSE;
+	if unlikely(!AdjustTokenPrivileges(tok, FALSE, &tok_priv, 0, NULL, NULL))
+		return FALSE;
 	error = GetLastError();
 	SetLastError(0);
 	return (unlikely(error == ERROR_NOT_ALL_ASSIGNED))
@@ -4049,9 +3941,8 @@ fs_symlink(DeeObject *__restrict target_text,
 	 */
 again:
 	error = nt_CreateSymbolicLink(link_path, target_text, flags);
-	if
-		unlikely(error > 0)
-	goto err_nt;
+	if unlikely(error > 0)
+		goto err_nt;
 	return error;
 err_nt:
 	DBG_ALIGNMENT_DISABLE();
@@ -4141,12 +4032,10 @@ fs_readlink(DeeObject *__restrict path) {
 again_createfile:
 		link_fd = nt_CreateFile(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
 		                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-		if
-			unlikely(!link_fd)
-		goto err;
-		if
-			unlikely(link_fd == INVALID_HANDLE_VALUE)
-		goto err_nt_createfile;
+		if unlikely(!link_fd)
+			goto err;
+		if unlikely(link_fd == INVALID_HANDLE_VALUE)
+			goto err_nt_createfile;
 		owns_linkfd = true;
 	} else if (DeeInt_Check(path)) {
 		if (DeeObject_AsUIntptr(path, (uintptr_t *)&link_fd))
@@ -4160,9 +4049,8 @@ again_createfile:
 				goto err;
 			/* Use the filename of a file. */
 			path = DeeFile_Filename(path);
-			if
-				unlikely(!path)
-			goto err;
+			if unlikely(!path)
+				goto err;
 			result = fs_readlink(path);
 			Dee_Decref(path);
 			return result;
@@ -4171,9 +4059,8 @@ again_createfile:
 	}
 	bufsiz = READLINK_INITIAL_BUFFER;
 	buffer = (PREPARSE_DATA_BUFFER)Dee_Malloc(bufsiz);
-	if
-		unlikely(!buffer)
-	goto err_fd;
+	if unlikely(!buffer)
+		goto err_fd;
 	/* Read symbolic link data. */
 	DBG_ALIGNMENT_DISABLE();
 	while (!DeviceIoControl(link_fd, FSCTL_GET_REPARSE_POINT,
@@ -4185,9 +4072,8 @@ again_createfile:
 			PREPARSE_DATA_BUFFER new_buffer;
 			bufsiz *= 2;
 			new_buffer = (PREPARSE_DATA_BUFFER)Dee_Realloc(buffer, bufsiz);
-			if
-				unlikely(!new_buffer)
-			goto err_buffer;
+			if unlikely(!new_buffer)
+				goto err_buffer;
 			DBG_ALIGNMENT_DISABLE();
 			continue;
 		}
@@ -4391,9 +4277,8 @@ read_filename:
 		goto read_filename;
 	}
 	result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t) + 4 + length * 2);
-	if
-		unlikely(!result_string)
-	{
+	if unlikely(!result_string)
+		{
 		rwlock_endwrite(&self->d_lock);
 		if (Dee_CollectMemory(sizeof(size_t) + 4 + length * 2))
 			goto again;
@@ -4409,9 +4294,8 @@ read_filename:
 		HANDLE hnd;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(dwError != ERROR_NO_MORE_FILES)
-		{
+		if unlikely(dwError != ERROR_NO_MORE_FILES)
+			{
 			rwlock_endwrite(&self->d_lock);
 			if (nt_IsBadAlloc(dwError)) {
 				if (Dee_CollectMemory(1))
@@ -4459,19 +4343,16 @@ dir_iter(Dir *__restrict self) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	result = DeeObject_MALLOC(DirIterator);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	wname = (LPWSTR)DeeString_AsWide((DeeObject *)self->d_path);
-	if
-		unlikely(!wname)
-	goto err_r;
+	if unlikely(!wname)
+		goto err_r;
 	/* Append the `\\*' to the given path and fix forward-slashes. */
 	wname_length = WSTR_LENGTH(wname);
 	wpattern     = (LPWSTR)Dee_AMalloc(8 + wname_length * 2);
-	if
-		unlikely(!wpattern)
-	goto err_r;
+	if unlikely(!wpattern)
+		goto err_r;
 	for (i = 0; i < wname_length; ++i) {
 		WCHAR ch = wname[i];
 		/* FindFirstFile() actually fails when handed forward-slashes.
@@ -4495,9 +4376,8 @@ dir_iter(Dir *__restrict self) {
 	                                 FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	if
-		unlikely(result->d_hnd == INVALID_HANDLE_VALUE)
-	{
+	if unlikely(result->d_hnd == INVALID_HANDLE_VALUE)
+		{
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
@@ -4595,14 +4475,12 @@ dir_ctor(Dir *__restrict self,
 		if (DeeObject_AsUIntptr((DeeObject *)self->d_path, (uintptr_t *)&fd))
 			goto err;
 		self->d_path = (DREF DeeStringObject *)nt_GetFilenameOfHandle(fd);
-		if
-			unlikely(!self->d_path)
-		goto err;
+		if unlikely(!self->d_path)
+			goto err;
 	} else {
 		self->d_path = (DREF DeeStringObject *)DeeFile_Filename((DeeObject *)self->d_path);
-		if
-			unlikely(!self->d_path)
-		goto err;
+		if unlikely(!self->d_path)
+			goto err;
 	}
 	return 0;
 err:
@@ -4774,9 +4652,8 @@ read_filename:
 		goto read_filename;
 	}
 	result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t) + 4 + length * 2);
-	if
-		unlikely(!result_string)
-	{
+	if unlikely(!result_string)
+		{
 		rwlock_endwrite(&self->q_iter.d_lock);
 		if (Dee_CollectMemory(sizeof(size_t) + 4 + length * 2))
 			goto again;
@@ -4792,9 +4669,8 @@ read_filename:
 		HANDLE hnd;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(dwError != ERROR_NO_MORE_FILES)
-		{
+		if unlikely(dwError != ERROR_NO_MORE_FILES)
+			{
 			rwlock_endwrite(&self->q_iter.d_lock);
 			if (nt_IsBadAlloc(dwError)) {
 				if (Dee_CollectMemory(1))
@@ -4882,13 +4758,11 @@ query_iter(Dir *__restrict self) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	result = DeeObject_MALLOC(QueryIterator);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	wname = (LPWSTR)DeeString_AsWide((DeeObject *)self->d_path);
-	if
-		unlikely(!wname)
-	goto err_r;
+	if unlikely(!wname)
+		goto err_r;
 again_wname:
 	/* Append the `\\*' to the given path and fix forward-slashes. */
 	wname_length = WSTR_LENGTH(wname);
@@ -4901,9 +4775,8 @@ again_wname:
 	 * of the resulting query iterator. */
 	result->q_wild = wname + wname_length;
 	wpattern       = (LPWSTR)Dee_AMalloc(8 + wname_length * 2);
-	if
-		unlikely(!wpattern)
-	goto err_r;
+	if unlikely(!wpattern)
+		goto err_r;
 	for (i = 0; i < wname_length; ++i) {
 		WCHAR ch = wname[i];
 		/* FindFirstFile() actually fails when handed forward-slashes.
@@ -4927,9 +4800,8 @@ again_wname:
 	                                        FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	if
-		unlikely(result->q_iter.d_hnd == INVALID_HANDLE_VALUE)
-	{
+	if unlikely(result->q_iter.d_hnd == INVALID_HANDLE_VALUE)
+		{
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
@@ -4943,9 +4815,8 @@ again_wname:
 			}
 			query_path = DeeString_NewWide(wname, wname_length,
 			                               STRING_ERROR_FIGNORE);
-			if
-				unlikely(!query_path)
-			goto err_r;
+			if unlikely(!query_path)
+				goto err_r;
 			err_handle_opendir(dwError, query_path);
 			Dee_Decref(query_path);
 			goto err_r;

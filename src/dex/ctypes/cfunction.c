@@ -303,9 +303,8 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 		argv_copy = NULL;
 	} else {
 		argv_copy = (DREF DeeSTypeObject **)Dee_Malloc(argc * sizeof(DREF DeeSTypeObject *));
-		if
-			unlikely(!argv_copy)
-		goto err;
+		if unlikely(!argv_copy)
+			goto err;
 		for (i = 0; i < argc; ++i) {
 			ASSERT_OBJECT_TYPE((DeeObject *)argv[i], &DeeSType_Type);
 			Dee_Incref((DeeObject *)argv[i]);
@@ -314,14 +313,12 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	}
 
 	result = DeeGCObject_CALLOC(DeeCFunctionTypeObject);
-	if
-		unlikely(!result)
-	goto err_argv;
+	if unlikely(!result)
+		goto err_argv;
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)generate_function_name(return_type, calling_convention, argc, argv);
-	if
-		unlikely(!name)
-	goto err_argv_r;
+	if unlikely(!name)
+		goto err_argv_r;
 	/* Store a reference to the cfunction-base type. */
 	Dee_Incref((DeeObject *)return_type);
 	Dee_Incref((DeeObject *)&DeeCFunction_Type);
@@ -344,18 +341,15 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 
 	/* Collect all the type descriptors used by libffi. */
 	result->ft_ffi_return_type = stype_ffitype(return_type);
-	if
-		unlikely(!result->ft_ffi_return_type)
-	goto err_argv_r_name;
+	if unlikely(!result->ft_ffi_return_type)
+		goto err_argv_r_name;
 	result->ft_ffi_arg_type_v = (ffi_type **)Dee_Malloc(argc * sizeof(ffi_type *));
-	if
-		unlikely(!result->ft_ffi_arg_type_v)
-	goto err_argv_r_name;
+	if unlikely(!result->ft_ffi_arg_type_v)
+		goto err_argv_r_name;
 	for (i = 0; i < argc; ++i) {
 		ffi_type *tp = stype_ffitype(argv_copy[i]);
-		if
-			unlikely(!tp)
-		goto err_argv_r_name_ffi_typev;
+		if unlikely(!tp)
+			goto err_argv_r_name_ffi_typev;
 		result->ft_ffi_arg_type_v[i] = tp;
 	}
 
@@ -421,9 +415,8 @@ stype_cfunction_rehash(DeeSTypeObject *__restrict self,
 again:
 	new_map = (DeeCFunctionTypeObject **)Dee_TryCalloc((new_mask + 1) *
 	                                                   sizeof(DeeCFunctionTypeObject *));
-	if
-		unlikely(!new_map)
-	{
+	if unlikely(!new_map)
+		{
 		/* Try again with a 1-element mask. */
 		if (!self->st_cfunction.sf_list && new_mask != 0) {
 			new_mask = 1;
@@ -529,9 +522,8 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 	/* Construct a new cfunction type. */
 	result = cfunctiontype_new(return_type, calling_convention,
 	                           argc, argv, hash, inherit_argv);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Add the new type to the cache. */
 register_type:
 	rwlock_write(&return_type->st_cachelock);

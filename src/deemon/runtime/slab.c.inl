@@ -427,9 +427,8 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 			close(fd);
 		}
 #endif /* !MAP_ANONYMOUS */
-		if
-			unlikely(slab_memory == MAP_FAILED)
-		goto disable_slabs;
+		if unlikely(slab_memory == MAP_FAILED)
+			goto disable_slabs;
 #else
 #error "Invalid SLAB configuration"
 #endif

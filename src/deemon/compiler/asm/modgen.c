@@ -62,17 +62,15 @@ module_compile(DeeModuleObject *__restrict mod,
 		new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
 		                                                     current_rootscope->rs_importc *
 		                                                     sizeof(DREF DeeModuleObject *));
-		if
-			likely(new_vector)
-		current_rootscope->rs_importv = new_vector;
+		if likely(new_vector)
+			current_rootscope->rs_importv = new_vector;
 	}
 
 	/* Start filling in members of the module. */
 	mod->mo_globalv = (DREF DeeObject **)Dee_Calloc(current_rootscope->rs_globalc *
 	                                                   sizeof(DREF DeeObject *));
-	if
-		unlikely(!mod->mo_globalv)
-	goto err;
+	if unlikely(!mod->mo_globalv)
+		goto err;
 	mod->mo_globalc = current_rootscope->rs_globalc;
 	mod->mo_importc = current_rootscope->rs_importc;
 #ifdef CONFIG_NO_THREADS

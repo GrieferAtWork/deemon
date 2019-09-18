@@ -2485,9 +2485,8 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pipe_f_impl(void)
 		goto err;
 	}
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-	if
-		unlikely(!result)
-	goto err_fds;
+	if unlikely(!result)
+		goto err_fds;
 	return result;
 err_fds:
 	DBG_ALIGNMENT_DISABLE();
@@ -2518,18 +2517,15 @@ again:
 	if (!SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
 		goto err_hWritehRead_nterror;
 	fds[0] = _open_osfhandle((intptr_t)(uintptr_t)hRead, O_RDONLY);
-	if
-		unlikely(fds[0] < 0)
-	goto err_hWritehRead_errno;
+	if unlikely(fds[0] < 0)
+		goto err_hWritehRead_errno;
 	fds[1] = _open_osfhandle((intptr_t)(uintptr_t)hWrite, O_WRONLY);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(fds[1] < 0)
-	goto err_hWritefds0_errno;
+	if unlikely(fds[1] < 0)
+		goto err_hWritefds0_errno;
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-	if
-		unlikely(!result)
-	goto err_fds;
+	if unlikely(!result)
+		goto err_fds;
 	return result;
 err_fds:
 	DBG_ALIGNMENT_DISABLE();
@@ -2609,24 +2605,20 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 	if (error >= 0) {
 		if (oflags & O_CLOEXEC) {
 			error = fcntl(fds[0], F_SETFD, FD_CLOEXEC);
-			if
-				unlikely(error < 0)
-			goto err_fds_errno;
+			if unlikely(error < 0)
+				goto err_fds_errno;
 			error = fcntl(fds[1], F_SETFD, FD_CLOEXEC);
-			if
-				unlikely(error < 0)
-			goto err_fds_errno;
+			if unlikely(error < 0)
+				goto err_fds_errno;
 		}
 #ifdef O_NONBLOCK
 		if (oflags & O_NONBLOCK) {
 			error = fcntl(fds[0], F_SETFL, O_NONBLOCK);
-			if
-				unlikely(error < 0)
-			goto err_fds_errno;
+			if unlikely(error < 0)
+				goto err_fds_errno;
 			error = fcntl(fds[1], F_SETFL, O_NONBLOCK);
-			if
-				unlikely(error < 0)
-			goto err_fds_errno;
+			if unlikely(error < 0)
+				goto err_fds_errno;
 		}
 #endif
 	}
@@ -2642,9 +2634,8 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 		goto err;
 	}
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-	if
-		unlikely(!result)
-	goto err_fds;
+	if unlikely(!result)
+		goto err_fds;
 	return result;
 #ifndef HAVE_PIPE2
 err_fds_errno:
@@ -2692,18 +2683,15 @@ again:
 			goto err_hWritehRead_nterror;
 	}
 	fds[0] = _open_osfhandle((intptr_t)(uintptr_t)hRead, O_RDONLY);
-	if
-		unlikely(fds[0] < 0)
-	goto err_hWritehRead_errno;
+	if unlikely(fds[0] < 0)
+		goto err_hWritehRead_errno;
 	fds[1] = _open_osfhandle((intptr_t)(uintptr_t)hWrite, O_WRONLY);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(fds[1] < 0)
-	goto err_hWritefds0_errno;
+	if unlikely(fds[1] < 0)
+		goto err_hWritefds0_errno;
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-	if
-		unlikely(!result)
-	goto err_fds;
+	if unlikely(!result)
+		goto err_fds;
 	return result;
 err_fds:
 	DBG_ALIGNMENT_DISABLE();
@@ -2777,28 +2765,24 @@ FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ cha
 			goto err;
 	} else {
 		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, &owner);
-		if
-			unlikely(!owner)
-		goto err;
+		if unlikely(!owner)
+			goto err;
 		result = DeeObject_AsUINT(owner, &owner_uid);
 		Dee_Decref(owner);
-		if
-			unlikely(result)
-		goto err;
+		if unlikely(result)
+			goto err;
 	}
 	if (DeeInt_Check(group)) {
 		if (DeeObject_AsUINT(group, &group_gid))
 			goto err;
 	} else {
 		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, &group);
-		if
-			unlikely(!group)
-		goto err;
+		if unlikely(!group)
+			goto err;
 		result = DeeObject_AsUINT(group, &group_gid);
 		Dee_Decref(group);
-		if
-			unlikely(result)
-		goto err;
+		if unlikely(result)
+			goto err;
 	}
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())

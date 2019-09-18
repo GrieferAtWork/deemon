@@ -343,9 +343,8 @@ DeeSeq_DelItem(DeeObject *__restrict self, size_t index) {
 				/* Try to invoke the native delitem operator. */
 				DREF DeeObject *index_ob;
 				index_ob = DeeInt_NewSize(index);
-				if
-					unlikely(!index_ob)
-				goto err;
+				if unlikely(!index_ob)
+					goto err;
 				result = (*seq->tp_del)(self, index_ob);
 				Dee_Decref(index_ob);
 				return result;

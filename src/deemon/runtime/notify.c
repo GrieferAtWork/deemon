@@ -407,9 +407,8 @@ again:
 			temp = (*func)(arg);
 			Dee_XDecref(arg);
 			/* If an error occurred, forward it. */
-			if
-				unlikely(temp)
-			return temp;
+			if unlikely(temp)
+				return temp;
 #if __SIZEOF_POINTER__ > __SIZEOF_INT__
 			if likely(result != INT_MAX)
 				++result;

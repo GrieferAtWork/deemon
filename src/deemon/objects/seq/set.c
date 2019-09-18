@@ -126,9 +126,8 @@ PRIVATE int DCALL
 suiter_set_in2nd(SetUnionIterator *__restrict self,
                  DeeObject *__restrict value) {
 	int newval = DeeObject_Bool(value);
-	if
-		unlikely(newval < 0)
-	return newval;
+	if unlikely(newval < 0)
+		return newval;
 	rwlock_write(&self->sui_lock);
 	self->sui_in2nd = !!newval;
 	rwlock_endwrite(&self->sui_lock);
@@ -154,9 +153,8 @@ suiter_copy(SetUnionIterator *__restrict self,
 	rwlock_endread(&other->sui_lock);
 	self->sui_iter = DeeObject_Copy(iter);
 	Dee_Decref(iter);
-	if
-		unlikely(!self->sui_iter)
-	goto err;
+	if unlikely(!self->sui_iter)
+		goto err;
 	rwlock_init(&self->sui_lock);
 	self->sui_union = other->sui_union;
 	Dee_Incref(self->sui_union);
@@ -176,14 +174,12 @@ suiter_deep(SetUnionIterator *__restrict self,
 	rwlock_endread(&other->sui_lock);
 	self->sui_iter = DeeObject_DeepCopy(iter);
 	Dee_Decref(iter);
-	if
-		unlikely(!self->sui_iter)
-	goto err;
+	if unlikely(!self->sui_iter)
+		goto err;
 	rwlock_init(&self->sui_lock);
 	self->sui_union = (DREF SetUnion *)DeeObject_DeepCopy((DeeObject *)other->sui_union);
-	if
-		unlikely(!self->sui_union)
-	goto err_iter;
+	if unlikely(!self->sui_union)
+		goto err_iter;
 	return 0;
 err_iter:
 	Dee_Decref(self->sui_iter);
@@ -196,13 +192,11 @@ suiter_ctor(SetUnionIterator *__restrict self) {
 	self->sui_union = (DREF SetUnion *)DeeObject_NewDefault(self->ob_type == &SetUnionIterator_Type
 	                                                        ? &SetUnion_Type
 	                                                        : &SetSymmetricDifference_Type);
-	if
-		unlikely(!self->sui_union)
-	goto err;
+	if unlikely(!self->sui_union)
+		goto err;
 	self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a);
-	if
-		unlikely(!self->sui_iter)
-	goto err_union;
+	if unlikely(!self->sui_iter)
+		goto err_union;
 	rwlock_init(&self->sui_lock);
 	self->sui_in2nd = false;
 	return 0;
@@ -245,9 +239,8 @@ read_from_iter:
 	Dee_Decref(iter);
 	if (is_second)
 		goto done;
-	if
-		unlikely(result != ITER_DONE)
-	{
+	if unlikely(result != ITER_DONE)
+		{
 		if (result) {
 			int temp;
 			/* Check if the found item is also part of the second set.
@@ -257,9 +250,8 @@ read_from_iter:
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
-				if
-					unlikely(temp < 0)
-				{
+				if unlikely(temp < 0)
+					{
 					result = NULL;
 					goto done;
 				}
@@ -280,14 +272,12 @@ read_from_iter:
 #endif              /* !CONFIG_NO_THREADS */
 	/* Create the level #2 iterator. */
 	result = DeeObject_IterSelf(self->sui_union->su_b);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	rwlock_write(&self->sui_lock);
 	/* Check for another race condition. */
-	if
-		unlikely(self->sui_iter != iter)
-	{
+	if unlikely(self->sui_iter != iter)
+		{
 		rwlock_endwrite(&self->sui_lock);
 		Dee_Decref(result);
 		goto again;
@@ -572,13 +562,11 @@ PRIVATE int DCALL
 su_deep(SetUnion *__restrict self,
         SetUnion *__restrict other) {
 	self->su_a = DeeObject_DeepCopy(other->su_a);
-	if
-		unlikely(!self->su_a)
-	goto err;
+	if unlikely(!self->su_a)
+		goto err;
 	self->su_b = DeeObject_DeepCopy(other->su_b);
-	if
-		unlikely(!self->su_a)
-	goto err_a;
+	if unlikely(!self->su_a)
+		goto err_a;
 	return 0;
 err_a:
 	Dee_Decref(self->su_a);
@@ -604,13 +592,11 @@ PRIVATE DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
 	DREF SetUnionIterator *result;
 	result = DeeObject_MALLOC(SetUnionIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sui_iter = DeeObject_IterSelf(self->su_a);
-	if
-		unlikely(!result->sui_iter)
-	goto err_r;
+	if unlikely(!result->sui_iter)
+		goto err_r;
 	rwlock_init(&result->sui_lock);
 	result->sui_in2nd = false;
 	result->sui_union = self;
@@ -628,13 +614,11 @@ su_contains(SetUnion *__restrict self, DeeObject *__restrict item) {
 	DREF DeeObject *result;
 	int temp;
 	result = DeeObject_ContainsObject(self->su_a, item);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	temp = DeeObject_Bool(result);
-	if
-		unlikely(temp < 0)
-	goto err_r;
+	if unlikely(temp < 0)
+		goto err_r;
 	if (temp)
 		goto done;
 	Dee_Decref(result);
@@ -734,9 +718,8 @@ read_from_iter:
 	Dee_Decref(iter);
 	if (is_second)
 		goto done;
-	if
-		unlikely(result != ITER_DONE)
-	{
+	if unlikely(result != ITER_DONE)
+		{
 		if (result) {
 			int temp;
 			/* Only yield the item if it's not contained in the other set. */
@@ -747,9 +730,8 @@ read_from_iter:
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
-				if
-					unlikely(temp < 0)
-				{
+				if unlikely(temp < 0)
+					{
 					result = NULL;
 					goto done;
 				}
@@ -770,14 +752,12 @@ read_from_iter:
 #endif              /* !CONFIG_NO_THREADS */
 	/* Create the level #2 iterator. */
 	result = DeeObject_IterSelf(self->ssd_set->ssd_b);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	rwlock_write(&self->ssd_lock);
 	/* Check for another race condition. */
-	if
-		unlikely(self->ssd_iter != iter)
-	{
+	if unlikely(self->ssd_iter != iter)
+		{
 		rwlock_endwrite(&self->ssd_lock);
 		Dee_Decref(result);
 		goto again;
@@ -870,13 +850,11 @@ PRIVATE DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
 	DREF SetSymmetricDifferenceIterator *result;
 	result = DeeObject_MALLOC(SetSymmetricDifferenceIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ssd_iter = DeeObject_IterSelf(self->ssd_a);
-	if
-		unlikely(!result->ssd_iter)
-	goto err_r;
+	if unlikely(!result->ssd_iter)
+		goto err_r;
 	rwlock_init(&result->ssd_lock);
 	result->ssd_in2nd = false;
 	result->ssd_set   = self;
@@ -894,13 +872,11 @@ ssd_contains(SetSymmetricDifference *__restrict self, DeeObject *__restrict item
 	DREF DeeObject *result;
 	int cona, conb;
 	cona = DeeObject_Contains(self->ssd_a, item);
-	if
-		unlikely(cona < 0)
-	goto err;
+	if unlikely(cona < 0)
+		goto err;
 	conb = DeeObject_Contains(self->ssd_b, item);
-	if
-		unlikely(conb < 0)
-	goto err;
+	if unlikely(conb < 0)
+		goto err;
 	result = DeeBool_For(!!cona ^ !!conb);
 	Dee_Incref(result);
 done:
@@ -987,13 +963,11 @@ siiter_ctor(SetIntersectionIterator *__restrict self) {
 	self->sii_intersect = (DREF SetIntersection *)DeeObject_NewDefault(self->ob_type == &SetDifferenceIterator_Type
 	                                                                   ? &SetIntersection_Type
 	                                                                   : &SetDifference_Type);
-	if
-		unlikely(!self->sii_intersect)
-	goto err;
+	if unlikely(!self->sii_intersect)
+		goto err;
 	self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a);
-	if
-		unlikely(!self->sii_iter)
-	goto err_isec;
+	if unlikely(!self->sii_iter)
+		goto err_isec;
 	self->sii_other = self->sii_intersect->si_b;
 	Dee_Incref(self->sii_other);
 	return 0;
@@ -1007,9 +981,8 @@ PRIVATE int DCALL
 siiter_copy(SetIntersectionIterator *__restrict self,
             SetIntersectionIterator *__restrict other) {
 	self->sii_iter = DeeObject_Copy(other->sii_iter);
-	if
-		unlikely(!self->sii_iter)
-	goto err;
+	if unlikely(!self->sii_iter)
+		goto err;
 	self->sii_intersect = other->sii_intersect;
 	self->sii_other     = other->sii_other;
 	Dee_Incref(self->sii_intersect);
@@ -1023,13 +996,11 @@ PRIVATE int DCALL
 siiter_deep(SetIntersectionIterator *__restrict self,
             SetIntersectionIterator *__restrict other) {
 	self->sii_iter = DeeObject_DeepCopy(other->sii_iter);
-	if
-		unlikely(!self->sii_iter)
-	goto err;
+	if unlikely(!self->sii_iter)
+		goto err;
 	self->sii_intersect = (DREF SetIntersection *)DeeObject_DeepCopy((DeeObject *)other->sii_intersect);
-	if
-		unlikely(!self->sii_intersect)
-	goto err_iter;
+	if unlikely(!self->sii_intersect)
+		goto err_iter;
 	self->sii_other = self->sii_intersect->si_b;
 	Dee_Incref(self->sii_other);
 	return 0;
@@ -1047,9 +1018,8 @@ siiter_init(SetIntersectionIterator *__restrict self,
 	if (DeeObject_AssertTypeExact((DeeObject *)self->sii_intersect, &SetIntersection_Type))
 		goto err;
 	self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a);
-	if
-		unlikely(!self)
-	goto err;
+	if unlikely(!self)
+		goto err;
 	Dee_Incref(self->sii_intersect);
 	self->sii_other = self->sii_intersect->si_b;
 	Dee_Incref(self->sii_other);
@@ -1188,13 +1158,11 @@ PRIVATE DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
 	DREF SetIntersectionIterator *result;
 	result = DeeObject_MALLOC(SetIntersectionIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sii_iter = DeeObject_IterSelf(self->si_a);
-	if
-		unlikely(!result->sii_iter)
-	goto err_r;
+	if unlikely(!result->sii_iter)
+		goto err_r;
 	result->sii_intersect = self;
 	result->sii_other     = self->si_b;
 	Dee_Incref(self);
@@ -1212,13 +1180,11 @@ si_contains(SetIntersection *__restrict self, DeeObject *__restrict item) {
 	DREF DeeObject *result;
 	int temp;
 	result = DeeObject_ContainsObject(self->si_a, item);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	temp = DeeObject_Bool(result);
-	if
-		unlikely(temp < 0)
-	goto err_r;
+	if unlikely(temp < 0)
+		goto err_r;
 	if (!temp)
 		goto done;
 	Dee_Decref(result);
@@ -1397,13 +1363,11 @@ PRIVATE DREF SetDifferenceIterator *DCALL
 sd_iter(SetDifference *__restrict self) {
 	DREF SetDifferenceIterator *result;
 	result = DeeObject_MALLOC(SetDifferenceIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sdi_iter = DeeObject_IterSelf(self->sd_a);
-	if
-		unlikely(!result->sdi_iter)
-	goto err_r;
+	if unlikely(!result->sdi_iter)
+		goto err_r;
 	result->sdi_diff  = self;
 	result->sdi_other = self->sd_b;
 	Dee_Incref(self);
@@ -1508,14 +1472,12 @@ DeeSet_Union(DeeObject *__restrict lhs,
 	if (DeeInverseSet_CheckExact(lhs)) {
 		if (!DeeInverseSet_CheckExact(rhs)) {
 			/* Special case: `~a | b' --> `~(a & ~b)' */
-			if
-				unlikely((rhs = DeeSet_Invert(rhs)) == NULL)
-			goto err;
+			if unlikely((rhs = DeeSet_Invert(rhs)) == NULL)
+				goto err;
 			temp = DeeSet_Intersection(DeeInverseSet_SET(lhs), rhs);
 			Dee_Decref(rhs);
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			result = DeeSet_Invert(temp);
 			Dee_Decref(temp);
 			goto done;
@@ -1523,23 +1485,20 @@ DeeSet_Union(DeeObject *__restrict lhs,
 		/* Special case: `~a | ~b' --> `~(a & b)' */
 		temp = DeeSet_Intersection(DeeInverseSet_SET(lhs),
 		                           DeeInverseSet_SET(rhs));
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		result = DeeSet_Invert(temp);
 		Dee_Decref(temp);
 		goto done;
 	}
 	if (DeeInverseSet_CheckExact(rhs)) {
 		/* Special case: `a | ~b' --> `~(b & ~a)' */
-		if
-			unlikely((lhs = DeeSet_Invert(lhs)) == NULL)
-		goto err;
+		if unlikely((lhs = DeeSet_Invert(lhs)) == NULL)
+			goto err;
 		temp = DeeSet_Intersection(DeeInverseSet_SET(rhs), lhs);
 		Dee_Decref(lhs);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		result = DeeSet_Invert(temp);
 		Dee_Decref(temp);
 		goto done;
@@ -1550,9 +1509,8 @@ DeeSet_Union(DeeObject *__restrict lhs,
 		return_reference_(lhs);
 	/* Construct a set-union wrapper. */
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetUnion);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	((SetUnion *)result)->su_a = lhs;
 	((SetUnion *)result)->su_b = rhs;
 	Dee_Incref(lhs);
@@ -1572,9 +1530,8 @@ DeeSet_Intersection(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
 			/* Special case: `~a & ~b' -> `~(a | b)' */
 			temp = DeeSet_Intersection(DeeInverseSet_SET(lhs),
 			                           DeeInverseSet_SET(rhs));
-			if
-				unlikely(!temp)
-			goto err;
+			if unlikely(!temp)
+				goto err;
 			result = DeeSet_Invert(temp);
 			Dee_Decref(temp);
 			goto done;
@@ -1588,9 +1545,8 @@ DeeSet_Intersection(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
 		return_reference_(Dee_EmptySet);
 	/* Construct a set-intersection wrapper. */
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetIntersection);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	ASSERT(!DeeInverseSet_CheckExact(lhs));
 	((SetIntersection *)result)->si_a = lhs;
 	((SetIntersection *)result)->si_b = rhs;
@@ -1609,9 +1565,8 @@ DeeSet_Difference(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
 	if (DeeInverseSet_CheckExact(lhs)) {
 		/* Special case: `~a - b' -> `~(a | b)' */
 		temp = DeeSet_Union(DeeInverseSet_SET(lhs), rhs);
-		if
-			unlikely(!temp)
-		goto err;
+		if unlikely(!temp)
+			goto err;
 		result = DeeSet_Invert(temp);
 		Dee_Decref(temp);
 		goto done;
@@ -1622,9 +1577,8 @@ DeeSet_Difference(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
 		return_reference_(lhs);
 	/* Construct a set-difference wrapper. */
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetDifference);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	ASSERT(!DeeInverseSet_CheckExact(lhs));
 	((SetDifference *)result)->sd_a = lhs;
 	((SetDifference *)result)->sd_b = rhs;
@@ -1646,9 +1600,8 @@ DeeSet_SymmetricDifference(DeeObject *__restrict lhs, DeeObject *__restrict rhs)
 		return_reference_(lhs);
 	/* Construct a set-symmetric-difference wrapper. */
 	result = DeeObject_MALLOC(SetSymmetricDifference);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	ASSERT(!DeeInverseSet_CheckExact(lhs));
 	result->ssd_a = lhs;
 	result->ssd_b = rhs;

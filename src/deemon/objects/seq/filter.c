@@ -48,9 +48,8 @@ filter_visit(FilterIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE int DCALL
 filteriterator_ctor(FilterIterator *__restrict self) {
 	self->fi_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	if
-		unlikely(!self->fi_iter)
-	goto err;
+	if unlikely(!self->fi_iter)
+		goto err;
 	self->fi_func = Dee_None;
 	Dee_Incref(Dee_None);
 	return 0;
@@ -67,9 +66,8 @@ filteriterator_init(FilterIterator *__restrict self,
 	if (DeeObject_AssertTypeExact((DeeObject *)filter, &SeqFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_IterSelf(filter->f_seq);
-	if
-		unlikely(!self->fi_iter)
-	goto err;
+	if unlikely(!self->fi_iter)
+		goto err;
 	self->fi_func = filter->f_fun;
 	Dee_Incref(filter->f_fun);
 	return 0;
@@ -81,9 +79,8 @@ PRIVATE int DCALL
 filteriterator_copy(FilterIterator *__restrict self,
                     FilterIterator *__restrict other) {
 	self->fi_iter = DeeObject_Copy(other->fi_iter);
-	if
-		unlikely(!self->fi_iter)
-	goto err;
+	if unlikely(!self->fi_iter)
+		goto err;
 	self->fi_func = other->fi_func;
 	Dee_Incref(self->fi_func);
 	return 0;
@@ -95,13 +92,11 @@ PRIVATE int DCALL
 filteriterator_deep(FilterIterator *__restrict self,
                     FilterIterator *__restrict other) {
 	self->fi_iter = DeeObject_DeepCopy(other->fi_iter);
-	if
-		unlikely(!self->fi_iter)
-	goto err;
+	if unlikely(!self->fi_iter)
+		goto err;
 	self->fi_func = DeeObject_DeepCopy(other->fi_func);
-	if
-		unlikely(!self->fi_func)
-	goto err_iter;
+	if unlikely(!self->fi_func)
+		goto err_iter;
 	return 0;
 err_iter:
 	Dee_Decref_likely(self->fi_iter);
@@ -122,20 +117,17 @@ filteriterator_next(FilterIterator *__restrict self) {
 	int pred_bool;
 again:
 	result = DeeObject_IterNext(self->fi_iter);
-	if
-		unlikely(!ITER_ISOK(result))
-	goto done;
+	if unlikely(!ITER_ISOK(result))
+		goto done;
 	/* Invoke the predicate for the discovered element. */
 	pred_result = DeeObject_Call(self->fi_func, 1, &result);
-	if
-		unlikely(!pred_result)
-	goto err_r;
+	if unlikely(!pred_result)
+		goto err_r;
 	/* Cast the filter's return value to a boolean. */
 	pred_bool = DeeObject_Bool(pred_result);
 	Dee_Decref(pred_result);
-	if
-		unlikely(pred_bool < 0)
-	goto err_r;
+	if unlikely(pred_bool < 0)
+		goto err_r;
 	if (!pred_bool) {
 		Dee_Decref(result);
 		goto again;
@@ -182,13 +174,11 @@ filteriterator_seq_get(FilterIterator *__restrict self) {
 	DREF Filter *result;
 	DREF DeeObject *base_seq;
 	base_seq = DeeObject_GetAttr(self->fi_iter, &str_seq);
-	if
-		unlikely(!base_seq)
-	goto err;
+	if unlikely(!base_seq)
+		goto err;
 	result = DeeObject_MALLOC(Filter);
-	if
-		unlikely(!result)
-	goto err_base_seq;
+	if unlikely(!result)
+		goto err_base_seq;
 	result->f_seq = base_seq; /* Inherit reference. */
 	result->f_fun = self->fi_func;
 	Dee_Incref(result->f_fun);
@@ -266,13 +256,11 @@ PRIVATE DREF FilterIterator *DCALL
 filter_iter(Filter *__restrict self) {
 	DREF FilterIterator *result;
 	result = DeeObject_MALLOC(FilterIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->fi_iter = DeeObject_IterSelf(self->f_seq);
-	if
-		unlikely(!result->fi_iter)
-	goto err_r;
+	if unlikely(!result->fi_iter)
+		goto err_r;
 	result->fi_func = self->f_fun;
 	Dee_Incref(result->fi_func);
 	DeeObject_Init(result, &SeqFilterIterator_Type);
@@ -329,13 +317,11 @@ PRIVATE int DCALL
 filter_deep(Filter *__restrict self,
             Filter *__restrict other) {
 	self->f_seq = DeeObject_DeepCopy(other->f_seq);
-	if
-		unlikely(!self->f_seq)
-	goto err;
+	if unlikely(!self->f_seq)
+		goto err;
 	self->f_fun = DeeObject_DeepCopy(other->f_fun);
-	if
-		unlikely(!self->f_fun)
-	goto err_seq;
+	if unlikely(!self->f_fun)
+		goto err_seq;
 	return 0;
 err_seq:
 	Dee_Decref_likely(self->f_seq);
@@ -409,9 +395,8 @@ DeeSeq_Filter(DeeObject *__restrict self,
               DeeObject *__restrict pred_keep) {
 	DREF Filter *result;
 	result = DeeObject_MALLOC(Filter);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(self);
 	Dee_Incref(pred_keep);
 	result->f_seq = self;

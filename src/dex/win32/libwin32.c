@@ -315,9 +315,8 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeInt_NewSize((size_t)hResult);
-	if
-		unlikely(!result)
-	CloseHandle(hResult);
+	if unlikely(!result)
+		CloseHandle(hResult);
 	return result;
 err:
 	return NULL;
@@ -379,9 +378,8 @@ again:
 	                      dwCreationDisposition,
 	                      dwFlagsAndAttributes,
 	                      hTemplateFile);
-	if
-		unlikely(hResult == INVALID_HANDLE_VALUE)
-	{
+	if unlikely(hResult == INVALID_HANDLE_VALUE)
+		{
 		if (GetLastError() == ERROR_OPERATION_ABORTED) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
@@ -391,9 +389,8 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeInt_NewSize((size_t)hResult);
-	if
-		likely(result)
-	return result;
+	if likely(result)
+		return result;
 	CloseHandle(hResult);
 err:
 	return NULL;
@@ -771,9 +768,8 @@ again:
 	                          lDistanceToMoveLow,
 	                          &lDistanceToMoveHigh,
 	                          dwMoveMethod);
-	if
-		unlikely(dwResult == INVALID_SET_FILE_POINTER)
-	{
+	if unlikely(dwResult == INVALID_SET_FILE_POINTER)
+		{
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (error != NO_ERROR) {
@@ -963,9 +959,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetTempPath_f_impl(void)
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -985,16 +980,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1038,9 +1031,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -1060,16 +1052,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1327,9 +1317,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDLE hModul
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_buffer;
@@ -1357,9 +1346,8 @@ again:
 		/* Increase buffer size. */
 		dwBufSize *= 2;
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_buffer;
+		if unlikely(!lpNewBuffer)
+			goto err_buffer;
 		lpBuffer = lpNewBuffer;
 	}
 	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
@@ -1391,9 +1379,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemDirectory_f_impl(void)
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -1413,16 +1400,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1452,9 +1437,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f_impl(void)
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -1474,16 +1458,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1511,9 +1493,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f_impl(void)
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -1533,16 +1514,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1591,9 +1570,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(void)
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -1613,16 +1591,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1652,9 +1628,8 @@ FORCELOCAL DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(void)
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if
-		unlikely(!lpBuffer)
-	goto err;
+	if unlikely(!lpBuffer)
+		goto err;
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err_result;
@@ -1674,16 +1649,14 @@ again:
 			break;
 		/* Resize to fit. */
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwError);
-		if
-			unlikely(!lpNewBuffer)
-		goto err_result;
+		if unlikely(!lpNewBuffer)
+			goto err_result;
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
 	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if
-		likely(lpNewBuffer)
-	lpBuffer = lpNewBuffer;
+	if likely(lpNewBuffer)
+		lpBuffer = lpNewBuffer;
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);

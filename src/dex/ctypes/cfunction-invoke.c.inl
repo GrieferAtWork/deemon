@@ -76,9 +76,8 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 #else /* VARARGS */
 	wbuf = Dee_AMalloc(tp_self->ft_wsize);
 #endif /* !VARARGS */
-	if
-		unlikely(!wbuf)
-	goto err;
+	if unlikely(!wbuf)
+		goto err;
 
 	/* Initialize arguments */
 	iter = (union argument *)((void *)((uintptr_t)wbuf + tp_self->ft_woff_argmem));
@@ -282,9 +281,8 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				if (DeeObject_AssertType((DeeObject *)dee_va_type, &DeeSType_Type))
 					goto err_wbuf;
 				*dee_va_ffi_types = stype_ffitype((DeeSTypeObject *)dee_va_type);
-				if
-					unlikely(!*dee_va_ffi_types)
-				goto err_wbuf;
+				if unlikely(!*dee_va_ffi_types)
+					goto err_wbuf;
 				/* Prefer hard copies */
 				switch ((*dee_va_ffi_types)->size) {
 
@@ -367,18 +365,16 @@ def_var_data:
 		size_t datasize;
 		DeeSTypeObject *orig_type = tp_self->ft_orig;
 		datasize                  = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
-		if
-			unlikely(orig_type->st_base.tp_flags & TP_FGC)
-		{
+		if unlikely(orig_type->st_base.tp_flags & TP_FGC)
+			{
 			/* This can happen when the user creates their own
 			 * classes that are derived from structured types. */
 			result = (DeeObject *)DeeGCObject_Malloc(datasize);
 		} else {
 			result = (DeeObject *)DeeObject_Malloc(datasize);
 		}
-		if
-			unlikely(!result)
-		goto done_wbuf;
+		if unlikely(!result)
+			goto done_wbuf;
 		/* Construct a new structured type that is returned as result. */
 		DeeObject_Init(result, (DeeTypeObject *)orig_type);
 		memcpy(DeeStruct_Data(result), ret_mem,

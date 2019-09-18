@@ -106,14 +106,12 @@ asm_gpush_u32(uint32_t value) {
 	DREF DeeObject *obj;
 	int32_t cid;
 	obj = DeeInt_NewU32(value);
-	if
-		unlikely(!obj)
-	goto err;
+	if unlikely(!obj)
+		goto err;
 	cid = asm_newconst(obj);
 	Dee_Decref(obj);
-	if
-		unlikely(cid < 0)
-	goto err;
+	if unlikely(cid < 0)
+		goto err;
 	return asm_gpush_const((uint16_t)cid);
 err:
 	return -1;
@@ -124,14 +122,12 @@ asm_gpush_s32(int32_t value) {
 	DREF DeeObject *obj;
 	int32_t cid;
 	obj = DeeInt_NewS32(value);
-	if
-		unlikely(!obj)
-	goto err;
+	if unlikely(!obj)
+		goto err;
 	cid = asm_newconst(obj);
 	Dee_Decref(obj);
-	if
-		unlikely(cid < 0)
-	goto err;
+	if unlikely(cid < 0)
+		goto err;
 	return asm_gpush_const((uint16_t)cid);
 err:
 	return -1;
@@ -149,30 +145,25 @@ list_getrange_as_tuple(DeeListObject *__restrict self,
 	size_t i;
 again:
 	DeeList_LockRead(self);
-	if
-		unlikely(begin < 0)
-	begin += self->l_size;
-	if
-		unlikely(end < 0)
-	end += self->l_size;
-	if
-		unlikely((size_t)begin >= self->l_size ||
+	if unlikely(begin < 0)
+		begin += self->l_size;
+	if unlikely(end < 0)
+		end += self->l_size;
+	if unlikely((size_t)begin >= self->l_size ||
 		         (size_t)begin >= (size_t)end)
 	{
 		/* Empty list. */
 		DeeList_LockEndRead(self);
 		return DeeList_New();
 	}
-	if
-		unlikely((size_t)end > self->l_size)
-	end = (dssize_t)self->l_size;
+	if unlikely((size_t)end > self->l_size)
+		end = (dssize_t)self->l_size;
 	end -= begin;
 	ASSERT(end != 0);
 	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject, t_elem) +
 	                                                    (size_t)end * sizeof(DREF DeeObject *));
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		DeeList_LockEndRead(self);
 		if (Dee_CollectMemory(offsetof(DeeTupleObject, t_elem) +
 		                      (size_t)end * sizeof(DREF DeeObject *)))
@@ -283,14 +274,12 @@ push_tuple_parts:
 			DREF DeeObject *subrange;
 			subrange = tuple_getrange_i((DeeTupleObject *)value,
 			                            (dssize_t)start, (dssize_t)end);
-			if
-				unlikely(!subrange)
-			goto err;
+			if unlikely(!subrange)
+				goto err;
 			cid = asm_newconst(subrange);
 			Dee_Decref(subrange);
-			if
-				unlikely(cid < 0)
-			goto err;
+			if unlikely(cid < 0)
+				goto err;
 			if (asm_gpush_const((uint16_t)cid))
 				goto err;
 		}
@@ -326,14 +315,12 @@ push_tuple_parts:
 				} else {
 					subrange = tuple_getrange_i((DeeTupleObject *)value,
 					                            (dssize_t)start, (dssize_t)end);
-					if
-						unlikely(!subrange)
-					goto err;
+					if unlikely(!subrange)
+						goto err;
 					cid = asm_newconst(subrange);
 					Dee_Decref(subrange);
-					if
-						unlikely(cid < 0)
-					goto err;
+					if unlikely(cid < 0)
+						goto err;
 					if (asm_gpush_const((uint16_t)cid))
 						goto err;
 					if (asm_gconcat())
@@ -365,9 +352,8 @@ push_tuple_parts:
 				DeeList_LockEndRead(value);
 				temp = asm_gpush_constexpr(item);
 				Dee_Decref(item);
-				if
-					unlikely(temp)
-				goto err;
+				if unlikely(temp)
+					goto err;
 				DeeList_LockRead(value);
 				++pack_length, ++end;
 			}
@@ -399,9 +385,8 @@ push_tuple_parts:
 					DeeList_LockEndRead(value);
 					temp = asm_gpush_constexpr(subrange);
 					Dee_Decref(subrange);
-					if
-						unlikely(temp)
-					goto err;
+					if unlikely(temp)
+						goto err;
 					if (is_first_part) {
 						if (asm_gpack_list(1))
 							goto err;
@@ -414,14 +399,12 @@ push_tuple_parts:
 					DeeList_LockEndRead(value);
 					subrange = list_getrange_as_tuple((DeeListObject *)value,
 					                                  (dssize_t)start, (dssize_t)end);
-					if
-						unlikely(!subrange)
-					goto err;
+					if unlikely(!subrange)
+						goto err;
 					cid = asm_newconst(subrange);
 					Dee_Decref(subrange);
-					if
-						unlikely(cid < 0)
-					goto err;
+					if unlikely(cid < 0)
+						goto err;
 					if (asm_gpush_const((uint16_t)cid))
 						goto err;
 					if (is_first_part) {
@@ -485,9 +468,8 @@ check_dict_again:
 			ro_mask = (ro_mask << 1) | 1;
 		ro_mask = (ro_mask << 1) | 1;
 		rodict  = (DREF DeeRoDictObject *)DeeObject_TryCalloc(SIZEOF_RODICT(ro_mask));
-		if
-			unlikely(!rodict)
-		{
+		if unlikely(!rodict)
+			{
 			DeeDict_LockEndRead(value);
 			if (Dee_CollectMemory(SIZEOF_RODICT(ro_mask)))
 				goto check_dict_again;
@@ -514,9 +496,8 @@ check_dict_again:
 		 * -> Register it as a constant. */
 		cid = asm_newconst((DeeObject *)rodict);
 		Dee_Decref(rodict);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		/* Now push the ro-Dict, then cast it to a regular one. */
 		if (asm_gpush_const((uint16_t)cid))
 			goto err;
@@ -541,14 +522,12 @@ push_dict_parts:
 			DeeDict_LockEndRead(value);
 			/* Push the key & item. */
 			error = asm_gpush_constexpr(item_key);
-			if
-				likely(!error)
-			error = asm_gpush_constexpr(item_value);
+			if likely(!error)
+				error = asm_gpush_constexpr(item_value);
 			Dee_Decref(item_value);
 			Dee_Decref(item_key);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 			++num_items;
 			DeeDict_LockRead(value);
 		}
@@ -591,9 +570,8 @@ check_set_again:
 			ro_mask = (ro_mask << 1) | 1;
 		ro_mask = (ro_mask << 1) | 1;
 		roset   = (DREF DeeRoSetObject *)DeeObject_TryCalloc(SIZEOF_ROSET(ro_mask));
-		if
-			unlikely(!roset)
-		{
+		if unlikely(!roset)
+			{
 			DeeHashSet_LockEndRead(value);
 			if (Dee_CollectMemory(SIZEOF_ROSET(ro_mask)))
 				goto check_set_again;
@@ -617,9 +595,8 @@ check_set_again:
 		 * -> Register it as a constant. */
 		cid = asm_newconst((DeeObject *)roset);
 		Dee_Decref(roset);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		/* Now push the ro-set, then cast it to a regular one. */
 		if (asm_gpush_const((uint16_t)cid))
 			goto err;
@@ -643,9 +620,8 @@ push_set_parts:
 			/* Push the key & item. */
 			error = asm_gpush_constexpr(item_key);
 			Dee_Decref(item_key);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 			++num_items;
 			DeeHashSet_LockRead(value);
 		}
@@ -657,9 +633,8 @@ push_set_parts:
 push_constexpr:
 	/* Fallback: Push a constant variable  */
 	cid = asm_newconst(value);
-	if
-		unlikely(cid < 0)
-	goto err;
+	if unlikely(cid < 0)
+		goto err;
 	return asm_gpush_const((uint16_t)cid);
 err:
 	return -1;
@@ -720,23 +695,20 @@ check_function_class:
 			} else {
 				symid = asm_esymid(function);
 			}
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			if (asm_gcall_extern((uint16_t)symid, function->s_extern.e_symbol->ss_index, argc))
 				goto err;
 			goto done;
 
 		case SYMBOL_TYPE_GLOBAL:
-			if
-				unlikely((symid = asm_gsymid_for_read(function, warn_ast)) < 0)
-			goto err;
+			if unlikely((symid = asm_gsymid_for_read(function, warn_ast)) < 0)
+				goto err;
 			return asm_gcall_global((uint16_t)symid, argc);
 
 		case SYMBOL_TYPE_LOCAL:
-			if
-				unlikely((symid = asm_lsymid_for_read(function, warn_ast)) < 0)
-			goto err;
+			if unlikely((symid = asm_lsymid_for_read(function, warn_ast)) < 0)
+				goto err;
 			return asm_gcall_local((uint16_t)symid, argc);
 
 		case SYMBOL_TYPE_CATTR: {
@@ -782,9 +754,8 @@ check_function_class:
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err; /* args..., func, class_sym */
 					symid = asm_newmodule(DeeModule_GetDeemon());
-					if
-						unlikely(symid < 0)
-					goto err; /* Call as an InstanceMethod */
+					if unlikely(symid < 0)
+						goto err; /* Call as an InstanceMethod */
 					if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 						goto err; /* args..., class_sym.func */
 					              /* Fallthrough to invoke the InstanceMethod normally. */
@@ -795,15 +766,13 @@ check_function_class:
 			}
 
 			/* The attribute must be accessed as virtual. */
-			if
-				unlikely(asm_check_thiscall(function, warn_ast))
-			goto err;
+			if unlikely(asm_check_thiscall(function, warn_ast))
+				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 				symid2 = asm_newconst((DeeObject *)attr->ca_name);
-				if
-					unlikely(symid2 < 0)
-				goto err;
+				if unlikely(symid2 < 0)
+					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 				    !SYMBOL_MUST_REFERENCE_THIS(this_sym))
 					return asm_gcallattr_this_const((uint16_t)symid2, argc);
@@ -817,9 +786,8 @@ check_function_class:
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
 					    this_sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
@@ -849,9 +817,8 @@ check_function_class:
 					goto err;
 			} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr))
 					goto err;
 			} else {
@@ -875,9 +842,8 @@ check_function_class:
 			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 				/* Access to an instance member function (must produce a bound method). */
 				/* args..., func */
-				if
-					unlikely(argc != (uint8_t)-1)
-				{
+				if unlikely(argc != (uint8_t)-1)
+					{
 					if (asm_grrot(argc))
 						goto err; /* func, args... */
 					if (asm_gpush_symbol(this_sym, warn_ast))
@@ -889,9 +855,8 @@ check_function_class:
 				if (asm_gpush_symbol(this_sym, warn_ast))
 					goto err; /* args..., func, this */
 				symid = asm_newmodule(DeeModule_GetDeemon());
-				if
-					unlikely(symid < 0)
-				goto err; /* Call as an InstanceMethod */
+				if unlikely(symid < 0)
+					goto err; /* Call as an InstanceMethod */
 				if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 					goto err; /* args..., this.func */
 				              /* Fallthrough to invoke the InstanceMethod normally. */
@@ -907,9 +872,8 @@ got_attribute_value:
 		}
 	}
 	/* Fallback: Generate an extended call. */
-	if
-		unlikely(asm_gpush_symbol(function, warn_ast))
-	goto err;
+	if unlikely(asm_gpush_symbol(function, warn_ast))
+		goto err;
 	if (asm_grrot(argc + 1))
 		goto err;
 	if (asm_gcall(argc))
@@ -935,15 +899,13 @@ check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym)) {
 		if (current_assembler.a_flag & ASM_FARGREFS) {
 			symid = asm_asymid_r(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			return asm_gpush_arg((uint16_t)symid);
 		}
 		symid = asm_rsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_ref((uint16_t)symid);
 	}
 	switch (SYMBOL_TYPE(sym)) {
@@ -957,9 +919,8 @@ check_sym_class:
 
 	case SYMBOL_TYPE_EXTERN:
 		symid = asm_esymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
 			/* Generate an external call to the getter. */
 			return asm_gcall_extern((uint16_t)symid,
@@ -971,30 +932,26 @@ check_sym_class:
 
 	case SYMBOL_TYPE_GLOBAL:
 		symid = asm_gsymid_for_read(sym, warn_ast);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_global((uint16_t)symid);
 
 	case SYMBOL_TYPE_LOCAL:
 		symid = asm_lsymid_for_read(sym, warn_ast);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_local((uint16_t)symid);
 
 	case SYMBOL_TYPE_STATIC:
 		symid = asm_ssymid_for_read(sym, warn_ast);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_static((uint16_t)symid);
 
 	case SYMBOL_TYPE_STACK: {
 		uint16_t offset, absolute_stack_addr;
-		if
-			unlikely(!(sym->s_flag & SYMBOL_FALLOC))
-		{
+		if unlikely(!(sym->s_flag & SYMBOL_FALLOC))
+			{
 			if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED, sym))
 				goto err;
 			return asm_gpush_none();
@@ -1054,24 +1011,21 @@ check_sym_class:
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err; /* func, class_sym */
 				symid = asm_newmodule(DeeModule_GetDeemon());
-				if
-					unlikely(symid < 0)
-				goto err; /* Call as an InstanceMethod */
+				if unlikely(symid < 0)
+					goto err; /* Call as an InstanceMethod */
 				if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 					goto err; /* class_sym.func */
 			}
 			return 0;
 		}
 		/* The attribute must be accessed as virtual. */
-		if
-			unlikely(asm_check_thiscall(sym, warn_ast))
-		goto err;
+		if unlikely(asm_check_thiscall(sym, warn_ast))
+			goto err;
 		SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 			symid2 = asm_newconst((DeeObject *)attr->ca_name);
-			if
-				unlikely(symid2 < 0)
-			goto err;
+			if unlikely(symid2 < 0)
+				goto err;
 			if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 			    !SYMBOL_MUST_REFERENCE_THIS(this_sym))
 				return asm_ggetattr_this_const((uint16_t)symid2);
@@ -1083,9 +1037,8 @@ check_sym_class:
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
 				    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
 				    this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1111,9 +1064,8 @@ check_sym_class:
 				goto err;
 		} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 			symid = asm_rsymid(class_sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr))
 				goto err;
 		} else {
@@ -1134,9 +1086,8 @@ check_sym_class:
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 			/* Access to an instance member function (must produce a bound method). */
 			symid = asm_newmodule(DeeModule_GetDeemon());
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			if (asm_gpush_symbol(this_sym, warn_ast))
 				goto err;
 			return asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2);
@@ -1146,9 +1097,8 @@ check_sym_class:
 
 	case SYMBOL_TYPE_MODULE:
 		symid = asm_msymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_module((uint16_t)symid);
 
 	case SYMBOL_TYPE_GETSET:
@@ -1175,9 +1125,8 @@ check_sym_class:
 			if (asm_gpush_this())
 				goto err;
 			symid = asm_newmodule(DeeModule_GetDeemon());
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			return asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2);
 		}
 		return asm_gpush_this_function();
@@ -1251,9 +1200,8 @@ check_sym_class:
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_GLOBAL:
-		if
-			unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-		return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...' */
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+			return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...' */
 		ATTR_FALLTHROUGH
 	case SYMBOL_TYPE_LOCAL:
 	case SYMBOL_TYPE_STATIC:
@@ -1291,27 +1239,23 @@ check_sym_class:
 		ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY),
 		        "Cannot prefix property symbols");
 		symid = asm_esymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
 		return asm_pextern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
 	case SYMBOL_TYPE_GLOBAL:
 		symid = asm_gsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_pglobal((uint16_t)symid);
 
 	case SYMBOL_TYPE_LOCAL:
 		symid = asm_lsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
-		if
-			unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-		{
+		if unlikely(symid < 0)
+			goto err;
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+			{
 			if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 				goto err;
 			if (asm_gcheck_final_local_bound((uint16_t)symid))
@@ -1320,22 +1264,19 @@ check_sym_class:
 		return asm_plocal((uint16_t)symid);
 
 	case SYMBOL_TYPE_STATIC:
-		if
-			unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-		{
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+			{
 			if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
 		symid = asm_ssymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_pstatic((uint16_t)symid);
 
 	case SYMBOL_TYPE_STACK:
-		if
-			unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-		{
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+			{
 			if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
@@ -1380,31 +1321,27 @@ check_sym_class:
 		ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY),
 		        "Cannot prefix property symbols");
 		symid = asm_esymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
 		return asm_pextern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
 	case SYMBOL_TYPE_GLOBAL:
 		symid = asm_gsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_pglobal((uint16_t)symid);
 
 	case SYMBOL_TYPE_LOCAL:
 		symid = asm_lsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_plocal((uint16_t)symid);
 
 	case SYMBOL_TYPE_STATIC:
 		symid = asm_ssymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_pstatic((uint16_t)symid);
 
 	case SYMBOL_TYPE_STACK:
@@ -1488,9 +1425,8 @@ check_sym_class:
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
 			goto fallback;
 		symid = asm_esymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
 		return asm_gpush_bnd_extern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
@@ -1498,18 +1434,16 @@ check_sym_class:
 		if (!sym->s_nwrite)
 			return asm_gpush_false();
 		symid = asm_gsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_bnd_global((uint16_t)symid);
 
 	case SYMBOL_TYPE_LOCAL:
 		if (!sym->s_nwrite)
 			return asm_gpush_false();
 		symid = asm_lsymid(sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		return asm_gpush_bnd_local((uint16_t)symid);
 
 	case SYMBOL_TYPE_CATTR: {
@@ -1529,9 +1463,8 @@ test_class_attribute:
 			return asm_gboundattr();
 		}
 		/* The attribute must be accessed as virtual. */
-		if
-			unlikely(asm_check_thiscall(sym, warn_ast))
-		goto err;
+		if unlikely(asm_check_thiscall(sym, warn_ast))
+			goto err;
 		SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))
 #ifndef CONFIG_INLINE_GETSET_BINDING_CHECKER
@@ -1552,16 +1485,14 @@ test_class_attribute:
 			struct asm_sym *guard_begin, *guard_end;
 			struct asm_exc *exception_handler;
 			guard_begin = asm_newsym();
-			if
-				unlikely(!guard_begin)
-			goto err;
+			if unlikely(!guard_begin)
+				goto err;
 			asm_defsym(guard_begin);
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
 					    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
 					    this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1589,9 +1520,8 @@ test_class_attribute:
 					goto err;
 			} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET))
 					goto err;
 			} else {
@@ -1613,9 +1543,8 @@ test_class_attribute:
 			}
 got_attribute_value:
 			guard_end = asm_newsym();
-			if
-				unlikely(!guard_end)
-			goto err;
+			if unlikely(!guard_end)
+				goto err;
 			asm_defsym(guard_end);
 			if (asm_gpop())
 				goto err; /* The return value of the getter. */
@@ -1624,21 +1553,18 @@ got_attribute_value:
 			asm_decsp();
 			/* define the exception handler cleanup code. */
 			exception_handler = asm_newexc();
-			if
-				unlikely(!exception_handler)
-			goto err;
+			if unlikely(!exception_handler)
+				goto err;
 			exception_handler->ex_start = guard_begin;
 			exception_handler->ex_end   = guard_end;
 			++guard_begin->as_used;
 			++guard_end->as_used;
 			guard_begin = asm_newsym();
-			if
-				unlikely(!guard_begin)
-			goto err;
+			if unlikely(!guard_begin)
+				goto err;
 			guard_end = asm_newsym();
-			if
-				unlikely(!guard_end)
-			goto err;
+			if unlikely(!guard_end)
+				goto err;
 			/* Setup an exception handler for dealing with unbound-attribute errors. */
 			exception_handler->ex_addr  = guard_begin;
 			exception_handler->ex_flags = EXCEPTION_HANDLER_FHANDLED;
@@ -1678,9 +1604,8 @@ got_attribute_value:
 				goto err;
 		} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 			symid = asm_rsymid(class_sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			if (asm_gboundmember_this_r((uint16_t)symid, attr->ca_addr))
 				goto err;
 		} else {
@@ -1719,33 +1644,29 @@ check_sym_class:
 			goto check_sym_class;
 
 		case SYMBOL_TYPE_GLOBAL:
-			if
-				unlikely(sym->s_flag & SYMBOL_FFINAL)
-			{
+			if unlikely(sym->s_flag & SYMBOL_FFINAL)
+				{
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
 			if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
 				return 0;
 			symid = asm_gsymid(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			return asm_gdel_global((uint16_t)symid);
 
 		case SYMBOL_TYPE_LOCAL:
-			if
-				unlikely(sym->s_flag & SYMBOL_FFINAL)
-			{
+			if unlikely(sym->s_flag & SYMBOL_FFINAL)
+				{
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
 			if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
 				return 0;
 			symid = asm_lsymid(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			return asm_gdel_local((uint16_t)symid);
 
 		case SYMBOL_TYPE_EXTERN: {
@@ -1753,9 +1674,8 @@ check_sym_class:
 			int32_t mid;
 			modsym = SYMBOL_EXTERN_SYMBOL(sym);
 			mid    = asm_esymid(sym);
-			if
-				unlikely(mid < 0)
-			goto err;
+			if unlikely(mid < 0)
+				goto err;
 			if (modsym->ss_flags & MODSYM_FPROPERTY) {
 				/* Call an external property:
 				 * >> call    extern <mid>:<gid + MODULE_PROPERTY_DEL>,#0
@@ -1772,14 +1692,12 @@ check_sym_class:
 				int32_t cid;
 				DREF DeeStringObject *name_obj;
 				name_obj = module_symbol_getnameobj(modsym);
-				if
-					unlikely(!name_obj)
-				goto err;
+				if unlikely(!name_obj)
+					goto err;
 				cid = asm_newconst((DeeObject *)name_obj);
 				Dee_Decref(name_obj);
-				if
-					unlikely(cid < 0)
-				goto err;
+				if unlikely(cid < 0)
+					goto err;
 				if (asm_gpush_module((uint16_t)mid))
 					goto err;
 				return asm_gdelattr_const((uint16_t)cid);
@@ -1787,9 +1705,8 @@ check_sym_class:
 		}	break;
 
 		case SYMBOL_TYPE_STACK:
-			if
-				unlikely(sym->s_flag & SYMBOL_FFINAL)
-			{
+			if unlikely(sym->s_flag & SYMBOL_FFINAL)
+				{
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
@@ -1854,24 +1771,21 @@ del_class_attribute:
 				 * encode this as a delattr, which, while not static, still
 				 * does exactly what we want it to do! */
 				symid = asm_newconst((DeeObject *)attr->ca_name);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err;
 				return asm_gdelattr_const((uint16_t)symid);
 			}
 			/* The attribute must be accessed as virtual. */
-			if
-				unlikely(asm_check_thiscall(sym, warn_ast))
-			goto err;
+			if unlikely(asm_check_thiscall(sym, warn_ast))
+				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 				int32_t symid2;
 				symid2 = asm_newconst((DeeObject *)attr->ca_name);
-				if
-					unlikely(symid2 < 0)
-				goto err;
+				if unlikely(symid2 < 0)
+					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 				    !SYMBOL_MUST_REFERENCE_THIS(this_sym))
 					return asm_gdelattr_this_const((uint16_t)symid2);
@@ -1885,9 +1799,8 @@ del_class_attribute:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if
-							unlikely(symid < 0)
-						goto err;
+						if unlikely(symid < 0)
+							goto err;
 						if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
 						    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
 						    this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -1915,9 +1828,8 @@ del_class_attribute:
 						goto err;
 				} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_DEL))
 						goto err;
 				} else {
@@ -1951,9 +1863,8 @@ pop_unused_result:
 					goto err;
 			} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_gdelmember_this_r((uint16_t)symid, attr->ca_addr))
 					goto err;
 			} else {
@@ -2007,9 +1918,8 @@ check_sym_class:
 				return asm_gpop(); /* Fallback: Simply discard the value. */
 			}
 			symid = asm_esymid(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
 				/* Invoke the external setter callback. */
 				return asm_gcall_extern((uint16_t)symid,
@@ -2020,12 +1930,10 @@ check_sym_class:
 
 		case SYMBOL_TYPE_GLOBAL:
 			symid = asm_gsymid(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
-			if
-				unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+			if unlikely(symid < 0)
+				goto err;
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+				{
 				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
 				symid = asm_newconst_string(sym->s_name->k_name,
@@ -2041,12 +1949,10 @@ check_sym_class:
 
 		case SYMBOL_TYPE_LOCAL:
 			symid = asm_lsymid(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
-			if
-				unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+			if unlikely(symid < 0)
+				goto err;
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+				{
 				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
 				if (asm_gcheck_final_local_bound((uint16_t)symid))
@@ -2056,12 +1962,10 @@ check_sym_class:
 
 		case SYMBOL_TYPE_STATIC:
 			symid = asm_ssymid(sym);
-			if
-				unlikely(symid < 0)
-			goto err;
-			if
-				unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+			if unlikely(symid < 0)
+				goto err;
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+				{
 				if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 					goto err;
 			}
@@ -2069,15 +1973,13 @@ check_sym_class:
 
 		case SYMBOL_TYPE_STACK:
 			ASSERT(current_assembler.a_stackcur);
-			if
-				unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			{
+			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+				{
 				if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 					goto err;
 			}
-			if
-				unlikely(!(sym->s_flag & SYMBOL_FALLOC))
-			{
+			if unlikely(!(sym->s_flag & SYMBOL_FALLOC))
+				{
 				/* This is where the magic of lazy stack initialization happens! */
 				if (current_assembler.a_flag & ASM_FSTACKDISP) {
 					if (current_assembler.a_scope != SYMBOL_SCOPE(sym)) {
@@ -2192,15 +2094,13 @@ set_class_attribute:
 				return asm_gpop(); /* - */
 			}
 			/* The attribute must be accessed as virtual. */
-			if
-				unlikely(asm_check_thiscall(sym, warn_ast))
-			goto err;
+			if unlikely(asm_check_thiscall(sym, warn_ast))
+				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 				symid = asm_newconst((DeeObject *)attr->ca_name);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 				    !SYMBOL_MUST_REFERENCE_THIS(this_sym))
 					return asm_gsetattr_this_const((uint16_t)symid);
@@ -2216,9 +2116,8 @@ set_class_attribute:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if
-							unlikely(symid < 0)
-						goto err;
+						if unlikely(symid < 0)
+							goto err;
 						if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
 						    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
 						    this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -2246,9 +2145,8 @@ set_class_attribute:
 						goto err;
 				} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET))
 						goto err;
 				} else {
@@ -2289,9 +2187,8 @@ pop_unused_result:
 					goto err; /* - */
 			} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_gsetmember_this_r((uint16_t)symid, attr->ca_addr))
 					goto err;
 			} else {
@@ -2403,13 +2300,11 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	if (asm_gpush_bnd_local(lid))
 		goto err;
 	within_cold = asm_newsym();
-	if
-		unlikely(!within_cold)
-	goto err;
+	if unlikely(!within_cold)
+		goto err;
 	after_cold = asm_newsym();
-	if
-		unlikely(!after_cold)
-	goto err;
+	if unlikely(!after_cold)
+		goto err;
 	if (asm_gjmp(ASM_JT, within_cold))
 		goto err;
 	asm_decsp(); /* Popped by `ASM_JT' */
@@ -2421,20 +2316,17 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	asm_defsym(within_cold);
 	/* We get here only when the local was already bound. */
 	constlid = DeeInt_NewU16(lid);
-	if
-		unlikely(!constlid)
-	goto err;
+	if unlikely(!constlid)
+		goto err;
 	temp_id = asm_newconst(constlid);
 	Dee_Decref(constlid);
-	if
-		unlikely(temp_id < 0)
-	goto err;
+	if unlikely(temp_id < 0)
+		goto err;
 	if (asm_gpush_const(temp_id))
 		goto err; /* Push the ID of the faulting local */
 	temp_id = asm_newmodule(DeeModule_GetDeemon());
-	if
-		unlikely(temp_id < 0)
-	goto err;
+	if unlikely(temp_id < 0)
+		goto err;
 	/* Invoke `__roloc from deemon' and let it decide what to do about the error. */
 	if (asm_gcall_extern((uint16_t)temp_id, id___roloc, 1))
 		goto err;

@@ -63,13 +63,11 @@ typedef struct {
 PRIVATE int DCALL
 catiterator_ctor(CatIterator *__restrict self) {
 	self->c_cat = (DREF Cat *)DeeSeq_Concat(Dee_EmptySeq, Dee_EmptySeq);
-	if
-		unlikely(!self->c_cat)
-	goto err;
+	if unlikely(!self->c_cat)
+		goto err;
 	self->c_curr = DeeObject_IterSelf(Dee_EmptySeq);
-	if
-		unlikely(!self->c_curr)
-	goto err_cat;
+	if unlikely(!self->c_curr)
+		goto err_cat;
 	self->c_pseq = DeeTuple_ELEM(self->c_cat);
 	rwlock_init(&self->c_lock);
 	return 0;
@@ -90,9 +88,8 @@ catiterator_copy(CatIterator *__restrict self,
 	rwlock_endread(&other->c_lock);
 	self->c_curr = DeeObject_Copy(iterator);
 	Dee_Decref(iterator);
-	if
-		unlikely(!self->c_curr)
-	goto err;
+	if unlikely(!self->c_curr)
+		goto err;
 	self->c_cat = other->c_cat;
 	Dee_Incref(self->c_cat);
 	rwlock_init(&self->c_lock);
@@ -113,13 +110,11 @@ catiterator_deep(CatIterator *__restrict self,
 	rwlock_endread(&other->c_lock);
 	self->c_curr = DeeObject_DeepCopy(iterator);
 	Dee_Decref(iterator);
-	if
-		unlikely(!self->c_curr)
-	goto err;
+	if unlikely(!self->c_curr)
+		goto err;
 	self->c_cat = (DREF Cat *)DeeObject_DeepCopy((DeeObject *)other->c_cat);
-	if
-		unlikely(!self->c_cat)
-	goto err_curr;
+	if unlikely(!self->c_cat)
+		goto err_curr;
 	self->c_pseq = DeeTuple_ELEM(self->c_cat) + sequence_index;
 	rwlock_init(&self->c_lock);
 	return 0;
@@ -138,9 +133,8 @@ catiterator_init(CatIterator *__restrict self,
 		goto err;
 	self->c_pseq = DeeTuple_ELEM(self->c_cat);
 	self->c_curr = DeeObject_IterSelf(self->c_pseq[0]);
-	if
-		unlikely(!self->c_curr)
-	goto err;
+	if unlikely(!self->c_curr)
+		goto err;
 	Dee_Incref(self->c_cat);
 	rwlock_init(&self->c_lock);
 	return 0;
@@ -264,9 +258,8 @@ do_iter:
 	Dee_Decref(iter);
 	if (!ITER_ISOK(result)) {
 		DeeObject *const *pnext;
-		if
-			unlikely(!result)
-		return NULL;
+		if unlikely(!result)
+			return NULL;
 		rwlock_write(&self->c_lock);
 		/* Check if the iterator has changed. */
 		if (self->c_curr != iter) {
@@ -277,8 +270,7 @@ do_iter:
 		pnext = self->c_pseq + 1;
 		ASSERT(pnext > DeeTuple_ELEM(self->c_cat));
 		ASSERT(pnext <= DeeTuple_ELEM(self->c_cat) + DeeTuple_SIZE(self->c_cat));
-		if
-			unlikely(pnext == (DeeTuple_ELEM(self->c_cat) +
+		if unlikely(pnext == (DeeTuple_ELEM(self->c_cat) +
 			                   DeeTuple_SIZE(self->c_cat)))
 		{
 			/* Fully exhausted. */
@@ -288,9 +280,8 @@ do_iter:
 		rwlock_endwrite(&self->c_lock);
 		/* Create an iterator for this sequence. */
 		iter = DeeObject_IterSelf(*pnext);
-		if
-			unlikely(!iter)
-		return NULL;
+		if unlikely(!iter)
+			return NULL;
 		rwlock_write(&self->c_lock);
 		COMPILER_READ_BARRIER();
 		/* Check if the sequence was changed by someone else. */
@@ -420,14 +411,12 @@ PRIVATE DREF CatIterator *DCALL
 cat_iter(Cat *__restrict self) {
 	DREF CatIterator *result;
 	result = DeeObject_MALLOC(CatIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	ASSERT(DeeTuple_SIZE(self) != 0);
 	result->c_curr = DeeObject_IterSelf(DeeTuple_GET(self, 0));
-	if
-		unlikely(!result->c_curr)
-	goto err_r;
+	if unlikely(!result->c_curr)
+		goto err_r;
 	result->c_pseq = DeeTuple_ELEM(self);
 	result->c_cat  = self;
 	Dee_Incref(self);
@@ -469,9 +458,8 @@ cat_nsi_getsize(Cat *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		size_t temp = DeeObject_Size(DeeTuple_GET(self, i));
-		if
-			unlikely(temp == (size_t)-1)
-		return (size_t)-1;
+		if unlikely(temp == (size_t)-1)
+			return (size_t)-1;
 		if (OVERFLOW_UADD(result, temp, &result)) {
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
 			return (size_t)-1;
@@ -484,9 +472,8 @@ cat_nsi_getsize(Cat *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 cat_size(Cat *__restrict self) {
 	size_t result = cat_nsi_getsize(self);
-	if
-		unlikely(result == (size_t)-1)
-	return NULL;
+	if unlikely(result == (size_t)-1)
+		return NULL;
 	return DeeInt_NewSize(result);
 }
 
@@ -498,14 +485,12 @@ cat_contains(Cat *__restrict self,
 		DREF DeeObject *result;
 		int error;
 		result = DeeObject_ContainsObject(DeeTuple_GET(self, i), search_item);
-		if
-			unlikely(!result)
-		return NULL;
+		if unlikely(!result)
+			return NULL;
 		error = DeeObject_Bool(result);
 		if (error != 0) {
-			if
-				unlikely(error < 0)
-			Dee_Clear(result);
+			if unlikely(error < 0)
+				Dee_Clear(result);
 			return result;
 		}
 		Dee_Decref(result);
@@ -546,22 +531,19 @@ cat_nsi_find(Cat *__restrict self,
 	size_t temp, i, offset = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		temp = DeeSeq_Find(DeeTuple_GET(self, i), start, end, keyed_search_item, key);
-		if
-			unlikely(temp == (size_t)-2)
-		goto err;
+		if unlikely(temp == (size_t)-2)
+			goto err;
 		if (temp != (size_t)-1) {
 			if (OVERFLOW_UADD(offset, temp, &offset))
 				goto index_overflow;
-			if
-				unlikely(offset == (size_t)-1 ||
+			if unlikely(offset == (size_t)-1 ||
 				         offset == (size_t)-2)
 			goto index_overflow;
 			return offset;
 		}
 		temp = DeeObject_Size(DeeTuple_GET(self, i));
-		if
-			unlikely(temp == (size_t)-1)
-		goto err;
+		if unlikely(temp == (size_t)-1)
+			goto err;
 		if (temp >= end)
 			break;
 		start = 0;
@@ -584,9 +566,8 @@ cat_nsi_rfind(Cat *__restrict self,
 	size_t start_offset = 0, temp;
 	size_t *seq_lengths, i;
 	size_t effective_length;
-	if
-		unlikely(end <= start)
-	goto done;
+	if unlikely(end <= start)
+		goto done;
 	seq_max = DeeTuple_SIZE(self);
 	if (start != 0) {
 		/* Find the first sequence which `start' is apart of. */
@@ -594,9 +575,8 @@ cat_nsi_rfind(Cat *__restrict self,
 			if (seq_min >= seq_max)
 				goto done;
 			temp = DeeObject_Size(DeeTuple_GET(self, seq_min));
-			if
-				unlikely(temp == (size_t)-1)
-			goto err;
+			if unlikely(temp == (size_t)-1)
+				goto err;
 			if (temp > start)
 				break;
 			start -= temp;
@@ -611,17 +591,15 @@ cat_nsi_rfind(Cat *__restrict self,
 			goto check_final_temp_from_first;
 		}
 		seq_lengths = (size_t *)Dee_AMalloc((seq_max - seq_min) * sizeof(size_t));
-		if
-			unlikely(!seq_lengths)
-		goto err;
+		if unlikely(!seq_lengths)
+			goto err;
 		seq_lengths[0]   = temp; /* Remember the length of the first sequence. */
 		i                = seq_min + 1;
 		effective_length = temp;
 	} else {
 		seq_lengths = (size_t *)Dee_AMalloc(seq_max * sizeof(size_t));
-		if
-			unlikely(!seq_lengths)
-		goto err;
+		if unlikely(!seq_lengths)
+			goto err;
 		i                = seq_min;
 		effective_length = 0;
 	}
@@ -632,9 +610,8 @@ cat_nsi_rfind(Cat *__restrict self,
 			break;
 		}
 		temp = DeeObject_Size(DeeTuple_GET(self, i));
-		if
-			unlikely(temp == (size_t)-1)
-		goto err_seqlen;
+		if unlikely(temp == (size_t)-1)
+			goto err_seqlen;
 		effective_length += temp;
 		seq_lengths[i - seq_min] = effective_length;
 	}
@@ -648,9 +625,8 @@ cat_nsi_rfind(Cat *__restrict self,
 		temp = DeeSeq_RFind(DeeTuple_GET(self, seq_max - 1), 0, (size_t)-1, keyed_search_item, key);
 	}
 check_temp_for_errors:
-	if
-		unlikely(temp == (size_t)-2)
-	goto err;
+	if unlikely(temp == (size_t)-2)
+		goto err;
 	if (temp != (size_t)-1) {
 		Dee_AFree(seq_lengths);
 		if (OVERFLOW_UADD(temp, start_offset, &temp))
@@ -675,9 +651,8 @@ check_temp_for_errors:
 	temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min),
 	                    start, (size_t)-1, keyed_search_item, key);
 check_final_temp_from_first:
-	if
-		likely(temp != (size_t)-2)
-	{
+	if likely(temp != (size_t)-2)
+		{
 		if (temp != (size_t)-1) {
 add_start_offset:
 			if (OVERFLOW_UADD(temp, start_offset, &temp))
@@ -766,9 +741,8 @@ PRIVATE DREF Cat *DCALL
 cat_deepcopy(Cat *__restrict self) {
 	DREF Cat *result;
 	result = (DREF Cat *)tuple_deepcopy((Tuple *)self);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		Dee_Incref(&SeqConcat_Type);
 		result->ob_type = &SeqConcat_Type;
 		Dee_DecrefNokill(&DeeTuple_Type);
@@ -834,9 +808,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
 		if (DeeObject_InstanceOf(other, &SeqConcat_Type)) {
 			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self) +
 			                                                          DeeTuple_SIZE(other));
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			dst = DeeTuple_ELEM(result);
 			end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
 			for (; iter != end; ++iter, ++dst) {
@@ -852,9 +825,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
 			}
 		} else {
 			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self) + 1);
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			dst = DeeTuple_ELEM(result);
 			end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
 			for (; iter != end; ++iter, ++dst) {
@@ -867,9 +839,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
 		}
 	} else if (DeeObject_InstanceOf(other, &SeqConcat_Type)) {
 		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(other));
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		dst    = DeeTuple_ELEM(result);
 		*dst++ = self;
 		Dee_Incref(self);
@@ -881,9 +852,8 @@ DeeSeq_Concat(DeeObject *__restrict self,
 		}
 	} else {
 		result = (DREF DeeTupleObject *)DeeTuple_Pack(2, self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 	}
 	/* Fix the resulting object type. */
 	ASSERT(result->ob_type == &DeeTuple_Type);

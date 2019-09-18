@@ -63,12 +63,10 @@ DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 INTERN int DCALL
 set_astloc_from_obj(DeeObject *obj,
                     struct ast *__restrict result) {
-	if
-		unlikely(get_astloc_from_obj(obj, &result->a_ddi))
-	return -1;
-	if
-		likely(result->a_ddi.l_file)
-	TPPFile_Incref(result->a_ddi.l_file);
+	if unlikely(get_astloc_from_obj(obj, &result->a_ddi))
+		return -1;
+	if likely(result->a_ddi.l_file)
+		TPPFile_Incref(result->a_ddi.l_file);
 	return 0;
 }
 
@@ -101,9 +99,8 @@ get_astloc_from_obj(DeeObject *obj,
 			err_invalid_file_compiler((DeeCompilerItemObject *)args[0]);
 			goto err_args_0;
 		}
-		if
-			unlikely(!((DeeCompilerItemObject *)args[0])->ci_value)
-		{
+		if unlikely(!((DeeCompilerItemObject *)args[0])->ci_value)
+			{
 			err_compiler_item_deleted((DeeCompilerItemObject *)args[0]);
 			goto err_args_0;
 		}
@@ -241,9 +238,8 @@ scope_contains(DeeCompilerScopeObject *__restrict self,
 		                      ((DeeCompilerSymbolObject *)elem)->ci_value->s_scope == self->ci_value));
 	} else if (DeeString_Check(elem)) {
 		char *utf8 = DeeString_AsUtf8(elem);
-		if
-			unlikely(!utf8)
-		{
+		if unlikely(!utf8)
+			{
 			result = NULL;
 			goto done;
 		}
@@ -268,9 +264,8 @@ scope_getitem(DeeCompilerScopeObject *__restrict self,
 		return NULL;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
-	if
-		unlikely(!sym)
-	{
+	if unlikely(!sym)
+		{
 		err_item_not_found((DeeObject *)self, elem);
 		result = NULL;
 	} else {
@@ -291,9 +286,8 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 		return -1;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
-	if
-		unlikely(!sym)
-	{
+	if unlikely(!sym)
+		{
 		err_item_not_found((DeeObject *)self, elem);
 		result = -1;
 	} else {

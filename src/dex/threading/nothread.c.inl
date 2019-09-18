@@ -81,9 +81,8 @@ sema_enter(Semaphore *__restrict self) {
 PRIVATE int DCALL
 sema_leave(Semaphore *__restrict self, size_t count) {
 #ifdef CONFIG_NO_THREADS
-	if
-		unlikely((self->sem_count + count) < self->sem_count)
-	{
+	if unlikely((self->sem_count + count) < self->sem_count)
+		{
 		return DeeError_Throwf(&DeeError_IntegerOverflow,
 		                       "Integer overflow when posting to semaphore");
 	}
@@ -93,9 +92,8 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 	size_t old_count;
 	for (;;) {
 		old_count = ATOMIC_READ(self->sem_count);
-		if
-			unlikely((old_count + count) < old_count)
-		{
+		if unlikely((old_count + count) < old_count)
+			{
 			return DeeError_Throwf(&DeeError_IntegerOverflow,
 			                       "Integer overflow when posting to semaphore");
 		}

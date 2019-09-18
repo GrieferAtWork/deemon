@@ -197,9 +197,8 @@ do_alloc:
 	                                                  file,
 	                                                  line);
 #endif /* !NDEBUG */
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 init_result:
 	DeeObject_Init(result, &DeeInt_Type);
 	result->ob_size = n_digits;
@@ -254,9 +253,8 @@ DeeInt_NewSleb(uint8_t **__restrict preader) {
 		++num_digits;
 	num_digits = ((num_digits * 7 + (DIGIT_BITS - 1)) / DIGIT_BITS);
 	result     = DeeInt_Alloc(num_digits);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Read the integer. */
 	reader   = *preader;
 	dst      = result->ob_digit;
@@ -319,9 +317,8 @@ DeeInt_NewUleb(uint8_t **__restrict preader) {
 		++num_digits;
 	num_digits = ((num_digits * 7 + (DIGIT_BITS - 1)) / DIGIT_BITS);
 	result     = DeeInt_Alloc(num_digits);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Read the integer. */
 	reader   = *preader;
 	num_bits = 0, temp = 0;
@@ -506,9 +503,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 		abs_val = (uint8_t)0 - (uint8_t)val;
 	}
 	result = DeeInt_Alloc(1);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		result->ob_size     = sign;
 		result->ob_digit[0] = (digit)abs_val;
 	}
@@ -518,9 +514,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 PUBLIC DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
 	DREF DeeIntObject *result;
 	result = DeeInt_Alloc(1);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		result->ob_size     = 1;
 		result->ob_digit[0] = (digit)val;
 	}
@@ -533,9 +528,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 	DREF DeeIntObject *result;
 #if DIGIT_BITS >= 16
 	result = DeeInt_Alloc(1);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		result->ob_size     = 1;
 		result->ob_digit[0] = (digit)val;
 	}
@@ -545,17 +539,15 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 			return_reference_((DeeObject *)&DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = 1;
 			result->ob_digit[0] = (digit)val;
 		}
 	} else {
 		result = DeeInt_Alloc(2);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = 2;
 			result->ob_digit[0] = val & DIGIT_MASK;
 			result->ob_digit[1] = val >> DIGIT_BITS;
@@ -576,9 +568,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
 			return_reference_((DeeObject *)&DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = 1;
 			result->ob_digit[0] = (digit)val;
 		}
@@ -588,9 +579,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
 			;
 		ASSERT(req_digits > 0);
 		result = DeeInt_Alloc(req_digits);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size = req_digits;
 			for (req_digits = 0; val;
 			     val >>= DIGIT_BITS, ++req_digits)
@@ -617,9 +607,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
 			return_reference_((DeeObject *)&DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = 1;
 			result->ob_digit[0] = (digit)val;
 		}
@@ -631,9 +620,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
 			;
 		ASSERT(req_digits > 0);
 		result = DeeInt_Alloc(req_digits);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size = req_digits;
 			for (req_digits = 0; val;
 			     val >>= DIGIT_BITS, ++req_digits)
@@ -653,9 +641,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 	}
 #if DIGIT_BITS >= 16
 	result = DeeInt_Alloc(1);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		result->ob_size     = sign;
 		result->ob_digit[0] = (digit)abs_val;
 	}
@@ -665,17 +652,15 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 			return_reference_((DeeObject *)&DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = sign;
 			result->ob_digit[0] = (digit)abs_val;
 		}
 	} else {
 		result = DeeInt_Alloc(2);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = 2 * sign;
 			result->ob_digit[0] = abs_val & DIGIT_MASK;
 			result->ob_digit[1] = abs_val >> DIGIT_BITS;
@@ -701,9 +686,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
 			return_reference_((DeeObject *)&DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = sign;
 			result->ob_digit[0] = (digit)abs_val;
 		}
@@ -713,9 +697,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
 			;
 		ASSERT(req_digits > 0);
 		result = DeeInt_Alloc(req_digits);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size = req_digits * sign;
 			for (req_digits = 0; abs_val;
 			     abs_val >>= DIGIT_BITS, ++req_digits)
@@ -748,9 +731,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 			return_reference_((DeeObject *)&DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size     = sign;
 			result->ob_digit[0] = (digit)abs_val;
 		}
@@ -762,9 +744,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 			;
 		ASSERT(req_digits > 0);
 		result = DeeInt_Alloc(req_digits);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			result->ob_size = req_digits * sign;
 			for (req_digits = 0; abs_val;
 			     abs_val >>= DIGIT_BITS, ++req_digits)
@@ -791,9 +772,8 @@ DeeInt_NewU128(duint128_t val) {
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		result->ob_size = req_digits;
 		for (req_digits = 0; !DSINT128_ISNUL(val);
 		     DUINT128_SHR(val, DIGIT_BITS), ++req_digits) {
@@ -827,9 +807,8 @@ DeeInt_NewS128(dint128_t val) {
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		result->ob_size = req_digits * sign;
 		for (req_digits = 0; !DSINT128_ISNUL(abs_val);
 		     DUINT128_SHR(abs_val, DIGIT_BITS), ++req_digits) {
@@ -961,9 +940,8 @@ parse_ch:
 		}
 		if (c) {
 			ASSERT(c < DIGIT_BASE);
-			if
-				likely((size_t)result->ob_size < size_z)
-			{
+			if likely((size_t)result->ob_size < size_z)
+				{
 				*pz = (digit)c;
 				++result->ob_size;
 			} else {
@@ -1056,19 +1034,16 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			radix = 10;
 		}
 	}
-	if
-		unlikely(begin == end)
-	goto invalid;
+	if unlikely(begin == end)
+		goto invalid;
 	ASSERT(radix >= 2);
 	if ((radix & (radix - 1)) != 0) {
 		result = int_from_nonbinary_string(begin, end, radix, radix_and_flags);
 		/* Check for errors. */
-		if
-			unlikely(!ITER_ISOK(result))
-		{
-			if
-				unlikely(result == (DREF DeeIntObject *)ITER_DONE)
-			goto invalid;
+		if unlikely(!ITER_ISOK(result))
+			{
+			if unlikely(result == (DREF DeeIntObject *)ITER_DONE)
+				goto invalid;
 			goto done;
 		}
 	} else {
@@ -1078,9 +1053,8 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		{
 			size_t num_digits = 1 + ((len * bits_per_digit) / DIGIT_BITS);
 			result            = DeeInt_Alloc(num_digits);
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			memset(result->ob_digit, 0, num_digits * sizeof(digit));
 		}
 		dst    = result->ob_digit;
@@ -1117,9 +1091,8 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 				goto invalid_r;
 			}
 			/* Got the digit. */
-			if
-				unlikely(dig >= radix)
-			goto invalid_r;
+			if unlikely(dig >= radix)
+				goto invalid_r;
 			/* Add the digit to out number buffer. */
 			number |= (twodigits)dig << num_bits;
 			num_bits += bits_per_digit;
@@ -1214,19 +1187,16 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			radix = 10;
 		}
 	}
-	if
-		unlikely(begin == end)
-	goto invalid;
+	if unlikely(begin == end)
+		goto invalid;
 	ASSERT(radix >= 2);
 	if ((radix & (radix - 1)) != 0) {
 		result = int_from_nonbinary_string(begin, end, radix, radix_and_flags);
 		/* Check for errors. */
-		if
-			unlikely(!ITER_ISOK(result))
-		{
-			if
-				unlikely(result == (DREF DeeIntObject *)ITER_DONE)
-			goto invalid;
+		if unlikely(!ITER_ISOK(result))
+			{
+			if unlikely(result == (DREF DeeIntObject *)ITER_DONE)
+				goto invalid;
 			goto done;
 		}
 	} else {
@@ -1236,9 +1206,8 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 		{
 			size_t num_digits = 1 + ((len * bits_per_digit) / DIGIT_BITS);
 			result            = DeeInt_Alloc(num_digits);
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			memset(result->ob_digit, 0, num_digits * sizeof(digit));
 		}
 		dst    = result->ob_digit;
@@ -1273,9 +1242,8 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				goto invalid_r;
 			}
 			/* Got the digit. */
-			if
-				unlikely(dig >= radix)
-			goto invalid_r;
+			if unlikely(dig >= radix)
+				goto invalid_r;
 			/* Add the digit to out number buffer. */
 			number |= (twodigits)dig << num_bits;
 			num_bits += bits_per_digit;
@@ -1341,8 +1309,7 @@ PUBLIC int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
 		}
 		break;
 	}
-	if
-		unlikely(negative &&
+	if unlikely(negative &&
 		         !(radix_and_flags & DEEATOI_STRING_FSIGNED))
 	{
 		/* Negative value when unsigned was needed. */
@@ -1386,9 +1353,8 @@ PUBLIC int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
 			radix = 10;
 		}
 	}
-	if
-		unlikely(begin == end)
-	goto err_invalid;
+	if unlikely(begin == end)
+		goto err_invalid;
 	ASSERT(radix >= 2);
 	/* Parse the integer starting with the least significant bits. */
 	result = 0;
@@ -1423,9 +1389,8 @@ PUBLIC int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str,
 			goto err_invalid;
 		}
 		/* Got the digit. */
-		if
-			unlikely(dig >= radix)
-		goto err_invalid;
+		if unlikely(dig >= radix)
+			goto err_invalid;
 		/* Add the digit to out number buffer. */
 		if (OVERFLOW_UMUL(result, radix, &result))
 			goto err_overflow;
@@ -1459,16 +1424,14 @@ PUBLIC int (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str,
 	int result = Dee_Atoi64(str, len, radix_and_flags, &val64);
 	if (result == 0) {
 		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
-			if
-				unlikely(val64 < INT32_MIN || val64 > INT32_MAX)
-			{
+			if unlikely(val64 < INT32_MIN || val64 > INT32_MAX)
+				{
 				err_integer_overflow_i(32, val64 < 0);
 				goto err;
 			}
 		} else {
-			if
-				unlikely((uint64_t)val64 > UINT32_MAX)
-			{
+			if unlikely((uint64_t)val64 > UINT32_MAX)
+				{
 				err_integer_overflow_i(32, true);
 				goto err;
 			}
@@ -1487,16 +1450,14 @@ PUBLIC int (DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str,
 	int result = Dee_Atoi64(str, len, radix_and_flags, &val64);
 	if (result == 0) {
 		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
-			if
-				unlikely(val64 < INT16_MIN || val64 > INT16_MAX)
-			{
+			if unlikely(val64 < INT16_MIN || val64 > INT16_MAX)
+				{
 				err_integer_overflow_i(16, val64 < 0);
 				goto err;
 			}
 		} else {
-			if
-				unlikely((uint64_t)val64 > UINT16_MAX)
-			{
+			if unlikely((uint64_t)val64 > UINT16_MAX)
+				{
 				err_integer_overflow_i(16, true);
 				goto err;
 			}
@@ -1515,16 +1476,14 @@ PUBLIC int (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str,
 	int result = Dee_Atoi64(str, len, radix_and_flags, &val64);
 	if (result == 0) {
 		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
-			if
-				unlikely(val64 < INT8_MIN || val64 > INT8_MAX)
-			{
+			if unlikely(val64 < INT8_MIN || val64 > INT8_MAX)
+				{
 				err_integer_overflow_i(8, val64 < 0);
 				goto err;
 			}
 		} else {
-			if
-				unlikely((uint64_t)val64 > UINT8_MAX)
-			{
+			if unlikely((uint64_t)val64 > UINT8_MAX)
+				{
 				err_integer_overflow_i(8, true);
 				goto err;
 			}
@@ -1551,9 +1510,8 @@ DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
 	negative = (dssize_t)size_a < 0;
 	if (negative)
 		size_a = (size_t) - (dssize_t)size_a;
-	if
-		unlikely(size_a > SSIZE_MAX / DIGIT_BITS)
-	{
+	if unlikely(size_a > SSIZE_MAX / DIGIT_BITS)
+		{
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "int too large to format");
 err:
@@ -1589,9 +1547,8 @@ err:
 	}
 	/* Allocate a string target buffer. */
 	buf = (char *)Dee_AMalloc(buflen * sizeof(char));
-	if
-		unlikely(!buf)
-	goto err_pout;
+	if unlikely(!buf)
+		goto err_pout;
 	iter = buf + buflen;
 	for (i = 0; i < size - 1; ++i) {
 		rem = pout[i];
@@ -1670,9 +1627,8 @@ do_print:
 			if (!num_digits) {
 				bufsize = 4;
 				buf     = (char *)Dee_AMalloc(bufsize * sizeof(char));
-				if
-					unlikely(!buf)
-				goto err;
+				if unlikely(!buf)
+					goto err;
 				iter    = buf + bufsize;
 				*--iter = '0';
 				goto do_print_prefix;
@@ -1681,9 +1637,8 @@ do_print:
 		}
 		bufsize = 4 + ((num_digits * DIGIT_BITS) / dig_bits);
 		buf     = (char *)Dee_AMalloc(bufsize * sizeof(char));
-		if
-			unlikely(!buf)
-		goto err;
+		if unlikely(!buf)
+			goto err;
 		iter   = buf + bufsize;
 		src    = me->ob_digit;
 		number = 0, num_bits = 0;
@@ -2238,9 +2193,8 @@ PUBLIC int (DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
 	unsigned int last_bits;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
 	count = (size_t)DeeInt_SIZE(self);
-	if
-		unlikely(!count)
-	{
+	if unlikely(!count)
+		{
 		/* Special case: zero. */
 		memset(dst, 0, length);
 		return 0;
@@ -2249,9 +2203,8 @@ PUBLIC int (DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
 	if ((dssize_t)count < 0) {
 		count        = (size_t) - (dssize_t)count;
 		leading_byte = 0xff;
-		if
-			unlikely(!as_signed)
-		{
+		if unlikely(!as_signed)
+			{
 			err_integer_overflow((DeeObject *)self, 0, false);
 			goto err;
 		}
@@ -2464,9 +2417,8 @@ PUBLIC DREF DeeObject *(DCALL DeeInt_FromBytes)(void const *__restrict buf, size
 	total_digits = (total_bits + (DIGIT_BITS - 1)) / DIGIT_BITS;
 	ASSERT(total_digits >= 1);
 	result = DeeInt_Alloc(total_digits);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Now to actually fill in integer digit data. */
 	{
 		twodigits temp     = 0;
@@ -2568,21 +2520,18 @@ int_new(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	if (DeeString_Check(val)) {
 		char *utf8 = DeeString_AsUtf8(val);
-		if
-			unlikely(!utf8)
-		goto err;
-		if
-			unlikely(radix == 1)
-		goto err_bad_radix;
+		if unlikely(!utf8)
+			goto err;
+		if unlikely(radix == 1)
+			goto err_bad_radix;
 		return DeeInt_FromString(utf8,
 		                         WSTR_LENGTH(utf8),
 		                         DEEINT_STRING(radix,
 		                                       DEEINT_STRING_FNORMAL));
 	}
 	if (DeeBytes_Check(val)) {
-		if
-			unlikely(radix == 1)
-		goto err_bad_radix;
+		if unlikely(radix == 1)
+			goto err_bad_radix;
 		return DeeInt_FromAscii((char *)DeeBytes_DATA(val),
 		                        DeeBytes_SIZE(val),
 		                        DEEINT_STRING(radix,
@@ -2796,16 +2745,14 @@ PRIVATE DREF DeeObject *DCALL
 int_tostr_impl(DeeObject *__restrict self, uint32_t flags) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if
-		unlikely(DeeInt_Print(self, flags, &unicode_printer_print, &printer) < 0)
-	goto err_printer;
+	if unlikely(DeeInt_Print(self, flags, &unicode_printer_print, &printer) < 0)
+		goto err_printer;
 	return unicode_printer_pack(&printer);
 err_printer:
 	unicode_printer_fini(&printer);
 #else
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if
-		unlikely(DeeInt_Print(self, flags,
+	if unlikely(DeeInt_Print(self, flags,
 		                      &ascii_printer_print,
 		                      &printer) < 0)
 	goto err_printer;
@@ -2921,9 +2868,8 @@ int_tobytes(DeeIntObject *__restrict self,
 	}
 	/* Encode integer bytes. */
 	result = DeeBytes_NewBufferUninitialized(length);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (DeeInt_AsBytes((DeeObject *)self,
 	                   DeeBytes_DATA(result),
 	                   length, encode_little,
@@ -3073,9 +3019,8 @@ int_get_bitcount_impl(DeeIntObject *__restrict self) {
 		goto err;
 	}
 	for (;;) {
-		if
-			unlikely(!asize)
-		return 1;
+		if unlikely(!asize)
+			return 1;
 		--asize;
 		dig = self->ob_digit[asize];
 		if (dig)
@@ -3093,9 +3038,8 @@ err:
 PRIVATE DREF DeeObject *DCALL
 int_get_bitcount(DeeIntObject *__restrict self) {
 	size_t result = int_get_bitcount_impl(self);
-	if
-		unlikely(result == (size_t)-1)
-	goto err;
+	if unlikely(result == (size_t)-1)
+		goto err;
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -3105,9 +3049,8 @@ PRIVATE DREF DeeObject *DCALL
 int_get_bytecount(DeeIntObject *__restrict self) {
 	size_t bits = int_get_bitcount_impl(self);
 	size_t result;
-	if
-		unlikely(bits == (size_t)-1)
-	goto err;
+	if unlikely(bits == (size_t)-1)
+		goto err;
 	result = bits / 8;
 	if (bits & 7)
 		++result;

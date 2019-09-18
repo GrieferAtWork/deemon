@@ -1437,9 +1437,8 @@ FORCELOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_
 		result = (DeeStringObject *)DeeObject_Realloc(result,
 		                                              COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                              (num_chars + 1) * sizeof(char));
-		if
-			unlikely(!result)
-		return NULL;
+		if unlikely(!result)
+			return NULL;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {

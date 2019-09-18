@@ -105,9 +105,8 @@ bool_or(DeeObject *__restrict self,
 	if (DeeBool_IsTrue(self))
 		return_true;
 	temp = DeeObject_Bool(other);
-	if
-		unlikely(temp < 0)
-	return NULL;
+	if unlikely(temp < 0)
+		return NULL;
 	return_bool(temp);
 }
 
@@ -118,9 +117,8 @@ bool_and(DeeObject *__restrict self,
 	if (!DeeBool_IsTrue(self))
 		return_false;
 	temp = DeeObject_Bool(other);
-	if
-		unlikely(temp < 0)
-	return NULL;
+	if unlikely(temp < 0)
+		return NULL;
 	return_bool(temp);
 }
 
@@ -128,21 +126,18 @@ PRIVATE DREF DeeObject *DCALL
 bool_xor(DeeObject *__restrict self,
          DeeObject *__restrict other) {
 	int temp = DeeObject_Bool(other);
-	if
-		unlikely(temp < 0)
-	return NULL;
+	if unlikely(temp < 0)
+		return NULL;
 	return_bool(DeeBool_IsTrue(self) ^ temp);
 }
 
 PRIVATE DREF DeeObject *DCALL
 bool_div(DeeObject *__restrict self, DeeObject *__restrict other) {
 	int temp = DeeObject_Bool(other);
-	if
-		unlikely(temp < 0)
-	return NULL;
-	if
-		unlikely(!temp)
-	{
+	if unlikely(temp < 0)
+		return NULL;
+	if unlikely(!temp)
+		{
 		err_divide_by_zero(self, other);
 		return NULL;
 	}
@@ -152,12 +147,10 @@ bool_div(DeeObject *__restrict self, DeeObject *__restrict other) {
 PRIVATE DREF DeeObject *DCALL
 bool_mod(DeeObject *__restrict self, DeeObject *__restrict other) {
 	int temp = DeeObject_Bool(other);
-	if
-		unlikely(temp < 0)
-	return NULL;
-	if
-		unlikely(!temp)
-	{
+	if unlikely(temp < 0)
+		return NULL;
+	if unlikely(!temp)
+		{
 		err_divide_by_zero(self, other);
 		return NULL;
 	}
@@ -255,18 +248,16 @@ PRIVATE struct type_math bool_math = {
 PRIVATE DREF DeeObject *DCALL
 bool_eq(DeeObject *__restrict self, DeeObject *__restrict other) {
 	int error = DeeObject_Bool(other);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	return_bool_((!error) != DeeBool_IsTrue(self));
 }
 
 PRIVATE DREF DeeObject *DCALL
 bool_ne(DeeObject *__restrict self, DeeObject *__restrict other) {
 	int error = DeeObject_Bool(other);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	return_bool_((!error) == DeeBool_IsTrue(self));
 }
 
@@ -276,9 +267,8 @@ bool_lo(DeeObject *__restrict self, DeeObject *__restrict other) {
 	if (DeeBool_IsTrue(self))
 		return_false; /* true < X --> false */
 	error = DeeObject_Bool(other);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	return_bool_(error); /* false < X --> X */
 }
 
@@ -288,9 +278,8 @@ bool_le(DeeObject *__restrict self, DeeObject *__restrict other) {
 	if (!DeeBool_IsTrue(self))
 		return_true; /* false <= X --> true */
 	error = DeeObject_Bool(other);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	return_bool_(error); /* true <= X --> X */
 }
 
@@ -300,9 +289,8 @@ bool_gr(DeeObject *__restrict self, DeeObject *__restrict other) {
 	if (!DeeBool_IsTrue(self))
 		return_false; /* false > X --> false */
 	error = DeeObject_Bool(other);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	return_bool_(error); /* true > X --> X */
 }
 
@@ -312,9 +300,8 @@ bool_ge(DeeObject *__restrict self, DeeObject *__restrict other) {
 	if (DeeBool_IsTrue(self))
 		return_true; /* true >= X --> true */
 	error = DeeObject_Bool(other);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	return_bool_(!error); /* false >= X --> !X */
 }
 

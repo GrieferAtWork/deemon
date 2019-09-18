@@ -569,9 +569,8 @@ DeeObject_TGenericCallAttrStringKw(DeeTypeObject *__restrict tp_self,
 		} while ((iter = DeeType_Base(iter)) != NULL);
 		return ITER_DONE;
 done_call:
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			DREF DeeObject *real_result;
 			real_result = DeeObject_CallKw(result, argc, argv, kw);
 			Dee_Decref(result);
@@ -609,9 +608,8 @@ DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *__restrict tp_self,
 		} while ((iter = DeeType_Base(iter)) != NULL);
 		return ITER_DONE;
 done_call:
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			DREF DeeObject *real_result;
 			real_result = DeeObject_CallKw(result, argc, argv, kw);
 			Dee_Decref(result);
@@ -2413,9 +2411,8 @@ again:
 			break;
 		if (iter->tp_attr) {
 do_iter_attr:
-			if
-				likely(iter->tp_attr->tp_getattr)
-			{
+			if likely(iter->tp_attr->tp_getattr)
+				{
 				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
 				DREF DeeObject *found_object;
 				getattr = iter->tp_attr->tp_getattr;
@@ -3598,9 +3595,8 @@ do_iter_attr:
 			if (!setattr)
 				break;
 			attr_name_ob = DeeString_NewSizedWithHash(attr_name, attrlen, hash);
-			if
-				unlikely(!attr_name_ob)
-			goto err;
+			if unlikely(!attr_name_ob)
+				goto err;
 			result = (*setattr)(self, attr_name_ob, value);
 			Dee_Decref(attr_name_ob);
 			return result;

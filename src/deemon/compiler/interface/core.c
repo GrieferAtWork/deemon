@@ -53,9 +53,8 @@ DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	Dee_Decref(com);
 #else /* CONFIG_NO_THREADS */
-	if
-		unlikely(!Dee_DecrefIfNotOne(com))
-	{
+	if unlikely(!Dee_DecrefIfNotOne(com))
+		{
 		recursive_rwlock_write(&DeeCompiler_Lock);
 		Dee_Decref(com);
 		recursive_rwlock_endwrite(&DeeCompiler_Lock);
@@ -252,9 +251,8 @@ DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
 	ASSERT(type->tp_init.tp_alloc.tp_alloc == &compiler_wrap_tp_alloc);
 	ASSERT(type->tp_init.tp_alloc.tp_free == &compiler_wrap_tp_free);
 	result = compiler_wrap_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->cw_compiler = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, type);
@@ -285,9 +283,8 @@ again:
 		for (; result; result = result->ci_next) {
 			if (result->ci_value != value)
 				continue;
-			if
-				unlikely(!Dee_IncrefIfNotZero(result))
-			continue;
+			if unlikely(!Dee_IncrefIfNotZero(result))
+				continue;
 			ASSERT_OBJECT_TYPE_EXACT(result, type);
 			rwlock_endread(&self->cp_items.ci_lock);
 			return (DREF DeeObject *)result;
@@ -296,20 +293,17 @@ again:
 	rwlock_endread(&self->cp_items.ci_lock);
 	/* Construct a new item. */
 	result = compiler_item_alloc();
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	rwlock_write(&self->cp_items.ci_lock);
 	/* Make sure that the item wasn't created in the mean time! */
 	if (self->cp_items.ci_list) {
 		new_result = self->cp_items.ci_list[Dee_HashPointer(value) & self->cp_items.ci_mask];
 		for (; new_result; new_result = new_result->ci_next) {
-			if
-				likely(new_result->ci_value != value)
-			continue;
-			if
-				unlikely(!Dee_IncrefIfNotZero(new_result))
-			continue;
+			if likely(new_result->ci_value != value)
+				continue;
+			if unlikely(!Dee_IncrefIfNotZero(new_result))
+				continue;
 			ASSERT_OBJECT_TYPE_EXACT(new_result, type);
 			rwlock_endread(&self->cp_items.ci_lock);
 			compiler_item_free(result);
@@ -324,9 +318,8 @@ again:
 			new_mask = 16 - 1;
 		new_map = (DeeCompilerItemObject **)Dee_TryCalloc((new_mask + 1) *
 		                                                  sizeof(DeeCompilerItemObject *));
-		if
-			unlikely(!new_map && !self->cp_items.ci_list)
-		{
+		if unlikely(!new_map && !self->cp_items.ci_list)
+			{
 			rwlock_endwrite(&self->cp_items.ci_lock);
 			compiler_item_free(result);
 			goto again;
@@ -411,9 +404,8 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 		return false;
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 	rwlock_write(&com->cp_items.ci_lock);
-	if
-		unlikely(!com->cp_items.ci_list)
-	{
+	if unlikely(!com->cp_items.ci_list)
+		{
 		rwlock_endwrite(&com->cp_items.ci_lock);
 		return false;
 	}
@@ -504,9 +496,8 @@ DeeCompilerItem_GetValue(DeeObject *__restrict self) {
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 	ASSERT(DeeCompiler_Current == ((DeeCompilerItemObject *)self)->ci_compiler);
 	result = ((DeeCompilerItemObject *)self)->ci_value;
-	if
-		unlikely(!result)
-	err_compiler_item_deleted((DeeCompilerItemObject *)self);
+	if unlikely(!result)
+		err_compiler_item_deleted((DeeCompilerItemObject *)self);
 	return result;
 }
 

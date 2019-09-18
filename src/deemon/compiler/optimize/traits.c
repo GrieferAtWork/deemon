@@ -610,9 +610,8 @@ ast_doesnt_return(struct ast *__restrict self,
 		bool has_returning_handler;
 		size_t i;
 		struct catch_expr *vec;
-		if
-			unlikely(!self->a_try.t_catchc)
-		return ast_doesnt_return(self->a_try.t_guard, flags);
+		if unlikely(!self->a_try.t_catchc)
+			return ast_doesnt_return(self->a_try.t_guard, flags);
 		has_returning_handler = false;
 		vec                   = self->a_try.t_catchv;
 		flags &= ~(AST_DOESNT_RETURN_FINCATCH |
@@ -889,9 +888,8 @@ ast_get_boolean(struct ast *__restrict self) {
 	if (self->a_type == AST_CONSTEXPR &&
 	    !(optimizer_flags & OPTIMIZE_FNOPREDICT)) {
 		int result = DeeObject_Bool(self->a_constexpr);
-		if
-			unlikely(result < 0)
-		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		if unlikely(result < 0)
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return result;
 	}
 	return -1;
@@ -1097,9 +1095,8 @@ ast_equal_impl(struct ast *__restrict a,
 		if (Dee_TYPE(a->a_constexpr) != Dee_TYPE(b->a_constexpr))
 			goto ne;
 		temp = DeeObject_CompareEq(a->a_constexpr, b->a_constexpr);
-		if
-			unlikely(temp < 0)
-		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		if unlikely(temp < 0)
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return temp > 0;
 	}	break;
 

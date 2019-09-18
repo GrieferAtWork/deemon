@@ -246,9 +246,8 @@ f_ctypes_sizeof(size_t argc, DeeObject **__restrict argv) {
 		if (DeeBytes_Check(arg))
 			return DeeInt_NewSize(DeeBytes_SIZE(arg));
 		type = DeeSType_Get(arg);
-		if
-			unlikely(!type)
-		goto err;
+		if unlikely(!type)
+			goto err;
 	}
 	if (DeeLValueType_Check(type))
 		type = ((DeeLValueTypeObject *)type)->lt_orig;
@@ -269,9 +268,8 @@ f_ctypes_alignof(size_t argc, DeeObject **__restrict argv) {
 		type = (DeeSTypeObject *)Dee_TYPE(arg);
 	else {
 		type = DeeSType_Get(arg);
-		if
-			unlikely(!type)
-		goto err;
+		if unlikely(!type)
+			goto err;
 	}
 	if (DeeLValueType_Check(type))
 		type = ((DeeLValueTypeObject *)type)->lt_orig;

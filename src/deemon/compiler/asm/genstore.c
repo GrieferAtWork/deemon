@@ -283,9 +283,8 @@ check_getattr_sym:
 
 			case SYMBOL_TYPE_THIS:
 				attrid = asm_newconst((DeeObject *)attrname);
-				if
-					unlikely(attrid < 0)
-				goto err;
+				if unlikely(attrid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (asm_ggetattr_this_const((uint16_t)attrid))
@@ -310,9 +309,8 @@ check_getattr_sym:
 				if (!PUSH_RESULT)
 					goto done;
 				symid = asm_gsymid_for_read(globsym, ddi_ast);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gpush_global((uint16_t)symid);
@@ -334,9 +332,8 @@ check_getattr_sym:
 				} else {
 					module_id = asm_msymid(sym);
 				}
-				if
-					unlikely(module_id < 0)
-				goto err;
+				if unlikely(module_id < 0)
+					goto err;
 				/* Push an external symbol accessed through its module. */
 				if (asm_putddi(ddi_ast))
 					goto err;
@@ -362,13 +359,11 @@ check_getattr_sym:
 				/* We are allowed to reference the base-symbol! */
 				type_rid = asm_rsymid(type_expr->a_sym);
 do_perform_supergetattr:
-				if
-					unlikely(type_rid < 0)
-				goto err;
+				if unlikely(type_rid < 0)
+					goto err;
 				attrid = asm_newconst((DeeObject *)attrname);
-				if
-					unlikely(attrid < 0)
-				goto err;
+				if unlikely(attrid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (asm_gsupergetattr_this_rc((uint16_t)type_rid, (uint16_t)attrid))
@@ -383,9 +378,8 @@ do_perform_supergetattr:
 				 * an explicit reference to it. */
 				struct symbol *deemon_symbol;
 				deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
-				if
-					unlikely(!deemon_symbol)
-				goto err;
+				if unlikely(!deemon_symbol)
+					goto err;
 				if (deemon_symbol != ASM_BIND_DEEMON_EXPORT_NOTFOUND) {
 					type_rid = asm_rsymid(deemon_symbol);
 					goto do_perform_supergetattr;
@@ -395,9 +389,8 @@ do_perform_supergetattr:
 		if (ast_genasm(base, ASM_G_FPUSHRES))
 			goto err;
 		attrid = asm_newconst((DeeObject *)attrname);
-		if
-			unlikely(attrid < 0)
-		goto err;
+		if unlikely(attrid < 0)
+			goto err;
 		if (asm_putddi(ddi_ast))
 			goto err;
 		if (asm_ggetattr_const((uint16_t)attrid))
@@ -490,9 +483,8 @@ check_boundattr_sym:
 					return asm_gpush_false();
 				}
 				symid = asm_gsymid_for_read(globsym, ddi_ast);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gpush_bnd_global((uint16_t)symid);
@@ -516,9 +508,8 @@ check_boundattr_sym:
 				} else {
 					module_id = asm_msymid(sym);
 				}
-				if
-					unlikely(module_id < 0)
-				goto err;
+				if unlikely(module_id < 0)
+					goto err;
 				/* Push an external symbol accessed through its module. */
 				if (asm_putddi(ddi_ast))
 					goto err;
@@ -592,9 +583,8 @@ check_delattr_sym:
 				if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 					break;
 				attrid = asm_newconst(name->a_constexpr);
-				if
-					unlikely(attrid < 0)
-				goto err;
+				if unlikely(attrid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gdelattr_this_const(attrid);
@@ -615,9 +605,8 @@ check_delattr_sym:
 				if (globsym->s_type != SYMBOL_TYPE_GLOBAL)
 					break; /* Not a global symbol (TODO: Add a warning for this) */
 				symid = asm_gsymid(globsym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				return asm_gdel_global((uint16_t)symid);
@@ -627,9 +616,8 @@ check_delattr_sym:
 			}
 		}
 		attrid = asm_newconst(name->a_constexpr);
-		if
-			unlikely(attrid < 0)
-		goto err;
+		if unlikely(attrid < 0)
+			goto err;
 		if (ast_genasm(base, ASM_G_FPUSHRES))
 			goto err;
 		if (asm_putddi(ddi_ast))
@@ -742,15 +730,13 @@ set_class_attribute:
 		return asm_gpop(); /* [result] */
 	}
 	/* The attribute must be accessed as virtual. */
-	if
-		unlikely(asm_check_thiscall(sym, ddi_ast))
-	goto err;
+	if unlikely(asm_check_thiscall(sym, ddi_ast))
+		goto err;
 	SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 	if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 		symid = asm_newconst((DeeObject *)attr->ca_name);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (this_sym->s_type == SYMBOL_TYPE_THIS &&
 		    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 			if (ast_genasm(value, ASM_G_FPUSHRES))
@@ -790,9 +776,8 @@ set_class_attribute:
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
 				    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
 				    this_sym->s_type == SYMBOL_TYPE_THIS &&
@@ -832,9 +817,8 @@ set_class_attribute:
 				goto err; /* [result], setter */
 		} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 			symid = asm_rsymid(class_sym);
-			if
-				unlikely(symid < 0)
-			goto err;
+			if unlikely(symid < 0)
+				goto err;
 			if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET))
 				goto err; /* [result], setter */
 		} else {
@@ -906,9 +890,8 @@ pop_unused_result:
 			goto err; /* [result] */
 	} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 		symid = asm_rsymid(class_sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (ast_genasm(value, ASM_G_FPUSHRES))
 			goto err; /* value */
 		if (asm_putddi(ddi_ast))
@@ -1000,9 +983,8 @@ check_base_symbol_class:
 				if (SYMBOL_MUST_REFERENCE_THIS(sym))
 					break;
 				cid = asm_newconst(name->a_constexpr);
-				if
-					unlikely(cid < 0)
-				goto err;
+				if unlikely(cid < 0)
+					goto err;
 				if (ast_genasm(value, ASM_G_FPUSHRES))
 					goto err;
 				if (asm_putddi(ddi_ast))
@@ -1029,9 +1011,8 @@ check_base_symbol_class:
 				if (globsym->s_type != SYMBOL_TYPE_GLOBAL)
 					break; /* Not a global symbol (TODO: Add a warning for this) */
 				symid = asm_gsymid(globsym);
-				if
-					unlikely(symid < 0)
-				goto err;
+				if unlikely(symid < 0)
+					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (PUSH_RESULT && asm_gdup())
@@ -1056,9 +1037,8 @@ check_base_symbol_class:
 				} else {
 					module_id = asm_msymid(sym);
 				}
-				if
-					unlikely(module_id < 0)
-				goto err;
+				if unlikely(module_id < 0)
+					goto err;
 				/* Push an external symbol accessed through its module. */
 				if (ast_genasm(value, ASM_G_FPUSHRES))
 					goto err;
@@ -1079,20 +1059,17 @@ check_base_symbol_class:
 				break;
 			}
 		}
-		if
-			unlikely(asm_gpush2_duplast(base, value, ddi_ast, gflags))
-		goto err;
+		if unlikely(asm_gpush2_duplast(base, value, ddi_ast, gflags))
+			goto err;
 		cid = asm_newconst(name->a_constexpr);
-		if
-			unlikely(cid < 0)
-		goto err;
+		if unlikely(cid < 0)
+			goto err;
 		if (asm_gsetattr_const((uint16_t)cid))
 			goto err;
 		goto done;
 	}
-	if
-		unlikely(asm_gpush3_duplast(base, name, value, ddi_ast, gflags))
-	goto err;
+	if unlikely(asm_gpush3_duplast(base, name, value, ddi_ast, gflags))
+		goto err;
 	if (asm_gsetattr())
 		goto err;
 done:
@@ -1113,29 +1090,25 @@ ast_gen_setitem(struct ast *__restrict sequence,
 		if (DeeInt_Check(index->a_constexpr) &&
 		    DeeInt_TryAsS32(index->a_constexpr, &int_index) &&
 		    int_index >= INT16_MIN && int_index <= INT16_MAX) {
-			if
-				unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
-			goto err;
+			if unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
+				goto err;
 			if (asm_gsetitem_index((int16_t)int_index))
 				goto err;
 			goto done;
 		}
 		if (asm_allowconst(index->a_constexpr)) {
 			int_index = asm_newconst(index->a_constexpr);
-			if
-				unlikely(int_index < 0)
-			goto err;
-			if
-				unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
-			goto err;
+			if unlikely(int_index < 0)
+				goto err;
+			if unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
+				goto err;
 			if (asm_gsetitem_const((uint16_t)int_index))
 				goto err;
 			goto done;
 		}
 	}
-	if
-		unlikely(asm_gpush3_duplast(sequence, index, value, ddi_ast, gflags))
-	goto err;
+	if unlikely(asm_gpush3_duplast(sequence, index, value, ddi_ast, gflags))
+		goto err;
 	if (asm_gsetitem())
 		goto err;
 done:
@@ -1162,17 +1135,15 @@ ast_gen_setrange(struct ast *__restrict sequence,
 			    DeeInt_TryAsS32(end->a_constexpr, &index) &&
 			    index >= INT16_MIN && index <= INT16_MAX) {
 				/* `setrange pop, none, $<Simm16>, pop' */
-				if
-					unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
-				goto err;
+				if unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
+					goto err;
 				if (asm_gsetrange_ni((int16_t)index))
 					goto err;
 				goto done;
 			}
 			/* `setrange pop, none, pop, pop' */
-			if
-				unlikely(asm_gpush3_duplast(sequence, end, value, ddi_ast, gflags))
-			goto err;
+			if unlikely(asm_gpush3_duplast(sequence, end, value, ddi_ast, gflags))
+				goto err;
 			if (asm_gsetrange_np())
 				goto err;
 			goto done;
@@ -1185,9 +1156,8 @@ ast_gen_setrange(struct ast *__restrict sequence,
 				DeeObject *end_index = end->a_constexpr;
 				if (DeeNone_Check(end_index)) {
 					/* `setrange pop, $<Simm16>, none, pop' */
-					if
-						unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
-					goto err;
+					if unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
+						goto err;
 					if (asm_gsetrange_in((int16_t)index))
 						goto err;
 					goto done;
@@ -1196,17 +1166,15 @@ ast_gen_setrange(struct ast *__restrict sequence,
 				    DeeInt_TryAsS32(end_index, &index2) &&
 				    index2 >= INT16_MIN && index2 <= INT16_MAX) {
 					/* `setrange pop, $<Simm16>, $<Simm16>, pop' */
-					if
-						unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
-					goto err;
+					if unlikely(asm_gpush2_duplast(sequence, value, ddi_ast, gflags))
+						goto err;
 					if (asm_gsetrange_ii((int16_t)index, (int16_t)index2))
 						goto err;
 					goto done;
 				}
 			}
-			if
-				unlikely(asm_gpush3_duplast(sequence, end, value, ddi_ast, gflags))
-			goto err;
+			if unlikely(asm_gpush3_duplast(sequence, end, value, ddi_ast, gflags))
+				goto err;
 			if (asm_gsetrange_ip((int16_t)index))
 				goto err;
 			goto done;
@@ -1217,9 +1185,8 @@ ast_gen_setrange(struct ast *__restrict sequence,
 		int32_t index;
 		if (DeeNone_Check(end_index)) {
 			/* `setrange pop, pop, none, pop' */
-			if
-				unlikely(asm_gpush3_duplast(sequence, begin, value, ddi_ast, gflags))
-			goto err;
+			if unlikely(asm_gpush3_duplast(sequence, begin, value, ddi_ast, gflags))
+				goto err;
 			if (asm_gsetrange_pn())
 				goto err;
 			goto done;
@@ -1228,17 +1195,15 @@ ast_gen_setrange(struct ast *__restrict sequence,
 		    DeeInt_TryAsS32(end_index, &index) &&
 		    index >= INT16_MIN && index <= INT16_MAX) {
 			/* `setrange pop, pop, $<Simm16>, pop' */
-			if
-				unlikely(asm_gpush3_duplast(sequence, begin, value, ddi_ast, gflags))
-			goto err;
+			if unlikely(asm_gpush3_duplast(sequence, begin, value, ddi_ast, gflags))
+				goto err;
 			if (asm_gsetrange_pi((int16_t)index))
 				goto err;
 			goto done;
 		}
 	}
-	if
-		unlikely(asm_gpush4_duplast(sequence, begin, end, value, ddi_ast, gflags))
-	goto err;
+	if unlikely(asm_gpush4_duplast(sequence, begin, end, value, ddi_ast, gflags))
+		goto err;
 	if (asm_gsetrange())
 		goto err;
 done:
@@ -1310,9 +1275,8 @@ check_src_sym_class:
 	if (SYMBOL_MUST_REFERENCE(src_sym)) {
 		/* mov PREFIX, ref <imm8/16> */
 		symid = asm_rsymid(src_sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (asm_putddi(dst_ast))
 			goto err;
 		if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1355,9 +1319,8 @@ check_src_sym_class:
 	case SYMBOL_TYPE_MODULE:
 		/* mov PREFIX, module <imm8/16> */
 		symid = asm_msymid(src_sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (asm_putddi(dst_ast))
 			goto err;
 		if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1407,9 +1370,8 @@ check_src_sym_class:
 		if (!(src_sym->s_flag & SYMBOL_FALLOC))
 			break;
 		symid = asm_gsymid_for_read(src_sym, dst_ast);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (asm_putddi(dst_ast))
 			goto err;
 		if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1421,9 +1383,8 @@ check_src_sym_class:
 		if (!(src_sym->s_flag & SYMBOL_FALLOC))
 			break;
 		symid = asm_lsymid_for_read(src_sym, dst_ast);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (asm_putddi(dst_ast))
 			goto err;
 		if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1435,9 +1396,8 @@ check_src_sym_class:
 		if (!(src_sym->s_flag & SYMBOL_FALLOC))
 			break;
 		symid = asm_ssymid_for_read(src_sym, dst_ast);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (asm_putddi(dst_ast))
 			goto err;
 		if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1449,9 +1409,8 @@ check_src_sym_class:
 		if (SYMBOL_EXTERN_SYMBOL(src_sym)->ss_flags & MODSYM_FPROPERTY)
 			break; /* Cannot be used for external properties. */
 		symid = asm_esymid(src_sym);
-		if
-			unlikely(symid < 0)
-		goto err;
+		if unlikely(symid < 0)
+			goto err;
 		if (asm_putddi(dst_ast))
 			goto err;
 		if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1514,9 +1473,8 @@ INTERN int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
 			int32_t cid;
 			/* mov PREFIX, const <imm8/16> */
 			cid = asm_newconst(constval);
-			if
-				unlikely(cid < 0)
-			goto err;
+			if unlikely(cid < 0)
+				goto err;
 			if (asm_putddi(dst_ast))
 				goto err;
 			if (asm_gprefix_symbol(dst_sym, dst_ast))
@@ -1603,9 +1561,8 @@ check_dst_sym_class:
 					 * -> In this case, we can simply encode the initializer as the raw
 					 *    static value and not have to generate any runtime code! */
 					sid = asm_newstatic(src->a_constexpr, dst_sym);
-					if
-						unlikely(sid < 0)
-					goto err;
+					if unlikely(sid < 0)
+						goto err;
 					dst_sym->s_symid = (uint16_t)sid;
 					dst_sym->s_flag |= SYMBOL_FALLOC;
 					if (PUSH_RESULT &&
@@ -1697,9 +1654,8 @@ check_dst_sym_class_hybrid:
 				case SYMBOL_TYPE_GLOBAL:
 					/* mov global <imm8/16>, PREFIX */
 					symid = asm_gsymid(dst_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_putddi(dst))
 						goto err;
 					if (asm_gprefix_symbol_for_read(src->a_sym, src))
@@ -1709,9 +1665,8 @@ check_dst_sym_class_hybrid:
 				case SYMBOL_TYPE_LOCAL:
 					/* mov local <imm8/16>, PREFIX */
 					symid = asm_lsymid(dst_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_putddi(dst))
 						goto err;
 					if (asm_gprefix_symbol_for_read(src->a_sym, src))
@@ -1721,9 +1676,8 @@ check_dst_sym_class_hybrid:
 				case SYMBOL_TYPE_STATIC:
 					/* mov static <imm8/16>, PREFIX */
 					symid = asm_ssymid(dst_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_putddi(dst))
 						goto err;
 					if (asm_gprefix_symbol_for_read(src->a_sym, src))
@@ -1736,9 +1690,8 @@ check_dst_sym_class_hybrid:
 					    (MODSYM_FREADONLY | MODSYM_FPROPERTY))
 						break;
 					symid = asm_esymid(dst_sym);
-					if
-						unlikely(symid < 0)
-					goto err;
+					if unlikely(symid < 0)
+						goto err;
 					if (asm_putddi(dst))
 						goto err;
 					if (asm_gprefix_symbol_for_read(src->a_sym, src))
@@ -1784,25 +1737,22 @@ check_dst_sym_class_hybrid:
 		switch (dst->a_flag) {
 
 		case OPERATOR_GETATTR:
-			if
-				unlikely(!dst->a_operator.o_op1)
-			break;
+			if unlikely(!dst->a_operator.o_op1)
+				break;
 			return ast_gen_setattr(dst->a_operator.o_op0,
 			                       dst->a_operator.o_op1,
 			                       src, ddi_ast, gflags);
 
 		case OPERATOR_GETITEM:
-			if
-				unlikely(!dst->a_operator.o_op1)
-			break;
+			if unlikely(!dst->a_operator.o_op1)
+				break;
 			return ast_gen_setitem(dst->a_operator.o_op0,
 			                       dst->a_operator.o_op1,
 			                       src, ddi_ast, gflags);
 
 		case OPERATOR_GETRANGE:
-			if
-				unlikely(!dst->a_operator.o_op2)
-			break;
+			if unlikely(!dst->a_operator.o_op2)
+				break;
 			return ast_gen_setrange(dst->a_operator.o_op0,
 			                        dst->a_operator.o_op1,
 			                        dst->a_operator.o_op2,
@@ -1954,16 +1904,14 @@ asm_gpop_expr(struct ast *__restrict self) {
 		switch (self->a_flag) {
 		case OPERATOR_GETATTR: {
 			struct ast *attr;
-			if
-				unlikely((attr = self->a_operator.o_op1) == NULL)
-			break;
+			if unlikely((attr = self->a_operator.o_op1) == NULL)
+				break;
 			if (attr->a_type == AST_CONSTEXPR &&
 			    DeeString_Check(attr->a_constexpr)) {
 				int32_t cid      = asm_newconst(attr->a_constexpr);
 				struct ast *base = self->a_operator.o_op0;
-				if
-					unlikely(cid < 0)
-				goto err;
+				if unlikely(cid < 0)
+					goto err;
 				if (base->a_type == AST_SYM) {
 					struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
 					if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
@@ -2000,9 +1948,8 @@ asm_gpop_expr(struct ast *__restrict self) {
 
 		case OPERATOR_GETITEM: {
 			struct ast *index;
-			if
-				unlikely((index = self->a_operator.o_op1) == NULL)
-			break;
+			if unlikely((index = self->a_operator.o_op1) == NULL)
+				break;
 			if (ast_genasm_one(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;
 			if (index->a_type == AST_CONSTEXPR) {
@@ -2021,9 +1968,8 @@ asm_gpop_expr(struct ast *__restrict self) {
 				}
 				if (asm_allowconst(index->a_constexpr)) {
 					int_index = asm_newconst(index->a_constexpr);
-					if
-						unlikely(int_index < 0)
-					goto err;
+					if unlikely(int_index < 0)
+						goto err;
 					if (asm_putddi(self))
 						goto err;
 					if (asm_gswap())
@@ -2047,9 +1993,8 @@ asm_gpop_expr(struct ast *__restrict self) {
 		case OPERATOR_GETRANGE: {
 			struct ast *begin, *end;
 			int32_t index;
-			if
-				unlikely(!self->a_operator.o_op2)
-			break;
+			if unlikely(!self->a_operator.o_op2)
+				break;
 			if (ast_genasm_one(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;
 			begin = self->a_operator.o_op1;

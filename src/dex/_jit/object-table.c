@@ -56,9 +56,8 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 	} else {
 		size_t size = (dst->ot_mask + 1) * sizeof(struct jit_object_entry);
 		new_table   = (struct jit_object_entry *)Dee_Calloc(size);
-		if
-			unlikely(!new_table)
-		return -1;
+		if unlikely(!new_table)
+			return -1;
 		dst->ot_list = new_table;
 		memcpy(new_table, src->ot_list, size);
 		for (i = 0; i <= dst->ot_mask; ++i) {
@@ -131,9 +130,8 @@ JITObjectTable_TryRehash(JITObjectTable *__restrict self,
 	ASSERT(new_mask != 0);
 	new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
 	                                                     sizeof(struct jit_object_entry));
-	if
-		unlikely(!new_table)
-	return false;
+	if unlikely(!new_table)
+		return false;
 	if (self->ot_list != jit_empty_object_list) {
 		struct jit_object_entry *old_table;
 		old_table = self->ot_list;
@@ -203,20 +201,17 @@ again:
 						new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
 					if (new_mask < 7)
 						new_mask = 7;
-					if
-						likely(JITObjectTable_TryRehash(self, new_mask))
-					goto again;
+					if likely(JITObjectTable_TryRehash(self, new_mask))
+						goto again;
 					if (self->ot_size == self->ot_mask) {
 						new_mask = (self->ot_mask << 1) | 1;
 						if (self->ot_used < self->ot_size)
 							new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
 						for (;;) {
-							if
-								likely(JITObjectTable_TryRehash(self, new_mask))
-							goto again;
-							if
-								unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-							return -1;
+							if likely(JITObjectTable_TryRehash(self, new_mask))
+								goto again;
+							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+								return -1;
 						}
 					}
 				}
@@ -364,20 +359,17 @@ again:
 						new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
 					if (new_mask < 7)
 						new_mask = 7;
-					if
-						likely(JITObjectTable_TryRehash(self, new_mask))
-					goto again;
+					if likely(JITObjectTable_TryRehash(self, new_mask))
+						goto again;
 					if (self->ot_size == self->ot_mask) {
 						new_mask = (self->ot_mask << 1) | 1;
 						if (self->ot_used < self->ot_size)
 							new_mask = self->ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
 						for (;;) {
-							if
-								likely(JITObjectTable_TryRehash(self, new_mask))
-							goto again;
-							if
-								unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-							return NULL;
+							if likely(JITObjectTable_TryRehash(self, new_mask))
+								goto again;
+							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+								return NULL;
 						}
 					}
 				}

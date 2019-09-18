@@ -42,28 +42,24 @@ ast_parse_argument_list(uint16_t mode,
 	                         AST_COMMA_ALLOWKWDLIST,
 	                         AST_FMULTIPLE_TUPLE,
 	                         NULL);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (tok == TOK_POW) {
 		/* XXX: I really don't like using `**' for this.
 		 *      I realize that I _have_ to provide some way
 		 *      of passing arbitrary mappings through keywords,
 		 *      however this just feel too python-ésque to me...
 		 */
-		if
-			unlikely(yield() < 0)
-		goto err_r;
+		if unlikely(yield() < 0)
+			goto err_r;
 		/* Parse the keyword invocation AST. */
 		*pkeyword_labels = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!*pkeyword_labels)
-		goto err_r;
+		if unlikely(!*pkeyword_labels)
+			goto err_r;
 	} else if (TPP_ISKEYWORD(tok)) {
 		char *next = peek_next_token(NULL);
-		if
-			unlikely(!next)
-		goto err_r;
+		if unlikely(!next)
+			goto err_r;
 		if (*next == ':') {
 			size_t multiple_a;
 			if (result->a_type == AST_CONSTEXPR) {
@@ -75,14 +71,12 @@ ast_parse_argument_list(uint16_t mode,
 				result->a_multiple.m_astv = NULL;
 			}
 			kwdlist = DeeKwds_NewWithHint(1);
-			if
-				unlikely(!kwdlist)
-			goto err_r;
+			if unlikely(!kwdlist)
+				goto err_r;
 			kwdlist_ast = ast_sethere(ast_constexpr(kwdlist));
 			Dee_Decref_unlikely(kwdlist);
-			if
-				unlikely(!kwdlist_ast)
-			goto err_r;
+			if unlikely(!kwdlist_ast)
+				goto err_r;
 			*pkeyword_labels = kwdlist_ast; /* Inherit reference (on success) */
 			multiple_a       = result->a_multiple.m_astc;
 			/* Parse a keyword label list! */
@@ -94,54 +88,46 @@ ast_parse_argument_list(uint16_t mode,
 				                   token.t_kwd->k_size,
 				                   Dee_HashStr(token.t_kwd->k_name)))
 					goto err_r_kwdlist;
-				if
-					unlikely(yield() < 0)
-				goto err_r_kwdlist;
-				if
-					unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL))
-				goto err_r_kwdlist;
+				if unlikely(yield() < 0)
+					goto err_r_kwdlist;
+				if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL))
+					goto err_r_kwdlist;
 				/* Make sure that we have allocated sufficient memory for the keyword list. */
 				ASSERT(result->a_multiple.m_astc <= multiple_a);
 				if (result->a_multiple.m_astc >= multiple_a) {
 					DREF struct ast **new_astv;
 					size_t new_alloc = multiple_a * 2;
-					if
-						unlikely(!new_alloc)
-					new_alloc = 2;
+					if unlikely(!new_alloc)
+						new_alloc = 2;
 					new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
 					                                              new_alloc * sizeof(DREF struct ast *));
-					if
-						unlikely(!new_astv)
-					{
+					if unlikely(!new_astv)
+						{
 						new_alloc = result->a_multiple.m_astc + 1;
 						new_astv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
 						                                           new_alloc * sizeof(DREF struct ast *));
-						if
-							unlikely(!new_astv)
-						goto err_r_kwdlist;
+						if unlikely(!new_astv)
+							goto err_r_kwdlist;
 					}
 					result->a_multiple.m_astv = new_astv;
 					multiple_a                = new_alloc;
 				}
 				/* Parse the expression that is bound to the keyword. */
 				argument_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if
-					unlikely(!argument_value)
-				goto err_r_kwdlist;
+				if unlikely(!argument_value)
+					goto err_r_kwdlist;
 				result->a_multiple.m_astv[result->a_multiple.m_astc++] = argument_value; /* Inherit reference. */
 				if (tok != ',')
 					break;
 				if (mode & AST_COMMA_STRICTCOMMA) {
 					char *next_token = peek_next_token(NULL);
-					if
-						unlikely(!next_token)
-					goto err_r_kwdlist;
+					if unlikely(!next_token)
+						goto err_r_kwdlist;
 					if (!DeeUni_IsSymCont(*next_token)) /* Can't be a label. */
 						break;
 				}
-				if
-					unlikely(yield() < 0)
-				goto err_r_kwdlist;
+				if unlikely(yield() < 0)
+					goto err_r_kwdlist;
 				if (!TPP_ISKEYWORD(tok))
 					break; /* End of argument list. */
 			}
@@ -152,9 +138,8 @@ ast_parse_argument_list(uint16_t mode,
 				new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
 				                                              result->a_multiple.m_astc *
 				                                              sizeof(DREF struct ast *));
-				if
-					likely(new_astv)
-				result->a_multiple.m_astv = new_astv;
+				if likely(new_astv)
+					result->a_multiple.m_astv = new_astv;
 			}
 			/* The constant-branch for the keyword-list was already
 			 * constructed above, so we're already finished here! */

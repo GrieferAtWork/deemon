@@ -1089,9 +1089,8 @@ do_conditional_forward_optimization:
 												--jmp_reloc->ar_sym->as_stck;
 											else {
 												struct asm_sym *newsym = asm_newsym();
-												if
-													unlikely(!newsym)
-												goto err;
+												if unlikely(!newsym)
+													goto err;
 												newsym->as_addr = jmp_reloc->ar_sym->as_addr + target_size;
 												newsym->as_stck = jmp_reloc->ar_sym->as_stck - 1;
 												newsym->as_sect = jmp_reloc->ar_sym->as_sect;
@@ -1140,9 +1139,8 @@ conditional_jump_forwarding_ok:
 												--jmp_reloc->ar_sym->as_stck;
 											else {
 												struct asm_sym *newsym = asm_newsym();
-												if
-													unlikely(!newsym)
-												goto err;
+												if unlikely(!newsym)
+													goto err;
 												newsym->as_addr = jmp_reloc->ar_sym->as_addr + target_size;
 												newsym->as_stck = jmp_reloc->ar_sym->as_stck - 1;
 												newsym->as_sect = jmp_reloc->ar_sym->as_sect;
@@ -1755,9 +1753,8 @@ do_unused_operand_optimization_ex:
 					/* Handle unconditional jumps. */
 					if (IP_ISJMP(iter)) {
 						next = follow_jmp(iter, NULL);
-						if
-							unlikely(next <= iter)
-						break; /* Let's not deal with this... */
+						if unlikely(next <= iter)
+							break; /* Let's not deal with this... */
 						/* NOTE: Since we stop on any conditional jump (see below),
 						 *       we are actually allowed to follow unconditional ones. */
 						iter = next;

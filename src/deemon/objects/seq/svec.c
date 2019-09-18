@@ -251,9 +251,8 @@ PRIVATE DREF RefVectorIterator *DCALL
 rvec_iter(RefVector *__restrict self) {
 	DREF RefVectorIterator *result;
 	result = DeeObject_MALLOC(RefVectorIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &RefVectorIterator_Type);
 	Dee_Incref(self); /* Reference stored in `rvi_vector' */
 	result->rvi_vector = self;
@@ -289,9 +288,8 @@ rvec_contains(RefVector *__restrict self,
 		temp = DeeObject_CompareEq(other, item);
 		Dee_Decref(item);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			return NULL;
+			if unlikely(temp < 0)
+				return NULL;
 			return_true;
 		}
 	}
@@ -305,9 +303,8 @@ rvec_getitem(RefVector *__restrict self,
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
 		return NULL;
-	if
-		unlikely(index >= self->rv_length)
-	{
+	if unlikely(index >= self->rv_length)
+		{
 		err_index_out_of_bounds((DeeObject *)self,
 		                        index,
 		                        self->rv_length);
@@ -318,9 +315,8 @@ rvec_getitem(RefVector *__restrict self,
 		rwlock_read(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	result = self->rv_vector[index];
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 #ifndef CONFIG_NO_THREADS
 		if (self->rv_plock)
 			rwlock_endread(self->rv_plock);
@@ -361,9 +357,8 @@ rvec_setitem(RefVector *__restrict self,
 	}
 	if (DeeObject_AsSize(index_ob, &index))
 		return -1;
-	if
-		unlikely(index >= self->rv_length)
-	{
+	if unlikely(index >= self->rv_length)
+		{
 		err_index_out_of_bounds((DeeObject *)self,
 		                        index,
 		                        self->rv_length);
@@ -400,9 +395,8 @@ rvec_nsi_getsize(RefVector *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	if
-		unlikely(index >= self->rv_length)
-	{
+	if unlikely(index >= self->rv_length)
+		{
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
 		return NULL;
 	}
@@ -411,9 +405,8 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 		rwlock_read(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	result = self->rv_vector[index];
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 #ifndef CONFIG_NO_THREADS
 		if (self->rv_plock)
 			rwlock_endread(self->rv_plock);
@@ -432,9 +425,8 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 PRIVATE int DCALL
 rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
-	if
-		unlikely(index >= self->rv_length)
-	return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
+	if unlikely(index >= self->rv_length)
+		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
 		rwlock_write(self->rv_plock);
@@ -447,9 +439,8 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	}
 	oldobj = self->rv_vector[index];
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if
-		unlikely(!oldobj)
-	{
+	if unlikely(!oldobj)
+		{
 #ifndef CONFIG_NO_THREADS
 		rwlock_endwrite(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
@@ -509,9 +500,8 @@ PRIVATE int DCALL
 rvec_nsi_setitem(RefVector *__restrict self, size_t index,
                  DeeObject *__restrict value) {
 	DREF DeeObject *oldobj;
-	if
-		unlikely(index >= self->rv_length)
-	return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
+	if unlikely(index >= self->rv_length)
+		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock) {
 		rwlock_write(self->rv_plock);
@@ -553,9 +543,8 @@ PRIVATE DREF DeeObject *DCALL
 rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
                  DeeObject *__restrict value) {
 	DREF DeeObject *result;
-	if
-		unlikely(index >= self->rv_length)
-	{
+	if unlikely(index >= self->rv_length)
+		{
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
 		goto err;
 	}
@@ -571,9 +560,8 @@ rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
 		goto err;
 	}
 	result = self->rv_vector[index];
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 #ifndef CONFIG_NO_THREADS
 		rwlock_endwrite(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
@@ -600,9 +588,8 @@ rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
 #else  /* !CONFIG_NO_THREADS */
 	ASSERT(self->rv_writable);
 #endif /* CONFIG_NO_THREADS */
-	if
-		unlikely(self->rv_vector[index] != old_value)
-	{
+	if unlikely(self->rv_vector[index] != old_value)
+		{
 #ifndef CONFIG_NO_THREADS
 		rwlock_endwrite(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
@@ -632,9 +619,8 @@ rvec_nsi_find(RefVector *__restrict self, size_t start, size_t end,
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		return i;
 	}
 	return (size_t)-1;
@@ -660,9 +646,8 @@ rvec_nsi_rfind(RefVector *__restrict self, size_t start, size_t end,
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		return i;
 	}
 	return (size_t)-1;
@@ -690,9 +675,8 @@ again:
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		/* Found the item. */
 		if (!rvec_nsi_cmpdelitem(self, i, item))
 			goto again;
@@ -724,9 +708,8 @@ again:
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		/* Found the item. */
 		if (!rvec_nsi_cmpdelitem(self, i, item))
 			goto again;
@@ -759,16 +742,14 @@ again:
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		/* Found the item. */
 		if (!rvec_nsi_cmpdelitem(self, i, item))
 			goto again;
 		++result;
-		if
-			unlikely(result == (size_t)-2)
-		break; /* Prevent overflows. */
+		if unlikely(result == (size_t)-2)
+			break; /* Prevent overflows. */
 	}
 	return result;
 err:
@@ -794,23 +775,20 @@ again:
 			continue; /* Unbound index */
 		callback_result = DeeObject_Call(should_remove, 1, &item);
 		Dee_Decref(item);
-		if
-			unlikely(!callback_result)
-		goto err;
+		if unlikely(!callback_result)
+			goto err;
 		temp = DeeObject_Bool(callback_result);
 		Dee_Decref(callback_result);
 		if (temp == 0)
 			continue;
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		/* Found the item. */
 		if (!rvec_nsi_cmpdelitem(self, i, item))
 			goto again;
 		++result;
-		if
-			unlikely(result == (size_t)-2)
-		break; /* Prevent overflows. */
+		if unlikely(result == (size_t)-2)
+			break; /* Prevent overflows. */
 	}
 	return result;
 err:
@@ -872,25 +850,21 @@ rvec_nsi_setrange(RefVector *__restrict self,
 		}
 		for (i = (size_t)start; i < (size_t)end; ++i) {
 			elem = DeeFastSeq_GetItem(values, i - (size_t)start);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			rvec_nsi_setitem_fast(self, i, elem); /* Inherit reference. */
 		}
 	} else {
 		DREF DeeObject *iterator;
 		iterator = DeeObject_IterSelf(values);
-		if
-			unlikely(!iterator)
-		goto err;
+		if unlikely(!iterator)
+			goto err;
 		for (i = (size_t)start; i < (size_t)end; ++i) {
 			elem = DeeObject_IterNext(iterator);
-			if
-				unlikely(!ITER_ISOK(elem))
-			{
-				if
-					unlikely(elem == ITER_DONE)
+			if unlikely(!ITER_ISOK(elem))
 				{
+				if unlikely(elem == ITER_DONE)
+					{
 					err_invalid_unpack_size(values,
 					                        (size_t)end - (size_t)start,
 					                        i - (size_t)start);
@@ -903,9 +877,8 @@ err_iterator:
 		}
 		/* Make sure that the given iterator ends here! */
 		elem = DeeObject_IterNext(iterator);
-		if
-			unlikely(elem != ITER_DONE)
-		{
+		if unlikely(elem != ITER_DONE)
+			{
 			if (elem) {
 				err_invalid_unpack_iter_size(values, iterator, (size_t)end - (size_t)start);
 				Dee_Decref(elem);
@@ -1125,9 +1098,8 @@ DeeRefVector_New(DeeObject *__restrict owner, size_t length,
 	ASSERT_OBJECT(owner);
 	ASSERT(!length || vector);
 	result = DeeObject_MALLOC(RefVector);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &RefVector_Type);
 	Dee_Incref(owner); /* Create the reference for `rv_owner' */
 	result->rv_length = length;
@@ -1148,9 +1120,8 @@ done:
 PRIVATE int DCALL
 sveciter_ctor(SharedVectorIterator *__restrict self) {
 	self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&SharedVector_Type);
-	if
-		unlikely(!self->si_seq)
-	goto err;
+	if unlikely(!self->si_seq)
+		goto err;
 	self->si_index = 0;
 	return 0;
 err:
@@ -1239,9 +1210,8 @@ INTERN int DCALL
 sveciter_deep(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
 	self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);
-	if
-		unlikely(self->si_seq)
-	goto err;
+	if unlikely(self->si_seq)
+		goto err;
 #ifdef CONFIG_NO_THREADS
 	self->si_index = other->si_index;
 #else  /* CONFIG_NO_THREADS */
@@ -1413,9 +1383,8 @@ PRIVATE DREF SharedVectorIterator *DCALL
 svec_iter(SharedVector *__restrict self) {
 	DREF SharedVectorIterator *result;
 	result = DeeObject_MALLOC(SharedVectorIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &SharedVectorIterator_Type);
 	Dee_Incref(self);
 	result->si_seq   = self;
@@ -1448,9 +1417,8 @@ svec_contains(SharedVector *__restrict self,
 		temp = DeeObject_CompareEq(other, item);
 		Dee_Decref(item);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			return_true;
 		}
 		rwlock_read(&self->sv_lock);
@@ -1469,9 +1437,8 @@ svec_getitem(SharedVector *__restrict self,
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
 	rwlock_read(&self->sv_lock);
-	if
-		unlikely(index >= self->sv_length)
-	{
+	if unlikely(index >= self->sv_length)
+		{
 		size_t my_length = self->sv_length;
 		rwlock_endread(&self->sv_lock);
 		err_index_out_of_bounds((DeeObject *)self, index, my_length);
@@ -1500,9 +1467,8 @@ PRIVATE DREF DeeObject *DCALL
 svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	rwlock_read(&self->sv_lock);
-	if
-		unlikely(index >= self->sv_length)
-	{
+	if unlikely(index >= self->sv_length)
+		{
 		size_t my_length = self->sv_length;
 		rwlock_endread(&self->sv_lock);
 		err_index_out_of_bounds((DeeObject *)self, index, my_length);
@@ -1518,9 +1484,8 @@ PRIVATE DREF DeeObject *DCALL
 svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	rwlock_read(&self->sv_lock);
-	if
-		unlikely(index >= self->sv_length)
-	{
+	if unlikely(index >= self->sv_length)
+		{
 		rwlock_endread(&self->sv_lock);
 		return NULL;
 	}
@@ -1546,9 +1511,8 @@ svec_nsi_find(SharedVector *__restrict self,
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			return i;
 		}
 		rwlock_read(&self->sv_lock);
@@ -1580,9 +1544,8 @@ svec_nsi_rfind(SharedVector *__restrict self,
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			return i;
 		}
 		rwlock_read(&self->sv_lock);
@@ -1660,9 +1623,8 @@ again:
 	self->sv_length = other->sv_length;
 	self->sv_vector = (DREF DeeObject **)Dee_TryMalloc(self->sv_length *
 	                                                   sizeof(DREF DeeObject *));
-	if
-		unlikely(!self->sv_vector)
-	{
+	if unlikely(!self->sv_vector)
+		{
 		rwlock_endread(&other->sv_lock);
 		if (Dee_CollectMemory(self->sv_length * sizeof(DREF DeeObject *)))
 			goto again;
@@ -1682,13 +1644,11 @@ PRIVATE int DCALL
 svec_deep(SharedVector *__restrict self,
           SharedVector *__restrict other) {
 	size_t i;
-	if
-		unlikely(svec_copy(self, other))
-	goto err;
+	if unlikely(svec_copy(self, other))
+		goto err;
 	for (i = 0; i < self->sv_length; ++i) {
-		if
-			unlikely(DeeObject_InplaceDeepCopy(&self->sv_vector[i]))
-		goto err_r;
+		if unlikely(DeeObject_InplaceDeepCopy(&self->sv_vector[i]))
+			goto err_r;
 	}
 	return 0;
 err_r:
@@ -1763,9 +1723,8 @@ PUBLIC DREF DeeObject *DCALL
 DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector) {
 	DREF SharedVector *result;
 	result = DeeObject_MALLOC(SharedVector);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &SharedVector_Type);
 	rwlock_init(&result->sv_lock);
 	result->sv_length = length;
@@ -1808,9 +1767,8 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	rwlock_write(&me->sv_lock);
 	vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sv_length *
 	                                               sizeof(DREF DeeObject *));
-	if
-		unlikely(!vector_copy)
-	goto err_cannot_inherit;
+	if unlikely(!vector_copy)
+		goto err_cannot_inherit;
 	/* Simply copy all the elements, transferring
 	 * all the references that they represent. */
 	MEMCPY_PTR(vector_copy, me->sv_vector, me->sv_length);

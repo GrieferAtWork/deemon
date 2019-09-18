@@ -113,9 +113,8 @@ ast_genasm_set(struct ast *__restrict self,
 		DREF DeeObject *inner_set;
 		int result;
 		inner_set = DeeRoSet_FromSequence(self->a_constexpr);
-		if
-			unlikely(!inner_set)
-		{
+		if unlikely(!inner_set)
+			{
 restore_error:
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 			goto push_generic;
@@ -130,9 +129,8 @@ restore_error:
 		 * Instead, try to generate it as a regular hash-set. */
 		Dee_Decref_likely(inner_set);
 		inner_set = DeeHashSet_FromSequence(self->a_constexpr);
-		if
-			unlikely(!inner_set)
-		goto restore_error;
+		if unlikely(!inner_set)
+			goto restore_error;
 		result = asm_gpush_constexpr(inner_set);
 		Dee_Decref_unlikely(inner_set);
 		return result;

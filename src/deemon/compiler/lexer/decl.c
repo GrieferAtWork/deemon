@@ -64,12 +64,10 @@ decl_ast_copy(struct decl_ast *__restrict self,
 		struct decl_ast *new_vec;
 		new_vec = (struct decl_ast *)Dee_Malloc(self->da_alt.a_altc *
 		                                        sizeof(struct decl_ast));
-		if
-			unlikely(!new_vec)
-		goto err;
+		if unlikely(!new_vec)
+			goto err;
 		for (i = 0; i < self->da_alt.a_altc; ++i) {
-			if
-				unlikely(decl_ast_copy(&new_vec[i],
+			if unlikely(decl_ast_copy(&new_vec[i],
 				                       &self->da_alt.a_altv[i]))
 			{
 				while (i--)
@@ -95,12 +93,10 @@ decl_ast_copy(struct decl_ast *__restrict self,
 	case DAST_SEQ:
 copy_inner:
 		inner = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
-		if
-			unlikely(!inner)
-		goto err;
-		if
-			unlikely(decl_ast_copy(inner, self->da_seq))
-		{
+		if unlikely(!inner)
+			goto err;
+		if unlikely(decl_ast_copy(inner, self->da_seq))
+			{
 			Dee_Free(inner);
 			goto err;
 		}
@@ -110,19 +106,16 @@ copy_inner:
 	case DAST_WITH: {
 		struct decl_ast *inner;
 		inner = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-		if
-			unlikely(!inner)
-		goto err;
-		if
-			unlikely(decl_ast_copy(&inner[0], &self->da_with.w_cell[0]))
-		{
+		if unlikely(!inner)
+			goto err;
+		if unlikely(decl_ast_copy(&inner[0], &self->da_with.w_cell[0]))
+			{
 err_with_inner:
 			Dee_Free(inner);
 			goto err;
 		}
-		if
-			unlikely(decl_ast_copy(&inner[1], &self->da_with.w_cell[1]))
-		{
+		if unlikely(decl_ast_copy(&inner[1], &self->da_with.w_cell[1]))
+			{
 			decl_ast_fini(&inner[0]);
 			goto err_with_inner;
 		}
@@ -311,9 +304,8 @@ decl_ast_isempty(struct decl_ast const *__restrict self) {
 		    !decl_ast_isempty(self->da_func.f_ret))
 			goto nope; /* We've got a return type. */
 		scope = decl_ast_func_getscope(self);
-		if
-			unlikely(!scope)
-		goto nope;
+		if unlikely(!scope)
+			goto nope;
 		if ((scope->bs_argc != 0) ||                   /* We've got argument names */
 		    !(scope->bs_cflags & BASESCOPE_FRETURN)) { /* We know that only `none' is ever returned */
 			Dee_Decref_unlikely((DeeObject *)scope);
@@ -348,9 +340,8 @@ decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
 	for (; iter < end; ++iter) {
 		char ch = *iter;
 		if (!must_escape && !DeeUni_IsSymCont(ch)) {
-			if
-				unlikely(unicode_printer_putascii(printer, '{'))
-			goto err;
+			if unlikely(unicode_printer_putascii(printer, '{'))
+				goto err;
 			must_escape = true;
 		}
 		if (ch == '\\' || ch == '?' || ch == '!' ||
@@ -363,12 +354,10 @@ decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
 			if (!must_escape &&
 			    unlikely(unicode_printer_putascii(printer, '{')))
 				goto err;
-			if
-				unlikely(unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
-			goto err;
-			if
-				unlikely(unicode_printer_putascii(printer, '\\'))
-			goto err;
+			if unlikely(unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+				goto err;
+			if unlikely(unicode_printer_putascii(printer, '\\'))
+				goto err;
 			must_escape = true;
 			flush_start = iter;
 			if (ch == '\r' && iter + 1 < end && iter[1] == '\n')
@@ -381,20 +370,17 @@ decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
 			if (!must_escape &&
 			    unlikely(unicode_printer_putascii(printer, '{')))
 				goto err;
-			if
-				unlikely(unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
-			goto err;
-			if
-				unlikely(unicode_printer_putascii(printer, '\\'))
-			goto err;
+			if unlikely(unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+				goto err;
+			if unlikely(unicode_printer_putascii(printer, '\\'))
+				goto err;
 			must_escape = true;
 			flush_start = iter;
 			continue;
 		}
 	}
-	if
-		unlikely(unicode_printer_print(printer, flush_start, (size_t)(end - flush_start)) < 0)
-	goto err;
+	if unlikely(unicode_printer_print(printer, flush_start, (size_t)(end - flush_start)) < 0)
+		goto err;
 	/* Print the trailing right-brace required when the name was escaped. */
 	if (must_escape &&
 	    unlikely(unicode_printer_putascii(printer, '}')))
@@ -496,16 +482,14 @@ switch_symbol_type:
 				if (UNICODE_PRINTER_PRINT(printer, "?E") < 0)
 					goto err;
 				module_name = DeeString_AsUtf8((DeeObject *)sym->s_extern.e_module->mo_name);
-				if
-					unlikely(!module_name)
-				goto err;
+				if unlikely(!module_name)
+					goto err;
 				if (decl_ast_escapename(module_name,
 				                        WSTR_LENGTH(module_name),
 				                        printer) < 0)
 					goto err;
-				if
-					unlikely(unicode_printer_putc(printer, ':'))
-				goto err;
+				if unlikely(unicode_printer_putc(printer, ':'))
+					goto err;
 				if (decl_ast_escapename(MODULE_SYMBOL_GETNAMESTR(msym),
 				                        MODULE_SYMBOL_GETNAMELEN(msym),
 				                        printer) < 0)
@@ -592,9 +576,8 @@ print_undefined_symbol_name:
 		if (unicode_printer_printf(printer, "?X%Iu", self->da_alt.a_altc) < 0)
 			goto err;
 		for (i = 0; i < self->da_alt.a_altc; ++i) {
-			if
-				unlikely(decl_ast_print_type(&self->da_alt.a_altv[i], printer))
-			goto err;
+			if unlikely(decl_ast_print_type(&self->da_alt.a_altv[i], printer))
+				goto err;
 		}
 	}	break;
 
@@ -603,53 +586,43 @@ print_undefined_symbol_name:
 		if (unicode_printer_printf(printer, "?T%Iu", self->da_tuple.t_itemc) < 0)
 			goto err;
 		for (i = 0; i < self->da_tuple.t_itemc; ++i) {
-			if
-				unlikely(decl_ast_print_type(&self->da_tuple.t_itemv[i], printer))
-			goto err;
+			if unlikely(decl_ast_print_type(&self->da_tuple.t_itemv[i], printer))
+				goto err;
 		}
 	}	break;
 
 	case DAST_SEQ:
 		if (UNICODE_PRINTER_PRINT(printer, "?S") < 0)
 			goto err;
-		if
-			unlikely(decl_ast_print_type(self->da_seq, printer))
-		goto err;
+		if unlikely(decl_ast_print_type(self->da_seq, printer))
+			goto err;
 		break;
 
 	case DAST_ATTR: {
 		char *attrname;
 		attrname = DeeString_AsUtf8((DeeObject *)self->da_attr.a_name);
-		if
-			unlikely(!attrname)
-		goto err;
-		if
-			unlikely(UNICODE_PRINTER_PRINT(printer, "?A") < 0)
-		goto err;
-		if
-			unlikely(decl_ast_escapename(attrname, WSTR_LENGTH(attrname), printer) < 0)
-		goto err;
-		if
-			unlikely(decl_ast_print_type(self->da_attr.a_base, printer))
-		goto err;
+		if unlikely(!attrname)
+			goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(printer, "?A") < 0)
+			goto err;
+		if unlikely(decl_ast_escapename(attrname, WSTR_LENGTH(attrname), printer) < 0)
+			goto err;
+		if unlikely(decl_ast_print_type(self->da_attr.a_base, printer))
+			goto err;
 	}	break;
 
 	case DAST_WITH:
-		if
-			unlikely(UNICODE_PRINTER_PRINT(printer, "?C") < 0)
-		goto err;
-		if
-			unlikely(decl_ast_print_type(&self->da_with.w_cell[0], printer))
-		goto err;
-		if
-			unlikely(decl_ast_print_type(&self->da_with.w_cell[1], printer))
-		goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(printer, "?C") < 0)
+			goto err;
+		if unlikely(decl_ast_print_type(&self->da_with.w_cell[0], printer))
+			goto err;
+		if unlikely(decl_ast_print_type(&self->da_with.w_cell[1], printer))
+			goto err;
 		break;
 
 	case DAST_STRING:
-		if
-			unlikely(unicode_printer_printstring(printer, (DeeObject *)self->da_string) < 0)
-		goto err;
+		if unlikely(unicode_printer_printstring(printer, (DeeObject *)self->da_string) < 0)
+			goto err;
 		break;
 
 	default:
@@ -689,12 +662,10 @@ decl_ast_print_const_expr(DeeObject *__restrict self,
 	if (DeeString_Check(self)) {
 		char const *utf8_repr;
 		utf8_repr = DeeString_AsUtf8(self);
-		if
-			unlikely(!utf8_repr)
-		goto err;
-		if
-			unlikely(unicode_printer_putascii(printer, 'P'))
-		goto err;
+		if unlikely(!utf8_repr)
+			goto err;
+		if unlikely(unicode_printer_putascii(printer, 'P'))
+			goto err;
 		return decl_ast_escapename(utf8_repr, WSTR_LENGTH(utf8_repr), printer);
 	}
 	if (DeeTuple_Check(self)) {
@@ -851,9 +822,8 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 	return_empty_string;
 #else
 	bool decl_is_empty;
-	if
-		unlikely(!UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl))
-	{
+	if unlikely(!UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl))
+		{
 		/* Return the user-defined declaration prefix. */
 		DREF DeeObject *result;
 		while (UNICODE_PRINTER_LENGTH(&current_tags.at_decl)) {
@@ -865,9 +835,8 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 			--UNICODE_PRINTER_LENGTH(&current_tags.at_decl);
 		}
 		if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
-			if
-				unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
-			goto err2;
+			if unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
+				goto err2;
 			switch (current_tags.at_doc.up_flags & UNICODE_PRINTER_FWIDTH) {
 
 			CASE_WIDTH_1BYTE:
@@ -953,31 +922,27 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 
 
 	case KWD___asm__:
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
+			goto err_flags;
 		/* TODO: Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?Dobject")) {
 		 * >> } */
 		self->da_type = DAST_NONE;
 
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ASM))
-		goto err_r;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ASM))
+			goto err_r;
 		break;
 
 
 	case KWD_none:
 		/* None-type. */
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		self->da_type  = DAST_CONST;
 		self->da_flag  = DAST_FNORMAL;
 		self->da_const = (DREF DeeObject *)&DeeNone_Type;
@@ -989,18 +954,16 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		DREF struct ast *type_expr;
 		uint16_t old_opt_flags;
 		/* Type-of-expression declaration. */
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (tok == '(') {
 			type_expr = ast_parse_unaryhead(LOOKUP_SYM_NORMAL |
 			                                PARSE_UNARY_DISALLOW_CASTS);
 		} else {
 			type_expr = ast_parse_unary(LOOKUP_SYM_NORMAL);
 		}
-		if
-			unlikely(!type_expr)
-		goto err;
+		if unlikely(!type_expr)
+			goto err;
 		if (ast_optimize_all(type_expr, true)) {
 err_type_expr:
 			ast_decref(type_expr);
@@ -1010,9 +973,8 @@ err_type_expr:
 		optimizer_flags &= ~OPTIMIZE_FNOPREDICT;
 		self->da_const = (DREF DeeObject *)ast_predict_type(type_expr);
 		optimizer_flags |= old_opt_flags & OPTIMIZE_FNOPREDICT;
-		if
-			unlikely(!self->da_const)
-		{
+		if unlikely(!self->da_const)
+			{
 			if (WARN(W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION))
 				goto err_type_expr;
 			self->da_type = DAST_NONE;
@@ -1033,41 +995,35 @@ err_type_expr:
 		/* Tuple type declaration. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		error = decl_ast_parse(self);
-		if
-			unlikely(error)
-		goto err_flags;
+		if unlikely(error)
+			goto err_flags;
 		/* This also functions as regular parenthesis, just like in
 		 * normal expressions, where `()' is the empty tuple, `(foo)'
 		 * is regular parenthesis, `(foo,)' is a 1-element tuple, and
 		 * `(foo, bar)' and `(foo, bar,)' are 2-element tuples. */
 		if (tok == ')') {
 			/* Simple parenthesis. */
-			if
-				unlikely(yield() < 0)
-			goto err_r_flags;
+			if unlikely(yield() < 0)
+				goto err_r_flags;
 			break;
 		}
 		elema = 2, elemc = 1;
 		elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-		if
-			unlikely(!elemv)
-		goto err_r_flags;
+		if unlikely(!elemv)
+			goto err_r_flags;
 		memcpy(&elemv[0], self, sizeof(struct decl_ast));
 		if (tok == ',')
 			for (;;) {
-				if
-					unlikely(yield() < 0)
-				goto err_elemv;
+				if unlikely(yield() < 0)
+					goto err_elemv;
 				if (tok == ')')
 					break; /* Single-element tuple / trailing comma */
 				error = decl_ast_parse(&elemv[elemc]);
-				if
-					unlikely(error)
-				goto err_elemv;
+				if unlikely(error)
+					goto err_elemv;
 				++elemc;
 				if (tok != ',')
 					break;
@@ -1077,15 +1033,13 @@ err_type_expr:
 					elema *= 2;
 					new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elema *
 					                                                     sizeof(struct decl_ast));
-					if
-						unlikely(!new_elemv)
-					{
+					if unlikely(!new_elemv)
+						{
 						elema     = elemc + 1;
 						new_elemv = (struct decl_ast *)Dee_Realloc(elemv, elema *
 						                                                  sizeof(struct decl_ast));
-						if
-							unlikely(!new_elemv)
-						goto err_elemv;
+						if unlikely(!new_elemv)
+							goto err_elemv;
 					}
 					elemv = new_elemv;
 				}
@@ -1094,14 +1048,12 @@ err_type_expr:
 			struct decl_ast *new_elemv;
 			new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elemc *
 			                                                     sizeof(struct decl_ast));
-			if
-				likely(new_elemv)
-			elemv = new_elemv;
+			if likely(new_elemv)
+				elemv = new_elemv;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_TUPLE))
-		{
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_TUPLE))
+			{
 			old_flags = 0;
 			goto err_elemv;
 		}
@@ -1124,17 +1076,14 @@ err_elemv:
 		/* Sequence type declaration. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(yield() < 0)
-		goto err_flags;
+		if unlikely(yield() < 0)
+			goto err_flags;
 		decl_seq = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
-		if
-			unlikely(!decl_seq)
-		goto err_flags;
+		if unlikely(!decl_seq)
+			goto err_flags;
 		error = decl_ast_parse(decl_seq);
-		if
-			unlikely(error)
-		{
+		if unlikely(error)
+			{
 err_seq:
 			Dee_Free(decl_seq);
 			goto err_flags;
@@ -1143,39 +1092,34 @@ err_seq:
 			/* Special case: `{x: y}' is an alias for `{(x,y)...}', as it best represents a mapping */
 			struct decl_ast *elemv;
 			elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-			if
-				unlikely(!elemv)
-			{
+			if unlikely(!elemv)
+				{
 err_seq_0:
 				decl_ast_fini(decl_seq);
 				goto err_seq;
 			}
 			memcpy(&elemv[0], decl_seq, sizeof(struct decl_ast));
-			if
-				unlikely(yield() < 0)
-			{
+			if unlikely(yield() < 0)
+				{
 err_elemv_0:
 				decl_ast_fini(&elemv[0]);
 				Dee_Free(elemv);
 				goto err_seq;
 			}
 			error = decl_ast_parse(&elemv[1]);
-			if
-				unlikely(error)
-			goto err_elemv_0;
+			if unlikely(error)
+				goto err_elemv_0;
 			decl_seq->da_type          = DAST_TUPLE;
 			decl_seq->da_flag          = DAST_FNORMAL;
 			decl_seq->da_tuple.t_itemc = 2;
 			decl_seq->da_tuple.t_itemv = elemv; /* Inherit */
 		} else {
-			if
-				unlikely(likely(tok == TOK_DOTS) ? (yield() < 0) : WARN(W_EXPECTED_DOTS_AFTER_SEQUENCE))
-			goto err_seq_0;
+			if unlikely(likely(tok == TOK_DOTS) ? (yield() < 0) : WARN(W_EXPECTED_DOTS_AFTER_SEQUENCE))
+				goto err_seq_0;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_SEQUENCE))
-		goto err_seq_0;
+		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_SEQUENCE))
+			goto err_seq_0;
 		self->da_type = DAST_SEQ;
 		self->da_flag = DAST_FNORMAL;
 		self->da_seq  = decl_seq;
@@ -1185,18 +1129,15 @@ err_elemv_0:
 	case KWD___nth: {
 		DREF struct ast *nth_expr;
 		/* N'th symbol compatibility. */
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if
-			unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_NTH))
-		goto err_flags;
+		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_NTH))
+			goto err_flags;
 		nth_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if
-			unlikely(!nth_expr)
-		goto err_flags;
+		if unlikely(!nth_expr)
+			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		/* Optimize the ast-expression to propagate constant, thus
 		 * allowing the use of `__nth(2+3)' instead of forcing the
@@ -1209,9 +1150,8 @@ err_nth:
 		if (nth_expr->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_nth;
-		if
-			unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_NTH))
-		goto err_nth;
+		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_NTH))
+			goto err_nth;
 		if (TPP_ISKEYWORD(tok)) {
 			unsigned int nth_symbol = 0;
 			struct symbol *sym;
@@ -1223,9 +1163,8 @@ err_nth:
 			}
 			ast_decref(nth_expr);
 			sym = lookup_nth(nth_symbol, token.t_kwd);
-			if
-				likely(sym)
-			{
+			if likely(sym)
+				{
 				self->da_type   = DAST_SYMBOL;
 				self->da_flag   = DAST_FNORMAL;
 				self->da_symbol = sym;
@@ -1236,9 +1175,8 @@ err_nth:
 				self->da_type = DAST_NONE;
 				self->da_flag = DAST_FNORMAL;
 			}
-			if
-				unlikely(yield() < 0)
-			goto err_r;
+			if unlikely(yield() < 0)
+				goto err_r;
 		} else {
 			ast_decref(nth_expr);
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_NTH))
@@ -1253,21 +1191,18 @@ err_nth:
 			/* Lookup a symbol-like expression. */
 			DREF struct symbol *sym; /* Perform a regular symbol lookup. */
 			struct TPPKeyword *name = token.t_kwd;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (tok == KWD_from) {
 				/* `Error from deemon' - Short form of `import Error from deemon' */
-				if
-					unlikely(yield() < 0)
-				goto err;
+				if unlikely(yield() < 0)
+					goto err;
 				sym = ast_parse_import_single_sym(name);
 			} else {
 				sym = lookup_symbol(LOOKUP_SYM_NORMAL, name, NULL);
 			}
-			if
-				unlikely(!sym)
-			goto err;
+			if unlikely(!sym)
+				goto err;
 			self->da_type   = DAST_SYMBOL;
 			self->da_flag   = DAST_FNORMAL;
 			self->da_symbol = sym;
@@ -1300,12 +1235,10 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 	switch (tok) {
 
 	case '.':
-		if
-			unlikely(yield() < 0)
-		goto err_r;
-		if
-			unlikely(!TPP_ISKEYWORD(tok))
-		{
+		if unlikely(yield() < 0)
+			goto err_r;
+		if unlikely(!TPP_ISKEYWORD(tok))
+			{
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
 				goto err_r;
 			break;
@@ -1313,9 +1246,8 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 		if (self->da_type == DAST_CONST) {
 			DREF DeeObject *attrib;
 			attrib = DeeObject_GetAttrString(self->da_const, token.t_kwd->k_name);
-			if
-				unlikely(!attrib)
-			{
+			if unlikely(!attrib)
+				{
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
 				if (WARN(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,
 				         token.t_kwd->k_name, self->da_const))
@@ -1329,14 +1261,12 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 			struct module_symbol *modsym;
 			modsym = DeeModule_GetSymbolString(self->da_symbol->s_module, token.t_kwd->k_name,
 			                                   Dee_HashPtr(token.t_kwd->k_name, token.t_kwd->k_size));
-			if
-				likely(modsym)
-			{
+			if likely(modsym)
+				{
 				struct symbol *new_symbol;
 				new_symbol = new_unnamed_symbol_in_scope(self->da_symbol->s_scope);
-				if
-					unlikely(!new_symbol)
-				goto err_r;
+				if unlikely(!new_symbol)
+					goto err_r;
 				new_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 				new_symbol->s_extern.e_module = self->da_symbol->s_module;
 				new_symbol->s_extern.e_symbol = modsym;
@@ -1355,13 +1285,11 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 			attr_name = (DREF struct string_object *)DeeString_NewUtf8(token.t_kwd->k_name,
 			                                                           token.t_kwd->k_size,
 			                                                           STRING_ERROR_FIGNORE);
-			if
-				unlikely(!attr_name)
-			goto err_r;
+			if unlikely(!attr_name)
+				goto err_r;
 			inner_ast = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
-			if
-				unlikely(!inner_ast)
-			{
+			if unlikely(!inner_ast)
+				{
 				Dee_Decref(attr_name);
 				goto err_r;
 			}
@@ -1371,9 +1299,8 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 			self->da_attr.a_base = inner_ast; /* Inherit reference. */
 			self->da_attr.a_name = attr_name; /* Inherit reference. */
 		}
-		if
-			unlikely(yield() < 0)
-		goto err_r;
+		if unlikely(yield() < 0)
+			goto err_r;
 		break;
 
 	default: break;
@@ -1390,24 +1317,20 @@ decl_ast_parse_alt(struct decl_ast *__restrict self) {
 	size_t elema, elemc, i;
 	struct decl_ast *elemv;
 	result = decl_ast_parse_unary(self);
-	if
-		unlikely(result)
-	goto err;
+	if unlikely(result)
+		goto err;
 	if (tok == '|') {
 		elema = 2, elemc = 1;
 		elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-		if
-			unlikely(!elemv)
-		goto err_r;
+		if unlikely(!elemv)
+			goto err_r;
 		decl_ast_move(&elemv[0], self);
 		for (;;) {
-			if
-				unlikely(yield() < 0)
-			goto err_elemv;
+			if unlikely(yield() < 0)
+				goto err_elemv;
 			result = decl_ast_parse_unary(&elemv[elemc]);
-			if
-				unlikely(result)
-			goto err_elemv;
+			if unlikely(result)
+				goto err_elemv;
 			/* Check if the secondary variant is identical to a previous one.
 			 * If it is, don't add it again! */
 			for (i = 0; i < elemc; ++i) {
@@ -1427,15 +1350,13 @@ after_inc_elemc:
 				elema *= 2;
 				new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elema *
 				                                                     sizeof(struct decl_ast));
-				if
-					unlikely(!new_elemv)
-				{
+				if unlikely(!new_elemv)
+					{
 					elema     = elemc + 1;
 					new_elemv = (struct decl_ast *)Dee_Realloc(elemv, elema *
 					                                                  sizeof(struct decl_ast));
-					if
-						unlikely(!new_elemv)
-					goto err_elemv;
+					if unlikely(!new_elemv)
+						goto err_elemv;
 				}
 				elemv = new_elemv;
 			}
@@ -1444,9 +1365,8 @@ after_inc_elemc:
 			struct decl_ast *new_elemv;
 			new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elemc *
 			                                                     sizeof(struct decl_ast));
-			if
-				likely(new_elemv)
-			elemv = new_elemv;
+			if likely(new_elemv)
+				elemv = new_elemv;
 		}
 		/* Fill in the resulting AST representation as an ALT-ast */
 		self->da_type       = DAST_ALT;
@@ -1468,19 +1388,15 @@ err:
 
 INTERN int DCALL
 decl_ast_parse_for_symbol(struct symbol *__restrict self) {
-	if
-		likely(self->s_decltype.da_type == DAST_NONE)
-	{
-		if
-			unlikely(decl_ast_parse(&self->s_decltype))
-		goto err;
+	if likely(self->s_decltype.da_type == DAST_NONE)
+		{
+		if unlikely(decl_ast_parse(&self->s_decltype))
+			goto err;
 	} else {
 		struct decl_ast decl;
-		if
-			unlikely(decl_ast_parse(&decl))
-		goto err;
-		if
-			unlikely(!decl_ast_equal(&self->s_decltype, &decl) &&
+		if unlikely(decl_ast_parse(&decl))
+			goto err;
+		if unlikely(!decl_ast_equal(&self->s_decltype, &decl) &&
 			         WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, self))
 		{
 			decl_ast_fini(&decl);
@@ -1499,22 +1415,18 @@ INTERN int DCALL
 decl_ast_parse(struct decl_ast *__restrict self) {
 	int result;
 	result = decl_ast_parse_alt(self);
-	if
-		unlikely(result)
-	goto err;
+	if unlikely(result)
+		goto err;
 	while (tok == KWD_with) {
 		struct decl_ast *inner;
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		inner = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
-		if
-			unlikely(!inner)
-		goto err_r;
+		if unlikely(!inner)
+			goto err_r;
 		result = decl_ast_parse_alt(&inner[1]);
-		if
-			unlikely(result)
-		{
+		if unlikely(result)
+			{
 			Dee_Free(inner);
 			goto err_r;
 		}

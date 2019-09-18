@@ -47,9 +47,8 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
 	ASSERT(new_mask != 0);
 	new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
 	                                                     sizeof(struct jit_object_entry));
-	if
-		unlikely(!new_table)
-	return false;
+	if unlikely(!new_table)
+		return false;
 	if (self->jf_args.ot_list != jit_empty_object_list) {
 		struct jit_object_entry *old_table;
 		old_table = self->jf_args.ot_list;
@@ -132,20 +131,17 @@ again:
 						new_mask = self->jf_args.ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
 					if (new_mask < 7)
 						new_mask = 7;
-					if
-						likely(JITFunction_TryRehashArguments(self, new_mask))
-					goto again;
+					if likely(JITFunction_TryRehashArguments(self, new_mask))
+						goto again;
 					if (self->jf_args.ot_size == self->jf_args.ot_mask) {
 						new_mask = (self->jf_args.ot_mask << 1) | 1;
 						if (self->jf_args.ot_used < self->jf_args.ot_size)
 							new_mask = self->jf_args.ot_mask; /* It's enough if we just rehash to get rid of deleted entries. */
 						for (;;) {
-							if
-								likely(JITFunction_TryRehashArguments(self, new_mask))
-							goto again;
-							if
-								unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-							return NULL;
+							if likely(JITFunction_TryRehashArguments(self, new_mask))
+								goto again;
+							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
+								return NULL;
 						}
 					}
 				}
@@ -246,9 +242,8 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 	JITLexer lex;
 	DREF JITFunction *result;
 	result = DeeObject_MALLOC(JITFunction);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->jf_source_start = source_start;
 	result->jf_source_end   = source_end;
 	result->jf_source       = source;
@@ -291,9 +286,8 @@ err_varargs_already_defined:
 				argent = JITFunction_CreateArgument(result,
 				                                    (char const *)lex.jl_tokstart,
 				                                    (size_t)(lex.jl_tokend - lex.jl_tokstart));
-				if
-					unlikely(!argent)
-				goto err_r;
+				if unlikely(!argent)
+					goto err_r;
 				result->jf_varargs = (size_t)(argent - result->jf_args.ot_list);
 				JITLexer_Yield(&lex);
 			} else {
@@ -320,9 +314,8 @@ err_no_keyword_for_argument:
 					argent = JITFunction_CreateArgument(result,
 					                                    (char const *)lex.jl_tokstart,
 					                                    (size_t)(lex.jl_tokend - lex.jl_tokstart));
-					if
-						unlikely(!argent)
-					goto err_r;
+					if unlikely(!argent)
+						goto err_r;
 					JITLexer_Yield(&lex);
 					result->jf_varkwds = (size_t)(argent - result->jf_args.ot_list);
 				} else {
@@ -331,9 +324,8 @@ err_no_keyword_for_argument:
 					argent = JITFunction_CreateArgument(result,
 					                                    (char const *)lex.jl_tokstart,
 					                                    (size_t)(lex.jl_tokend - lex.jl_tokstart));
-					if
-						unlikely(!argent)
-					goto err_r;
+					if unlikely(!argent)
+						goto err_r;
 					JITLexer_Yield(&lex);
 					if (lex.jl_tok == TOK_DOTS) {
 						/* Varargs... */
@@ -358,12 +350,10 @@ err_no_keyword_for_argument:
 							lex.jl_text = source;
 							/* Parse the default value. */
 							default_value = JITLexer_ParseDefaultValue(&lex, impbase, globals);
-							if
-								unlikely(!default_value)
-							goto err_r;
-							if
-								unlikely(argent->oe_value)
-							Dee_Clear(argent->oe_value);
+							if unlikely(!default_value)
+								goto err_r;
+							if unlikely(argent->oe_value)
+								Dee_Clear(argent->oe_value);
 							argent->oe_value = default_value; /* Inherit reference. */
 						} else {
 							if (result->jf_argc_min != result->jf_argc_max) {
@@ -380,16 +370,13 @@ err_no_keyword_for_argument:
 							uint16_t new_arga;
 							size_t *new_argv;
 							new_arga = arga * 2;
-							if
-								unlikely(!new_arga)
-							new_arga = 2;
-							if
-								unlikely(new_arga < arga)
-							{
-								new_arga = result->jf_argc_max + 1;
-								if
-									unlikely(new_arga < arga)
+							if unlikely(!new_arga)
+								new_arga = 2;
+							if unlikely(new_arga < arga)
 								{
+								new_arga = result->jf_argc_max + 1;
+								if unlikely(new_arga < arga)
+									{
 									DeeError_Throwf(&DeeError_SyntaxError,
 									                "Too many arguments");
 									goto err_r;
@@ -397,15 +384,13 @@ err_no_keyword_for_argument:
 							}
 							new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
 							                                    new_arga * sizeof(size_t));
-							if
-								unlikely(!new_argv)
-							{
+							if unlikely(!new_argv)
+								{
 								new_arga = result->jf_argc_max + 1;
 								new_argv = (size_t *)Dee_Realloc(result->jf_argv,
 								                                 new_arga * sizeof(size_t));
-								if
-									unlikely(!new_argv)
-								goto err_r;
+								if unlikely(!new_argv)
+									goto err_r;
 							}
 							result->jf_argv = new_argv;
 							arga            = new_arga;
@@ -432,9 +417,8 @@ err_no_keyword_for_argument:
 			size_t *new_argv;
 			new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
 			                                    result->jf_argc_max * sizeof(size_t));
-			if
-				likely(new_argv)
-			result->jf_argv = new_argv;
+			if likely(new_argv)
+				result->jf_argv = new_argv;
 		}
 	}
 
@@ -444,9 +428,8 @@ err_no_keyword_for_argument:
 		ent        = JITFunction_CreateArgument(result,
                                          name_start,
                                          len);
-		if
-			unlikely(!ent)
-		goto err_r;
+		if unlikely(!ent)
+			goto err_r;
 		result->jf_selfarg = (size_t)(ent - result->jf_args.ot_list);
 	}
 
@@ -545,29 +528,24 @@ jf_repr(JITFunction *__restrict self) {
 	struct jit_object_entry *ent;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (self->jf_selfarg == (size_t)-1) {
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, "[]") < 0)
-		goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "[]") < 0)
+			goto err;
 		if (!self->jf_argc_max)
 			goto do_print_code;
 	} else {
 		ent = &self->jf_args.ot_list[self->jf_selfarg];
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, "function ") < 0)
-		goto err;
-		if
-			unlikely(unicode_printer_print(&printer, ent->oe_namestr, ent->oe_namelen) < 0)
-		goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "function ") < 0)
+			goto err;
+		if unlikely(unicode_printer_print(&printer, ent->oe_namestr, ent->oe_namelen) < 0)
+			goto err;
 	}
-	if
-		unlikely(unicode_printer_putc(&printer, '(') < 0)
-	goto err;
+	if unlikely(unicode_printer_putc(&printer, '(') < 0)
+		goto err;
 	for (i = 0; i < self->jf_argc_max; ++i) {
 		if (i != 0 && unicode_printer_putascii(&printer, ','))
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_argv[i]];
-		if
-			unlikely(unicode_printer_print(&printer,
+		if unlikely(unicode_printer_print(&printer,
 			                               (char const *)ent->oe_namestr,
 			                               ent->oe_namelen) < 0)
 		goto err;
@@ -576,9 +554,8 @@ jf_repr(JITFunction *__restrict self) {
 				if (unicode_printer_putascii(&printer, '?'))
 					goto err;
 			} else {
-				if
-					unlikely(unicode_printer_printf(&printer, " = %r", ent->oe_value) < 0)
-				goto err;
+				if unlikely(unicode_printer_printf(&printer, " = %r", ent->oe_value) < 0)
+					goto err;
 			}
 		}
 	}
@@ -586,52 +563,42 @@ jf_repr(JITFunction *__restrict self) {
 		if (self->jf_argc_max != 0 && unicode_printer_putascii(&printer, ','))
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_varargs];
-		if
-			unlikely(unicode_printer_print(&printer,
+		if unlikely(unicode_printer_print(&printer,
 			                               (char const *)ent->oe_namestr,
 			                               ent->oe_namelen) < 0)
 		goto err;
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, "...") < 0)
-		goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "...") < 0)
+			goto err;
 	}
 	if (self->jf_varkwds != (size_t)-1) {
 		if ((self->jf_argc_max != 0 || self->jf_varargs != (size_t)-1) &&
 		    unicode_printer_putascii(&printer, ','))
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_varkwds];
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, "**") < 0)
-		goto err;
-		if
-			unlikely(unicode_printer_print(&printer,
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "**") < 0)
+			goto err;
+		if unlikely(unicode_printer_print(&printer,
 			                               (char const *)ent->oe_namestr,
 			                               ent->oe_namelen) < 0)
 		goto err;
 	}
-	if
-		unlikely(unicode_printer_putc(&printer, ')') < 0)
-	goto err;
+	if unlikely(unicode_printer_putc(&printer, ')') < 0)
+		goto err;
 do_print_code:
 	if (self->jf_flags & JIT_FUNCTION_FRETEXPR) {
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, " -> ") < 0)
-		goto err;
-		if
-			unlikely(unicode_printer_print(&printer, self->jf_source_start,
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, " -> ") < 0)
+			goto err;
+		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
 			                               (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
 		goto err;
 	} else {
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\t") < 0)
-		goto err;
-		if
-			unlikely(unicode_printer_print(&printer, self->jf_source_start,
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\t") < 0)
+			goto err;
+		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
 			                               (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
 		goto err;
-		if
-			unlikely(UNICODE_PRINTER_PRINT(&printer, "\n}") < 0)
-		goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "\n}") < 0)
+			goto err;
 	}
 	return unicode_printer_pack(&printer);
 err:
@@ -655,9 +622,8 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 		/* Yield function support */
 		result = (DREF JITYieldFunctionObject *)DeeObject_Malloc(offsetof(JITYieldFunctionObject, jy_argv) +
 		                                                         (argc * sizeof(DREF DeeObject *)));
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		result->jy_func = self;
 		result->jy_kw   = kw;
 		result->jy_argc = argc;
@@ -679,9 +645,8 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 	ASSERT(base_locals.ot_prev.otp_tab != NULL);
 	base_locals.ot_list = (struct jit_object_entry *)Dee_Malloc((base_locals.ot_mask + 1) *
 	                                                            sizeof(struct jit_object_entry));
-	if
-		unlikely(!base_locals.ot_list)
-	goto err;
+	if unlikely(!base_locals.ot_list)
+		goto err;
 	memcpy(base_locals.ot_list, self->jf_args.ot_list,
 	       (base_locals.ot_mask + 1) * sizeof(struct jit_object_entry));
 
@@ -744,13 +709,11 @@ jf_call_kw(JITFunction *__restrict self, size_t argc,
 			                            &context);
 			JITLValue_Fini(&lexer.jl_lvalue);
 		}
-		if
-			likely(result)
-		{
-			ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-			if
-				unlikely(lexer.jl_tok != TOK_EOF)
+		if likely(result)
 			{
+			ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
+			if unlikely(lexer.jl_tok != TOK_EOF)
+				{
 				DeeError_Throwf(&DeeError_SyntaxError,
 				                "Expected EOF but got `%$s'",
 				                (size_t)(lexer.jl_end - lexer.jl_tokstart),
@@ -866,9 +829,8 @@ compare_objtabs(JITObjectTable *__restrict a,
 				if (a->ot_list[i].oe_value != b->ot_list[i].oe_value) {
 					temp = DeeObject_CompareEq(a->ot_list[i].oe_value,
 					                           b->ot_list[i].oe_value);
-					if
-						unlikely(temp <= 0)
-					goto err_temp;
+					if unlikely(temp <= 0)
+						goto err_temp;
 				}
 			} else {
 				if (b->ot_list[i].oe_value)
@@ -965,9 +927,8 @@ jf_eq(JITFunction *__restrict self,
 	if (DeeObject_AssertTypeExact(other, &JITFunction_Type))
 		goto err;
 	result = jf_equal(self, other);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;
@@ -980,9 +941,8 @@ jf_ne(JITFunction *__restrict self,
 	if (DeeObject_AssertTypeExact(other, &JITFunction_Type))
 		goto err;
 	result = jf_equal(self, other);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(!result);
 err:
 	return NULL;
@@ -1030,9 +990,8 @@ jf_getkwds(JITFunction *__restrict self) {
 	DREF DeeObject *result;
 	uint16_t i;
 	result = DeeTuple_NewUninitialized(self->jf_argc_max);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	for (i = 0; i < self->jf_argc_max; ++i) {
 		DREF DeeObject *name;
 		struct jit_object_entry *ent;
@@ -1040,9 +999,8 @@ jf_getkwds(JITFunction *__restrict self) {
 		name = DeeString_NewUtf8(ent->oe_namestr,
 		                         ent->oe_namelen,
 		                         STRING_ERROR_FIGNORE);
-		if
-			unlikely(!name)
-		goto err_r_i;
+		if unlikely(!name)
+			goto err_r_i;
 		DeeTuple_SET(result, i, name); /* Inherit reference. */
 	}
 done:

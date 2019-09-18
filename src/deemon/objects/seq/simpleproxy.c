@@ -54,9 +54,8 @@ PRIVATE int DCALL
 proxy_deep(SeqSimpleProxy *__restrict self,
            SeqSimpleProxy *__restrict other) {
 	self->sp_seq = DeeObject_DeepCopy(other->sp_seq);
-	if
-		unlikely(!self->sp_seq)
-	goto err;
+	if unlikely(!self->sp_seq)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -118,13 +117,11 @@ PRIVATE DREF SeqSimpleProxyIterator *DCALL
 ids_iter(SeqSimpleProxy *__restrict self) {
 	DREF SeqSimpleProxyIterator *result;
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_iter = DeeObject_IterSelf(self->sp_seq);
-	if
-		unlikely(!result->si_iter)
-	goto err_r;
+	if unlikely(!result->si_iter)
+		goto err_r;
 	DeeObject_Init(result, &SeqIdsIterator_Type);
 done:
 	return result;
@@ -137,13 +134,11 @@ PRIVATE DREF SeqSimpleProxyIterator *DCALL
 types_iter(SeqSimpleProxy *__restrict self) {
 	DREF SeqSimpleProxyIterator *result;
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_iter = DeeObject_IterSelf(self->sp_seq);
-	if
-		unlikely(!result->si_iter)
-	goto err_r;
+	if unlikely(!result->si_iter)
+		goto err_r;
 	DeeObject_Init(result, &SeqTypesIterator_Type);
 done:
 	return result;
@@ -156,13 +151,11 @@ PRIVATE DREF SeqSimpleProxyIterator *DCALL
 classes_iter(SeqSimpleProxy *__restrict self) {
 	DREF SeqSimpleProxyIterator *result;
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->si_iter = DeeObject_IterSelf(self->sp_seq);
-	if
-		unlikely(!result->si_iter)
-	goto err_r;
+	if unlikely(!result->si_iter)
+		goto err_r;
 	DeeObject_Init(result, &SeqClassesIterator_Type);
 done:
 	return result;
@@ -176,9 +169,8 @@ PRIVATE DREF DeeObject *DCALL
 ids_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
-	if
-		likely(elem)
-	{
+	if likely(elem)
+		{
 		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
 		Dee_Decref(elem);
 	}
@@ -189,9 +181,8 @@ PRIVATE DREF DeeObject *DCALL
 types_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
-	if
-		likely(elem)
-	{
+	if likely(elem)
+		{
 		result = (DREF DeeObject *)Dee_TYPE(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -203,9 +194,8 @@ PRIVATE DREF DeeObject *DCALL
 classes_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
-	if
-		likely(elem)
-	{
+	if likely(elem)
+		{
 		result = (DREF DeeObject *)DeeObject_Class(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -218,9 +208,8 @@ PRIVATE DREF DeeObject *DCALL
 ids_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
-	if
-		likely(elem)
-	{
+	if likely(elem)
+		{
 		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
 		Dee_Decref(elem);
 	}
@@ -231,9 +220,8 @@ PRIVATE DREF DeeObject *DCALL
 types_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
-	if
-		likely(elem)
-	{
+	if likely(elem)
+		{
 		result = (DREF DeeObject *)Dee_TYPE(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -245,9 +233,8 @@ PRIVATE DREF DeeObject *DCALL
 classes_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
-	if
-		likely(elem)
-	{
+	if likely(elem)
+		{
 		result = (DREF DeeObject *)DeeObject_Class(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -262,9 +249,8 @@ ids_getrange(SeqSimpleProxy *__restrict self,
              DeeObject *__restrict end) {
 	DREF DeeObject *result, *subrange;
 	result = subrange = DeeObject_GetRange(self->sp_seq, start, end);
-	if
-		likely(subrange)
-	{
+	if likely(subrange)
+		{
 		result = SeqIds_New(subrange);
 		Dee_Decref(subrange);
 	}
@@ -277,9 +263,8 @@ types_getrange(SeqSimpleProxy *__restrict self,
                DeeObject *__restrict end) {
 	DREF DeeObject *result, *subrange;
 	result = subrange = DeeObject_GetRange(self->sp_seq, start, end);
-	if
-		likely(subrange)
-	{
+	if likely(subrange)
+		{
 		result = SeqTypes_New(subrange);
 		Dee_Decref(subrange);
 	}
@@ -292,9 +277,8 @@ classes_getrange(SeqSimpleProxy *__restrict self,
                  DeeObject *__restrict end) {
 	DREF DeeObject *result, *subrange;
 	result = subrange = DeeObject_GetRange(self->sp_seq, start, end);
-	if
-		likely(subrange)
-	{
+	if likely(subrange)
+		{
 		result = SeqClasses_New(subrange);
 		Dee_Decref(subrange);
 	}
@@ -315,26 +299,23 @@ ids_contains(SeqSimpleProxy *__restrict self,
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		for (i = 0; i < fast_size; ++i) {
 			elem = DeeFastSeq_GetItem(self->sp_seq, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			Dee_Decref(elem);
 			if (DeeObject_Id(elem) == id_value)
 				goto yes;
 		}
 	} else {
 		iter = DeeObject_IterSelf(self->sp_seq);
-		if
-			unlikely(!iter)
-		goto err;
+		if unlikely(!iter)
+			goto err;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 			Dee_Decref(elem);
 			if (DeeObject_Id(elem) == id_value)
 				goto yes_iter;
 		}
-		if
-			unlikely(!elem)
-		goto err_iter;
+		if unlikely(!elem)
+			goto err_iter;
 		Dee_Decref(iter);
 	}
 	return_false;
@@ -353,33 +334,29 @@ types_contains(SeqSimpleProxy *__restrict self,
                DeeTypeObject *__restrict typ) {
 	size_t i, fast_size;
 	DREF DeeObject *iter, *elem;
-	if
-		unlikely(!DeeType_Check(typ))
-	goto nope;
+	if unlikely(!DeeType_Check(typ))
+		goto nope;
 	fast_size = DeeFastSeq_GetSize(self->sp_seq);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		for (i = 0; i < fast_size; ++i) {
 			elem = DeeFastSeq_GetItem(self->sp_seq, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			if (Dee_TYPE(elem) == typ)
 				goto yes_elem;
 			Dee_Decref(elem);
 		}
 	} else {
 		iter = DeeObject_IterSelf(self->sp_seq);
-		if
-			unlikely(!iter)
-		goto err;
+		if unlikely(!iter)
+			goto err;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 			if (Dee_TYPE(elem) == typ)
 				goto yes_elem_iter;
 			Dee_Decref(elem);
 		}
-		if
-			unlikely(!elem)
-		goto err_iter;
+		if unlikely(!elem)
+			goto err_iter;
 		Dee_Decref(iter);
 	}
 nope:
@@ -400,33 +377,29 @@ classes_contains(SeqSimpleProxy *__restrict self,
                  DeeTypeObject *__restrict typ) {
 	size_t i, fast_size;
 	DREF DeeObject *iter, *elem;
-	if
-		unlikely(!DeeType_Check(typ))
-	goto nope;
+	if unlikely(!DeeType_Check(typ))
+		goto nope;
 	fast_size = DeeFastSeq_GetSize(self->sp_seq);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		for (i = 0; i < fast_size; ++i) {
 			elem = DeeFastSeq_GetItem(self->sp_seq, i);
-			if
-				unlikely(!elem)
-			goto err;
+			if unlikely(!elem)
+				goto err;
 			if (DeeObject_Class(elem) == typ)
 				goto yes_elem;
 			Dee_Decref(elem);
 		}
 	} else {
 		iter = DeeObject_IterSelf(self->sp_seq);
-		if
-			unlikely(!iter)
-		goto err;
+		if unlikely(!iter)
+			goto err;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 			if (DeeObject_Class(elem) == typ)
 				goto yes_elem_iter;
 			Dee_Decref(elem);
 		}
-		if
-			unlikely(!elem)
-		goto err_iter;
+		if unlikely(!elem)
+			goto err_iter;
 		Dee_Decref(iter);
 	}
 nope:
@@ -731,9 +704,8 @@ INTERN DeeTypeObject SeqClasses_Type = {
 PRIVATE int DCALL
 iter_ctor(SeqSimpleProxyIterator *__restrict self) {
 	self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	if
-		unlikely(!self->si_iter)
-	goto err;
+	if unlikely(!self->si_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -743,9 +715,8 @@ PRIVATE int DCALL
 iter_copy(SeqSimpleProxyIterator *__restrict self,
           SeqSimpleProxyIterator *__restrict other) {
 	self->si_iter = DeeObject_Copy(other->si_iter);
-	if
-		unlikely(!self->si_iter)
-	goto err;
+	if unlikely(!self->si_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -772,9 +743,8 @@ iter_init(SeqSimpleProxyIterator *__restrict self,
 	if (DeeObject_AssertTypeExact(seq, tp))
 		goto err;
 	self->si_iter = DeeObject_IterSelf(seq->sp_seq);
-	if
-		unlikely(!self->si_iter)
-	goto err;
+	if unlikely(!self->si_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -1060,9 +1030,8 @@ INTERN DREF DeeObject *DCALL
 SeqIds_New(DeeObject *__restrict seq) {
 	DREF SeqSimpleProxy *result;
 	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(seq);
 	result->sp_seq = seq;
 	DeeObject_Init(result, &SeqIds_Type);
@@ -1074,9 +1043,8 @@ INTERN DREF DeeObject *DCALL
 SeqTypes_New(DeeObject *__restrict seq) {
 	DREF SeqSimpleProxy *result;
 	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(seq);
 	result->sp_seq = seq;
 	DeeObject_Init(result, &SeqTypes_Type);
@@ -1088,9 +1056,8 @@ INTERN DREF DeeObject *DCALL
 SeqClasses_New(DeeObject *__restrict seq) {
 	DREF SeqSimpleProxy *result;
 	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(seq);
 	result->sp_seq = seq;
 	DeeObject_Init(result, &SeqClasses_Type);

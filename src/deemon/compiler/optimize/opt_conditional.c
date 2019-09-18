@@ -69,63 +69,54 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
 		struct ast_assumes ff_assumes;
 		struct ast_optimize_stack child_stack;
 		if (has_tt && has_ff) {
-			if
-				unlikely(ast_assumes_initcond(&tt_assumes, stack->os_assume))
-			goto err;
+			if unlikely(ast_assumes_initcond(&tt_assumes, stack->os_assume))
+				goto err;
 			child_stack.os_prev   = stack;
 			child_stack.os_assume = &tt_assumes;
 			child_stack.os_ast    = self->a_conditional.c_tt;
 			child_stack.os_used   = result_used;
-			if
-				unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
-			{
+			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
+				{
 err_tt_assumes:
 				ast_assumes_fini(&tt_assumes);
 				goto err;
 			}
-			if
-				unlikely(ast_assumes_initcond(&ff_assumes, stack->os_assume))
-			goto err_tt_assumes;
+			if unlikely(ast_assumes_initcond(&ff_assumes, stack->os_assume))
+				goto err_tt_assumes;
 			child_stack.os_prev   = stack;
 			child_stack.os_assume = &ff_assumes;
 			child_stack.os_ast    = self->a_conditional.c_ff;
 			child_stack.os_used   = result_used;
-			if
-				unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
-			{
+			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
+				{
 err_ff_tt_assumes:
 				ast_assumes_fini(&ff_assumes);
 				goto err_tt_assumes;
 			}
 			/* With true-branch and false-branch assumptions now made, merge them! */
-			if
-				unlikely(ast_assumes_mergecond(&tt_assumes, &ff_assumes))
-			goto err_ff_tt_assumes;
+			if unlikely(ast_assumes_mergecond(&tt_assumes, &ff_assumes))
+				goto err_ff_tt_assumes;
 			ast_assumes_fini(&ff_assumes);
 		} else {
 			ASSERT(has_tt || has_ff);
-			if
-				unlikely(ast_assumes_initcond(&tt_assumes, stack->os_assume))
-			goto err;
+			if unlikely(ast_assumes_initcond(&tt_assumes, stack->os_assume))
+				goto err;
 			child_stack.os_prev   = stack;
 			child_stack.os_assume = &tt_assumes;
 			child_stack.os_ast    = has_tt
 			                     ? self->a_conditional.c_tt
 			                     : self->a_conditional.c_ff;
 			child_stack.os_used = result_used;
-			if
-				unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
-			goto err_tt_assumes;
+			if unlikely(ast_optimize(&child_stack, child_stack.os_ast, result_used))
+				goto err_tt_assumes;
 			/* Merge made assumptions with a NULL-branch, behaving
 			 * the same as a merge with an empty set of assumptions. */
-			if
-				unlikely(ast_assumes_mergecond(&tt_assumes, NULL))
-			goto err_tt_assumes;
+			if unlikely(ast_assumes_mergecond(&tt_assumes, NULL))
+				goto err_tt_assumes;
 		}
 		/* Finally, merge newly made assumptions onto those made by the caller. */
-		if
-			unlikely(ast_assumes_merge(stack->os_assume, &tt_assumes))
-		goto err_tt_assumes;
+		if unlikely(ast_assumes_merge(stack->os_assume, &tt_assumes))
+			goto err_tt_assumes;
 		ast_assumes_fini(&tt_assumes);
 	} else
 #endif /*  OPTIMIZE_FASSUME*/
@@ -176,14 +167,12 @@ err_ff_tt_assumes:
 				DREF struct ast *graft;
 				int temp;
 				graft = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL, eval_branch), self);
-				if
-					unlikely(!graft)
-				goto err;
+				if unlikely(!graft)
+					goto err;
 				temp = ast_graft_onto(self, graft);
 				ast_decref(graft);
-				if
-					unlikely(temp)
-				goto err;
+				if unlikely(temp)
+					goto err;
 			} else {
 				if (ast_graft_onto(self, eval_branch))
 					goto err;
@@ -205,17 +194,15 @@ err_ff_tt_assumes:
 			 *          <everything_after_label_in(other_branch)>; _temp; }'
 			 *       instead, if `other_branch' contains a `label'. */
 			elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-			if
-				unlikely(!elemv)
-			goto err;
+			if unlikely(!elemv)
+				goto err;
 			elemv[0] = self->a_conditional.c_cond;
 			/* Cast the branch being evaluated to a boolean if required. */
 			if (self->a_flag & AST_FCOND_BOOL) {
 				DREF struct ast *merge;
 				merge = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL, eval_branch), self);
-				if
-					unlikely(!merge)
-				{
+				if unlikely(!merge)
+					{
 					Dee_Free(elemv);
 					goto err;
 				}
@@ -247,9 +234,8 @@ after_constant_condition:
 					DREF struct ast **elemv;
 					ASSERT(self->a_conditional.c_ff);
 					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-					if
-						unlikely(!elemv)
-					goto err;
+					if unlikely(!elemv)
+						goto err;
 					elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
 					elemv[1] = self->a_conditional.c_ff;   /* Inherit reference. */
 					ast_decref_nokill(self->a_conditional.c_tt);
@@ -286,9 +272,8 @@ after_constant_condition:
 					DREF struct ast **elemv;
 					ASSERT(self->a_conditional.c_tt);
 					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-					if
-						unlikely(!elemv)
-					goto err;
+					if unlikely(!elemv)
+						goto err;
 					elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
 					elemv[1] = self->a_conditional.c_tt;   /* Inherit reference. */
 					ast_decref_nokill(self->a_conditional.c_ff);
@@ -340,9 +325,8 @@ apply_bool_matrix_transformation:
 					DREF struct ast **elemv;
 optimize_conditional_bool_predictable_inherit_multiple:
 					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-					if
-						unlikely(!elemv)
-					goto err;
+					if unlikely(!elemv)
+						goto err;
 					elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
 					elemv[1] = self->a_conditional.c_tt;   /* Inherit reference. */
 					ast_decref(self->a_conditional.c_ff);
@@ -435,9 +419,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
 			argument_packet = DeeTuple_Pack(2,
 			                                ff->a_constexpr,
 			                                tt->a_constexpr);
-			if
-				unlikely(!argument_packet)
-			goto err;
+			if unlikely(!argument_packet)
+				goto err;
 			Dee_Decref(tt->a_constexpr);
 			Dee_Decref(ff->a_constexpr);
 			tt->a_constexpr           = argument_packet; /* Inherit reference. */
@@ -460,9 +443,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
 				DREF struct ast **elemv;
 if_statement_branches_identical:
 				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-				if
-					unlikely(!elemv)
-				goto err;
+				if unlikely(!elemv)
+					goto err;
 				ast_fini_contents(tt);
 				tt->a_type              = AST_BOOL;
 				tt->a_flag              = AST_FBOOL_NORMAL;
@@ -526,9 +508,8 @@ if_statement_branches_identical:
 					++move_count;
 				}
 				if (move_count) {
-					if
-						unlikely(!tt_astc && !ff_astc)
-					goto if_statement_branches_identical;
+					if unlikely(!tt_astc && !ff_astc)
+						goto if_statement_branches_identical;
 					if (!tt_astc) {
 						/* Only the false-branches remain. */
 						/* TODO */

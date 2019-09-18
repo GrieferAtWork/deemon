@@ -206,14 +206,12 @@ again:
 			if (ast_has_sideeffects(self->a_bool)) {
 				/* Replace this branch with `{ ...; true/false; }' */
 				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
-				if
-					unlikely(!elemv)
-				goto err;
+				if unlikely(!elemv)
+					goto err;
 				elemv[0] = self->a_bool;
 				elemv[1] = ast_setscope_and_ddi(ast_constexpr(DeeBool_For(ast_value)), self);
-				if
-					unlikely(!elemv[1])
-				{
+				if unlikely(!elemv[1])
+					{
 					Dee_Free(elemv);
 					goto err;
 				}
@@ -389,9 +387,8 @@ INTERN int (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_use
 	do {
 		old_value = optimizer_count;
 		result    = ast_startoptimize(self, result_used);
-		if
-			unlikely(result)
-		break;
+		if unlikely(result)
+			break;
 		/* Stop after the first pass if the `OPTIMIZE_FONEPASS' flag is set. */
 		if (optimizer_flags & OPTIMIZE_FONEPASS)
 			break;

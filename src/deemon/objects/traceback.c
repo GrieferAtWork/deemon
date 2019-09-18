@@ -283,16 +283,14 @@ traceiter_next(TraceIterator *__restrict self) {
 	struct code_frame *result_frame;
 #ifdef CONFIG_NO_THREADS
 	result_frame = self->ti_next;
-	if
-		unlikely(result_frame < self->ti_trace->tb_frames)
-	return ITER_DONE;
+	if unlikely(result_frame < self->ti_trace->tb_frames)
+		return ITER_DONE;
 	self->ti_next = result_frame - 1;
 #else /* CONFIG_NO_THREADS */
 	do {
 		result_frame = ATOMIC_READ(self->ti_next);
-		if
-			unlikely(result_frame < self->ti_trace->tb_frames)
-		return ITER_DONE;
+		if unlikely(result_frame < self->ti_trace->tb_frames)
+			return ITER_DONE;
 	} while (!ATOMIC_CMPXCH(self->ti_next, result_frame, result_frame - 1));
 #endif /* !CONFIG_NO_THREADS */
 	/* Create a new frame wrapper for this entry. */

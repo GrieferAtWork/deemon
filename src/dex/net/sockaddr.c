@@ -751,16 +751,14 @@ restart:
 		}
 		goto err;
 	}
-	if
-		unlikely(!hp->h_name)
-	goto nodns2;
+	if unlikely(!hp->h_name)
+		goto nodns2;
 	name_length = strlen(hp->h_name);
 	/* Safely copy the host's name. */
 	result = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 	                                                (name_length + 1) * sizeof(char));
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		rwlock_endwrite(&sysdb_lock);
 		if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 		                      (name_length + 1) * sizeof(char)))
@@ -839,9 +837,8 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 		                            SockAddr_Sizeof(family, protocol) -
 		                            offsetof(SockAddr, sa_inet.sin_addr),
 		                            family, flags);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		break;
 	}
 	return result;
@@ -854,18 +851,15 @@ get_port_name(char const *__restrict port, size_t port_length,
               uint16_t *__restrict presult) {
 	char const *iter = port;
 	uint16_t new_result, result = 0;
-	if
-		unlikely(!port_length)
-	goto invalid_port;
+	if unlikely(!port_length)
+		goto invalid_port;
 	do {
 		char ch = *iter++;
-		if
-			unlikely(!(ch >= '0' && ch <= '9'))
-		goto invalid_port;
+		if unlikely(!(ch >= '0' && ch <= '9'))
+			goto invalid_port;
 		new_result = result * 10 + (ch - '0');
-		if
-			unlikely(new_result < result)
-		goto invalid_port;
+		if unlikely(new_result < result)
+			goto invalid_port;
 		result = new_result;
 	} while (--port_length);
 	*presult = result;
@@ -963,18 +957,16 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 	/* Make sure that we've got a NUL-terminated input string. */
 	if (host[host_length]) {
 		host_buffer = (char *)Dee_AMalloc((host_length + 1) * sizeof(char));
-		if
-			unlikely(!host_buffer)
-		goto err;
+		if unlikely(!host_buffer)
+			goto err;
 		memcpy(host_buffer, host, host_length * sizeof(char));
 		host_buffer[host_length] = '\0';
 		host                     = host_buffer;
 	}
 	if (port[port_length]) {
 		port_buffer = (char *)Dee_AMalloc((port_length + 1) * sizeof(char));
-		if
-			unlikely(!port_buffer)
-		goto err;
+		if unlikely(!port_buffer)
+			goto err;
 		memcpy(port_buffer, port, port_length * sizeof(char));
 		port_buffer[port_length] = '\0';
 		port                     = port_buffer;
@@ -1078,9 +1070,8 @@ retry_addrinfo:
 		while (!info->ai_addr && info->ai_next)
 			info = info->ai_next;
 #endif
-		if
-			unlikely(!info->ai_addr)
-		{
+		if unlikely(!info->ai_addr)
+			{
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
@@ -1220,9 +1211,8 @@ do_gethostbyname_again:
 		DBG_ALIGNMENT_DISABLE();
 		hp = (struct hostent *)gethostbyname(host);
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(!hp)
-		{
+		if unlikely(!hp)
+			{
 			DBG_ALIGNMENT_DISABLE();
 			error = h_errno;
 			DBG_ALIGNMENT_ENABLE();
@@ -1350,8 +1340,7 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 	/* Check for simple case: a socket address object was passed. */
 	if (argc == 1 && DeeObject_InstanceOf(argv[0], &DeeSockAddr_Type)) {
 		arg0 = argv[0];
-		if
-			unlikely(family != AF_AUTO &&
+		if unlikely(family != AF_AUTO &&
 			         family != ((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family)
 		{
 			DeeError_Throwf(&DeeError_ValueError,
@@ -1421,9 +1410,8 @@ do_generic_string_2:
 					goto err;
 				/* Cast to string, so we can also allow integers as second argument */
 				arg2_string = DeeObject_Str(argv[1]);
-				if
-					unlikely(!arg2_string)
-				goto err;
+				if unlikely(!arg2_string)
+					goto err;
 				error = SockAddr_FromStringPort(self, family, protocol, type,
 				                                DeeString_STR(arg0), DeeString_SIZE(arg0),
 				                                DeeString_STR(arg2_string), DeeString_SIZE(arg2_string));
@@ -1490,9 +1478,8 @@ do_generic_string_2:
 
 #ifdef AF_UNIX
 	case AF_UNIX:
-		if
-			likely(argc != 1)
-		{
+		if likely(argc != 1)
+			{
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Constructing address family AF_UNIX requires 1 argument, but %Iu were given",
 			                argc);
@@ -1503,9 +1490,8 @@ do_generic_string_2:
 			goto err;
 		/* v Note the '>='. That is on purpose as we need 'DeeString_SIZE(arg0) + 1'
 		 *   bytes for the string and its terminating \0 character */
-		if
-			unlikely(DeeString_SIZE(arg0) >= sizeof(((struct sockaddr_un *)NULL)->sun_path) / sizeof(char))
-		{
+		if unlikely(DeeString_SIZE(arg0) >= sizeof(((struct sockaddr_un *)NULL)->sun_path) / sizeof(char))
+			{
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Given path for 'AF_UNIX' is too long: %r", arg0);
 			goto err;
@@ -1543,9 +1529,8 @@ do_generic_string_2:
 		switch (protocol) {
 
 		case BTPROTO_L2CAP: {
-			if
-				unlikely(argc != 2)
-			{
+			if unlikely(argc != 2)
+				{
 				if (argc == 1)
 					goto do_generic_string;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1559,15 +1544,13 @@ do_generic_string_2:
 				goto err;
 			if (DeeObject_AsUINT(argv[1], &self->bt_l2.l2_psm))
 				goto err;
-			if
-				unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_l2.l2_bdaddr))
-			goto err;
+			if unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_l2.l2_bdaddr))
+				goto err;
 		}	break;
 
 		case BTPROTO_RFCOMM: {
-			if
-				unlikely(argc != 2)
-			{
+			if unlikely(argc != 2)
+				{
 				if (argc == 1)
 					goto do_generic_string;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1581,15 +1564,13 @@ do_generic_string_2:
 				goto err;
 			if (DeeObject_AsUINT(argv[1], &self->bt_rc.rc_channel))
 				goto err;
-			if
-				unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_rc.rc_bdaddr))
-			goto err;
+			if unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_rc.rc_bdaddr))
+				goto err;
 		}	break;
 
 		case BTPROTO_HCI: {
-			if
-				unlikely(argc != 1)
-			{
+			if unlikely(argc != 1)
+				{
 				if (argc == 2)
 					goto do_generic_string_2;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1602,9 +1583,8 @@ do_generic_string_2:
 #if defined(__NetBSD__) || defined(__DragonFly__)
 			if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
 				goto err;
-			if
-				unlikely(priv_stobdaddr(DeeString_StR(argv[0]), &self->bt_hci.hci_bdaddr))
-			goto err;
+			if unlikely(priv_stobdaddr(DeeString_StR(argv[0]), &self->bt_hci.hci_bdaddr))
+				goto err;
 #else /* __NetBSD__ || __DragonFly__ */
 			if (DeeObject_AsUINT(argv[0], &self->bt_hci.hci_dev))
 				goto err;
@@ -1613,9 +1593,8 @@ do_generic_string_2:
 
 #if !defined(__FreeBSD__)
 		case BTPROTO_SCO: {
-			if
-				unlikely(argc != 1)
-			{
+			if unlikely(argc != 1)
+				{
 				if (argc == 2)
 					goto do_generic_string_2;
 				DeeError_Throwf(&DeeError_TypeError,
@@ -1627,9 +1606,8 @@ do_generic_string_2:
 			self->bt_sco.sco_family = AF_BLUETOOTH;
 			if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
 				goto err;
-			if
-				unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_sco.sco_bdaddr))
-			goto err;
+			if unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_sco.sco_bdaddr))
+				goto err;
 		}	break;
 #endif /* !__FreeBSD__ */
 

@@ -49,14 +49,12 @@ PRIVATE int
 	struct ast_symbol_assume *new_vector, *iter, *end;
 	size_t new_mask = self->aa_syms.sa_mask;
 	new_mask        = (new_mask << 1) | 1;
-	if
-		unlikely(new_mask == 1)
-	new_mask = 16 - 1;
+	if unlikely(new_mask == 1)
+		new_mask = 16 - 1;
 	ASSERT(self->aa_syms.sa_size < new_mask);
 	new_vector = (struct ast_symbol_assume *)Dee_Calloc((new_mask + 1) * sizeof(struct ast_symbol_assume));
-	if
-		unlikely(!new_vector)
-	return -1;
+	if unlikely(!new_vector)
+		return -1;
 	if (self->aa_syms.sa_elem) {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->aa_syms.sa_elem) + (self->aa_syms.sa_mask + 1);
@@ -111,9 +109,8 @@ ast_assumes_newsymbol(struct ast_assumes *__restrict self,
 	dhash_t i, perturb, hash;
 	hash = sym->s_name->k_id;
 	if (!self->aa_syms.sa_elem) {
-		if
-			unlikely(ast_assumes_rehashsymbol(self))
-		goto err;
+		if unlikely(ast_assumes_rehashsymbol(self))
+			goto err;
 	}
 again:
 	i = perturb = hash & self->aa_syms.sa_mask;
@@ -123,9 +120,8 @@ again:
 		item = AST_SYMBOL_ASSUMES_HASHIT(&self->aa_syms, i);
 		if (!item->sa_sym) {
 			if (self->aa_syms.sa_size >= self->aa_syms.sa_mask) {
-				if
-					unlikely(ast_assumes_rehashsymbol(self))
-				goto err;
+				if unlikely(ast_assumes_rehashsymbol(self))
+					goto err;
 				goto again;
 			}
 			item->sa_sym = sym;
@@ -156,9 +152,8 @@ INTERN int
 	if (!SYMBOL_ALLOW_ASSUMPTIONS(sym))
 		goto done;
 	assumption = ast_assumes_newsymbol(self, sym);
-	if
-		unlikely(!assumption)
-	goto err;
+	if unlikely(!assumption)
+		goto err;
 	assumption->sa_value = value;
 	Dee_XIncref(value);
 done:
@@ -295,9 +290,8 @@ INTERN int
 (DCALL ast_assumes_undefined_all)(struct ast_assumes *__restrict self) {
 	size_t i;
 	struct ast_assumes const *iter;
-	if
-		unlikely(ast_assumes_undefined(self))
-	goto err;
+	if unlikely(ast_assumes_undefined(self))
+		goto err;
 	iter = self->aa_prev;
 	while (iter) {
 		if (iter->aa_syms.sa_size) {
@@ -309,9 +303,8 @@ INTERN int
 				if (!ass->sa_value)
 					continue; /* Already a negative assumption (don't matter) */
 				/* Overrule with a negative assumption. */
-				if
-					unlikely(ast_assumes_setsymval(self, ass->sa_sym, NULL))
-				goto err;
+				if unlikely(ast_assumes_setsymval(self, ass->sa_sym, NULL))
+					goto err;
 			}
 		}
 		if (iter->aa_flag & AST_ASSUMES_FFUNCTION)
@@ -386,9 +379,8 @@ same_constant_value(DeeObject *__restrict a,
 	if (Dee_TYPE(a) != Dee_TYPE(b))
 		return false;
 	temp = DeeObject_CompareEq(a, b);
-	if
-		unlikely(temp < 0)
-	DeeError_Handled(ERROR_HANDLED_RESTORE);
+	if unlikely(temp < 0)
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
 	return temp > 0;
 }
 
@@ -459,9 +451,8 @@ INTERN int
 		if (sass->sa_value)
 			continue; /* Positive assumptions have already been merged. */
 		sass = ast_assumes_newsymbol(child, sass->sa_sym);
-		if
-			unlikely(!sass)
-		goto err;
+		if unlikely(!sass)
+			goto err;
 		sass->sa_value = NULL;
 	}
 	return 0;
@@ -497,9 +488,8 @@ INTERN int
 			fass = &follower->aa_syms.sa_elem[i];
 			if (!fass->sa_sym)
 				continue;
-			if
-				unlikely(ast_assumes_setsymval(self, fass->sa_sym, fass->sa_value))
-			goto err;
+			if unlikely(ast_assumes_setsymval(self, fass->sa_sym, fass->sa_value))
+				goto err;
 		}
 	}
 	return 0;

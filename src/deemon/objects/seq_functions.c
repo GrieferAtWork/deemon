@@ -654,19 +654,16 @@ DeeSeq_Min_k(DeeObject *__restrict self,
 			DREF DeeObject *key_elem;
 			if (!key_result) {
 				key_result = DeeObject_Call(key, 1, &result);
-				if
-					unlikely(!key_result)
-				goto err_r_iter_elem;
+				if unlikely(!key_result)
+					goto err_r_iter_elem;
 			}
 			key_elem = DeeObject_Call(key, 1, &elem);
-			if
-				unlikely(!key_elem)
-			goto err_r_iter_elem;
+			if unlikely(!key_elem)
+				goto err_r_iter_elem;
 			temp = DeeObject_CompareLo(key_result, key_elem);
 			if (temp <= 0) {
-				if
-					unlikely(temp < 0)
-				{
+				if unlikely(temp < 0)
+					{
 					Dee_Decref(key_elem);
 					goto err_r_iter_elem;
 				}
@@ -684,9 +681,8 @@ DeeSeq_Min_k(DeeObject *__restrict self,
 		if (DeeThread_CheckInterrupt())
 			goto err_r_iter;
 	}
-	if
-		unlikely(!elem)
-	goto err_r_iter;
+	if unlikely(!elem)
+		goto err_r_iter;
 	Dee_Decref(iterator);
 	/* Return `none' when the sequence was empty. */
 	if (!result) {
@@ -720,19 +716,16 @@ DeeSeq_Max_k(DeeObject *__restrict self,
 			DREF DeeObject *key_elem;
 			if (!key_result) {
 				key_result = DeeObject_Call(key, 1, &result);
-				if
-					unlikely(!key_result)
-				goto err_r_iter_elem;
+				if unlikely(!key_result)
+					goto err_r_iter_elem;
 			}
 			key_elem = DeeObject_Call(key, 1, &elem);
-			if
-				unlikely(!key_elem)
-			goto err_r_iter_elem;
+			if unlikely(!key_elem)
+				goto err_r_iter_elem;
 			temp = DeeObject_CompareLo(key_result, key_elem);
 			if (temp <= 0) {
-				if
-					unlikely(temp < 0)
-				{
+				if unlikely(temp < 0)
+					{
 					Dee_Decref(key_elem);
 					goto err_r_iter_elem;
 				}
@@ -829,9 +822,8 @@ DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
 		else {
 			temp = DeeObject_CompareLo(result, elem);
 			if (temp <= 0) {
-				if
-					unlikely(temp < 0)
-				goto err_r_iter_elem;
+				if unlikely(temp < 0)
+					goto err_r_iter_elem;
 				Dee_Decref(elem);
 			} else {
 				Dee_Decref(result);

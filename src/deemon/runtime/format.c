@@ -163,9 +163,8 @@ format_cleanup(char const *__restrict format, va_list args) {
 	char const *flush_start;
 next:
 	ch = *format++;
-	if
-		unlikely(!ch)
-	goto end;
+	if unlikely(!ch)
+		goto end;
 	if (ch != '%')
 		goto next;
 	flush_start = format;

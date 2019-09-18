@@ -87,9 +87,8 @@ parse_asm_flags(char *__restrict str,
 				remove_flag = true;
 			}
 			optlen = (size_t)(flag_end - flag_start);
-			if
-				likely(optlen < COMPILER_STRLEN(disasm_flags[0].name))
-			{
+			if likely(optlen < COMPILER_STRLEN(disasm_flags[0].name))
+				{
 				for (i = 0; i < COMPILER_LENOF(disasm_flags); ++i) {
 					if (disasm_flags[i].name[optlen])
 						continue;
@@ -152,9 +151,8 @@ libdisasm_public_printcode_f(size_t argc,
 		                            code->co_code + code->co_codebytes,
 		                            code, NULL, flags);
 		DBG_ALIGNMENT_ENABLE();
-		if
-			unlikely(error < 0)
-		{
+		if unlikely(error < 0)
+			{
 			unicode_printer_fini(&printer);
 			goto err;
 		}
@@ -165,9 +163,8 @@ libdisasm_public_printcode_f(size_t argc,
 	                            code->co_code + code->co_codebytes,
 	                            code, NULL, flags);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)error);
 err:
 	return NULL;

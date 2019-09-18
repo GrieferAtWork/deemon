@@ -235,15 +235,13 @@ DeeCompiler_New(DeeObject *__restrict module,
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
 	ASSERTF(!(flags & ~COMPILER_FMASK), "Invalid compiler flags in %x", flags);
 	result = DeeObject_MALLOC(DeeCompilerObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Create the new root scope object. */
 	result->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
 	                                                        (DeeObject **)&module);
-	if
-		unlikely(!result->cp_scope)
-	goto err_r;
+	if unlikely(!result->cp_scope)
+		goto err_r;
 	weakref_support_init(result);
 	memset(&result->cp_tags, 0, sizeof(result->cp_tags));
 	memset(&result->cp_items, 0, sizeof(result->cp_items));
@@ -287,9 +285,8 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 	DeeCompiler_Unload(self);
 
 	if (self->cp_tags.at_anno.an_annov) {
-		if
-			unlikely(self->cp_tags.at_anno.an_annoc)
-		{
+		if unlikely(self->cp_tags.at_anno.an_annoc)
+			{
 			recursive_rwlock_write(&DeeCompiler_Lock);
 			while (self->cp_tags.at_anno.an_annoc--)
 				ast_decref(self->cp_tags.at_anno.an_annov[self->cp_tags.at_anno.an_annoc].aa_func);

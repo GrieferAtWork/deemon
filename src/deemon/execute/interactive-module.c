@@ -272,9 +272,8 @@ imod_parse_statement(InteractiveModule *__restrict self,
 	}
 
 	merge = ast_parse_statement(true);
-	if
-		unlikely(!merge)
-	goto err;
+	if unlikely(!merge)
+		goto err;
 	if (should_yield) {
 		result = ast_yield(merge);
 		ast_decref(merge);
@@ -327,17 +326,14 @@ do_exec_code:
 		goto done_exec; /* Something other than the illegal-instruction error that we're looking for. */
 	current_traceback = except_frame_gettb(DeeThread_Self()->t_except);
 	current_code      = self->im_module.mo_root;
-	if
-		unlikely(!current_code)
-	goto done_exec;
-	preexisting_codesize = current_code->co_codebytes;
-	if
-		likely(current_traceback)
-	{
-		instruction_t *iter, *end;
-		if
-			unlikely(!current_traceback->tb_numframes)
+	if unlikely(!current_code)
 		goto done_exec;
+	preexisting_codesize = current_code->co_codebytes;
+	if likely(current_traceback)
+		{
+		instruction_t *iter, *end;
+		if unlikely(!current_traceback->tb_numframes)
+			goto done_exec;
 		/* Check if the error occurred past the written portion of interactive code. */
 		top_frame = &current_traceback->tb_frames[current_traceback->tb_numframes - 1];
 		if (top_frame->cf_func != self->im_frame.cf_func)
@@ -364,9 +360,8 @@ do_exec_code:
 		goto done_exec;
 
 	recursive_rwlock_write(&self->im_lock);
-	if
-		unlikely(!self->im_compiler)
-	{
+	if unlikely(!self->im_compiler)
+		{
 		result = ITER_DONE;
 		goto done_compiler;
 	}
@@ -411,9 +406,8 @@ do_exec_code:
 		statement_ast = NULL;
 	}
 
-	if
-		unlikely(!statement_ast)
-	goto done_compiler_end;
+	if unlikely(!statement_ast)
+		goto done_compiler_end;
 
 	/* Merge code flags. */
 	current_basescope->bs_flags |= current_code->co_flags;
@@ -443,9 +437,8 @@ do_exec_code:
 	if (is_reusing_code_object) {
 		DeeGC_Untrack((DeeObject *)current_code);
 		is_reusing_code_object = (ATOMIC_READ(current_code->ob_refcnt) == 2);
-		if
-			unlikely(!is_reusing_code_object)
-		DeeGC_Track((DeeObject *)current_code);
+		if unlikely(!is_reusing_code_object)
+			DeeGC_Track((DeeObject *)current_code);
 	}
 	ASSERT(current_code->co_refc == 0);
 	ASSERT(current_code->co_argc_min == 0);
@@ -476,9 +469,8 @@ do_exec_code:
 		assembler_init();
 		current_assembler.a_constv = (DREF DeeObject **)Dee_Malloc(current_assembler.a_consta *
 		                                                           sizeof(DREF DeeObject *));
-		if
-			unlikely(!current_assembler.a_constv)
-		goto done_assembler_fini;
+		if unlikely(!current_assembler.a_constv)
+			goto done_assembler_fini;
 		/* Copy over static variables. */
 		rwlock_read(&current_code->co_static_lock);
 		for (i = 0; i < current_assembler.a_constc; ++i) {
@@ -488,18 +480,16 @@ do_exec_code:
 		rwlock_endread(&current_code->co_static_lock);
 		/* Copy over all the unwritten text. */
 		text = asm_alloc(preexisting_codesize);
-		if
-			unlikely(!text)
-		goto done_assembler_fini;
+		if unlikely(!text)
+			goto done_assembler_fini;
 		memcpy(text, current_code->co_code, preexisting_codesize);
 	}
 	if (current_assembler.a_flag & ASM_FREUSELOC) {
 		size_t alloc_size            = (current_assembler.a_locala + 7) / 8;
 		current_assembler.a_locala   = current_assembler.a_localc;
 		current_assembler.a_localuse = (uint8_t *)Dee_Malloc(alloc_size);
-		if
-			unlikely(!current_assembler.a_localuse)
-		goto done_assembler_fini;
+		if unlikely(!current_assembler.a_localuse)
+			goto done_assembler_fini;
 		memset(current_assembler.a_localuse, 0xff, alloc_size);
 	}
 
@@ -534,9 +524,8 @@ do_exec_code:
 			    current_assembler.a_sect[i].sec_begin)
 				continue; /* Empty section. */
 			code_end = asm_newsym();
-			if
-				unlikely(!code_end)
-			goto done_assembler_fini;
+			if unlikely(!code_end)
+				goto done_assembler_fini;
 			asm_setcur(SECTION_COUNT - 1);
 			break;
 		}
@@ -558,41 +547,34 @@ do_exec_code:
 	/* Make sure that all used labels have been defined.
 	 * -> We don't allow unresolved forward-labels in
 	 *    interactive code (for now...) */
-	if
-		unlikely(asm_check_user_labels_defined())
-	goto done_assembler_fini;
+	if unlikely(asm_check_user_labels_defined())
+		goto done_assembler_fini;
 
 	/* Merge text sections. */
-	if
-		unlikely(asm_mergetext())
-	goto done_assembler_fini;
+	if unlikely(asm_mergetext())
+		goto done_assembler_fini;
 
 	if (current_assembler.a_flag & (ASM_FPEEPHOLE | ASM_FOPTIMIZE)) {
 		link_error = asm_linkstack();
-		if
-			unlikely(link_error != 0)
-		goto err_link;
+		if unlikely(link_error != 0)
+			goto err_link;
 	}
 
 	/* Merge static variables. */
-	if
-		unlikely(asm_mergestatic())
-	goto done_assembler_fini;
+	if unlikely(asm_mergestatic())
+		goto done_assembler_fini;
 
 	/* Apply constant relocations. */
-	if
-		unlikely(asm_applyconstrel())
-	goto done_assembler_fini;
+	if unlikely(asm_applyconstrel())
+		goto done_assembler_fini;
 
 	/* Link together the text, resolving relocations. */
 	link_error = asm_linktext();
-	if
-		unlikely(link_error != 0)
-	{
-err_link:
-		if
-			unlikely(link_error >= 0)
+	if unlikely(link_error != 0)
 		{
+err_link:
+		if unlikely(link_error >= 0)
+			{
 			/* Already in bigcode mode? - That's not good... */
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Failed to link final code: Relocation target is out of bounds");
@@ -615,9 +597,8 @@ done_assembler_fini:
 			uint16_t req_localc = current_assembler.a_localc;
 			new_localv = (DREF DeeObject **)Dee_Realloc(self->im_frame.cf_frame,
 			                                            req_localc * sizeof(DREF DeeObject *));
-			if
-				unlikely(!new_localv)
-			goto err_result;
+			if unlikely(!new_localv)
+				goto err_result;
 			MEMSET_PTR(new_localv + old_co_localc, 0, req_localc - old_co_localc);
 			/* Install the new stack. */
 			self->im_frame.cf_frame = new_localv;
@@ -629,9 +610,8 @@ done_assembler_fini:
 			uint16_t req_stacksz = current_assembler.a_stackmax;
 			new_stackv = (DREF DeeObject **)Dee_Realloc(self->im_frame.cf_stack,
 			                                            req_stacksz * sizeof(DREF DeeObject *));
-			if
-				unlikely(!new_stackv)
-			goto err_result;
+			if unlikely(!new_stackv)
+				goto err_result;
 			/* Install the new stack. */
 			self->im_frame.cf_sp      = new_stackv + (self->im_frame.cf_sp - self->im_frame.cf_stack);
 			self->im_frame.cf_stack   = new_stackv;
@@ -639,9 +619,8 @@ done_assembler_fini:
 		}
 
 		current_code = asm_gencode();
-		if
-			unlikely(!current_code)
-		{
+		if unlikely(!current_code)
+			{
 gencode_failed:
 			result = NULL;
 			if (is_reusing_code_object)
@@ -667,9 +646,8 @@ gencode_failed:
 					full_exceptv = (struct except_handler *)Dee_Realloc(old_co_exceptv,
 					                                                    (current_code->co_exceptc + old_co_exceptc) *
 					                                                    sizeof(struct except_handler));
-					if
-						unlikely(!full_exceptv)
-					goto gencode_failed;
+					if unlikely(!full_exceptv)
+						goto gencode_failed;
 					memcpy(full_exceptv + old_co_exceptc,
 					       current_code->co_exceptv,
 					       current_code->co_exceptc *
@@ -683,9 +661,8 @@ gencode_failed:
 					full_exceptv = (struct except_handler *)Dee_Realloc(current_code->co_exceptv,
 					                                                    (current_code->co_exceptc + old_co_exceptc) *
 					                                                    sizeof(struct except_handler));
-					if
-						unlikely(!full_exceptv)
-					goto gencode_failed;
+					if unlikely(!full_exceptv)
+						goto gencode_failed;
 					memmove(full_exceptv + old_co_exceptc, full_exceptv,
 					        current_code->co_exceptc * sizeof(struct except_handler));
 					memcpy(full_exceptv, old_co_exceptv, old_co_exceptc * sizeof(struct except_handler));
@@ -712,9 +689,8 @@ gencode_failed:
 				Dee_Incref(Dee_EmptyTuple);
 				new_self_func = (DeeFunctionObject *)DeeFunction_NewNoRefs((DeeObject *)current_code);
 				Dee_DecrefNokill(current_code);
-				if
-					unlikely(!new_self_func)
-				{
+				if unlikely(!new_self_func)
+					{
 					Dee_DecrefNokill(Dee_EmptyTuple);
 					result = NULL;
 					if (is_reusing_code_object)
@@ -835,9 +811,8 @@ copy_options_chain(struct compiler_options_mapping **proot,
 	}
 	/* Create a copy of `source'. */
 	iter = (struct compiler_options_mapping *)Dee_Malloc(sizeof(struct compiler_options_mapping));
-	if
-		unlikely(!iter)
-	return -1;
+	if unlikely(!iter)
+		return -1;
 	memcpy(iter, source, sizeof(struct compiler_options));
 	iter->com_opt.co_inner = NULL;
 	iter->com_map          = source;
@@ -901,9 +876,8 @@ module_rehash_globals(DeeModuleObject *__restrict self) {
 	ASSERT(!(new_mask & (new_mask + 1)));
 	new_vec = (struct module_symbol *)Dee_Calloc((new_mask + 1) *
 	                                             sizeof(struct module_symbol));
-	if
-		unlikely(!new_vec)
-	goto err;
+	if unlikely(!new_vec)
+		goto err;
 	for (i = 0; i <= self->mo_bucketm; ++i) {
 		size_t j, perturb;
 		struct module_symbol *item;
@@ -942,9 +916,8 @@ module_import_symbol(DeeModuleObject *__restrict self,
 	new_globalv = (DREF DeeObject **)Dee_Realloc(self->mo_globalv,
 	                                             (self->mo_globalc + 1) *
 	                                             sizeof(DREF DeeObject *));
-	if
-		unlikely(!new_globalv)
-	goto err;
+	if unlikely(!new_globalv)
+		goto err;
 	self->mo_globalv = new_globalv;
 
 	/* Append the symbol initializer */
@@ -999,15 +972,13 @@ module_import_symbols(DeeModuleObject *__restrict self,
 	DREF DeeObject *iterator, *elem;
 	int temp;
 	iterator = DeeObject_IterSelf(default_symbols);
-	if
-		unlikely(!iterator)
-	goto err;
+	if unlikely(!iterator)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		temp = module_import_symbol_pair(self, elem);
 		Dee_Decref(elem);
-		if
-			unlikely(temp)
-		goto err;
+		if unlikely(temp)
+			goto err;
 	}
 	Dee_Decref(iterator);
 	return 0;
@@ -1103,9 +1074,8 @@ imod_init(InteractiveModule *__restrict self,
 			if (name_end == name_start)
 				name_end = name + size;
 			module_name = DeeString_NewSized(name_start, (size_t)(name_end - name_start));
-			if
-				unlikely(!module_name)
-			goto err_options;
+			if unlikely(!module_name)
+				goto err_options;
 			self->im_module.mo_name = (DREF struct string_object *)module_name; /* Inherit reference */
 		} else {
 			module_name = Dee_EmptyString;
@@ -1135,15 +1105,13 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_module.mo_bucketm = INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK;
 	self->im_module.mo_bucketv = (struct module_symbol *)Dee_Calloc((INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK + 1) *
 	                                                                sizeof(struct module_symbol));
-	if
-		unlikely(!self->im_module.mo_bucketv)
-	goto err_name;
+	if unlikely(!self->im_module.mo_bucketv)
+		goto err_name;
 
 	/* If given, import default symbols as globals. */
 	if (default_symbols) {
-		if
-			unlikely(module_import_symbols(&self->im_module, default_symbols))
-		goto err_globals;
+		if unlikely(module_import_symbols(&self->im_module, default_symbols))
+			goto err_globals;
 	}
 
 #ifndef CONFIG_NO_THREADS
@@ -1184,18 +1152,16 @@ imod_init(InteractiveModule *__restrict self,
 
 	/* Allocate the function object for the initial code frame. */
 	self->im_frame.cf_func = (DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
-	if
-		unlikely(!self->im_frame.cf_func)
-	goto err_stream;
+	if unlikely(!self->im_frame.cf_func)
+		goto err_stream;
 	DeeObject_Init(self->im_frame.cf_func, &DeeFunction_Type);
 	/* self->im_frame.cf_func->fo_code = ...; // Set below! */
 
 	/* Allocate the compiler that will be used
 	 * to process data from the source stream. */
 	self->im_compiler = DeeCompiler_New((DeeObject *)self, self->im_options.co_compiler);
-	if
-		unlikely(!self->im_compiler)
-	goto err_frame;
+	if unlikely(!self->im_compiler)
+		goto err_frame;
 
 	/* Setup the initial configuration that will be used by the compiler,
 	 * as well as link in the source stream as the used TPP input file. */
@@ -1213,9 +1179,8 @@ imod_init(InteractiveModule *__restrict self,
 		struct symbol *dots;
 		DeeRootScopeObject *root_scope;
 		root_scope = (DeeRootScopeObject *)self->im_compiler->cp_scope;
-		if
-			unlikely((dots = sym_alloc()) == NULL)
-		goto err_compiler;
+		if unlikely((dots = sym_alloc()) == NULL)
+			goto err_compiler;
 #ifndef NDEBUG
 		memset(dots, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1239,9 +1204,8 @@ imod_init(InteractiveModule *__restrict self,
 		root_scope->rs_scope.bs_scope.s_del = dots;
 
 		root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
-		if
-			unlikely(!root_scope->rs_scope.bs_argv)
-		{
+		if unlikely(!root_scope->rs_scope.bs_argv)
+			{
 			sym_free(dots);
 			goto err_compiler;
 		}
@@ -1260,9 +1224,8 @@ imod_init(InteractiveModule *__restrict self,
 			source_path = (DeeStringObject *)source_pathname;
 		base_file = TPPFile_OpenStream((stream_t)source_stream,
 		                               source_path ? DeeString_STR(source_path) : "");
-		if
-			unlikely(!base_file)
-		goto err_compiler;
+		if unlikely(!base_file)
+			goto err_compiler;
 		/* Set the non-blocking I/O flag for the input file. */
 		base_file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_NONBLOCK;
 
@@ -1279,9 +1242,8 @@ imod_init(InteractiveModule *__restrict self,
 do_create_used_name:
 			used_name = TPPString_New(DeeString_STR(self->im_options.co_filename),
 			                          DeeString_SIZE(self->im_options.co_filename));
-			if
-				unlikely(!used_name)
-			{
+			if unlikely(!used_name)
+				{
 				if (Dee_CollectMemory(offsetof(struct TPPString, s_text) +
 				                      (DeeString_SIZE(self->im_options.co_filename) + 1) * sizeof(char)))
 					goto do_create_used_name;
@@ -1301,9 +1263,8 @@ do_create_used_name:
 do_create_base_name:
 			module_base_scope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(self->im_options.co_rootname),
 			                                                    DeeString_SIZE(self->im_options.co_rootname), 1);
-			if
-				unlikely(!module_base_scope->bs_name)
-			{
+			if unlikely(!module_base_scope->bs_name)
+				{
 				if (Dee_CollectMemory(offsetof(struct TPPKeyword, k_name) +
 				                      (DeeString_SIZE(self->im_options.co_rootname) + 1) * sizeof(char)))
 					goto do_create_base_name;
@@ -1319,9 +1280,8 @@ do_create_base_name:
 			if (self->im_options.co_setup) {
 				int error;
 				error = (*self->im_options.co_setup)(self->im_options.co_setup_arg);
-				if
-					unlikely(error != 0)
-				goto err_compiler_basefile;
+				if unlikely(error != 0)
+					goto err_compiler_basefile;
 			}
 			if (self->im_module.mo_globalc) {
 				current_rootscope->rs_globalc = self->im_module.mo_globalc;
@@ -1331,9 +1291,8 @@ do_create_base_name:
 					modsym = &self->im_module.mo_bucketv[i];
 					if (!modsym->ss_name)
 						continue;
-					if
-						unlikely((sym = sym_alloc()) == NULL)
-					{
+					if unlikely((sym = sym_alloc()) == NULL)
+						{
 err_compiler_basefile:
 						COMPILER_END();
 						goto err_basefile;
@@ -1347,9 +1306,8 @@ err_compiler_basefile:
 					sym->s_name = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
 					                                     MODULE_SYMBOL_GETNAMELEN(modsym),
 					                                     1);
-					if
-						unlikely(!sym->s_name)
-					goto err_compiler_basefile;
+					if unlikely(!sym->s_name)
+						goto err_compiler_basefile;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 					sym->s_decltype.da_type = DAST_NONE;
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -1364,9 +1322,8 @@ err_compiler_basefile:
 					/* Register the symbol in the current scope. */
 					if (++current_scope->s_mapc > current_scope->s_mapa) {
 						/* Must rehash this scope. */
-						if
-							unlikely(rehash_scope(current_scope))
-						goto err_compiler_basefile;
+						if unlikely(rehash_scope(current_scope))
+							goto err_compiler_basefile;
 					}
 					/* Insert the new symbol into the scope lookup map. */
 					ASSERT(current_scope->s_mapa != 0);
@@ -1395,9 +1352,8 @@ err_compiler_basefile:
 		DREF DeeCodeObject *init_code;
 		init_code = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
 		                                                     sizeof(instruction_t));
-		if
-			unlikely(!init_code)
-		goto err_globals;
+		if unlikely(!init_code)
+			goto err_globals;
 		init_code->co_flags     = INTERACTIVE_MODULE_CODE_FLAGS;
 		init_code->co_localc    = 0;
 		init_code->co_staticc   = 0;
@@ -1584,9 +1540,8 @@ DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
                           DeeObject *default_symbols) {
 	DREF InteractiveModule *result;
 	result = DeeGCObject_MALLOC(InteractiveModule);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init((DeeObject *)result, &DeeInteractiveModule_Type);
 	if (imod_init(result,
 	              source_stream,
@@ -1628,17 +1583,15 @@ DeeModule_OpenInteractiveString(DeeObject *__restrict source_stream,
 		source_pathname_ob = DeeString_NewUtf8(source_pathname,
 		                                       source_pathsize,
 		                                       STRING_ERROR_FSTRICT);
-		if
-			unlikely(!source_pathname_ob)
-		goto err;
+		if unlikely(!source_pathname_ob)
+			goto err;
 	}
 	if (module_namesize) {
 		module_name_ob = DeeString_NewUtf8(module_name,
 		                                   module_namesize,
 		                                   STRING_ERROR_FSTRICT);
-		if
-			unlikely(!module_name_ob)
-		goto err_source_pathname_ob;
+		if unlikely(!module_name_ob)
+			goto err_source_pathname_ob;
 	}
 	result = DeeModule_OpenInteractive(source_stream,
 	                                   mode,

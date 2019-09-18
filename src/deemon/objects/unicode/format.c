@@ -114,22 +114,19 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 					value = 10 + (ch - 'A');
 				else {
 					/* Check for symbol characters not recognized in numbers. */
-					if
-						unlikely(DeeUni_IsSymCont(ch))
-					goto do_variable_length_index;
+					if unlikely(DeeUni_IsSymCont(ch))
+						goto do_variable_length_index;
 					break;
 				}
 				/* Check for values illegal for the selected radix. */
-				if
-					unlikely(value >= radix)
-				goto do_variable_length_index;
+				if unlikely(value >= radix)
+					goto do_variable_length_index;
 				/* Add values to the new index. */
 				new_index = index * radix;
 				new_index += value;
 				/* Check for overflow (including the sign bit). */
-				if
-					unlikely(new_index <= index)
-				goto do_variable_length_index;
+				if unlikely(new_index <= index)
+					goto do_variable_length_index;
 				/* Use the new index from now on. */
 				index = new_index;
 				++index_end;
@@ -143,9 +140,8 @@ do_variable_length_index:
 				++index_end;
 			key = DeeInt_FromString(fmt_start, index_end - fmt_start,
 			                        DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
-			if
-				unlikely(!key)
-			goto err;
+			if unlikely(!key)
+				goto err;
 			result = DeeObject_GetItem(self->f_args, key);
 			Dee_Decref(key);
 		}
@@ -269,9 +265,8 @@ Formatter_GetValue(struct formatter *__restrict self,
 	}
 	/* Load the format expression. */
 	result = Formatter_GetOne(self, &fmt_start, do_eval);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (fmt_start != fmt_end) {
 		error_unused_format_string(fmt_start, fmt_end);
 		goto err;
@@ -313,9 +308,8 @@ object_vector_append(struct object_vector *__restrict self,
 			new_count = 4;
 		new_vector = (DREF DeeObject **)Dee_Realloc(self->ov_vec, new_count *
 		                                                          sizeof(DREF DeeObject *));
-		if
-			unlikely(!new_vector)
-		{
+		if unlikely(!new_vector)
+			{
 			/* Always inherit a reference. */
 			Dee_Decref(ob);
 			return -1;
@@ -333,9 +327,8 @@ object_vector_extend(struct object_vector *__restrict self,
 	int result = 0;
 	REF DeeObject *elem, *iter;
 	iter = DeeObject_IterSelf(ob);
-	if
-		unlikely(!iter)
-	return -1;
+	if unlikely(!iter)
+		return -1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		result = object_vector_append(self, elem);
 		if (result)
@@ -382,9 +375,8 @@ Formatter_GetOne(struct formatter *__restrict self,
 			++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 		result = Formatter_GetOne(self, &fmt_start, do_eval);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		if (*fmt_start != ')') {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Expected `)' after `(' in format expression, but got %:1q",
@@ -394,9 +386,8 @@ Formatter_GetOne(struct formatter *__restrict self,
 		++fmt_start; /* Skip `)' */
 	} else {
 		result = Formatter_GetUnaryArg(self, pfmt_start, do_eval);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		fmt_start = *pfmt_start;
 	}
 next_suffix:
@@ -416,9 +407,8 @@ next_suffix:
 			++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 		index = Formatter_GetExpr(self, &fmt_start, do_eval);
-		if
-			unlikely(!index)
-		goto err_r;
+		if unlikely(!index)
+			goto err_r;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 		while (DeeUni_IsSpace(*fmt_start))
 			++fmt_start;
@@ -431,9 +421,8 @@ next_suffix:
 				++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 			index2 = Formatter_GetExpr(self, &fmt_start, do_eval);
-			if
-				unlikely(!index2)
-			{
+			if unlikely(!index2)
+				{
 				Dee_Decref(index);
 				goto err_r;
 			}
@@ -441,9 +430,8 @@ next_suffix:
 			while (DeeUni_IsSpace(*fmt_start))
 				++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
-			if
-				unlikely(*fmt_start != ']')
-			{
+			if unlikely(*fmt_start != ']')
+				{
 				Dee_Decref(index2);
 err_bad_index_expression:
 				DeeError_Throwf(&DeeError_ValueError,
@@ -455,15 +443,13 @@ err_bad_index_expression:
 			new_result = DeeObject_GetRange(result, index, index2);
 			Dee_Decref(index2);
 		} else {
-			if
-				unlikely(*fmt_start != ']')
-			goto err_bad_index_expression;
+			if unlikely(*fmt_start != ']')
+				goto err_bad_index_expression;
 			new_result = DeeObject_GetItem(result, index);
 		}
 		Dee_Decref(index);
-		if
-			unlikely(!new_result)
-		goto err_r;
+		if unlikely(!new_result)
+			goto err_r;
 		Dee_Decref(result);
 		result = new_result;
 		++fmt_start; /* Skip the trailing `]' character. */
@@ -485,15 +471,13 @@ err_bad_index_expression:
 		} else {
 			attr = Formatter_GetUnaryKey(&fmt_start);
 		}
-		if
-			unlikely(!attr)
-		goto err_r;
+		if unlikely(!attr)
+			goto err_r;
 		/* Do the attribute lookup. */
 		new_result = DeeObject_GetAttr(result, attr);
 		Dee_Decref(attr);
-		if
-			unlikely(!new_result)
-		goto err_r;
+		if unlikely(!new_result)
+			goto err_r;
 		Dee_Decref(result);
 		result = new_result;
 		goto next_suffix;
@@ -511,17 +495,15 @@ err_bad_index_expression:
 		if (*fmt_start == ')') {
 			/* Simple case: 0-argument call */
 			new_result = DeeObject_Call(result, 0, NULL);
-			if
-				unlikely(!new_result)
-			goto err_r;
+			if unlikely(!new_result)
+				goto err_r;
 			Dee_Decref(result);
 			result = new_result;
 			goto next_suffix;
 		}
 		arg = Formatter_GetExpr(self, &fmt_start, do_eval);
-		if
-			unlikely(!arg)
-		goto err_r;
+		if unlikely(!arg)
+			goto err_r;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 		while (DeeUni_IsSpace(*fmt_start))
 			++fmt_start;
@@ -543,23 +525,20 @@ err_bad_index_expression:
 					/* There are more arguments after this first one. */
 					error = object_vector_extend(&args, arg);
 					Dee_Decref(arg);
-					if
-						unlikely(error)
-					goto err_r;
+					if unlikely(error)
+						goto err_r;
 					fmt_start = after_dots + 1; /* Skip `,' */
 					goto parse_second_argument;
 				}
-				if
-					unlikely(after_dots[0] != ')')
-				{
+				if unlikely(after_dots[0] != ')')
+					{
 					fmt_start = after_dots;
 					goto err_expected_rparen_arg;
 				}
 				new_arg = DeeTuple_FromSequence(arg);
 				Dee_Decref(arg);
-				if
-					unlikely(!new_arg)
-				goto err_call_argv;
+				if unlikely(!new_arg)
+					goto err_call_argv;
 				new_result = DeeObject_Call(result,
 				                            DeeTuple_SIZE(new_arg),
 				                            DeeTuple_ELEM(new_arg));
@@ -579,9 +558,8 @@ err_call_argv:
 				new_result = DeeObject_Call(result, 1, &arg);
 			}
 			++fmt_start; /* Skip `)' */
-			if
-				unlikely(!new_result)
-			goto err_r;
+			if unlikely(!new_result)
+				goto err_r;
 			Dee_Decref(result);
 			result = new_result;
 			goto next_suffix;
@@ -597,9 +575,8 @@ parse_second_argument:
 		/* Parse additional arguments. */
 		for (;;) {
 			arg = Formatter_GetExpr(self, &fmt_start, do_eval);
-			if
-				unlikely(!arg)
-			goto err_call_argv;
+			if unlikely(!arg)
+				goto err_call_argv;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 			while (DeeUni_IsSpace(*fmt_start))
 				++fmt_start;
@@ -611,9 +588,8 @@ parse_second_argument:
 				/* Expand argument list. */
 				extend_error = object_vector_extend(&args, arg);
 				Dee_Decref(arg);
-				if
-					unlikely(extend_error)
-				goto err_call_argv;
+				if unlikely(extend_error)
+					goto err_call_argv;
 				fmt_start += 3;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 				while (DeeUni_IsSpace(*fmt_start))
@@ -635,9 +611,8 @@ parse_second_argument:
 		new_result = DeeObject_Call(result, args.ov_cnt, args.ov_vec);
 		object_vector_fini(&args);
 		/* Set the returned value as new result. */
-		if
-			unlikely(!new_result)
-		goto err_r;
+		if unlikely(!new_result)
+			goto err_r;
 		Dee_Decref(result);
 		result = new_result;
 		goto next_suffix;
@@ -654,9 +629,8 @@ parse_second_argument:
 		 * NOTE: Also supports the missing-: extension that uses `none' for `ff' */
 		/* Evaluate the condition. */
 		is_true = DeeObject_Bool(result);
-		if
-			unlikely(is_true < 0)
-		goto err_r;
+		if unlikely(is_true < 0)
+			goto err_r;
 		++fmt_start; /* Skip `?' */
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 		while (DeeUni_IsSpace(*fmt_start))
@@ -667,9 +641,8 @@ parse_second_argument:
 			Dee_Incref(tt);
 		} else {
 			tt = Formatter_GetExpr(self, &fmt_start, do_eval && is_true != 0);
-			if
-				unlikely(!tt)
-			goto err_r;
+			if unlikely(!tt)
+				goto err_r;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 			while (DeeUni_IsSpace(*fmt_start))
 				++fmt_start;
@@ -687,9 +660,8 @@ parse_second_argument:
 				Dee_Incref(ff);
 			} else {
 				ff = Formatter_GetExpr(self, &fmt_start, do_eval && is_true == 0);
-				if
-					unlikely(!ff)
-				{
+				if unlikely(!ff)
+					{
 					Dee_Decref(tt);
 					goto err_r;
 				}
@@ -773,9 +745,8 @@ format_impl(struct formatter *__restrict self,
 		}
 		/* Process the format string to extract an argument. */
 		in_arg = Formatter_GetOne(self, &format_start, true);
-		if
-			unlikely(!in_arg)
-		goto err;
+		if unlikely(!in_arg)
+			goto err;
 		if (*format_start == '!') {
 			/* Explicit format mode. */
 			char mode = *++format_start;
@@ -815,16 +786,14 @@ format_impl(struct formatter *__restrict self,
 					                          &unicode_printer_print,
 					                          &format_string_printer);
 					self->f_seqiter = inner_formatter.f_seqiter;
-					if
-						unlikely(print_error < 0)
-					{
+					if unlikely(print_error < 0)
+						{
 						unicode_printer_fini(&format_string_printer);
 						goto err_arg;
 					}
 					format_string = unicode_printer_pack(&format_string_printer);
-					if
-						unlikely(!format_string)
-					goto err_arg;
+					if unlikely(!format_string)
+						goto err_arg;
 					/* Now use the generated format-string to format the input argument. */
 					print_error = DeeObject_PrintFormat(in_arg, printer, arg, format_string);
 					Dee_Decref(format_string);
@@ -840,9 +809,8 @@ print_normal:
 		}
 check_print_error:
 		Dee_Decref(in_arg);
-		if
-			unlikely(print_error < 0)
-		goto err;
+		if unlikely(print_error < 0)
+			goto err;
 		ASSERT(format_start <= format_end);
 		if (format_start != format_end) {
 			error_unused_format_string(format_start, format_end);
@@ -943,9 +911,8 @@ format_bytes_impl(struct formatter *__restrict self,
 		}
 		/* Process the format string to extract an argument. */
 		in_arg = Formatter_GetOne(self, &format_start, true);
-		if
-			unlikely(!in_arg)
-		goto err;
+		if unlikely(!in_arg)
+			goto err;
 		if (*format_start == '!') {
 			/* Explicit format mode. */
 			char mode = *++format_start;
@@ -985,16 +952,14 @@ format_bytes_impl(struct formatter *__restrict self,
 					                                &unicode_printer_print,
 					                                &format_string_printer);
 					self->f_seqiter = inner_formatter.f_seqiter;
-					if
-						unlikely(print_error < 0)
-					{
+					if unlikely(print_error < 0)
+						{
 						unicode_printer_fini(&format_string_printer);
 						goto err_arg;
 					}
 					format_string = unicode_printer_pack(&format_string_printer);
-					if
-						unlikely(!format_string)
-					goto err_arg;
+					if unlikely(!format_string)
+						goto err_arg;
 					/* Now use the generated format-string to format the input argument. */
 					print_error = DeeObject_PrintFormat(in_arg, printer, arg, format_string);
 					Dee_Decref(format_string);
@@ -1010,9 +975,8 @@ print_normal:
 		}
 check_print_error:
 		Dee_Decref(in_arg);
-		if
-			unlikely(print_error < 0)
-		goto err;
+		if unlikely(print_error < 0)
+			goto err;
 		ASSERT(format_start <= format_end);
 		if (format_start != format_end) {
 			error_unused_format_string(format_start, format_end);

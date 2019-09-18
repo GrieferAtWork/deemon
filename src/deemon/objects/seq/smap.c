@@ -158,9 +158,8 @@ smapiter_next(SharedMapIterator *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 	/* Got the key+value. Now pack them together into a tuple. */
 	result = DeeTuple_NewUninitialized(2);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		Dee_Decref(result_value);
 		Dee_Decref(result_key);
 		goto done;
@@ -273,9 +272,8 @@ PRIVATE DREF SharedMapIterator *DCALL
 smap_iter(SharedMap *__restrict self) {
 	DREF SharedMapIterator *result;
 	result = DeeObject_MALLOC(SharedMapIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sm_seq = self;
 	Dee_Incref(self);
 	result->sm_index = 0;
@@ -333,9 +331,8 @@ smap_contains(SharedMap *__restrict self, DeeObject *__restrict key) {
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			return NULL;
+			if unlikely(temp < 0)
+				return NULL;
 			return_true;
 		}
 	}
@@ -360,9 +357,8 @@ smap_contains(SharedMap *__restrict self, DeeObject *__restrict key) {
 			temp = DeeObject_CompareEq(key, item_key);
 			if (temp != 0) {
 				Dee_Decref(item_key);
-				if
-					unlikely(temp < 0)
-				return NULL;
+				if unlikely(temp < 0)
+					return NULL;
 				return_true; /* Found it! */
 			}
 		}
@@ -401,9 +397,8 @@ smap_getitem(SharedMap *__restrict self, DeeObject *__restrict key) {
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			{
+			if unlikely(temp < 0)
+				{
 				Dee_Decref(item_value);
 				goto err;
 			}
@@ -431,9 +426,8 @@ smap_getitem(SharedMap *__restrict self, DeeObject *__restrict key) {
 			temp = DeeObject_CompareEq(key, item_key);
 			if (temp != 0) {
 				Dee_Decref(item_key);
-				if
-					unlikely(temp < 0)
-				{
+				if unlikely(temp < 0)
+					{
 					Dee_Decref(item_value);
 					goto err;
 				}
@@ -481,9 +475,8 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
-			if
-				unlikely(temp < 0)
-			{
+			if unlikely(temp < 0)
+				{
 				Dee_Decref(item_value);
 				goto err;
 			}
@@ -511,9 +504,8 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 			temp = DeeObject_CompareEq(key, item_key);
 			if (temp != 0) {
 				Dee_Decref(item_key);
-				if
-					unlikely(temp < 0)
-				{
+				if unlikely(temp < 0)
+					{
 					Dee_Decref(item_value);
 					goto err;
 				}
@@ -669,9 +661,8 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *__restrict vector) {
 	while (length * 2 >= mask)
 		mask = (mask << 1) | 1;
 	result = (DREF SharedMap *)DeeObject_Calloc(SHAREDMAP_SIZEOF(mask));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->sm_length = length;
 	result->sm_vector = vector;
 	result->sm_mask   = mask;
@@ -716,9 +707,8 @@ PUBLIC void DCALL DeeSharedMap_Decref(DeeObject *__restrict self) {
 	rwlock_write(&me->sm_lock);
 	vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sm_length * 2 *
 	                                               sizeof(DREF DeeObject *));
-	if
-		unlikely(!vector_copy)
-	goto err_cannot_inherit;
+	if unlikely(!vector_copy)
+		goto err_cannot_inherit;
 	/* Simply copy all the elements, transferring
 	 * all the references that they represent. */
 	MEMCPY_PTR(vector_copy, me->sm_vector, me->sm_length * 2);

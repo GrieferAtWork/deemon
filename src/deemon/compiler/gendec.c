@@ -92,14 +92,12 @@ decgen_imports(DeeModuleObject *__restrict self) {
 			char const *global_name;
 import_module_by_name:
 			global_name = DeeString_AsUtf8((DeeObject *)mod->mo_name);
-			if
-				unlikely(!global_name)
-			goto err;
+			if unlikely(!global_name)
+				goto err;
 			data = dec_allocstr(global_name,
 			                    (WSTR_LENGTH(global_name) + 1) * sizeof(char));
-			if
-				unlikely(!data)
-			goto err;
+			if unlikely(!data)
+				goto err;
 		} else {
 			char *self_pathstr, *other_pathstr;
 			char *self_pathend, *other_pathend;
@@ -112,16 +110,14 @@ import_module_by_name:
 			if (!mod->mo_path)
 				goto import_module_by_name;
 			other_pathstr = DeeString_AsUtf8((DeeObject *)mod->mo_path);
-			if
-				unlikely(!other_pathstr)
-			goto err;
+			if unlikely(!other_pathstr)
+				goto err;
 			other_pathend = other_pathstr + WSTR_LENGTH(other_pathstr);
 			if (!module_pathstr) {
 				/* Lazily calculate the module's path when it's start being used. */
 				module_pathstr = DeeString_AsUtf8((DeeObject *)self->mo_path);
-				if
-					unlikely(!module_pathstr)
-				goto err;
+				if unlikely(!module_pathstr)
+					goto err;
 				module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
 				/* NOTE: No need to check for alternative separators
 				 *       because the path has been sanitized. */
@@ -193,16 +189,14 @@ import_module_by_name:
 
 			/* Write all of the dots. */
 			buffer = dec_alloc(num_dots);
-			if
-				unlikely(!buffer)
-			goto err;
+			if unlikely(!buffer)
+				goto err;
 			memset(buffer, '.', num_dots);
 
 			/* Now write the other pathname with all SEPs replaced with `.' */
 			buffer = dec_alloc(1 + (size_t)(other_pathend - other_pathstr));
-			if
-				unlikely(!buffer)
-			goto err;
+			if unlikely(!buffer)
+				goto err;
 			other_pathpart = other_pathstr;
 			if (is_dec_file) {
 				/* In dec files, we must erase the first `.' character of the filename. */
@@ -260,13 +254,11 @@ decgen_globals(DeeModuleObject *__restrict self) {
 	struct dec_section *exttab; /* Vector of extended symbols (`Dec_GlbExt' in `Dec_Glbmap.g_ext') */
 	bool has_special_symbols = false;
 	symtab                   = dec_newsection_after(SC_GLOBALS);
-	if
-		unlikely(!symtab)
-	goto err;
+	if unlikely(!symtab)
+		goto err;
 	exttab = dec_newsection_after(symtab);
-	if
-		unlikely(!exttab)
-	goto err;
+	if unlikely(!exttab)
+		goto err;
 	globalc = self->mo_globalc, symcount = 0;
 	symend = (symbegin = self->mo_bucketv) +
 	         (self->mo_bucketm + 1);
@@ -291,17 +283,15 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		}
 		++symcount; /* Track the total number of symbols. */
 		dec_curr = symtab;
-		if
-			unlikely(!symiter)
-		{
+		if unlikely(!symiter)
+			{
 			/* No symbol exist do describe this global variable. */
 			if (dec_putw(0))
 				goto err; /* Dec_GlbSym.s_flg */
 			dec_curr = SC_STRING;
 			ptr      = dec_allocstr("", sizeof(char));
-			if
-				unlikely(!ptr)
-			goto err;
+			if unlikely(!ptr)
+				goto err;
 			addr     = dec_ptr2addr(ptr);
 			dec_curr = symtab;
 			if (dec_putptr(addr))
@@ -315,16 +305,14 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			name_len = MODULE_SYMBOL_GETNAMELEN(symiter);
 			ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(symiter),
 			                   (name_len + 1) * sizeof(char));
-			if
-				unlikely(!ptr)
-			goto err;
+			if unlikely(!ptr)
+				goto err;
 			addr     = dec_ptr2addr(ptr);
 			dec_curr = symtab;
 			if (dec_putptr(addr))
 				goto err; /* Dec_GlbSym.s_nam */
-			if
-				likely(name_len)
-			{
+			if likely(name_len)
+				{
 				char const *doc_str;
 				size_t doc_len;
 				if (!symiter->ss_doc || (current_dec.dw_flags & DEC_WRITE_FNODOC)) {
@@ -339,9 +327,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 				if (doc_len) {
 					dec_curr = SC_STRING;
 					ptr = dec_allocstr(doc_str, (doc_len + 1) * sizeof(char));
-					if
-						unlikely(!ptr)
-					goto err;
+					if unlikely(!ptr)
+						goto err;
 					addr     = dec_ptr2addr(ptr);
 					dec_curr = symtab;
 					if (dec_putptr(addr))
@@ -374,16 +361,14 @@ decgen_globals(DeeModuleObject *__restrict self) {
 				name_len = MODULE_SYMBOL_GETNAMELEN(first_alias);
 				ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(first_alias),
 				                   (name_len + 1) * sizeof(char));
-				if
-					unlikely(!ptr)
-				goto err;
+				if unlikely(!ptr)
+					goto err;
 				addr     = dec_ptr2addr(ptr);
 				dec_curr = exttab;
 				if (dec_putptr(addr))
 					goto err; /* Dec_GlbExt.s_nam */
-				if
-					likely(name_len)
-				{
+				if likely(name_len)
+					{
 					/* Write the length of the doc, and potentially the doc, too. */
 					char const *doc_str;
 					size_t doc_len;
@@ -399,9 +384,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 					if (doc_len) {
 						dec_curr = SC_STRING;
 						ptr = dec_allocstr(doc_str, (doc_len + 1) * sizeof(char));
-						if
-							unlikely(!ptr)
-						goto err;
+						if unlikely(!ptr)
+							goto err;
 						addr     = dec_ptr2addr(ptr);
 						dec_curr = symtab;
 						if (dec_putptr(addr))
@@ -433,16 +417,14 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			name_len = MODULE_SYMBOL_GETNAMELEN(symiter);
 			ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(symiter),
 			                   (name_len + 1) * sizeof(char));
-			if
-				unlikely(!ptr)
-			goto err;
+			if unlikely(!ptr)
+				goto err;
 			addr     = dec_ptr2addr(ptr);
 			dec_curr = exttab;
 			if (dec_putptr(addr))
 				goto err; /* Dec_GlbExt.s_nam */
-			if
-				likely(name_len)
-			{
+			if likely(name_len)
+				{
 				/* Write the length of the doc, and potentially the doc, too. */
 				char const *doc_str;
 				size_t doc_len;
@@ -459,9 +441,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 					dec_curr = SC_STRING;
 					ptr = dec_allocstr(doc_str,
 					                   (doc_len + 1) * sizeof(char));
-					if
-						unlikely(!ptr)
-					goto err;
+					if unlikely(!ptr)
+						goto err;
 					addr     = dec_ptr2addr(ptr);
 					dec_curr = symtab;
 					if (dec_putptr(addr))
@@ -510,9 +491,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		dec_curr = SC_STRING;
 		nameptr = dec_allocstr(DeeString_STR(symiter->ss_name),
 		                       (DeeString_SIZE(symiter->ss_name) + 1) * sizeof(char));
-		if
-			unlikely(!nameptr)
-		goto err;
+		if unlikely(!nameptr)
+			goto err;
 		nameaddr = dec_ptr2addr(nameptr);
 		dec_curr = SC_GLOBALS;
 		if (dec_putptr(nameaddr))
@@ -527,9 +507,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			dec_curr = SC_STRING;
 			nameptr = dec_allocstr(DeeString_STR(docstr),
 			                       DeeString_SIZE(docstr) * sizeof(char));
-			if
-				unlikely(!nameptr)
-			goto err;
+			if unlikely(!nameptr)
+				goto err;
 			nameaddr = dec_ptr2addr(nameptr);
 			dec_curr = SC_GLOBALS;
 			if (dec_putptr(nameaddr))
@@ -608,18 +587,16 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	} else {
 		strptr = dec_allocstr("", sizeof(char));
 	}
-	if
-		unlikely(!strptr)
-	goto err;
+	if unlikely(!strptr)
+		goto err;
 	straddr  = dec_ptr2addr(strptr);
 	dec_curr = oldsec;
 	if (dec_putptr(straddr))
 		goto err; /* Dec_ClassDescriptor::cd_nam */
 	if (self->cd_doc) {
 		char *doc_str = DeeString_AsUtf8((DeeObject *)self->cd_doc);
-		if
-			unlikely(!doc_str)
-		goto err;
+		if unlikely(!doc_str)
+			goto err;
 		if (WSTR_LENGTH(doc_str) == 0)
 			goto empty_doc;
 		if (dec_putptr((uint32_t)WSTR_LENGTH(doc_str)))
@@ -627,9 +604,8 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 		oldsec   = dec_curr;
 		dec_curr = SC_STRING;
 		strptr   = dec_allocstr(doc_str, WSTR_LENGTH(doc_str) * sizeof(char));
-		if
-			unlikely(!strptr)
-		goto err;
+		if unlikely(!strptr)
+			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = oldsec;
 		if (dec_putptr(straddr))
@@ -705,18 +681,16 @@ empty_doc:
 		dec_curr = SC_STRING;
 		strptr = dec_allocstr(DeeString_STR(attr->ca_name),
 		                      (DeeString_SIZE(attr->ca_name) + 1) * sizeof(char));
-		if
-			unlikely(!strptr)
-		goto err;
+		if unlikely(!strptr)
+			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = oldsec;
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
 			char *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
-			if
-				unlikely(!doc_str)
-			goto err;
+			if unlikely(!doc_str)
+				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
 				goto empty_cattr_doc;
 			if (dec_putptr((uint32_t)WSTR_LENGTH(doc_str)))
@@ -724,9 +698,8 @@ empty_doc:
 			oldsec   = dec_curr;
 			dec_curr = SC_STRING;
 			strptr   = dec_allocstr(doc_str, WSTR_LENGTH(doc_str) * sizeof(char));
-			if
-				unlikely(!strptr)
-			goto err;
+			if unlikely(!strptr)
+				goto err;
 			straddr  = dec_ptr2addr(strptr);
 			dec_curr = oldsec;
 			if (dec_putptr(straddr))
@@ -763,18 +736,16 @@ empty_cattr_doc:
 		dec_curr = SC_STRING;
 		strptr = dec_allocstr(DeeString_STR(attr->ca_name),
 		                      (DeeString_SIZE(attr->ca_name) + 1) * sizeof(char));
-		if
-			unlikely(!strptr)
-		goto err;
+		if unlikely(!strptr)
+			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = oldsec;
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
 			char *doc_str = DeeString_AsUtf8((DeeObject *)attr->ca_doc);
-			if
-				unlikely(!doc_str)
-			goto err;
+			if unlikely(!doc_str)
+				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
 				goto empty_iattr_doc;
 			if (dec_putptr((uint32_t)WSTR_LENGTH(doc_str)))
@@ -782,9 +753,8 @@ empty_cattr_doc:
 			oldsec   = dec_curr;
 			dec_curr = SC_STRING;
 			strptr = dec_allocstr(doc_str, WSTR_LENGTH(doc_str) * sizeof(char));
-			if
-				unlikely(!strptr)
-			goto err;
+			if unlikely(!strptr)
+				goto err;
 			straddr  = dec_ptr2addr(strptr);
 			dec_curr = oldsec;
 			if (dec_putptr(straddr))
@@ -827,9 +797,8 @@ dec_putkwds(DeeKwdsObject *__restrict self) {
 			dec_curr = SC_STRING;
 			strptr = dec_allocstr(DeeString_STR(name),
 			                      (DeeString_SIZE(name) + 1) * sizeof(char));
-			if
-				unlikely(!strptr)
-			goto err;
+			if unlikely(!strptr)
+				goto err;
 			straddr  = dec_ptr2addr(strptr);
 			dec_curr = oldsec;
 			if (dec_putptr(straddr))
@@ -893,9 +862,8 @@ PRIVATE int(DCALL dec_recursion_check)(DeeObject *__restrict self) {
 	struct dec_recursion_frame *iter;
 	for (iter = dec_obj_recursion; iter;
 	     iter = iter->drf_prev) {
-		if
-			unlikely(iter->drf_obj == self)
-		goto err_recursion;
+		if unlikely(iter->drf_obj == self)
+			goto err_recursion;
 	}
 	return 0;
 err_recursion:
@@ -928,17 +896,15 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		if (DeeInt_IsNeg(self)) {
 			/* Encode as signed. */
 			buffer = dec_alloc(1 + DeeInt_GetSlebMaxSize(self));
-			if
-				unlikely(!buffer)
-			goto err;
+			if unlikely(!buffer)
+				goto err;
 			*buffer++ = DTYPE_SLEB; /* Type byte */
 			buffer    = DeeInt_GetSleb(self, buffer);
 		} else {
 			/* Encode as unsigned. */
 			buffer = dec_alloc(1 + DeeInt_GetUlebMaxSize(self));
-			if
-				unlikely(!buffer)
-			goto err;
+			if unlikely(!buffer)
+				goto err;
 			*buffer++ = DTYPE_ULEB; /* Type byte */
 			buffer    = DeeInt_GetUleb(self, buffer);
 		}
@@ -954,9 +920,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		if (dec_putb(DTYPE_STRING))
 			goto err;
 		utf8_data = DeeString_AsUtf8(self);
-		if
-			unlikely(!utf8_data)
-		goto err;
+		if unlikely(!utf8_data)
+			goto err;
 		if (dec_putptr((uint32_t)WSTR_LENGTH(utf8_data)))
 			goto err;
 		/* Special case: an empty string doesn't have an address pointer. */
@@ -968,9 +933,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		strptr = dec_allocstr(utf8_data,
 		                      WSTR_LENGTH(utf8_data) *
 		                      sizeof(char));
-		if
-			unlikely(!strptr)
-		goto err;
+		if unlikely(!strptr)
+			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = oldsec;
 		/* Emit the address of the string. */
@@ -1014,9 +978,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 			/* Emit the list item. */
 			error = dec_putobj(obj);
 			Dee_Decref(obj);
-			if
-				unlikely(error)
-			{
+			if unlikely(error)
+				{
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
@@ -1052,18 +1015,16 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 				continue;
 			Dee_Incref(obj);
 			DeeHashSet_LockEndRead(me);
-			if
-				unlikely(written >= length)
-			{
+			if unlikely(written >= length)
+				{
 				Dee_Decref(obj);
 				break;
 			}
 			/* Emit the set item. */
 			error = dec_putobj(obj);
 			Dee_Decref(obj);
-			if
-				unlikely(error)
-			{
+			if unlikely(error)
+				{
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
@@ -1109,9 +1070,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 			Dee_Incref(key);
 			Dee_Incref(value);
 			DeeDict_LockEndRead(me);
-			if
-				unlikely(written >= length)
-			{
+			if unlikely(written >= length)
+				{
 				Dee_Decref(value);
 				Dee_Decref(key);
 				break;
@@ -1122,9 +1082,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 				error = dec_putobj(value);
 			Dee_Decref(value);
 			Dee_Decref(key);
-			if
-				unlikely(error)
-			{
+			if unlikely(error)
+				{
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
@@ -1164,9 +1123,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 			error = dec_putobj(me->rd_elem[i].di_key);
 			if (!error)
 				error = dec_putobj(me->rd_elem[i].di_value);
-			if
-				unlikely(error)
-			goto err;
+			if unlikely(error)
+				goto err;
 #ifndef NDEBUG
 			++num_written;
 #endif /* !NDEBUG */
@@ -1258,12 +1216,10 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 
 	/* Fallback: try to encode a builtin object. */
 	builtin_id = Dec_BuiltinID(self);
-	if
-		unlikely(builtin_id == DEC_BUILTINID_UNKNOWN)
-	goto err_unsupported;
+	if unlikely(builtin_id == DEC_BUILTINID_UNKNOWN)
+		goto err_unsupported;
 	/* Encode a builtin object ID. */
-	if
-		likely(DEC_BUILTINID_SETOF(builtin_id) ==
+	if likely(DEC_BUILTINID_SETOF(builtin_id) ==
 		       current_dec.dw_objset)
 	{
 		/* The object is part of the main object set
@@ -1274,9 +1230,8 @@ INTERN int(DCALL dec_putobj)(DeeObject *self) {
 		/* Not apart of the main object set.
 		 * >> Must be encoded as an extended object-set builtin. */
 		uint8_t *buffer = dec_alloc(3);
-		if
-			unlikely(!buffer)
-		goto err;
+		if unlikely(!buffer)
+			goto err;
 		buffer[0] = (uint8_t)((DTYPE16_BUILTIN_MIN & 0xff00) >> 8);
 		buffer[1] = (uint8_t)(DEC_BUILTINID_SETOF(builtin_id) + (DTYPE16_BUILTIN_MIN & 0xff));
 		buffer[2] = (uint8_t)(DEC_BUILTINID_IDOF(builtin_id));
@@ -1370,9 +1325,8 @@ dec_do_putddi_strtab(DeeDDIObject *__restrict self,
 		dec_curr = SC_STRING;
 		str      = DeeString_STR(self->d_strtab) + vec[i];
 		strptr   = dec_allocstr(str, (strlen(str) + 1) * sizeof(char));
-		if
-			unlikely(!strptr)
-		goto err;
+		if unlikely(!strptr)
+			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = ddi_sec;
 		/* Emit the string pointer within the DDI string vector. */
@@ -1392,15 +1346,13 @@ dec_putddi_strtab(DeeDDIObject *__restrict self,
 	struct dec_section *result, *old_sec;
 	/* Create a new section within which debug data will be placed. */
 	result = dec_newsection_after(SC_DEBUG_DATA);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	old_sec  = dec_curr;
 	dec_curr = result;
 	/* Actually emit the debug data. */
-	if
-		unlikely(dec_do_putddi_strtab(self, vec, length))
-	goto err;
+	if unlikely(dec_do_putddi_strtab(self, vec, length))
+		goto err;
 	/* Switch back to the old section. */
 	dec_curr = old_sec;
 	/* Return a pointer to a symbol describing the start of the sub-section. */
@@ -1417,9 +1369,8 @@ dec_putddi_strtab_ptr(DeeDDIObject *__restrict self,
 	struct dec_sym *sym;
 	if (length) {
 		sym = dec_putddi_strtab(self, vec, length);
-		if
-			unlikely(!sym)
-		goto err;
+		if unlikely(!sym)
+			goto err;
 		if (dec_putrel(use_16bit ? DECREL_ABS16 : DECREL_ABS32, sym))
 			goto err;
 	} else {
@@ -1442,9 +1393,8 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 		struct dec_section *xsect, *old_sec;
 		/* Create a new section within which debug data will be placed. */
 		xsect = dec_newsection_after(SC_DEBUG_DATA);
-		if
-			unlikely(!xsect)
-		goto err;
+		if unlikely(!xsect)
+			goto err;
 		old_sec  = dec_curr;
 		dec_curr = xsect;
 		if (dec_putw(0))
@@ -1500,9 +1450,8 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 				string   = DeeString_STR(ddi->d_strtab) + string_offset;
 				dec_curr = SC_STRING;
 				string   = (char *)dec_allocstr(string, (strlen(string) + 1) * sizeof(char));
-				if
-					unlikely(!string)
-				goto err;
+				if unlikely(!string)
+					goto err;
 				string_offset = dec_ptr2addr((uint8_t *)string);
 				dec_curr      = xsect;
 				if (string_offset <= UINT8_MAX && symbol_id <= UINT8_MAX) {
@@ -1531,9 +1480,8 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 			default:
 defl_xdat:
 				buf = dec_alloc(1 + opsize);
-				if
-					unlikely(!buf)
-				goto err;
+				if unlikely(!buf)
+					goto err;
 				memcpy(buf, buf - 1, 1 + opsize);
 				break;
 			}
@@ -1605,23 +1553,20 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 	/* First of all: Allocate the code's text segment. */
 	dec_curr = SC_TEXT;
 	text_sym = dec_newsym();
-	if
-		unlikely(!text_sym)
-	goto err;
+	if unlikely(!text_sym)
+		goto err;
 	ptr = dec_allocstr(self->co_code,
 	                   self->co_codebytes);
-	if
-		unlikely(!ptr)
-	goto err;
+	if unlikely(!ptr)
+		goto err;
 	dec_defsymat(text_sym, dec_ptr2addr(ptr));
 
 	if (self->co_staticc) {
 		/* Generate the static/constant variable vector. */
 		struct dec_section *static_sec;
 		static_sec = dec_newsection_after(SC_ROOT);
-		if
-			unlikely(!static_sec)
-		goto err;
+		if unlikely(!static_sec)
+			goto err;
 		dec_curr   = static_sec;
 		static_sym = &static_sec->ds_start; /* This is where static object data starts. */
 		/* Generate static object vector. */
@@ -1633,9 +1578,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 		struct dec_section *except_sec;
 		struct except_handler *iter, *end;
 		except_sec = dec_newsection_after(SC_ROOT);
-		if
-			unlikely(!except_sec)
-		goto err;
+		if unlikely(!except_sec)
+			goto err;
 		dec_curr   = except_sec;
 		except_sym = &except_sec->ds_start; /* This is where exception data starts. */
 		end        = (iter = self->co_exceptv) + self->co_exceptc;
@@ -1682,9 +1626,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 		/* Create the argument descriptor data. */
 		struct dec_section *args_sec;
 		args_sec = dec_newsection_after(SC_ROOT);
-		if
-			unlikely(!args_sec)
-		goto err;
+		if unlikely(!args_sec)
+			goto err;
 		dec_curr    = args_sec;
 		default_sym = &args_sec->ds_start; /* This is where argument data starts. */
 		/* Generate default argument data. */
@@ -1702,9 +1645,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 			uint8_t *tempptr;
 			struct dec_sym *tempsym;
 			struct dec_section *ddi_section = dec_newsection_after(SC_DEBUG);
-			if
-				unlikely(!ddi_section)
-			goto err;
+			if unlikely(!ddi_section)
+				goto err;
 			dec_curr = ddi_section;
 			ddi_sym  = &ddi_section->ds_start;
 			/* Start emitting the DDI object. */
@@ -1716,18 +1658,15 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 			/* Emit the DDI text into the debug-text section. */
 			dec_curr = SC_DEBUG_TEXT;
 			tempptr  = dec_allocstr(ddi->d_ddi, ddi->d_ddisize);
-			if
-				unlikely(!tempptr)
-			goto err;
+			if unlikely(!tempptr)
+				goto err;
 			tempsym = dec_newsym();
-			if
-				unlikely(!tempsym)
-			goto err;
+			if unlikely(!tempsym)
+				goto err;
 			dec_defsymat(tempsym, dec_ptr2addr(tempptr));
 			dec_curr = ddi_section;
-			if
-				unlikely(dec_putddi_xdat_ptr(ddi, ddi->d_exdat, use_8bit))
-			goto err; /* Dec_CodeDDI.cd_ddixdat */
+			if unlikely(dec_putddi_xdat_ptr(ddi, ddi->d_exdat, use_8bit))
+				goto err; /* Dec_CodeDDI.cd_ddixdat */
 
 			/* Now emit the size of, and a pointer to the DDI's text. */
 			if (use_8bit) {
@@ -1775,9 +1714,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 		struct dec_section *kwd_section;
 		uint16_t i;
 		kwd_section = dec_newsection_after(SC_ROOT);
-		if
-			unlikely(!kwd_section)
-		goto err;
+		if unlikely(!kwd_section)
+			goto err;
 		kwd_sym = &kwd_section->ds_start;
 		if (use_8bit) {
 			for (i = 0; i < self->co_argc_max; ++i) {
@@ -1785,13 +1723,11 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 				uint32_t addr;
 				dec_curr = SC_STRING;
 				name     = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
-				if
-					unlikely(!name)
-				goto err;
+				if unlikely(!name)
+					goto err;
 				name = dec_allocstr(name, (WSTR_LENGTH(name) + 1) * sizeof(char));
-				if
-					unlikely(!name)
-				goto err;
+				if unlikely(!name)
+					goto err;
 				addr     = dec_ptr2addr(name);
 				dec_curr = kwd_section;
 				if (dec_putptr(addr))
@@ -1803,16 +1739,14 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 				uint32_t addr;
 				size_t len;
 				name = (uint8_t *)DeeString_AsUtf8((DeeObject *)self->co_keywords[i]);
-				if
-					unlikely(!name)
-				goto err;
+				if unlikely(!name)
+					goto err;
 				len = WSTR_LENGTH(name);
 				if (len) {
 					dec_curr = SC_STRING;
 					name     = dec_allocstr(name, len * sizeof(char));
-					if
-						unlikely(!name)
-					goto err;
+					if unlikely(!name)
+						goto err;
 					addr     = dec_ptr2addr(name);
 					dec_curr = kwd_section;
 					if (dec_putptr((uint32_t)len))
@@ -1835,9 +1769,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 		uint32_t code_addr = dec_addr;
 		/* Allocate and copy descriptor data. */
 		pdesc8 = (Dec_8BitCode *)dec_alloc(sizeof(Dec_8BitCode));
-		if
-			unlikely(!pdesc8)
-		goto err;
+		if unlikely(!pdesc8)
+			goto err;
 		UNALIGNED_SETLE16(&pdesc8->co_flags, descr.co_flags);                     /* Dec_Code.co_flags */
 		pdesc8->co_localc   = (uint8_t)descr.co_localc;                           /* Dec_Code.co_localc */
 		pdesc8->co_refc     = (uint8_t)descr.co_refc;                             /* Dec_Code.co_refc */
@@ -1884,9 +1817,8 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 #endif /* !CONFIG_LITTLE_ENDIAN */
 		/* Allocate and copy descriptor data. */
 		pdesc = (Dec_Code *)dec_alloc(sizeof(Dec_Code));
-		if
-			unlikely(!pdesc)
-		goto err;
+		if unlikely(!pdesc)
+			goto err;
 		memcpy(pdesc, &descr, sizeof(Dec_Code));
 		/* Create relocations. */
 		if (static_sym && dec_putrelat(code_addr + offsetof(Dec_Code, co_staticoff), DECREL_ABS32, static_sym))
@@ -1919,9 +1851,8 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	dec_curr = SC_HEADER;
 	header   = (Dec_Ehdr *)dec_alloc(sizeof(Dec_Ehdr));
-	if
-		unlikely(!header)
-	goto err;
+	if unlikely(!header)
+		goto err;
 
 	/* Initialize the magic header. */
 	header->e_ident[DI_MAG0] = DECMAG0;
@@ -1941,9 +1872,8 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 	{
 		uint64_t comtm;
 		comtm = DeeModule_GetCTime((DeeObject *)self);
-		if
-			unlikely(comtm == (uint64_t)-1)
-		goto err;
+		if unlikely(comtm == (uint64_t)-1)
+			goto err;
 		/* Fill in the original timestamp of when the module was compiled. */
 		header->e_timestamp_lo = LESWAP32((uint32_t)comtm);
 		header->e_timestamp_hi = LESWAP32((uint32_t)(comtm >> 32));
@@ -1964,30 +1894,25 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 		goto err;
 
 	/* Save the module import table. */
-	if
-		unlikely(decgen_imports(self))
-	goto err;
+	if unlikely(decgen_imports(self))
+		goto err;
 
 	/* TODO: Save additional dependencies (files that were included by the source file of this module) */
 
 	/* Save the global variable table. */
-	if
-		unlikely(decgen_globals(self))
-	goto err;
+	if unlikely(decgen_globals(self))
+		goto err;
 
 	/* Emit the root code object. */
 	dec_curr = SC_ROOT;
-	if
-		likely(self->mo_root)
-	{
-		if
-			unlikely(dec_putcode(self->mo_root))
-		goto err;
+	if likely(self->mo_root)
+		{
+		if unlikely(dec_putcode(self->mo_root))
+			goto err;
 	} else {
 		/* Shouldn't happen, but the specs allow `mo_root' to be NULL. */
-		if
-			unlikely(dec_putcode(&empty_code))
-		goto err;
+		if unlikely(dec_putcode(&empty_code))
+			goto err;
 	}
 
 	return 0;

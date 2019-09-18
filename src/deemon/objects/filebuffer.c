@@ -130,9 +130,8 @@ PRIVATE void atexit_flushall(void) {
 		buf_write(buffer);
 		error = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
 		buf_endwrite(buffer);
-		if
-			unlikely(error)
-		{
+		if unlikely(error)
+			{
 			DeeError_Print("Failed to synchronize tty during exit\n",
 			               ERROR_PRINT_HANDLEINTR);
 		}
@@ -187,9 +186,8 @@ buffer_init(Buffer *__restrict self,
 	if ((self->fb_size = size) != 0) {
 		/* Allocate the initial buffer. */
 		self->fb_base = (uint8_t *)Dee_Malloc(size);
-		if
-			unlikely(!self->fb_base)
-		goto err;
+		if unlikely(!self->fb_base)
+			goto err;
 	} else {
 		self->fb_base = NULL;
 	}
@@ -282,17 +280,15 @@ set_lfflag:
 		}
 		return 0;
 	}
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 	file = self->fb_file, Dee_Incref(file);
 	COMPILER_BARRIER();
 	is_a_tty = DeeFile_IsAtty(file);
 	COMPILER_BARRIER();
 	Dee_Decref(file);
-	if
-		unlikely(is_a_tty < 0)
-	goto err;
+	if unlikely(is_a_tty < 0)
+		goto err;
 	self->fb_flag |= is_a_tty ? FILE_BUFFER_FISATTY : FILE_BUFFER_FNOTATTY;
 	flags = self->fb_flag;
 	goto set_lfflag;
@@ -314,13 +310,11 @@ DeeFileBuffer_New(DeeObject *__restrict file,
                   uint16_t mode, size_t size) {
 	DREF Buffer *result;
 	result = DeeObject_MALLOC(Buffer);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	/* Initialize the buffer. */
-	if
-		unlikely(buffer_init(result, file, mode, size))
-	goto err_r;
+	if unlikely(buffer_init(result, file, mode, size))
+		goto err_r;
 	DeeObject_Init(result, &DeeFileBuffer_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -347,9 +341,8 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeFileBuffer_Type);
 	buf_write(me);
 	result = buffer_sync_nolock(me, BUFFER_SYNC_FERROR_IF_CLOSED);
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 
 	/* Set the new buffering mode. */
 	if (mode != FILE_BUFFER_MODE_KEEP) {
@@ -378,9 +371,8 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 		if (me->fb_flag & FILE_BUFFER_FREADING)
 			goto err_cannot_resize;
 		new_buffer = buffer_realloc_nolock(me, size);
-		if
-			unlikely(!new_buffer)
-		goto err;
+		if unlikely(!new_buffer)
+			goto err;
 		/* Figure out where pointers are located at and update them. */
 		bufoff = (size_t)(me->fb_ptr - me->fb_base);
 		if (bufoff >= size) {
@@ -431,9 +423,8 @@ PUBLIC int DCALL DeeFileBuffer_SyncTTYs(void) {
 		COMPILER_BARRIER();
 		buf_endwrite(buffer);
 		Dee_Decref(buffer);
-		if
-			unlikely(result)
-		break;
+		if unlikely(result)
+			break;
 	}
 	return result;
 }
@@ -450,14 +441,12 @@ buffer_read_nolock(Buffer *__restrict self,
 	uint8_t *new_buffer;
 	DREF DeeObject *file;
 	bool did_read_data = false;
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 again:
 	bufavail = self->fb_cnt;
-	if
-		likely(bufavail)
-	{
+	if likely(bufavail)
+		{
 read_from_buffer:
 		if (bufavail > bufsize)
 			bufavail = bufsize;
@@ -484,12 +473,10 @@ read_from_buffer:
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
 	/* Unlikely: But can happen due to recursive callbacks. */
-	if
-		unlikely(self->fb_cnt)
-	goto read_from_buffer;
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(self->fb_cnt)
+		goto read_from_buffer;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 
 	/* If we're a TTY buffer, flush all other TTY buffers before reading. */
 	if (self->fb_flag & FILE_BUFFER_FISATTY) {
@@ -497,12 +484,10 @@ read_from_buffer:
 		if (DeeFileBuffer_SyncTTYs())
 			goto err;
 		COMPILER_BARRIER();
-		if
-			unlikely(self->fb_cnt)
-		goto read_from_buffer;
-		if
-			unlikely(!self->fb_file)
-		goto err_closed;
+		if unlikely(self->fb_cnt)
+			goto read_from_buffer;
+		if unlikely(!self->fb_file)
+			goto err_closed;
 		self->fb_chng = self->fb_base;
 		self->fb_chsz = 0;
 	}
@@ -510,9 +495,8 @@ read_from_buffer:
 	/* Determine where the next block of data is. */
 	next_data = self->fb_fblk + (self->fb_ptr - self->fb_base);
 
-	if
-		unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
-	{
+	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
+		{
 		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
 		file = self->fb_file;
@@ -524,9 +508,8 @@ read_through:
 			new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
 			COMPILER_BARRIER();
 			Dee_Decref(file);
-			if
-				unlikely(new_pos < 0)
-			goto err;
+			if unlikely(new_pos < 0)
+				goto err;
 			self->fb_fpos = next_data;
 			goto again; /* Must start over because of recursive callbacks. */
 		}
@@ -534,17 +517,15 @@ read_through:
 		read_size = DeeFile_Readf(file, buffer, bufsize, flags);
 		COMPILER_BARRIER();
 		Dee_Decref(file);
-		if
-			unlikely(read_size < 0)
-		goto err;
+		if unlikely(read_size < 0)
+			goto err;
 		self->fb_fpos = next_data + bufsize;
 		result += read_size;
 		goto done;
 	}
 	/* If no buffer had been allocated, allocate one now. */
-	if
-		unlikely(!self->fb_size)
-	{
+	if unlikely(!self->fb_size)
+		{
 		/* Start out with the smallest size. */
 		size_t initial_bufsize;
 		if (bufsize >= FILE_BUFSIZ_MAX)
@@ -553,9 +534,8 @@ read_through:
 		if (initial_bufsize < FILE_BUFSIZ_MIN)
 			initial_bufsize = FILE_BUFSIZ_MIN;
 		new_buffer = buffer_tryrealloc_nolock(self, initial_bufsize);
-		if
-			unlikely(!new_buffer)
-		{
+		if unlikely(!new_buffer)
+			{
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
@@ -572,9 +552,8 @@ read_through:
 		/* Upscale the buffer. */
 		new_buffer = buffer_tryrealloc_nolock(self, bufsize);
 		/* If the allocation failed, also use read-through mode. */
-		if
-			unlikely(!new_buffer)
-		goto read_through;
+		if unlikely(!new_buffer)
+			goto read_through;
 		self->fb_base = new_buffer;
 		self->fb_size = bufsize;
 	}
@@ -595,9 +574,8 @@ read_through:
 		new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
 		COMPILER_BARRIER();
 		Dee_Decref(file);
-		if
-			unlikely(new_pos < 0)
-		goto err;
+		if unlikely(new_pos < 0)
+			goto err;
 		self->fb_fpos = next_data;
 		goto again; /* Must start over because of recursive callbacks. */
 	}
@@ -612,12 +590,10 @@ read_through:
 	Dee_Decref(file);
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
-	if
-		unlikely(read_size < 0)
-	goto err;
-	if
-		unlikely(read_size == 0)
-	goto done;
+	if unlikely(read_size < 0)
+		goto err;
+	if unlikely(read_size == 0)
+		goto done;
 	self->fb_fpos = next_data + (size_t)read_size;
 	self->fb_ptr  = self->fb_base;
 	self->fb_cnt  = (size_t)read_size;
@@ -649,20 +625,17 @@ buffer_write_nolock(Buffer *__restrict self,
 		goto err;
 	}
 again_checkfile:
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 again:
 	/* Fill available buffer. */
 	bufavail = (self->fb_base + self->fb_size) - self->fb_ptr;
-	if
-		likely(bufavail)
-	{
+	if likely(bufavail)
+		{
 		if (bufavail > bufsize)
 			bufavail = bufsize;
-		if
-			unlikely(!bufavail)
-		goto done;
+		if unlikely(!bufavail)
+			goto done;
 		memcpy(self->fb_ptr, buffer, bufavail);
 		result += bufavail;
 		/* Update the changed file-area. */
@@ -726,9 +699,8 @@ again:
 		if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto err;
 		COMPILER_BARRIER();
-		if
-			unlikely(!self->fb_file)
-		goto err_closed;
+		if unlikely(!self->fb_file)
+			goto err_closed;
 		self->fb_chng = self->fb_base;
 		self->fb_chsz = 0;
 		/* Check for special case: If the buffer is fixed to zero-length,
@@ -742,9 +714,8 @@ do_writethrough:
 			temp = DeeFile_Writef(file, buffer, bufsize, flags);
 			COMPILER_BARRIER();
 			Dee_Decref(file);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 			goto done;
 		}
@@ -762,9 +733,8 @@ do_writethrough:
 	if (new_bufsize < FILE_BUFSIZ_MIN)
 		new_bufsize = FILE_BUFSIZ_MIN;
 	new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
-	if
-		unlikely(!new_buffer)
-	{
+	if unlikely(!new_buffer)
+		{
 		/* Buffer relocation failed. - sync() + operate in write-through mode as fallback. */
 		if ((self->fb_flag & FILE_BUFFER_FISATTY) &&
 		    DeeFileBuffer_SyncTTYs())
@@ -773,9 +743,8 @@ do_writethrough:
 		if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto err;
 		COMPILER_BARRIER();
-		if
-			unlikely(!self->fb_file)
-		goto err_closed;
+		if unlikely(!self->fb_file)
+			goto err_closed;
 		self->fb_chng = self->fb_base;
 		self->fb_chsz = 0;
 		goto do_writethrough;
@@ -806,9 +775,8 @@ buffer_seek_nolock(Buffer *__restrict self,
 		dpos_t old_abspos;
 		dpos_t new_abspos;
 		uint8_t *new_pos;
-		if
-			unlikely(!self->fb_file)
-		goto err_closed;
+		if unlikely(!self->fb_file)
+			goto err_closed;
 		/* For these modes, we can calculate the new position,
 		 * allowing for in-buffer seek, as well as delayed seek. */
 		old_abspos = self->fb_fblk;
@@ -818,9 +786,8 @@ buffer_seek_nolock(Buffer *__restrict self,
 		else {
 			new_abspos = old_abspos + off;
 		}
-		if
-			unlikely(new_abspos >= INT64_MAX)
-		{
+		if unlikely(new_abspos >= INT64_MAX)
+			{
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid seek offset");
 			goto err;
@@ -864,9 +831,8 @@ full_seek:
 	if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err;
 	COMPILER_BARRIER();
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
 	file          = self->fb_file;
@@ -876,9 +842,8 @@ full_seek:
 	/* Do a full seek using the underlying file. */
 	result = DeeFile_Seek(file, off, whence);
 	Dee_Decref(file);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	COMPILER_BARRIER();
 
 	/* Clear the buffer and set the new file pointer. */
@@ -902,9 +867,8 @@ buffer_sync_nolock(Buffer *__restrict self, uint16_t mode) {
 	dssize_t temp;
 	DREF DeeObject *file;
 again:
-	if
-		unlikely(!self->fb_file)
-	{
+	if unlikely(!self->fb_file)
+		{
 		/* The buffer has been closed. */
 		if (!(mode & BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto done;
@@ -924,9 +888,8 @@ again:
 		new_pos = DeeFile_Seek(file, (doff_t)abs_chngpos, SEEK_SET);
 		COMPILER_BARRIER();
 		Dee_Decref(file);
-		if
-			unlikely(new_pos < 0)
-		goto err;
+		if unlikely(new_pos < 0)
+			goto err;
 		self->fb_fpos = (dpos_t)new_pos;
 		/* Since the buffer may have changed, we need to start over. */
 		goto again;
@@ -938,9 +901,8 @@ again:
 	                        changed_size);
 	COMPILER_BARRIER();
 	Dee_Decref(file);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (changed_size == self->fb_chsz && self->fb_file &&
 	    abs_chngpos == self->fb_fblk + (self->fb_chng - self->fb_base)) {
 		/* Data was synchronized. */
@@ -1000,12 +962,10 @@ read_from_buffer:
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
 	/* Unlikely: But can happen due to recursive callbacks. */
-	if
-		unlikely(self->fb_cnt)
-	goto read_from_buffer;
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(self->fb_cnt)
+		goto read_from_buffer;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 
 	/* If we're a TTY buffer, flush all other TTY buffers before reading. */
 	if (buffer_determine_isatty(self))
@@ -1015,12 +975,10 @@ read_from_buffer:
 		if (DeeFileBuffer_SyncTTYs())
 			goto err;
 		COMPILER_BARRIER();
-		if
-			unlikely(self->fb_cnt)
-		goto read_from_buffer;
-		if
-			unlikely(!self->fb_file)
-		goto err_closed;
+		if unlikely(self->fb_cnt)
+			goto read_from_buffer;
+		if unlikely(!self->fb_file)
+			goto err_closed;
 		self->fb_chng = self->fb_base;
 		self->fb_chsz = 0;
 	}
@@ -1028,9 +986,8 @@ read_from_buffer:
 	/* Determine where the next block of data is. */
 	next_data = self->fb_fblk + (self->fb_ptr - self->fb_base);
 
-	if
-		unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
-	{
+	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE)
+		{
 		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
 		file = self->fb_file;
@@ -1042,9 +999,8 @@ read_through:
 			new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
 			COMPILER_BARRIER();
 			Dee_Decref(file);
-			if
-				unlikely(new_pos < 0)
-			goto err;
+			if unlikely(new_pos < 0)
+				goto err;
 			self->fb_fpos = next_data;
 			goto again; /* Must start over because of recursive callbacks. */
 		}
@@ -1061,14 +1017,12 @@ read_through:
 	}
 
 	/* If no buffer had been allocated, allocate one now. */
-	if
-		unlikely(!self->fb_size)
-	{
+	if unlikely(!self->fb_size)
+		{
 		/* Start out with the smallest size. */
 		new_buffer = buffer_tryrealloc_nolock(self, FILE_BUFSIZ_MIN);
-		if
-			unlikely(!new_buffer)
-		{
+		if unlikely(!new_buffer)
+			{
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
@@ -1080,9 +1034,8 @@ read_through:
 		    !(self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))) {
 			/* Upscale the buffer. */
 			new_buffer = buffer_tryrealloc_nolock(self, FILE_BUFSIZ_MIN);
-			if
-				unlikely(!new_buffer)
-			goto read_through;
+			if unlikely(!new_buffer)
+				goto read_through;
 			self->fb_base = new_buffer;
 			self->fb_size = FILE_BUFSIZ_MIN;
 		}
@@ -1104,9 +1057,8 @@ read_through:
 		new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
 		COMPILER_BARRIER();
 		Dee_Decref(file);
-		if
-			unlikely(new_pos < 0)
-		goto err;
+		if unlikely(new_pos < 0)
+			goto err;
 		self->fb_fpos = next_data;
 		goto again; /* Must start over because of recursive callbacks. */
 	}
@@ -1121,15 +1073,12 @@ read_through:
 	Dee_Decref(file);
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
-	if
-		unlikely(read_size < 0)
-	goto err;
-	if
-		unlikely(self->fb_cnt)
-	goto read_from_buffer;
-	if
-		unlikely(self->fb_chsz)
-	goto again;
+	if unlikely(read_size < 0)
+		goto err;
+	if unlikely(self->fb_cnt)
+		goto read_from_buffer;
+	if unlikely(self->fb_chsz)
+		goto again;
 	self->fb_fpos = next_data + (size_t)read_size;
 	/* Check for special case: EOF reached. */
 	if (!read_size)
@@ -1170,22 +1119,19 @@ again:
 		goto eof;
 	inc_size = self->fb_size;
 	/* Determine the minimum buffer size. */
-	if
-		unlikely(!inc_size)
-	inc_size = (self->fb_flag & FILE_BUFFER_FNODYNSCALE) ? 1 : FILE_BUFSIZ_MIN;
+	if unlikely(!inc_size)
+		inc_size = (self->fb_flag & FILE_BUFFER_FNODYNSCALE) ? 1 : FILE_BUFSIZ_MIN;
 	if (inc_size > self->fb_fblk)
 		inc_size = (size_t)self->fb_fblk;
 	new_bufsize = self->fb_size + inc_size;
 	new_buffer  = buffer_tryrealloc_nolock(self, new_bufsize);
-	if
-		unlikely(!new_buffer)
-	{
+	if unlikely(!new_buffer)
+		{
 		inc_size    = 1;
 		new_bufsize = self->fb_size + 1;
 		new_buffer  = buffer_tryrealloc_nolock(self, new_bufsize);
-		if
-			unlikely(!new_buffer)
-		{
+		if unlikely(!new_buffer)
+			{
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
@@ -1217,12 +1163,10 @@ buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size) {
 	int result;
 	DREF DeeObject *file;
 	/* Synchronize the buffer. */
-	if
-		unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
-	goto err;
-	if
-		unlikely(!self->fb_file)
-	goto err_closed;
+	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
+		goto err;
+	if unlikely(!self->fb_file)
+		goto err_closed;
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
 	abs_pos       = self->fb_fblk + (self->fb_ptr - self->fb_base);
@@ -1324,9 +1268,8 @@ buffer_close(Buffer *__restrict self) {
 	uint8_t *buffer;
 	uint16_t flags;
 	buf_write(self);
-	if
-		unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
-	goto err;
+	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
+		goto err;
 	file   = self->fb_file;
 	buffer = self->fb_base;
 	flags  = self->fb_flag;
@@ -1497,9 +1440,8 @@ buffer_fini(Buffer *__restrict self) {
 		buffer_ttys_lock_leave();
 	}
 	/* Synchronize the buffer one last time. */
-	if
-		unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL))
-	{
+	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL))
+		{
 		DeeError_Print("Discarding error in buffer synchronization in finalization\n",
 		               ERROR_PRINT_DOHANDLE);
 	}
@@ -1522,9 +1464,8 @@ buffer_size(Buffer *__restrict self,
 	DREF DeeObject *file, *result;
 	buf_write(self);
 	file = self->fb_file;
-	if
-		unlikely(!file)
-	goto err_closed_unlock;
+	if unlikely(!file)
+		goto err_closed_unlock;
 	Dee_Incref(file);
 	buf_endwrite(self);
 	/* Forward the to contained file. */
@@ -1545,9 +1486,8 @@ buffer_fileno(Buffer *__restrict self,
 	DREF DeeObject *file, *result;
 	buf_write(self);
 	file = self->fb_file;
-	if
-		unlikely(!file)
-	goto err_closed_unlock;
+	if unlikely(!file)
+		goto err_closed_unlock;
 	Dee_Incref(file);
 	buf_endwrite(self);
 	/* Forward the to contained file. */
@@ -1572,9 +1512,8 @@ buffer_isatty(Buffer *__restrict self,
 	/* Determine if the buffer points to a TTY. */
 	error = buffer_determine_isatty(self);
 	buf_endwrite(self);
-	if
-		unlikely(error)
-	goto err;
+	if unlikely(error)
+		goto err;
 	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
 err:
 	return NULL;
@@ -1592,9 +1531,8 @@ buffer_flush(Buffer *__restrict self,
 	                           BUFFER_SYNC_FERROR_IF_CLOSED |
 	                           BUFFER_SYNC_FNOSYNC_FILE);
 	buf_endwrite(self);
-	if
-		unlikely(error)
-	goto err;
+	if unlikely(error)
+		goto err;
 	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
 err:
 	return NULL;
@@ -1721,9 +1659,8 @@ buffer_filename(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
 	buf_write(self);
 	file = self->fb_file;
-	if
-		unlikely(!file)
-	goto err_closed_unlock;
+	if unlikely(!file)
+		goto err_closed_unlock;
 	Dee_Incref(file);
 	buf_endwrite(self);
 	/* Forward the to contained file. */
@@ -1742,9 +1679,8 @@ buffer_getfile(Buffer *__restrict self) {
 	DREF DeeObject *result;
 	buf_write(self);
 	result = self->fb_file;
-	if
-		unlikely(!result)
-	goto err_closed_unlock;
+	if unlikely(!result)
+		goto err_closed_unlock;
 	Dee_Incref(result);
 	buf_endwrite(self);
 	return result;

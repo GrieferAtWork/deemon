@@ -126,15 +126,13 @@ textjumps_add(struct textjumps *__restrict self,
 			newalloc = 4;
 		newvec = (struct textjump *)Dee_TryRealloc(self->tj_vec, newalloc *
 		                                                         sizeof(struct textjump));
-		if
-			unlikely(!newvec)
-		{
+		if unlikely(!newvec)
+			{
 			newalloc = self->tj_cnt + 1;
 			newvec   = (struct textjump *)Dee_Realloc(self->tj_vec, newalloc *
                                                                   sizeof(struct textjump));
-			if
-				unlikely(!newvec)
-			return -1;
+			if unlikely(!newvec)
+				return -1;
 		}
 		self->tj_vec = newvec;
 		self->tj_alc = newalloc;
@@ -161,9 +159,8 @@ textjumps_add(struct textjumps *__restrict self,
 			uint8_t *used_levels;
 			size_t i;
 			used_levels = (uint8_t *)Dee_ACalloc((self->tj_max + 7) / 8);
-			if
-				unlikely(!used_levels)
-			return -1;
+			if unlikely(!used_levels)
+				return -1;
 			for (i = 0; i < self->tj_cnt; ++i) {
 				code_addr_t slot_min;
 				code_addr_t slot_max;
@@ -320,9 +317,8 @@ print_box(dformatprinter printer, void *arg,
 			temp = (*printer)(arg, (char *)&text[i], 1);
 			break;
 		}
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		result += temp;
 	}
 	return result;
@@ -366,9 +362,8 @@ textjumps_print(dformatprinter printer, void *arg,
 #else /* DIRECTIVE_DEDENT_WIDTH == 0 */
 	lines = (unsigned char *)Dee_AMalloc((line_length + 3) * sizeof(unsigned char));
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
-	if
-		unlikely(!lines)
-	return -1;
+	if unlikely(!lines)
+		return -1;
 	memset(lines, ' ', line_length * sizeof(unsigned char));
 	for (i = 0; i < self->tj_cnt; ++i) {
 		code_addr_t jmp_min;
@@ -455,9 +450,8 @@ textjumps_print(dformatprinter printer, void *arg,
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
 #ifdef HAVE_PRINT_BOX
 	temp = print_box(printer, arg, lines, line_length);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	result += temp;
 #else /* HAVE_PRINT_BOX */
 	print((char *)lines, line_length);
@@ -508,9 +502,8 @@ libdisasm_printclassattribute(dformatprinter printer, void *arg,
 	                          "%s        attribute %k, %I16u",
 	                          line_prefix, self->ca_name,
 	                          self->ca_addr);
-	if
-		unlikely(result < 0)
-	goto done;
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i < COMPILER_LENOF(attributeflags); ++i) {
 		if (!(self->ca_flag & attributeflags[i].mask))
 			continue;
@@ -544,9 +537,8 @@ libdisasm_printclass(dformatprinter printer, void *arg,
 	                          self->cd_name ? " " : "",
 	                          line_prefix, self->cd_imemb_size,
 	                          line_prefix, self->cd_cmemb_size);
-	if
-		unlikely(result < 0)
-	goto done;
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i < COMPILER_LENOF(typeflags); ++i) {
 		if (!(self->cd_flags & typeflags[i].mask))
 			continue;
@@ -708,9 +700,8 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 			line_length += 3;
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
 			temp = DeeFormat_Repeat(printer, arg, ' ', line_length);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 		}
 		PRINT(".code @");
@@ -732,9 +723,8 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 		code_addr_t code_ip = (code_addr_t)(iter - start_addr);
 		while ((ddi_ip != DDI_NEXT_DONE) && ddi.rs_regs.dr_uip < code_ip) {
 			ddi_ip = Dee_ddi_next_state(ddi_ip, &ddi, DDI_STATE_FNORMAL);
-			if
-				unlikely(ddi_ip == DDI_NEXT_ERR)
-			goto err_n1;
+			if unlikely(ddi_ip == DDI_NEXT_ERR)
+				goto err_n1;
 		}
 		if (ddi_ip && ddi.rs_regs.dr_uip == code_ip) {
 			if (flags & PCODE_FDDI) {
@@ -749,9 +739,8 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 					print(whitespace, (sp_width * 2) + 7);
 				if (!(flags & PCODE_FNOJUMPARROW)) {
 					temp = textjumps_print(printer, arg, &jumps, code_ip, code_ip);
-					if
-						unlikely(temp < 0)
-					goto err;
+					if unlikely(temp < 0)
+						goto err;
 					result += temp;
 				}
 				PRINT(".ddi ");
@@ -847,17 +836,15 @@ get_next_instruction_without_stack:
 						print(whitespace, (sp_width * 2) + 7);
 					if (!(flags & PCODE_FNOJUMPARROW)) {
 						temp = textjumps_print(printer, arg, &jumps, code_ip, code_ip);
-						if
-							unlikely(temp < 0)
-						goto err;
+						if unlikely(temp < 0)
+							goto err;
 						result += temp;
 					}
 					temp = libdisasm_printlabel(printer, arg, opcode,
 					                            jmp->tj_origin,
 					                            jmp->tj_target);
-					if
-						unlikely(temp < 0)
-					goto err;
+					if unlikely(temp < 0)
+						goto err;
 					result += temp;
 					PRINT(":\n");
 				}
@@ -895,9 +882,8 @@ prefix_except_prefix:
 							print(whitespace, (sp_width * 2) + 7);
 						if (!(flags & PCODE_FNOJUMPARROW)) {
 							temp = textjumps_print(printer, arg, &jumps, code_ip, code_ip);
-							if
-								unlikely(temp < 0)
-							goto err;
+							if unlikely(temp < 0)
+								goto err;
 							result += temp;
 						}
 						if (j == 2) {
@@ -938,9 +924,8 @@ prefix_except_prefix:
 			char bytes[INSTRLEN_MAX * 3];
 			size_t i, num_bytes;
 			num_bytes = (size_t)(next - iter);
-			if
-				unlikely(num_bytes > INSTRLEN_MAX)
-			num_bytes = INSTRLEN_MAX;
+			if unlikely(num_bytes > INSTRLEN_MAX)
+				num_bytes = INSTRLEN_MAX;
 			for (i = 0; i < num_bytes; ++i) {
 				uint8_t byte;
 				bytes[(i * 3) + 2] = ' ';
@@ -957,17 +942,15 @@ prefix_except_prefix:
 				PRINT("   ");
 			if (!(flags & PCODE_FNODEPTH)) {
 				temp = print_sp_transition(printer, arg, stacksz, new_stacksz, sp_width);
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 				result += temp;
 			}
 			if (!(flags & PCODE_FNOJUMPARROW)) {
 				temp = textjumps_print(printer, arg, &jumps, code_ip,
 				                       (code_addr_t)(next - start_addr));
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 				result += temp;
 			}
 #if DIRECTIVE_DEDENT_WIDTH != 0
@@ -979,9 +962,8 @@ prefix_except_prefix:
 			temp = libdisasm_printinstr(printer, arg, iter, stacksz,
 			                            ddi_ip ? &ddi : NULL,
 			                            code, flags);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 			PRINT("\n");
 #if INSTRLEN_MAX > LINE_MAXBYTES * 2
@@ -1007,9 +989,8 @@ prefix_except_prefix:
 						temp = textjumps_print(printer, arg, &jumps,
 						                       (code_addr_t)(next - start_addr),
 						                       (code_addr_t)(next - start_addr));
-						if
-							unlikely(temp < 0)
-						goto err;
+						if unlikely(temp < 0)
+							goto err;
 						result += temp;
 						PRINT("\n");
 					}
@@ -1036,9 +1017,8 @@ prefix_except_prefix:
 					temp = textjumps_print(printer, arg, &jumps,
 					                       (code_addr_t)(next - start_addr),
 					                       (code_addr_t)(next - start_addr));
-					if
-						unlikely(temp < 0)
-					goto err;
+					if unlikely(temp < 0)
+						goto err;
 					result += temp;
 					PRINT("\n");
 				}
@@ -1047,17 +1027,15 @@ prefix_except_prefix:
 		} else {
 			if (!(flags & PCODE_FNODEPTH)) {
 				temp = print_sp_transition(printer, arg, stacksz, new_stacksz, sp_width);
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 				result += temp;
 			}
 			if (!(flags & PCODE_FNOJUMPARROW)) {
 				temp = textjumps_print(printer, arg, &jumps, code_ip,
 				                       (code_addr_t)(next - start_addr));
-				if
-					unlikely(temp < 0)
-				goto err;
+				if unlikely(temp < 0)
+					goto err;
 				result += temp;
 			}
 #if DIRECTIVE_DEDENT_WIDTH != 0
@@ -1069,9 +1047,8 @@ prefix_except_prefix:
 			temp = libdisasm_printinstr(printer, arg, iter, stacksz,
 			                            ddi_ip ? &ddi : NULL,
 			                            code, flags);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			result += temp;
 			PRINT("\n");
 		}
@@ -1092,9 +1069,8 @@ prefix_except_prefix:
 						                            (DeeClassDescriptorObject *)inner_code,
 						                            i, line_prefix);
 						Dee_Decref(inner_code);
-						if
-							unlikely(temp < 0)
-						goto err;
+						if unlikely(temp < 0)
+							goto err;
 						result += temp;
 						rwlock_read(&code->co_static_lock);
 					}
@@ -1110,15 +1086,13 @@ prefix_except_prefix:
 			                        line_prefix ? line_prefix : "",
 			                        i,
 			                        kind);
-			if
-				likely(temp >= 0)
-			{
+			if likely(temp >= 0)
+				{
 				char *inner_prefix;
 				result += temp;
 				inner_prefix = (char *)Dee_Malloc((prefix_len + 5) * sizeof(char));
-				if
-					unlikely(!inner_prefix)
-				temp = -1;
+				if unlikely(!inner_prefix)
+					temp = -1;
 				else {
 					memset(inner_prefix, ' ', (prefix_len + 4) * sizeof(char));
 					inner_prefix[prefix_len + 4] = '\0';
@@ -1129,21 +1103,18 @@ prefix_except_prefix:
 					                           inner_prefix,
 					                           flags);
 					DBG_ALIGNMENT_ENABLE();
-					if
-						likely(temp >= 0)
-					{
+					if likely(temp >= 0)
+						{
 						temp = DeeFormat_Printf(printer, arg, "%s}\n", line_prefix ? line_prefix : "");
-						if
-							likely(temp >= 0)
-						result += temp;
+						if likely(temp >= 0)
+							result += temp;
 					}
 					Dee_Free(inner_prefix);
 				}
 			}
 			Dee_Decref(inner_code);
-			if
-				unlikely(temp < 0)
-			goto err;
+			if unlikely(temp < 0)
+				goto err;
 			rwlock_read(&code->co_static_lock);
 		}
 		rwlock_endread(&code->co_static_lock);

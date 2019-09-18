@@ -323,9 +323,8 @@ again:
 	table = ATOMIC_READ(self->cd_ops[table_index]);
 	if (!table) {
 		table = (struct class_optable *)Dee_TryCalloc(sizeof(struct class_optable));
-		if
-			unlikely(!table)
-		goto done;
+		if unlikely(!table)
+			goto done;
 		if (!ATOMIC_CMPXCH(self->cd_ops[table_index], NULL, table)) {
 			/* Table was already allocated! */
 			Dee_Free(table);
@@ -351,14 +350,12 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 	if (name < CLASS_OPERATOR_USERCOUNT) {
 		struct class_optable *table;
 		table = self->cd_ops[name / CLASS_HEADER_OPC2];
-		if
-			likely(table)
-		{
+		if likely(table)
+			{
 			rwlock_read(&self->cd_lock);
 			result = table->co_operators[name % CLASS_HEADER_OPC2];
-			if
-				likely(result)
-			{
+			if likely(result)
+				{
 				Dee_Incref(result);
 				rwlock_endread(&self->cd_lock);
 				return result;
@@ -379,9 +376,8 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
 		rwlock_read(&self->cd_lock);
 		result = self->cd_members[entry->co_addr];
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			rwlock_endread(&self->cd_lock);
 			err_unimplemented_operator(tp_self, name);
 			return NULL;
@@ -414,14 +410,12 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		if (name < CLASS_OPERATOR_USERCOUNT) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
-			if
-				likely(table)
-			{
+			if likely(table)
+				{
 				rwlock_read(&iter_class->cd_lock);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
-				if
-					likely(result)
-				{
+				if likely(result)
+					{
 					Dee_Incref(result);
 					rwlock_endread(&iter_class->cd_lock);
 					/* Inherit the base's operator locally, by caching it. */
@@ -447,9 +441,8 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
 			rwlock_read(&iter_class->cd_lock);
 			result = iter_class->cd_members[entry->co_addr];
-			if
-				unlikely(!result)
-			{
+			if unlikely(!result)
+				{
 				rwlock_endread(&iter_class->cd_lock);
 				goto done; /* Deleted operator. */
 			}
@@ -486,14 +479,12 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		if (name < CLASS_OPERATOR_USERCOUNT) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
-			if
-				likely(table)
-			{
+			if likely(table)
+				{
 				rwlock_read(&iter_class->cd_lock);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
-				if
-					likely(result)
-				{
+				if likely(result)
+					{
 					Dee_Incref(result);
 					rwlock_endread(&iter_class->cd_lock);
 					/* Inherit the base's operator locally, by caching it. */
@@ -519,9 +510,8 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
 			rwlock_read(&iter_class->cd_lock);
 			result = iter_class->cd_members[entry->co_addr];
-			if
-				unlikely(!result)
-			{
+			if unlikely(!result)
+				{
 				rwlock_endread(&iter_class->cd_lock);
 				return NULL; /* Deleted operator. */
 			}
@@ -563,9 +553,8 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
 		rwlock_read(&self_class->cd_lock);
 		result = self_class->cd_members[entry->co_addr];
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			rwlock_endread(&self_class->cd_lock);
 			break; /* Deleted operator. */
 		}
@@ -636,9 +625,8 @@ instance_destructor(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self  = Dee_TYPE(self);
 	struct class_desc *desc = DeeClass_DESC(tp_self);
 	callback                = class_desc_get_known_operator(tp_self, desc, OPERATOR_DESTRUCTOR);
-	if
-		unlikely(!callback)
-	result = NULL;
+	if unlikely(!callback)
+		result = NULL;
 	else {
 		dref_t new_refcnt;
 		ATOMIC_FETCHINC(self->ob_refcnt);
@@ -650,9 +638,8 @@ instance_destructor(DeeObject *__restrict self) {
 			new_refcnt = ATOMIC_READ(self->ob_refcnt);
 			if (new_refcnt > 1) {
 				/* Object got revived (let the caller inherit our reference) */
-				if
-					likely(result)
-				Dee_Decref(result);
+				if likely(result)
+					Dee_Decref(result);
 				else {
 					DeeError_Print("Unhandled error in destructor\n",
 					               ERROR_PRINT_DOHANDLE);
@@ -663,9 +650,8 @@ instance_destructor(DeeObject *__restrict self) {
 				break;
 		}
 	}
-	if
-		likely(result)
-	Dee_Decref(result);
+	if likely(result)
+		Dee_Decref(result);
 	else {
 		DeeError_Print("Unhandled error in destructor\n",
 		               ERROR_PRINT_DOHANDLE);
@@ -766,9 +752,8 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 				goto err_no_keywords;
 		} else {
 			size_t kw_size = DeeObject_Size(kw);
-			if
-				unlikely(kw_size == (size_t)-1)
-			goto err;
+			if unlikely(kw_size == (size_t)-1)
+				goto err;
 			if (kw_size != 0)
 				goto err_no_keywords;
 		}
@@ -849,9 +834,8 @@ instance_tcopy(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the copy operator function. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_COPY);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -862,9 +846,8 @@ instance_tcopy(DeeTypeObject *__restrict tp_self,
 			goto err_members;
 	}
 	result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -891,9 +874,8 @@ instance_tdeepcopy(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the copy operator function. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_DEEPCOPY);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -908,9 +890,8 @@ instance_tdeepcopy(DeeTypeObject *__restrict tp_self,
 	if (Dee_DeepCopyAddAssoc(self, other))
 		goto err_super;
 	result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -1032,18 +1013,16 @@ instance_builtin_deepload(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	tp_self = Dee_TYPE(self);
 	do {
-		if
-			unlikely(instance_builtin_tdeepload(tp_self, self))
-		goto err;
+		if unlikely(instance_builtin_tdeepload(tp_self, self))
+			goto err;
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
 	/* Invoke deepload for all non-user defined base classes. */
 	for (; tp_self; tp_self = DeeType_Base(tp_self)) {
 		if (!tp_self->tp_init.tp_deepload)
 			continue;
-		if
-			unlikely((*tp_self->tp_init.tp_deepload)(self))
-		goto err;
+		if unlikely((*tp_self->tp_init.tp_deepload)(self))
+			goto err;
 	}
 	return 0;
 err:
@@ -1073,9 +1052,8 @@ instance_builtin_tassign(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	uint16_t i, size;
 	DREF DeeObject **old_items;
-	if
-		unlikely(self == other)
-	goto done;
+	if unlikely(self == other)
+		goto done;
 	if (DeeObject_AssertType(other, tp_self))
 		goto err;
 	tp_super = DeeType_Base(tp_self);
@@ -1084,9 +1062,8 @@ instance_builtin_tassign(DeeTypeObject *__restrict tp_self,
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
 	old_items      = (DREF DeeObject **)Dee_AMalloc(size * sizeof(DREF DeeObject *));
-	if
-		unlikely(!old_items)
-	goto err;
+	if unlikely(!old_items)
+		goto err;
 	/* Load member values from `others' */
 	rwlock_read(&other_instance->id_lock);
 	MEMCPY_PTR(old_items, other_instance->id_vtab, size);
@@ -1122,9 +1099,8 @@ instance_builtin_tmoveassign(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	uint16_t i, size;
 	DREF DeeObject **old_items;
-	if
-		unlikely(self == other)
-	goto done;
+	if unlikely(self == other)
+		goto done;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && DeeObject_TMoveAssign(tp_super, self, other))
@@ -1132,9 +1108,8 @@ instance_builtin_tmoveassign(DeeTypeObject *__restrict tp_self,
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
 	old_items      = (DREF DeeObject **)Dee_AMalloc(size * sizeof(DREF DeeObject *));
-	if
-		unlikely(!old_items)
-	goto err;
+	if unlikely(!old_items)
+		goto err;
 	/* Load member values from `others', while also unbinding all members. */
 	rwlock_write(&other_instance->id_lock);
 	MEMCPY_PTR(old_items, other_instance->id_vtab, size);
@@ -1259,9 +1234,8 @@ instance_initsuper_as_initkw(DeeTypeObject *__restrict tp_super,
 					goto err_no_keywords;
 			} else {
 				size_t kw_size = DeeObject_Size(kw);
-				if
-					unlikely(kw_size == (size_t)-1)
-				goto err;
+				if unlikely(kw_size == (size_t)-1)
+					goto err;
 				if (kw_size != 0)
 					goto err_no_keywords;
 			}
@@ -1296,22 +1270,19 @@ instance_super_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, 0, NULL);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args_only;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err_args_only;
+	if unlikely(!func)
+		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -1332,9 +1303,8 @@ instance_super_tctor(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(args);
 	Dee_Decref(func);
@@ -1367,14 +1337,12 @@ instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, 0, NULL);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args_only;
@@ -1385,9 +1353,8 @@ instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err_args_only;
+	if unlikely(!func)
+		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -1413,9 +1380,8 @@ instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(args);
 	Dee_Decref(func);
@@ -1451,22 +1417,19 @@ instance_super_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, argc, argv);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args_only;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err_args_only;
+	if unlikely(!func)
+		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -1487,9 +1450,8 @@ instance_super_tinit(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, argc, argv);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(args);
 	Dee_Decref(func);
@@ -1523,14 +1485,12 @@ instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, argc, argv);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args_only;
@@ -1540,9 +1500,8 @@ instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
 		goto err_args_only;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err_args_only;
+	if unlikely(!func)
+		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -1569,9 +1528,8 @@ instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
 
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, argc, argv);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(args);
 	Dee_Decref(func);
@@ -1607,22 +1565,19 @@ instance_super_tinitkw(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_CallKw(func, argc, argv, kw);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args_only;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err_args_only;
+	if unlikely(!func)
+		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -1643,9 +1598,8 @@ instance_super_tinitkw(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(args);
 	Dee_Decref(func);
@@ -1679,14 +1633,12 @@ instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_CallKw(func, argc, argv, kw);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args_only;
@@ -1696,9 +1648,8 @@ instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
 		goto err_args_only;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err_args_only;
+	if unlikely(!func)
+		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -1724,9 +1675,8 @@ instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(args);
 	Dee_Decref(func);
@@ -1762,14 +1712,12 @@ instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, 0, NULL);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
@@ -1810,14 +1758,12 @@ instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, 0, NULL);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
@@ -1871,14 +1817,12 @@ instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, argc, argv);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
@@ -1920,14 +1864,12 @@ instance_builtin_kwsuper_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_Call(func, argc, argv);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
@@ -1981,14 +1923,12 @@ instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_CallKw(func, argc, argv, kw);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
@@ -2030,14 +1970,12 @@ instance_builtin_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Figure out the arguments to-be passed to the super-constructor. */
 	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	args = DeeObject_CallKw(func, argc, argv, kw);
 	Dee_Decref(func);
-	if
-		unlikely(!args)
-	goto err;
+	if unlikely(!args)
+		goto err;
 	/* Make sure that the super-arguments object is a tuple. */
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
@@ -2091,9 +2029,8 @@ instance_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -2106,9 +2043,8 @@ instance_tctor(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2135,9 +2071,8 @@ instance_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -2150,9 +2085,8 @@ instance_tinit(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, argc, argv);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2179,9 +2113,8 @@ instance_tinitkw(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -2194,9 +2127,8 @@ instance_tinitkw(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2223,17 +2155,15 @@ instance_nobase_tctor(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *func, *result;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2257,17 +2187,15 @@ instance_nobase_tinit(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *func, *result;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, argc, argv);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2291,17 +2219,15 @@ instance_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *func, *result;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2329,9 +2255,8 @@ instance_inherited_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -2343,9 +2268,8 @@ instance_inherited_tinit(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. (without any arguments) */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2372,9 +2296,8 @@ instance_inherited_tinitkw(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -2386,9 +2309,8 @@ instance_inherited_tinitkw(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. (without any arguments) */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	Dee_Decref(func);
 	return 0;
@@ -2434,9 +2356,8 @@ instance_builtin_tinit(DeeTypeObject *__restrict tp_self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
-	if
-		unlikely(argc != 0)
-	{
+	if unlikely(argc != 0)
+		{
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
 	}
@@ -2463,23 +2384,19 @@ instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
-	if
-		unlikely(argc != 0)
-	{
+	if unlikely(argc != 0)
+		{
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
 	}
-	if
-		unlikely(kw && !DeeKwds_Check(kw))
-	{
+	if unlikely(kw && !DeeKwds_Check(kw))
+		{
 		size_t keyword_count;
 		keyword_count = DeeObject_Size(kw);
-		if
-			unlikely(keyword_count == (size_t)-1)
-		goto err;
-		if
-			unlikely(keyword_count != 0)
-		{
+		if unlikely(keyword_count == (size_t)-1)
+			goto err;
+		if unlikely(keyword_count != 0)
+			{
 			err_keywords_ctor_not_accepted(tp_self, kw);
 			goto err;
 		}
@@ -2519,9 +2436,8 @@ instance_builtin_nobase_tinit(DeeTypeObject *__restrict tp_self,
                               size_t argc, DeeObject **__restrict argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	if
-		unlikely(argc != 0)
-	return err_unimplemented_constructor(tp_self, argc, argv);
+	if unlikely(argc != 0)
+		return err_unimplemented_constructor(tp_self, argc, argv);
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -2534,23 +2450,19 @@ instance_builtin_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
                                 DeeObject **__restrict argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	if
-		unlikely(argc != 0)
-	{
+	if unlikely(argc != 0)
+		{
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
 	}
-	if
-		unlikely(kw && !DeeKwds_Check(kw))
-	{
+	if unlikely(kw && !DeeKwds_Check(kw))
+		{
 		size_t keyword_count;
 		keyword_count = DeeObject_Size(kw);
-		if
-			unlikely(keyword_count == (size_t)-1)
-		goto err;
-		if
-			unlikely(keyword_count != 0)
-		{
+		if unlikely(keyword_count == (size_t)-1)
+			goto err;
+		if unlikely(keyword_count != 0)
+			{
 			err_keywords_ctor_not_accepted(tp_self, kw);
 			goto err;
 		}
@@ -2635,9 +2547,8 @@ instance_builtin_inherited_tinitkw(DeeTypeObject *__restrict tp_self,
 	} else if (kw && !DeeKwds_Check(kw)) {
 		size_t keyword_count;
 		keyword_count = DeeObject_Size(kw);
-		if
-			unlikely(keyword_count == (size_t)-1)
-		goto err;
+		if unlikely(keyword_count == (size_t)-1)
+			goto err;
 		if (keyword_count != 0) {
 			err_keywords_ctor_not_accepted(&DeeObject_Type, kw);
 			goto err;
@@ -2826,9 +2737,8 @@ find_next_attribute(DeeClassDescriptorObject *__restrict self,
 	struct class_attribute *result = NULL, *entry;
 	uint16_t next_table_index      = *pnext_table_index;
 	uint16_t nearest_table_index   = (uint16_t)-1;
-	if
-		unlikely(next_table_index >= self->cd_imemb_size)
-	goto done;
+	if unlikely(next_table_index >= self->cd_imemb_size)
+		goto done;
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
 		entry = &self->cd_iattr_list[i];
 		if (entry->ca_addr < next_table_index)
@@ -2856,11 +2766,9 @@ instance_autoload_members(DeeTypeObject *__restrict tp_self,
 	for (i = 0; i < argc; ++i) {
 		struct class_attribute *at;
 		at = find_next_attribute(desc->cd_desc, &next_table_index);
-		if
-			unlikely(!at)
-		goto err_argc;
-		if
-			unlikely(DeeInstance_SetAttribute(desc,
+		if unlikely(!at)
+			goto err_argc;
+		if unlikely(DeeInstance_SetAttribute(desc,
 			                                  instance,
 			                                  self,
 			                                  at,
@@ -2889,23 +2797,20 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 	if (DeeKwds_Check(kw)) {
 		size_t i, positional_argc;
 		DeeObject **kw_argv;
-		if
-			unlikely(DeeKwds_SIZE(kw) > argc)
-		return err_keywords_bad_for_argc(argc, DeeKwds_SIZE(kw));
+		if unlikely(DeeKwds_SIZE(kw) > argc)
+			return err_keywords_bad_for_argc(argc, DeeKwds_SIZE(kw));
 		positional_argc = argc - DeeKwds_SIZE(kw);
 		kw_argv         = argv + positional_argc;
 		/* Load positional arguments into the first positional_argc instance members. */
 		for (i = 0; i < positional_argc; ++i) {
 			struct class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
-			if
-				unlikely(!at)
-			{
+			if unlikely(!at)
+				{
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
-			if
-				unlikely(DeeInstance_SetAttribute(desc,
+			if unlikely(DeeInstance_SetAttribute(desc,
 				                                  instance,
 				                                  self,
 				                                  at,
@@ -2919,23 +2824,20 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 			at = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
 			                                                       DeeString_STR(kw->kw_map[i].ke_name),
 			                                                       kw->kw_map[i].ke_hash);
-			if
-				unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
-			{
+			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
+				{
 				err_unknown_attribute(tp_self,
 				                      DeeString_STR(kw->kw_map[i].ke_name),
 				                      ATTR_ACCESS_SET);
 				goto err;
 			}
-			if
-				unlikely(at->ca_addr < next_table_index)
-			{
+			if unlikely(at->ca_addr < next_table_index)
+				{
 				/* Member had already been initialized via a positional argument! */
 				err_keywords_shadows_positional(DeeString_STR(kw->kw_map[i].ke_name));
 				goto err;
 			}
-			if
-				unlikely(DeeInstance_SetAttribute(desc,
+			if unlikely(DeeInstance_SetAttribute(desc,
 				                                  instance,
 				                                  self,
 				                                  at,
@@ -2948,14 +2850,12 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 		for (i = 0; i < argc; ++i) {
 			struct class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
-			if
-				unlikely(!at)
-			{
+			if unlikely(!at)
+				{
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
-			if
-				unlikely(DeeInstance_SetAttribute(desc,
+			if unlikely(DeeInstance_SetAttribute(desc,
 				                                  instance,
 				                                  self,
 				                                  at,
@@ -2963,35 +2863,30 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 			goto err;
 		}
 		iterator = DeeObject_IterSelf((DeeObject *)kw);
-		if
-			unlikely(!iterator)
-		goto err;
+		if unlikely(!iterator)
+			goto err;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			struct class_attribute *at;
-			if
-				unlikely(DeeObject_Unpack(elem, 2, data))
-			goto err_iter_elem;
+			if unlikely(DeeObject_Unpack(elem, 2, data))
+				goto err_iter_elem;
 			Dee_Decref(elem);
 			if (DeeObject_AssertTypeExact(data[0], &DeeString_Type))
 				goto err_iter_data;
 			at = DeeClassDesc_QueryInstanceAttribute(desc, data[0]);
-			if
-				unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
-			{
+			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
+				{
 				err_unknown_attribute(tp_self,
 				                      DeeString_STR(data[0]),
 				                      ATTR_ACCESS_SET);
 				goto err_iter_data;
 			}
-			if
-				unlikely(at->ca_addr < next_table_index)
-			{
+			if unlikely(at->ca_addr < next_table_index)
+				{
 				/* Member had already been initialized via a positional argument! */
 				err_keywords_shadows_positional(DeeString_STR(data[0]));
 				goto err_iter_data;
 			}
-			if
-				unlikely(DeeInstance_SetAttribute(desc,
+			if unlikely(DeeInstance_SetAttribute(desc,
 				                                  instance,
 				                                  self,
 				                                  at,
@@ -3000,9 +2895,8 @@ instance_autoload_members_kw(DeeTypeObject *__restrict tp_self,
 			Dee_Decref(data[1]);
 			Dee_Decref(data[0]);
 		}
-		if
-			unlikely(!elem)
-		goto err_iter;
+		if unlikely(!elem)
+			goto err_iter;
 		Dee_Decref(iterator);
 	}
 	return 0;
@@ -3095,9 +2989,8 @@ instance_auto_tinit(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -3110,13 +3003,11 @@ instance_auto_tinit(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	/* Auto-initialize members. */
-	if
-		unlikely(instance_autoload_members(tp_self,
+	if unlikely(instance_autoload_members(tp_self,
 		                                   desc,
 		                                   instance,
 		                                   self,
@@ -3150,9 +3041,8 @@ instance_auto_tinitkw(DeeTypeObject *__restrict tp_self,
 	instance = DeeInstance_DESC(desc, self);
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
@@ -3165,13 +3055,11 @@ instance_auto_tinitkw(DeeTypeObject *__restrict tp_self,
 	}
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_super;
+	if unlikely(!result)
+		goto err_super;
 	Dee_Decref(result);
 	/* Auto-initialize members. */
-	if
-		unlikely(instance_autoload_members_kw(tp_self,
+	if unlikely(instance_autoload_members_kw(tp_self,
 		                                      desc,
 		                                      instance,
 		                                      self,
@@ -3212,8 +3100,7 @@ instance_builtin_auto_tinit(DeeTypeObject *__restrict tp_self,
 			goto err_members;
 	}
 	/* Auto-initialize members. */
-	if
-		unlikely(instance_autoload_members(tp_self,
+	if unlikely(instance_autoload_members(tp_self,
 		                                   desc,
 		                                   instance,
 		                                   self,
@@ -3250,8 +3137,7 @@ instance_builtin_auto_tinitkw(DeeTypeObject *__restrict tp_self,
 			goto err_members;
 	}
 	/* Auto-initialize members. */
-	if
-		unlikely(instance_autoload_members_kw(tp_self,
+	if unlikely(instance_autoload_members_kw(tp_self,
 		                                      desc,
 		                                      instance,
 		                                      self,
@@ -3303,21 +3189,18 @@ instance_auto_nobase_tinit(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *func, *result;
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_members;
+	if unlikely(!result)
+		goto err_members;
 	Dee_Decref(result);
 	/* Auto-initialize members. */
-	if
-		unlikely(instance_autoload_members(tp_self,
+	if unlikely(instance_autoload_members(tp_self,
 		                                   desc,
 		                                   instance,
 		                                   self,
@@ -3344,17 +3227,15 @@ instance_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
 	instance = DeeInstance_DESC(desc, self);
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
-	if
-		unlikely(!result)
-	goto err_members;
+	if unlikely(!result)
+		goto err_members;
 	Dee_Decref(result);
 	/* Auto-initialize members. */
 	if unlikely(instance_autoload_members_kw(tp_self,
@@ -3408,8 +3289,7 @@ instance_builtin_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
 	rwlock_init(&instance->id_lock);
 	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
 	/* Auto-initialize members. */
-	if
-		unlikely(instance_autoload_members_kw(tp_self,
+	if unlikely(instance_autoload_members_kw(tp_self,
 		                                      desc,
 		                                      instance,
 		                                      self,
@@ -3681,21 +3561,18 @@ instance_builtin_teq(DeeTypeObject *__restrict tp_self,
 	/* Compare the underlying objects. */
 	if (DeeType_Base(tp_self)) {
 		result = DeeObject_TCompareEqObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp)
 			goto nope;
 	}
 	temp = impl_instance_builtin_eq(tp_self, self, other);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (temp)
 		return_true;
 nope:
@@ -3716,21 +3593,18 @@ instance_builtin_tne(DeeTypeObject *__restrict tp_self,
 	/* Compare the underlying objects. */
 	if (DeeType_Base(tp_self)) {
 		result = DeeObject_TCompareNeObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp)
 			goto nope;
 	}
 	temp = impl_instance_builtin_ne(tp_self, self, other);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (temp)
 		return_true;
 nope:
@@ -3751,32 +3625,27 @@ instance_builtin_tlo(DeeTypeObject *__restrict tp_self,
 	if (DeeType_Base(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareLoObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (temp)
 			return_true;
 		result = DeeObject_TCompareEqObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp)
 			goto nope;
 	}
 	temp = impl_instance_builtin_lo(tp_self, self, other);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (temp)
 		return_true;
 nope:
@@ -3797,32 +3666,27 @@ instance_builtin_tle(DeeTypeObject *__restrict tp_self,
 	if (DeeType_Base(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareLoObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (temp)
 			return_true;
 		result = DeeObject_TCompareEqObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp)
 			goto nope;
 	}
 	temp = impl_instance_builtin_le(tp_self, self, other);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (temp)
 		return_true;
 nope:
@@ -3843,32 +3707,27 @@ instance_builtin_tgr(DeeTypeObject *__restrict tp_self,
 	if (DeeType_Base(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareGrObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (temp)
 			return_true;
 		result = DeeObject_TCompareEqObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp)
 			goto nope;
 	}
 	temp = impl_instance_builtin_gr(tp_self, self, other);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (temp)
 		return_true;
 nope:
@@ -3889,32 +3748,27 @@ instance_builtin_tge(DeeTypeObject *__restrict tp_self,
 	if (DeeType_Base(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareGrObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (temp)
 			return_true;
 		result = DeeObject_TCompareEqObject(DeeType_Base(tp_self), self, other);
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		temp = DeeObject_Bool(result);
 		Dee_Decref(result);
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 		if (!temp)
 			goto nope;
 	}
 	temp = impl_instance_builtin_ge(tp_self, self, other);
-	if
-		unlikely(temp < 0)
-	goto err;
+	if unlikely(temp < 0)
+		goto err;
 	if (temp)
 		return_true;
 nope:
@@ -3984,9 +3838,8 @@ instance_tcall(DeeTypeObject *__restrict tp_self,
                size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_CALL);
-	if
-		unlikely(!func)
-	return NULL;
+	if unlikely(!func)
+		return NULL;
 	result = DeeObject_ThisCall(func, self, argc, argv);
 	Dee_Decref(func);
 	return result;
@@ -3998,9 +3851,8 @@ instance_tcallkw(DeeTypeObject *__restrict tp_self,
                  DeeObject **__restrict argv, DeeObject *kw) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_CALL);
-	if
-		unlikely(!func)
-	return NULL;
+	if unlikely(!func)
+		return NULL;
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
 	Dee_Decref(func);
 	return result;
@@ -4060,9 +3912,8 @@ instance_tnext(DeeTypeObject *__restrict tp_self,
                DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_ITERNEXT);
-	if
-		unlikely(!func)
-	return NULL;
+	if unlikely(!func)
+		return NULL;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
 	if (!result && DeeError_Catch(&DeeError_StopIteration))
@@ -4342,9 +4193,8 @@ instance_tstr(DeeTypeObject *__restrict tp_self,
               DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_STR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
 	if (likely(result) &&
@@ -4367,9 +4217,8 @@ instance_trepr(DeeTypeObject *__restrict tp_self,
                DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_REPR);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
 	if (likely(result) &&
@@ -4392,9 +4241,8 @@ instance_tint(DeeTypeObject *__restrict tp_self,
               DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_INT);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
 	if (likely(result) && DeeObject_AssertTypeExact(result, &DeeInt_Type))
@@ -4417,14 +4265,12 @@ instance_tbool(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *func, *result;
 	int retval;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_BOOL);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err;
 	retval = DeeBool_IsTrue(result);
@@ -4447,9 +4293,8 @@ instance_tint32(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *intval;
 	int error;
 	intval = instance_tint(tp_self, self);
-	if
-		unlikely(!intval)
-	return -1;
+	if unlikely(!intval)
+		return -1;
 	error = DeeInt_As32(intval, result);
 	Dee_Decref(intval);
 	return error;
@@ -4462,9 +4307,8 @@ instance_tint64(DeeTypeObject *__restrict tp_self,
 	DREF DeeObject *intval;
 	int error;
 	intval = instance_tint(tp_self, self);
-	if
-		unlikely(!intval)
-	return -1;
+	if unlikely(!intval)
+		return -1;
 	error = DeeInt_As64(intval, result);
 	Dee_Decref(intval);
 	return error;
@@ -4476,9 +4320,8 @@ instance_tdouble(DeeTypeObject *__restrict tp_self,
                  double *__restrict result) {
 	DREF DeeObject *func, *value;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_FLOAT);
-	if
-		unlikely(!func)
-	goto err;
+	if unlikely(!func)
+		goto err;
 	value = DeeObject_ThisCall(func, self, 0, NULL);
 	if (likely(value) && DeeObject_AssertTypeExact(value, &DeeFloat_Type))
 		goto err_r;
@@ -4516,19 +4359,16 @@ instance_thash(DeeTypeObject *__restrict tp_self,
 	dhash_t result_value;
 	int temp;
 	func = DeeClass_TryGetOperator(tp_self, OPERATOR_HASH);
-	if
-		unlikely(!func)
-	goto fallback;
+	if unlikely(!func)
+		goto fallback;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
-	if
-		unlikely(!result)
-	goto fallback_handled;
+	if unlikely(!result)
+		goto fallback_handled;
 	temp = DeeObject_AsUIntptr(result, &result_value);
 	Dee_Decref(result);
-	if
-		unlikely(temp)
-	goto fallback_handled;
+	if unlikely(temp)
+		goto fallback_handled;
 	return result_value;
 fallback_handled:
 	DeeError_Print("Unhandled error in `operator hash'\n",
@@ -4773,18 +4613,15 @@ lazy_allocate(void **ptable, size_t table_size) {
 	if (*ptable)
 		return 0;
 	new_table = Dee_Calloc(table_size);
-	if
-		unlikely(!new_table)
-	return -1;
+	if unlikely(!new_table)
+		return -1;
 #ifdef CONFIG_NO_THREADS
-	if
-		unlikely(*ptable)
-	Dee_Free(new_table);
+	if unlikely(*ptable)
+		Dee_Free(new_table);
 	else *ptable = new_table;
 #else  /* CONFIG_NO_THREADS */
-	if
-		unlikely(!ATOMIC_CMPXCH(*ptable, NULL, new_table))
-	Dee_Free(new_table);
+	if unlikely(!ATOMIC_CMPXCH(*ptable, NULL, new_table))
+		Dee_Free(new_table);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
@@ -4875,9 +4712,8 @@ DeeClass_New(DeeTypeObject *__restrict base,
 		result_type_type = &DeeType_Type; /* No base class. */
 	} else {
 		/* Make sure that the given base-object is actually a type. */
-		if
-			unlikely(!DeeType_IsInherited(&DeeType_Type, (DeeTypeObject *)result_type_type))
-		{
+		if unlikely(!DeeType_IsInherited(&DeeType_Type, (DeeTypeObject *)result_type_type))
+			{
 			DeeObject_TypeAssertFailed((DeeObject *)base, &DeeType_Type);
 			goto err;
 		}
@@ -4905,9 +4741,8 @@ err_custom_allocator:
 	result = (DREF DeeTypeObject *)DeeGCObject_Calloc(result_class_offset +
 	                                                  COMPILER_OFFSETOF(struct class_desc, cd_members) +
 	                                                  (desc->cd_cmemb_size * sizeof(DREF DeeObject *)));
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	/* Figure out where the class descriptor starts. */
 	result_class     = (struct class_desc *)((uintptr_t)result + result_class_offset);
 	result->tp_class = result_class;
@@ -4967,16 +4802,14 @@ err_custom_allocator:
 	Dee_Incref(desc);
 	rwlock_cinit(&result_class->cd_lock);
 
-	if
-		likely(desc->cd_name)
-	{
+	if likely(desc->cd_name)
+		{
 		result->tp_name = DeeString_STR(desc->cd_name);
 		result->tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(desc->cd_name);
 	}
-	if
-		likely(desc->cd_doc)
-	{
+	if likely(desc->cd_doc)
+		{
 		result->tp_doc = DeeString_STR(desc->cd_doc);
 		result->tp_flags |= TP_FDOCOBJECT;
 		Dee_Incref(desc->cd_doc);
@@ -5182,9 +5015,8 @@ err_custom_allocator:
 		} else if (result_type_type->tp_init.tp_alloc.tp_any_ctor_kw) {
 			error = (*result_type_type->tp_init.tp_alloc.tp_any_ctor_kw)((DeeObject *)result, 0, NULL, NULL);
 		}
-		if
-			unlikely(error)
-		goto err_r_base;
+		if unlikely(error)
+			goto err_r_base;
 	}
 
 	/* Initialize the resulting object, and start tracking it. */

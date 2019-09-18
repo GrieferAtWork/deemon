@@ -59,9 +59,8 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		goto err;
 	if (DeeString_Check(lexer.jl_text)) {
 		usertext = DeeString_AsUtf8(lexer.jl_text);
-		if
-			unlikely(!usertext)
-		goto err;
+		if unlikely(!usertext)
+			goto err;
 		usersize = WSTR_LENGTH(usertext);
 		Dee_Incref(lexer.jl_text);
 	} else if (DeeBytes_Check(lexer.jl_text)) {
@@ -70,14 +69,12 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		Dee_Incref(lexer.jl_text);
 	} else {
 		lexer.jl_text = DeeFile_ReadText(lexer.jl_text, (size_t)-1, true);
-		if
-			unlikely(!lexer.jl_text)
-		goto err;
+		if unlikely(!lexer.jl_text)
+			goto err;
 		if (DeeString_Check(lexer.jl_text)) {
 			usertext = DeeString_AsUtf8(lexer.jl_text);
-			if
-				unlikely(!usertext)
-			goto err_expr;
+			if unlikely(!usertext)
+				goto err_expr;
 			usersize = WSTR_LENGTH(usertext);
 		} else {
 			usertext = (char *)DeeBytes_DATA(lexer.jl_text);
@@ -129,9 +126,8 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 #else
 					result = JITLexer_EvalHybridSecondary(&lexer, &was);
 #endif
-					if
-						unlikely(!result)
-					break;
+					if unlikely(!result)
+						break;
 				} while (lexer.jl_tok);
 			}
 		}
@@ -171,9 +167,8 @@ libjit_exec_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 	}
 	if likely(result) {
 		ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-		if
-			unlikely(lexer.jl_tok != TOK_EOF)
-		{
+		if unlikely(lexer.jl_tok != TOK_EOF)
+			{
 			DeeError_Throwf(&DeeError_SyntaxError,
 			                "Expected EOF but got `%$s'",
 			                (size_t)(lexer.jl_end - lexer.jl_tokstart),

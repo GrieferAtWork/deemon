@@ -97,9 +97,8 @@ mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
 	DeeFile_LockRead(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
 	result = (size_t)(self->mf_end - self->mf_begin) * sizeof(char);
-	if
-		unlikely(pos >= (dpos_t)result)
-	{
+	if unlikely(pos >= (dpos_t)result)
+		{
 		result = 0;
 	} else {
 		result = result - (size_t)pos;
@@ -121,54 +120,45 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 	switch (whence) {
 
 	case SEEK_SET:
-		if
-			unlikely(off < 0)
-		goto err_invalid;
+		if unlikely(off < 0)
+			goto err_invalid;
 #if __SIZEOF_POINTER__ < 8
-		if
-			unlikely(off >= SIZE_MAX)
-		goto err_overflow;
+		if unlikely(off >= SIZE_MAX)
+			goto err_overflow;
 #endif
-		if
-			unlikely(self->mf_ptr + (size_t)off < self->mf_ptr)
-		goto err_overflow;
+		if unlikely(self->mf_ptr + (size_t)off < self->mf_ptr)
+			goto err_overflow;
 		self->mf_ptr = self->mf_begin + (size_t)off;
 		result       = off;
 		break;
 
 	case SEEK_CUR:
 #if __SIZEOF_POINTER__ < 8
-		if
-			unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
-		goto err_overflow;
+		if unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
+			goto err_overflow;
 #endif /* __SIZEOF_POINTER__ < 8 */
 		result = (size_t)(self->mf_ptr - self->mf_begin);
 		result += (dssize_t)off;
-		if
-			unlikely(result < 0)
-		goto err_invalid;
+		if unlikely(result < 0)
+			goto err_invalid;
 		new_pointer = self->mf_ptr + (dssize_t)off;
-		if
-			unlikely(off > 0 && new_pointer < self->mf_ptr)
-		goto err_overflow;
+		if unlikely(off > 0 && new_pointer < self->mf_ptr)
+			goto err_overflow;
 		self->mf_ptr = new_pointer;
 		break;
 
 	case SEEK_END:
 		result = (size_t)(self->mf_end - self->mf_begin);
 		result += (dssize_t)off;
-		if
-			unlikely(result < 0)
-		goto err_invalid;
+		if unlikely(result < 0)
+			goto err_invalid;
 #if __SIZEOF_POINTER__ < 8
-		if
-			unlikely(result >= SSIZE_MIN)
-		goto err_overflow;
+		if unlikely(result >= SSIZE_MIN)
+			goto err_overflow;
 #endif /* __SIZEOF_POINTER__ < 8 */
 		new_pointer = self->mf_begin + result;
-		if
-			unlikely(new_pointer < self->mf_begin)
-		goto err_overflow;
+		if unlikely(new_pointer < self->mf_begin)
+			goto err_overflow;
 		self->mf_ptr = new_pointer;
 		break;
 
@@ -206,9 +196,8 @@ mf_getc(MemoryFile *__restrict self, dioflag_t UNUSED(flags)) {
 	int result;
 	DeeFile_LockWrite(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
-	if
-		unlikely(self->mf_ptr >= self->mf_end)
-	{
+	if unlikely(self->mf_ptr >= self->mf_end)
+		{
 		result = GETC_EOF;
 	} else {
 		result = *self->mf_ptr++;
@@ -222,9 +211,8 @@ mf_ungetc(MemoryFile *__restrict self, int ch) {
 	int result;
 	DeeFile_LockWrite(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
-	if
-		unlikely(self->mf_ptr == self->mf_begin)
-	{
+	if unlikely(self->mf_ptr == self->mf_begin)
+		{
 		result = GETC_EOF;
 	} else {
 #if 0
@@ -319,9 +307,8 @@ PUBLIC DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	DREF MemoryFile *result;
 	result = DeeObject_MALLOC(MemoryFile);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mf_begin = (char *)data;
 	result->mf_end   = (char *)data + data_size;
 	result->mf_ptr   = result->mf_begin;
@@ -349,9 +336,8 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
 		data_copy = size ? Dee_TryMalloc(size) : NULL;
 		COMPILER_READ_BARRIER();
 		DeeFile_LockWrite((MemoryFile *)self);
-		if
-			likely(data_copy || !size)
-		{
+		if likely(data_copy || !size)
+			{
 			/* Copy the stream's data */
 			memcpy(data_copy,
 			       ((MemoryFile *)self)->mf_begin,
@@ -387,9 +373,8 @@ reader_read(Reader *__restrict self, void *__restrict buffer,
 	size_t result;
 	DeeFile_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
-	if
-		unlikely(!self->r_owner)
-	{
+	if unlikely(!self->r_owner)
+		{
 		DeeFile_LockEndWrite(self);
 		return (dssize_t)err_file_closed();
 	}
@@ -413,16 +398,14 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 	size_t result;
 	DeeFile_LockRead(self);
 	ASSERT(self->r_ptr >= self->r_begin);
-	if
-		unlikely(!self->r_owner)
-	{
+	if unlikely(!self->r_owner)
+		{
 		DeeFile_LockEndRead(self);
 		return (dssize_t)err_file_closed();
 	}
 	result = (size_t)(self->r_end - self->r_begin) * sizeof(char);
-	if
-		unlikely(pos >= (dpos_t)result)
-	{
+	if unlikely(pos >= (dpos_t)result)
+		{
 		result = 0;
 	} else {
 		result = result - (size_t)pos;
@@ -442,63 +425,53 @@ reader_seek(Reader *__restrict self,
 	char *new_pointer;
 	DeeFile_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
-	if
-		unlikely(!self->r_owner)
-	{
+	if unlikely(!self->r_owner)
+		{
 		DeeFile_LockEndWrite(self);
 		return (dssize_t)err_file_closed();
 	}
 	switch (whence) {
 
 	case SEEK_SET:
-		if
-			unlikely(off < 0)
-		goto err_invalid;
+		if unlikely(off < 0)
+			goto err_invalid;
 #if __SIZEOF_POINTER__ < 8
-		if
-			unlikely(off >= SIZE_MAX)
-		goto err_overflow;
+		if unlikely(off >= SIZE_MAX)
+			goto err_overflow;
 #endif
-		if
-			unlikely(self->r_ptr + (size_t)off < self->r_ptr)
-		goto err_overflow;
+		if unlikely(self->r_ptr + (size_t)off < self->r_ptr)
+			goto err_overflow;
 		self->r_ptr = self->r_begin + (size_t)off;
 		result      = off;
 		break;
 
 	case SEEK_CUR:
 #if __SIZEOF_POINTER__ < 8
-		if
-			unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
-		goto err_overflow;
+		if unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
+			goto err_overflow;
 #endif
 		result = (size_t)(self->r_ptr - self->r_begin);
 		result += (dssize_t)off;
-		if
-			unlikely(result < 0)
-		goto err_invalid;
+		if unlikely(result < 0)
+			goto err_invalid;
 		new_pointer = self->r_ptr + (dssize_t)off;
-		if
-			unlikely(off > 0 && new_pointer < self->r_ptr)
-		goto err_overflow;
+		if unlikely(off > 0 && new_pointer < self->r_ptr)
+			goto err_overflow;
 		self->r_ptr = new_pointer;
 		break;
 
 	case SEEK_END:
 		result = (size_t)(self->r_end - self->r_begin);
 		result += (dssize_t)off;
-		if
-			unlikely(result < 0)
-		goto err_invalid;
+		if unlikely(result < 0)
+			goto err_invalid;
 #if __SIZEOF_POINTER__ < 8
-		if
-			unlikely(result >= SSIZE_MIN)
-		goto err_overflow;
+		if unlikely(result >= SSIZE_MIN)
+			goto err_overflow;
 #endif /* __SIZEOF_POINTER__ < 8 */
 		new_pointer = self->r_begin + result;
-		if
-			unlikely(new_pointer < self->r_begin)
-		goto err_overflow;
+		if unlikely(new_pointer < self->r_begin)
+			goto err_overflow;
 		self->r_ptr = new_pointer;
 		break;
 
@@ -526,11 +499,9 @@ err_overflow:
 PRIVATE int DCALL
 reader_sync(Reader *__restrict self) {
 #ifdef CONFIG_NO_THREADS
-	if
-		unlikely(!self->r_owner)
+	if unlikely(!self->r_owner)
 #else /* CONFIG_NO_THREADS */
-	if
-		unlikely(!ATOMIC_READ(self->r_owner))
+	if unlikely(!ATOMIC_READ(self->r_owner))
 #endif /* !CONFIG_NO_THREADS */
 	{
 		return (dssize_t)err_file_closed();
@@ -552,9 +523,8 @@ reader_close(Reader *__restrict self) {
 	self->r_end   = NULL;
 	DeeFile_LockEndWrite(self);
 	/* If the string was already deleted, throw an error. */
-	if
-		unlikely(!owner)
-	return err_file_closed();
+	if unlikely(!owner)
+		return err_file_closed();
 	/* Decref() the string. */
 	DeeObject_PutBuf(owner, &self->r_buffer, Dee_BUFFER_FREADONLY);
 	Dee_Decref(owner);
@@ -605,16 +575,14 @@ reader_getc(Reader *__restrict self, dioflag_t UNUSED(flags)) {
 	int result;
 	DeeFile_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
-	if
-		unlikely(!self->r_owner)
-	{
+	if unlikely(!self->r_owner)
+		{
 		DeeFile_LockEndWrite(self);
 		err_file_closed();
 		return GETC_ERR;
 	}
-	if
-		unlikely(self->r_ptr >= self->r_end)
-	{
+	if unlikely(self->r_ptr >= self->r_end)
+		{
 		result = GETC_EOF;
 	} else {
 		result = *self->r_ptr++;
@@ -629,16 +597,14 @@ reader_ungetc(Reader *__restrict self,
 	int result;
 	DeeFile_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
-	if
-		unlikely(!self->r_owner)
-	{
+	if unlikely(!self->r_owner)
+		{
 		DeeFile_LockEndWrite(self);
 		err_file_closed();
 		return GETC_ERR;
 	}
-	if
-		unlikely(self->r_ptr == self->r_begin)
-	{
+	if unlikely(self->r_ptr == self->r_begin)
+		{
 		result = GETC_EOF;
 	} else {
 #if 0
@@ -690,9 +656,8 @@ reader_init(Reader *__restrict self,
 	if (end > self->r_buffer.bb_size)
 		end = self->r_buffer.bb_size;
 	/* Handle empty read. */
-	if
-		unlikely(begin >= end)
-	begin = end = 0;
+	if unlikely(begin >= end)
+		begin = end = 0;
 	/* Fill in members. */
 	Dee_Incref(self->r_owner);
 	rwlock_init(&self->fo_lock);
@@ -789,9 +754,8 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size) {
 	DREF Reader *result;
 	result = DeeObject_MALLOC(Reader);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(data_owner);
 	result->r_owner = data_owner;
 	result->r_begin = (char *)data;
@@ -812,18 +776,16 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          dssize_t begin, dssize_t end) {
 	DREF Reader *result;
 	result = DeeObject_MALLOC(Reader);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (DeeObject_GetBuf(data, &result->r_buffer, Dee_BUFFER_FREADONLY))
 		goto err_r;
 	/* Truncate the end-pointer. */
 	if ((size_t)end > result->r_buffer.bb_size)
 		end = (dssize_t)result->r_buffer.bb_size;
 	/* Handle empty read. */
-	if
-		unlikely((size_t)begin >= (size_t)end)
-	begin = end = 0;
+	if unlikely((size_t)begin >= (size_t)end)
+		begin = end = 0;
 	/* Fill in members. */
 	Dee_Incref(data);
 	result->r_owner = data;
@@ -918,9 +880,8 @@ again:
 				result = (DREF DeeStringObject *)DeeObject_TryRealloc(result,
 				                                                      COMPILER_OFFSETOF(DeeStringObject, s_str) +
 				                                                      (me->w_printer.up_length + 1) * sizeof(char));
-				if
-					unlikely(!result)
-				{
+				if unlikely(!result)
+					{
 					result = COMPILER_CONTAINER_OF(me->w_printer.up_buffer,
 					                               DeeStringObject,
 					                               s_str);
@@ -945,9 +906,8 @@ again:
 		{
 			/* Must pack together a multi-byte string. */
 			result = (DREF DeeStringObject *)unicode_printer_trypack(&me->w_printer);
-			if
-				unlikely(!result)
-			goto err_collect;
+			if unlikely(!result)
+				goto err_collect;
 			me->w_string           = result;
 			me->w_printer.up_flags = (uint8_t)DeeString_WIDTH(result);
 			if (me->w_printer.up_flags == STRING_WIDTH_1BYTE) {
@@ -1146,15 +1106,13 @@ writer_tryappend8(Writer *__restrict self,
 			init_size = UNICODE_PRINTER_INITIAL_BUFSIZE;
 		init_buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                                     (init_size + 1) * sizeof(char));
-		if
-			unlikely(!init_buffer)
-		{
+		if unlikely(!init_buffer)
+			{
 			init_size   = bufsize;
 			init_buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 			                                                     (init_size + 1) * sizeof(char));
-			if
-				unlikely(!init_buffer)
-			goto err;
+			if unlikely(!init_buffer)
+				goto err;
 		}
 		DeeObject_Init(init_buffer, &DeeString_Type);
 		init_buffer->s_data = NULL;
@@ -1182,18 +1140,16 @@ writer_tryappend8(Writer *__restrict self,
 			                                                                           s_str),
 			                                                     COMPILER_OFFSETOF(DeeStringObject, s_str) +
 			                                                     (new_size + 1) * sizeof(char));
-			if
-				unlikely(!new_buffer)
-			{
+			if unlikely(!new_buffer)
+				{
 				new_size   = written + bufsize;
 				new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 				                                                                           DeeStringObject,
 				                                                                           s_str),
 				                                                     COMPILER_OFFSETOF(DeeStringObject, s_str) +
 				                                                     (new_size + 1) * sizeof(char));
-				if
-					unlikely(!new_buffer)
-				goto err;
+				if unlikely(!new_buffer)
+					goto err;
 			}
 			new_buffer->s_len         = new_size;
 			self->w_printer.up_buffer = new_buffer->s_str;
@@ -1213,13 +1169,11 @@ writer_tryappend8(Writer *__restrict self,
 				new_size *= 2;
 			} while (new_size < written + bufsize);
 			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, new_size);
-			if
-				unlikely(!new_buffer)
-			{
+			if unlikely(!new_buffer)
+				{
 				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, written + bufsize);
-				if
-					unlikely(!new_buffer)
-				goto err;
+				if unlikely(!new_buffer)
+					goto err;
 			}
 			self->w_printer.up_buffer = new_buffer;
 		}
@@ -1240,13 +1194,11 @@ writer_tryappend8(Writer *__restrict self,
 				new_size *= 2;
 			} while (new_size < written + bufsize);
 			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, new_size);
-			if
-				unlikely(!new_buffer)
-			{
+			if unlikely(!new_buffer)
+				{
 				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, written + bufsize);
-				if
-					unlikely(!new_buffer)
-				goto err;
+				if unlikely(!new_buffer)
+					goto err;
 			}
 			self->w_printer.up_buffer = new_buffer;
 		}
@@ -1273,15 +1225,13 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 			DeeStringObject *init_buffer;
 			init_buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 			                                                     (init_size + 1) * sizeof(char));
-			if
-				unlikely(!init_buffer)
-			{
+			if unlikely(!init_buffer)
+				{
 				init_size   = 1;
 				init_buffer = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 				                                                     (init_size + 1) * sizeof(char));
-				if
-					unlikely(!init_buffer)
-				goto err;
+				if unlikely(!init_buffer)
+					goto err;
 			}
 			DeeObject_Init(init_buffer, &DeeString_Type);
 			init_buffer->s_data   = NULL;
@@ -1294,13 +1244,11 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 		} else if (ch <= 0xffff) {
 			uint16_t *init_buffer;
 			init_buffer = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
-			if
-				unlikely(!init_buffer)
-			{
+			if unlikely(!init_buffer)
+				{
 				init_buffer = DeeString_TryNew2ByteBuffer(1);
-				if
-					unlikely(!init_buffer)
-				goto err;
+				if unlikely(!init_buffer)
+					goto err;
 			}
 			init_buffer[0]            = (uint16_t)ch;
 			self->w_printer.up_buffer = init_buffer;
@@ -1310,13 +1258,11 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 		} else {
 			uint32_t *init_buffer;
 			init_buffer = DeeString_TryNew4ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
-			if
-				unlikely(!init_buffer)
-			{
+			if unlikely(!init_buffer)
+				{
 				init_buffer = DeeString_TryNew4ByteBuffer(1);
-				if
-					unlikely(!init_buffer)
-				goto err;
+				if unlikely(!init_buffer)
+					goto err;
 			}
 			init_buffer[0]            = ch;
 			self->w_printer.up_buffer = init_buffer;
@@ -1346,18 +1292,16 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 				                                                                           s_str),
 				                                                     COMPILER_OFFSETOF(DeeStringObject, s_str) +
 				                                                     (new_size + 1) * sizeof(char));
-				if
-					unlikely(!new_buffer)
-				{
+				if unlikely(!new_buffer)
+					{
 					new_size   = written + 1;
 					new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 					                                                                           DeeStringObject,
 					                                                                           s_str),
 					                                                     COMPILER_OFFSETOF(DeeStringObject, s_str) +
 					                                                     (new_size + 1) * sizeof(char));
-					if
-						unlikely(!new_buffer)
-					goto err;
+					if unlikely(!new_buffer)
+						goto err;
 				}
 				new_buffer->s_len         = new_size;
 				self->w_printer.up_buffer = new_buffer->s_str;
@@ -1372,9 +1316,8 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 			size_t i, length;
 			length     = self->w_printer.up_length;
 			new_buffer = DeeString_TryNew2ByteBuffer(length + 1);
-			if
-				unlikely(!new_buffer)
-			goto err;
+			if unlikely(!new_buffer)
+				goto err;
 			for (i = 0; i < length; ++i)
 				new_buffer[i] = ((uint8_t *)self->w_printer.up_buffer)[i];
 			new_buffer[length] = (uint16_t)ch;
@@ -1394,9 +1337,8 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 			size_t i, length;
 			length     = self->w_printer.up_length;
 			new_buffer = DeeString_TryNew4ByteBuffer(length + 1);
-			if
-				unlikely(!new_buffer)
-			goto err;
+			if unlikely(!new_buffer)
+				goto err;
 			for (i = 0; i < length; ++i)
 				new_buffer[i] = ((uint8_t *)self->w_printer.up_buffer)[i];
 			new_buffer[length] = (uint32_t)ch;
@@ -1421,9 +1363,8 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 			uint16_t *src;
 			length     = self->w_printer.up_length;
 			new_buffer = DeeString_TryNew4ByteBuffer(length + 1);
-			if
-				unlikely(!new_buffer)
-			goto err;
+			if unlikely(!new_buffer)
+				goto err;
 			src = (uint16_t *)self->w_printer.up_buffer;
 			for (i = 0; i < length; ++i)
 				new_buffer[i] = src[i];
@@ -1443,13 +1384,11 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 				new_size *= 2;
 			while (new_size <= written);
 			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, new_size);
-			if
-				unlikely(!new_buffer)
-			{
+			if unlikely(!new_buffer)
+				{
 				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, written + 1);
-				if
-					unlikely(!new_buffer)
-				goto err;
+				if unlikely(!new_buffer)
+					goto err;
 			}
 			self->w_printer.up_buffer = new_buffer;
 		}
@@ -1466,13 +1405,11 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 				new_size *= 2;
 			while (new_size <= written);
 			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, new_size);
-			if
-				unlikely(!new_buffer)
-			{
+			if unlikely(!new_buffer)
+				{
 				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, written + 1);
-				if
-					unlikely(!new_buffer)
-				goto err;
+				if unlikely(!new_buffer)
+					goto err;
 			}
 			self->w_printer.up_buffer = new_buffer;
 		}
@@ -1584,9 +1521,8 @@ again:
 				size_t length;
 				length      = self->w_printer.up_length;
 				buffer_copy = DeeString_TryNew2ByteBuffer(length + bufsize);
-				if
-					unlikely(!buffer_copy)
-				{
+				if unlikely(!buffer_copy)
+					{
 					DeeFile_LockEndWrite(self);
 					if (Dee_CollectMemory(sizeof(size_t) + (length + bufsize + 1) * 2))
 						goto again;
@@ -1599,9 +1535,8 @@ again:
 				size_t length;
 				length      = self->w_printer.up_length;
 				buffer_copy = DeeString_TryNew4ByteBuffer(length + bufsize);
-				if
-					unlikely(!buffer_copy)
-				{
+				if unlikely(!buffer_copy)
+					{
 					DeeFile_LockEndWrite(self);
 					if (Dee_CollectMemory(sizeof(size_t) + (length + bufsize + 1) * 4))
 						goto again;
@@ -1643,18 +1578,16 @@ again:
 		                                       DeeStringObject,
 		                                       s_str);
 		ASSERT(DeeString_WIDTH(written_buffer) == STRING_WIDTH_1BYTE);
-		if
-			unlikely(DeeObject_IsShared(written_buffer))
-		{
+		if unlikely(DeeObject_IsShared(written_buffer))
+			{
 			/* Unshare the already written portion of the buffer. */
 			DeeStringObject *buffer_copy;
 			size_t buffer_length = self->w_printer.up_length;
 			ASSERT(buffer_length == DeeString_SIZE(written_buffer));
 			buffer_copy = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 			                                                     (buffer_length + bufsize + 1) * sizeof(char));
-			if
-				unlikely(!buffer_copy)
-			{
+			if unlikely(!buffer_copy)
+				{
 				DeeFile_LockEndWrite(self);
 				if (Dee_CollectMemory(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 				                      (buffer_length + bufsize + 1) * sizeof(char)))
@@ -1822,9 +1755,8 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 PUBLIC DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
 	DREF Writer *result;
 	result = DeeObject_MALLOC(Writer);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	writer_ctor(result);
 	DeeLFileObject_Init(result, &DeeFileWriter_Type);
 done:

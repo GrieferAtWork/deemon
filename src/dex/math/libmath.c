@@ -297,17 +297,14 @@ f_math_frexp(size_t argc, DeeObject **__restrict argv) {
 	if (math_checkerr(mat))
 		goto err;
 	a = DeeFloat_New(mat);
-	if
-		unlikely(!a)
-	goto err;
+	if unlikely(!a)
+		goto err;
 	b = DeeInt_NewInt(ex);
-	if
-		unlikely(!b)
-	goto err_a;
+	if unlikely(!b)
+		goto err_a;
 	result = DeeTuple_PackSymbolic(2, a, b);
-	if
-		unlikely(!result)
-	goto err_b;
+	if unlikely(!result)
+		goto err_b;
 	return result;
 err_b:
 	Dee_Decref(b);
@@ -327,17 +324,14 @@ f_math_modf(size_t argc, DeeObject **__restrict argv) {
 		goto err;
 	x = modf(x, &y);
 	a = DeeFloat_New(x);
-	if
-		unlikely(!a)
-	goto err;
+	if unlikely(!a)
+		goto err;
 	b = DeeFloat_New(y);
-	if
-		unlikely(!b)
-	goto err_a;
+	if unlikely(!b)
+		goto err_a;
 	result = DeeTuple_PackSymbolic(2, a, b);
-	if
-		unlikely(!result)
-	goto err_b;
+	if unlikely(!result)
+		goto err_b;
 	return result;
 err_b:
 	Dee_Decref(b);
@@ -357,9 +351,8 @@ f_math_ldexp(size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "Do:ldexp", &x, &y))
 		goto err;
 	y = DeeObject_Int(y);
-	if
-		unlikely(!y)
-	goto err;
+	if unlikely(!y)
+		goto err;
 #if __SIZEOF_INT__ == 4
 	error = DeeInt_TryAs32(y, &y_value);
 #elif __SIZEOF_INT__ == 2

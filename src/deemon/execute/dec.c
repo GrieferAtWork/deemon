@@ -702,9 +702,8 @@ DecFile_Init(DecFile *__restrict self,
 
 	/* Read the entirety of the given input_stream. */
 	old_pos = (dpos_t)DeeFile_Seek(input_stream, 0, SEEK_SET);
-	if
-		unlikely((doff_t)old_pos < 0)
-	{
+	if unlikely((doff_t)old_pos < 0)
+		{
 err_seek_failed:
 #if 0 /* TODO */
 		if (DeeError_Catch(&DeeError_NotImplemented)) {
@@ -716,30 +715,25 @@ err_seek_failed:
 	}
 	/* Determine the total size by seeking up to the end. */
 	total_size = (dpos_t)DeeFile_Seek(input_stream, 0, SEEK_END);
-	if
-		unlikely((doff_t)total_size < 0)
-	goto err_seek_failed;
+	if unlikely((doff_t)total_size < 0)
+		goto err_seek_failed;
 	/* Seek back to where we were before. */
-	if
-		unlikely(DeeFile_Seek(input_stream, (doff_t)old_pos, SEEK_SET) < 0)
-	goto err_seek_failed;
+	if unlikely(DeeFile_Seek(input_stream, (doff_t)old_pos, SEEK_SET) < 0)
+		goto err_seek_failed;
 
 	/* Quick check: If the file is larger than the allowed limit,
 	 *              don't even consider attempting to load it. */
-	if
-		unlikely(total_size > DFILE_LIMIT)
-	goto end_not_a_dec;
+	if unlikely(total_size > DFILE_LIMIT)
+		goto end_not_a_dec;
 	/* Another quick check: If the file isn't even large enough for the
 	 *                      basic header, it's not a DEC file either. */
-	if
-		unlikely(total_size < sizeof(Dec_Ehdr))
-	goto end_not_a_dec;
+	if unlikely(total_size < sizeof(Dec_Ehdr))
+		goto end_not_a_dec;
 
 	/* Allocate a buffer to reading everything from the file. */
 	hdr = (Dec_Ehdr *)Dee_Malloc((size_t)total_size + DECFILE_PADDING);
-	if
-		unlikely(!hdr)
-	goto err;
+	if unlikely(!hdr)
+		goto err;
 	self->df_ehdr = hdr;
 	self->df_size = (size_t)total_size;
 
@@ -757,53 +751,38 @@ err_seek_failed:
 
 	/* All right! we've read the file.
 	 * Now to do a quick validation of the header. */
-	if
-		unlikely(hdr->e_ident[DI_MAG0] != DECMAG0)
-	goto end_not_a_dec_data;
-	if
-		unlikely(hdr->e_ident[DI_MAG1] != DECMAG1)
-	goto end_not_a_dec_data;
-	if
-		unlikely(hdr->e_ident[DI_MAG2] != DECMAG2)
-	goto end_not_a_dec_data;
-	if
-		unlikely(hdr->e_ident[DI_MAG3] != DECMAG3)
-	goto end_not_a_dec_data;
-	if
-		unlikely(hdr->e_version != LESWAP16_C(DVERSION_CUR))
-	goto end_not_a_dec_data;
-	if
-		unlikely(hdr->e_size < sizeof(Dec_Ehdr))
-	goto end_not_a_dec_data;
-	if
-		unlikely(hdr->e_builtinset > DBUILTINS_MAX)
-	goto end_not_a_dec_data;
+	if unlikely(hdr->e_ident[DI_MAG0] != DECMAG0)
+		goto end_not_a_dec_data;
+	if unlikely(hdr->e_ident[DI_MAG1] != DECMAG1)
+		goto end_not_a_dec_data;
+	if unlikely(hdr->e_ident[DI_MAG2] != DECMAG2)
+		goto end_not_a_dec_data;
+	if unlikely(hdr->e_ident[DI_MAG3] != DECMAG3)
+		goto end_not_a_dec_data;
+	if unlikely(hdr->e_version != LESWAP16_C(DVERSION_CUR))
+		goto end_not_a_dec_data;
+	if unlikely(hdr->e_size < sizeof(Dec_Ehdr))
+		goto end_not_a_dec_data;
+	if unlikely(hdr->e_builtinset > DBUILTINS_MAX)
+		goto end_not_a_dec_data;
 	/* Validate pointers from the header. */
-	if
-		unlikely(LESWAP32(hdr->e_impoff) > total_size)
-	goto end_not_a_dec_data;
-	if
-		unlikely(LESWAP32(hdr->e_depoff) > total_size)
-	goto end_not_a_dec_data;
-	if
-		unlikely(LESWAP32(hdr->e_globoff) > total_size)
-	goto end_not_a_dec_data;
-	if
-		unlikely(LESWAP32(hdr->e_rootoff) > total_size)
-	goto end_not_a_dec_data;
-	if
-		unlikely(LESWAP32(hdr->e_stroff) < hdr->e_size)
-	goto end_not_a_dec_data; /* Missing string table. */
-	if
-		unlikely(LESWAP32(hdr->e_rootoff) < hdr->e_size)
-	goto end_not_a_dec_data; /* Validate the root-code pointer. */
-	if
-		unlikely(LESWAP32(hdr->e_stroff) +
+	if unlikely(LESWAP32(hdr->e_impoff) > total_size)
+		goto end_not_a_dec_data;
+	if unlikely(LESWAP32(hdr->e_depoff) > total_size)
+		goto end_not_a_dec_data;
+	if unlikely(LESWAP32(hdr->e_globoff) > total_size)
+		goto end_not_a_dec_data;
+	if unlikely(LESWAP32(hdr->e_rootoff) > total_size)
+		goto end_not_a_dec_data;
+	if unlikely(LESWAP32(hdr->e_stroff) < hdr->e_size)
+		goto end_not_a_dec_data; /* Missing string table. */
+	if unlikely(LESWAP32(hdr->e_rootoff) < hdr->e_size)
+		goto end_not_a_dec_data; /* Validate the root-code pointer. */
+	if unlikely(LESWAP32(hdr->e_stroff) +
 		         LESWAP32(hdr->e_strsiz) <
 		         LESWAP32(hdr->e_stroff))
 	goto end_not_a_dec_data; /* Check for overflow */
-	if
-		unlikely(LESWAP32(hdr->e_stroff) +
+	if unlikely(LESWAP32(hdr->e_stroff) +
 		         LESWAP32(hdr->e_strsiz) >
 		         total_size)
 	goto end_not_a_dec_data;
@@ -870,9 +849,8 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 	Dec_Ehdr *hdr = self->df_ehdr;
 	uint64_t timestamp, other;
 	other = DecTime_Lookup((DeeObject *)self->df_name);
-	if
-		unlikely(other == (uint64_t)-1)
-	goto err;
+	if unlikely(other == (uint64_t)-1)
+		goto err;
 	timestamp = (((uint64_t)LESWAP32(hdr->e_timestamp_hi) << 32) |
 	             ((uint64_t)LESWAP32(hdr->e_timestamp_lo)));
 	if (other > timestamp)
@@ -955,9 +933,8 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	/* Load the import table. */
 	strtab         = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
 	module_pathstr = DeeString_AsUtf8((DeeObject *)self->df_name);
-	if
-		unlikely(!module_pathstr)
-	goto err;
+	if unlikely(!module_pathstr)
+		goto err;
 	module_pathlen = WSTR_LENGTH(module_pathstr);
 	while (module_pathlen &&
 	       module_pathstr[module_pathlen - 1] != '/'
@@ -970,30 +947,26 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	impmap  = (Dec_Strmap *)(self->df_base + LESWAP32(hdr->e_impoff));
 	importc = UNALIGNED_GETLE16((uint16_t *)&impmap->i_len);
 	importv = (DREF DeeModuleObject **)Dee_Malloc(importc * sizeof(DREF DeeModuleObject *));
-	if
-		unlikely(!importv)
-	goto err;
+	if unlikely(!importv)
+		goto err;
 	modend = (moditer = importv) + importc;
 	reader = impmap->i_map;
 	for (; moditer != modend; ++moditer) {
 		uint32_t off;
 		char const *module_name;
-		if
-			unlikely(reader >= end)
-		GOTO_CORRUPTED(reader, stop_imports);
+		if unlikely(reader >= end)
+			GOTO_CORRUPTED(reader, stop_imports);
 		off = Dec_DecodePointer(&reader);
-		if
-			unlikely(off >= LESWAP32(hdr->e_strsiz))
-		GOTO_CORRUPTED(reader, stop_imports);
+		if unlikely(off >= LESWAP32(hdr->e_strsiz))
+			GOTO_CORRUPTED(reader, stop_imports);
 		module_name = strtab + off;
 		/* Load the imported module. */
 		module = (DREF DeeModuleObject *)DeeModule_OpenRelativeString(module_name, strlen(module_name),
 		                                                              module_pathstr, module_pathlen,
 		                                                              self->df_options ? self->df_options->co_inner : NULL,
 		                                                              false);
-		if
-			unlikely(!ITER_ISOK(module))
-		{
+		if unlikely(!ITER_ISOK(module))
+			{
 			if (module) {
 				/* Don't throw an error for this when `module_name' describes
 				 * the name of a global module. - This could happen if the
@@ -1026,14 +999,12 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		/* Check if the module has changed. */
 		if (!self->df_options || !(self->df_options->co_decloader & DEC_FLOADOUTDATED)) {
 			uint64_t modtime = DeeModule_GetCTime((DeeObject *)module);
-			if
-				unlikely(modtime == (uint64_t)-1)
-			goto err_imports_module;
+			if unlikely(modtime == (uint64_t)-1)
+				goto err_imports_module;
 			/* If the module has changed since the time
 			 * described on the DEC header, stop loading. */
-			if
-				unlikely(modtime > timestamp)
-			goto stop_imports_module;
+			if unlikely(modtime > timestamp)
+				goto stop_imports_module;
 		}
 		*moditer = module; /* Inherit */
 	}
@@ -1083,12 +1054,10 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 	glbmap  = (Dec_Glbmap *)(self->df_base + LESWAP32(hdr->e_globoff));
 	globalc = UNALIGNED_GETLE16((uint16_t *)&glbmap->g_cnt);
 	symbolc = UNALIGNED_GETLE16((uint16_t *)&glbmap->g_len);
-	if
-		unlikely(globalc > symbolc)
-	GOTO_CORRUPTED(&glbmap->g_cnt, stop);
-	if
-		unlikely(!symbolc)
-	return 0; /* Unlikely, but allowed. */
+	if unlikely(globalc > symbolc)
+		GOTO_CORRUPTED(&glbmap->g_cnt, stop);
+	if unlikely(!symbolc)
+		return 0; /* Unlikely, but allowed. */
 	strtab = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
 	reader = (uint8_t *)glbmap + 4;
 
@@ -1103,9 +1072,8 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 	/* Allocate the module bucket vector. */
 	bucketv = (struct module_symbol *)Dee_Calloc((bucket_mask + 1) *
 	                                             sizeof(struct module_symbol));
-	if
-		unlikely(!bucketv)
-	goto err;
+	if unlikely(!bucketv)
+		goto err;
 
 	/* Read symbol information. */
 	for (i = 0; i < symbolc; ++i) {
@@ -1113,9 +1081,8 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		char *name, *doc;
 		uint32_t doclen;
 		dhash_t name_hash, hash_i, perturb;
-		if
-			unlikely(reader >= end)
-		GOTO_CORRUPTED(reader, stop_symbolv); /* Validate bounds. */
+		if unlikely(reader >= end)
+			GOTO_CORRUPTED(reader, stop_symbolv); /* Validate bounds. */
 		flags = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 		if (flags & ~MODSYM_FMASK)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Unknown flags are being used. */
@@ -1130,24 +1097,21 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 				if (!(flags & MODSYM_FPROPERTY) && addr2 >= self->df_module->mo_importc)
 					GOTO_CORRUPTED(reader, stop_symbolv); /* Validate module index. */
 			} else {
-				if
-					unlikely(addr >= globalc)
-				GOTO_CORRUPTED(reader, stop_symbolv); /* Validate symbol address. */
+				if unlikely(addr >= globalc)
+					GOTO_CORRUPTED(reader, stop_symbolv); /* Validate symbol address. */
 			}
 		}
 		name = strtab + Dec_DecodePointer(&reader);
-		if
-			unlikely(name >= (char *)end)
-		GOTO_CORRUPTED(reader, stop_symbolv);
+		if unlikely(name >= (char *)end)
+			GOTO_CORRUPTED(reader, stop_symbolv);
 		/* If the name points to an empty string, skip this entry. */
 		if (!*name)
 			continue;
 		doclen = Dec_DecodePointer(&reader), doc = strtab;
 		if (doclen)
 			doc += Dec_DecodePointer(&reader);
-		if
-			unlikely(doc + doclen >= (char *)end)
-		GOTO_CORRUPTED(reader, stop_symbolv);
+		if unlikely(doc + doclen >= (char *)end)
+			GOTO_CORRUPTED(reader, stop_symbolv);
 
 		/* Figure out the proper hash for the name. */
 		name_hash = Dee_HashStr(name);
@@ -1159,9 +1123,8 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 				continue;
 			/* Found an unused slot compatible with the hash of this symbol's name. */
 			temp = (DREF DeeStringObject *)DeeString_New(name);
-			if
-				unlikely(!temp)
-			goto err_symbolv;
+			if unlikely(!temp)
+				goto err_symbolv;
 			temp->s_hash    = name_hash; /* Save the name hash. */
 			target->ss_name = DeeString_STR(temp);
 			flags |= MODSYM_FNAMEOBJ;
@@ -1170,9 +1133,8 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 				temp = (DREF DeeStringObject *)DeeString_NewUtf8(doc,
 				                                                 doclen,
 				                                                 STRING_ERROR_FSTRICT);
-				if
-					unlikely(!temp)
-				goto err_symbolv;
+				if unlikely(!temp)
+					goto err_symbolv;
 				target->ss_doc = DeeString_STR(temp);
 				flags |= MODSYM_FDOCOBJ;
 			}
@@ -1186,9 +1148,8 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 
 	/* Allocate and setup the global variable vector. */
 	module->mo_globalv = (DREF DeeObject **)Dee_Calloc(globalc * sizeof(DREF DeeObject *));
-	if
-		unlikely(!module->mo_globalv)
-	goto err_symbolv;
+	if unlikely(!module->mo_globalv)
+		goto err_symbolv;
 	module->mo_globalc = globalc;
 
 	/* Install the symbol mask and hash-table. */
@@ -1264,12 +1225,10 @@ set_none_result:
 			uint32_t ptr;
 			ptr = Dec_DecodePointer(&reader);
 			str = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff) + ptr);
-			if
-				unlikely(ptr + len < ptr)
-			GOTO_CORRUPTED(reader, done); /* Check for overflow. */
-			if
-				unlikely(str + len > (char *)(self->df_base + self->df_size))
-			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
+			if unlikely(ptr + len < ptr)
+				GOTO_CORRUPTED(reader, done); /* Check for overflow. */
+			if unlikely(str + len > (char *)(self->df_base + self->df_size))
+				GOTO_CORRUPTED(reader, done); /* Validate bounds. */
 			/* Create the new string. */
 			result = DeeString_NewUtf8(str, len, STRING_ERROR_FSTRICT);
 		}
@@ -1285,20 +1244,17 @@ set_none_result:
 		DREF DeeCodeObject *code;
 		uint16_t i, refc;
 		code = DecFile_LoadCode(self, &reader);
-		if
-			unlikely(!ITER_ISOK(code))
-		{
-			if
-				unlikely(!code)
-			goto err;
+		if unlikely(!ITER_ISOK(code))
+			{
+			if unlikely(!code)
+				goto err;
 			goto corrupt;
 		}
 		refc   = code->co_refc;
 		result = (DREF DeeObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv) +
 		                                            (refc * sizeof(DREF DeeObject *)));
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 err_function_code:
 			Dee_Decref(code);
 			goto err;
@@ -1306,9 +1262,8 @@ err_function_code:
 		for (i = 0; i < refc; ++i) {
 			DREF DeeObject *temp;
 			temp = DecFile_LoadObject(self, &reader);
-			if
-				unlikely(!ITER_ISOK(temp))
-			{
+			if unlikely(!ITER_ISOK(temp))
+				{
 				while (i--)
 					Dee_Decref(((DREF DeeFunctionObject *)result)->fo_refv[i]);
 				DeeObject_Free(result);
@@ -1328,20 +1283,17 @@ err_function_code:
 		uint8_t *end;
 		length = Dec_DecodePointer(&reader);
 		result = DeeTuple_NewUninitialized(length);
-		if
-			unlikely(!result)
-		goto done;
+		if unlikely(!result)
+			goto done;
 		end = self->df_data + self->df_size;
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *item;
 			/* Read the individual tuple items. */
-			if
-				unlikely(reader >= end)
-			item      = ITER_DONE;
+			if unlikely(reader >= end)
+				item      = ITER_DONE;
 			else item = DecFile_LoadObject(self, &reader);
-			if
-				unlikely(!ITER_ISOK(item))
-			{
+			if unlikely(!ITER_ISOK(item))
+				{
 				while (i--)
 					Dee_Decref(DeeTuple_GET(result, i));
 				DeeTuple_FreeUninitialized(result);
@@ -1358,20 +1310,17 @@ err_function_code:
 		uint8_t *end;
 		length = Dec_DecodePointer(&reader);
 		result = DeeList_NewUninitialized(length);
-		if
-			unlikely(!result)
-		goto done;
+		if unlikely(!result)
+			goto done;
 		end = self->df_data + self->df_size;
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *item;
 			/* Read the individual list items. */
-			if
-				unlikely(reader >= end)
-			item      = ITER_DONE;
+			if unlikely(reader >= end)
+				item      = ITER_DONE;
 			else item = DecFile_LoadObject(self, &reader);
-			if
-				unlikely(!ITER_ISOK(item))
-			{
+			if unlikely(!ITER_ISOK(item))
+				{
 				while (i--)
 					Dee_Decref(DeeList_GET(result, i));
 				DeeList_FreeUninitialized(result);
@@ -1403,16 +1352,14 @@ err_function_code:
 		fileend = (char *)(self->df_base + self->df_size);
 		strtab  = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
 		name    = strtab + Dec_DecodePointer(&reader);
-		if
-			unlikely(name < strtab || name >= fileend)
-		GOTO_CORRUPTED(reader, corrupt);
+		if unlikely(name < strtab || name >= fileend)
+			GOTO_CORRUPTED(reader, corrupt);
 		doclen = Dec_DecodePointer(&reader);
 		doc    = NULL;
 		if (doclen) {
 			doc = strtab + Dec_DecodePointer(&reader);
-			if
-				unlikely(doc < strtab || doc >= fileend)
-			GOTO_CORRUPTED(reader, corrupt);
+			if unlikely(doc < strtab || doc >= fileend)
+				GOTO_CORRUPTED(reader, corrupt);
 		}
 		cmemb_size  = *(uint8_t *)reader, reader += 1;
 		imemb_size  = *(uint8_t *)reader, reader += 1;
@@ -1426,9 +1373,8 @@ err_function_code:
 		}
 		result = (DREF DeeObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
 		                                            (iattr_mask + 1) * sizeof(struct class_attribute));
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		DeeObject_Init(result, &DeeClassDescriptor_Type);
 		descriptor->cd_flags      = flags;
 		descriptor->cd_cattr_list = empty_class_attributes;
@@ -1452,9 +1398,8 @@ err_function_code:
 				opbind_mask = (opbind_mask << 1) | 1;
 			opbind_list = (struct class_operator *)Dee_Malloc((opbind_mask + 1) *
 			                                                  sizeof(struct class_operator));
-			if
-				unlikely(!opbind_list)
-			goto err_r;
+			if unlikely(!opbind_list)
+				goto err_r;
 			memset(opbind_list, 0xff, (opbind_mask + 1) * sizeof(struct class_operator));
 			descriptor->cd_clsop_mask = opbind_mask;
 			descriptor->cd_clsop_list = opbind_list;
@@ -1484,9 +1429,8 @@ err_function_code:
 				cattr_mask = (cattr_mask << 1) | 1;
 			cattr_list = (struct class_attribute *)Dee_Calloc((cattr_mask + 1) *
 			                                                  sizeof(struct class_attribute));
-			if
-				unlikely(!cattr_list)
-			goto err_r;
+			if unlikely(!cattr_list)
+				goto err_r;
 			descriptor->cd_cattr_list = cattr_list;
 			descriptor->cd_cattr_mask = cattr_mask;
 			for (i = 0; i < cattr_count; ++i) {
@@ -1494,33 +1438,27 @@ err_function_code:
 				dhash_t j, perturb, hash;
 				uint8_t addr, flags;
 				DREF DeeStringObject *name_ob;
-				if
-					unlikely(reader >= (uint8_t *)fileend)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(reader >= (uint8_t *)fileend)
+					GOTO_CORRUPTED(reader, corrupt_r);
 				addr  = *(uint8_t *)reader, reader += 1;
 				flags = *(uint8_t *)reader, reader += 1;
-				if
-					unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
-				GOTO_CORRUPTED(reader, corrupt_r);
-				if
-					unlikely(addr >= cmemb_size)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+					GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(addr >= cmemb_size)
+					GOTO_CORRUPTED(reader, corrupt_r);
 				name = strtab + Dec_DecodePointer(&reader);
-				if
-					unlikely(name < strtab || name >= fileend)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(name < strtab || name >= fileend)
+					GOTO_CORRUPTED(reader, corrupt_r);
 				doclen = Dec_DecodePointer(&reader);
 				doc    = NULL;
 				if (doclen) {
 					doc = strtab + Dec_DecodePointer(&reader);
-					if
-						unlikely(doc < strtab || doc >= fileend)
-					GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(doc < strtab || doc >= fileend)
+						GOTO_CORRUPTED(reader, corrupt_r);
 				}
 				name_ob = (DREF DeeStringObject *)DeeString_New(name);
-				if
-					unlikely(!name_ob)
-				goto err_r;
+				if unlikely(!name_ob)
+					goto err_r;
 				hash = DeeString_Hash((DeeObject *)name_ob);
 				j = perturb = hash & cattr_mask;
 				for (;; DeeClassDescriptor_CATTRNEXT(j, perturb)) {
@@ -1532,9 +1470,8 @@ err_function_code:
 				entry->ca_hash = hash;
 				if (doclen) {
 					entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc, doclen, STRING_ERROR_FSTRICT);
-					if
-						unlikely(!entry->ca_doc)
-					goto err_r;
+					if unlikely(!entry->ca_doc)
+						goto err_r;
 				}
 				entry->ca_addr = addr;
 				entry->ca_flag = flags;
@@ -1546,33 +1483,27 @@ err_function_code:
 			dhash_t j, perturb, hash;
 			uint8_t addr, flags;
 			DREF DeeStringObject *name_ob;
-			if
-				unlikely(reader >= (uint8_t *)fileend)
-			GOTO_CORRUPTED(reader, corrupt_r);
+			if unlikely(reader >= (uint8_t *)fileend)
+				GOTO_CORRUPTED(reader, corrupt_r);
 			addr  = *(uint8_t *)reader, reader += 1;
 			flags = *(uint8_t *)reader, reader += 1;
-			if
-				unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
-			GOTO_CORRUPTED(reader, corrupt_r);
-			if
-				unlikely(addr >= ((flags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
-			GOTO_CORRUPTED(reader, corrupt_r);
+			if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+				GOTO_CORRUPTED(reader, corrupt_r);
+			if unlikely(addr >= ((flags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
+				GOTO_CORRUPTED(reader, corrupt_r);
 			name = strtab + Dec_DecodePointer(&reader);
-			if
-				unlikely(name < strtab || name >= fileend)
-			GOTO_CORRUPTED(reader, corrupt_r);
+			if unlikely(name < strtab || name >= fileend)
+				GOTO_CORRUPTED(reader, corrupt_r);
 			doclen = Dec_DecodePointer(&reader);
 			doc    = NULL;
 			if (doclen) {
 				doc = strtab + Dec_DecodePointer(&reader);
-				if
-					unlikely(doc < strtab || doc >= fileend)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(doc < strtab || doc >= fileend)
+					GOTO_CORRUPTED(reader, corrupt_r);
 			}
 			name_ob = (DREF DeeStringObject *)DeeString_New(name);
-			if
-				unlikely(!name_ob)
-			goto err_r;
+			if unlikely(!name_ob)
+				goto err_r;
 			hash = DeeString_Hash((DeeObject *)name_ob);
 			j = perturb = hash & iattr_mask;
 			for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
@@ -1584,9 +1515,8 @@ err_function_code:
 			entry->ca_hash = hash;
 			if (doclen) {
 				entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc, doclen, STRING_ERROR_FSTRICT);
-				if
-					unlikely(!entry->ca_doc)
-				goto err_r;
+				if unlikely(!entry->ca_doc)
+					goto err_r;
 			}
 			entry->ca_addr = addr;
 			entry->ca_flag = flags;
@@ -1601,26 +1531,22 @@ err_function_code:
 		/* Invocation keywords descriptor. */
 		count  = Dec_DecodePointer(&reader);
 		result = DeeKwds_NewWithHint(count);
-		if
-			unlikely(!result)
-		goto done;
+		if unlikely(!result)
+			goto done;
 		strtab = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
 		end    = self->df_base + self->df_size;
 		for (i = 0; i < count; ++i) {
 			uint32_t addr;
 			char *name;
 			size_t name_len;
-			if
-				unlikely(reader >= end)
-			GOTO_CORRUPTED(reader, corrupt_r); /* Validate bounds. */
+			if unlikely(reader >= end)
+				GOTO_CORRUPTED(reader, corrupt_r); /* Validate bounds. */
 			addr = Dec_DecodePointer(&reader);
 			name = strtab + addr;
-			if
-				unlikely(name >= (char *)end)
-			GOTO_CORRUPTED(reader, corrupt_r); /* Validate bounds. */
+			if unlikely(name >= (char *)end)
+				GOTO_CORRUPTED(reader, corrupt_r); /* Validate bounds. */
 			name_len = strlen(name);
-			if
-				unlikely(DeeKwds_Append(&result,
+			if unlikely(DeeKwds_Append(&result,
 				                        name,
 				                        name_len,
 				                        Dee_HashPtr(name, name_len)))
@@ -1641,21 +1567,18 @@ err_function_code:
 			uint8_t *end;
 			num_items = Dec_DecodePointer(&reader);
 			result    = DeeHashSet_New();
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			end = self->df_data + self->df_size;
 			while (num_items--) {
 				DREF DeeObject *item;
 				int error;
 				/* Read the individual set items. */
-				if
-					unlikely(reader >= end)
-				item      = SET_CORRUPTED(reader, ITER_DONE);
+				if unlikely(reader >= end)
+					item      = SET_CORRUPTED(reader, ITER_DONE);
 				else item = DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(item))
-				{
+				if unlikely(!ITER_ISOK(item))
+					{
 					Dee_Decref(result);
 					result = item;
 					goto done;
@@ -1663,9 +1586,8 @@ err_function_code:
 				/* Insert the item into the result set. */
 				error = DeeHashSet_Insert(result, item);
 				Dee_Decref(item);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 		}	break;
 
@@ -1674,21 +1596,18 @@ err_function_code:
 			uint8_t *end;
 			num_items = Dec_DecodePointer(&reader);
 			result    = DeeRoSet_NewWithHint(num_items);
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			end = self->df_data + self->df_size;
 			while (num_items--) {
 				DREF DeeObject *item;
 				int error;
 				/* Read the individual set items. */
-				if
-					unlikely(reader >= end)
-				item      = SET_CORRUPTED(reader, ITER_DONE);
+				if unlikely(reader >= end)
+					item      = SET_CORRUPTED(reader, ITER_DONE);
 				else item = DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(item))
-				{
+				if unlikely(!ITER_ISOK(item))
+					{
 					Dee_Decref(result);
 					result = item;
 					goto done;
@@ -1696,9 +1615,8 @@ err_function_code:
 				/* Insert the item into the result set. */
 				error = DeeRoSet_Insert(&result, item);
 				Dee_Decref(item);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 		}	break;
 
@@ -1707,32 +1625,27 @@ err_function_code:
 			uint8_t *end;
 			num_items = Dec_DecodePointer(&reader);
 			result    = DeeDict_New();
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			end = self->df_data + self->df_size;
 			while (num_items--) {
 				DREF DeeObject *key, *value;
 				int error;
 				/* Read the individual Dict key-item pairs. */
-				if
-					unlikely(reader >= end)
-				key      = SET_CORRUPTED(reader, ITER_DONE);
+				if unlikely(reader >= end)
+					key      = SET_CORRUPTED(reader, ITER_DONE);
 				else key = DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(key))
-				{
+				if unlikely(!ITER_ISOK(key))
+					{
 					Dee_Decref(result);
 					result = key;
 					goto done;
 				}
-				if
-					unlikely(reader >= end)
-				value      = SET_CORRUPTED(reader, ITER_DONE);
+				if unlikely(reader >= end)
+					value      = SET_CORRUPTED(reader, ITER_DONE);
 				else value = DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(value))
-				{
+				if unlikely(!ITER_ISOK(value))
+					{
 					Dee_Decref(value);
 					Dee_Decref(result);
 					result = value;
@@ -1742,9 +1655,8 @@ err_function_code:
 				error = (*DeeDict_Type.tp_seq->tp_set)(result, key, value);
 				Dee_Decref(value);
 				Dee_Decref(key);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 		}	break;
 
@@ -1753,32 +1665,27 @@ err_function_code:
 			uint8_t *end;
 			num_items = Dec_DecodePointer(&reader);
 			result    = DeeRoDict_NewWithHint(num_items);
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			end = self->df_data + self->df_size;
 			while (num_items--) {
 				DREF DeeObject *key, *value;
 				int error;
 				/* Read the individual Dict key-item pairs. */
-				if
-					unlikely(reader >= end)
-				key      = SET_CORRUPTED(reader, ITER_DONE);
+				if unlikely(reader >= end)
+					key      = SET_CORRUPTED(reader, ITER_DONE);
 				else key = DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(key))
-				{
+				if unlikely(!ITER_ISOK(key))
+					{
 					Dee_Decref(result);
 					result = key;
 					goto done;
 				}
-				if
-					unlikely(reader >= end)
-				value      = SET_CORRUPTED(reader, ITER_DONE);
+				if unlikely(reader >= end)
+					value      = SET_CORRUPTED(reader, ITER_DONE);
 				else value = DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(value))
-				{
+				if unlikely(!ITER_ISOK(value))
+					{
 					Dee_Decref(value);
 					Dee_Decref(result);
 					result = value;
@@ -1788,9 +1695,8 @@ err_function_code:
 				error = DeeRoDict_Insert(&result, key, value);
 				Dee_Decref(value);
 				Dee_Decref(key);
-				if
-					unlikely(error)
-				goto err_r;
+				if unlikely(error)
+					goto err_r;
 			}
 		}	break;
 
@@ -1812,16 +1718,14 @@ err_function_code:
 			fileend = (char *)(self->df_base + self->df_size);
 			strtab  = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
 			name    = strtab + Dec_DecodePointer(&reader);
-			if
-				unlikely(name < strtab || name >= fileend)
-			GOTO_CORRUPTED(reader, corrupt);
+			if unlikely(name < strtab || name >= fileend)
+				GOTO_CORRUPTED(reader, corrupt);
 			doclen = Dec_DecodePointer(&reader);
 			doc    = NULL;
 			if (doclen) {
 				doc = strtab + Dec_DecodePointer(&reader);
-				if
-					unlikely(doc < strtab || doc >= fileend)
-				GOTO_CORRUPTED(reader, corrupt);
+				if unlikely(doc < strtab || doc >= fileend)
+					GOTO_CORRUPTED(reader, corrupt);
 			}
 			cmemb_size  = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 			imemb_size  = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
@@ -1831,18 +1735,16 @@ err_function_code:
 			iattr_mask  = 0;
 			if (iattr_count) {
 #if __SIZEOF_POINTER__ < 8
-				if
-					unlikely(iattr_count > (((size_t)-1) / 3) * 2)
-				GOTO_CORRUPTED(reader, corrupt);
+				if unlikely(iattr_count > (((size_t)-1) / 3) * 2)
+					GOTO_CORRUPTED(reader, corrupt);
 #endif /* __SIZEOF_POINTER__ < 8 */
 				while (iattr_count > (iattr_mask / 3) * 2)
 					iattr_mask = (iattr_mask << 1) | 1;
 			}
 			result = (DREF DeeObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
 			                                            (iattr_mask + 1) * sizeof(struct class_attribute));
-			if
-				unlikely(!result)
-			goto err;
+			if unlikely(!result)
+				goto err;
 			DeeObject_Init(result, &DeeClassDescriptor_Type);
 			descriptor->cd_flags      = flags;
 			descriptor->cd_cattr_list = empty_class_attributes;
@@ -1866,9 +1768,8 @@ err_function_code:
 					opbind_mask = (opbind_mask << 1) | 1;
 				opbind_list = (struct class_operator *)Dee_Malloc((opbind_mask + 1) *
 				                                                  sizeof(struct class_operator));
-				if
-					unlikely(!opbind_list)
-				goto err_r;
+				if unlikely(!opbind_list)
+					goto err_r;
 				memset(opbind_list, 0xff, (opbind_mask + 1) * sizeof(struct class_operator));
 				descriptor->cd_clsop_mask = opbind_mask;
 				descriptor->cd_clsop_list = opbind_list;
@@ -1878,9 +1779,8 @@ err_function_code:
 					uint16_t j, perturb;
 					name = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 					addr = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
-					if
-						unlikely(addr == (uint16_t)-1)
-					GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(addr == (uint16_t)-1)
+						GOTO_CORRUPTED(reader, corrupt_r);
 					if (addr >= cmemb_size)
 						GOTO_CORRUPTED(reader, corrupt_r);
 					j = perturb = name & opbind_mask;
@@ -1898,17 +1798,15 @@ err_function_code:
 				/* Load the class attribute descriptor table. */
 				cattr_mask = 0;
 #if __SIZEOF_POINTER__ < 8
-				if
-					unlikely(cattr_count > (((size_t)-1) / 3) * 2)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(cattr_count > (((size_t)-1) / 3) * 2)
+					GOTO_CORRUPTED(reader, corrupt_r);
 #endif /* __SIZEOF_POINTER__ < 8 */
 				while (cattr_count > (cattr_mask / 3) * 2)
 					cattr_mask = (cattr_mask << 1) | 1;
 				cattr_list = (struct class_attribute *)Dee_Calloc((cattr_mask + 1) *
 				                                                  sizeof(struct class_attribute));
-				if
-					unlikely(!cattr_list)
-				goto err_r;
+				if unlikely(!cattr_list)
+					goto err_r;
 				descriptor->cd_cattr_list = cattr_list;
 				descriptor->cd_cattr_mask = cattr_mask;
 				for (i = 0; i < cattr_count; ++i) {
@@ -1916,33 +1814,27 @@ err_function_code:
 					dhash_t j, perturb, hash;
 					uint16_t addr, flags;
 					DREF DeeStringObject *name_ob;
-					if
-						unlikely(reader >= (uint8_t *)fileend)
-					GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(reader >= (uint8_t *)fileend)
+						GOTO_CORRUPTED(reader, corrupt_r);
 					addr  = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 					flags = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
-					if
-						unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
-					GOTO_CORRUPTED(reader, corrupt_r);
-					if
-						unlikely(addr >= cmemb_size)
-					GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+						GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(addr >= cmemb_size)
+						GOTO_CORRUPTED(reader, corrupt_r);
 					name = strtab + Dec_DecodePointer(&reader);
-					if
-						unlikely(name < strtab || name >= fileend)
-					GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(name < strtab || name >= fileend)
+						GOTO_CORRUPTED(reader, corrupt_r);
 					doclen = Dec_DecodePointer(&reader);
 					doc    = NULL;
 					if (doclen) {
 						doc = strtab + Dec_DecodePointer(&reader);
-						if
-							unlikely(doc < strtab || doc >= fileend)
-						GOTO_CORRUPTED(reader, corrupt_r);
+						if unlikely(doc < strtab || doc >= fileend)
+							GOTO_CORRUPTED(reader, corrupt_r);
 					}
 					name_ob = (DREF DeeStringObject *)DeeString_New(name);
-					if
-						unlikely(!name_ob)
-					goto err_r;
+					if unlikely(!name_ob)
+						goto err_r;
 					hash = DeeString_Hash((DeeObject *)name_ob);
 					j = perturb = hash & cattr_mask;
 					for (;; DeeClassDescriptor_CATTRNEXT(j, perturb)) {
@@ -1954,9 +1846,8 @@ err_function_code:
 					entry->ca_hash = hash;
 					if (doclen) {
 						entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc, doclen, STRING_ERROR_FSTRICT);
-						if
-							unlikely(!entry->ca_doc)
-						goto err_r;
+						if unlikely(!entry->ca_doc)
+							goto err_r;
 					}
 					entry->ca_addr = addr;
 					entry->ca_flag = flags;
@@ -1968,33 +1859,27 @@ err_function_code:
 				dhash_t j, perturb, hash;
 				uint16_t addr, flags;
 				DREF DeeStringObject *name_ob;
-				if
-					unlikely(reader >= (uint8_t *)fileend)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(reader >= (uint8_t *)fileend)
+					GOTO_CORRUPTED(reader, corrupt_r);
 				addr  = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 				flags = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
-				if
-					unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
-				GOTO_CORRUPTED(reader, corrupt_r);
-				if
-					unlikely(addr >= ((flags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(flags & ~CLASS_ATTRIBUTE_FMASK)
+					GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(addr >= ((flags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
+					GOTO_CORRUPTED(reader, corrupt_r);
 				name = strtab + Dec_DecodePointer(&reader);
-				if
-					unlikely(name < strtab || name >= fileend)
-				GOTO_CORRUPTED(reader, corrupt_r);
+				if unlikely(name < strtab || name >= fileend)
+					GOTO_CORRUPTED(reader, corrupt_r);
 				doclen = Dec_DecodePointer(&reader);
 				doc    = NULL;
 				if (doclen) {
 					doc = strtab + Dec_DecodePointer(&reader);
-					if
-						unlikely(doc < strtab || doc >= fileend)
-					GOTO_CORRUPTED(reader, corrupt_r);
+					if unlikely(doc < strtab || doc >= fileend)
+						GOTO_CORRUPTED(reader, corrupt_r);
 				}
 				name_ob = (DREF DeeStringObject *)DeeString_New(name);
-				if
-					unlikely(!name_ob)
-				goto err_r;
+				if unlikely(!name_ob)
+					goto err_r;
 				hash = DeeString_Hash((DeeObject *)name_ob);
 				j = perturb = hash & iattr_mask;
 				for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
@@ -2006,9 +1891,8 @@ err_function_code:
 				entry->ca_hash = hash;
 				if (doclen) {
 					entry->ca_doc = (DREF DeeStringObject *)DeeString_NewUtf8(doc, doclen, STRING_ERROR_FSTRICT);
-					if
-						unlikely(!entry->ca_doc)
-					goto err_r;
+					if unlikely(!entry->ca_doc)
+						goto err_r;
 				}
 				entry->ca_addr = addr;
 				entry->ca_flag = flags;
@@ -2023,9 +1907,8 @@ err_function_code:
 				result = DeeCell_NewEmpty();
 			} else {
 				result = DecFile_LoadObject(self, &reader);
-				if
-					likely(ITER_ISOK(result))
-				{
+				if likely(ITER_ISOK(result))
+					{
 					/* Pack the read object into a Cell. */
 					DREF DeeObject *new_result;
 					new_result = DeeCell_New(result);
@@ -2036,14 +1919,12 @@ err_function_code:
 			break;
 
 		default:
-			if
-				unlikely(code < (DTYPE16_BUILTIN_MIN & 0xff))
-			GOTO_CORRUPTED(reader, done);
+			if unlikely(code < (DTYPE16_BUILTIN_MIN & 0xff))
+				GOTO_CORRUPTED(reader, done);
 			/* Load a builtin object from a custom data set. */
 			result = Dec_GetBuiltin(code - (DTYPE16_BUILTIN_MIN & 0xff), *(uint8_t *)reader);
-			if
-				unlikely(!result)
-			result = SET_CORRUPTED(reader, ITER_DONE);
+			if unlikely(!result)
+				result = SET_CORRUPTED(reader, ITER_DONE);
 			else Dee_Incref(result);
 			++reader;
 			break;
@@ -2051,19 +1932,16 @@ err_function_code:
 		break;
 
 	default:
-		if
-			unlikely(code < DTYPE_BUILTIN_MIN)
-		GOTO_CORRUPTED(reader, done);
+		if unlikely(code < DTYPE_BUILTIN_MIN)
+			GOTO_CORRUPTED(reader, done);
 #if DTYPE_BUILTIN_MAX != 0xff
-		if
-			unlikely(code > DTYPE_BUILTIN_MAX)
-		GOTO_CORRUPTED(reader, done);
+		if unlikely(code > DTYPE_BUILTIN_MAX)
+			GOTO_CORRUPTED(reader, done);
 #endif
 		/* Load a builtin object. */
 		result = Dec_GetBuiltin(self->df_ehdr->e_builtinset, code);
-		if
-			unlikely(!result)
-		result = SET_CORRUPTED(reader, ITER_DONE);
+		if unlikely(!result)
+			result = SET_CORRUPTED(reader, ITER_DONE);
 		else Dee_Incref(result);
 		break;
 	}
@@ -2098,14 +1976,12 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 	uint8_t *end    = self->df_base + self->df_size;
 	*pcount = count = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 	result          = (DREF DeeObject **)Dee_Malloc(count * sizeof(DREF DeeObject *));
-	if
-		unlikely(!result)
-	return NULL;
+	if unlikely(!result)
+		return NULL;
 	for (i = 0; i < count; ++i) {
 		/* Validate the the vector is still in-bounds. */
-		if
-			unlikely(reader >= end)
-		{
+		if unlikely(reader >= end)
+			{
 			new_result = ITER_DONE;
 			GOTO_CORRUPTED(reader, read_failed);
 		}
@@ -2115,9 +1991,8 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 		} else {
 			/* Read one object. */
 			result[i] = DecFile_LoadObject(self, &reader);
-			if
-				unlikely(!ITER_ISOK(result[i]))
-			{
+			if unlikely(!ITER_ISOK(result[i]))
+				{
 				new_result = result[i];
 read_failed:
 				while (i--)
@@ -2167,30 +2042,24 @@ load_strmap(DecFile *__restrict self,
 	uint32_t string_size;
 	if (!map_addr)
 		return 0; /* Undefined map. */
-	if
-		unlikely(map_addr + 2 >= self->df_size)
-	GOTO_CORRUPTED(self->df_base + map_addr, err_currupt); /* Map is out-of-bounds. */
+	if unlikely(map_addr + 2 >= self->df_size)
+		GOTO_CORRUPTED(self->df_base + map_addr, err_currupt); /* Map is out-of-bounds. */
 	reader     = self->df_base + map_addr;
 	map_length = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
-	if
-		unlikely(!map_length)
-	return 0; /* Empty map (same as undefined). */
-	if
-		unlikely(map_length == (uint16_t)-1)
-	{
-		map_length = UNALIGNED_GETLE32((uint32_t *)reader), reader += 4;
-		if
-			unlikely(!map_length)
+	if unlikely(!map_length)
 		return 0; /* Empty map (same as undefined). */
+	if unlikely(map_length == (uint16_t)-1)
+		{
+		map_length = UNALIGNED_GETLE32((uint32_t *)reader), reader += 4;
+		if unlikely(!map_length)
+			return 0; /* Empty map (same as undefined). */
 	}
-	if
-		unlikely(map_length > (self->df_size - (map_addr + 2)))
-	GOTO_CORRUPTED(reader - 2, err_currupt); /* Map items are out-of-bounds. */
+	if unlikely(map_length > (self->df_size - (map_addr + 2)))
+		GOTO_CORRUPTED(reader - 2, err_currupt); /* Map items are out-of-bounds. */
 	/* Allocate the map vector. */
 	vector = (uint32_t *)Dee_Malloc(map_length * sizeof(uint32_t));
-	if
-		unlikely(!vector)
-	return -1;
+	if unlikely(!vector)
+		return -1;
 
 	string_size = LESWAP32(self->df_ehdr->e_strsiz);
 	/* Read vector contents. */
@@ -2198,9 +2067,8 @@ load_strmap(DecFile *__restrict self,
 		uint32_t pointer;
 		pointer = Dec_DecodePointer(&reader);
 		/* Validate that the pointer fits into the string-table. */
-		if
-			unlikely(pointer >= string_size)
-		GOTO_CORRUPTEDF(reader, err_currupt_vec,
+		if unlikely(pointer >= string_size)
+			GOTO_CORRUPTEDF(reader, err_currupt_vec,
 		                "[%I16u/%I16u] pointer = %#I32x, string_size = %#I32x",
 		                i, map_length, pointer, string_size);
 		vector[i] = pointer;
@@ -2254,9 +2122,8 @@ DecFile_LoadDDI(DecFile *__restrict self,
 		GOTO_CORRUPTED(reader, err_currupted);
 	result = (DREF DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) +
 	                                               ddi_ddisize + DDI_INSTRLEN_MAX);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 
 	/* Copy DDI text. */
 	memcpy(result->d_ddi, ddi_text, ddi_ddisize);
@@ -2285,12 +2152,10 @@ DecFile_LoadDDI(DecFile *__restrict self,
 		    xdat >= self->df_base + self->df_size)
 			GOTO_CORRUPTED(xdat, err_currupted_r_maps);
 		xsiz = UNALIGNED_GETLE16((uint16_t *)xdat), xdat += 2;
-		if
-			unlikely(xsiz == (uint16_t)-1)
-		xsiz = UNALIGNED_GETLE32((uint32_t *)xdat), xdat += 4;
-		if
-			likely(xsiz != 0)
-		{
+		if unlikely(xsiz == (uint16_t)-1)
+			xsiz = UNALIGNED_GETLE32((uint32_t *)xdat), xdat += 4;
+		if likely(xsiz != 0)
+			{
 			struct Dee_ddi_exdat *xres;
 			if (xdat < self->df_base ||
 			    xdat + xsiz < xdat ||
@@ -2298,9 +2163,8 @@ DecFile_LoadDDI(DecFile *__restrict self,
 				GOTO_CORRUPTED(xdat, err_currupted_r_maps);
 			xres = (struct Dee_ddi_exdat *)Dee_Malloc(offsetof(struct Dee_ddi_exdat, dx_data) +
 			                                          xsiz + DDI_EXDAT_MAXSIZE);
-			if
-				unlikely(!xres)
-			goto err_r_maps;
+			if unlikely(!xres)
+				goto err_r_maps;
 			xres->dx_size = xsiz;
 			/* Initialize X-data information. */
 			memcpy(xres->dx_data, xdat, xsiz);
@@ -2320,9 +2184,8 @@ DecFile_LoadDDI(DecFile *__restrict self,
 	 * files allow DDI strings to be mixed & shared with all the
 	 * other strings which we'd have to separate otherwise. */
 	result->d_strtab = (DREF DeeStringObject *)DecFile_Strtab(self);
-	if
-		unlikely(!result->d_strtab)
-	goto err_r_maps;
+	if unlikely(!result->d_strtab)
+		goto err_r_maps;
 
 	Dee_Incref(result->d_strtab);
 	DeeObject_Init(result, &DeeDDI_Type);
@@ -2364,9 +2227,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 	if (header.co_flags & ~(CODE_FMASK | DEC_CODE_F8BIT))
 		GOTO_CORRUPTED(reader, corrupt);
 	if (header.co_flags & DEC_CODE_F8BIT) {
-		if
-			unlikely(reader + sizeof(Dec_8BitCode) - 2 >= end)
-		GOTO_CORRUPTED(reader, done); /* Validate bounds. */
+		if unlikely(reader + sizeof(Dec_8BitCode) - 2 >= end)
+			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
 		/* Read all the fields and widen them. */
 		header.co_localc     = *(uint8_t *)reader, reader += 1;
 		header.co_refc       = *(uint8_t *)reader, reader += 1;
@@ -2380,9 +2242,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		header.co_textsiz    = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 		header.co_textoff    = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 	} else {
-		if
-			unlikely(reader + sizeof(Dec_Code) - 2 >= end)
-		GOTO_CORRUPTED(reader, done); /* Validate bounds. */
+		if unlikely(reader + sizeof(Dec_Code) - 2 >= end)
+			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
 		memcpy(&header.co_flags + 1, reader, sizeof(Dec_Code) - 2);
 		reader += sizeof(Dec_Code) - 2;
 #ifdef CONFIG_BIG_ENDIAN
@@ -2401,8 +2262,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 	}
 
 	/* Validate the that text address is in-bounds (it will be read later). */
-	if
-		unlikely(header.co_textsiz &&
+	if unlikely(header.co_textsiz &&
 		         header.co_textoff + header.co_textsiz >=
 		         self->df_size)
 	GOTO_CORRUPTED(reader, done);
@@ -2414,9 +2274,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		header.co_flags |= CODE_FASSEMBLY;
 		result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
 		                                                  header.co_textsiz + INSTRLEN_MAX);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			/* Initialize trailing bytes as `ret none' instructions. */
 			memset(result->co_code + header.co_textsiz,
 			       ASM_RET_NONE, INSTRLEN_MAX);
@@ -2427,9 +2286,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		                                                  header.co_textsiz);
 	}
 	/* Check for errors during code allocation. */
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 
 	/* Fill in argument information and default arguments. */
 	result->co_argc_min = header.co_argc_min;
@@ -2441,22 +2299,19 @@ DecFile_LoadCode(DecFile *__restrict self,
 		uint16_t defaultc;
 		DREF DeeObject **defv;
 		uint8_t *def_reader = self->df_base + header.co_defaultoff;
-		if
-			unlikely(def_reader >= end)
-		GOTO_CORRUPTED(reader, corrupt_r);
+		if unlikely(def_reader >= end)
+			GOTO_CORRUPTED(reader, corrupt_r);
 		/* Default default object vector. */
 		defv = DecFile_LoadObjectVector(self, &defaultc, &def_reader, true);
-		if
-			unlikely(!ITER_ISOK(defv))
-		{
+		if unlikely(!ITER_ISOK(defv))
+			{
 			if (!defv)
 				goto err_r;
 			goto corrupt_r;
 		}
 		result->co_defaultv = defv;
-		if
-			unlikely(defaultc + result->co_argc_max < defaultc)
-		{
+		if unlikely(defaultc + result->co_argc_max < defaultc)
+			{
 			/* Too many default objects (the counter overflows). */
 			while (defaultc--)
 				Dee_Decref(defv[defaultc]);
@@ -2473,14 +2328,12 @@ DecFile_LoadCode(DecFile *__restrict self,
 		uint16_t staticc;
 		DREF DeeObject **staticv;
 		uint8_t *sta_reader = self->df_base + header.co_staticoff;
-		if
-			unlikely(sta_reader >= end)
-		GOTO_CORRUPTED(reader, corrupt_r_default);
+		if unlikely(sta_reader >= end)
+			GOTO_CORRUPTED(reader, corrupt_r_default);
 		/* Default object vector. */
 		staticv = DecFile_LoadObjectVector(self, &staticc, &sta_reader, false);
-		if
-			unlikely(!ITER_ISOK(staticv))
-		{
+		if unlikely(!ITER_ISOK(staticv))
+			{
 			if (!staticv)
 				goto err_r_default;
 			goto corrupt_r_default;
@@ -2499,8 +2352,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		bool is8bit;
 		struct except_handler *exceptv;
 		reader = self->df_base + header.co_exceptoff;
-		if
-			unlikely(reader >= end) /* Validate bounds */
+		if unlikely(reader >= end) /* Validate bounds */
 		GOTO_CORRUPTED(reader, corrupt_r_static);
 		is8bit = !!(header.co_flags & DEC_CODE_F8BIT);
 		if (is8bit) {
@@ -2510,9 +2362,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		}
 		/* Allocate the exception vector. */
 		exceptv = (struct except_handler *)Dee_Malloc(count * sizeof(struct except_handler));
-		if
-			unlikely(!exceptv)
-		goto err_r_static;
+		if unlikely(!exceptv)
+			goto err_r_static;
 		/* Write the exception descriptors to the resulting code object. */
 		result->co_exceptv = exceptv;
 		/* Load all the exception handlers. */
@@ -2521,8 +2372,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		     ++result->co_exceptc) {
 			struct except_handler *hand;
 			hand = exceptv + result->co_exceptc;
-			if
-				unlikely(reader >= end) /* Validate bounds */
+			if unlikely(reader >= end) /* Validate bounds */
 			GOTO_CORRUPTED(reader, corrupt_r_except);
 			hand->eh_flags = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2; /* Dec_8BitCodeExcept.ce_flags / Dec_CodeExcept.ce_flags */
 			if (is8bit) {
@@ -2553,9 +2403,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 				reader += 1;
 			} else {
 				hand->eh_mask = (DREF DeeTypeObject *)DecFile_LoadObject(self, &reader);
-				if
-					unlikely(!ITER_ISOK(hand->eh_mask))
-				{
+				if unlikely(!ITER_ISOK(hand->eh_mask))
+					{
 					if (!hand->eh_mask)
 						goto err_r_except;
 					goto corrupt_r_except;
@@ -2574,13 +2423,11 @@ DecFile_LoadCode(DecFile *__restrict self,
 		DREF DeeDDIObject *ddi;
 		uint8_t *ddi_reader;
 		ddi_reader = self->df_base + header.co_ddioff;
-		if
-			unlikely(ddi_reader >= end || ddi_reader < self->df_base)
-		GOTO_CORRUPTED(ddi_reader, corrupt_r_except);
+		if unlikely(ddi_reader >= end || ddi_reader < self->df_base)
+			GOTO_CORRUPTED(ddi_reader, corrupt_r_except);
 		ddi = DecFile_LoadDDI(self, ddi_reader, !!(header.co_flags & DEC_CODE_F8BIT));
-		if
-			unlikely(!ITER_ISOK(ddi))
-		{
+		if unlikely(!ITER_ISOK(ddi))
+			{
 			if (!ddi)
 				goto err_r_except;
 			goto corrupt_r_except;
@@ -2599,21 +2446,18 @@ DecFile_LoadCode(DecFile *__restrict self,
 		uint32_t string_size = LESWAP32(self->df_ehdr->e_strsiz);
 		char *strtab         = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
 		uint8_t *kwd_reader  = self->df_base + header.co_kwdoff;
-		if
-			unlikely(kwd_reader >= end || kwd_reader < self->df_base)
-		GOTO_CORRUPTED(kwd_reader, corrupt_r_ddi);
+		if unlikely(kwd_reader >= end || kwd_reader < self->df_base)
+			GOTO_CORRUPTED(kwd_reader, corrupt_r_ddi);
 		kwds = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
 		                                           sizeof(DREF DeeStringObject *));
-		if
-			unlikely(!kwds)
-		goto err_r_ddi;
+		if unlikely(!kwds)
+			goto err_r_ddi;
 		if (header.co_flags & DEC_CODE_F8BIT) {
 			for (i = 0; i < result->co_argc_max; ++i) {
 				uint32_t addr;
 				char *name;
-				if
-					unlikely(kwd_reader >= end)
-				{
+				if unlikely(kwd_reader >= end)
+					{
 corrupt_kwds_i:
 					while (i--)
 						Dee_Decref(kwds[i]);
@@ -2621,9 +2465,8 @@ corrupt_kwds_i:
 					GOTO_CORRUPTED(kwd_reader, corrupt_r_ddi);
 				}
 				addr = Dec_DecodePointer((uint8_t **)&kwd_reader);
-				if
-					unlikely(addr >= string_size)
-				goto corrupt_kwds_i;
+				if unlikely(addr >= string_size)
+					goto corrupt_kwds_i;
 				name = strtab + addr;
 				if ((kwds[i] = (DREF DeeStringObject *)DeeString_NewUtf8(name,
 				                                                         strlen(name),
@@ -2638,9 +2481,8 @@ err_kwds_i:
 		} else {
 			for (i = 0; i < result->co_argc_max; ++i) {
 				uint32_t addr, size;
-				if
-					unlikely(kwd_reader >= end)
-				goto corrupt_kwds_i;
+				if unlikely(kwd_reader >= end)
+					goto corrupt_kwds_i;
 				size = Dec_DecodePointer((uint8_t **)&kwd_reader);
 				if (!size) {
 					kwds[i] = (DREF DeeStringObject *)Dee_EmptyString;
@@ -2648,8 +2490,7 @@ err_kwds_i:
 					continue;
 				}
 				addr = Dec_DecodePointer((uint8_t **)&kwd_reader);
-				if
-					unlikely(addr >= string_size ||
+				if unlikely(addr >= string_size ||
 					         addr + size > addr ||
 					         addr + size >= string_size)
 				goto corrupt_kwds_i;
@@ -2683,9 +2524,8 @@ err_kwds_i:
 	                        (uint32_t)header.co_stackmax) *
 	                       sizeof(DREF DeeObject *);
 	/* Forceably set the heapframe flag when the frame is very large. */
-	if
-		unlikely(result->co_framesize >= CODE_LARGEFRAME_THRESHOLD)
-	result->co_flags |= CODE_FHEAPFRAME;
+	if unlikely(result->co_framesize >= CODE_LARGEFRAME_THRESHOLD)
+		result->co_flags |= CODE_FHEAPFRAME;
 
 	/* Fill in module information for the code object. */
 	result->co_module = self->df_module;
@@ -2776,9 +2616,8 @@ DecFile_Load(DecFile *__restrict self) {
 		root_reader = self->df_base + self->df_ehdr->e_rootoff;
 		/* Read the root code object. */
 		root_code = DecFile_LoadCode(self, &root_reader);
-		if
-			unlikely(!ITER_ISOK(root_code))
-		{
+		if unlikely(!ITER_ISOK(root_code))
+			{
 			result = root_code ? 1 : -1;
 			goto err;
 		}
@@ -2866,14 +2705,12 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 		/* Lookup the last-modified time of the module's path file. */
 		DeeStringObject *path;
 		path = ((DeeModuleObject *)self)->mo_path;
-		if
-			unlikely(!path)
-		result = 0;
+		if unlikely(!path)
+			result = 0;
 		else {
 			result = DecTime_Lookup((DeeObject *)path);
-			if
-				unlikely(result == (uint64_t)-1)
-			goto done;
+			if unlikely(result == (uint64_t)-1)
+				goto done;
 		}
 		/* Cache the result value in the module itself. */
 		((DeeModuleObject *)self)->mo_ctime = result;
@@ -2932,9 +2769,8 @@ os_mtime_for(DeeObject *__restrict filename) {
 	WIN32_FILE_ATTRIBUTE_DATA attrib;
 	LPWSTR wname;
 	wname = (LPWSTR)DeeString_AsWide(filename);
-	if
-		unlikely(!wname)
-	return (uint64_t)-1;
+	if unlikely(!wname)
+		return (uint64_t)-1;
 	DBG_ALIGNMENT_DISABLE();
 	if (!GetFileAttributesExW(wname, GetFileExInfoStandard, &attrib)) {
 		DBG_ALIGNMENT_ENABLE();
@@ -3081,14 +2917,12 @@ mtime_cache_rehash(void) {
 	struct mtime_entry *new_vector, *iter, *end;
 	size_t new_mask = mtime_cache.mc_mask;
 	new_mask        = (new_mask << 1) | 1;
-	if
-		unlikely(new_mask == 1)
-	new_mask = 64 - 1; /* Start out bigger than 2. */
+	if unlikely(new_mask == 1)
+		new_mask = 64 - 1; /* Start out bigger than 2. */
 	ASSERT(mtime_cache.mc_size < new_mask);
 	new_vector = (struct mtime_entry *)Dee_TryCalloc((new_mask + 1) * sizeof(struct mtime_entry));
-	if
-		unlikely(!new_vector)
-	return false;
+	if unlikely(!new_vector)
+		return false;
 	ASSERT((mtime_cache.mc_list == empty_mtime_items) == (mtime_cache.mc_size == 0));
 	ASSERT((mtime_cache.mc_list == empty_mtime_items) == (mtime_cache.mc_mask == 0));
 	if (mtime_cache.mc_list != empty_mtime_items) {
@@ -3186,16 +3020,14 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	/* Ensure that we are using an absolute, fixed path. */
 	filename = make_absolute(filename);
-	if
-		unlikely(!filename)
-	return (uint64_t)-1;
+	if unlikely(!filename)
+		return (uint64_t)-1;
 	/* Consult the cache before asking the OS. */
 	if (!mtime_cache_lookup(filename, &result)) {
 		result = os_mtime_for(filename);
 		/* Add the new information to the cache. */
-		if
-			likely(result != (uint64_t)-1)
-		mtime_cache_insert(filename, result);
+		if likely(result != (uint64_t)-1)
+			mtime_cache_insert(filename, result);
 	}
 	Dee_Decref(filename);
 #if 0

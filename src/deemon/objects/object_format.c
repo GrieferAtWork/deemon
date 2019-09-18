@@ -87,9 +87,8 @@ object_format_generic(DeeObject *__restrict self,
 
 	default: break;
 	}
-	if
-		unlikely(format_str >= format_end)
-	goto err_bad_format_str;
+	if unlikely(format_str >= format_end)
+		goto err_bad_format_str;
 	ch = *format_str++;
 	if (!DeeUni_IsDecimal(ch))
 		goto err_bad_format_str;
@@ -104,9 +103,8 @@ object_format_generic(DeeObject *__restrict self,
 			filler_str = format_str;
 			filler_len = format_end - format_str;
 			/* The filler string isn't allowed to be empty. */
-			if
-				unlikely(!filler_len)
-			goto err_bad_format_str;
+			if unlikely(!filler_len)
+				goto err_bad_format_str;
 			break;
 		}
 		if (OVERFLOW_UMUL(alignment_width, 10, &alignment_width) ||
@@ -117,15 +115,13 @@ object_format_generic(DeeObject *__restrict self,
 	/* Special case: With an alignment width of ZERO(0), we already
 	 *               know that we would never have to pad, so we can
 	 *               simply print the object regularly! */
-	if
-		unlikely(!alignment_width)
-	return DeeObject_Print(self, printer, arg);
+	if unlikely(!alignment_width)
+		return DeeObject_Print(self, printer, arg);
 
 	/* Generate the string representation of `self' */
 	self_str = DeeObject_Str(self);
-	if
-		unlikely(!self_str)
-	return -1;
+	if unlikely(!self_str)
+		return -1;
 
 	/* Do the alignment! */
 	result   = 0;
@@ -138,16 +134,14 @@ object_format_generic(DeeObject *__restrict self,
 			goto print_self_raw;
 print_ljust:
 		temp = DeeString_PrintUtf8(self_str, printer, arg);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		temp = DeeFormat_RepeatUtf8(printer, arg,
 		                            filler_str, filler_len,
 		                            alignment_width);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		break;
 
@@ -156,16 +150,14 @@ print_ljust:
 			temp = DeeFormat_RepeatUtf8(printer, arg,
 			                            filler_str, filler_len,
 			                            alignment_width);
-			if
-				unlikely(temp < 0)
-			goto err_temp;
+			if unlikely(temp < 0)
+				goto err_temp;
 			result += temp;
 		}
 print_self_raw:
 		temp = DeeString_PrintUtf8(self_str, printer, arg);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		break;
 
@@ -179,21 +171,18 @@ print_self_raw:
 		temp = DeeFormat_RepeatUtf8(printer, arg,
 		                            filler_str, filler_len,
 		                            linsert);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		temp = DeeString_PrintUtf8(self_str, printer, arg);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		temp = DeeFormat_RepeatUtf8(printer, arg,
 		                            filler_str, filler_len,
 		                            rinsert);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 	}	break;
 
@@ -203,9 +192,8 @@ print_self_raw:
 		if (alignment_width <= self_len)
 			goto print_self_raw;
 		my_str = DeeString_AsUtf8(self_str);
-		if
-			unlikely(!my_str)
-		{
+		if unlikely(!my_str)
+			{
 			temp = -1;
 			goto err_temp;
 		}
@@ -217,22 +205,19 @@ print_self_raw:
 			goto print_ljust;
 		ASSERT(num_signs <= WSTR_LENGTH(my_str));
 		temp = (*printer)(arg, my_str, num_signs);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		temp = DeeFormat_RepeatUtf8(printer, arg,
 		                            filler_str, filler_len,
 		                            alignment_width - self_len);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 		temp = (*printer)(arg, my_str + num_signs,
 		                  WSTR_LENGTH(my_str) - num_signs);
-		if
-			unlikely(temp < 0)
-		goto err_temp;
+		if unlikely(temp < 0)
+			goto err_temp;
 		result += temp;
 	}	break;
 
@@ -275,9 +260,8 @@ object_format_impl(DeeObject *__restrict self,
 			if (!tp_self->tp_attr->tp_getattr)
 				break;
 			format_function = (*tp_self->tp_attr->tp_getattr)(self, &str___format__);
-			if
-				unlikely(!format_function)
-			{
+			if unlikely(!format_function)
+				{
 check_attribute_error:
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))
@@ -291,26 +275,23 @@ check_attribute_error:
 		if (format_function != ITER_DONE) {
 			DREF DeeObject *callback_result;
 			dssize_t result;
-			if
-				unlikely(!format_function)
-			goto check_attribute_error;
+			if unlikely(!format_function)
+				goto check_attribute_error;
 call_format_function:
 			if (format_str_obj) {
 				callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
 			} else {
 				format_str_obj = DeeString_NewUtf8(format_str, format_len, STRING_ERROR_FIGNORE);
-				if
-					unlikely(!format_str_obj)
-				callback_result = NULL;
+				if unlikely(!format_str_obj)
+					callback_result = NULL;
 				else {
 					callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
 					Dee_Decref(format_str_obj);
 				}
 			}
 			Dee_Decref(format_function);
-			if
-				unlikely(!callback_result)
-			return -1;
+			if unlikely(!callback_result)
+				return -1;
 			result = DeeObject_Print(callback_result, printer, arg);
 			Dee_Decref(callback_result);
 			return result;
@@ -333,9 +314,8 @@ DeeObject_PrintFormat(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
                       DeeObject *__restrict format_str) {
 	char *utf8_format = DeeString_AsUtf8(format_str);
-	if
-		unlikely(!utf8_format)
-	return -1;
+	if unlikely(!utf8_format)
+		return -1;
 	return object_format_impl(self, printer, arg, utf8_format,
 	                          WSTR_LENGTH(utf8_format), format_str);
 }

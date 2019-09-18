@@ -132,9 +132,8 @@ sema_init(Semaphore *__restrict self,
 	DBG_ALIGNMENT_DISABLE();
 	self->sem_handle = CreateSemaphoreW(NULL, init_value, 0x7fffffff, NULL);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(!self->sem_handle)
-	goto err_nt;
+	if unlikely(!self->sem_handle)
+		goto err_nt;
 	return 0;
 err_nt:
 	DeeError_Throwf(&DeeError_SystemError,
@@ -163,9 +162,8 @@ sema_post(Semaphore *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, "|I32u:post", &count))
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	if
-		unlikely(!ReleaseSemaphore(self->sem_handle, count, NULL))
-	goto err_nt;
+	if unlikely(!ReleaseSemaphore(self->sem_handle, count, NULL))
+		goto err_nt;
 	DBG_ALIGNMENT_ENABLE();
 	return_none;
 err_nt:
@@ -191,9 +189,8 @@ sema_trywait(Semaphore *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
 		goto err;
 	error = nt_WaitForSemaphore(self->sem_handle, 0);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error == 0);
 err:
 	return NULL;
@@ -207,9 +204,8 @@ sema_timedwait(Semaphore *__restrict self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
 		goto err;
 	error = nt_WaitForSemaphore(self->sem_handle, timeout);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error == 0);
 err:
 	return NULL;
@@ -262,9 +258,8 @@ sema_enter(Semaphore *__restrict self) {
 PRIVATE int DCALL
 sema_leave(Semaphore *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
-	if
-		unlikely(!ReleaseSemaphore(self->sem_handle, 1, NULL))
-	goto err;
+	if unlikely(!ReleaseSemaphore(self->sem_handle, 1, NULL))
+		goto err;
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
 err:
@@ -378,9 +373,8 @@ mutex_leave(Mutex *__restrict self) {
 	caller = GetCurrentThreadId();
 	DBG_ALIGNMENT_ENABLE();
 	/* Check if the caller is actually the owner. */
-	if
-		unlikely(caller != self->m_owner)
-	{
+	if unlikely(caller != self->m_owner)
+		{
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "Mutex is not owned by the calling thread");
 		goto err;
@@ -389,9 +383,8 @@ mutex_leave(Mutex *__restrict self) {
 		/* Last lock (must clear the owner-field and post the semaphore) */
 		self->m_owner = (DWORD)-1;
 		DBG_ALIGNMENT_DISABLE();
-		if
-			unlikely(!ReleaseSemaphore(self->m_sema, 1, NULL))
-		{
+		if unlikely(!ReleaseSemaphore(self->m_sema, 1, NULL))
+			{
 			DBG_ALIGNMENT_ENABLE();
 			err_post_failed();
 			goto err;
@@ -412,9 +405,8 @@ mutex_ctor(Mutex *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	self->m_sema = CreateSemaphoreW(NULL, 0, 0x7fffffff, NULL);
 	DBG_ALIGNMENT_ENABLE();
-	if
-		unlikely(!self->m_sema)
-	goto err_nt;
+	if unlikely(!self->m_sema)
+		goto err_nt;
 	self->m_owner = (DWORD)-1;
 	return 0;
 err_nt:
@@ -456,9 +448,8 @@ mutex_tryacquire(Mutex *__restrict self,
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
 	error = mutex_timedenter(self, 0);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error == 0);
 err:
 	return NULL;
@@ -472,9 +463,8 @@ mutex_timedacquire(Mutex *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "I64u:tryacquire", &timeout))
 		goto err;
 	error = mutex_timedenter(self, timeout);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error == 0);
 err:
 	return NULL;

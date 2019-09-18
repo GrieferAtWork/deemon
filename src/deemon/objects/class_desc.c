@@ -179,9 +179,8 @@ PRIVATE DREF ClassOperatorTable *DCALL
 coti_getseq(ClassOperatorTableIterator *__restrict self) {
 	DREF ClassOperatorTable *result;
 	result = DeeObject_MALLOC(ClassOperatorTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->co_desc = self->co_desc;
 	Dee_Incref(self->co_desc);
 	DeeObject_Init(result, &ClassOperatorTable_Type);
@@ -289,9 +288,8 @@ PRIVATE DREF ClassOperatorTableIterator *DCALL
 cot_iter(ClassOperatorTable *__restrict self) {
 	DREF ClassOperatorTableIterator *result;
 	result = DeeObject_MALLOC(ClassOperatorTableIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->co_desc = self->co_desc;
 	result->co_iter = self->co_desc->cd_clsop_list;
 	result->co_end  = (self->co_desc->cd_clsop_list +
@@ -474,9 +472,8 @@ cattr_new(ClassDescriptor *__restrict desc,
           struct class_attribute *__restrict attr) {
 	DREF ClassAttribute *result;
 	result = DeeObject_MALLOC(ClassAttribute);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ca_desc = desc;
 	result->ca_attr = attr;
 	Dee_Incref(desc);
@@ -548,9 +545,8 @@ cati_next(ClassAttributeTableIterator *__restrict self) {
 	if (!ent)
 		return ITER_DONE;
 	attr = cattr_new(self->ca_desc, ent);
-	if
-		unlikely(!attr)
-	return NULL;
+	if unlikely(!attr)
+		return NULL;
 	result = DeeTuple_Pack(2, ent->ca_name, attr);
 	Dee_Decref(attr);
 	return result;
@@ -578,9 +574,8 @@ PRIVATE DREF ClassAttributeTableIterator *DCALL
 cat_iter(ClassAttributeTable *__restrict self) {
 	DREF ClassAttributeTableIterator *result;
 	result = DeeObject_MALLOC(ClassAttributeTableIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ca_desc = self->ca_desc;
 	result->ca_iter = self->ca_start;
 	result->ca_end  = (self->ca_start + self->ca_mask + 1);
@@ -662,9 +657,8 @@ PRIVATE DREF ClassAttributeTable *DCALL
 cati_getseq(ClassAttributeTableIterator *__restrict self) {
 	DREF ClassAttributeTable *result;
 	result = DeeObject_MALLOC(ClassAttributeTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ca_desc = self->ca_desc;
 	if (self->ca_end == self->ca_desc->cd_iattr_list + self->ca_desc->cd_iattr_mask + 1) {
 		result->ca_start = self->ca_desc->cd_iattr_list;
@@ -1219,9 +1213,8 @@ PRIVATE DREF ClassOperatorTable *DCALL
 cd_operators(ClassDescriptor *__restrict self) {
 	DREF ClassOperatorTable *result;
 	result = DeeObject_MALLOC(ClassOperatorTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->co_desc = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &ClassOperatorTable_Type);
@@ -1233,9 +1226,8 @@ PRIVATE DREF ClassAttributeTable *DCALL
 cd_iattr(ClassDescriptor *__restrict self) {
 	DREF ClassAttributeTable *result;
 	result = DeeObject_MALLOC(ClassAttributeTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ca_desc  = self;
 	result->ca_start = self->cd_iattr_list;
 	result->ca_mask  = self->cd_iattr_mask;
@@ -1249,9 +1241,8 @@ PRIVATE DREF ClassAttributeTable *DCALL
 cd_cattr(ClassDescriptor *__restrict self) {
 	DREF ClassAttributeTable *result;
 	result = DeeObject_MALLOC(ClassAttributeTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ca_desc  = self;
 	result->ca_start = self->cd_cattr_list;
 	result->ca_mask  = self->cd_cattr_mask;
@@ -1441,36 +1432,30 @@ class_attribute_init(struct class_attribute *__restrict self,
 			goto err;
 		}
 		addr = DeeFastSeq_GetItem(data, 0);
-		if
-			unlikely(!addr)
-		goto err;
+		if unlikely(!addr)
+			goto err;
 		flags = DeeFastSeq_GetItem(data, 1);
-		if
-			unlikely(!addr)
-		goto err_addr;
+		if unlikely(!addr)
+			goto err_addr;
 		if (fast_size >= 3) {
 			doc = DeeFastSeq_GetItem(data, 2);
-			if
-				unlikely(!addr)
-			goto err_addr_flags;
+			if unlikely(!addr)
+				goto err_addr_flags;
 		}
 	} else {
 		iter = DeeObject_IterSelf(data);
-		if
-			unlikely(!iter)
-		goto err;
+		if unlikely(!iter)
+			goto err;
 		addr = DeeObject_IterNext(iter);
-		if
-			unlikely(!ITER_ISOK(addr))
-		{
+		if unlikely(!ITER_ISOK(addr))
+			{
 			if (addr == ITER_DONE)
 				err_invalid_unpack_size_minmax(data, 2, 3, 0);
 			goto err_iter;
 		}
 		flags = DeeObject_IterNext(iter);
-		if
-			unlikely(!ITER_ISOK(flags))
-		{
+		if unlikely(!ITER_ISOK(flags))
+			{
 			if (flags == ITER_DONE)
 				err_invalid_unpack_size_minmax(data, 2, 3, 1);
 			goto err_iter_addr;
@@ -1480,13 +1465,11 @@ class_attribute_init(struct class_attribute *__restrict self,
 			doc = NULL;
 		} else {
 			DREF DeeObject *tail;
-			if
-				unlikely(!doc)
-			goto err_iter_addr_flags;
+			if unlikely(!doc)
+				goto err_iter_addr_flags;
 			tail = DeeObject_IterNext(iter);
-			if
-				unlikely(tail != ITER_DONE)
-			{
+			if unlikely(tail != ITER_DONE)
+				{
 				if (tail) {
 					Dee_Decref(tail);
 					err_invalid_unpack_iter_size_minmax(data, iter, 2, 3);
@@ -1509,9 +1492,8 @@ class_attribute_init(struct class_attribute *__restrict self,
 			size_t flag_len;
 			next     = strchr(pos, ',');
 			flag_len = next ? (size_t)(next - pos) : strlen(pos);
-			if
-				likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name))
-			{
+			if likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name))
+				{
 				unsigned int i;
 				for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
 					if (class_attribute_flags_db[i].fe_name[flag_len] != '\0')
@@ -1576,9 +1558,8 @@ cd_rehash_cattr(ClassDescriptor *__restrict self) {
 		new_mask = 7;
 	new_map = (struct class_attribute *)Dee_Calloc((new_mask + 1) *
 	                                               sizeof(struct class_attribute));
-	if
-		unlikely(!new_map)
-	goto err;
+	if unlikely(!new_map)
+		goto err;
 	if (self->cd_cattr_list != empty_class_attributes) {
 		/* Rehash the old table. */
 		size_t i, j, perturb;
@@ -1615,14 +1596,12 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 	DREF DeeObject *data[2];
 	ClassDescriptor *result;
 	iterator = DeeObject_IterSelf(iattr);
-	if
-		unlikely(!iterator)
-	goto err;
+	if unlikely(!iterator)
+		goto err;
 	result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor, cd_iattr_list) +
 	                                             (8 * sizeof(struct class_attribute)));
-	if
-		unlikely(!result)
-	goto err_iter;
+	if unlikely(!result)
+		goto err_iter;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		struct class_attribute *ent;
 		dhash_t hash, j, perturb;
@@ -1632,9 +1611,8 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			new_mask   = (imask << 1) | 1;
 			new_result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor, cd_iattr_list) +
 			                                                 ((new_mask + 1) * sizeof(struct class_attribute)));
-			if
-				unlikely(!new_result)
-			goto err_iter_r_elem;
+			if unlikely(!new_result)
+				goto err_iter_r_elem;
 			/* Rehash the already existing instance attribute table. */
 			for (i = 0; i <= imask; ++i) {
 				if (!result->cd_iattr_list[i].ca_name)
@@ -1754,9 +1732,8 @@ cd_add_operator(ClassDescriptor *__restrict self,
 			mask = 3;
 		map = (struct class_operator *)Dee_Malloc((mask + 1) *
 		                                          sizeof(struct class_operator));
-		if
-			unlikely(!map)
-		goto err;
+		if unlikely(!map)
+			goto err;
 		memset(map, 0xff, (mask + 1) * sizeof(struct class_operator));
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		}
@@ -1825,9 +1802,8 @@ cd_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 		goto err;
 
 	result = cd_alloc_from_iattr(class_iattr, class_isize, class_csize);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->cd_flags = TP_FNORMAL;
 	if (class_flags != (DeeStringObject *)Dee_EmptyString) {
 		if (DeeString_Check(class_flags)) {
@@ -1838,9 +1814,8 @@ cd_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
 				size_t flag_len;
 				next     = strchr(pos, ',');
 				flag_len = next ? (size_t)(next - pos) : strlen(pos);
-				if
-					likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name))
-				{
+				if likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name))
+					{
 					unsigned int i;
 					for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
 						if (class_flags_db[i].fe_name[flag_len] != '\0')
@@ -1880,9 +1855,8 @@ got_flag:
 	if (class_cattr != Dee_EmptyTuple) {
 		size_t used_attr = 0;
 		iterator         = DeeObject_IterSelf(class_cattr);
-		if
-			unlikely(!iterator)
-		goto err_r_imemb;
+		if unlikely(!iterator)
+			goto err_r_imemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			struct class_attribute *ent;
 			dhash_t hash, i, perturb;
@@ -1941,9 +1915,8 @@ got_flag:
 	if (class_operators != Dee_EmptyTuple) {
 		uint16_t operator_count = 0;
 		iterator                = DeeObject_IterSelf(class_operators);
-		if
-			unlikely(!iterator)
-		goto err_r_imemb_cmemb;
+		if unlikely(!iterator)
+			goto err_r_imemb_cmemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			uint16_t name, index;
 			if (DeeObject_Unpack(elem, 2, data))
@@ -2140,14 +2113,12 @@ ot_size(ObjectTable *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 ot_nsi_getitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	if
-		unlikely(index >= self->ot_size)
-	goto err_index;
+	if unlikely(index >= self->ot_size)
+		goto err_index;
 	rwlock_read(&self->ot_desc->id_lock);
 	result = self->ot_desc->id_vtab[index];
-	if
-		unlikely(!result)
-	goto err_unbound;
+	if unlikely(!result)
+		goto err_unbound;
 	Dee_Incref(result);
 	rwlock_endread(&self->ot_desc->id_lock);
 	return result;
@@ -2174,15 +2145,13 @@ ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
 PRIVATE int DCALL
 ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
-	if
-		unlikely(index >= self->ot_size)
-	goto err_index;
+	if unlikely(index >= self->ot_size)
+		goto err_index;
 	rwlock_write(&self->ot_desc->id_lock);
 	oldval = self->ot_desc->id_vtab[index];
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if
-		unlikely(!oldval)
-	goto err_unbound;
+	if unlikely(!oldval)
+		goto err_unbound;
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->ot_desc->id_vtab[index] = NULL;
 	rwlock_endwrite(&self->ot_desc->id_lock);
@@ -2205,9 +2174,8 @@ PRIVATE int DCALL
 ot_nsi_setitem(ObjectTable *__restrict self, size_t index,
                DeeObject *__restrict value) {
 	DREF DeeObject *oldval;
-	if
-		unlikely(index >= self->ot_size)
-	goto err_index;
+	if unlikely(index >= self->ot_size)
+		goto err_index;
 	Dee_Incref(value);
 	rwlock_write(&self->ot_desc->id_lock);
 	oldval                        = self->ot_desc->id_vtab[index];
@@ -2223,14 +2191,12 @@ PRIVATE DREF DeeObject *DCALL
 ot_nsi_xchitem(ObjectTable *__restrict self, size_t index,
                DeeObject *__restrict newval) {
 	DREF DeeObject *oldval;
-	if
-		unlikely(index >= self->ot_size)
-	goto err_index;
+	if unlikely(index >= self->ot_size)
+		goto err_index;
 	rwlock_write(&self->ot_desc->id_lock);
 	oldval = self->ot_desc->id_vtab[index];
-	if
-		unlikely(!oldval)
-	goto err_unbound;
+	if unlikely(!oldval)
+		goto err_unbound;
 	Dee_Incref(newval);
 	self->ot_desc->id_vtab[index] = newval;
 	rwlock_endwrite(&self->ot_desc->id_lock);
@@ -2483,9 +2449,8 @@ type_get_ctable(DeeTypeObject *__restrict self) {
 		return_empty_seq;
 	desc   = DeeClass_DESC(self);
 	result = DeeObject_MALLOC(ObjectTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ot_owner = (DREF DeeObject *)self;
 	result->ot_desc  = class_desc_as_instance(desc);
 	result->ot_size  = desc->cd_desc->cd_cmemb_size;
@@ -2510,9 +2475,8 @@ instance_get_itable(DeeObject *__restrict self) {
 		return_empty_seq;
 	desc   = DeeClass_DESC(type);
 	result = DeeObject_MALLOC(ObjectTable);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ot_owner = (DREF DeeObject *)self;
 	result->ot_desc  = DeeInstance_DESC(desc, real_self);
 	result->ot_size  = desc->cd_desc->cd_imemb_size;
@@ -2803,9 +2767,8 @@ DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
 	ASSERT(DeeType_IsClass(class_type));
 	ASSERT(attribute);
 	result = DeeObject_MALLOC(DeeInstanceMemberObject);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->im_type      = class_type;
 	result->im_attribute = attribute;
 	Dee_Incref(class_type);
@@ -2872,9 +2835,8 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 		               attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
 		               perm, attr_type, arg);
 		Dee_XDecref(attr_type);
-		if
-			unlikely(temp < 0)
-		return temp;
+		if unlikely(temp < 0)
+			return temp;
 		result += temp;
 	}
 	return result;
@@ -2932,9 +2894,8 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
 		               attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
 		               perm, attr_type, arg);
 		Dee_XDecref(attr_type);
-		if
-			unlikely(temp < 0)
-		return temp;
+		if unlikely(temp < 0)
+			return temp;
 		result += temp;
 	}
 	return result;
@@ -3002,9 +2963,8 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 		               attr->ca_doc ? DeeString_STR(attr->ca_doc) : NULL,
 		               perm, attr_type, arg);
 		Dee_XDecref(attr_type);
-		if
-			unlikely(temp < 0)
-		return temp;
+		if unlikely(temp < 0)
+			return temp;
 		result += temp;
 	}
 	return result;
@@ -3251,15 +3211,13 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 		member_value = my_class->cd_members[attr->ca_addr];
 		Dee_XIncref(member_value);
 		rwlock_endread(&my_class->cd_lock);
-		if
-			unlikely(!member_value)
-		goto unbound;
+		if unlikely(!member_value)
+			goto unbound;
 		return member_value;
 	}
 	result = DeeObject_MALLOC(DeePropertyObject);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	result->p_del = NULL;
 	result->p_set = NULL;
 	rwlock_read(&my_class->cd_lock);
@@ -3361,9 +3319,8 @@ DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type,
 #endif /* CLASS_GETSET_GET == 0 */
 	Dee_XIncref(callback);
 	rwlock_endread(&my_class->cd_lock);
-	if
-		unlikely(!callback)
-	goto unbound;
+	if unlikely(!callback)
+		goto unbound;
 	/* Invoke the callback. */
 	result = DeeObject_Call(callback, argc, argv);
 	Dee_Decref(callback);
@@ -3418,9 +3375,8 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type,
 #endif /* CLASS_GETSET_GET == 0 */
 	Dee_XIncref(callback);
 	rwlock_endread(&my_class->cd_lock);
-	if
-		unlikely(!callback)
-	goto unbound;
+	if unlikely(!callback)
+		goto unbound;
 	/* Invoke the callback. */
 	result = DeeObject_CallKw(callback, argc, argv, kw);
 	Dee_Decref(callback);
@@ -3479,9 +3435,8 @@ DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type,
 #endif /* CLASS_GETSET_GET == 0 */
 	Dee_XIncref(callback);
 	rwlock_endread(&my_class->cd_lock);
-	if
-		unlikely(!callback)
-	goto unbound;
+	if unlikely(!callback)
+		goto unbound;
 	/* Invoke the callback. */
 	result = DeeObject_CallTuple(callback, args);
 	Dee_Decref(callback);
@@ -3535,9 +3490,8 @@ DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type,
 #endif /* CLASS_GETSET_GET == 0 */
 	Dee_XIncref(callback);
 	rwlock_endread(&my_class->cd_lock);
-	if
-		unlikely(!callback)
-	goto unbound;
+	if unlikely(!callback)
+		goto unbound;
 	/* Invoke the callback. */
 	result = DeeObject_CallTupleKw(callback, args, kw);
 	Dee_Decref(callback);
@@ -3560,9 +3514,8 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type,
 		/* Simulate `operator ()' for wrappers generated by `instancemember_wrapper()'. */
 		DeeObject *thisarg;
 		args_tuple = DeeTuple_VNewf(format, args);
-		if
-			unlikely(!args_tuple)
-		goto err;
+		if unlikely(!args_tuple)
+			goto err;
 		if (DeeArg_Unpack(DeeTuple_SIZE(args_tuple),
 		                  DeeTuple_ELEM(args_tuple),
 		                  "o:get", &thisarg))
@@ -3601,9 +3554,8 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type,
 #endif /* CLASS_GETSET_GET == 0 */
 	Dee_XIncref(callback);
 	rwlock_endread(&my_class->cd_lock);
-	if
-		unlikely(!callback)
-	goto unbound;
+	if unlikely(!callback)
+		goto unbound;
 	/* Invoke the callback. */
 	result = DeeObject_VCallf(callback, format, args);
 	Dee_Decref(callback);
@@ -3622,9 +3574,8 @@ INTERN int DCALL
 DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
                               struct class_attribute *__restrict attr) {
 	struct class_desc *my_class = DeeClass_DESC(class_type);
-	if
-		unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
-	goto err_noaccess;
+	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+		goto err_noaccess;
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
 		return err_cant_access_attribute(class_type,
@@ -3639,9 +3590,8 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		my_class->cd_members[attr->ca_addr] = NULL;
 		rwlock_endwrite(&my_class->cd_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-		if
-			unlikely(!old_value)
-		goto unbound;
+		if unlikely(!old_value)
+			goto unbound;
 		Dee_Decref(old_value);
 #else  /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
@@ -3659,8 +3609,7 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		rwlock_endwrite(&my_class->cd_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 		/* Only thrown an unbound-error when none of the callbacks were assigned. */
-		if
-			unlikely(!old_value[0] &&
+		if unlikely(!old_value[0] &&
 			         !old_value[1] &&
 			         !old_value[2])
 		goto unbound;
@@ -3685,9 +3634,8 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type,
                               struct class_attribute *__restrict attr,
                               DeeObject *__restrict value) {
 	struct class_desc *my_class = DeeClass_DESC(class_type);
-	if
-		unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
-	goto err_noaccess;
+	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+		goto err_noaccess;
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
 		return err_cant_access_attribute(class_type,
@@ -3754,9 +3702,8 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto illegal;
+		if unlikely(!getter)
+			goto illegal;
 		/* Invoke the getter. */
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
@@ -3769,9 +3716,8 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!callback)
-		goto unbound;
+		if unlikely(!callback)
+			goto unbound;
 		result = DeeInstanceMethod_New(callback, this_arg);
 		Dee_Decref(callback);
 	} else {
@@ -3780,9 +3726,8 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 		result = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(result);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!result)
-		goto unbound;
+		if unlikely(!result)
+			goto unbound;
 	}
 	return result;
 unbound:
@@ -3812,17 +3757,15 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto unbound;
+		if unlikely(!getter)
+			goto unbound;
 		/* Invoke the getter. */
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		         : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
-		if
-			likely(result)
-		{
+		if likely(result)
+			{
 			Dee_Decref(result);
 			return 1;
 		}
@@ -3861,18 +3804,16 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto illegal;
+		if unlikely(!getter)
+			goto illegal;
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
 		/* Invoke the return value of the getter. */
-		if
-			unlikely(!callback)
-		return NULL;
+		if unlikely(!callback)
+			return NULL;
 		result = DeeObject_Call(callback, argc, argv);
 		Dee_Decref(callback);
 	} else {
@@ -3881,9 +3822,8 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!callback)
-		goto unbound;
+		if unlikely(!callback)
+			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCall(callback, this_arg, argc, argv)
 		         : DeeObject_Call(callback, argc, argv);
@@ -3919,18 +3859,16 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto illegal;
+		if unlikely(!getter)
+			goto illegal;
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
 		/* Invoke the return value of the getter. */
-		if
-			unlikely(!callback)
-		return NULL;
+		if unlikely(!callback)
+			return NULL;
 		result = DeeObject_VCallf(callback, format, args);
 		Dee_Decref(callback);
 	} else {
@@ -3939,9 +3877,8 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!callback)
-		goto unbound;
+		if unlikely(!callback)
+			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_VThisCallf(callback, this_arg, format, args)
 		         : DeeObject_VCallf(callback, format, args);
@@ -3978,18 +3915,16 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto illegal;
+		if unlikely(!getter)
+			goto illegal;
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
 		/* Invoke the return value of the getter. */
-		if
-			unlikely(!callback)
-		return NULL;
+		if unlikely(!callback)
+			return NULL;
 		result = DeeObject_CallKw(callback, argc, argv, kw);
 		Dee_Decref(callback);
 	} else {
@@ -3998,9 +3933,8 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!callback)
-		goto unbound;
+		if unlikely(!callback)
+			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCallKw(callback, this_arg, argc, argv, kw)
 		         : DeeObject_CallKw(callback, argc, argv, kw);
@@ -4037,18 +3971,16 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto illegal;
+		if unlikely(!getter)
+			goto illegal;
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
 		/* Invoke the return value of the getter. */
-		if
-			unlikely(!callback)
-		return NULL;
+		if unlikely(!callback)
+			return NULL;
 		result = DeeObject_CallTuple(callback, args);
 		Dee_Decref(callback);
 	} else {
@@ -4057,9 +3989,8 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!callback)
-		goto unbound;
+		if unlikely(!callback)
+			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCallTuple(callback, this_arg, args)
 		         : DeeObject_CallTuple(callback, args);
@@ -4095,18 +4026,16 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!getter)
-		goto illegal;
+		if unlikely(!getter)
+			goto illegal;
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
 		/* Invoke the return value of the getter. */
-		if
-			unlikely(!callback)
-		return NULL;
+		if unlikely(!callback)
+			return NULL;
 		result = DeeObject_CallTupleKw(callback, args, kw);
 		Dee_Decref(callback);
 	} else {
@@ -4115,9 +4044,8 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!callback)
-		goto unbound;
+		if unlikely(!callback)
+			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCallTupleKw(callback, this_arg, args, kw)
 		         : DeeObject_CallTupleKw(callback, args, kw);
@@ -4156,17 +4084,15 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		delfun = self->id_vtab[attr->ca_addr + CLASS_GETSET_DEL];
 		Dee_XIncref(delfun);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!delfun)
-		goto illegal;
+		if unlikely(!delfun)
+			goto illegal;
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCall(delfun, this_arg, 0, NULL)
 		       : DeeObject_Call(delfun, 0, NULL);
 		Dee_Decref(delfun);
-		if
-			unlikely(!temp)
-		return -1;
+		if unlikely(!temp)
+			return -1;
 		Dee_Decref(temp);
 	} else {
 		DREF DeeObject *old_value;
@@ -4176,9 +4102,8 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		self->id_vtab[attr->ca_addr] = NULL;
 		rwlock_endwrite(&self->id_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-		if
-			unlikely(!old_value)
-		goto unbound;
+		if unlikely(!old_value)
+			goto unbound;
 		Dee_Decref(old_value);
 #else  /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
@@ -4216,17 +4141,15 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 		setter = self->id_vtab[attr->ca_addr + CLASS_GETSET_SET];
 		Dee_XIncref(setter);
 		rwlock_endread(&self->id_lock);
-		if
-			unlikely(!setter)
-		goto illegal;
+		if unlikely(!setter)
+			goto illegal;
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCall(setter, this_arg, 1, (DeeObject **)&value)
 		       : DeeObject_Call(setter, 1, (DeeObject **)&value);
 		Dee_Decref(setter);
-		if
-			unlikely(!temp)
-		return -1;
+		if unlikely(!temp)
+			return -1;
 		Dee_Decref(temp);
 	} else {
 		DREF DeeObject *old_value;
@@ -4557,9 +4480,8 @@ INTERN int (DCALL DeeInstance_DelMember)(/*Class*/ DeeTypeObject *__restrict tp_
 	inst->id_vtab[addr] = NULL;
 	rwlock_endwrite(&inst->id_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if
-		unlikely(!old_value)
-	return err_unbound_member(tp_self, desc, addr);
+	if unlikely(!old_value)
+		return err_unbound_member(tp_self, desc, addr);
 	Dee_Decref(old_value);
 #else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(old_value);
@@ -4720,9 +4642,8 @@ INTERN DREF DeeObject *(DCALL DeeClass_GetMember)(DeeTypeObject *__restrict self
 	result = desc->cd_members[addr];
 	Dee_XIncref(result);
 	rwlock_endwrite(&desc->cd_lock);
-	if
-		unlikely(!result)
-	err_unbound_class_member(self, desc, addr);
+	if unlikely(!result)
+		err_unbound_class_member(self, desc, addr);
 	return result;
 }
 

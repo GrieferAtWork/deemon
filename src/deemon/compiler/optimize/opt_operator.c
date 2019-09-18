@@ -61,9 +61,8 @@ emulate_object_decode(DeeObject *__restrict self,
 		goto err;
 	if (errors) {
 		error_mode = DeeCodec_GetErrorMode(errors);
-		if
-			unlikely(error_mode == (unsigned int)-1)
-		goto err;
+		if unlikely(error_mode == (unsigned int)-1)
+			goto err;
 	}
 	return DeeCodec_DecodeIntern(self, name, error_mode);
 err:
@@ -81,9 +80,8 @@ emulate_object_encode(DeeObject *__restrict self,
 		goto err;
 	if (errors) {
 		error_mode = DeeCodec_GetErrorMode(errors);
-		if
-			unlikely(error_mode == (unsigned int)-1)
-		goto err;
+		if unlikely(error_mode == (unsigned int)-1)
+			goto err;
 	}
 	return DeeCodec_EncodeIntern(self, name, error_mode);
 err:
@@ -283,9 +281,8 @@ cleanup_operands:
 			}
 			if (temp == CONSTEXPR_USECOPY) {
 				operand = DeeObject_DeepCopy(operand);
-				if
-					unlikely(!operand)
-				{
+				if unlikely(!operand)
+					{
 					DeeError_Handled(ERROR_HANDLED_RESTORE);
 					goto cleanup_operands;
 				}
@@ -300,20 +297,17 @@ cleanup_operands:
 				goto not_allowed;
 			if (!DeeTuple_Check(argv[1]))
 				goto not_allowed;
-			if
-				unlikely(self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP)
-			{
-				operator_result = DeeObject_Copy(argv[0]);
-				if
-					likely(operator_result)
+			if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP)
 				{
+				operator_result = DeeObject_Copy(argv[0]);
+				if likely(operator_result)
+					{
 					DREF DeeObject *real_result;
 					real_result = emulate_method_call(argv[0],
 					                                  DeeTuple_SIZE(argv[1]),
 					                                  DeeTuple_ELEM(argv[1]));
-					if
-						likely(real_result)
-					Dee_Decref(real_result);
+					if likely(real_result)
+						Dee_Decref(real_result);
 					else {
 						Dee_Clear(operator_result);
 					}
@@ -332,14 +326,12 @@ not_allowed:
 		} else if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
 			/* Return a copy of the original operand. */
 			operator_result = DeeObject_Copy(argv[0]);
-			if
-				likely(operator_result)
-			{
+			if likely(operator_result)
+				{
 				DREF DeeObject *real_result;
 				real_result = DeeObject_InvokeOperator(argv[0], self->a_flag, opcount - 1, argv + 1);
-				if
-					likely(real_result)
-				Dee_Decref(real_result);
+				if likely(real_result)
+					Dee_Decref(real_result);
 				else {
 					Dee_Clear(operator_result);
 				}
@@ -365,9 +357,8 @@ not_allowed:
 	}
 	/* If the operator failed, don't do any propagation. */
 set_operator_result:
-	if
-		unlikely(!operator_result)
-	{
+	if unlikely(!operator_result)
+		{
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		goto generic_operator_optimizations;
 	}
@@ -440,9 +431,8 @@ generic_operator_optimizations:
 				}
 			} else {
 				if (AST_FMULTIPLE_ISDICT(cast_expr->a_flag)) {
-					if
-						unlikely((cast_expr->a_multiple.m_astc & 1) != 0)
-					goto after_sequence_cast_propagation;
+					if unlikely((cast_expr->a_multiple.m_astc & 1) != 0)
+						goto after_sequence_cast_propagation;
 					/* TODO: Take every first and second element and pack them together
 					 *       as tuple expression-like multi-branches.
 					 * >> local x = List { "foo" : a, "bar" : b };

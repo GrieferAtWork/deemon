@@ -97,9 +97,8 @@ attr_eq(Attr *__restrict self, Attr *__restrict other) {
 	if (self->a_info.a_decl != other->a_info.a_decl) {
 		result = DeeObject_CompareEq(self->a_info.a_decl,
 		                             other->a_info.a_decl);
-		if
-			unlikely(result < 0)
-		goto err;
+		if unlikely(result < 0)
+			goto err;
 		if (!result)
 			goto nope;
 	}
@@ -165,9 +164,8 @@ again:
 		} else {
 			/* Wrap the name string into a string object. */
 			result = (DREF DeeStringObject *)DeeString_New(name_str);
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			/* Cache the name-string as part of the attribute structure. */
 			if (!ATOMIC_CMPXCH(self->a_name, name_str, DeeString_STR(result))) {
 				Dee_Decref(result);
@@ -204,9 +202,8 @@ again:
 			result = (DREF DeeStringObject *)DeeString_NewUtf8(doc_str,
 			                                                   strlen(doc_str),
 			                                                   STRING_ERROR_FIGNORE);
-			if
-				unlikely(!result)
-			goto done;
+			if unlikely(!result)
+				goto done;
 			/* Cache the doc-string as part of the attribute structure. */
 			if (!ATOMIC_CMPXCH(self->a_info.a_doc, doc_str, DeeString_STR(result))) {
 				Dee_Decref(result);
@@ -292,9 +289,8 @@ attr_getflags(Attr *__restrict self) {
 		mask >>= 1;
 	}
 	result = DeeString_NewBuffer(num_flags);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	dst       = DeeString_STR(result);
 	mask      = self->a_info.a_perm & 0x1ff;
 	num_flags = 0;
@@ -398,9 +394,8 @@ string_to_attrflags(char const *__restrict str,
 		char ch = *str++;
 		unsigned int i;
 		for (i = 0; attr_flags[i] != ch; ++i) {
-			if
-				unlikely(i >= COMPILER_LENOF(attr_flags))
-			{
+			if unlikely(i >= COMPILER_LENOF(attr_flags))
+				{
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Unknown attribute flag %:1q",
 				                str - 1);
@@ -439,18 +434,16 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
 	rules.alr_hash = DeeString_Hash(search_name);
 	if (flagmask) {
 		if (DeeString_Check(flagmask)) {
-			if
-				unlikely(string_to_attrflags(DeeString_STR(flagmask), &rules.alr_perm_mask))
-			goto err;
+			if unlikely(string_to_attrflags(DeeString_STR(flagmask), &rules.alr_perm_mask))
+				goto err;
 		} else {
 			if (DeeObject_AsUInt16(flagmask, &rules.alr_perm_mask))
 				goto err;
 		}
 		if (flagval) {
 			if (DeeString_Check(flagval)) {
-				if
-					unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
-				goto err;
+				if unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
+					goto err;
 			} else {
 				if (DeeObject_AsUInt16(flagval, &rules.alr_perm_value))
 					goto err;
@@ -461,9 +454,8 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
 	} else if (flagval) {
 		rules.alr_perm_mask = (uint16_t)-1;
 		if (DeeString_Check(flagval)) {
-			if
-				unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
-			goto err;
+			if unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
+				goto err;
 		} else {
 			if (DeeObject_AsUInt16(flagval, &rules.alr_perm_value))
 				goto err;
@@ -478,9 +470,8 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
 		err_unknown_attribute_lookup(Dee_TYPE(search_self), rules.alr_name);
 		goto err;
 	}
-	if
-		likely(!lookup_error)
-	{
+	if likely(!lookup_error)
+		{
 		self->a_name = DeeString_STR(argv[1]);
 		self->a_info.a_perm |= ATTR_NAMEOBJ;
 		Dee_Incref(argv[1]);
@@ -514,18 +505,16 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	rules.alr_hash = DeeString_Hash(search_name);
 	if (flagmask) {
 		if (DeeString_Check(flagmask)) {
-			if
-				unlikely(string_to_attrflags(DeeString_STR(flagmask), &rules.alr_perm_mask))
-			goto err;
+			if unlikely(string_to_attrflags(DeeString_STR(flagmask), &rules.alr_perm_mask))
+				goto err;
 		} else {
 			if (DeeObject_AsUInt16(flagmask, &rules.alr_perm_mask))
 				goto err;
 		}
 		if (flagval) {
 			if (DeeString_Check(flagval)) {
-				if
-					unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
-				goto err;
+				if unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
+					goto err;
 			} else {
 				if (DeeObject_AsUInt16(flagval, &rules.alr_perm_value))
 					goto err;
@@ -536,9 +525,8 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	} else if (flagval) {
 		rules.alr_perm_mask = (uint16_t)-1;
 		if (DeeString_Check(flagval)) {
-			if
-				unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
-			goto err;
+			if unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
+				goto err;
 		} else {
 			if (DeeObject_AsUInt16(flagval, &rules.alr_perm_value))
 				goto err;
@@ -549,9 +537,8 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	                                   &info,
 	                                   &rules);
 	if (lookup_error != 0) {
-		if
-			likely(lookup_error > 0)
-		return_false;
+		if likely(lookup_error > 0)
+			return_false;
 		goto err;
 	}
 	attribute_info_fini(&info);
@@ -585,18 +572,16 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	rules.alr_hash = DeeString_Hash(search_name);
 	if (flagmask) {
 		if (DeeString_Check(flagmask)) {
-			if
-				unlikely(string_to_attrflags(DeeString_STR(flagmask), &rules.alr_perm_mask))
-			goto err;
+			if unlikely(string_to_attrflags(DeeString_STR(flagmask), &rules.alr_perm_mask))
+				goto err;
 		} else {
 			if (DeeObject_AsUInt16(flagmask, &rules.alr_perm_mask))
 				goto err;
 		}
 		if (flagval) {
 			if (DeeString_Check(flagval)) {
-				if
-					unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
-				goto err;
+				if unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
+					goto err;
 			} else {
 				if (DeeObject_AsUInt16(flagval, &rules.alr_perm_value))
 					goto err;
@@ -607,9 +592,8 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	} else if (flagval) {
 		rules.alr_perm_mask = (uint16_t)-1;
 		if (DeeString_Check(flagval)) {
-			if
-				unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
-			goto err;
+			if unlikely(string_to_attrflags(DeeString_STR(flagval), &rules.alr_perm_value))
+				goto err;
 		} else {
 			if (DeeObject_AsUInt16(flagval, &rules.alr_perm_value))
 				goto err;
@@ -620,15 +604,13 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	                                   &info,
 	                                   &rules);
 	if (lookup_error != 0) {
-		if
-			likely(lookup_error > 0)
-		return_none;
+		if likely(lookup_error > 0)
+			return_none;
 		goto err;
 	}
 	result = DeeObject_MALLOC(DeeAttributeObject);
-	if
-		unlikely(!result)
-	goto err_info;
+	if unlikely(!result)
+		goto err_info;
 	DeeObject_Init(result, &DeeAttribute_Type);
 	info.a_perm |= ATTR_NAMEOBJ;
 	memcpy(&result->a_info, &info, sizeof(struct attribute_info)); /* Inherit references */
@@ -780,9 +762,8 @@ save_attr(DeeObject *__restrict declarator,
 do_realloc:
 		new_vector = (DREF Attr **)Dee_TryRealloc(self->al_v, new_alloc *
 		                                                      sizeof(DREF Attr *));
-		if
-			unlikely(!new_vector)
-		{
+		if unlikely(!new_vector)
+			{
 			if (new_alloc != self->al_c + 1) {
 				new_alloc = self->al_c + 1;
 				goto do_realloc;
@@ -796,9 +777,8 @@ do_realloc:
 	}
 	/* Allocate a new attribute descriptor. */
 	new_attr = DeeObject_MALLOC(Attr);
-	if
-		unlikely(!new_attr)
-	goto err;
+	if unlikely(!new_attr)
+		goto err;
 	new_attr->a_name = attr_name;
 	if (perm & ATTR_NAMEOBJ)
 		Dee_Incref(COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str));
@@ -865,9 +845,8 @@ enumattr_init(EnumAttr *__restrict self,
 			DREF Attr **new_vector;
 			new_vector = (DREF Attr **)Dee_TryRealloc(list.al_v, list.al_c *
 			                                                     sizeof(DREF Attr *));
-			if
-				likely(new_vector)
-			list.al_v = new_vector;
+			if likely(new_vector)
+				list.al_v = new_vector;
 		}
 		/* Assign the attribute vector. */
 		self->ea_attrc = list.al_c;
@@ -923,9 +902,8 @@ PRIVATE DREF EnumAttrIter *DCALL
 enumattr_iter(EnumAttr *__restrict self) {
 	DREF EnumAttrIter *result;
 	result = DeeObject_MALLOC(EnumAttrIter);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &DeeEnumAttrIterator_Type);
 	enumattriter_setup(result, self);
 done:
@@ -1104,9 +1082,8 @@ enumattr_longjmp(DeeObject *__restrict declarator,
 again:
 	/* Create a new descriptor for the information passed. */
 	new_attribute = DeeObject_TRYMALLOC(Attr);
-	if
-		unlikely(!new_attribute)
-	goto err_collect; /* Error. */
+	if unlikely(!new_attribute)
+		goto err_collect; /* Error. */
 	new_attribute->a_info.a_decl     = declarator;
 	new_attribute->a_info.a_perm     = perm;
 	new_attribute->a_info.a_attrtype = attr_type;
@@ -1164,9 +1141,8 @@ enumattr_start(EnumAttrIter *__restrict self) {
                                     self->ei_seq->ea_obj,
                                     (denum_t)&enumattr_longjmp, self);
 	/* -1 indicates an internal error, rather than stop-enumeration (with is -2). */
-	if
-		unlikely(enum_error == -1)
-	{
+	if unlikely(enum_error == -1)
+		{
 		/* Discard all unyielded attributes and enter an error state. */
 		while (self->ei_bufpos != self->ei_buffer) {
 			--self->ei_bufpos;

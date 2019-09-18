@@ -66,9 +66,8 @@ ob_weakref_deep(WeakRef *__restrict self,
 	self->wr_del = NULL;
 	if (other->wr_del) {
 		self->wr_del = DeeObject_DeepCopy(other->wr_del);
-		if
-			unlikely(!self->wr_del)
-		goto err;
+		if unlikely(!self->wr_del)
+			goto err;
 	}
 	Dee_weakref_copy(&self->wr_ref, &other->wr_ref);
 	return 0;
@@ -90,9 +89,8 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
 		ASSERT(me->wr_del);
 		result = DeeObject_Call(me->wr_del, 1, (DeeObject **)&me);
 		Dee_Decref(me);
-		if
-			likely(result)
-		Dee_Decref(result);
+		if likely(result)
+			Dee_Decref(result);
 		else {
 			DeeError_Print("Unhandled exception in WeakRef callback",
 			               ERROR_PRINT_DOHANDLE);

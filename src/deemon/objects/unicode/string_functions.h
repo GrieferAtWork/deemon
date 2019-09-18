@@ -81,9 +81,8 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
                        void const *__restrict needle, size_t needle_length) {
 	uint8_t *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
 	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
 		if (memcmp(candidate, needle, needle_length) == 0)
@@ -189,9 +188,8 @@ LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_length,
                         void const *__restrict needle, size_t needle_length) {
 	void const *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= needle_length - 1, marker = *(uint8_t *)needle;
 	while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) {
 		if (MEMEQB(candidate, needle, needle_length))
@@ -210,9 +208,8 @@ LOCAL uint16_t *dee_memmemw(uint16_t const *__restrict haystack, size_t haystack
                             uint16_t const *__restrict needle, size_t needle_length) {
 	uint16_t const *candidate;
 	uint16_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= needle_length - 1, marker = *(uint16_t *)needle;
 	while ((candidate = memchrw(haystack, marker, haystack_length)) != NULL) {
 		if (MEMEQW(candidate, needle, needle_length))
@@ -229,9 +226,8 @@ LOCAL uint16_t *dee_memrmemw(uint16_t const *__restrict haystack, size_t haystac
                              uint16_t const *__restrict needle, size_t needle_length) {
 	uint16_t const *candidate;
 	uint16_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= needle_length - 1, marker = *(uint16_t *)needle;
 	while ((candidate = memrchrw(haystack, marker, haystack_length)) != NULL) {
 		if (MEMEQW(candidate, needle, needle_length))
@@ -246,9 +242,8 @@ LOCAL uint32_t *dee_memmeml(uint32_t const *__restrict haystack, size_t haystack
                             uint32_t const *__restrict needle, size_t needle_length) {
 	uint32_t const *candidate;
 	uint32_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= needle_length - 1, marker = *(uint32_t *)needle;
 	while ((candidate = memchrl(haystack, marker, haystack_length)) != NULL) {
 		if (MEMEQL(candidate, needle, needle_length))
@@ -265,9 +260,8 @@ LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystac
                              uint32_t const *__restrict needle, size_t needle_length) {
 	uint32_t const *candidate;
 	uint32_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= needle_length - 1, marker = *(uint32_t *)needle;
 	while ((candidate = memrchrl(haystack, marker, haystack_length)) != NULL) {
 		if (MEMEQL(candidate, needle, needle_length))
@@ -751,9 +745,8 @@ dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
                     uint8_t const *needle, size_t needle_length) {
 	uint8_t *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= needle_length - 1;
 	marker = (uint8_t)DeeUni_ToLower(*needle);
 	while ((candidate = dee_memasciicasechr(haystack, marker, haystack_length)) != NULL) {
@@ -771,17 +764,15 @@ dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
                      uint8_t const *needle, size_t needle_length) {
 	uint8_t *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	marker = (uint8_t)DeeUni_ToLower(*needle);
 	haystack_length -= needle_length - 1;
 	while ((candidate = dee_memasciicaserchr(haystack, marker, haystack_length)) != NULL) {
 		if (dee_memasciicaseeq(candidate, needle, needle_length))
 			return candidate;
-		if
-			unlikely(candidate == haystack)
-		break;
+		if unlikely(candidate == haystack)
+			break;
 		haystack_length = (size_t)(candidate - haystack);
 	}
 	return NULL;

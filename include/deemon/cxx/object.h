@@ -442,9 +442,8 @@ public:
 	cxx_iterator(obj_inherited iter)
 	    : it_iter(throw_if_null(iter))
 	    , it_next(DeeObject_IterNext(iter)) {
-		if
-			unlikely(!it_next)
-		{
+		if unlikely(!it_next)
+			{
 			Dee_Decref((DeeObject *)iter);
 			throw_last_deemon_exception();
 		}
@@ -457,9 +456,8 @@ public:
 	cxx_iterator(obj_nonnull_inherited iter) DEE_CXX_NOTHROW
 	    : it_iter(iter)
 	    , it_next(DeeObject_IterNext(iter)) {
-		if
-			unlikely(!it_next)
-		{
+		if unlikely(!it_next)
+			{
 			Dee_Decref((DeeObject *)iter);
 			throw_last_deemon_exception();
 		}
@@ -1427,9 +1425,8 @@ class Object: public detail::object_base {
 		void(del)() const {
 			DREF DeeObject *begin_ob = throw_if_null(DeeInt_NewSize(m_bgn)), *end_ob;
 			end_ob                   = DeeInt_NewSize(m_end);
-			if
-				unlikely(!end_ob)
-			{
+			if unlikely(!end_ob)
+				{
 				Dee_Decref(begin_ob);
 				throw_last_deemon_exception();
 			}

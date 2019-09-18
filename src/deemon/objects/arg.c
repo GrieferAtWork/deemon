@@ -61,9 +61,8 @@ PRIVATE DREF Kwds *DCALL kwds_ctor(void);
 PRIVATE int DCALL
 kwdsiter_ctor(KwdsIterator *__restrict self) {
 	self->ki_map = kwds_ctor();
-	if
-		unlikely(!self->ki_map)
-	return -1;
+	if unlikely(!self->ki_map)
+		return -1;
 	self->ki_iter = self->ki_map->kw_map;
 	self->ki_end  = self->ki_map->kw_map + self->ki_map->kw_mask + 1;
 	return 0;
@@ -146,9 +145,8 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 	}
 #endif /* !CONFIG_NO_THREADS */
 	value = DeeInt_NewSize(entry->ke_index);
-	if
-		unlikely(!value)
-	return NULL;
+	if unlikely(!value)
+		return NULL;
 	result = DeeTuple_Pack(2, entry->ke_name, value);
 	Dee_Decref_unlikely(value);
 	return result;
@@ -304,9 +302,8 @@ DeeKwds_NewWithHint(size_t num_items) {
 		init_mask = (init_mask << 1) | 1;
 	result = (DREF Kwds *)DeeObject_Calloc(COMPILER_OFFSETOF(Kwds, kw_map) +
 	                                       (init_mask + 1) * sizeof(struct kwds_entry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->kw_mask = init_mask;
 	DeeObject_Init(result, &DeeKwds_Type);
 done:
@@ -319,9 +316,8 @@ INTERN DREF Kwds *DCALL kwds_rehash(DREF Kwds *__restrict self) {
 	size_t new_mask = (self->kw_mask << 1) | 1;
 	result          = (DREF Kwds *)DeeObject_Calloc(COMPILER_OFFSETOF(Kwds, kw_map) +
                                            (new_mask + 1) * sizeof(struct kwds_entry));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->kw_mask = new_mask;
 	for (i = 0; i <= self->kw_mask; ++i) {
 		struct kwds_entry *src = &self->kw_map[i];
@@ -354,9 +350,8 @@ INTERN int(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
 	if (self->kw_size * 2 > self->kw_mask) {
 		/* Must allocate a larger map. */
 		self = kwds_rehash(self);
-		if
-			unlikely(!self)
-		return -1;
+		if unlikely(!self)
+			return -1;
 		*pself = (DREF DeeObject *)self;
 	}
 	ASSERT(self->kw_size < self->kw_mask);
@@ -367,9 +362,8 @@ INTERN int(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
 			break;
 	}
 	entry->ke_name = (DREF DeeStringObject *)DeeString_NewSized(name, name_len);
-	if
-		unlikely(!entry->ke_name)
-	return -1;
+	if unlikely(!entry->ke_name)
+		return -1;
 	entry->ke_name->s_hash = hash; /* Remember the hash! */
 	entry->ke_index        = self->kw_size++;
 	entry->ke_hash         = hash;
@@ -426,9 +420,8 @@ PRIVATE DREF Kwds *DCALL kwds_ctor(void) {
 	DREF Kwds *result;
 	result = (DREF Kwds *)DeeObject_Malloc(COMPILER_OFFSETOF(Kwds, kw_map) +
 	                                       (2 * sizeof(struct kwds_entry)));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->kw_map[0].ke_name = NULL;
 	result->kw_map[1].ke_name = NULL;
 	result->kw_mask           = 1;
@@ -490,9 +483,8 @@ PRIVATE DREF KwdsIterator *DCALL
 kwds_iter(Kwds *__restrict self) {
 	DREF KwdsIterator *result;
 	result = DeeObject_MALLOC(KwdsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ki_iter = self->kw_map;
 	result->ki_end  = self->kw_map + self->kw_mask + 1;
 	result->ki_map  = self;
@@ -660,9 +652,8 @@ STATIC_ASSERT(COMPILER_OFFSETOF(KwdsIterator, ki_map) ==
 PRIVATE int DCALL
 kmapiter_ctor(KmapIterator *__restrict self) {
 	self->ki_map = (DREF KwdsMapping *)DeeObject_NewDefault(&DeeKwdsMapping_Type);
-	if
-		unlikely(!self->ki_map)
-	goto err;
+	if unlikely(!self->ki_map)
+		goto err;
 	self->ki_iter = self->ki_map->kmo_kwds->kw_map;
 	self->ki_end  = self->ki_map->kmo_kwds->kw_map + self->ki_map->kmo_kwds->kw_mask + 1;
 	return 0;
@@ -740,9 +731,8 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	}
 #endif
 	rwlock_read(&self->ki_map->kmo_lock);
-	if
-		unlikely(!self->ki_map->kmo_argv)
-	{
+	if unlikely(!self->ki_map->kmo_argv)
+		{
 		rwlock_endread(&self->ki_map->kmo_lock);
 		return ITER_DONE;
 	}
@@ -782,9 +772,8 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 			break;
 	}
 #endif
-	if
-		unlikely(!ATOMIC_READ(self->ki_map->kmo_argv))
-	return ITER_DONE;
+	if unlikely(!ATOMIC_READ(self->ki_map->kmo_argv))
+		return ITER_DONE;
 	return_reference_((DeeObject *)entry->ke_name);
 }
 
@@ -818,9 +807,8 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 	}
 #endif
 	rwlock_read(&self->ki_map->kmo_lock);
-	if
-		unlikely(!self->ki_map->kmo_argv)
-	{
+	if unlikely(!self->ki_map->kmo_argv)
+		{
 		rwlock_endread(&self->ki_map->kmo_lock);
 		return ITER_DONE;
 	}
@@ -885,9 +873,8 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 PRIVATE int DCALL
 kmap_ctor(KwdsMapping *__restrict self) {
 	self->kmo_kwds = kwds_ctor();
-	if
-		unlikely(!self->kmo_kwds)
-	goto err;
+	if unlikely(!self->kmo_kwds)
+		goto err;
 	self->kmo_argv = NULL;
 	rwlock_init(&self->kmo_lock);
 	return 0;
@@ -902,9 +889,8 @@ kmap_copy(KwdsMapping *__restrict self,
 	count          = other->kmo_kwds->kw_size;
 	self->kmo_argv = (DREF DeeObject **)Dee_Malloc(count *
 	                                               sizeof(DREF DeeObject *));
-	if
-		unlikely(!self->kmo_argv)
-	goto err;
+	if unlikely(!self->kmo_argv)
+		goto err;
 	rwlock_read(&other->kmo_lock);
 	for (i = 0; i < count; ++i) {
 		self->kmo_argv[i] = other->kmo_argv[i];
@@ -926,9 +912,8 @@ kmap_deep(KwdsMapping *__restrict self,
 	count          = other->kmo_kwds->kw_size;
 	self->kmo_argv = (DREF DeeObject **)Dee_Malloc(count *
 	                                               sizeof(DREF DeeObject *));
-	if
-		unlikely(!self->kmo_argv)
-	goto err;
+	if unlikely(!self->kmo_argv)
+		goto err;
 	rwlock_read(&other->kmo_lock);
 	for (i = 0; i < count; ++i) {
 		self->kmo_argv[i] = other->kmo_argv[i];
@@ -970,9 +955,8 @@ kmap_init(KwdsMapping *__restrict self,
 	}
 	self->kmo_argv = (DREF DeeObject **)Dee_Malloc(DeeTuple_SIZE(args) *
 	                                               sizeof(DREF DeeObject *));
-	if
-		unlikely(!self->kmo_argv)
-	goto err;
+	if unlikely(!self->kmo_argv)
+		goto err;
 	for (i = 0; i < DeeTuple_SIZE(args); ++i) {
 		self->kmo_argv[i] = DeeTuple_GET(args, i);
 		Dee_Incref(self->kmo_argv[i]);
@@ -1024,9 +1008,8 @@ PRIVATE DREF KmapIterator *DCALL
 kmap_iter(KwdsMapping *__restrict self) {
 	DREF KmapIterator *result;
 	result = DeeObject_MALLOC(KmapIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ki_iter = self->kmo_kwds->kw_map;
 	result->ki_end  = self->kmo_kwds->kw_map + self->kmo_kwds->kw_mask + 1;
 	result->ki_map  = self;
@@ -1094,9 +1077,8 @@ kmap_nsi_getdefault(KwdsMapping *__restrict self,
 	if (index == (size_t)-1)
 		goto nope;
 	rwlock_read(&self->kmo_lock);
-	if
-		unlikely(!self->kmo_argv)
-	{
+	if unlikely(!self->kmo_argv)
+		{
 		rwlock_endread(&self->kmo_lock);
 		goto nope;
 	}
@@ -1218,9 +1200,8 @@ DeeKwdsMapping_New(/*Kwds*/ DeeObject *__restrict kwds,
 	DREF KwdsMapping *result;
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
 	result = DeeObject_MALLOC(KwdsMapping);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->kmo_argv = argv;
 	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
 	rwlock_init(&result->kmo_lock);
@@ -1250,13 +1231,11 @@ clear_argv:
 			do
 				argv = (DREF DeeObject **)Dee_TryMalloc(argc * sizeof(DREF DeeObject *));
 			while (unlikely(!argv) && Dee_TryCollectMemory(argc * sizeof(DREF DeeObject *)));
-			if
-				unlikely(!argv)
-			goto clear_argv;
+			if unlikely(!argv)
+				goto clear_argv;
 			rwlock_write(&me->kmo_lock);
-			if
-				unlikely(!me->kmo_argv)
-			{
+			if unlikely(!me->kmo_argv)
+				{
 				/* Shouldn't really happen, but is allowed by the specs... */
 				Dee_Free(argv);
 				argv = NULL;
@@ -1290,17 +1269,14 @@ DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if
-		unlikely(index == (size_t)-1)
-	return false;
+	if unlikely(index == (size_t)-1)
+		return false;
 #ifdef CONFIG_NO_THREADS
-	if
-		unlikely(!me->kmo_argv)
-	return false;
+	if unlikely(!me->kmo_argv)
+		return false;
 #else
-	if
-		unlikely(!ATOMIC_READ(me->kmo_argv))
-	return false;
+	if unlikely(!ATOMIC_READ(me->kmo_argv))
+		return false;
 #endif
 	return true;
 }
@@ -1315,17 +1291,14 @@ DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if
-		unlikely(index == (size_t)-1)
-	return false;
+	if unlikely(index == (size_t)-1)
+		return false;
 #ifdef CONFIG_NO_THREADS
-	if
-		unlikely(!me->kmo_argv)
-	return false;
+	if unlikely(!me->kmo_argv)
+		return false;
 #else
-	if
-		unlikely(!ATOMIC_READ(me->kmo_argv))
-	return false;
+	if unlikely(!ATOMIC_READ(me->kmo_argv))
+		return false;
 #endif
 	return true;
 }
@@ -1340,17 +1313,15 @@ DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if
-		unlikely(index == (size_t)-1)
-	{
+	if unlikely(index == (size_t)-1)
+		{
 no_such_key:
 		err_unknown_key_str((DeeObject *)self, name);
 		return NULL;
 	}
 	rwlock_read(&me->kmo_lock);
-	if
-		unlikely(!me->kmo_argv)
-	{
+	if unlikely(!me->kmo_argv)
+		{
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1372,18 +1343,16 @@ DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if
-		unlikely(index == (size_t)-1)
-	{
+	if unlikely(index == (size_t)-1)
+		{
 no_such_key:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
 	}
 	rwlock_read(&me->kmo_lock);
-	if
-		unlikely(!me->kmo_argv)
-	{
+	if unlikely(!me->kmo_argv)
+		{
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1405,17 +1374,15 @@ DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if
-		unlikely(index == (size_t)-1)
-	{
+	if unlikely(index == (size_t)-1)
+		{
 no_such_key:
 		err_unknown_key_str_len((DeeObject *)self, name, namesize);
 		return NULL;
 	}
 	rwlock_read(&me->kmo_lock);
-	if
-		unlikely(!me->kmo_argv)
-	{
+	if unlikely(!me->kmo_argv)
+		{
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1438,18 +1405,16 @@ DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me    = (KwdsMapping *)self;
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if
-		unlikely(index == (size_t)-1)
-	{
+	if unlikely(index == (size_t)-1)
+		{
 no_such_key:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
 	}
 	rwlock_read(&me->kmo_lock);
-	if
-		unlikely(!me->kmo_argv)
-	{
+	if unlikely(!me->kmo_argv)
+		{
 		rwlock_endread(&me->kmo_lock);
 		goto no_such_key;
 	}
@@ -1473,9 +1438,8 @@ DeeArg_GetKw(size_t *__restrict pargc,
 	if (DeeKwds_Check(kw)) {
 		size_t num_keywords;
 		num_keywords = DeeKwds_SIZE(kw);
-		if
-			unlikely(num_keywords > *pargc)
-		{
+		if unlikely(num_keywords > *pargc)
+			{
 			/* Argument list is too short of the given keywords */
 			err_keywords_bad_for_argc(*pargc, num_keywords);
 			return NULL;
@@ -1512,17 +1476,15 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);
-		if
-			unlikely(num_keywords > argc)
-		{
+		if unlikely(num_keywords > argc)
+			{
 			/* Argument list is too short of the given keywords */
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
 		kw_index = kwds_findstr((Kwds *)kw, name, hash);
-		if
-			unlikely(kw_index == (size_t)-1)
-		{
+		if unlikely(kw_index == (size_t)-1)
+			{
 			err_keywords_not_found(name);
 			return NULL;
 		}
@@ -1542,17 +1504,15 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);
-		if
-			unlikely(num_keywords > argc)
-		{
+		if unlikely(num_keywords > argc)
+			{
 			/* Argument list is too short of the given keywords */
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
 		kw_index = kwds_findstr_len((Kwds *)kw, name, namelen, hash);
-		if
-			unlikely(kw_index == (size_t)-1)
-		{
+		if unlikely(kw_index == (size_t)-1)
+			{
 			err_keywords_not_found(name);
 			return NULL;
 		}
@@ -1577,9 +1537,8 @@ return_def:
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);
-		if
-			unlikely(num_keywords > argc)
-		goto return_def;
+		if unlikely(num_keywords > argc)
+			goto return_def;
 		kw_index = kwds_findstr((Kwds *)kw, name, hash);
 		if (kw_index == (size_t)-1)
 			goto return_def;

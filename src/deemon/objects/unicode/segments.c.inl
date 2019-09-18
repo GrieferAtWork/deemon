@@ -272,9 +272,8 @@ PRIVATE DREF StringSegmentsIterator *DCALL
 sseg_iter(StringSegments *__restrict self) {
 	DREF StringSegmentsIterator *result;
 	result = DeeObject_MALLOC(StringSegmentsIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	Dee_Incref(self->s_str);
 	result->s_str   = self->s_str;
 	result->s_siz   = self->s_siz;
@@ -321,24 +320,20 @@ sseg_contains(StringSegments *__restrict self,
 
 		CASE_WIDTH_2BYTE:
 			my_str.cp16 = DeeString_As2Byte((DeeObject *)str);
-			if
-				unlikely(!my_str.cp16)
-			goto err;
+			if unlikely(!my_str.cp16)
+				goto err;
 			ot_str.cp16 = DeeString_As2Byte((DeeObject *)other);
-			if
-				unlikely(!ot_str.cp16)
-			goto err;
+			if unlikely(!ot_str.cp16)
+				goto err;
 			return_bool(MEMEQW(my_str.cp16 + last_index, ot_str.cp16, last_part));
 
 		CASE_WIDTH_4BYTE:
 			my_str.cp32 = DeeString_As4Byte((DeeObject *)str);
-			if
-				unlikely(!my_str.cp32)
-			goto err;
+			if unlikely(!my_str.cp32)
+				goto err;
 			ot_str.cp32 = DeeString_As4Byte((DeeObject *)other);
-			if
-				unlikely(!ot_str.cp32)
-			goto err;
+			if unlikely(!ot_str.cp32)
+				goto err;
 			return_bool(MEMEQL(my_str.cp32 + last_index, ot_str.cp32, last_part));
 		}
 	}
@@ -357,13 +352,11 @@ sseg_contains(StringSegments *__restrict self,
 
 	CASE_WIDTH_2BYTE:
 		my_str.cp16 = DeeString_As2Byte((DeeObject *)str);
-		if
-			unlikely(!my_str.cp16)
-		goto err;
+		if unlikely(!my_str.cp16)
+			goto err;
 		ot_str.cp16 = DeeString_As2Byte((DeeObject *)other);
-		if
-			unlikely(!ot_str.cp16)
-		goto err;
+		if unlikely(!ot_str.cp16)
+			goto err;
 		my_end.cp16 = my_str.cp16 + WSTR_LENGTH(my_str.cp16) - self->s_siz;
 		for (; my_str.cp16 <= my_end.cp16; my_str.cp16 += self->s_siz) {
 			if (MEMEQW(my_str.cp16, ot_str.cp16, self->s_siz))
@@ -373,13 +366,11 @@ sseg_contains(StringSegments *__restrict self,
 
 	CASE_WIDTH_4BYTE:
 		my_str.cp32 = DeeString_As4Byte((DeeObject *)str);
-		if
-			unlikely(!my_str.cp32)
-		goto err;
+		if unlikely(!my_str.cp32)
+			goto err;
 		ot_str.cp32 = DeeString_As4Byte((DeeObject *)other);
-		if
-			unlikely(!ot_str.cp32)
-		goto err;
+		if unlikely(!ot_str.cp32)
+			goto err;
 		my_end.cp32 = my_str.cp32 + WSTR_LENGTH(my_str.cp32) - self->s_siz;
 		for (; my_str.cp32 <= my_end.cp32; my_str.cp32 += self->s_siz) {
 			if (MEMEQL(my_str.cp32, ot_str.cp32, self->s_siz))
@@ -404,9 +395,8 @@ sseg_get(StringSegments *__restrict self,
 	length = DeeString_WLEN(self->s_str);
 	length += (self->s_siz - 1);
 	length /= self->s_siz;
-	if
-		unlikely(index > length)
-	goto err_index;
+	if unlikely(index > length)
+		goto err_index;
 	index *= self->s_siz;
 	return string_getsubstr(self->s_str, index, index + self->s_siz);
 err_index:
@@ -489,9 +479,8 @@ DeeString_Segments(String *__restrict self,
 	DREF StringSegments *result;
 	ASSERT(segment_size != 0);
 	result = DeeObject_MALLOC(StringSegments);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->s_str = (DREF DeeStringObject *)self;
 	Dee_Incref(self);
 	result->s_siz = segment_size;

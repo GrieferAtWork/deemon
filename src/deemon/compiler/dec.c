@@ -71,9 +71,8 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
                        void const *__restrict needle, size_t needle_length) {
 	uint8_t *candidate;
 	uint8_t marker;
-	if
-		unlikely(!needle_length || needle_length > haystack_length)
-	return NULL;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
 	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
 	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
 		if (memcmp(candidate, needle, needle_length) == 0)
@@ -134,26 +133,23 @@ INTERN uint8_t *DCALL dec_alloc(size_t n_bytes) {
 	struct dec_section *sec = dec_curr;
 	uint8_t *result         = sec->ds_iter;
 	size_t req_size, new_size;
-	if
-		likely(result + n_bytes <= sec->ds_end)
-	{
+	if likely(result + n_bytes <= sec->ds_end)
+		{
 		/* Fast path: the section already has enough buffer memory allocated. */
 		sec->ds_iter = result + n_bytes;
 		goto end;
 	}
 	new_size = (size_t)(sec->ds_iter - sec->ds_begin);
 	req_size = new_size + n_bytes;
-	if
-		unlikely(!new_size)
-	new_size = 32;
+	if unlikely(!new_size)
+		new_size = 32;
 	while (new_size < req_size)
 		new_size *= 2;
 do_realloc:
 	/* Allocate more memory. */
 	result = (uint8_t *)Dee_TryRealloc(sec->ds_begin, new_size);
-	if
-		unlikely(!result)
-	{
+	if unlikely(!result)
+		{
 		if (new_size != req_size) {
 			new_size = req_size;
 			goto do_realloc;
@@ -186,9 +182,8 @@ dec_allocstr(void const *__restrict data, size_t n_bytes) {
 	if (!result) {
 		/* Append a new block of data if no existing one could be found. */
 		result = dec_alloc(n_bytes);
-		if
-			likely(result)
-		memcpy(result, data, n_bytes);
+		if likely(result)
+			memcpy(result, data, n_bytes);
 	}
 	return result;
 }
@@ -256,27 +251,24 @@ INTERN uint8_t *DCALL dec_reuselocal(size_t n_bytes) {
  * before advancing the text pointer. */
 INTERN int (DCALL dec_putb)(uint8_t byte) {
 	uint8_t *buf = dec_alloc(1);
-	if
-		unlikely(!buf)
-	return -1;
+	if unlikely(!buf)
+		return -1;
 	*buf = byte;
 	return 0;
 }
 
 INTERN int (DCALL dec_putw)(uint16_t host_endian_word) {
 	uint8_t *buf = dec_alloc(2);
-	if
-		unlikely(!buf)
-	return -1;
+	if unlikely(!buf)
+		return -1;
 	UNALIGNED_SETLE16((uint16_t *)buf, host_endian_word);
 	return 0;
 }
 
 INTERN int (DCALL dec_putl)(uint32_t host_endian_dword) {
 	uint8_t *buf = dec_alloc(4);
-	if
-		unlikely(!buf)
-	return -1;
+	if unlikely(!buf)
+		return -1;
 	UNALIGNED_SETLE32((uint32_t *)buf, host_endian_dword);
 	return 0;
 }
@@ -334,9 +326,8 @@ INTERN int (DCALL dec_putieee754)(double value) {
 	/* XXX: Special decoding when `double' doesn't conform to ieee754 */
 	buffer.value = value;
 	dst          = dec_alloc(8);
-	if
-		unlikely(!dst)
-	return -1;
+	if unlikely(!dst)
+		return -1;
 	UNALIGNED_SETLE64((uint64_t *)dst, buffer.data);
 	return 0;
 }
@@ -349,9 +340,8 @@ dec_newsection_after(struct dec_section *__restrict sect) {
 	struct dec_section *result;
 	ASSERT(sect);
 	result = (struct dec_section *)Dee_Calloc(sizeof(struct dec_section));
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->ds_start.ds_sect = result;
 	/* Insert the new section after the one given. */
 	result->ds_next = sect->ds_next;
@@ -368,9 +358,8 @@ done:
  *       with an assertion error. */
 INTERN struct dec_sym *DCALL dec_newsym(void) {
 	struct dec_sym *result = sym_alloc();
-	if
-		likely(result)
-	{
+	if likely(result)
+		{
 		/* Keep track of the newly allocated symbol. */
 		result->ds_next        = current_dec.dw_symbols;
 		current_dec.dw_symbols = result;
@@ -396,9 +385,8 @@ INTERN struct dec_rel *DCALL dec_newrel(void) {
 do_realloc:
 		result = (struct dec_rel *)Dee_TryRealloc(sec->ds_relv, new_alloc *
 		                                                        sizeof(struct dec_rel));
-		if
-			unlikely(!result)
-		{
+		if unlikely(!result)
+			{
 			if (new_alloc != sec->ds_relc + 1) {
 				new_alloc = sec->ds_relc + 1;
 				goto do_realloc;
@@ -426,9 +414,8 @@ done:
  * make use of a symbol. */
 INTERN int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym) {
 	struct dec_rel *rel = dec_newrel();
-	if
-		unlikely(!rel)
-	return -1;
+	if unlikely(!rel)
+		return -1;
 	ASSERT(rel == dec_curr->ds_relv ||
 	       rel[-1].dr_addr <= dec_addr);
 	rel->dr_sym  = sym;
@@ -440,9 +427,8 @@ INTERN int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym) {
 INTERN int (DCALL dec_putrelat)(uint32_t addr, uint8_t type,
                                struct dec_sym *sym) {
 	struct dec_rel *rel = dec_newrel();
-	if
-		unlikely(!rel)
-	return -1;
+	if unlikely(!rel)
+		return -1;
 	ASSERT(rel == dec_curr->ds_relv ||
 	       rel[-1].dr_addr <= addr);
 	rel->dr_sym  = sym;
@@ -487,9 +473,8 @@ INTERN uint8_t(DCALL dec_link)(void) {
 			case DECREL_ABS16:
 				relval = UNALIGNED_GETLE16((uint16_t *)target) + (relsym->ds_addr +
 				                                                  relsym->ds_sect->ds_base);
-				if
-					unlikely(relval > UINT16_MAX)
-				goto rel_trunc;
+				if unlikely(relval > UINT16_MAX)
+					goto rel_trunc;
 				UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)relval);
 				break;
 
@@ -549,9 +534,8 @@ INTERN int(DCALL dec_write)(DeeObject *__restrict file_stream) {
 		dssize_t temp;
 		temp = DeeFile_WriteAll(file_stream, sec->ds_begin,
 		                        (size_t)(sec->ds_iter - sec->ds_begin));
-		if
-			unlikely(temp < 0)
-		goto err;
+		if unlikely(temp < 0)
+			goto err;
 	}
 	return 0;
 err:
@@ -638,21 +622,18 @@ INTERN int (DCALL dec_generate_and_link)(DeeModuleObject *__restrict module) {
 again:
 	/* Generate DEC data for the given module. */
 	result = dec_generate(module);
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 
 	/* Set base addresses for all DEC sections. */
 	dec_setbases();
 
 	/* Link all DEC data. */
-	if
-		unlikely(dec_link() != DECREL_NONE)
-	{
-		/* Relocation was truncated. - Set the `DEC_WRITE_FBIGFILE' flag and try again. */
-		if
-			unlikely(current_dec.dw_flags & DEC_WRITE_FBIGFILE)
+	if unlikely(dec_link() != DECREL_NONE)
 		{
+		/* Relocation was truncated. - Set the `DEC_WRITE_FBIGFILE' flag and try again. */
+		if unlikely(current_dec.dw_flags & DEC_WRITE_FBIGFILE)
+			{
 			/* This is bad... (and shouldn't actually happen!) */
 			DeeError_Throwf(&DeeError_NotImplemented,
 			                "DEC relocation was truncated");
@@ -730,9 +711,8 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 
 	/* Generate and link DEC data for the given module. */
 	result = dec_generate_and_link(module);
-	if
-		unlikely(result)
-	goto done;
+	if unlikely(result)
+		goto done;
 
 	/* Create the DEC output file only after we've generated
 	 * all dec data, so we don't have to concern ourselves
@@ -751,9 +731,8 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 			--dec_filelen;
 		}
 		dec_filename = DeeString_NewBuffer(dec_filelen + 4);
-		if
-			unlikely(!dec_filename)
-		goto err;
+		if unlikely(!dec_filename)
+			goto err;
 		{
 			size_t pathlen;
 			char *dst, *dec_filestart;
@@ -785,9 +764,8 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 		                         OPEN_FTRUNC | OPEN_FHIDDEN,
 		                         0644);
 		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
-		if
-			unlikely(!output_fp)
-		goto err_filename;
+		if unlikely(!output_fp)
+			goto err_filename;
 		/* Write all DEC data to the provided file stream. */
 		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		result = dec_write(output_fp);
@@ -799,9 +777,8 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 			/* Delete the DEC file, considering that we've failed to do write to it. */
 #ifdef CONFIG_HOST_WINDOWS
 			LPWSTR wname = (LPWSTR)DeeString_AsWide(dec_filename);
-			if
-				likely(wname)
-			DeleteFileW(wname);
+			if likely(wname)
+				DeleteFileW(wname);
 			else {
 				DeleteFileA(DeeString_STR(dec_filename));
 				if (!DeeError_Handled(ERROR_HANDLED_NORMAL))

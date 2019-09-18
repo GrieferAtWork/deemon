@@ -436,16 +436,14 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 			b -= a_value;
 			if (b <= DIGIT_MASK) {
 				z = DeeInt_Alloc(1);
-				if
-					unlikely(!z)
-				return NULL;
+				if unlikely(!z)
+					return NULL;
 				z->ob_digit[0] = (digit)b;
 				z->ob_size     = -1;
 			} else {
 				z = DeeInt_Alloc(2);
-				if
-					unlikely(!z)
-				return NULL;
+				if unlikely(!z)
+					return NULL;
 				z->ob_digit[0] = b & DIGIT_MASK;
 				z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
 				z->ob_size     = -2;
@@ -455,15 +453,13 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 		a_value -= b;
 		if (a_value <= DIGIT_MASK) {
 			z = DeeInt_Alloc(1);
-			if
-				unlikely(!z)
-			return NULL;
+			if unlikely(!z)
+				return NULL;
 			z->ob_digit[0] = (digit)a_value;
 		} else {
 			z = DeeInt_Alloc(2);
-			if
-				unlikely(!z)
-			return NULL;
+			if unlikely(!z)
+				return NULL;
 			z->ob_digit[0] = a_value & DIGIT_MASK;
 			z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
 		}
@@ -517,24 +513,21 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 			b -= (uint32_t)a_value;
 			if (b <= DIGIT_MASK) {
 				z = DeeInt_Alloc(1);
-				if
-					unlikely(!z)
-				return NULL;
+				if unlikely(!z)
+					return NULL;
 				z->ob_digit[0] = (digit)b;
 				z->ob_size     = -1;
 			} else if (b <= ((twodigits)1 << (DIGIT_BITS * 2)) - 1) {
 				z = DeeInt_Alloc(2);
-				if
-					unlikely(!z)
-				return NULL;
+				if unlikely(!z)
+					return NULL;
 				z->ob_digit[0] = b & DIGIT_MASK;
 				z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
 				z->ob_size     = -2;
 			} else {
 				z = DeeInt_Alloc(3);
-				if
-					unlikely(!z)
-				return NULL;
+				if unlikely(!z)
+					return NULL;
 				z->ob_digit[0] = b & DIGIT_MASK;
 				z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
 				z->ob_digit[2] = (b >> (DIGIT_BITS * 2)) & DIGIT_MASK;
@@ -545,22 +538,19 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 		a_value -= b;
 		if (a_value <= DIGIT_MASK) {
 			z = DeeInt_Alloc(1);
-			if
-				unlikely(!z)
-			return NULL;
+			if unlikely(!z)
+				return NULL;
 			z->ob_digit[0] = (digit)a_value;
 		} else if (a_value <= ((twodigits)1 << (DIGIT_BITS * 2)) - 1) {
 			z = DeeInt_Alloc(2);
-			if
-				unlikely(!z)
-			return NULL;
+			if unlikely(!z)
+				return NULL;
 			z->ob_digit[0] = a_value & DIGIT_MASK;
 			z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
 		} else {
 			z = DeeInt_Alloc(3);
-			if
-				unlikely(!z)
-			return NULL;
+			if unlikely(!z)
+				return NULL;
 			z->ob_digit[0] = a_value & DIGIT_MASK;
 			z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
 			z->ob_digit[2] = (a_value >> (DIGIT_BITS * 2)) & DIGIT_MASK;
@@ -642,9 +632,8 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
-		if
-			unlikely(a->ob_size == 0)
-		{
+		if unlikely(a->ob_size == 0)
+			{
 			*pself = (DeeIntObject *)&DeeInt_One;
 			Dee_Incref(&DeeInt_One);
 			Dee_DecrefDokill(a);
@@ -657,9 +646,8 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 				a->ob_digit[i] = 0;
 			}
 			z = DeeInt_Alloc(a->ob_size + 1);
-			if
-				unlikely(!z)
-			goto err;
+			if unlikely(!z)
+				goto err;
 			memset(z->ob_digit, 0, (size_t)a->ob_size * sizeof(digit));
 			z->ob_digit[(size_t)a->ob_size] = 1;
 		} else {
@@ -702,9 +690,8 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 		z = x_add_int(a, (digit)1);
 	}
 done:
-	if
-		unlikely(!z)
-	goto err;
+	if unlikely(!z)
+		goto err;
 	*pself = z; /* Inherit reference. */
 	Dee_Decref(a);
 done2:
@@ -719,9 +706,8 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
-		if
-			unlikely(a->ob_size == 0)
-		{
+		if unlikely(a->ob_size == 0)
+			{
 			*pself = (DeeIntObject *)&DeeInt_One;
 			Dee_Incref(&DeeInt_One);
 			Dee_DecrefDokill(a);
@@ -760,9 +746,8 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 				a->ob_digit[i] = 0;
 			}
 			z = DeeInt_Alloc(a_digits + 1);
-			if
-				unlikely(!z)
-			goto err;
+			if unlikely(!z)
+				goto err;
 			z->ob_size = -z->ob_size;
 			memset(z->ob_digit, 0, a_digits * sizeof(digit));
 			z->ob_digit[a_digits] = 1;
@@ -783,9 +768,8 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 		z = x_sub_int(a, (digit)1);
 	}
 done:
-	if
-		unlikely(!z)
-	goto err;
+	if unlikely(!z)
+		goto err;
 	*pself = z; /* Inherit reference. */
 	Dee_Decref(a);
 done2:
@@ -1028,9 +1012,8 @@ x_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	dssize_t i;
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t size_b = ABS(b->ob_size);
-	if
-		unlikely((z = DeeInt_Alloc(size_a + size_b)) == NULL)
-	return NULL;
+	if unlikely((z = DeeInt_Alloc(size_a + size_b)) == NULL)
+		return NULL;
 	memset(z->ob_digit, 0, z->ob_size * sizeof(digit));
 	if (a == b) {
 		for (i = 0; i < size_a; ++i) {
@@ -1089,12 +1072,10 @@ kmul_split(DeeIntObject *__restrict n, dssize_t size,
 	dssize_t const size_n = ABS(n->ob_size);
 	size_lo               = MIN(size_n, size);
 	size_hi               = size_n - size_lo;
-	if
-		unlikely((hi = DeeInt_Alloc(size_hi)) == NULL)
-	return -1;
-	if
-		unlikely((lo = DeeInt_Alloc(size_lo)) == NULL)
-	{
+	if unlikely((hi = DeeInt_Alloc(size_hi)) == NULL)
+		return -1;
+	if unlikely((lo = DeeInt_Alloc(size_lo)) == NULL)
+		{
 		Dee_Decref(hi);
 		return -1;
 	}
@@ -1352,15 +1333,13 @@ x_divrem(DeeIntObject *__restrict v1,
 	size_v = ABS(v1->ob_size);
 	size_w = ABS(w1->ob_size);
 	ASSERT(size_v >= size_w && size_w >= 2);
-	if
-		unlikely((v = DeeInt_Alloc(size_v + 1)) == NULL)
-	{
+	if unlikely((v = DeeInt_Alloc(size_v + 1)) == NULL)
+		{
 		*prem = NULL;
 		return NULL;
 	}
-	if
-		unlikely((w = DeeInt_Alloc(size_w)) == NULL)
-	{
+	if unlikely((w = DeeInt_Alloc(size_w)) == NULL)
+		{
 		Dee_Decref(v);
 		*prem = NULL;
 		return NULL;

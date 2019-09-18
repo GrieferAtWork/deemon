@@ -122,9 +122,8 @@ subrangeiterator_seq_get(SubRangeIterator *__restrict self) {
 	DREF DeeObject *base_seq;
 	size_t end;
 	base_seq = DeeObject_GetAttr(self->sr_iter, &str_seq);
-	if
-		unlikely(!base_seq)
-	goto err;
+	if unlikely(!base_seq)
+		goto err;
 	if (OVERFLOW_UADD(self->sr_start, self->sr_size, &end)) {
 		result = DeeSeq_GetRangeN(base_seq, self->sr_start);
 	} else {
@@ -166,9 +165,8 @@ subrangeiterator_copy(SubRangeIterator *__restrict self,
 	self->sr_start = other->sr_start;
 	self->sr_size  = READ_SIZE(other);
 	self->sr_iter  = DeeObject_Copy(other->sr_iter);
-	if
-		unlikely(!self->sr_iter)
-	goto err;
+	if unlikely(!self->sr_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -180,9 +178,8 @@ subrangeiterator_deep(SubRangeIterator *__restrict self,
 	self->sr_start = other->sr_start;
 	self->sr_size  = READ_SIZE(other);
 	self->sr_iter  = DeeObject_DeepCopy(other->sr_iter);
-	if
-		unlikely(!self->sr_iter)
-	goto err;
+	if unlikely(!self->sr_iter)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -256,9 +253,8 @@ subrange_visit(SubRange *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE DREF DeeObject *DCALL
 subrange_size(SubRange *__restrict self) {
 	size_t inner_size = DeeObject_Size(self->sr_seq);
-	if
-		unlikely(inner_size == (size_t)-1)
-	goto err;
+	if unlikely(inner_size == (size_t)-1)
+		goto err;
 	if (self->sr_start >= inner_size)
 		return_reference_(&DeeInt_Zero);
 	inner_size -= self->sr_start;
@@ -275,13 +271,11 @@ subrange_iter(SubRange *__restrict self) {
 	DREF DeeObject *iterator;
 	size_t begin_index;
 	iterator = DeeObject_IterSelf(self->sr_seq);
-	if
-		unlikely(!iterator)
-	goto err;
+	if unlikely(!iterator)
+		goto err;
 	result = DeeObject_MALLOC(SubRangeIterator);
-	if
-		unlikely(!result)
-	goto err_iterator;
+	if unlikely(!result)
+		goto err_iterator;
 	begin_index      = self->sr_start;
 	result->sr_start = begin_index;
 	result->sr_size  = self->sr_size;
@@ -290,9 +284,8 @@ subrange_iter(SubRange *__restrict self) {
 	while (begin_index--) {
 		DREF DeeObject *discard;
 		discard = DeeObject_IterNext(iterator);
-		if
-			unlikely(!ITER_ISOK(discard))
-		{
+		if unlikely(!ITER_ISOK(discard))
+			{
 			if (!discard)
 				goto err_iterator_r;
 			/* Empty iterator (the base iterator was exhausted during the discard-phase) */
@@ -340,9 +333,8 @@ err:
 PRIVATE size_t DCALL
 subrange_nsi_getsize(SubRange *__restrict self) {
 	size_t inner_size = DeeObject_Size(self->sr_seq);
-	if
-		unlikely(inner_size != (size_t)-1)
-	{
+	if unlikely(inner_size != (size_t)-1)
+		{
 		if (self->sr_start >= inner_size)
 			return 0;
 		inner_size -= self->sr_start;
@@ -355,9 +347,8 @@ subrange_nsi_getsize(SubRange *__restrict self) {
 PRIVATE size_t DCALL
 subrange_nsi_getsize_fast(SubRange *__restrict self) {
 	size_t inner_size = DeeFastSeq_GetSize(self->sr_seq);
-	if
-		unlikely(inner_size != (size_t)-1)
-	{
+	if unlikely(inner_size != (size_t)-1)
+		{
 		if (self->sr_start >= inner_size)
 			return 0;
 		inner_size -= self->sr_start;
@@ -471,9 +462,8 @@ PRIVATE int DCALL
 subrange_deep(SubRange *__restrict self,
               SubRange *__restrict other) {
 	self->sr_seq = DeeObject_DeepCopy(other->sr_seq);
-	if
-		unlikely(!self->sr_seq)
-	goto err;
+	if unlikely(!self->sr_seq)
+		goto err;
 	self->sr_start = other->sr_start;
 	self->sr_size  = other->sr_size;
 	return 0;
@@ -501,13 +491,11 @@ err:
 PRIVATE int DCALL
 subrange_bool(SubRange *__restrict self) {
 	size_t seqsize;
-	if
-		unlikely(!self->sr_size)
-	return 0;
+	if unlikely(!self->sr_size)
+		return 0;
 	seqsize = DeeObject_Size(self->sr_seq);
-	if
-		unlikely(seqsize == (size_t)-1)
-	goto err;
+	if unlikely(seqsize == (size_t)-1)
+		goto err;
 	return self->sr_start < seqsize;
 err:
 	return -1;
@@ -563,14 +551,12 @@ INTERN DREF DeeObject *DCALL
 DeeSeq_GetRange(DeeObject *__restrict self,
                 size_t begin, size_t end) {
 	DREF SubRange *result;
-	if
-		unlikely(begin >= end)
-	return_reference_(Dee_EmptySeq);
+	if unlikely(begin >= end)
+		return_reference_(Dee_EmptySeq);
 	/* Create a sub-range sequence. */
 	result = DeeObject_MALLOC(SubRange);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (DeeObject_InstanceOfExact(self, &SeqSubRange_Type)) {
 		SubRange *me = (SubRange *)self;
 		/* Special handling for recursion. */
@@ -597,9 +583,8 @@ DeeSeq_GetRangeN(DeeObject *__restrict self,
 		return_reference_(self);
 	/* Create a sub-range sequence. */
 	result = DeeObject_MALLOC(SubRangeN);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	if (DeeObject_InstanceOfExact(self, &SeqSubRangeN_Type)) {
 		SubRangeN *me = (SubRangeN *)self;
 		/* Special handling for recursion. */
@@ -630,9 +615,8 @@ subrangen_iter(SubRangeN *__restrict self) {
 	DREF DeeObject *result, *elem;
 	size_t offset;
 	result = DeeObject_IterSelf(self->sr_seq);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	offset = self->sr_start;
 	while (offset--) {
 		elem = DeeObject_IterNext(result);
@@ -656,9 +640,8 @@ PRIVATE size_t DCALL
 subrangen_nsi_getsize(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->sr_seq);
-	if
-		likely(result != (size_t)-1)
-	{
+	if likely(result != (size_t)-1)
+		{
 		if (result <= self->sr_start)
 			result = 0;
 		else {
@@ -672,9 +655,8 @@ PRIVATE size_t DCALL
 subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeFastSeq_GetSize(self->sr_seq);
-	if
-		likely(result != (size_t)-1)
-	{
+	if likely(result != (size_t)-1)
+		{
 		if (result <= self->sr_start)
 			result = 0;
 		else {
@@ -687,9 +669,8 @@ subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 PRIVATE DREF DeeObject *DCALL
 subrangen_size(SubRangeN *__restrict self) {
 	size_t result = subrangen_nsi_getsize(self);
-	if
-		unlikely(result == (size_t)-1)
-	goto err;
+	if unlikely(result == (size_t)-1)
+		goto err;
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -810,9 +791,8 @@ PRIVATE int DCALL
 subrangen_deep(SubRangeN *__restrict self,
                SubRangeN *__restrict other) {
 	self->sr_seq = DeeObject_DeepCopy(other->sr_seq);
-	if
-		unlikely(!self->sr_seq)
-	goto err;
+	if unlikely(!self->sr_seq)
+		goto err;
 	self->sr_start = other->sr_start;
 	return 0;
 err:
@@ -835,9 +815,8 @@ err:
 PRIVATE int DCALL
 subrangen_bool(SubRangeN *__restrict self) {
 	size_t seqsize = DeeObject_Size(self->sr_seq);
-	if
-		unlikely(seqsize == (size_t)-1)
-	goto err;
+	if unlikely(seqsize == (size_t)-1)
+		goto err;
 	return self->sr_start < seqsize;
 err:
 	return -1;

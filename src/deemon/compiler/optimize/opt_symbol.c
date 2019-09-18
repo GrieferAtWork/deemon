@@ -82,9 +82,8 @@ INTERN int(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stac
 		DeeModuleObject *symmod;
 		symmod = SYMBOL_EXTERN_MODULE(sym);
 		error  = DeeModule_RunInit((DeeObject *)symmod);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		if (error == 0) {
 			/* The module is not initialized. */
 			ASSERT(sym->s_extern.e_symbol->ss_index <
@@ -95,9 +94,8 @@ INTERN int(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stac
 			rwlock_endread(&symmod->mo_lock);
 			/* Make sure that the symbol value is allowed
 			 * to be expanded in constant expression. */
-			if
-				likely(symval)
-			{
+			if likely(symval)
+				{
 				int allowed;
 set_constant_expression:
 				allowed = allow_constexpr(symval);

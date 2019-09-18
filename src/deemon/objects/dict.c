@@ -65,9 +65,8 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
 	DREF Dict *result;
 	/* Allocate the Dict object. */
 	result = DeeGCObject_MALLOC(Dict);
-	if
-		unlikely(!result)
-	return NULL;
+	if unlikely(!result)
+		return NULL;
 	if (!num_keyitems) {
 		/* Special case: allocate an empty Dict. */
 		result->d_mask = 0;
@@ -82,15 +81,13 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict ke
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
 		result->d_elem = (struct dict_item *)Dee_TryCalloc((mask + 1) * sizeof(struct dict_item));
-		if
-			unlikely(!result->d_elem)
-		{
+		if unlikely(!result->d_elem)
+			{
 			/* Try one level less if that failed. */
 			mask           = min_mask;
 			result->d_elem = (struct dict_item *)Dee_Calloc((mask + 1) * sizeof(struct dict_item));
-			if
-				unlikely(!result->d_elem)
-			goto err_r;
+			if unlikely(!result->d_elem)
+				goto err_r;
 		}
 		/* Without any dummy items, these are identical. */
 		result->d_size = num_keyitems;
@@ -139,21 +136,18 @@ dict_insert_iterator(Dict *__restrict self,
 	DREF DeeObject *key_and_value[2];
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		/* Unpack the yielded element again. */
-		if
-			unlikely(DeeObject_Unpack(elem, 2, key_and_value))
-		goto err_elem;
+		if unlikely(DeeObject_Unpack(elem, 2, key_and_value))
+			goto err_elem;
 		Dee_Decref(elem);
-		if
-			unlikely(dict_setitem(self, key_and_value[0], key_and_value[1]))
-		goto err_item;
+		if unlikely(dict_setitem(self, key_and_value[0], key_and_value[1]))
+			goto err_item;
 		Dee_Decref(key_and_value[1]);
 		Dee_Decref(key_and_value[0]);
 		if (DeeThread_CheckInterrupt())
 			goto err;
 	}
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	return 0;
 err_item:
 	Dee_Decref(key_and_value[1]);
@@ -175,9 +169,8 @@ dict_init_iterator(Dict *__restrict self,
 	rwlock_init(&self->d_lock);
 #endif /* !CONFIG_NO_THREADS */
 	weakref_support_init(self);
-	if
-		unlikely(dict_insert_iterator(self, iterator))
-	{
+	if unlikely(dict_insert_iterator(self, iterator))
+		{
 		dict_fini(self);
 		return -1;
 	}
@@ -208,15 +201,13 @@ dict_init_sequence(Dict *__restrict self,
 #endif /* !CONFIG_NO_THREADS */
 		self->d_mask = src->rd_mask;
 		self->d_used = self->d_size = src->rd_size;
-		if
-			unlikely(!self->d_size)
-		self->d_elem = (struct dict_item *)empty_dict_items;
+		if unlikely(!self->d_size)
+			self->d_elem = (struct dict_item *)empty_dict_items;
 		else {
 			self->d_elem = (struct dict_item *)Dee_Malloc((src->rd_mask + 1) *
 			                                              sizeof(struct dict_item));
-			if
-				unlikely(!self->d_elem)
-			goto err;
+			if unlikely(!self->d_elem)
+				goto err;
 			memcpy(self->d_elem, src->rd_elem,
 			       (self->d_mask + 1) * sizeof(struct dict_item));
 			end = (iter = self->d_elem) + (self->d_mask + 1);
@@ -234,9 +225,8 @@ dict_init_sequence(Dict *__restrict self,
 	/* TODO: Fast-sequence support */
 
 	iterator = DeeObject_IterSelf(sequence);
-	if
-		unlikely(!iterator)
-	goto err;
+	if unlikely(!iterator)
+		goto err;
 	error = dict_init_iterator(self, iterator);
 	Dee_Decref(iterator);
 	return error;
@@ -248,12 +238,10 @@ PUBLIC DREF DeeObject *DCALL
 DeeDict_FromIterator(DeeObject *__restrict self) {
 	DREF Dict *result;
 	result = DeeGCObject_MALLOC(Dict);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(dict_init_iterator(result, self))
-	goto err_r;
+	if unlikely(!result)
+		goto done;
+	if unlikely(dict_init_iterator(result, self))
+		goto err_r;
 	DeeObject_Init(result, &DeeDict_Type);
 	DeeGC_Track((DeeObject *)result);
 done:
@@ -267,12 +255,10 @@ PUBLIC DREF DeeObject *DCALL
 DeeDict_FromSequence(DeeObject *__restrict self) {
 	DREF Dict *result;
 	result = DeeGCObject_MALLOC(Dict);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(dict_init_sequence(result, self))
-	goto err_r;
+	if unlikely(!result)
+		goto done;
+	if unlikely(dict_init_sequence(result, self))
+		goto err_r;
 	DeeObject_Init(result, &DeeDict_Type);
 	DeeGC_Track((DeeObject *)result);
 done:
@@ -311,9 +297,8 @@ again:
 	self->d_size = other->d_size;
 	if ((self->d_elem = other->d_elem) != empty_dict_items) {
 		self->d_elem = (struct dict_item *)Dee_TryMalloc((other->d_mask + 1) * sizeof(struct dict_item));
-		if
-			unlikely(!self->d_elem)
-		{
+		if unlikely(!self->d_elem)
+			{
 			DeeDict_LockEndRead(other);
 			if (Dee_CollectMemory((other->d_mask + 1) * sizeof(struct dict_item)))
 				goto again;
@@ -366,9 +351,8 @@ dict_deepload(Dict *__restrict self) {
 			break;
 		DeeDict_LockEndRead(self);
 		new_items = (Entry *)Dee_Realloc(items, item_count * sizeof(Entry));
-		if
-			unlikely(!new_items)
-		goto err_items;
+		if unlikely(!new_items)
+			goto err_items;
 		old_item_count = item_count;
 		items          = new_items;
 	}
@@ -398,9 +382,8 @@ dict_deepload(Dict *__restrict self) {
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
 	new_map = (struct dict_item *)Dee_Calloc((new_mask + 1) * sizeof(struct dict_item));
-	if
-		unlikely(!new_map)
-	goto err_items_v;
+	if unlikely(!new_map)
+		goto err_items_v;
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
 		dhash_t j, perturb, hash;
@@ -525,13 +508,11 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 	size_t new_mask = self->d_mask;
 	if (sizedir > 0) {
 		new_mask = (new_mask << 1) | 1;
-		if
-			unlikely(new_mask == 1)
-		new_mask = 16 - 1; /* Start out bigger than 2. */
+		if unlikely(new_mask == 1)
+			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if
-			unlikely(!self->d_used)
-		{
+		if unlikely(!self->d_used)
+			{
 			ASSERT(!self->d_used);
 			/* Special case: delete the vector. */
 			if (self->d_size) {
@@ -559,9 +540,8 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 	ASSERT(self->d_used < new_mask);
 	ASSERT(self->d_used <= self->d_size);
 	new_vector = (struct dict_item *)Dee_TryCalloc((new_mask + 1) * sizeof(struct dict_item));
-	if
-		unlikely(!new_vector)
-	return false;
+	if unlikely(!new_vector)
+		return false;
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
 	if (self->d_elem != empty_dict_items) {
@@ -932,9 +912,8 @@ again:
 		/* Write to the first dummy item. */
 		key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (key_len + 1) * sizeof(char));
-		if
-			unlikely(!key_ob)
-		goto collect_memory;
+		if unlikely(!key_ob)
+			goto collect_memory;
 		DeeObject_Init(key_ob, &DeeString_Type);
 		key_ob->s_data = NULL;
 		key_ob->s_hash = hash;
@@ -1031,9 +1010,8 @@ again:
 		/* Write to the first dummy item. */
 		key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (keylen + 1) * sizeof(char));
-		if
-			unlikely(!key_ob)
-		goto collect_memory;
+		if unlikely(!key_ob)
+			goto collect_memory;
 		DeeObject_Init(key_ob, &DeeString_Type);
 		key_ob->s_data = NULL;
 		key_ob->s_hash = hash;
@@ -1104,9 +1082,8 @@ restart:
 		Dee_Decref(item_key);
 		if (error > 0)
 			return_true; /* Found the item. */
-		if
-			unlikely(error < 0)
-		return NULL; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return NULL; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
 		if (self->d_elem != vector ||
@@ -1152,9 +1129,8 @@ restart:
 		if (error > 0)
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
-		if
-			unlikely(error < 0)
-		return NULL; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return NULL; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
 		if (self->d_elem != vector ||
@@ -1202,9 +1178,8 @@ restart:
 		if (error > 0)
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
-		if
-			unlikely(error < 0)
-		return NULL; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return NULL; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
 		if (((Dict *)self)->d_elem != vector ||
@@ -1248,9 +1223,8 @@ restart:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if
-			unlikely(error < 0)
-		return NULL; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return NULL; /* Error in compare operator. */
 		if (error > 0) {
 			DREF DeeObject *item_value;
 			/* Found it! */
@@ -1334,9 +1308,8 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if
-			unlikely(error < 0)
-		return -1; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return -1; /* Error in compare operator. */
 		if (error > 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing item. */
@@ -1446,9 +1419,8 @@ again:
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if
-			unlikely(error < 0)
-		return -1; /* Error in compare operator. */
+		if unlikely(error < 0)
+			return -1; /* Error in compare operator. */
 		if (error > 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing key. */
@@ -1557,9 +1529,8 @@ dict_nsi_setdefault(Dict *__restrict self,
 	DeeObject *old_value;
 	int error;
 	error = dict_setitem_ex(self, key, defl, SETITEM_SETNEW, &old_value);
-	if
-		unlikely(error < 0)
-	return NULL;
+	if unlikely(error < 0)
+		return NULL;
 	if (error == 1)
 		return old_value;
 	return_reference_(defl);
@@ -1580,9 +1551,8 @@ dict_nsi_insertnew(Dict *__restrict self,
                    DREF DeeObject **poldvalue) {
 	int error;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, poldvalue);
-	if
-		unlikely(error < 0)
-	return -1;
+	if unlikely(error < 0)
+		return -1;
 	return !error;
 }
 
@@ -1646,9 +1616,8 @@ again:
 		error = unicode_printer_printf(&p, "%s%r: %r", is_first ? "" : ", ", key, value);
 		Dee_Decref(value);
 		Dee_Decref(key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		is_first = false;
 		DeeDict_LockRead(self);
 		if (self->d_elem != vector ||
@@ -1656,8 +1625,7 @@ again:
 			goto restart;
 	}
 	DeeDict_LockEndRead(self);
-	if
-		unlikely((is_first ? unicode_printer_putascii(&p, '}')
+	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
 		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
 	goto err;
 	return unicode_printer_pack(&p);
@@ -1684,9 +1652,8 @@ PRIVATE int DCALL
 dict_init(Dict *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
 	DeeObject *seq;
-	if
-		unlikely(DeeArg_Unpack(argc, argv, "o:Dict", &seq))
-	goto err;
+	if unlikely(DeeArg_Unpack(argc, argv, "o:Dict", &seq))
+		goto err;
 	return dict_init_sequence(self, seq);
 err:
 	return -1;
@@ -1754,13 +1721,11 @@ dict_popsomething(DeeDictObject *__restrict self,
 		goto err;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
 	result = DeeTuple_NewUninitialized(2);
-	if
-		unlikely(!result)
-	goto err;
+	if unlikely(!result)
+		goto err;
 	DeeDict_LockWrite(self);
-	if
-		unlikely(!self->d_used)
-	{
+	if unlikely(!self->d_used)
+		{
 		DeeDict_LockEndWrite(self);
 		DeeTuple_FreeUninitialized(result);
 		err_empty_sequence((DeeObject *)self);
@@ -1793,9 +1758,8 @@ dict_setdefault(DeeDictObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
 		goto err;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error == 1)
 		return old_value;
 	return_reference_(value);
@@ -1811,9 +1775,8 @@ dict_setold(DeeDictObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
 		goto err;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETOLD, NULL);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error);
 err:
 	return NULL;
@@ -1827,9 +1790,8 @@ dict_setnew(DeeDictObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
 		goto err;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, NULL);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(!error);
 err:
 	return NULL;
@@ -1843,9 +1805,8 @@ dict_setold_ex(DeeDictObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
 		goto err;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETOLD, &old_value);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error == 1) {
 		result = DeeTuple_Pack(2, Dee_True, old_value);
 		Dee_Decref(old_value);
@@ -1865,9 +1826,8 @@ dict_setnew_ex(DeeDictObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
 		goto err;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error == 1) {
 		result = DeeTuple_Pack(2, Dee_False, old_value);
 		Dee_Decref(old_value);
@@ -1889,9 +1849,8 @@ dict_update(DeeDictObject *__restrict self,
 	iterator = DeeObject_IterSelf(items);
 	error    = dict_insert_iterator(self, iterator);
 	Dee_Decref(iterator);
-	if
-		unlikely(error)
-	goto err;
+	if unlikely(error)
+		goto err;
 	return_none;
 err:
 	return NULL;

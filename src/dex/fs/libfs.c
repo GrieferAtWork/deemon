@@ -79,9 +79,8 @@ fs_copyfile(DeeObject *__restrict existing_file,
 	dpos_t file_size = 0, total = 0;
 	/* Open a source and a destination stream. */
 	src = open_file_for_copy(existing_file, OPEN_FRDONLY, 0);
-	if
-		unlikely(!ITER_ISOK(src))
-	{
+	if unlikely(!ITER_ISOK(src))
+		{
 		if (src)
 			DeeError_Throwf(&DeeError_FileNotFound,
 			                "File `%k' could not be found",
@@ -89,9 +88,8 @@ fs_copyfile(DeeObject *__restrict existing_file,
 		goto err;
 	}
 	dst = open_file_for_copy(new_file, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FEXCL | OPEN_FTRUNC, 0644);
-	if
-		unlikely(!ITER_ISOK(dst))
-	{
+	if unlikely(!ITER_ISOK(dst))
+		{
 		if (dst)
 			DeeError_Throwf(&DeeError_FileExists,
 			                "File `%k' already exists",
@@ -99,15 +97,13 @@ fs_copyfile(DeeObject *__restrict existing_file,
 		goto err_src;
 	}
 	buffer = (uint8_t *)Dee_Malloc(COPYFILE_BUFSIZE);
-	if
-		unlikely(!buffer)
-	goto err_dst;
+	if unlikely(!buffer)
+		goto err_dst;
 	if (!DeeNone_Check(progress_callback)) {
 		/* Determine the full size of the source data stream. */
 		file_size = DeeFile_GetSize(src);
-		if
-			unlikely(file_size == (dpos_t)-1)
-		{
+		if unlikely(file_size == (dpos_t)-1)
+			{
 			/* Failed to determine stream size.
 			 * If this is because the source stream doesn't implement
 			 * seeking, ignore the error and proceed to copy file data. */
@@ -118,15 +114,13 @@ fs_copyfile(DeeObject *__restrict existing_file,
 	for (;;) {
 		dssize_t read_size;
 		read_size = DeeFile_Read(src, buffer, COPYFILE_BUFSIZE);
-		if
-			unlikely(read_size < 0)
-		goto err_dst;
+		if unlikely(read_size < 0)
+			goto err_dst;
 		if (!read_size)
 			break; /* EOF */
 		read_size = DeeFile_WriteAll(dst, buffer, (size_t)read_size);
-		if
-			unlikely(read_size < 0)
-		goto err_dst;
+		if unlikely(read_size < 0)
+			goto err_dst;
 		if (read_size != COPYFILE_BUFSIZE)
 			break; /* EOF */
 		total += read_size;
@@ -572,9 +566,8 @@ f_libfs_expand(size_t argc, DeeObject **__restrict argv) {
 			while (*iter) {
 				uint8_t id   = (uint8_t)*iter++;
 				uint16_t opt = GET_OPTION(id);
-				if
-					unlikely(opt == 0x8000)
-				goto err_invalid_opt;
+				if unlikely(opt == 0x8000)
+					goto err_invalid_opt;
 				options |= opt;
 			}
 		} else if (!DeeInt_Check(options_ob) && !env_ob) {

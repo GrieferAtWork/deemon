@@ -47,9 +47,8 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 	symbol = DeeModule_GetSymbolString(module,
 	                                   symbol_name,
 	                                   Dee_HashStr(symbol_name));
-	if
-		unlikely(!symbol)
-	return 1; /* Doesn't exists */
+	if unlikely(!symbol)
+		return 1; /* Doesn't exists */
 	if (symbol->ss_flags & MODSYM_FEXTERN) {
 		/* Follow external module symbols. */
 		ASSERT(symbol->ss_extern.ss_impid < module->mo_importc);
@@ -57,9 +56,8 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 	}
 	/* XXX: What if the calling module is the `operators' module? */
 	temp = asm_newmodule(module);
-	if
-		unlikely(temp < 0)
-	return -1;
+	if unlikely(temp < 0)
+		return -1;
 	*pmodid = (uint16_t)temp;
 	*psymid = symbol->ss_index;
 	return 0;
@@ -91,9 +89,8 @@ ast_gen_operator_func(struct ast *binding,
 	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(&str_operators,
 	                                                                inner_compiler_options,
 	                                                                false);
-	if
-		unlikely(!ITER_ISOK(operators_module))
-	{
+	if unlikely(!ITER_ISOK(operators_module))
+		{
 		if (operators_module) {
 			if (WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators))
 				goto err;
@@ -104,9 +101,8 @@ ast_gen_operator_func(struct ast *binding,
 	if (symbol_name) {
 		/* Lookup a symbol matching the operator's name. */
 		temp = bind_module_symbol(operators_module, &opmod_id, &opsym_id, symbol_name);
-		if
-			unlikely(temp != 0)
-		{
+		if unlikely(temp != 0)
+			{
 			if (temp < 0)
 				goto err;
 			if (WARNAST(ddi_ast, W_NO_OPERATOR_SYMBOL, symbol_name))
@@ -119,9 +115,8 @@ ast_gen_operator_func(struct ast *binding,
 			if (ast_genasm_one(binding, ASM_G_FPUSHRES))
 				goto err;
 			deemon_module_id = asm_newmodule(DeeModule_GetDeemon());
-			if
-				unlikely(deemon_module_id < 0)
-			goto err_module;
+			if unlikely(deemon_module_id < 0)
+				goto err_module;
 			if (asm_gcall_extern((uint16_t)deemon_module_id, id_InstanceMethod, 2))
 				goto err_module; /* InstanceMethod(<...> from operators,binding) */
 		}
@@ -138,18 +133,16 @@ generic_operator:
 		                          &opmod_id,
 		                          &opsym_id,
 		                          DeeString_STR(&str_operator));
-		if
-			unlikely(temp != 0)
-		{
+		if unlikely(temp != 0)
+			{
 			if (temp < 0)
 				goto err;
 			if (WARNAST(ddi_ast, W_NO_OPERATOR_FALLBACK_FUNCTION))
 				goto err_module;
 		}
 		deemon_module_id = asm_newmodule(DeeModule_GetDeemon());
-		if
-			unlikely(deemon_module_id < 0)
-		goto err_module;
+		if unlikely(deemon_module_id < 0)
+			goto err_module;
 		if (asm_gpush_extern(opmod_id, opsym_id))
 			goto err_module; /* operator from operators */
 		if (asm_gpush_u16(operator_name))

@@ -107,41 +107,35 @@ multiple_continue_at_iter:
 				Dee_Incref(cexpr);
 			} else if (self->a_flag == AST_FMULTIPLE_LIST) {
 				cexpr = DeeList_New();
-				if
-					unlikely(!cexpr)
-				goto err;
+				if unlikely(!cexpr)
+					goto err;
 			} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
 				cexpr = DeeHashSet_New();
-				if
-					unlikely(!cexpr)
-				goto err;
+				if unlikely(!cexpr)
+					goto err;
 			} else if (self->a_flag == AST_FMULTIPLE_DICT) {
 				cexpr = DeeDict_New();
-				if
-					unlikely(!cexpr)
-				goto err;
+				if unlikely(!cexpr)
+					goto err;
 			} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
 				cexpr = DeeRoDict_New();
-				if
-					unlikely(!cexpr)
-				goto err;
+				if unlikely(!cexpr)
+					goto err;
 			} else {
 				goto after_multiple_constexpr;
 			}
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = cexpr; /* Inherit reference */
 		} else if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
-			if
-				unlikely(ast_graft_onto(self, self->a_multiple.m_astv[self->a_multiple.m_astc - 1]))
-			goto err;
+			if unlikely(ast_graft_onto(self, self->a_multiple.m_astv[self->a_multiple.m_astc - 1]))
+				goto err;
 		} else if (self->a_flag == AST_FMULTIPLE_TUPLE ||
 		           self->a_flag == AST_FMULTIPLE_GENERIC) {
 			DREF DeeObject *new_tuple;
 			size_t i;
 			new_tuple = DeeTuple_NewUninitialized(self->a_multiple.m_astc);
-			if
-				unlikely(!new_tuple)
-			goto err;
+			if unlikely(!new_tuple)
+				goto err;
 			for (i = 0; i < self->a_multiple.m_astc; ++i) {
 				struct ast *branch = self->a_multiple.m_astv[i];
 				DeeObject *value   = branch->a_constexpr;
@@ -155,9 +149,8 @@ multiple_continue_at_iter:
 			DREF DeeObject *new_list;
 			size_t i;
 			new_list = DeeList_NewUninitialized(self->a_multiple.m_astc);
-			if
-				unlikely(!new_list)
-			goto err;
+			if unlikely(!new_list)
+				goto err;
 			for (i = 0; i < self->a_multiple.m_astc; ++i) {
 				struct ast *branch = self->a_multiple.m_astv[i];
 				DeeObject *value   = branch->a_constexpr;
@@ -172,9 +165,8 @@ multiple_continue_at_iter:
 			DREF DeeObject *new_set;
 			size_t i;
 			new_set = DeeHashSet_New();
-			if
-				unlikely(!new_set)
-			goto err;
+			if unlikely(!new_set)
+				goto err;
 			for (i = 0; i < self->a_multiple.m_astc; ++i) {
 				if (DeeHashSet_Insert(new_set, self->a_multiple.m_astv[i]->a_constexpr) < 0) {
 					Dee_Decref(new_set);
@@ -189,9 +181,8 @@ multiple_continue_at_iter:
 			DREF DeeObject *new_dict;
 			size_t i;
 			new_dict = DeeDict_New();
-			if
-				unlikely(!new_dict)
-			goto err;
+			if unlikely(!new_dict)
+				goto err;
 			for (i = 0; i < self->a_multiple.m_astc / 2; ++i) {
 				DeeObject *key  = self->a_multiple.m_astv[(i * 2) + 0]->a_constexpr;
 				DeeObject *item = self->a_multiple.m_astv[(i * 2) + 1]->a_constexpr;
@@ -209,9 +200,8 @@ multiple_continue_at_iter:
 			size_t i, length;
 			length   = self->a_multiple.m_astc / 2;
 			new_dict = DeeRoDict_NewWithHint(length);
-			if
-				unlikely(!new_dict)
-			goto err;
+			if unlikely(!new_dict)
+				goto err;
 			for (i = 0; i < length; ++i) {
 				DeeObject *key  = self->a_multiple.m_astv[(i * 2) + 0]->a_constexpr;
 				DeeObject *item = self->a_multiple.m_astv[(i * 2) + 1]->a_constexpr;
@@ -289,9 +279,8 @@ continue_inline_at_iter:
 				                                           (self->a_multiple.m_astc - 1 +
 				                                            inner->a_multiple.m_astc) *
 				                                           sizeof(DREF struct ast *));
-				if
-					unlikely(!new_astv)
-				goto err;
+				if unlikely(!new_astv)
+					goto err;
 				move_count              = (size_t)((end - iter) - 1);
 				iter                    = new_astv + (iter - self->a_multiple.m_astv);
 				self->a_multiple.m_astv = new_astv;
@@ -315,9 +304,8 @@ continue_inline_at_iter:
 				struct ast *expand = *iter;
 				size_t move_count;
 				vec = DeeSeq_AsHeapVector(inner->a_constexpr, &len);
-				if
-					unlikely(!vec)
-				{
+				if unlikely(!vec)
+					{
 					DeeError_Handled(ERROR_HANDLED_RESTORE);
 					continue;
 				}
@@ -333,9 +321,8 @@ continue_inline_at_iter:
 				new_astv = (DREF struct ast **)Dee_Realloc(self->a_multiple.m_astv,
 				                                           (self->a_multiple.m_astc - 1 + len) *
 				                                           sizeof(DREF struct ast *));
-				if
-					unlikely(!new_astv)
-				{
+				if unlikely(!new_astv)
+					{
 err_expand_vec:
 					while (len--)
 						Dee_Decref(vec[len]);
@@ -355,9 +342,8 @@ err_expand_vec:
 				for (i = 0; i < len; ++i) {
 					DREF struct ast *constant_ast;
 					constant_ast = ast_setddi(ast_constexpr(vec[i]), &inner->a_ddi);
-					if
-						unlikely(!constant_ast)
-					{
+					if unlikely(!constant_ast)
+						{
 						MEMMOVE_PTR(iter + i + len,
 						            iter + i + 1,
 						            move_count - i);

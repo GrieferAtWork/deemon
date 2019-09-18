@@ -68,9 +68,8 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 #endif /* AST_COMMA_ALLOWVARDECLS != LOOKUP_SYM_ALLOWDECL */
 	/* Allow explicit visibility modifiers when variable can be declared. */
 	if (mode & AST_COMMA_ALLOWVARDECLS) {
-		if
-			unlikely(JITLexer_ParseLookupMode(self, &lookup_mode))
-		goto err;
+		if unlikely(JITLexer_ParseLookupMode(self, &lookup_mode))
+			goto err;
 	}
 
 next_expr:
@@ -84,28 +83,24 @@ next_expr:
 		unsigned int symbol_mode      = lookup_mode;
 		if (self->jl_tok == KWD_final) {
 			class_flags |= TP_FFINAL;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if (unlikely(self->jl_tok != KWD_class) &&
 			    WARN(W_EXPECTED_CLASS_AFTER_FINAL))
 				goto err;
 		}
 		loc_here(&loc);
-		if
-			unlikely(yield() < 0)
-		goto err;
+		if unlikely(yield() < 0)
+			goto err;
 		if (self->jl_tok == KWD_class && !(class_flags & TP_FFINAL)) {
 			class_flags |= TP_FFINAL;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 		}
 		if (TPP_ISKEYWORD(self->jl_tok)) {
 			class_name = token.t_kwd;
-			if
-				unlikely(yield() < 0)
-			goto err;
+			if unlikely(yield() < 0)
+				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
 				if (current_scope == &current_rootscope->rs_scope.bs_scope)
@@ -118,9 +113,8 @@ next_expr:
 		                                     class_name != NULL,
 		                                     symbol_mode),
 		                     &loc);
-		if
-			unlikely(!current)
-		goto err;
+		if unlikely(!current)
+			goto err;
 		need_semi = false; /* Classes always have braces and don't need semicolons. */
 	} else
 #endif
@@ -277,9 +271,8 @@ err_var_symbol:
 			error = JITLValue_SetValue((JITLValue *)&var_symbol,
 			                           self->jl_context,
 			                           current);
-			if
-				unlikely(error)
-			goto err_currrent_var_symbol;
+			if unlikely(error)
+				goto err_currrent_var_symbol;
 		}
 		JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
@@ -359,9 +352,8 @@ err_currrent_var_symbol:
 #ifdef JIT_EVAL
 				LOAD_LVALUE(args, err_currrent_var_symbol);
 				merge = DeeTuple_PackSymbolic(1, args);
-				if
-					unlikely(!merge)
-				{
+				if unlikely(!merge)
+					{
 					Dee_Decref(args);
 					goto err_currrent_var_symbol;
 				}
@@ -390,9 +382,8 @@ err_currrent_var_symbol:
 					LOAD_LVALUE(args, err_currrent_var_symbol);
 				}
 				if (has_paren) {
-					if
-						likely(self->jl_tok == ')')
-					{
+					if likely(self->jl_tok == ')')
+						{
 						JITLexer_Yield(self);
 					} else {
 						syn_call_expected_rparen_after_call(self);
@@ -410,18 +401,16 @@ err_currrent_var_symbol:
 #ifdef JIT_EVAL
 			merge = DeeObject_CallTuple(current, args);
 			Dee_Decref(args);
-			if
-				unlikely(!merge)
-			goto err_currrent_var_symbol;
+			if unlikely(!merge)
+				goto err_currrent_var_symbol;
 			Dee_Decref(current);
 			current = merge;
 			/* Now store the generated value into the target symbol. */
 			error = JITLValue_SetValue((JITLValue *)&var_symbol,
 			                           self->jl_context,
 			                           current);
-			if
-				unlikely(error)
-			goto err_currrent_var_symbol;
+			if unlikely(error)
+				goto err_currrent_var_symbol;
 			JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
 		}
@@ -438,14 +427,12 @@ err_currrent_var_symbol:
 			error = JITLValueList_CopyObjects(&expr_comma,
 			                                  &expr_batch,
 			                                  self->jl_context);
-			if
-				unlikely(error)
-			goto err_current;
+			if unlikely(error)
+				goto err_current;
 		}
 		expand_count = objectlist_extendseq(&expr_batch, current);
-		if
-			unlikely(expand_count == (size_t)-1)
-		goto err_current;
+		if unlikely(expand_count == (size_t)-1)
+			goto err_current;
 		Dee_Decref(current);
 #endif /* JIT_EVAL */
 		goto continue_expression_after_dots;
@@ -467,15 +454,13 @@ err_currrent_var_symbol:
 		if (current == JIT_LVALUE) {
 			error = JITLValueList_Append(&expr_comma,
 			                             &self->jl_lvalue);
-			if
-				unlikely(error)
-			goto err_current;
+			if unlikely(error)
+				goto err_current;
 			self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 		} else {
 			error = JITLValueList_AppendRValue(&expr_comma, current);
-			if
-				unlikely(error)
-			goto err_current;
+			if unlikely(error)
+				goto err_current;
 			Dee_Decref(current);
 		}
 #endif /* JIT_EVAL */
@@ -496,26 +481,23 @@ continue_at_comma:
 				/* Evaluate to the last referenced expression. */
 				current = JITLValue_GetValue(&expr_comma.ll_list[expr_comma.ll_size - 1],
 				                             self->jl_context);
-				if
-					unlikely(!current)
-				goto err;
+				if unlikely(!current)
+					goto err;
 				objectlist_fini(&expr_batch);
 				JITLValueList_Fini(&expr_comma);
 			} else {
 				error = JITLValueList_CopyObjects(&expr_comma,
 				                                  &expr_batch,
 				                                  self->jl_context);
-				if
-					unlikely(error)
-				goto err;
+				if unlikely(error)
+					goto err;
 				JITLValueList_Fini(&expr_comma);
 				/* Pack the branch together to form a multi-branch AST. */
 				current = seq_type == &DeeTuple_Type
 				          ? objectlist_packtuple(&expr_batch)
 				          : objectlist_packlist(&expr_batch);
-				if
-					unlikely(!current)
-				goto err_nocomma;
+				if unlikely(!current)
+					goto err_nocomma;
 			}
 			/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 			 *          in an undefined state, but don't hold any real data. */
@@ -574,9 +556,8 @@ err_current_lvalue:
 				ASSERT(current_lvalue.lv_kind != JIT_LVALUE_NONE);
 				error = JITLValueList_Append(&expr_comma,
 				                             &current_lvalue);
-				if
-					unlikely(error)
-				{
+				if unlikely(error)
+					{
 err_store_source_current_lvalue:
 					Dee_Decref(store_source);
 					goto err_current_lvalue;
@@ -584,9 +565,8 @@ err_store_source_current_lvalue:
 			} else {
 				ASSERT(current_lvalue.lv_kind == JIT_LVALUE_NONE);
 				error = JITLValueList_AppendRValue(&expr_comma, current);
-				if
-					unlikely(error)
-				{
+				if unlikely(error)
+					{
 					/*err_store_source_current:*/
 					Dee_Decref(store_source);
 					goto err_current;
@@ -601,9 +581,8 @@ err_store_source_current_lvalue:
 				size_t i;
 				expand_count = expr_comma.ll_size;
 				buf          = objectlist_alloc(&expr_batch, expand_count);
-				if
-					unlikely(!buf)
-				{
+				if unlikely(!buf)
+					{
 err_store_source:
 					Dee_Decref(store_source);
 					goto err;
@@ -611,9 +590,8 @@ err_store_source:
 				error = DeeObject_Unpack(store_source,
 				                         expand_count,
 				                         buf);
-				if
-					unlikely(error)
-				{
+				if unlikely(error)
+					{
 					expr_batch.ol_size -= expand_count;
 					goto err_store_source;
 				}
@@ -623,9 +601,8 @@ err_store_source:
 					error = JITLValue_SetValue(&expr_comma.ll_list[i],
 					                           self->jl_context,
 					                           buf[i]);
-					if
-						unlikely(error)
-					goto err;
+					if unlikely(error)
+						goto err;
 				}
 
 continue_expression_after_dots:
@@ -650,21 +627,18 @@ continue_expression_after_dots:
 					                                     expr_batch.ol_list +
 					                                     expr_batch.ol_size -
 					                                     expand_count);
-					if
-						unlikely(!current)
-					goto err_nocomma;
+					if unlikely(!current)
+						goto err_nocomma;
 					expr_batch.ol_size -= expand_count;
 					objectlist_fini(&expr_batch);
 				} else if (seq_type == &DeeTuple_Type) {
 					current = objectlist_packtuple(&expr_batch);
-					if
-						unlikely(!current)
-					goto err_nocomma;
+					if unlikely(!current)
+						goto err_nocomma;
 				} else {
 					current = objectlist_packlist(&expr_batch);
-					if
-						unlikely(!current)
-					goto err_nocomma;
+					if unlikely(!current)
+						goto err_nocomma;
 				}
 				goto done_expression_nomerge;
 			}
@@ -683,18 +657,16 @@ continue_expression_after_dots:
 			error = JITLValueList_CopyObjects(&expr_comma,
 			                                  &expr_batch,
 			                                  self->jl_context);
-			if
-				unlikely(error)
-			goto err_store_source_current_lvalue;
+			if unlikely(error)
+				goto err_store_source_current_lvalue;
 			JITLValueList_Fini(&expr_comma);
 			JITLValueList_Init(&expr_comma);
 			/* Actually perform the store to the L-value. */
 			error = JITLValue_SetValue(&current_lvalue,
 			                           self->jl_context,
 			                           store_source);
-			if
-				unlikely(error)
-			goto err_store_source_current_lvalue;
+			if unlikely(error)
+				goto err_store_source_current_lvalue;
 			JITLValue_Fini(&current_lvalue);
 			current = store_source; /* Inherit reference. */
 #endif /* JIT_EVAL */
@@ -710,9 +682,8 @@ continue_expression_after_dots:
 				/* Append the generated expression to the batch. */
 #ifdef JIT_EVAL
 				error = objectlist_append(&expr_batch, current);
-				if
-					unlikely(error)
-				goto err_current;
+				if unlikely(error)
+					goto err_current;
 				Dee_Decref(current);
 set_multiple_and_continue_at_comma:
 #endif /* JIT_EVAL */
@@ -725,9 +696,8 @@ set_multiple_and_continue_at_comma:
 				if (JIT_MaybeExpressionBegin(smlex.jl_tok)) {
 #ifdef JIT_EVAL
 					error = objectlist_append(&expr_batch, current);
-					if
-						unlikely(error)
-					goto err_current;
+					if unlikely(error)
+						goto err_current;
 					Dee_Decref(current);
 set_multiple_and_continue_at_comma_continue:
 #endif /* JIT_EVAL */
@@ -752,16 +722,14 @@ done_expression:
 				error = JITLValueList_CopyObjects(&expr_comma,
 				                                  &expr_batch,
 				                                  self->jl_context);
-				if
-					unlikely(error)
-				goto err_current;
+				if unlikely(error)
+					goto err_current;
 			}
 			/* Append the remaining expression to the batch. */
 			LOAD_LVALUE(current, err);
 			error = objectlist_append(&expr_batch, current);
-			if
-				unlikely(error)
-			goto err_current;
+			if unlikely(error)
+				goto err_current;
 			Dee_Decref(current);
 			/* Pack the branch together to form a multi-branch AST. */
 			if (seq_type == &DeeTuple_Type) {
@@ -769,9 +737,8 @@ done_expression:
 			} else {
 				current = objectlist_packlist(&expr_batch);
 			}
-			if
-				unlikely(!current)
-			goto err;
+			if unlikely(!current)
+				goto err;
 			/* Free an remaining buffers. */
 			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 			JITLValueList_Fini(&expr_comma);
@@ -788,15 +755,13 @@ done_expression:
 			LOAD_LVALUE(current, err);
 			if (seq_type == &DeeTuple_Type) {
 				merge = DeeTuple_PackSymbolic(1, current);
-				if
-					unlikely(!merge)
-				goto err_current;
+				if unlikely(!merge)
+					goto err_current;
 				current = merge;
 			} else if (seq_type == &DeeList_Type) {
 				merge = DeeList_NewVectorInherited(1, (DREF DeeObject *const *)&current);
-				if
-					unlikely(!merge)
-				goto err_current;
+				if unlikely(!merge)
+					goto err_current;
 				current = merge;
 			}
 		}
@@ -809,9 +774,8 @@ done_expression_nomerge:
 			*pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi) {
 		/* Consume a `;' token as part of the expression. */
-		if
-			likely(self->jl_tok == ';')
-		{
+		if likely(self->jl_tok == ';')
+			{
 			JITLexer_Yield(self);
 		} else {
 			syn_expr_expected_semi_after_expr(self);
@@ -831,9 +795,8 @@ done_expression_nocurrent:
 			if (expr_comma.ll_size) {
 				current = JITLValue_GetValue(&expr_comma.ll_list[expr_comma.ll_size - 1],
 				                             self->jl_context);
-				if
-					unlikely(!current)
-				goto err;
+				if unlikely(!current)
+					goto err;
 			} else {
 				ASSERT(expr_batch.ol_size);
 				--expr_batch.ol_size;
@@ -847,9 +810,8 @@ done_expression_nocurrent:
 				error = JITLValueList_CopyObjects(&expr_comma,
 				                                  &expr_batch,
 				                                  self->jl_context);
-				if
-					unlikely(error)
-				goto err;
+				if unlikely(error)
+					goto err;
 				JITLValueList_Fini(&expr_comma);
 			}
 			/* Pack the branch together to form a multi-branch AST. */
@@ -858,9 +820,8 @@ done_expression_nocurrent:
 			} else {
 				current = objectlist_packlist(&expr_batch);
 			}
-			if
-				unlikely(!current)
-			goto err_nocomma;
+			if unlikely(!current)
+				goto err_nocomma;
 			/* Free an remaining buffers. */
 			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		}
@@ -879,9 +840,8 @@ done_expression_nocurrent:
 			Dee_Incref(Dee_EmptyTuple);
 		} else {
 			current = DeeList_New();
-			if
-				unlikely(!current)
-			goto err_noexpr;
+			if unlikely(!current)
+				goto err_noexpr;
 		}
 	}
 #endif /* JIT_EVAL */

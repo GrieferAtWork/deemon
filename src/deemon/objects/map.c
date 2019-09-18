@@ -50,9 +50,8 @@ typedef struct {
 PRIVATE int DCALL
 proxy_iterator_ctor(MapProxyIterator *__restrict self) {
 	self->mpi_iter = DeeObject_IterSelf(Dee_EmptyMapping);
-	if
-		unlikely(!self->mpi_iter)
-	return -1;
+	if unlikely(!self->mpi_iter)
+		return -1;
 	self->mpi_map = Dee_EmptyMapping;
 	Dee_Incref(self->mpi_map);
 	self->mpi_nsi = NULL;
@@ -66,9 +65,8 @@ proxy_iterator_init(MapProxyIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "|o:_mappingproxy.Iterator", &self->mpi_map))
 		return -1;
 	self->mpi_iter = DeeObject_IterSelf(self->mpi_map);
-	if
-		unlikely(!self->mpi_iter)
-	return -1;
+	if unlikely(!self->mpi_iter)
+		return -1;
 	Dee_Incref(self->mpi_map);
 	self->mpi_nsi = DeeType_NSI(Dee_TYPE(self->mpi_map));
 	if (self->mpi_nsi && self->mpi_nsi->nsi_class != TYPE_SEQX_CLASS_MAP)
@@ -80,9 +78,8 @@ PRIVATE int DCALL
 proxy_iterator_copy(MapProxyIterator *__restrict self,
                     MapProxyIterator *__restrict other) {
 	self->mpi_iter = DeeObject_Copy(other->mpi_iter);
-	if
-		unlikely(!self->mpi_iter)
-	return -1;
+	if unlikely(!self->mpi_iter)
+		return -1;
 	self->mpi_map = other->mpi_map;
 	Dee_Incref(self->mpi_map);
 	self->mpi_nsi = other->mpi_nsi;
@@ -117,14 +114,12 @@ proxy_iterator_next_key(MapProxyIterator *__restrict self) {
 	pair = DeeObject_IterNext(self->mpi_iter);
 	if (pair == ITER_DONE)
 		return ITER_DONE;
-	if
-		unlikely(!pair)
-	goto err;
+	if unlikely(!pair)
+		goto err;
 	error = DeeObject_Unpack(pair, 2, key_and_value);
 	Dee_Decref(pair);
-	if
-		unlikely(error)
-	goto err;
+	if unlikely(error)
+		goto err;
 	Dee_Decref(key_and_value[1]);
 	return key_and_value[0];
 err:
@@ -142,14 +137,12 @@ proxy_iterator_next_value(MapProxyIterator *__restrict self) {
 	pair = DeeObject_IterNext(self->mpi_iter);
 	if (pair == ITER_DONE)
 		return ITER_DONE;
-	if
-		unlikely(!pair)
-	goto err;
+	if unlikely(!pair)
+		goto err;
 	error = DeeObject_Unpack(pair, 2, key_and_value);
 	Dee_Decref(pair);
-	if
-		unlikely(error)
-	goto err;
+	if unlikely(error)
+		goto err;
 	Dee_Decref(key_and_value[0]);
 	return key_and_value[1];
 err:
@@ -401,13 +394,11 @@ PRIVATE DREF MapProxyIterator *DCALL
 proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type) {
 	DREF MapProxyIterator *result;
 	result = DeeObject_MALLOC(MapProxyIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mpi_iter = DeeObject_IterSelf(self->mp_map);
-	if
-		unlikely(!result->mpi_iter)
-	goto err_r;
+	if unlikely(!result->mpi_iter)
+		goto err_r;
 	result->mpi_nsi = DeeType_NSI(Dee_TYPE(self->mp_map));
 	if (result->mpi_nsi && result->mpi_nsi->nsi_class != TYPE_SEQX_CLASS_MAP)
 		result->mpi_nsi = NULL;
@@ -668,9 +659,8 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 INTDEF DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE DREF DeeObject *DCALL
 map_iterself(DeeObject *__restrict self) {
-	if
-		unlikely(Dee_TYPE(self) == &DeeMapping_Type)
-	{
+	if unlikely(Dee_TYPE(self) == &DeeMapping_Type)
+		{
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
 		return new_empty_sequence_iterator();
@@ -699,16 +689,14 @@ map_getitem(DeeObject *__restrict self, DeeObject *__restrict key) {
 	dhash_t key_hash = DeeObject_Hash(key);
 	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
 	iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
 		int unpack_error, temp;
 		unpack_error = DeeObject_Unpack(item, 2, item_key_and_value);
 		Dee_Decref(item);
-		if
-			unlikely(unpack_error)
-		goto err_iter;
+		if unlikely(unpack_error)
+			goto err_iter;
 		/* Check if this is the key we're looking for. */
 		if (DeeObject_Hash(item_key_and_value[0]) != key_hash) {
 			Dee_Decref(item_key_and_value[0]);
@@ -716,9 +704,8 @@ map_getitem(DeeObject *__restrict self, DeeObject *__restrict key) {
 			temp = DeeObject_CompareEq(key, item_key_and_value[0]);
 			Dee_Decref(item_key_and_value[0]);
 			if (temp != 0) {
-				if
-					unlikely(temp < 0)
-				Dee_Clear(item_key_and_value[1]);
+				if unlikely(temp < 0)
+					Dee_Clear(item_key_and_value[1]);
 				/* Found it! */
 				Dee_Decref(iter);
 				return item_key_and_value[1];
@@ -790,9 +777,8 @@ map_eq_impl(DeeObject *__restrict self,
 	DREF DeeObject *other_value;
 	/* Check of all keys from `self' have the same value within `other' */
 	iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		if (DeeObject_Unpack(elem, 2, pair))
 			goto err_elem;
@@ -802,9 +788,8 @@ map_eq_impl(DeeObject *__restrict self,
 		if (!ITER_ISOK(other_value)) {
 			Dee_Decref(pair[1]);
 			Dee_Decref(iter);
-			if
-				unlikely(!other_value)
-			goto err;
+			if unlikely(!other_value)
+				goto err;
 			return 0; /* Key wasn't provided by `other' */
 		}
 		temp = DeeObject_CompareEq(pair[1], other_value);
@@ -817,15 +802,13 @@ map_eq_impl(DeeObject *__restrict self,
 		/* Track the number of pairs found in `self' */
 		++pair_count;
 	}
-	if
-		unlikely(!elem)
-	goto err_iter;
+	if unlikely(!elem)
+		goto err_iter;
 	Dee_Decref(iter);
 	/* Make sure that `other' has the same size as `self' */
 	other_size = DeeObject_Size(other);
-	if
-		unlikely(other_size == (size_t)-1)
-	goto err;
+	if unlikely(other_size == (size_t)-1)
+		goto err;
 	return pair_count == other_size;
 err_elem:
 	Dee_Decref(elem);
@@ -840,9 +823,8 @@ PRIVATE DREF DeeObject *DCALL
 map_eq(DeeObject *__restrict self,
        DeeObject *__restrict other) {
 	int error = map_eq_impl(self, other);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(error);
 err:
 	return NULL;
@@ -852,9 +834,8 @@ PRIVATE DREF DeeObject *DCALL
 map_ne(DeeObject *__restrict self,
        DeeObject *__restrict other) {
 	int error = map_eq_impl(self, other);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	return_bool_(!error);
 err:
 	return NULL;
@@ -877,12 +858,10 @@ map_repr(DeeObject *__restrict self) {
 	DREF DeeObject *iterator = DeeObject_IterSelf(self);
 	DREF DeeObject *elem;
 	bool is_first = true;
-	if
-		unlikely(!iterator)
-	return NULL;
-	if
-		unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-	goto err1;
+	if unlikely(!iterator)
+		return NULL;
+	if unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
+		goto err1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		dssize_t print_error;
 		DREF DeeObject *elem_key_and_value[2];
@@ -901,11 +880,9 @@ map_repr(DeeObject *__restrict self) {
 		if (DeeThread_CheckInterrupt())
 			goto err1;
 	}
-	if
-		unlikely(!elem)
-	goto err1;
-	if
-		unlikely((is_first ? unicode_printer_putascii(&p, '}')
+	if unlikely(!elem)
+		goto err1;
+	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
 		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
 	goto err1;
 	Dee_Decref(iterator);
@@ -922,9 +899,8 @@ PRIVATE DREF MapProxy *DCALL
 map_new_proxy(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
 	DREF MapProxy *result;
 	result = DeeObject_MALLOC(MapProxy);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mp_map = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, result_type);
@@ -936,13 +912,11 @@ PRIVATE DREF MapProxyIterator *DCALL
 map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
 	DREF MapProxyIterator *result;
 	result = DeeObject_MALLOC(MapProxyIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	result->mpi_iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!result->mpi_iter)
-	goto err_r;
+	if unlikely(!result->mpi_iter)
+		goto err_r;
 	result->mpi_map = self;
 	Dee_Incref(self);
 	if (result_type != &DeeMappingItemsIterator_Type) {
@@ -1027,16 +1001,14 @@ mapiter_next_key(DeeObject *__restrict self,
 	} while (type_inherit_nsi(tp_self));
 	result = DeeObject_IterNext(iter);
 	if (!ITER_ISOK(result)) {
-		if
-			unlikely(!result)
-		goto err;
+		if unlikely(!result)
+			goto err;
 		return ITER_DONE;
 	}
 	error = DeeObject_Unpack(result, 2, content);
 	Dee_Decref(result);
-	if
-		unlikely(error)
-	goto err;
+	if unlikely(error)
+		goto err;
 	Dee_Decref(content[1]);
 	return content[0];
 err:
@@ -1047,9 +1019,8 @@ PRIVATE DREF DeeObject *DCALL
 DeeMap_GetFirst(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *result;
 	iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
 	if (result == ITER_DONE)
@@ -1066,15 +1037,13 @@ DeeMap_DelFirst(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *key;
 	int result;
 	iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	key = mapiter_next_key(self, iter);
 	Dee_Decref(iter);
 	if (!ITER_ISOK(key)) {
-		if
-			unlikely(!key)
-		goto err;
+		if unlikely(!key)
+			goto err;
 		goto err_empty;
 	}
 	result = DeeObject_DelItem(self, key);
@@ -1090,9 +1059,8 @@ PRIVATE DREF DeeObject *DCALL
 DeeMap_GetLast(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *result, *next;
 	iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	result = DeeObject_IterNext(iter);
 	if (!ITER_ISOK(result)) {
 		Dee_Decref(iter);
@@ -1110,9 +1078,8 @@ DeeMap_GetLast(DeeObject *__restrict self) {
 			goto err_result;
 	}
 	Dee_Decref(iter);
-	if
-		unlikely(!next)
-	Dee_Clear(result);
+	if unlikely(!next)
+		Dee_Clear(result);
 	return result;
 err_empty:
 	err_empty_sequence(self);
@@ -1128,9 +1095,8 @@ DeeMap_DelLast(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *key, *next;
 	int result;
 	iter = DeeObject_IterSelf(self);
-	if
-		unlikely(!iter)
-	goto err;
+	if unlikely(!iter)
+		goto err;
 	key = mapiter_next_key(self, iter);
 	if (!ITER_ISOK(key)) {
 		Dee_Decref(iter);
@@ -1146,9 +1112,8 @@ DeeMap_DelLast(DeeObject *__restrict self) {
 		key = next;
 	}
 	Dee_Decref(iter);
-	if
-		unlikely(!next)
-	{
+	if unlikely(!next)
+		{
 		Dee_Decref(key);
 		goto err;
 	}
@@ -1248,9 +1213,8 @@ map_frozen_get(DeeTypeObject *__restrict self) {
 	                            (DeeObject *)self,
 	                            &info,
 	                            &rules);
-	if
-		unlikely(error < 0)
-	goto err;
+	if unlikely(error < 0)
+		goto err;
 	if (error != 0)
 		return_reference_(&DeeRoDict_Type);
 	if (info.a_attrtype) {

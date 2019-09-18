@@ -89,14 +89,12 @@ usetiterator_next(USetIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
-			if
-				unlikely(item > end)
-			goto set_has_changed;
+			if unlikely(item > end)
+				goto set_has_changed;
 			goto iter_exhausted;
 		}
-		if
-			unlikely(item < set->s_elem)
-		goto set_has_changed;
+		if unlikely(item < set->s_elem)
+			goto set_has_changed;
 		/* Search for the next non-empty item. */
 		while (item != end && (!item->si_key || item->si_key == dummy))
 			++item;
@@ -132,9 +130,8 @@ iter_exhausted:
 INTERN int DCALL
 usetiterator_ctor(USetIterator *__restrict self) {
 	self->si_set = (USet *)DeeObject_NewDefault(&USet_Type);
-	if
-		unlikely(!self->si_set)
-	return -1;
+	if unlikely(!self->si_set)
+		return -1;
 	self->si_next = self->si_set->s_elem;
 	return 0;
 }
@@ -291,13 +288,11 @@ USet_InitIterator(USet *__restrict self,
 		int error;
 		error = USet_DoInsertNolock(self, elem);
 		Dee_Decref(elem);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 	}
-	if
-		unlikely(!elem)
-	goto err;
+	if unlikely(!elem)
+		goto err;
 	return 0;
 err:
 	USet_Fini(self);
@@ -312,9 +307,8 @@ USet_DoInsertUnlocked(USet *__restrict self,
 	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
 		struct uset_item *item = &self->s_elem[i & self->s_mask];
 		if (item->si_key) { /* Already in use */
-			if
-				likely(!USAME(item->si_key, ob))
-			continue;
+			if likely(!USAME(item->si_key, ob))
+				continue;
 			--self->s_size;
 			--self->s_used;
 			Dee_Decref_unlikely(ob);
@@ -336,13 +330,11 @@ uset_rehash(USet *__restrict self, int sizedir) {
 	size_t new_mask = self->s_mask;
 	if (sizedir > 0) {
 		new_mask = (new_mask << 1) | 1;
-		if
-			unlikely(new_mask == 1)
-		new_mask = 16 - 1; /* Start out bigger than 2. */
+		if unlikely(new_mask == 1)
+			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if
-			unlikely(!self->s_used)
-		{
+		if unlikely(!self->s_used)
+			{
 			ASSERT(!self->s_used);
 			/* Special case: delete the vector. */
 			if (self->s_size) {
@@ -371,9 +363,8 @@ uset_rehash(USet *__restrict self, int sizedir) {
 	ASSERT(self->s_used <= self->s_size);
 	new_vector = (struct uset_item *)Dee_TryCalloc((new_mask + 1) *
 	                                               sizeof(struct uset_item));
-	if
-		unlikely(!new_vector)
-	return false;
+	if unlikely(!new_vector)
+		return false;
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
 	ASSERT((self->s_elem == empty_set_items) == (self->s_used == 0));
 	ASSERT((self->s_elem == empty_set_items) == (self->s_size == 0));
@@ -605,9 +596,8 @@ again_hashset:
 			self->s_mask = src->s_mask;
 			self->s_elem = (struct uset_item *)Dee_TryCalloc((src->s_mask + 1) *
 			                                                 sizeof(struct uset_item));
-			if
-				unlikely(!self->s_elem)
-			{
+			if unlikely(!self->s_elem)
+				{
 				DeeHashSet_LockEndRead(src);
 				if (Dee_CollectMemory((self->s_mask + 1) * sizeof(struct uset_item)))
 					goto again_hashset;
@@ -632,9 +622,8 @@ again_hashset:
 		rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
 		self->s_used = self->s_size = src->rs_size;
-		if
-			unlikely(!self->s_size)
-		{
+		if unlikely(!self->s_size)
+			{
 			self->s_mask = 0;
 			self->s_elem = (struct uset_item *)empty_set_items;
 		} else {
@@ -642,9 +631,8 @@ again_hashset:
 			self->s_mask = src->rs_mask;
 			self->s_elem = (struct uset_item *)Dee_Calloc((src->rs_mask + 1) *
 			                                              sizeof(struct uset_item));
-			if
-				unlikely(!self->s_elem)
-			goto err;
+			if unlikely(!self->s_elem)
+				goto err;
 			for (i = 0; i <= src->rs_mask; ++i) {
 				DeeObject *key = src->rs_elem[i].si_key;
 				if (!key)
@@ -665,18 +653,16 @@ again_hashset:
 		rwlock_init(&self->s_lock);
 #endif /* !CONFIG_NO_THREADS */
 		self->s_used = self->s_size = src->rs_size;
-		if
-			unlikely(!self->s_size)
-		{
+		if unlikely(!self->s_size)
+			{
 			self->s_mask = 0;
 			self->s_elem = (struct uset_item *)empty_set_items;
 		} else {
 			self->s_mask = src->rs_mask;
 			self->s_elem = (struct uset_item *)Dee_Calloc((src->rs_mask + 1) *
 			                                              sizeof(struct uset_item));
-			if
-				unlikely(!self->s_elem)
-			goto err;
+			if unlikely(!self->s_elem)
+				goto err;
 			for (i = 0; i <= src->rs_mask; ++i) {
 				DeeObject *key = src->rs_elem[i].si_key;
 				if (!key)
@@ -702,15 +688,13 @@ again_hashset:
 			/* Prefer using a mask of one greater level to improve performance. */
 			mask         = (min_mask << 1) | 1;
 			self->s_elem = (struct uset_item *)Dee_TryCalloc((mask + 1) * sizeof(struct uset_item));
-			if
-				unlikely(!self->s_elem)
-			{
+			if unlikely(!self->s_elem)
+				{
 				/* Try one level less if that failed. */
 				mask         = min_mask;
 				self->s_elem = (struct uset_item *)Dee_Calloc((mask + 1) * sizeof(struct uset_item));
-				if
-					unlikely(!self->s_elem)
-				goto err;
+				if unlikely(!self->s_elem)
+					goto err;
 			}
 			/* Without any dummy items, these are identical. */
 			self->s_mask = mask;
@@ -719,19 +703,16 @@ again_hashset:
 			for (i = 0; i < fastsize; ++i) {
 				DREF DeeObject *key;
 				key = DeeFastSeq_GetItemUnbound(sequence, i);
-				if
-					unlikely(!ITER_ISOK(key))
-				{
-					if
-						unlikely(key == ITER_DONE)
-					goto err_elem;
+				if unlikely(!ITER_ISOK(key))
+					{
+					if unlikely(key == ITER_DONE)
+						goto err_elem;
 					ASSERT(self->s_size);
 					ASSERT(self->s_used);
 					--self->s_size;
 					--self->s_used;
-					if
-						unlikely(!self->s_size)
-					{
+					if unlikely(!self->s_size)
+						{
 						Dee_Free(self->s_elem);
 						self->s_elem = empty_set_items;
 						ASSERT(self->s_used == 0);
@@ -753,9 +734,8 @@ again_hashset:
 		int result;
 		DREF DeeObject *iterator;
 		iterator = DeeObject_IterSelf(sequence);
-		if
-			unlikely(!iterator)
-		goto err;
+		if unlikely(!iterator)
+			goto err;
 		result = USet_InitIterator(self, iterator);
 		Dee_Decref(iterator);
 		return result;
@@ -774,12 +754,10 @@ INTERN DREF USet *DCALL
 USet_FromSequence(DeeObject *__restrict sequence) {
 	DREF USet *result;
 	result = DeeGCObject_MALLOC(USet);
-	if
-		unlikely(!result)
-	goto done;
-	if
-		unlikely(USet_InitSequence(result, sequence))
-	goto err;
+	if unlikely(!result)
+		goto done;
+	if unlikely(USet_InitSequence(result, sequence))
+		goto err;
 	DeeObject_Init(result, &USet_Type);
 	DeeGC_Track((DeeObject *)result);
 done:
@@ -828,9 +806,8 @@ again:
 	if ((self->s_elem = other->s_elem) != empty_set_items) {
 		self->s_elem = (struct uset_item *)Dee_TryMalloc((other->s_mask + 1) *
 		                                                 sizeof(struct uset_item));
-		if
-			unlikely(!self->s_elem)
-		{
+		if unlikely(!self->s_elem)
+			{
 			DeeHashSet_LockEndRead(other);
 			if (Dee_CollectMemory((self->s_mask + 1) * sizeof(struct uset_item)))
 				goto again;
@@ -868,9 +845,8 @@ uset_deepload(USet *__restrict self) {
 			break;
 		DeeHashSet_LockEndRead(self);
 		new_items = (DREF DeeObject **)Dee_Realloc(items, item_count * sizeof(DREF DeeObject *));
-		if
-			unlikely(!new_items)
-		goto err_items;
+		if unlikely(!new_items)
+			goto err_items;
 		ols_item_count = item_count;
 		items          = new_items;
 	}
@@ -896,9 +872,8 @@ uset_deepload(USet *__restrict self) {
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
 	new_map = (struct uset_item *)Dee_Calloc((new_mask + 1) * sizeof(struct uset_item));
-	if
-		unlikely(!new_map)
-	goto err_items_v;
+	if unlikely(!new_map)
+		goto err_items_v;
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
 		dhash_t j, perturb;
@@ -906,9 +881,8 @@ uset_deepload(USet *__restrict self) {
 		for (;; j = DeeHashSet_HashNx(j, perturb), DeeHashSet_HashPt(perturb)) {
 			struct uset_item *item = &new_map[j & new_mask];
 			if (item->si_key) {
-				if
-					likely(!USAME(item->si_key, items[i]))
-				continue; /* Already in use */
+				if likely(!USAME(item->si_key, items[i]))
+					continue; /* Already in use */
 				goto next_item;
 			}
 			item->si_key = items[i]; /* Inherit reference. */
@@ -1002,9 +976,8 @@ PRIVATE DREF USetIterator *DCALL
 uset_iter(USet *__restrict self) {
 	DREF USetIterator *result;
 	result = DeeObject_MALLOC(USetIterator);
-	if
-		unlikely(!result)
-	goto done;
+	if unlikely(!result)
+		goto done;
 	DeeObject_Init(result, &USetIterator_Type);
 	result->si_set = self;
 	Dee_Incref(self);
@@ -1069,9 +1042,8 @@ again:
 		/* Print this item. */
 		error = unicode_printer_printf(&p, "%s%r", is_first ? "" : ", ", key);
 		Dee_Decref(key);
-		if
-			unlikely(error < 0)
-		goto err;
+		if unlikely(error < 0)
+			goto err;
 		is_first = false;
 		DeeHashSet_LockRead(self);
 		if (self->s_elem != vector ||
@@ -1106,9 +1078,8 @@ PRIVATE int DCALL
 uset_init(USet *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
 	DeeObject *seq;
-	if
-		unlikely(DeeArg_Unpack(argc, argv, "o:UniqueSet", &seq))
-	goto err;
+	if unlikely(DeeArg_Unpack(argc, argv, "o:UniqueSet", &seq))
+		goto err;
 	return USet_InitSequence(self, seq);
 err:
 	return -1;
@@ -1160,9 +1131,8 @@ uset_insert(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
 		goto err;
 	result = USet_Insert(self, item);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;
@@ -1198,9 +1168,8 @@ uset_update(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
 	result = DeeObject_Foreach(items, (dforeach_t)&insert_callback, self);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
@@ -1213,9 +1182,8 @@ uset_remove(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
 	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
 		goto err;
 	result = USet_Remove(self, item);
-	if
-		unlikely(result < 0)
-	goto err;
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
 err:
 	return NULL;
@@ -1441,9 +1409,8 @@ iter_exhausted:
 INTERN int DCALL
 urosetiterator_ctor(URoSetIterator *__restrict self) {
 	self->si_set = URoSet_New();
-	if
-		unlikely(!self->si_set)
-	return -1;
+	if unlikely(!self->si_set)
+		return -1;
 	self->si_next = self->si_set->rs_elem;
 	return 0;
 }
