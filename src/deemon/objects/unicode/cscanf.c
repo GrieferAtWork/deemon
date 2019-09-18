@@ -666,7 +666,7 @@ err_r:
 }
 
 PRIVATE struct type_seq ss_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & ss_iter
+	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ss_iter
 };
 
 PRIVATE struct type_member ss_members[] = {

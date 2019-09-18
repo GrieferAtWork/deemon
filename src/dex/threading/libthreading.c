@@ -44,8 +44,8 @@ PRIVATE struct dex_symbol symbols[] = {
 #ifndef CONFIG_NO_THREADS
 PRIVATE struct tls_callback_hooks orig_hooks;
 PRIVATE struct tls_callback_hooks thrd_hooks = {
-	/* .tc_fini  = */ (void(DCALL *)(void *__restrict)) & thread_tls_fini,
-	/* .tc_visit = */ (void(DCALL *)(void *__restrict, dvisit_t, void *)) & thread_tls_visit
+	/* .tc_fini  = */ (void(DCALL *)(void *__restrict))&thread_tls_fini,
+	/* .tc_visit = */ (void(DCALL *)(void *__restrict, dvisit_t, void *))&thread_tls_visit
 };
 
 PRIVATE int DCALL

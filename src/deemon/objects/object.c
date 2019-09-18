@@ -2320,7 +2320,7 @@ PRIVATE struct type_getset object_getsets[] = {
 	{ "super", &DeeSuper_Of, NULL, NULL,
 	  DOC("->?Dsuper\n"
 	      "Returns a view for the super-instance of @this object") },
-	{ "__itable__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & instance_get_itable, NULL, NULL,
+	{ "__itable__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instance_get_itable, NULL, NULL,
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the instance object "
 	      "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
@@ -3488,19 +3488,19 @@ type_is_superbase(DeeTypeObject *__restrict self, size_t argc,
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method type_methods[] = {
-	{ "baseof", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_baseof,
+	{ "baseof", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_baseof,
 	  DOC("(other:?DType)->?Dbool\n"
 	      "Returns :true if @this Type is equal to, or a base of @other\n"
 	      "If @other isn't a Type, :false is returned\n"
 	      "Using baseof, the behavior of ${x is y} can be approximated as:\n"
 	      ">print y.baseof(type(x)); // print x is y;"),
 	  TYPE_METHOD_FKWDS },
-	{ "derivedfrom", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_derivedfrom,
+	{ "derivedfrom", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_derivedfrom,
 	  DOC("(other:?DType)->?Dbool\n"
 	      "Returns :true if @this Type is equal to, or has been derived from @other\n"
 	      "If @other isn't a Type, :false is returned"),
 	  TYPE_METHOD_FKWDS },
-	{ "newinstance", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_newinstance,
+	{ "newinstance", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_newinstance,
 	  DOC("(fields!!)->\n"
 	      "Allocate a new instance of @this Type and initialize members in accordance ot @fields\n"
 	      ">class MyClass {\n"
@@ -3543,7 +3543,7 @@ PRIVATE struct type_method type_methods[] = {
 	      ">x.appendmember();\n"
 	      ">print repr x;          /* [10,20,30,\"abc\"] */"),
 	  TYPE_METHOD_FKWDS },
-	{ "hasattribute", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_hasattribute,
+	{ "hasattribute", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_hasattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Returns :true if this type, or one of its sub-classes defines an "
 	      "instance-attribute @name, and doesn't define any attribute-operators. "
@@ -3558,7 +3558,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "that function, this function will stop searching the base-classes of @this Type "
 	      "when one of that types implements one of the attribute operators."),
 	  TYPE_METHOD_FKWDS },
-	{ "hasprivateattribute", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_hasprivateattribute,
+	{ "hasprivateattribute", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_hasprivateattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Similar to #hasattribute, but only looks at attributes declared by "
 	      "@this Type, excluding any defined by a sub-class.\n"
@@ -3567,7 +3567,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "> return attribute.exists(this,name,\"ic\",\"ic\",this)\n"
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
-	{ "hasoperator", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_hasoperator,
+	{ "hasoperator", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_hasoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
 	      "Returns :true if instances of @this Type implement an operator @name, "
@@ -3644,7 +3644,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"leave\"|$\"leave\"|${operator leave(): none}\n"
 	      "}"),
 	  TYPE_METHOD_FKWDS },
-	{ "hasprivateoperator", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_hasprivateoperator,
+	{ "hasprivateoperator", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_hasprivateoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
 	      "Returns :true if instances of @this Type implement an operator @name, "
@@ -3656,7 +3656,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "inherited constructors\n"
 	      "For a list of operator names, see #hasoperator"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_getinstanceattr + 2, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_getinstanceattr,
+	{ meth_getinstanceattr + 2, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_getinstanceattr,
 	  DOC("(name:?Dstring)->\n"
 	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
@@ -3681,46 +3681,46 @@ PRIVATE struct type_method type_methods[] = {
 	      "one of the attribute-operators, but will continue search for matching attribute names, even "
 	      "if those attributes would normally have been overshadowed by attribute callbacks"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_callinstanceattr, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_callinstanceattr,
+	{ meth_callinstanceattr, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_callinstanceattr,
 	  DOC("(name:?Dstring,args!)->\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_hasinstanceattr + 2, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_hasinstanceattr,
+	{ meth_hasinstanceattr + 2, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_hasinstanceattr,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_boundinstanceattr + 4, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_boundinstanceattr,
+	{ meth_boundinstanceattr + 4, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_boundinstanceattr,
 	  DOC("(name:?Dstring,allow_missing=!t)->?Dbool\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_delinstanceattr + 2, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_delinstanceattr,
+	{ meth_delinstanceattr + 2, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_delinstanceattr,
 	  DOC("(name:?Dstring)\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_setinstanceattr + 3, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_setinstanceattr,
+	{ meth_setinstanceattr + 3, (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_setinstanceattr,
 	  DOC("(name:?Dstring,value)->\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	{ "same_or_derived_from", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
-	{ "derived_from", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_derivedfrom_not_same, DOC("(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
-	{ "is_vartype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_vartype, DOC("->?Dbool\nDeprecated alias for #__isvariable__") },
-	{ "is_heaptype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #__iscustom__") },
-	{ "is_gctype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_gctype, DOC("->?Dbool\nDeprecated alias for #__isgc__") },
-	{ "is_final", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
-	{ "is_class", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_class, DOC("->?Dbool\nDeprecated alias for #__isclass__") },
-	{ "is_complete", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
-	{ "is_classtype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	{ "is_pointer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
-	{ "is_lvalue", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
-	{ "is_structured", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
-	{ "is_struct", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_struct, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
-	{ "is_array", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_array, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
-	{ "is_foreign_function", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_foreign_function, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
-	{ "is_file", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_filetype, DOC("->?Dbool\nDeprecated alias for ${this is type(File from deemon)}") },
-	{ "is_super_base", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & type_is_superbase, DOC("->?Dbool\nDeprecated alias for ${this.__base__ !is bound}") },
+	{ "same_or_derived_from", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
+	{ "derived_from", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_derivedfrom_not_same, DOC("(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
+	{ "is_vartype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #__isvariable__") },
+	{ "is_heaptype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #__iscustom__") },
+	{ "is_gctype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #__isgc__") },
+	{ "is_final", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
+	{ "is_class", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_class, DOC("->?Dbool\nDeprecated alias for #__isclass__") },
+	{ "is_complete", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
+	{ "is_classtype", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	{ "is_pointer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
+	{ "is_lvalue", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
+	{ "is_structured", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
+	{ "is_struct", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_struct, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
+	{ "is_array", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_array, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
+	{ "is_foreign_function", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_foreign_function, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
+	{ "is_file", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_filetype, DOC("->?Dbool\nDeprecated alias for ${this is type(File from deemon)}") },
+	{ "is_super_base", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&type_is_superbase, DOC("->?Dbool\nDeprecated alias for ${this.__base__ !is bound}") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 	{ NULL }
@@ -4067,7 +4067,7 @@ INTDEF DREF DeeObject *DCALL type_get_operatorids(DeeTypeObject *__restrict self
 INTDEF DREF DeeObject *DCALL type_get_ctable(DeeTypeObject *__restrict self);
 
 PRIVATE struct type_getset type_getsets[] = {
-	TYPE_FEATURE_GETSETS { "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_isbuffer, NULL, NULL,
+	TYPE_FEATURE_GETSETS { "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_isbuffer, NULL, NULL,
 	                       DOC("->?Dbool\n"
 	                           "Returns :true if @this Type implements the buffer interface\n"
 	                           "The most prominent Type to which this applies is :Bytes, however other types also support this") },
@@ -4081,11 +4081,11 @@ PRIVATE struct type_getset type_getsets[] = {
 	 *    >>     }
 	 *    >> }
 	 */
-	{ "__class__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_classdesc, NULL, NULL,
+	{ "__class__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_classdesc, NULL, NULL,
 	  DOC("->?Ert:ClassDescriptor\n"
 	      "@throw AttributeError @this typeType is a user-defined class (s.a. #__isclass__)\n"
 	      "Returns the internal class-descriptor descriptor for a user-defined class") },
-	{ "__issingleton__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_issingleton, NULL, NULL,
+	{ "__issingleton__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_issingleton, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this Type describes a singleton object, requiring that @this type not be "
 	      "implementing a constructor (or be deleting its constructor), as well as not be one "
@@ -4093,18 +4093,18 @@ PRIVATE struct type_getset type_getsets[] = {
 	      "objects for C attributes, or be generated by the compiler, such as code objects, "
 	      "class descriptors or DDI information providers") },
 	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_module, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "Return the module used to define @this Type, or :none if the module cannot "
 	      "be determined, which may be the case if the Type doesn't have any defining "
 	      "features such as operators, or class/instance member functions") },
-	{ "__ctable__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_ctable, NULL, NULL,
+	{ "__ctable__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_ctable, NULL, NULL,
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the class object table, "
 	      "as referenced by :rt.ClassDescriptor.attribute.addr\n"
 	      "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"
 	      "The instance-attribute table can be accessed through :Object.__itable__") },
-	{ "__operators__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_operators, NULL, NULL,
+	{ "__operators__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_operators, NULL, NULL,
 	  DOC("->?S?X2?Dstring?Dint\n"
 	      "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
 	      "This member functions such that the member function #hasprivateoperator can be implemented as:\n"
@@ -4121,17 +4121,17 @@ PRIVATE struct type_getset type_getsets[] = {
 	      "For the purposes of human-readable information, is is recommended to use #__class__.operators "
 	      "when @this Type is a user-defined class (aka. #__isclass__ is :true), and only use #__operators__ "
 	      "for all other types that this doesn't apply to") },
-	{ "__operatorids__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_operatorids, NULL, NULL,
+	{ "__operatorids__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_operatorids, NULL, NULL,
 	  DOC("->?S?Dint\n"
 	      "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
 	      "This is the same as #__operators__, but the runtime will not attempt to translate known "
 	      "operator ids to their user-friendly name, as described in #hasoperator") },
-	{ "__instancesize__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_instancesize, NULL, NULL,
+	{ "__instancesize__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns the heap allocation size of instances of @this Type, or :none when @this Type cannot "
 	      "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "__instance_size__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_get_instancesize, NULL, NULL,
+	{ "__instance_size__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Deprecated alias for #__instancesize__") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
@@ -4227,8 +4227,8 @@ PRIVATE struct type_attr type_attr_data = {
 };
 
 PRIVATE struct type_gc type_gc_data = {
-	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict)) & type_clear,
-	/* .tp_pclear = */ (void(DCALL *)(DeeObject *__restrict, unsigned int)) & type_pclear,
+	/* .tp_clear  = */ (void(DCALL *)(DeeObject *__restrict))&type_clear,
+	/* .tp_pclear = */ (void(DCALL *)(DeeObject *__restrict, unsigned int))&type_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_CLASS
 };
 

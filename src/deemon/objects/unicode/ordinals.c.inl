@@ -153,7 +153,7 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 
 PRIVATE struct type_getset stringordinalsiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stringordinalsiter_seq,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stringordinalsiter_seq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:StringOrdinals") },

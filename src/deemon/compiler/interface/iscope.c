@@ -164,14 +164,14 @@ scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 
 
 PRIVATE struct type_getset scope_getsets[] = {
-	{ "base", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & scope_getbase, NULL, NULL,
+	{ "base", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&scope_getbase, NULL, NULL,
 	  DOC("->?ABaseScope?Ert:Compiler\n"
 	      "Returns the nearest base-scope that @this scope is apart of") },
-	{ "prev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & scope_getprev, NULL, NULL,
+	{ "prev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&scope_getprev, NULL, NULL,
 	  DOC("->?X2?AScope?Ert:Compiler?N\n"
 	      "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
 	{ "isclassscope",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & scope_get_isclassscope, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&scope_get_isclassscope, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this scope is a class-scope\n"
 	      "Class scopes are somewhat special, in that they prolong the full linkage of "

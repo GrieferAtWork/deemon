@@ -2108,9 +2108,9 @@ err:
 }
 
 PRIVATE struct type_getset user_getsets[] = {
-	{ "name", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & user_get_name, NULL, NULL, DeeUser_name_doc },
-	{ "home", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & user_get_home, NULL, NULL, DeeUser_home_doc },
-	{ "domain_np", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & user_get_domain, NULL, NULL,
+	{ "name", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&user_get_name, NULL, NULL, DeeUser_name_doc },
+	{ "home", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&user_get_home, NULL, NULL, DeeUser_home_doc },
+	{ "domain_np", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&user_get_domain, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "@throw SystemError Failed to retrieve the domain\n"
 	      "Returns the windows-specific name of the domain associated with @this user") },
@@ -2704,24 +2704,24 @@ stat_getnttype_np(DeeStatObject *__restrict self) {
 
 
 PRIVATE struct type_getset stat_getsets[] = {
-	{ "st_dev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
-	{ "st_ino", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
-	{ "st_mode", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
-	{ "st_nlink", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
-	{ "st_uid", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_uid, NULL, NULL, DeeStat_st_uid_doc },
-	{ "st_gid", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_gid, NULL, NULL, DeeStat_st_gid_doc },
-	{ "st_rdev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
-	{ "st_size", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_size, NULL, NULL, DeeStat_st_size_doc },
-	{ "st_atime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
-	{ "st_mtime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
-	{ "st_ctime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
+	{ "st_dev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
+	{ "st_ino", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
+	{ "st_mode", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
+	{ "st_nlink", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
+	{ "st_uid", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_uid, NULL, NULL, DeeStat_st_uid_doc },
+	{ "st_gid", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_gid, NULL, NULL, DeeStat_st_gid_doc },
+	{ "st_rdev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
+	{ "st_size", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
+	{ "st_atime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
+	{ "st_mtime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
+	{ "st_ctime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
 
 	/* Non-portable NT extensions. */
-	{ "ntattr_np", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_getntattr_np, NULL, NULL,
+	{ "ntattr_np", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_getntattr_np, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Non-portable windows extension for retrieveing the NT attributes of the stat-file, those "
 	      "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
-	{ "nttype_np", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & stat_getnttype_np, NULL, NULL,
+	{ "nttype_np", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_getnttype_np, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this stat-file does not contain valid NT-type information\n"
 	      "Non-portable windows extension for retrieveing the NT type of this stat-file, that "
@@ -2794,13 +2794,13 @@ stat_issock(DeeStatObject *__restrict self,
 }
 
 PRIVATE struct type_method stat_methods[] = {
-	{ "isdir", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_isdir, DeeStat_isdir_doc },
-	{ "ischr", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_ischr, DeeStat_ischr_doc },
-	{ "isblk", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_isblk, DeeStat_isblk_doc },
-	{ "isreg", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_isreg, DeeStat_isreg_doc },
-	{ "isfifo", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_isfifo, DeeStat_isfifo_doc },
-	{ "islnk", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_islnk, DeeStat_islnk_doc },
-	{ "issock", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & stat_issock, DeeStat_issock_doc },
+	{ "isdir", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isdir, DeeStat_isdir_doc },
+	{ "ischr", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_ischr, DeeStat_ischr_doc },
+	{ "isblk", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isblk, DeeStat_isblk_doc },
+	{ "isreg", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isreg, DeeStat_isreg_doc },
+	{ "isfifo", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isfifo, DeeStat_isfifo_doc },
+	{ "islnk", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_islnk, DeeStat_islnk_doc },
+	{ "issock", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_issock, DeeStat_issock_doc },
 	{ NULL }
 };
 

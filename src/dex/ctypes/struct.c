@@ -419,18 +419,18 @@ struct_type_typeof(DeeStructTypeObject *__restrict self,
 
 
 PRIVATE struct type_method struct_type_methods[] = {
-	{ "offsetof", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & struct_type_offsetof,
+	{ "offsetof", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&struct_type_offsetof,
 	  DOC("(field:?Dstring)->?Dint\n"
 	      "@throw AttributeError No field with the name @field exists\n"
 	      "Returns the offset of a given @field") },
-	{ "offsetafter", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & struct_type_offsetafter,
+	{ "offsetafter", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&struct_type_offsetafter,
 	  DOC("(field:?Dstring)->?Dint\n"
 	      "@throw AttributeError No field with the name @field exists\n"
 	      "Returns the offset after a given @field") },
 	/* TODO: containerof(pointer p, string field) -> lvalue
 	 *       Where type(p) === this.typeof(field).pointer,
 	 *       and type(return) == this.lvalue */
-	{ "typeof", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & struct_type_typeof,
+	{ "typeof", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&struct_type_typeof,
 	  DOC("(field:?Dstring)->structured_type\n"
 	      "@throw AttributeError No field with the name @field exists\n"
 	      "Returns the typing of given @field") },

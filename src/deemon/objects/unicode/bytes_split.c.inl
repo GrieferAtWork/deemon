@@ -476,7 +476,7 @@ bs_getsep(BytesSplit *__restrict self) {
 }
 
 PRIVATE struct type_getset bs_getsets[] = {
-	{ "__sep__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & bs_getsep, NULL, NULL,
+	{ "__sep__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bs_getsep, NULL, NULL,
 	  DOC("->?DBytes") },
 	{ NULL }
 };
@@ -832,7 +832,7 @@ blsi_getseq(BytesLineSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset blsi_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & blsi_getseq },
+	{ DeeString_STR(&str_seq), (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&blsi_getseq },
 	{ NULL }
 };
 

@@ -496,8 +496,8 @@ err:
 }
 
 PRIVATE struct type_with se_with = {
-	/* .tp_enter = */ (int(DCALL *)(DeeObject *__restrict)) & se_enter,
-	/* .tp_leave = */ (int(DCALL *)(DeeObject *__restrict)) & se_leave
+	/* .tp_enter = */ (int(DCALL *)(DeeObject *__restrict))&se_enter,
+	/* .tp_leave = */ (int(DCALL *)(DeeObject *__restrict))&se_leave
 };
 
 

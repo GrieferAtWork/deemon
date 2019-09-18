@@ -255,7 +255,7 @@ PRIVATE struct type_cmp refaiter_cmp = {
 
 PRIVATE struct type_getset refaiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & refaiter_getseq,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&refaiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:ReFindAll") },
@@ -353,7 +353,7 @@ relaiter_getseq(ReSequenceIterator *__restrict self) {
 
 PRIVATE struct type_getset relaiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & relaiter_getseq,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&relaiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:ReLocateAll") },
@@ -491,7 +491,7 @@ respiter_getseq(ReSequenceIterator *__restrict self) {
 
 PRIVATE struct type_getset respiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & respiter_getseq,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&respiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:ReSplit") },

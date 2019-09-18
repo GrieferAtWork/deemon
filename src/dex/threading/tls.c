@@ -634,9 +634,9 @@ PRIVATE int DCALL tls_bool(Tls *__restrict self) {
 
 
 PRIVATE struct type_getset tls_getsets[] = {
-	{ "value", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & tls_getvalue,
-	  (int(DCALL *)(DeeObject *__restrict)) & tls_delvalue,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & tls_setvalue,
+	{ "value", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&tls_getvalue,
+	  (int(DCALL *)(DeeObject *__restrict))&tls_delvalue,
+	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&tls_setvalue,
 	  DOC("@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
 	      "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
 	      "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
@@ -697,33 +697,33 @@ tls_set(Tls *__restrict self,
 
 PRIVATE struct type_method tls_methods[] = {
 	{ "get",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & tls_get,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tls_get,
 	  DOC("->\n"
 	      "@throw UnboundAttribute The TLS variable isn't bound\n"
 	      "Return the stored object. Same as ${this.item}") },
 	{ "delete",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & tls_delete,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tls_delete,
 	  DOC("->?Dbool\n"
 	      "Unbind the TLS variable slot, returning :false if "
 	      "it had already been unbound and :true otherwise") },
 	{ "set",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & tls_set,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tls_set,
 	  DOC("(ob)\n"
 	      "Set the TLS variable. Same as ${this.item = ob}") },
 	{ "xch",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & tls_xch,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tls_xch,
 	  DOC("(ob)->\n"
 	      "@throw AttributeError The TLS variable had already been unbound\n"
 	      "Exchange the stored TLS value with @ob and return the old value") },
 	{ "pop",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & tls_pop,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tls_pop,
 	  DOC("->\n"
 	      "@throw AttributeError The TLS variable had already been unbound\n"
 	      "Unbind the stored TLS object and return the previously stored object") },
 
 	/* Deprecated functions. */
 	{ "exchange",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & tls_xch,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tls_xch,
 	  DOC("(ob)->\n"
 	      "Deprecated alias for #xch") },
 	{ NULL }

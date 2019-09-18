@@ -130,8 +130,8 @@ err:
 }
 
 PRIVATE struct type_cmp attr_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict)) & attr_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & attr_eq
+	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&attr_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&attr_eq
 };
 
 PRIVATE struct type_member attr_members[] = {
@@ -323,54 +323,54 @@ attr_repr(Attr *__restrict self) {
 
 
 PRIVATE struct type_getset attr_getsets[] = {
-	{ "name", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_get_name, NULL, NULL,
+	{ "name", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_get_name, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "The name of this Attribute") },
-	{ "doc", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_get_doc, NULL, NULL,
+	{ "doc", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The documentation string of this Attribute, or :none when no documentation is present") },
-	{ "canget", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_canget, NULL, NULL,
+	{ "canget", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the Attribute has a way of being read from") },
-	{ "candel", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_candel, NULL, NULL,
+	{ "candel", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_candel, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the Attribute has a way of being deleted") },
-	{ "canset", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_canset, NULL, NULL,
+	{ "canset", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the Attribute has a way of being written to") },
-	{ "cancall", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_cancall, NULL, NULL,
+	{ "cancall", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_cancall, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if the Attribute is intended to be called as a function. "
 	      "Note that this feature alone does not meant that the Attribute really can, or "
 	      "cannot be called, only that calling it as a function might be the inteded use.") },
-	{ "isprivate", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_isprivate, NULL, NULL,
+	{ "isprivate", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_isprivate, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the Attribute is considered to be private\n"
 	      "Private attributes only appear in user-classes, prohibiting access to only thiscall "
 	      "functions with a this-argument that is an instance of the declaring class.") },
-	{ "isproperty", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_isproperty, NULL, NULL,
+	{ "isproperty", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_isproperty, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the Attribute is property-like, meaning that access by "
 	      "reading, deletion, or writing causes unpredictable side-effects") },
-	{ "iswrapper", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_iswrapper, NULL, NULL,
+	{ "iswrapper", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_iswrapper, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the Attribute is accessed from the implementing type, which "
 	      "exposes it as a wrapper for an instance member (e.g. ${string.find} is an unbound "
 	      "wrapper (aka. ${Attribute(string,\"find\").iswrapper == true}) for the instance function, "
 	      "member or property that would be bound in ${\"foo\".find} (aka. "
 	      "${Attribute(\"foo\",\"find\").iswrapper == false}))") },
-	{ "isinstance", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_isinstance, NULL, NULL,
+	{ "isinstance", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_isinstance, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if accessing this Attribute requires an instance of the declaring object "
 	      "#decl, rather than being an Attribute of the declaring object #decl itself.\n"
 	      "Note that practically all attributes, such as member functions, are available as both "
 	      "instance and class Attribute, while in other cases an Attribute will evaluate to different "
 	      "objects depending on being invoked on a class or an instance (such as :Dict.keys)") },
-	{ "isclass", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_isclass, NULL, NULL,
+	{ "isclass", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_isclass, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if access to this Attribute must be made though the declaring type #decl.\n"
 	      "To test if an Attribute can only be accessed through an instance, use #isinstance instead") },
-	{ "flags", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & attr_getflags, NULL, NULL,
+	{ "flags", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&attr_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Return a set of characters descripting the flags of @this Attribute:\n"
 	      "%{table Character|Mnemonic|Field|Flag description\n"
@@ -622,7 +622,7 @@ err:
 }
 
 PRIVATE struct type_method attr_class_methods[] = {
-	{ "exists", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & attribute_exists,
+	{ "exists", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&attribute_exists,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Taking the same arguments as #op:constructor, check if the an attribute matching "
@@ -637,7 +637,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	      "> return true;\n"
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
-	{ "lookup", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & attribute_lookup,
+	{ "lookup", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&attribute_lookup,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Same as #op:constructor, but return :none if the attribute doesn't exist\n"
@@ -934,13 +934,13 @@ enumattr_ne(EnumAttr *__restrict self,
 }
 
 PRIVATE struct type_cmp enumattr_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict)) & enumattr_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & enumattr_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & enumattr_ne
+	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&enumattr_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&enumattr_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&enumattr_ne
 };
 
 PRIVATE struct type_seq enumattr_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & enumattr_iter
+	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&enumattr_iter
 };
 
 PRIVATE struct type_member enumattr_class_members[] = {

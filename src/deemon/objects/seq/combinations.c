@@ -798,7 +798,7 @@ err_r:
 }
 
 PRIVATE struct type_seq rcom_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & rcom_iter
+	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&rcom_iter
 };
 
 PRIVATE struct type_member rcom_class_members[] = {
@@ -1042,7 +1042,7 @@ err_r:
 }
 
 PRIVATE struct type_seq pmut_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & pmut_iter
+	/* .tp_iter_self = */ (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&pmut_iter
 };
 
 PRIVATE struct type_member pmut_class_members[] = {

@@ -108,12 +108,12 @@ DEFINE_COMPARE(subrangeiterator_ge, >=)
 
 PRIVATE struct type_cmp subrangeiterator_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & subrangeiterator_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & subrangeiterator_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & subrangeiterator_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & subrangeiterator_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & subrangeiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & subrangeiterator_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&subrangeiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&subrangeiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&subrangeiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&subrangeiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&subrangeiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&subrangeiterator_ge
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -137,7 +137,7 @@ err:
 
 PRIVATE struct type_getset subrangeiterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & subrangeiterator_seq_get,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&subrangeiterator_seq_get,
 	  NULL, NULL,
 	  DOC("->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN") },
 	{ NULL }

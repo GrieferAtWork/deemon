@@ -193,7 +193,7 @@ err:
 
 PRIVATE struct type_getset filteriterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & filteriterator_seq_get,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&filteriterator_seq_get,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:SeqFilter") },

@@ -641,14 +641,14 @@ err:
 
 PRIVATE struct type_getset set_class_getsets[] = {
 	{ DeeString_STR(&str_Iterator),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & set_iterator_get,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&set_iterator_get,
 	  NULL,
 	  NULL,
 	  DOC("->?DType\n"
 	      "Returns the iterator class used by instances of @this Set type\n"
 	      "This member must be overwritten by sub-classes of :Set") },
 	{ "Frozen",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & set_frozen_get,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&set_frozen_get,
 	  NULL,
 	  NULL,
 	  DOC("->?DType\n"

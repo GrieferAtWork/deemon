@@ -464,7 +464,7 @@ PRIVATE struct type_member si_members[] = {
 PRIVATE struct type_getset si_getsets[] = {
 #define DEFINE_FIELD(name, doc)                                                         \
 	{ #name,                                                                            \
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & si_get_##name, NULL, NULL, \
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&si_get_##name, NULL, NULL, \
 	  DOC("->?Dint\n" doc) }
 	DEFINE_FIELD(slabsize, "Total size of the slab (in bytes)"),
 	DEFINE_FIELD(itemsize, "Slab item size (in bytes)"),
@@ -482,7 +482,7 @@ PRIVATE struct type_getset si_getsets[] = {
 	DEFINE_FIELD(usedpages, "Number of pages which are currently being used (@cur_fullpages + @cur_freepages)"),
 	DEFINE_FIELD(tailpages, "Number of pages which haven't been allocated, yet"),
 #undef DEFINE_FIELD
-	{ "__index__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & si_get_index, NULL, NULL,
+	{ "__index__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&si_get_index, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Index of @this slab within :rt:SlabStat") },
 	{ NULL }

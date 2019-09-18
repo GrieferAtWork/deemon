@@ -341,11 +341,11 @@ catiterator_curr_set(CatIterator *__restrict self,
 
 PRIVATE struct type_getset catiterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & catiterator_seq_get, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&catiterator_seq_get, NULL, NULL,
 	  DOC("->?Ert:SeqConcat") },
 	{ "__curr__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & catiterator_curr_get, NULL,
-	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & catiterator_curr_set,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&catiterator_curr_get, NULL,
+	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_curr_set,
 	  DOC("->?DIterator") },
 	{ NULL }
 };
@@ -440,7 +440,7 @@ cat_getsequences(Cat *__restrict self) {
 
 PRIVATE struct type_getset cat_getsets[] = {
 	{ "__sequences__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & cat_getsequences,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&cat_getsequences,
 	  NULL,
 	  NULL,
 	  DOC("->?S?DSequence") },

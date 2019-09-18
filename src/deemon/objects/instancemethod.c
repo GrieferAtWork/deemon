@@ -310,24 +310,24 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 
 PRIVATE struct type_getset im_getsets[] = {
 	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & instancemethod_get_name, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The name of the function being bound, or :none if unknown") },
 	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & instancemethod_get_doc, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemethod_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The documentation string of the function being bound, or :none if unknown") },
 	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & instancemethod_get_kwds, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemethod_get_kwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
 	      "Returns a sequence of keyword argument names accepted by @this function\n"
 	      "If @this function doesn't accept keyword arguments, an empty sequence is returned") },
 	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & instancemethod_get_type, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemethod_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "The type implementing the function that is being bound, or :none if unknown") },
 	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & instancemethod_get_module, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemethod_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "The type within which the bound function was defined "
 	      "(alias for :Function.__module__ though ${__func__.__module__})\n"

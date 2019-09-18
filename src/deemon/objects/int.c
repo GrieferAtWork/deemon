@@ -331,7 +331,7 @@ DeeInt_NewUleb(uint8_t **__restrict preader) {
 			num_bits += 7;
 			if (!(*reader++ & 0x80)) {
 				while (num_bits &&
-				       !((temp >> (num_bits - 1)) & 1))
+				       !((temp >> (num_bits - 1))&1))
 					--num_bits;
 				break;
 			}
@@ -391,7 +391,7 @@ DeeInt_GetSleb(DeeObject *__restrict self,
 		if (src == end) {
 			/* Truncate zero-bits from the most significant digit. */
 			while (num_bits &&
-			       !((temp >> (num_bits - 1)) & 1))
+			       !((temp >> (num_bits - 1))&1))
 				--num_bits;
 			if (num_bits <= 6) {
 				*dst++ = 0x40 | (uint8_t)temp;
@@ -413,7 +413,7 @@ DeeInt_GetSleb(DeeObject *__restrict self,
 			if (src == end) {
 				/* Truncate zero-bits from the most significant digit. */
 				while (num_bits &&
-				       !((temp >> (num_bits - 1)) & 1))
+				       !((temp >> (num_bits - 1))&1))
 					--num_bits;
 			}
 		}
@@ -463,7 +463,7 @@ DeeInt_GetUleb(DeeObject *__restrict self,
 			if (src == end) {
 				/* Truncate zero-bits from the most significant digit. */
 				while (num_bits &&
-				       !((temp >> (num_bits - 1)) & 1))
+				       !((temp >> (num_bits - 1))&1))
 					--num_bits;
 			}
 		}
@@ -1621,7 +1621,7 @@ do_print:
 				num_bits += DIGIT_BITS;
 				if (!--num_digits) {
 					/* Strip leading ZERO-digits from the output. */
-					while (num_bits && !((number >> (num_bits - 1)) & 1))
+					while (num_bits && !((number >> (num_bits - 1))&1))
 						--num_bits;
 				}
 			}
@@ -2931,7 +2931,7 @@ err:
 
 PRIVATE struct type_method int_methods[] = {
 	{ "tostr",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & int_tostr,
+	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_tostr,
 	  DOC("(radix=!10,mode=!P{})->?Dstring\n"
 	      "@throw ValueError The given @mode was not recognized\n"
 	      "@throw NotImplemented The given @radix cannot be represented\n"
@@ -2944,19 +2944,19 @@ PRIVATE struct type_method int_methods[] = {
 	      "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hex",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & int_hex,
+	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_hex,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. #tostr)") },
 	{ "bin",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & int_bin,
+	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_bin,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. #tostr)") },
 	{ "oct",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & int_oct,
+	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_oct,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
 	{ "tobytes",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & int_tobytes,
+	  (DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_tobytes,
 	  DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
@@ -2970,7 +2970,7 @@ PRIVATE struct type_method int_methods[] = {
 	      "negative integers"),
 	  TYPE_METHOD_FKWDS },
 	{ "__sizeof__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict)) & int_sizeof,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -3032,14 +3032,14 @@ err:
 
 PRIVATE struct type_getset int_getsets[] = {
 	{ "bitcount",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & int_get_bitcount,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&int_get_bitcount,
 	  NULL,
 	  NULL,
 	  DOC("->?Dint\n"
 	      "Returns the minimum number of bits that are required "
 	      "in order to encode @this integer in unsigned two's complement") },
 	{ "bytecount",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & int_get_bytecount,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&int_get_bytecount,
 	  NULL,
 	  NULL,
 	  DOC("->?Dint\n"

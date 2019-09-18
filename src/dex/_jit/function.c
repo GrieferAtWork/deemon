@@ -945,9 +945,9 @@ err:
 
 
 PRIVATE struct type_cmp jf_cmp = {
-	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict)) & jf_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & jf_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict)) & jf_ne
+	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject * __restrict))&jf_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&jf_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&jf_ne
 };
 
 
@@ -1027,25 +1027,25 @@ jf_getisretexpr(JITFunction *__restrict self) {
 
 PRIVATE struct type_getset jf_getsets[] = {
 	{ "__name__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_getname, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N") },
 	{ "__doc__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_getdoc, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_getdoc, NULL, NULL,
 	  DOC("->?N\nAlways returns :none (doc strings aren't processed in JIT code)") },
 	{ "__kwds__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_getkwds, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring") },
 	{ "__text__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_gettext, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_gettext, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Returns the source text executed by @this function") },
 	{ "isyielding",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_isyielding, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_isyielding, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this function behaves as yielding (i.e. contains a yield statment "
 	      "that doesn't appear as part of a recursively defined inner function)") },
 	{ "isretexpr",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_getisretexpr, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_getisretexpr, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this function was defined like ${[] -> 42}, meaning "
 	      "that #__text__ is merely the expression that should be returned by the function\n"
@@ -1058,11 +1058,11 @@ PRIVATE struct type_getset jf_getsets[] = {
 	/* TODO: __property__ */
 	/* etc... */
 	{ "hasvarargs",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_hasvarargs, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_hasvarargs, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this function accepts variable arguments as overflow") },
 	{ "hasvarkwds",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & jf_hasvarkwds, NULL, NULL,
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&jf_hasvarkwds, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this function accepts variable keyword arguments as overflow") },
 	{ NULL }
