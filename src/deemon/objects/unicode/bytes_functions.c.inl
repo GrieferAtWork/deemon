@@ -3550,8 +3550,7 @@ bytes_partitionmatch(Bytes *__restrict self,
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	}                                                            \
-	__WHILE0
+	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if
 		unlikely(!result)
@@ -3624,8 +3623,7 @@ bytes_rpartitionmatch(Bytes *__restrict self,
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	}                                                            \
-	__WHILE0
+	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if
 		unlikely(!result)
@@ -3699,8 +3697,7 @@ bytes_casepartitionmatch(Bytes *__restrict self,
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	}                                                            \
-	__WHILE0
+	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if
 		unlikely(!result)
@@ -3773,8 +3770,7 @@ bytes_caserpartitionmatch(Bytes *__restrict self,
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	}                                                            \
-	__WHILE0
+	} __WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if
 		unlikely(!result)

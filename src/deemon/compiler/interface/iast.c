@@ -3292,11 +3292,12 @@ err:
 #define ENTER_SCOPE(caller_scope, child_scope, is_expression) \
 	do {                                                      \
 		bool is_scope = false;                                \
-	DO(print_enter_scope(caller_scope, child_scope, printer, arg, is_expression, &indent, &is_scope))
+		DO(print_enter_scope(caller_scope, child_scope,       \
+		                     printer, arg, is_expression,     \
+		                     &indent, &is_scope))
 #define LEAVE_SCOPE(is_expression, need_semicolon)                                        \
-	DO(print_leave_scope(printer, arg, is_expression, need_semicolon, indent, is_scope)); \
-	}                                                                                     \
-	__WHILE0
+		DO(print_leave_scope(printer, arg, is_expression, need_semicolon, indent, is_scope)); \
+	} __WHILE0
 
 INTDEF bool DCALL
 DeeString_IsSymbol(DeeObject *__restrict self,

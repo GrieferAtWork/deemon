@@ -1810,8 +1810,7 @@ get_action_by_name(char const *__restrict name) {
 	do {               \
 		result = (id); \
 		goto done;     \
-	}                  \
-	__WHILE0
+	} __WHILE0
 	int32_t result;
 	switch (name[0]) {
 	case 'a':

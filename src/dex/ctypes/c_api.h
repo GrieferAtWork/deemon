@@ -38,8 +38,7 @@ DECL_BEGIN
 #define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
 	do {                                                              \
 		action_libcall;                                               \
-	}                                                                 \
-	__WHILE0
+	} __WHILE0
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 #define CTYPES_PROTECTED_I(action_inline, action_error) \
 	CTYPES_PROTECTED(action_inline, action_inline, action_error)

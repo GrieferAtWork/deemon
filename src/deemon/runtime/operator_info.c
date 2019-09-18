@@ -151,8 +151,7 @@ Dee_OperatorFromName(DeeTypeObject *typetype,
 	do {               \
 		result = (id); \
 		goto done;     \
-	}                  \
-	__WHILE0
+	} __WHILE0
 	uint16_t result = (uint16_t)-1;
 	switch (*name) {
 
