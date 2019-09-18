@@ -3364,7 +3364,7 @@ instance_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self,
 	                                         argc,
 	                                         argv,
 	                                         (DeeKwdsObject *)kw))
-	goto err_members;
+		goto err_members;
 	Dee_Decref(func);
 	return 0;
 err_members:
@@ -3390,7 +3390,7 @@ instance_builtin_auto_nobase_tinit(DeeTypeObject *__restrict tp_self,
 	                                      self,
 	                                      argc,
 	                                      argv))
-	goto err_members;
+		goto err_members;
 	return 0;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);

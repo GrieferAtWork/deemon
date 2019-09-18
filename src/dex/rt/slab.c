@@ -70,9 +70,8 @@ do_realloc_result:
 			unlikely(reqsize > oldsize)
 		goto do_realloc_result;
 	} else if unlikely(reqsize <
-	                 COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
-	                 (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)))
-	{
+	                   COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
+	                   (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
 		new_result = (DREF SlabStatObject *)DeeObject_TryRealloc(result,
 		                                                         COMPILER_OFFSETOF(SlabStatObject, st_stat) +
 		                                                         reqsize);

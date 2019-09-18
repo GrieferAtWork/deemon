@@ -411,10 +411,13 @@ DeeString_NewSized(char const *__restrict str, size_t length) {
 	/* Optimization: use pre-allocated latin1 strings
 	 *               for single-character sequences. */
 	switch (length) {
+
 	case 0:
 		return_empty_string;
+
 	case 1:
 		return DeeString_Chr((uint8_t)str[0]);
+
 	default:
 		break;
 	}
@@ -479,15 +482,18 @@ DeeString_Hash(DeeObject *__restrict self) {
 	result = DeeString_HASH(self);
 	if (result == (dhash_t)-1) {
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
 		CASE_WIDTH_1BYTE:
 			result = Dee_HashPtr(DeeString_STR(self),
 			                     DeeString_SIZE(self));
 			break;
+
 		CASE_WIDTH_2BYTE: {
 			uint16_t *str;
 			str    = DeeString_Get2Byte(self);
 			result = Dee_Hash2Byte(str, WSTR_LENGTH(str));
 		}	break;
+
 		CASE_WIDTH_4BYTE: {
 			uint32_t *str;
 			str    = DeeString_Get4Byte(self);
@@ -504,15 +510,18 @@ DeeString_HashCase(DeeObject *__restrict self) {
 	dhash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
 	CASE_WIDTH_1BYTE:
 		result = Dee_HashCasePtr(DeeString_STR(self),
 		                         DeeString_SIZE(self));
 		break;
+
 	CASE_WIDTH_2BYTE: {
 		uint16_t *str;
 		str    = DeeString_Get2Byte(self);
 		result = Dee_HashCase2Byte(str, WSTR_LENGTH(str));
 	}	break;
+
 	CASE_WIDTH_4BYTE: {
 		uint32_t *str;
 		str    = DeeString_Get4Byte(self);
@@ -528,18 +537,21 @@ string_repr(DeeObject *__restrict self) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	str.ptr                      = DeeString_WSTR(self);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
 	CASE_WIDTH_1BYTE:
 		if unlikely(DeeFormat_Quote8(&ascii_printer_print, &printer,
 		                             str.cp8, WSTR_LENGTH(str.cp8),
 		                             FORMAT_QUOTE_FNORMAL) < 0)
 			goto err;
 		break;
+
 	CASE_WIDTH_2BYTE:
 		if unlikely(DeeFormat_Quote16(&ascii_printer_print, &printer,
 		                              str.cp16, WSTR_LENGTH(str.cp16),
 		                              FORMAT_QUOTE_FNORMAL) < 0)
 			goto err;
 		break;
+
 	CASE_WIDTH_4BYTE:
 		if unlikely(DeeFormat_Quote32(&ascii_printer_print, &printer,
 		                              str.cp32, WSTR_LENGTH(str.cp32),

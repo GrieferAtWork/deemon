@@ -864,7 +864,7 @@ bytes_repr(Bytes *__restrict self) {
 	if unlikely(bytes_print_repr(self,
 	                             &ascii_printer_print,
 	                             &printer) < 0)
-	goto err;
+		goto err;
 	return ascii_printer_pack(&printer);
 err:
 	ascii_printer_fini(&printer);
