@@ -135,11 +135,11 @@ DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
 #define DeeBytes_NewSubViewRo(self, base, num_bytes)                                 \
 	DeeBytes_NewView((self)->b_buffer.bb_put ? (DeeObject *)(self) : (self)->b_orig, \
 	                 base, num_bytes, Dee_BUFFER_FREADONLY)
-#else
+#else /* Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE */
 #define DeeBytes_NewSubViewRo(self, base, num_bytes)                                 \
 	DeeBytes_NewView((self)->b_buffer.bb_put ? (DeeObject *)(self) : (self)->b_orig, \
 	                 base, num_bytes, (self)->b_flags & ~Dee_BUFFER_FWRITABLE)
-#endif
+#endif /* Dee_BUFFER_FMASK != Dee_BUFFER_FWRITABLE */
 #endif /* !__INTELLISENSE__ */
 
 /* Construct a writable bytes-object that is initialized from the

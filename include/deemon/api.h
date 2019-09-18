@@ -259,19 +259,19 @@ extern void (__debugbreak)(void);
 #define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),(_CrtCheckMemory)(),DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
 extern ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
-#else
+#else /* !_MSC_VER || _DLL */
 extern int (ATTR_CDECL _CrtCheckMemory)(void);
-#endif
+#endif /* _MSC_VER && !_DLL */
 #endif /* _MSC_VER */
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 #endif /* !NDEBUG */
 
 #ifdef __INTELLISENSE__
 extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #define DEE_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
-#else
+#else /* __INTELLISENSE__ */
 #define DEE_REQUIRES_TYPE(T, x) (x)
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #ifndef NDEBUG
 #define DEE_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
@@ -281,7 +281,7 @@ DDATDEF int _Dee_dprint_enabled;
 DFUNDEF void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF void (_Dee_dprintf)(char const *__restrict format, ...);
 DFUNDEF void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
-#endif
+#endif /* !NDEBUG */
 
 
 #ifndef Dee_ASSERT

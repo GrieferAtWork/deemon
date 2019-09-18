@@ -69,7 +69,7 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 #define Dee_TryRealloc(ptr, n_bytes) DeeDbg_TryRealloc(ptr, n_bytes, __FILE__, __LINE__)
 #define Dee_Free(ptr)                DeeDbg_Free(ptr, __FILE__, __LINE__)
 #define Dee_UntrackAlloc(ptr)        DeeDbg_UntrackAlloc(ptr, __FILE__, __LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbg_Malloc(n_bytes, file, line)          Dee_Malloc(n_bytes)
 #define DeeDbg_Calloc(n_bytes, file, line)          Dee_Calloc(n_bytes)
 #define DeeDbg_Realloc(ptr, n_bytes, file, line)    Dee_Realloc(ptr, n_bytes)
@@ -78,7 +78,7 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 #define DeeDbg_TryRealloc(ptr, n_bytes, file, line) Dee_TryRealloc(ptr, n_bytes)
 #define DeeDbg_Free(ptr, file, line)                Dee_Free(ptr)
 #define Dee_UntrackAlloc(ptr)                      (ptr)
-#endif
+#endif /* NDEBUG */
 
 /* Reclaim free memory by going through internal pre-allocation caches,
  * freeing up to (but potentially exceeding by a bit) `max_collect' bytes of memory.
@@ -120,9 +120,9 @@ DFUNDEF void (DCALL DeeObject_Free)(void *ptr);
 DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
 #ifndef NDEBUG
 #define DeeObject_Free(ptr)                DeeDbgObject_Free(ptr,__FILE__,__LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbgObject_Free(ptr, file, line) DeeObject_Free(ptr)
-#endif
+#endif /* NDEBUG */
 #else /* !CONFIG_NO_OBJECT_SLABS */
 #define DeeObject_Free(ptr)                Dee_Free(ptr)
 #define DeeDbgObject_Free(ptr, file, line) DeeDbg_Free(ptr, file, line)
@@ -140,9 +140,9 @@ DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
  * who's reference counter was modified at any point in time. */
 #ifdef CONFIG_TRACE_REFCHANGES
 DFUNDEF void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
-#else
+#else /* CONFIG_TRACE_REFCHANGES */
 #define DeeObject_FreeTracker(self) (void)0
-#endif
+#endif /* !CONFIG_TRACE_REFCHANGES */
 #endif /* __CC__ */
 
 
@@ -315,14 +315,14 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #elif Dee_SLAB_MINSIZE == 4
 #define DeeSlab_Free      DeeSlab_Free4
 #define DeeDbgSlab_Free   DeeDbgSlab_Free4
-#else
+#else /* Dee_SLAB_MINSIZE == 4 */
 #define DEE_PRIVATE_DeeSlab_Free2(x) DeeSlab_Free##x
 #define DEE_PRIVATE_DeeSlab_Free(x) DEE_PRIVATE_DeeSlab_Free2(x)
 #define DEE_PRIVATE_DeeDbgSlab_Free2(x) DeeDbgSlab_Free##x
 #define DEE_PRIVATE_DeeDbgSlab_Free(x) DEE_PRIVATE_DeeDbgSlab_Free2(x)
 #define DeeSlab_Free      DEE_PRIVATE_DeeSlab_Free(Dee_SLAB_MINSIZE)
 #define DeeDbgSlab_Free   DEE_PRIVATE_DeeDbgSlab_Free(Dee_SLAB_MINSIZE)
-#endif
+#endif /* Dee_SLAB_MINSIZE != 4 */
 
 
 /* Define slab-enabled object memory allocators, and override regular
@@ -339,13 +339,13 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #define DeeSlab_TryMalloc4() DeeDbgSlab_TryMalloc4(__FILE__, __LINE__)
 #define DeeSlab_TryCalloc4() DeeDbgSlab_TryCalloc4(__FILE__, __LINE__)
 #define DeeSlab_Free4(ptr)   DeeDbgSlab_Free4(ptr, __FILE__, __LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbgSlab_Malloc4(file, line)    DeeSlab_Malloc4()
 #define DeeDbgSlab_Calloc4(file, line)    DeeSlab_Calloc4()
 #define DeeDbgSlab_TryMalloc4(file, line) DeeSlab_TryMalloc4()
 #define DeeDbgSlab_TryCalloc4(file, line) DeeSlab_TryCalloc4()
 #define DeeDbgSlab_Free4(ptr, file, line) DeeSlab_Free4(ptr)
-#endif
+#endif /* NDEBUG */
 #endif /* DeeSlab_HasSize(4) */
 #if DeeSlab_HasSize(5)
 #define DeeObject_SlabMalloc5    DeeSlab_Malloc5
@@ -359,13 +359,13 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #define DeeSlab_TryMalloc5() DeeDbgSlab_TryMalloc5(__FILE__, __LINE__)
 #define DeeSlab_TryCalloc5() DeeDbgSlab_TryCalloc5(__FILE__, __LINE__)
 #define DeeSlab_Free5(ptr)   DeeDbgSlab_Free5(ptr, __FILE__, __LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbgSlab_Malloc5(file, line)    DeeSlab_Malloc5()
 #define DeeDbgSlab_Calloc5(file, line)    DeeSlab_Calloc5()
 #define DeeDbgSlab_TryMalloc5(file, line) DeeSlab_TryMalloc5()
 #define DeeDbgSlab_TryCalloc5(file, line) DeeSlab_TryCalloc5()
 #define DeeDbgSlab_Free5(ptr, file, line) DeeSlab_Free5(ptr)
-#endif
+#endif /* NDEBUG */
 #endif /* DeeSlab_HasSize(5) */
 #if DeeSlab_HasSize(6)
 #define DeeObject_SlabMalloc6    DeeSlab_Malloc6
@@ -379,13 +379,13 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #define DeeSlab_TryMalloc6() DeeDbgSlab_TryMalloc6(__FILE__, __LINE__)
 #define DeeSlab_TryCalloc6() DeeDbgSlab_TryCalloc6(__FILE__, __LINE__)
 #define DeeSlab_Free6(ptr)   DeeDbgSlab_Free6(ptr, __FILE__, __LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbgSlab_Malloc6(file, line)    DeeSlab_Malloc6()
 #define DeeDbgSlab_Calloc6(file, line)    DeeSlab_Calloc6()
 #define DeeDbgSlab_TryMalloc6(file, line) DeeSlab_TryMalloc6()
 #define DeeDbgSlab_TryCalloc6(file, line) DeeSlab_TryCalloc6()
 #define DeeDbgSlab_Free6(ptr, file, line) DeeSlab_Free6(ptr)
-#endif
+#endif /* NDEBUG */
 #endif /* DeeSlab_HasSize(6) */
 #if DeeSlab_HasSize(8)
 #define DeeObject_SlabMalloc8    DeeSlab_Malloc8
@@ -399,13 +399,13 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #define DeeSlab_TryMalloc8() DeeDbgSlab_TryMalloc8(__FILE__, __LINE__)
 #define DeeSlab_TryCalloc8() DeeDbgSlab_TryCalloc8(__FILE__, __LINE__)
 #define DeeSlab_Free8(ptr)   DeeDbgSlab_Free8(ptr, __FILE__, __LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbgSlab_Malloc8(file, line)    DeeSlab_Malloc8()
 #define DeeDbgSlab_Calloc8(file, line)    DeeSlab_Calloc8()
 #define DeeDbgSlab_TryMalloc8(file, line) DeeSlab_TryMalloc8()
 #define DeeDbgSlab_TryCalloc8(file, line) DeeSlab_TryCalloc8()
 #define DeeDbgSlab_Free8(ptr, file, line) DeeSlab_Free8(ptr)
-#endif
+#endif /* NDEBUG */
 #endif /* DeeSlab_HasSize(8) */
 #if DeeSlab_HasSize(10)
 #define DeeObject_SlabMalloc10    DeeSlab_Malloc10
@@ -419,13 +419,13 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #define DeeSlab_TryMalloc10() DeeDbgSlab_TryMalloc10(__FILE__, __LINE__)
 #define DeeSlab_TryCalloc10() DeeDbgSlab_TryCalloc10(__FILE__, __LINE__)
 #define DeeSlab_Free10(ptr)   DeeDbgSlab_Free10(ptr, __FILE__, __LINE__)
-#else
+#else /* !NDEBUG */
 #define DeeDbgSlab_Malloc10(file, line)    DeeSlab_Malloc10()
 #define DeeDbgSlab_Calloc10(file, line)    DeeSlab_Calloc10()
 #define DeeDbgSlab_TryMalloc10(file, line) DeeSlab_TryMalloc10()
 #define DeeDbgSlab_TryCalloc10(file, line) DeeSlab_TryCalloc10()
 #define DeeDbgSlab_Free10(ptr, file, line) DeeSlab_Free10(ptr)
-#endif
+#endif /* NDEBUG */
 #endif /* DeeSlab_HasSize(10) */
 #else /* !CONFIG_NO_OBJECT_SLABS */
 
@@ -452,10 +452,10 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 #ifdef __INTELLISENSE__
 DFUNDEF void (DCALL DeeSlab_Free)(void *__restrict ptr);
 DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int line);
-#else
+#else /* __INTELLISENSE__ */
 #define DeeSlab_Free      Dee_Free
 #define DeeDbgSlab_Free   DeeDbg_Free
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* CONFIG_NO_OBJECT_SLABS */
 
@@ -628,7 +628,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_TRYMALLOC_S(T) ((T *)DeeObject_TryMalloc(sizeof(T)))
 #define DeeObject_TRYCALLOC_S(T) ((T *)DeeObject_TryCalloc(sizeof(T)))
 #define DeeObject_FREE_S               DeeObject_Free
-#else
+#else /* !CONFIG_BUILDING_DEEMON || __PIC__ */
 #ifdef GUARD_DEEMON_OBJECT_H
 #define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_FIXED_ALLOCATOR(T)
 #define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_FIXED_ALLOCATOR_GC(T)
@@ -642,7 +642,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeObject_TRYFMALLOC_S         DeeObject_TRYMALLOC
 #define DeeObject_TRYFCALLOC_S         DeeObject_TRYCALLOC
 #define DeeObject_FREE_S               DeeObject_FREE
-#endif
+#endif /* CONFIG_BUILDING_DEEMON && !__PIC__ */
 
 
 

@@ -818,25 +818,25 @@
 #define CASE_ASM_EXTENDED    case ASM_EXTENDED1
 #else
 #if ASM_EXTENDEDMIN + 7 == ASM_EXTENDEDMAX
-#define CASE_ASM_EXTENDED    \
-        case ASM_EXTENDEDMIN + 0: \
-        case ASM_EXTENDEDMIN + 1: \
-        case ASM_EXTENDEDMIN + 2: \
-        case ASM_EXTENDEDMIN + 3: \
-        case ASM_EXTENDEDMIN + 4: \
-        case ASM_EXTENDEDMIN + 5: \
-        case ASM_EXTENDEDMIN + 6: \
-        case ASM_EXTENDEDMIN + 7
-#else
-#define CASE_ASM_EXTENDED    \
-        case ASM_EXTENDEDMIN ... ASM_EXTENDEDMAX
-#endif
+#define CASE_ASM_EXTENDED     \
+	case ASM_EXTENDEDMIN + 0: \
+	case ASM_EXTENDEDMIN + 1: \
+	case ASM_EXTENDEDMIN + 2: \
+	case ASM_EXTENDEDMIN + 3: \
+	case ASM_EXTENDEDMIN + 4: \
+	case ASM_EXTENDEDMIN + 5: \
+	case ASM_EXTENDEDMIN + 6: \
+	case ASM_EXTENDEDMIN + 7
+#else /* ASM_EXTENDEDMIN + 7 == ASM_EXTENDEDMAX */
+#define CASE_ASM_EXTENDED \
+	case ASM_EXTENDEDMIN ... ASM_EXTENDEDMAX
+#endif /* ASM_EXTENDEDMIN + 7 != ASM_EXTENDEDMAX */
 #if ((ASM_EXTENDEDMIN & 0xf8) == (ASM_EXTENDEDMAX & 0xf8)) && \
     ((ASM_EXTENDEDMIN & 7) == 0 && (ASM_EXTENDEDMAX & 7) == 7)
-#define ASM_ISEXTENDED(x)   (((x) & 0xf8) == ASM_EXTENDEDMIN)
-#else
-#define ASM_ISEXTENDED(x)   ((x) >= ASM_EXTENDEDMIN && (x) <= ASM_EXTENDEDMAX)
-#endif
+#define ASM_ISEXTENDED(x) (((x)&0xf8) == ASM_EXTENDEDMIN)
+#else /* ... */
+#define ASM_ISEXTENDED(x) ((x) >= ASM_EXTENDEDMIN && (x) <= ASM_EXTENDEDMAX)
+#endif /* !... */
 #endif
 
 /* Working storage class modifiers. */

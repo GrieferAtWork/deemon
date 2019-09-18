@@ -552,10 +552,10 @@ struct empty_code_struct {
 
 #ifdef __INTELLISENSE__
 INTDEF DeeCodeObject empty_code;
-#else
+#else /* __INTELLISENSE__ */
 INTDEF struct empty_code_struct empty_code_head;
 #define empty_code   empty_code_head.c_code
-#endif
+#endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeCode_Type;

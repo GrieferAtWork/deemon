@@ -475,10 +475,10 @@ struct ast_loc {
 #define l_col      _l_linecol.l_col
 #endif
 	;
-#else
+#else /* CONFIG_BUILDING_DEEMON */
 	int                  l_line; /* [valid_if(l_file != NULL)] Location line. */
 	int                  l_col;  /* [valid_if(l_file != NULL)] Location column. */
-#endif
+#endif /* !CONFIG_BUILDING_DEEMON */
 };
 
 

@@ -299,58 +299,58 @@ typedef union PACKED {
 	double d;
 	struct {
 #ifdef CONFIG_BIG_ENDIAN
-		unsigned int negative:1;
-		unsigned int exponent:11;
-		unsigned int mantissa0:20;
-		unsigned int mantissa1:32;
+		unsigned int negative : 1;
+		unsigned int exponent : 11;
+		unsigned int mantissa0 : 20;
+		unsigned int mantissa1 : 32;
 #elif CONFIG_HOST_FLOAT_ENDIAN == 4321
-		unsigned int mantissa0:20;
-		unsigned int exponent:11;
-		unsigned int negative:1;
-		unsigned int mantissa1:32;
-#else
-		unsigned int mantissa1:32;
-		unsigned int mantissa0:20;
-		unsigned int exponent:11;
-		unsigned int negative:1;
-#endif
+		unsigned int mantissa0 : 20;
+		unsigned int exponent : 11;
+		unsigned int negative : 1;
+		unsigned int mantissa1 : 32;
+#else /* Endian... */
+		unsigned int mantissa1 : 32;
+		unsigned int mantissa0 : 20;
+		unsigned int exponent : 11;
+		unsigned int negative : 1;
+#endif /* !Endian... */
 	} ieee;
 	struct {
 #ifdef CONFIG_BIG_ENDIAN
-		unsigned int negative:1;
-		unsigned int exponent:11;
-		unsigned int quiet_nan:1;
-		unsigned int mantissa0:19;
-		unsigned int mantissa1:32;
+		unsigned int negative : 1;
+		unsigned int exponent : 11;
+		unsigned int quiet_nan : 1;
+		unsigned int mantissa0 : 19;
+		unsigned int mantissa1 : 32;
 #elif CONFIG_HOST_FLOAT_ENDIAN == 4321
-		unsigned int mantissa0:19;
-		unsigned int quiet_nan:1;
-		unsigned int exponent:11;
-		unsigned int negative:1;
-		unsigned int mantissa1:32;
-#else
-		unsigned int mantissa1:32;
-		unsigned int mantissa0:19;
-		unsigned int quiet_nan:1;
-		unsigned int exponent:11;
-		unsigned int negative:1;
-#endif
+		unsigned int mantissa0 : 19;
+		unsigned int quiet_nan : 1;
+		unsigned int exponent : 11;
+		unsigned int negative : 1;
+		unsigned int mantissa1 : 32;
+#else /* Endian... */
+		unsigned int mantissa1 : 32;
+		unsigned int mantissa0 : 19;
+		unsigned int quiet_nan : 1;
+		unsigned int exponent : 11;
+		unsigned int negative : 1;
+#endif /* !Endian... */
 	} ieee_nan;
 } Dec_host_ieee754_double;
 
 typedef union PACKED {
 	struct {
-		unsigned int mantissa1:32;
-		unsigned int mantissa0:20;
-		unsigned int exponent:11;
-		unsigned int negative:1;
+		unsigned int mantissa1 : 32;
+		unsigned int mantissa0 : 20;
+		unsigned int exponent : 11;
+		unsigned int negative : 1;
 	} ieee;
 	struct {
-		unsigned int mantissa1:32;
-		unsigned int mantissa0:19;
-		unsigned int quiet_nan:1;
-		unsigned int exponent:11;
-		unsigned int negative:1;
+		unsigned int mantissa1 : 32;
+		unsigned int mantissa0 : 19;
+		unsigned int quiet_nan : 1;
+		unsigned int exponent : 11;
+		unsigned int negative : 1;
 	} ieee_nan;
 } Dec_ieee754_double;
 

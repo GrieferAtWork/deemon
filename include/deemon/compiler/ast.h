@@ -618,11 +618,11 @@ INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
 #define CONFIG_NO_AST_DEBUG 1
 #define DEFINE_AST_GENERATOR(name, args) \
 	INTDEF DREF struct ast *DCALL name args
-#else
+#else /* NDEBUG || __INTELLISENSE__ */
 #define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (char const *file, int line, __VA_ARGS__)
 #define DEFINE_AST_GENERATOR(name, args) \
 	INTDEF DREF struct ast *DCALL name##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args
-#endif
+#endif /* !NDEBUG && !__INTELLISENSE__ */
 
 
 /* [AST_CONSTEXPR] */

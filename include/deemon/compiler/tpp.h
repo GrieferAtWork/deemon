@@ -239,22 +239,22 @@ tok_t tok;
 tok_t yield(void);
 tok_t yieldnb(void);
 tok_t yieldnbif(bool allow);
-#else
+#else /* __INTELLISENSE__ */
 #define token             TPPLexer_Global.l_token
 #define tok               TPPLexer_Global.l_token.t_id
 #define yield()           TPPLexer_Yield()
 #define yieldnb()         TPPLexer_YieldNB()
 #define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
-#endif
+#endif /* !__INTELLISENSE__ */
 #define HAS(ext)          TPPLexer_HasExtension(ext)
 #define WARN(...)         parser_warnf(__VA_ARGS__)
-#define WARNAT(loc, ...)  parser_warnatf(loc,__VA_ARGS__)
-#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl,__VA_ARGS__)
-#define WARNAST(ast, ...) parser_warnastf(ast,__VA_ARGS__)
+#define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)
+#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__)
+#define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)
 #define PERR(...)         parser_errf(__VA_ARGS__)
-#define PERRAT(loc, ...)  parser_erratf(loc,__VA_ARGS__)
-#define PERRSYM(sym, ...) parser_erratrf(&(sym)->s_decl,__VA_ARGS__)
-#define PERRAST(ast, ...) parser_errastf(ast,__VA_ARGS__)
+#define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)
+#define PERRSYM(sym, ...) parser_erratrf(&(sym)->s_decl, __VA_ARGS__)
+#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)
 #define TPP_PUSHF()       do{uint32_t _old_flags = TPPLexer_Current->l_flags
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
 #define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags;}__WHILE0
@@ -262,11 +262,11 @@ tok_t yieldnbif(bool allow);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define parser_warnf(...)             __builtin_expect(parser_warnf(__VA_ARGS__),0)
-#define parser_warnatf(loc, ...)      __builtin_expect(parser_warnatf(loc,__VA_ARGS__),0)
-#define parser_warnastf(loc_ast, ...) __builtin_expect(parser_warnastf(loc_ast,__VA_ARGS__),0)
-#endif
-#endif
+#define parser_warnf(...)             __builtin_expect(parser_warnf(__VA_ARGS__), 0)
+#define parser_warnatf(loc, ...)      __builtin_expect(parser_warnatf(loc, __VA_ARGS__), 0)
+#define parser_warnastf(loc_ast, ...) __builtin_expect(parser_warnastf(loc_ast, __VA_ARGS__), 0)
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 
 
