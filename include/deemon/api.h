@@ -94,19 +94,21 @@ DECL_BEGIN
  *       -> This is only meant for testing small example applications
  *          that have proven to cause reference leaks, in order to
  *          analyze what exactly is causing them. */
-#if 0
+#if !defined(CONFIG_TRACE_REFCHANGES) && !defined(CONFIG_NO_TRACE_REFCHANGES)
+#if !defined(NDEBUG) && 0
 #define CONFIG_TRACE_REFCHANGES 1
 #else
 #define CONFIG_NO_TRACE_REFCHANGES 1 
 #endif
+#endif /* !CONFIG_TRACE_REFCHANGES && !CONFIG_NO_TRACE_REFCHANGES */
 
+#if !defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_BADREFCNT_CHECKS)
 #ifdef NDEBUG
 #define CONFIG_NO_BADREFCNT_CHECKS 1
 #else /* NDEBUG */
-#ifndef CONFIG_NO_TRACE_REFCHANGES
-#define CONFIG_TRACE_REFCHANGES    1
-#endif /* !CONFIG_NO_TRACE_REFCHANGES */
+#define CONFIG_BADREFCNT_CHECKS 1
 #endif /* !NDEBUG */
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_BADREFCNT_CHECKS */
 
 
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -119,12 +121,23 @@ DECL_BEGIN
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 
-#undef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-#undef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#if !defined(CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS) && \
+    !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS)
 #ifndef __OPTIMIZE_SIZE__
 #define CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS 1
+#else /* !__OPTIMIZE_SIZE__ */
+#define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS 1
+#endif /* __OPTIMIZE_SIZE__ */
+#endif
+
+#if !defined(CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
+    !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS)
+#ifndef __OPTIMIZE_SIZE__
 #define CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
-#endif /* !__OPTIMIZE_SIZE__ */
+#else /* !__OPTIMIZE_SIZE__ */
+#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
+#endif /* __OPTIMIZE_SIZE__ */
+#endif
 
 
 #if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
@@ -260,7 +273,7 @@ extern void (__debugbreak)(void);
 #pragma warning(disable: 4512)
 #pragma warning(disable: 4565)
 #pragma warning(disable: 4610)
-#endif
+#endif /* _MSC_VER */
 
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS

@@ -3297,14 +3297,18 @@ err:
 PRIVATE DREF /*String*/DeeStringObject *
 DCALL get_default_home(void) {
 	DREF DeeStringObject *result;
-	DREF DeeStringObject *new_result;
+#ifndef CONFIG_NO_DEEMON_HOME_ENVIRON
 	char *env;
+#ifndef CONFIG_DEEMON_HOME_ENVIRON
+#define CONFIG_DEEMON_HOME_ENVIRON "DEEMON_HOME"
+#endif /* !CONFIG_DEEMON_HOME_ENVIRON */
 	DBG_ALIGNMENT_DISABLE();
-	env = getenv("DEEMON_HOME");
+	env = getenv(CONFIG_DEEMON_HOME_ENVIRON);
 	DBG_ALIGNMENT_ENABLE();
 	if (env) {
 		size_t len = strlen(env);
 		if (len) {
+			DREF DeeStringObject *new_result;
 			while (len && ISSEP(env[len - 1]))
 				--len;
 			result = (DREF DeeStringObject *)DeeString_NewUtf8(env, len + 1, STRING_ERROR_FIGNORE);
@@ -3316,12 +3320,14 @@ DCALL get_default_home(void) {
 			return new_result;
 		}
 	}
+#endif /* !CONFIG_NO_DEEMON_HOME_ENVIRON */
 #ifdef CONFIG_DEEMON_HOME
 	return_reference_((DeeStringObject *)&default_deemon_home);
 #elif defined(CONFIG_HOST_WINDOWS)
 	{
 		DWORD dwBufSize = PATH_MAX, dwError;
 		LPWSTR lpBuffer, lpNewBuffer;
+		DREF DeeStringObject *new_result;
 		lpBuffer = DeeString_NewWideBuffer(dwBufSize);
 		if unlikely(!lpBuffer)
 			goto err;
@@ -3437,43 +3443,67 @@ DeeExec_SetHome(/*String*/ DeeObject *new_home) {
 
 
 PRIVATE void DCALL do_init_module_path(void) {
-	DREF DeeObject *path_part;
 	int error;
-	char *path;
-	DBG_ALIGNMENT_DISABLE();
-	path = getenv("DEEMON_PATH");
-	DBG_ALIGNMENT_ENABLE();
-	if (path)
-		while (*path) {
-			/* Split the module path. */
-			char *next_path = strchr(path, DELIM);
-			if (next_path) {
-				path_part = DeeString_NewUtf8(path,
-				                              (size_t)(next_path - path),
-				                              STRING_ERROR_FIGNORE);
-				++next_path;
-			} else {
-				next_path = strend(path);
-				path_part = DeeString_NewUtf8(path,
-				                              (size_t)(next_path - path),
-				                              STRING_ERROR_FIGNORE);
+#ifndef CONFIG_NO_DEEMON_PATH_ENVIRON
+	{
+		char *path;
+		DREF DeeObject *path_part;
+#ifndef CONFIG_DEEMON_PATH_ENVIRON
+#define CONFIG_DEEMON_PATH_ENVIRON "DEEMON_PATH"
+#endif /* !CONFIG_DEEMON_PATH_ENVIRON */
+		DBG_ALIGNMENT_DISABLE();
+		path = getenv(CONFIG_DEEMON_PATH_ENVIRON);
+		DBG_ALIGNMENT_ENABLE();
+		if (path) {
+			while (*path) {
+				/* Split the module path. */
+				char *next_path = strchr(path, DELIM);
+				if (next_path) {
+					path_part = DeeString_NewUtf8(path,
+					                              (size_t)(next_path - path),
+					                              STRING_ERROR_FIGNORE);
+					++next_path;
+				} else {
+					next_path = strend(path);
+					path_part = DeeString_NewUtf8(path,
+					                              (size_t)(next_path - path),
+					                              STRING_ERROR_FIGNORE);
+				}
+				if unlikely(!path_part)
+					goto init_error;
+				error = DeeList_Append((DeeObject *)&DeeModule_Path, path_part);
+				Dee_Decref(path_part);
+				if unlikely(error)
+					goto init_error;
+				path = next_path;
 			}
-			if unlikely(!path_part)
-				goto init_error;
-			error = DeeList_Append((DeeObject *)&DeeModule_Path, path_part);
-			Dee_Decref(path_part);
-			if unlikely(error)
-				goto init_error;
-			path = next_path;
 		}
+#endif /* !CONFIG_NO_DEEMON_PATH_ENVIRON */
+	}
+#ifdef CONFIG_DEEMON_PATH
+#define APPEND_PATH(str)                                                 \
+	{                                                                    \
+		PRIVATE DEFINE_STRING(_libpath_string, str);                     \
+		error = DeeList_Append((DeeObject *)&DeeModule_Path, path_part); \
+		Dee_Decref(path_part);                                           \
+		if unlikely(error)                                               \
+			goto init_error;                                             \
+	}
+	CONFIG_DEEMON_PATH(APPEND_PATH)
+#undef APPEND_PATH
+#else /* CONFIG_DEEMON_PATH */
 	/* Add the default path based on deemon-home. */
-	path_part = DeeString_Newf("%Klib", DeeExec_GetHome());
-	if unlikely(!path_part)
-		goto init_error;
-	error = DeeList_Append((DeeObject *)&DeeModule_Path, path_part);
-	Dee_Decref(path_part);
-	if unlikely(error)
-		goto init_error;
+	{
+		DREF DeeObject *default_path;
+		default_path = DeeString_Newf("%Klib", DeeExec_GetHome());
+		if unlikely(!default_path)
+			goto init_error;
+		error = DeeList_Append((DeeObject *)&DeeModule_Path, default_path);
+		Dee_Decref(default_path);
+		if unlikely(error)
+			goto init_error;
+	}
+#endif /* !CONFIG_DEEMON_PATH */
 	return;
 init_error:
 	DeeError_Print("Failed to initialize module path\n",

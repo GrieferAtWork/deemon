@@ -1,0 +1,46 @@
+#
+# Deemon Configure file
+#
+
+BLD_ROOT="$(pwd)"
+SRC_ROOT="$(dirname $(readlink -f "$0"))"
+
+CONFIG_CC="gcc"
+CONFIG_CFLAGS=""
+CONFIG_LDFLAGS=""
+CONFIG_DLL=""
+
+# TODO: Must also create a config.h header file that always gets included
+#       for any given source file (this file is where configuration options
+#       such as `CONFIG_TRACE_REFCHANGES' get defined)
+#       It should also contain system feature definitions such as
+#       HAVE_INCLUDE_STDLIB_H or HAVE_SYMLINK
+#       It should also contain an optional override for `CONFIG_DEEMON_HOME'
+# Options:
+#   - NDEBUG
+#   - CONFIG_TRACE_REFCHANGES / CONFIG_NO_TRACE_REFCHANGES
+#   - CONFIG_BADREFCNT_CHECKS / CONFIG_NO_BADREFCNT_CHECKS
+#   - CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS / CONFIG_NO_CALLTUPLE_OPTIMIZATIONS
+#   - CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS / CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#   - DEEMON_HOME:
+#       - CONFIG_NO_DEEMON_HOME_ENVIRON
+#       - CONFIG_DEEMON_HOME_ENVIRON
+#       - CONFIG_DEEMON_HOME
+#   - DEEMON_PATH:
+#       - CONFIG_NO_DEEMON_PATH_ENVIRON
+#       - CONFIG_DEEMON_PATH_ENVIRON
+#       - CONFIG_DEEMON_PATH
+#   - CONFIG_NO_OBJECT_SLABS
+# Go though all of the source files and collect CONFIG_* options
+# that can then be added here!
+
+cat > "$BLD_ROOT/config.mak" <<EOF
+BLD_ROOT := $BLD_ROOT
+SRC_ROOT := $SRC_ROOT
+CC := gcc
+CFLAGS :=
+LDFLAGS :=
+DLL := .dll
+EXE := .exe
+EOF
+
