@@ -136,7 +136,7 @@ err:
 }
 
 PRIVATE struct type_getset aiter_getsets[] = {
-	{ "seq", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&aiter_getseq },
+	{ "seq", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&aiter_getseq },
 	{ NULL }
 };
 

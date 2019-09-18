@@ -137,7 +137,7 @@ err:
 
 PRIVATE struct type_getset subrangeiterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&subrangeiterator_seq_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&subrangeiterator_seq_get,
 	  NULL, NULL,
 	  DOC("->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN") },
 	{ NULL }

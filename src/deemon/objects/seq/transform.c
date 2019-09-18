@@ -89,7 +89,7 @@ err:
 
 PRIVATE struct type_getset transiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&transiter_seq_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&transiter_seq_get, NULL, NULL,
 	  DOC("->?Ert:SeqTransformation") },
 	{ NULL }
 };

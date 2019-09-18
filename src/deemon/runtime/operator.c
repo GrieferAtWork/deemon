@@ -4869,9 +4869,9 @@ do_iter_attr:
 				return DeeObject_TCallAttr(DeeSuper_TYPE(self), DeeSuper_SELF(self), attr_name, argc, argv);
 #endif /* !DEFINE_TYPE_OPERATORS */
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject * (DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
 				return DeeSeqEach_CallAttr(((SeqEachBase *)self)->se_seq, attr_name, argc, argv);
-			if (getattr == (DREF DeeObject * (DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
 				return DeeSeqEach_CallAttr(self, attr_name, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)

@@ -339,7 +339,7 @@ ri_index_set(RangeIterator *__restrict self,
 
 PRIVATE struct type_getset ri_getsets[] = {
 	{ "index",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ri_index_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ri_index_get,
 	  (int (DCALL *)(DeeObject *__restrict))&ri_index_del,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ri_index_set },
 	{ NULL }

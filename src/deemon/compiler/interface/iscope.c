@@ -164,14 +164,14 @@ scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 
 
 PRIVATE struct type_getset scope_getsets[] = {
-	{ "base", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&scope_getbase, NULL, NULL,
+	{ "base", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&scope_getbase, NULL, NULL,
 	  DOC("->?ABaseScope?Ert:Compiler\n"
 	      "Returns the nearest base-scope that @this scope is apart of") },
-	{ "prev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&scope_getprev, NULL, NULL,
+	{ "prev", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&scope_getprev, NULL, NULL,
 	  DOC("->?X2?AScope?Ert:Compiler?N\n"
 	      "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
 	{ "isclassscope",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&scope_get_isclassscope, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&scope_get_isclassscope, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this scope is a class-scope\n"
 	      "Class scopes are somewhat special, in that they prolong the full linkage of "
@@ -364,7 +364,7 @@ done:
 }
 
 PRIVATE struct type_method scope_methods[] = {
-	{ "newanon", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&scope_newanon,
+	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&scope_newanon,
 	  DOC("->?ASymbol?Ert:Compiler\n"
 	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
 	      "The symbol isn't given a name (when queried it will have an empty name), and "
@@ -373,7 +373,7 @@ PRIVATE struct type_method scope_methods[] = {
 	      "meaning that this is the type of symbol that should be used to hold hidden "
 	      "values, as used by $with-statements\n"
 	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
-	{ "newlocal", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&scope_newlocal,
+	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&scope_newlocal,
 	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
 	      "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
 	      "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"

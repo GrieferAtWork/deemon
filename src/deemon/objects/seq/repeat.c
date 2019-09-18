@@ -314,11 +314,11 @@ err:
 
 PRIVATE struct type_getset repeatiter_getsets[] = {
 	{ "__iter__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&repeatiter_get_iter, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&repeatiter_get_iter, NULL,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_iter,
 	  DOC("->?DIterator") },
 	{ "__num__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&repeatiter_get_num, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&repeatiter_get_num, NULL,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_num,
 	  DOC("->?Dint") },
 	{ NULL }

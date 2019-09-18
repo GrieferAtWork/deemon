@@ -1590,18 +1590,18 @@ err:
 
 PRIVATE struct type_method buffer_methods[] = {
 	{ DeeString_STR(&str_size),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_size,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_size,
 	  DOC("->?Dint\n"
 	      "Forward to the $size function of the file being buffered") },
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 	{ DeeString_STR(&str_fileno),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_fileno,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_fileno,
 	  DOC("->?Dint\n"
 	      "@throw AttributeError The file being buffered does not implement a member function $fileno\n"
 	      "Forward to the $fileno function of the file being buffered") },
 #endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_isatty,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_isatty,
 	  DOC("->?Dbool\n"
 	      "Forward to the $isatty function of the file being buffered\n"
 	      "Note that in order to implement auto-buffering, file buffers are allowed to "
@@ -1610,12 +1610,12 @@ PRIVATE struct type_method buffer_methods[] = {
 	      "any side-effects caused by the underlying $isatty may not come into effect "
 	      "following repeated calls") },
 	{ "flush",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_flush,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_flush,
 	  DOC("()\n"
 	      "Similar to #sync, but never synchronize the underlying file, regardless "
 	      "of whether or not $\"nosync\" was passed to the constructor, or #setbuf") },
 	{ "setbuf",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_setbuf,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&buffer_setbuf,
 	  DOC("(mode:?Dstring,size=!0)\n"
 	      "@throw ValueError The given @mode is malformed, or not recognized\n"
 	      "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
@@ -1679,11 +1679,11 @@ err_closed_unlock:
 
 PRIVATE struct type_getset buffer_getsets[] = {
 	{ "file",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&buffer_getfile, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&buffer_getfile, NULL, NULL,
 	  DOC("->?DFile\n"
 	      "Returns the file that is being buffered") },
 	{ "filename",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&buffer_filename, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&buffer_filename, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Forward the filename attribute of the file being buffered") },
 	{ NULL }

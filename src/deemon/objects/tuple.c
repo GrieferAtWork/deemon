@@ -1640,18 +1640,18 @@ err_empty:
 
 PRIVATE struct type_method tuple_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tuple_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&tuple_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
 
 PRIVATE struct type_getset tuple_getsets[] = {
 	{ DeeString_STR(&str_first),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&tuple_first,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&tuple_first,
 	  NULL,
 	  NULL },
 	{ DeeString_STR(&str_last),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&tuple_last,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&tuple_last,
 	  NULL,
 	  NULL },
 	{ NULL }

@@ -1339,17 +1339,17 @@ time_isdst(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE struct type_method time_methods[] = {
-	{ "as", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_as,
+	{ "as", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_as,
 	  DOC("(string repr)->time\n"
 	      "@throw ValueError The given @repr is not a known string representation\n"
 	      "Re-return @this time object using a given representation\n"
 	      "Views of all available representation can also be generated "
 	      "using properties of the same names, meaning that this function "
 	      "could also be implemented using $__getattr__") },
-	{ "format", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_doformat,
+	{ "format", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_doformat,
 	  DOC("(format:?Dstring)->?Dstring\n"
 	      "Format @this time object using a given strftime-style @format string") },
-	{ "__format__", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_doformat,
+	{ "__format__", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_doformat,
 	  DOC("(format:?Dstring)->?Dstring\n"
 	      "Internal alias for #format") },
 	{ NULL }
@@ -1592,7 +1592,7 @@ DOC_DEF(docof_timeas, "->?GTime\n"
                       "Note that these representations are always zero-based, meaning "
                       "that January is $0, the 2nd day of the month is $1, etc.");
 PRIVATE struct type_getset time_getsets[] = {
-	{ "intval", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_intval, NULL, NULL,
+	{ "intval", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_intval, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Returns the integer value of the selected time representation\n"
 	      "This differs from the regular int-operator which always return the time in microseconds:\n"
@@ -1601,13 +1601,13 @@ PRIVATE struct type_getset time_getsets[] = {
 	      ">print x;        // 2 days\n"
 	      ">print int(x);   // 2*24*60*60*1000*1000\n"
 	      ">print x.intval; // 2") },
-	{ "isdst", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_isdst, NULL, NULL,
+	{ "isdst", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_isdst, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if DaylightSavingsTime is in active at @this time\n"
 	      "Note that this implementation does not perform any special "
 	      "handling no matter if daylight savings is active or not") },
 	{ "timepart",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_timepart_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_timepart_get,
 	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_timepart_set,
 	  DOC("->?GTime\n"
@@ -1616,7 +1616,7 @@ PRIVATE struct type_getset time_getsets[] = {
 	      "When setting, the passed objected is interpreted as an integer describing the "
 	      "number of microsecond since the day began") },
 	{ "datepart",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_datepart_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_datepart_get,
 	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_datepart_set,
 	  DOC("->?GTime\n"
@@ -1685,17 +1685,17 @@ PRIVATE struct type_getset time_getsets[] = {
 	{ "msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC("->?GTime\nDeprecated alias for #mic / #millisecond") },
 	{ "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?GTime\nDeprecated alias for #mics / #milliseconds") },
 	{ "time",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_timepart_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_timepart_get,
 	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_timepart_set,
 	  DOC("->?GTime\nDeprecated alias for #timepart") },
 	{ "part",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_datepart_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_datepart_get,
 	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_datepart_set,
 	  DOC("->?GTime\nDeprecated alias for #datepart") },
 	{ "time_t",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&time_get_time_t,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&time_get_time_t,
 	  (int (DCALL *)(DeeObject *__restrict))&time_del_time_t,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&time_set_time_t,
 	  DOC("->?Dint\nDeprecated") },
@@ -2225,11 +2225,11 @@ PRIVATE struct type_method time_class_methods[] = {
 	{ "now", &time_class_now, DOC("->?GTime\nDeprecated. Use :time:now instead") },
 	{ "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use :time:tick instead") },
 	{ "freq", &time_class_freq, DOC("->?Dint\nDeprecated. Always returns ${1000000}") },
-	{ "time", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_class_maketime,
+	{ "time", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_class_maketime,
 	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
 	      "Deprecated. Use :maketime instead"),
 	  TYPE_METHOD_FKWDS },
-	{ "date", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_class_makedate,
+	{ "date", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&time_class_makedate,
 	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
 	      "Deprecated. Use :makedate instead"),
 	  TYPE_METHOD_FKWDS },

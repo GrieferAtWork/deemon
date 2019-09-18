@@ -330,31 +330,31 @@ property_get_module(Property *__restrict self) {
 
 PRIVATE struct type_getset property_getsets[] = {
 	{ "canget",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_canget, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this Property has a getter callback") },
 	{ "candel",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_candel, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_candel, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this Property has a delete callback") },
 	{ "canset",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_canset, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this Property has a setter callback") },
 	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_get_name, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the name of @this Property, or :none if unknown") },
 	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_get_doc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the documentation string of @this Property, or :none if unknown") },
 	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_get_type, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_get_type, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the type implementing @this Property, or :none if unknown") },
 	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&property_get_module, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&property_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "Returns the module within which @this Property is declared, or :none if unknown") },
 	{ NULL }

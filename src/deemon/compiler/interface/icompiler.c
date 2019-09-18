@@ -207,21 +207,21 @@ compiler_get_module(DeeCompilerObject *__restrict self) {
 
 
 INTERN struct type_getset compiler_getsets[] = {
-	{ "lexer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_lexer, NULL, NULL,
+	{ "lexer", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&compiler_get_lexer, NULL, NULL,
 	  DOC("->?ALexer?Ert:Compiler\n"
 	      "Returns the lexer (tokenizer) of @this compiler") },
-	{ "parser", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_parser, NULL, NULL,
+	{ "parser", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&compiler_get_parser, NULL, NULL,
 	  DOC("->?AParser?Ert:Compiler\n"
 	      "Returns the parser (token to ast converter) of @this compiler") },
 	{ "scope",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_scope, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&compiler_get_scope, NULL,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&compiler_set_scope,
 	  DOC("->?AScope?Ert:Compiler\n"
 	      "@throw ValueError Attempted to set a scope who's compiler doesn't match @this\n"
 	      "@throw ReferenceError Attempted to set a scope not apart of the same base-scope as #basescope\n"
 	      "Get or set the current scope used for parsing new #{ast}s") },
 	{ "basescope",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_basescope, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&compiler_get_basescope, NULL,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&compiler_set_basescope,
 	  DOC("->?ABaseScope?Ert:Compiler\n"
 	      "@throw ValueError Attempted to set a scope who's compiler doesn't match @this\n"
@@ -229,12 +229,12 @@ INTERN struct type_getset compiler_getsets[] = {
 	      "Get or set the current base-scope, representing the current function-context\n"
 	      "When setting the base-scope, #scope is set to the same scope") },
 	{ "rootscope",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_rootscope, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&compiler_get_rootscope, NULL, NULL,
 	  DOC("->?ARootScope?Ert:Compiler\n"
 	      "Get the root-scope active within @this compiler\n"
 	      "Note that this scope is fixed and cannot be changed") },
 	{ DeeString_STR(&str_module),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&compiler_get_module, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&compiler_get_module, NULL, NULL,
 	  DOC("->?DModule\n"
 	      "Returns the module being constructed by @this compiler\n"
 	      "Warning: The returned module is incomplete and uninitialized, "
@@ -1980,14 +1980,14 @@ ast_makeassembly(DeeCompilerObject *__restrict self,
 }
 
 INTERN struct type_method compiler_methods[] = {
-	{ "makeconstexpr", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeconstexpr,
+	{ "makeconstexpr", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeconstexpr,
 	  DOC("(value,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
 	      "@throw ValueError The compiler of @scope doesn't match @this\n"
 	      "Construct a new constant-expression ast referring to @value"),
 	  TYPE_METHOD_FKWDS },
-	{ "makesym", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makesym,
+	{ "makesym", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makesym,
 	  DOC("(sym:?ASymbol?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -1999,7 +1999,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "for writing instead. Similarly, special handling is done when the "
 	      "branch is used in an assembly output operand"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeunbind", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeunbind,
+	{ "makeunbind", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeunbind,
 	  DOC("(sym:?ASymbol?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2007,7 +2007,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
 	      "Construct a branch for unbinding the value of @sym at runtime"),
 	  TYPE_METHOD_FKWDS },
-	{ "makebound", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makebound,
+	{ "makebound", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makebound,
 	  DOC("(sym:?ASymbol?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2015,7 +2015,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "@throw ReferenceError The given @sym is not reachable from the effectively used @scope\n"
 	      "Construct a branch for checking if a given symbol @sym is bound"),
 	  TYPE_METHOD_FKWDS },
-	{ "makemultiple", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makemultiple,
+	{ "makemultiple", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makemultiple,
 	  DOC("(branches:?S?AAst?Ert:Compiler,typing:?DType=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2036,7 +2036,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "Note that in any kind of sequence branch, asts created by @makeexpand may "
 	      "appear, and will be inlined as part of the greater whole expression"),
 	  TYPE_METHOD_FKWDS },
-	{ "makereturn", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makereturn,
+	{ "makereturn", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makereturn,
 	  DOC("(expr:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2044,7 +2044,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
 	      "Construct a return-branch that either returns @expr, or :none when @expr is :none"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeyield", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeyield,
+	{ "makeyield", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeyield,
 	  DOC("(expr:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2052,7 +2052,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
 	      "Construct a yield-branch that either returns @expr, or :none when @expr is :none"),
 	  TYPE_METHOD_FKWDS },
-	{ "makethrow", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makethrow,
+	{ "makethrow", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makethrow,
 	  DOC("(expr:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2060,7 +2060,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
 	      "Construct a throw-branch that either throws @expr, or re-throws the last exception when @expr is :none"),
 	  TYPE_METHOD_FKWDS },
-	{ "maketry", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_maketry,
+	{ "maketry", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_maketry,
 	  DOC("(guard:?AAst?Ert:Compiler,handlers:?S?T3?Dstring?AAst?Ert:Compiler?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(guard:?AAst?Ert:Compiler,handlers:?S?T3?Dint?AAst?Ert:Compiler?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
@@ -2077,7 +2077,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "$\"finally\"|The handler is a finally-handler, meaning it always gets executed\n"
 	      "$\"interrupt\"|The handler is capable of catching interrupt-exceptions (ignored when $\"finally\" is given)}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeloop", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeloop,
+	{ "makeloop", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeloop,
 	  DOC("(flags:?Dstring,elem:?AAst?Ert:Compiler=!N,iter:?AAst?Ert:Compiler,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(flags:?Dstring,cond:?AAst?Ert:Compiler=!N,next:?AAst?Ert:Compiler=!N,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(flags:?Dint,elem:?AAst?Ert:Compiler=!N,iter:?AAst?Ert:Compiler,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
@@ -2100,7 +2100,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "$\"unlikely\"|The block (@loop) of the loop is unlikely to be reached, and "
 	      "should be placed in a section of code that is rarely used}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeloopctl", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeloopctl,
+	{ "makeloopctl", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeloopctl,
 	  DOC("(isbreak:?Dbool,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2108,7 +2108,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "Construct a loop control branch, that is either a $continue (when "
 	      "@isbreak is :false), or a $break statement (when @isbreak is :true)"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeconditional", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeconditional,
+	{ "makeconditional", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeconditional,
 	  DOC("(cond:?AAst?Ert:Compiler,tt:?AAst?Ert:Compiler=!N,ff:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(cond:?AAst?Ert:Compiler,tt:?AAst?Ert:Compiler=!N,ff:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
@@ -2136,7 +2136,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "$\"likely\"|When given, assembly for @ff is placed in a section of code that is rarely used\n"
 	      "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makebool", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makebool,
+	{ "makebool", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makebool,
 	  DOC("(expr:?AAst?Ert:Compiler,negate=!f,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2146,7 +2146,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "underlying boolean logic when @negate is :true\n"
 	      "The expression ${!!a} results in ${makebool(a,false)}, while ${!a} results in ${makebool(a,true)}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeexpand", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeexpand,
+	{ "makeexpand", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeexpand,
 	  DOC("(expr:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2154,7 +2154,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "@throw ReferenceError The given @expr is not part of the basescope of the effective @scope\n"
 	      "Construct an expand-branch that will unpack a sequence expression @expr at runtime"),
 	  TYPE_METHOD_FKWDS },
-	{ "makefunction", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makefunction,
+	{ "makefunction", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makefunction,
 	  DOC("(code:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or :none to use #scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or :none when not available\n"
@@ -2165,7 +2165,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "The base-scope of the function is set to ${code.scope.base}, while the returned "
 	      "branch will be executed in the context of @scope, or the current scope when :none"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeoperatorfunc", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeoperatorfunc,
+	{ "makeoperatorfunc", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeoperatorfunc,
 	  DOC("(name:?Dstring,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dint,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
@@ -2180,7 +2180,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "For example ${operator add} results in ${makeoperatorfunc(\"add\")}, while "
 	      "${binding.operator add} results in ${makeoperatorfunc(\"add\",binding)}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeoperator", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeoperator,
+	{ "makeoperator", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeoperator,
 	  DOC("(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dint,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
@@ -2208,7 +2208,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "inplace operator is used when the @a operand cannot actually be written to\n"
 	      "$\"dontoptimize\"|Don't perform constant optimizations within this branch during the ast-optimization pass}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeaction", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeaction,
+	{ "makeaction", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeaction,
 	  DOC("(name:?Dstring,a:?AAst?Ert:Compiler=!N,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,mustrun=!t,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
 	      "@param name The name of the action (see table below)\n"
 	      "@param mustrun When :false, ast-optimization may optimize away side-effects caused by action operands. "
@@ -2247,19 +2247,19 @@ INTERN struct type_method compiler_methods[] = {
 	      "$\"diffobj\"|${a !== b is bound}|2|Evaluate to :true when @a and @b are different objects at runtime, or :false otherwise\n"
 	      "$\"callkw\"|${a(b...,**c)}|3|Perform a call to @a, using positional arguments from @b, and a keyword list from @c}"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeclass", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeclass,
+	{ "makeclass", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeclass,
 	  DOC("TODO"),
 	  TYPE_METHOD_FKWDS },
-	{ "makelabel", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makelabel,
+	{ "makelabel", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makelabel,
 	  DOC("TODO"),
 	  TYPE_METHOD_FKWDS },
-	{ "makegoto", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makegoto,
+	{ "makegoto", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makegoto,
 	  DOC("TODO"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeswitch", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeswitch,
+	{ "makeswitch", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeswitch,
 	  DOC("TODO"),
 	  TYPE_METHOD_FKWDS },
-	{ "makeassembly", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeassembly,
+	{ "makeassembly", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&ast_makeassembly,
 	  DOC("TODO"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }

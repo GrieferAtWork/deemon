@@ -750,7 +750,7 @@ err:
 
 PRIVATE struct type_method traceback_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&traceback_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&traceback_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

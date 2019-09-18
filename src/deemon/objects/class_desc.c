@@ -218,7 +218,7 @@ PRIVATE struct type_cmp coti_cmp = {
 
 PRIVATE struct type_getset coti_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&coti_getseq, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&coti_getseq, NULL, NULL,
 	  DOC("->?Aoperators?Ert:ClassDescriptor") },
 	{ NULL }
 };
@@ -675,7 +675,7 @@ done:
 
 PRIVATE struct type_getset cati_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&cati_getseq, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&cati_getseq, NULL, NULL,
 	  DOC("->?Aattributes?Ert:ClassDescriptor") },
 	{ NULL }
 };
@@ -804,9 +804,9 @@ err:
 
 
 PRIVATE struct type_getset ca_getsets[] = {
-	{ "name", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_getname, NULL, NULL, DOC("->?Dstring") },
-	{ "doc", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_getdoc, NULL, NULL, DOC("->?X2?Dstring?N") },
-	{ "addr", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_getaddr, NULL, NULL,
+	{ "name", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_getname, NULL, NULL, DOC("->?Dstring") },
+	{ "doc", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_getdoc, NULL, NULL, DOC("->?X2?Dstring?N") },
+	{ "addr", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_getaddr, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Index into the class/instance object table, where @this attribute is stored\n"
 	      "When #isclassmem or #isclassns are :true, this index and any index offset from it "
@@ -815,19 +815,19 @@ PRIVATE struct type_getset ca_getsets[] = {
 	      "within the class itself, rather than having to be copied into each and every instance "
 	      "of the class\n"
 	      "S.a. :Type.__ctable__ and :Type.__itable__") },
-	{ "isprivate", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_isprivate, NULL, NULL,
+	{ "isprivate", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_isprivate, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute was declared as $private") },
-	{ "isfinal", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_isfinal, NULL, NULL,
+	{ "isfinal", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_isfinal, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute was declared as $final") },
-	{ "isreadonly", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_isreadonly, NULL, NULL,
+	{ "isreadonly", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_isreadonly, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute can only be read from\n"
 	      "When this is case, a property-like attribute can only ever have a getter "
 	      "associated with itself, while field- or method-like attribute can only be "
 	      "written once (aka. when not already bound)") },
-	{ "ismethod", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_ismethod, NULL, NULL,
+	{ "ismethod", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_ismethod, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute referrs to a method\n"
 	      "When set, reading from the attribute will return a an object "
@@ -835,7 +835,7 @@ PRIVATE struct type_getset ca_getsets[] = {
 	      "Note however that this is rarely ever required to be done, as method attributes "
 	      "are usually called directly, in which case a callattr instruction can silently "
 	      "prepend the this-argument before the passed argument list") },
-	{ "isproperty", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_isproperty, NULL, NULL,
+	{ "isproperty", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_isproperty, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute was defined as a property\n"
 	      "When this is the case, a #readonly attribute only has a single callback "
@@ -846,18 +846,18 @@ PRIVATE struct type_getset ca_getsets[] = {
 	      "$" PP_STR(CLASS_GETSET_GET) "|The getter callback ($get)\n"
 	                                   "$" PP_STR(CLASS_GETSET_DEL) "|The delete callback ($del)\n"
 	                                                                "$" PP_STR(CLASS_GETSET_SET) "|The setter callback ($set)}") },
-	{ "isclassmem", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_isclassmem, NULL, NULL,
+	{ "isclassmem", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_isclassmem, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Set if #addr is an index into the class object table, rather than into the "
 	      "instance object table. Note however that when #isclassns") },
-	{ "isclassns", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_getisclassns, NULL, NULL,
+	{ "isclassns", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_getisclassns, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this class attribute is exclusive to the "
 	      "class-namespace (i.e. was declared as $static)\n"
 	      "During enumeration of attributes, all attributes where this is :true "
 	      "are enumated by :ClassDescriptor.cattr, while all for which it isn't "
 	      "are enumated by :ClassDescriptor.iattr") },
-	{ "flags", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&ca_getflags, NULL, NULL,
+	{ "flags", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ca_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Returns a comma-separated string describing the flags of @this class attribute\n"
 	      "%{table Flag|Property\n"
@@ -1304,17 +1304,17 @@ err:
 
 PRIVATE struct type_method cd_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cd_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cd_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
 
 PRIVATE struct type_getset cd_getsets[] = {
 	{ "isfinal",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_isfinal, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_isfinal, NULL, NULL,
 	  DOC("->?Dbool") },
 	{ "isinterrupt",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_isinterrupt, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_isinterrupt, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class behaves as an interrupt exception when thrown\n"
 	      "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
@@ -1326,30 +1326,30 @@ PRIVATE struct type_getset cd_getsets[] = {
 	      "expecting it to continue running because the error was silently swallowed by an "
 	      "unrelated catch-all block") },
 	{ "hassuperconstructor",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_hassuperconstructor, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_hassuperconstructor, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class inherits its constructor from its base-type\n"
 	      "In user-defined classes, this behavior is encoded as ${this = super;}") },
 	{ "__hassuperkwds__",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_hassuperkwds, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_hassuperkwds, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if the super-args operator of @this class returns a tuple (args,kwds) "
 	      "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
 	      "Otherwise, the super-args operator simply returns args and the super-constructor "
 	      "is called as ${super(args...)}") },
 	{ "__hasautoinit__",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_hasautoinit, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_hasautoinit, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class provides an automatic initializer and ${operator repr}\n"
 	      "This is used to implement the user-code ${this = default;} constructor definition") },
 	{ "__isinttruncated__",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_isinttruncated, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_isinttruncated, NULL, NULL,
 	  DOC("->?Dbool") },
 	{ "__hasmoveany__",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_ismoveany, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_ismoveany, NULL, NULL,
 	  DOC("->?Dbool") },
 	{ "flags",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_getflags, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Return a comma-separated string of flags used to describe the combination of properties described by "
 	      "#isfinal, #isinterrupt, #hassuperconstructor, #__hassuperkwds__, #__isinttruncated__, and #__hasmoveany__\n"
@@ -1362,18 +1362,18 @@ PRIVATE struct type_getset cd_getsets[] = {
 	      "$\"inttrunc\"|#__isinttruncated__\n"
 	      "$\"moveany\"|#__hasmoveany__\n}") },
 	{ DeeString_STR(&str_operators),
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_operators, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_operators, NULL, NULL,
 	  DOC("->?#OperatorTable\n"
 	      "Enumerate operators implemented by @this class, as well as their associated "
 	      "class object table indices which are holding the respective implementations\n"
 	      "Note that the class object table entry may be left unbound to explicitly "
 	      "define an operator as having been deleted") },
 	{ "iattr",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_iattr, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_iattr, NULL, NULL,
 	  DOC("->?#AttributeTable\n"
 	      "Enumerate user-defined instance attributes as a mapping-like :deemon:string-#Attribute sequence") },
 	{ "cattr",
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&cd_cattr, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&cd_cattr, NULL, NULL,
 	  DOC("->?#AttributeTable\n"
 	      "Enumerate user-defined class ($static) attributes as a mapping-like :deemon:string-#Attribute sequence") },
 	{ NULL }
@@ -2325,13 +2325,13 @@ ot_isitable(ObjectTable *__restrict self) {
 
 PRIVATE struct type_getset ot_getsets[] = {
 	{ DeeString_STR(&str___type__),
-	  (DeeObject * (DCALL *)(DeeObject * __restrict))&ot_gettype, NULL, NULL,
+	  (DeeObject *(DCALL *)(DeeObject * __restrict))&ot_gettype, NULL, NULL,
 	  DOC("->?DType\nThe type describing @this object table") },
-	{ "__class__", (DeeObject * (DCALL *)(DeeObject * __restrict))&ot_getclass, NULL, NULL,
+	{ "__class__", (DeeObject *(DCALL *)(DeeObject * __restrict))&ot_getclass, NULL, NULL,
 	  DOC("->?Ert:ClassDescriptor\nSame as ${this.__type__.__class__}") },
-	{ "__isctable__", (DeeObject * (DCALL *)(DeeObject * __restrict))&ot_isctable, NULL, NULL,
+	{ "__isctable__", (DeeObject *(DCALL *)(DeeObject * __restrict))&ot_isctable, NULL, NULL,
 	  DOC("->?Dbool\nEvaluates to :true if @this is a class object table") },
-	{ "__isitable__", (DeeObject * (DCALL *)(DeeObject * __restrict))&ot_isitable, NULL, NULL,
+	{ "__isitable__", (DeeObject *(DCALL *)(DeeObject * __restrict))&ot_isitable, NULL, NULL,
 	  DOC("->?Dbool\nEvaluates to :true if @this is an instance object table") },
 	{ NULL }
 };
@@ -2575,17 +2575,17 @@ instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, vo
 
 PRIVATE struct type_method instancemember_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&instancemember_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&instancemember_get,
 	  DOC("(thisarg)->\n"
 	      "Return the @thisarg's value of @this member"),
 	  TYPE_METHOD_FKWDS },
 	{ "delete",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&instancemember_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&instancemember_delete,
 	  DOC("(thisarg)\n"
 	      "Delete @thisarg's value of @this member"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&instancemember_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&instancemember_set,
 	  DOC("(thisarg,value)\n"
 	      "Set @thisarg's value of @this member to @value"),
 	  TYPE_METHOD_FKWDS },
@@ -2652,27 +2652,27 @@ instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
 
 PRIVATE struct type_getset instancemember_getsets[] = {
 	{ "canget",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemember_get_canget, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemember_get_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this member can be read from") },
 	{ "candel",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemember_get_candel, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemember_get_candel, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this member can be deleted") },
 	{ "canset",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemember_get_canset, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemember_get_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this member can be written to") },
 	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemember_get_name, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemember_get_name, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "The name of @this instance member") },
 	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemember_get_doc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemember_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The documentation string associated with @this instance member") },
 	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&instancemember_get_module, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemember_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "Returns the module that is defining @this instance "
 	      "member, or :none if that module could not be defined") },

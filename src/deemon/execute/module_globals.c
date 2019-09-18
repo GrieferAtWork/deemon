@@ -228,7 +228,7 @@ mei_getseq(ModuleExportsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset mei_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&mei_getseq },
+	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&mei_getseq },
 	{ NULL }
 };
 
@@ -510,7 +510,7 @@ PRIVATE struct type_seq me_seq = {
 
 PRIVATE struct type_method me_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&me_get_f,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&me_get_f,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }
@@ -692,7 +692,7 @@ mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset mgi_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&mgi_getseq },
+	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&mgi_getseq },
 	{ NULL }
 };
 #undef READ_INDEX

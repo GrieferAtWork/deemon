@@ -765,17 +765,17 @@ err:
 
 PRIVATE struct type_method sysfile_methods[] = {
 	{ STR_FILENO,
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_fileno,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_fileno,
 	  DOC("->?Dint") },
 	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_isatty,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_isatty,
 	  DOC("->?Dbool") },
 	{ "flush",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_flush,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_flush,
 	  DOC("()\n"
 	      "An alias for #sync used for compatibility with :File.Buffer") },
 	{ "setbuf",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_setbuf,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&sysfile_setbuf,
 	  DOC("(string mode,size=!0)\n"
 	      "Set the buffering mode in a manner that is compatible with :File.Buffer.setbuf") },
 	{ NULL }
@@ -788,7 +788,7 @@ sysfile_getfile(SystemFile *__restrict self) {
 
 PRIVATE struct type_getset sysfile_getsets[] = {
 	{ "file",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&sysfile_getfile, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sysfile_getfile, NULL, NULL,
 	  DOC("->?DFile\n"
 	      "Returns @this File, indicating the self-buffering "
 	      "behavior of system files on this host") },

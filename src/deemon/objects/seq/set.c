@@ -481,11 +481,11 @@ PRIVATE struct type_member suiter_members[] = {
 
 PRIVATE struct type_getset suiter_getsets[] = {
 	{ "__iter__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&suiter_get_iter, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&suiter_get_iter, NULL,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_iter,
 	  DOC("->?DIterator") },
 	{ "__in2nd__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&suiter_get_in2nd, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&suiter_get_in2nd, NULL,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_in2nd,
 	  DOC("->?Dbool") },
 	{ NULL }

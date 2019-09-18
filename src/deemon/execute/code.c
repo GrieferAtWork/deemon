@@ -840,26 +840,26 @@ PRIVATE struct type_getset code_getsets[] = {
 	 * types, including `function', `objmethod', etc.
 	 */
 	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_name, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the name of @this code object, or :none if unknown (s.a. :Function.__name__)") },
 	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_doc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the documentation string of @this code object, or :none if unknown (s.a. :Function.__doc__)") },
 	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_type, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "Try to determine if @this code object is defined as part of a user-defined class, "
 	      "and if it is, return that class type, or :none if that class couldn't be found, "
 	      "or if @this code object is defined as stand-alone (s.a. :Function.__type__)") },
 	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_kwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_kwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
 	      "Returns a sequence of keyword argument names accepted by @this code object\n"
 	      "If @this code doesn't accept keyword arguments, an empty sequence is returned") },
 	{ "__operator__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_operator, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_operator, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Try to determine if @this code object is defined as part of a user-defined class, "
 	      "and if so, if it is used to define an operator callback. If that is the case, "
@@ -867,68 +867,68 @@ PRIVATE struct type_getset code_getsets[] = {
 	      "if that class couldn't be found, @this code object is defined as stand-alone, or "
 	      "defined as a class- or instance-method (s.a. :Function.__operator__)") },
 	{ "__operatorname__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_operatorname, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_operatorname, NULL, NULL,
 	  DOC("->?X3?Dstring?Dint?N\n"
 	      "Same as #__operator__, but instead try to return the unambiguous name of the "
 	      "operator, though still return its ID if the operator isn't recognized as being "
 	      "part of the standard (s.a. :Function.__operatorname__)") },
 	{ "__property__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_get_property, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_get_property, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns an integer describing the kind if @this code is part of a property or getset, "
 	      "or returns :none if the function's property could not be found, or if the function isn't "
 	      "declared as a property callback (s.a. :Function.__property__)") },
 	{ "__default__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_getdefault, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_getdefault, NULL, NULL,
 	  DOC("->?S?O\n"
 	      "Access to the default values of arguments") },
 	/* Code-specific RTTI fields don't have leading/trailing underscores,
 	 * because they don't need to match the ABI also provided by numerous
 	 * other types (such as `function', `objmethod', etc.) */
 	{ "statics",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_getstatic, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_getstatic, NULL, NULL,
 	  DOC("->?S?O\n"
 	      "Access to the static values of @this code object") },
 	{ "isyielding",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_isyielding, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_isyielding, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this code object is for a yield-function") },
 	{ "iscopyable",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_iscopyable, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_iscopyable, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if execution frames of @this code object can be copied") },
 	{ "hasassembly",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_hasassembly, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_hasassembly, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if assembly of @this code object is executed in safe-mode") },
 	{ "islenient",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_islenient, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_islenient, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the runtime stack allocation allows for leniency") },
 	{ "hasvarargs",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_hasvarargs, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_hasvarargs, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this code object accepts variable arguments as overflow") },
 	{ "hasvarkwds",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_hasvarkwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_hasvarkwds, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this code object accepts variable keyword arguments as overflow") },
 	{ "isthiscall",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_isthiscall, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_isthiscall, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this code object requires a hidden leading this-argument") },
 	{ "hasheapframe",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_hasheapframe, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_hasheapframe, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if the runtime stack-frame must be allocated on the heap") },
 	{ "hasfinally",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_hasfinally, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_hasfinally, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
 	      "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
 	      "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution") },
 	{ "isconstructor",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&code_isconstructor, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&code_isconstructor, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "True for class constructor code objects. - When set, don't include the this-argument in "
 	      "tracebacks, thus preventing incomplete instances from being leaked when the constructor "

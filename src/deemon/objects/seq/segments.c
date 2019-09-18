@@ -167,7 +167,7 @@ err:
 
 PRIVATE struct type_getset segiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&segiter_getseq,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&segiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:SeqSegments") },

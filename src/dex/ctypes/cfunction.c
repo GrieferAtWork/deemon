@@ -335,8 +335,8 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	/* Assign the proper call operator. */
 #ifndef __INTELLISENSE__
 	result->ft_base.st_call = (((unsigned int)calling_convention & (unsigned int)CC_FVARARGS)
-	                           ? (DREF DeeObject * (DCALL *)(DeeSTypeObject * __restrict, void *, size_t, DeeObject **__restrict))&cfunction_call_v
-	                           : (DREF DeeObject * (DCALL *)(DeeSTypeObject * __restrict, void *, size_t, DeeObject **__restrict))&cfunction_call);
+	                           ? (DREF DeeObject *(DCALL *)(DeeSTypeObject * __restrict, void *, size_t, DeeObject **__restrict))&cfunction_call_v
+	                           : (DREF DeeObject *(DCALL *)(DeeSTypeObject * __restrict, void *, size_t, DeeObject **__restrict))&cfunction_call);
 #endif /* !__INTELLISENSE__ */
 
 	/* Collect all the type descriptors used by libffi. */

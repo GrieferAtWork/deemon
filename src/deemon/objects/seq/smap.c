@@ -590,7 +590,7 @@ PRIVATE struct type_member smap_class_members[] = {
 
 PRIVATE struct type_method smap_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&smap_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&smap_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }

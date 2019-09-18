@@ -1537,19 +1537,19 @@ bytes_dellast(Bytes *__restrict self) {
 
 PRIVATE struct type_getset bytes_getsets[] = {
 	{ "isreadonly",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_isreadonly, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_isreadonly, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this Bytes object cannot be written to") },
 	{ "iswritable",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_iswritable, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_iswritable, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this Bytes object not be written to (the inverse of #isreadonly)") },
 	{ "ismutable",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_iswritable, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_iswritable, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Alias for #iswritable, overriding :Sequence.ismutable") },
 	{ DeeString_STR(&str_first),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_getfirst,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_getfirst,
 	  (int (DCALL *)(DeeObject *__restrict))&bytes_delfirst,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setfirst,
 	  DOC("->?Dint\n"
@@ -1557,7 +1557,7 @@ PRIVATE struct type_getset bytes_getsets[] = {
 	      "@throw BufferError Attempted to modify the byte when @this Bytes object is not writable\n"
 	      "Access the first byte of @this Bytes object") },
 	{ DeeString_STR(&str_last),
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&bytes_getlast,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_getlast,
 	  (int (DCALL *)(DeeObject *__restrict))&bytes_dellast,
 	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setlast,
 	  DOC("->?Dint\n"
@@ -1806,7 +1806,7 @@ err:
 
 
 PRIVATE struct type_method bytes_class_methods[] = {
-	{ "fromseq", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&bytes_fromseq,
+	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&bytes_fromseq,
 	  DOC("(seq:?S?Dint)->?.\n"
 	      "@throw NotImplemented The given @seq cannot be iterated, or contains at "
 	      "least one item that cannot be converted into an integer\n"
@@ -1815,7 +1815,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	      "Convert the items of the given sequence @seq into integers, "
 	      "and construct a writable Bytes object from their values\n"
 	      "Passing :none for @seq will return an empty Bytes object") },
-	{ "fromhex", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&bytes_fromhex,
+	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&bytes_fromhex,
 	  DOC("(hex_string:?Dstring)->?.\n"
 	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
 	      "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"

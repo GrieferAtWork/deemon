@@ -919,17 +919,17 @@ stat_get_ctime(DeeStatObject *__restrict self) {
 
 
 PRIVATE struct type_getset stat_getsets[] = {
-	{ "st_dev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
-	{ "st_ino", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
-	{ "st_mode", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
-	{ "st_nlink", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
+	{ "st_dev", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
+	{ "st_ino", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
+	{ "st_mode", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
+	{ "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
 	/* >> property st_uid -> user;
 	 * >> property st_gid -> group; */
-	{ "st_rdev", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
-	{ "st_size", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
-	{ "st_atime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
-	{ "st_mtime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
-	{ "st_ctime", (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
+	{ "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
+	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
+	{ "st_atime", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
+	{ "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
+	{ "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
 	{ NULL }
 };
 
@@ -1004,13 +1004,13 @@ err:
 }
 
 PRIVATE struct type_method stat_methods[] = {
-	{ "isdir", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isdir, DeeStat_isdir_doc },
-	{ "ischr", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_ischr, DeeStat_ischr_doc },
-	{ "isblk", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isblk, DeeStat_isblk_doc },
-	{ "isreg", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isreg, DeeStat_isreg_doc },
-	{ "isfifo", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isfifo, DeeStat_isfifo_doc },
-	{ "islnk", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_islnk, DeeStat_islnk_doc },
-	{ "issock", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_issock, DeeStat_issock_doc },
+	{ "isdir", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isdir, DeeStat_isdir_doc },
+	{ "ischr", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_ischr, DeeStat_ischr_doc },
+	{ "isblk", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isblk, DeeStat_isblk_doc },
+	{ "isreg", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isreg, DeeStat_isreg_doc },
+	{ "isfifo", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_isfifo, DeeStat_isfifo_doc },
+	{ "islnk", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_islnk, DeeStat_islnk_doc },
+	{ "issock", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&stat_issock, DeeStat_issock_doc },
 	{ NULL }
 };
 

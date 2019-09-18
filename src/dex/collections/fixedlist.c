@@ -768,10 +768,10 @@ err:
 
 PRIVATE struct type_method fl_methods[] = {
 	{ "clear",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&fl_clear_meth,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&fl_clear_meth,
 	  DOC("()") },
 	{ "__sizeof__",
-	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&fl_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&fl_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
