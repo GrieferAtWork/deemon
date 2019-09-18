@@ -2355,7 +2355,7 @@ create_assembly_file:
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTLF |
 	                              TPPLEXER_FLAG_TERMINATE_STRING_LF |
 	                              /*TPPLEXER_FLAG_NO_MACROS|
-                                 TPPLEXER_FLAG_NO_DIRECTIVES|*/
+	                              TPPLEXER_FLAG_NO_DIRECTIVES|*/
 	                              TPPLEXER_FLAG_ASM_COMMENTS);
 
 	/* Enable the $-token, as well as C and C++ comments. */

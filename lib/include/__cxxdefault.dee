@@ -18,34 +18,37 @@
  */
 #pragma once
 #ifndef __DEEMON_GUARD___CXXDEFAULT_DEE
-#define __DEEMON_GUARD___CXXDEFAULT_DEE
-#endif
+#define __DEEMON_GUARD___CXXDEFAULT_DEE 1
+#endif /* !__DEEMON_GUARD___CXXDEFAULT_DEE */
 
 #include "__stddef.dee"
 #include "__cdefault.dee"
 
 #ifdef __STDC_NOCXX__
-#	error C++ Simulation headers are disabled \
- 	(Don't #define __STDC_NOCXX__ if this isn't intented)
-#endif
+#error C++ Simulation headers are disabled (Don't #define __STDC_NOCXX__ if this isn't intented)
+#endif /* __STDC_NOCXX__ */
 
 #pragma warning(push, disable: 1)
 #ifndef namespace
 #define namespace NO_NAMESPACE_SUPPORT
-#endif
+#endif /* !namespace */
+
 #ifndef using
 #define using     NO_NAMESPACE_SUPPORT
-#endif
+#endif /* !using */
+
 #ifndef nullptr
 #define nullptr   none
-#endif
+#endif /* !nullptr */
+
 #ifndef __nullptr
 #define __nullptr none
-#endif
+#endif /* !__nullptr */
+
 #define _NATIVE_NULLPTR_SUPPORTED 1
 #define __EXCEPTIONS 1
 #pragma warning(pop)
 
 #ifdef __DEEMON_GUARD_ATOMIC
 #include <cxx/atomic>
-#endif
+#endif /* __DEEMON_GUARD_ATOMIC */

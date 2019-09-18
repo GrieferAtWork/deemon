@@ -24,6 +24,8 @@
 #define _GNU_SOURCE 1
 
 #include "libxml.h"
+/**/
+
 #include <deemon/alloc.h>
 #include <deemon/object.h>
 #include <deemon/stringutils.h>
@@ -37,114 +39,115 @@ DECL_BEGIN
  * Additionally, there has never been a point where
  * it was working entirely flawless. */
 #if !defined(__USE_KOS) || !defined(__USE_GNU)
-#define memmem  dee_memmem
+#define memmem dee_memmem
 LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
                        void const *__restrict needle, size_t needle_length) {
- uint8_t *candidate; uint8_t marker;
- if unlikely(!needle_length || needle_length > haystack_length)
-    return NULL;
- haystack_length -= (needle_length - 1),marker = *(uint8_t *)needle;
- while ((candidate = (uint8_t *)memchr(haystack,marker,haystack_length)) != NULL) {
-  if (memcmp(candidate,needle,needle_length) == 0)
-      return (void *)candidate;
-  ++candidate;
-  haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
-  haystack        = (void const *)candidate;
- }
- return NULL;
+	uint8_t *candidate;
+	uint8_t marker;
+	if unlikely(!needle_length || needle_length > haystack_length)
+		return NULL;
+	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
+	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
+		if (memcmp(candidate, needle, needle_length) == 0)
+			return (void *)candidate;
+		++candidate;
+		haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
+		haystack        = (void const *)candidate;
+	}
+	return NULL;
 }
 #endif /* !__KOS__ || !__USE_GNU */
 
 
 INTERN void DCALL
 XMLNode_Destroy(XMLNode *__restrict self) {
- DREF XMLNode *iter,*next;
- size_t i;
+	DREF XMLNode *iter, *next;
+	size_t i;
 #ifndef NDEBUG
- ASSERT(self->xn_sib_prev == NULL);
- ASSERT(self->xn_sib_next == NULL);
- ASSERT(self->xn_changed.le_pself == NULL);
-#endif
- iter = self->xn_changes;
- while (iter) {
-  next = iter->xn_changed.le_next;
-  XMLNode_Decref(iter);
-  iter = next;
- }
- if (self->xn_attr.nas_list) {
-  for (i = 0; i <= self->xn_attr.nas_mask; ++i) {
-   if (!ITER_ISOK(self->xn_attr.nas_list[i].na_name_str))
-       continue;
-   Dee_Decref(self->xn_attr.nas_list[i].na_owner);
-  }
-  Dee_Free(self->xn_attr.nas_list);
- }
- if (self->xn_children.ncs_list) {
-  for (i = 0; i <= self->xn_children.ncs_mask; ++i) {
-   if (!ITER_ISOK(self->xn_children.ncs_list[i].nc_child))
-       continue;
-   XMLNode_Decref(self->xn_children.ncs_list[i].nc_child);
-  }
-  Dee_Free(self->xn_children.ncs_list);
- }
-
- Dee_Decref(self->xn_kind_obj);
- Dee_Decref(self->xn_attr_obj);
- Dee_Decref(self->xn_text_obj);
-
- DeeSlab_FREE(self);
+	ASSERT(self->xn_sib_prev == NULL);
+	ASSERT(self->xn_sib_next == NULL);
+	ASSERT(self->xn_changed.le_pself == NULL);
+#endif /* !NDEBUG */
+	iter = self->xn_changes;
+	while (iter) {
+		next = iter->xn_changed.le_next;
+		XMLNode_Decref(iter);
+		iter = next;
+	}
+	if (self->xn_attr.nas_list) {
+		for (i = 0; i <= self->xn_attr.nas_mask; ++i) {
+			if (!ITER_ISOK(self->xn_attr.nas_list[i].na_name_str))
+				continue;
+			Dee_Decref(self->xn_attr.nas_list[i].na_owner);
+		}
+		Dee_Free(self->xn_attr.nas_list);
+	}
+	if (self->xn_children.ncs_list) {
+		for (i = 0; i <= self->xn_children.ncs_mask; ++i) {
+			if (!ITER_ISOK(self->xn_children.ncs_list[i].nc_child))
+				continue;
+			XMLNode_Decref(self->xn_children.ncs_list[i].nc_child);
+		}
+		Dee_Free(self->xn_children.ncs_list);
+	}
+	Dee_Decref(self->xn_kind_obj);
+	Dee_Decref(self->xn_attr_obj);
+	Dee_Decref(self->xn_text_obj);
+	DeeSlab_FREE(self);
 }
 
 
 #define XMLNode_ShouldRehashChildren(self) \
-       ((self)->xn_children.ncs_used >= ((self)->xn_children.ncs_mask * 2) / 3)
+	((self)->xn_children.ncs_used >= ((self)->xn_children.ncs_mask * 2) / 3)
 #define XMLNode_MustRehashChildren(self) \
-       ((self)->xn_children.ncs_used >= (self)->xn_children.ncs_mask)
+	((self)->xn_children.ncs_used >= (self)->xn_children.ncs_mask)
 
-#define XML_NODE_DEFAULT_CHILD_MASK  3
+#define XML_NODE_DEFAULT_CHILD_MASK 3
 
 LOCAL bool DCALL
 XMLNode_TryRehashChildren(XMLNode *__restrict self) {
- size_t new_mask,old_mask,i;
- struct xml_node_child *new_list,*old_list;
- if (!self->xn_children.ncs_list) {
-  new_list = (struct xml_node_child *)Dee_TryCalloc(4 *
-                                                    sizeof(struct xml_node_child));
-  if unlikely(!new_list) goto err;
-  self->xn_children.ncs_mask = XML_NODE_DEFAULT_CHILD_MASK;
-  ASSERT(self->xn_children.ncs_size == 0);
-  ASSERT(self->xn_children.ncs_used == 0);
-  self->xn_children.ncs_list = new_list;
-  goto done;
- }
- old_mask = self->xn_children.ncs_mask;
- new_mask = (self->xn_children.ncs_mask << 1) | 1;
- new_list = (struct xml_node_child *)Dee_TryCalloc((new_mask + 1) *
-                                                    sizeof(struct xml_node_child));
- if unlikely(!new_list) goto err;
- old_list = self->xn_children.ncs_list;
- /* Re-hash the old child node vector. */
- for (i = 0; i <= old_mask; ++i) {
-  dhash_t j,perturb;
-  DREF XMLNode *node = old_list[i].nc_child;
-  if (!ITER_ISOK(node)) continue;
-  j = perturb = node->xn_kind_hash & new_mask;
-  for (;; XMLNodeChildren_NEXT(j,perturb)) {
-   dhash_t index = j & new_mask;
-   if (new_list[index].nc_child)
-       continue;
-   new_list[index].nc_child = node; /* Inherit reference */
-   break;
-  }
- }
- self->xn_children.ncs_size = self->xn_children.ncs_used;
- self->xn_children.ncs_mask = new_mask;
- self->xn_children.ncs_list = new_list;
- Dee_Free(old_list);
+	size_t new_mask, old_mask, i;
+	struct xml_node_child *new_list, *old_list;
+	if (!self->xn_children.ncs_list) {
+		new_list = (struct xml_node_child *)Dee_TryCalloc(4 * sizeof(struct xml_node_child));
+		if unlikely(!new_list)
+			goto err;
+		self->xn_children.ncs_mask = XML_NODE_DEFAULT_CHILD_MASK;
+		ASSERT(self->xn_children.ncs_size == 0);
+		ASSERT(self->xn_children.ncs_used == 0);
+		self->xn_children.ncs_list = new_list;
+		goto done;
+	}
+	old_mask = self->xn_children.ncs_mask;
+	new_mask = (self->xn_children.ncs_mask << 1) | 1;
+	new_list = (struct xml_node_child *)Dee_TryCalloc((new_mask + 1) *
+	                                                  sizeof(struct xml_node_child));
+	if unlikely(!new_list)
+		goto err;
+	old_list = self->xn_children.ncs_list;
+	/* Re-hash the old child node vector. */
+	for (i = 0; i <= old_mask; ++i) {
+		dhash_t j, perturb;
+		DREF XMLNode *node = old_list[i].nc_child;
+		if (!ITER_ISOK(node))
+			continue;
+		j = perturb = node->xn_kind_hash & new_mask;
+		for (;; XMLNodeChildren_NEXT(j, perturb)) {
+			dhash_t index = j & new_mask;
+			if (new_list[index].nc_child)
+				continue;
+			new_list[index].nc_child = node; /* Inherit reference */
+			break;
+		}
+	}
+	self->xn_children.ncs_size = self->xn_children.ncs_used;
+	self->xn_children.ncs_mask = new_mask;
+	self->xn_children.ncs_list = new_list;
+	Dee_Free(old_list);
 done:
- return true;
+	return true;
 err:
- return false;
+	return false;
 }
 
 
@@ -157,233 +160,238 @@ err:
 INTERN DREF XMLNode *DCALL
 XMLNode_GetPrev(XMLNode *self,
                 XMLNode *__restrict parent) {
- DREF XMLNode *result;
- rwlock_read(&parent->xn_lock);
- result = self->xn_sib_prev;
- if (result) {
-  XMLNode_Incref(result);
-  rwlock_endread(&parent->xn_lock);
-  return result;
- }
- rwlock_endread(&parent->xn_lock);
- return (DREF XMLNode *)ITER_DONE;
+	DREF XMLNode *result;
+	rwlock_read(&parent->xn_lock);
+	result = self->xn_sib_prev;
+	if (result) {
+		XMLNode_Incref(result);
+		rwlock_endread(&parent->xn_lock);
+		return result;
+	}
+	rwlock_endread(&parent->xn_lock);
+	return (DREF XMLNode *)ITER_DONE;
 }
 
 INTERN DREF XMLNode *DCALL
 XMLNode_GetNext(XMLNode *self,
                 XMLNode *__restrict parent) {
- DREF XMLNode *result;
- char *iter,*end,*temp;
- bool ends_with_slash;
+	DREF XMLNode *result;
+	char *iter, *end, *temp;
+	bool ends_with_slash;
 again:
- rwlock_read(&parent->xn_lock);
- result = self
-        ? self->xn_sib_next
-        : parent->xn_children.ncs_head
-        ;
- if (result) {
-  XMLNode_Incref(result);
-  rwlock_endread(&parent->xn_lock);
-  return result;
- }
- ASSERT(self == parent->xn_children.ncs_tail);
- iter = (char *)parent->xn_text_next;
- end  = (char *)parent->xn_text_end;
- ASSERT(iter <= end);
- if (iter >= end) {
-  rwlock_endread(&parent->xn_lock);
-  return (DREF XMLNode *)ITER_DONE;
- }
- if (!rwlock_upgrade(&parent->xn_lock)) {
-  COMPILER_READ_BARRIER();
-  iter = (char *)parent->xn_text_next;
-  end  = (char *)parent->xn_text_end;
-  ASSERT(iter <= end);
-  if (iter >= end) {
-   rwlock_endwrite(&parent->xn_lock);
-   return (DREF XMLNode *)ITER_DONE;
-  }
- }
- /* Search for the next sibling node. */
-find_block_start:
- iter = (char *)memchr(iter,'<',(size_t)(end - iter));
- if (!iter) {
-set_end_of_text:
-  /* No more child nodes. */
-  parent->xn_text_next = end;
-  rwlock_endwrite(&parent->xn_lock);
-  return (DREF XMLNode *)ITER_DONE;
- }
- ++iter;
- if (iter + 3 <= end && iter[0] == '!' &&
-     iter[1] == '-' && iter[2] == '-') {
-  /* XML Comment */
-  iter = (char *)memmem(iter,(size_t)(end - iter),"-->",3 * sizeof(char));
-  if unlikely(!iter) goto set_end_of_text;
-  iter += 3;
-  goto find_block_start;
- }
- /* Rehash the parent's child hash-vector, if necessary */
- if (XMLNode_ShouldRehashChildren(parent) &&
-    !XMLNode_TryRehashChildren(parent) &&
-     XMLNode_MustRehashChildren(parent)) {
-  if (Dee_CollectMemory(1))
-      goto again;
-  goto err;
- }
- result = XMLNode_TryAlloc();
- if unlikely(!result) {
-  parent->xn_text_next = iter;
-  rwlock_endwrite(&parent->xn_lock);
-  if (Dee_CollectMemory(sizeof(XMLNode)))
-      goto again;
-  goto err;
- }
- result->xn_refcnt = 1;
- rwlock_init(&result->xn_lock);
- result->xn_changes = NULL;
- result->xn_changed.le_pself = NULL;
- if ((result->xn_sib_prev = self) != NULL) {
-  self->xn_sib_next = result;
- } else {
-  parent->xn_children.ncs_head = result;
- }
- parent->xn_children.ncs_tail = result;
- result->xn_sib_next = NULL;
-#define SKIP_SPACE() \
- while (iter < end) { \
-  uint32_t ch; \
-  temp = iter; \
-  ch = utf8_readchar((char const **)&temp,end); \
-  if (!DeeUni_IsSpace(ch)) break; \
-  iter = temp; \
- }
-
- SKIP_SPACE();
- result->xn_kind_str = iter; /* Start of the tag kind name. */
- while (iter < end) {
-  uint32_t ch;
-  temp = iter;
-  ch = utf8_readchar((char const **)&temp,end);
-  if (!DeeUni_IsSymCont(ch) && ch != ':') break;
-  iter = temp;
- }
- result->xn_kind_end = iter;
- SKIP_SPACE();
- result->xn_attr_next =
- result->xn_attr_str =
- result->xn_attr_end = iter;
- ends_with_slash = false;
- for (;;) {
-  char ch;
-  if unlikely(iter >= end) {
-eof_in_attr:
-   result->xn_attr_end = iter;
-   result->xn_text_str = iter;
-   result->xn_text_end = iter;
-   iter = end;
-   goto done;
-  }
-  ch = *iter;
-  if (ch > 0x7f) {
-   uint32_t ch32;
-   ch32 = utf8_readchar((char const **)&iter,end);
-   if (!DeeUni_IsSpace(ch32))
-       result->xn_attr_end = iter;
-  } else {
-   if (ch == '>')
-       break;
-   if (ch == '\"') {
-    ++iter;
-    iter = (char *)memchr(iter,'\"',(size_t)(end - iter));
-    if unlikely(!iter)
-       goto eof_in_attr;
-    ++iter;
-    continue;
-   }
-   if (ch == '/') {
-    ends_with_slash = true;
-   } else {
-    if (!DeeUni_IsSpace(ch))
-        result->xn_attr_end = iter,
-        ends_with_slash = false;
-   }
-   ++iter;
-  }
- }
- result->xn_text_str = iter;
- if (!ends_with_slash) {
-  /* Search for the end of node text */
-  unsigned int recursion = 1;
-  while (iter < end) {
-   char marker,ch = *iter++;
-   if (ch != '<')
-       continue;
-   if (iter + 3 <= end && iter[0] == '!' &&
-       iter[1] == '-' && iter[2] == '-') {
-    /* XML Comment */
-    iter = (char *)memmem(iter,(size_t)(end - iter),"-->",3 * sizeof(char));
-    if unlikely(!iter) goto set_end_of_text_scan;
-    iter += 3;
-    continue;
-   }
-   SKIP_SPACE();
-   if unlikely(iter >= end)
-      break;
-   marker = *iter++;
-   while (iter < end) {
-    ch = *iter++;
-    if (ch == '>') break;
-    if (ch == '\"') {
-     iter = (char *)memchr(iter,'\"',(size_t)(end - iter));
-     if unlikely(!iter) {
-set_end_of_text_scan:
-      iter = end;
-      goto done_text;
-     }
-     ++iter;
-     continue;
+	rwlock_read(&parent->xn_lock);
+	result = self
+	         ? self->xn_sib_next
+	         : parent->xn_children.ncs_head;
+	if (result) {
+		XMLNode_Incref(result);
+		rwlock_endread(&parent->xn_lock);
+		return result;
 	}
-   }
-   if (marker == '/') {
-    --recursion;
-    if (!recursion)
-        break;
-   } else {
-    ++recursion;
-   }
-  }
- }
-done_text:
- result->xn_text_end = iter;
-done:
- /* Fill in remaining fields. */
- result->xn_text_next = result->xn_text_str;
- result->xn_kind_obj =
- result->xn_attr_obj =
- result->xn_text_obj = parent->xn_text_obj;
- parent->xn_text_next = iter;
- Dee_Incref_n(parent->xn_text_obj,3);
- result->xn_kind_hash = Dee_HashUtf8(result->xn_kind_str,
-                                 (size_t)(result->xn_kind_end - result->xn_kind_str));
+	ASSERT(self == parent->xn_children.ncs_tail);
+	iter = (char *)parent->xn_text_next;
+	end  = (char *)parent->xn_text_end;
+	ASSERT(iter <= end);
+	if (iter >= end) {
+		rwlock_endread(&parent->xn_lock);
+		return (DREF XMLNode *)ITER_DONE;
+	}
+	if (!rwlock_upgrade(&parent->xn_lock)) {
+		COMPILER_READ_BARRIER();
+		iter = (char *)parent->xn_text_next;
+		end  = (char *)parent->xn_text_end;
+		ASSERT(iter <= end);
+		if (iter >= end) {
+			rwlock_endwrite(&parent->xn_lock);
+			return (DREF XMLNode *)ITER_DONE;
+		}
+	}
+	/* Search for the next sibling node. */
+find_block_start:
+	iter = (char *)memchr(iter, '<', (size_t)(end - iter));
+	if (!iter) {
+	set_end_of_text:
+		/* No more child nodes. */
+		parent->xn_text_next = end;
+		rwlock_endwrite(&parent->xn_lock);
+		return (DREF XMLNode *)ITER_DONE;
+	}
+	++iter;
+	if (iter + 3 <= end && iter[0] == '!' &&
+	    iter[1] == '-' && iter[2] == '-') {
+		/* XML Comment */
+		iter = (char *)memmem(iter, (size_t)(end - iter), "-->", 3 * sizeof(char));
+		if unlikely(!iter)
+			goto set_end_of_text;
+		iter += 3;
+		goto find_block_start;
+	}
+	/* Rehash the parent's child hash-vector, if necessary */
+	if (XMLNode_ShouldRehashChildren(parent) &&
+	    !XMLNode_TryRehashChildren(parent) &&
+	    XMLNode_MustRehashChildren(parent)) {
+		if (Dee_CollectMemory(1))
+			goto again;
+		goto err;
+	}
+	result = XMLNode_TryAlloc();
+	if unlikely(!result) {
+		parent->xn_text_next = iter;
+		rwlock_endwrite(&parent->xn_lock);
+		if (Dee_CollectMemory(sizeof(XMLNode)))
+			goto again;
+		goto err;
+	}
+	result->xn_refcnt = 1;
+	rwlock_init(&result->xn_lock);
+	result->xn_changes          = NULL;
+	result->xn_changed.le_pself = NULL;
+	if ((result->xn_sib_prev = self) != NULL) {
+		self->xn_sib_next = result;
+	} else {
+		parent->xn_children.ncs_head = result;
+	}
+	parent->xn_children.ncs_tail = result;
+	result->xn_sib_next          = NULL;
+#define SKIP_SPACE()                                     \
+	while (iter < end) {                                 \
+		uint32_t ch;                                     \
+		temp = iter;                                     \
+		ch   = utf8_readchar((char const **)&temp, end); \
+		if (!DeeUni_IsSpace(ch))                         \
+			break;                                       \
+		iter = temp;                                     \
+	}
 
- {
-  /* Add the resulting node to the parent's hash-vector. */
-  dhash_t i,perturb;
-  i = perturb = result->xn_kind_hash & parent->xn_children.ncs_mask;
-  for (;; XMLNodeChildren_NEXT(i,perturb)) {
-   size_t index = i & parent->xn_children.ncs_mask;
-   if (ITER_ISOK(parent->xn_children.ncs_list[index].nc_child))
-       continue;
-   parent->xn_children.ncs_list[index].nc_child = result;
-   break;
-  }
- }
- XMLNode_Incref(result); /* The reference that we're returning. */
- rwlock_endwrite(&parent->xn_lock);
- return (DREF XMLNode *)ITER_DONE;
+	SKIP_SPACE();
+	result->xn_kind_str = iter; /* Start of the tag kind name. */
+	while (iter < end) {
+		uint32_t ch;
+		temp = iter;
+		ch   = utf8_readchar((char const **)&temp, end);
+		if (!DeeUni_IsSymCont(ch) && ch != ':')
+			break;
+		iter = temp;
+	}
+	result->xn_kind_end = iter;
+	SKIP_SPACE();
+	result->xn_attr_next =
+	result->xn_attr_str =
+	result->xn_attr_end = iter;
+	ends_with_slash     = false;
+	for (;;) {
+		char ch;
+		if unlikely(iter >= end) {
+eof_in_attr:
+			result->xn_attr_end = iter;
+			result->xn_text_str = iter;
+			result->xn_text_end = iter;
+			iter                = end;
+			goto done;
+		}
+		ch = *iter;
+		if (ch > 0x7f) {
+			uint32_t ch32;
+			ch32 = utf8_readchar((char const **)&iter, end);
+			if (!DeeUni_IsSpace(ch32))
+				result->xn_attr_end = iter;
+		} else {
+			if (ch == '>')
+				break;
+			if (ch == '\"') {
+				++iter;
+				iter = (char *)memchr(iter, '\"', (size_t)(end - iter));
+				if unlikely(!iter)
+					goto eof_in_attr;
+				++iter;
+				continue;
+			}
+			if (ch == '/') {
+				ends_with_slash = true;
+			} else {
+				if (!DeeUni_IsSpace(ch))
+					result->xn_attr_end = iter,
+					ends_with_slash     = false;
+			}
+			++iter;
+		}
+	}
+	result->xn_text_str = iter;
+	if (!ends_with_slash) {
+		/* Search for the end of node text */
+		unsigned int recursion = 1;
+		while (iter < end) {
+			char marker, ch = *iter++;
+			if (ch != '<')
+				continue;
+			if (iter + 3 <= end && iter[0] == '!' &&
+			    iter[1] == '-' && iter[2] == '-') {
+				/* XML Comment */
+				iter = (char *)memmem(iter, (size_t)(end - iter), "-->", 3 * sizeof(char));
+				if unlikely(!iter)
+					goto set_end_of_text_scan;
+				iter += 3;
+				continue;
+			}
+			SKIP_SPACE();
+			if unlikely(iter >= end)
+				break;
+			marker = *iter++;
+			while (iter < end) {
+				ch = *iter++;
+				if (ch == '>')
+					break;
+				if (ch == '\"') {
+					iter = (char *)memchr(iter, '\"', (size_t)(end - iter));
+					if unlikely(!iter) {
+set_end_of_text_scan:
+						iter = end;
+						goto done_text;
+					}
+					++iter;
+					continue;
+				}
+			}
+			if (marker == '/') {
+				--recursion;
+				if (!recursion)
+					break;
+			} else {
+				++recursion;
+			}
+		}
+	}
+done_text:
+	result->xn_text_end = iter;
+done:
+	/* Fill in remaining fields. */
+	result->xn_text_next = result->xn_text_str;
+	result->xn_kind_obj =
+	result->xn_attr_obj =
+	result->xn_text_obj  = parent->xn_text_obj;
+	parent->xn_text_next = iter;
+	Dee_Incref_n(parent->xn_text_obj, 3);
+	result->xn_kind_hash = Dee_HashUtf8(result->xn_kind_str,
+	                                    (size_t)(result->xn_kind_end -
+	                                             result->xn_kind_str));
+
+	{
+		/* Add the resulting node to the parent's hash-vector. */
+		dhash_t i, perturb;
+		i = perturb = result->xn_kind_hash & parent->xn_children.ncs_mask;
+		for (;; XMLNodeChildren_NEXT(i, perturb)) {
+			size_t index = i & parent->xn_children.ncs_mask;
+			if (ITER_ISOK(parent->xn_children.ncs_list[index].nc_child))
+				continue;
+			parent->xn_children.ncs_list[index].nc_child = result;
+			break;
+		}
+	}
+	XMLNode_Incref(result); /* The reference that we're returning. */
+	rwlock_endwrite(&parent->xn_lock);
+	return (DREF XMLNode *)ITER_DONE;
 err:
- return NULL;
+	return NULL;
 }
 
 
@@ -410,23 +418,23 @@ XMLNode_InitFromString(XMLNode *__restrict self,
 PRIVATE int DCALL
 node_init(XMLNodeObject *__restrict self,
           size_t argc, DeeObject **__restrict argv) {
- (void)self;
- (void)argc;
- (void)argv;
- /* TODO */
- return 0;
+	(void)self;
+	(void)argc;
+	(void)argv;
+	/* TODO */
+	return 0;
 }
 
 PRIVATE void DCALL
 node_fini(XMLNodeObject *__restrict self) {
- XMLNode_Decref(self->xno_node);
- Dee_XDecref(self->xno_parent);
+	XMLNode_Decref(self->xno_node);
+	Dee_XDecref(self->xno_parent);
 }
 
 PRIVATE void DCALL
 node_visit(XMLNodeObject *__restrict self,
            dvisit_t proc, void *arg) {
- Dee_XVisit(self->xno_parent);
+	Dee_XVisit(self->xno_parent);
 }
 
 

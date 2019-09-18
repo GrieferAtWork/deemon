@@ -540,24 +540,26 @@ DEF_WARNING(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE,(WG_SYMBOL),WSTATE_ERROR,{ st
 DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_READABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Property `%s' cannot be read from",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE,(WG_SYMBOL),WSTATE_ERROR,{ struct symbol *sym = ARG(struct symbol *); WARNF("Property `%s' cannot be written to",SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL,(WG_SYMBOL),WSTATE_ERROR,{
-    struct symbol *sym = ARG(struct symbol *); size_t i;
-    char const *decl_format = TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT ? "\n%s(%d,%d) : " : "\n%s:%d:%d: ";
-    WARNF("Symbol `%s' has been declared ambiguously",SYMBOL_NAME(sym));
-    if (sym->s_ambig.a_decl2.l_file) {
-        WARNF(decl_format,
-              TPPFile_Filename(sym->s_ambig.a_decl2.l_file,NULL),
-              sym->s_ambig.a_decl2.l_line + 1,
-              sym->s_ambig.a_decl2.l_col + 1);
-        WARNF("See reference to 2nd declaration");
+	struct symbol *sym = ARG(struct symbol *); size_t i;
+	char const *decl_format = TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
+	                          ? "\n%s(%d,%d) : ";
+	                          : "\n%s:%d:%d: ";
+	WARNF("Symbol `%s' has been declared ambiguously",SYMBOL_NAME(sym));
+	if (sym->s_ambig.a_decl2.l_file) {
+		WARNF(decl_format,
+		      TPPFile_Filename(sym->s_ambig.a_decl2.l_file, NULL),
+		      sym->s_ambig.a_decl2.l_line + 1,
+		      sym->s_ambig.a_decl2.l_col + 1);
+		WARNF("See reference to 2nd declaration");
 	}
-    for (i = 0; i < sym->s_ambig.a_declc; ++i) {
-        struct ast_loc *altloc = &sym->s_ambig.a_declv[i];
-        if (!altloc->l_file) continue;
-        WARNF(decl_format,
-              TPPFile_Filename(altloc->l_file,NULL),
-              altloc->l_line + 1,
-              altloc->l_col + 1);
-        WARNF("See reference to %lu%s declaration",(unsigned long)i + 3,i == 0 ? "rd" : "th");
+	for (i = 0; i < sym->s_ambig.a_declc; ++i) {
+		struct ast_loc *altloc = &sym->s_ambig.a_declv[i];
+		if (!altloc->l_file) continue;
+		WARNF(decl_format,
+		      TPPFile_Filename(altloc->l_file, NULL),
+		      altloc->l_line + 1,
+		      altloc->l_col + 1);
+		WARNF("See reference to %lu%s declaration", (unsigned long)i + 3, i == 0 ? "rd" : "th");
 	}
 })
 DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD,(WG_SYMBOL),WSTATE_FATAL,{ struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from static function `%s'",SYMBOL_FIELD_ATTR(sym)->ca_name,ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })

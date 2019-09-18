@@ -1034,7 +1034,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRange",
 	/* .tp_doc      = */ DOC("()\n"
-                            "(start,end,step?)"),
+	                         "(start,end,step?)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1529,7 +1529,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqIntRange",
 	/* .tp_doc      = */ DOC("()\n"
-                            "(start:?Dint,end:?Dint,step=!1)"),
+	                         "(start:?Dint,end:?Dint,step=!1)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

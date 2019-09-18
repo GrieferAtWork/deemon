@@ -422,9 +422,9 @@ err_no_keyword_for_argument:
 	if (name_start < name_end) {
 		struct jit_object_entry *ent;
 		size_t len = (size_t)(name_end - name_start);
-		ent        = JITFunction_CreateArgument(result,
-                                         name_start,
-                                         len);
+		ent = JITFunction_CreateArgument(result,
+		                                 name_start,
+		                                 len);
 		if unlikely(!ent)
 			goto err_r;
 		result->jf_selfarg = (size_t)(ent - result->jf_args.ot_list);

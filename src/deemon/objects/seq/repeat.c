@@ -624,7 +624,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeat",
 	/* .tp_doc      = */ DOC("()\n"
-                            "(seq:?DSequence,num:?Dint)"),
+	                         "(seq:?DSequence,num:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

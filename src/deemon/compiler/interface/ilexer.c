@@ -1740,12 +1740,13 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "Note: This field is preserved by #flags") },
 #if 0
 	{ "charunsigned",
-     (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_charunsigned,
-     (int(DCALL *)(DeeObject *__restrict))&lexer_del_charunsigned,
-     (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&lexer_set_charunsigned,
-      DOC("->?Dbool\n"
-          "When :true, characters are undefined when they appear in constant expressions") },
+	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&lexer_get_charunsigned,
+	  (int(DCALL *)(DeeObject *__restrict))&lexer_del_charunsigned,
+	  (int(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&lexer_set_charunsigned,
+	  DOC("->?Dbool\n"
+	      "When :true, characters are undefined when they appear in constant expressions") },
 #endif
+
 	{ "eofonparen",
 	  (DREF DeeObject * (DCALL *)(DeeObject * __restrict))&lexer_get_eofonparen,
 	  (int(DCALL *)(DeeObject *__restrict))&lexer_del_eofonparen,

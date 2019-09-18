@@ -1266,9 +1266,9 @@ string_iter(String *__restrict self) {
 	Dee_Incref(self);
 	result->si_width    = DeeString_WIDTH(self);
 	result->si_iter.ptr = DeeString_WSTR(self);
-	result->si_end.ptr  = (void *)((uintptr_t)result->si_iter.ptr +
-                                  WSTR_LENGTH(result->si_iter.ptr) *
-                                  STRING_SIZEOF_WIDTH(result->si_width));
+	result->si_end.ptr = (void *)((uintptr_t)result->si_iter.ptr +
+	                              WSTR_LENGTH(result->si_iter.ptr) *
+	                              STRING_SIZEOF_WIDTH(result->si_width));
 done:
 	return (DREF DeeObject *)result;
 }

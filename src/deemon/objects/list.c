@@ -167,8 +167,8 @@ list_copy(List *__restrict self,
 again:
 	DeeList_LockRead(other);
 	self->l_alloc = self->l_size = other->l_size;
-	self->l_elem                 = (DREF DeeObject **)Dee_TryMalloc(self->l_alloc *
-                                                    sizeof(DREF DeeObject *));
+	self->l_elem = (DREF DeeObject **)Dee_TryMalloc(self->l_alloc *
+	                                                sizeof(DREF DeeObject *));
 	if unlikely(!self->l_elem) {
 		DeeList_LockEndRead(other);
 		if (Dee_CollectMemory(self->l_alloc * sizeof(DREF DeeObject *)))

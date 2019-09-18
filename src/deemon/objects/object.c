@@ -2012,9 +2012,9 @@ object_format_method(DeeObject *__restrict self,
 	{
 		dssize_t error;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		error                          = object_format_generic(self,
-                                      &unicode_printer_print,
-                                      &printer, format_utf8, WSTR_LENGTH(format_utf8));
+		error = object_format_generic(self,
+		                              &unicode_printer_print,
+		                              &printer, format_utf8, WSTR_LENGTH(format_utf8));
 		if unlikely(error < 0)
 			goto err_printer;
 		return unicode_printer_pack(&printer);

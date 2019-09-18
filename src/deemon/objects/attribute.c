@@ -310,12 +310,12 @@ PRIVATE DREF DeeObject *DCALL
 attr_repr(Attr *__restrict self) {
 	DREF DeeObject *flags_str, *result;
 	flags_str = attr_getflags(self);
-	result    = DeeString_Newf("Attribute(%r,%q,%r,%r,%r)",
-                            self->a_info.a_decl,
-                            self->a_name,
-                            flags_str,
-                            flags_str,
-                            self->a_info.a_decl);
+	result = DeeString_Newf("Attribute(%r,%q,%r,%r,%r)",
+	                        self->a_info.a_decl,
+	                        self->a_name,
+	                        flags_str,
+	                        flags_str,
+	                        self->a_info.a_decl);
 	Dee_Decref(flags_str);
 	return result;
 }
@@ -1115,8 +1115,8 @@ again:
 err_collect:
 	/* Let the other end collect memory for us.
 	 * With how small our stack is, we'd probably not be able to
-  * safely execute user-code that may be invoked from gc-callbacks
-  * associated with the memory collection sub-system. */
+	 * safely execute user-code that may be invoked from gc-callbacks
+	 * associated with the memory collection sub-system. */
 	if ((error = setjmp(iterator->ei_continue)) == 0)
 		longjmp(iterator->ei_break, BRKSIG_COLLECT);
 	/* Stop iteration if the other end requested this. */
@@ -1134,9 +1134,9 @@ enumattr_start(EnumAttrIter *__restrict self) {
 	dssize_t enum_error;
 	/* This is where execution on the fake stack starts. */
 	self->ei_bufpos = self->ei_buffer;
-	enum_error      = DeeObject_EnumAttr(self->ei_seq->ea_type,
-                                    self->ei_seq->ea_obj,
-                                    (denum_t)&enumattr_longjmp, self);
+	enum_error = DeeObject_EnumAttr(self->ei_seq->ea_type,
+	                                self->ei_seq->ea_obj,
+	                                (denum_t)&enumattr_longjmp, self);
 	/* -1 indicates an internal error, rather than stop-enumeration (with is -2). */
 	if unlikely(enum_error == -1) {
 		/* Discard all unyielded attributes and enter an error state. */

@@ -1656,8 +1656,8 @@ INTERN instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
 			return NULL;
 		}
 	}
-	current_assembler.a_curr->sec_iter  = result + (current_assembler.a_curr->sec_iter -
-                                                   current_assembler.a_curr->sec_begin);
+	current_assembler.a_curr->sec_iter = result + (current_assembler.a_curr->sec_iter -
+	                                               current_assembler.a_curr->sec_begin);
 	current_assembler.a_curr->sec_begin = result;
 	current_assembler.a_curr->sec_end   = result + new_size;
 	result                              = current_assembler.a_curr->sec_iter;
@@ -2438,8 +2438,8 @@ INTERN int (DCALL asm_gjmp)(instruction_t instr,
 		/* Adjust the stack for `foreach' popping the iterator when done. */
 		current_assembler.a_stackcur -= 2;
 		asm_defsym(temp1); /* `ASM_FOREACH' will pop the iterator when its done and jump here.
-                      *  Therefor, we must define this symbol while already having set
-                      *  the proper stack alignment. */
+		                    *  Therefor, we must define this symbol while already having set
+		                    *  the proper stack alignment. */
 		if unlikely(asm_gsetstack_s(target))
 			goto err;
 		if unlikely(asm_do_gjmp(ASM_JMP, target))

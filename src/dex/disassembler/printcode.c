@@ -128,8 +128,8 @@ textjumps_add(struct textjumps *__restrict self,
 		                                                         sizeof(struct textjump));
 		if unlikely(!newvec) {
 			newalloc = self->tj_cnt + 1;
-			newvec   = (struct textjump *)Dee_Realloc(self->tj_vec, newalloc *
-                                                                  sizeof(struct textjump));
+			newvec = (struct textjump *)Dee_Realloc(self->tj_vec, newalloc *
+			                                                      sizeof(struct textjump));
 			if unlikely(!newvec)
 				return -1;
 		}

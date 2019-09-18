@@ -180,7 +180,6 @@ do_as_if:
 	print "default: break; \\";
 	print indent,;
 	print "} \\";
-    
 }
 local target_names = [];
 for (local alias, target: codecs) {

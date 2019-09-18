@@ -3411,10 +3411,10 @@ string_getsubstr_ib(String *__restrict self,
 		Dee_Incref(result);
 	} else {
 		int width = DeeString_WIDTH(self);
-		result    = (DREF String *)DeeString_NewWithWidth(str.cp8 +
-                                                       (start * STRING_SIZEOF_WIDTH(width)),
-                                                       end - (size_t)start,
-                                                       width);
+		result = (DREF String *)DeeString_NewWithWidth(str.cp8 +
+		                                               (start * STRING_SIZEOF_WIDTH(width)),
+		                                               end - (size_t)start,
+		                                               width);
 	}
 	return result;
 }
@@ -3438,10 +3438,10 @@ string_getsubstr(String *__restrict self,
 			Dee_Incref(Dee_EmptyString);
 		} else {
 			int width = DeeString_WIDTH(self);
-			result    = (DREF String *)DeeString_NewWithWidth(str.cp8 +
-                                                           (start * STRING_SIZEOF_WIDTH(width)),
-                                                           end - (size_t)start,
-                                                           width);
+			result = (DREF String *)DeeString_NewWithWidth(str.cp8 +
+			                                               (start * STRING_SIZEOF_WIDTH(width)),
+			                                               end - (size_t)start,
+			                                               width);
 		}
 	}
 	return result;
@@ -3614,7 +3614,7 @@ string_endswith(String *__restrict self, size_t argc,
 #ifdef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
 	if (begin == 0 && end >= DeeString_WLEN(self) &&
 	    /* NOTE: This checks that `DeeString_STR()' being either LATIN-1, or
-      *       UTF-8 is the same for both our own, and the `other' string. */
+	     *       UTF-8 is the same for both our own, and the `other' string. */
 	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(other))) {
 		/* Special case: Since we don't have to count characters, we can simply
 		 *               match the UTF-8 representations against each other. */
@@ -4839,8 +4839,8 @@ partition_packb(String *__restrict other,
 		goto err;
 	if (ptr == lhs) {
 		uint8_t *post_ptr = ptr + ptr_length;
-		poststr           = (DREF String *)DeeString_New1Byte(post_ptr,
-                                                    lhs_length - ptr_length);
+		poststr = (DREF String *)DeeString_New1Byte(post_ptr,
+		                                            lhs_length - ptr_length);
 		if unlikely(!poststr)
 			goto err_r;
 		prestr = (DREF String *)Dee_EmptyString;
@@ -4885,8 +4885,8 @@ partition_packw(String *__restrict other,
 		goto err;
 	if (ptr == lhs) {
 		uint16_t *post_ptr = ptr + ptr_length;
-		poststr            = (DREF String *)DeeString_New2Byte(post_ptr,
-                                                    lhs_length - ptr_length);
+		poststr = (DREF String *)DeeString_New2Byte(post_ptr,
+		                                            lhs_length - ptr_length);
 		if unlikely(!poststr)
 			goto err_r;
 		prestr = (DREF String *)Dee_EmptyString;
@@ -4931,8 +4931,8 @@ partition_packl(String *__restrict other,
 		goto err;
 	if (ptr == lhs) {
 		uint32_t *post_ptr = ptr + ptr_length;
-		poststr            = (DREF String *)DeeString_New4Byte(post_ptr,
-                                                    lhs_length - ptr_length);
+		poststr = (DREF String *)DeeString_New4Byte(post_ptr,
+		                                            lhs_length - ptr_length);
 		if unlikely(!poststr)
 			goto err_r;
 		prestr = (DREF String *)Dee_EmptyString;
@@ -7684,9 +7684,9 @@ string_findmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = find_matchb(scan_str.cp8 + start, scan_len,
-                              open_str.cp8, open_len,
-                              clos_str.cp8, clos_len);
+		ptr.cp8 = find_matchb(scan_str.cp8 + start, scan_len,
+		                      open_str.cp8, open_len,
+		                      clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7776,9 +7776,9 @@ string_indexmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = find_matchb(scan_str.cp8 + start, scan_len,
-                              open_str.cp8, open_len,
-                              clos_str.cp8, clos_len);
+		ptr.cp8 = find_matchb(scan_str.cp8 + start, scan_len,
+		                      open_str.cp8, open_len,
+		                      clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7870,10 +7870,10 @@ string_casefindmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = find_casematchb(scan_str.cp8 + start, scan_len,
-                                  open_str.cp8, open_len,
-                                  clos_str.cp8, clos_len,
-                                  &match_length);
+		ptr.cp8 = find_casematchb(scan_str.cp8 + start, scan_len,
+		                          open_str.cp8, open_len,
+		                          clos_str.cp8, clos_len,
+		                          &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -7968,10 +7968,10 @@ string_caseindexmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = find_casematchb(scan_str.cp8 + start, scan_len,
-                                  open_str.cp8, open_len,
-                                  clos_str.cp8, clos_len,
-                                  &match_length);
+		ptr.cp8 = find_casematchb(scan_str.cp8 + start, scan_len,
+		                          open_str.cp8, open_len,
+		                          clos_str.cp8, clos_len,
+		                          &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -8068,9 +8068,9 @@ string_rfindmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = rfind_matchb(scan_str.cp8 + start, scan_len,
-                               open_str.cp8, open_len,
-                               clos_str.cp8, clos_len);
+		ptr.cp8 = rfind_matchb(scan_str.cp8 + start, scan_len,
+		                       open_str.cp8, open_len,
+		                       clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -8160,9 +8160,9 @@ string_rindexmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = rfind_matchb(scan_str.cp8 + start, scan_len,
-                               open_str.cp8, open_len,
-                               clos_str.cp8, clos_len);
+		ptr.cp8 = rfind_matchb(scan_str.cp8 + start, scan_len,
+		                       open_str.cp8, open_len,
+		                       clos_str.cp8, clos_len);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -8254,10 +8254,10 @@ string_caserfindmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = rfind_casematchb(scan_str.cp8 + start, scan_len,
-                                   open_str.cp8, open_len,
-                                   clos_str.cp8, clos_len,
-                                   &match_length);
+		ptr.cp8 = rfind_casematchb(scan_str.cp8 + start, scan_len,
+		                           open_str.cp8, open_len,
+		                           clos_str.cp8, clos_len,
+		                           &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);
@@ -8352,10 +8352,10 @@ string_caserindexmatch(String *__restrict self,
 		if unlikely(end <= start)
 			goto err_not_found; /* Empty search area. */
 		scan_len = end - start;
-		ptr.cp8  = rfind_casematchb(scan_str.cp8 + start, scan_len,
-                                   open_str.cp8, open_len,
-                                   clos_str.cp8, clos_len,
-                                   &match_length);
+		ptr.cp8 = rfind_casematchb(scan_str.cp8 + start, scan_len,
+		                           open_str.cp8, open_len,
+		                           clos_str.cp8, clos_len,
+		                           &match_length);
 		if unlikely(!ptr.cp8)
 			goto err_not_found;
 		result = (size_t)(ptr.cp8 - scan_str.cp8);

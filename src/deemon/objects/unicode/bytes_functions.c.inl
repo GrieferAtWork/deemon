@@ -3160,9 +3160,9 @@ bytes_findmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = find_matchb(scan_str + start, scan_len,
-                      s_open.n_data, s_open.n_size,
-                      s_clos.n_data, s_clos.n_size);
+	ptr = find_matchb(scan_str + start, scan_len,
+	                  s_open.n_data, s_open.n_size,
+	                  s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
@@ -3189,9 +3189,9 @@ bytes_rfindmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = rfind_matchb(scan_str + start, scan_len,
-                       s_open.n_data, s_open.n_size,
-                       s_clos.n_data, s_clos.n_size);
+	ptr = rfind_matchb(scan_str + start, scan_len,
+	                   s_open.n_data, s_open.n_size,
+	                   s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
@@ -3218,9 +3218,9 @@ bytes_indexmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = find_matchb(scan_str + start, scan_len,
-                      s_open.n_data, s_open.n_size,
-                      s_clos.n_data, s_clos.n_size);
+	ptr = find_matchb(scan_str + start, scan_len,
+	                  s_open.n_data, s_open.n_size,
+	                  s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
@@ -3247,9 +3247,9 @@ bytes_rindexmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = rfind_matchb(scan_str + start, scan_len,
-                       s_open.n_data, s_open.n_size,
-                       s_clos.n_data, s_clos.n_size);
+	ptr = rfind_matchb(scan_str + start, scan_len,
+	                   s_open.n_data, s_open.n_size,
+	                   s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
@@ -3276,9 +3276,9 @@ bytes_casefindmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = find_asciicasematchb(scan_str + start, scan_len,
-                               s_open.n_data, s_open.n_size,
-                               s_clos.n_data, s_clos.n_size);
+	ptr = find_asciicasematchb(scan_str + start, scan_len,
+	                           s_open.n_data, s_open.n_size,
+	                           s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	return DeeTuple_Newf(DEE_FMT_SIZE_T
@@ -3308,9 +3308,9 @@ bytes_caserfindmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = rfind_asciicasematchb(scan_str + start, scan_len,
-                                s_open.n_data, s_open.n_size,
-                                s_clos.n_data, s_clos.n_size);
+	ptr = rfind_asciicasematchb(scan_str + start, scan_len,
+	                            s_open.n_data, s_open.n_size,
+	                            s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
@@ -3341,9 +3341,9 @@ bytes_caseindexmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = find_asciicasematchb(scan_str + start, scan_len,
-                               s_open.n_data, s_open.n_size,
-                               s_clos.n_data, s_clos.n_size);
+	ptr = find_asciicasematchb(scan_str + start, scan_len,
+	                           s_open.n_data, s_open.n_size,
+	                           s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
@@ -3374,9 +3374,9 @@ bytes_caserindexmatch(Bytes *__restrict self,
 		goto err_not_found; /* Empty search area. */
 	scan_len = end - start;
 	scan_str = DeeBytes_DATA(self);
-	ptr      = rfind_asciicasematchb(scan_str + start, scan_len,
-                                s_open.n_data, s_open.n_size,
-                                s_clos.n_data, s_clos.n_size);
+	ptr = rfind_asciicasematchb(scan_str + start, scan_len,
+	                            s_open.n_data, s_open.n_size,
+	                            s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
 	result = (size_t)(ptr - scan_str);

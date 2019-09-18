@@ -3085,8 +3085,8 @@ PRIVATE struct type_method thread_class_methods[] = {
 	{ DeeString_STR(&str_yield),
 	  &thread_yield,
 	  /* TODO: Must make this one deprecated, and add a new one with a different name!
-       *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
-       *       causes a compiler warning! */
+	   *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
+	   *       causes a compiler warning! */
 	  DOC("()\n"
 	      "Willingly preempt execution to another thread or process") },
 	{ "sleep", &thread_sleep,

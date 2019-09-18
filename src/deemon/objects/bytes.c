@@ -384,9 +384,9 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 			                                                new_bufsize);
 			if unlikely(!new_result) {
 				new_bufsize = i + 1;
-				new_result  = (DREF Bytes *)DeeObject_Realloc(result,
-                                                             COMPILER_OFFSETOF(Bytes, b_data) +
-                                                             new_bufsize);
+				new_result = (DREF Bytes *)DeeObject_Realloc(result,
+				                                             COMPILER_OFFSETOF(Bytes, b_data) +
+				                                             new_bufsize);
 				if unlikely(!new_result)
 					goto err_r_elem;
 			}
@@ -1193,9 +1193,7 @@ DeeBytes_PrintUtf8(DeeObject *__restrict self,
 		}
 		escape_buf[0] = 0xc0 | ((ch & 0xc0) >> 6);
 		escape_buf[1] = 0x80 | (ch & 0x3f);
-		temp          = (*printer)(arg,
-                          (char const *)escape_buf,
-                          2);
+		temp = (*printer)(arg, (char const *)escape_buf, 2);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;

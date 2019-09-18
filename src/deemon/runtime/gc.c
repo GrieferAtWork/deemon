@@ -756,7 +756,7 @@ restart:
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		if (iter->gc_object.ob_refcnt == 0)
 			continue; /* The object may have just been decref()-ed by another thread,
-                 * but that thread hadn't had the chance to untrack it, yet. */
+			           * but that thread hadn't had the chance to untrack it, yet. */
 		ASSERT_OBJECT(&iter->gc_object);
 #ifdef CONFIG_GC_CHECK_MEMORY
 		DEE_CHECKMEMORY();

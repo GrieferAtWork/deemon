@@ -314,8 +314,8 @@ INTERN DREF Kwds *DCALL kwds_rehash(DREF Kwds *__restrict self) {
 	DREF Kwds *result;
 	size_t i, j, perturb;
 	size_t new_mask = (self->kw_mask << 1) | 1;
-	result          = (DREF Kwds *)DeeObject_Calloc(COMPILER_OFFSETOF(Kwds, kw_map) +
-                                           (new_mask + 1) * sizeof(struct kwds_entry));
+	result = (DREF Kwds *)DeeObject_Calloc(COMPILER_OFFSETOF(Kwds, kw_map) +
+	                                       (new_mask + 1) * sizeof(struct kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_mask = new_mask;

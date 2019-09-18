@@ -364,24 +364,24 @@ done:
 }
 
 PRIVATE struct type_method scope_methods[] = {
-	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&scope_newanon,
-      DOC("->?ASymbol?Ert:Compiler\n"
-          "Construct a new anonymous symbol, and add it as part of @this scope\n"
-          "The symbol isn't given a name (when queried it will have an empty name), and "
-          "will otherwise behave just like a symbol that has been deleted (s.a. #op:delitem)\n"
-          "The symbol can however be used to hold values just like any other symbol, "
-          "meaning that this is the type of symbol that should be used to hold hidden "
-          "values, as used by $with-statements\n"
-          "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
-	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&scope_newlocal,
-      DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
-          "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
-          "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"
-          "Lookup, or create a new local symbol named @name\n"
-          "If another symbol with that same name already exists, either return that "
-          "symbol when @requirenew is :false, or throw a :ValueError otherwise\n"
-          "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)"),
-      TYPE_METHOD_FKWDS },
+	{ "newanon", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&scope_newanon,
+	  DOC("->?ASymbol?Ert:Compiler\n"
+	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
+	      "The symbol isn't given a name (when queried it will have an empty name), and "
+	      "will otherwise behave just like a symbol that has been deleted (s.a. #op:delitem)\n"
+	      "The symbol can however be used to hold values just like any other symbol, "
+	      "meaning that this is the type of symbol that should be used to hold hidden "
+	      "values, as used by $with-statements\n"
+	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
+	{ "newlocal", (DREF DeeObject * (DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&scope_newlocal,
+	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
+	      "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
+	      "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"
+	      "Lookup, or create a new local symbol named @name\n"
+	      "If another symbol with that same name already exists, either return that "
+	      "symbol when @requirenew is :false, or throw a :ValueError otherwise\n"
+	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)"),
+	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
 

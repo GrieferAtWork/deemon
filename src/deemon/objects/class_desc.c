@@ -292,8 +292,8 @@ cot_iter(ClassOperatorTable *__restrict self) {
 		goto done;
 	result->co_desc = self->co_desc;
 	result->co_iter = self->co_desc->cd_clsop_list;
-	result->co_end  = (self->co_desc->cd_clsop_list +
-                      self->co_desc->cd_clsop_mask + 1);
+	result->co_end = (self->co_desc->cd_clsop_list +
+	                  self->co_desc->cd_clsop_mask + 1);
 	Dee_Incref(self->co_desc);
 	DeeObject_Init(result, &ClassOperatorTableIterator_Type);
 done:
@@ -2788,8 +2788,8 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 		if (!attr->ca_name)
 			continue;
 		attr_type = NULL;
-		perm      = (ATTR_IMEMBER | ATTR_CMEMBER | ATTR_WRAPPER |
-                ATTR_PERMGET | ATTR_NAMEOBJ);
+		perm = (ATTR_IMEMBER | ATTR_CMEMBER | ATTR_WRAPPER |
+		        ATTR_PERMGET | ATTR_NAMEOBJ);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
 			perm |= ATTR_PROPERTY;
 		else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -3054,13 +3054,14 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
 	if (!attr)
 		goto not_found;
 	attr_type = NULL;
-	perm      = (ATTR_IMEMBER | ATTR_CMEMBER |
-            ATTR_WRAPPER | ATTR_PERMGET |
-            ATTR_NAMEOBJ);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+	perm = (ATTR_IMEMBER | ATTR_CMEMBER |
+	        ATTR_WRAPPER | ATTR_PERMGET |
+	        ATTR_NAMEOBJ);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		perm |= ATTR_PROPERTY;
-	else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 		perm |= ATTR_PERMCALL;
+	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
 		perm |= ATTR_PRIVATE;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
